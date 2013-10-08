@@ -30,7 +30,7 @@ public:
 
 public:
     std::string archive();
-    std::string generateLogFileName(std::string surl, std::string durl, std::string & file_id, std::string & job_id);
+    std::string generateLogFileName(std::string surl, std::string durl, unsigned file_id, std::string & job_id);
     static std::string dateDir();
     void generateLogFile();
 
@@ -41,7 +41,7 @@ public:
     void setSourceUrl(std::string& source_url);
     void setDestUrl(std::string& dest_url);
 
-    void setFileId(std::string& file_id);
+    void setFileId(unsigned file_id);
     void setJobId(std::string& job_id);
 
     inline std::string getLogFileName()
@@ -79,7 +79,7 @@ public:
 private:
     std::string source_url;
     std::string dest_url;
-    std::string file_id;
+    unsigned    file_id;
     std::string job_id;
     std::string logFileName;
     std::string archiveFileName;

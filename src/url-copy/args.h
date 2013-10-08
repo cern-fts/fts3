@@ -45,7 +45,7 @@ public:
     std::string destUrl;
     std::string sourceTokenDescription;
     std::string destTokenDescription;
-    std::string fileId;
+    unsigned    fileId;
     std::string proxy;
     double      userFileSize;
     int         bringOnline;

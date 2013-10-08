@@ -56,6 +56,7 @@ limitations under the License. */
 #include <sys/resource.h>
 #include <boost/algorithm/string/replace.hpp>
 #include <execinfo.h>
+#include "transfer.h"
 
 using namespace std;
 using boost::thread;
@@ -64,9 +65,6 @@ FileManagement* fileManagement = NULL;
 static Reporter reporter;
 static transfer_completed tr_completed;
 static bool retry = true;
-static std::string strArray[7];
-static std::string g_file_id("0");
-static std::string g_job_id("");
 static std::string errorScope("");
 static std::string errorPhase("");
 static std::string reasonClass("");
@@ -90,6 +88,8 @@ static std::string globalErrorMessage("");
 static double throughput = 0.0;
 static double transferred_bytes = 0;
 time_t globalTimeout;
+
+Transfer currentTransfer;
 
 extern std::string stackTrace;
 gfal_context_t handle = NULL;
@@ -132,27 +132,6 @@ static std::string srmVersion(const std::string & url)
         return std::string("2.2.0");
 
     return std::string("");
-}
-
-
-static std::vector<std::string> split(const char *str, char c = ':')
-{
-    std::vector<std::string> result;
-
-    while (1)
-        {
-            const char *begin = str;
-
-            while (*str != c && *str)
-                str++;
-
-            result.push_back(string(begin, str));
-
-            if (0 == *str++)
-                break;
-        }
-
-    return result;
 }
 
 static void call_perf(gfalt_transfer_status_t h, const char*, const char*, gpointer)
@@ -231,18 +210,13 @@ void abnormalTermination(const std::string& classification, const std::string&, 
     reporter.nostreams = UrlCopyOpts::getInstance().nStreams;
     reporter.buffersize = UrlCopyOpts::getInstance().tcpBuffersize;
 
-    if (strArray[0].length() > 0)
-        reporter.sendTerminal(throughput, retry, g_job_id, strArray[0], classification, errorMessage, diff, source_size);
-    else
-        reporter.sendTerminal(throughput, retry, g_job_id, g_file_id, classification, errorMessage, diff, source_size);
+
+    reporter.sendTerminal(throughput, retry, currentTransfer.jobId, currentTransfer.fileId, classification, errorMessage, diff, source_size);
 
     std::string moveFile = fileManagement->archive();
-    if (strArray[0].length() > 0)
-        reporter.sendLog(g_job_id, strArray[0], fileManagement->_getLogArchivedFileFullPath(),
-                         UrlCopyOpts::getInstance().debug);
-    else
-        reporter.sendLog(g_job_id, g_file_id, fileManagement->_getLogArchivedFileFullPath(),
-                         UrlCopyOpts::getInstance().debug);
+
+    reporter.sendLog(currentTransfer.jobId, currentTransfer.fileId, fileManagement->_getLogArchivedFileFullPath(),
+                     UrlCopyOpts::getInstance().debug);
 
     if (moveFile.length() != 0)
         {
@@ -259,7 +233,7 @@ void abnormalTermination(const std::string& classification, const std::string&, 
 
 void canceler()
 {
-    errorMessage = "Transfer " + g_job_id + " was canceled because it was not responding";
+    errorMessage = "Transfer " + currentTransfer.jobId + " was canceled because it was not responding";
 
     Logger::getInstance().WARNING() << errorMessage << std::endl;
 
@@ -286,19 +260,9 @@ void taskStatusUpdater(int time)
 {
     while (time)
         {
-            if (strArray[0].length() > 0)
-                {
-                    Logger::getInstance().INFO() << "Sending back to the server url-copy is still alive : " <<  throughput << "  " <<  transferred_bytes
-                                                 << std::endl;
-                    reporter.sendPing(UrlCopyOpts::getInstance().jobId, strArray[0], throughput, transferred_bytes);
-                }
-            else
-                {
-                    Logger::getInstance().INFO() << "Sending back to the server url-copy is still alive : "  <<  throughput << "  " <<  transferred_bytes
-                                                 << std::endl;
-                    reporter.sendPing(UrlCopyOpts::getInstance().jobId, UrlCopyOpts::getInstance().fileId,
-                                      throughput, transferred_bytes);
-                }
+            Logger::getInstance().INFO() << "Sending back to the server url-copy is still alive : " <<  throughput << "  " <<  transferred_bytes
+                                     << std::endl;
+            reporter.sendPing(currentTransfer.jobId, currentTransfer.fileId, throughput, transferred_bytes);
             boost::this_thread::sleep(boost::posix_time::seconds(time));
         }
 }
@@ -338,11 +302,11 @@ void signalHandler(int signum)
         {
             propagated = true;
 
-            logger.ERROR() << "Transfer process died " << g_job_id << std::endl;
+            logger.ERROR() << "Transfer process died " << currentTransfer.jobId << std::endl;
             logger.ERROR() << "Received signal " << signum << std::endl;
             logger.ERROR() << stackTrace << std::endl;
 
-            errorMessage = "Transfer process died " + g_job_id;
+            errorMessage = "Transfer process died " + currentTransfer.jobId;
             errorMessage += stackTrace;
             abnormalTermination("FAILED", errorMessage, "Error");
         }
@@ -351,7 +315,7 @@ void signalHandler(int signum)
             if (propagated == false)
                 {
                     propagated = true;
-                    errorMessage = "Transfer " + g_job_id + " canceled by the user";
+                    errorMessage = "Transfer " + currentTransfer.jobId + " canceled by the user";
                     logger.WARNING() << errorMessage << std::endl;
                     abnormalTermination("CANCELED", errorMessage, "Abort");
                 }
@@ -361,7 +325,7 @@ void signalHandler(int signum)
             if (propagated == false)
                 {
                     propagated = true;
-                    errorMessage = "Transfer " + g_job_id + " has been forced-canceled because it was stalled";
+                    errorMessage = "Transfer " + currentTransfer.jobId + " has been forced-canceled because it was stalled";
                     logger.WARNING() << errorMessage << std::endl;
                     abnormalTermination("FAILED", errorMessage, "Abort");
                 }
@@ -371,7 +335,7 @@ void signalHandler(int signum)
             if (propagated == false)
                 {
                     propagated = true;
-                    errorMessage = "Transfer " + g_job_id + " aborted, check log file for details, received signum " + boost::lexical_cast<std::string>(signum);
+                    errorMessage = "Transfer " + currentTransfer.jobId + " aborted, check log file for details, received signum " + boost::lexical_cast<std::string>(signum);
                     logger.WARNING() << errorMessage << std::endl;
                     abnormalTermination("FAILED", errorMessage, "Abort");
                 }
@@ -439,7 +403,7 @@ void myunexpected()
     if (propagated == false)
         {
             propagated = true;
-            errorMessage = "Transfer unexpected handler called " + g_job_id;
+            errorMessage = "Transfer unexpected handler called " + currentTransfer.jobId;
             errorMessage += " Source: " + UrlCopyOpts::getInstance().sourceUrl;
             errorMessage += " Dest: " + UrlCopyOpts::getInstance().destUrl;
             Logger::getInstance().ERROR() << errorMessage << std::endl;
@@ -453,7 +417,7 @@ void myterminate()
     if (propagated == false)
         {
             propagated = true;
-            errorMessage = "Transfer terminate handler called:" + g_job_id;
+            errorMessage = "Transfer terminate handler called:" + currentTransfer.jobId;
             errorMessage += " Source: " + UrlCopyOpts::getInstance().sourceUrl;
             errorMessage += " Dest: " + UrlCopyOpts::getInstance().destUrl;
             Logger::getInstance().ERROR() << errorMessage << std::endl;
@@ -499,8 +463,7 @@ int main(int argc, char **argv)
             return 1;
         }
 
-    g_file_id = opts.fileId;
-    g_job_id = opts.jobId;
+    currentTransfer.jobId = opts.jobId;
 
     std::string bytes_to_string("");
     struct stat statbufsrc;
@@ -581,7 +544,7 @@ int main(int argc, char **argv)
 
     if (opts.areTransfersOnFile() && urlsFile.empty() == true)
         {
-            errorMessage = "Transfer " + g_job_id + " contains no urls with session reuse/multihop enabled";
+            errorMessage = "Transfer " + currentTransfer.jobId + " contains no urls with session reuse/multihop enabled";
 
             abnormalTermination("FAILED", errorMessage, "Error");
         }
@@ -624,31 +587,35 @@ int main(int argc, char **argv)
 
             if (opts.areTransfersOnFile())
                 {
+                    std::string strArray[7];
                     std::string mid_str(urlsFile[ii]);
                     typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
                     tokenizer tokens(mid_str, boost::char_separator<char> (" "));
                     std::copy(tokens.begin(), tokens.end(), strArray);
+
+                    currentTransfer.fileId = boost::lexical_cast<unsigned>(strArray[0]);
+                    currentTransfer.sourceUrl = strArray[1];
+                    currentTransfer.destUrl   = strArray[2];
+                    currentTransfer.setChecksum(strArray[3]);
+                    currentTransfer.userFileSize = boost::lexical_cast<double>(opts.userFileSize);
+                    currentTransfer.fileMetadata = strArray[5];
+                    currentTransfer.tokenBringOnline = strArray[6];
                 }
             else
                 {
-                    strArray[0] = opts.fileId;
-                    strArray[1] = opts.sourceUrl;
-                    strArray[2] = opts.destUrl;
-                    strArray[3] = opts.checksumValue;
-                    if(opts.userFileSize > 0)
-                        strArray[4] = to_string<double >(opts.userFileSize, std::dec);
-                    else
-                        strArray[4] = "0";
-                    strArray[5] = opts.fileMetadata;
-                    strArray[6] = opts.tokenBringOnline;
+                    currentTransfer.fileId = opts.fileId;
+                    currentTransfer.sourceUrl = opts.sourceUrl;
+                    currentTransfer.destUrl   = opts.destUrl;
+                    currentTransfer.setChecksum(opts.checksumValue);
+                    currentTransfer.userFileSize = opts.userFileSize;
+                    currentTransfer.fileMetadata = opts.fileMetadata;
+                    currentTransfer.tokenBringOnline = opts.tokenBringOnline;
                 }
 
-            fileManagement->setSourceUrl(strArray[1]);
-            fileManagement->setDestUrl(strArray[2]);
-            fileManagement->setFileId(strArray[0]);
-            fileManagement->setJobId(opts.jobId);
-            g_file_id = strArray[0];
-            g_job_id = opts.jobId;
+            fileManagement->setSourceUrl(currentTransfer.sourceUrl);
+            fileManagement->setDestUrl(currentTransfer.destUrl);
+            fileManagement->setFileId(currentTransfer.fileId);
+            fileManagement->setJobId(currentTransfer.jobId);
 
             reporter.timeout = opts.timeout;
             reporter.nostreams = opts.nStreams;
@@ -661,10 +628,10 @@ int main(int argc, char **argv)
             msg_ifce::getInstance()->set_agent_fqdn(&tr_completed, hostname);
             msg_ifce::getInstance()->set_t_channel(&tr_completed, fileManagement->getSePair());
             msg_ifce::getInstance()->set_transfer_id(&tr_completed, fileManagement->getLogFileName());
-            msg_ifce::getInstance()->set_source_srm_version(&tr_completed, srmVersion(strArray[1]));
-            msg_ifce::getInstance()->set_destination_srm_version(&tr_completed, srmVersion(strArray[2]));
-            msg_ifce::getInstance()->set_source_url(&tr_completed, strArray[1]);
-            msg_ifce::getInstance()->set_dest_url(&tr_completed, strArray[2]);
+            msg_ifce::getInstance()->set_source_srm_version(&tr_completed, srmVersion(currentTransfer.sourceUrl));
+            msg_ifce::getInstance()->set_destination_srm_version(&tr_completed, srmVersion(currentTransfer.destUrl));
+            msg_ifce::getInstance()->set_source_url(&tr_completed, currentTransfer.sourceUrl);
+            msg_ifce::getInstance()->set_dest_url(&tr_completed, currentTransfer.destUrl);
             msg_ifce::getInstance()->set_source_hostname(&tr_completed, fileManagement->getSourceHostnameFile());
             msg_ifce::getInstance()->set_dest_hostname(&tr_completed, fileManagement->getDestHostnameFile());
             msg_ifce::getInstance()->set_channel_type(&tr_completed, "urlcopy");
@@ -696,7 +663,7 @@ int main(int argc, char **argv)
 
             // Scope
             {
-                reporter.sendLog(opts.jobId, strArray[0], fileManagement->getLogFilePath(),
+                reporter.sendLog(opts.jobId, currentTransfer.fileId, fileManagement->getLogFilePath(),
                                  opts.debug);
 
                 gfalt_set_user_data(params, NULL, NULL);
@@ -705,28 +672,28 @@ int main(int argc, char **argv)
                 logger.INFO() << "Proxy:" << opts.proxy << std::endl;
                 logger.INFO() << "VO:" << opts.vo << std::endl; //a
                 logger.INFO() << "Job id:" << opts.jobId << std::endl;
-                logger.INFO() << "File id:" << strArray[0] << std::endl;
-                logger.INFO() << "Source url:" << strArray[1] << std::endl;
-                logger.INFO() << "Dest url:" << strArray[2] << std::endl;
+                logger.INFO() << "File id:" << currentTransfer.fileId << std::endl;
+                logger.INFO() << "Source url:" << currentTransfer.sourceUrl << std::endl;
+                logger.INFO() << "Dest url:" << currentTransfer.destUrl << std::endl;
                 logger.INFO() << "Overwrite enabled:" << opts.overwrite << std::endl;
                 logger.INFO() << "Tcp buffer size:" << opts.tcpBuffersize << std::endl;
                 logger.INFO() << "Dest space token:" << opts.destTokenDescription << std::endl;
                 logger.INFO() << "Source space token:" << opts.sourceTokenDescription << std::endl;
                 logger.INFO() << "Pin lifetime:" << opts.copyPinLifetime << std::endl;
                 logger.INFO() << "BringOnline:" << opts.bringOnline << std::endl;
-                logger.INFO() << "Checksum:" << strArray[3] << std::endl;
+                logger.INFO() << "Checksum:" << currentTransfer.checksumValue << std::endl;
                 logger.INFO() << "Checksum enabled:" << opts.compareChecksum << std::endl;
-                logger.INFO() << "User filesize:" << strArray[4] << std::endl;
-                logger.INFO() << "File metadata:" << replaceMetadataString(strArray[5]) << std::endl;
+                logger.INFO() << "User filesize:" << currentTransfer.userFileSize << std::endl;
+                logger.INFO() << "File metadata:" << replaceMetadataString(currentTransfer.fileMetadata) << std::endl;
                 logger.INFO() << "Job metadata:" << replaceMetadataString(opts.jobMetadata) << std::endl;
-                logger.INFO() << "Bringonline token:" << strArray[6] << std::endl;
+                logger.INFO() << "Bringonline token:" << currentTransfer.tokenBringOnline << std::endl;
 
                 //set to active only for reuse
                 if (opts.areTransfersOnFile())
                     {
                         logger.INFO() << "Set the transfer to ACTIVE, report back to the server" << std::endl;
                         reporter.setMultipleTransfers(true);
-                        reporter.sendMessage(throughput, false, opts.jobId, strArray[0], "ACTIVE", "", diff, source_size);
+                        reporter.sendMessage(throughput, false, opts.jobId, currentTransfer.fileId, "ACTIVE", "", diff, source_size);
                     }
 
                 if (fexists(opts.proxy.c_str()) != 0)
@@ -788,18 +755,10 @@ int main(int argc, char **argv)
                         if (!opts.checksumValue.empty() && opts.checksumValue != "x")   //user provided checksum
                             {
                                 logger.INFO() << "User  provided checksum" << std::endl;
-                                //check if only alg is specified
-                                if (std::string::npos == (strArray[3]).find(":"))
-                                    {
-                                        gfalt_set_user_defined_checksum(params, (strArray[3]).c_str(), NULL, NULL);
-                                    }
-                                else
-                                    {
-                                        std::vector<std::string> token = split((strArray[3]).c_str());
-                                        std::string checkAlg = token[0];
-                                        std::string csk = token[1];
-                                        gfalt_set_user_defined_checksum(params, checkAlg.c_str(), csk.c_str(), NULL);
-                                    }
+                                gfalt_set_user_defined_checksum(params,
+                                                                currentTransfer.checksumAlgorithm.c_str(),
+                                                                currentTransfer.checksumValue.c_str(),
+                                                                NULL);
                             }
                         else    //use auto checksum
                             {
@@ -811,7 +770,7 @@ int main(int argc, char **argv)
                 for (int sourceStatRetry = 0; sourceStatRetry < 4; sourceStatRetry++)
                     {
                         errorMessage = ""; //reset
-                        if (gfal2_stat(handle, (strArray[1]).c_str(), &statbufsrc, &tmp_err) < 0)
+                        if (gfal2_stat(handle, (currentTransfer.sourceUrl).c_str(), &statbufsrc, &tmp_err) < 0)
                             {
                                 std::string tempError(tmp_err->message);
                                 const int errCode = tmp_err->code;
@@ -847,10 +806,10 @@ int main(int argc, char **argv)
                                                 goto stop;
                                             }
                                     }
-                                else if (strArray[4]!= "x" && boost::lexical_cast<double>(strArray[4]) != 0 && boost::lexical_cast<double>(strArray[4]) != statbufsrc.st_size)
+                                else if (currentTransfer.userFileSize != 0 && currentTransfer.userFileSize != statbufsrc.st_size)
                                     {
                                         std::stringstream error_;
-                                        error_ << "User specified source file size is " << strArray[4] << " but stat returned " << statbufsrc.st_size;
+                                        error_ << "User specified source file size is " << currentTransfer.userFileSize << " but stat returned " << statbufsrc.st_size;
                                         errorMessage = error_.str();
                                         logger.ERROR() << errorMessage << std::endl;
                                         errorScope = SOURCE;
@@ -890,7 +849,7 @@ int main(int argc, char **argv)
                         //if overwrite is not enabled, check if  exists and stop the transfer if it does
                         logger.INFO() << "Stat the dest surl to check if file already exists" << std::endl;
                         errorMessage = ""; //reset
-                        if (gfal2_stat(handle, (strArray[2]).c_str(), &statbufdestOver, &tmp_err) == 0)
+                        if (gfal2_stat(handle, (currentTransfer.destUrl).c_str(), &statbufdestOver, &tmp_err) == 0)
                             {
                                 double dest_sizeOver = (double) statbufdestOver.st_size;
                                 if(dest_sizeOver > 0)
@@ -933,13 +892,13 @@ int main(int argc, char **argv)
                 reporter.timeout = opts.timeout;
                 reporter.nostreams = opts.nStreams;
                 reporter.buffersize = opts.tcpBuffersize;
-                reporter.sendMessage(throughput, false, opts.jobId, strArray[0], "UPDATE", "", diff, source_size);
+                reporter.sendMessage(throughput, false, opts.jobId, currentTransfer.fileId, "UPDATE", "", diff, source_size);
 
                 gfalt_set_tcp_buffer_size(params, opts.tcpBuffersize, NULL);
                 gfalt_set_monitor_callback(params, &call_perf, NULL);
 
                 //check all params before passed to gfal2
-                if ((strArray[1]).c_str() == NULL || (strArray[2]).c_str() == NULL)
+                if ((currentTransfer.sourceUrl).c_str() == NULL || (currentTransfer.destUrl).c_str() == NULL)
                     {
                         errorMessage = "Failed to get source or dest surl";
                         logger.ERROR() << errorMessage << std::endl;
@@ -951,7 +910,7 @@ int main(int argc, char **argv)
 
 
                 logger.INFO() << "Transfer Starting" << std::endl;
-                if ((ret = gfalt_copy_file(handle, params, (strArray[1]).c_str(), (strArray[2]).c_str(), &tmp_err)) != 0)
+                if ((ret = gfalt_copy_file(handle, params, (currentTransfer.sourceUrl).c_str(), (currentTransfer.destUrl).c_str(), &tmp_err)) != 0)
                     {
                         if (tmp_err != NULL && tmp_err->message != NULL)
                             {
@@ -1001,7 +960,7 @@ int main(int argc, char **argv)
                 for (int destStatRetry = 0; destStatRetry < 4; destStatRetry++)
                     {
                         errorMessage = ""; //reset
-                        if (gfal2_stat(handle, (strArray[2]).c_str(), &statbufdest, &tmp_err) < 0)
+                        if (gfal2_stat(handle, (currentTransfer.destUrl).c_str(), &statbufdest, &tmp_err) < 0)
                             {
                                 std::string tempError(tmp_err->message);
                                 logger.ERROR() << "Failed to get dest file size, errno:" << tmp_err->code << ", "
@@ -1036,10 +995,10 @@ int main(int argc, char **argv)
                                                 goto stop;
                                             }
                                     }
-                                else if (strArray[4]!= "x" && boost::lexical_cast<double>(strArray[4]) != 0 && boost::lexical_cast<double>(strArray[4]) != statbufdest.st_size)
+                                else if (currentTransfer.userFileSize != 0 && currentTransfer.userFileSize != statbufdest.st_size)
                                     {
                                         std::stringstream error_;
-                                        error_ << "User specified destination file size is " << strArray[4] << " but stat returned " << statbufdest.st_size;
+                                        error_ << "User specified destination file size is " << currentTransfer.userFileSize << " but stat returned " << statbufdest.st_size;
                                         errorMessage = error_.str();
                                         logger.ERROR() << errorMessage << std::endl;
                                         errorScope = DESTINATION;
@@ -1095,7 +1054,7 @@ stop:
                     if (!terminalState)
                         {
                             logger.INFO() << "Report FAILED back to the server" << std::endl;
-                            reporter.sendTerminal(throughput, retry, opts.jobId, strArray[0], "FAILED", errorMessage, diff, source_size);
+                            reporter.sendTerminal(throughput, retry, opts.jobId, currentTransfer.fileId, "FAILED", errorMessage, diff, source_size);
                         }
                 }
             else
@@ -1105,14 +1064,14 @@ stop:
                     reporter.nostreams = opts.nStreams;
                     reporter.buffersize = opts.tcpBuffersize;
                     logger.INFO() << "Report FINISHED back to the server" << std::endl;
-                    reporter.sendTerminal(throughput, false, opts.jobId, strArray[0], "FINISHED", errorMessage, diff, source_size);
+                    reporter.sendTerminal(throughput, false, opts.jobId, currentTransfer.fileId, "FINISHED", errorMessage, diff, source_size);
                     /*unpin the file here and report the result in the log file...*/
                     g_clear_error(&tmp_err);
 
                     if (opts.bringOnline > 0)
                         {
-                            logger.INFO() << "Token will be unpinned: " << strArray[6] << std::endl;
-                            if(gfal2_release_file(handle, (strArray[1]).c_str(), (strArray[6]).c_str(), &tmp_err) < 0)
+                            logger.INFO() << "Token will be unpinned: " << currentTransfer.tokenBringOnline << std::endl;
+                            if(gfal2_release_file(handle, (currentTransfer.sourceUrl).c_str(), (currentTransfer.tokenBringOnline).c_str(), &tmp_err) < 0)
                                 {
                                     if (tmp_err && tmp_err->message)
                                         {
@@ -1121,7 +1080,7 @@ stop:
                                 }
                             else
                                 {
-                                    logger.INFO() << "Token unpinned: " << strArray[6] << std::endl;
+                                    logger.INFO() << "Token unpinned: " << currentTransfer.tokenBringOnline << std::endl;
                                 }
                         }
                 }
@@ -1134,7 +1093,7 @@ stop:
             std::string archiveErr = fileManagement->archive();
             if (!archiveErr.empty())
                 logger.ERROR() << "Could not archive: " << archiveErr << std::endl;
-            reporter.sendLog(opts.jobId, strArray[0], fileManagement->_getLogArchivedFileFullPath(),
+            reporter.sendLog(opts.jobId, currentTransfer.fileId, fileManagement->_getLogArchivedFileFullPath(),
                              opts.debug);
         }//end for reuse loop
 

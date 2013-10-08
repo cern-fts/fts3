@@ -120,7 +120,7 @@ void FileManagement::setDestUrl(std::string& dest_url)
         free(base_path);
 }
 
-void FileManagement::setFileId(std::string& file_id)
+void FileManagement::setFileId(unsigned file_id)
 {
     this->file_id = file_id;
 }
@@ -218,7 +218,7 @@ std::string FileManagement::dateDir()
     return ss.str();
 }
 
-std::string FileManagement::generateLogFileName(std::string, std::string, std::string & file_id, std::string & job_id)
+std::string FileManagement::generateLogFileName(std::string, std::string, unsigned file_id, std::string & job_id)
 {
     std::string new_name = std::string("");
     archiveFileName = shostFile + "__" + dhostFile;

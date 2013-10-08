@@ -48,7 +48,7 @@ const char UrlCopyOpts::short_options[] = "PONM:L:K:J:I:H:GRFD:E:C:z:A:t:a:b:c:d
 UrlCopyOpts::UrlCopyOpts(): monitoringMessages(false), autoTunned(false),
     manualConfig(false), debug(false), overwrite(false), daemonize(false),
     logToStderr(false), reuse(false), multihop(false), compareChecksum(CHECKSUM_DONT_CHECK),
-    fileId("0"), userFileSize(0), bringOnline(-1), copyPinLifetime(-1),
+    fileId(0), userFileSize(0), bringOnline(-1), copyPinLifetime(-1),
     nStreams(DEFAULT_NOSTREAMS), tcpBuffersize(DEFAULT_BUFFSIZE),
     blockSize(0), timeout(DEFAULT_TIMEOUT)
 {
@@ -188,7 +188,7 @@ int UrlCopyOpts::parse(int argc, char * const argv[])
                             sourceTokenDescription = optarg;
                             break;
                         case 'B':
-                            fileId = optarg;
+                            fileId = boost::lexical_cast<unsigned>(optarg);
                             break;
                         case '5':
                             proxy = optarg;

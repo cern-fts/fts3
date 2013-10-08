@@ -81,20 +81,13 @@ std::string Reporter::ReplaceNonPrintableCharacters(string s)
 }
 
 void Reporter::sendMessage(double throughput, bool retry,
-                           const string& job_id, const string& file_id,
+                           const string& job_id, unsigned file_id,
                            const string& transfer_status, const string& transfer_message,
                            double timeInSecs, double filesize)
 {
     boost::recursive_mutex::scoped_lock lock(mutex);
-    try
-        {
-            msg->file_id  = boost::lexical_cast<unsigned int>(file_id);
-        }
-    catch (...)
-        {
-            return;
-        }
 
+    msg->file_id  = file_id;
     strncpy(msg->job_id, job_id.c_str(), sizeof(msg->job_id));
     msg->job_id[sizeof(msg->job_id) -1] = '\0';
     strncpy(msg->transfer_status, transfer_status.c_str(), sizeof(msg->transfer_status));
@@ -130,7 +123,7 @@ void Reporter::sendMessage(double throughput, bool retry,
 }
 
 void Reporter::sendTerminal(double throughput, bool retry,
-                            const string& job_id, const string& file_id,
+                            const string& job_id, unsigned file_id,
                             const string& transfer_status, const string& transfer_message,
                             double timeInSecs, double filesize)
 {
@@ -149,19 +142,13 @@ void Reporter::sendTerminal(double throughput, bool retry,
 
 }
 
-void Reporter::sendPing(const std::string& job_id, const std::string& file_id,
+void Reporter::sendPing(const std::string& job_id, unsigned file_id,
                         double throughput, double transferred)
 {
     boost::recursive_mutex::scoped_lock lock(mutex);
-    try
-        {
-            msg_updater->file_id = boost::lexical_cast<unsigned int>(file_id);
-        }
-    catch (...)
-        {
-            return;
-        }
+
     strncpy(msg_updater->job_id, job_id.c_str(), sizeof(msg_updater->job_id));
+    msg_updater->file_id = file_id;
     msg_updater->job_id[sizeof(msg_updater->job_id) -1] = '\0';
     msg_updater->process_id = (int) getpid();
     msg_updater->timestamp = milliseconds_since_epoch();
@@ -174,19 +161,12 @@ void Reporter::sendPing(const std::string& job_id, const std::string& file_id,
 
 
 
-void Reporter::sendLog(const std::string& job_id, const std::string& file_id,
+void Reporter::sendLog(const std::string& job_id, unsigned file_id,
                        const std::string& logFileName, bool debug)
 {
     boost::recursive_mutex::scoped_lock lock(mutex);
-    try
-        {
-            msg_log->file_id = boost::lexical_cast<unsigned int>(file_id);
-        }
-    catch (...)
-        {
-            return;
-        }
 
+    msg_log->file_id = file_id;
     strncpy(msg_log->job_id, job_id.c_str(), sizeof(msg_log->job_id));
     msg_log->job_id[sizeof(msg_log->job_id) -1] = '\0';
     strncpy(msg_log->filePath, logFileName.c_str(), sizeof(msg_log->filePath));
