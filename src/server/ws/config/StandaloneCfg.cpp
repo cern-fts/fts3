@@ -62,7 +62,6 @@ void StandaloneCfg::init(string name)
 
 string StandaloneCfg::json()
 {
-
     stringstream ss;
 
     ss << "\"" << "active" << "\":" << (active ? "true" : "false") << ",";
@@ -80,7 +79,6 @@ string StandaloneCfg::json()
 
 void StandaloneCfg::save(string name)
 {
-
     // add the in-link
     addLinkCfg(any, name, active, any + "-" + name, in_protocol);
     // add the shares for the in-link

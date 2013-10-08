@@ -116,6 +116,26 @@ string Configuration::json(map<string, int>& params)
     return ss.str();
 }
 
+string Configuration::json(map<string, double>& params)
+{
+
+    stringstream ss;
+
+    ss << "[";
+
+    map<string, double>::iterator it;
+    for (it = params.begin(); it != params.end();)
+        {
+            ss << "{\"" << it->first << "\":" << it->second << "}";
+            it++;
+            if (it != params.end()) ss << ",";
+        }
+
+    ss << "]";
+
+    return ss.str();
+}
+
 string Configuration::json(optional< map<string, int> >& params)
 {
 

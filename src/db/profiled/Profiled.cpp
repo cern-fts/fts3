@@ -513,6 +513,30 @@ std::vector<ShareConfig*> ProfiledDB::getShareConfig(std::string source, std::st
     PROFILE_PREFIXED("DB::", return db->getShareConfig(source, destination));
 }
 
+void ProfiledDB::addActivityConfig(std::string vo, std::string shares, bool active)
+{
+	PROFILE_PREFIXED("DB::", db->addActivityConfig(vo, shares, active));
+}
+
+void ProfiledDB::updateActivityConfig(std::string vo, std::string shares, bool active)
+{
+	PROFILE_PREFIXED("DB::", db->updateActivityConfig(vo, shares, active));
+}
+
+void ProfiledDB::deleteActivityConfig(std::string vo)
+{
+	PROFILE_PREFIXED("DB::", db->deleteActivityConfig(vo));
+}
+
+bool ProfiledDB::isActivityConfigActive(std::string vo)
+{
+	PROFILE_PREFIXED("DB::", db->isActivityConfigActive(vo));
+}
+
+std::map< std::string, double > ProfiledDB::getActivityConfig(std::string vo)
+{
+	PROFILE_PREFIXED("DB::", db->getActivityConfig(vo));
+}
 
 bool ProfiledDB::checkIfSeIsMemberOfAnotherGroup( const std::string & member)
 {

@@ -37,6 +37,7 @@
 #include "SePairCfg.h"
 #include "GrPairCfg.h"
 #include "ShareOnlyCfg.h"
+#include "ActivityCfg.h"
 
 using namespace fts3::ws;
 
@@ -86,6 +87,11 @@ void ConfigurationHandler::parse(string configuration)
                 new ShareOnlyCfg(dn, parser)
             );
             break;
+        case CfgParser::ACTIVITY_SHARE_CFG:
+            cfg.reset(
+                new ActivityCfg(dn, parser)
+            );
+        	break;
         case CfgParser::NOT_A_CFG:
         default:
             throw Err_Custom("Wrong configuration format!");
@@ -177,7 +183,6 @@ vector<string> ConfigurationHandler::get()
 
 string ConfigurationHandler::get(string name)
 {
-
     FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is querying configuration" << commit;
 
     if (db->isShareOnly(name))
@@ -190,7 +195,6 @@ string ConfigurationHandler::get(string name)
         }
     else
         {
-
             if (db->checkGroupExists(name))
                 {
                     cfg.reset(
@@ -284,7 +288,6 @@ string ConfigurationHandler::getPair(string src, string dest)
 
 string ConfigurationHandler::getPair(string symbolic)
 {
-
     scoped_ptr< pair<string, string> > p (
         db->getSourceAndDestination(symbolic)
     );
@@ -293,6 +296,12 @@ string ConfigurationHandler::getPair(string symbolic)
         return getPair(p->first, p->second);
     else
         throw Err_Custom("The symbolic name does not exist!");
+}
+
+string ConfigurationHandler::getVo(string vo)
+{
+	cfg.reset(new ActivityCfg(dn, vo));
+	return cfg->json();
 }
 
 void ConfigurationHandler::del()

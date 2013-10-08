@@ -134,6 +134,11 @@ public:
     string getPair(string symbolic);
 
     /**
+     *
+     */
+    string getVo(string vo);
+
+    /**
      * Deletes the configuration specified by the argument
      * 	Only share and protocol specific configurations will be deleted.
      *

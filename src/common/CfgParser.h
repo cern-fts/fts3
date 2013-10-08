@@ -70,7 +70,8 @@ public:
         STANDALONE_GR_CFG,
         SE_PAIR_CFG,
         GR_PAIR_CFG,
-        SHARE_ONLY_CFG
+        SHARE_ONLY_CFG,
+        ACTIVITY_SHARE_CFG
     };
 
     /**
@@ -156,6 +157,8 @@ private:
     static const map<string, set <string> > grPairCfgTokens;
     /// the tokens used  in a share-only configuration
     static const map<string, set <string> > shareOnlyCfgTokens;
+    /// the tokens used  in a share-only configuration
+    static const map<string, set <string> > activityShareCfgTokens;
     /// all the allowed tokens
     static const set<string> allTokens;
 
@@ -169,6 +172,8 @@ private:
     static const map< string, set <string> > initGrPairCfgTokens();
     /// initializes allowed JSON members for share-only configuration
     static const map<string, set <string> > initShareOnlyCfgTokens();
+    /// initializes allowed JSON members for activity share configuration
+    static const map<string, set <string> > initActivityShareCfgTokens();
 };
 
 template <typename T>
@@ -301,6 +306,80 @@ inline map <string, int> CfgParser::get< map<string, int> >(string path)
                         {
                             // get the integer value
                             int value = kv.second.get_value<int>();
+                            // make sure it's not negative
+                            if (value < 0) throw Err_Custom("The value of " + kv.first + " cannot be negative!");
+                            // set the value
+                            ret[kv.first] = value;
+                        }
+
+                }
+            catch(ptree_bad_data& ex)
+                {
+                    throw Err_Custom("Wrong value type of " + kv.first);
+                }
+        }
+
+    return ret;
+}
+
+template <>
+inline map <string, double> CfgParser::get< map<string, double> >(string path)
+{
+
+    map<string, double> ret;
+
+    optional<ptree&> value = pt.get_child_optional(path);
+    if (!value.is_initialized()) throw Err_Custom("The " + path + " has to be specified!");
+    ptree& array = value.get();
+
+    // check if the node has a value,
+    // accordingly to boost it should be empty if array syntax was used in JSON
+    string wrong = array.get_value<string>();
+    if (!wrong.empty())
+        {
+            throw Err_Custom("Wrong value: '" + wrong + "'");
+        }
+
+    ptree::iterator it;
+    for (it = array.begin(); it != array.end(); ++it)
+        {
+            pair<string, ptree> v = *it;
+
+            // check if the node has a name,
+            // accordingly to boost it should be empty if object weren't
+            // members of the array (our case)
+            if (!v.first.empty())
+                {
+                    throw Err_Custom("An array was expected, instead an object was found (at '" + path + "', name: '" + v.first + "')");
+                }
+
+            // check if there is a value,
+            // the value should be empty because only a 'key:value' object should be specified
+            if (!v.second.get_value<string>().empty())
+                {
+                    throw Err_Custom("'{key:value}' object was expected, not just the value");
+                }
+
+            // there should be only one child the 'key:value' object
+            if (v.second.size() != 1)
+                {
+                    throw Err_Custom("In array '" + path + "' only ('{key:value}' objects were expected)");
+                }
+
+            pair<string, ptree> kv = v.second.front();
+            try
+                {
+                    // get the string value
+                    string str_value = kv.second.get_value<string>();
+                    // check if it's auto-value
+                    if (str_value == auto_value)
+                        {
+                            ret[kv.first] = -1;
+                        }
+                    else
+                        {
+                            // get the integer value
+                            double value = kv.second.get_value<double>();
                             // make sure it's not negative
                             if (value < 0) throw Err_Custom("The value of " + kv.first + " cannot be negative!");
                             // set the value

@@ -4087,6 +4087,108 @@ std::vector<ShareConfig*> MySqlAPI::getShareConfig(std::string source, std::stri
 }
 
 
+void MySqlAPI::addActivityConfig(std::string vo, std::string shares, bool active)
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            sql.begin();
+
+            const string act = active ? "on" : "off";
+
+            sql << "INSERT INTO t_activity_share_config (vo, activity_share, active) "
+                "                    VALUES (:vo, :share, :active)",
+                soci::use(vo),
+                soci::use(shares),
+                soci::use(act)
+            ;
+
+            sql.commit();
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+}
+
+void MySqlAPI::updateActivityConfig(std::string vo, std::string shares, bool active)
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            sql.begin();
+
+            const string act = active ? "on" : "off";
+
+            sql <<
+            	" UPDATE t_activity_share_config "
+            	" SET activity_share = :share, active = :active "
+                " WHERE vo = :vo",
+                soci::use(shares),
+                soci::use(act),
+                soci::use(vo)
+            ;
+
+            sql.commit();
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+}
+
+void MySqlAPI::deleteActivityConfig(std::string vo)
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            sql.begin();
+
+            sql << "DELETE FROM t_activity_share_config WHERE vo = :vo ",
+                soci::use(vo);
+
+            sql.commit();
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+}
+
+bool MySqlAPI::isActivityConfigActive(std::string vo)
+{
+    soci::session sql(*connectionPool);
+
+	std::string active;
+
+    try
+        {
+            sql << "SELECT active FROM t_activity_share_config WHERE vo = :vo ",
+                soci::use(vo),
+                soci::into(active)
+            ;
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+
+    return active == "on";
+}
+
+std::map< std::string, double > MySqlAPI::getActivityConfig(std::string vo)
+{
+	soci::session sql(*connectionPool);
+	return getActivityShareConf(sql, vo);
+
+}
+
 
 void MySqlAPI::submitHost(const std::string & jobId)
 {

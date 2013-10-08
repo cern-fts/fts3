@@ -64,6 +64,7 @@ set(fts_server_gsoap_transfer_sources
 	"${PROJECT_SOURCE_DIR}/src/server/ws/config/SePairCfg.cpp"
 	"${PROJECT_SOURCE_DIR}/src/server/ws/config/GrPairCfg.cpp"
 	"${PROJECT_SOURCE_DIR}/src/server/ws/config/ShareOnlyCfg.cpp"
+	"${PROJECT_SOURCE_DIR}/src/server/ws/config/ActivityCfg.cpp"
 )
 
 add_library(fts_server_gsoap_transfer SHARED ${fts_server_gsoap_transfer_sources})

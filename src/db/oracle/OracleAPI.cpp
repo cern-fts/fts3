@@ -6789,6 +6789,33 @@ std::vector<ShareConfig*> OracleAPI::getShareConfig(std::string source, std::str
     return ret;
 }
 
+void OracleAPI::addActivityConfig(std::string vo, std::string shares, bool active)
+{
+	// TODO
+}
+
+void OracleAPI::updateActivityConfig(std::string vo, std::string shares, bool active)
+{
+	// TODO
+}
+
+void OracleAPI::deleteActivityConfig(std::string vo)
+{
+	// TODO
+}
+
+bool OracleAPI::isActivityConfigActive(std::string vo)
+{
+	// TODO
+	return false;
+}
+
+std::map< std::string, double > OracleAPI::getActivityConfig(std::string vo)
+{
+	// TODO
+	return std::map<std::string, double>();
+}
+
 void OracleAPI::submitHost(const std::string & jobId)
 {
 

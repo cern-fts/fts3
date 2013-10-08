@@ -32,6 +32,7 @@ GetCfgCli::GetCfgCli() : SrcDestCli(true)
     specific.add_options()
     ("name,n", value<string>(), "Restrict to specific symbolic (configuration) name.")
     ("all", "Get all the configurations (standalone and pairs) for the given SE.")
+    ("vo", "Get activity share configuration for the given VO.")
     ;
 }
 
@@ -58,6 +59,11 @@ string GetCfgCli::getName()
 bool GetCfgCli::all()
 {
     return vm.count("all");
+}
+
+bool GetCfgCli::vo()
+{
+    return vm.count("vo");
 }
 
 //optional<GSoapContextAdapter&> GetCfgCli::validate(bool init) {

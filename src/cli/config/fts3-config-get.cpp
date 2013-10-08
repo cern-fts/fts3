@@ -62,6 +62,8 @@ int main(int ac, char* av[])
                     all = "all";
                 }
 
+            if (cli->vo()) all = "vo";
+
             implcfg__getConfigurationResponse resp;
             ctx.getConfiguration(source, destination, all, cli->getName(), resp);
 

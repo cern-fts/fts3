@@ -195,6 +195,12 @@ public:
     ShareConfig* getShareConfig(std::string source, std::string destination, std::string vo);
     std::vector<ShareConfig*> getShareConfig(std::string source, std::string destination);
 
+    virtual void addActivityConfig(std::string vo, std::string shares, bool active);
+    virtual void updateActivityConfig(std::string vo, std::string shares, bool active);
+    virtual void deleteActivityConfig(std::string vo);
+    virtual bool isActivityConfigActive(std::string vo);
+    virtual std::map< std::string, double > getActivityConfig(std::string vo);
+
     bool checkIfSeIsMemberOfAnotherGroup( const std::string & member);
 
     void addFileShareConfig(int file_id, std::string source, std::string destination, std::string vo);

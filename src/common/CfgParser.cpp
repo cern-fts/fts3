@@ -45,6 +45,7 @@ const map<string, set <string> > CfgParser::standaloneGrCfgTokens = CfgParser::i
 const map<string, set <string> > CfgParser::sePairCfgTokens = CfgParser::initSePairCfgTokens();
 const map<string, set <string> > CfgParser::grPairCfgTokens = CfgParser::initGrPairCfgTokens();
 const map<string, set <string> > CfgParser::shareOnlyCfgTokens = CfgParser::initShareOnlyCfgTokens();
+const map<string, set <string> > CfgParser::activityShareCfgTokens = CfgParser::initActivityShareCfgTokens();
 
 const string CfgParser::auto_value = "auto";
 
@@ -63,11 +64,11 @@ const set<string> CfgParser::allTokens =
     ("destination_se")
     ("source_group")
     ("destination_group")
+    ("vo")
     ;
 
 const map< string, set <string> > CfgParser::initStandaloneSeCfgTokens()
 {
-
     set<string> root = list_of
                        ("se")
                        ("active")
@@ -89,7 +90,6 @@ const map< string, set <string> > CfgParser::initStandaloneSeCfgTokens()
 
 const map< string, set <string> > CfgParser::initStandaloneGrCfgTokens()
 {
-
     set<string> root = list_of
                        ("group")
                        ("members")
@@ -112,7 +112,6 @@ const map< string, set <string> > CfgParser::initStandaloneGrCfgTokens()
 
 const map< string, set <string> > CfgParser::initSePairCfgTokens()
 {
-
     set<string> root = list_of
                        ("symbolic_name")
                        ("active")
@@ -129,7 +128,6 @@ const map< string, set <string> > CfgParser::initSePairCfgTokens()
 
 const map< string, set <string> > CfgParser::initGrPairCfgTokens()
 {
-
     set<string> root = list_of
                        ("symbolic_name")
                        ("active")
@@ -146,12 +144,24 @@ const map< string, set <string> > CfgParser::initGrPairCfgTokens()
 
 const map<string, set <string> > CfgParser::initShareOnlyCfgTokens()
 {
-
     set<string> root = list_of
                        ("se")
                        ("active")
                        ("in")
                        ("out")
+                       ;
+
+    return map_list_of
+           (string(), root)
+           ;
+}
+
+const map<string, set <string> > CfgParser::initActivityShareCfgTokens()
+{
+    set<string> root = list_of
+                       ("vo")
+                       ("active")
+                       ("share")
                        ;
 
     return map_list_of
@@ -239,6 +249,12 @@ CfgParser::CfgParser(string configuration)
             type = GR_PAIR_CFG;
             return;
         }
+
+    if (validate(pt, activityShareCfgTokens))
+    	{
+    		type = ACTIVITY_SHARE_CFG;
+    		return;
+    	}
 
     type = NOT_A_CFG;
 }
