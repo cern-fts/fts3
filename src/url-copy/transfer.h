@@ -20,14 +20,14 @@ public:
     uint64_t finishTime;
 
     // File size
-    double fileSize;
+    off_t fileSize;
 
     // Progress makers
     double throughput;
-    double transferredBytes;
+    off_t transferredBytes;
 
     Transfer(): fileId(0), userFileSize(0), startTime(0), finishTime(0),
-            fileSize(0), throughput(0.0), transferredBytes(0.0)
+            fileSize(0), throughput(0.0), transferredBytes(0)
     {
     }
 

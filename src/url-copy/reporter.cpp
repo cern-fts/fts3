@@ -83,7 +83,7 @@ std::string Reporter::ReplaceNonPrintableCharacters(string s)
 void Reporter::sendMessage(double throughput, bool retry,
                            const string& job_id, unsigned file_id,
                            const string& transfer_status, const string& transfer_message,
-                           double timeInSecs, double filesize)
+                           double timeInSecs, off_t filesize)
 {
     boost::recursive_mutex::scoped_lock lock(mutex);
 
@@ -105,7 +105,7 @@ void Reporter::sendMessage(double throughput, bool retry,
 
     msg->process_id = (int) getpid();
     msg->timeInSecs = timeInSecs;
-    msg->filesize = filesize;
+    msg->filesize = (double)filesize;
     msg->nostreams = nostreams;
     msg->timeout = timeout;
     msg->buffersize = buffersize;
@@ -125,7 +125,7 @@ void Reporter::sendMessage(double throughput, bool retry,
 void Reporter::sendTerminal(double throughput, bool retry,
                             const string& job_id, unsigned file_id,
                             const string& transfer_status, const string& transfer_message,
-                            double timeInSecs, double filesize)
+                            double timeInSecs, off_t filesize)
 {
     boost::recursive_mutex::scoped_lock lock(mutex);
     // Did we send it already?
@@ -143,7 +143,7 @@ void Reporter::sendTerminal(double throughput, bool retry,
 }
 
 void Reporter::sendPing(const std::string& job_id, unsigned file_id,
-                        double throughput, double transferred)
+                        double throughput, off_t transferred)
 {
     boost::recursive_mutex::scoped_lock lock(mutex);
 
@@ -153,7 +153,7 @@ void Reporter::sendPing(const std::string& job_id, unsigned file_id,
     msg_updater->process_id = (int) getpid();
     msg_updater->timestamp = milliseconds_since_epoch();
     msg_updater->throughput = throughput;
-    msg_updater->transferred = transferred;
+    msg_updater->transferred = (double)transferred;
     // Try twice
     if (runProducerStall(*msg_updater) != 0)
         runProducerStall(*msg_updater);

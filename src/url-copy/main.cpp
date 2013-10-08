@@ -118,7 +118,7 @@ static void call_perf(gfalt_transfer_status_t h, const char*, const char*, gpoin
                                          << ", elapsed:" << elapsed
                                          << std::endl;
             currentTransfer.throughput       = (double) avg;
-            currentTransfer.transferredBytes = (double) trans;
+            currentTransfer.transferredBytes = trans;
         }
 
 }
@@ -388,7 +388,7 @@ void myterminate()
 }
 
 
-int statWithRetries(gfal_context_t handle, const std::string& category, const std::string& url, double* size, std::string* errMsg)
+int statWithRetries(gfal_context_t handle, const std::string& category, const std::string& url, off_t* size, std::string* errMsg)
 {
     struct stat statBuffer;
     GError* statError = NULL;
@@ -411,7 +411,7 @@ int statWithRetries(gfal_context_t handle, const std::string& category, const st
                 }
             else
                 {
-                    *size = static_cast<double>(statBuffer.st_size);
+                    *size = statBuffer.st_size;
                     return 0;
                 }
             Logger::getInstance().WARNING() << "Stat the destination will be retried" << std::endl;
@@ -918,7 +918,7 @@ int main(int argc, char **argv)
                 msg_ifce::getInstance()->set_total_bytes_transfered(&tr_completed, currentTransfer.transferredBytes);
 
                 logger.INFO() << "Stat the dest surl start" << std::endl;
-                double dest_size;
+                off_t dest_size;
                 errorCode = statWithRetries(handle, "DESTINATION", currentTransfer.destUrl, &dest_size, &errorMessage);
                 if (errorCode != 0)
                     {

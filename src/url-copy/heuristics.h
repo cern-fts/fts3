@@ -11,9 +11,9 @@ bool retryTransfer(int errorNo, const std::string& category);
 /**
  * Return the best number of streams for the given file size
  */
-unsigned adjustStreamsBasedOnSize(double sizeInBytes, unsigned int currentStreams);
+unsigned adjustStreamsBasedOnSize(off_t sizeInBytes, unsigned int currentStreams);
 
 /**
  * Return a reasonable timeout for the given filesize
  */
-unsigned adjustTimeoutBasedOnSize(double sizeInBytes, unsigned int timeout);
+unsigned adjustTimeoutBasedOnSize(off_t sizeInBytes, unsigned int timeout);

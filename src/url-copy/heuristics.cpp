@@ -70,7 +70,7 @@ bool retryTransfer(int errorNo, const std::string& category)
 
 
 
-unsigned adjustStreamsBasedOnSize(double sizeInBytes, unsigned int currentStreams)
+unsigned adjustStreamsBasedOnSize(off_t sizeInBytes, unsigned int currentStreams)
 {
     if (sizeInBytes <= 5242880) //starting with 5MB
         return 1;
@@ -97,7 +97,7 @@ unsigned adjustStreamsBasedOnSize(double sizeInBytes, unsigned int currentStream
 
 
 
-static unsigned adjustTimeout(double sizeInBytes)
+static unsigned adjustTimeout(off_t sizeInBytes)
 {
     if (sizeInBytes <= 10485760) //starting with 10MB
         return 900;
@@ -108,7 +108,7 @@ static unsigned adjustTimeout(double sizeInBytes)
 
 
 
-unsigned adjustTimeoutBasedOnSize(double sizeInBytes,
+unsigned adjustTimeoutBasedOnSize(off_t sizeInBytes,
                                   unsigned timeout)
 {
     static const unsigned long MB = 1 << 20;

@@ -39,17 +39,17 @@ public:
     void sendMessage(double throughput, bool retry,
                      const std::string& job_id, unsigned file_id,
                      const std::string& transfer_status, const std::string& transfer_message,
-                     double timeInSecs,  double fileSize);
+                     double timeInSecs,  off_t fileSize);
 
     // Same as before, but it can be run only once!
     void sendTerminal(double throughput, bool retry,
                       const std::string& job_id, unsigned file_id,
                       const std::string& transfer_status, const std::string& transfer_message,
-                      double timeInSecs,  double fileSize);
+                      double timeInSecs,  off_t fileSize);
 
     // Let the server know that we are alive, and how are we doing
     void sendPing(const std::string& job_id, unsigned file_id,
-                  double throughput, double transferred);
+                  double throughput, off_t transferred);
 
     // Send to the server the log file
     void sendLog(const std::string& job_id, unsigned file_id,
