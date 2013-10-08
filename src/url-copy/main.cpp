@@ -84,7 +84,6 @@ time_t globalTimeout;
 
 Transfer currentTransfer;
 
-extern std::string stackTrace;
 gfal_context_t handle = NULL;
 
 static std::string replaceMetadataString(std::string text)
@@ -250,8 +249,10 @@ void taskStatusUpdater(int time)
 }
 
 
-void log_stack(int sig)
+std::string log_stack(int sig)
 {
+    std::string stackTrace;
+
     if(sig == SIGSEGV || sig == SIGBUS || sig == SIGABRT)
         {
             const int stack_size = 25;
@@ -262,7 +263,7 @@ void log_stack(int sig)
                 {
                     if(symbols && symbols[i])
                         {
-                            stackTrace+=std::string(symbols[i]) + '\n';
+                            stackTrace += std::string(symbols[i]) + '\n';
                         }
                 }
             if(symbols)
@@ -270,6 +271,7 @@ void log_stack(int sig)
                     free(symbols);
                 }
         }
+    return stackTrace;
 }
 
 
@@ -279,7 +281,7 @@ void signalHandler(int signum)
 
     logger.WARNING() << "Received signal " << signum << std::endl;
 
-    log_stack(signum);
+    std::string stackTrace = log_stack(signum);
     if (stackTrace.length() > 0)
         {
             propagated = true;
