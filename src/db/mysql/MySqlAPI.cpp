@@ -5309,7 +5309,7 @@ void MySqlAPI::cancelWaitingFiles(std::set<std::string>& jobs)
             if(!temp.getCleanUpSanityCheck())
                 return;
 
-            sql.begin();
+
 
             soci::rowset<soci::row> rs = (
                                              sql.prepare <<
@@ -5320,6 +5320,7 @@ void MySqlAPI::cancelWaitingFiles(std::set<std::string>& jobs)
                                              "	AND file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED')"
                                          );
 
+            sql.begin();
             soci::rowset<soci::row>::iterator it;
             for (it = rs.begin(); it != rs.end(); ++it)
                 {
@@ -5486,13 +5487,13 @@ void MySqlAPI::checkSanityState()
                     return;
                 }
 
-            sql.begin();
 
             soci::rowset<std::string> rs = (
                                                sql.prepare <<
                                                " select job_id from t_job where job_finished is null "
                                            );
 
+            sql.begin();
             for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
                     sql << "SELECT COUNT(DISTINCT file_index) FROM t_file where job_id=:jobId ", soci::use(*i), soci::into(numberOfFiles);
@@ -5552,7 +5553,7 @@ void MySqlAPI::checkSanityState()
                 }
             sql.commit();
 
-            sql.begin();
+
 
             //now check reverse sanity checks, JOB can't be FINISH,  FINISHEDDIRTY, FAILED is at least one tr is in SUBMITTED, READY, ACTIVE
             //special case for canceled
@@ -5561,6 +5562,7 @@ void MySqlAPI::checkSanityState()
                                                 " select job_id from t_job where job_finished IS NOT NULL "
                                             );
 
+            sql.begin();
             for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
                 {
                     sql << "SELECT COUNT(*) FROM t_file where job_id=:jobId AND file_state in ('ACTIVE','READY','SUBMITTED','STAGING') ", soci::use(*i2), soci::into(numberOfFilesRevert);
@@ -5576,7 +5578,6 @@ void MySqlAPI::checkSanityState()
                     //reset
                     numberOfFilesRevert = 0;
                 }
-
             sql.commit();
 
         }
