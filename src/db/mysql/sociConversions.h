@@ -102,6 +102,12 @@ struct type_conversion<TransferJobs>
         aux_tm = v.get<struct tm>("submit_time");
         job.SUBMIT_TIME = mktime(&aux_tm);
 
+        try {
+            job.REUSE = v.get<std::string>("reuse_job");
+        }
+        catch (...) {
+        }
+
         // No method that uses this type asks for finish_time
         job.FINISH_TIME = 0;
     }

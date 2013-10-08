@@ -357,7 +357,7 @@ CREATE TABLE t_job (
 -- The state the job is currently in
   job_state            VARCHAR(32) NOT NULL,
 --
--- Session reuse for this job. Allowed values are Y, (N), NULL
+-- Session reuse for this job. Allowed values are Y, N, H (multihop) NULL
   reuse_job            VARCHAR(3), 
 --
 -- Canceling flag. Allowed values are Y, (N), NULL

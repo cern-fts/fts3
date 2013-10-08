@@ -402,6 +402,7 @@ protected:
 
                                 // since there will be just one VO pick it (TODO)
                                 std::string vo = jobsReuse2.front()->VO_NAME;
+                                bool multihop = (jobsReuse2.front()->REUSE == "H");
 
                                 for (queueiter = voQueues[vo].begin(); queueiter != voQueues[vo].end(); ++queueiter)
                                     {
@@ -604,7 +605,11 @@ protected:
                                                 params.append(proxy_file);
                                             }
 
-                                        params.append(" -G ");
+                                        if (multihop)
+                                            params.append(" --multi-hop ");
+                                        else
+                                            params.append(" -G ");
+
                                         params.append(" -a ");
                                         params.append(job_id);
                                         params.append(" -C ");
