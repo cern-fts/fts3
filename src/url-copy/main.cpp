@@ -52,7 +52,6 @@ static double source_size = 0.0;
 static double dest_size = 0.0;
 static char hostname[1024] = {0};
 static volatile bool propagated = false;
-static volatile bool canceled = false;
 static volatile bool terminalState = false;
 static std::string globalErrorMessage("");
 static double throughput = 0.0;
@@ -74,6 +73,7 @@ static std::string replaceMetadataString(std::string text)
 
 static void cancelTransfer()
 {
+    static volatile bool canceled = false;
     if (handle && !canceled)   // finish all transfer in a clean way
         {
             canceled = true;
