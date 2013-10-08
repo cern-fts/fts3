@@ -25,6 +25,30 @@ including the queue with submitted transfer-jobs,
 the active, failed and finished transfers, as well
 as some statistics (e.g. success rate)
 
+%package selinux
+Summary:		SELinux support for fts-monitoring
+Group:			Applications/Internet
+Requires:       fts-monitoring
+
+%description selinux
+This package labels port 8449, used by fts-monitoring, as http_port_t,
+so Apache can bind to it.
+It also labels /var/log/fts3/ with httpd_sys_content_t, so the log files
+can be served.
+
+%post selinux
+if [ "$1" -le "1" ] ; then # First install
+semanage port -a -t http_port_t -p tcp 8449
+setsebool -P httpd_can_network_connect=1 
+chcon -R system_u:object_r:httpd_sys_content_t:s0 /var/log/fts3/
+fi
+
+%preun selinux
+if [ "$1" -lt "1" ] ; then # Final removal
+semanage port -d -t http_port_t -p tcp 8449
+setsebool -P httpd_can_network_connect=0
+chcon -R system_u:object_r:var_log_t:s0 /var/log/fts3/
+fi
 
 %prep
 %setup -qc
@@ -48,7 +72,11 @@ install -m 644 httpd.conf.d/ftsmon.conf           %{buildroot}%{_sysconfdir}/htt
 %config(noreplace) %attr(640, root, apache) %{_sysconfdir}/fts3web/fts3web.ini
 %doc LICENSE
 
+%files selinux
+
 %changelog
+ * Tue Oct 08 2013 Alejandro Alvarez <aalvarez@cern.ch> - 3.1.27-1
+  - Added selinux rpm
  * Wed Aug 28 2013 Michal Simon <michal.simon@cern.ch> - 3.1.1-1
   - replacing '--no-preserve=ownership'
   - python macros have been removed
