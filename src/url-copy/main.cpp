@@ -77,10 +77,6 @@ static char hostname[1024] = {0};
 static volatile bool propagated = false;
 static volatile bool canceled = false;
 static volatile bool terminalState = false;
-static std::string nstream_to_string("");
-static std::string tcpbuffer_to_string("");
-static std::string block_to_string("");
-static std::string timeout_to_string("");
 static std::string globalErrorMessage("");
 static double throughput = 0.0;
 static double transferred_bytes = 0;
@@ -624,12 +620,9 @@ int main(int argc, char **argv)
             msg_ifce::getInstance()->set_vo(&tr_completed, opts.vo);
             msg_ifce::getInstance()->set_source_site_name(&tr_completed, opts.sourceSiteName);
             msg_ifce::getInstance()->set_dest_site_name(&tr_completed, opts.destSiteName);
-            nstream_to_string = to_string<unsigned int>(opts.nStreams, std::dec);
-            msg_ifce::getInstance()->set_number_of_streams(&tr_completed, nstream_to_string.c_str());
-            tcpbuffer_to_string = to_string<unsigned int>(opts.tcpBuffersize, std::dec);
-            msg_ifce::getInstance()->set_tcp_buffer_size(&tr_completed, tcpbuffer_to_string.c_str());
-            block_to_string = to_string<unsigned int>(opts.blockSize, std::dec);
-            msg_ifce::getInstance()->set_block_size(&tr_completed, block_to_string.c_str());
+            msg_ifce::getInstance()->set_number_of_streams(&tr_completed, opts.nStreams);
+            msg_ifce::getInstance()->set_tcp_buffer_size(&tr_completed, opts.tcpBuffersize);
+            msg_ifce::getInstance()->set_block_size(&tr_completed, opts.blockSize);
             msg_ifce::getInstance()->set_srm_space_token_dest(&tr_completed, opts.destTokenDescription);
             msg_ifce::getInstance()->set_srm_space_token_source(&tr_completed, opts.sourceTokenDescription);
 
@@ -859,8 +852,7 @@ int main(int argc, char **argv)
                 if(!opts.manualConfig || opts.autoTunned || opts.timeout==0)
                     opts.timeout = experimentalTimeout;
                 gfalt_set_timeout(params, opts.timeout, NULL);
-                timeout_to_string = to_string<unsigned int>(opts.timeout, std::dec);
-                msg_ifce::getInstance()->set_transfer_timeout(&tr_completed, timeout_to_string.c_str());
+                msg_ifce::getInstance()->set_transfer_timeout(&tr_completed, opts.timeout);
                 logger.INFO() << "Timeout:" << opts.timeout << std::endl;
                 globalTimeout = experimentalTimeout + 500;
                 logger.INFO() << "Resetting global timeout thread to " << globalTimeout << " seconds" << std::endl;
@@ -869,8 +861,7 @@ int main(int argc, char **argv)
                 if(!opts.manualConfig || opts.autoTunned || opts.nStreams==0)
                     opts.nStreams = experimentalNstreams;
                 gfalt_set_nbstreams(params, opts.nStreams, NULL);
-                nstream_to_string = to_string<unsigned int>(opts.nStreams, std::dec);
-                msg_ifce::getInstance()->set_number_of_streams(&tr_completed, nstream_to_string.c_str());
+                msg_ifce::getInstance()->set_number_of_streams(&tr_completed, opts.nStreams);
                 logger.INFO() << "nbstreams:" << opts.nStreams << std::endl;
 
                 //update protocol stuff
