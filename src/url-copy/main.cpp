@@ -48,14 +48,11 @@ static std::string errorPhase("");
 static std::string reasonClass("");
 static std::string errorMessage("");
 static std::string readFile("");
-static double source_size = 0.0;
-static double dest_size = 0.0;
 static char hostname[1024] = {0};
 static volatile bool propagated = false;
 static volatile bool terminalState = false;
 static std::string globalErrorMessage("");
-static double throughput = 0.0;
-static double transferred_bytes = 0;
+
 time_t globalTimeout;
 
 Transfer currentTransfer;
@@ -120,8 +117,8 @@ static void call_perf(gfalt_transfer_status_t h, const char*, const char*, gpoin
                                          << ", inst KB/sec:" << inst
                                          << ", elapsed:" << elapsed
                                          << std::endl;
-            throughput        = (double) avg;
-            transferred_bytes = (double) trans;
+            currentTransfer.throughput       = (double) avg;
+            currentTransfer.transferredBytes = (double) trans;
         }
 
 }
@@ -166,10 +163,11 @@ void abnormalTermination(const std::string& classification, const std::string&, 
     reporter.buffersize = UrlCopyOpts::getInstance().tcpBuffersize;
 
 
-    reporter.sendTerminal(throughput, retry, currentTransfer.jobId, currentTransfer.fileId,
+    reporter.sendTerminal(currentTransfer.throughput, retry,
+                          currentTransfer.jobId, currentTransfer.fileId,
                           classification, errorMessage,
                           currentTransfer.getTransferDurationInSeconds(),
-                          source_size);
+                          currentTransfer.fileSize);
 
     std::string moveFile = fileManagement.archive();
 
@@ -218,9 +216,11 @@ void taskStatusUpdater(int time)
 {
     while (time)
         {
-            Logger::getInstance().INFO() << "Sending back to the server url-copy is still alive : " <<  throughput << "  " <<  transferred_bytes
+            Logger::getInstance().INFO() << "Sending back to the server url-copy is still alive : "
+                                     <<  currentTransfer.throughput << "  " <<  currentTransfer.transferredBytes
                                      << std::endl;
-            reporter.sendPing(currentTransfer.jobId, currentTransfer.fileId, throughput, transferred_bytes);
+            reporter.sendPing(currentTransfer.jobId, currentTransfer.fileId,
+                              currentTransfer.throughput, currentTransfer.transferredBytes);
             boost::this_thread::sleep(boost::posix_time::seconds(time));
         }
 }
@@ -542,7 +542,7 @@ int main(int argc, char **argv)
             errorPhase = std::string("");
             retry = true;
             errorMessage = std::string("");
-            throughput = 0.0;
+            currentTransfer.throughput = 0.0;
 
             if (opts.areTransfersOnFile())
                 {
@@ -649,7 +649,10 @@ int main(int argc, char **argv)
                     {
                         logger.INFO() << "Set the transfer to ACTIVE, report back to the server" << std::endl;
                         reporter.setMultipleTransfers(true);
-                        reporter.sendMessage(throughput, false, opts.jobId, currentTransfer.fileId, "ACTIVE", "", 0, source_size);
+                        reporter.sendMessage(currentTransfer.throughput, false,
+                                             opts.jobId, currentTransfer.fileId,
+                                             "ACTIVE", "", 0,
+                                             currentTransfer.fileSize);
                     }
 
                 if (access(opts.proxy.c_str(), F_OK) != 0)
@@ -781,10 +784,9 @@ int main(int argc, char **argv)
                                 else
                                     {
                                         logger.INFO() << "Source file size: " << statbufsrc.st_size << std::endl;
-                                        if (statbufsrc.st_size > 0)
-                                            source_size = (double) statbufsrc.st_size;
+                                        currentTransfer.fileSize = (double) statbufsrc.st_size;
                                         //set the value of file size to the message
-                                        msg_ifce::getInstance()->set_file_size(&tr_completed, source_size);
+                                        msg_ifce::getInstance()->set_file_size(&tr_completed, currentTransfer.fileSize);
                                         break;
                                     }
                             }
@@ -844,7 +846,10 @@ int main(int argc, char **argv)
                 reporter.timeout = opts.timeout;
                 reporter.nostreams = opts.nStreams;
                 reporter.buffersize = opts.tcpBuffersize;
-                reporter.sendMessage(throughput, false, opts.jobId, currentTransfer.fileId, "UPDATE", "", 0, source_size);
+                reporter.sendMessage(currentTransfer.throughput, false,
+                                     opts.jobId, currentTransfer.fileId,
+                                     "UPDATE", "",
+                                     0, currentTransfer.fileSize);
 
                 gfalt_set_tcp_buffer_size(params, opts.tcpBuffersize, NULL);
                 gfalt_set_monitor_callback(params, &call_perf, NULL);
@@ -904,10 +909,11 @@ int main(int argc, char **argv)
                     }
 
 
-                transferred_bytes = (double) source_size;
-                msg_ifce::getInstance()->set_total_bytes_transfered(&tr_completed, transferred_bytes);
+                currentTransfer.transferredBytes = currentTransfer.fileSize;
+                msg_ifce::getInstance()->set_total_bytes_transfered(&tr_completed, currentTransfer.transferredBytes);
 
                 logger.INFO() << "Stat the dest surl start" << std::endl;
+                double dest_size;
                 for (int destStatRetry = 0; destStatRetry < 4; destStatRetry++)
                     {
                         errorMessage = ""; //reset
@@ -974,7 +980,7 @@ int main(int argc, char **argv)
                     }
 
                 //check source and dest file sizes
-                if (source_size == dest_size)
+                if (currentTransfer.fileSize == dest_size)
                     {
                         logger.INFO() << "Source and destination file size matching" << std::endl;
                     }
@@ -1004,10 +1010,11 @@ stop:
                     if (!terminalState)
                         {
                             logger.INFO() << "Report FAILED back to the server" << std::endl;
-                            reporter.sendTerminal(throughput, retry, opts.jobId, currentTransfer.fileId,
+                            reporter.sendTerminal(currentTransfer.throughput, retry,
+                                                  opts.jobId, currentTransfer.fileId,
                                                   "FAILED", errorMessage,
                                                   currentTransfer.getTransferDurationInSeconds(),
-                                                  source_size);
+                                                  currentTransfer.fileSize);
                         }
                 }
             else
@@ -1017,10 +1024,11 @@ stop:
                     reporter.nostreams = opts.nStreams;
                     reporter.buffersize = opts.tcpBuffersize;
                     logger.INFO() << "Report FINISHED back to the server" << std::endl;
-                    reporter.sendTerminal(throughput, false, opts.jobId, currentTransfer.fileId,
+                    reporter.sendTerminal(currentTransfer.throughput, false,
+                                          opts.jobId, currentTransfer.fileId,
                                           "FINISHED", errorMessage,
                                           currentTransfer.getTransferDurationInSeconds(),
-                                          source_size);
+                                          currentTransfer.fileSize);
                     /*unpin the file here and report the result in the log file...*/
                     g_clear_error(&tmp_err);
 
