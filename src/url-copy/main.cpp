@@ -425,10 +425,6 @@ int main(int argc, char **argv)
 
     currentTransfer.jobId = opts.jobId;
 
-    struct stat statbufsrc;
-    struct stat statbufdest;
-    struct stat statbufdestOver;
-    int ret = -1;
     UserProxyEnv* cert = NULL;
 
     hostname[1023] = '\0';
@@ -728,6 +724,7 @@ int main(int argc, char **argv)
                 logger.INFO() << "Stat the source surl start" << std::endl;
                 for (int sourceStatRetry = 0; sourceStatRetry < 4; sourceStatRetry++)
                     {
+                        struct stat statbufsrc;
                         errorMessage = ""; //reset
                         if (gfal2_stat(handle, (currentTransfer.sourceUrl).c_str(), &statbufsrc, &tmp_err) < 0)
                             {
@@ -802,6 +799,7 @@ int main(int argc, char **argv)
                     }
                 else
                     {
+                        struct stat statbufdestOver;
                         //if overwrite is not enabled, check if  exists and stop the transfer if it does
                         logger.INFO() << "Stat the dest surl to check if file already exists" << std::endl;
                         errorMessage = ""; //reset
@@ -825,7 +823,7 @@ int main(int argc, char **argv)
                             }
                     }
 
-                unsigned int experimentalTimeout = adjustTimeoutBasedOnSize(statbufsrc.st_size, opts.timeout);
+                unsigned int experimentalTimeout = adjustTimeoutBasedOnSize(currentTransfer.fileSize, opts.timeout);
                 if(!opts.manualConfig || opts.autoTunned || opts.timeout==0)
                     opts.timeout = experimentalTimeout;
                 gfalt_set_timeout(params, opts.timeout, NULL);
@@ -834,7 +832,7 @@ int main(int argc, char **argv)
                 globalTimeout = experimentalTimeout + 500;
                 logger.INFO() << "Resetting global timeout thread to " << globalTimeout << " seconds" << std::endl;
 
-                unsigned int experimentalNstreams = adjustStreamsBasedOnSize(statbufsrc.st_size, opts.nStreams);
+                unsigned int experimentalNstreams = adjustStreamsBasedOnSize(currentTransfer.fileSize, opts.nStreams);
                 if(!opts.manualConfig || opts.autoTunned || opts.nStreams==0)
                     opts.nStreams = experimentalNstreams;
                 gfalt_set_nbstreams(params, opts.nStreams, NULL);
@@ -867,7 +865,7 @@ int main(int argc, char **argv)
 
 
                 logger.INFO() << "Transfer Starting" << std::endl;
-                if ((ret = gfalt_copy_file(handle, params, (currentTransfer.sourceUrl).c_str(), (currentTransfer.destUrl).c_str(), &tmp_err)) != 0)
+                if (gfalt_copy_file(handle, params, (currentTransfer.sourceUrl).c_str(), (currentTransfer.destUrl).c_str(), &tmp_err) != 0)
                     {
                         if (tmp_err != NULL && tmp_err->message != NULL)
                             {
@@ -916,6 +914,7 @@ int main(int argc, char **argv)
                 double dest_size;
                 for (int destStatRetry = 0; destStatRetry < 4; destStatRetry++)
                     {
+                        struct stat statbufdest;
                         errorMessage = ""; //reset
                         if (gfal2_stat(handle, (currentTransfer.destUrl).c_str(), &statbufdest, &tmp_err) < 0)
                             {
