@@ -119,12 +119,6 @@ static void cancelTransfer()
         }
 }
 
-static int fexists(const char *filename)
-{
-    struct stat buffer;
-    if (stat(filename, &buffer) == 0) return 0;
-    return -1;
-}
 
 static std::string srmVersion(const std::string & url)
 {
@@ -696,7 +690,7 @@ int main(int argc, char **argv)
                         reporter.sendMessage(throughput, false, opts.jobId, currentTransfer.fileId, "ACTIVE", "", diff, source_size);
                     }
 
-                if (fexists(opts.proxy.c_str()) != 0)
+                if (access(opts.proxy.c_str(), F_OK) != 0)
                     {
                         errorMessage = "Proxy doesn't exist, probably expired and not renewed " + opts.proxy;
                         errorScope = SOURCE;
