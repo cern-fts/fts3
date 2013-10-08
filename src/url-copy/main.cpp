@@ -414,7 +414,7 @@ int statWithRetries(gfal_context_t handle, const std::string& category, const st
                     *size = statBuffer.st_size;
                     return 0;
                 }
-            Logger::getInstance().WARNING() << "Stat the destination will be retried" << std::endl;
+            Logger::getInstance().WARNING() << "Stat the file will be retried" << std::endl;
             sleep(3); //give it some time to breath
         }
 
@@ -497,24 +497,21 @@ int main(int argc, char **argv)
             cert = new UserProxyEnv(opts.proxy);
         }
 
-    std::vector<std::string> urlsFile;
-    std::string line("");
-    readFile = "/var/lib/fts3/" + opts.jobId;
-    if (opts.areTransfersOnFile())
-        {
-            std::ifstream infile(readFile.c_str(), std::ios_base::in);
-            while (getline(infile, line, '\n'))
-                {
-                    urlsFile.push_back(line);
-                }
-            infile.close();
-            if(readFile.length() > 0)
-                unlink(readFile.c_str());
-        }
+    // Populate the transfer list
+    std::vector<Transfer> transferList;
+
+    if (opts.areTransfersOnFile()) {
+        readFile = "/var/lib/fts3/" + opts.jobId;
+        Transfer::initListFromFile(readFile, &transferList);
+    }
+    else {
+        transferList.push_back(Transfer::createFromOptions(opts));
+    }
+
 
     //cancelation point
-    long unsigned int reuseOrNot = (urlsFile.empty() == true) ? 1 : urlsFile.size();
-    globalTimeout = reuseOrNot * 6000;
+    long unsigned int numberOfFiles = transferList.size();
+    globalTimeout = numberOfFiles * 6000;
 
     try
         {
@@ -531,7 +528,7 @@ int main(int argc, char **argv)
             throw;
         }
 
-    if (opts.areTransfersOnFile() && urlsFile.empty() == true)
+    if (opts.areTransfersOnFile() && transferList.empty() == true)
         {
             errorMessage = "Transfer " + currentTransfer.jobId + " contains no urls with session reuse/multihop enabled";
 
@@ -565,7 +562,7 @@ int main(int argc, char **argv)
         }
 
 
-    for (register unsigned int ii = 0; ii < reuseOrNot; ii++)
+    for (register unsigned int ii = 0; ii < numberOfFiles; ii++)
         {
             errorScope = std::string("");
             reasonClass = std::string("");
@@ -574,32 +571,7 @@ int main(int argc, char **argv)
             errorMessage = std::string("");
             currentTransfer.throughput = 0.0;
 
-            if (opts.areTransfersOnFile())
-                {
-                    std::string strArray[7];
-                    std::string mid_str(urlsFile[ii]);
-                    typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
-                    tokenizer tokens(mid_str, boost::char_separator<char> (" "));
-                    std::copy(tokens.begin(), tokens.end(), strArray);
-
-                    currentTransfer.fileId = boost::lexical_cast<unsigned>(strArray[0]);
-                    currentTransfer.sourceUrl = strArray[1];
-                    currentTransfer.destUrl   = strArray[2];
-                    currentTransfer.setChecksum(strArray[3]);
-                    currentTransfer.userFileSize = boost::lexical_cast<double>(opts.userFileSize);
-                    currentTransfer.fileMetadata = strArray[5];
-                    currentTransfer.tokenBringOnline = strArray[6];
-                }
-            else
-                {
-                    currentTransfer.fileId = opts.fileId;
-                    currentTransfer.sourceUrl = opts.sourceUrl;
-                    currentTransfer.destUrl   = opts.destUrl;
-                    currentTransfer.setChecksum(opts.checksumValue);
-                    currentTransfer.userFileSize = opts.userFileSize;
-                    currentTransfer.fileMetadata = opts.fileMetadata;
-                    currentTransfer.tokenBringOnline = opts.tokenBringOnline;
-                }
+            currentTransfer = transferList[ii];
 
             fileManagement.setSourceUrl(currentTransfer.sourceUrl);
             fileManagement.setDestUrl(currentTransfer.destUrl);
