@@ -388,6 +388,40 @@ void myterminate()
 }
 
 
+int statWithRetries(gfal_context_t handle, const std::string& category, const std::string& url, double* size, std::string* errMsg)
+{
+    struct stat statBuffer;
+    GError* statError = NULL;
+    bool canBeRetried = false;
+
+    int errorCode = 0;
+
+    errMsg->clear();
+    for (int attempt = 0; attempt < 4; attempt++)
+        {
+            if (gfal2_stat(handle, url.c_str(), &statBuffer, &statError) < 0)
+                {
+                    errorCode = statError->code;
+                    errMsg->assign(statError->message);
+                    g_clear_error(&statError);
+
+                    canBeRetried = retryTransfer(errorCode, category);
+                    if (!canBeRetried)
+                        return errorCode;
+                }
+            else
+                {
+                    *size = static_cast<double>(statBuffer.st_size);
+                    return 0;
+                }
+            Logger::getInstance().WARNING() << "Stat the destination will be retried" << std::endl;
+            sleep(3); //give it some time to breath
+        }
+
+    Logger::getInstance().ERROR() << "No more retries for stat the file" << std::endl;
+    return errorCode;
+}
+
 
 __attribute__((constructor)) void begin(void)
 {
@@ -721,75 +755,48 @@ int main(int argc, char **argv)
                             }
                     }
 
+                /* Stat source file */
                 logger.INFO() << "Stat the source surl start" << std::endl;
-                for (int sourceStatRetry = 0; sourceStatRetry < 4; sourceStatRetry++)
+                int errorCode = statWithRetries(handle, "SOURCE", currentTransfer.sourceUrl, &currentTransfer.fileSize, &errorMessage);
+                if (errorCode != 0)
                     {
-                        struct stat statbufsrc;
-                        errorMessage = ""; //reset
-                        if (gfal2_stat(handle, (currentTransfer.sourceUrl).c_str(), &statbufsrc, &tmp_err) < 0)
-                            {
-                                std::string tempError(tmp_err->message);
-                                const int errCode = tmp_err->code;
-                                logger.ERROR() << "Failed to get source file size, errno:"
-                                               << errCode << ", " << tempError
-                                               << std::endl;
-                                errorMessage = "Failed to get source file size: " + tempError;
-                                errorScope = SOURCE;
-                                reasonClass = mapErrnoToString(errCode);
-                                errorPhase = TRANSFER_PREPARATION;
-                                retry = retryTransfer(tmp_err->code, "SOURCE" );
-                                if (sourceStatRetry == 3 || retry == false)
-                                    {
-                                        logger.INFO() << "No more retries for stat the source" << std::endl;
-                                        g_clear_error(&tmp_err);
-                                        goto stop;
-                                    }
-                                g_clear_error(&tmp_err);
-                            }
-                        else
-                            {
-                                if (statbufsrc.st_size <= 0)
-                                    {
-                                        errorMessage = "Source file size is 0";
-                                        logger.ERROR() << errorMessage << std::endl;
-                                        errorScope = SOURCE;
-                                        reasonClass = mapErrnoToString(gfal_posix_code_error());
-                                        errorPhase = TRANSFER_PREPARATION;
-                                        if (sourceStatRetry == 3)
-                                            {
-                                                logger.INFO() << "No more retries for stat the source" << std::endl;
-                                                retry = true;
-                                                goto stop;
-                                            }
-                                    }
-                                else if (currentTransfer.userFileSize != 0 && currentTransfer.userFileSize != statbufsrc.st_size)
-                                    {
-                                        std::stringstream error_;
-                                        error_ << "User specified source file size is " << currentTransfer.userFileSize << " but stat returned " << statbufsrc.st_size;
-                                        errorMessage = error_.str();
-                                        logger.ERROR() << errorMessage << std::endl;
-                                        errorScope = SOURCE;
-                                        reasonClass = mapErrnoToString(gfal_posix_code_error());
-                                        errorPhase = TRANSFER_PREPARATION;
-                                        if (sourceStatRetry == 3)
-                                            {
-                                                logger.INFO() << "No more retries for stat the source" << std::endl;
-                                                retry = true;
-                                                goto stop;
-                                            }
-                                    }
-                                else
-                                    {
-                                        logger.INFO() << "Source file size: " << statbufsrc.st_size << std::endl;
-                                        currentTransfer.fileSize = (double) statbufsrc.st_size;
-                                        //set the value of file size to the message
-                                        msg_ifce::getInstance()->set_file_size(&tr_completed, currentTransfer.fileSize);
-                                        break;
-                                    }
-                            }
-                        logger.INFO() <<"Stat the source file will be retried" << std::endl;
-                        sleep(3); //give it some time to breath
+                        logger.ERROR() << "Failed to get source file size, errno:"
+                                   << errorCode << ", " << errorMessage << std::endl;
+
+                        errorMessage = "Failed to get source file size: " + errorMessage;
+                        errorScope = SOURCE;
+                        reasonClass = mapErrnoToString(errorCode);
+                        errorPhase = TRANSFER_PREPARATION;
+                        retry = retryTransfer(errorCode, "SOURCE");
+                        goto stop;
                     }
+
+                if (currentTransfer.fileSize == 0)
+                    {
+                          errorMessage = "Source file size is 0";
+                          logger.ERROR() << errorMessage << std::endl;
+                          errorScope = SOURCE;
+                          reasonClass = mapErrnoToString(gfal_posix_code_error());
+                          errorPhase = TRANSFER_PREPARATION;
+                          retry = true;
+                          goto stop;
+                    }
+
+                if (currentTransfer.userFileSize != 0 && currentTransfer.userFileSize != currentTransfer.fileSize)
+                    {
+                        std::stringstream error_;
+                        error_ << "User specified source file size is " << currentTransfer.userFileSize << " but stat returned " << currentTransfer.fileSize;
+                        errorMessage = error_.str();
+                        logger.ERROR() << errorMessage << std::endl;
+                        errorScope = SOURCE;
+                        reasonClass = mapErrnoToString(gfal_posix_code_error());
+                        errorPhase = TRANSFER_PREPARATION;
+                        retry = true;
+                        goto stop;
+                    }
+
+                logger.INFO() << "Source file size: " << currentTransfer.fileSize << std::endl;
+                msg_ifce::getInstance()->set_file_size(&tr_completed, currentTransfer.fileSize);
 
                 //overwrite dest file if exists
                 if (opts.overwrite)
@@ -912,71 +919,44 @@ int main(int argc, char **argv)
 
                 logger.INFO() << "Stat the dest surl start" << std::endl;
                 double dest_size;
-                for (int destStatRetry = 0; destStatRetry < 4; destStatRetry++)
+                errorCode = statWithRetries(handle, "DESTINATION", currentTransfer.destUrl, &dest_size, &errorMessage);
+                if (errorCode != 0)
                     {
-                        struct stat statbufdest;
-                        errorMessage = ""; //reset
-                        if (gfal2_stat(handle, (currentTransfer.destUrl).c_str(), &statbufdest, &tmp_err) < 0)
-                            {
-                                std::string tempError(tmp_err->message);
-                                logger.ERROR() << "Failed to get dest file size, errno:" << tmp_err->code << ", "
-                                               << tempError
-                                               << std::endl;
-                                errorMessage = "Failed to get dest file size: " + tempError;
-                                errorScope = DESTINATION;
-                                reasonClass = mapErrnoToString(tmp_err->code);
-                                errorPhase = TRANSFER_FINALIZATION;
-                                retry = retryTransfer(tmp_err->code, "DESTINATION" );
-                                if (destStatRetry == 3 || false == retry)
-                                    {
-                                        logger.INFO() << "No more retry stating the destination" << std::endl;
-                                        g_clear_error(&tmp_err);
-                                        goto stop;
-                                    }
-                                g_clear_error(&tmp_err);
-                            }
-                        else
-                            {
-                                if (statbufdest.st_size <= 0)
-                                    {
-                                        errorMessage = "Destination file size is 0";
-                                        logger.ERROR() << errorMessage << std::endl;
-                                        errorScope = DESTINATION;
-                                        reasonClass = mapErrnoToString(gfal_posix_code_error());
-                                        errorPhase = TRANSFER_FINALIZATION;
-                                        if (destStatRetry == 3)
-                                            {
-                                                logger.INFO() << "No more retry stating the destination" << std::endl;
-                                                retry = true;
-                                                goto stop;
-                                            }
-                                    }
-                                else if (currentTransfer.userFileSize != 0 && currentTransfer.userFileSize != statbufdest.st_size)
-                                    {
-                                        std::stringstream error_;
-                                        error_ << "User specified destination file size is " << currentTransfer.userFileSize << " but stat returned " << statbufdest.st_size;
-                                        errorMessage = error_.str();
-                                        logger.ERROR() << errorMessage << std::endl;
-                                        errorScope = DESTINATION;
-                                        reasonClass = mapErrnoToString(gfal_posix_code_error());
-                                        errorPhase = TRANSFER_FINALIZATION;
-                                        if (destStatRetry == 3)
-                                            {
-                                                retry = true;
-                                                logger.INFO() << "No more retry stating the destination" << std::endl;
-                                                goto stop;
-                                            }
-                                    }
-                                else
-                                    {
-                                        logger.INFO() << "Destination file size: " << statbufdest.st_size << std::endl;
-                                        dest_size = (double) statbufdest.st_size;
-                                        break;
-                                    }
-                            }
-                        logger.WARNING() << "Stat the destination will be retried" << std::endl;
-                        sleep(3); //give it some time to breath
+                        logger.ERROR() << "Failed to get dest file size, errno:" << errorCode << ", "
+                                       << errorMessage << std::endl;
+                        errorMessage = "Failed to get dest file size: " + errorMessage;
+                        errorScope = DESTINATION;
+                        reasonClass = mapErrnoToString(errorCode);
+                        errorPhase = TRANSFER_FINALIZATION;
+                        retry = retryTransfer(errorCode, "DESTINATION");
+                        goto stop;
                     }
+
+                if (dest_size <= 0)
+                {
+                    errorMessage = "Destination file size is 0";
+                    logger.ERROR() << errorMessage << std::endl;
+                    errorScope = DESTINATION;
+                    reasonClass = mapErrnoToString(gfal_posix_code_error());
+                    errorPhase = TRANSFER_FINALIZATION;
+                    retry = true;
+                    goto stop;
+                }
+
+                if (currentTransfer.userFileSize != 0 && currentTransfer.userFileSize != dest_size)
+                    {
+                        std::stringstream error_;
+                        error_ << "User specified destination file size is " << currentTransfer.userFileSize << " but stat returned " << dest_size;
+                        errorMessage = error_.str();
+                        logger.ERROR() << errorMessage << std::endl;
+                        errorScope = DESTINATION;
+                        reasonClass = mapErrnoToString(gfal_posix_code_error());
+                        errorPhase = TRANSFER_FINALIZATION;
+                        retry = true;
+                        goto stop;
+                    }
+
+                logger.INFO() << "Destination file size: " << dest_size << std::endl;
 
                 //check source and dest file sizes
                 if (currentTransfer.fileSize == dest_size)
