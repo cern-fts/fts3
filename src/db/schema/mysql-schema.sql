@@ -682,7 +682,6 @@ CREATE INDEX job_vo_name      ON t_job(vo_name);
 CREATE INDEX job_cred_id      ON t_job(user_dn,cred_id);
 CREATE INDEX job_jobfinished_id     ON t_job(job_finished);
 CREATE INDEX job_priority     ON t_job(priority, submit_time);
-CREATE INDEX job_submit_time     ON t_job(submit_time);
 
 -- t_file indexes:
 -- t_file(file_id) is primary key
