@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdint.h>
 #include <string>
 
 class Transfer {
@@ -14,7 +15,11 @@ public:
     std::string fileMetadata;
     std::string tokenBringOnline;
 
-    Transfer(): fileId(0), userFileSize(0)
+    // Timestamps in milliseconds
+    uint64_t startTime;
+    uint64_t finishTime;
+
+    Transfer(): fileId(0), userFileSize(0), startTime(0), finishTime(0)
     {
     }
 
@@ -29,5 +34,12 @@ public:
             checksumAlgorithm.assign(checksum.substr(0, colon));
             checksumValue.assign(checksum.substr(colon + 1));
         }
+    }
+
+    double getTransferDurationInSeconds()
+    {
+        if (startTime == 0 || finishTime == 0)
+            return 0.0;
+        return (static_cast<double>(finishTime) - static_cast<double>(startTime)) / 1000.0;
     }
 };

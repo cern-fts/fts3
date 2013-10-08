@@ -72,9 +72,6 @@ static std::string errorMessage("");
 static std::string readFile("");
 static double source_size = 0.0;
 static double dest_size = 0.0;
-static double diff = 0.0;
-static double transfer_start = 0.0;
-static double transfer_complete = 0.0;
 static uid_t pw_uid;
 static char hostname[1024] = {0};
 static volatile bool propagated = false;
@@ -93,13 +90,6 @@ Transfer currentTransfer;
 
 extern std::string stackTrace;
 gfal_context_t handle = NULL;
-
-
-//convert milli to secs
-static double transferDuration(double start , double complete)
-{
-    return (start==0 || complete==0)? 0.0: (complete - start) / 1000;
-}
 
 static std::string replaceMetadataString(std::string text)
 {
@@ -190,7 +180,6 @@ void abnormalTermination(const std::string& classification, const std::string&, 
 
     Logger::getInstance().ERROR() << errorMessage << std::endl;
 
-    diff = transferDuration(transfer_start, transfer_complete);
     msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());
     msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, getDefaultReasonClass());
     msg_ifce::getInstance()->set_failure_phase(&tr_completed, getDefaultErrorPhase());
@@ -205,7 +194,10 @@ void abnormalTermination(const std::string& classification, const std::string&, 
     reporter.buffersize = UrlCopyOpts::getInstance().tcpBuffersize;
 
 
-    reporter.sendTerminal(throughput, retry, currentTransfer.jobId, currentTransfer.fileId, classification, errorMessage, diff, source_size);
+    reporter.sendTerminal(throughput, retry, currentTransfer.jobId, currentTransfer.fileId,
+                          classification, errorMessage,
+                          currentTransfer.getTransferDurationInSeconds(),
+                          source_size);
 
     std::string moveFile = fileManagement->archive();
 
@@ -355,12 +347,12 @@ static void event_logger(const gfalt_event_t e, gpointer /*udata*/)
     if (e->stage == GFAL_EVENT_TRANSFER_ENTER)
         {
             msg->set_timestamp_transfer_started(&tr_completed, timestampStr);
-            transfer_start = boost::lexical_cast<double>(e->timestamp);
+            currentTransfer.startTime = e->timestamp;
         }
     else if (e->stage == GFAL_EVENT_TRANSFER_EXIT)
         {
             msg->set_timestamp_transfer_completed(&tr_completed, timestampStr);
-            transfer_complete = boost::lexical_cast<double>(e->timestamp);
+            currentTransfer.finishTime = e->timestamp;
         }
 
     else if (e->stage == GFAL_EVENT_CHECKSUM_ENTER && e->side == GFAL_EVENT_SOURCE)
@@ -687,7 +679,7 @@ int main(int argc, char **argv)
                     {
                         logger.INFO() << "Set the transfer to ACTIVE, report back to the server" << std::endl;
                         reporter.setMultipleTransfers(true);
-                        reporter.sendMessage(throughput, false, opts.jobId, currentTransfer.fileId, "ACTIVE", "", diff, source_size);
+                        reporter.sendMessage(throughput, false, opts.jobId, currentTransfer.fileId, "ACTIVE", "", 0, source_size);
                     }
 
                 if (access(opts.proxy.c_str(), F_OK) != 0)
@@ -886,7 +878,7 @@ int main(int argc, char **argv)
                 reporter.timeout = opts.timeout;
                 reporter.nostreams = opts.nStreams;
                 reporter.buffersize = opts.tcpBuffersize;
-                reporter.sendMessage(throughput, false, opts.jobId, currentTransfer.fileId, "UPDATE", "", diff, source_size);
+                reporter.sendMessage(throughput, false, opts.jobId, currentTransfer.fileId, "UPDATE", "", 0, source_size);
 
                 gfalt_set_tcp_buffer_size(params, opts.tcpBuffersize, NULL);
                 gfalt_set_monitor_callback(params, &call_perf, NULL);
@@ -1034,7 +1026,6 @@ int main(int argc, char **argv)
                 gfalt_set_user_data(params, NULL, NULL);
             }//logStream
 stop:
-            diff = transferDuration(transfer_start, transfer_complete);
             msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
             msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
             msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
@@ -1048,7 +1039,10 @@ stop:
                     if (!terminalState)
                         {
                             logger.INFO() << "Report FAILED back to the server" << std::endl;
-                            reporter.sendTerminal(throughput, retry, opts.jobId, currentTransfer.fileId, "FAILED", errorMessage, diff, source_size);
+                            reporter.sendTerminal(throughput, retry, opts.jobId, currentTransfer.fileId,
+                                                  "FAILED", errorMessage,
+                                                  currentTransfer.getTransferDurationInSeconds(),
+                                                  source_size);
                         }
                 }
             else
@@ -1058,7 +1052,10 @@ stop:
                     reporter.nostreams = opts.nStreams;
                     reporter.buffersize = opts.tcpBuffersize;
                     logger.INFO() << "Report FINISHED back to the server" << std::endl;
-                    reporter.sendTerminal(throughput, false, opts.jobId, currentTransfer.fileId, "FINISHED", errorMessage, diff, source_size);
+                    reporter.sendTerminal(throughput, false, opts.jobId, currentTransfer.fileId,
+                                          "FINISHED", errorMessage,
+                                          currentTransfer.getTransferDurationInSeconds(),
+                                          source_size);
                     /*unpin the file here and report the result in the log file...*/
                     g_clear_error(&tmp_err);
 
