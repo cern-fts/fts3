@@ -599,11 +599,13 @@ void MsgPrinter::addToArray(ptree& root, string name, const ptree& node)
     optional<ptree&> child = root.get_child_optional(name);
     if (child.is_initialized())
         {
-            child.get().push_front(std::make_pair("", node));
+            child.get().push_back(make_pair("", node));
         }
     else
         {
-            root.put_child(name, node);
+            ptree files;
+            files.push_back(std::make_pair("", node));
+            root.put_child(name, files);
         }
 }
 
