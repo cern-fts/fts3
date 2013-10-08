@@ -425,7 +425,6 @@ int main(int argc, char **argv)
 
     currentTransfer.jobId = opts.jobId;
 
-    std::string bytes_to_string("");
     struct stat statbufsrc;
     struct stat statbufdest;
     struct stat statbufdestOver;
@@ -784,10 +783,8 @@ int main(int argc, char **argv)
                                         logger.INFO() << "Source file size: " << statbufsrc.st_size << std::endl;
                                         if (statbufsrc.st_size > 0)
                                             source_size = (double) statbufsrc.st_size;
-                                        //conver longlong to string
-                                        std::string size_to_string = to_string<double > (source_size, std::dec);
                                         //set the value of file size to the message
-                                        msg_ifce::getInstance()->set_file_size(&tr_completed, size_to_string.c_str());
+                                        msg_ifce::getInstance()->set_file_size(&tr_completed, source_size);
                                         break;
                                     }
                             }
@@ -908,8 +905,7 @@ int main(int argc, char **argv)
 
 
                 transferred_bytes = (double) source_size;
-                bytes_to_string = to_string<double>(transferred_bytes, std::dec);
-                msg_ifce::getInstance()->set_total_bytes_transfered(&tr_completed, bytes_to_string.c_str());
+                msg_ifce::getInstance()->set_total_bytes_transfered(&tr_completed, transferred_bytes);
 
                 logger.INFO() << "Stat the dest surl start" << std::endl;
                 for (int destStatRetry = 0; destStatRetry < 4; destStatRetry++)

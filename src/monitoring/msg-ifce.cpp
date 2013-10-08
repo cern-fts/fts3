@@ -560,10 +560,10 @@ void msg_ifce::set_final_transfer_state(transfer_completed* tr_completed, const 
         tr_completed->final_transfer_state = value;
 }
 
-void msg_ifce::set_total_bytes_transfered(transfer_completed* tr_completed, const std::string & value)
+void msg_ifce::set_total_bytes_transfered(transfer_completed* tr_completed, double value)
 {
     if (tr_completed)
-        tr_completed->total_bytes_transfered = value;
+        tr_completed->total_bytes_transfered = to_string<double>(value, std::dec);
 }
 
 void msg_ifce::set_number_of_streams(transfer_completed* tr_completed, unsigned value)
@@ -584,10 +584,10 @@ void msg_ifce::set_block_size(transfer_completed* tr_completed, unsigned value)
         tr_completed->block_size = to_string<unsigned int>(value, std::dec);
 }
 
-void msg_ifce::set_file_size(transfer_completed* tr_completed, const std::string & value)
+void msg_ifce::set_file_size(transfer_completed* tr_completed, double value)
 {
     if (tr_completed)
-        tr_completed->file_size = value;
+        tr_completed->file_size = to_string<double>(value, std::dec);
 }
 
 void msg_ifce::set_time_spent_in_srm_preparation_start(transfer_completed* tr_completed, const std::string & value)

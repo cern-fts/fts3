@@ -119,11 +119,11 @@ public:
     void set_timestamp_checksum_dest_ended(transfer_completed* tr_completed, const std::string & value);
     void set_transfer_timeout(transfer_completed* tr_completed, unsigned value);
     void set_checksum_timeout(transfer_completed* tr_completed, const std::string & value);
-    void set_total_bytes_transfered(transfer_completed* tr_completed, const std::string & value);
+    void set_total_bytes_transfered(transfer_completed* tr_completed, double value);
     void set_number_of_streams(transfer_completed* tr_completed, unsigned value);
     void set_tcp_buffer_size(transfer_completed* tr_completed, unsigned value);
     void set_block_size(transfer_completed* tr_completed, unsigned value);
-    void set_file_size(transfer_completed* tr_completed, const std::string & value);
+    void set_file_size(transfer_completed* tr_completed, double value);
     void set_time_spent_in_srm_preparation_start(transfer_completed* tr_completed, const std::string & value);
     void set_time_spent_in_srm_preparation_end(transfer_completed* tr_completed, const std::string & value);
     void set_time_spent_in_srm_finalization_start(transfer_completed* tr_completed, const std::string & value);
