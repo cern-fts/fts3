@@ -321,15 +321,14 @@ unsigned MySqlMonitoring::numberOfTransfersInState(const std::string& vo,
 
             if (!vo.empty())
                 {
-                    query << "SELECT COUNT(*) FROM t_file, t_job WHERE "
-                          "    t_file.job_id = t_job.job_id AND "
-                          "    t_job.vo_name = :vo ";
+                    query << "SELECT COUNT(*) FROM t_file WHERE "
+                          " vo_name = :vo ";
                     stmt.exchange(soci::use(vo));
                 }
             else
                 {
-                    query << "SELECT COUNT(*) FROM t_file WHERE "
-                          "    (t_file.finish_time > :notBefore OR t_file.finish_time IS NULL) ";
+                    query << " SELECT COUNT(*) FROM t_file WHERE "
+                          "    (job_finished_time > :notBefore OR job_finished IS NULL) ";
                     stmt.exchange(soci::use(notBefore));
                 }
 
@@ -373,9 +372,8 @@ unsigned  MySqlMonitoring::numberOfTransfersInState(const std::string& vo,
             std::ostringstream query;
             soci::statement stmt(sql);
 
-            query << "SELECT COUNT(*) FROM t_file, t_job WHERE "
-                  "    t_file.job_id = t_job.job_id AND "
-                  "    t_job.source_se = :src AND t_job.dest_se = :dest ";
+            query << "SELECT COUNT(*) FROM t_file WHERE "
+                  "   source_se = :src AND dest_se = :dest ";
 
             stmt.exchange(soci::use(notBefore));
             stmt.exchange(soci::use(pair.sourceStorageElement));
@@ -383,14 +381,14 @@ unsigned  MySqlMonitoring::numberOfTransfersInState(const std::string& vo,
 
             if (!vo.empty())
                 {
-                    query << " AND t_job.vo_name = :vo ";
+                    query << " AND vo_name = :vo ";
                     stmt.exchange(soci::use(vo));
                 }
 
             if (!state.empty())
                 {
                     size_t i;
-                    query << "AND t_file.file_state IN (";
+                    query << "AND file_state IN (";
                     for (i = 0; i < state.size() - 1; ++i)
                         {
                             query << ":state" << i << ", ";
