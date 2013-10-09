@@ -57,7 +57,16 @@ class TestMultihop(base.TestBase):
             logging.info("Got job id %s" % jobId)
             state = self.client.poll(jobId)
             logging.info("Job %s finished with %s" % (jobId, state))
+
+            # Job must be failed
             self.assertEqual('FAILED', state)
+
+            # Both hops must be failed
+            files = self.client.getFileInfo(jobId)
+            self.assertEqual('FAILED', files[(src, hop)]['state'])
+            self.assertEqual('FAILED', files[(hop, dst)]['state'])
+            self.assertEqual('Not executed because a previous hop failed',
+                             files[(hop, dst)]['reason'])
 
 
     def test_multihop_final_fail(self):
@@ -79,7 +88,14 @@ class TestMultihop(base.TestBase):
             logging.info("Got job id %s" % jobId)
             state = self.client.poll(jobId)
             logging.info("Job %s finished with %s" % (jobId, state))
+
+            # Job must be failed
             self.assertEqual('FAILED', state)
+
+            # First hop must have passed, second failed
+            files = self.client.getFileInfo(jobId)
+            self.assertEqual('FINISHED', files[(src, hop)]['state'])
+            self.assertEqual('FAILED', files[(hop, dst)]['state'])
 
 
 if __name__ == '__main__':
