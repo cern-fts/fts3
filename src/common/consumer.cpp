@@ -53,13 +53,6 @@ struct sort_functor_status
 };
 
 
-struct sort_functor_monitoring
-{
-    bool operator()(const message_monitoring & a, const message_monitoring & b) const
-    {
-        return a.timestamp < b.timestamp;
-    }
-};
 
 boost::posix_time::time_duration::tick_type milliseconds_since_epoch()
 {
@@ -133,8 +126,6 @@ int runConsumerMonitoring(std::vector<struct message_monitoring>& messages)
                 }
         }
     files.clear();
-    std::sort(messages.begin(), messages.end(), sort_functor_monitoring());
-
     return 0;
 }
 
