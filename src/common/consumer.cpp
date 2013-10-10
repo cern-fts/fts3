@@ -97,7 +97,7 @@ int runConsumerMonitoring(std::vector<struct message_monitoring>& messages)
 {
     string dir = string(MONITORING_DIR);
     vector<string> files = vector<string>();
-    files.reserve(1000);   
+    files.reserve(1000);
 
     if (getDir(dir,files) != 0)
         return errno;
@@ -142,7 +142,7 @@ int runConsumerStatus(std::vector<struct message>& messages)
     for (unsigned int i = 0; i < files.size(); i++)
         {
             FILE *fp = NULL;
-	    struct message msg;
+            struct message msg;
             if ((fp = fopen(files[i].c_str(), "r")) != NULL)
                 {
                     size_t readElements = fread(&msg, sizeof(message), 1, fp);
@@ -179,7 +179,7 @@ int runConsumerStall(std::vector<struct message_updater>& messages)
     for (unsigned int i = 0; i < files.size(); i++)
         {
             FILE *fp = NULL;
-	    struct message_updater msg_local;
+            struct message_updater msg_local;
             if ((fp = fopen(files[i].c_str(), "r")) != NULL)
                 {
                     size_t readElements = fread(&msg_local, sizeof(message_updater), 1, fp);
@@ -218,7 +218,7 @@ int runConsumerLog(std::map<int, struct message_log>& messages)
     for (unsigned int i = 0; i < files.size(); i++)
         {
             FILE *fp = NULL;
-	    struct message_log msg;
+            struct message_log msg;
             if ((fp = fopen(files[i].c_str(), "r")) != NULL)
                 {
                     size_t readElements = fread(&msg, sizeof(message_log), 1, fp);

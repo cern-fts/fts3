@@ -409,7 +409,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                 continue;
                         }
 
-                    		soci::rowset<TransferFiles> rs = (
+                    soci::rowset<TransferFiles> rs = (
                                                          sql.prepare <<
                                                          " SELECT "
                                                          "       f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
@@ -432,7 +432,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                                          soci::use(boost::get<1>(triplet)),
                                                          soci::use(boost::get<2>(triplet)),
                                                          soci::use(tTime),
-                                                         soci::use(hashSegment.start), soci::use(hashSegment.end),                                                         
+                                                         soci::use(hashSegment.start), soci::use(hashSegment.end),
                                                          soci::use(filesNum)
                                                      );
 
@@ -568,11 +568,11 @@ void MySqlAPI::useFileReplica(std::string jobId, int fileId)
                 soci::use(fileId),
                 soci::into(fileIndex, ind)
                 ;
-            
+
             // make sure it's not NULL
             if (ind == soci::i_ok)
                 {
-		sql.begin();
+                    sql.begin();
                     sql <<
                         " UPDATE t_file "
                         " SET file_state = 'SUBMITTED' "
@@ -581,7 +581,7 @@ void MySqlAPI::useFileReplica(std::string jobId, int fileId)
                         "	AND file_state = 'NOT_USED'",
                         soci::use(jobId),
                         soci::use(fileIndex);
-                 sql.commit();			
+                    sql.commit();
                 }
         }
     catch (std::exception& e)
@@ -3022,18 +3022,18 @@ void MySqlAPI::backup()
     soci::session sql(*connectionPool);
 
     try
-        {    
+        {
             struct message_sanity msg;
             msg.cleanUpRecords = true;
             CleanUpSanityChecks temp(this, sql, msg);
             if(!temp.getCleanUpSanityCheck())
                 return;
-					 
-	    sql << "ALTER TABLE `t_file_backup` DISABLE KEYS";
-	    sql << "ALTER TABLE `t_file_backup` DISABLE KEYS";	    
-	    sql << "SET FOREIGN_KEY_CHECKS = 0";
+
+            sql << "ALTER TABLE `t_file_backup` DISABLE KEYS";
+            sql << "ALTER TABLE `t_file_backup` DISABLE KEYS";
+            sql << "SET FOREIGN_KEY_CHECKS = 0";
             sql << "SET UNIQUE_CHECKS = 0";
-            sql << "SET AUTOCOMMIT = 0";	    
+            sql << "SET AUTOCOMMIT = 0";
 
             sql << "INSERT INTO t_job_backup SELECT * FROM t_job "
                 " WHERE job_finished < (UTC_TIMESTAMP() - interval '4' DAY ) AND "
@@ -3049,11 +3049,11 @@ void MySqlAPI::backup()
 
             sql << "DELETE FROM t_job WHERE job_id IN (SELECT job_id FROM t_job_backup)";
             sql.commit();
-	    
-	    sql << "ALTER TABLE `t_file_backup` ENABLE KEYS";
-	    sql << "ALTER TABLE `t_job_backup` ENABLE KEYS";	    
+
+            sql << "ALTER TABLE `t_file_backup` ENABLE KEYS";
+            sql << "ALTER TABLE `t_job_backup` ENABLE KEYS";
             sql << "SET UNIQUE_CHECKS = 1";
-            sql << "SET FOREIGN_KEY_CHECKS = 1";                
+            sql << "SET FOREIGN_KEY_CHECKS = 1";
 
 
         }

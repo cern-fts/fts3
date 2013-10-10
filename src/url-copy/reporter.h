@@ -72,7 +72,7 @@ private:
     struct message_log*     msg_log;
     std::string             hostname;
     boost::recursive_mutex mutex;
-    
+
 
 #ifdef __STDC_NO_ATOMICS__
     std::atomic<bool> isTerminalSent;
