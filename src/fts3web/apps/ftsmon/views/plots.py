@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import colorsys
 import os
 import tempfile
 os.environ['MPLCONFIGDIR'] = tempfile.mkdtemp()
@@ -51,11 +52,44 @@ def error(httpRequest, msg = 'Error on plotting. Probably wrong query format.'):
     return response
 
 
+def _tetrad(h, s, v):
+    t = [((0.25 * x + h), s, v) for x in range(4)]
+    return t
+
+
+def _generateColors(number):
+    if number <= 0:
+        return []
+    
+    # Starting hue
+    hStart = 0.61
+    
+    # Append tetrads displacing the start depending on how many
+    # elements we have
+    dispNumber = number / 4
+    if number % 4 > 0:
+        dispNumber = dispNumber + 1
+    dispRange  = 0.25
+    dispStep   = dispRange / float(dispNumber)
+    HSV_tuples = []
+    for i in range(dispNumber):
+        h = hStart + dispStep * i
+        HSV_tuples.extend(_tetrad(h, 0.75, 0.85))
+    
+    RGB_tuples = map(lambda hsv: colorsys.hsv_to_rgb(*hsv), HSV_tuples)
+    RGB_255_tuples = map(lambda rgb: (rgb[0] * 255, rgb[1] * 255, rgb[2] * 255), RGB_tuples)
+    WEB_tuples = map(lambda rgb: "%02X%02X%02X" % rgb, RGB_255_tuples)
+    
+    print WEB_tuples
+    
+    return WEB_tuples
+
+
 def pie(httpRequest):
-    try:
+    #try:
         labels = []
         values = []
-        colors = ['3366cc', '109618', 'ff9900', '990099', 'dc3912', '0099c6', 'dd4477', '66aa00', 'b82e2e']
+        colors = None
         title  = None
         
         for (arg, argv) in httpRequest.GET.iteritems():
@@ -69,6 +103,18 @@ def pie(httpRequest):
                 cx = strToArray(argv)
                 if len(cx):
                     colors = cx
+                    
+        # Truncate values if there are more
+        if len(labels) < len(values):
+            values = values[:len(labels)]
+            
+        # Extend if there are less
+        if len(labels) > len(values):
+            values.extend([values[-1]] * (len(labels) - len(values)))
+        
+        # Generate color list if not specified
+        if not colors:
+            colors = _generateColors(len(labels))
 
         # Append # if the color is a full RGB                    
         for c in range(len(colors)):
@@ -85,9 +131,12 @@ def pie(httpRequest):
         canvas = FigureCanvas(fig)
         
         ax = fig.add_subplot(1,2,1)
-        (patches, texts, auto) = ax.pie(values, labels = None, colors = colors, autopct='%1.1f%%')
+        (patches, texts, auto) = ax.pie(values, labels=None, colors=colors, autopct='%1.1f%%')
         if title:
             ax.set_title(title)
+            
+        for p in patches:
+            p.set_edgecolor('white')
         
         ax2 = fig.add_subplot(1,2,2)
         fontP = FontProperties()
@@ -99,5 +148,5 @@ def pie(httpRequest):
         fig.savefig(response, format='png', bbox_inches = 'tight', transparent = True)
                 
         return response
-    except Exception, e:
-        return error(httpRequest, str(e))
+    #except Exception, e:
+    #    return error(httpRequest, str(e))
