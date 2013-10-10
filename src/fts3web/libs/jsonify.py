@@ -39,7 +39,7 @@ class ClassEncoder(json.JSONEncoder):
 @decorator
 def jsonify(f, *args, **kwargs):
     d = f(*args, **kwargs)
-    j = json.dumps(d, cls = ClassEncoder, indent = 2, sort_keys = False)
+    j = json.dumps(d, cls = ClassEncoder, indent = 2, sort_keys = True)
     return HttpResponse(j, mimetype='application/json')
 
 
