@@ -13,19 +13,22 @@
 #include <string>
 #include <map>
 
-namespace fts3 {
-namespace ws {
+namespace fts3
+{
+namespace ws
+{
 
 
 
-class ActivityCfg  : public Configuration {
+class ActivityCfg  : public Configuration
+{
 public:
 
-	ActivityCfg(string dn, string name);
+    ActivityCfg(string dn, string name);
 
-	ActivityCfg(string dn, CfgParser& parser);
+    ActivityCfg(string dn, CfgParser& parser);
 
-	virtual ~ActivityCfg();
+    virtual ~ActivityCfg();
 
     /**
      * Creates a string containing the JSON configuration common for all 'standalone' configurations

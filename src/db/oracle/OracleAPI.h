@@ -76,10 +76,10 @@ public:
      * Submit a transfer request to be stored in the database
      **/
     virtual void submitPhysical(const std::string & jobId, std::vector<job_element_tupple> src_dest_pair,
-            const std::string & DN, const std::string & cred,
-            const std::string & voName, const std::string & myProxyServer, const std::string & delegationID,
-            const std::string & sourceSe, const std::string & destinationSe,
-            const JobParameterHandler & params);
+                                const std::string & DN, const std::string & cred,
+                                const std::string & voName, const std::string & myProxyServer, const std::string & delegationID,
+                                const std::string & sourceSe, const std::string & destinationSe,
+                                const JobParameterHandler & params);
 
     virtual void getTransferJobStatus(std::string requestID, bool archive, std::vector<JobStatus*>& jobs);
 

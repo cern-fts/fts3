@@ -170,13 +170,13 @@ protected:
                                                                                 << "\nTransferred: " << (*iter).transferred
                                                                                 << commit;
                                                 ThreadSafeList::get_instance().updateMsg(*iter);
- 						if((*iter).throughput != 0 && (*iter).transferred != 0)
+                                                if((*iter).throughput != 0 && (*iter).transferred != 0)
                                                     {
                                                         DBSingleton::instance().getDBObjectInstance()
                                                         ->updateFileTransferProgress(job, (*iter).file_id,
                                                                                      (*iter).throughput,
                                                                                      (*iter).transferred);
-                                                    }						
+                                                    }
                                             }
                                         else
                                             {

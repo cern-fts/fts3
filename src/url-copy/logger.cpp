@@ -36,7 +36,7 @@ Logger::~Logger()
 
 
 Logger& Logger::getInstance()
-{    
+{
     return Logger::instance;
 }
 

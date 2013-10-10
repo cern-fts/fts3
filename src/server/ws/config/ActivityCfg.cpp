@@ -7,13 +7,15 @@
 
 #include "ActivityCfg.h"
 
-namespace fts3 {
-namespace ws {
+namespace fts3
+{
+namespace ws
+{
 
 
 ActivityCfg::ActivityCfg(string dn, string name) : Configuration(dn), vo(name)
 {
-	init(vo);
+    init(vo);
 }
 
 ActivityCfg::ActivityCfg(string dn, CfgParser& parser) : Configuration(dn)
@@ -46,28 +48,31 @@ string ActivityCfg::json()
 
 void ActivityCfg::save()
 {
-	if (db->getActivityConfig(vo).empty()) {
-		// insert
-		db->addActivityConfig(vo, Configuration::json(shares), active);
+    if (db->getActivityConfig(vo).empty())
+        {
+            // insert
+            db->addActivityConfig(vo, Configuration::json(shares), active);
 
-	} else {
-		// update
-		db->updateActivityConfig(vo, Configuration::json(shares), active);
-	}
+        }
+    else
+        {
+            // update
+            db->updateActivityConfig(vo, Configuration::json(shares), active);
+        }
 }
 
 void ActivityCfg::del()
 {
-	db->deleteActivityConfig(vo);
+    db->deleteActivityConfig(vo);
 }
 
 void ActivityCfg::init(string vo)
 {
-	active = db->isActivityConfigActive(vo);
-	shares = db->getActivityConfig(vo);
+    active = db->isActivityConfigActive(vo);
+    shares = db->getActivityConfig(vo);
 
-	if (shares.empty())
-		throw Err_Custom("There is no activity configuration for: " + vo);
+    if (shares.empty())
+        throw Err_Custom("There is no activity configuration for: " + vo);
 }
 
 } /* namespace ws */

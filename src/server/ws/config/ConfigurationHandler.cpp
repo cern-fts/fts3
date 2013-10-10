@@ -91,7 +91,7 @@ void ConfigurationHandler::parse(string configuration)
             cfg.reset(
                 new ActivityCfg(dn, parser)
             );
-        	break;
+            break;
         case CfgParser::NOT_A_CFG:
         default:
             throw Err_Custom("Wrong configuration format!");
@@ -300,8 +300,8 @@ string ConfigurationHandler::getPair(string symbolic)
 
 string ConfigurationHandler::getVo(string vo)
 {
-	cfg.reset(new ActivityCfg(dn, vo));
-	return cfg->json();
+    cfg.reset(new ActivityCfg(dn, vo));
+    return cfg->json();
 }
 
 void ConfigurationHandler::del()

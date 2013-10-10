@@ -251,10 +251,10 @@ CfgParser::CfgParser(string configuration)
         }
 
     if (validate(pt, activityShareCfgTokens))
-    	{
-    		type = ACTIVITY_SHARE_CFG;
-    		return;
-    	}
+        {
+            type = ACTIVITY_SHARE_CFG;
+            return;
+        }
 
     type = NOT_A_CFG;
 }

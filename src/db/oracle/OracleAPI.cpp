@@ -798,10 +798,10 @@ void OracleAPI::getByJobId(std::map<std::string, std::list<TransferFiles*> >& fi
 
 
 void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_element_tupple> job_elements,
-        const std::string & DN, const std::string & cred,
-        const std::string & voName, const std::string & myProxyServer, const std::string & delegationID,
-        const std::string & sourceSe, const std::string & destinationSe,
-        const JobParameterHandler & params)
+                               const std::string & DN, const std::string & cred,
+                               const std::string & voName, const std::string & myProxyServer, const std::string & delegationID,
+                               const std::string & sourceSe, const std::string & destinationSe,
+                               const JobParameterHandler & params)
 {
     const int         bringOnline      = params.get<int>(JobParameterHandler::BRING_ONLINE);
     const std::string checksumMethod   = params.get(JobParameterHandler::CHECKSUM_METHOD);
@@ -6791,29 +6791,29 @@ std::vector<ShareConfig*> OracleAPI::getShareConfig(std::string source, std::str
 
 void OracleAPI::addActivityConfig(std::string vo, std::string shares, bool active)
 {
-	// TODO
+    // TODO
 }
 
 void OracleAPI::updateActivityConfig(std::string vo, std::string shares, bool active)
 {
-	// TODO
+    // TODO
 }
 
 void OracleAPI::deleteActivityConfig(std::string vo)
 {
-	// TODO
+    // TODO
 }
 
 bool OracleAPI::isActivityConfigActive(std::string vo)
 {
-	// TODO
-	return false;
+    // TODO
+    return false;
 }
 
 std::map< std::string, double > OracleAPI::getActivityConfig(std::string vo)
 {
-	// TODO
-	return std::map<std::string, double>();
+    // TODO
+    return std::map<std::string, double>();
 }
 
 void OracleAPI::submitHost(const std::string & jobId)

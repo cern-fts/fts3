@@ -3,7 +3,8 @@
 #include <stdint.h>
 #include <string>
 
-class Transfer {
+class Transfer
+{
 public:
     unsigned    fileId;
     std::string jobId;
@@ -27,21 +28,23 @@ public:
     off_t transferredBytes;
 
     Transfer(): fileId(0), userFileSize(0), startTime(0), finishTime(0),
-            fileSize(0), throughput(0.0), transferredBytes(0)
+        fileSize(0), throughput(0.0), transferredBytes(0)
     {
     }
 
     void setChecksum(const std::string& checksum)
     {
         size_t colon = checksum.find(':');
-        if (colon == std::string::npos) {
-            checksumAlgorithm.assign(checksum);
-            checksumValue.clear();
-        }
-        else {
-            checksumAlgorithm.assign(checksum.substr(0, colon));
-            checksumValue.assign(checksum.substr(colon + 1));
-        }
+        if (colon == std::string::npos)
+            {
+                checksumAlgorithm.assign(checksum);
+                checksumValue.clear();
+            }
+        else
+            {
+                checksumAlgorithm.assign(checksum.substr(0, colon));
+                checksumValue.assign(checksum.substr(colon + 1));
+            }
     }
 
     double getTransferDurationInSeconds()
@@ -89,15 +92,16 @@ public:
 
     // Initialize a list from a file
     static void initListFromFile(const std::string& jobId, const std::string& path,
-            std::vector<Transfer>* list)
+                                 std::vector<Transfer>* list)
     {
         std::string line;
         std::ifstream infile(path.c_str(), std::ios_base::in);
 
-        while (getline(infile, line, '\n')) {
-            Transfer t = Transfer::createFromString(jobId, line);
-            list->push_back(t);
-        }
+        while (getline(infile, line, '\n'))
+            {
+                Transfer t = Transfer::createFromString(jobId, line);
+                list->push_back(t);
+            }
 
         infile.close();
         unlink(path.c_str());

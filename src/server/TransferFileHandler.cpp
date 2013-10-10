@@ -113,19 +113,19 @@ TransferFiles* TransferFileHandler::get(string vo)
 
 optional< pair<string, string> > TransferFileHandler::getNextPair(string vo)
 {
-	// if there are no pairs for the given VO ...
-	if (voToFileIndexes[vo].empty()) return optional< pair<string, string> >();
+    // if there are no pairs for the given VO ...
+    if (voToFileIndexes[vo].empty()) return optional< pair<string, string> >();
 
-	// if it is the end wrap around
-	if (nextPairForVo[vo] == voToFileIndexes[vo].end()) nextPairForVo[vo] = voToFileIndexes[vo].begin();
+    // if it is the end wrap around
+    if (nextPairForVo[vo] == voToFileIndexes[vo].end()) nextPairForVo[vo] = voToFileIndexes[vo].begin();
 
-	// get the iterator
-	map< pair<string, string>, list<FileIndex> >::iterator ret = nextPairForVo[vo];
+    // get the iterator
+    map< pair<string, string>, list<FileIndex> >::iterator ret = nextPairForVo[vo];
 
-	// set the next pair
-	nextPairForVo[vo]++;
+    // set the next pair
+    nextPairForVo[vo]++;
 
-	return ret->first;
+    return ret->first;
 }
 
 optional<FileIndex> TransferFileHandler::getIndex(string vo)
@@ -147,12 +147,12 @@ optional<FileIndex> TransferFileHandler::getIndex(string vo)
     // if there are no more values assigned to either VO or pair remove it from respective mapping
     if (it->second[*src_dst].empty())
         {
-    		it->second.erase(*src_dst);
+            it->second.erase(*src_dst);
 
-    		if (it->second.empty())
-    			{
-    				voToFileIndexes.erase(it);
-    			}
+            if (it->second.empty())
+                {
+                    voToFileIndexes.erase(it);
+                }
         }
 
     return index;

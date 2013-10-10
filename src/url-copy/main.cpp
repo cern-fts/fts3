@@ -217,8 +217,8 @@ void taskStatusUpdater(int time)
     while (time)
         {
             Logger::getInstance().INFO() << "Sending back to the server url-copy is still alive : "
-                                     <<  currentTransfer.throughput << "  " <<  currentTransfer.transferredBytes
-                                     << std::endl;
+                                         <<  currentTransfer.throughput << "  " <<  currentTransfer.transferredBytes
+                                         << std::endl;
             reporter.sendPing(currentTransfer.jobId, currentTransfer.fileId,
                               currentTransfer.throughput, currentTransfer.transferredBytes);
             boost::this_thread::sleep(boost::posix_time::seconds(time));
@@ -525,13 +525,15 @@ int main(int argc, char **argv)
     // Populate the transfer list
     std::vector<Transfer> transferList;
 
-    if (opts.areTransfersOnFile()) {
-        readFile = "/var/lib/fts3/" + opts.jobId;
-        Transfer::initListFromFile(opts.jobId, readFile, &transferList);
-    }
-    else {
-        transferList.push_back(Transfer::createFromOptions(opts));
-    }
+    if (opts.areTransfersOnFile())
+        {
+            readFile = "/var/lib/fts3/" + opts.jobId;
+            Transfer::initListFromFile(opts.jobId, readFile, &transferList);
+        }
+    else
+        {
+            transferList.push_back(Transfer::createFromOptions(opts));
+        }
 
 
     //cancelation point
@@ -758,7 +760,7 @@ int main(int argc, char **argv)
                 if (errorCode != 0)
                     {
                         logger.ERROR() << "Failed to get source file size, errno:"
-                                   << errorCode << ", " << errorMessage << std::endl;
+                                       << errorCode << ", " << errorMessage << std::endl;
 
                         errorMessage = "Failed to get source file size: " + errorMessage;
                         errorScope = SOURCE;
@@ -770,13 +772,13 @@ int main(int argc, char **argv)
 
                 if (currentTransfer.fileSize == 0)
                     {
-                          errorMessage = "Source file size is 0";
-                          logger.ERROR() << errorMessage << std::endl;
-                          errorScope = SOURCE;
-                          reasonClass = mapErrnoToString(gfal_posix_code_error());
-                          errorPhase = TRANSFER_PREPARATION;
-                          retry = true;
-                          goto stop;
+                        errorMessage = "Source file size is 0";
+                        logger.ERROR() << errorMessage << std::endl;
+                        errorScope = SOURCE;
+                        reasonClass = mapErrnoToString(gfal_posix_code_error());
+                        errorPhase = TRANSFER_PREPARATION;
+                        retry = true;
+                        goto stop;
                     }
 
                 if (currentTransfer.userFileSize != 0 && currentTransfer.userFileSize != currentTransfer.fileSize)
@@ -930,15 +932,15 @@ int main(int argc, char **argv)
                     }
 
                 if (dest_size <= 0)
-                {
-                    errorMessage = "Destination file size is 0";
-                    logger.ERROR() << errorMessage << std::endl;
-                    errorScope = DESTINATION;
-                    reasonClass = mapErrnoToString(gfal_posix_code_error());
-                    errorPhase = TRANSFER_FINALIZATION;
-                    retry = true;
-                    goto stop;
-                }
+                    {
+                        errorMessage = "Destination file size is 0";
+                        logger.ERROR() << errorMessage << std::endl;
+                        errorScope = DESTINATION;
+                        reasonClass = mapErrnoToString(gfal_posix_code_error());
+                        errorPhase = TRANSFER_FINALIZATION;
+                        retry = true;
+                        goto stop;
+                    }
 
                 if (currentTransfer.userFileSize != 0 && currentTransfer.userFileSize != dest_size)
                     {

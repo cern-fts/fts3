@@ -127,16 +127,16 @@ int fts3::implcfg__getConfiguration(soap* soap, string all, string name, string 
                 }
             else if (standalone)
                 {
-            		// the user is querying for activity share configuration
+                    // the user is querying for activity share configuration
                     if (all == "vo")
-                    	{
-                    		response.configuration->cfg.push_back(handler.getVo(source));
-                    	}
+                        {
+                            response.configuration->cfg.push_back(handler.getVo(source));
+                        }
                     // the user is querying for all configuration regarding given SE
                     else if (all == "all")
-						{
-							response.configuration->cfg = handler.getAll(source);
-						}
+                        {
+                            response.configuration->cfg = handler.getAll(source);
+                        }
                     // standard standalone configuration
                     else
                         {

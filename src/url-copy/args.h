@@ -55,7 +55,8 @@ public:
     unsigned    blockSize;
     unsigned    timeout;
 
-    bool areTransfersOnFile() const {
+    bool areTransfersOnFile() const
+    {
         return reuse || multihop;
     }
 

@@ -27,17 +27,17 @@ void ProfiledDB::init(std::string username, std::string password, std::string co
 }
 
 void ProfiledDB::submitPhysical(const std::string & jobId, std::vector<job_element_tupple> src_dest_pair,
-        const std::string & DN, const std::string & cred,
-        const std::string & voName, const std::string & myProxyServer, const std::string & delegationID,
-        const std::string & sourceSe, const std::string & destinationSe,
-        const JobParameterHandler & params)
+                                const std::string & DN, const std::string & cred,
+                                const std::string & voName, const std::string & myProxyServer, const std::string & delegationID,
+                                const std::string & sourceSe, const std::string & destinationSe,
+                                const JobParameterHandler & params)
 {
     PROFILE_PREFIXED("DB::", db->submitPhysical(
-                     jobId, src_dest_pair,
-                     DN, cred,
-                     voName, myProxyServer, delegationID,
-                     sourceSe, destinationSe,
-                     params));
+                         jobId, src_dest_pair,
+                         DN, cred,
+                         voName, myProxyServer, delegationID,
+                         sourceSe, destinationSe,
+                         params));
 }
 
 void ProfiledDB::getTransferJobStatus(std::string requestID, bool archive, std::vector<JobStatus*>& jobs)
@@ -515,27 +515,27 @@ std::vector<ShareConfig*> ProfiledDB::getShareConfig(std::string source, std::st
 
 void ProfiledDB::addActivityConfig(std::string vo, std::string shares, bool active)
 {
-	PROFILE_PREFIXED("DB::", db->addActivityConfig(vo, shares, active));
+    PROFILE_PREFIXED("DB::", db->addActivityConfig(vo, shares, active));
 }
 
 void ProfiledDB::updateActivityConfig(std::string vo, std::string shares, bool active)
 {
-	PROFILE_PREFIXED("DB::", db->updateActivityConfig(vo, shares, active));
+    PROFILE_PREFIXED("DB::", db->updateActivityConfig(vo, shares, active));
 }
 
 void ProfiledDB::deleteActivityConfig(std::string vo)
 {
-	PROFILE_PREFIXED("DB::", db->deleteActivityConfig(vo));
+    PROFILE_PREFIXED("DB::", db->deleteActivityConfig(vo));
 }
 
 bool ProfiledDB::isActivityConfigActive(std::string vo)
 {
-	PROFILE_PREFIXED("DB::", db->isActivityConfigActive(vo));
+    PROFILE_PREFIXED("DB::", db->isActivityConfigActive(vo));
 }
 
 std::map< std::string, double > ProfiledDB::getActivityConfig(std::string vo)
 {
-	PROFILE_PREFIXED("DB::", db->getActivityConfig(vo));
+    PROFILE_PREFIXED("DB::", return db->getActivityConfig(vo));
 }
 
 bool ProfiledDB::checkIfSeIsMemberOfAnotherGroup( const std::string & member)
