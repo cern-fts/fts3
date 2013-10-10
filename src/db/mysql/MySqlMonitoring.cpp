@@ -375,7 +375,6 @@ unsigned  MySqlMonitoring::numberOfTransfersInState(const std::string& vo,
             query << "SELECT COUNT(*) FROM t_file WHERE "
                   "   source_se = :src AND dest_se = :dest ";
 
-            stmt.exchange(soci::use(notBefore));
             stmt.exchange(soci::use(pair.sourceStorageElement));
             stmt.exchange(soci::use(pair.destinationStorageElement));
 
