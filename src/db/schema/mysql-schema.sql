@@ -677,7 +677,7 @@ CREATE TABLE t_optimize_active (
 --
 -- t_job indexes:
 -- t_job(job_id) is primary key
-CREATE INDEX job_job_state    ON t_job(job_state, vo_name, job_finished);
+CREATE INDEX job_job_state    ON t_job(job_state, vo_name, job_finished, submit_time);
 CREATE INDEX job_vo_name      ON t_job(vo_name);
 CREATE INDEX job_cred_id      ON t_job(user_dn,cred_id);
 CREATE INDEX job_jobfinished_id     ON t_job(job_finished);
