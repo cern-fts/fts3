@@ -530,7 +530,7 @@ void ProfiledDB::deleteActivityConfig(std::string vo)
 
 bool ProfiledDB::isActivityConfigActive(std::string vo)
 {
-    PROFILE_PREFIXED("DB::", db->isActivityConfigActive(vo));
+    PROFILE_PREFIXED("DB::", return db->isActivityConfigActive(vo));
 }
 
 std::map< std::string, double > ProfiledDB::getActivityConfig(std::string vo)
