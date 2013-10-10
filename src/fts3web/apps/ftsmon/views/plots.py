@@ -52,10 +52,10 @@ def error(httpRequest, msg = 'Error on plotting. Probably wrong query format.'):
 
 
 def pie(httpRequest):
-    #try:   
+    try:
         labels = []
         values = []
-        colors = ['3366cc', '109618', 'ff9900', '990099', 'dc3912']
+        colors = ['3366cc', '109618', 'ff9900', '990099', 'dc3912', '0099c6', 'dd4477', '66aa00', 'b82e2e']
         title  = None
         
         for (arg, argv) in httpRequest.GET.iteritems():
@@ -99,5 +99,5 @@ def pie(httpRequest):
         fig.savefig(response, format='png', bbox_inches = 'tight', transparent = True)
                 
         return response
-    #except Exception, e:
-    #    return error(httpRequest, str(e))
+    except Exception, e:
+        return error(httpRequest, str(e))
