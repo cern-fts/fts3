@@ -80,13 +80,11 @@ def _generateColors(number):
     RGB_255_tuples = map(lambda rgb: (rgb[0] * 255, rgb[1] * 255, rgb[2] * 255), RGB_tuples)
     WEB_tuples = map(lambda rgb: "%02X%02X%02X" % rgb, RGB_255_tuples)
     
-    print WEB_tuples
-    
     return WEB_tuples
 
 
 def pie(httpRequest):
-    #try:
+    try:
         labels = []
         values = []
         colors = None
@@ -148,5 +146,5 @@ def pie(httpRequest):
         fig.savefig(response, format='png', bbox_inches = 'tight', transparent = True)
                 
         return response
-    #except Exception, e:
-    #    return error(httpRequest, str(e))
+    except Exception, e:
+        return error(httpRequest, str(e))
