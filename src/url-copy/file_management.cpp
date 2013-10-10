@@ -36,7 +36,7 @@ using namespace std;
 
 
 
-FileManagement::FileManagement() : logFileName("/var/log/fts3/"), base_scheme(NULL), base_host(NULL), base_path(NULL), base_port(0)
+FileManagement::FileManagement() : file_id(0), logFileName("/var/log/fts3/"), base_scheme(NULL), base_host(NULL), base_path(NULL), base_port(0)
 {
     try
         {
