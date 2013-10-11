@@ -5630,8 +5630,6 @@ void MySqlAPI::cancelWaitingFiles(std::set<std::string>& jobs)
             if(!temp.getCleanUpSanityCheck())
                 return;
 
-            sql.begin();
-
             soci::rowset<soci::row> rs = (
                                              sql.prepare <<
                                              " SELECT file_id, job_id "
@@ -5642,6 +5640,8 @@ void MySqlAPI::cancelWaitingFiles(std::set<std::string>& jobs)
                                          );
 
             soci::rowset<soci::row>::iterator it;
+	    
+            sql.begin();	    
             for (it = rs.begin(); it != rs.end(); ++it)
                 {
 
@@ -5674,7 +5674,7 @@ void MySqlAPI::revertNotUsedFiles()
 {
 
     soci::session sql(*connectionPool);
-    int countNotUsed = 0;
+    std::string notUsed;
 
     try
         {
@@ -5685,40 +5685,43 @@ void MySqlAPI::revertNotUsedFiles()
                 return;
 
 
-            //no reason to execute if there are no files in NOT_USED state
-            sql << "select count(*) from t_file where file_state = 'NOT_USED' ",
-                soci::into(countNotUsed);
-
-            if(countNotUsed == 0)
-                return;
-
+            soci::rowset<std::string> rs = (
+                                               sql.prepare <<
+                                               "select distinct f.job_id from t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
+                                               " WHERE file_state = 'NOT_USED' and j.job_finished is NULL"
+                                           );
             sql.begin();
 
-            sql <<
-                " UPDATE t_file f1 "
-                " SET f1.file_state = 'SUBMITTED' "
-                " WHERE f1.file_state = 'NOT_USED' "
-                "	AND NOT EXISTS ( "
-                "		SELECT NULL "
-                "		FROM ( "
-                "			SELECT job_id, file_index, file_state "
-                "			FROM t_file f2 "
-                "			WHERE EXISTS ( "
-                "					SELECT NULL "
-                "					FROM t_file f3 "
-                "					WHERE f3.job_id = f2.job_id "
-                "						AND f3.file_index = f2.file_index "
-                "						AND f3.file_state = 'NOT_USED' "
-                "				) "
-                "				AND f2.file_state <> 'NOT_USED' "
-                "				AND f2.file_state <> 'CANCELED' "
-                "				AND f2.file_state <> 'FAILED' "
-                "		) AS t_file_tmp "
-                "		WHERE t_file_tmp.job_id = f1.job_id "
-                "			AND t_file_tmp.file_index = f1.file_index "
-                "	) "
-                ;
+            for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+                {
+                    notUsed = *i;
 
+                    sql <<
+                        " UPDATE t_file f1 "
+                        " SET f1.file_state = 'SUBMITTED' "
+                        " WHERE f1.file_state = 'NOT_USED' "
+                        "	AND NOT EXISTS ( "
+                        "		SELECT NULL "
+                        "		FROM ( "
+                        "			SELECT job_id, file_index, file_state "
+                        "			FROM t_file f2 "
+                        "			WHERE f2.job_id = :notUsed AND EXISTS ( "
+                        "					SELECT NULL "
+                        "					FROM t_file f3 "
+                        "					WHERE f2.job_id = f3.job_id "
+                        "						AND f3.file_index = f2.file_index "
+                        "						AND f3.file_state = 'NOT_USED' "
+                        "				) "
+                        "				AND f2.file_state <> 'NOT_USED' "
+                        "				AND f2.file_state <> 'CANCELED' "
+                        "				AND f2.file_state <> 'FAILED' "
+                        "		) AS t_file_tmp "
+                        "		WHERE t_file_tmp.job_id = f1.job_id "
+                        "			AND t_file_tmp.file_index = f1.file_index AND   "
+                        "	) ", soci::use(notUsed)
+                        ;
+
+                }
             sql.commit();
         }
     catch (std::exception& e)
@@ -5929,8 +5932,8 @@ void MySqlAPI::countFileInTerminalStates(soci::session& sql, std::string jobId,
                 "	and NOT EXISTS ( "
                 "		select null "
                 "		from t_file f2 "
-                "		where job_id = :jobId "
-                "			and f2.file_index = f1.file_index "
+                "		where f2.job_id = :jobId "
+                "			and f1.file_index = f2.file_index "
                 "			and f2.file_state <> 'CANCELED' "
                 " 	) ",
                 soci::use(jobId),
@@ -5946,8 +5949,8 @@ void MySqlAPI::countFileInTerminalStates(soci::session& sql, std::string jobId,
                 "	and NOT EXISTS ( "
                 "		select null "
                 "		from t_file f2 "
-                "		where job_id = :jobId "
-                "			and f2.file_index = f1.file_index "
+                "		where f2.job_id = :jobId "
+                "			and f1.file_index = f2.file_index "
                 "			and f2.file_state NOT IN ('CANCELED', 'FAILED') "
                 " 	) ",
                 soci::use(jobId),
@@ -5960,6 +5963,7 @@ void MySqlAPI::countFileInTerminalStates(soci::session& sql, std::string jobId,
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
 }
+
 
 void MySqlAPI::getFilesForNewSeCfg(std::string source, std::string destination, std::string vo, std::vector<int>& out)
 {
