@@ -3269,10 +3269,18 @@ void MySqlAPI::backup()
             sql << "INSERT INTO t_file_backup SELECT * FROM t_file WHERE job_id IN (SELECT job_id FROM t_job_backup)";
             sql.commit();
 
-            sql << "DELETE FROM t_file WHERE file_id IN (SELECT file_id FROM t_file_backup)";
+            sql << "DELETE FROM t_file "
+                   " USING t_file "
+                   " INNER JOIN "
+                   "    (SELECT job_id FROM t_job_backup) AS jbackup "
+                   " ON t_file.job_id = jbackup.job_id";
             sql.commit();
 
-            sql << "DELETE FROM t_job WHERE job_id IN (SELECT job_id FROM t_job_backup)";
+            sql << "DELETE FROM t_job "
+                   " USING t_job "
+                   " INNER JOIN "
+                   "    (SELECT job_id FROM t_job_backup) AS jbackup "
+                   " ON t_job.job_id = jbackup.job_id";
             sql.commit();
 
             sql << "ALTER TABLE `t_file_backup` ENABLE KEYS";
