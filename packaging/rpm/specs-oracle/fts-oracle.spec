@@ -14,7 +14,7 @@ Source0: %{name}-%{version}.tar.gz
 BuildRequires:  cmake
 BuildRequires:  boost-devel%{?_isa}
 BuildRequires:  glib2-devel%{?_isa}
-#BuildRequires:  oracle-instantclient-devel%{?_isa}
+BuildRequires:  oracle-instantclient-devel%{?_isa}
 BuildRequires:  libuuid-devel%{?_isa}
 Requires(pre):  shadow-utils
 BuildRequires:  soci-oracle-devel
