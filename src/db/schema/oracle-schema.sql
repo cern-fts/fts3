@@ -276,6 +276,12 @@ CREATE TABLE t_share_config (
    ,CONSTRAINT t_share_config_fk FOREIGN KEY (source, destination) REFERENCES t_link_config (source, destination)
 );
 
+CREATE TABLE t_activity_share_config (
+  vo             VARCHAR(100) NOT NULL PRIMARY KEY,
+  activity_share VARCHAR(255) NOT NULL,
+  active         VARCHAR(3) check (active in ('on', 'off'))
+);
+
 --
 -- blacklist of bad SEs that should not be transferred to
 --
@@ -613,6 +619,11 @@ CREATE TABLE t_file (
   ,wait_timeout			NUMBER
   ,t_log_file        VARCHAR2(2048)
   ,t_log_file_debug  INTEGER
+--
+  ,hashed_id       INTEGER DEFAULT 0
+--
+-- The VO that owns this job
+  ,vo_name              VARCHAR(50)  
 );
 
 --
@@ -692,7 +703,21 @@ CREATE TABLE t_stage_req (
   ,CONSTRAINT stagereq_pk PRIMARY KEY (vo_name, host)
 );
 
+--
+-- Host hearbeats
+--
+CREATE TABLE t_hosts (
+    hostname    VARCHAR2(64) PRIMARY KEY NOT NULL,
+    beat        TIMESTAMP WITH TIME ZONE DEFAULT NULL
+);
 
+
+CREATE TABLE t_optimize_active (
+  source_se    VARCHAR2(255) NOT NULL,
+  dest_se      VARCHAR2(255) NOT NULL,
+  active       INTEGER DEFAULT 5,
+  CONSTRAINT t_optimize_active_pk PRIMARY KEY (source_se, dest_se)
+);
 
 --
 --
@@ -726,7 +751,7 @@ CREATE INDEX file_file_src_dest ON t_file(source_se, dest_se);
 CREATE INDEX file_file_src_dest_job_id ON t_file(source_se, dest_se, job_id);
 CREATE INDEX file_file_state_job_id4 ON t_file(file_state, dest_se);
 CREATE INDEX file_pid_job_id ON t_file(pid, job_id);
-
+CREATE INDEX file_id_hashed ON t_file(hashed_id, file_state);
 
 CREATE INDEX optimize_active         ON t_optimize(active);
 CREATE INDEX optimize_source_a         ON t_optimize(source_se,dest_se);
@@ -786,5 +811,5 @@ CREATE TABLE t_profiling_snapshot (
 
 CREATE INDEX t_prof_snapshot_total ON t_profiling_snapshot(total);
 
-
 exit;
+

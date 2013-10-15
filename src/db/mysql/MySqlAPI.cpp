@@ -963,7 +963,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
     const std::string sourceSpaceToken = params.get(JobParameterHandler::SPACETOKEN_SOURCE);
     const std::string spaceToken       = params.get(JobParameterHandler::SPACETOKEN);
 
-    std::string reuseFlag;
+    std::string reuseFlag = "N";
     if (reuse == "Y")
         reuseFlag = "Y";
     else if (hop == "Y")
@@ -1079,7 +1079,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
                         }
 
                     // Update hash
-                    if (reuse != "Y")
+                    if (reuseFlag == "N")
                         updateHashedId.execute();
                     else
                         updateHashedIdWithJobId.execute();

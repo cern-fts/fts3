@@ -19,77 +19,82 @@
  */
 
 #include <error.h>
+#include <oracle/soci-oracle.h>
 #include "OracleMonitoring.h"
-#include "OracleConnection.h"
-#include "OracleTypeConversions.h"
+#include "sociMonitoringConversions.h"
 
-
-
-OracleMonitoring::OracleMonitoring(): conn(NULL), conv(NULL)
+OracleMonitoring::OracleMonitoring(): poolSize(2), connectionPool(poolSize)
 {
+    memset(&notBefore, 0, sizeof(notBefore));
 }
+
 
 
 OracleMonitoring::~OracleMonitoring()
 {
-    if (conn) delete conn;
-    if (conv) delete conv;
 }
+
 
 
 void OracleMonitoring::init(const std::string& username, const std::string& password, const std::string &connectString, int pooledConn)
 {
-    if (!conn)
-        conn = new OracleConnection(username, password, connectString, pooledConn);
-    if (!conv)
-        conv = new OracleTypeConversions();
+    std::ostringstream connParams;
+    std::string host, db, port;
 
-    if (conn && conv)
-        notBefore = conv->toTimestamp(0, conn->getEnv());
+    try
+        {
+            // Build connection string
+            connParams << "oracle://" << username << "/" << password << "@" << connectString;
+            std::string connStr = connParams.str();
+
+            // Connect
+            poolSize = (size_t) pooledConn;
+
+            for (size_t i = 0; i < poolSize; ++i)
+                {
+                    soci::session& sql = connectionPool.at(i);
+                    sql.open(soci::oracle, connStr);
+                }
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
 }
 
 
 
 void OracleMonitoring::setNotBefore(time_t nb)
 {
-    notBefore = conv->toTimestamp(nb, conn->getEnv());
+    gmtime_r(&nb, &notBefore);
 }
 
 
 
 void OracleMonitoring::getVONames(std::vector<std::string>& vos)
 {
-    const std::string tag   = "getVONames";
-    const std::string query = "SELECT DISTINCT(VO_NAME)\
-                               FROM T_JOB\
-                               WHERE SUBMIT_TIME > :notBefore";
+    soci::session sql(connectionPool);
 
-    SafeConnection pooledConnection;
-    pooledConnection = conn->getPooledConnection();
-
-    struct message_sanity msg;
-    msg.msgCron = true;
-    CleanUpSanityChecks temp(this, pooledConnection, msg);
-    if(!temp.getCleanUpSanityCheck())
+    try
         {
-            conn->releasePooledConnection(pooledConnection);
-            return;
+            struct message_sanity msg;
+            msg.msgCron = true;
+            CleanUpSanityChecks temp(this, sql, msg);
+            if(!temp.getCleanUpSanityCheck())
+                return;
+
+            soci::rowset<std::string> rs = (sql.prepare << "SELECT DISTINCT(vo_name) "
+                                            "FROM t_job "
+                                            "WHERE job_finished is NULL ");
+            for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+                {
+                    vos.push_back(*i);
+                }
         }
-
-
-    SafeStatement s = conn->createStatement(query, tag, pooledConnection);
-    s->setTimestamp(1, notBefore);
-
-    SafeResultSet r = conn->createResultset(s, pooledConnection);
-
-    while (r->next())
+    catch (std::exception& e)
         {
-            vos.push_back(r->getString(1));
+            throw Err_Custom(std::string(__func__) + ": " + e.what());
         }
-
-    conn->destroyResultset(s, r);
-    conn->destroyStatement(s, tag, pooledConnection);
-    conn->releasePooledConnection(pooledConnection);
 }
 
 
@@ -97,31 +102,24 @@ void OracleMonitoring::getVONames(std::vector<std::string>& vos)
 void OracleMonitoring::getSourceAndDestSEForVO(const std::string& vo,
         std::vector<SourceAndDestSE>& pairs)
 {
-    const std::string tag   = "getSourceAndDestSEForVO";
-    const std::string query = "SELECT DISTINCT SOURCE_SE, DEST_SE\
-                               FROM T_JOB\
-                               WHERE VO_NAME = :vo AND SUBMIT_TIME > :notBefore";
-    SafeConnection pooledConnection;
-    pooledConnection = conn->getPooledConnection();
+    soci::session sql(connectionPool);
 
-
-    SafeStatement s = conn->createStatement(query, tag, pooledConnection);
-    s->setString(1, vo);
-    s->setTimestamp(2, notBefore);
-
-    SafeResultSet r = conn->createResultset(s, pooledConnection);
-
-    while (r->next())
+    try
         {
-            SourceAndDestSE pair;
-            pair.sourceStorageElement      = r->getString(1);
-            pair.destinationStorageElement = r->getString(2);
-            pairs.push_back(pair);
+            soci::rowset<SourceAndDestSE> rs = (sql.prepare << "SELECT DISTINCT source_se, dest_se "
+                                                "FROM t_job "
+                                                "WHERE vo_name = :vo AND "
+                                                "      job_finished is NULL ",
+                                                soci::use(vo) );
+            for (soci::rowset<SourceAndDestSE>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+                {
+                    pairs.push_back(*i);
+                }
         }
-
-    conn->destroyResultset(s, r);
-    conn->destroyStatement(s, tag, pooledConnection);
-    conn->releasePooledConnection(pooledConnection);
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": " + e.what());
+        }
 }
 
 
@@ -129,210 +127,157 @@ void OracleMonitoring::getSourceAndDestSEForVO(const std::string& vo,
 unsigned OracleMonitoring::numberOfJobsInState(const SourceAndDestSE& pair,
         const std::string& state)
 {
-    const std::string tag   = "numberOfJobsWithState";
-    const std::string query = "SELECT COUNT(*) FROM T_JOB\
-                               WHERE JOB_STATE = :state AND\
-                                     SOURCE_SE = :source AND\
-                                     DEST_SE   = :dest AND\
-                                     SUBMIT_TIME > :notBefore";
-    SafeConnection pooledConnection;
-    pooledConnection = conn->getPooledConnection();
+    soci::session sql(connectionPool);
 
-
-    SafeStatement s = conn->createStatement(query, tag, pooledConnection);
-    s->setString(1, state);
-    s->setString(2, pair.sourceStorageElement);
-    s->setString(3, pair.destinationStorageElement);
-    s->setTimestamp(4, notBefore);
-
-    SafeResultSet r = conn->createResultset(s, pooledConnection);
-
-    unsigned count = 0;
-    if (r->next())
-        count = r->getNumber(1);
-
-    conn->destroyResultset(s, r);
-    conn->destroyStatement(s, tag, pooledConnection);
-    conn->releasePooledConnection(pooledConnection);
-
-    return count;
+    try
+        {
+            unsigned count = 0;
+            sql << "SELECT COUNT(*) FROM t_job "
+                "WHERE job_state = :state AND "
+                "      source_se = :source AND "
+                "      dest_se   = :dest AND "
+                "      (job_finished > :notBefore OR job_finished IS NULL)",
+                soci::use(state),
+                soci::use(pair.sourceStorageElement), soci::use(pair.destinationStorageElement),
+                soci::use(notBefore), soci::into(count);
+            return count;
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": " + e.what());
+        }
 }
 
 
 
 void OracleMonitoring::getConfigAudit(const std::string& actionLike,
-                                      std::vector<ConfigAudit>& audit)
+                                     std::vector<ConfigAudit>& audit)
 {
-    const std::string tag   = "getConfigAudit";
-    const std::string query = "SELECT WHEN, DN, CONFIG, ACTION\
-                               FROM T_CONFIG_AUDIT\
-                               WHERE ACTION LIKE :like AND\
-                                     WHEN > :notBefore";
-    SafeConnection pooledConnection;
-    pooledConnection = conn->getPooledConnection();
+    soci::session sql(connectionPool);
 
-
-    SafeStatement s = conn->createStatement(query, tag, pooledConnection);
-    s->setString(1, actionLike);
-    s->setTimestamp(2, notBefore);
-
-    SafeResultSet r = conn->createResultset(s, pooledConnection);
-    while (r->next())
+    try
         {
-            ConfigAudit item;
-            item.when = conv->toTimeT(s->getTimestamp(1));
-            item.userDN = s->getString(2);
-            item.config = s->getString(3);
-            item.action = s->getString(4);
-            audit.push_back(item);
+            soci::rowset<ConfigAudit> rs = (sql.prepare << "SELECT datetime, dn, config, action "
+                                            "FROM t_config_audit "
+                                            "WHERE action LIKE :like AND datetime > :notBefore",
+                                            soci::use(actionLike), soci::use(notBefore));
+            for (soci::rowset<ConfigAudit>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+                {
+                    audit.push_back(*i);
+                }
         }
-
-    conn->destroyResultset(s, r);
-    conn->destroyStatement(s, tag, pooledConnection);
-    conn->releasePooledConnection(pooledConnection);
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": " + e.what());
+        }
 }
 
 
 
 void OracleMonitoring::getTransferFiles(const std::string& jobId,
-                                        std::vector<TransferFiles>& files)
+                                       std::vector<TransferFiles>& files)
 {
-    const std::string tag   = "getTransferFiles";
-    const std::string query = "SELECT INTERNAL_FILE_PARAMS, JOB_ID, SOURCE_SURL, DEST_SURL,\
-                                     FILE_STATE, FILESIZE, REASON, START_TIME, FINISH_TIME,\
-                                     THROUGHPUT, CHECKSUM, TX_DURATION\
-                               FROM T_FILE\
-                               WHERE JOB_ID = :jobId\
-                               ORDER BY SYS_EXTRACT_UTC(t_file.start_time)";
-    SafeConnection pooledConnection;
-    pooledConnection = conn->getPooledConnection();
+    soci::session sql(connectionPool);
 
-
-    SafeStatement s = conn->createStatement(query, tag, pooledConnection);
-    s->setString(1, jobId);
-
-    SafeResultSet r = conn->createResultset(s, pooledConnection);
-    while (r->next())
+    try
         {
-            TransferFiles tf;
-            tf.INTERNAL_FILE_PARAMS = r->getString(1);
-            tf.JOB_ID = r->getString(2);
-            tf.SOURCE_SURL = r->getString(3);
-            tf.DEST_SURL = r->getString(4);
-            tf.FILE_STATE = r->getString(5);
-            tf.FILESIZE = r->getString(6);
-            tf.REASON = r->getString(7);
-            //tf.START_TIME = r->getString(8);
-            tf.FINISH_TIME = r->getString(9);
-            //tf.THROUGHPUT = r->getNumber(10);
-            tf.CHECKSUM = r->getString(11);
-            //tf.TX_DURATION = r->getNumber(12);
-            files.push_back(tf);
+            soci::rowset<TransferFiles> rs = (sql.prepare << "SELECT t_file.*, t_job.vo_name, t_job.overwrite_flag, "
+                                              "       t_job.user_dn, t_job.cred_id, t_job.checksum_method, "
+                                              "       t_job.source_space_token, t_job.space_token "
+                                              "FROM t_file, t_job "
+                                              "WHERE t_file.job_id = :jobId AND t_file.job_id = t_job.job_id "
+                                              "ORDER BY start_time",
+                                              soci::use(jobId));
+            for (soci::rowset<TransferFiles>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+                {
+                    files.push_back(*i);
+                }
         }
-
-    conn->destroyResultset(s, r);
-    conn->destroyStatement(s, tag, pooledConnection);
-    conn->releasePooledConnection(pooledConnection);
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": " + e.what());
+        }
 }
 
 
 
 void OracleMonitoring::getJob(const std::string& jobId, TransferJobs& job)
 {
-    const std::string tag   = "getJob";
-    const std::string query = "SELECT USER_DN, JOB_ID, VO_NAME,\
-                                     JOB_STATE, SUBMIT_TIME, FINISH_TIME, REASON,\
-                                     SOURCE_SPACE_TOKEN, SPACE_TOKEN\
-                               FROM T_JOB\
-                               WHERE JOB_ID = :jobId";
-    SafeConnection pooledConnection;
-    pooledConnection = conn->getPooledConnection();
+    soci::session sql(connectionPool);
 
-
-    SafeStatement s = conn->createStatement(query, tag, pooledConnection);
-    s->setString(1, jobId);
-
-    SafeResultSet r = conn->createResultset(s, pooledConnection);
-    if (r->next())
+    try
         {
-            job.USER_DN = r->getString(1);
-            job.JOB_ID = r->getString(2);
-            job.VO_NAME = r->getString(3);
-            job.JOB_STATE = r->getString(6);
-            job.SUBMIT_TIME = conv->toTimeT(r->getTimestamp(7));
-            job.FINISH_TIME = conv->toTimeT(r->getTimestamp(8));
-            job.REASON = r->getString(9);
+            sql << "SELECT * FROM t_job WHERE job_id = :jobId",
+                soci::use(jobId), soci::into(job);
         }
-
-    conn->destroyResultset(s, r);
-    conn->destroyStatement(s, tag, pooledConnection);
-    conn->releasePooledConnection(pooledConnection);
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": " + e.what());
+        }
 }
 
 
 
 void OracleMonitoring::filterJobs(const std::vector<std::string>& inVos,
-                                  const std::vector<std::string>& inStates,
-                                  std::vector<TransferJobs>& jobs)
+                                 const std::vector<std::string>& inStates,
+                                 std::vector<TransferJobs>& jobs)
 {
-    std::ostringstream tag;
-    std::ostringstream query;
-    size_t i, j;
-    SafeConnection pooledConnection;
-    pooledConnection = conn->getPooledConnection();
+    soci::session sql(connectionPool);
 
-    tag << "filterJobs" << inVos.size() << "-" << inStates.size();
-
-    query << "SELECT USER_DN, JOB_ID, VO_NAME, JOB_STATE, "
-          "       SUBMIT_TIME, FINISH_TIME, SOURCE_SPACE_TOKEN, SPACE_TOKEN "
-          "FROM T_JOB "
-          "WHERE SUBMIT_TIME > :notBefore";
-
-    if (!inVos.empty())
+    try
         {
-            query << " AND VO_NAME IN (";
-            for (i = 1; i < inVos.size(); ++i)
-                query << ":vo" << i << ", ";
-            query << ":vo" << i << ")";
-        }
+            size_t i;
+            std::ostringstream query;
+            soci::statement stmt(sql);
 
-    if (!inStates.empty())
-        {
-            query << " AND JOB_STATE IN (";
-            for (i = 1; i < inStates.size(); ++i)
-                query << ":state" << i << ", ";
-            query << ":state" << i << ")";
-        }
+            query << "SELECT * FROM t_job WHERE (finish_time > :notBefore OR finish_time IS NULL) ";
+            stmt.exchange(soci::use(notBefore));
 
-    query << " ORDER BY SUBMIT_TIME DESC, FINISH_TIME DESC, JOB_ID DESC";
+            if (!inVos.empty())
+                {
+                    query << "AND vo_name IN (";
+                    for (i = 0; i < inVos.size() - 1; ++i)
+                        {
+                            query << ":vo" << i << ", ";
+                            stmt.exchange(soci::use(inVos[i]));
+                        }
+                    query << ":vo" << i << ") ";
+                    stmt.exchange(soci::use(inVos[i]));
+                }
 
+            if (!inStates.empty())
+                {
+                    query << "AND job_state IN (";
+                    for (i = 0; i < inStates.size() - 1; ++i)
+                        {
+                            query << ":state" << i << ", ";
+                            stmt.exchange(soci::use(inStates[i]));
+                        }
+                    query << ":state" << i << ") ";
+                    stmt.exchange(soci::use(inStates[i]));
+                }
 
+            query << "ORDER BY submit_time DESC, finish_time DESC, job_id DESC";
 
-    SafeStatement s = conn->createStatement(query.str(), tag.str(), pooledConnection);
-    s->setTimestamp(1, notBefore);
-    for (i = 0; i < inVos.size(); ++i)
-        s->setString((unsigned int)i + 2, inVos[i]);
-    for (j = 0; j < inStates.size(); ++j)
-        s->setString((unsigned int)i + (unsigned int)j + 2, inStates[j]);
-
-    SafeResultSet r = conn->createResultset(s, pooledConnection);
-    while (r->next())
-        {
             TransferJobs job;
-            job.USER_DN = r->getString(1);
-            job.JOB_ID  = r->getString(2);
-            job.VO_NAME = r->getString(3);
-            job.JOB_STATE = r->getString(6);
-            job.SUBMIT_TIME = conv->toTimeT(r->getTimestamp(7));
-            job.FINISH_TIME = conv->toTimeT(r->getTimestamp(8));
-            job.SOURCE_SPACE_TOKEN = r->getString(9);
-            job.SPACE_TOKEN = r->getString(10);
-            jobs.push_back(job);
-        }
+            stmt.exchange(soci::into(job));
+            stmt.alloc();
+            stmt.prepare(query.str());
+            stmt.define_and_bind();
 
-    conn->destroyResultset(s, r);
-    conn->destroyStatement(s, tag.str(), pooledConnection);
-    conn->releasePooledConnection(pooledConnection);
+            if (stmt.execute(true))
+                {
+                    do
+                        {
+                            jobs.push_back(job);
+                        }
+                    while (stmt.fetch());
+                }
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": " + e.what());
+        }
 }
 
 
@@ -340,256 +285,229 @@ void OracleMonitoring::filterJobs(const std::vector<std::string>& inVos,
 unsigned OracleMonitoring::numberOfTransfersInState(const std::string& vo,
         const std::vector<std::string>& state)
 {
-    std::ostringstream tag;
-    std::ostringstream query;
-    size_t i;
-    SafeConnection pooledConnection;
-    pooledConnection = conn->getPooledConnection();
+    soci::session sql(connectionPool);
 
-    if (state.size() == 0)
-        return 0;
+    try
+        {
+            unsigned count = 0;
+            std::ostringstream query;
+            soci::statement stmt(sql);
 
-    tag << "numberOfTransfersInState" << state.size() << vo.empty();
-    query << "SELECT COUNT(*) FROM T_FILE, T_JOB "
-          "WHERE  T_JOB.SUBMIT_TIME > :notBefore AND "
-          "T_FILE.JOB_ID = T_JOB.JOB_ID AND "
-          "T_FILE.FILE_STATE IN (";
-    for (i = 1; i < state.size(); ++i)
-        query << ":state" << i << ", ";
-    query << ":state" << i << ") ";
+            if (!vo.empty())
+                {
+                    query << "SELECT COUNT(*) FROM t_file WHERE "
+                          " vo_name = :vo ";
+                    stmt.exchange(soci::use(vo));
+                }
+            else
+                {
+                    query << " SELECT COUNT(*) FROM t_file WHERE "
+                          "    (job_finished_time > :notBefore OR job_finished IS NULL) ";
+                    stmt.exchange(soci::use(notBefore));
+                }
 
-    if (!vo.empty())
-        query << " AND T_JOB.VO_NAME = :vo";
+            if (!state.empty())
+                {
+                    size_t i;
+                    query << "AND t_file.file_state IN (";
+                    for (i = 0; i < state.size() - 1; ++i)
+                        {
+                            query << ":state" << i << ", ";
+                            stmt.exchange(soci::use(state[i]));
+                        }
+                    query << ":state" << i << ")";
+                    stmt.exchange(soci::use(state[i]));
+                }
 
-
-
-    SafeStatement s = conn->createStatement(query.str(), tag.str(), pooledConnection);
-    s->setTimestamp(1, notBefore);
-
-    for (i = 0; i < state.size(); ++i)
-        s->setString((unsigned int)i + 2, state[i]);
-
-    if (!vo.empty())
-        s->setString((unsigned int)i + 2, vo);
-
-    SafeResultSet r = conn->createResultset(s, pooledConnection);
-    unsigned count = 0;
-    if (r->next())
-        count = r->getNumber(1);
-
-    conn->destroyResultset(s, r);
-    conn->destroyStatement(s, tag.str(), pooledConnection);
-    conn->releasePooledConnection(pooledConnection);
-
-    return count;
+            stmt.exchange(soci::into(count));
+            stmt.alloc();
+            stmt.prepare(query.str());
+            stmt.define_and_bind();
+            stmt.execute(true);
+            return count;
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": " + e.what());
+        }
 }
 
 
 
-unsigned OracleMonitoring::numberOfTransfersInState(const std::string& vo,
+unsigned  OracleMonitoring::numberOfTransfersInState(const std::string& vo,
         const SourceAndDestSE& pair,
         const std::vector<std::string>& state)
 {
-    std::ostringstream tag;
-    std::ostringstream query;
-    size_t i;
-    SafeConnection pooledConnection;
-    pooledConnection = conn->getPooledConnection();
+    soci::session sql(connectionPool);
 
-    if (state.size() == 0)
-        return 0;
+    try
+        {
+            unsigned count = 0;
+            std::ostringstream query;
+            soci::statement stmt(sql);
 
-    tag << "numberOfTransfersInStatePair" << state.size();
-    query << "SELECT COUNT(*) FROM T_FILE, T_JOB "
-          "WHERE  T_JOB.SUBMIT_TIME > :notBefore AND "
-          "T_FILE.JOB_ID = T_JOB.JOB_ID AND "
-          "T_FILE.FILE_STATE IN (";
-    for (i = 1; i < state.size(); ++i)
-        query << ":state" << i << ", ";
-    query << ":state" << i << ") ";
+            query << "SELECT COUNT(*) FROM t_file WHERE "
+                  "   source_se = :src AND dest_se = :dest ";
 
-    query << " AND T_JOB.SOURCE_SE = :src AND T_JOB.DEST_SE = :dest ";
-    if (!vo.empty())
-        query << "AND T_JOB.VO_NAME = :vo";
+            stmt.exchange(soci::use(pair.sourceStorageElement));
+            stmt.exchange(soci::use(pair.destinationStorageElement));
 
+            if (!vo.empty())
+                {
+                    query << " AND vo_name = :vo ";
+                    stmt.exchange(soci::use(vo));
+                }
 
+            if (!state.empty())
+                {
+                    size_t i;
+                    query << "AND file_state IN (";
+                    for (i = 0; i < state.size() - 1; ++i)
+                        {
+                            query << ":state" << i << ", ";
+                            stmt.exchange(soci::use(state[i]));
+                        }
+                    query << ":state" << i << ")";
+                    stmt.exchange(soci::use(state[i]));
+                }
 
-    SafeStatement s = conn->createStatement(query.str(), tag.str(), pooledConnection);
-    s->setTimestamp(1, notBefore);
-
-    for (i = 0; i < state.size(); ++i)
-        s->setString((unsigned int)i + 2, state[i]);
-
-    s->setString((unsigned int)i + 2, pair.sourceStorageElement);
-    s->setString((unsigned int)i + 3, pair.destinationStorageElement);
-
-    if (!vo.empty())
-        s->setString((unsigned int)i + 4, vo);
-
-    SafeResultSet r = conn->createResultset(s, pooledConnection);
-    unsigned count = 0;
-    if (r->next())
-        count = r->getNumber(1);
-
-    conn->destroyResultset(s, r);
-    conn->destroyStatement(s, tag.str(), pooledConnection);
-    conn->releasePooledConnection(pooledConnection);
-
-    return count;
+            stmt.exchange(soci::into(count));
+            stmt.alloc();
+            stmt.prepare(query.str());
+            stmt.define_and_bind();
+            stmt.execute(true);
+            return count;
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": " + e.what());
+        }
 }
 
 
 
 void OracleMonitoring::getUniqueReasons(std::vector<ReasonOccurrences>& reasons)
 {
-    const std::string tag   = "getUniqueReasons";
-    const std::string query = "SELECT COUNT(*), REASON\
-                               FROM T_FILE\
-                               WHERE REASON IS NOT NULL AND\
-                                     FINISH_TIME > :notBefore\
-                               GROUP BY REASON\
-                               ORDER BY REASON ASC";
-    SafeConnection pooledConnection;
-    pooledConnection = conn->getPooledConnection();
+    soci::session sql(connectionPool);
 
-
-    SafeStatement s = conn->createStatement(query, tag, pooledConnection);
-    s->setTimestamp(1, notBefore);
-
-    SafeResultSet r = conn->createResultset(s, pooledConnection);
-    while (r->next())
+    try
         {
-            ReasonOccurrences reason;
-            reason.count = r->getNumber(1);
-            reason.reason = r->getString(2);
-            reasons.push_back(reason);
+            soci::rowset<ReasonOccurrences> rs = (sql.prepare << "SELECT COUNT(*) AS count, reason "
+                                                  "FROM t_file WHERE reason IS NOT NULL AND "
+                                                  "                  reason != '' AND "
+                                                  "                  finish_time > :notBefore "
+                                                  "GROUP BY reason "
+                                                  "ORDER BY count DESC",
+                                                  soci::use(notBefore));
+            for (soci::rowset<ReasonOccurrences>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+                {
+                    reasons.push_back(*i);
+                }
         }
-
-    conn->destroyResultset(s, r);
-    conn->destroyStatement(s, tag, pooledConnection);
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": " + e.what());
+        }
 }
 
 
 
 unsigned OracleMonitoring::averageDurationPerSePair(const SourceAndDestSE& pair)
 {
-    const std::string tag   = "averageDurationPerSePair";
-    const std::string query = "SELECT AVG(TX_DURATION)\
-                               FROM T_FILE\
-                               WHERE TX_DURATION IS NOT NULL AND\
-                                     FINISH_TIME > :notBefore AND\
-                                     SOURCE_SURL LIKE CONCAT('%', :source, '%') AND\
-                                     DEST_SURL LIKE CONCAT('%', :dest, '%')";
-    SafeConnection pooledConnection;
-    pooledConnection = conn->getPooledConnection();
+    soci::session sql(connectionPool);
 
+    try
+        {
+            unsigned avg;
 
-    SafeStatement s = conn->createStatement(query, tag, pooledConnection);
-    s->setTimestamp(1, notBefore);
-    s->setString(2, pair.sourceStorageElement);
-    s->setString(3, pair.destinationStorageElement);
-
-    SafeResultSet r = conn->createResultset(s, pooledConnection);
-    unsigned duration = 0;
-    if (r->next())
-        duration = r->getNumber(0);
-
-    conn->destroyResultset(s, r);
-    conn->destroyStatement(s, tag, pooledConnection);
-    conn->releasePooledConnection(pooledConnection);
-
-    return duration;
+            sql << "SELECT AVG(tx_duration) FROM t_file WHERE "
+                "    tx_duration IS NOT NULL AND finish_time > :notBefore AND "
+                "    source_surl LIKE CONCAT('%', :source, '%') AND "
+                "    dest_surl LIKE CONCAT('%', :dest, '%')",
+                soci::use(notBefore), soci::use(pair.sourceStorageElement),
+                soci::use(pair.destinationStorageElement),
+                soci::into(avg);
+            return avg;
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": " + e.what());
+        }
 }
 
 
 
 void OracleMonitoring::averageThroughputPerSePair(std::vector<SePairThroughput>& avgThroughput)
 {
-    const std::string tag   = "averageThroughputPerSePair";
-    const std::string query = "SELECT T_JOB.SOURCE_SE, T_JOB.DEST_SE, AVG(TX_DURATION), AVG(THROUGHPUT)\
-                               FROM T_FILE, T_JOB\
-                               WHERE T_FILE.THROUGHPUT IS NOT NULL AND\
-                                     T_FILE.FILE_STATE = 'FINISHED' AND\
-                                     T_FILE.JOB_ID = T_JOB.JOB_ID AND\
-                                     T_JOB.SUBMIT_TIME > :notBefore\
-                               GROUP BY T_JOB.SOURCE_SE, T_JOB.DEST_SE";
-    SafeConnection pooledConnection;
-    pooledConnection = conn->getPooledConnection();
+    soci::session sql(connectionPool);
 
-
-    SafeStatement s = conn->createStatement(query, tag, pooledConnection);
-    s->setTimestamp(1, notBefore);
-
-    SafeResultSet r = conn->createResultset(s, pooledConnection);
-    while (r->next())
+    try
         {
-            SePairThroughput pairThroughput;
-            pairThroughput.storageElements.sourceStorageElement = r->getString(1);
-            pairThroughput.storageElements.destinationStorageElement = r->getString(2);
-            pairThroughput.duration = r->getNumber(3);
-            pairThroughput.averageThroughput = r->getNumber(4);
-
-            avgThroughput.push_back(pairThroughput);
+            soci::rowset<SePairThroughput> rs = (sql.prepare << "SELECT t_job.source_se, t_job.dest_se, "
+                                                 "       AVG(t_file.tx_duration) AS duration, AVG(t_file.throughput) AS throughput "
+                                                 "FROM t_file, t_job "
+                                                 "WHERE t_file.throughput IS NOT NULL AND "
+                                                 "      t_file.file_state = 'FINISHED' AND "
+                                                 "      t_file.job_id = t_job.job_id AND "
+                                                 "      t_job.finish_time > :notBefore "
+                                                 "GROUP BY t_job.source_se, t_job.dest_se",
+                                                 soci::use(notBefore));
+            for (soci::rowset<SePairThroughput>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+                {
+                    avgThroughput.push_back(*i);
+                }
         }
-
-    conn->destroyResultset(s, r);
-    conn->destroyStatement(s, tag, pooledConnection);
-    conn->releasePooledConnection(pooledConnection);
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": " + e.what());
+        }
 }
 
 
 
 void OracleMonitoring::getJobVOAndSites(const std::string& jobId, JobVOAndSites& voAndSites)
 {
-    const std::string tag   = "getJobVOAndSites";
-    const std::string query = "SELECT T_JOB.VO_NAME, T_CHANNEL.SOURCE_SITE, T_CHANNEL.DEST_SITE\
-                               FROM T_JOB, T_CHANNEL\
-                               WHERE T_CHANNEL.CHANNEL_NAME = T_JOB.CHANNEL_NAME AND\
-                                     T_JOB.JOB_ID = :jobId";
-    SafeConnection pooledConnection;
-    pooledConnection = conn->getPooledConnection();
+    soci::session sql(connectionPool);
 
-
-    SafeStatement s = conn->createStatement(query, tag, pooledConnection);
-    s->setString(1, jobId);
-
-    SafeResultSet r = conn->createResultset(s, pooledConnection);
-    if (r->next())
+    try
         {
-            voAndSites.vo = r->getString(1);
-            voAndSites.sourceSite = r->getString(2);
-            voAndSites.destinationSite = r->getString(3);
+            sql << "SELECT t_job.vo_name, t_channel.source_site, t_channel.dest_site "
+                "FROM t_job, t_channel "
+                "WHERE t_channel.channel_name = t_job.channel_name AND "
+                "      t_job.job_id = :jobId",
+                soci::use(jobId), soci::into(voAndSites);
         }
-
-    conn->destroyResultset(s, r);
-    conn->destroyStatement(s, tag, pooledConnection);
-    conn->releasePooledConnection(pooledConnection);
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": " + e.what());
+        }
 }
 
 
-bool OracleMonitoring::assignSanityRuns(SafeConnection& pooled, struct message_sanity &msg)
+bool OracleMonitoring::assignSanityRuns(soci::session& sql, struct message_sanity &msg)
 {
+
     long long rows = 0;
 
     try
         {
             if(msg.msgCron)
                 {
-                    SafeStatement stmt = conn->createStatement(
-                                             "update t_server_sanity set msgcron=1, t_msgcron = SYS_EXTRACT_UTC(SYSTIMESTAMP) "
-                                             " where msgcron=0"
-                                             " AND (t_msgcron < (SYS_EXTRACT_UTC(SYSTIMESTAMP) - INTERVAL '1' day)) ",
-                                             "assignSanityRuns/msgcron",
-                                             pooled);
-                    rows = stmt->executeUpdate();
+                    sql.begin();
+                    soci::statement st((sql.prepare << "update t_server_sanity set msgcron=1, t_msgcron = UTC_TIMESTAMP() "
+                                        " where msgcron=0"
+                                        " AND (t_msgcron < (UTC_TIMESTAMP() - INTERVAL '1' day)) "
+                                       ));
+                    st.execute(true);
+                    rows = st.get_affected_rows();
                     msg.msgCron = (rows > 0? true: false);
-                    conn->commit(pooled);
+                    sql.commit();
                     return msg.msgCron;
                 }
         }
     catch (std::exception& e)
         {
-            conn->rollback(pooled);
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
 
@@ -597,23 +515,21 @@ bool OracleMonitoring::assignSanityRuns(SafeConnection& pooled, struct message_s
 }
 
 
-void OracleMonitoring::resetSanityRuns(SafeConnection& pooled, struct message_sanity &msg)
+void OracleMonitoring::resetSanityRuns(soci::session& sql, struct message_sanity &msg)
 {
     try
         {
+            sql.begin();
             if(msg.msgCron)
                 {
-                    SafeStatement stmt = conn->createStatement(
-                                             "update t_server_sanity set msgcron=0 where msgcron=1",
-                                             "resetSanityRuns/msgcron",
-                                             pooled);
-                    stmt->executeUpdate();
+                    soci::statement st((sql.prepare << "update t_server_sanity set msgcron=0 where msgcron=1"));
+                    st.execute(true);
                 }
-            conn->commit(pooled);
+            sql.commit();
         }
     catch (std::exception& e)
         {
-            conn->rollback(pooled);
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
 }

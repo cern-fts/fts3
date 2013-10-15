@@ -4,18 +4,17 @@ include_directories(BEFORE ${OCCI_INCLUDE_DIR})
 include_directories (BEFORE ../generic)
 include_directories (BEFORE ../..)
 include_directories (BEFORE ../../common)
+include_directories (/usr/include/soci)
 include_directories (.)
 
 
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(fts_db_oracle_SOURCES OracleConnection.cpp OracleAPI.cpp OracleTypeConversions.cpp OracleMonitoring.cpp)
+set(fts_db_oracle_SOURCES OracleAPI.cpp OracleMonitoring.cpp)
 
 add_library(fts_db_oracle SHARED ${fts_db_oracle_SOURCES})
 add_dependencies(fts_db_oracle fts_common)
-target_link_libraries(fts_db_oracle ${OCCI_LIBRARY} )
-target_link_libraries(fts_db_oracle ${CLNTSH_LIBRARY} )
-target_link_libraries(fts_db_oracle ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(fts_db_oracle soci_core soci_oracle)
 target_link_libraries(fts_db_oracle fts_common)
 set_target_properties(fts_db_oracle             PROPERTIES
                                                 LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/src/db/oracle

@@ -28,6 +28,7 @@ class Cli:
         # Spawn the transfer
         cmdArray = ['fts-transfer-submit',
                     '-s', config.Fts3Endpoint,
+                    '--retry', '0',
                     '--job-metadata', label, 
                     '--new-bulk-format', '-f', submission.name] + extraArgs
         logging.debug("Spawning %s" % ' '.join(cmdArray))

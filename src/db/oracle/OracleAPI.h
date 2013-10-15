@@ -15,25 +15,13 @@
  * limitations under the License.
  ***********************************************/
 
-/**
- * @file OracleAPI.h
- * @brief interface to access oracle backend
- * @author Michail Salichos
- * @date 09/02/2012
- *
- **/
-
 #pragma once
 
+#include <common_dev.h>
+#include <soci.h>
 #include "GenericDbIfce.h"
-#include "OracleConnection.h"
-#include <boost/scoped_ptr.hpp>
-#include "OracleTypeConversions.h"
-#include "threadtraits.h"
-#include "pointers.h"
-#include "OptimizerSample.h"
-#include "definitions.h"
 
+using namespace FTS3_COMMON_NAMESPACE;
 
 class OracleAPI : public GenericDbIfce
 {
@@ -44,15 +32,14 @@ public:
     class CleanUpSanityChecks
     {
     public:
-        CleanUpSanityChecks(OracleAPI* instanceLocal,SafeConnection& pooled, struct message_sanity &msg):
-            instanceLocal(instanceLocal), pooled(pooled), msg(msg), returnValue(false)
+        CleanUpSanityChecks(OracleAPI* instanceLocal, soci::session& sql, struct message_sanity &msg):instanceLocal(instanceLocal), sql(sql), msg(msg), returnValue(false)
         {
-            returnValue = instanceLocal->assignSanityRuns(pooled, msg);
+            returnValue = instanceLocal->assignSanityRuns(sql, msg);
         }
 
         ~CleanUpSanityChecks()
         {
-            instanceLocal->resetSanityRuns(pooled, msg);
+            instanceLocal->resetSanityRuns(sql, msg);
         }
 
         bool getCleanUpSanityCheck()
@@ -61,10 +48,11 @@ public:
         }
 
         OracleAPI* instanceLocal;
-        SafeConnection& pooled;
+        soci::session& sql;
         struct message_sanity &msg;
         bool returnValue;
     };
+
 
     /**
      * Intialize database connection  by providing information from fts3config file
@@ -88,6 +76,8 @@ public:
     virtual void listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates, std::string restrictToClientDN, std::string forDN, std::string VOname);
 
     virtual TransferJobs* getTransferJob(std::string jobId, bool archive);
+
+    virtual void getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std::string & vos);
 
     virtual void getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files);
 
@@ -115,6 +105,7 @@ public:
 
     virtual void getCancelJob(std::vector<int>& requestIDs);
 
+
     /*t_credential API*/
     virtual void insertGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs);
 
@@ -136,13 +127,9 @@ public:
 
     virtual void setDebugMode(std::string source_hostname, std::string destin_hostname, std::string mode);
 
-    virtual void getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std::string & vos);
-
     virtual void auditConfiguration(const std::string & dn, const std::string & config, const std::string & action);
 
     virtual void fetchOptimizationConfig2(OptimizerSample* ops, const std::string & source_hostname, const std::string & destin_hostname);
-
-    virtual void recordOptimizerUpdate(int active, double filesize, double throughput, int nostreams, int timeout, int buffersize,std::string source_hostname, std::string destin_hostname);
 
     virtual bool updateOptimizer(double throughput, int file_id , double filesize, double timeInSecs, int nostreams, int timeout, int buffersize,std::string source_hostname, std::string destin_hostname);
 
@@ -158,9 +145,7 @@ public:
 
     virtual int getSeIn(const std::set<std::string> & source, const std::string & destination);
 
-    virtual int getCredits(SafeConnection& pooledConnection, SafeStatement s[], SafeResultSet r[], const std::string & source_hostname, const std::string & destin_hostname);
-
-    virtual void initVariablesForGetCredits(SafeConnection& pooledConnection, SafeStatement s[], std::string* query, std::string* tag, std::string basename);
+    virtual int getCredits(const std::string & source_hostname, const std::string & destination_hostname);
 
     virtual void setAllowed(const std::string & job_id, int file_id, const std::string & source_se, const std::string & dest, int nostreams, int timeout, int buffersize);
 
@@ -215,14 +200,14 @@ public:
 
     virtual std::string getGroupForSe(const std::string se);
 
+
     virtual void submitHost(const std::string & jobId);
 
     virtual std::string transferHost(int fileId);
 
     virtual std::string transferHostV(std::map<int,std::string>& fileIds);
 
-    virtual bool checkIfSeIsMemberOfAnotherGroup( const std::string & member);
-
+    //t_config_symbolic
     virtual void addLinkConfig(LinkConfig* cfg);
     virtual void updateLinkConfig(LinkConfig* cfg);
     virtual void deleteLinkConfig(std::string source, std::string destination);
@@ -244,6 +229,8 @@ public:
     virtual void deleteActivityConfig(std::string vo);
     virtual bool isActivityConfigActive(std::string vo);
     virtual std::map< std::string, double > getActivityConfig(std::string vo);
+
+    virtual bool checkIfSeIsMemberOfAnotherGroup( const std::string & member);
 
     virtual void addFileShareConfig(int file_id, std::string source, std::string destination, std::string vo);
 
@@ -271,9 +258,9 @@ public:
 
     virtual int sumUpVoShares (std::string source, std::string destination, std::set<std::string> vos);
 
-    virtual bool checkConnectionStatus();
-
     virtual void setPriority(std::string jobId, int priority);
+
+    virtual bool checkConnectionStatus();
 
     virtual void setRetry(int retry);
 
@@ -287,7 +274,7 @@ public:
 
     virtual void setToFailOldQueuedJobs(std::vector<std::string>& jobs);
 
-    virtual std::vector< std::pair<std::string, std::string> > getPairsForSe(std::string se) ;
+    virtual std::vector< std::pair<std::string, std::string> > getPairsForSe(std::string se);
 
     virtual std::vector<std::string> getAllStandAlloneCfgs();
 
@@ -323,7 +310,7 @@ public:
 
     virtual void cancelJobsInTheQueue(const std::string& dn, std::vector<std::string>& jobs);
 
-    virtual void transferLogFile(const std::string& filePath, const std::string& jobId, int fileId, bool debug);
+    virtual void transferLogFile( const std::string& filePath, const std::string& jobId, int fileId, bool debug);
 
     virtual struct message_state getStateOfTransfer(const std::string& jobId, int fileId);
 
@@ -351,22 +338,48 @@ public:
 
     virtual void getTransferRetries(int fileId, std::vector<FileRetry*>& retries);
 
-    // These are not exposed by the db interface
-    bool assignSanityRuns(SafeConnection& conn, struct message_sanity &msg);
+    bool assignSanityRuns(soci::session& sql, struct message_sanity &msg);
 
-    void resetSanityRuns(SafeConnection& conn, struct message_sanity &msg);
+    void resetSanityRuns(soci::session& sql, struct message_sanity &msg);
+
+    void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end);
+
+    std::map<std::string, double> getActivityShareConf(soci::session& sql, std::string vo);
+
+    std::map<std::string, long long> getActivitiesInQueue(soci::session& sql, std::string src, std::string dst, std::string vo);
+
+    std::map<std::string, int> getFilesNumPerActivity(soci::session& sql, std::string src, std::string dst, std::string vo, int filesNum);
 
 private:
-    OracleConnection *conn;
-    OracleTypeConversions *conv;
+    size_t                poolSize;
+    soci::connection_pool* connectionPool;
+    std::string           hostname;
+
     bool getInOutOfSe(const std::string& sourceSe, const std::string& destSe);
-    int getOptimizerMode();
-    void countFileInTerminalStates(SafeConnection& pooledConnection, std::string jobId,
+
+    void recordOptimizerUpdate(soci::session& sql, int active, double filesize, double throughput,
+                               int nostreams, int timeout, int buffersize,std::string source_hostname, std::string destin_hostname);
+
+    int getOptimizerMode(soci::session& sql);
+
+    void countFileInTerminalStates(soci::session& sql, std::string jobId,
                                    unsigned int& finished, unsigned int& cancelled, unsigned int& failed);
-    OptimizerSample optimizerObject;
-    std::string ftsHostName;
+
+
+    bool getChangedFile (std::string source, std::string dest, double rate, double thr, double avgThr);
+
     int lowDefault;
     int highDefault;
     int jobsNum;
     int filesNum;
+
+    struct HashSegment
+    {
+        unsigned start;
+        unsigned end;
+
+        HashSegment(): start(0), end(0xFFFF) {}
+    } hashSegment;
+
+    std::vector< boost::tuple<std::string, std::string, double, double, double> > filesMemStore;
 };
