@@ -18,13 +18,11 @@
  *
  */
 
-
 #include "signal_logger.h"
 #include <unistd.h>
 #include <execinfo.h>
 #include <stdlib.h>
 #include <iostream>
-
 
 std::string stackTrace("");
 
@@ -44,6 +42,10 @@ void SignalLogger::log_stack(int sig)
         }
     else
         {
+            char signal_buffer[64];
+            snprintf(signal_buffer, sizeof(signal_buffer), "Caught signal %d", sig);
+            stackTrace = std::string(signal_buffer) + '\n';
+
             signal(sig, SIG_DFL);
             const int stack_size = 25;
             void * array[stack_size]= {0};
