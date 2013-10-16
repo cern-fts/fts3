@@ -105,3 +105,36 @@ class Cli:
             pairDict[(src,dst)] = f
         return pairDict
 
+
+    def getConfig(self, sourceSE, destSE = None):
+        cmdArray = ['fts-config-get', '-s', config.Fts3Endpoint, sourceSE]
+        if destSE:
+            cmdArray.append(destSE)
+        logging.debug("Spawning %s" % ' '.join(cmdArray))
+        proc = subprocess.Popen(cmdArray, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        rcode = proc.wait()
+        if rcode != 0:
+            return None
+        return json.loads(proc.stdout.read().strip())
+
+
+    def setConfig(self, cfg):
+        cmdArray = ['fts-config-set', '-s', config.Fts3Endpoint, "'" + json.dumps(cfg) + "'"]
+        logging.debug("Spawning %s" % ' '.join(cmdArray))
+        proc = subprocess.Popen(cmdArray, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        rcode = proc.wait()
+        if rcode != 0:
+            logging.error(proc.stdout.read())
+            logging.error(proc.stderr.read())
+            raise Exception("fts-config-set failed with exit code %d" % rcode)
+
+
+    def delConfig(self, cfg):
+        cmdArray = ['fts-config-del', '-s', config.Fts3Endpoint, "'" + json.dumps(cfg) + "'"]
+        logging.debug("Spawning %s" % ' '.join(cmdArray))
+        proc = subprocess.Popen(cmdArray, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        rcode = proc.wait()
+        if rcode != 0:
+            logging.error(proc.stdout.read())
+            logging.error(proc.stderr.read())
+            raise Exception("fts-config-del failed with exit code %d" % rcode)

@@ -32,3 +32,10 @@ def getStoragePairs():
 
 	return pairs
 
+
+def getStorageElement(surl):
+	"""
+	Return only the relevant part for the configuration from the surl
+	"""
+	parsed = urlparse(surl)
+	return "%s://%s" % (parsed.scheme, parsed.hostname)
