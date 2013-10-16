@@ -183,10 +183,10 @@ struct type_conversion<SeAndConfig>
 
     static void from_base(values const& v, indicator, SeAndConfig& sc)
     {
-        sc.SE_NAME     = v.get<std::string>("SE_NAME");
-        sc.SHARE_ID    = v.get<std::string>("SHARE_ID");
-        sc.SHARE_TYPE  = v.get<std::string>("SHARE_TYPE");
-        sc.SHARE_VALUE = v.get<std::string>("SHARE_VALUE");
+        sc.SE_NAME     = v.get<std::string>("SE_NAME", "");
+        sc.SHARE_ID    = v.get<std::string>("SHARE_ID", "");
+        sc.SHARE_TYPE  = v.get<std::string>("SHARE_TYPE", "");
+        sc.SHARE_VALUE = v.get<std::string>("SHARE_VALUE", "");
     }
 };
 
@@ -275,17 +275,17 @@ struct type_conversion<Se>
 
     static void from_base(values const& v, indicator, Se& se)
     {
-        se.ENDPOINT = v.get<std::string>("ENDPOINT");
-        se.SE_TYPE  = v.get<std::string>("SE_TYPE");
-        se.SITE     = v.get<std::string>("SITE");
-        se.NAME     = v.get<std::string>("NAME");
-        se.STATE    = v.get<std::string>("STATE");
-        se.VERSION  = v.get<std::string>("VERSION");
-        se.HOST     = v.get<std::string>("HOST");
-        se.SE_TRANSFER_TYPE     = v.get<std::string>("SE_TRANSFER_TYPE");
-        se.SE_TRANSFER_PROTOCOL = v.get<std::string>("SE_TRANSFER_PROTOCOL");
-        se.SE_CONTROL_PROTOCOL  = v.get<std::string>("SE_CONTROL_PROTOCOL");
-        se.GOCDB_ID = v.get<std::string>("GOCDB_ID");
+        se.ENDPOINT = v.get<std::string>("ENDPOINT", "");
+        se.SE_TYPE  = v.get<std::string>("SE_TYPE", "");
+        se.SITE     = v.get<std::string>("SITE", "");
+        se.NAME     = v.get<std::string>("NAME", "");
+        se.STATE    = v.get<std::string>("STATE", "");
+        se.VERSION  = v.get<std::string>("VERSION", "");
+        se.HOST     = v.get<std::string>("HOST", "");
+        se.SE_TRANSFER_TYPE     = v.get<std::string>("SE_TRANSFER_TYPE", "");
+        se.SE_TRANSFER_PROTOCOL = v.get<std::string>("SE_TRANSFER_PROTOCOL", "");
+        se.SE_CONTROL_PROTOCOL  = v.get<std::string>("SE_CONTROL_PROTOCOL", "");
+        se.GOCDB_ID = v.get<std::string>("GOCDB_ID", "");
     }
 };
 
@@ -296,11 +296,11 @@ struct type_conversion<SeConfig>
 
     static void from_base(values const& v, indicator, SeConfig& config)
     {
-        config.source         = v.get<std::string>("SOURCE");
-        config.destination    = v.get<std::string>("DEST");
-        config.vo             = v.get<std::string>("VO");
-        config.symbolicName   = v.get<std::string>("SYMBOLICNAME");
-        config.state          = v.get<std::string>("STATE");
+        config.source         = v.get<std::string>("SOURCE", "");
+        config.destination    = v.get<std::string>("DEST", "");
+        config.vo             = v.get<std::string>("VO", "");
+        config.symbolicName   = v.get<std::string>("SYMBOLICNAME", "");
+        config.state          = v.get<std::string>("STATE", "");
     }
 
 };
@@ -312,10 +312,10 @@ struct type_conversion<ShareConfig>
 
     static void from_base(values const& v, indicator, ShareConfig& config)
     {
-        config.source           = v.get<std::string>("SOURCE");
-        config.destination      = v.get<std::string>("DESTINATION");
-        config.vo               = v.get<std::string>("VO");
-        config.active_transfers = static_cast<int>(v.get<long long>("ACTIVE"));
+        config.source           = v.get<std::string>("SOURCE", "");
+        config.destination      = v.get<std::string>("DESTINATION", "");
+        config.vo               = v.get<std::string>("VO", "");
+        config.active_transfers = static_cast<int>(v.get<long long>("ACTIVE", -1));
     }
 };
 
@@ -327,9 +327,9 @@ struct type_conversion<SeGroup>
     static void from_base(values const& v, indicator, SeGroup& grp)
     {
         grp.active       = static_cast<int>(v.get<long long>("ACTIVE", -1));
-        grp.groupName    = v.get<std::string>("GROUPNAME");
-        grp.member       = v.get<std::string>("MEMBER");
-        grp.symbolicName = v.get<std::string>("SYMBOLICNAME");
+        grp.groupName    = v.get<std::string>("GROUPNAME", "");
+        grp.member       = v.get<std::string>("MEMBER", "");
+        grp.symbolicName = v.get<std::string>("SYMBOLICNAME", "");
     }
 };
 
@@ -340,15 +340,15 @@ struct type_conversion<LinkConfig>
 
     static void from_base(values const& v, indicator, LinkConfig& lnk)
     {
-        lnk.source            = v.get<std::string>("SOURCE");
-        lnk.destination       = v.get<std::string>("DESTINATION");
-        lnk.state             = v.get<std::string>("STATE");
-        lnk.symbolic_name     = v.get<std::string>("SYMBOLICNAME");
-        lnk.NOSTREAMS         = static_cast<int>(v.get<long long>("NOSTREAMS"));
-        lnk.TCP_BUFFER_SIZE   = static_cast<int>(v.get<long long>("TCP_BUFFER_SIZE"));
-        lnk.URLCOPY_TX_TO     = static_cast<int>(v.get<long long>("URLCOPY_TX_TO"));
-        lnk.NO_TX_ACTIVITY_TO = static_cast<int>(v.get<long long>("NO_TX_ACTIVITY_TO"));
-        lnk.auto_tuning     = v.get<std::string>("AUTO_TUNING");
+        lnk.source            = v.get<std::string>("SOURCE", "");
+        lnk.destination       = v.get<std::string>("DESTINATION", "");
+        lnk.state             = v.get<std::string>("STATE", "");
+        lnk.symbolic_name     = v.get<std::string>("SYMBOLICNAME", "");
+        lnk.NOSTREAMS         = static_cast<int>(v.get<long long>("NOSTREAMS", 0));
+        lnk.TCP_BUFFER_SIZE   = static_cast<int>(v.get<long long>("TCP_BUFFER_SIZE", 0));
+        lnk.URLCOPY_TX_TO     = static_cast<int>(v.get<long long>("URLCOPY_TX_TO", 0));
+        lnk.NO_TX_ACTIVITY_TO = static_cast<int>(v.get<long long>("NO_TX_ACTIVITY_TO", 0));
+        lnk.auto_tuning     = v.get<std::string>("AUTO_TUNING", "");
     }
 };
 

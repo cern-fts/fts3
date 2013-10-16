@@ -3668,7 +3668,7 @@ bool OracleAPI::checkGroupExists(const std::string & groupName)
     try
         {
             std::string grp;
-            sql << "SELECT groupName FROM t_group_members WHERE groupName = :group",
+            sql << "SELECT groupName FROM t_group_members WHERE groupName = :groupName",
                 soci::use(groupName), soci::into(grp);
 
             exists = sql.got_data();
@@ -3689,7 +3689,7 @@ void OracleAPI::getGroupMembers(const std::string & groupName, std::vector<std::
     try
         {
             soci::rowset<std::string> rs = (sql.prepare << "SELECT member FROM t_group_members "
-                                            "WHERE groupName = :group",
+                                            "WHERE groupName = :groupName",
                                             soci::use(groupName));
             for (soci::rowset<std::string>::const_iterator i = rs.begin();
                     i != rs.end(); ++i)
@@ -3733,7 +3733,7 @@ void OracleAPI::addMemberToGroup(const std::string & groupName, std::vector<std:
 
             std::string member;
             soci::statement stmt = (sql.prepare << "INSERT INTO t_group_members(member, groupName) "
-                                    "                    VALUES (:member, :group)",
+                                    "                    VALUES (:member, :groupName)",
                                     soci::use(member), soci::use(groupName));
             for (std::vector<std::string>::const_iterator i = groupMembers.begin();
                     i != groupMembers.end(); ++i)
@@ -3764,7 +3764,7 @@ void OracleAPI::deleteMembersFromGroup(const std::string & groupName, std::vecto
 
             std::string member;
             soci::statement stmt = (sql.prepare << "DELETE FROM t_group_members "
-                                    "WHERE groupName = :group AND member = :member",
+                                    "WHERE groupName = :groupName AND member = :member",
                                     soci::use(groupName), soci::use(member));
             for (std::vector<std::string>::const_iterator i = groupMembers.begin();
                     i != groupMembers.end(); ++i)
@@ -3942,8 +3942,8 @@ bool OracleAPI::isGrInPair(std::string group)
     try
         {
             sql << "SELECT symbolicName FROM t_link_config WHERE "
-                "  ((source = :group AND destination <> '*') OR "
-                "  (source <> '*' AND destination = :group))",
+                "  ((source = :groupName AND destination <> '*') OR "
+                "  (source <> '*' AND destination = :groupName))",
                 soci::use(group, "group");
             inPair = sql.got_data();
         }
@@ -4318,8 +4318,8 @@ void OracleAPI::addFileShareConfig(int file_id, std::string source, std::string 
             sql.begin();
 
             sql << " MERGE INTO t_file_share_config USING "
-                   "    (SELECT :fileId as fileId, :source as source, :destination as destination, :vo as vo) Config "
-                   " ON (t_file_share_config.file_id = Config.file_id AND t_file_share_config.source = Config.source AND "
+                   "    (SELECT :fileId as fileId, :source as source, :destination as destination, :vo as vo From dual) Config "
+                   " ON (t_file_share_config.file_id = Config.fileId AND t_file_share_config.source = Config.source AND "
                    "     t_file_share_config.destination = Config.destination AND t_file_share_config.vo = Config.vo) "
                    " WHEN NOT MATCHED THEN INSERT (file_id, source, destination, vo) VALUES "
                    "                              (Config.fileId, Config.source, Config.destination, Config.vo)",
@@ -5753,14 +5753,12 @@ bool OracleAPI::isShareOnly(std::string se)
     bool ret = true;
     try
         {
+            std::string symbolicName;
             sql <<
                 " select symbolicName from t_link_config "
                 " where source = :source and destination = '*' and auto_tuning = 'all'",
-                soci::use(se)
-                ;
-
+                soci::use(se), soci::into(symbolicName);
             ret = sql.got_data();
-
         }
     catch (std::exception& e)
         {
