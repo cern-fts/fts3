@@ -1,6 +1,6 @@
 Name: fts-oracle
 Version: 3.1.30
-Release: 1%{?dist}
+Release: 2%{?dist}
 Summary: File Transfer Service V3 oracle plug-in
 Group: Applications/Internet
 License: ASL 2.0
@@ -18,6 +18,8 @@ BuildRequires:  oracle-instantclient-devel%{?_isa}
 BuildRequires:  libuuid-devel%{?_isa}
 Requires(pre):  shadow-utils
 BuildRequires:  soci-oracle-devel
+
+Requires:  soci-oracle%{?_isa}
 
 AutoReq: no
 AutoProv: yes
