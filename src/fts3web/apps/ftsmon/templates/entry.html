@@ -2,83 +2,69 @@
 
 <!doctype html>
 <html lang="en" ng-app="ftsmon">
-	<head>
-		<meta charset="utf-8">
-		
-		<title>
-		  {% getSetting "SITE_NAME" %} FTS3
-	    </title>
-		<link rel="shortcut icon" href="{% getSetting 'SITE_LOGO_SMALL' %}" />
-		
-		<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.5/angular.js"></script>
-		<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.5/angular-resource.js"></script>
-		<script src="{{STATIC_URL}}js/ui-bootstrap-tpls-0.5.0.min.js"></script>
-		
-		<script>var STATIC_ROOT="{{STATIC_URL}}";</script>
-		<script>var LOG_BASE_URL="{% getSetting 'LOG_BASE_URL' %}";</script>
-		
-		<script src="{{STATIC_URL}}js/ftsmon.js"></script>
-		<script src="{{STATIC_URL}}js/resources.js"></script>
-		<script src="{{STATIC_URL}}js/jobs.js"></script>
-		<script src="{{STATIC_URL}}js/transfers.js"></script>
-		<script src="{{STATIC_URL}}js/overview.js"></script>
-		<script src="{{STATIC_URL}}js/staging.js"></script>
-		<script src="{{STATIC_URL}}js/optimizer.js"></script>
-		<script src="{{STATIC_URL}}js/errors.js"></script>
-		<script src="{{STATIC_URL}}js/config.js"></script>
-		<script src="{{STATIC_URL}}js/statistics.js"></script>
-		
-		<link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.min.css" rel="stylesheet">
-		<link href="{{STATIC_URL}}css/overrides.css" rel="stylesheet">
-		<link href="{{STATIC_URL}}css/styles.css" rel="stylesheet">
-		
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	</head>
-	
-	<body>
-		<header class="header">
-			<div class="navbar navbar-fixed-top">
-				<div class="brand">
-					<img class="" src="{{STATIC_URL}}img/loader.gif" ng-show="loading">
-				</div>
-				<div class="navbar-inner">
-					<div class="container">
-						<span class="brand" href="/">
-						  <img style="height: 24px" src="{% getSetting 'SITE_LOGO' %}">
-						</span>
-						<ul class="nav">
-						    <li><a href="#/">Overview</a></li>
-							<li><a href="#/jobs">Jobs</a></li>
-					        <li><a href="#/transfers">Transfers</a></li>
-							<li><a href="#/staging">Staging</a></li>
-							<li class="dropdown">
-							    <a href="#" class="dropdown-toggle">
-							        Optimizer<b class="caret"></b>
-							    </a>
-							    <ul class="dropdown-menu">
-							        <li><a href="#/optimizer">Achieved throughput</a></li>
-							        <li><a href="#/optimizer/active">Allowed actives per pair</a></li>
-							    </ul>
-							</li>
-							<li><a href="#errors">Error reasons</a></li>
-							<li class="dropdown">
-                                <a href="#" class="dropdown-toggle">
-                                    Statistics<b class="caret"></b>
-                                </a>
-                                <ul class="dropdown-menu">
-                                    <li><a href="#/statistics/overview">Overview</a></li>
-                                    <li><a href="#/statistics/servers">FTS3 Servers</a></li>
-                                    <li><a href="#/statistics/pairs">Per pair</a></li>
-                                    <li><a href="#/statistics/vos">Per VO</a></li>
-                                    <li><a href="#/statistics/profiling">Profiling</a></li>
-                                </ul>
-                            </li>
-                            <li><a href="#/configaudit">Configuration audit</a></li>
-                            <li><a href="#/archive">Archive</a></li>
-                        </ul>
-                        <form class="navbar-search pull-right ng-pristine ng-valid" ng-submit="searchJob()">
-                            <input type="text" ng-model="jobId" class="search-query" placeholder="Job id"/>
-                        </form>
+    <head>
+        <meta charset="utf-8">
+
+        <title>
+          {% getSetting "SITE_NAME" %} FTS3
+        </title>
+        <link rel="shortcut icon" href="{% getSetting 'SITE_LOGO_SMALL' %}" />
+
+        <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.min.css" rel="stylesheet">
+        <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-responsive.min.css" rel="stylesheet">
+        <link href="{{STATIC_URL}}css/overrides.css" rel="stylesheet">
+        <link href="{{STATIC_URL}}css/styles.css" rel="stylesheet">
+
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+
+    <body>
+        <header class="header">
+            <div class="navbar navbar-fixed-top navbar-inverse">
+                <span class="brand">
+                    <img class="" src="{{STATIC_URL}}img/loader.gif" ng-show="loading">
+                </span>
+                <div class="navbar-inner">
+                    <div class="container">
+                       <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                           <span class="icon-bar"></span>
+                           <span class="icon-bar"></span>
+                           <span class="icon-bar"></span>
+                       </button>
+
+                       <span class="brand">
+                         <img style="height: 24px" src="{% getSetting 'SITE_LOGO' %}">
+                       </span>
+
+                        <div class="nav-collapse collapse">
+                            <ul class="nav">
+                                <li><a href="#" data-toggle="collapse" data-target=".nav-collapse">Overview</a></li>
+                                <li><a href="#jobs" data-toggle="collapse" data-target=".nav-collapse">Jobs</a></li>
+                                <li><a href="#transfers" data-toggle="collapse" data-target=".nav-collapse">Transfers</a></li>
+                                <li><a href="#staging" data-toggle="collapse" data-target=".nav-collapse">Staging</a></li>
+                                <li><a href="#optimizer" data-toggle="collapse" data-target=".nav-collapse">Optimizer</a></li>
+                                <li><a href="#errors" data-toggle="collapse" data-target=".nav-collapse">Error reasons</a></li>
+                                <li class="dropdown">
+                                    <a href="#" class="dropdown-toggle">
+                                        Statistics<b class="caret"></b>
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        <li><a href="#statistics/overview" data-toggle="collapse" data-target=".nav-collapse">Overview</a></li>
+                                        <li><a href="#statistics/servers" data-toggle="collapse" data-target=".nav-collapse">FTS3 Servers</a></li>
+                                        <li><a href="#statistics/pairs" data-toggle="collapse" data-target=".nav-collapse">Per pair</a></li>
+                                        <li><a href="#statistics/vos" data-toggle="collapse" data-target=".nav-collapse">Per VO</a></li>
+                                        <li><a href="#statistics/profiling" data-toggle="collapse" data-target=".nav-collapse">Profiling</a></li>
+                                    </ul>
+                                </li>
+                                <li><a href="#configaudit" data-toggle="collapse" data-target=".nav-collapse">Configuration audit</a></li>
+                                <li><a href="#archive" data-toggle="collapse" data-target=".nav-collapse">Archive</a></li>
+                            </ul>
+                            <div class="pull-right">
+                                <form class="navbar-search ng-pristine ng-valid" ng-submit="searchJob()">
+                                    <input type="text" ng-model="jobId" class="search-query" placeholder="Job id"/>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -86,5 +72,28 @@
         <div role="main">
             <div ng-view></div>
         </div>
+
+        <!--  Scripts -->
+
+        <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.5/angular.js"></script>
+        <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.5/angular-resource.js"></script>
+        <script src="{{STATIC_URL}}/js/ui-bootstrap-tpls-0.5.0.min.js"></script>
+
+        <script src="//codeorigin.jquery.com/jquery-1.10.2.min.js"></script>
+        <script src="//netdna.bootstrapcdn.com/bootstrap/2.3.2/js/bootstrap.min.js"></script>
+
+        <script>var STATIC_ROOT="{{STATIC_URL}}";</script>
+        <script>var LOG_BASE_URL="{% getSetting 'LOG_BASE_URL' %}";</script>
+
+        <script src="{{STATIC_URL}}js/ftsmon.js"></script>
+        <script src="{{STATIC_URL}}js/resources.js"></script>
+        <script src="{{STATIC_URL}}js/jobs.js"></script>
+        <script src="{{STATIC_URL}}js/transfers.js"></script>
+        <script src="{{STATIC_URL}}js/overview.js"></script>
+        <script src="{{STATIC_URL}}js/staging.js"></script>
+        <script src="{{STATIC_URL}}js/optimizer.js"></script>
+        <script src="{{STATIC_URL}}js/errors.js"></script>
+        <script src="{{STATIC_URL}}js/config.js"></script>
+        <script src="{{STATIC_URL}}js/statistics.js"></script>
     </body>
 </html>

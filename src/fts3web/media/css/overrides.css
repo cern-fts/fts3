@@ -1,39 +1,6 @@
-.navbar-inner {
-	background: black;
-}
-
-.navbar .nav>li>a {
-	color: #CCC;
-	text-shadow: none;
-}
-
-.navbar .nav>li>a:hover {
-	color: white;
-}
-
 .odd {
 	background: #E5E5E5;
 }
-
-.navbar .nav li.dropdown.open>.dropdown-toggle, .navbar .nav li.dropdown.active>.dropdown-toggle, .navbar .nav li.dropdown.open.active>.dropdown-toggle {
-	background: black;
-	color: white;
-}
-
-.navbar .nav li:hover.dropdown>.dropdown-toggle .caret {
-    border-top-color: white;
-    border-bottom-color: white;
-}
-
-.navbar .nav li.dropdown.open>.dropdown-toggle .caret, .navbar .nav li.dropdown.active>.dropdown-toggle .caret, .navbar .nav li.dropdown.open.active>.dropdown-toggle .caret {
-	border-top-color: white;
-	border-bottom-color: white;
-}
-
-.navbar-search .search-query {
-	font-size: 80%;
-}
-
 
 .icon-plus {
 	cursor: pointer;
