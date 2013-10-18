@@ -1,7 +1,7 @@
 Summary: FTS3 Web Application for monitoring
 Name: fts-monitoring
 Version: 3.1.30
-Release: 1%{?dist}
+Release: 2%{?dist}
 URL: https://svnweb.cern.ch/trac/fts3
 License: ASL 2.0
 Group: Applications/Internet
@@ -38,16 +38,24 @@ can be served.
 
 %post selinux
 if [ "$1" -le "1" ] ; then # First install
-semanage port -a -t http_port_t -p tcp 8449
-setsebool -P httpd_can_network_connect=1 
-chcon -R system_u:object_r:httpd_sys_content_t:s0 /var/log/fts3/
+    semanage port -a -t http_port_t -p tcp 8449
+    setsebool -P httpd_can_network_connect=1 
+    chcon -R system_u:object_r:httpd_sys_content_t:s0 /var/log/fts3/
+    libnzz="/usr/lib64/oracle/11.2.0.3.0/client/lib64/libnnz11.so"
+    if [ -f "$libnzz" ]; then
+        execstack -c "$libnzz"
+    fi
 fi
 
 %preun selinux
 if [ "$1" -lt "1" ] ; then # Final removal
-semanage port -d -t http_port_t -p tcp 8449
-setsebool -P httpd_can_network_connect=0
-chcon -R system_u:object_r:var_log_t:s0 /var/log/fts3/
+    semanage port -d -t http_port_t -p tcp 8449
+    setsebool -P httpd_can_network_connect=0
+    chcon -R system_u:object_r:var_log_t:s0 /var/log/fts3/
+    libnzz="/usr/lib64/oracle/11.2.0.3.0/client/lib64/libnnz11.so"
+    if [ -f "$libnzz" ]; then
+        execstack -s "$libnzz"
+    fi
 fi
 
 %prep
