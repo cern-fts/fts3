@@ -47,7 +47,7 @@ private:
     {
         while (!stopThreads)
             {
-                unsigned index, count, start, end;
+                unsigned index=0, count=0, start=0, end=0;
                 try
                     {
                         db::DBSingleton::instance().getDBObjectInstance()->updateHeartBeat(&index, &count, &start, &end);
