@@ -458,7 +458,6 @@ void OracleAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& f
     time_t now = time(NULL);
     struct tm tTime;
     gmtime_r(&now, &tTime);
-    soci::indicator isNull = soci::i_ok;
     std::vector< boost::tuple<std::string, std::string, std::string> > distinct;
     distinct.reserve(1500); //approximation
 
@@ -517,16 +516,21 @@ void OracleAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& f
                     bool manualConfigExists = false;
                     int limit = 0;
                     int maxActive = 0;
+		    soci::indicator isNull = soci::i_ok;
 
                     sql << "SELECT COUNT(*) FROM t_link_config WHERE (source = :source OR source = '*') AND (destination = :dest OR destination = '*')",
                         soci::use(boost::get<0>(triplet)),soci::use(boost::get<1>(triplet)),soci::into(count);
                     if(count > 0)
                         manualConfigExists = true;
-                    sql << "SELECT COUNT(*) FROM t_group_members WHERE (member=:source OR member=:dest)",
-                        soci::use(boost::get<0>(triplet)),soci::use(boost::get<1>(triplet)),soci::into(count);
-                    if(count > 0)
-                        manualConfigExists = true;
+			
+		    if(!manualConfigExists){	
+                    	sql << "SELECT COUNT(*) FROM t_group_members WHERE (member=:source OR member=:dest)",
+                        	soci::use(boost::get<0>(triplet)),soci::use(boost::get<1>(triplet)),soci::into(count);
+                   	if(count > 0)
+                        	manualConfigExists = true;
+		    }
 
+		    if(!manualConfigExists){
                     sql << " select count(*) from t_file where source_se=:source_se and dest_se=:dest_se and file_state in ('READY','ACTIVE') ",
                         soci::use(boost::get<0>(triplet)),
                         soci::use(boost::get<1>(triplet)),
@@ -538,12 +542,13 @@ void OracleAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& f
                         soci::into(maxActive, isNull);
 
                     /* need to check whether a manual config exists for source_se or dest_se so as not to limit the files */
-                    if (isNull != soci::i_null && !manualConfigExists)
+                    if (isNull != soci::i_null && maxActive > 0)
                         {
                             filesNum = (maxActive - limit);
                             if(filesNum <=0 )
                                 continue;
                         }
+		    }
 
                     std::map<std::string, int> activityFilesNum =
                         getFilesNumPerActivity(sql, boost::get<0>(triplet), boost::get<1>(triplet), boost::get<2>(triplet), filesNum);

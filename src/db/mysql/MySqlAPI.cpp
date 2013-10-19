@@ -488,7 +488,6 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
     time_t now = time(NULL);
     struct tm tTime;
     gmtime_r(&now, &tTime);
-    soci::indicator isNull = soci::i_ok;
     std::vector< boost::tuple<std::string, std::string, std::string> > distinct;
     distinct.reserve(1500); //approximation
 
@@ -547,32 +546,42 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                     bool manualConfigExists = false;
                     int limit = 0;
                     int maxActive = 0;
+		    soci::indicator isNull = soci::i_ok;
 
+		     //1st check if manual config exists
                     sql << "SELECT COUNT(*) FROM t_link_config WHERE (source = :source OR source = '*') AND (destination = :dest OR destination = '*')",
-                        soci::use(boost::get<0>(triplet)),soci::use(boost::get<1>(triplet)),soci::into(count);
-                    if(count > 0)
-                        manualConfigExists = true;
-                    sql << "SELECT COUNT(*) FROM t_group_members WHERE (member=:source OR member=:dest)",
-                        soci::use(boost::get<0>(triplet)),soci::use(boost::get<1>(triplet)),soci::into(count);
+                        soci::use(boost::get<0>(triplet)), soci::use(boost::get<1>(triplet)), soci::into(count);
                     if(count > 0)
                         manualConfigExists = true;
 
-                    sql << " select count(*) from t_file where source_se=:source_se and dest_se=:dest_se and file_state in ('READY','ACTIVE') ",
-                        soci::use(boost::get<0>(triplet)),
-                        soci::use(boost::get<1>(triplet)),
-                        soci::into(limit);
-
-                    sql << "select active from t_optimize_active where source_se=:source_se and dest_se=:dest_se",
-                        soci::use(boost::get<0>(triplet)),
-                        soci::use(boost::get<1>(triplet)),
-                        soci::into(maxActive, isNull);
-
-                    /* need to check whether a manual config exists for source_se or dest_se so as not to limit the files */
-                    if (isNull != soci::i_null && !manualConfigExists)
+		    //if 1st check is false, check 2nd time for manual config
+                    if(!manualConfigExists)
                         {
-                            filesNum = (maxActive - limit);
-                            if(filesNum <=0 )
-                                continue;
+                            sql << "SELECT COUNT(*) FROM t_group_members WHERE (member=:source OR member=:dest)",
+                                soci::use(boost::get<0>(triplet)), soci::use(boost::get<1>(triplet)), soci::into(count);
+                            if(count > 0)
+                                manualConfigExists = true;
+                        }
+
+		    //both previously check returned false, you optimizer
+                    if(!manualConfigExists)
+                        {
+                            sql << " select count(*) from t_file where source_se=:source_se and dest_se=:dest_se and file_state in ('READY','ACTIVE') ",
+                                soci::use(boost::get<0>(triplet)),
+                                soci::use(boost::get<1>(triplet)),
+                                soci::into(limit);
+
+                            sql << "select active from t_optimize_active where source_se=:source_se and dest_se=:dest_se",
+                                soci::use(boost::get<0>(triplet)),
+                                soci::use(boost::get<1>(triplet)),
+                                soci::into(maxActive, isNull);
+                       
+                            if (isNull != soci::i_null && maxActive > 0)
+                                {
+                                    filesNum = (maxActive - limit);
+                                    if(filesNum <=0 )
+                                        continue;
+                                }
                         }
 
                     std::map<std::string, int> activityFilesNum =
