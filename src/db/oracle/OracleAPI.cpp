@@ -828,7 +828,7 @@ unsigned int OracleAPI::updateFileStatus(TransferFiles* file, const std::string 
             stmt.exchange(soci::use(hostname, "hostname"));
             stmt.alloc();
             stmt.prepare("UPDATE t_file SET "
-                         "    file_state = :state, start_time = CURRENT_TIMESTAMP, transferHost = :hostname "
+                         "    file_state = :state, start_time = sys_extract_utc(systimestamp), transferHost = :hostname "
                          "WHERE file_id = :fileId AND file_state = 'SUBMITTED'");
             stmt.define_and_bind();
             stmt.execute(true);
@@ -966,7 +966,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_elemen
                 "                   reuse_job, bring_online, retry, retry_delay, job_metadata,        "
                 "                  source_se, dest_se)                                                "
                 "VALUES (:jobId, :jobState, :jobParams, :userDn, :userCred, :priority,                 "
-                "        :voName, CURRENT_TIMESTAMP, :internalParams, :submitHost, :credId,              "
+                "        :voName, sys_extract_utc(systimestamp), :internalParams, :submitHost, :credId,              "
                 "        :myproxyServer, :spaceToken, :overwriteFlag, :sourceSpaceToken,               "
                 "        :copyPinLifetime, :failNearline, :checksumMethod,             "
                 "        :reuseJob, :bring_online, :retry, :retryDelay, :job_metadata,                "
@@ -1005,7 +1005,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_elemen
             soci::statement pairStmtSeBlaklisted = (
                     sql.prepare <<
                     "INSERT INTO t_file (vo_name, job_id, file_state, source_surl, dest_surl, checksum, user_filesize, file_metadata, selection_strategy, file_index, source_se, dest_se, wait_timestamp, wait_timeout) "
-                    "VALUES (:voName, :jobId, :fileState, :sourceSurl, :destSurl, :checksum, :filesize, :metadata, :ss, :fileIndex, :source_se, :dest_se, CURRENT_TIMESTAMP, :timeout) ",
+                    "VALUES (:voName, :jobId, :fileState, :sourceSurl, :destSurl, :checksum, :filesize, :metadata, :ss, :fileIndex, :source_se, :dest_se, sys_extract_utc(systimestamp), :timeout) ",
                     soci::use(voName),
                     soci::use(jobId),
                     soci::use(initialState),
@@ -1726,7 +1726,7 @@ bool OracleAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, cons
 
                     // Update job
                     sql << "UPDATE t_job SET "
-                        "    job_state = :state, job_finished = CURRENT_TIMESTAMP, finish_time = CURRENT_TIMESTAMP, "
+                        "    job_state = :state, job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), "
                         "    reason = :reason "
                         "WHERE job_id = :jobId AND "
                         "      job_state NOT IN ('FINISHEDDIRTY','CANCELED','FINISHED','FAILED')",
@@ -1734,7 +1734,7 @@ bool OracleAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, cons
                         soci::use(job_id, "jobId");
 
                     // And file finish timestamp
-                    sql << "UPDATE t_file SET job_finished = CURRENT_TIMESTAMP WHERE job_id = :jobId ",
+                    sql << "UPDATE t_file SET job_finished = sys_extract_utc(systimestamp) WHERE job_id = :jobId ",
                         soci::use(job_id, "jobId");
 
                 }
@@ -1797,7 +1797,7 @@ void OracleAPI::cancelJob(std::vector<std::string>& requestIDs)
             for (std::vector<std::string>::const_iterator i = requestIDs.begin(); i != requestIDs.end(); ++i)
                 {
                     // Cancel job
-                    sql << "UPDATE t_job SET job_state = 'CANCELED', job_finished = CURRENT_TIMESTAMP, finish_time = CURRENT_TIMESTAMP, cancel_job='Y' "
+                    sql << "UPDATE t_job SET job_state = 'CANCELED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), cancel_job='Y' "
                         "                 ,reason = :reason "
                         "WHERE job_id = :jobId AND job_state NOT IN ('CANCELED','FINISHEDDIRTY', 'FINISHED', 'FAILED')",
                         soci::use(reason, "reason"), soci::use(*i, "jobId");
@@ -1818,7 +1818,7 @@ void OracleAPI::cancelJob(std::vector<std::string>& requestIDs)
                         }
 
                     // Cancel files
-                    sql << "UPDATE t_file SET file_state = 'CANCELED', job_finished = CURRENT_TIMESTAMP, finish_time = CURRENT_TIMESTAMP, "
+                    sql << "UPDATE t_file SET file_state = 'CANCELED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), "
                         "                  reason = :reason "
                         "WHERE job_id = :jobId AND file_state NOT IN ('CANCELED','FINISHED','FAILED')",
                         soci::use(reason, "reason"), soci::use(*i, "jobId");
@@ -2219,7 +2219,7 @@ void OracleAPI::auditConfiguration(const std::string & dn, const std::string & c
         {
             sql.begin();
             sql << "INSERT INTO t_config_audit (datetime, dn, config, action ) VALUES "
-                "                           (CURRENT_TIMESTAMP, :dn, :config, :action)",
+                "                           (sys_extract_utc(systimestamp), :dn, :config, :action)",
                 soci::use(dn), soci::use(config), soci::use(action);
             sql.commit();
         }
@@ -2360,7 +2360,7 @@ void OracleAPI::recordOptimizerUpdate(soci::session& sql, int active, double fil
             sql << "INSERT INTO t_optimizer_evolution "
                 " (datetime, source_se, dest_se, nostreams, timeout, active, throughput, buffer, filesize) "
                 " VALUES "
-                " (CURRENT_TIMESTAMP, :source, :dest, :nostreams, :timeout, :active, :throughput, :buffer, :filesize)",
+                " (sys_extract_utc(systimestamp), :source, :dest, :nostreams, :timeout, :active, :throughput, :buffer, :filesize)",
                 soci::use(source_hostname), soci::use(destin_hostname), soci::use(nostreams),
                 soci::use(timeout), soci::use(active), soci::use(throughput), soci::use(buffersize), soci::use(filesize);
             sql.commit();
@@ -2429,7 +2429,7 @@ bool OracleAPI::updateOptimizer(double throughputIn, int, double filesize, doubl
 
             stmt.prepare(
                 " UPDATE t_optimize "
-                " SET filesize = :fsize, throughput = :throughput, active = :active, datetime = CURRENT_TIMESTAMP, timeout= :timeout "
+                " SET filesize = :fsize, throughput = :throughput, active = :active, datetime = sys_extract_utc(systimestamp), timeout= :timeout "
                 " WHERE nostreams = :nstreams "
                 "   AND buffer = :buffer "
                 "   AND source_se = :source_se "
@@ -2460,7 +2460,7 @@ bool OracleAPI::updateOptimizer(double throughputIn, int, double filesize, doubl
                     stmt2.alloc();
 
                     stmt2.prepare("UPDATE t_optimize "
-                                  " SET datetime = CURRENT_TIMESTAMP "
+                                  " SET datetime = sys_extract_utc(systimestamp) "
                                   " WHERE nostreams = :nstreams "
                                   " AND buffer = :buffer "
                                   " AND source_se = :source_se "
@@ -2681,8 +2681,8 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                             " FROM t_file "
                             " WHERE source_se = :source_se AND dest_se = :dest_se AND "
                             "       file_state IN ('ACTIVE','FINISHED') AND throughput > 0 AND "
-                            "       filesize > 0 AND (start_time >= (CURRENT_TIMESTAMP - interval '5' minute) OR "
-                            "                         job_finished >= (CURRENT_TIMESTAMP - interval '5' minute)) "
+                            "       filesize > 0 AND (start_time >= (sys_extract_utc(systimestamp) - interval '5' minute) OR "
+                            "                         job_finished >= (sys_extract_utc(systimestamp) - interval '5' minute)) "
                             " ORDER BY job_finished DESC "
                             " ) WHERE rn >= 6 and rn <= 18",
                             soci::use(source_hostname), soci::use(destin_hostname));
@@ -2708,8 +2708,8 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                                            " WHERE source_se = :source AND dest_se = :dest AND "
                                            "       file_state IN ('ACTIVE','FINISHED') AND throughput > 0 AND "
                                            "       filesize > 0  AND "
-                                           "       (start_time >= (CURRENT_TIMESTAMP - interval '5' minute) OR "
-                                           "        job_finished >= (CURRENT_TIMESTAMP - interval '5' minute)) "
+                                           "       (start_time >= (sys_extract_utc(systimestamp) - interval '5' minute) OR "
+                                           "        job_finished >= (sys_extract_utc(systimestamp) - interval '5' minute)) "
                                            " ORDER BY job_finished DESC)"
                                            " WHERE rn <= 5 ",
                                            soci::use(source_hostname),soci::use(destin_hostname));
@@ -2731,7 +2731,7 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                     soci::rowset<std::string> rs = (sql.prepare << "SELECT file_state FROM t_file "
                                                     "WHERE "
                                                     "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                                                    "      (t_file.job_finished > (CURRENT_TIMESTAMP - interval '5' minute)) AND "
+                                                    "      (t_file.job_finished > (sys_extract_utc(systimestamp) - interval '5' minute)) AND "
                                                     "      file_state IN ('FAILED','FINISHED') ",
                                                     soci::use(source_hostname), soci::use(destin_hostname));
 
@@ -3390,7 +3390,7 @@ void OracleAPI::blacklistSe(std::string se, std::string vo, std::string status, 
                 {
 
                     sql << " UPDATE t_bad_ses SET "
-                        "   addition_time = CURRENT_TIMESTAMP, "
+                        "   addition_time = sys_extract_utc(systimestamp), "
                         "   admin_dn = :admin, "
                         "   vo = :vo, "
                         "   status = :status, "
@@ -3408,7 +3408,7 @@ void OracleAPI::blacklistSe(std::string se, std::string vo, std::string status, 
                 {
 
                     sql << "INSERT INTO t_bad_ses (se, message, addition_time, admin_dn, vo, status, wait_timeout) "
-                        "               VALUES (:se, :message, CURRENT_TIMESTAMP, :admin, :vo, :status, :timeout)",
+                        "               VALUES (:se, :message, sys_extract_utc(systimestamp), :admin, :vo, :status, :timeout)",
                         soci::use(se), soci::use(msg), soci::use(adm_dn), soci::use(vo), soci::use(status), soci::use(timeout);
                 }
 
@@ -3432,7 +3432,7 @@ void OracleAPI::blacklistDn(std::string dn, std::string msg, std::string adm_dn)
             sql.begin();
 
             sql << " MERGE INTO t_bad_dns USING "
-                   "    (SELECT :dn AS dn, :message AS message, CURRENT_TIMESTAMP as tstamp, :admin AS admin FROM dual) Blacklisted "
+                   "    (SELECT :dn AS dn, :message AS message, sys_extract_utc(systimestamp) as tstamp, :admin AS admin FROM dual) Blacklisted "
                    " WHEN NOT MATCHED THEN INSERT (dn, message, addition_time, admin_dn) VALUES "
                    "                              (BlackListed.dn, BlackListed.message, BlackListed.tstamp, BlackListed.admin)",
                 soci::use(dn), soci::use(msg), soci::use(adm_dn);
@@ -4664,7 +4664,7 @@ void OracleAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
 
             sql.begin();
             soci::rowset<std::string> rs = (sql.prepare << "SELECT job_id FROM t_job WHERE "
-                                            "    submit_time < (CURRENT_TIMESTAMP - interval :interval hour) AND "
+                                            "    submit_time < (sys_extract_utc(systimestamp) - interval :interval hour) AND "
                                             "    job_state in ('SUBMITTED', 'READY')",
                                             soci::use(maxTime));
 
@@ -4999,7 +4999,7 @@ void OracleAPI::bringOnlineReportStatus(const std::string & state, const std::st
                     sql.begin();
                     sql <<
                         " UPDATE t_file "
-                        " SET staging_start = CURRENT_TIMESTAMP, transferhost=:thost "
+                        " SET staging_start = sys_extract_utc(systimestamp), transferhost=:thost "
                         " WHERE job_id = :jobId "
                         "   AND file_id= :fileId "
                         "   AND file_state='STAGING'",
@@ -5017,7 +5017,7 @@ void OracleAPI::bringOnlineReportStatus(const std::string & state, const std::st
 
                     sql <<
                         " UPDATE t_file "
-                        " SET staging_finished = CURRENT_TIMESTAMP, reason = :reason, file_state = :fileState "
+                        " SET staging_finished = sys_extract_utc(systimestamp), reason = :reason, file_state = :fileState "
                         " WHERE job_id = :jobId "
                         "   AND file_id = :fileId "
                         "   AND file_state = 'STAGING'",
@@ -5205,7 +5205,7 @@ double OracleAPI::getSuccessRate(std::string source, std::string destination)
                                                "SELECT file_state FROM t_file "
                                                "WHERE "
                                                "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                                               "      (t_file.job_finished > (CURRENT_TIMESTAMP - interval '15' minute)) AND "
+                                               "      (t_file.job_finished > (sys_extract_utc(systimestamp) - interval '15' minute)) AND "
                                                "      file_state IN ('FAILED','FINISHED') ",
                                                soci::use(source), soci::use(destination)
                                            )
@@ -5245,7 +5245,7 @@ double OracleAPI::getAvgThroughput(std::string source, std::string destination)
             sql <<
                 " select ROUND(AVG(throughput),2) AS Average  from t_file where"
                 " source_se=:source and dest_se=:dst "
-                " and job_finished >= (CURRENT_TIMESTAMP - interval '15' minute)",
+                " and job_finished >= (sys_extract_utc(systimestamp) - interval '15' minute)",
                 soci::use(source),soci::use(destination), soci::into(avgThr, isNull);
             if (isNull == soci::i_null)
                 {
@@ -5545,7 +5545,7 @@ void OracleAPI::setFilesToWaiting(const std::string& se, const std::string& vo, 
 
                     sql <<
                         " UPDATE t_file "
-                        " SET wait_timestamp = CURRENT_TIMESTAMP, wait_timeout = :timeout "
+                        " SET wait_timestamp = sys_extract_utc(systimestamp), wait_timeout = :timeout "
                         " WHERE (source_se = :src OR dest_se = :dest) "
                         "   AND file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED') "
                         "   AND (wait_timestamp IS NULL OR wait_timeout IS NULL) ",
@@ -5560,7 +5560,7 @@ void OracleAPI::setFilesToWaiting(const std::string& se, const std::string& vo, 
 
                     sql <<
                         " UPDATE t_file f, t_job j "
-                        " SET f.wait_timestamp = CURRENT_TIMESTAMP, f.wait_timeout = :timeout "
+                        " SET f.wait_timestamp = sys_extract_utc(systimestamp), f.wait_timeout = :timeout "
                         " WHERE (f.source_se = :src OR f.dest_se = :dest) "
                         "   AND j.vo_name = :vo "
                         "   AND f.file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED') "
@@ -5594,7 +5594,7 @@ void OracleAPI::setFilesToWaiting(const std::string& dn, int timeout)
 
             sql <<
                 " UPDATE t_file f, t_job j "
-                " SET f.wait_timestamp = CURRENT_TIMESTAMP, f.wait_timeout = :timeout "
+                " SET f.wait_timestamp = sys_extract_utc(systimestamp), f.wait_timeout = :timeout "
                 " WHERE j.user_dn = :dn "
                 "   AND f.file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED') "
                 "   AND f.job_id = j.job_id "
@@ -5632,7 +5632,7 @@ void OracleAPI::cancelWaitingFiles(std::set<std::string>& jobs)
                                              " SELECT file_id, job_id "
                                              " FROM t_file "
                                              " WHERE wait_timeout <> 0 "
-                                             "  AND TIMESTAMPDIFF(SECOND, wait_timestamp, CURRENT_TIMESTAMP) > wait_timeout "
+                                             "  AND TIMESTAMPDIFF(SECOND, wait_timestamp, sys_extract_utc(systimestamp)) > wait_timeout "
                                              "  AND file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED')"
                                          );
 
@@ -5827,7 +5827,7 @@ void OracleAPI::checkSanityState()
                                         {
 
                                             sql << "UPDATE t_job SET "
-                                                "    job_state = 'CANCELED', job_finished = CURRENT_TIMESTAMP, finish_time = CURRENT_TIMESTAMP, "
+                                                "    job_state = 'CANCELED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), "
                                                 "    reason = :canceledMessage "
                                                 "    WHERE job_id = :jobId ", soci::use(canceledMessage), soci::use(*i);
 
@@ -5838,7 +5838,7 @@ void OracleAPI::checkSanityState()
                                                 {
 
                                                     sql << "UPDATE t_job SET "
-                                                        "    job_state = 'FINISHED', job_finished = CURRENT_TIMESTAMP, finish_time = CURRENT_TIMESTAMP "
+                                                        "    job_state = 'FINISHED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp) "
                                                         "    WHERE job_id = :jobId", soci::use(*i);
 
                                                 }
@@ -5848,7 +5848,7 @@ void OracleAPI::checkSanityState()
                                                         {
 
                                                             sql << "UPDATE t_job SET "
-                                                                "    job_state = 'FAILED', job_finished = CURRENT_TIMESTAMP, finish_time = CURRENT_TIMESTAMP, "
+                                                                "    job_state = 'FAILED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), "
                                                                 "    reason = :failed "
                                                                 "    WHERE job_id = :jobId", soci::use(failed), soci::use(*i);
 
@@ -5857,7 +5857,7 @@ void OracleAPI::checkSanityState()
                                                         {
 
                                                             sql << "UPDATE t_job SET "
-                                                                "    job_state = 'FINISHEDDIRTY', job_finished = CURRENT_TIMESTAMP, finish_time = CURRENT_TIMESTAMP, "
+                                                                "    job_state = 'FINISHEDDIRTY', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), "
                                                                 "    reason = :failed "
                                                                 "    WHERE job_id = :jobId", soci::use(failed), soci::use(*i);
 
@@ -5876,7 +5876,7 @@ void OracleAPI::checkSanityState()
             //now check reverse sanity checks, JOB can't be FINISH,  FINISHEDDIRTY, FAILED is at least one tr is in SUBMITTED, READY, ACTIVE
             soci::rowset<std::string> rs2 = (
                                                 sql.prepare <<
-                                                " select job_id from t_job where job_state in ('FINISHED','FAILED','FINISHEDDIRTY') AND job_finished > (CURRENT_TIMESTAMP - interval '30' minute)"
+                                                " select job_id from t_job where job_state in ('FINISHED','FAILED','FINISHEDDIRTY') AND job_finished > (sys_extract_utc(systimestamp) - interval '30' minute)"
                                             );
 
             for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
@@ -6290,7 +6290,7 @@ void OracleAPI::storeProfiling(const fts3::ProfilingSubsystem* prof)
             update.alloc();
 
             update.prepare("UPDATE t_profiling_info SET "
-                           "    updated = CURRENT_TIMESTAMP, period = :period");
+                           "    updated = sys_extract_utc(systimestamp), period = :period");
 
             update.define_and_bind();
             update.execute(true);
@@ -6298,7 +6298,7 @@ void OracleAPI::storeProfiling(const fts3::ProfilingSubsystem* prof)
             if (update.get_affected_rows() == 0)
                 {
                     sql << "INSERT INTO t_profiling_info (updated, period) "
-                        "VALUES (CURRENT_TIMESTAMP, :period)",
+                        "VALUES (sys_extract_utc(systimestamp), :period)",
                         soci::use(prof->getInterval());
                 }
 
@@ -6437,7 +6437,7 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
             // Keep log
             sql << "INSERT INTO t_file_retry_errors "
                 "    (file_id, attempt, datetime, reason) "
-                "VALUES (:fileId, :attempt, CURRENT_TIMESTAMP, :reason)",
+                "VALUES (:fileId, :attempt, sys_extract_utc(systimestamp), :reason)",
                 soci::use(fileId), soci::use(retry), soci::use(reason);
 
             sql.commit();
@@ -6489,9 +6489,9 @@ bool OracleAPI::assignSanityRuns(soci::session& sql, struct message_sanity &msg)
             if(msg.checkSanityState)
                 {
                     sql.begin();
-                    soci::statement st((sql.prepare << "update t_server_sanity set checkSanityState=1, t_checkSanityState = CURRENT_TIMESTAMP "
+                    soci::statement st((sql.prepare << "update t_server_sanity set checkSanityState=1, t_checkSanityState = sys_extract_utc(systimestamp) "
                                         "where checkSanityState=0"
-                                        " AND (t_checkSanityState < (CURRENT_TIMESTAMP - INTERVAL '30' minute)) "));
+                                        " AND (t_checkSanityState < (sys_extract_utc(systimestamp) - INTERVAL '30' minute)) "));
                     st.execute(true);
                     rows = st.get_affected_rows();
                     msg.checkSanityState = (rows > 0? true: false);
@@ -6501,9 +6501,9 @@ bool OracleAPI::assignSanityRuns(soci::session& sql, struct message_sanity &msg)
             else if(msg.setToFailOldQueuedJobs)
                 {
                     sql.begin();
-                    soci::statement st((sql.prepare << "update t_server_sanity set setToFailOldQueuedJobs=1, t_setToFailOldQueuedJobs = CURRENT_TIMESTAMP "
+                    soci::statement st((sql.prepare << "update t_server_sanity set setToFailOldQueuedJobs=1, t_setToFailOldQueuedJobs = sys_extract_utc(systimestamp) "
                                         " where setToFailOldQueuedJobs=0"
-                                        " AND (t_setToFailOldQueuedJobs < (CURRENT_TIMESTAMP - INTERVAL '15' minute)) "
+                                        " AND (t_setToFailOldQueuedJobs < (sys_extract_utc(systimestamp) - INTERVAL '15' minute)) "
                                        ));
                     st.execute(true);
                     rows = st.get_affected_rows();
@@ -6514,9 +6514,9 @@ bool OracleAPI::assignSanityRuns(soci::session& sql, struct message_sanity &msg)
             else if(msg.forceFailTransfers)
                 {
                     sql.begin();
-                    soci::statement st((sql.prepare << "update t_server_sanity set forceFailTransfers=1, t_forceFailTransfers = CURRENT_TIMESTAMP "
+                    soci::statement st((sql.prepare << "update t_server_sanity set forceFailTransfers=1, t_forceFailTransfers = sys_extract_utc(systimestamp) "
                                         " where forceFailTransfers=0"
-                                        " AND (t_forceFailTransfers < (CURRENT_TIMESTAMP - INTERVAL '15' minute)) "
+                                        " AND (t_forceFailTransfers < (sys_extract_utc(systimestamp) - INTERVAL '15' minute)) "
                                        ));
                     st.execute(true);
                     rows = st.get_affected_rows();
@@ -6527,9 +6527,9 @@ bool OracleAPI::assignSanityRuns(soci::session& sql, struct message_sanity &msg)
             else if(msg.revertToSubmitted)
                 {
                     sql.begin();
-                    soci::statement st((sql.prepare << "update t_server_sanity set revertToSubmitted=1, t_revertToSubmitted = CURRENT_TIMESTAMP "
+                    soci::statement st((sql.prepare << "update t_server_sanity set revertToSubmitted=1, t_revertToSubmitted = sys_extract_utc(systimestamp) "
                                         " where revertToSubmitted=0"
-                                        " AND (t_revertToSubmitted < (CURRENT_TIMESTAMP - INTERVAL '15' minute)) "
+                                        " AND (t_revertToSubmitted < (sys_extract_utc(systimestamp) - INTERVAL '15' minute)) "
                                        ));
                     st.execute(true);
                     rows = st.get_affected_rows();
@@ -6540,9 +6540,9 @@ bool OracleAPI::assignSanityRuns(soci::session& sql, struct message_sanity &msg)
             else if(msg.cancelWaitingFiles)
                 {
                     sql.begin();
-                    soci::statement st((sql.prepare << "update t_server_sanity set cancelWaitingFiles=1, t_cancelWaitingFiles = CURRENT_TIMESTAMP "
+                    soci::statement st((sql.prepare << "update t_server_sanity set cancelWaitingFiles=1, t_cancelWaitingFiles = sys_extract_utc(systimestamp) "
                                         "  where cancelWaitingFiles=0"
-                                        " AND (t_cancelWaitingFiles < (CURRENT_TIMESTAMP - INTERVAL '15' minute)) "
+                                        " AND (t_cancelWaitingFiles < (sys_extract_utc(systimestamp) - INTERVAL '15' minute)) "
                                        ));
                     st.execute(true);
                     rows = st.get_affected_rows();
@@ -6553,9 +6553,9 @@ bool OracleAPI::assignSanityRuns(soci::session& sql, struct message_sanity &msg)
             else if(msg.revertNotUsedFiles)
                 {
                     sql.begin();
-                    soci::statement st((sql.prepare << "update t_server_sanity set revertNotUsedFiles=1, t_revertNotUsedFiles = CURRENT_TIMESTAMP "
+                    soci::statement st((sql.prepare << "update t_server_sanity set revertNotUsedFiles=1, t_revertNotUsedFiles = sys_extract_utc(systimestamp) "
                                         " where revertNotUsedFiles=0"
-                                        " AND (t_revertNotUsedFiles < (CURRENT_TIMESTAMP - INTERVAL '15' minute)) "
+                                        " AND (t_revertNotUsedFiles < (sys_extract_utc(systimestamp) - INTERVAL '15' minute)) "
                                        ));
                     st.execute(true);
                     rows = st.get_affected_rows();
@@ -6566,9 +6566,9 @@ bool OracleAPI::assignSanityRuns(soci::session& sql, struct message_sanity &msg)
             else if(msg.cleanUpRecords)
                 {
                     sql.begin();
-                    soci::statement st((sql.prepare << "update t_server_sanity set cleanUpRecords=1, t_cleanUpRecords = CURRENT_TIMESTAMP "
+                    soci::statement st((sql.prepare << "update t_server_sanity set cleanUpRecords=1, t_cleanUpRecords = sys_extract_utc(systimestamp) "
                                         " where cleanUpRecords=0"
-                                        " AND (t_cleanUpRecords < (CURRENT_TIMESTAMP - INTERVAL '3' day)) "
+                                        " AND (t_cleanUpRecords < (sys_extract_utc(systimestamp) - INTERVAL '3' day)) "
                                        ));
                     st.execute(true);
                     rows = st.get_affected_rows();
@@ -6579,9 +6579,9 @@ bool OracleAPI::assignSanityRuns(soci::session& sql, struct message_sanity &msg)
             else if(msg.msgCron)
                 {
                     sql.begin();
-                    soci::statement st((sql.prepare << "update t_server_sanity set msgcron=1, t_msgcron = CURRENT_TIMESTAMP "
+                    soci::statement st((sql.prepare << "update t_server_sanity set msgcron=1, t_msgcron = sys_extract_utc(systimestamp) "
                                         " where msgcron=0"
-                                        " AND (t_msgcron < (CURRENT_TIMESTAMP - INTERVAL '1' day)) "
+                                        " AND (t_msgcron < (sys_extract_utc(systimestamp) - INTERVAL '1' day)) "
                                        ));
                     st.execute(true);
                     rows = st.get_affected_rows();
@@ -6608,43 +6608,43 @@ void OracleAPI::resetSanityRuns(soci::session& sql, struct message_sanity &msg)
             if(msg.checkSanityState)
                 {
                     soci::statement st((sql.prepare << "update t_server_sanity set checkSanityState=0 where (checkSanityState=1 "
-                                        " OR (t_checkSanityState < (CURRENT_TIMESTAMP - INTERVAL '45' minute)))  "));
+                                        " OR (t_checkSanityState < (sys_extract_utc(systimestamp) - INTERVAL '45' minute)))  "));
                     st.execute(true);
                 }
             else if(msg.setToFailOldQueuedJobs)
                 {
                     soci::statement st((sql.prepare << "update t_server_sanity set setToFailOldQueuedJobs=0 where (setToFailOldQueuedJobs=1 "
-                                        " OR (t_setToFailOldQueuedJobs < (CURRENT_TIMESTAMP - INTERVAL '45' minute)))  "));
+                                        " OR (t_setToFailOldQueuedJobs < (sys_extract_utc(systimestamp) - INTERVAL '45' minute)))  "));
                     st.execute(true);
                 }
             else if(msg.forceFailTransfers)
                 {
                     soci::statement st((sql.prepare << "update t_server_sanity set forceFailTransfers=0 where (forceFailTransfers=1 "
-                                        " OR (t_forceFailTransfers < (CURRENT_TIMESTAMP - INTERVAL '45' minute)))  "));
+                                        " OR (t_forceFailTransfers < (sys_extract_utc(systimestamp) - INTERVAL '45' minute)))  "));
                     st.execute(true);
                 }
             else if(msg.revertToSubmitted)
                 {
                     soci::statement st((sql.prepare << "update t_server_sanity set revertToSubmitted=0 where (revertToSubmitted=1  "
-                                        " OR (t_revertToSubmitted < (CURRENT_TIMESTAMP - INTERVAL '45' minute)))  "));
+                                        " OR (t_revertToSubmitted < (sys_extract_utc(systimestamp) - INTERVAL '45' minute)))  "));
                     st.execute(true);
                 }
             else if(msg.cancelWaitingFiles)
                 {
                     soci::statement st((sql.prepare << "update t_server_sanity set cancelWaitingFiles=0 where (cancelWaitingFiles=1  "
-                                        " OR (t_cancelWaitingFiles < (CURRENT_TIMESTAMP - INTERVAL '45' minute)))  "));
+                                        " OR (t_cancelWaitingFiles < (sys_extract_utc(systimestamp) - INTERVAL '45' minute)))  "));
                     st.execute(true);
                 }
             else if(msg.revertNotUsedFiles)
                 {
                     soci::statement st((sql.prepare << "update t_server_sanity set revertNotUsedFiles=0 where (revertNotUsedFiles=1  "
-                                        " OR (t_revertNotUsedFiles < (CURRENT_TIMESTAMP - INTERVAL '45' minute)))  "));
+                                        " OR (t_revertNotUsedFiles < (sys_extract_utc(systimestamp) - INTERVAL '45' minute)))  "));
                     st.execute(true);
                 }
             else if(msg.cleanUpRecords)
                 {
                     soci::statement st((sql.prepare << "update t_server_sanity set cleanUpRecords=0 where (cleanUpRecords=1  "
-                                        " OR (t_cleanUpRecords < (CURRENT_TIMESTAMP - INTERVAL '4' day)))  "));
+                                        " OR (t_cleanUpRecords < (sys_extract_utc(systimestamp) - INTERVAL '4' day)))  "));
                     st.execute(true);
                 }
             else if(msg.msgCron)
@@ -6674,19 +6674,19 @@ void OracleAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* star
             // Update beat
             sql << "MERGE INTO t_hosts USING "
                    " (SELECT :hostname AS hostname FROM dual) Hostname ON (t_hosts.hostname = Hostname.hostname) "
-                   " WHEN     MATCHED THEN UPDATE SET t_hosts.beat = CURRENT_TIMESTAMP"
-                   " WHEN NOT MATCHED THEN INSERT (hostname, beat) VALUES (Hostname.hostname, CURRENT_TIMESTAMP)",
+                   " WHEN     MATCHED THEN UPDATE SET t_hosts.beat = sys_extract_utc(systimestamp)"
+                   " WHEN NOT MATCHED THEN INSERT (hostname, beat) VALUES (Hostname.hostname, sys_extract_utc(systimestamp))",
                 soci::use(hostname);
 
             // Total number of working instances
             sql << "SELECT COUNT(hostname) FROM t_hosts "
-                   "  WHERE beat >= (CURRENT_TIMESTAMP - interval '2' minute)",
+                   "  WHERE beat >= (sys_extract_utc(systimestamp) - interval '2' minute)",
                 soci::into(*count);
 
             // This instance index
             soci::rowset<std::string> rsHosts = (sql.prepare <<
                                                  "SELECT hostname FROM t_hosts "
-                                                 "WHERE beat >= (CURRENT_TIMESTAMP - interval '2' minute)"
+                                                 "WHERE beat >= (sys_extract_utc(systimestamp) - interval '2' minute)"
                                                  "ORDER BY hostname");
 
             soci::rowset<std::string>::const_iterator i;
