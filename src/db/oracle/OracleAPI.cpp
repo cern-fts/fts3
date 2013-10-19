@@ -3246,42 +3246,20 @@ void OracleAPI::backup()
             msg.cleanUpRecords = true;
             CleanUpSanityChecks temp(this, sql, msg);
             if(!temp.getCleanUpSanityCheck())
-                return;
+                return;          
 
-            sql << "ALTER TABLE `t_file_backup` DISABLE KEYS";
-            sql << "ALTER TABLE `t_file_backup` DISABLE KEYS";
-            sql << "SET FOREIGN_KEY_CHECKS = 0";
-            sql << "SET UNIQUE_CHECKS = 0";
-            sql << "SET AUTOCOMMIT = 0";
+            sql.begin();
 
-            sql << "INSERT INTO t_job_backup SELECT * FROM t_job "
-                " WHERE job_finished < (CURRENT_TIMESTAMP - interval '4' DAY ) AND "
-                " job_state IN ('FINISHED', 'FAILED', 'CANCELED', 'FINISHEDDIRTY')";
+            sql << "insert into t_job_backup select * from t_job where job_state IN "
+	    	   " ('FINISHED', 'FAILED', 'CANCELED', 'FINISHEDDIRTY') and job_finished < (systimestamp - interval '4' DAY )";
+
+            sql << "insert into t_file_backup select * from t_file where job_id IN (select job_id from t_job_backup)";
+
+            sql << "delete from t_file where file_id in (select file_id from t_file_backup)";
+
+            sql << "delete from t_job where job_id in (select job_id from t_job_backup)";
+		   
             sql.commit();
-
-
-            sql << "INSERT INTO t_file_backup SELECT * FROM t_file WHERE job_id IN (SELECT job_id FROM t_job_backup)";
-            sql.commit();
-
-            sql << "DELETE FROM t_file "
-                   " USING t_file "
-                   " INNER JOIN "
-                   "    (SELECT job_id FROM t_job_backup) AS jbackup "
-                   " ON t_file.job_id = jbackup.job_id";
-            sql.commit();
-
-            sql << "DELETE FROM t_job "
-                   " USING t_job "
-                   " INNER JOIN "
-                   "    (SELECT job_id FROM t_job_backup) AS jbackup "
-                   " ON t_job.job_id = jbackup.job_id";
-            sql.commit();
-
-            sql << "ALTER TABLE `t_file_backup` ENABLE KEYS";
-            sql << "ALTER TABLE `t_job_backup` ENABLE KEYS";
-            sql << "SET UNIQUE_CHECKS = 1";
-            sql << "SET FOREIGN_KEY_CHECKS = 1";
-
 
         }
     catch (std::exception& e)
