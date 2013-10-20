@@ -3039,34 +3039,31 @@ void MySqlAPI::backup()
             CleanUpSanityChecks temp(this, sql, msg);
             if(!temp.getCleanUpSanityCheck())
                 return;
+       
+           
+            soci::rowset<soci::row> rs = (
+                                             sql.prepare <<
+                                             " SELECT job_id "
+                                             " FROM t_job "
+                                             " WHERE "
+                                             "      job_finished < (UTC_TIMESTAMP() - interval '4' DAY ) AND "
+                                             "      job_state IN ('FINISHED', 'FAILED', 'CANCELED', 'FINISHEDDIRTY') "
+                                         );
+	    sql.begin();				 
+            for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+                {
+                    soci::row const& r = *i;
+                    std::string job_id = r.get<std::string>("job_id");
+		    
+		    sql << "INSERT INTO t_job_backup SELECT * FROM t_job WHERE job_id = :job_id", soci::use(job_id);
+		    
+		    sql << "INSERT INTO t_file_backup SELECT * FROM t_file WHERE job_id = :job_id", soci::use(job_id);
+		    
+            	    sql << "DELETE FROM t_file WHERE job_id = :job_id", soci::use(job_id);
 
-            sql << "ALTER TABLE `t_file_backup` DISABLE KEYS";
-            sql << "ALTER TABLE `t_file_backup` DISABLE KEYS";
-            sql << "SET FOREIGN_KEY_CHECKS = 0";
-            sql << "SET UNIQUE_CHECKS = 0";
-            sql << "SET AUTOCOMMIT = 0";
-
-            sql << "INSERT INTO t_job_backup SELECT * FROM t_job "
-                " WHERE job_finished < (UTC_TIMESTAMP() - interval '4' DAY ) AND "
-                " job_state IN ('FINISHED', 'FAILED', 'CANCELED', 'FINISHEDDIRTY')";
-            sql.commit();
-
-
-            sql << "INSERT INTO t_file_backup SELECT * FROM t_file WHERE job_id IN (SELECT job_id FROM t_job_backup)";
-            sql.commit();
-
-            sql << "DELETE FROM t_file WHERE file_id IN (SELECT file_id FROM t_file_backup)";
-            sql.commit();
-
-            sql << "DELETE FROM t_job WHERE job_id IN (SELECT job_id FROM t_job_backup)";
-            sql.commit();
-
-            sql << "ALTER TABLE `t_file_backup` ENABLE KEYS";
-            sql << "ALTER TABLE `t_job_backup` ENABLE KEYS";
-            sql << "SET UNIQUE_CHECKS = 1";
-            sql << "SET FOREIGN_KEY_CHECKS = 1";
-
-
+                    sql << "DELETE FROM t_job WHERE job_id = :job_id", soci::use(job_id);		                        
+                }
+            sql.commit();           
         }
     catch (std::exception& e)
         {
