@@ -728,8 +728,8 @@ CREATE TABLE t_profiling_info (
 
 CREATE TABLE t_profiling_snapshot (
     scope      VARCHAR(255) NOT NULL PRIMARY KEY,
-    cnt        LONG NOT NULL,
-    exceptions LONG NOT NULL,
+    cnt        INT NOT NULL,
+    exceptions INT NOT NULL,
     total      DOUBLE NOT NULL,
     average    DOUBLE NOT NULL
 );
