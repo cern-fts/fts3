@@ -358,7 +358,8 @@ void Configuration::addShareCfg(string source, string destination, map<string, i
                 {
                     // if the VO was not in the new configuration remove the record
                     db->deleteShareConfig(source, destination, cfg->vo);
-                    deleteCount++;
+                    // Although it is a deletion it is done due to an update
+                    updateCount++;
                 }
             else
                 {
