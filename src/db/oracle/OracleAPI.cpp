@@ -198,10 +198,9 @@ void OracleAPI::init(std::string username, std::string password, std::string con
             // Build connection string
             connParams << "user=" << username << " "
                        << "password=" << password << " "
-                       << "service=//" << connectString;
+                       << "service=\"" << connectString << '"';
 
             std::string connStr = connParams.str();
-            std::cout << connStr << std::endl;
 
             // Connect
             poolSize = (size_t) pooledConn;
