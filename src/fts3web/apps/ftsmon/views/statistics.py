@@ -20,6 +20,7 @@ from django.db.models import Q, Count, Avg
 from ftsweb.models import Job, File, ConfigAudit, Host
 from ftsweb.models import ProfilingSnapshot, ProfilingInfo
 from jsonify import jsonify, jsonify_paged
+from util import getOrderBy, orderedField
 
 
 STATES               = ['SUBMITTED', 'READY', 'ACTIVE', 'FAILED', 'FINISHED', 'CANCELED', 'STAGING', 'NOT_USED']
@@ -339,7 +340,23 @@ def profiling(httpRequest):
         profiling['updated'] = False
         profiling['period']  = False
     
-    profiles = ProfilingSnapshot.objects.filter(cnt__gt = 0).order_by('total')
+    
+    profiles = ProfilingSnapshot.objects.filter(cnt__gt = 0)
+    
+    (orderBy, orderDesc) = getOrderBy(httpRequest)
+    if orderBy == 'scope':
+        profiles = profiles.order_by(orderedField('scope', orderDesc))
+    elif orderBy == 'called':
+        profiles = profiles.order_by(orderedField('cnt', orderDesc))
+    elif orderBy == 'aggregate':
+        profiles = profiles.order_by(orderedField('total', orderDesc))
+    elif orderBy == 'average':
+        profiles = profiles.order_by(orderedField('average', orderDesc))
+    elif orderBy == 'exceptions':
+        profiles = profiles.order_by(orderedField('exceptions', orderDesc))
+    else:    
+        profiles = profiles.order_by('total')
+    
     profiling['profiles'] = profiles.all()
     
     return profiling
