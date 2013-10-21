@@ -4013,7 +4013,7 @@ void MySqlAPI::deleteShareConfig(std::string source, std::string destination, st
             sql.begin();
 
             sql << "DELETE FROM t_share_config WHERE source = :source AND destination = :dest AND vo = :vo",
-                soci::use(destination), soci::use(source), soci::use(vo);
+                soci::use(source), soci::use(destination), soci::use(vo);
 
             sql.commit();
         }
