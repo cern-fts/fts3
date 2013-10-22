@@ -170,7 +170,7 @@ static int extractTimeout(std::string & str)
 
 
 
-MySqlAPI::MySqlAPI(): poolSize(10), connectionPool(NULL), lowDefault(3), highDefault(5), jobsNum(3), filesNum(5)
+MySqlAPI::MySqlAPI(): poolSize(10), connectionPool(NULL)
 {
     char chname[MAXHOSTNAMELEN]= {0};
     gethostname(chname, sizeof(chname));
@@ -494,6 +494,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
     try
         {
             int mode = getOptimizerMode(sql);
+            int filesNum;
             if(mode==1)
                 {
                     filesNum = mode_1[3];
@@ -546,7 +547,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                     bool manualConfigExists = false;
                     int limit = 0;
                     int maxActive = 0;
-		    soci::indicator isNull = soci::i_ok;
+                    soci::indicator isNull = soci::i_ok;
 
 		     //1st check if manual config exists
                     sql << "SELECT COUNT(*) FROM t_link_config WHERE (source = :source OR source = '*') AND (destination = :dest OR destination = '*')",
@@ -2587,6 +2588,7 @@ bool MySqlAPI::isTrAllowed2(const std::string & source_hostname, const std::stri
     try
         {
             int mode = getOptimizerMode(sql);
+            int lowDefault = 3, highDefault = 5, jobsNum = 3;
             if(mode==1)
                 {
                     lowDefault = mode_1[0];
@@ -2652,6 +2654,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
     try
         {
             int mode = getOptimizerMode(sql);
+            int lowDefault = 3, highDefault = 5, jobsNum = 3;
             if(mode==1)
                 {
                     lowDefault = mode_1[0];
