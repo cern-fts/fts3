@@ -20,6 +20,10 @@ class Cli:
         submission.write(json.dumps({'Files': transfers}))
         submission.close()
 
+        # If retry is not explicit, set it to 0
+        if '--retry' not in extraArgs:
+            extraArgs += ['--retry', '0']
+
         # Label the job
         caller = inspect.stack()[1][3]
         labeldict = {'label': config.TestLabel, 'test': caller}
@@ -28,7 +32,6 @@ class Cli:
         # Spawn the transfer
         cmdArray = ['fts-transfer-submit',
                     '-s', config.Fts3Endpoint,
-                    '--retry', '0',
                     '--job-metadata', label, 
                     '--new-bulk-format', '-f', submission.name] + extraArgs
         logging.debug("Spawning %s" % ' '.join(cmdArray))

@@ -1,0 +1,56 @@
+#!/usr/bin/env python
+# meta: proxy=true
+# meta: preconfig=../FTS3-config
+import itertools
+import logging
+from lib import base 
+
+
+class TestRetry(base.TestBase):
+
+    def test_retry_not_retiable(self):
+        """
+        Submit a transfer that will fail with source does not exist. It must NOT be retried
+        even if set.
+        """
+        for (src, dst) in self.transfers:
+            logging.info("Retry transfer with non existing source %s => %s" % (src, dst))
+            jobId = self.client.submit([{'sources': [src], 'destinations': [dst]}],
+                                       extraArgs = ['--retry', '2', '--retry-delay', '10'])
+            logging.info("Got job id %s" % jobId)
+            state = self.client.poll(jobId)
+            logging.info("Finished with %s" % state)
+            self.assertEqual('FAILED', state)
+
+            files = self.client.getFileInfo(jobId)
+            for pair in files.keys():
+                self.assertEqual('FAILED', files[pair]['state'])
+                self.assertEqual(0, int(files[pair]['retries']))
+
+
+    def test_retry(self):
+        """
+        Submit a transfer that will fail with an error that should
+        be retried.
+        """
+        for (src, dst) in self.transfers:
+            src = 'gsiftp://does.not.exist.ch:8443/path/file'
+            logging.info("Retry transfer with non reachable source %s => %s" % (src, dst))
+            jobId = self.client.submit([{'sources': [src], 'destinations': [dst]}],
+                                       extraArgs = ['--retry', '1', '--retry-delay', '10'])
+            logging.info("Got job id %s" % jobId)
+            state = self.client.poll(jobId)
+            logging.info("Finished with %s" % state)
+            self.assertEqual('FAILED', state)
+
+            files = self.client.getFileInfo(jobId)
+            for pair in files.keys():
+                self.assertEqual('FAILED', files[pair]['state'])
+                self.assertEqual(1, int(files[pair]['retries']))
+
+
+
+if __name__ == '__main__':
+    import sys
+    sys.exit(TestRetry().run())
+
