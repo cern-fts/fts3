@@ -38,6 +38,7 @@ urlpatterns = patterns('ftsmon.views',
     
     url(r'^optimizer/$', 'optimizer.optimizer'),
     url(r'^optimizer/detailed$', 'optimizer.optimizerDetailed'),
+    url(r'^optimizer/active', 'optimizer.optimizerActive'),
     
     url(r'^errors/$', 'errors.showErrors'),
     url(r'^errors/list$', 'errors.transfersWithError'),

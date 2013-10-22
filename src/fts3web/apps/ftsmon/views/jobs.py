@@ -84,7 +84,7 @@ def setupFilters(filterForm):
 
 def jobListing(httpRequest, jobModel = Job, filters = None):
     # Initial query
-    jobs = jobModel.objects.extra(select = {'nullFinished': 'coalesce(finish_time, CURRENT_TIMESTAMP)'})
+    jobs = jobModel.objects.extra(select = {'nullFinished': 'coalesce(job_finished, CURRENT_TIMESTAMP)'})
     
     # Convert startdate and enddate to datetime
     startdate = enddate = None
@@ -96,13 +96,13 @@ def jobListing(httpRequest, jobModel = Job, filters = None):
     # Time filter
     if filters['time_window']:
         notBefore = datetime.datetime.utcnow() -  datetime.timedelta(hours = filters['time_window'])
-        jobs = jobs.filter(Q(finish_time__gte = notBefore) | Q(finish_time = None))
+        jobs = jobs.filter(Q(job_finished__gte = notBefore) | Q(job_finished = None))
     elif startdate and enddate:
-        jobs = jobs.filter(finish_time__gte = startdate, finish_time__lte = enddate)
+        jobs = jobs.filter(job_finished__gte = startdate, job_finished__lte = enddate)
     elif startdate:
-        jobs = jobs.filter(finish_time__gte = startdate)
+        jobs = jobs.filter(job_finished__gte = startdate)
     elif enddate:
-        jobs = jobs.filter(finish_time__lte = enddate)
+        jobs = jobs.filter(job_finished__lte = enddate)
     
     # Filters
     if filters['vo']:
@@ -118,7 +118,7 @@ def jobListing(httpRequest, jobModel = Job, filters = None):
         jobs = jobs.filter(job_state__in = filters['state'])
     
     # Push needed fields
-    jobs = jobs.values('job_id', 'submit_host', 'submit_time', 'job_state', 'finish_time',
+    jobs = jobs.values('job_id', 'submit_host', 'submit_time', 'job_state', 'job_finished',
                        'vo_name', 'source_space_token', 'space_token',
                        'priority', 'user_dn', 'reason',
                        'job_metadata', 'nullFinished', 'source_se', 'dest_se')
@@ -240,7 +240,7 @@ def transferList(httpRequest):
     if not filters['time_window']:
         filters['time_window'] = 12
     
-    transfers = File.objects.extra(select = {'nullFinished': 'coalesce(t_file.finish_time, CURRENT_TIMESTAMP)'})
+    transfers = File.objects.extra(select = {'nullFinished': 'coalesce(t_file.job_finished, CURRENT_TIMESTAMP)'})
     if filters['state']:
         transfers = transfers.filter(file_state__in = filters['state'])
     else:
@@ -253,7 +253,7 @@ def transferList(httpRequest):
         transfers = transfers.filter(job__vo_name = filters['vo'])
     if filters['time_window']:
         notBefore =  datetime.datetime.utcnow() - datetime.timedelta(hours = filters['time_window'])
-        transfers = transfers.filter(Q(finish_time__isnull = True) | (Q(finish_time__gte = notBefore)))
+        transfers = transfers.filter(Q(job_finished__isnull = True) | (Q(job_finished__gte = notBefore)))
    
     transfers = transfers.values('nullFinished', 'file_id', 'file_state', 'job_id',
                                  'source_se', 'dest_se', 'start_time', 'job__submit_time', 'job__priority')

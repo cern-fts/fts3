@@ -28,14 +28,20 @@ if 'FTS3WEB_CONFIG' in os.environ:
 else:
     FTS3WEB_CONFIG.read('/etc/fts3web/fts3web.ini')
     
-# Overload if /etc/fts3/fts3config is present
-if not FTS3WEB_CONFIG.has_section('database'):
-    print >>sys.stderr, "[database] not present in the fts3web configuration file"
-    print >>sys.stderr, "           Using /etc/fts3/fts3config instead"
+# Load /etc/fts3/fts3config if exists
+fts3cfg = None
+if os.path.exists('/etc/fts3/fts3config'):
     # FTS3 config file does not have a default header, and ConfigParser does not like that
     content = "[fts3]\n" + open('/etc/fts3/fts3config').read()
     fts3cfg = RawConfigParser()
     fts3cfg.readfp(StringIO(content))
+
+# Overload if /etc/fts3/fts3config is present
+if not FTS3WEB_CONFIG.has_section('database'):
+    print >>sys.stderr, "[database] not present in the fts3web configuration file"
+    print >>sys.stderr, "           Using /etc/fts3/fts3config instead"
+    if not fts3cfg:
+        raise Exception('[database] not present, and could not load /etc/fts3/fts3config')
     
     dbType = fts3cfg.get('fts3', 'DbType')
     dbUser = fts3cfg.get('fts3', 'DbUserName')
@@ -66,6 +72,8 @@ if not FTS3WEB_CONFIG.has_section('database'):
     if FTS3WEB_CONFIG.get('database', 'engine') == 'sqlite':
         FTS3WEB_CONFIG.set('database', 'engine', 'sqlite3')
 
+if not FTS3WEB_CONFIG.get('site', 'name'):
+    FTS3WEB_CONFIG.set('site', 'name', fts3cfg.get('fts3', 'SiteName'))
 
 ### 
 if 'BASE_URL' in os.environ:

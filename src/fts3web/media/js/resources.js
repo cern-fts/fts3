@@ -47,6 +47,11 @@ angular.module('ftsmon.resources', ['ngResource'])
 		query: {method: 'GET', isArray: false}
 	})
 })
+.factory('OptimizerActive', function($resource) {
+	return $resource('optimizer/active', {}, {
+		query: {method: 'GET', isArray: false}
+	})
+})
 .factory('Errors', function($resource) {
 	return $resource('errors', {}, {
 		query: {method: 'GET', isArray: false}

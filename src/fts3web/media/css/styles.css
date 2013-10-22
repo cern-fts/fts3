@@ -19,6 +19,10 @@ table.table {
 	table-layout: fixed;
 }
 
+table.table th {
+	overflow: hidden;
+}
+
 table.table td {
 	overflow: hidden;
 }

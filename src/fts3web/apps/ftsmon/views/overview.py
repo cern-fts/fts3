@@ -34,7 +34,7 @@ def overview(httpRequest):
     notBefore  = datetime.utcnow() - timedelta(hours = 1)
     
     pairs = File.objects\
-                .filter(Q(finish_time__isnull = True) | Q(finish_time__gte = notBefore))
+                .filter(Q(job_finished__isnull = True) | Q(job_finished__gte = notBefore))
     
     if filters['vo']:
         pairs = pairs.filter(job__vo_name = filters['vo'])

@@ -20,6 +20,7 @@ from django.db.models import Q, Count, Avg
 from ftsweb.models import Job, File, ConfigAudit, Host
 from ftsweb.models import ProfilingSnapshot, ProfilingInfo
 from jsonify import jsonify, jsonify_paged
+from util import getOrderBy, orderedField
 
 
 STATES               = ['SUBMITTED', 'READY', 'ACTIVE', 'FAILED', 'FINISHED', 'CANCELED', 'STAGING', 'NOT_USED']
@@ -39,7 +40,7 @@ def _getCountPerState(age = None):
     query = File.objects
     if age:
         notBefore = datetime.utcnow() - age
-        query = query.filter(Q(finish_time__gte = notBefore) | Q(finish_time__isnull = True))
+        query = query.filter(Q(job_finished__gte = notBefore) | Q(job_finished__isnull = True))
     
     query = query.values('file_state').annotate(number = Count('file_state'))
     
@@ -72,7 +73,7 @@ def _getTransferAndSubmissionPerHost(timewindow):
         
     transfers = {}
     query = File.objects.values('transferHost')\
-                        .filter(Q(finish_time__gte = notBefore) | Q(finish_time__isnull = True))\
+                        .filter(Q(job_finished__gte = notBefore) | Q(job_finished__isnull = True))\
                         .annotate(count = Count('transferHost'))
     for t in query:
         # Submitted do not have a transfer host!
@@ -103,7 +104,7 @@ def _getTransferAndSubmissionPerHost(timewindow):
 def _getStateCountPerVo(timewindow):
     perVo = {}
     query = File.objects.values('file_state', 'job__vo_name')\
-                        .filter(Q(finish_time__gte = datetime.utcnow() - timewindow) | Q(finish_time__isnull = True))\
+                        .filter(Q(job_finished__gte = datetime.utcnow() - timewindow) | Q(job_finished__isnull = True))\
                         .annotate(count = Count('file_state'))\
                         .order_by('file_state')
     for voJob in query:
@@ -119,7 +120,7 @@ def _getStateCountPerVo(timewindow):
 def _getAllPairs(notBefore, source = None, dest = None):
     pairs = []
     
-    query = File.objects.filter(Q(finish_time__gte = notBefore) | Q(finish_time = None))\
+    query = File.objects.filter(Q(job_finished__gte = notBefore) | Q(job_finished = None))\
                         .values('source_se', 'dest_se')
     if source:
         query = query.filter(source_se = source)
@@ -135,7 +136,7 @@ def _getAllPairs(notBefore, source = None, dest = None):
 def _getAveragePerPair(pairs, notBefore):
     avg = {}
     
-    pairsAvg = File.objects.exclude(file_state__in = ACTIVE_STATES).filter(finish_time__gte = notBefore)\
+    pairsAvg = File.objects.exclude(file_state__in = ACTIVE_STATES).filter(job_finished__gte = notBefore)\
                               .values('source_se', 'dest_se', 'tx_duration', 'throughput')\
                               .annotate(Avg('tx_duration'), Avg('throughput'))
 
@@ -158,7 +159,7 @@ def _getFilesInStatePerPair(pairs, states, notBefore):
     if states:
         query = query.filter(file_state__in = states)
         
-    query = query.filter(Q(finish_time__gt = notBefore) | Q(finish_time__isnull = True))\
+    query = query.filter(Q(job_finished__gt = notBefore) | Q(job_finished__isnull = True))\
                         .values('source_se', 'dest_se', 'file_state')\
                         .annotate(count = Count('file_state'))
 
@@ -217,7 +218,7 @@ def _getStatsPerPair(source_se, dest_se, timewindow):
 def _getRetriedStats(timewindow):
     notBefore = datetime.utcnow() - timewindow
     
-    retriedObjs = File.objects.filter(file_state__in = ['FAILED', 'FINISHED'], finish_time__gte = notBefore, retry__gt = 0)\
+    retriedObjs = File.objects.filter(file_state__in = ['FAILED', 'FINISHED'], job_finished__gte = notBefore, retry__gt = 0)\
                           .values('file_state').annotate(number = Count('file_state'))
     retried = {}
     for f in retriedObjs:
@@ -280,7 +281,7 @@ def servers(httpRequest):
         if k in transfers:
             servers[k].update(transfers.get(k))
         else:
-            servers[k].update({'transfers': 0, 'active': 0, 'submissions': 1})
+            servers[k].update({'transfers': 0, 'active': 0, 'submissions': 0})
     
     return servers
 
@@ -339,7 +340,23 @@ def profiling(httpRequest):
         profiling['updated'] = False
         profiling['period']  = False
     
-    profiles = ProfilingSnapshot.objects.filter(cnt__gt = 0).order_by('total')
+    
+    profiles = ProfilingSnapshot.objects.filter(cnt__gt = 0)
+    
+    (orderBy, orderDesc) = getOrderBy(httpRequest)
+    if orderBy == 'scope':
+        profiles = profiles.order_by(orderedField('scope', orderDesc))
+    elif orderBy == 'called':
+        profiles = profiles.order_by(orderedField('cnt', orderDesc))
+    elif orderBy == 'aggregate':
+        profiles = profiles.order_by(orderedField('total', orderDesc))
+    elif orderBy == 'average':
+        profiles = profiles.order_by(orderedField('average', orderDesc))
+    elif orderBy == 'exceptions':
+        profiles = profiles.order_by(orderedField('exceptions', orderDesc))
+    else:    
+        profiles = profiles.order_by('total')
+    
     profiling['profiles'] = profiles.all()
     
     return profiling

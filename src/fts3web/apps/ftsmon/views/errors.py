@@ -25,7 +25,7 @@ from jsonify import jsonify_paged
 @jsonify_paged
 def showErrors(httpRequest):
     notbefore = datetime.utcnow() - timedelta(hours = 12)
-    errors = File.objects.filter(reason__isnull = False, finish_time__gte = notbefore)\
+    errors = File.objects.filter(reason__isnull = False, job_finished__gte = notbefore)\
                          .exclude(reason = '')
                          
     if httpRequest.GET.get('contains', None):
@@ -50,7 +50,7 @@ def transfersWithError(httpRequest):
     reason = httpRequest.GET['reason']
 
     notbefore = datetime.utcnow() - timedelta(hours = 12)
-    transfers = File.objects.filter(reason = reason, finish_time__gte = notbefore)
+    transfers = File.objects.filter(reason = reason, job_finished__gte = notbefore)
     
     if httpRequest.GET.get('source_se', None):
         transfers = transfers.filter(source_se = httpRequest.GET['source_se'])

@@ -28,9 +28,9 @@ def unique(httpRequest):
     notBefore = datetime.utcnow() - timedelta(hours = 12)
     
     vos          = Job.objects.values('vo_name').distinct()
-    sources      = Job.objects.filter(Q(finish_time__isnull = True) | Q(finish_time__gte = notBefore))\
+    sources      = Job.objects.filter(Q(job_finished__isnull = True) | Q(job_finished__gte = notBefore))\
                       .values('source_se').distinct()
-    destinations = Job.objects.filter(Q(finish_time__isnull = True) | Q(finish_time__gte = notBefore))\
+    destinations = Job.objects.filter(Q(job_finished__isnull = True) | Q(job_finished__gte = notBefore))\
                       .values('dest_se').distinct()
     
     return {

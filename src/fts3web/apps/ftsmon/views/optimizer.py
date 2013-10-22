@@ -19,9 +19,11 @@ from datetime import datetime, timedelta
 from django.db.models import Max, Avg, StdDev, Count, Min
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import Http404
-from ftsweb.models import Optimize, OptimizerEvolution, File, Job
+from ftsweb.models import Optimize, OptimizerEvolution, OptimizeActive
+from ftsweb.models import File, Job
 from ftsmon import forms
 from jsonify import jsonify, jsonify_paged
+from util import getOrderBy, orderedField
 		
 
 @jsonify_paged
@@ -77,7 +79,7 @@ def optimizerDetailed(httpRequest):
 	# File sizes
 	fsizes = File.objects.filter(source_se = source_se, dest_se = dest_se,
 								 file_state = 'FINISHED',
-								 finish_time__gte = notBefore)
+								 job_finished__gte = notBefore)
 	
 	fsizes = fsizes.aggregate(nfiles  = Count('file_id'),
 							  biggest = Max('filesize'),
@@ -88,7 +90,8 @@ def optimizerDetailed(httpRequest):
 	# Optimizer snapshot
 	optimizerSnapshot = Optimize.objects.filter(source_se = source_se, dest_se = dest_se,
 											   throughput__isnull = False,
-											   datetime__gte = notBefore).order_by('-datetime')
+											   datetime__gte = notBefore)\
+									    .distinct().order_by('-datetime')
 											   
 	# Optimizer evolution
 	optimizerHistory = OptimizerEvolution.objects.filter(source_se = source_se, dest_se = dest_se,
@@ -99,3 +102,24 @@ def optimizerDetailed(httpRequest):
 		'snapshot': optimizerSnapshot,
 		'history': optimizerHistory
 	}
+
+
+@jsonify_paged
+def optimizerActive(httpRequest):
+	active = OptimizeActive.objects
+	
+	source_se = httpRequest.GET.get('source_se', None)
+	dest_se   = httpRequest.GET.get('dest_se', None)
+	
+	if source_se:
+		active = active.filter(source_se = source_se)
+	if dest_se:
+		active = active.filter(dest_se = dest_se)
+	
+	(orderBy, orderDesc) = getOrderBy(httpRequest)
+	if orderBy == 'active':
+		active = active.order_by(orderedField('active', orderDesc))
+	else:
+		active = active.order_by('source_se', 'dest_se')
+	
+	return active
