@@ -3271,6 +3271,9 @@ void MySqlAPI::backup()
             if(!temp.getCleanUpSanityCheck())
                 return;
 
+	    sql << "SET AUTOCOMMIT = 0"; 
+	    sql << "SET FOREIGN_KEY_CHECKS = 0"; 
+	    sql << "SET UNIQUE_CHECKS = 0";
 
             soci::rowset<soci::row> rs = (
                                              sql.prepare <<
