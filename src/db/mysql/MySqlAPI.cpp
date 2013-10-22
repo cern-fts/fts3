@@ -246,8 +246,10 @@ void MySqlAPI::init(std::string username, std::string password, std::string conn
         }
     catch (std::exception& e)
         {
-            if(connectionPool)
+            if(connectionPool){
                 delete connectionPool;
+		connectionPool = NULL;
+	    }
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
 }
