@@ -323,22 +323,22 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
     try
         {
             int mode = getOptimizerMode(sql);
-            int filesNum;
+            int defaultFilesNum;
             if(mode==1)
                 {
-                    filesNum = mode_1[3];
+                    defaultFilesNum = mode_1[3];
                 }
             else if(mode==2)
                 {
-                    filesNum = mode_2[3];
+                    defaultFilesNum = mode_2[3];
                 }
             else if(mode==3)
                 {
-                    filesNum = mode_3[3];
+                    defaultFilesNum = mode_3[3];
                 }
             else
                 {
-                    filesNum = mode_1[3];
+                    defaultFilesNum = mode_1[3];
                 }
 
 
@@ -383,9 +383,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                     boost::tuple<std::string, std::string, std::string>& triplet = *it;
                     int count = 0;
                     bool manualConfigExists = false;
-                    int limit = 0;
-                    int maxActive = 0;
-                    soci::indicator isNull = soci::i_ok;
+                    int filesNum = defaultFilesNum;
 
 		     //1st check if manual config exists
                     sql << "SELECT COUNT(*) FROM t_link_config WHERE (source = :source OR source = '*') AND (destination = :dest OR destination = '*')",
@@ -405,6 +403,10 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
 		    //both previously check returned false, you optimizer
                     if(!manualConfigExists)
                         {
+                            int limit = 0;
+                            int maxActive = 0;
+                            soci::indicator isNull = soci::i_ok;
+
                             sql << " select count(*) from t_file where source_se=:source_se and dest_se=:dest_se and file_state in ('READY','ACTIVE') ",
                                 soci::use(boost::get<0>(triplet)),
                                 soci::use(boost::get<1>(triplet)),
