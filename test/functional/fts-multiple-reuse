@@ -8,38 +8,74 @@ from lib import base, storage
 
 class TestMultipleReuse(base.TestBase):
 
-	def setUp(self):
-		# Need to create three sources and three destinations
-		self.transfers = []
-		for (srcSa, dstSa) in storage.getStoragePairs():
-			pairs = []
-			for i in range(3):
-				s = self.surl.generate(srcSa)
-				d = self.surl.generate(dstSa)
-				pairs.append((s, d))
-			self.transfers.append(pairs)
+    def setUp(self):
+        # Need to create three sources and three destinations
+        self.transfers = []
+        for (srcSa, dstSa) in storage.getStoragePairs():
+            pairs = []
+            for i in range(3):
+                s = self.surl.generate(srcSa)
+                d = self.surl.generate(dstSa)
+                pairs.append((s, d))
+            self.transfers.append(pairs)
 
 
-	def test_multipleWithReuse(self):
-		"""
-		Transfer multiple files with reuse
-		"""
-		for t in self.transfers:
-			logging.info("Transfer multiple files with reuse")
-			files = []
-			for (src, dst) in t:
-				logging.info("%s => %s" % (src, dst))
-				self.surl.create(src)
-				files.append({'sources': [src], 'destinations': [dst]})
+    def test_multipleWithReuse(self):
+        """
+        Transfer multiple files with reuse
+        """
+        for t in self.transfers:
+            logging.info("Transfer multiple files with reuse")
+            files = []
+            for (src, dst) in t:
+                logging.info("%s => %s" % (src, dst))
+                self.surl.create(src)
+                files.append({'sources': [src], 'destinations': [dst]})
 
-			jobId = self.client.submit(files, ['-r'])
-			logging.info("Got job id %s" % jobId)
-			state = self.client.poll(jobId)
-			logging.info("Job %s finished with %s" % (jobId, state))
-			self.assertEqual('FINISHED', state)
-		
+            jobId = self.client.submit(files, ['-r'])
+            logging.info("Got job id %s" % jobId)
+            state = self.client.poll(jobId)
+            logging.info("Job %s finished with %s" % (jobId, state))
+            self.assertEqual('FINISHED', state)
+
+            files = self.client.getFileInfo(jobId)
+            for pair in files.keys():
+                self.assertEqual('FINISHED', files[pair]['state'])
+
+
+    def test_multipleWithReuseDirty(self):
+        """
+        Transfer multiple files with reuse, one does not exist
+        """
+        for t in self.transfers:
+            logging.info("Transfer multiple files with reuse, one does not exist")
+            files = []
+            created = []
+            nCreated = len(t) - 1
+            for (src, dst) in t:
+                logging.info("%s => %s" % (src, dst))
+                if nCreated > 0:
+                    self.surl.create(src)
+                    created.append(src)
+                    nCreated -= 1
+                files.append({'sources': [src], 'destinations': [dst]})
+
+            jobId = self.client.submit(files, ['-r'])
+            logging.info("Got job id %s" % jobId)
+            state = self.client.poll(jobId)
+            logging.info("Job %s finished with %s" % (jobId, state))
+            self.assertEqual('FINISHEDDIRTY', state)
+
+            files = self.client.getFileInfo(jobId)
+            for (src, dst) in files.keys():
+                if src in created:
+                    self.assertEqual('FINISHED', files[(src, dst)]['state'])
+                else:
+                    self.assertEqual('FAILED', files[(src, dst)]['state'])
+
+        
 
 if __name__ == '__main__':
-	import sys
-	sys.exit(TestMultipleReuse().run())
+    import sys
+    sys.exit(TestMultipleReuse().run())
 

@@ -97,3 +97,10 @@ class TestBase():
         if value > limit:
             raise AssertionError("Expected <= %s, but %s is higher" % (str(limit), str(value)))
         logging.info("Assertion %s <= %s OK" % (str(value), str(limit)))
+
+
+    def assertIn(self, expected, value):
+        if value not in expected:
+            raise AssertionError("Expected a value in [%s], got %s" % (','.join(expected), str(value)))
+        logging.info("Assertion %s in [%s] OK" % (str(value), ','.join(expected)))
+
