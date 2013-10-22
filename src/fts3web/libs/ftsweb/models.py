@@ -147,7 +147,8 @@ class  ConfigAudit(models.Model):
     
     def __eq__(self, b):
         return isinstance(b, self.__class__) and \
-               self.datetime == b.datetime and self.config == b.config and self.dn == b.dn
+               self.datetime == b.datetime and self.dn == b.dn and \
+               self.config == b.config and self.action == b.action
 
 
 class Optimize(models.Model):
