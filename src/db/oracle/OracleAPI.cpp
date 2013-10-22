@@ -169,7 +169,7 @@ static int extractTimeout(std::string & str)
 
 
 
-OracleAPI::OracleAPI(): poolSize(10), connectionPool(NULL), lowDefault(3), highDefault(5), jobsNum(3), filesNum(5)
+OracleAPI::OracleAPI(): poolSize(10), connectionPool(NULL)
 {
     char chname[MAXHOSTNAMELEN]= {0};
     gethostname(chname, sizeof(chname));
@@ -463,6 +463,7 @@ void OracleAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& f
     try
         {
             int mode = getOptimizerMode(sql);
+            int filesNum;
             if(mode==1)
                 {
                     filesNum = mode_1[3];
@@ -2572,6 +2573,7 @@ bool OracleAPI::isTrAllowed2(const std::string & source_hostname, const std::str
     try
         {
             int mode = getOptimizerMode(sql);
+            int lowDefault = 3, highDefault = 5, jobsNum = 3;
             if(mode==1)
                 {
                     lowDefault = mode_1[0];
@@ -2637,6 +2639,7 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
     try
         {
             int mode = getOptimizerMode(sql);
+            int lowDefault = 3, highDefault = 5, jobsNum = 3;
             if(mode==1)
                 {
                     lowDefault = mode_1[0];

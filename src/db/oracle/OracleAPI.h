@@ -368,11 +368,6 @@ private:
 
     bool getChangedFile (std::string source, std::string dest, double rate, double thr, double avgThr);
 
-    int lowDefault;
-    int highDefault;
-    int jobsNum;
-    int filesNum;
-
     struct HashSegment
     {
         unsigned start;
