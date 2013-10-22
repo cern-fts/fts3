@@ -213,10 +213,11 @@ void OracleAPI::init(std::string username, std::string password, std::string con
         }
     catch (std::exception& e)
         {
-            if(connectionPool) {
-                delete connectionPool;
-                connectionPool = NULL;
-            }
+            if(connectionPool)
+                {
+                    delete connectionPool;
+                    connectionPool = NULL;
+                }
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
 }
@@ -463,22 +464,22 @@ void OracleAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& f
     try
         {
             int mode = getOptimizerMode(sql);
-            int filesNum;
+            int defaultFilesNum = 0;
             if(mode==1)
                 {
-                    filesNum = mode_1[3];
+                    defaultFilesNum = mode_1[3];
                 }
             else if(mode==2)
                 {
-                    filesNum = mode_2[3];
+                    defaultFilesNum = mode_2[3];
                 }
             else if(mode==3)
                 {
-                    filesNum = mode_3[3];
+                    defaultFilesNum = mode_3[3];
                 }
             else
                 {
-                    filesNum = mode_1[3];
+                    defaultFilesNum = mode_1[3];
                 }
 
             soci::rowset<soci::row> rs = (
@@ -514,41 +515,45 @@ void OracleAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& f
                     boost::tuple<std::string, std::string, std::string>& triplet = *it;
                     int count = 0;
                     bool manualConfigExists = false;
-                    int limit = 0;
-                    int maxActive = 0;
-		    soci::indicator isNull = soci::i_ok;
+                    int filesNum = defaultFilesNum;
 
                     sql << "SELECT COUNT(*) FROM t_link_config WHERE (source = :source OR source = '*') AND (destination = :dest OR destination = '*')",
                         soci::use(boost::get<0>(triplet)),soci::use(boost::get<1>(triplet)),soci::into(count);
                     if(count > 0)
                         manualConfigExists = true;
-			
-		    if(!manualConfigExists){	
-                    	sql << "SELECT COUNT(*) FROM t_group_members WHERE (member=:source OR member=:dest)",
-                        	soci::use(boost::get<0>(triplet)),soci::use(boost::get<1>(triplet)),soci::into(count);
-                   	if(count > 0)
-                        	manualConfigExists = true;
-		    }
 
-		    if(!manualConfigExists){
-                    sql << " select count(*) from t_file where source_se=:source_se and dest_se=:dest_se and file_state in ('READY','ACTIVE') ",
-                        soci::use(boost::get<0>(triplet)),
-                        soci::use(boost::get<1>(triplet)),
-                        soci::into(limit);
-
-                    sql << "select active from t_optimize_active where source_se=:source_se and dest_se=:dest_se",
-                        soci::use(boost::get<0>(triplet)),
-                        soci::use(boost::get<1>(triplet)),
-                        soci::into(maxActive, isNull);
-
-                    /* need to check whether a manual config exists for source_se or dest_se so as not to limit the files */
-                    if (isNull != soci::i_null && maxActive > 0)
+                    if(!manualConfigExists)
                         {
-                            filesNum = (maxActive - limit);
-                            if(filesNum <=0 )
-                                continue;
+                            sql << "SELECT COUNT(*) FROM t_group_members WHERE (member=:source OR member=:dest)",
+                                soci::use(boost::get<0>(triplet)),soci::use(boost::get<1>(triplet)),soci::into(count);
+                            if(count > 0)
+                                manualConfigExists = true;
                         }
-		    }
+
+                    if(!manualConfigExists)
+                        {
+                            int limit = 0;
+                            int maxActive = 0;
+                            soci::indicator isNull = soci::i_ok;
+
+                            sql << " select count(*) from t_file where source_se=:source_se and dest_se=:dest_se and file_state in ('READY','ACTIVE') ",
+                                soci::use(boost::get<0>(triplet)),
+                                soci::use(boost::get<1>(triplet)),
+                                soci::into(limit);
+
+                            sql << "select active from t_optimize_active where source_se=:source_se and dest_se=:dest_se",
+                                soci::use(boost::get<0>(triplet)),
+                                soci::use(boost::get<1>(triplet)),
+                                soci::into(maxActive, isNull);
+
+                            /* need to check whether a manual config exists for source_se or dest_se so as not to limit the files */
+                            if (isNull != soci::i_null && maxActive > 0)
+                                {
+                                    filesNum = (maxActive - limit);
+                                    if(filesNum <=0 )
+                                        continue;
+                                }
+                        }
 
                     std::map<std::string, int> activityFilesNum =
                         getFilesNumPerActivity(sql, boost::get<0>(triplet), boost::get<1>(triplet), boost::get<2>(triplet), filesNum);
@@ -921,10 +926,10 @@ void OracleAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std:
 
 
 void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_element_tupple> src_dest_pair,
-                              const std::string & DN, const std::string & cred,
-                              const std::string & voName, const std::string & myProxyServer, const std::string & delegationID,
-                              const std::string & sourceSe, const std::string & destinationSe,
-                              const JobParameterHandler & params)
+                               const std::string & DN, const std::string & cred,
+                               const std::string & voName, const std::string & myProxyServer, const std::string & delegationID,
+                               const std::string & sourceSe, const std::string & destinationSe,
+                               const JobParameterHandler & params)
 {
     const int         bringOnline      = params.get<int>(JobParameterHandler::BRING_ONLINE);
     const char        checksumMethod   = params.get(JobParameterHandler::CHECKSUM_METHOD)[0];
@@ -1024,8 +1029,8 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_elemen
             // This guarantees that the whole set belong to the same machine, but keeping
             // the load balance between hosts
             soci::statement updateHashedId = (sql.prepare <<
-                    "UPDATE t_file SET hashed_id = ora_hash(file_id, 65535) WHERE file_id = :fileId",
-                    soci::use(newFileId)
+                                              "UPDATE t_file SET hashed_id = ora_hash(file_id, 65535) WHERE file_id = :fileId",
+                                              soci::use(newFileId)
                                              );
 
             soci::statement updateHashedIdWithJobId = (sql.prepare <<
@@ -1047,10 +1052,10 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_elemen
                     destSe = iter->dest_se;
 
                     sql << " MERGE INTO t_optimize_active USING "
-                           "    (SELECT :sourceSe as source, :destSe as dest FROM dual) Pair "
-                           " ON (t_optimize_active.source_se = Pair.source AND t_optimize_active.dest_se = Pair.dest) "
-                           " WHEN NOT MATCHED THEN INSERT (source_se, dest_se) VALUES (Pair.source, Pair.dest)",
-                           soci::use(sourceSe), soci::use(destSe);
+                        "    (SELECT :sourceSe as source, :destSe as dest FROM dual) Pair "
+                        " ON (t_optimize_active.source_se = Pair.source AND t_optimize_active.dest_se = Pair.dest) "
+                        " WHEN NOT MATCHED THEN INSERT (source_se, dest_se) VALUES (Pair.source, Pair.dest)",
+                        soci::use(sourceSe), soci::use(destSe);
 
                     if (iter->wait_timeout.is_initialized())
                         {
@@ -1064,7 +1069,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_elemen
 
                     // Last id
                     sql << "SELECT file_file_id_seq.currval FROM dual",
-                            soci::into(newFileId);
+                        soci::into(newFileId);
 
                     // Update hash
                     if (reuseFlag == "N")
@@ -1246,7 +1251,7 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
 
 
 void OracleAPI::getTransferFileStatus(std::string requestID, bool archive,
-                                     unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files)
+                                      unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files)
 {
     soci::session sql(*connectionPool);
 
@@ -1339,7 +1344,7 @@ void OracleAPI::getSe(Se* &se, std::string seName)
 
 
 void OracleAPI::addSe(std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
-                     std::string SE_TRANSFER_TYPE, std::string SE_TRANSFER_PROTOCOL, std::string SE_CONTROL_PROTOCOL, std::string GOCDB_ID)
+                      std::string SE_TRANSFER_TYPE, std::string SE_TRANSFER_PROTOCOL, std::string SE_CONTROL_PROTOCOL, std::string GOCDB_ID)
 {
     soci::session sql(*connectionPool);
 
@@ -1365,7 +1370,7 @@ void OracleAPI::addSe(std::string ENDPOINT, std::string SE_TYPE, std::string SIT
 
 
 void OracleAPI::updateSe(std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
-                        std::string SE_TRANSFER_TYPE, std::string SE_TRANSFER_PROTOCOL, std::string SE_CONTROL_PROTOCOL, std::string GOCDB_ID)
+                         std::string SE_TRANSFER_TYPE, std::string SE_TRANSFER_PROTOCOL, std::string SE_CONTROL_PROTOCOL, std::string GOCDB_ID)
 {
     soci::session sql(*connectionPool);
 
@@ -1486,7 +1491,7 @@ void OracleAPI::deleteSe(std::string NAME)
 
 
 bool OracleAPI::updateFileTransferStatus(double throughputIn, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
-                                        int process_id, double filesize, double duration)
+        int process_id, double filesize, double duration)
 {
     bool ok = true;
     soci::session sql(*connectionPool);
@@ -2351,8 +2356,8 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
 }
 
 void OracleAPI::recordOptimizerUpdate(soci::session& sql, int active, double filesize,
-                                     double throughput, int nostreams, int timeout, int buffersize,
-                                     std::string source_hostname, std::string destin_hostname)
+                                      double throughput, int nostreams, int timeout, int buffersize,
+                                      std::string source_hostname, std::string destin_hostname)
 {
     try
         {
@@ -2372,8 +2377,8 @@ void OracleAPI::recordOptimizerUpdate(soci::session& sql, int active, double fil
 }
 
 bool OracleAPI::updateOptimizer(double throughputIn, int, double filesize, double timeInSecs, int nostreams,
-                               int timeout, int buffersize,
-                               std::string source_hostname, std::string destin_hostname)
+                                int timeout, int buffersize,
+                                std::string source_hostname, std::string destin_hostname)
 {
     bool ok = true;
     soci::session sql(*connectionPool);
@@ -3045,7 +3050,7 @@ void OracleAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
 
 
 void OracleAPI::setAllowed(const std::string & job_id, int file_id, const std::string & /*source_se*/, const std::string & /*dest*/,
-                          int nostreams, int timeout, int buffersize)
+                           int nostreams, int timeout, int buffersize)
 {
     soci::session sql(*connectionPool);
     std::stringstream params;
@@ -3253,19 +3258,19 @@ void OracleAPI::backup()
             msg.cleanUpRecords = true;
             CleanUpSanityChecks temp(this, sql, msg);
             if(!temp.getCleanUpSanityCheck())
-                return;          
+                return;
 
             sql.begin();
 
             sql << "insert into t_job_backup select * from t_job where job_state IN "
-	    	   " ('FINISHED', 'FAILED', 'CANCELED', 'FINISHEDDIRTY') and job_finished < (systimestamp - interval '4' DAY )";
+                " ('FINISHED', 'FAILED', 'CANCELED', 'FINISHEDDIRTY') and job_finished < (systimestamp - interval '4' DAY )";
 
             sql << "insert into t_file_backup select * from t_file where job_id IN (select job_id from t_job_backup)";
 
             sql << "delete from t_file where file_id in (select file_id from t_file_backup)";
 
             sql << "delete from t_job where job_id in (select job_id from t_job_backup)";
-		   
+
             sql.commit();
 
         }
@@ -3434,9 +3439,9 @@ void OracleAPI::blacklistDn(std::string dn, std::string msg, std::string adm_dn)
             sql.begin();
 
             sql << " MERGE INTO t_bad_dns USING "
-                   "    (SELECT :dn AS dn, :message AS message, sys_extract_utc(systimestamp) as tstamp, :admin AS admin FROM dual) Blacklisted "
-                   " WHEN NOT MATCHED THEN INSERT (dn, message, addition_time, admin_dn) VALUES "
-                   "                              (BlackListed.dn, BlackListed.message, BlackListed.tstamp, BlackListed.admin)",
+                "    (SELECT :dn AS dn, :message AS message, sys_extract_utc(systimestamp) as tstamp, :admin AS admin FROM dual) Blacklisted "
+                " WHEN NOT MATCHED THEN INSERT (dn, message, addition_time, admin_dn) VALUES "
+                "                              (BlackListed.dn, BlackListed.message, BlackListed.tstamp, BlackListed.admin)",
                 soci::use(dn), soci::use(msg), soci::use(adm_dn);
             sql.commit();
         }
@@ -3530,7 +3535,7 @@ bool OracleAPI::isSeBlacklisted(std::string se, std::string vo)
     try
         {
             sql << "SELECT se FROM t_bad_ses WHERE se = :se AND (vo IS NULL OR vo='' OR vo = :vo)",
-                    soci::use(se), soci::use(vo), soci::into(se);
+                soci::use(se), soci::use(vo), soci::into(se);
             blacklisted = sql.got_data();
         }
     catch (std::exception& e)
@@ -4303,11 +4308,11 @@ void OracleAPI::addFileShareConfig(int file_id, std::string source, std::string 
             sql.begin();
 
             sql << " MERGE INTO t_file_share_config USING "
-                   "    (SELECT :fileId as fileId, :source as source, :destination as destination, :vo as vo From dual) Config "
-                   " ON (t_file_share_config.file_id = Config.fileId AND t_file_share_config.source = Config.source AND "
-                   "     t_file_share_config.destination = Config.destination AND t_file_share_config.vo = Config.vo) "
-                   " WHEN NOT MATCHED THEN INSERT (file_id, source, destination, vo) VALUES "
-                   "                              (Config.fileId, Config.source, Config.destination, Config.vo)",
+                "    (SELECT :fileId as fileId, :source as source, :destination as destination, :vo as vo From dual) Config "
+                " ON (t_file_share_config.file_id = Config.fileId AND t_file_share_config.source = Config.source AND "
+                "     t_file_share_config.destination = Config.destination AND t_file_share_config.vo = Config.vo) "
+                " WHEN NOT MATCHED THEN INSERT (file_id, source, destination, vo) VALUES "
+                "                              (Config.fileId, Config.source, Config.destination, Config.vo)",
                 soci::use(file_id),
                 soci::use(source),
                 soci::use(destination),
@@ -5457,8 +5462,8 @@ struct message_state OracleAPI::getStateOfTransfer(const std::string& jobId, int
                     if(ret.retry_max == 0)
                         {
                             sql << "SELECT retry FROM "
-                                   " (SELECT rownum as rn, retry FROM t_server_config) "
-                                   "WHERE rn = 1", soci::into(ret.retry_max, ind);
+                                " (SELECT rownum as rn, retry FROM t_server_config) "
+                                "WHERE rn = 1", soci::into(ret.retry_max, ind);
                         }
                 }
 
@@ -6273,14 +6278,14 @@ void OracleAPI::storeProfiling(const fts3::ProfilingSubsystem* prof)
             for (i = prof->profiles.begin(); i != prof->profiles.end(); ++i)
                 {
                     sql << "MERGE INTO t_profiling_snapshot USING "
-                           "    (SELECT :scope AS scope, :cnt as cnt, :exceptions as exceptions, :total as total, :avg as avg FROM dual) Profile"
-                           " ON (t_profiling_snapshot.scope = Profile.scope) "
-                           " WHEN     MATCHED THEN UPDATE SET t_profiling_snapshot.cnt = Profile.cnt,"
-                           "                                  t_profiling_snapshot.exceptions = Profile.exceptions,"
-                           "                                  t_profiling_snapshot.total = Profile.total,"
-                           "                                  t_profiling_snapshot.average = Profile.avg "
-                           " WHEN NOT MATCHED THEN INSERT (scope, cnt, exceptions, total, average) VALUES "
-                           "                              (Profile.scope, Profile.cnt, Profile.exceptions, Profile.total, Profile.avg) ",
+                        "    (SELECT :scope AS scope, :cnt as cnt, :exceptions as exceptions, :total as total, :avg as avg FROM dual) Profile"
+                        " ON (t_profiling_snapshot.scope = Profile.scope) "
+                        " WHEN     MATCHED THEN UPDATE SET t_profiling_snapshot.cnt = Profile.cnt,"
+                        "                                  t_profiling_snapshot.exceptions = Profile.exceptions,"
+                        "                                  t_profiling_snapshot.total = Profile.total,"
+                        "                                  t_profiling_snapshot.average = Profile.avg "
+                        " WHEN NOT MATCHED THEN INSERT (scope, cnt, exceptions, total, average) VALUES "
+                        "                              (Profile.scope, Profile.cnt, Profile.exceptions, Profile.total, Profile.avg) ",
                         soci::use(i->second.nCalled, "cnt"), soci::use(i->second.nExceptions, "exceptions"),
                         soci::use(i->second.totalTime, "total"), soci::use(i->second.getAverage(), "avg"),
                         soci::use(i->first, "scope");
@@ -6675,14 +6680,14 @@ void OracleAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* star
 
             // Update beat
             sql << "MERGE INTO t_hosts USING "
-                   " (SELECT :hostname AS hostname FROM dual) Hostname ON (t_hosts.hostname = Hostname.hostname) "
-                   " WHEN     MATCHED THEN UPDATE SET t_hosts.beat = sys_extract_utc(systimestamp)"
-                   " WHEN NOT MATCHED THEN INSERT (hostname, beat) VALUES (Hostname.hostname, sys_extract_utc(systimestamp))",
+                " (SELECT :hostname AS hostname FROM dual) Hostname ON (t_hosts.hostname = Hostname.hostname) "
+                " WHEN     MATCHED THEN UPDATE SET t_hosts.beat = sys_extract_utc(systimestamp)"
+                " WHEN NOT MATCHED THEN INSERT (hostname, beat) VALUES (Hostname.hostname, sys_extract_utc(systimestamp))",
                 soci::use(hostname);
 
             // Total number of working instances
             sql << "SELECT COUNT(hostname) FROM t_hosts "
-                   "  WHERE beat >= (sys_extract_utc(systimestamp) - interval '2' minute)",
+                "  WHERE beat >= (sys_extract_utc(systimestamp) - interval '2' minute)",
                 soci::into(*count);
 
             // This instance index
