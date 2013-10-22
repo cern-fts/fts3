@@ -151,7 +151,7 @@ unsigned OracleMonitoring::numberOfJobsInState(const SourceAndDestSE& pair,
 
 
 void OracleMonitoring::getConfigAudit(const std::string& actionLike,
-                                     std::vector<ConfigAudit>& audit)
+                                      std::vector<ConfigAudit>& audit)
 {
     soci::session sql(connectionPool);
 
@@ -175,7 +175,7 @@ void OracleMonitoring::getConfigAudit(const std::string& actionLike,
 
 
 void OracleMonitoring::getTransferFiles(const std::string& jobId,
-                                       std::vector<TransferFiles>& files)
+                                        std::vector<TransferFiles>& files)
 {
     soci::session sql(connectionPool);
 
@@ -219,8 +219,8 @@ void OracleMonitoring::getJob(const std::string& jobId, TransferJobs& job)
 
 
 void OracleMonitoring::filterJobs(const std::vector<std::string>& inVos,
-                                 const std::vector<std::string>& inStates,
-                                 std::vector<TransferJobs>& jobs)
+                                  const std::vector<std::string>& inStates,
+                                  std::vector<TransferJobs>& jobs)
 {
     soci::session sql(connectionPool);
 

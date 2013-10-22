@@ -45,7 +45,8 @@ inline time_t getTimeT(values const& v, const std::string& name)
     if (v.get_indicator(name) != soci::i_ok)
         return time(NULL);
 
-    switch (v.get_properties(name).get_data_type()) {
+    switch (v.get_properties(name).get_data_type())
+        {
         case dt_double:
             return static_cast<time_t>(v.get<double>(name));
         case dt_integer:
@@ -56,13 +57,13 @@ inline time_t getTimeT(values const& v, const std::string& name)
             return static_cast<time_t>(v.get<unsigned long long>(name));
         case dt_date:
             when = v.get<std::tm>(name);
-            return mktime(&when);
+            return timegm(&when);
         case dt_string:
             strptime(v.get<std::string>(name).c_str(), "%d-%b-%y %H.%M.%S.000000 %p %z", &when);
-            return mktime(&when);
+            return timegm(&when);
         default:
             throw std::bad_cast();
-    }
+        }
 }
 
 

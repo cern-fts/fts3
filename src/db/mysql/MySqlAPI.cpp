@@ -246,10 +246,11 @@ void MySqlAPI::init(std::string username, std::string password, std::string conn
         }
     catch (std::exception& e)
         {
-            if(connectionPool){
-                delete connectionPool;
-		connectionPool = NULL;
-	    }
+            if(connectionPool)
+                {
+                    delete connectionPool;
+                    connectionPool = NULL;
+                }
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
 }
@@ -496,7 +497,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
     try
         {
             int mode = getOptimizerMode(sql);
-            int defaultFilesNum;
+            int defaultFilesNum = 0;
             if(mode==1)
                 {
                     defaultFilesNum = mode_1[3];
@@ -549,13 +550,13 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                     bool manualConfigExists = false;
                     int filesNum = defaultFilesNum;
 
-		     //1st check if manual config exists
+                    //1st check if manual config exists
                     sql << "SELECT COUNT(*) FROM t_link_config WHERE (source = :source OR source = '*') AND (destination = :dest OR destination = '*')",
                         soci::use(boost::get<0>(triplet)), soci::use(boost::get<1>(triplet)), soci::into(count);
                     if(count > 0)
                         manualConfigExists = true;
 
-		    //if 1st check is false, check 2nd time for manual config
+                    //if 1st check is false, check 2nd time for manual config
                     if(!manualConfigExists)
                         {
                             sql << "SELECT COUNT(*) FROM t_group_members WHERE (member=:source OR member=:dest)",
@@ -564,7 +565,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                 manualConfigExists = true;
                         }
 
-		    //both previously check returned false, you optimizer
+                    //both previously check returned false, you optimizer
                     if(!manualConfigExists)
                         {
                             int limit = 0;
@@ -580,7 +581,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                 soci::use(boost::get<0>(triplet)),
                                 soci::use(boost::get<1>(triplet)),
                                 soci::into(maxActive, isNull);
-                       
+
                             if (isNull != soci::i_null && maxActive > 0)
                                 {
                                     filesNum = (maxActive - limit);
@@ -3269,8 +3270,8 @@ void MySqlAPI::backup()
             CleanUpSanityChecks temp(this, sql, msg);
             if(!temp.getCleanUpSanityCheck())
                 return;
-       
-           
+
+
             soci::rowset<soci::row> rs = (
                                              sql.prepare <<
                                              " SELECT job_id "
@@ -3279,21 +3280,21 @@ void MySqlAPI::backup()
                                              "      job_finished < (UTC_TIMESTAMP() - interval '4' DAY ) AND "
                                              "      job_state IN ('FINISHED', 'FAILED', 'CANCELED', 'FINISHEDDIRTY') "
                                          );
-	    sql.begin();				 
+            sql.begin();
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
                     soci::row const& r = *i;
                     std::string job_id = r.get<std::string>("job_id");
-		    
-		    sql << "INSERT INTO t_job_backup SELECT * FROM t_job WHERE job_id = :job_id", soci::use(job_id);
-		    
-		    sql << "INSERT INTO t_file_backup SELECT * FROM t_file WHERE job_id = :job_id", soci::use(job_id);
-		    
-            	    sql << "DELETE FROM t_file WHERE job_id = :job_id", soci::use(job_id);
 
-                    sql << "DELETE FROM t_job WHERE job_id = :job_id", soci::use(job_id);		                        
+                    sql << "INSERT INTO t_job_backup SELECT * FROM t_job WHERE job_id = :job_id", soci::use(job_id);
+
+                    sql << "INSERT INTO t_file_backup SELECT * FROM t_file WHERE job_id = :job_id", soci::use(job_id);
+
+                    sql << "DELETE FROM t_file WHERE job_id = :job_id", soci::use(job_id);
+
+                    sql << "DELETE FROM t_job WHERE job_id = :job_id", soci::use(job_id);
                 }
-            sql.commit();           
+            sql.commit();
         }
     catch (std::exception& e)
         {
@@ -5652,8 +5653,8 @@ void MySqlAPI::cancelWaitingFiles(std::set<std::string>& jobs)
                                          );
 
             soci::rowset<soci::row>::iterator it;
-	    
-            sql.begin();	    
+
+            sql.begin();
             for (it = rs.begin(); it != rs.end(); ++it)
                 {
 
