@@ -3042,8 +3042,7 @@ void MySqlAPI::backup()
     int count = 0;
 
     try
-        {
-	
+        {	
             struct message_sanity msg;
             msg.cleanUpRecords = true;
             CleanUpSanityChecks temp(this, sql, msg);
