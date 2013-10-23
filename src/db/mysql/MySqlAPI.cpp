@@ -3039,9 +3039,11 @@ void MySqlAPI::revertToSubmitted()
 void MySqlAPI::backup()
 {
     soci::session sql(*connectionPool);
+    int count = 0;
 
     try
         {
+	
             struct message_sanity msg;
             msg.cleanUpRecords = true;
             CleanUpSanityChecks temp(this, sql, msg);
@@ -3050,7 +3052,9 @@ void MySqlAPI::backup()
 		
 	    sql << "SET AUTOCOMMIT = 0"; 
 	    sql << "SET FOREIGN_KEY_CHECKS = 0"; 
-	    sql << "SET UNIQUE_CHECKS = 0";	
+	    sql << "SET UNIQUE_CHECKS = 0";
+	    sql << "SET SESSION tx_isolation='READ-UNCOMMITTED'";
+	    sql << "SET sql_log_bin = 0";	
                   
             soci::rowset<soci::row> rs = (
                                              sql.prepare <<
@@ -3060,9 +3064,10 @@ void MySqlAPI::backup()
                                              "      job_finished < (UTC_TIMESTAMP() - interval '4' DAY ) AND "
                                              "      job_state IN ('FINISHED', 'FAILED', 'CANCELED', 'FINISHEDDIRTY') "
                                          );
-	    sql.begin();				 
+				 
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
+		    count++;
                     soci::row const& r = *i;
                     std::string job_id = r.get<std::string>("job_id");
 		    
@@ -3073,6 +3078,12 @@ void MySqlAPI::backup()
             	    sql << "DELETE FROM t_file WHERE job_id = :job_id", soci::use(job_id);
 
                     sql << "DELETE FROM t_job WHERE job_id = :job_id", soci::use(job_id);		                        
+		    
+		    //commit every 10 records
+		    if(count==10){
+		        count = 0;
+		    	sql.commit();		    	
+		    }
                 }
             sql.commit();           
         }
