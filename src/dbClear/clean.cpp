@@ -97,7 +97,7 @@ int main(int argc, char** argv)
         }
     catch (Err& e)
         {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Fatal error, exiting..." << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Fatal error, exiting... " << e.what() << commit;
             return EXIT_FAILURE;
         }
     catch (...)
