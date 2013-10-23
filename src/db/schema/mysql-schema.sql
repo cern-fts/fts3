@@ -719,6 +719,7 @@ INSERT INTO t_schema_vers (major,minor,patch) VALUES (1,0,0);
 -- Saves the bother of writing down again the same schema
 CREATE TABLE t_file_backup AS (SELECT * FROM t_file);
 CREATE TABLE t_job_backup  AS (SELECT * FROM t_job);
+CREATE INDEX t_job_backup_job_id     ON t_job_backup(job_id);
 
 
 -- Profiling information
