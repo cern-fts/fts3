@@ -721,58 +721,33 @@ CREATE TABLE t_optimize_active (
 
 --
 --
--- Index Section
+-- Index Section 
 --
 --
-
 -- t_job indexes:
 -- t_job(job_id) is primary key
-CREATE INDEX job_job_state    ON t_job(job_state);
+CREATE INDEX job_job_state    ON t_job(job_state, vo_name, job_finished, submit_time);
 CREATE INDEX job_vo_name      ON t_job(vo_name);
 CREATE INDEX job_cred_id      ON t_job(user_dn,cred_id);
 CREATE INDEX job_jobfinished_id     ON t_job(job_finished);
-CREATE INDEX job_priority     ON t_job(priority);
-CREATE INDEX job_submit_time     ON t_job(submit_time);
-CREATE INDEX job_priority_s_time     ON t_job(priority,submit_time);
-CREATE INDEX job_list     ON t_job(job_id, job_state, reason, submit_time, user_dn,vo_name, priority, cancel_job);
+CREATE INDEX job_priority     ON t_job(priority, submit_time);
+CREATE INDEX t_job_submit_host ON t_job(submit_host);
 
 -- t_file indexes:
 -- t_file(file_id) is primary key
 CREATE INDEX file_job_id     ON t_file(job_id);
-CREATE INDEX file_file_state_job_id ON t_file(file_state,file_id);
 CREATE INDEX file_jobfinished_id ON t_file(job_finished);
-CREATE INDEX file_job_id_a ON t_file(job_id, FINISH_TIME);
-CREATE INDEX file_finish_time ON t_file(finish_time);
-CREATE INDEX file_file_index ON t_file(file_index);
-CREATE INDEX file_job_id_file_index ON t_file(job_id, file_index);
-CREATE INDEX file_retry_timestamp ON t_file(retry_timestamp);
-CREATE INDEX file_file_throughput ON t_file(throughput);
-CREATE INDEX file_file_src_dest ON t_file(source_se, dest_se);
-CREATE INDEX file_file_src_dest_job_id ON t_file(source_se, dest_se, job_id);
-CREATE INDEX file_file_state_job_id4 ON t_file(file_state, dest_se);
-CREATE INDEX file_pid_job_id ON t_file(pid, job_id);
+CREATE INDEX job_reuse  ON t_job(reuse_job);
+CREATE INDEX file_source_dest ON t_file(source_se, dest_se, file_state); 
+CREATE INDEX t_waittimeout ON t_file(wait_timeout);
 CREATE INDEX file_id_hashed ON t_file(hashed_id, file_state);
+CREATE INDEX t_retry_timestamp ON t_file(retry_timestamp);
+CREATE INDEX t_file_select ON t_file(dest_se, source_se, job_finished, file_state );
+CREATE INDEX file_vo_name_state ON t_file(file_state, vo_name, source_se, dest_se);
+CREATE INDEX file_vo_name ON t_file( vo_name, source_se, dest_se, file_state);
+CREATE INDEX file_tr_host  ON t_file(TRANSFERHOST);
 
-CREATE INDEX optimize_active         ON t_optimize(active);
 CREATE INDEX optimize_source_a         ON t_optimize(source_se,dest_se);
-CREATE INDEX optimize_dest_se           ON t_optimize(dest_se);
-CREATE INDEX optimize_nostreams         ON t_optimize(nostreams);
-CREATE INDEX optimize_timeout           ON t_optimize(timeout);
-CREATE INDEX optimize_buffer            ON t_optimize(buffer);
-CREATE INDEX optimize_order         ON t_optimize(nostreams,timeout,buffer);
-CREATE INDEX optimize_prot         ON t_optimize(nostreams,active,throughput);
-CREATE INDEX optimize_prot2         ON t_optimize(throughput, active, nostreams, timeout, buffer);
-
-
-
-CREATE INDEX t_server_config_max_time         ON t_server_config(max_time_queue);
-CREATE INDEX t_server_config_retry         ON t_server_config(retry);
-
-CREATE index idx_report_job      ON t_job (vo_name,job_id);
-
-
--- Config index
-CREATE INDEX t_group_members  ON t_group_members(groupName);
 
 --
 --
@@ -792,7 +767,7 @@ CREATE TABLE t_file_backup AS (SELECT * FROM t_file);
 CREATE TABLE t_job_backup  AS (SELECT * FROM t_job);
 
 CREATE INDEX t_job_backup_1            ON t_job_backup(job_id);
-CREATE INDEX t_file_backup_1            ON t_file_backup(file_id);
+CREATE INDEX t_file_backup_1            ON t_file_backup(job_id);
 
 
 -- Profiling information
