@@ -696,7 +696,7 @@ CREATE INDEX t_retry_timestamp ON t_file(retry_timestamp);
 CREATE INDEX t_file_select ON t_file(dest_se, source_se, job_finished, file_state );
 CREATE INDEX file_vo_name_state ON t_file(file_state, vo_name, source_se, dest_se);
 CREATE INDEX file_vo_name ON t_file( vo_name, source_se, dest_se, file_state);
-CREATE INDEX file_tr_host  ON t_file(TRANSFERHOST);
+CREATE INDEX file_tr_host ON t_file(transferHost, file_state);
 
 CREATE INDEX optimize_source_a         ON t_optimize(source_se,dest_se);
 
