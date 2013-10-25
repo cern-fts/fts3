@@ -574,7 +574,7 @@ protected:
                                             {
                                                 TransferFiles* temp = (TransferFiles*) * queueiter;
                                                 DBSingleton::instance().getDBObjectInstance()->updateFileStatus(temp, "READY");
-                                                fileIds.insert(std::make_pair<int, std::string > (temp->FILE_ID, temp->JOB_ID));
+                                                fileIds.insert(std::make_pair(temp->FILE_ID, temp->JOB_ID));
                                                 SingleTrStateInstance::instance().sendStateMessage(temp->JOB_ID, temp->FILE_ID);
                                             }
 
