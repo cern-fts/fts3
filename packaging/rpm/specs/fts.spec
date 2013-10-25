@@ -298,7 +298,6 @@ exit 0
 
 %changelog
 * Wed Aug 07 2013 Michal Simon <michal.simon@cern.ch> - 3.1.1-2
-  - GenericDbIfce.h includes new blacklisting API
   - no longer linking explicitly to boost libraries with '-mt' sufix 
 * Sat Aug 03 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 3.1.0-3
   - Rebuilt for https://fedoraproject.org/wiki/Fedora_20_Mass_Rebuild
@@ -308,7 +307,7 @@ exit 0
     suffix from several boost libraries (fts-3.1.0-boost_mt.patch)
 * Wed Jul 24 2013 Michal Simon <michal.simon@cern.ch> - 3.0.3-15
   - compatible with rawhide (f20)
-* Fri Jul 02 2013 Michail Salichos <michail.salichos@cern.ch> - 3.0.3-14
+* Tue Jul 02 2013 Michail Salichos <michail.salichos@cern.ch> - 3.0.3-14
   - mysql queries optimization
 * Fri Jun 14 2013 Michal Simon <michal.simon@cern.ch> - 3.0.3-1
   - dependency on 'gfal2-plugin-http' has been removed
