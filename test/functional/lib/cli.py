@@ -66,7 +66,7 @@ class Cli:
 			remaining -= config.PollInterval
 			state = self.getJobState(jobId)
 			if remaining <= 0:
-				self.error("Timeout expired, cancelling job")
+				logging.error("Timeout expired, cancelling job")
 				self.cancel(jobId)
 				raise Exception("Timeout expired while polling")
 

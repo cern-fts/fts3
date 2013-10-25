@@ -17,7 +17,7 @@ TestLabel = 'fts3-tests'
 PollInterval = 5
 
 # Job timeout in seconds
-Timeout = 300
+Timeout = 600
 
 # Checksum algorithm
 Checksum = 'ADLER32'
