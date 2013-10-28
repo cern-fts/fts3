@@ -68,11 +68,15 @@ class TestBase():
         for test in testMethods:
             try:
                 self.setUp()
+                logging.info("Running %s" % test.__name__)
+                for line in test.__doc__.split('\n'):
+                    logging.info(line)
                 test()
             except Exception, e:
                 logging.error(str(e))
                 nErrors += 1
-            self.tearDown()
+            finally:
+                self.tearDown()
         logging.info("%d test executed, %d failed" % (len(testMethods), nErrors))
         return nErrors
 
