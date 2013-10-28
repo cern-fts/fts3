@@ -150,57 +150,54 @@ optional<ProtocolResolver::protocol> ProtocolResolver::getProtocolCfg(optional< 
     return ret;
 }
 
+void ProtocolResolver::fillAuto(optional<protocol>& source, optional<protocol>& destination) {
+
+	if (!source && !destination) return;
+
+	protocol auto_prot = autotune();
+
+    // iterate over all protocol parameters
+    for (int i = 0; i < protocol::size; i++) {
+    	// source and destination auto flags
+    	bool src_auto_tuned = false, dst_auto_tuned = false;
+    	// check the source
+    	if (source.is_initialized() && (*source)[i] == automatic) {
+    		// set the flag
+    		src_auto_tuned = true;
+    		(*source)[i] = auto_prot[i];
+    	}
+    	// check the destination
+    	if (destination.is_initialized() && (*destination)[i] == automatic) {
+    		// set the flag
+    		dst_auto_tuned = true;
+    		(*destination)[i] = auto_prot[i];
+    	}
+    	// auto_tuned is set to true if:
+    	// - both source and destination use auto
+    	// - or source uses auto and destination does not exist
+    	// - or destination uses auto and source does not exist
+    	auto_tuned |= (src_auto_tuned && dst_auto_tuned) || (src_auto_tuned && !destination) || (dst_auto_tuned && !source);
+    }
+}
+
 optional<ProtocolResolver::protocol> ProtocolResolver::merge(optional<protocol> source, optional<protocol> destination)
 {
+	// replace the 'automatic' marker (-1) with autotuner values
+	fillAuto(source, destination);
+
     // make sure both source and destination protocol exists
     if (!source) return destination;
     if (!destination) return source;
 
-    protocol ret, &src_prot = *source, &dst_prot = *destination, auto_prot = autotune();
+    protocol ret, &src_prot = *source, &dst_prot = *destination;
 
     // iterate over all protocol parameters
     for (int i = 0; i < protocol::size; i++)
         {
-            // if both are automatic use the automatic value
-            if (src_prot[i] == automatic && dst_prot[i] == automatic)
-                {
-                    ret[i] = auto_prot[i];
-                    auto_tuned = true;
-                }
-            // if only source uses automatic merge automatic value with destination
-            else if (src_prot[i] == automatic)
-                {
-                    if (auto_prot[i] < dst_prot[i])
-                        {
-                            ret[i] = auto_prot[i];
-                            auto_tuned = true;
-                        }
-                    else
-                        {
-                            ret[i] = dst_prot[i];
-                        }
-                }
-            // if only destination uses automatic merge source with automatic value
-            else if (dst_prot[i] == automatic)
-                {
-                    if (auto_prot[i] < src_prot[i])
-                        {
-                            ret[i] = auto_prot[i];
-                            auto_tuned = true;
-                        }
-                    else
-                        {
-                            ret[i] = src_prot[i];
-                        }
-                }
-            // otherwise automatic is not used at all so merge source with destination
-            else
-                {
-                    ret[i] =
-                        src_prot[i] < dst_prot[i] ?
-                        src_prot[i] : dst_prot[i]
-                        ;
-                }
+    		ret[i] =
+    				src_prot[i] < dst_prot[i] ?
+                    src_prot[i] : dst_prot[i]
+                    ;
         }
 
     return ret;

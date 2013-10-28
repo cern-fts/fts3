@@ -200,6 +200,15 @@ private:
     optional<protocol> merge(optional<protocol> source, optional<protocol> destination);
 
     /**
+     * Fill the fields market as auto (-1) with respective value
+     *
+     * @param p - the protocol that if being transformed
+     * @return input protocol after transformation
+     */
+    void fillAuto(optional<protocol>& source, optional<protocol>& destination);
+
+
+    /**
      * Does the auto tuning in case the protocol was set to 'auto'
      *
      * @param source - the source hostname
