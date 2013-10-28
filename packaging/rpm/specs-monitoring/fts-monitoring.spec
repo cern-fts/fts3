@@ -28,7 +28,7 @@ as some statistics (e.g. success rate)
 %package selinux
 Summary:		SELinux support for fts-monitoring
 Group:			Applications/Internet
-Requires:       fts-monitoring
+Requires:       fts-monitoring = %{version}-%{release}
 
 %description selinux
 This package labels port 8449, used by fts-monitoring, as http_port_t,
