@@ -143,6 +143,9 @@ optional<ProtocolResolver::protocol> ProtocolResolver::getProtocolCfg(optional< 
 
     // set the timeout
     ret.urlcopy_tx_to = cfg->URLCOPY_TX_TO;
+    
+    if(cfg->auto_tuning == "on")
+	auto_tuned = true;    
 
     return ret;
 }
@@ -241,7 +244,7 @@ bool ProtocolResolver::resolve()
     prot = merge(
                getProtocolCfg(source_link),
                getProtocolCfg(destination_link)
-           );
+           );	  
 
     return prot.is_initialized();
 }
