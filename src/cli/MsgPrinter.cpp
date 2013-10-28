@@ -512,7 +512,7 @@ void MsgPrinter::file_list(vector<string> values, vector<string> retries)
             ptree retriesArray;
             vector<string>::const_iterator i;
             for (i = retries.begin(); i != retries.end(); ++i)
-                retriesArray.push_front(std::make_pair("", *i));
+                retriesArray.push_front(std::make_pair("", ptree(*i)));
             file.put_child("retries", retriesArray);
         }
     else
