@@ -20,10 +20,16 @@
 
 #include <ctime>
 #include <iostream>
+#include <boost/version.hpp>
+
 #ifdef __STDC_NO_ATOMICS__
 #include <atomic>
 #else
+#if BOOST_VERSION >= 105300
+#include <boost/atomic.hpp>
+#else
 #include <stdatomic.h>
+#endif
 #endif
 
 #include <boost/thread/recursive_mutex.hpp>
@@ -77,7 +83,11 @@ private:
 #ifdef __STDC_NO_ATOMICS__
     std::atomic<bool> isTerminalSent;
 #else
+#if BOOST_VERSION >= 105300
+    boost::atomic<bool> isTerminalSent;
+#else
     std::atomic_bool isTerminalSent;
+#endif
 #endif
 
     bool multiple;
