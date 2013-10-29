@@ -220,8 +220,8 @@ exit 0
 %dir %attr(0755,fts3,root) %{_var}/lib/fts3/logs
 %dir %attr(0755,fts3,root) %{_var}/log/fts3
 %dir %attr(0755,fts3,root) %{_sysconfdir}/fts3
-%attr(0644,fts3,root) %{_var}/lib/fts3/bdii_cache.xml
-%attr(0644,fts3,root) %{_var}/lib/fts3/myosg.xml
+%config(noreplace) %attr(0644,fts3,root) %{_var}/lib/fts3/bdii_cache.xml
+%config(noreplace) %attr(0644,fts3,root) %{_var}/lib/fts3/myosg.xml
 %{_sbindir}/fts*
 %attr(0755,root,root) %{_initddir}/fts-msg-bulk
 %attr(0755,root,root) %{_initddir}/fts-server
