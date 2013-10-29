@@ -4,6 +4,7 @@ import logging
 import subprocess
 import tempfile
 import time
+import uuid
 from urlparse import urlparse
 
 
@@ -19,7 +20,7 @@ class Surl:
 		Generates a file surl located under base
 		i.e. srm://host/path => srm://host/path/file.temp
 		"""
-		return "%s/%s.%f" % (base, 'fts3tests', time.time())
+		return "%s/%s.%s" % (base, 'fts3tests', str(uuid.uuid4()))
 
 
 	def _fillFile(self, fd, size):
