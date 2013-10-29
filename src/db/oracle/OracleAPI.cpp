@@ -3840,6 +3840,8 @@ void OracleAPI::deleteLinkConfig(std::string source, std::string destination)
         {
             sql.begin();
 
+            sql << "DELETE FROM t_share_config WHERE source = :source AND destination = :destination",
+                soci::use(source), soci::use(destination);
             sql << "DELETE FROM t_link_config WHERE source = :source AND destination = :destination",
                 soci::use(source), soci::use(destination);
 
