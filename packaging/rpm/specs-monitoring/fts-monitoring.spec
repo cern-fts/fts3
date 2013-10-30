@@ -7,14 +7,14 @@ License: ASL 2.0
 Group: Applications/Internet
 BuildArch: noarch
 
-#Requires: cx_Oracle%{?_isa}
-Requires: MySQL-python%{?_isa}
+#Requires: cx_Oracle
+Requires: MySQL-python
 Requires: Django >= 1.3.7
-Requires: httpd%{?_isa}
-Requires: mod_wsgi%{?_isa}
-Requires: python%{?_isa}
+Requires: httpd
+Requires: mod_wsgi
+Requires: python
 Requires: python-decorator
-Requires: python-matplotlib%{?_isa}
+Requires: python-matplotlib
 
 Source0: https://grid-deployment.web.cern.ch/grid-deployment/dms/fts3/tar/%{name}-%{version}.tar.gz
 
@@ -88,6 +88,9 @@ install -m 644 httpd.conf.d/ftsmon.conf           %{buildroot}%{_sysconfdir}/htt
 
  * Tue Oct 08 2013 Alejandro Alvarez <aalvarez@cern.ch> - 3.1.33-2
   - Added selinux rpm
+
+ * Mon Sep 02 2013 Michal Simon <michal.simon@cern.ch> - 3.1.1-2
+  - since it is a noarch package removing '%{?_isa}' sufix
 
  * Wed Aug 28 2013 Michal Simon <michal.simon@cern.ch> - 3.1.1-1
   - replacing '--no-preserve=ownership'
