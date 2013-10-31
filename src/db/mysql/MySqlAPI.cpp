@@ -3265,19 +3265,19 @@ void MySqlAPI::backup()
     int count = 0;
 
     try
-        {	
+        {
             struct message_sanity msg;
             msg.cleanUpRecords = true;
             CleanUpSanityChecks temp(this, sql, msg);
             if(!temp.getCleanUpSanityCheck())
                 return;
-		
-	    sql << "SET AUTOCOMMIT = 0"; 
-	    sql << "SET FOREIGN_KEY_CHECKS = 0"; 
-	    sql << "SET UNIQUE_CHECKS = 0";
-	    sql << "SET SESSION tx_isolation='READ-UNCOMMITTED'";
-	    sql << "SET sql_log_bin = 0";	
-                  
+
+            sql << "SET AUTOCOMMIT = 0";
+            sql << "SET FOREIGN_KEY_CHECKS = 0";
+            sql << "SET UNIQUE_CHECKS = 0";
+            sql << "SET SESSION tx_isolation='READ-UNCOMMITTED'";
+            sql << "SET sql_log_bin = 0";
+
             soci::rowset<soci::row> rs = (
                                              sql.prepare <<
                                              " SELECT job_id "
@@ -3286,28 +3286,29 @@ void MySqlAPI::backup()
                                              "      job_finished < (UTC_TIMESTAMP() - interval '4' DAY ) AND "
                                              "      job_state IN ('FINISHED', 'FAILED', 'CANCELED', 'FINISHEDDIRTY') "
                                          );
-				 
+
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
-		    count++;
+                    count++;
                     soci::row const& r = *i;
                     std::string job_id = r.get<std::string>("job_id");
-		    
-		    sql << "INSERT INTO t_job_backup SELECT * FROM t_job WHERE job_id = :job_id", soci::use(job_id);
-		    
-		    sql << "INSERT INTO t_file_backup SELECT * FROM t_file WHERE job_id = :job_id", soci::use(job_id);
-		    
-            	    sql << "DELETE FROM t_file WHERE job_id = :job_id", soci::use(job_id);
 
-                    sql << "DELETE FROM t_job WHERE job_id = :job_id", soci::use(job_id);		                        
-		    
-		    //commit every 10 records
-		    if(count==10){
-		        count = 0;
-		    	sql.commit();		    	
-		    }
+                    sql << "INSERT INTO t_job_backup SELECT * FROM t_job WHERE job_id = :job_id", soci::use(job_id);
+
+                    sql << "INSERT INTO t_file_backup SELECT * FROM t_file WHERE job_id = :job_id", soci::use(job_id);
+
+                    sql << "DELETE FROM t_file WHERE job_id = :job_id", soci::use(job_id);
+
+                    sql << "DELETE FROM t_job WHERE job_id = :job_id", soci::use(job_id);
+
+                    //commit every 10 records
+                    if(count==10)
+                        {
+                            count = 0;
+                            sql.commit();
+                        }
                 }
-            sql.commit();           
+            sql.commit();
         }
     catch (std::exception& e)
         {
@@ -5044,10 +5045,30 @@ void MySqlAPI::bringOnlineReportStatus(const std::string & state, const std::str
                 }
             else
                 {
-                    sql.begin();
-                    std::string dbState = state == "FINISHED" ? "SUBMITTED" : state;
-                    std::string dbReason = state == "FINISHED" ? string() : message;
+                    std::string source_surl;
+                    std::string dest_surl;
+                    std::string dbState;
+                    std::string dbReason;
+                    int stage_in_only = 0;
 
+                    sql << "select count(*) from t_file where job_id=:job_id and file_id=:file_id and source_surl=dest_surl",
+                        soci::use(msg.job_id),
+                        soci::use(msg.file_id),
+                        soci::into(stage_in_only);
+
+                    if(stage_in_only == 0)  //stage-in and transfer
+                        {
+                            dbState = state == "FINISHED" ? "SUBMITTED" : state;
+                            dbReason = state == "FINISHED" ? string() : message;
+                        }
+                    else //stage-in only
+                        {
+                            dbState = state == "FINISHED" ? "FINISHED" : state;
+                            dbReason = state == "FINISHED" ? string() : message;
+                        }
+
+
+                    sql.begin();
                     sql <<
                         " UPDATE t_file "
                         " SET staging_finished = UTC_TIMESTAMP(), reason = :reason, file_state = :fileState "
@@ -5071,7 +5092,14 @@ void MySqlAPI::bringOnlineReportStatus(const std::string & state, const std::str
                             sql << " select count(*) from t_file where job_id=:jobId and file_state='STAGING' ", soci::use(msg.job_id), soci::into(countTr);
                             if(countTr == 0)
                                 {
-                                    updateJobTransferStatus(0, msg.job_id, "SUBMITTED");
+                                    if(stage_in_only == 0)
+                                        {
+                                            updateJobTransferStatus(0, msg.job_id, "SUBMITTED");
+                                        }
+                                    else
+                                        {
+                                            updateJobTransferStatus(0, msg.job_id, dbState);
+                                        }
                                 }
                         }
                     else
@@ -5079,9 +5107,6 @@ void MySqlAPI::bringOnlineReportStatus(const std::string & state, const std::str
                             updateJobTransferStatus(0, msg.job_id, dbState);
                         }
                 }
-
-
-
         }
     catch (std::exception& e)
         {

@@ -143,47 +143,51 @@ optional<ProtocolResolver::protocol> ProtocolResolver::getProtocolCfg(optional< 
 
     // set the timeout
     ret.urlcopy_tx_to = cfg->URLCOPY_TX_TO;
-    
+
     if(cfg->auto_tuning == "on")
-	auto_tuned = true;     
+        auto_tuned = true;
 
     return ret;
 }
 
-void ProtocolResolver::fillAuto(optional<protocol>& source, optional<protocol>& destination) {
+void ProtocolResolver::fillAuto(optional<protocol>& source, optional<protocol>& destination)
+{
 
-	if (!source && !destination) return;
+    if (!source && !destination) return;
 
-	protocol auto_prot = autotune();
+    protocol auto_prot = autotune();
 
     // iterate over all protocol parameters
-    for (int i = 0; i < protocol::size; i++) {
-    	// source and destination auto flags
-    	bool src_auto_tuned = false, dst_auto_tuned = false;
-    	// check the source
-    	if (source.is_initialized() && (*source)[i] == automatic) {
-    		// set the flag
-    		src_auto_tuned = true;
-    		(*source)[i] = auto_prot[i];
-    	}
-    	// check the destination
-    	if (destination.is_initialized() && (*destination)[i] == automatic) {
-    		// set the flag
-    		dst_auto_tuned = true;
-    		(*destination)[i] = auto_prot[i];
-    	}
-    	// auto_tuned is set to true if:
-    	// - both source and destination use auto
-    	// - or source uses auto and destination does not exist
-    	// - or destination uses auto and source does not exist
-    	auto_tuned |= (src_auto_tuned && dst_auto_tuned) || (src_auto_tuned && !destination) || (dst_auto_tuned && !source);
-    }
+    for (int i = 0; i < protocol::size; i++)
+        {
+            // source and destination auto flags
+            bool src_auto_tuned = false, dst_auto_tuned = false;
+            // check the source
+            if (source.is_initialized() && (*source)[i] == automatic)
+                {
+                    // set the flag
+                    src_auto_tuned = true;
+                    (*source)[i] = auto_prot[i];
+                }
+            // check the destination
+            if (destination.is_initialized() && (*destination)[i] == automatic)
+                {
+                    // set the flag
+                    dst_auto_tuned = true;
+                    (*destination)[i] = auto_prot[i];
+                }
+            // auto_tuned is set to true if:
+            // - both source and destination use auto
+            // - or source uses auto and destination does not exist
+            // - or destination uses auto and source does not exist
+            auto_tuned |= (src_auto_tuned && dst_auto_tuned) || (src_auto_tuned && !destination) || (dst_auto_tuned && !source);
+        }
 }
 
 optional<ProtocolResolver::protocol> ProtocolResolver::merge(optional<protocol> source, optional<protocol> destination)
 {
-	// replace the 'automatic' marker (-1) with autotuner values
-	fillAuto(source, destination);
+    // replace the 'automatic' marker (-1) with autotuner values
+    fillAuto(source, destination);
 
     // make sure both source and destination protocol exists
     if (!source) return destination;
@@ -194,10 +198,10 @@ optional<ProtocolResolver::protocol> ProtocolResolver::merge(optional<protocol> 
     // iterate over all protocol parameters
     for (int i = 0; i < protocol::size; i++)
         {
-    		ret[i] =
-    				src_prot[i] < dst_prot[i] ?
-                    src_prot[i] : dst_prot[i]
-                    ;
+            ret[i] =
+                src_prot[i] < dst_prot[i] ?
+                src_prot[i] : dst_prot[i]
+                ;
         }
 
     return ret;

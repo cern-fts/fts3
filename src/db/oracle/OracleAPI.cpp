@@ -5020,16 +5020,36 @@ void OracleAPI::bringOnlineReportStatus(const std::string & state, const std::st
                 }
             else
                 {
-                    sql.begin();
-                    std::string dbState = state == "FINISHED" ? "SUBMITTED" : state;
-                    std::string dbReason = state == "FINISHED" ? string() : message;
+                    std::string source_surl;
+                    std::string dest_surl;
+                    std::string dbState;
+                    std::string dbReason;
+                    int stage_in_only = 0;
 
+                    sql << "select count(*) from t_file where job_id=:job_id and file_id=:file_id and source_surl=dest_surl",
+                        soci::use(msg.job_id),
+                        soci::use(msg.file_id),
+                        soci::into(stage_in_only);
+
+                    if(stage_in_only == 0)  //stage-in and transfer
+                        {
+                            dbState = state == "FINISHED" ? "SUBMITTED" : state;
+                            dbReason = state == "FINISHED" ? string() : message;
+                        }
+                    else //stage-in only
+                        {
+                            dbState = state == "FINISHED" ? "FINISHED" : state;
+                            dbReason = state == "FINISHED" ? string() : message;
+                        }
+
+
+                    sql.begin();
                     sql <<
                         " UPDATE t_file "
-                        " SET staging_finished = sys_extract_utc(systimestamp), reason = :reason, file_state = :fileState "
+                        " SET staging_finished = UTC_TIMESTAMP(), reason = :reason, file_state = :fileState "
                         " WHERE job_id = :jobId "
-                        "   AND file_id = :fileId "
-                        "   AND file_state = 'STAGING'",
+                        "	AND file_id = :fileId "
+                        "	AND file_state = 'STAGING'",
                         soci::use(dbReason),
                         soci::use(dbState),
                         soci::use(msg.job_id),
@@ -5047,7 +5067,14 @@ void OracleAPI::bringOnlineReportStatus(const std::string & state, const std::st
                             sql << " select count(*) from t_file where job_id=:jobId and file_state='STAGING' ", soci::use(msg.job_id), soci::into(countTr);
                             if(countTr == 0)
                                 {
-                                    updateJobTransferStatus(0, msg.job_id, "SUBMITTED");
+                                    if(stage_in_only == 0)
+                                        {
+                                            updateJobTransferStatus(0, msg.job_id, "SUBMITTED");
+                                        }
+                                    else
+                                        {
+                                            updateJobTransferStatus(0, msg.job_id, dbState);
+                                        }
                                 }
                         }
                     else
@@ -5055,9 +5082,6 @@ void OracleAPI::bringOnlineReportStatus(const std::string & state, const std::st
                             updateJobTransferStatus(0, msg.job_id, dbState);
                         }
                 }
-
-
-
         }
     catch (std::exception& e)
         {
