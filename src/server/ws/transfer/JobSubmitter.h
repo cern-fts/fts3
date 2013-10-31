@@ -151,6 +151,12 @@ private:
     void init(tns3__TransferParams *jobParams);
 
     /**
+     * Extracts the activity name from file metadata
+     * in case if there is no activity it returns 'default'
+     */
+    string getActivity(string metadata);
+
+    /**
      * Checks:
      * - if the SE has been blacklisted (if yes an exception is thrown)
      * - if the SE is in BDII and the state is either 'production' or 'online'

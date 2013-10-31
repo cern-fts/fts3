@@ -79,6 +79,7 @@ struct job_element_tupple
     std::string selectionStrategy;
     int fileIndex;
     boost::optional<int> wait_timeout;
+    std::string activity;
 };
 
 class GenericDbIfce

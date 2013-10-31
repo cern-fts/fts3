@@ -457,6 +457,8 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
                             tupple.wait_timeout = destin_timeout;
                         }
 
+                    tupple.activity = getActivity(tupple.metadata);
+
                     jobs.push_back(tupple);
                 }
         }
@@ -473,6 +475,20 @@ void JobSubmitter::init(tns3__TransferParams *jobParams)
             params(jobParams->keys, jobParams->values);
             //FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Parameter map has been created" << commit;
         }
+}
+
+string JobSubmitter::getActivity(string metadata) {
+	// default value returned if the metadata are empty or an activity was not specified
+	static const string defstr = "default";
+	// if metadata are empty return default
+	if (metadata.empty()) return defstr;
+	// regular expression for finding the activity value
+	static const regex re("^.*\"activity\"\\s*:\\s*\"(.+)\".*$");
+	// look for the activity in the string and if it's there return the value
+    smatch what;
+    if (regex_match(metadata, what, re, match_extra)) return what[1];
+    // if the activity was not found return default
+    return defstr;
 }
 
 JobSubmitter::~JobSubmitter()

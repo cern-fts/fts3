@@ -306,7 +306,7 @@ std::map<std::string, long long> MySqlAPI::getActivitiesInQueue(soci::session& s
         {
             soci::rowset<soci::row> rs = (
                                              sql.prepare <<
-                                             " SELECT file_metadata, COUNT(DISTINCT f.job_id, file_index) AS count "
+                                             " SELECT activity, COUNT(DISTINCT f.job_id, file_index) AS count "
                                              " FROM t_job j, t_file f "
                                              " WHERE j.job_id = f.job_id AND j.vo_name = f.vo_name AND f.file_state = 'SUBMITTED' AND "
                                              "	f.source_se = :source AND f.dest_se = :dest AND "
@@ -320,7 +320,7 @@ std::map<std::string, long long> MySqlAPI::getActivitiesInQueue(soci::session& s
                                              "			(j1.reuse_job = 'N' OR j1.reuse_job IS NULL) AND j1.vo_name=:vo_name "
                                              "		ORDER BY j1.priority DESC, j1.submit_time "
                                              "	) "
-                                             " GROUP BY file_metadata ",
+                                             " GROUP BY activity ",
                                              soci::use(src),
                                              soci::use(dst),
                                              soci::use(vo),
@@ -332,13 +332,13 @@ std::map<std::string, long long> MySqlAPI::getActivitiesInQueue(soci::session& s
             soci::rowset<soci::row>::const_iterator it;
             for (it = rs.begin(); it != rs.end(); it++)
                 {
-                    if (it->get_indicator("file_metadata") == soci::i_null)
+                    if (it->get_indicator("activity") == soci::i_null)
                         {
                             ret["default"] = it->get<long long>("count");
                         }
                     else
                         {
-                            std::string activityShare = it->get<std::string>("file_metadata");
+                            std::string activityShare = it->get<std::string>("activity");
                             long long nFiles = it->get<long long>("count");
                             ret[activityShare.empty() ? "default" : activityShare] = nFiles;
                         }
@@ -581,9 +581,9 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                         "    f.vo_name = :vo_name AND ";
                                     select +=
                                         it_act->first == "default" ?
-                                        "	  (f.file_metadata = :activity OR f.file_metadata = '' OR f.file_metadata IS NULL) AND "
+                                        "	  (f.activity = :activity OR f.activity = '' OR f.activity IS NULL) AND "
                                         :
-                                        "	  f.file_metadata = :activity AND ";
+                                        "	  f.activity = :activity AND ";
                                     select +=
                                         "    f.wait_timestamp IS NULL AND "
                                         "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
@@ -948,13 +948,13 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
                 soci::use(sourceSe), soci::use(destinationSe);
 
             // Insert src/dest pair
-            std::string sourceSurl, destSurl, checksum, metadata, selectionStrategy, sourceSe, destSe;
+            std::string sourceSurl, destSurl, checksum, metadata, selectionStrategy, sourceSe, destSe, activity;
             double filesize = 0.0;
             int fileIndex = 0, timeout = 0;
             soci::statement pairStmt = (
                                            sql.prepare <<
-                                           "INSERT INTO t_file (vo_name, job_id, file_state, source_surl, dest_surl, checksum, user_filesize, file_metadata, selection_strategy, file_index, source_se, dest_se) "
-                                           "VALUES (:voName, :jobId, :fileState, :sourceSurl, :destSurl, :checksum, :filesize, :metadata, :ss, :fileIndex, :source_se, :dest_se)",
+                                           "INSERT INTO t_file (vo_name, job_id, file_state, source_surl, dest_surl, checksum, user_filesize, file_metadata, selection_strategy, file_index, source_se, dest_se, activity) "
+                                           "VALUES (:voName, :jobId, :fileState, :sourceSurl, :destSurl, :checksum, :filesize, :metadata, :ss, :fileIndex, :source_se, :dest_se, :activity)",
                                            soci::use(voName),
                                            soci::use(jobId),
                                            soci::use(initialState),
@@ -966,13 +966,14 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
                                            soci::use(selectionStrategy),
                                            soci::use(fileIndex),
                                            soci::use(sourceSe),
-                                           soci::use(destSe)
+                                           soci::use(destSe),
+                                           soci::use(activity)
                                        );
 
             soci::statement pairStmtSeBlaklisted = (
                     sql.prepare <<
-                    "INSERT INTO t_file (vo_name, job_id, file_state, source_surl, dest_surl, checksum, user_filesize, file_metadata, selection_strategy, file_index, source_se, dest_se, wait_timestamp, wait_timeout) "
-                    "VALUES (:voName, :jobId, :fileState, :sourceSurl, :destSurl, :checksum, :filesize, :metadata, :ss, :fileIndex, :source_se, :dest_se, UTC_TIMESTAMP(), :timeout)",
+                    "INSERT INTO t_file (vo_name, job_id, file_state, source_surl, dest_surl, checksum, user_filesize, file_metadata, selection_strategy, file_index, source_se, dest_se, wait_timestamp, wait_timeout, activity) "
+                    "VALUES (:voName, :jobId, :fileState, :sourceSurl, :destSurl, :checksum, :filesize, :metadata, :ss, :fileIndex, :source_se, :dest_se, UTC_TIMESTAMP(), :timeout, :activity)",
                     soci::use(voName),
                     soci::use(jobId),
                     soci::use(initialState),
@@ -985,7 +986,9 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
                     soci::use(fileIndex),
                     soci::use(sourceSe),
                     soci::use(destSe),
-                    soci::use(timeout));
+                    soci::use(timeout),
+                    soci::use(activity)
+            );
 
             // When reuse is enabled, we hash the job id instead of the file ID
             // This guarantees that the whole set belong to the same machine, but keeping
@@ -1010,6 +1013,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
                     fileIndex = iter->fileIndex;
                     sourceSe = iter->source_se;
                     destSe = iter->dest_se;
+                    activity = iter->activity;
 
                     sql << "INSERT IGNORE INTO t_optimize_active (source_se, dest_se) VALUES (:sourceSe, :destSe) ", soci::use(sourceSe), soci::use(destSe);
 
