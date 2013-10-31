@@ -2624,7 +2624,8 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                     double throughput=0.0, avgThr = 0.0;
                     double filesize = 0.0;
                     int active = 0;
-                    int maxActive = 0;
+                    int maxActive = 0;	
+		    std::stringstream message;	    
 
                     // Weighted average for the 12 less newest transfers
                     soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
@@ -2725,7 +2726,24 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                             if(ratioSuccessFailure == 100 && throughput != 0 && avgThr !=0 && throughput > avgThr)
                                 {
                                     active = maxActive + 1;
-                                    sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
+				    
+				    message << "Increasing max active by 1, previously " 
+				    	    << maxActive 
+					    << " now max active "
+					    << active
+					    << " for link "
+					    << source_hostname 
+					    << " -> "
+					    << destin_hostname 
+					    << " because success rate is " 
+					    << ratioSuccessFailure 
+					    << "% and current throughput is "
+					    << throughput
+					    << " and is bigger than previous "
+					    << avgThr;			
+					    			    
+                                    sql << "update t_optimize_active set datetime=UTC_TIMESTAMP(), message=:message, active=:active where source_se=:source and dest_se=:dest ",
+				    		soci::use(message.str()), soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
                                 }
                             else if(ratioSuccessFailure == 100 && throughput != 0 && avgThr !=0 && throughput == avgThr)
                                 {
@@ -2733,7 +2751,22 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                         active = maxActive + 1;
                                     else
                                         active = maxActive;
-                                    sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
+					
+				    message << "Success rate is " 
+				    	    << ratioSuccessFailure 
+					    << "% for link "
+					    << source_hostname 
+					    << " -> "
+					    << destin_hostname 
+					    << " and current throughput is "
+					    << throughput
+					    << " equal to previous "
+					    << avgThr
+					    << " so max active remains "
+					    << maxActive;						
+					
+                                    sql << "update t_optimize_active set datetime=UTC_TIMESTAMP(), message=:message, active=:active where source_se=:source and dest_se=:dest ",
+				    		soci::use(message.str()), soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
                                 }
                             else if(ratioSuccessFailure == 100 && throughput != 0 && avgThr !=0 && throughput < avgThr)
                                 {
@@ -2741,7 +2774,22 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                         active = highDefault;
                                     else
                                         active = maxActive - 2;
-                                    sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
+					
+				    message << "Success rate is " 
+				    	    << ratioSuccessFailure 
+					    << "% for link "
+					    << source_hostname 
+					    << " -> "
+					    << destin_hostname 
+					    << " and current throughput "
+					    << throughput
+					    << " is less than previous sample "
+					    << avgThr
+					    << " so max active is decreased by 2 and now is "
+					    << active;						
+					
+                                    sql << "update t_optimize_active set datetime=UTC_TIMESTAMP(), message=:message, active=:active where source_se=:source and dest_se=:dest ",
+				    		soci::use(message.str()), soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
                                 }
                             else if (ratioSuccessFailure < 100 && throughput != 0 && avgThr !=0)
                                 {
@@ -2749,12 +2797,37 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                         active = highDefault;
                                     else
                                         active = maxActive - 2;
-                                    sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
+					
+				    message << "Success rate is " 
+				    	    << ratioSuccessFailure 
+					    << "% for link "
+					    << source_hostname 
+					    << " -> "
+					    << destin_hostname 
+					    << " and current throughput is "
+					    << throughput
+					    << " while previous is "
+					    << avgThr
+					    << " so max active is decreased by 2 and now is "
+					    << active;						
+					
+                                    sql << "update t_optimize_active set datetime=UTC_TIMESTAMP(), message=:message, active=:active where source_se=:source and dest_se=:dest ",
+				    		soci::use(message.str()), soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
                                 }
                             else if(active == 0 && isNull == soci::i_null )
                                 {
                                     active = highDefault;
-                                    sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
+				    
+				    message << "Number of active for link " 
+					    << source_hostname 
+					    << " -> "
+					    << destin_hostname 
+					    << " is 0 and there is no max active yet into the db (no samples) "						
+					    << " so max active now is the default "
+					    << active;					    
+				    
+                                    sql << "update t_optimize_active set datetime=UTC_TIMESTAMP(), message=:message, active=:active where source_se=:source and dest_se=:dest ",
+				    		soci::use(message.str()), soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
                                 }
                             else
                                 {
@@ -2762,7 +2835,22 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                         active = highDefault;
                                     else
                                         active = maxActive;
-                                    sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
+					
+				    message << "Number of active for link " 
+					    << source_hostname 
+					    << " -> "
+					    << destin_hostname 
+					    << " is "
+					    << active
+					    <<  " success rate is "
+					    << ratioSuccessFailure
+					    << "% current throughput is "
+					    << throughput
+					    << " and previous throughput is "						
+					    << avgThr;																
+					
+                                    sql << "update t_optimize_active set datetime=UTC_TIMESTAMP(), message=:message, active=:active where source_se=:source and dest_se=:dest ",
+				    		soci::use(message.str()), soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
                                 }
 
                             sql.commit();
