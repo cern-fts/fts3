@@ -182,13 +182,18 @@ class OptimizeActive(models.Model):
     source_se  = models.CharField(max_length = 255)
     dest_se    = models.CharField(max_length = 255)
     active     = models.IntegerField(primary_key = True)
+    message    = models.CharField(max_length = 512)
+    datetime   = models.DateTimeField()
     
     def __eq__(self, other):
         if type(self) != type(other):
             return False
         
         return self.source_se == other.source_se and \
-               self.dest_se   == other.dest_se
+               self.dest_se   == other.dest_se and \
+               self.active    == other.active and \
+               self.message   == other.message and \
+               self.datetime  == other.datetime
     
     class Meta:
         db_table = 't_optimize_active'

@@ -79,17 +79,17 @@ OptimizerDetailedCtrl.resolve = {
 }
 
 
-function OptimizerActiveCtrl($location, $scope, active, OptimizerActive, Unique)
+function OptimizerDecisionsCtrl($location, $scope, decisions, OptimizerDecisions, Unique)
 {
-	$scope.active = active;
+	$scope.decisions = decisions;
 	
 	// Unique pairs and vos
 	$scope.unique = Unique.all();
 	
 	// Paginator	
 	$scope.pageMax   = 15;
-	$scope.page      = $scope.active.page;
-	$scope.pageCount = $scope.active.pageCount;
+	$scope.page      = $scope.decisions.page;
+	$scope.pageCount = $scope.decisions.pageCount;
 	
 	// On page change, reload
 	$scope.pageChanged = function(newPage) {
@@ -100,7 +100,7 @@ function OptimizerActiveCtrl($location, $scope, active, OptimizerActive, Unique)
 	$scope.autoRefresh = setInterval(function() {
 		var filter = $location.search();
 		filter.page = $scope.optimizer.page;
-    	$scope.active = OptimizerActive.query(filter);
+    	$scope.decisions = OptimizerDecisions.query(filter);
 	}, REFRESH_INTERVAL);
 	$scope.$on('$destroy', function() {
 		clearInterval($scope.autoRefresh);
@@ -118,13 +118,13 @@ function OptimizerActiveCtrl($location, $scope, active, OptimizerActive, Unique)
 }
 
 
-OptimizerActiveCtrl.resolve = {
-	active: function($rootScope, $location, $route, $q, OptimizerActive) {
+OptimizerDecisionsCtrl.resolve = {
+	decisions: function($rootScope, $location, $route, $q, OptimizerDecisions) {
 		loading($rootScope);
 		
 		var deferred = $q.defer();
 		
-		OptimizerActive.query($location.search(), function(data) {
+		OptimizerDecisions.query($location.search(), function(data) {
 			deferred.resolve(data);
 			stopLoading($rootScope);
 		});
