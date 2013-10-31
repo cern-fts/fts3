@@ -33,9 +33,10 @@
 #include "MySqlMonitoring.h"
 #include "sociConversions.h"
 #include "queue_updater.h"
+#include "DbUtils.h"
 
 using namespace FTS3_COMMON_NAMESPACE;
-
+using namespace db;
 
 
 bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate, double thr, double avgThr)
@@ -99,75 +100,6 @@ bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate
 
     return returnValue;
 }
-
-static time_t convertToUTC(int advance)
-{
-    time_t now;
-    if(advance > 0)
-        now = time(NULL) + advance;
-    else
-        now = time(NULL);
-
-    struct tm *utc;
-    utc = gmtime(&now);
-    return timegm(utc);
-}
-
-static std::string _getTrTimestampUTC()
-{
-    time_t now = time(NULL);
-    struct tm* tTime;
-    tTime = gmtime(&now);
-    time_t msec = timegm(tTime) * 1000; //the number of milliseconds since the epoch
-    std::ostringstream oss;
-    oss << fixed << msec;
-    return oss.str();
-}
-
-
-static double convertBtoM( double byte,  double duration)
-{
-    return ((((byte / duration) / 1024) / 1024) * 100) / 100;
-}
-
-
-static double my_round(double x, unsigned int digits)
-{
-    if (digits > 0)
-        {
-            return my_round(x*10.0, digits-1)/10.0;
-        }
-    else
-        {
-            return round(x);
-        }
-}
-
-static double convertKbToMb(double throughput)
-{
-    return throughput != 0.0? my_round((throughput / 1024), 6): 0.0;
-}
-
-static int extractTimeout(std::string & str)
-{
-    size_t found;
-    found = str.find("timeout:");
-    if (found != std::string::npos)
-        {
-            str = str.substr(found, str.length());
-            size_t found2;
-            found2 = str.find(",buffersize:");
-            if (found2 != std::string::npos)
-                {
-                    str = str.substr(0, found2);
-                    str = str.substr(8, str.length());
-                    return atoi(str.c_str());
-                }
-
-        }
-    return 0;
-}
-
 
 
 MySqlAPI::MySqlAPI(): poolSize(10), connectionPool(NULL)
@@ -2570,7 +2502,7 @@ bool MySqlAPI::isCredentialExpired(const std::string & dlg_id, const std::string
             if (sql.got_data())
                 {
                     time_t termTimestamp = timegm(&termTime);
-                    time_t now = convertToUTC(0);
+                    time_t now = getUTC(0);
                     expired = (difftime(termTimestamp, now) <= 0);
                 }
         }
@@ -2995,7 +2927,7 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
             std::string jobId, params, tHost,reuse;
             int fileId=0, pid=0, timeout=0;
             struct tm startTimeSt;
-            time_t now2 = convertToUTC(0);
+            time_t now2 = getUTC(0);
             time_t startTime;
             double diff = 0.0;
             soci::indicator isNull = soci::i_ok;
@@ -3193,7 +3125,7 @@ void MySqlAPI::revertToSubmitted()
             struct tm startTime;
             int fileId=0;
             std::string jobId, reuseJob;
-            time_t now2 = convertToUTC(0);
+            time_t now2 = getUTC(0);
 
             sql.begin();
 
@@ -5508,7 +5440,7 @@ struct message_state MySqlAPI::getStateOfTransfer(const std::string& jobId, int 
                     ret.file_metadata = it->get<std::string>("file_metadata","");
                     ret.source_se = it->get<std::string>("source_se");
                     ret.dest_se = it->get<std::string>("dest_se");
-                    ret.timestamp = _getTrTimestampUTC();
+                    ret.timestamp = getStrUTCTimestamp();
 
                     if(ret.retry_max == 0)
                         {
@@ -6464,7 +6396,7 @@ void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId, int retry
             if (retry_delay > 0)
                 {
                     // update
-                    time_t now = convertToUTC(retry_delay);
+                    time_t now = getUTC(retry_delay);
                     struct tm tTime;
                     gmtime_r(&now, &tTime);
                     sql <<
@@ -6476,7 +6408,7 @@ void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId, int retry
             else
                 {
                     // update
-                    time_t now = convertToUTC(default_retry_delay);
+                    time_t now = getUTC(default_retry_delay);
                     struct tm tTime;
                     gmtime_r(&now, &tTime);
                     sql <<
