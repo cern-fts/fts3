@@ -101,11 +101,9 @@ bool OracleAPI::getChangedFile (std::string source, std::string dest, double rat
 }
 
 
-OracleAPI::OracleAPI(): poolSize(10), connectionPool(NULL)
+OracleAPI::OracleAPI(): poolSize(10), connectionPool(NULL), hostname(getFullHostname())
 {
-    char chname[MAXHOSTNAMELEN]= {0};
-    gethostname(chname, sizeof(chname));
-    hostname.assign(chname);
+    // Pass
 }
 
 

@@ -102,11 +102,9 @@ bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate
 }
 
 
-MySqlAPI::MySqlAPI(): poolSize(10), connectionPool(NULL)
+MySqlAPI::MySqlAPI(): poolSize(10), connectionPool(NULL), hostname(getFullHostname())
 {
-    char chname[MAXHOSTNAMELEN]= {0};
-    gethostname(chname, sizeof(chname));
-    hostname.assign(chname);
+    // Pass
 }
 
 

@@ -17,7 +17,10 @@
 
 #pragma once
 
+#include <netdb.h>
 #include <sstream>
+#include <sys/types.h>
+#include <sys/socket.h>
 #include <time.h>
 
 namespace db
@@ -101,4 +104,28 @@ inline int extractTimeout(std::string & str)
     return 0;
 }
 
+/**
+ * Return the full qualified hostname
+ */
+inline std::string getFullHostname()
+{
+    char hostname[MAXHOSTNAMELEN] = {0};
+    gethostname(hostname, sizeof(hostname));
+
+    struct addrinfo hints, *info;
+    memset(&hints, 0, sizeof(hints));
+
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_CANONNAME;
+
+    // First is OK
+    if (getaddrinfo(hostname, NULL, &hints, &info) == 0) {
+        strncpy(hostname, info->ai_canonname, sizeof(hostname));
+        freeaddrinfo(info);
+    }
+    return hostname;
 }
+
+}
+
