@@ -4851,9 +4851,9 @@ std::vector<message_bringonline> OracleAPI::getBringOnlineFiles(std::string voNa
                                     struct message_bringonline msg;
                                     msg.url = row2.get<std::string>("SOURCE_SURL");
                                     msg.job_id = row2.get<std::string>("JOB_ID");
-                                    msg.file_id = row2.get<int>("FILE_ID"); !!!!!
-                                    msg.pinlifetime = row2.get<int>("COPY_PIN_LIFETIME");
-                                    msg.bringonlineTimeout = row2.get<int>("BRING_ONLINE");
+                                    msg.file_id = static_cast<int>(row2.get<long long>("FILE_ID"));
+                                    msg.pinlifetime = static_cast<int>(row2.get<double>("COPY_PIN_LIFETIME"));
+                                    msg.bringonlineTimeout = static_cast<int>(row2.get<double>("BRING_ONLINE"));
 
                                     ret.push_back(msg);
                                     bringOnlineReportStatus("STARTED", "", msg);
@@ -4906,9 +4906,9 @@ std::vector<message_bringonline> OracleAPI::getBringOnlineFiles(std::string voNa
                             struct message_bringonline msg;
                             msg.url = row.get<std::string>("SOURCE_SURL");
                             msg.job_id = row.get<std::string>("JOB_ID");
-                            msg.file_id = row.get<int>("FILE_ID");
-                            msg.pinlifetime = row.get<int>("COPY_PIN_LIFETIME");
-                            msg.bringonlineTimeout = row.get<int>("BRING_ONLINE");
+                            msg.file_id = static_cast<int>(row.get<long long>("FILE_ID"));
+                            msg.pinlifetime = static_cast<int>(row.get<double>("COPY_PIN_LIFETIME"));
+                            msg.bringonlineTimeout = static_cast<int>(row.get<double>("BRING_ONLINE"));
 
                             ret.push_back(msg);
                             bringOnlineReportStatus("STARTED", "", msg);
@@ -4978,7 +4978,7 @@ void OracleAPI::bringOnlineReportStatus(const std::string & state, const std::st
                     sql.begin();
                     sql <<
                         " UPDATE t_file "
-                        " SET staging_finished = UTC_TIMESTAMP(), reason = :reason, file_state = :fileState "
+                        " SET staging_finished = sys_extract_utc(systimestamp), reason = :reason, file_state = :fileState "
                         " WHERE job_id = :jobId "
                         "	AND file_id = :fileId "
                         "	AND file_state = 'STAGING'",
