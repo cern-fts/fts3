@@ -599,6 +599,9 @@ CREATE TABLE t_file (
 -- user provided metadata
   ,file_metadata    VARCHAR2(255)
 --
+-- activity name
+  ,activity   VARCHAR(255) DEFAULT "default"
+--
 -- selection strategy used in case when multiple protocols were provided
   ,selection_strategy VARCHAR(255)
 --
@@ -744,6 +747,7 @@ CREATE INDEX t_file_select ON t_file(dest_se, source_se, job_finished, file_stat
 CREATE INDEX file_vo_name_state ON t_file(file_state, vo_name, source_se, dest_se);
 CREATE INDEX file_vo_name ON t_file( vo_name, source_se, dest_se, file_state);
 CREATE INDEX file_tr_host  ON t_file(TRANSFERHOST);
+CREATE INDEX t_file_activity ON t_file(activity);
 
 CREATE INDEX optimize_source_a         ON t_optimize(source_se,dest_se);
 
