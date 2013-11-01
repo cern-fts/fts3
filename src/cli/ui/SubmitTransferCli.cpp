@@ -77,6 +77,9 @@ SubmitTransferCli::SubmitTransferCli()
     ("new-bulk-format", "New JSON format for bulk submission will be used")
     ("retry", value<int>(), "Number of retries. If 0, the server default will be used. If negative, there will be no retries.")
     ("retry-delay", value<int>()->default_value(0), "Retry delay in seconds")
+    ("nostreams", value<int>(), "number of streams that will be used for the given transfer-job")
+    ("timeout", value<int>(), "timeout (expressed in seconds) that will be used for the given job")
+    ("buff-size", value<int>(), "buffer size (expressed in bytes) that will be used for the given transfer-job")
     ;
 
     // add hidden options
@@ -434,6 +437,24 @@ map<string, string> SubmitTransferCli::getParams()
             if (val < 0) throw string("The 'retry-delay' value has to be positive!");
             parameters[JobParameterHandler::RETRY_DELAY] = lexical_cast<string>(val);
         }
+    if (vm.count("buff-size"))
+    	{
+    		int val = vm["buff-size"].as<int>();
+    		if (val <= 0) throw string("The buffer size has to greater than 0!");
+    		parameters[JobParameterHandler::BUFFER_SIZE] = lexical_cast<string>(val);
+    	}
+    if (vm.count("nostreams"))
+     	{
+    		int val = vm["nostreams"].as<int>();
+    		if (val <= 0) throw string("The number of streams has to be greater than 0!");
+    		parameters[JobParameterHandler::NOSTREAMS] = lexical_cast<string>(val);
+     	}
+    if (vm.count("timeout"))
+    	{
+			int val = vm["timeout"].as<int>();
+			if (val <= 0) throw string("The timeout has to be greater than 0!");
+			parameters[JobParameterHandler::TIMEOUT] = lexical_cast<string>(val);
+    	}
 
     return parameters;
 }

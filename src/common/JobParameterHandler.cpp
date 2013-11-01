@@ -42,6 +42,9 @@ const string JobParameterHandler::JOB_METADATA = "job_metadata";
 const string JobParameterHandler::RETRY = "retry";
 const string JobParameterHandler::RETRY_DELAY = "retry_delay";
 const string JobParameterHandler::MULTIHOP = "multihop";
+const string JobParameterHandler::BUFFER_SIZE = "buffer_size";
+const string JobParameterHandler::NOSTREAMS = "nostreams";
+const string JobParameterHandler::TIMEOUT = "timeout";
 
 JobParameterHandler::JobParameterHandler()
 {

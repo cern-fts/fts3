@@ -89,6 +89,9 @@ public:
     static const string RETRY;
     static const string RETRY_DELAY;
     static const string MULTIHOP;
+    static const string BUFFER_SIZE;
+    static const string NOSTREAMS;
+    static const string TIMEOUT;
     ///@}
 
     /**
