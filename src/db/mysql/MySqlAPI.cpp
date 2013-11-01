@@ -907,6 +907,9 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
     const std::string hop              = params.get(JobParameterHandler::MULTIHOP);
     const std::string sourceSpaceToken = params.get(JobParameterHandler::SPACETOKEN_SOURCE);
     const std::string spaceToken       = params.get(JobParameterHandler::SPACETOKEN);
+    const std::string nostreams		   = params.get(JobParameterHandler::NOSTREAMS);
+    const std::string buffSize		   = params.get(JobParameterHandler::BUFFER_SIZE);
+    const std::string timeout		   = params.get(JobParameterHandler::TIMEOUT);
 
     std::string reuseFlag = "N";
     if (reuse == "Y")
@@ -916,7 +919,23 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
 
     const std::string initialState = bringOnline > 0 || copyPinLifeTime > 0 ? "STAGING" : "SUBMITTED";
     const int priority = 3;
-    const std::string jobParams;
+    std::string jobParams;
+
+    // create the internal params string
+    // if numbre of streams was specified ...
+    if (!nostreams.empty()) jobParams = "nostreams:" + nostreams;
+    // if timeout was specified ...
+    if (!timeout.empty())
+    	{
+			if (!jobParams.empty()) jobParams += ",";
+    		jobParams += "timeout:" + timeout;
+    	}
+    // if buffer size was specified ...
+    if (!buffSize.empty())
+    	{
+			if (!jobParams.empty()) jobParams += ",";
+			jobParams += "buffersize:" + buffSize;
+    	}
 
     soci::session sql(*connectionPool);
 
