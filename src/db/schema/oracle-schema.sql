@@ -600,7 +600,7 @@ CREATE TABLE t_file (
   ,file_metadata    VARCHAR2(255)
 --
 -- activity name
-  ,activity   VARCHAR(255) DEFAULT "default"
+  ,activity   VARCHAR(255) DEFAULT 'default'
 --
 -- selection strategy used in case when multiple protocols were provided
   ,selection_strategy VARCHAR(255)
