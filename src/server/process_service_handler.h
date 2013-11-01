@@ -488,14 +488,26 @@ protected:
 
                                 if (enableOptimization.compare("true") == 0 && cfgs.empty())
                                     {
-                                        optimize = true;
-                                        opt_config = new OptimizerSample();
-                                        DBSingleton::instance().getDBObjectInstance()->fetchOptimizationConfig2(opt_config, source_hostname, destin_hostname);
-                                        BufSize = opt_config->getBufSize();
-                                        StreamsperFile = opt_config->getStreamsperFile();
-                                        Timeout = opt_config->getTimeout();
-                                        delete opt_config;
-                                        opt_config = NULL;
+                                		optional<ProtocolResolver::protocol> p =
+                                				ProtocolResolver::getUserDefinedProtocol(tempUrl);
+
+                                		if (p.is_initialized())
+                                			{
+            									BufSize = (*p).tcp_buffer_size;
+            									StreamsperFile = (*p).nostreams;
+            									Timeout = (*p).urlcopy_tx_to;
+                                			}
+                                		else
+            								{
+												optimize = true;
+												opt_config = new OptimizerSample();
+												DBSingleton::instance().getDBObjectInstance()->fetchOptimizationConfig2(opt_config, source_hostname, destin_hostname);
+												BufSize = opt_config->getBufSize();
+												StreamsperFile = opt_config->getStreamsperFile();
+												Timeout = opt_config->getTimeout();
+												delete opt_config;
+												opt_config = NULL;
+            								}
                                     }
                                 else
                                     {
