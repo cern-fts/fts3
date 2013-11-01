@@ -100,22 +100,6 @@ def _getTransferAndSubmissionPerHost(timewindow):
     return servers
 
 
-
-def _getStateCountPerVo(timewindow):
-    perVo = {}
-    query = File.objects.values('file_state', 'job__vo_name')\
-                        .filter(Q(job_finished__gte = datetime.utcnow() - timewindow) | Q(job_finished__isnull = True))\
-                        .annotate(count = Count('file_state'))\
-                        .order_by('file_state')
-    for voJob in query:
-        vo = voJob['job__vo_name']
-        if vo not in perVo:
-            perVo[vo] = {}
-        perVo[vo][voJob['file_state']] = voJob['count']
-
-    return perVo
-
-
 def _getRetriedStats(timewindow):
     notBefore = datetime.utcnow() - timewindow
     
@@ -189,7 +173,27 @@ def servers(httpRequest):
 
 @jsonify
 def pervo(httpRequest):
-    return _getStateCountPerVo(timedelta(minutes = 30))
+    notBefore = datetime.utcnow() - timedelta(minutes = 30)
+    
+    query = File.objects.values('file_state', 'job__vo_name')\
+                        .filter(Q(job_finished__gte = notBefore) | Q(job_finished__isnull = True))\
+                        .annotate(count = Count('file_state'))
+                        
+    if httpRequest.GET.get('source_se', None):
+        query = query.filter(source_se = httpRequest.GET['source_se'])
+    if httpRequest.GET.get('dest_se', None):
+        query = query.filter(source_se = httpRequest.GET['dest_se'])
+                        
+    query = query.order_by('file_state')
+                        
+    perVo = {}
+    for voJob in query:
+        vo = voJob['job__vo_name']
+        if vo not in perVo:
+            perVo[vo] = {}
+        perVo[vo][voJob['file_state']] = voJob['count']
+
+    return perVo
 
 
 @jsonify

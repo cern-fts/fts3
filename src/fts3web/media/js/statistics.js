@@ -69,9 +69,21 @@ StatsServersCtrl.resolve = {
 }
 
 
-function StatsVosCtrl($location, $scope, vos, StatsVO)
+function StatsVosCtrl($location, $scope, vos, StatsVO, Unique)
 {
 	$scope.vos = vos;
+	
+	// Filter
+	$scope.unique = Unique.all();
+	
+	$scope.filter = {
+		'source_se': undefinedAsEmpty($location.search().source_se),
+		'dest_se':   undefinedAsEmpty($location.search().dest_se),
+	}
+	
+	$scope.applyFilters = function() {
+		$location.search($scope.filter);
+	}
 
 	// Set timer to trigger autorefresh
 	$scope.autoRefresh = setInterval(function() {

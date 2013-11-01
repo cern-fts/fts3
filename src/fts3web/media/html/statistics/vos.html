@@ -1,6 +1,18 @@
 <h3>Statistics - Per VO</h3>
 <h4>For the last 30 minutes</h4>
 
+<div>
+    <label for="source_se">Source: </label>
+    <input type="text" placeholder="Source" id="source_se" ng-model="filter.source_se"
+           typeahead="source for source in unique.sources | filter:$viewValue"/>
+
+    <label for="dest_se">Destination: </label>
+    <input type="text" placeholder="Destination" id="dest_se" ng-model="filter.dest_se"
+           typeahead="dest for dest in unique.destinations | filter:$viewValue"/>
+           
+    <button class="btn btn-success" ng-click="applyFilters()">Apply</button>
+</div>
+
 <table class="table">
     <thead>
         <tr>
@@ -17,3 +29,7 @@
         </tr>
     </tbody>
 </table>
+
+<div class="text-center">
+     <plot title="Active" list="vos" value="ACTIVE"/>
+</div>
