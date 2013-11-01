@@ -33,7 +33,8 @@ function TransfersCtrl($location, $scope, transfers, Transfers, Unique)
 		source_se:   undefinedAsEmpty($location.search().source_se),
 		dest_se:     undefinedAsEmpty($location.search().dest_se),
 		time_window: undefinedAsEmpty($location.search().time_window),
-		state:       statesFromString($location.search().state)
+		state:       statesFromString($location.search().state),
+		activity:    undefinedAsEmpty($location.search().activity)
 	}
 	
 	$scope.applyFilters = function() {
@@ -43,7 +44,8 @@ function TransfersCtrl($location, $scope, transfers, Transfers, Unique)
 			source_se:    $scope.filter.source_se,
 			dest_se:      $scope.filter.dest_se,
 			time_window:  $scope.filter.time_window,
-			state:        joinStates($scope.filter.state)
+			state:        joinStates($scope.filter.state),
+			activity:     $scope.filter.activity
 		});
 		$scope.filtersModal = false;
 	}	

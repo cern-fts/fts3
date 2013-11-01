@@ -80,6 +80,11 @@
               <option value="">-- All VOs --</option>
             </select>
             
+            <label for="activity">Activity:</label>
+            <select id="activity" ng-model="filter.activity" ng-options="activity for activity in unique.activities">
+              <option value="">-- All activities --</option>
+            </select>
+            
             <label for="timewindow">Time window:</label>
             <input type="number" placeholder="time window in hours" id="timewindow" ng-model="filter.time_window"/>
         </div>

@@ -91,6 +91,7 @@ class FilterForm(forms.Form):
     time_window = forms.IntegerField(required = False)
     startdate   = forms.DateField(required = False)
     enddate     = forms.DateField(required = False)
+    activity    = forms.CharField(required = False)
     
     def is_empty(self):
         if self['source_se'].data or self['dest_se'].data or\

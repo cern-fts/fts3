@@ -66,7 +66,8 @@ def setupFilters(filterForm):
                'dest_se': None,
                'metadata': None,
                'startdate': None,
-               'enddate': None
+               'enddate': None,
+               'activity': None
               }
     
     # Process filter form
@@ -254,6 +255,8 @@ def transferList(httpRequest):
     if filters['time_window']:
         notBefore =  datetime.datetime.utcnow() - datetime.timedelta(hours = filters['time_window'])
         transfers = transfers.filter(Q(job_finished__isnull = True) | (Q(job_finished__gte = notBefore)))
+    if filters['activity']:
+        transfers = transfers.filter(activity = filters['activity'])
    
     transfers = transfers.values('nullFinished', 'file_id', 'file_state', 'job_id',
                                  'source_se', 'dest_se', 'start_time', 'job__submit_time', 'job__priority')

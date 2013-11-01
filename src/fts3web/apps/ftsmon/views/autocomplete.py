@@ -19,7 +19,7 @@ import simplejson
 from datetime import datetime, timedelta
 from django.db.models import Q
 from django.http import HttpResponse
-from ftsweb.models import Job, JobArchive
+from ftsweb.models import Job, File
 from jsonify import jsonify
 
 
@@ -32,10 +32,12 @@ def unique(httpRequest):
                       .values('source_se').distinct()
     destinations = Job.objects.filter(Q(job_finished__isnull = True) | Q(job_finished__gte = notBefore))\
                       .values('dest_se').distinct()
+    activities   = File.objects.values('activity').distinct()
     
     return {
         'vos': [vo['vo_name'] for vo in vos.all()],
         'sources': [source['source_se'] for source in sources.all()],
-        'destinations': [dest['dest_se'] for dest in destinations.all()]
+        'destinations': [dest['dest_se'] for dest in destinations.all()],
+        'activities': [act['activity'] for act in activities.all()]
     }
 
