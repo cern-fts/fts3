@@ -48,10 +48,10 @@
             <input type="text" placeholder="reason" id="reason" ng-model="filter.contains"/>
             <label for="source_se">Source:</label>
             <input type="text" placeholder="source se" id="source_se" ng-model="filter.source_se"
-                   typeahead="dest for dest in unique.sources | filter:$viewValue"/>
+                   typeahead="dest for dest in unique.sources | safeFilter:$viewValue"/>
             <label for="dest_se">Destination:</label>
             <input type="text" placeholder="destination se" id="dest_se" ng-model="filter.dest_se"
-                   typeahead="dest for dest in unique.destinations | filter:$viewValue"/>
+                   typeahead="dest for dest in unique.destinations | safeFilter:$viewValue"/>
         </div>
         <div class="modal-footer">
             <button class="btn btn-success" ng-click="filterReason(filter)">Apply</button>

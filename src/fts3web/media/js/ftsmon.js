@@ -174,6 +174,13 @@ config(function($routeProvider) {
 		$location.path('/job/' + $rootScope.jobId);
 	}
 })
+.filter('safeFilter', function($filter) {
+	return function(list, expr) {
+		if (typeof(list) == 'undefined')
+			return [];
+		return $filter('filter')(list, expr);
+	}
+})
 ;
 
 /** Refresh interval in ms */
@@ -322,3 +329,4 @@ function validVo(v)
 	else
 		return '';
 }
+

@@ -5,12 +5,12 @@
     <form ng-submit="filterBy(filter)" autocomplete="off">
 	    <label for="source_se">Source: </label>
 	    <input type="text" placeholder="Source" id="source_se" ng-model="filter.source_se"
-	           typeahead="source for source in unique.sources | filter:$viewValue"
+	           typeahead="source for source in unique.sources | safeFilter:$viewValue"
 	           class="input-xxlarge"/>
 	    &nbsp;
 	    <label for="dest_se">Destination: </label>
 	    <input type="text" placeholder="Destination" id="dest_se" ng-model="filter.dest_se"
-	           typeahead="dest for dest in unique.destinations | filter:$viewValue"
+	           typeahead="dest for dest in unique.destinations | safeFilter:$viewValue"
 	           class="input-xxlarge"/>
 	    <button class="btn" ng-click="applyFilters()"><i class="icon-filter"></i>Apply</button>
     </form>

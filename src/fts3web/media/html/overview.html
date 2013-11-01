@@ -107,11 +107,11 @@
         <div class="modal-body">
             <label for="source_se">Source storage element:</label>
             <input type="text" placeholder="source storage element" id="source_se" ng-model="filter.source_se"
-                   typeahead="source for source in unique.sources | filter:$viewValue"/>
+                   typeahead="source for source in unique.sources | safeFilter:$viewValue"/>
             
             <label for="dest_se">Destination storage element:</label>
             <input type="text" placeholder="destination storage element" name="dest_se" ng-model="filter.dest_se"
-                   typeahead="dest for dest in unique.destinations | filter:$viewValue"/>
+                   typeahead="dest for dest in unique.destinations | safeFilter:$viewValue"/>
                
             <label for="vo">VO:</label>
             <select id="vo" ng-model="filter.vo" ng-options="vo for vo in unique.vos">

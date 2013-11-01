@@ -85,9 +85,13 @@ angular.module('ftsmon.resources', ['ngResource'])
 .factory('Unique', function($q, $http) {
 	return function(field) {
 		var deferred = $q.defer();
-		$http.get('unique/' + field).success(function(data) {
-			deferred.resolve(data);
-		});
+		$http({method: 'GET', url: 'unique/' + field})
+			.success(function(data) {
+				deferred.resolve(data);
+			})
+			.error(function(data) {
+				deferred.resolve([]);
+			});
 		return deferred.promise;
 	}
 })
