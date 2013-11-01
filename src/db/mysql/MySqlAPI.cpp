@@ -355,9 +355,9 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                 {
                     soci::row const& r = *i;
 
-                    std::string source_se = r.get<std::string>("source_se");
-                    std::string dest_se = r.get<std::string>("dest_se");
-                    std::string vo_name = r.get<std::string>("vo_name");
+                    std::string source_se = r.get<std::string>("source_se","");
+                    std::string dest_se = r.get<std::string>("dest_se","");
+                    std::string vo_name = r.get<std::string>("vo_name","");
 
                     if(source_se.length()>0 && dest_se.length()>0 && vo_name.length()>0)
                         {
