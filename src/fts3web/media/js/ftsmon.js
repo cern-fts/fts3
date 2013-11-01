@@ -186,7 +186,7 @@ function plotArrayOfObjects(scope, list, labelAttr, valueAttr)
 	for (var i in list) {
 		var item = list[i];
 		labelStr += firstUpper(item[labelAttr]) + ',';
-		valueStr += item[valueAttr] + ',';
+		valueStr += undefinedAsZero(item[valueAttr]) + ',';
 	}
 	
 	scope.labels = labelStr;
@@ -199,7 +199,7 @@ function plotObject(scope, obj, labelsAttr)
 	for (var i in labelsAttr) {
 		var label = labelsAttr[i];
 		labelStr += firstUpper(label) + ',';
-		valueStr += obj[label] + ',';
+		valueStr += undefinedAsZero(obj[label]) + ',';
 	}
 	
 	scope.labels = labelStr;
@@ -212,7 +212,7 @@ function plotDictionary(scope, list, value)
 	for (var i  in list) {
 		if (i[0] != '$') {
 			labelStr += i + ',';
-			valueStr += list[i][value] + ',';
+			valueStr += undefinedAsZero(list[i][value]) + ',';
 		}
 	}
 	
@@ -305,6 +305,14 @@ function undefinedAsEmpty(v)
 		return v;
 	else
 		return '';
+}
+
+function undefinedAsZero(v)
+{
+	if (typeof(v) != 'undefined')
+		return v;
+	else
+		return 0;
 }
 
 function validVo(v)
