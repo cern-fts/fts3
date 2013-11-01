@@ -8,6 +8,22 @@ function ConfigCtrl($location, $scope, config, Configuration)
 	$scope.page      = $scope.config.page;
 	$scope.pageCount = $scope.config.pageCount;
 	
+	// Filter
+	$scope.filter = {
+		action:   undefinedAsEmpty($location.search().action),
+		user:     undefinedAsEmpty($location.search().user),
+		contains: undefinedAsEmpty($location.search().contains)
+	};
+	
+	$scope.applyFilters = function() {
+		$location.search({
+			page:        1,
+			action:   $scope.filter.action,
+			user:     $scope.filter.user,
+			contains: $scope.filter.contains
+		});
+	}
+	
 	// On page change, reload
 	$scope.pageChanged = function(newPage) {
 		$location.search('page', newPage);

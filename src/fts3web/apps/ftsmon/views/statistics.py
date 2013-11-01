@@ -17,7 +17,7 @@
 
 from datetime import datetime, timedelta
 from django.db.models import Q, Count, Avg
-from ftsweb.models import Job, File, ConfigAudit, Host
+from ftsweb.models import Job, File, Host
 from ftsweb.models import ProfilingSnapshot, ProfilingInfo
 from jsonify import jsonify, jsonify_paged
 from util import getOrderBy, orderedField
@@ -26,12 +26,6 @@ from util import getOrderBy, orderedField
 STATES               = ['SUBMITTED', 'READY', 'ACTIVE', 'FAILED', 'FINISHED', 'CANCELED', 'STAGING', 'NOT_USED']
 ACTIVE_STATES        = ['SUBMITTED', 'READY', 'ACTIVE', 'STAGING']
 FILE_TERMINAL_STATES = ['FINISHED', 'FAILED', 'CANCELED']
-
-
-@jsonify_paged
-def configurationAudit(httpRequest):
-    return ConfigAudit.objects.order_by('-datetime')
-
 
 
 def _getCountPerState(age = None):
