@@ -46,7 +46,11 @@ function OverviewCtrl($location, $scope, overview, Overview, Unique)
 	$scope.overview = overview;
 	
 	// Unique pairs and vos
-	$scope.unique = Unique.all();
+	$scope.unique = {
+		sources: Unique('sources'),
+		destinations: Unique('destinations'),
+		vos: Unique('vos')
+	}
 	
 	// Paginator	
 	$scope.pageMax   = 15;

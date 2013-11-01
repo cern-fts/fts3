@@ -5,7 +5,12 @@ function TransfersCtrl($location, $scope, transfers, Transfers, Unique)
 	$scope.transfers = transfers;
 	
 	// Unique values
-	$scope.unique = Unique.all();
+	$scope.unique = {
+		sources: Unique('sources'),
+		destinations: Unique('destinations'),
+		vos: Unique('vos'),
+		activities: Unique('activities')
+	}
 	
 	// Paginator	
 	$scope.pageMax   = 15;

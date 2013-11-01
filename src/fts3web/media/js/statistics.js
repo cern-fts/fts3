@@ -74,7 +74,10 @@ function StatsVosCtrl($location, $scope, vos, StatsVO, Unique)
 	$scope.vos = vos;
 	
 	// Filter
-	$scope.unique = Unique.all();
+	$scope.unique = {
+		sources: Unique('sources'),
+		destinations: Unique('destinations')
+	}
 	
 	$scope.filter = {
 		'source_se': undefinedAsEmpty($location.search().source_se),

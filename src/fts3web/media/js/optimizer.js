@@ -84,7 +84,10 @@ function OptimizerDecisionsCtrl($location, $scope, decisions, OptimizerDecisions
 	$scope.decisions = decisions;
 	
 	// Unique pairs and vos
-	$scope.unique = Unique.all();
+	$scope.unique = {
+		sources: Unique('sources'),
+		destinations: Unique('destinations')
+	}
 	
 	// Paginator	
 	$scope.pageMax   = 15;

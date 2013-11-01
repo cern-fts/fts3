@@ -6,7 +6,10 @@ function ErrorsCtrl($location, $scope, errors, Errors, Unique)
 	$scope.errors = errors;
 	
 	// Unique values
-	$scope.unique = Unique.all();
+	$scope.unique = {
+		sources: Unique('sources'),
+		destinations: Unique('destinations')
+	}
 	
 	// Paginator	
 	$scope.pageMax   = 15;

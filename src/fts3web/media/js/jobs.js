@@ -6,7 +6,11 @@ function JobListCtrl($location, $scope, jobs, Job, Unique)
 	$scope.jobs = jobs;
 	
 	// Unique values
-	$scope.unique = Unique.all();
+	$scope.unique = {
+		sources: Unique('sources'),
+		destinations: Unique('destinations'),
+		vos: Unique('vos')
+	}
 	
 	// Paginator	
 	$scope.pageMax   = 15;

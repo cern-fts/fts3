@@ -22,22 +22,27 @@ from django.http import HttpResponse
 from ftsweb.models import Job, File
 from jsonify import jsonify
 
+@jsonify
+def activities(httpRequest):
+    activities = File.objects.values('activity').distinct()
+    return [row['activity'] for row in activities]
 
 @jsonify
-def unique(httpRequest):
+def sources(httpRequest):
     notBefore = datetime.utcnow() - timedelta(hours = 12)
-    
-    vos          = Job.objects.values('vo_name').distinct()
-    sources      = Job.objects.filter(Q(job_finished__isnull = True) | Q(job_finished__gte = notBefore))\
-                      .values('source_se').distinct()
-    destinations = Job.objects.filter(Q(job_finished__isnull = True) | Q(job_finished__gte = notBefore))\
-                      .values('dest_se').distinct()
-    activities   = File.objects.values('activity').distinct()
-    
-    return {
-        'vos': [vo['vo_name'] for vo in vos.all()],
-        'sources': [source['source_se'] for source in sources.all()],
-        'destinations': [dest['dest_se'] for dest in destinations.all()],
-        'activities': [act['activity'] for act in activities.all()]
-    }
+    sources = Job.objects.filter(Q(job_finished__isnull = True) | Q(job_finished__gte = notBefore))\
+                 .values('source_se').distinct()
+    return [row['source_se'] for row in sources]
+
+@jsonify
+def destinations(httpRequest):
+    notBefore = datetime.utcnow() - timedelta(hours = 12)
+    sources = Job.objects.filter(Q(job_finished__isnull = True) | Q(job_finished__gte = notBefore))\
+                 .values('dest_se').distinct()
+    return [row['dest_se'] for row in sources]
+
+@jsonify
+def vos(httpRequest):
+    vos = Job.objects.values('vo_name').distinct()
+    return [row['vo_name'] for row in vos]
 

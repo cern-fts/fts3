@@ -22,11 +22,6 @@ angular.module('ftsmon.resources', ['ngResource'])
 		query: {method: 'GET', isArray: false}
 	})
 })
-.factory('Unique', function($resource) {
-	return $resource('unique/', {}, {
-		all: {method: 'GET', isArray: false}
-	})
-})
 .factory('Overview', function($resource) {
 	return $resource('overview', {}, {
 		query: {method: 'GET', isArray: false}
@@ -86,5 +81,14 @@ angular.module('ftsmon.resources', ['ngResource'])
 	return $resource('stats/profiling', {}, {
 		query: {method: 'GET', isArray: false}
 	})
+})
+.factory('Unique', function($q, $http) {
+	return function(field) {
+		var deferred = $q.defer();
+		$http.get('unique/' + field).success(function(data) {
+			deferred.resolve(data);
+		});
+		return deferred.promise;
+	}
 })
 ;
