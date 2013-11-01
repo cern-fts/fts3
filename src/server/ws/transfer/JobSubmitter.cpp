@@ -527,6 +527,32 @@ string JobSubmitter::submit()
             params.set(JobParameterHandler::RETRY_DELAY, "0");
         }
 
+    bool protocol =
+    		params.isParamSet(JobParameterHandler::TIMEOUT) ||
+    		params.isParamSet(JobParameterHandler::NOSTREAMS) ||
+    		params.isParamSet(JobParameterHandler::BUFFER_SIZE)
+    		;
+
+    // if at least one protocol parameter was set make sure they are all set
+    // use the defaults to fill the gaps
+    if (protocol)
+		{
+			if (!params.isParamSet(JobParameterHandler::TIMEOUT))
+				{
+					params.set(JobParameterHandler::TIMEOUT, "3600");
+				}
+
+			if (!params.isParamSet(JobParameterHandler::NOSTREAMS))
+				{
+					params.set(JobParameterHandler::NOSTREAMS, "4");
+				}
+
+			if (!params.isParamSet(JobParameterHandler::BUFFER_SIZE))
+				{
+					params.set(JobParameterHandler::BUFFER_SIZE, "0");
+				}
+		}
+
 
     // submit the transfer job (add it to the DB)
     db->submitPhysical (
