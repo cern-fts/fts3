@@ -1,16 +1,19 @@
-<h3>Statistics - Per VO</h3>
-<h4>For the last 30 minutes</h4>
+<h2>Statistics - VO</h2>
+<h3>For the last 30 minutes</h3>
 
-<div>
-    <label for="source_se">Source: </label>
-    <input type="text" placeholder="Source" id="source_se" ng-model="filter.source_se"
-           typeahead="source for source in unique.sources | filter:$viewValue"/>
-
-    <label for="dest_se">Destination: </label>
-    <input type="text" placeholder="Destination" id="dest_se" ng-model="filter.dest_se"
-           typeahead="dest for dest in unique.destinations | filter:$viewValue"/>
-           
-    <button class="btn btn-success" ng-click="applyFilters()">Apply</button>
+<div class="form-inline">
+    <form ng-submit="filterBy(filter)" autocomplete="off">
+	    <label for="source_se">Source: </label>
+	    <input type="text" placeholder="Source" id="source_se" ng-model="filter.source_se"
+	           typeahead="source for source in unique.sources | filter:$viewValue"
+	           class="input-xxlarge"/>
+	    &nbsp;
+	    <label for="dest_se">Destination: </label>
+	    <input type="text" placeholder="Destination" id="dest_se" ng-model="filter.dest_se"
+	           typeahead="dest for dest in unique.destinations | filter:$viewValue"
+	           class="input-xxlarge"/>
+	    <button class="btn" ng-click="applyFilters()"><i class="icon-filter"></i>Apply</button>
+    </form>
 </div>
 
 <table class="table">
