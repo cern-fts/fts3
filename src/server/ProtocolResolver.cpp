@@ -31,6 +31,8 @@
 #include <vector>
 
 #include <boost/assign/list_of.hpp>
+#include <boost/regex.hpp>
+#include <boost/lexical_cast.hpp>
 
 FTS3_SERVER_NAMESPACE_START
 
@@ -150,6 +152,24 @@ optional<ProtocolResolver::protocol> ProtocolResolver::getProtocolCfg(optional< 
     return ret;
 }
 
+optional<ProtocolResolver::protocol> ProtocolResolver::getUserDefinedProtocol(TransferFiles* file)
+{
+	if (!file || file->INTERNAL_FILE_PARAMS.empty()) return optional<protocol>();
+
+	// regular expression for extracting protocol parameters
+	static const regex re("^nostreams:(\\d+),timeout:(\\d+),buffersize:(\\d+)$");
+
+	smatch what;
+    if (!regex_match(file->INTERNAL_FILE_PARAMS, what, re, match_extra)) return optional<protocol>();
+
+    protocol ret;
+    ret.nostreams = lexical_cast<int>(what[1]);
+    ret.urlcopy_tx_to = lexical_cast<int>(what[2]);
+    ret.tcp_buffer_size = lexical_cast<int>(what[3]);
+
+    return ret;
+}
+
 void ProtocolResolver::fillAuto(optional<protocol>& source, optional<protocol>& destination)
 {
 
@@ -222,10 +242,12 @@ optional< pair<string, string> > ProtocolResolver::getFirst(list<LinkType> l)
 
 bool ProtocolResolver::resolve()
 {
+	// check if the user specified the protocol parameters while submitting
+	prot = getUserDefinedProtocol(file);
+	if (prot.is_initialized()) return true;
 
     // check if there's a SE pair configuration
     prot = getProtocolCfg(link[SE_PAIR]);
-
     if (prot.is_initialized()) return true;
 
     // check if there is a SE group pair configuration

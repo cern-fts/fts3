@@ -81,6 +81,7 @@ public:
     std::string CHECKSUM_METHOD;//					    CHAR(1)
     int BRINGONLINE; //					    NUMBER(38)
     std::string REUSE;
+    std::string INTERNAL_JOB_PARAMS;
 
     std::string getUserDn() const
     {

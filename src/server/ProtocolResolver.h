@@ -48,6 +48,9 @@ using namespace boost;
  */
 class ProtocolResolver
 {
+
+public:
+
     /**
      * protocol data:
      * - number of streams
@@ -97,8 +100,6 @@ class ProtocolResolver
         DESTINATION,
         VO
     };
-
-public:
 
     /**
      * Constructor.
@@ -158,6 +159,12 @@ public:
      */
     int getUrlCopyTxTo();
 
+    /**
+     * Gets the user defined protocol parameters (submitted with the job)
+     *
+     * @return an object containing protocol parameters
+     */
+    static optional<protocol> getUserDefinedProtocol(TransferFiles* file);
 
 private:
 
