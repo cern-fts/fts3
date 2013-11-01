@@ -459,9 +459,9 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                     soci::row const& r = *i;
                     distinct.push_back(
                         boost::tuple< std::string, std::string, std::string>(
-                            r.get<std::string>("source_se"),
-                            r.get<std::string>("dest_se"),
-                            r.get<std::string>("vo_name")
+                            r.get<std::string>("source_se",""),
+                            r.get<std::string>("dest_se",""),
+                            r.get<std::string>("vo_name","")
                         )
 
                     );

@@ -426,9 +426,9 @@ void OracleAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& f
                     soci::row const& r = *i;
                     distinct.push_back(
                         boost::tuple< std::string, std::string, std::string>(
-                            r.get<std::string>("SOURCE_SE"),
-                            r.get<std::string>("DEST_SE"),
-                            r.get<std::string>("VO_NAME")
+                            r.get<std::string>("SOURCE_SE",""),
+                            r.get<std::string>("DEST_SE",""),
+                            r.get<std::string>("VO_NAME","")
                         )
 
                     );

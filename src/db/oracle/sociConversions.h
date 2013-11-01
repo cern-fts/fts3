@@ -160,8 +160,8 @@ struct type_conversion<TransferFiles>
         file.CHECKSUM_METHOD    = v.get<std::string>("CHECKSUM_METHOD", "");
         file.SOURCE_SPACE_TOKEN = v.get<std::string>("SOURCE_SPACE_TOKEN", "");
         file.DEST_SPACE_TOKEN   = v.get<std::string>("SPACE_TOKEN", "");
-        file.BRINGONLINE   = static_cast<int>(v.get<double>("BRING_ONLINE"));
-        file.PIN_LIFETIME  = static_cast<int>(v.get<double>("COPY_PIN_LIFETIME"));
+        file.BRINGONLINE   = static_cast<int>(v.get<double>("BRING_ONLINE"),0);
+        file.PIN_LIFETIME  = static_cast<int>(v.get<double>("COPY_PIN_LIFETIME"),0);
         file.FILE_METADATA = v.get<std::string>("FILE_METADATA", "");
         file.JOB_METADATA  = v.get<std::string>("JOB_METADATA", "");
         file.USER_FILESIZE = static_cast<double>(v.get<long long>("USER_FILESIZE", 0));
