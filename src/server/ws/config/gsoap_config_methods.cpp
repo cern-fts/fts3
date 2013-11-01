@@ -260,7 +260,7 @@ int fts3::implcfg__doDrain(soap* ctx, bool drain, struct implcfg__doDrainRespons
         }
     catch (...)
         {
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the number of retries cannot be set"  << commit;
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the drain mode cannot be set"  << commit;
             return SOAP_FAULT;
         }
 
