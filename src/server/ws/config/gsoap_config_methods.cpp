@@ -226,11 +226,44 @@ int fts3::implcfg__delConfiguration(soap* soap, config__Configuration *_configur
 
 /* ---------------------------------------------------------------------- */
 
-int fts3::implcfg__doDrain(soap* soap, bool drain, struct implcfg__doDrainResponse &_param_13)
+int fts3::implcfg__doDrain(soap* ctx, bool drain, struct implcfg__doDrainResponse &_param_13)
 {
+    try
+        {
+            // authorize
+            AuthorizationManager::getInstance().authorize(
+                ctx,
+                AuthorizationManager::CONFIG,
+                AuthorizationManager::dummy
+            );
 
-    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Turning " << (drain ? "on" : "off") << " the drain mode" << commit;
-    DrainMode::getInstance() = drain;
+            // get user dn
+            CGsiAdapter cgsi(ctx);
+            string dn = cgsi.getClientDn();
+
+            // prepare the command for audit
+            stringstream cmd;
+            cmd << "fts-config-set --drain " << (drain ? "on" : "off");
+
+			FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Turning " << (drain ? "on" : "off") << " the drain mode" << commit;
+			DrainMode::getInstance() = drain;
+			// audit the operation
+			DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd.str(), "drain");
+        }
+    catch(Err& ex)
+        {
+
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+            soap_receiver_fault(ctx, ex.what(), "TransferException");
+
+            return SOAP_FAULT;
+        }
+    catch (...)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the number of retries cannot be set"  << commit;
+            return SOAP_FAULT;
+        }
+
     return SOAP_OK;
 }
 
