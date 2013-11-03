@@ -2193,8 +2193,13 @@ void OracleAPI::auditConfiguration(const std::string & dn, const std::string & c
 
 /*custom optimization stuff*/
 
-void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string & source_hostname, const std::string & destin_hostname)
+void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string & /*source_hostname*/, const std::string & /*destin_hostname*/)
 {
+
+	ops->streamsperfile = DEFAULT_NOSTREAMS;
+	ops->timeout = MID_TIMEOUT;
+	ops->bufsize = DEFAULT_BUFFSIZE;
+/*
     soci::session sql(*connectionPool);
 
     try
@@ -2307,6 +2312,7 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+*/	
 }
 
 void OracleAPI::recordOptimizerUpdate(soci::session& sql, int active, double filesize,
@@ -2711,9 +2717,9 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                         }
 
                     if(ratioSuccessFailure == 100)
-                        highDefault = mode_3[1];
-                    else
                         highDefault = mode_2[1];
+                    else
+                        highDefault = mode_1[1];
 
                     // Active transfers
                     soci::statement stmt7 = (
@@ -2786,7 +2792,7 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                                     if(active < highDefault || maxActive < highDefault)
                                         active = highDefault;
                                     else
-                                        active = maxActive - 2;
+                                        active = maxActive - 1;
 					
 				    message << "Success rate is " 
 				    	    << ratioSuccessFailure 

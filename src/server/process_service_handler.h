@@ -795,6 +795,7 @@ protected:
     void executeTransfer_a()
     {
         static bool drainMode = false;
+	static int reuseExec = 0;
 
         while (1)
             {
@@ -859,7 +860,10 @@ protected:
 
                         /* --- session reuse section ---*/
                         /*get jobs in submitted state and session reuse on*/
-                        DBSingleton::instance().getDBObjectInstance()->getSubmittedJobsReuse(jobsReuse, allowedVOs);
+			if(++reuseExec == 2){
+                        	DBSingleton::instance().getDBObjectInstance()->getSubmittedJobsReuse(jobsReuse, allowedVOs);
+				reuseExec = 0;
+			}
 
                         if (!jobsReuse.empty())
                             {

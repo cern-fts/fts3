@@ -2210,8 +2210,14 @@ void MySqlAPI::auditConfiguration(const std::string & dn, const std::string & co
 
 /*custom optimization stuff*/
 
-void MySqlAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string & source_hostname, const std::string & destin_hostname)
+void MySqlAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string & /*source_hostname*/, const std::string & /*destin_hostname*/)
 {
+
+	ops->streamsperfile = DEFAULT_NOSTREAMS;
+	ops->timeout = MID_TIMEOUT;
+	ops->bufsize = DEFAULT_BUFFSIZE;
+	
+/*
     soci::session sql(*connectionPool);
 
     try
@@ -2321,6 +2327,7 @@ void MySqlAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string 
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+*/	
 }
 
 void MySqlAPI::recordOptimizerUpdate(soci::session& sql, int active, double filesize,
@@ -2721,9 +2728,9 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                         }
 
                     if(ratioSuccessFailure == 100)
-                        highDefault = mode_3[1];
-                    else
                         highDefault = mode_2[1];
+                    else
+                        highDefault = mode_1[1];
 
                     // Active transfers
                     soci::statement stmt7 = (
@@ -2796,7 +2803,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                     if(active < highDefault || maxActive < highDefault)
                                         active = highDefault;
                                     else
-                                        active = maxActive - 2;
+                                        active = maxActive - 1;
 					
 				    message << "Success rate is " 
 				    	    << ratioSuccessFailure 
