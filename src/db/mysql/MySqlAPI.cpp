@@ -314,19 +314,15 @@ std::map<std::string, long long> MySqlAPI::getActivitiesInQueue(soci::session& s
                                              "	f.wait_timestamp IS NULL AND "
                                              "	(f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
                                              "	(f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
-                                             "	EXISTS ( "
-                                             "		SELECT NULL FROM t_job j1 "
-                                             "		WHERE j.job_id = j1.job_id AND j1.job_state in ('ACTIVE','READY','SUBMITTED') AND "
-                                             "			(j1.reuse_job = 'N' OR j1.reuse_job IS NULL) AND j1.vo_name=:vo_name "
-                                             "		ORDER BY j1.priority DESC, j1.submit_time "
-                                             "	) "
+                                             "  j.job_state in ('ACTIVE','READY','SUBMITTED') AND "
+                                             "  (j.reuse_job = 'N' OR j.reuse_job IS NULL) "
                                              " GROUP BY activity ",
                                              soci::use(src),
                                              soci::use(dst),
                                              soci::use(vo),
                                              soci::use(tTime),
-                                             soci::use(hashSegment.start), soci::use(hashSegment.end),
-                                             soci::use(vo)
+                                             soci::use(hashSegment.start),
+                                             soci::use(hashSegment.end)
                                          );
 
             soci::rowset<soci::row>::const_iterator it;
