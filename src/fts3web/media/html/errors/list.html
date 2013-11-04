@@ -1,8 +1,8 @@
-<h3>Transfers with the error '{{reason}}'</h3>
-<h4>For {{source_se}} → {{dest_se}}</h4>
+<h2>Transfers with the error '{{reason}}'</h2>
+<h3>For {{source_se}} → {{dest_se}}</h3>
 
-<pagination rotate="false" num-pages="pageCount" current-page="page"
-    max-size="pageMax" class="pagination" boundary-links="true"
+<pagination rotate="false" num-pages="files.pageCount" current-page="files.page"
+    max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>
     
 <table class="table">
@@ -29,3 +29,7 @@
         </tr>
     </tbody>
 </table>
+
+<pagination rotate="false" num-pages="files.pageCount" current-page="files.page"
+    max-size="15" class="pagination" boundary-links="true"
+    on-select-page="pageChanged(page)"></pagination>

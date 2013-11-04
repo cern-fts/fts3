@@ -3,11 +3,6 @@ function OptimizerCtrl($location, $scope, optimizer, Optimizer)
 {
 	$scope.optimizer = optimizer;
 	
-	// Paginator	
-	$scope.pageMax   = 15;
-	$scope.page      = $scope.optimizer.page;
-	$scope.pageCount = $scope.optimizer.pageCount;
-	
 	// On page change, reload
 	$scope.pageChanged = function(newPage) {
 		$location.search('page', newPage);
@@ -88,11 +83,6 @@ function OptimizerDecisionsCtrl($location, $scope, decisions, OptimizerDecisions
 		sources: Unique('sources'),
 		destinations: Unique('destinations')
 	}
-	
-	// Paginator	
-	$scope.pageMax   = 15;
-	$scope.page      = $scope.decisions.page;
-	$scope.pageCount = $scope.decisions.pageCount;
 	
 	// On page change, reload
 	$scope.pageChanged = function(newPage) {

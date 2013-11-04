@@ -51,11 +51,6 @@ function OverviewCtrl($location, $scope, overview, Overview, Unique)
 		destinations: Unique('destinations'),
 		vos: Unique('vos')
 	}
-	
-	// Paginator	
-	$scope.pageMax   = 15;
-	$scope.page      = $scope.overview.page;
-	$scope.pageCount = $scope.overview.pageCount;
 
 	// On page change, reload
 	$scope.pageChanged = function(newPage) {

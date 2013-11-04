@@ -60,12 +60,14 @@ def getPage(paginator, request):
 
 @decorator
 def jsonify_paged(f, *args, **kwargs):
+    pageSize = 50
+    
     d = f(*args, **kwargs)
     
-    if args[0].GET.get('page', 0) != 'all':
-        paginator = Paginator(d, 50)
-    else:
-        paginator = Paginator(d, len(d))
+    if args[0].GET.get('page', 0) == 'all':
+        pageSize = len(d)
+    
+    paginator = Paginator(d, pageSize)
     page = getPage(paginator, args[0])
     
     paged = {
@@ -74,6 +76,7 @@ def jsonify_paged(f, *args, **kwargs):
         'startIndex': page.start_index(),
         'page':       page.number,
         'pageCount':  paginator.num_pages,
+        'pageSize':   pageSize,
         'items':      page.object_list
     }
     

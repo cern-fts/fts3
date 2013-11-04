@@ -1,13 +1,13 @@
-<h3>
+<h2>
     Unique errors
     <button class="btn btn-mini btn-info" type="button" ng-click="filtersModal = true">Filter</button>
-</h3>
-<h4>For the last 12 hours</h4>
+</h2>
+<h3>For the last 12 hours</h3>
 
 <h4>{{errors.startIndex}} to {{errors.endIndex}} out of {{errors.count}}</h4>
 
-<pagination rotate="false" num-pages="pageCount" current-page="page"
-    max-size="pageMax" class="pagination" boundary-links="true"
+<pagination rotate="false" num-pages="errors.pageCount" current-page="errors.page"
+    max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>
 
 <table class="table">
@@ -33,8 +33,8 @@
     </tbody>
 </table>
 
-<pagination rotate="false" num-pages="pageCount" current-page="page"
-    max-size="pageMax" class="pagination" boundary-links="true"
+<pagination rotate="false" num-pages="errors.pageCount" current-page="errors.page"
+    max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>
 
 <!-- Modals -->

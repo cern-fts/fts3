@@ -11,11 +11,6 @@ function TransfersCtrl($location, $scope, transfers, Transfers, Unique)
 		vos: Unique('vos'),
 		activities: Unique('activities')
 	}
-	
-	// Paginator	
-	$scope.pageMax   = 15;
-	$scope.page      = $scope.transfers.page;
-	$scope.pageCount = $scope.transfers.pageCount;
 
 	// On page change, reload
 	$scope.pageChanged = function(newPage) {

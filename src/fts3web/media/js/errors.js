@@ -11,11 +11,6 @@ function ErrorsCtrl($location, $scope, errors, Errors, Unique)
 		destinations: Unique('destinations')
 	}
 	
-	// Paginator	
-	$scope.pageMax   = 15;
-	$scope.page      = $scope.errors.page;
-	$scope.pageCount = $scope.errors.pageCount;
-	
 	// Filter
 	$scope.filterReason = function(filter) {
 		$location.search(filter);
@@ -73,11 +68,10 @@ function FilesWithErrorCtrl($location, $scope, files, FilesWithError)
 	$scope.source_se = $location.search().source_se;
 	$scope.dest_se   = $location.search().dest_se;
 	
-	// Paginator	
-	$scope.pageMax   = 15;
-	$scope.page      = $scope.files.page;
-	$scope.pageCount = $scope.files.pageCount;
-	
+	// On page change, reload
+	$scope.pageChanged = function(newPage) {
+		$location.search('page', newPage);
+	};
 }
 
 

@@ -2,11 +2,6 @@ function StagingCtrl($location, $scope, staging, Staging)
 {
 	// Entries
 	$scope.staging = staging;
-	
-	// Paginator	
-	$scope.pageMax   = 15;
-	$scope.page      = $scope.staging.page;
-	$scope.pageCount = $scope.staging.pageCount;
 
 	// On page change, reload
 	$scope.pageChanged = function(newPage) {

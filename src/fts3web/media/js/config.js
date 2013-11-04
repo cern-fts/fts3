@@ -2,12 +2,7 @@
 function ConfigAuditCtrl($location, $scope, config, ConfigAudit)
 {
 	$scope.config = config;
-	
-	// Paginator	
-	$scope.pageMax   = 15;
-	$scope.page      = $scope.config.page;
-	$scope.pageCount = $scope.config.pageCount;
-	
+
 	// Filter
 	$scope.filter = {
 		action:   undefinedAsEmpty($location.search().action),
@@ -60,11 +55,6 @@ function ConfigStatusCtrl($location, $scope, server, links)
 {
 	$scope.server = server;
 	$scope.links = links;
-	
-	// Paginator	
-	$scope.pageMax   = 15;
-	$scope.page      = $scope.links.page;
-	$scope.pageCount = $scope.links.pageCount;
 	
 	// On page change, reload
 	$scope.pageChanged = function(newPage) {

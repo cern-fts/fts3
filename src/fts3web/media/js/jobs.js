@@ -11,11 +11,6 @@ function JobListCtrl($location, $scope, jobs, Job, Unique)
 		destinations: Unique('destinations'),
 		vos: Unique('vos')
 	}
-	
-	// Paginator	
-	$scope.pageMax   = 15;
-	$scope.page      = $scope.jobs.page;
-	$scope.pageCount = $scope.jobs.pageCount;
 
 	// On page change, reload
 	$scope.pageChanged = function(newPage) {
@@ -121,13 +116,9 @@ function JobViewCtrl($location, $scope, job, files, Job, Files)
 	$scope.itemPerPage = 50;
 	
 	$scope.job = job;
-
-	// We paginate the files
-	$scope.pageMax    = 15;
-	$scope.pageCount  = files.pageCount;
-	$scope.page       = files.page;
-	$scope.files      = files;
+	$scope.files = files;
 	
+	// On page change
 	$scope.pageChanged = function(newPage) {
 		$location.search('page', newPage);
 	}

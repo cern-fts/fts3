@@ -39,8 +39,8 @@
             ng-disabled="!job.states.NOT_USED">{{job.states.NOT_USED}} NOT_USED</button>
 </p>
 
-<pagination rotate="false" num-pages="pageCount" current-page="page"
-    max-size="pageMax" class="pagination" boundary-links="true"
+<pagination rotate="false" num-pages="files.pageCount" current-page="files.page"
+    max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>
 
 <table class="table">
@@ -122,3 +122,7 @@
         </tr>
     </tbody>
 </table>
+
+<pagination rotate="false" num-pages="files.pageCount" current-page="files.page"
+    max-size="15" class="pagination" boundary-links="true"
+    on-select-page="pageChanged(page)"></pagination>

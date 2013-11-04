@@ -1,9 +1,10 @@
+<h2>Staging</h2>
 <h3>
     Showing {{staging.startIndex}} to {{staging.endIndex}} out of {{staging.count}}
 </h3>
 
-<pagination rotate="false" num-pages="pageCount" current-page="page"
-    max-size="pageMax" class="pagination" boundary-links="true"
+<pagination rotate="false" num-pages="staging.pageCount" current-page="staging.page"
+    max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>
     
 <table class="table">
@@ -37,6 +38,6 @@
     </tbody>
 </table>
 
-<pagination rotate="false" num-pages="pageCount" current-page="page"
-    max-size="pageMax" class="pagination" boundary-links="true"
+<pagination rotate="false" num-pages="staging.pageCount" current-page="staging.page"
+    max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>
