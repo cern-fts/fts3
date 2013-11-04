@@ -21,11 +21,10 @@ class TestOverwrite(base.TestBase):
 			logging.info("Got job id %s" % jobId)
 			state = self.client.poll(jobId)
 			logging.info("Finished with %s" % state)
-			self.assertEqual('FINISHED', state)
+			self.assertEqual('FINISHED', state, 'job.state')
 
 
 
 if __name__ == '__main__':
 	import sys
 	sys.exit(TestOverwrite().run())
-

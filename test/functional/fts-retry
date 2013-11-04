@@ -20,12 +20,15 @@ class TestRetry(base.TestBase):
             logging.info("Got job id %s" % jobId)
             state = self.client.poll(jobId)
             logging.info("Finished with %s" % state)
-            self.assertEqual('FAILED', state)
+            self.assertEqual('FAILED', state, 'job.state')
 
             files = self.client.getFileInfo(jobId)
+            i = 0
             for pair in files.keys():
-                self.assertEqual('FAILED', files[pair]['state'])
-                self.assertEqual(0, int(files[pair]['retries']))
+                fileLabel = 'job.files[' + str(i) + ']'
+                self.assertEqual('FAILED', files[pair]['state'], fileLabel + '.state')
+                self.assertEqual(0, int(files[pair]['retries']), fileLabel + '.retries')
+                i += 1
 
 
     def test_retry(self):
@@ -41,13 +44,15 @@ class TestRetry(base.TestBase):
             logging.info("Got job id %s" % jobId)
             state = self.client.poll(jobId)
             logging.info("Finished with %s" % state)
-            self.assertEqual('FAILED', state)
+            self.assertEqual('FAILED', state, 'job.state')
 
             files = self.client.getFileInfo(jobId)
+            i = 0
             for pair in files.keys():
-                self.assertEqual('FAILED', files[pair]['state'])
-                self.assertEqual(1, int(files[pair]['retries']))
-
+                fileLabel = 'job.files[' + str(i) + ']'
+                self.assertEqual('FAILED', files[pair]['state'], fileLabel + '.state')
+                self.assertEqual(1, int(files[pair]['retries']), fileLabel + '.retries')
+                i += 1
 
 
 if __name__ == '__main__':

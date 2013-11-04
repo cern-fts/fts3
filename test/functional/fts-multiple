@@ -36,11 +36,14 @@ class TestMultiple(base.TestBase):
             logging.info("Got job id %s" % jobId)
             state = self.client.poll(jobId)
             logging.info("Job %s finished with %s" % (jobId, state))
-            self.assertEqual('FINISHED', state)
+            self.assertEqual('FINISHED', state, 'job.state')
 
             files = self.client.getFileInfo(jobId)
+            i = 0
             for pair in files.keys():
-                self.assertEqual('FINISHED', files[pair]['state'])
+                label = 'jobs.files[' + str(i) + '].state'
+                self.assertEqual('FINISHED', files[pair]['state'], label)
+                i += 1
     
 
     def test_multipleDirty(self):
@@ -67,14 +70,17 @@ class TestMultiple(base.TestBase):
             logging.info("Got job id %s" % jobId)
             state = self.client.poll(jobId)
             logging.info("Job %s finished with %s" % (jobId, state))
-            self.assertEqual('FINISHEDDIRTY', state)
+            self.assertEqual('FINISHEDDIRTY', state, 'job.state')
 
             files = self.client.getFileInfo(jobId)
+            i = 0
             for (src, dst) in files.keys():
+                label = 'jobs.files[' + str(i) + '].state'
                 if src in created:
-                    self.assertEqual('FINISHED', files[(src, dst)]['state'])
+                    self.assertEqual('FINISHED', files[(src, dst)]['state'], label)
                 else:
-                    self.assertEqual('FAILED', files[(src, dst)]['state'])
+                    self.assertEqual('FAILED', files[(src, dst)]['state'], label)
+                i += 1
 
 
 if __name__ == '__main__':

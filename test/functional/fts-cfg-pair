@@ -69,7 +69,8 @@ class TestCfgPair(base.TestBase):
             activeCount = states.count('ACTIVE') + states.count('READY')
             submittedCount = states.count('SUBMITTED')
             
-            self.assertEqual(len(transfers), terminalCount + activeCount + submittedCount)
+            totalCount = terminalCount + activeCount + submittedCount
+            self.assertEqual(len(transfers), totalCount, 'jobs.count()')
             # Saldy, this can not be really asserted, since limits are soft
             #self.assertLessEqualThan(activeCount, 1)
             logging.debug("%d submitted, %d active, %d terminal" % (submittedCount, activeCount, terminalCount))
@@ -101,7 +102,7 @@ class TestCfgPair(base.TestBase):
             states = self.transfer_and_poll(transfers)
             
             # They should have passed
-            self.assertEqual(len(transfers), states.count('FINISHED'))
+            self.assertEqual(len(transfers), states.count('FINISHED'), 'jobs.count("FINISHED")')
             
             # Reset
             self.resetConfig((srcSE, dstSE))
@@ -130,7 +131,7 @@ class TestCfgPair(base.TestBase):
             states = self.transfer_and_poll(transfers)
             
             # They should have passed
-            self.assertEqual(len(transfers), states.count('FAILED'))
+            self.assertEqual(len(transfers), states.count('FAILED'), 'jobs.count("FAILED")')
             
             # Reset
             self.resetConfig((srcSE, dstSE))

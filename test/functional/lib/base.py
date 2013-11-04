@@ -81,10 +81,16 @@ class TestBase():
         return nErrors
 
 
-    def assertEqual(self, expected, value):
+    def assertEqual(self, expected, value, label = None):
         if expected != value:
-            raise AssertionError("Expected '%s', got '%s'" % (str(expected), str(value)))
-        logging.info("Assertion '%s' == '%s' OK" % (str(expected), str(value)))
+            if label:
+                raise AssertionError("Expected '%s' == '%s', got '%s'" % (label, str(expected), str(value)))
+            else:
+                raise AssertionError("Expected '%s', got '%s'" % (str(expected), str(value)))
+        if label:
+            logging.info("Assertion '%s' == '%s' OK" % (label, str(value)))
+        else:
+            logging.info("Assertion '%s' == '%s' OK" % (str(expected), str(value)))
 
 
     def assertRaises(self, excType, method, *args, **kwargs):
@@ -97,14 +103,26 @@ class TestBase():
             logging.info("Exception '%s' raised as expected" % excType.__name__)
 
 
-    def assertLessEqualThan(self, value, limit):
+    def assertLessEqualThan(self, value, limit, label = None):
         if value > limit:
-            raise AssertionError("Expected <= %s, but %s is higher" % (str(limit), str(value)))
-        logging.info("Assertion %s <= %s OK" % (str(value), str(limit)))
+            if label:
+                raise AssertionError("Expected %s <= %s, but %s is higher" % (label, str(limit), str(value)))
+            else:
+                raise AssertionError("Expected <= %s, but %s is higher" % (str(limit), str(value)))
+        if label:
+            logging.info("Assertion %s <= %s OK" % (label, str(limit)))
+        else:
+            logging.info("Assertion %s <= %s OK" % (str(value), str(limit)))
 
 
-    def assertIn(self, expected, value):
+    def assertIn(self, expected, value, label = None):
         if value not in expected:
-            raise AssertionError("Expected a value in [%s], got %s" % (','.join(expected), str(value)))
-        logging.info("Assertion %s in [%s] OK" % (str(value), ','.join(expected)))
+            if label:
+                raise AssertionError("Expected '%s' in [%s], got %s" % (label, ','.join(expected), str(value)))
+            else:
+                raise AssertionError("Expected a value in [%s], got %s" % (','.join(expected), str(value)))
+        if label:
+            logging.info("Assertion '%s' in [%s] OK (%s)" % (label, ','.join(expected), str(value)))
+        else:
+            logging.info("Assertion '%s' in [%s] OK" % (str(value), ','.join(expected)))
 
