@@ -3516,13 +3516,14 @@ void OracleAPI::unblacklistSe(std::string se)
                 ;
             // set to null pending fields in respective files
             sql <<
-                " UPDATE t_file f, t_job j SET f.wait_timestamp = NULL, f.wait_timeout = NULL "
-                " WHERE f.job_id = j.job_id AND (f.source_se = :src OR f.dest_se = :dest) "
+                " UPDATE t_file f SET f.wait_timestamp = NULL, f.wait_timeout = NULL "
+                " WHERE (f.source_se = :src OR f.dest_se = :dest) "
                 "   AND f.file_state IN ('ACTIVE', 'READY', 'SUBMITTED') "
                 "   AND NOT EXISTS ( "
                 "       SELECT NULL "
-                "       FROM t_bad_dns "
-                "       WHERE dn = j.user_dn AND (status = 'WAIT' OR status = 'WAIT_AS')"
+                "       FROM t_bad_dns, t_job "
+                "       WHERE t_job.job_id = f.job_id and t_bad_dns.dn = t_job.user_dn AND "
+                "             (t_bad_dns.status = 'WAIT' OR t_bad_dns.status = 'WAIT_AS')"
                 "   )",
                 soci::use(se),
                 soci::use(se)
@@ -3601,7 +3602,7 @@ bool OracleAPI::allowSubmitForBlacklistedSe(std::string se)
     bool ret = false;
     try
         {
-            sql << "SELECT se FROM t_bad_ses WHERE se = :se AND status = 'WAIT_AS'", soci::use(se);
+            sql << "SELECT se FROM t_bad_ses WHERE se = :se AND status = 'WAIT_AS'", soci::use(se), soci::into(se);
             ret = sql.got_data();
         }
     catch (std::exception& e)
