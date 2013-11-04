@@ -50,6 +50,13 @@
                     <li>TCP Buffer Size: {{ link.tcp_buffer_size }}</li>
                     <li>Number of streams: {{ link.nostreams }}</li>
                     <li>Timeout: {{ link.urlcopy_tx_to }}</li>
+                    <li>Shares:
+                        <ul>
+                            <li ng-repeat="(vo, active) in link.shares">
+                                {{ vo }}: {{ active }}
+                            </li>
+                        </ul>
+                    </li>
                 </ul>
             </td>
         </tr>

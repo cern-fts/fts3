@@ -35,6 +35,25 @@ def audit(httpRequest):
 def server(httpRequest):
     return ServerConfig.objects.all()[0]
 
+
+# Wrap a list of link config, and push the
+# vo shares on demand (lazy!)
+class AppendShares:
+    
+    def __init__(self, resultSet):
+        self.rs = resultSet
+        
+    def __len__(self):
+        return len(self.rs)
+    
+    def __getitem__(self, i):
+        for link in self.rs[i]:
+            shares = ShareConfig.objects.filter(source = link.source, destination = link.destination).all()
+            link.shares = {}
+            for share in shares:
+                link.shares[share.vo] = share.active
+            yield link
+
 @jsonify_paged
 def links(httpRequest):
     links = LinkConfig.objects
@@ -44,4 +63,4 @@ def links(httpRequest):
     if httpRequest.GET.get('dest_se'):
         links = links.filter(destination = httpRequest.GET['dest_se'])
     
-    return links.all()
+    return AppendShares(links.all())
