@@ -1,2 +1,0 @@
-gsiftp://lpsc-se-dpm-server.in2p3.fr/dpm/in2p3.fr/home/dteam/test-hop-source gsiftp://hepgrid11.ph.liv.ac.uk/dpm/ph.liv.ac.uk/home/dteam/test-hop-01
-gsiftp://hepgrid11.ph.liv.ac.uk/dpm/ph.liv.ac.uk/home/dteam/test-hop-01 gsiftp://hepgrid11.ph.liv.ac.uk/dpm/ph.liv.ac.uk/home/dteam/test-hop-02

@@ -1,41 +1,23 @@
 import config
+import copy
 from urlparse import urlparse
 
 
-
-def groupStorageByProtocol(areas):
-	"""
-	From the configured areas, generates a dictionary where the urls are
-	grouped by protocol
-	"""
-	byProtocol = {}
-	for area in areas:
-		url = urlparse(area)
-		if url.scheme not in byProtocol:
-			byProtocol[url.scheme] = []
-		byProtocol[url.scheme].append(area % config.StorageParametrization)
-	return byProtocol
-
-
-
 def getStoragePairs():
-	"""
-	From the configured areas, generates a list of pairs with the same
-	protocol.
-	"""
-	byProtocol = groupStorageByProtocol(config.StorageAreas)
-	pairs = []
-	for (protocol, areas) in byProtocol.iteritems():
-		for source in areas:
-			for destination in [a for a in areas if a != source]:
-				pairs.append((source, destination))
-
-	return pairs
+    """
+    From the configured areas, generates a list of pairs
+    """
+    pairs = []
+    for (src, dst) in config.StorageAreaPairs:
+        src = src % config.StorageParametrization
+        dst = dst % config.StorageParametrization
+        pairs.append((src, dst))
+    return pairs
 
 
 def getStorageElement(surl):
-	"""
-	Return only the relevant part for the configuration from the surl
-	"""
-	parsed = urlparse(surl)
-	return "%s://%s" % (parsed.scheme, parsed.hostname)
+    """
+    Return only the relevant part for the configuration from the surl
+    """
+    parsed = urlparse(surl)
+    return "%s://%s" % (parsed.scheme, parsed.hostname)

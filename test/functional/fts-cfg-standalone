@@ -30,8 +30,8 @@ class TestCfgStandAlone(base.TestBase):
 
     def resetConfig(self, se):
         config = self.configuration[se]
-        before = config['before']
-        after  = config['after']
+        before = config.get('before', None)
+        after  = config.get('after', None)
         if before:
             logging.info("Restoring configuration for " + se)
             self.client.setConfig(before)

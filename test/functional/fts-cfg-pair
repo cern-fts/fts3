@@ -25,11 +25,12 @@ class TestCfgPair(base.TestBase):
             
             logging.info("Recovering current configuration for %s => %s" % (srcSE, dstSE))
             self.configuration[(srcSE, dstSE)] = {'before': self.client.getConfig(srcSE)}
-            
+
+
     def resetConfig(self, pair):
         config = self.configuration[pair]
-        before = config['before']
-        after  = config['after']
+        before = config.get('before', None)
+        after  = config.get('after', None)
         if before:
             logging.info("Restoring configuration for %s => %s" % pair)
             self.client.setConfig(before)
