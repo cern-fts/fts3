@@ -141,3 +141,24 @@ class Cli:
             logging.error(proc.stdout.read())
             logging.error(proc.stderr.read())
             raise Exception("fts-config-del failed with exit code %d" % rcode)
+
+
+    def banSe(self, se):
+        cmdArray = ['fts-set-blacklist', '-s', config.Fts3Endpoint, 'se', se, 'ON']
+        logging.debug("Spawning %s" % ' '.join(cmdArray))
+        proc = subprocess.Popen(cmdArray, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        rcode = proc.wait()
+        if rcode != 0:
+            logging.error(proc.stdout.read())
+            logging.error(proc.stderr.read())
+            raise Exception("fts-set-blacklist failed with exit code %d" % rcode)
+
+    def unbanSe(self, se):
+        cmdArray = ['fts-set-blacklist', '-s', config.Fts3Endpoint, 'se', se, 'OFF']
+        logging.debug("Spawning %s" % ' '.join(cmdArray))
+        proc = subprocess.Popen(cmdArray, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        rcode = proc.wait()
+        if rcode != 0:
+            logging.error(proc.stdout.read())
+            logging.error(proc.stderr.read())
+            raise Exception("fts-set-blacklist failed with exit code %d" % rcode)
