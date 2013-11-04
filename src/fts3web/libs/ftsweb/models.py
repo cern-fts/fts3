@@ -152,6 +152,50 @@ class  ConfigAudit(models.Model):
                self.config == b.config and self.action == b.action
 
 
+class ServerConfig(models.Model):
+    # Same thing: composite primary keys not supported
+    retry          = models.IntegerField(primary_key = True)
+    max_time_queue = models.IntegerField()
+    
+    class Meta:
+        db_table = 't_server_config'
+
+
+class LinkConfig(models.Model):
+    source            = models.CharField(max_length = 255, primary_key = True)
+    destination       = models.CharField(max_length = 255)
+    state             = models.CharField(max_length = 30)
+    symbolicName      = models.CharField(max_length = 255)
+    nostreams         = models.IntegerField()
+    tcp_buffer_size   = models.IntegerField()
+    urlcopy_tx_to     = models.IntegerField()
+    auto_tuning       = models.CharField(max_length = 3)
+    
+    def __eq__(self, b):
+        return isinstance(b, self.__class__) and \
+               self.source == b.source and \
+               self.destination == b.destination
+    
+    class Meta:
+        db_table = 't_link_config'
+
+
+class ShareConfig(models.Model):
+    source      = models.CharField(max_length = 255, primary_key = True)
+    destination = models.CharField(max_length = 255)
+    vo          = models.CharField(max_length = 100)
+    active      = models.IntegerField()
+    
+    def __eq__(self, b):
+        return isinstance(b, self.__class__) and \
+               self.source == b.source and \
+               self.destination == b.destination and \
+               self.vo == b.vo
+    
+    class Meta:
+        db_table = 't_share_config'
+
+
 class Optimize(models.Model):
     file_id    = models.IntegerField(primary_key = True)
     source_se  = models.CharField(max_length = 255)

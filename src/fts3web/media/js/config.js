@@ -1,5 +1,5 @@
 
-function ConfigCtrl($location, $scope, config, Configuration)
+function ConfigAuditCtrl($location, $scope, config, ConfigAudit)
 {
 	$scope.config = config;
 	
@@ -40,17 +40,62 @@ function ConfigCtrl($location, $scope, config, Configuration)
 	});
 }
 
-ConfigCtrl.resolve = {
-	config: function ($rootScope, $location, $route, $q, Configuration) {
+ConfigAuditCtrl.resolve = {
+	config: function ($rootScope, $location, $route, $q, ConfigAudit) {
     	loading($rootScope);
     	
     	var deferred = $q.defer();
 
-    	Configuration.query($location.search(), function(data) {
+    	ConfigAudit.query($location.search(), function(data) {
     		deferred.resolve(data);
     		stopLoading($rootScope);
     	});
     	
     	return deferred.promise;
+	}
+}
+
+
+function ConfigStatusCtrl($location, $scope, server, links)
+{
+	$scope.server = server;
+	$scope.links = links;
+	
+	// Paginator	
+	$scope.pageMax   = 15;
+	$scope.page      = $scope.links.page;
+	$scope.pageCount = $scope.links.pageCount;
+	
+	// On page change, reload
+	$scope.pageChanged = function(newPage) {
+		$location.search('page', newPage);
+	};
+}
+
+ConfigStatusCtrl.resolve = {
+	server: function ($rootScope, $location, $route, $q, ConfigServer) {
+		loading($rootScope);
+		
+		var deferred = $q.defer();
+		
+		ConfigServer.all(function(data) {
+			deferred.resolve(data);
+			stopLoading($rootScope);
+		});
+		
+		return deferred.promise;
+	},
+	
+	links: function($rootScope, $location, $route, $q, ConfigLinks) {
+		loading($rootScope);
+		
+		var deferred = $q.defer();
+		
+		ConfigLinks.query($location.search(), function(data) {
+			deferred.resolve(data);
+			stopLoading($rootScope);
+		});
+		
+		return deferred.promise;
 	}
 }

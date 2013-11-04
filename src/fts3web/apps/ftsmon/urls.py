@@ -26,7 +26,10 @@ urlpatterns = patterns('ftsmon.views',
     url(r'^jobs/(?P<jobId>[a-fA-F0-9\-]+)/files$', 'jobs.jobFiles'),
     url(r'^transfers$', 'jobs.transferList'),
     url(r'^staging', 'jobs.staging'),
-    url(r'^configuration$', 'configaudit.configurationAudit'),
+    
+    url(r'^config/audit$', 'config.audit'),
+    url(r'^config/links$', 'config.links'),
+    url(r'^config/server$', 'config.server'),
     
     url(r'^stats$', 'statistics.overview'),
     url(r'^stats/servers$', 'statistics.servers'),

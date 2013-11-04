@@ -39,9 +39,12 @@ config(function($routeProvider) {
 	                                   controller:  FilesWithErrorCtrl,
 		                               resolve:     FilesWithErrorCtrl.resolve}).
 		                      
-        when('/configaudit',          {templateUrl: STATIC_ROOT + 'html/config.html',
-		                               controller:  ConfigCtrl,
-			                           resolve:     ConfigCtrl.resolve}).
+        when('/config/audit',         {templateUrl: STATIC_ROOT + 'html/config/audit.html',
+		                               controller:  ConfigAuditCtrl,
+			                           resolve:     ConfigAuditCtrl.resolve}).
+	    when('/config/status',        {templateUrl: STATIC_ROOT + 'html/config/status.html',
+	    	                           controller:  ConfigStatusCtrl,
+	    	                           resolve:     ConfigStatusCtrl.resolve}).
 			                  
         when('/statistics/overview',  {templateUrl: STATIC_ROOT + 'html/statistics/overview.html',
 			                           controller:  StatsOverviewCtrl,

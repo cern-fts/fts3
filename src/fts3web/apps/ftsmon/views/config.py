@@ -15,11 +15,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from ftsweb.models import ConfigAudit
-from ftsweb.models import ProfilingSnapshot, ProfilingInfo
+from ftsweb.models import ProfilingSnapshot, ServerConfig, LinkConfig, ShareConfig
 from jsonify import jsonify, jsonify_paged
 
 @jsonify_paged
-def configurationAudit(httpRequest):
+def audit(httpRequest):
     ca = ConfigAudit.objects
     
     if httpRequest.GET.get('action', None):
@@ -30,3 +30,18 @@ def configurationAudit(httpRequest):
         ca = ca.filter(config__icontains = httpRequest.GET['contains'])
     
     return ca.order_by('-datetime')
+
+@jsonify
+def server(httpRequest):
+    return ServerConfig.objects.all()[0]
+
+@jsonify_paged
+def links(httpRequest):
+    links = LinkConfig.objects
+    
+    if httpRequest.GET.get('source_se'):
+        links = links.filter(source = httpRequest.GET['source_se'])
+    if httpRequest.GET.get('dest_se'):
+        links = links.filter(destination = httpRequest.GET['dest_se'])
+    
+    return links.all()

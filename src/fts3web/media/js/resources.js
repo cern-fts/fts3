@@ -57,8 +57,8 @@ angular.module('ftsmon.resources', ['ngResource'])
 		query: {method: 'GET', isArray: false}
 	})
 })
-.factory('Configuration', function($resource) {
-	return $resource('configuration', {}, {
+.factory('ConfigAudit', function($resource) {
+	return $resource('config/audit', {}, {
 		query: {method: 'GET', isArray: false}
 	})
 })
@@ -94,5 +94,15 @@ angular.module('ftsmon.resources', ['ngResource'])
 			});
 		return deferred.promise;
 	}
+})
+.factory('ConfigServer', function($resource) {
+	return $resource('config/server', {}, {
+		all: {method: 'GET', isArray: false}
+	})
+})
+.factory('ConfigLinks', function($resource) {
+	return $resource('config/links', {}, {
+		query: {method: 'GET', isArray: false}
+	})
 })
 ;
