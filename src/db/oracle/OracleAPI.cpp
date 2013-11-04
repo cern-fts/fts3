@@ -1772,7 +1772,7 @@ void OracleAPI::cancelJob(std::vector<std::string>& requestIDs)
                     for (soci::rowset<soci::row>::const_iterator i2 = rs.begin(); i2 != rs.end(); ++i2)
                         {
                             soci::row const& row = *i2;
-                            int pid = row.get<int>("PID");
+                            int pid = static_cast<int>(row.get<long long>("PID"));
                             kill(pid, SIGTERM);
                         }
 
