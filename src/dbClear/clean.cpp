@@ -82,27 +82,53 @@ int main(int argc, char** argv)
                 }
 
             FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv);
-
+	    
             int d = daemon(0,0);
             if(d < 0)
                 std::cerr << "Can't set daemon, will continue attached to tty" << std::endl;
+
+            std::string logDir = theServerConfig().get<std::string > ("TransferLogDirectory");
+            if (logDir.length() > 0)
+                {
+                    logDir += "/fts3server.log";
+                    int filedesc = open(logDir.c_str(), O_CREAT | O_WRONLY | O_APPEND, 0644);
+                    if (filedesc != -1)   //if ok
+                        {
+                            close(filedesc);
+                            FILE* freopenLogFile = freopen(logDir.c_str(), "a", stderr);
+                            if (freopenLogFile == NULL)
+                                {
+                                    std::cerr << "fts3 server failed to open log file, errno is:" << strerror(errno) << std::endl;
+                                    exit(1);
+                                }
+                        }
+                    else
+                        {
+                            std::cerr << "fts3 server failed to open log file, errno is:" << strerror(errno) << std::endl;
+                            exit(1);
+                        }
+                }
+
 
             fts3_initialize_db_backend();
 
             std::string cleanRecordsHost = theServerConfig().get<std::string>("CleanRecordsHost");
 
+
+	    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Backup starting" << commit;
             if(cleanRecordsHost.compare("true")==0)
                 db::DBSingleton::instance().getDBObjectInstance()->backup();
+	    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Backup ending" << commit;		
 
         }
     catch (Err& e)
         {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Fatal error, exiting... " << e.what() << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Backup fatal error, exiting... " << e.what() << commit;
             return EXIT_FAILURE;
         }
     catch (...)
         {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Fatal error (unknown origin), exiting..." << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Backup fatal error (unknown origin), exiting..." << commit;
             return EXIT_FAILURE;
         }
 
