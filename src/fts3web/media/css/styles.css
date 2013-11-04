@@ -104,3 +104,49 @@ td.SUBMITTED, .SUBMITTED {
 .orderby {
     cursor: pointer;
 }
+
+/* Config audit */
+tr.blacklist td:nth-child(1) {
+	background: black;
+	color: white;
+}
+
+tr.update td:nth-child(1) {
+    background: #006dcc;
+    color: white;
+}
+
+tr.insert td:nth-child(1) {
+    background: #5bb75b;
+    color: white;
+}
+
+tr.delete td:nth-child(1) {
+    background: #bd362f;
+    color: white;
+}
+
+tr.debug td:nth-child(1) {
+    background: #999999;
+    color: white;
+}
+
+tr.retry td:nth-child(1) {
+    background: #2f96b4;
+    color: white;
+}
+
+tr.queue-timeout td:nth-child(1) {
+    background: #2f96b4;
+    color: white;
+}
+
+tr.drain td:nth-child(1) {
+    background: #2f96b4;
+    color: white;
+}
+
+tr.optimizer td:nth-child(1) {
+    background: #2f96b4;
+    color: white;
+}

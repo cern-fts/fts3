@@ -10,14 +10,14 @@
 <table class="table">
     <thead>
         <tr>
-            <th style="width: 10%">Action</th>
+            <th style="width: 7%">Action</th>
             <th style="width: 45%">Configuration</th>
             <th style="width: 15%">Time</th>
-            <th style="width: 30%">User</th>
+            <th style="width: 33%">User</th>
         </tr>
     </thead>
     <tbody>
-        <tr ng-repeat="c in config.items" ng-class-odd="'odd'">
+        <tr ng-repeat="c in config.items" ng-class-odd="'odd'" ng-class="c.action">
             <td>{{c.action}}</td>
             <td>{{c.config}}</td>
             <td>{{c.datetime}}</td>
