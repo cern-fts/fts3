@@ -10,6 +10,17 @@ import time
 
 
 class Cli:
+    
+    def _spawn(self, cmdArray):
+        logging.debug("Spawning %s" % ' '.join(cmdArray))
+        proc = subprocess.Popen(cmdArray, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        rcode = proc.wait()
+        if rcode != 0:
+            logging.error(proc.stdout.read())
+            logging.error(proc.stderr.read())
+            raise Exception("%s failed with exit code %d" % (cmdArray[0], rcode))
+        return proc.stdout.read().strip()
+
 
     def submit(self, transfers, extraArgs = []):
         """
@@ -34,31 +45,14 @@ class Cli:
                     '-s', config.Fts3Endpoint,
                     '--job-metadata', label, 
                     '--new-bulk-format', '-f', submission.name] + extraArgs
-        logging.debug("Spawning %s" % ' '.join(cmdArray))
-        proc = subprocess.Popen(cmdArray, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-        rcode = proc.wait()
-        if rcode != 0:
-            logging.error(proc.stdout.read())
-            logging.error(proc.stderr.read())
-            raise Exception("fts-transfer-submit failed with exit code %d" % rcode)
-        jobId = proc.stdout.read().strip()
-
+        jobId = self._spawn(cmdArray)
         os.unlink(submission.name)
-
         return jobId
 
 
     def getJobState(self, jobId):
         cmdArray = ['fts-transfer-status', '-s', config.Fts3Endpoint, jobId]
-        logging.debug("Spawning %s" % ' '.join(cmdArray))
-        proc = subprocess.Popen(cmdArray, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-        rcode = proc.wait()
-        if rcode != 0:
-            logging.error(proc.stdout.read())
-            logging.error(proc.stderr.read())
-            raise Exception("fts-transfer-status failed with exit code %d" % rcode)
-        state = proc.stdout.read().strip()
-        return state
+        return self._spawn(cmdArray)
 
 
     def poll(self, jobId):
@@ -79,27 +73,14 @@ class Cli:
 
     def cancel(self, jobId):
         cmdArray = ['fts-transfer-cancel', '-s', config.Fts3Endpoint, jobId]
-        logging.debug("Spawning %s" % ' '.join(cmdArray))
-        proc = subprocess.Popen(cmdArray, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-        rcode = proc.wait()
-        if rcode != 0:
-            logging.error(proc.stdout.read())
-            logging.error(proc.stderr.read())
-            raise Exception("fts-transfer-cancel failed with exit code %d" % rcode)
+        self._spawn(cmdArray)
 
 
     def getFileInfo(self, jobId):
         cmdArray = ['fts-transfer-status', '-s', config.Fts3Endpoint, 
                     '--json', '-l', jobId]
-        logging.debug("Spawning %s" % ' '.join(cmdArray))
-        proc = subprocess.Popen(cmdArray, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-        rcode = proc.wait()
-        if rcode != 0:
-            logging.error(proc.stdout.read())
-            logging.error(proc.stderr.read())
-            raise Exception("fts-transfer-status failed with exit code %d" % rcode)
-        jsonDetailedState = proc.stdout.read().strip()
-        detailedState = json.loads(jsonDetailedState)
+        out = self._spawn(cmdArray)
+        detailedState = json.loads(out)
         fileStates = detailedState['job'][0]['files']
         pairDict = {}
         for f in fileStates:
@@ -113,52 +94,24 @@ class Cli:
         cmdArray = ['fts-config-get', '-s', config.Fts3Endpoint, sourceSE]
         if destSE:
             cmdArray.append(destSE)
-        logging.debug("Spawning %s" % ' '.join(cmdArray))
-        proc = subprocess.Popen(cmdArray, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-        rcode = proc.wait()
-        if rcode != 0:
-            return None
-        return json.loads(proc.stdout.read().strip())
+        return json.loads(self._spawn(cmdArray))
 
 
     def setConfig(self, cfg):
         cmdArray = ['fts-config-set', '-s', config.Fts3Endpoint, "'" + json.dumps(cfg) + "'"]
-        logging.debug("Spawning %s" % ' '.join(cmdArray))
-        proc = subprocess.Popen(cmdArray, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-        rcode = proc.wait()
-        if rcode != 0:
-            logging.error(proc.stdout.read())
-            logging.error(proc.stderr.read())
-            raise Exception("fts-config-set failed with exit code %d" % rcode)
+        self._spawn(cmdArray)
 
 
     def delConfig(self, cfg):
         cmdArray = ['fts-config-del', '-s', config.Fts3Endpoint, "'" + json.dumps(cfg) + "'"]
-        logging.debug("Spawning %s" % ' '.join(cmdArray))
-        proc = subprocess.Popen(cmdArray, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-        rcode = proc.wait()
-        if rcode != 0:
-            logging.error(proc.stdout.read())
-            logging.error(proc.stderr.read())
-            raise Exception("fts-config-del failed with exit code %d" % rcode)
+        self._spawn(cmdArray)
 
 
     def banSe(self, se):
         cmdArray = ['fts-set-blacklist', '-s', config.Fts3Endpoint, 'se', se, 'ON']
-        logging.debug("Spawning %s" % ' '.join(cmdArray))
-        proc = subprocess.Popen(cmdArray, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-        rcode = proc.wait()
-        if rcode != 0:
-            logging.error(proc.stdout.read())
-            logging.error(proc.stderr.read())
-            raise Exception("fts-set-blacklist failed with exit code %d" % rcode)
+        self._spawn(cmdArray)
+
 
     def unbanSe(self, se):
         cmdArray = ['fts-set-blacklist', '-s', config.Fts3Endpoint, 'se', se, 'OFF']
-        logging.debug("Spawning %s" % ' '.join(cmdArray))
-        proc = subprocess.Popen(cmdArray, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-        rcode = proc.wait()
-        if rcode != 0:
-            logging.error(proc.stdout.read())
-            logging.error(proc.stderr.read())
-            raise Exception("fts-set-blacklist failed with exit code %d" % rcode)
+        self._spawn(cmdArray)
