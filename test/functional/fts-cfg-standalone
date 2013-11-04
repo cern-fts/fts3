@@ -91,7 +91,7 @@ class TestCfgStandAlone(base.TestBase):
                 'se': dstSE,
                 'active': True,
                 'in': {
-                   'share': [{'dteam': 1}],
+                   'share': [{self.voName: 1}],
                    'protocol': 'auto'
                 },
                 'out': {
@@ -127,7 +127,7 @@ class TestCfgStandAlone(base.TestBase):
                 'se': srcSE,
                 'active': True,
                 'out': {
-                   'share': [{'dteam': 1}],
+                   'share': [{self.voName: 1}],
                    'protocol': 'auto'
                 },
                 'in': {
@@ -163,7 +163,7 @@ class TestCfgStandAlone(base.TestBase):
                 'se': dstSE,
                 'active': True,
                 'in': {
-                   'share': [{'dteam': 0}],
+                   'share': [{self.voName: 0}],
                    'protocol': 'auto'
                 },
                 'out': {
@@ -198,7 +198,7 @@ class TestCfgStandAlone(base.TestBase):
                 'se': srcSE,
                 'active': True,
                 'out': {
-                   'share': [{'dteam': 0}],
+                   'share': [{self.voName: 0}],
                    'protocol': 'auto'
                 },
                 'in': {
