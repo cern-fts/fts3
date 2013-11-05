@@ -125,18 +125,14 @@ vector<string> ConfigurationHandler::get()
             // check if it's a group or a SE
             if (db->checkGroupExists(*it))
                 {
-                    cfg.reset(
-                        new StandaloneGrCfg(dn, se)
-                    );
+            		StandaloneGrCfg cfg(dn, se);
+            		ret.push_back(cfg.json());
                 }
             else
                 {
-                    cfg.reset(
-                        new StandaloneSeCfg(dn, se)
-                    );
+            		StandaloneSeCfg cfg(dn, se);
+            		ret.push_back(cfg.json());
                 }
-
-            ret.push_back(cfg->json());
         }
     // get all share only configurations
     vector<string> socfgs = db->getAllShareOnlyCfgs();
@@ -147,11 +143,8 @@ vector<string> ConfigurationHandler::get()
             string se = *it;
             // if it's a wildcard change it to 'any', due to the convention
             if (se == Configuration::wildcard) se = Configuration::any;
-            // check if it's a group or a SE
-            cfg.reset(
-                new ShareOnlyCfg(dn, se)
-            );
-            ret.push_back(cfg->json());
+            ShareOnlyCfg cfg(dn, se);
+            ret.push_back(cfg.json());
         }
     // get all pair configuration (source-destination pairs only)
     vector< std::pair<string, string> > paircfgs = db->getAllPairCfgs();
@@ -164,19 +157,25 @@ vector<string> ConfigurationHandler::get()
 
             if (grPair)
                 {
-                    cfg.reset(
-                        new GrPairCfg(dn, it2->first, it2->second)
-                    );
+            		GrPairCfg cfg(dn, it2->first, it2->second);
+                    ret.push_back(cfg.json());
                 }
             else
                 {
-                    cfg.reset(
-                        new SePairCfg(dn, it2->first, it2->second)
-                    );
+            		SePairCfg cfg(dn, it2->first, it2->second);
+            		ret.push_back(cfg.json());
                 }
-
-            ret.push_back(cfg->json());
         }
+
+    // get all activity configs ...
+    vector<string> activityshares = db->getAllActivityShareConf();
+    vector<string>::iterator it3;
+
+    for (it3 = activityshares.begin(); it3 != activityshares.end(); it3++)
+    	{
+    		ActivityCfg cfg(dn, *it3);
+    		ret.push_back(cfg.json());
+    	}
 
     return ret;
 }

@@ -676,6 +676,12 @@ std::vector< std::pair<std::string, std::string> > ProfiledDB::getPairsForSe(std
 }
 
 
+std::vector<std::string> ProfiledDB::getAllActivityShareConf()
+{
+    PROFILE_PREFIXED("DB::", return db->getAllActivityShareConf());
+}
+
+
 std::vector<std::string> ProfiledDB::getAllStandAlloneCfgs()
 {
     PROFILE_PREFIXED("DB::", return db->getAllStandAlloneCfgs());

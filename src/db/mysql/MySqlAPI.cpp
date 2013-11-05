@@ -294,6 +294,34 @@ std::map<std::string, double> MySqlAPI::getActivityShareConf(soci::session& sql,
     return ret;
 }
 
+std::vector<std::string> MySqlAPI::getAllActivityShareConf()
+{
+    soci::session sql(*connectionPool);
+
+    std::vector<std::string> ret;
+
+    try
+        {
+            soci::rowset<soci::row> rs = (
+                                             sql.prepare <<
+                                             " SELECT vo "
+                                             " FROM t_activity_share_config "
+                                         );
+
+            soci::rowset<soci::row>::const_iterator it;
+            for (it = rs.begin(); it != rs.end(); it++)
+                {
+            		ret.push_back(it->get<std::string>("vo"));
+                }
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+
+    return ret;
+}
+
 std::map<std::string, long long> MySqlAPI::getActivitiesInQueue(soci::session& sql, std::string src, std::string dst, std::string vo)
 {
     std::map<std::string, long long> ret;

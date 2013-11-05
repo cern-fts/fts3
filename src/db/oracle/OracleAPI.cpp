@@ -261,6 +261,34 @@ std::map<std::string, double> OracleAPI::getActivityShareConf(soci::session& sql
     return ret;
 }
 
+std::vector<std::string> OracleAPI::getAllActivityShareConf()
+{
+    soci::session sql(*connectionPool);
+
+    std::vector<std::string> ret;
+
+    try
+        {
+            soci::rowset<soci::row> rs = (
+                                             sql.prepare <<
+                                             " SELECT vo "
+                                             " FROM t_activity_share_config "
+                                         );
+
+            soci::rowset<soci::row>::const_iterator it;
+            for (it = rs.begin(); it != rs.end(); it++)
+                {
+            		ret.push_back(it->get<std::string>("vo"));
+                }
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+
+    return ret;
+}
+
 std::map<std::string, long long> OracleAPI::getActivitiesInQueue(soci::session& sql, std::string src, std::string dst, std::string vo)
 {
     std::map<std::string, long long> ret;
@@ -276,17 +304,13 @@ std::map<std::string, long long> OracleAPI::getActivitiesInQueue(soci::session& 
                                              " SELECT activity, COUNT(DISTINCT f.job_id, file_index) AS count "
                                              " FROM t_job j, t_file f "
                                              " WHERE j.job_id = f.job_id AND j.vo_name = f.vo_name AND f.file_state = 'SUBMITTED' AND "
-                                             "  f.source_se = :source AND f.dest_se = :dest AND "
-                                             "  f.vo_name = :vo_name AND "
-                                             "  f.wait_timestamp IS NULL AND "
-                                             "  (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
-                                             "  (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
-                                             "  EXISTS ( "
-                                             "      SELECT NULL FROM t_job j1 "
-                                             "      WHERE j.job_id = j1.job_id AND j1.job_state in ('ACTIVE','READY','SUBMITTED') AND "
-                                             "          (j1.reuse_job = 'N' OR j1.reuse_job IS NULL) AND j1.vo_name=:vo_name "
-                                             "      ORDER BY j1.priority DESC, j1.submit_time "
-                                             "  ) "
+                                             "	f.source_se = :source AND f.dest_se = :dest AND "
+                                             "	f.vo_name = :vo_name AND "
+                                             "	f.wait_timestamp IS NULL AND "
+                                             "	(f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
+                                             "	(f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
+                                             "  j.job_state in ('ACTIVE','READY','SUBMITTED') AND "
+                                             "  (j.reuse_job = 'N' OR j.reuse_job IS NULL) "
                                              " GROUP BY activity ",
                                              soci::use(src),
                                              soci::use(dst),

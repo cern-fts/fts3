@@ -346,6 +346,8 @@ public:
 
     std::map<std::string, double> getActivityShareConf(soci::session& sql, std::string vo);
 
+    virtual std::vector<std::string> getAllActivityShareConf();
+
     std::map<std::string, long long> getActivitiesInQueue(soci::session& sql, std::string src, std::string dst, std::string vo);
 
     std::map<std::string, int> getFilesNumPerActivity(soci::session& sql, std::string src, std::string dst, std::string vo, int filesNum);

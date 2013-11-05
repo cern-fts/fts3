@@ -311,6 +311,8 @@ public:
 
     virtual std::vector< std::pair<std::string, std::string> > getPairsForSe(std::string se) = 0;
 
+    virtual std::vector<std::string> getAllActivityShareConf() = 0;
+
     virtual std::vector<std::string> getAllStandAlloneCfgs() = 0;
 
     virtual std::vector<std::string> getAllShareOnlyCfgs() = 0;
