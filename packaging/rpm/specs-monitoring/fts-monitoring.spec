@@ -25,6 +25,9 @@ including the queue with submitted transfer-jobs,
 the active, failed and finished transfers, as well
 as some statistics (e.g. success rate)
 
+%post
+service httpd condrestart
+
 %package selinux
 Summary:		SELinux support for fts-monitoring
 Group:			Applications/Internet
