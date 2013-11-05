@@ -3296,9 +3296,12 @@ void OracleAPI::revertToSubmitted()
 
 
 
-void OracleAPI::backup()
+void OracleAPI::backup(long* nJobs, long* nFiles)
 {
     soci::session sql(*connectionPool);
+
+    *nJobs = 0;
+    *nFiles = 0;
 
     try
         {
@@ -3315,12 +3318,15 @@ void OracleAPI::backup()
 
             sql << "insert into t_file_backup select * from t_file where job_id IN (select job_id from t_job_backup)";
 
-            sql << "delete from t_file where file_id in (select file_id from t_file_backup)";
+            soci::statement delFilesStmt = (sql.prepare << "delete from t_file where file_id in (select file_id from t_file_backup)");
+            delFilesStmt.execute(true);
+            *nFiles = delFilesStmt.get_affected_rows();
 
-            sql << "delete from t_job where job_id in (select job_id from t_job_backup)";
+            soci::statement delJobsStmt = (sql.prepare << "delete from t_job where job_id in (select job_id from t_job_backup)");
+            delJobsStmt.execute(true);
+            *nJobs = delJobsStmt.get_affected_rows();
 
             sql.commit();
-
         }
     catch (std::exception& e)
         {

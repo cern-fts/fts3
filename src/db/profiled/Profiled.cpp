@@ -309,9 +309,9 @@ void ProfiledDB::revertToSubmitted()
 }
 
 
-void ProfiledDB::backup()
+void ProfiledDB::backup(long* nJobs, long* nFiles)
 {
-    PROFILE_PREFIXED("DB::", db->backup());
+    PROFILE_PREFIXED("DB::", db->backup(nJobs, nFiles));
 }
 
 

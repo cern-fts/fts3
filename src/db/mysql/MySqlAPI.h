@@ -161,7 +161,7 @@ public:
 
     virtual void revertToSubmitted();
 
-    virtual void backup();
+    virtual void backup(long* nJobs, long* nFiles);
 
     virtual void forkFailedRevertState(const std::string & jobId, int fileId);
 

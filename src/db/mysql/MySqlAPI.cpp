@@ -3303,10 +3303,12 @@ void MySqlAPI::revertToSubmitted()
 
 
 
-void MySqlAPI::backup()
+void MySqlAPI::backup(long* nJobs, long* nFiles)
 {
     soci::session sql(*connectionPool);
-    int count = 0;
+
+    *nJobs = 0;
+    *nFiles = 0;
 
     try
         {
@@ -3331,19 +3333,27 @@ void MySqlAPI::backup()
                                              "      job_state IN ('FINISHED', 'FAILED', 'CANCELED', 'FINISHEDDIRTY') "
                                          );
 
+            std::string job_id;
+            soci::statement delFilesStmt = (sql.prepare << "DELETE FROM t_file WHERE job_id = :job_id", soci::use(job_id));
+            soci::statement delJobsStmt = (sql.prepare << "DELETE FROM t_job WHERE job_id = :job_id", soci::use(job_id));
+
+            int count = 0;
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
                     count++;
                     soci::row const& r = *i;
-                    std::string job_id = r.get<std::string>("job_id");
+                    job_id = r.get<std::string>("job_id");
 
                     sql << "INSERT INTO t_job_backup SELECT * FROM t_job WHERE job_id = :job_id", soci::use(job_id);
 
                     sql << "INSERT INTO t_file_backup SELECT * FROM t_file WHERE job_id = :job_id", soci::use(job_id);
 
-                    sql << "DELETE FROM t_file WHERE job_id = :job_id", soci::use(job_id);
 
-                    sql << "DELETE FROM t_job WHERE job_id = :job_id", soci::use(job_id);
+                    delFilesStmt.execute(true);
+                    *nFiles += delFilesStmt.get_affected_rows();
+
+                    delJobsStmt.execute(true);
+                    *nJobs += delJobsStmt.get_affected_rows();
 
                     //commit every 10 records
                     if(count==10)

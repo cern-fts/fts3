@@ -115,10 +115,15 @@ int main(int argc, char** argv)
             std::string cleanRecordsHost = theServerConfig().get<std::string>("CleanRecordsHost");
 
 
-	    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Backup starting" << commit;
-            if(cleanRecordsHost.compare("true")==0)
-                db::DBSingleton::instance().getDBObjectInstance()->backup();
-	    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Backup ending" << commit;		
+            FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Backup starting" << commit;
+            long nJobs = 0, nFiles = 0;
+            if (cleanRecordsHost.compare("true") == 0) {
+                db::DBSingleton::instance().getDBObjectInstance()->backup(&nJobs, &nFiles);
+            }
+            FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Backup ending: "
+                                           << nJobs << " jobs and "
+                                           << nFiles << " files affected"
+                                           << commit;
 
         }
     catch (Err& e)

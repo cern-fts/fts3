@@ -134,7 +134,7 @@ public:
 
     void revertToSubmitted();
 
-    void backup();
+    void backup(long* nJobs, long* nFiles);
 
     void forkFailedRevertState(const std::string & jobId, int fileId);
 
