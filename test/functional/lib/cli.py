@@ -11,14 +11,19 @@ import time
 
 class Cli:
     
-    def _spawn(self, cmdArray):
+    def _spawn(self, cmdArray, canFail = False):
         logging.debug("Spawning %s" % ' '.join(cmdArray))
         proc = subprocess.Popen(cmdArray, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
         rcode = proc.wait()
         if rcode != 0:
-            logging.error(proc.stdout.read())
-            logging.error(proc.stderr.read())
-            raise Exception("%s failed with exit code %d" % (cmdArray[0], rcode))
+            if canFail:
+                logging.warning(proc.stdout.read())
+                logging.warning(proc.stdout.read())
+                return ''
+            else:
+                logging.error(proc.stdout.read())
+                logging.error(proc.stderr.read())
+                raise Exception("%s failed with exit code %d" % (cmdArray[0], rcode))
         return proc.stdout.read().strip()
 
 
@@ -94,7 +99,11 @@ class Cli:
         cmdArray = ['fts-config-get', '-s', config.Fts3Endpoint, sourceSE]
         if destSE:
             cmdArray.append(destSE)
-        return json.loads(self._spawn(cmdArray))
+        # May fail if there is no configuration available
+        try:
+            return json.loads(self._spawn(cmdArray, canFail = True))
+        except:
+            return {}
 
 
     def setConfig(self, cfg):
