@@ -1,8 +1,10 @@
 import collections
 import logging
-import subprocess
+import traceback
 import types
-import cli, storage, surl 
+import subprocess
+import sys
+import cli, storage, surl
 
 
 def _getVoName():
@@ -69,12 +71,16 @@ class TestBase():
             try:
                 self.setUp()
                 logging.info("Running %s" % test.__name__)
-                for line in test.__doc__.split('\n'):
-                    logging.info(line)
+                if test.__doc__:
+                    for line in test.__doc__.split('\n'):
+                        logging.info(line)
                 test()
             except Exception, e:
+                exc_type, exc_value, exc_traceback = sys.exc_info()
                 logging.error(str(e))
                 nErrors += 1
+                for tb in traceback.extract_tb(exc_traceback):
+                    logging.debug("%s, line %d, in %s: %s" % tb)
             finally:
                 self.tearDown()
         logging.info("%d test executed, %d failed" % (len(testMethods), nErrors))
