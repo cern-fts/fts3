@@ -84,7 +84,11 @@ if __name__ == '__main__':
 
     missing_methods = get_missing_methods(db_methods, executed_methods)
 
-    print "Methods not executed in the server:"
+    print "Methods not executed in the server (%d):" % (len(missing_methods))
     for m in missing_methods:
         print m
 
+    ndb = len(db_methods)
+    ne  = len(executed_methods)
+    percent = (ne * 100.0) / ndb
+    print "Coverage %d out of %d (%.2f%%)" % (ne, ndb, percent)
