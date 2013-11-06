@@ -85,7 +85,7 @@ if __name__ == '__main__':
     missing_methods = get_missing_methods(db_methods, executed_methods)
 
     print "Methods not executed in the server (%d):" % (len(missing_methods))
-    for m in missing_methods:
+    for m in sorted(missing_methods):
         print m
 
     ndb = len(db_methods)
