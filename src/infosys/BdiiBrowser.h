@@ -139,11 +139,11 @@ private:
      * Connects to the BDII
      *
      * @param infosys - the BDII endpoint
-     * @param sec - connection timeout in secounds (by default 60)
+     * @param sec - connection timeout in secounds (by default 15)
      *
      * @return true is connection was successful, otherwise false
      */
-    bool connect(string infosys, time_t sec = 60);
+    bool connect(string infosys, time_t sec = 15);
 
     /**
      * Reconnect in case that the current connection is not valid any more
