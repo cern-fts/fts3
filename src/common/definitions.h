@@ -29,9 +29,6 @@ limitations under the License. */
 #define SOURCE_SE_ 100
 #define DEST_SE_ 100
 
-
-using namespace std;
-
 struct message_base
 {
 public:

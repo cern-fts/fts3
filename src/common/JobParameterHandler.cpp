@@ -27,24 +27,24 @@
 
 using namespace fts3::common;
 
-const string JobParameterHandler::GRIDFTP = "gridftp";
-const string JobParameterHandler::DELEGATIONID = "delegationid";
-const string JobParameterHandler::SPACETOKEN = "spacetoken";
-const string JobParameterHandler::SPACETOKEN_SOURCE = "source_spacetoken";
-const string JobParameterHandler::COPY_PIN_LIFETIME = "copy_pin_lifetime";
-const string JobParameterHandler::BRING_ONLINE = "bring_online";
-const string JobParameterHandler::LAN_CONNECTION = "lan_connection";
-const string JobParameterHandler::FAIL_NEARLINE = "fail_nearline";
-const string JobParameterHandler::OVERWRITEFLAG = "overwrite";
-const string JobParameterHandler::CHECKSUM_METHOD = "checksum_method";
-const string JobParameterHandler::REUSE = "reuse";
-const string JobParameterHandler::JOB_METADATA = "job_metadata";
-const string JobParameterHandler::RETRY = "retry";
-const string JobParameterHandler::RETRY_DELAY = "retry_delay";
-const string JobParameterHandler::MULTIHOP = "multihop";
-const string JobParameterHandler::BUFFER_SIZE = "buffer_size";
-const string JobParameterHandler::NOSTREAMS = "nostreams";
-const string JobParameterHandler::TIMEOUT = "timeout";
+const std::string JobParameterHandler::GRIDFTP = "gridftp";
+const std::string JobParameterHandler::DELEGATIONID = "delegationid";
+const std::string JobParameterHandler::SPACETOKEN = "spacetoken";
+const std::string JobParameterHandler::SPACETOKEN_SOURCE = "source_spacetoken";
+const std::string JobParameterHandler::COPY_PIN_LIFETIME = "copy_pin_lifetime";
+const std::string JobParameterHandler::BRING_ONLINE = "bring_online";
+const std::string JobParameterHandler::LAN_CONNECTION = "lan_connection";
+const std::string JobParameterHandler::FAIL_NEARLINE = "fail_nearline";
+const std::string JobParameterHandler::OVERWRITEFLAG = "overwrite";
+const std::string JobParameterHandler::CHECKSUM_METHOD = "checksum_method";
+const std::string JobParameterHandler::REUSE = "reuse";
+const std::string JobParameterHandler::JOB_METADATA = "job_metadata";
+const std::string JobParameterHandler::RETRY = "retry";
+const std::string JobParameterHandler::RETRY_DELAY = "retry_delay";
+const std::string JobParameterHandler::MULTIHOP = "multihop";
+const std::string JobParameterHandler::BUFFER_SIZE = "buffer_size";
+const std::string JobParameterHandler::NOSTREAMS = "nostreams";
+const std::string JobParameterHandler::TIMEOUT = "timeout";
 
 JobParameterHandler::JobParameterHandler()
 {
@@ -57,11 +57,11 @@ JobParameterHandler::~JobParameterHandler()
 
 }
 
-void JobParameterHandler::operator() (vector<string>& keys, vector<string>& values)
+void JobParameterHandler::operator() (std::vector<std::string>& keys, std::vector<std::string>& values)
 {
 
     // set the given parameters
-    for (vector<string>::iterator it_keys = keys.begin(), it_val = values.begin(); it_keys < keys.end(); it_keys++, it_val++)
+    for (std::vector<std::string>::iterator it_keys = keys.begin(), it_val = values.begin(); it_keys < keys.end(); it_keys++, it_val++)
         {
             parameters[*it_keys] = *it_val;
         }

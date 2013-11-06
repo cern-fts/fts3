@@ -34,20 +34,18 @@ namespace fts3
 namespace common
 {
 
-using namespace std;
-
 class ZipCompressor
 {
 
 public:
-    ZipCompressor(istream& in, ostream& out): out(out),in(in) {}
+    ZipCompressor(std::istream& in, std::ostream& out): out(out),in(in) {}
     virtual ~ZipCompressor() {}
 
     void compress();
 
 private:
-    ostream& out; // a binary file e.g.
-    istream& in;
+    std::ostream& out; // a binary file e.g.
+    std::istream& in;
 };
 
 } /* namespace common */

@@ -18,9 +18,6 @@ namespace fts3
 namespace common
 {
 
-using namespace std;
-using namespace boost;
-
 /**
  * A thread safe queue, allows only for putting and getting
  *
@@ -49,7 +46,7 @@ public:
      */
     void put(T* e)
     {
-        mutex::scoped_lock lock(qm);
+        boost::mutex::scoped_lock lock(qm);
         ts_queue.push(e);
         qv.notify_all();
     }
@@ -60,7 +57,7 @@ public:
     T* get()
     {
         // get the mutex
-        mutex::scoped_lock lock(qm);
+        boost::mutex::scoped_lock lock(qm);
         // if the queue is empty ...
         while (ts_queue.empty())
             {
@@ -77,13 +74,13 @@ public:
 
     bool hasData()
     {
-        mutex::scoped_lock lock(qm);
+        boost::mutex::scoped_lock lock(qm);
         return !ts_queue.empty() || !no_more_data;
     }
 
     void noMoreData ()
     {
-        mutex::scoped_lock lock(qm);
+        boost::mutex::scoped_lock lock(qm);
         no_more_data = true;
         qv.notify_all();
     }
@@ -91,13 +88,13 @@ public:
 private:
     /// the queue itself
 
-    queue<T*> ts_queue;
+    std::queue<T*> ts_queue;
 
     /// the mutex preventing concurrent browsing and reconnecting
-    mutex qm;
+    boost::mutex qm;
 
     /// conditional variable preventing concurrent browsing and reconnecting
-    condition_variable qv;
+    boost::condition_variable qv;
 
     /// set to true if no more data are intended to be put into the queue
     bool no_more_data;

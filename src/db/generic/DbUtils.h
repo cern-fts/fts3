@@ -51,7 +51,7 @@ static inline std::string getStrUTCTimestamp()
     //the number of milliseconds since the epoch
     time_t msec = getUTC(0) * 1000;
     std::ostringstream oss;
-    oss << fixed << msec;
+    oss << std::fixed << msec;
     return oss.str();
 }
 

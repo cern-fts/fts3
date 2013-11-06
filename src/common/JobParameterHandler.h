@@ -30,9 +30,6 @@
 #include <vector>
 #include <boost/lexical_cast.hpp>
 
-using namespace std;
-using namespace boost;
-
 namespace fts3
 {
 namespace common
@@ -68,30 +65,30 @@ public:
      * @param keys - vector with keys (e.g. keys[0] corresponds to values[0], and so on)
      * @param values - vector with values (e.g. keys[0] corresponds to values[0], and so on)
      */
-    void operator() (vector<string>& keys, vector<string>& values);
+    void operator() (std::vector<std::string>& keys, std::vector<std::string>& values);
 
     ///@{
     /**
      * names of transfer job parameters
      */
-    static const string GRIDFTP;
-    static const string DELEGATIONID;
-    static const string SPACETOKEN;
-    static const string SPACETOKEN_SOURCE;
-    static const string COPY_PIN_LIFETIME;
-    static const string BRING_ONLINE;
-    static const string LAN_CONNECTION;
-    static const string FAIL_NEARLINE;
-    static const string OVERWRITEFLAG;
-    static const string CHECKSUM_METHOD;
-    static const string REUSE;
-    static const string JOB_METADATA;
-    static const string RETRY;
-    static const string RETRY_DELAY;
-    static const string MULTIHOP;
-    static const string BUFFER_SIZE;
-    static const string NOSTREAMS;
-    static const string TIMEOUT;
+    static const std::string GRIDFTP;
+    static const std::string DELEGATIONID;
+    static const std::string SPACETOKEN;
+    static const std::string SPACETOKEN_SOURCE;
+    static const std::string COPY_PIN_LIFETIME;
+    static const std::string BRING_ONLINE;
+    static const std::string LAN_CONNECTION;
+    static const std::string FAIL_NEARLINE;
+    static const std::string OVERWRITEFLAG;
+    static const std::string CHECKSUM_METHOD;
+    static const std::string REUSE;
+    static const std::string JOB_METADATA;
+    static const std::string RETRY;
+    static const std::string RETRY_DELAY;
+    static const std::string MULTIHOP;
+    static const std::string BUFFER_SIZE;
+    static const std::string NOSTREAMS;
+    static const std::string TIMEOUT;
     ///@}
 
     /**
@@ -101,7 +98,7 @@ public:
      *
      * @return parameter value
      */
-    inline string get(string name) const
+    inline std::string get(std::string name) const
     {
         if (parameters.count(name))
             return parameters.at(name);
@@ -118,9 +115,9 @@ public:
      * @return parameter value
      */
     template<typename T>
-    inline T get(string name) const
+    inline T get(std::string name) const
     {
-        return lexical_cast<T>(this->get(name));
+        return boost::lexical_cast<T>(this->get(name));
     }
 
     /**
@@ -130,12 +127,12 @@ public:
      *
      * @return true if the parameter value has been set
      */
-    inline bool isParamSet(string name)
+    inline bool isParamSet(std::string name)
     {
         return parameters.find(name) != parameters.end();
     }
 
-    inline void set(string key, string value)
+    inline void set(std::string key, std::string value)
     {
         parameters[key] = value;
     }
@@ -143,7 +140,7 @@ public:
 private:
 
     /// maps parameter names into values
-    map<string, string> parameters;
+    std::map<std::string, std::string> parameters;
 
 };
 

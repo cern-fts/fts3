@@ -180,7 +180,7 @@ py::object Job::compareChecksum()
 
 void Job::setCopyPinLifetime(int pin)
 {
-    parameters[JobParameterHandler::COPY_PIN_LIFETIME] = boost::lexical_cast<string>(pin);
+    parameters[JobParameterHandler::COPY_PIN_LIFETIME] = boost::lexical_cast<std::string>(pin);
 }
 
 py::object Job::getCopyPinLifetime()

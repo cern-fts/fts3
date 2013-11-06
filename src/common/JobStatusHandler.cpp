@@ -32,17 +32,17 @@ using namespace boost::assign;
 using namespace fts3::common;
 using namespace boost;
 
-// initialize string constants
-const string JobStatusHandler::FTS3_STATUS_FINISHEDDIRTY = "FINISHEDDIRTY";
-const string JobStatusHandler::FTS3_STATUS_CANCELED = "CANCELED";
-const string JobStatusHandler::FTS3_STATUS_UNKNOWN = "UNKNOWN";
-const string JobStatusHandler::FTS3_STATUS_FAILED = "FAILED";
-const string JobStatusHandler::FTS3_STATUS_FINISHED = "FINISHED";
-const string JobStatusHandler::FTS3_STATUS_SUBMITTED = "SUBMITTED";
-const string JobStatusHandler::FTS3_STATUS_READY = "READY";
-const string JobStatusHandler::FTS3_STATUS_ACTIVE = "ACTIVE";
-const string JobStatusHandler::FTS3_STATUS_STAGING = "STAGING";
-const string JobStatusHandler::FTS3_STATUS_NOT_USED = "NOT_USED";
+// initialize std::string constants
+const std::string JobStatusHandler::FTS3_STATUS_FINISHEDDIRTY = "FINISHEDDIRTY";
+const std::string JobStatusHandler::FTS3_STATUS_CANCELED = "CANCELED";
+const std::string JobStatusHandler::FTS3_STATUS_UNKNOWN = "UNKNOWN";
+const std::string JobStatusHandler::FTS3_STATUS_FAILED = "FAILED";
+const std::string JobStatusHandler::FTS3_STATUS_FINISHED = "FINISHED";
+const std::string JobStatusHandler::FTS3_STATUS_SUBMITTED = "SUBMITTED";
+const std::string JobStatusHandler::FTS3_STATUS_READY = "READY";
+const std::string JobStatusHandler::FTS3_STATUS_ACTIVE = "ACTIVE";
+const std::string JobStatusHandler::FTS3_STATUS_STAGING = "STAGING";
+const std::string JobStatusHandler::FTS3_STATUS_NOT_USED = "NOT_USED";
 
 JobStatusHandler::JobStatusHandler():
     statusNameToId(map_list_of
@@ -61,11 +61,11 @@ JobStatusHandler::JobStatusHandler():
     // the constant map is initialized in initializer list
 }
 
-bool JobStatusHandler::isTransferFinished(string status)
+bool JobStatusHandler::isTransferFinished(std::string status)
 {
 
     to_upper(status);
-    map<string, JobStatusEnum>::const_iterator it = statusNameToId.find(status);
+    std::map<std::string, JobStatusEnum>::const_iterator it = statusNameToId.find(status);
 
     if (it == statusNameToId.end())
         {
@@ -74,19 +74,19 @@ bool JobStatusHandler::isTransferFinished(string status)
     return it->second <= 0;
 }
 
-bool JobStatusHandler::isStatusValid(string& status)
+bool JobStatusHandler::isStatusValid(std::string& status)
 {
 
     to_upper(status);
     return statusNameToId.find(status) != statusNameToId.end();
 }
 
-size_t JobStatusHandler::countInState(const string status, vector<JobStatus*>& statuses)
+size_t JobStatusHandler::countInState(const std::string status, std::vector<JobStatus*>& statuses)
 {
 
-    set<int> files;
+    std::set<int> files;
 
-    vector<JobStatus*>::iterator it;
+    std::vector<JobStatus*>::iterator it;
     for (it = statuses.begin(); it < statuses.end(); it++)
         {
             if (status == (*it)->fileStatus)

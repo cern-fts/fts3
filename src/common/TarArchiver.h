@@ -34,8 +34,6 @@ namespace fts3
 namespace common
 {
 
-using namespace std;
-
 class TarArchiver
 {
 public:
@@ -63,19 +61,19 @@ public:
 
 private:
     bool finished;
-    ostream& out;
+    std::ostream& out;
     void init(PosixTarHeader& header);
     void setChecksum(PosixTarHeader& header);
     void setSize(PosixTarHeader& header, unsigned long fileSize);
-    void setFilename(PosixTarHeader& header, string filename);
+    void setFilename(PosixTarHeader& header, std::string filename);
     void endRecord(size_t len);
 
 public:
-    TarArchiver(ostream& out);
+    TarArchiver(std::ostream& out);
     virtual ~TarArchiver();
     /** writes 2 empty blocks. Should be always called before closing the Tar file */
     void finish();
-    void putFile(istream& in, string nameInArchive);
+    void putFile(std::istream& in, std::string nameInArchive);
 };
 
 } /* namespace common */

@@ -4178,7 +4178,7 @@ void OracleAPI::addActivityConfig(std::string vo, std::string shares, bool activ
         {
             sql.begin();
 
-            const string act = active ? "on" : "off";
+            const std::string act = active ? "on" : "off";
 
             sql << "INSERT INTO t_activity_share_config (vo, activity_share, active) "
                 "                    VALUES (:vo, :share, :active)",
@@ -4204,7 +4204,7 @@ void OracleAPI::updateActivityConfig(std::string vo, std::string shares, bool ac
         {
             sql.begin();
 
-            const string act = active ? "on" : "off";
+            const std::string act = active ? "on" : "off";
 
             sql <<
                 " UPDATE t_activity_share_config "
@@ -5116,12 +5116,12 @@ void OracleAPI::bringOnlineReportStatus(const std::string & state, const std::st
                     if(stage_in_only == 0)  //stage-in and transfer
                         {
                             dbState = state == "FINISHED" ? "SUBMITTED" : state;
-                            dbReason = state == "FINISHED" ? string() : message;
+                            dbReason = state == "FINISHED" ? std::string() : message;
                         }
                     else //stage-in only
                         {
                             dbState = state == "FINISHED" ? "FINISHED" : state;
-                            dbReason = state == "FINISHED" ? string() : message;
+                            dbReason = state == "FINISHED" ? std::string() : message;
                         }
 
 
@@ -5455,7 +5455,7 @@ void OracleAPI::cancelFilesInTheQueue(const std::string& se, const std::string& 
             std::set<std::string>::iterator job_it;
             for (job_it = jobs.begin(); job_it != jobs.end(); ++job_it)
                 {
-                    updateJobTransferStatus(int(), *job_it, string());
+                    updateJobTransferStatus(int(), *job_it, std::string());
                 }
 
         }
@@ -5772,7 +5772,7 @@ void OracleAPI::cancelWaitingFiles(std::set<std::string>& jobs)
             std::set<std::string>::iterator job_it;
             for (job_it = jobs.begin(); job_it != jobs.end(); ++job_it)
                 {
-                    updateJobTransferStatus(int(), *job_it, string());
+                    updateJobTransferStatus(int(), *job_it, std::string());
                 }
         }
     catch (std::exception& e)
