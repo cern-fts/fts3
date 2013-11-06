@@ -4012,10 +4012,11 @@ bool OracleAPI::isGrInPair(std::string group)
     bool inPair = false;
     try
         {
+            std::string symbolicName;
             sql << "SELECT symbolicName FROM t_link_config WHERE "
                 "  ((source = :groupName AND destination <> '*') OR "
                 "  (source <> '*' AND destination = :groupName))",
-                soci::use(group, "group");
+                soci::use(group, "groupName"), soci::into(symbolicName);
             inPair = sql.got_data();
         }
     catch (std::exception& e)
