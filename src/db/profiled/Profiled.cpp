@@ -23,7 +23,7 @@ ProfiledDB::~ProfiledDB()
 
 void ProfiledDB::init(std::string username, std::string password, std::string connectString, int pooledConn)
 {
-    db->init(username, password, connectString, pooledConn);
+    PROFILE_PREFIXED("DB::", db->init(username, password, connectString, pooledConn));
 }
 
 void ProfiledDB::submitPhysical(const std::string & jobId, std::vector<job_element_tupple> src_dest_pair,
