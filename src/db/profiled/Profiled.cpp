@@ -437,11 +437,6 @@ LinkConfig* ProfiledDB::getLinkConfig(std::string source, std::string destinatio
     PROFILE_PREFIXED("DB::", return db->getLinkConfig(source, destination));
 }
 
-bool ProfiledDB::isThereLinkConfig(std::string source, std::string destination)
-{
-    PROFILE_PREFIXED("DB::", return db->isThereLinkConfig(source, destination));
-}
-
 std::pair<std::string, std::string>* ProfiledDB::getSourceAndDestination(std::string symbolic_name)
 {
     PROFILE_PREFIXED("DB::", return db->getSourceAndDestination(symbolic_name));
@@ -558,12 +553,6 @@ bool ProfiledDB::hasStandAloneSeCfgAssigned(int file_id, std::string vo)
 bool ProfiledDB::hasPairSeCfgAssigned(int file_id, std::string vo)
 {
     PROFILE_PREFIXED("DB::", return db->hasPairSeCfgAssigned(file_id, vo));
-}
-
-
-bool ProfiledDB::hasStandAloneGrCfgAssigned(int file_id, std::string vo)
-{
-    PROFILE_PREFIXED("DB::", return db->hasStandAloneGrCfgAssigned(file_id, vo));
 }
 
 

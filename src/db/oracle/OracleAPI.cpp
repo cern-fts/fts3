@@ -3937,29 +3937,6 @@ LinkConfig* OracleAPI::getLinkConfig(std::string source, std::string destination
 
 
 
-bool OracleAPI::isThereLinkConfig(std::string source, std::string destination)
-{
-    soci::session sql(*connectionPool);
-
-    bool exists = false;
-    try
-        {
-            int count = 0;
-            sql << "SELECT COUNT(*) FROM t_link_config WHERE "
-                "  source = :source AND destination = :dest",
-                soci::use(source), soci::use(destination),
-                soci::into(count);
-            exists = (count > 0);
-        }
-    catch (std::exception& e)
-        {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-    return exists;
-}
-
-
-
 std::pair<std::string, std::string>* OracleAPI::getSourceAndDestination(std::string symbolic_name)
 {
     soci::session sql(*connectionPool);
@@ -6181,37 +6158,7 @@ bool OracleAPI::hasPairSeCfgAssigned(int file_id, std::string vo)
     return count > 0;
 }
 
-bool OracleAPI::hasStandAloneGrCfgAssigned(int file_id, std::string vo)
-{
-    soci::session sql(*connectionPool);
 
-    int count = 0;
-
-    try
-        {
-            sql <<
-                " select count(*) "
-                " from t_file_share_config fc "
-                " where fc.file_id = :id "
-                "   and fc.vo = :vo "
-                "   and ((fc.source <> '(*)' and fc.destination = '*') or (fc.source = '*' and fc.destination <> '(*)')) "
-                "   and exists ( "
-                "       select null "
-                "       from t_group_members g "
-                "       where (g.groupName = fc.source or g.groupName = fc.destination) "
-                "   ) ",
-                soci::use(file_id),
-                soci::use(vo),
-                soci::into(count)
-                ;
-        }
-    catch (std::exception& e)
-        {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-
-    return count > 0;
-}
 
 bool OracleAPI::hasPairGrCfgAssigned(int file_id, std::string vo)
 {

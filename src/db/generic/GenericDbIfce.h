@@ -238,7 +238,6 @@ public:
     virtual void updateLinkConfig(LinkConfig* cfg) = 0;
     virtual void deleteLinkConfig(std::string source, std::string destination) = 0;
     virtual LinkConfig* getLinkConfig(std::string source, std::string destination) = 0;
-    virtual bool isThereLinkConfig(std::string source, std::string destination) = 0;
     virtual std::pair<std::string, std::string>* getSourceAndDestination(std::string symbolic_name) = 0;
     virtual bool isGrInPair(std::string group) = 0;
     virtual bool isShareOnly(std::string se) = 0;
@@ -271,8 +270,6 @@ public:
     virtual bool hasStandAloneSeCfgAssigned(int file_id, std::string vo) = 0;
 
     virtual bool hasPairSeCfgAssigned(int file_id, std::string vo) = 0;
-
-    virtual bool hasStandAloneGrCfgAssigned(int file_id, std::string vo) = 0;
 
     virtual bool hasPairGrCfgAssigned(int file_id, std::string vo) = 0;
 

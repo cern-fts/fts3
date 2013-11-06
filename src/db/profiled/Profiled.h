@@ -174,7 +174,6 @@ public:
     void updateLinkConfig(LinkConfig* cfg);
     void deleteLinkConfig(std::string source, std::string destination);
     LinkConfig* getLinkConfig(std::string source, std::string destination);
-    bool isThereLinkConfig(std::string source, std::string destination);
     std::pair<std::string, std::string>* getSourceAndDestination(std::string symbolic_name);
     bool isGrInPair(std::string group);
     bool isShareOnly(std::string se);
@@ -207,8 +206,6 @@ public:
     bool hasStandAloneSeCfgAssigned(int file_id, std::string vo);
 
     bool hasPairSeCfgAssigned(int file_id, std::string vo);
-
-    bool hasStandAloneGrCfgAssigned(int file_id, std::string vo);
 
     bool hasPairGrCfgAssigned(int file_id, std::string vo);
 
