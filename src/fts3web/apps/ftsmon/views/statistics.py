@@ -203,7 +203,9 @@ def profiling(httpRequest):
         profiling['period']  = False
     
     
-    profiles = ProfilingSnapshot.objects.filter(cnt__gt = 0)
+    profiles = ProfilingSnapshot.objects
+    if not httpRequest.GET.get('showall', False):
+        profiles = profiles.filter(cnt__gt = 0)
     
     (orderBy, orderDesc) = getOrderBy(httpRequest)
     if orderBy == 'scope':
