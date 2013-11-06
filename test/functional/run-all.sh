@@ -6,7 +6,7 @@ for test in fts-*; do
     ./$test
     testErrors=$?
     if [ $testErrors -gt 0 ]; then
-        $totalErrors=$((totalErrors+testErrors))
+        totalErrors=$((totalErrors+testErrors))
         failed=("${failed[@]}" "$test")
     fi
 done
