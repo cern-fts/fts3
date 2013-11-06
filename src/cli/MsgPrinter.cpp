@@ -30,10 +30,12 @@
 #include <boost/optional.hpp>
 #include <boost/assign.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/lambda/lambda.hpp>
 
 #include <utility>
 #include <sstream>
 #include <iostream>
+#include <algorithm>
 
 namespace fts3
 {
@@ -489,9 +491,7 @@ void MsgPrinter::file_list(vector<string> values, vector<string> retries)
             if (retries.size() > 0)
                 {
                     cout << "  Retries: " << endl;
-                    vector<string>::const_iterator i;
-                    for (i = retries.begin(); i != retries.end(); ++i)
-                        cout << "    " << *i << std::endl;
+                    for_each(retries.begin(), retries.end(), cout << ("    " + lambda::_1) << '\n');
                 }
             else
                 {
