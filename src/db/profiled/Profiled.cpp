@@ -106,12 +106,6 @@ void ProfiledDB::updateSe(std::string endpoint, std::string se_type, std::string
 }
 
 
-void ProfiledDB::deleteSe(std::string NAME)
-{
-    PROFILE_PREFIXED("DB::", db->deleteSe(NAME));
-}
-
-
 bool ProfiledDB::updateFileTransferStatus(double throughput, std::string job_id, int file_id, std::string transfer_status,
         std::string transfer_message, int process_id, double filesize, double duration)
 {

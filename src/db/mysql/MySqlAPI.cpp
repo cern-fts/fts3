@@ -1465,29 +1465,6 @@ void MySqlAPI::updateSe(std::string ENDPOINT, std::string SE_TYPE, std::string S
 
 
 
-/*
-Delete a SE
-REQUIRED: NAME
- */
-void MySqlAPI::deleteSe(std::string NAME)
-{
-    soci::session sql(*connectionPool);
-
-    try
-        {
-            sql.begin();
-            sql << "DELETE FROM t_se WHERE name = :name", soci::use(NAME);
-            sql.commit();
-        }
-    catch (std::exception& e)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-}
-
-
-
 bool MySqlAPI::updateFileTransferStatus(double throughputIn, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
                                         int process_id, double filesize, double duration)
 {
