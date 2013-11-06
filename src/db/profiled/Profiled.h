@@ -172,13 +172,6 @@ public:
 
     std::string getGroupForSe(const std::string se);
 
-
-    void submitHost(const std::string & jobId);
-
-    std::string transferHost(int fileId);
-
-    std::string transferHostV(std::map<int,std::string>& fileIds);
-
     void addLinkConfig(LinkConfig* cfg);
     void updateLinkConfig(LinkConfig* cfg);
     void deleteLinkConfig(std::string source, std::string destination);

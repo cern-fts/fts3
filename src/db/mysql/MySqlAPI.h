@@ -200,13 +200,6 @@ public:
 
     virtual std::string getGroupForSe(const std::string se);
 
-
-    virtual void submitHost(const std::string & jobId);
-
-    virtual std::string transferHost(int fileId);
-
-    virtual std::string transferHostV(std::map<int,std::string>& fileIds);
-
     //t_config_symbolic
     virtual void addLinkConfig(LinkConfig* cfg);
     virtual void updateLinkConfig(LinkConfig* cfg);

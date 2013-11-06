@@ -423,25 +423,6 @@ std::string ProfiledDB::getGroupForSe(const std::string se)
 }
 
 
-
-void ProfiledDB::submitHost(const std::string & jobId)
-{
-    PROFILE_PREFIXED("DB::", db->submitHost(jobId));
-}
-
-
-std::string ProfiledDB::transferHost(int fileId)
-{
-    PROFILE_PREFIXED("DB::", return db->transferHost(fileId));
-}
-
-
-std::string ProfiledDB::transferHostV(std::map<int,std::string>& fileIds)
-{
-    PROFILE_PREFIXED("DB::", return db->transferHostV(fileIds));
-}
-
-
 void ProfiledDB::addLinkConfig(LinkConfig* cfg)
 {
     PROFILE_PREFIXED("DB::", db->addLinkConfig(cfg));

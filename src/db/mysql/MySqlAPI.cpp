@@ -4306,47 +4306,6 @@ std::map< std::string, double > MySqlAPI::getActivityConfig(std::string vo)
 }
 
 
-void MySqlAPI::submitHost(const std::string & jobId)
-{
-    soci::session sql(*connectionPool);
-
-    try
-        {
-            sql.begin();
-
-            sql << "UPDATE t_job SET submit_host = :host WHERE job_id = :jobId",
-                soci::use(hostname), soci::use(jobId);
-
-            sql.commit();
-        }
-    catch (std::exception& e)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-}
-
-
-
-std::string MySqlAPI::transferHost(int fileId)
-{
-    soci::session sql(*connectionPool);
-
-    std::string host;
-    try
-        {
-            sql << "SELECT transferHost FROM t_file WHERE file_id = :fileId",
-                soci::use(fileId), soci::into(host);
-        }
-    catch (std::exception& e)
-        {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-    return host;
-}
-
-
-
 /*for session reuse check only*/
 bool MySqlAPI::isFileReadyStateV(std::map<int, std::string>& fileIds)
 {
@@ -4368,24 +4327,6 @@ bool MySqlAPI::isFileReadyStateV(std::map<int, std::string>& fileIds)
     return isReady;
 }
 
-
-
-std::string MySqlAPI::transferHostV(std::map<int, std::string>& fileIds)
-{
-    soci::session sql(*connectionPool);
-
-    std::string host("");
-    try
-        {
-            sql << "SELECT transferHost FROM t_file WHERE file_id = :fileId",
-                soci::use(fileIds.begin()->first), soci::into(host);
-        }
-    catch (std::exception& e)
-        {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-    return host;
-}
 
 /*
     we need to check if a member already belongs to another group
