@@ -4517,29 +4517,6 @@ void OracleAPI::setPriority(std::string job_id, int priority)
         }
 }
 
-bool OracleAPI::checkConnectionStatus()
-{
-    soci::session sql(*connectionPool);
-
-    bool couldConnect = false;
-    try
-        {
-            soci::oracle_session_backend* be = static_cast<soci::oracle_session_backend*>(sql.get_backend());
-            couldConnect = (OCIPing(be->svchp_, NULL, OCI_DEFAULT) == OCI_SUCCESS);
-        }
-    catch (std::exception& e)
-        {
-            // Pass
-        }
-    catch (...)
-        {
-            // Pass
-        }
-
-    return couldConnect;
-}
-
-
 
 void OracleAPI::setRetry(int retry)
 {

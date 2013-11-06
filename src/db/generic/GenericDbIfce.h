@@ -286,8 +286,6 @@ public:
 
     virtual int sumUpVoShares (std::string source, std::string destination, std::set<std::string> vos) = 0;
 
-    virtual bool checkConnectionStatus() = 0;
-
     virtual void setPriority(std::string jobId, int priority) = 0;
 
     virtual void setRetry(int retry) = 0;

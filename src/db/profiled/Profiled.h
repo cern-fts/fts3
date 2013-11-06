@@ -222,8 +222,6 @@ public:
 
     int sumUpVoShares (std::string source, std::string destination, std::set<std::string> vos);
 
-    bool checkConnectionStatus();
-
     void setPriority(std::string jobId, int priority);
 
     void setRetry(int retry);

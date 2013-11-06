@@ -4546,29 +4546,6 @@ void MySqlAPI::setPriority(std::string job_id, int priority)
         }
 }
 
-bool MySqlAPI::checkConnectionStatus()
-{
-    soci::session sql(*connectionPool);
-
-    bool couldConnect = false;
-    try
-        {
-            soci::mysql_session_backend* be = static_cast<soci::mysql_session_backend*>(sql.get_backend());
-            couldConnect = (mysql_ping(static_cast<MYSQL*>(be->conn_)) == 0);
-        }
-    catch (std::exception& e)
-        {
-            // Pass
-        }
-    catch (...)
-        {
-            // Pass
-        }
-
-    return couldConnect;
-}
-
-
 
 void MySqlAPI::setRetry(int retry)
 {

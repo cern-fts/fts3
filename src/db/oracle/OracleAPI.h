@@ -253,8 +253,6 @@ public:
 
     virtual void setPriority(std::string jobId, int priority);
 
-    virtual bool checkConnectionStatus();
-
     virtual void setRetry(int retry);
 
     virtual int getRetry(const std::string & jobId);

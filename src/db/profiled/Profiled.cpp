@@ -603,12 +603,6 @@ int ProfiledDB::sumUpVoShares (std::string source, std::string destination, std:
 }
 
 
-bool ProfiledDB::checkConnectionStatus()
-{
-    PROFILE_PREFIXED("DB::", return db->checkConnectionStatus());
-}
-
-
 void ProfiledDB::setPriority(std::string jobId, int priority)
 {
     PROFILE_PREFIXED("DB::", db->setPriority(jobId, priority));
