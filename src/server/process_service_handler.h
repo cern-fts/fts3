@@ -473,8 +473,9 @@ protected:
                                         return;
                                     }
 
-                                sourceSiteName = siteResolver.getSiteName(surl);
-                                destSiteName = siteResolver.getSiteName(durl);
+        			//temporarly disabled BDII access for getting the site name, pls do not remove the following 2 lines
+                                sourceSiteName = ""; //siteResolver.getSiteName(surl);
+                                destSiteName = ""; //siteResolver.getSiteName(durl);
 
                                 createJobFile(job_id, urls);
 
