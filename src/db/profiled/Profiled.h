@@ -227,8 +227,6 @@ public:
 
     void setRetryTransfer(const std::string & jobId, int fileId);
 
-    int getMaxTimeInQueue();
-
     void setMaxTimeInQueue(int afterXHours);
 
     void setToFailOldQueuedJobs(std::vector<std::string>& jobs);
@@ -300,7 +298,6 @@ public:
     void getTransferRetries(int fileId, std::vector<FileRetry*>& retries);
 
     void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end);
-
 };
 
 

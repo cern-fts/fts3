@@ -289,8 +289,6 @@ public:
 
     virtual int getRetryTimes(const std::string & jobId, int fileId) = 0;
 
-    virtual int getMaxTimeInQueue() = 0;
-
     virtual void setMaxTimeInQueue(int afterXHours) = 0;
 
     virtual void setToFailOldQueuedJobs(std::vector<std::string>& jobs) = 0;

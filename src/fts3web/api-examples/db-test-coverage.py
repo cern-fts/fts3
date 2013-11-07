@@ -38,7 +38,7 @@ def get_klass_id(xml, file_id, klass):
 
 
 def get_klass_methods(xml, klass_id):
-    methods = xml.xpath("Method[@context='%s']" % klass_id)
+    methods = xml.xpath("Method[@context='%s' and @access='public']" % klass_id)
     return map(lambda m: m.get('name'), methods)
 
 

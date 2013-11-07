@@ -610,12 +610,6 @@ int ProfiledDB::getRetryTimes(const std::string & jobId, int fileId)
 }
 
 
-int ProfiledDB::getMaxTimeInQueue()
-{
-    PROFILE_PREFIXED("DB::", return db->getMaxTimeInQueue());
-}
-
-
 void ProfiledDB::setMaxTimeInQueue(int afterXHours)
 {
     PROFILE_PREFIXED("DB::", db->setMaxTimeInQueue(afterXHours));
