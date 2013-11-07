@@ -804,12 +804,12 @@ void ProfiledDB::checkSchemaLoaded()
 
 void ProfiledDB::storeProfiling(const fts3::ProfilingSubsystem* prof)
 {
-    db->storeProfiling(prof);
+    PROFILE_PREFIXED("DB::", db->storeProfiling(prof));
 }
 
 void ProfiledDB::setOptimizerMode(int mode)
 {
-    db->setOptimizerMode(mode);
+    PROFILE_PREFIXED("DB::", db->setOptimizerMode(mode));
 }
 
 void ProfiledDB::setRetryTransfer(const std::string & jobId, int fileId,
