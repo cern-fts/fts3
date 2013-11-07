@@ -30,6 +30,8 @@
 #include <vector>
 #include <iostream>
 #include <memory>
+#include <iterator>
+#include <algorithm>
 
 using namespace std;
 using namespace fts3::cli;
@@ -68,13 +70,8 @@ int main(int ac, char* av[])
             ctx.getConfiguration(source, destination, all, cli->getName(), resp);
 
             vector<string> &cfgs = resp.configuration->cfg;
-            vector<string>::iterator it;
-
-            for (it = cfgs.begin(); it < cfgs.end(); it++)
-                {
-                    cout << *it << endl;
-                }
-
+            ostream_iterator<string> it(cout, "\n");
+            copy(cfgs.begin(), cfgs.end(), it);
         }
     catch(std::exception& e)
         {

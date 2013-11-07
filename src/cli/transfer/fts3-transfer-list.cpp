@@ -30,6 +30,11 @@
 
 #include <boost/scoped_ptr.hpp>
 
+#include <boost/lambda/lambda.hpp>
+#include <boost/lambda/bind.hpp>
+
+#include <algorithm>
+
 using namespace std;
 using namespace boost;
 using namespace fts3::cli;
@@ -60,12 +65,7 @@ int main(int ac, char* av[])
             vector<fts3::cli::JobStatus> statuses;
             statuses = ctx.listRequests(array, cli->getUserDn(), cli->getVoName());
 
-            vector<fts3::cli::JobStatus>::iterator it;
-            for (it = statuses.begin(); it < statuses.end(); it++)
-                {
-                    cli->printer().job_status(*it);
-                }
-
+            for_each(statuses.begin(), statuses.end(), lambda::bind(&MsgPrinter::job_status, &cli->printer(), lambda::_1));
         }
     catch(std::exception& ex)
         {

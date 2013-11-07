@@ -23,11 +23,15 @@
 
 #include "common/JobStatusHandler.h"
 
+#include <algorithm>
 #include <vector>
 #include <string>
+#include <iterator>
 
 #include <boost/scoped_ptr.hpp>
 #include <boost/assign.hpp>
+#include <boost/lambda/lambda.hpp>
+#include <boost/lambda/bind.hpp>
 
 using namespace std;
 using namespace boost;
@@ -138,11 +142,12 @@ int main(int ac, char* av[])
                                                                 ;
 
                                                             vector<string> retries;
-                                                            for (ri = stat->retries.begin(); ri != stat->retries.end(); ++ri)
-                                                                {
-                                                                    retries.resize((*ri)->attempt);
-                                                                    retries[(*ri)->attempt - 1] = (*ri)->reason;
-                                                                }
+                                                            transform(
+                                                            		stat->retries.begin(),
+                                                            		stat->retries.end(),
+                                                            		inserter(retries, retries.begin()),
+                                                            		lambda::bind(&tns3__FileTransferRetry::reason, lambda::_1)
+                                                            	);
 
                                                             cli->printer().file_list(values, retries);
                                                         }

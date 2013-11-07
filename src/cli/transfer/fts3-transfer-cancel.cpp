@@ -75,14 +75,6 @@ int main(int ac, char* av[])
             ctx.cancel(jobs);
 
             for_each(jobs.begin(), jobs.end(), lambda::bind(&MsgPrinter::cancelled_job, &(cli->printer()), lambda::_1));
-//
-//            vector<string>::iterator it;
-//            for (it = jobs.begin(); it < jobs.end(); it++)
-//                {
-//                    cli->printer().cancelled_job(*it);
-//
-//                }
-
         }
     catch(std::exception& ex)
         {
