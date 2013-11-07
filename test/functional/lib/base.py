@@ -7,19 +7,26 @@ import sys
 import cli, storage, surl
 
 
-def _getVoName():
+def _getVoAndDn():
     cmdArray = ['voms-proxy-info', '--all']
     proc = subprocess.Popen(cmdArray, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
     rcode = proc.wait()
     if rcode != 0:
         raise Exception("Could not get the VO name!")
+    
+    vo = None
+    dn = None
     for line in proc.stdout.readlines():
         if ':' in line:
             (key, value) = line.split(':', 1)
             key = key.strip()
             value = value.strip()
             if key == 'VO':
-                return value
+                vo = value
+            elif key == 'identity':
+                dn = value
+            
+    return (vo, dn)
 
 
 class TestBase():
@@ -27,7 +34,7 @@ class TestBase():
     def __init__(self, *args, **kwargs): 
         self.surl   = surl.Surl()
         self.client = cli.Cli()
-        self.voName = _getVoName()
+        (self.voName, self.userDn) = _getVoAndDn()
 
 
     def setUp(self):
