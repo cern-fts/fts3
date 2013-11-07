@@ -26,10 +26,15 @@
 
 #include "common/logger.h"
 
+#include "config/serverconfig.h"
+
+
 namespace fts3
 {
 namespace infosys
 {
+
+using namespace config;
 
 const char* SiteNameRetriever::ATTR_GLUE1_SERVICE = "GlueServiceUniqueID";
 const char* SiteNameRetriever::ATTR_GLUE1_SERVICE_URI = "GlueServiceURI";
@@ -121,6 +126,10 @@ string SiteNameRetriever::getFromBdii(string se)
 
 string SiteNameRetriever::getSiteName(string se)
 {
+	// check if the infosys has been activated in the fts3config file
+	bool active = theServerConfig().get<bool>("Infosys");
+	if (!active) return string();
+
     // lock the cache
     mutex::scoped_lock lock(m);
 
