@@ -125,6 +125,9 @@ int main(int argc, char** argv)
                                            << nFiles << " files affected"
                                            << commit;
 
+            // If profiling is configured, dump the timing
+            db::DBSingleton::instance().getDBObjectInstance()->storeProfiling(&ProfilingSubsystem::getInstance());
+
         }
     catch (Err& e)
         {
