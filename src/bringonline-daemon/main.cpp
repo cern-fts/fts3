@@ -461,6 +461,9 @@ int DoServer(int argc, char** argv)
                     exit(1);
                 }
 
+            // Start profiling
+            ProfilingSubsystem::getInstance().start();
+
             boost::thread hbThread(heartbeat);
 
             vector< boost::tuple<string, string, int> >::iterator it;
