@@ -131,4 +131,3 @@ class TestBase():
             logging.info("Assertion '%s' in [%s] OK (%s)" % (label, ','.join(expected), str(value)))
         else:
             logging.info("Assertion '%s' in [%s] OK" % (str(value), ','.join(expected)))
-

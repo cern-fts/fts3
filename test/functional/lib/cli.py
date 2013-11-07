@@ -81,9 +81,11 @@ class Cli:
         self._spawn(cmdArray)
 
 
-    def getFileInfo(self, jobId):
+    def getFileInfo(self, jobId, detailed = False):
         cmdArray = ['fts-transfer-status', '-s', config.Fts3Endpoint, 
                     '--json', '-l', jobId]
+        if detailed:
+            cmdArray += ['--detailed']
         out = self._spawn(cmdArray)
         detailedState = json.loads(out)
         fileStates = detailedState['job'][0]['files']
