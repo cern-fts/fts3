@@ -25,6 +25,12 @@
 
 #include "JobParameterHandler.h"
 
+#include <algorithm>
+#include <iterator>
+
+#include <boost/iterator/zip_iterator.hpp>
+#include <boost/tuple/tuple.hpp>
+
 using namespace fts3::common;
 
 const std::string JobParameterHandler::GRIDFTP = "gridftp";
@@ -59,11 +65,9 @@ JobParameterHandler::~JobParameterHandler()
 
 void JobParameterHandler::operator() (std::vector<std::string>& keys, std::vector<std::string>& values)
 {
+	boost::zip_iterator< boost::tuple< std::vector<std::string>::iterator, std::vector<std::string>::iterator > > begin(boost::make_tuple(keys.begin(), values.begin()));
+	boost::zip_iterator< boost::tuple< std::vector<std::string>::iterator, std::vector<std::string>::iterator > > end(boost::make_tuple(keys.end(), values.end()));
 
-    // set the given parameters
-    for (std::vector<std::string>::iterator it_keys = keys.begin(), it_val = values.begin(); it_keys < keys.end(); it_keys++, it_val++)
-        {
-            parameters[*it_keys] = *it_val;
-        }
+	std::transform(begin, end, std::inserter(parameters, parameters.begin()), zipper());
 }
 
