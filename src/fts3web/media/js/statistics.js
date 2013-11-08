@@ -152,3 +152,28 @@ StatsProfilingCtrl.resolve = {
     	return deferred.promise;
 	}
 }
+
+
+function SlowQueriesCtrl($location, $scope, slowQueries)
+{
+	$scope.slowQueries = slowQueries;
+}
+
+SlowQueriesCtrl.resolve = {
+	slowQueries: function($rootScope, $location, $q, SlowQueries) {
+    	loading($rootScope);
+    	
+    	var deferred = $q.defer();
+
+    	var page = $location.search().page;
+    	if (!page || page < 1)
+    		page = 1;
+    	
+    	SlowQueries.query($location.search(), function(data) {
+    		deferred.resolve(data);
+    		stopLoading($rootScope);
+    	});
+    	
+    	return deferred.promise;
+	}
+}

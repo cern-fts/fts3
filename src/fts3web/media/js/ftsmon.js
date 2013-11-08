@@ -55,9 +55,13 @@ config(function($routeProvider) {
         when('/statistics/vos',       {templateUrl: STATIC_ROOT + 'html/statistics/vos.html',
                                        controller:  StatsVosCtrl,
 				                       resolve:     StatsVosCtrl.resolve}).
+
         when('/statistics/profiling', {templateUrl: STATIC_ROOT + 'html/statistics/profiling.html',
                                        controller:  StatsProfilingCtrl,
                                        resolve:     StatsProfilingCtrl.resolve}).
+        when('/statistics/slowqueries', {templateUrl: STATIC_ROOT + 'html/statistics/slowqueries.html',
+                                         controller:  SlowQueriesCtrl,
+                                         resolve:     SlowQueriesCtrl.resolve}).
 							         
 		otherwise({templateUrl: STATIC_ROOT + 'html/404.html'});
 })

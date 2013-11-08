@@ -16,11 +16,14 @@
 # limitations under the License.
 
 from datetime import datetime, timedelta
+from django.db import connection
 from django.db.models import Q, Count, Avg
+from django.db.utils import DatabaseError
 from ftsweb.models import Job, File, Host
 from ftsweb.models import ProfilingSnapshot, ProfilingInfo
 from jsonify import jsonify, jsonify_paged
 from util import getOrderBy, orderedField
+import settings
 
 
 STATES               = ['SUBMITTED', 'READY', 'ACTIVE', 'FAILED', 'FINISHED', 'CANCELED', 'STAGING', 'NOT_USED']
@@ -224,3 +227,37 @@ def profiling(httpRequest):
     profiling['profiles'] = profiles.all()
     
     return profiling
+
+
+def _slowEntry2Dict(queries):
+    for q in queries:
+        yield {
+           'start_time':     q[0],
+           'user_host':      q[1],
+           'query_time':     q[2],
+           'lock_time':      q[3],
+           'rows_sent':      q[4],
+           'rows_examined':  q[5],
+           'db':             q[6],
+           'last_insert_id': q[7],
+           'insert_id':      q[8],
+           'server_id':      q[9],
+           'sql_text':       q[10]
+        }
+
+
+@jsonify
+def slowQueries(httpRequest):
+    engine = settings.DATABASES['default']['ENGINE']
+    
+    if engine.endswith('oracle'):
+        return {'message': 'Not supported for Oracle'}
+    
+    try:
+        dbName = settings.DATABASES['default']['NAME']
+        cursor = connection.cursor()    
+        cursor.execute("SELECT * FROM mysql.slow_log WHERE db = %s ORDER BY query_time DESC" , (dbName))
+        return {'queries': _slowEntry2Dict(cursor.fetchall())}
+    except DatabaseError, e:
+        return {'message': str(e)}
+

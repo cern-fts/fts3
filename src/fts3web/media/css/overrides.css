@@ -13,3 +13,9 @@
 .icon-th-list {
 	cursor: pointer;
 }
+
+pre {
+	background: transparent;
+	border: none;
+	font-size: 110%;
+}
