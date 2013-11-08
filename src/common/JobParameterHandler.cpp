@@ -65,9 +65,11 @@ JobParameterHandler::~JobParameterHandler()
 
 void JobParameterHandler::operator() (std::vector<std::string>& keys, std::vector<std::string>& values)
 {
-	boost::zip_iterator< boost::tuple< std::vector<std::string>::iterator, std::vector<std::string>::iterator > > begin(boost::make_tuple(keys.begin(), values.begin()));
-	boost::zip_iterator< boost::tuple< std::vector<std::string>::iterator, std::vector<std::string>::iterator > > end(boost::make_tuple(keys.end(), values.end()));
-
-	std::transform(begin, end, std::inserter(parameters, parameters.begin()), zipper());
+	std::transform(
+			boost::make_zip_iterator(boost::make_tuple(keys.begin(), values.begin())),
+			boost::make_zip_iterator(boost::make_tuple(keys.end(), values.end())),
+			std::inserter(parameters, parameters.begin()),
+			zipper()
+		);
 }
 
