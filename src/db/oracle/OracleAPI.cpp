@@ -3494,10 +3494,11 @@ void OracleAPI::blacklistDn(std::string dn, std::string msg, std::string adm_dn)
             sql.begin();
 
             sql << " MERGE INTO t_bad_dns USING "
-                "    (SELECT :dn AS dn, :message AS message, sys_extract_utc(systimestamp) as tstamp, :admin AS admin FROM dual) Blacklisted "
-                " WHEN NOT MATCHED THEN INSERT (dn, message, addition_time, admin_dn) VALUES "
-                "                              (BlackListed.dn, BlackListed.message, BlackListed.tstamp, BlackListed.admin)",
-                soci::use(dn), soci::use(msg), soci::use(adm_dn);
+                   "   (SELECT :dn AS dn, :message AS message, sys_extract_utc(systimestamp) as tstamp, :admin AS admin FROM dual) Blacklisted "
+                   " ON (t_bad_dns.dn = Blacklisted.dn) "
+                   " WHEN NOT MATCHED THEN INSERT (dn, message, addition_time, admin_dn) VALUES "
+                   "                              (BlackListed.dn, BlackListed.message, BlackListed.tstamp, BlackListed.admin)",
+                   soci::use(dn), soci::use(msg), soci::use(adm_dn);
             sql.commit();
         }
     catch (std::exception& e)
@@ -3561,15 +3562,16 @@ void OracleAPI::unblacklistDn(std::string dn)
                 ;
             // set to null pending fields in respective files
             sql <<
-                " UPDATE t_file f, t_job j SET f.wait_timestamp = NULL, f.wait_timeout = NULL "
-                " WHERE f.job_id = j.job_id AND j.user_dn = :dn "
-                "   AND f.file_state IN ('ACTIVE', 'READY', 'SUBMITTED') "
-                "   AND NOT EXISTS ( "
-                "       SELECT NULL "
-                "       FROM t_bad_ses "
-                "       WHERE (se = f.source_se OR se = f.dest_se) AND status = 'WAIT' "
-                "   )",
-                soci::use(dn)
+                " UPDATE (SELECT t_file.wait_timestamp AS wait_timestamp, t_file.wait_timeout AS wait_timeout "
+                "         FROM t_file INNER JOIN t_job ON t_file.job_id = t_job.job_id "
+                "         WHERE t_job.user_dn = :dn "
+                "         AND t_file.file_state in ('ACTIVE', 'READY', 'SUBMITTED') "
+                "         AND NOT EXISTS (SELECT NULL "
+                "                         FROM t_bad_ses "
+                "                         WHERE (se = t_file.source_se OR se = t_file.dest_se) AND "
+                "                                STATUS = 'WAIT')"
+                " ) SET wait_timestamp = NULL, wait_timeout = NULL",
+                soci::use(dn, "dn")
                 ;
 
             sql.commit();
@@ -5529,7 +5531,6 @@ void OracleAPI::setFilesToWaiting(const std::string& se, const std::string& vo, 
 
             if (vo.empty())
                 {
-
                     sql <<
                         " UPDATE t_file "
                         " SET wait_timestamp = sys_extract_utc(systimestamp), wait_timeout = :timeout "
@@ -5540,24 +5541,21 @@ void OracleAPI::setFilesToWaiting(const std::string& se, const std::string& vo, 
                         soci::use(se),
                         soci::use(se)
                         ;
-
                 }
             else
                 {
-
-                    sql <<
-                        " UPDATE t_file f, t_job j "
-                        " SET f.wait_timestamp = sys_extract_utc(systimestamp), f.wait_timeout = :timeout "
-                        " WHERE (f.source_se = :src OR f.dest_se = :dest) "
-                        "   AND j.vo_name = :vo "
-                        "   AND f.file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED') "
-                        "   AND f.job_id = j.job_id "
-                        "   AND (f.wait_timestamp IS NULL OR f.wait_timeout IS NULL) ",
-                        soci::use(timeout),
-                        soci::use(se),
-                        soci::use(se),
-                        soci::use(vo)
-                        ;
+                sql <<
+                    " UPDATE t_file "
+                    " SET wait_timestamp = sys_extract_utc(systimestamp), wait_timeout = :timeout "
+                    " WHERE (source_se = :src OR dest_se = :dest) "
+                    "   AND vo_name = : vo "
+                    "   AND file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED') "
+                    "   AND (wait_timestamp IS NULL OR wait_timeout IS NULL) ",
+                    soci::use(timeout),
+                    soci::use(se),
+                    soci::use(se),
+                    soci::use(vo)
+                    ;
                 }
 
             sql.commit();
@@ -5580,14 +5578,13 @@ void OracleAPI::setFilesToWaiting(const std::string& dn, int timeout)
             sql.begin();
 
             sql <<
-                " UPDATE t_file f, t_job j "
-                " SET f.wait_timestamp = sys_extract_utc(systimestamp), f.wait_timeout = :timeout "
-                " WHERE j.user_dn = :dn "
-                "   AND f.file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED') "
-                "   AND f.job_id = j.job_id "
-                "   AND (f.wait_timestamp IS NULL OR f.wait_timeout IS NULL) ",
-                soci::use(timeout),
-                soci::use(dn)
+                " UPDATE (SELECT t_file.wait_timestamp AS wait_timestamp, t_file.wait_timeout AS wait_timeout "
+                "         FROM t_file INNER JOIN t_job ON t_file.job_id = t_job.job_id "
+                "         WHERE t_job.user_dn = :dn AND "
+                "               t_file.file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED') "
+                "               AND (t_file.wait_timestamp IS NULL or t_file.wait_timeout IS NULL) "
+                " ) SET wait_timestamp = sys_extract_utc(systimestamp), wait_timeout = :timeout",
+                soci::use(dn), soci::use(timeout)
                 ;
 
             sql.commit();
