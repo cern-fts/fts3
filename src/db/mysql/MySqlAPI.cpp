@@ -4886,10 +4886,9 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
                                                               "	AND f.staging_start IS NULL "
                                                               "	AND f.file_state = 'STAGING' "
                                                               "	AND f.source_se = :source_se and f.source_surl like 'srm%'   "
-                                                              "	AND j.submit_host = :hostname and j.job_finished is null "
+                                                              "	AND j.job_finished is null "
                                                               " LIMIT :limit",
                                                               soci::use(hostV),
-                                                              soci::use(hostname),
                                                               soci::use(maxNoConfig)
 
                                                           );
@@ -4940,11 +4939,10 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
                                                      "	AND f.file_state = 'STAGING' "
                                                      "	AND f.source_se = :source_se "
                                                      "	AND j.vo_name = :vo_name and f.source_surl like 'srm%'   "
-                                                     "	AND j.SUBMIT_HOST = :hostname and j.job_finished is null"
+                                                     "	AND j.job_finished is null"
                                                      " LIMIT :limit",
                                                      soci::use(hostName),
                                                      soci::use(voName),
-                                                     soci::use(hostname),
                                                      soci::use(maxConfig)
                                                  );
 
