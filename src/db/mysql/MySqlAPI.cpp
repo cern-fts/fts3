@@ -2367,7 +2367,7 @@ bool MySqlAPI::updateOptimizer(double throughputIn, int, double filesize, double
             sql <<
                 " SELECT active FROM t_optimize_active "
                 " WHERE source_se = :source_se "
-                " dest_se = :dest_se ",
+                " AND dest_se = :dest_se ",
                 soci::use(source_hostname),
                 soci::use(destin_hostname),
                 soci::into(active);
