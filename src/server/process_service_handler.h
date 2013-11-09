@@ -473,7 +473,7 @@ protected:
                                         return;
                                     }
 
-        			//temporarly disabled BDII access for getting the site name, pls do not remove the following 2 lines
+                                //temporarly disabled BDII access for getting the site name, pls do not remove the following 2 lines
                                 sourceSiteName = ""; //siteResolver.getSiteName(surl);
                                 destSiteName = ""; //siteResolver.getSiteName(durl);
 
@@ -779,7 +779,7 @@ protected:
     void executeTransfer_a()
     {
         static bool drainMode = false;
-	static int reuseExec = 0;
+        static int reuseExec = 0;
 
         while (1)
             {
@@ -844,11 +844,12 @@ protected:
 
                         /* --- session reuse section ---*/
                         /*get jobs in submitted state and session reuse on*/
-			
-			if(++reuseExec == 2){
-                        	DBSingleton::instance().getDBObjectInstance()->getSubmittedJobsReuse(jobsReuse, allowedVOs);
-				reuseExec = 0;
-			}
+
+                        if(++reuseExec == 2)
+                            {
+                                DBSingleton::instance().getDBObjectInstance()->getSubmittedJobsReuse(jobsReuse, allowedVOs);
+                                reuseExec = 0;
+                            }
 
                         if (!jobsReuse.empty())
                             {

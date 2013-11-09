@@ -62,7 +62,7 @@ private:
                 catch (...)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Hearbeat failed " << commit;
-                    }		    
+                    }
                 sleep(60);
             }
     }

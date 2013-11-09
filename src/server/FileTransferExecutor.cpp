@@ -197,7 +197,7 @@ void FileTransferExecutor::execute()
                                                     ""
                                                 );
 
-			    //temporarly disabled BDII access for getting the site name, pls do not remove the following 2 lines
+                            //temporarly disabled BDII access for getting the site name, pls do not remove the following 2 lines
                             string sourceSiteName = ""; //siteResolver.getSiteName(temp->SOURCE_SURL);
                             string destSiteName = ""; //siteResolver.getSiteName(temp->DEST_SURL);
 
