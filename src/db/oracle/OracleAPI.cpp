@@ -6351,7 +6351,7 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
                 "      reuse_job = 'Y'",
                 soci::use(jobId);
 
-            sql << "UPDATE t_file SET file_state = 'SUBMITTED', start_time=NULL, transferHost=NULL, t_log_file=NULL, t_log_file_debug=NULL "
+            sql << "UPDATE t_file SET file_state = 'SUBMITTED', start_time=NULL, transferHost=NULL, t_log_file=NULL, t_log_file_debug=NULL, throughput = 0 "
                 "WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
                 soci::use(fileId), soci::use(jobId);
 
