@@ -2811,7 +2811,7 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                                     sql << "update t_optimize_active set datetime=sys_extract_utc(systimestamp), message=:message, active=:active where source_se=:source and dest_se=:dest ",
 				    	soci::use(message.str()), soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
                                 }
-                            else if (ratioSuccessFailure < 100 && throughput != 0 && avgThr !=0)
+                            else if (ratioSuccessFailure < 100)
                                 {
                                     if(active < highDefault || maxActive < highDefault)
                                         active = highDefault;
