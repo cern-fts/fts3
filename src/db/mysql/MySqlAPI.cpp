@@ -3341,6 +3341,9 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
             std::string job_id;
             soci::statement delFilesStmt = (sql.prepare << "DELETE FROM t_file WHERE job_id = :job_id", soci::use(job_id));
             soci::statement delJobsStmt = (sql.prepare << "DELETE FROM t_job WHERE job_id = :job_id", soci::use(job_id));
+	    
+	    soci::statement insertJobsStmt = (sql.prepare << "INSERT INTO t_job_backup SELECT * FROM t_job WHERE job_id = :job_id", soci::use(job_id));
+	    soci::statement insertFileStmt = (sql.prepare << "INSERT INTO t_file_backup SELECT * FROM t_file WHERE job_id = :job_id", soci::use(job_id));	    
 
             int count = 0;
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
@@ -3349,10 +3352,8 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                     soci::row const& r = *i;
                     job_id = r.get<std::string>("job_id");
 
-                    sql << "INSERT INTO t_job_backup SELECT * FROM t_job WHERE job_id = :job_id", soci::use(job_id);
-
-                    sql << "INSERT INTO t_file_backup SELECT * FROM t_file WHERE job_id = :job_id", soci::use(job_id);
-
+                    insertJobsStmt.execute(true);
+                    insertFileStmt.execute(true);		    
 
                     delFilesStmt.execute(true);
                     *nFiles += delFilesStmt.get_affected_rows();
