@@ -328,8 +328,8 @@ static bool checkValidProxy(const std::string& filename)
 
 void heartbeat(void)
 {
-    unsigned myIndex, count;
-    unsigned hashStart, hashEnd;
+    unsigned myIndex=0, count=0;
+    unsigned hashStart=0, hashEnd=0;
 
     while (!stopThreads) {
         db::DBSingleton::instance().getDBObjectInstance()->updateHeartBeat(

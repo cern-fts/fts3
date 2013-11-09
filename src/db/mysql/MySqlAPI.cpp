@@ -4902,8 +4902,8 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
                                     msg.url = row2.get<std::string>("source_surl");
                                     msg.job_id = row2.get<std::string>("job_id");
                                     msg.file_id = row2.get<int>("file_id");
-                                    msg.pinlifetime = row2.get<int>("copy_pin_lifetime");
-                                    msg.bringonlineTimeout = row2.get<int>("bring_online");
+                                    msg.pinlifetime = row2.get<int>("copy_pin_lifetime",0);
+                                    msg.bringonlineTimeout = row2.get<int>("bring_online",0);
 
                                     ret.push_back(msg);
                                     bringOnlineReportStatus("STARTED", "", msg);
@@ -4922,9 +4922,11 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
                         "	AND f.file_state = 'STAGING' "
                         "	AND f.STAGING_START IS NOT NULL "
                         " 	AND j.vo_name = :vo_name "
-                        "	AND f.source_se = :source_se and f.source_surl like 'srm%'   ",
+                        "	AND f.source_se = :source_se and f.source_surl like 'srm%'   "
+			"       AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd)",
                         soci::use(voName),
                         soci::use(hostName),
+                        soci::use(hashSegment.start), soci::use(hashSegment.end),			
                         soci::into(currentStagingFilesConfig)
                         ;
 
@@ -4955,8 +4957,8 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
                             msg.url = row.get<std::string>("source_surl");
                             msg.job_id = row.get<std::string>("job_id");
                             msg.file_id = row.get<int>("file_id");
-                            msg.pinlifetime = row.get<int>("copy_pin_lifetime");
-                            msg.bringonlineTimeout = row.get<int>("bring_online");
+                            msg.pinlifetime = row.get<int>("copy_pin_lifetime",0);
+                            msg.bringonlineTimeout = row.get<int>("bring_online",0);
 
                             ret.push_back(msg);
                             bringOnlineReportStatus("STARTED", "", msg);
