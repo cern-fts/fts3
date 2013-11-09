@@ -326,6 +326,24 @@ static bool checkValidProxy(const std::string& filename)
     return delegCredPtr->isValidProxy(filename);
 }
 
+void heartbeat(void)
+{
+    unsigned myIndex=0, count=0;
+    unsigned hashStart=0, hashEnd=0;
+
+    while (!stopThreads) {
+        db::DBSingleton::instance().getDBObjectInstance()->updateHeartBeat(
+                &myIndex, &count, &hashStart, &hashEnd);
+
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Systole: host " << myIndex << " out of " << count
+                                        << " [" << std::hex << hashStart << ':' << std::hex << hashEnd << ']'
+                                        << std::dec
+                                        << commit;
+
+        boost::this_thread::sleep(boost::posix_time::seconds(60));
+    }
+}
+
 
 int DoServer(int argc, char** argv)
 {
@@ -442,6 +460,9 @@ int DoServer(int argc, char** argv)
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Fatal error (unknown origin), exiting..." << commit;
                     exit(1);
                 }
+
+            boost::thread hbThread(heartbeat);
+
             vector< boost::tuple<string, string, int> >::iterator it;
             std::vector< boost::tuple<std::string, std::string, int> > voHostnameConfig;
             std::vector<struct message_bringonline> urls;
@@ -521,6 +542,7 @@ int DoServer(int argc, char** argv)
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Fatal error (unknown origin), exiting..." << commit;
             return -1;
         }
+    stopThreads = true;
     return EXIT_SUCCESS;
 }
 

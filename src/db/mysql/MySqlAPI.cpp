@@ -4583,6 +4583,8 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
                                                      "	(j.BRING_ONLINE > 0 OR j.COPY_PIN_LIFETIME > 0) "
                                                      "	AND f.file_state = 'STAGING' "
                                                      "	AND f.staging_start IS NULL and f.source_surl like 'srm%' and j.job_finished is null "
+                                                     "  AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd)",
+                                                     soci::use(hashSegment.start), soci::use(hashSegment.end)
                                                  );
 
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
@@ -4616,10 +4618,9 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
                                                               "	AND f.staging_start IS NULL "
                                                               "	AND f.file_state = 'STAGING' "
                                                               "	AND f.source_se = :source_se and f.source_surl like 'srm%'   "
-                                                              "	AND j.submit_host = :hostname and j.job_finished is null "
+                                                              "	AND j.job_finished is null "
                                                               " LIMIT :limit",
                                                               soci::use(hostV),
-                                                              soci::use(hostname),
                                                               soci::use(maxNoConfig)
 
                                                           );
@@ -4632,8 +4633,8 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
                                     msg.url = row2.get<std::string>("source_surl");
                                     msg.job_id = row2.get<std::string>("job_id");
                                     msg.file_id = row2.get<int>("file_id");
-                                    msg.pinlifetime = row2.get<int>("copy_pin_lifetime");
-                                    msg.bringonlineTimeout = row2.get<int>("bring_online");
+                                    msg.pinlifetime = row2.get<int>("copy_pin_lifetime",0);
+                                    msg.bringonlineTimeout = row2.get<int>("bring_online",0);
 
                                     ret.push_back(msg);
                                     bringOnlineReportStatus("STARTED", "", msg);
@@ -4652,9 +4653,11 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
                         "	AND f.file_state = 'STAGING' "
                         "	AND f.STAGING_START IS NOT NULL "
                         " 	AND j.vo_name = :vo_name "
-                        "	AND f.source_se = :source_se and f.source_surl like 'srm%'   ",
+                        "	AND f.source_se = :source_se and f.source_surl like 'srm%'   "
+			"       AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd)",
                         soci::use(voName),
                         soci::use(hostName),
+                        soci::use(hashSegment.start), soci::use(hashSegment.end),			
                         soci::into(currentStagingFilesConfig)
                         ;
 
@@ -4670,11 +4673,10 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
                                                      "	AND f.file_state = 'STAGING' "
                                                      "	AND f.source_se = :source_se "
                                                      "	AND j.vo_name = :vo_name and f.source_surl like 'srm%'   "
-                                                     "	AND j.SUBMIT_HOST = :hostname and j.job_finished is null"
+                                                     "	AND j.job_finished is null"
                                                      " LIMIT :limit",
                                                      soci::use(hostName),
                                                      soci::use(voName),
-                                                     soci::use(hostname),
                                                      soci::use(maxConfig)
                                                  );
 
@@ -4686,8 +4688,8 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
                             msg.url = row.get<std::string>("source_surl");
                             msg.job_id = row.get<std::string>("job_id");
                             msg.file_id = row.get<int>("file_id");
-                            msg.pinlifetime = row.get<int>("copy_pin_lifetime");
-                            msg.bringonlineTimeout = row.get<int>("bring_online");
+                            msg.pinlifetime = row.get<int>("copy_pin_lifetime",0);
+                            msg.bringonlineTimeout = row.get<int>("bring_online",0);
 
                             ret.push_back(msg);
                             bringOnlineReportStatus("STARTED", "", msg);
@@ -4731,10 +4733,30 @@ void MySqlAPI::bringOnlineReportStatus(const std::string & state, const std::str
                 }
             else
                 {
-                    sql.begin();
-                    std::string dbState = state == "FINISHED" ? "SUBMITTED" : state;
-                    std::string dbReason = state == "FINISHED" ? string() : message;
+                    std::string source_surl;
+                    std::string dest_surl;
+                    std::string dbState;
+                    std::string dbReason;
+                    int stage_in_only = 0;
 
+                    sql << "select count(*) from t_file where job_id=:job_id and file_id=:file_id and source_surl=dest_surl",
+                        soci::use(msg.job_id),
+                        soci::use(msg.file_id),
+                        soci::into(stage_in_only);
+
+                    if(stage_in_only == 0)  //stage-in and transfer
+                        {
+                            dbState = state == "FINISHED" ? "SUBMITTED" : state;
+                            dbReason = state == "FINISHED" ? std::string() : message;
+                        }
+                    else //stage-in only
+                        {
+                            dbState = state == "FINISHED" ? "FINISHED" : state;
+                            dbReason = state == "FINISHED" ? std::string() : message;
+                        }
+
+
+                    sql.begin();
                     sql <<
                         " UPDATE t_file "
                         " SET staging_finished = UTC_TIMESTAMP(), reason = :reason, file_state = :fileState "
@@ -4758,7 +4780,14 @@ void MySqlAPI::bringOnlineReportStatus(const std::string & state, const std::str
                             sql << " select count(*) from t_file where job_id=:jobId and file_state='STAGING' ", soci::use(msg.job_id), soci::into(countTr);
                             if(countTr == 0)
                                 {
-                                    updateJobTransferStatus(0, msg.job_id, "SUBMITTED");
+                                    if(stage_in_only == 0)
+                                        {
+                                            updateJobTransferStatus(0, msg.job_id, "SUBMITTED");
+                                        }
+                                    else
+                                        {
+                                            updateJobTransferStatus(0, msg.job_id, dbState);
+                                        }
                                 }
                         }
                     else
@@ -4766,9 +4795,6 @@ void MySqlAPI::bringOnlineReportStatus(const std::string & state, const std::str
                             updateJobTransferStatus(0, msg.job_id, dbState);
                         }
                 }
-
-
-
         }
     catch (std::exception& e)
         {
@@ -4776,6 +4802,7 @@ void MySqlAPI::bringOnlineReportStatus(const std::string & state, const std::str
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
 }
+
 
 void MySqlAPI::addToken(const std::string & job_id, int file_id, const std::string & token)
 {
