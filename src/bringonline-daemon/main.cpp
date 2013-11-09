@@ -331,17 +331,18 @@ void heartbeat(void)
     unsigned myIndex=0, count=0;
     unsigned hashStart=0, hashEnd=0;
 
-    while (!stopThreads) {
-        db::DBSingleton::instance().getDBObjectInstance()->updateHeartBeat(
+    while (!stopThreads)
+        {
+            db::DBSingleton::instance().getDBObjectInstance()->updateHeartBeat(
                 &myIndex, &count, &hashStart, &hashEnd);
 
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Systole: host " << myIndex << " out of " << count
-                                        << " [" << std::hex << hashStart << ':' << std::hex << hashEnd << ']'
-                                        << std::dec
-                                        << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Systole: host " << myIndex << " out of " << count
+                                            << " [" << std::hex << hashStart << ':' << std::hex << hashEnd << ']'
+                                            << std::dec
+                                            << commit;
 
-        boost::this_thread::sleep(boost::posix_time::seconds(60));
-    }
+            boost::this_thread::sleep(boost::posix_time::seconds(60));
+        }
 }
 
 

@@ -488,26 +488,26 @@ protected:
 
                                 if (enableOptimization.compare("true") == 0 && cfgs.empty())
                                     {
-                                		optional<ProtocolResolver::protocol> p =
-                                				ProtocolResolver::getUserDefinedProtocol(tempUrl);
+                                        optional<ProtocolResolver::protocol> p =
+                                            ProtocolResolver::getUserDefinedProtocol(tempUrl);
 
-                                		if (p.is_initialized())
-                                			{
-            									BufSize = (*p).tcp_buffer_size;
-            									StreamsperFile = (*p).nostreams;
-            									Timeout = (*p).urlcopy_tx_to;
-                                			}
-                                		else
-            								{
-												optimize = true;
-												opt_config = new OptimizerSample();
-												DBSingleton::instance().getDBObjectInstance()->fetchOptimizationConfig2(opt_config, source_hostname, destin_hostname);
-												BufSize = opt_config->getBufSize();
-												StreamsperFile = opt_config->getStreamsperFile();
-												Timeout = opt_config->getTimeout();
-												delete opt_config;
-												opt_config = NULL;
-            								}
+                                        if (p.is_initialized())
+                                            {
+                                                BufSize = (*p).tcp_buffer_size;
+                                                StreamsperFile = (*p).nostreams;
+                                                Timeout = (*p).urlcopy_tx_to;
+                                            }
+                                        else
+                                            {
+                                                optimize = true;
+                                                opt_config = new OptimizerSample();
+                                                DBSingleton::instance().getDBObjectInstance()->fetchOptimizationConfig2(opt_config, source_hostname, destin_hostname);
+                                                BufSize = opt_config->getBufSize();
+                                                StreamsperFile = opt_config->getStreamsperFile();
+                                                Timeout = opt_config->getTimeout();
+                                                delete opt_config;
+                                                opt_config = NULL;
+                                            }
                                     }
                                 else
                                     {
@@ -795,7 +795,7 @@ protected:
     void executeTransfer_a()
     {
         static bool drainMode = false;
-	static int reuseExec = 0;
+        static int reuseExec = 0;
 
         while (1)
             {
@@ -860,10 +860,11 @@ protected:
 
                         /* --- session reuse section ---*/
                         /*get jobs in submitted state and session reuse on*/
-			if(++reuseExec == 2){
-                        	DBSingleton::instance().getDBObjectInstance()->getSubmittedJobsReuse(jobsReuse, allowedVOs);
-				reuseExec = 0;
-			}
+                        if(++reuseExec == 2)
+                            {
+                                DBSingleton::instance().getDBObjectInstance()->getSubmittedJobsReuse(jobsReuse, allowedVOs);
+                                reuseExec = 0;
+                            }
 
                         if (!jobsReuse.empty())
                             {

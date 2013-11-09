@@ -143,11 +143,11 @@ int main(int ac, char* av[])
 
                                                             vector<string> retries;
                                                             transform(
-                                                            		stat->retries.begin(),
-                                                            		stat->retries.end(),
-                                                            		inserter(retries, retries.begin()),
-                                                            		lambda::bind(&tns3__FileTransferRetry::reason, lambda::_1)
-                                                            	);
+                                                                stat->retries.begin(),
+                                                                stat->retries.end(),
+                                                                inserter(retries, retries.begin()),
+                                                                lambda::bind(&tns3__FileTransferRetry::reason, lambda::_1)
+                                                            );
 
                                                             cli->printer().file_list(values, retries);
                                                         }

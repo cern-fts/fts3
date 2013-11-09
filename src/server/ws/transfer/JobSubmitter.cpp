@@ -477,14 +477,15 @@ void JobSubmitter::init(tns3__TransferParams *jobParams)
         }
 }
 
-string JobSubmitter::getActivity(string metadata) {
-	// default value returned if the metadata are empty or an activity was not specified
-	static const string defstr = "default";
-	// if metadata are empty return default
-	if (metadata.empty()) return defstr;
-	// regular expression for finding the activity value
-	static const regex re("^.*\"activity\"\\s*:\\s*\"(.+)\".*$");
-	// look for the activity in the string and if it's there return the value
+string JobSubmitter::getActivity(string metadata)
+{
+    // default value returned if the metadata are empty or an activity was not specified
+    static const string defstr = "default";
+    // if metadata are empty return default
+    if (metadata.empty()) return defstr;
+    // regular expression for finding the activity value
+    static const regex re("^.*\"activity\"\\s*:\\s*\"(.+)\".*$");
+    // look for the activity in the string and if it's there return the value
     smatch what;
     if (regex_match(metadata, what, re, match_extra)) return what[1];
     // if the activity was not found return default
@@ -528,30 +529,30 @@ string JobSubmitter::submit()
         }
 
     bool protocol =
-    		params.isParamSet(JobParameterHandler::TIMEOUT) ||
-    		params.isParamSet(JobParameterHandler::NOSTREAMS) ||
-    		params.isParamSet(JobParameterHandler::BUFFER_SIZE)
-    		;
+        params.isParamSet(JobParameterHandler::TIMEOUT) ||
+        params.isParamSet(JobParameterHandler::NOSTREAMS) ||
+        params.isParamSet(JobParameterHandler::BUFFER_SIZE)
+        ;
 
     // if at least one protocol parameter was set make sure they are all set
     // use the defaults to fill the gaps
     if (protocol)
-		{
-			if (!params.isParamSet(JobParameterHandler::TIMEOUT))
-				{
-					params.set(JobParameterHandler::TIMEOUT, "3600");
-				}
+        {
+            if (!params.isParamSet(JobParameterHandler::TIMEOUT))
+                {
+                    params.set(JobParameterHandler::TIMEOUT, "3600");
+                }
 
-			if (!params.isParamSet(JobParameterHandler::NOSTREAMS))
-				{
-					params.set(JobParameterHandler::NOSTREAMS, "4");
-				}
+            if (!params.isParamSet(JobParameterHandler::NOSTREAMS))
+                {
+                    params.set(JobParameterHandler::NOSTREAMS, "4");
+                }
 
-			if (!params.isParamSet(JobParameterHandler::BUFFER_SIZE))
-				{
-					params.set(JobParameterHandler::BUFFER_SIZE, "0");
-				}
-		}
+            if (!params.isParamSet(JobParameterHandler::BUFFER_SIZE))
+                {
+                    params.set(JobParameterHandler::BUFFER_SIZE, "0");
+                }
+        }
 
 
     // submit the transfer job (add it to the DB)

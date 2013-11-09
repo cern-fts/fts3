@@ -125,13 +125,13 @@ vector<string> ConfigurationHandler::get()
             // check if it's a group or a SE
             if (db->checkGroupExists(*it))
                 {
-            		StandaloneGrCfg cfg(dn, se);
-            		ret.push_back(cfg.json());
+                    StandaloneGrCfg cfg(dn, se);
+                    ret.push_back(cfg.json());
                 }
             else
                 {
-            		StandaloneSeCfg cfg(dn, se);
-            		ret.push_back(cfg.json());
+                    StandaloneSeCfg cfg(dn, se);
+                    ret.push_back(cfg.json());
                 }
         }
     // get all share only configurations
@@ -157,13 +157,13 @@ vector<string> ConfigurationHandler::get()
 
             if (grPair)
                 {
-            		GrPairCfg cfg(dn, it2->first, it2->second);
+                    GrPairCfg cfg(dn, it2->first, it2->second);
                     ret.push_back(cfg.json());
                 }
             else
                 {
-            		SePairCfg cfg(dn, it2->first, it2->second);
-            		ret.push_back(cfg.json());
+                    SePairCfg cfg(dn, it2->first, it2->second);
+                    ret.push_back(cfg.json());
                 }
         }
 
@@ -172,10 +172,10 @@ vector<string> ConfigurationHandler::get()
     vector<string>::iterator it3;
 
     for (it3 = activityshares.begin(); it3 != activityshares.end(); it3++)
-    	{
-    		ActivityCfg cfg(dn, *it3);
-    		ret.push_back(cfg.json());
-    	}
+        {
+            ActivityCfg cfg(dn, *it3);
+            ret.push_back(cfg.json());
+        }
 
     return ret;
 }

@@ -154,12 +154,12 @@ optional<ProtocolResolver::protocol> ProtocolResolver::getProtocolCfg(optional< 
 
 optional<ProtocolResolver::protocol> ProtocolResolver::getUserDefinedProtocol(TransferFiles* file)
 {
-	if (!file || file->INTERNAL_FILE_PARAMS.empty()) return optional<protocol>();
+    if (!file || file->INTERNAL_FILE_PARAMS.empty()) return optional<protocol>();
 
-	// regular expression for extracting protocol parameters
-	static const regex re("^nostreams:(\\d+),timeout:(\\d+),buffersize:(\\d+)$");
+    // regular expression for extracting protocol parameters
+    static const regex re("^nostreams:(\\d+),timeout:(\\d+),buffersize:(\\d+)$");
 
-	smatch what;
+    smatch what;
     if (!regex_match(file->INTERNAL_FILE_PARAMS, what, re, match_extra)) return optional<protocol>();
 
     protocol ret;
@@ -242,9 +242,9 @@ optional< pair<string, string> > ProtocolResolver::getFirst(list<LinkType> l)
 
 bool ProtocolResolver::resolve()
 {
-	// check if the user specified the protocol parameters while submitting
-	prot = getUserDefinedProtocol(file);
-	if (prot.is_initialized()) return true;
+    // check if the user specified the protocol parameters while submitting
+    prot = getUserDefinedProtocol(file);
+    if (prot.is_initialized()) return true;
 
     // check if there's a SE pair configuration
     prot = getProtocolCfg(link[SE_PAIR]);

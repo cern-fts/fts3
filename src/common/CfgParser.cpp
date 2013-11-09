@@ -70,16 +70,16 @@ const std::set<std::string> CfgParser::allTokens =
 const std::map< std::string, std::set <std::string> > CfgParser::initStandaloneSeCfgTokens()
 {
     std::set<std::string> root = list_of
-                       ("se")
-                       ("active")
-                       ("in")
-                       ("out")
-                       ;
+                                 ("se")
+                                 ("active")
+                                 ("in")
+                                 ("out")
+                                 ;
 
     std::set<std::string> cfg = list_of
-                      ("share")
-                      ("protocol")
-                      ;
+                                ("share")
+                                ("protocol")
+                                ;
 
     return map_list_of
            (std::string(), root)
@@ -91,17 +91,17 @@ const std::map< std::string, std::set <std::string> > CfgParser::initStandaloneS
 const std::map< std::string, std::set <std::string> > CfgParser::initStandaloneGrCfgTokens()
 {
     std::set<std::string> root = list_of
-                       ("group")
-                       ("members")
-                       ("active")
-                       ("in")
-                       ("out")
-                       ;
+                                 ("group")
+                                 ("members")
+                                 ("active")
+                                 ("in")
+                                 ("out")
+                                 ;
 
     std::set<std::string> cfg = list_of
-                      ("share")
-                      ("protocol")
-                      ;
+                                ("share")
+                                ("protocol")
+                                ;
 
     return map_list_of
            (std::string(), root)
@@ -113,13 +113,13 @@ const std::map< std::string, std::set <std::string> > CfgParser::initStandaloneG
 const std::map< std::string, std::set <std::string> > CfgParser::initSePairCfgTokens()
 {
     std::set<std::string> root = list_of
-                       ("symbolic_name")
-                       ("active")
-                       ("source_se")
-                       ("destination_se")
-                       ("share")
-                       ("protocol")
-                       ;
+                                 ("symbolic_name")
+                                 ("active")
+                                 ("source_se")
+                                 ("destination_se")
+                                 ("share")
+                                 ("protocol")
+                                 ;
 
     return map_list_of
            (std::string(), root)
@@ -129,13 +129,13 @@ const std::map< std::string, std::set <std::string> > CfgParser::initSePairCfgTo
 const std::map< std::string, std::set <std::string> > CfgParser::initGrPairCfgTokens()
 {
     std::set<std::string> root = list_of
-                       ("symbolic_name")
-                       ("active")
-                       ("source_group")
-                       ("destination_group")
-                       ("share")
-                       ("protocol")
-                       ;
+                                 ("symbolic_name")
+                                 ("active")
+                                 ("source_group")
+                                 ("destination_group")
+                                 ("share")
+                                 ("protocol")
+                                 ;
 
     return map_list_of
            (std::string(), root)
@@ -145,11 +145,11 @@ const std::map< std::string, std::set <std::string> > CfgParser::initGrPairCfgTo
 const std::map<std::string, std::set <std::string> > CfgParser::initShareOnlyCfgTokens()
 {
     std::set<std::string> root = list_of
-                       ("se")
-                       ("active")
-                       ("in")
-                       ("out")
-                       ;
+                                 ("se")
+                                 ("active")
+                                 ("in")
+                                 ("out")
+                                 ;
 
     return map_list_of
            (std::string(), root)
@@ -159,10 +159,10 @@ const std::map<std::string, std::set <std::string> > CfgParser::initShareOnlyCfg
 const std::map<std::string, std::set <std::string> > CfgParser::initActivityShareCfgTokens()
 {
     std::set<std::string> root = list_of
-                       ("vo")
-                       ("active")
-                       ("share")
-                       ;
+                                 ("vo")
+                                 ("active")
+                                 ("share")
+                                 ;
 
     return map_list_of
            (std::string(), root)

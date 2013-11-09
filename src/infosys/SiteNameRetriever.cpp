@@ -126,9 +126,9 @@ string SiteNameRetriever::getFromBdii(string se)
 
 string SiteNameRetriever::getSiteName(string se)
 {
-	// check if the infosys has been activated in the fts3config file
-	bool active = theServerConfig().get<bool>("Infosys");
-	if (!active) return string();
+    // check if the infosys has been activated in the fts3config file
+    bool active = theServerConfig().get<bool>("Infosys");
+    if (!active) return string();
 
     // lock the cache
     mutex::scoped_lock lock(m);

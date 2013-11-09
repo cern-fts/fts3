@@ -278,7 +278,7 @@ std::vector<std::string> OracleAPI::getAllActivityShareConf()
             soci::rowset<soci::row>::const_iterator it;
             for (it = rs.begin(); it != rs.end(); it++)
                 {
-            		ret.push_back(it->get<std::string>("vo"));
+                    ret.push_back(it->get<std::string>("vo"));
                 }
         }
     catch (std::exception& e)
@@ -917,16 +917,16 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_elemen
     if (!nostreams.empty()) jobParams = "nostreams:" + nostreams;
     // if timeout was specified ...
     if (!timeout.empty())
-    	{
-			if (!jobParams.empty()) jobParams += ",";
-    		jobParams += "timeout:" + timeout;
-    	}
+        {
+            if (!jobParams.empty()) jobParams += ",";
+            jobParams += "timeout:" + timeout;
+        }
     // if buffer size was specified ...
     if (!buffSize.empty())
-    	{
-			if (!jobParams.empty()) jobParams += ",";
-			jobParams += "buffersize:" + buffSize;
-    	}
+        {
+            if (!jobParams.empty()) jobParams += ",";
+            jobParams += "buffersize:" + buffSize;
+        }
 
 
     soci::session sql(*connectionPool);
@@ -1000,7 +1000,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_elemen
                     soci::use(destSe),
                     soci::use(timeout),
                     soci::use(activity)
-            );
+                                                   );
 
             // When reuse is enabled, we hash the job id instead of the file ID
             // This guarantees that the whole set belong to the same machine, but keeping
@@ -2197,123 +2197,123 @@ void OracleAPI::auditConfiguration(const std::string & dn, const std::string & c
 void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string & /*source_hostname*/, const std::string & /*destin_hostname*/)
 {
 
-	ops->streamsperfile = DEFAULT_NOSTREAMS;
-	ops->timeout = MID_TIMEOUT;
-	ops->bufsize = DEFAULT_BUFFSIZE;
-/*
-    soci::session sql(*connectionPool);
+    ops->streamsperfile = DEFAULT_NOSTREAMS;
+    ops->timeout = MID_TIMEOUT;
+    ops->bufsize = DEFAULT_BUFFSIZE;
+    /*
+        soci::session sql(*connectionPool);
 
-    try
-        {
-            int numberOfSamples = 0;
+        try
+            {
+                int numberOfSamples = 0;
 
-            sql <<
-                " SELECT COUNT(*) "
-                " FROM t_optimize "
-                " WHERE throughput is NULL "
-                "   AND source_se = :source "
-                "   AND dest_se=:destination "
-                "   AND file_id=0 ",
-                soci::use(source_hostname),
-                soci::use(destin_hostname),
-                soci::into(numberOfSamples);
+                sql <<
+                    " SELECT COUNT(*) "
+                    " FROM t_optimize "
+                    " WHERE throughput is NULL "
+                    "   AND source_se = :source "
+                    "   AND dest_se=:destination "
+                    "   AND file_id=0 ",
+                    soci::use(source_hostname),
+                    soci::use(destin_hostname),
+                    soci::into(numberOfSamples);
 
-            if (numberOfSamples > 0)
-                {
+                if (numberOfSamples > 0)
+                    {
 
-                    soci::rowset<soci::row> rs = (
-                                                     sql.prepare <<
-                                                     " SELECT * FROM ("
-                                                     " SELECT rownum as rn, nostreams, timeout, buffer "
-                                                     " FROM t_optimize "
-                                                     " WHERE source_se = :source "
-                                                     "  AND dest_se = :dest "
-                                                     "  AND throughput is NULL "
-                                                     "  AND file_id = 0 "
-                                                     " ORDER BY nostreams ASC, timeout ASC, buffer ASC "
-                                                     ") WHERE rn = 1",
-                                                     soci::use(source_hostname),
-                                                     soci::use(destin_hostname)
-                                                 );
+                        soci::rowset<soci::row> rs = (
+                                                         sql.prepare <<
+                                                         " SELECT * FROM ("
+                                                         " SELECT rownum as rn, nostreams, timeout, buffer "
+                                                         " FROM t_optimize "
+                                                         " WHERE source_se = :source "
+                                                         "  AND dest_se = :dest "
+                                                         "  AND throughput is NULL "
+                                                         "  AND file_id = 0 "
+                                                         " ORDER BY nostreams ASC, timeout ASC, buffer ASC "
+                                                         ") WHERE rn = 1",
+                                                         soci::use(source_hostname),
+                                                         soci::use(destin_hostname)
+                                                     );
 
-                    soci::rowset<soci::row>::const_iterator r = rs.begin();
+                        soci::rowset<soci::row>::const_iterator r = rs.begin();
 
-                    if (r != rs.end())
-                        {
-                            // we are expecting just one row (LIMIT 1)
-                            ops->streamsperfile = static_cast<int>(r->get<double>("NOSTREAMS"));
-                            ops->timeout = static_cast<int>(r->get<double>("TIMEOUT"));
-                            ops->bufsize = static_cast<int>(r->get<double>("BUFFER"));
-                            ops->file_id = 1;
+                        if (r != rs.end())
+                            {
+                                // we are expecting just one row (LIMIT 1)
+                                ops->streamsperfile = static_cast<int>(r->get<double>("NOSTREAMS"));
+                                ops->timeout = static_cast<int>(r->get<double>("TIMEOUT"));
+                                ops->bufsize = static_cast<int>(r->get<double>("BUFFER"));
+                                ops->file_id = 1;
 
-                        }
-                    else
-                        {
-                            // or no row at all
-                            ops->streamsperfile = DEFAULT_NOSTREAMS;
-                            ops->timeout = MID_TIMEOUT;
-                            ops->bufsize = DEFAULT_BUFFSIZE;
-                            ops->file_id = 0;
-                        }
+                            }
+                        else
+                            {
+                                // or no row at all
+                                ops->streamsperfile = DEFAULT_NOSTREAMS;
+                                ops->timeout = MID_TIMEOUT;
+                                ops->bufsize = DEFAULT_BUFFSIZE;
+                                ops->file_id = 0;
+                            }
 
-                }
-            else
-                {
+                    }
+                else
+                    {
 
-                    unsigned numberOfActives = 0;
+                        unsigned numberOfActives = 0;
 
-                    sql << " SELECT COUNT(*) "
-                        " FROM t_file "
-                        " WHERE t_file.file_state = 'ACTIVE' "
-                        "   AND t_file.source_se = :source "
-                        "   AND t_file.dest_se = :dest",
-                        soci::use(source_hostname),
-                        soci::use(destin_hostname),
-                        soci::into(numberOfActives);
+                        sql << " SELECT COUNT(*) "
+                            " FROM t_file "
+                            " WHERE t_file.file_state = 'ACTIVE' "
+                            "   AND t_file.source_se = :source "
+                            "   AND t_file.dest_se = :dest",
+                            soci::use(source_hostname),
+                            soci::use(destin_hostname),
+                            soci::into(numberOfActives);
 
-                    soci::rowset<soci::row> rs = (
-                                                     sql.prepare <<
-                                                     " SELECT * FROM ("
-                                                     " SELECT rownum as rn, throughput, active, nostreams, timeout, buffer "
-                                                     " FROM  "
-                                                     "  t_optimize "
-                                                     "  WHERE source_se = :source "
-                                                     "      AND dest_se = :destination "
-                                                     "      AND throughput IS NOT NULL "
-                                                     "  ORDER BY ABS(active - :active), throughput DESC"
-                                                     ") WHERE rownum = 1 ",
-                                                     soci::use(source_hostname),
-                                                     soci::use(destin_hostname),
-                                                     soci::use(numberOfActives)
-                                                 );
+                        soci::rowset<soci::row> rs = (
+                                                         sql.prepare <<
+                                                         " SELECT * FROM ("
+                                                         " SELECT rownum as rn, throughput, active, nostreams, timeout, buffer "
+                                                         " FROM  "
+                                                         "  t_optimize "
+                                                         "  WHERE source_se = :source "
+                                                         "      AND dest_se = :destination "
+                                                         "      AND throughput IS NOT NULL "
+                                                         "  ORDER BY ABS(active - :active), throughput DESC"
+                                                         ") WHERE rownum = 1 ",
+                                                         soci::use(source_hostname),
+                                                         soci::use(destin_hostname),
+                                                         soci::use(numberOfActives)
+                                                     );
 
-                    soci::rowset<soci::row>::const_iterator r = rs.begin();
+                        soci::rowset<soci::row>::const_iterator r = rs.begin();
 
-                    if (r != rs.end())
-                        {
-                            // we are expecting just one row (LIMIT 1)
-                            ops->streamsperfile = static_cast<int>(r->get<double>("NOSTREAMS"));
-                            ops->timeout = static_cast<int>(r->get<double>("TIMEOUT"));
-                            ops->bufsize = static_cast<int>(r->get<double>("BUFFER"));
-                            ops->file_id = 1;
+                        if (r != rs.end())
+                            {
+                                // we are expecting just one row (LIMIT 1)
+                                ops->streamsperfile = static_cast<int>(r->get<double>("NOSTREAMS"));
+                                ops->timeout = static_cast<int>(r->get<double>("TIMEOUT"));
+                                ops->bufsize = static_cast<int>(r->get<double>("BUFFER"));
+                                ops->file_id = 1;
 
-                        }
-                    else
-                        {
-                            // or no row at all
-                            ops->streamsperfile = DEFAULT_NOSTREAMS;
-                            ops->timeout = MID_TIMEOUT;
-                            ops->bufsize = DEFAULT_BUFFSIZE;
-                            ops->file_id = 0;
-                        }
-                }
+                            }
+                        else
+                            {
+                                // or no row at all
+                                ops->streamsperfile = DEFAULT_NOSTREAMS;
+                                ops->timeout = MID_TIMEOUT;
+                                ops->bufsize = DEFAULT_BUFFSIZE;
+                                ops->file_id = 0;
+                            }
+                    }
 
-        }
-    catch (std::exception& e)
-        {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-*/	
+            }
+        catch (std::exception& e)
+            {
+                throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            }
+    */
 }
 
 void OracleAPI::recordOptimizerUpdate(soci::session& sql, int active, double filesize,
@@ -2641,7 +2641,7 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                     double filesize = 0.0;
                     int active = 0;
                     int maxActive = 0;
-		    std::stringstream message;
+                    std::stringstream message;
 
                     // Weighted average for the 12 less newest transfers
                     soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
@@ -2746,24 +2746,24 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                             if(ratioSuccessFailure == 100 && throughput != 0 && avgThr !=0 && throughput > avgThr)
                                 {
                                     active = maxActive + 1;
-				    
-				    message << "Increasing active by 1, previously " 
-				    	    << maxActive 
-					    << " now max active "
-					    << active
-					    << " for link "
-					    << source_hostname 
-					    << " -> "
-					    << destin_hostname 
-					    << " because success rate is " 
-					    << ratioSuccessFailure 
-					    << "% and current throughput is "
-					    << throughput
-					    << " and is bigger than previous "
-					    << avgThr;						    
-				    
+
+                                    message << "Increasing active by 1, previously "
+                                            << maxActive
+                                            << " now max active "
+                                            << active
+                                            << " for link "
+                                            << source_hostname
+                                            << " -> "
+                                            << destin_hostname
+                                            << " because success rate is "
+                                            << ratioSuccessFailure
+                                            << "% and current throughput is "
+                                            << throughput
+                                            << " and is bigger than previous "
+                                            << avgThr;
+
                                     sql << "update t_optimize_active set datetime=sys_extract_utc(systimestamp), message=:message, active=:active where source_se=:source and dest_se=:dest ",
-				    	soci::use(message.str()), soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
+                                        soci::use(message.str()), soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
                                 }
                             else if(ratioSuccessFailure == 100 && throughput != 0 && avgThr !=0 && throughput == avgThr)
                                 {
@@ -2771,22 +2771,22 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                                         active = maxActive + 1;
                                     else
                                         active = maxActive;
-					
-				    message << "Success rate is " 
-				    	    << ratioSuccessFailure 
-					    << "% for link "
-					    << source_hostname 
-					    << " -> "
-					    << destin_hostname 
-					    << " and current throughput is "
-					    << throughput
-					    << " equal to previous "
-					    << avgThr
-					    << " so max active remains "
-					    << maxActive;						
-					
+
+                                    message << "Success rate is "
+                                            << ratioSuccessFailure
+                                            << "% for link "
+                                            << source_hostname
+                                            << " -> "
+                                            << destin_hostname
+                                            << " and current throughput is "
+                                            << throughput
+                                            << " equal to previous "
+                                            << avgThr
+                                            << " so max active remains "
+                                            << maxActive;
+
                                     sql << "update t_optimize_active set datetime=sys_extract_utc(systimestamp), message=:message, active=:active where source_se=:source and dest_se=:dest ",
-				    	soci::use(message.str()), soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
+                                        soci::use(message.str()), soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
                                 }
                             else if(ratioSuccessFailure == 100 && throughput != 0 && avgThr !=0 && throughput < avgThr)
                                 {
@@ -2794,22 +2794,22 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                                         active = highDefault;
                                     else
                                         active = maxActive - 1;
-					
-				    message << "Success rate is " 
-				    	    << ratioSuccessFailure 
-					    << "% for link "
-					    << source_hostname 
-					    << " -> "
-					    << destin_hostname 
-					    << " and current throughput "
-					    << throughput
-					    << " is less than previous sample "
-					    << avgThr
-					    << " so max active is decreased by 2 and now is "
-					    << active;						
-					
+
+                                    message << "Success rate is "
+                                            << ratioSuccessFailure
+                                            << "% for link "
+                                            << source_hostname
+                                            << " -> "
+                                            << destin_hostname
+                                            << " and current throughput "
+                                            << throughput
+                                            << " is less than previous sample "
+                                            << avgThr
+                                            << " so max active is decreased by 2 and now is "
+                                            << active;
+
                                     sql << "update t_optimize_active set datetime=sys_extract_utc(systimestamp), message=:message, active=:active where source_se=:source and dest_se=:dest ",
-				    	soci::use(message.str()), soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
+                                        soci::use(message.str()), soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
                                 }
                             else if (ratioSuccessFailure < 100)
                                 {
@@ -2817,37 +2817,37 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                                         active = highDefault;
                                     else
                                         active = maxActive - 2;
-					
-				    message << "Success rate is " 
-				    	    << ratioSuccessFailure 
-					    << "% for link "
-					    << source_hostname 
-					    << " -> "
-					    << destin_hostname 
-					    << " and current throughput is "
-					    << throughput
-					    << " while previous is "
-					    << avgThr
-					    << " so max active is decreased by 2 and now is "
-					    << active;						
-					
+
+                                    message << "Success rate is "
+                                            << ratioSuccessFailure
+                                            << "% for link "
+                                            << source_hostname
+                                            << " -> "
+                                            << destin_hostname
+                                            << " and current throughput is "
+                                            << throughput
+                                            << " while previous is "
+                                            << avgThr
+                                            << " so max active is decreased by 2 and now is "
+                                            << active;
+
                                     sql << "update t_optimize_active set datetime=sys_extract_utc(systimestamp), message=:message, active=:active where source_se=:source and dest_se=:dest ",
-				    	soci::use(message.str()), soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
+                                        soci::use(message.str()), soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
                                 }
                             else if(active == 0 && isNull == soci::i_null )
                                 {
                                     active = highDefault;
-				    
-				    message << "Number of active for link " 
-					    << source_hostname 
-					    << " -> "
-					    << destin_hostname 
-					    << " is 0 and there is no max active yet into the db (no samples) "						
-					    << " so max active now is the default "
-					    << active;					    
-				    
+
+                                    message << "Number of active for link "
+                                            << source_hostname
+                                            << " -> "
+                                            << destin_hostname
+                                            << " is 0 and there is no max active yet into the db (no samples) "
+                                            << " so max active now is the default "
+                                            << active;
+
                                     sql << "update t_optimize_active set datetime=sys_extract_utc(systimestamp), message=:message, active=:active where source_se=:source and dest_se=:dest ",
-				    	soci::use(message.str()), soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
+                                        soci::use(message.str()), soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
                                 }
                             else
                                 {
@@ -2855,22 +2855,22 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                                         active = highDefault;
                                     else
                                         active = maxActive;
-					
-				    message << "Number of active for link " 
-					    << source_hostname 
-					    << " -> "
-					    << destin_hostname 
-					    << " is "
-					    << active
-					    <<  " success rate is "
-					    << ratioSuccessFailure
-					    << "% current throughput is "
-					    << throughput
-					    << " and previous throughput is "						
-					    << avgThr;						
-					
+
+                                    message << "Number of active for link "
+                                            << source_hostname
+                                            << " -> "
+                                            << destin_hostname
+                                            << " is "
+                                            << active
+                                            <<  " success rate is "
+                                            << ratioSuccessFailure
+                                            << "% current throughput is "
+                                            << throughput
+                                            << " and previous throughput is "
+                                            << avgThr;
+
                                     sql << "update t_optimize_active set datetime=sys_extract_utc(systimestamp), message=:message, active=:active where source_se=:source and dest_se=:dest ",
-				    	soci::use(message.str()), soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
+                                        soci::use(message.str()), soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
                                 }
 
                             sql.commit();
@@ -3494,11 +3494,11 @@ void OracleAPI::blacklistDn(std::string dn, std::string msg, std::string adm_dn)
             sql.begin();
 
             sql << " MERGE INTO t_bad_dns USING "
-                   "   (SELECT :dn AS dn, :message AS message, sys_extract_utc(systimestamp) as tstamp, :admin AS admin FROM dual) Blacklisted "
-                   " ON (t_bad_dns.dn = Blacklisted.dn) "
-                   " WHEN NOT MATCHED THEN INSERT (dn, message, addition_time, admin_dn) VALUES "
-                   "                              (BlackListed.dn, BlackListed.message, BlackListed.tstamp, BlackListed.admin)",
-                   soci::use(dn), soci::use(msg), soci::use(adm_dn);
+                "   (SELECT :dn AS dn, :message AS message, sys_extract_utc(systimestamp) as tstamp, :admin AS admin FROM dual) Blacklisted "
+                " ON (t_bad_dns.dn = Blacklisted.dn) "
+                " WHEN NOT MATCHED THEN INSERT (dn, message, addition_time, admin_dn) VALUES "
+                "                              (BlackListed.dn, BlackListed.message, BlackListed.tstamp, BlackListed.admin)",
+                soci::use(dn), soci::use(msg), soci::use(adm_dn);
             sql.commit();
         }
     catch (std::exception& e)
@@ -5542,18 +5542,18 @@ void OracleAPI::setFilesToWaiting(const std::string& se, const std::string& vo, 
                 }
             else
                 {
-                sql <<
-                    " UPDATE t_file "
-                    " SET wait_timestamp = sys_extract_utc(systimestamp), wait_timeout = :timeout "
-                    " WHERE (source_se = :src OR dest_se = :dest) "
-                    "   AND vo_name = : vo "
-                    "   AND file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED') "
-                    "   AND (wait_timestamp IS NULL OR wait_timeout IS NULL) ",
-                    soci::use(timeout),
-                    soci::use(se),
-                    soci::use(se),
-                    soci::use(vo)
-                    ;
+                    sql <<
+                        " UPDATE t_file "
+                        " SET wait_timestamp = sys_extract_utc(systimestamp), wait_timeout = :timeout "
+                        " WHERE (source_se = :src OR dest_se = :dest) "
+                        "   AND vo_name = : vo "
+                        "   AND file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED') "
+                        "   AND (wait_timestamp IS NULL OR wait_timeout IS NULL) ",
+                        soci::use(timeout),
+                        soci::use(se),
+                        soci::use(se),
+                        soci::use(vo)
+                        ;
                 }
 
             sql.commit();

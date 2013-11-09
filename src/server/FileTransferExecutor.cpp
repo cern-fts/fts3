@@ -107,25 +107,25 @@ void FileTransferExecutor::execute()
 
                     if (optimize)
                         {
-                    		optional<ProtocolResolver::protocol> p = ProtocolResolver::getUserDefinedProtocol(temp.get());
+                            optional<ProtocolResolver::protocol> p = ProtocolResolver::getUserDefinedProtocol(temp.get());
 
-                    		if (p.is_initialized())
-                    			{
-									BufSize = (*p).tcp_buffer_size;
-									StreamsperFile = (*p).nostreams;
-									Timeout = (*p).urlcopy_tx_to;
-                    			}
-                    		else
-								{
-									OptimizerSample* opt_config = new OptimizerSample();
-									db->initOptimizer(source_hostname, destin_hostname, 0);
-									db->fetchOptimizationConfig2(opt_config, source_hostname, destin_hostname);
-									BufSize = opt_config->getBufSize();
-									StreamsperFile = opt_config->getStreamsperFile();
-									Timeout = opt_config->getTimeout();
-									delete opt_config;
-									opt_config = NULL;
-								}
+                            if (p.is_initialized())
+                                {
+                                    BufSize = (*p).tcp_buffer_size;
+                                    StreamsperFile = (*p).nostreams;
+                                    Timeout = (*p).urlcopy_tx_to;
+                                }
+                            else
+                                {
+                                    OptimizerSample* opt_config = new OptimizerSample();
+                                    db->initOptimizer(source_hostname, destin_hostname, 0);
+                                    db->fetchOptimizationConfig2(opt_config, source_hostname, destin_hostname);
+                                    BufSize = opt_config->getBufSize();
+                                    StreamsperFile = opt_config->getStreamsperFile();
+                                    Timeout = opt_config->getTimeout();
+                                    delete opt_config;
+                                    opt_config = NULL;
+                                }
                         }
 
                     FileTransferScheduler scheduler(

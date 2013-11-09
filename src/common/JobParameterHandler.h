@@ -44,13 +44,13 @@ namespace common
  */
 class JobParameterHandler
 {
-	struct zipper
-	{
-		std::pair<std::string, std::string> operator()(const boost::tuple<const std::string&, const std::string&>& t) const
-		{
-			return make_pair(t.get<0>(), t.get<1>());
-		}
-	};
+    struct zipper
+    {
+        std::pair<std::string, std::string> operator()(const boost::tuple<const std::string&, const std::string&>& t) const
+        {
+            return make_pair(t.get<0>(), t.get<1>());
+        }
+    };
 
 public:
 

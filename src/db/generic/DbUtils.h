@@ -120,10 +120,11 @@ inline std::string getFullHostname()
     hints.ai_flags = AI_CANONNAME;
 
     // First is OK
-    if (getaddrinfo(hostname, NULL, &hints, &info) == 0) {
-        strncpy(hostname, info->ai_canonname, sizeof(hostname));
-        freeaddrinfo(info);
-    }
+    if (getaddrinfo(hostname, NULL, &hints, &info) == 0)
+        {
+            strncpy(hostname, info->ai_canonname, sizeof(hostname));
+            freeaddrinfo(info);
+        }
     return hostname;
 }
 

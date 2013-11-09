@@ -438,23 +438,23 @@ map<string, string> SubmitTransferCli::getParams()
             parameters[JobParameterHandler::RETRY_DELAY] = lexical_cast<string>(val);
         }
     if (vm.count("buff-size"))
-    	{
-    		int val = vm["buff-size"].as<int>();
-    		if (val <= 0) throw string("The buffer size has to greater than 0!");
-    		parameters[JobParameterHandler::BUFFER_SIZE] = lexical_cast<string>(val);
-    	}
+        {
+            int val = vm["buff-size"].as<int>();
+            if (val <= 0) throw string("The buffer size has to greater than 0!");
+            parameters[JobParameterHandler::BUFFER_SIZE] = lexical_cast<string>(val);
+        }
     if (vm.count("nostreams"))
-     	{
-    		int val = vm["nostreams"].as<int>();
-    		if (val <= 0) throw string("The number of streams has to be greater than 0!");
-    		parameters[JobParameterHandler::NOSTREAMS] = lexical_cast<string>(val);
-     	}
+        {
+            int val = vm["nostreams"].as<int>();
+            if (val <= 0) throw string("The number of streams has to be greater than 0!");
+            parameters[JobParameterHandler::NOSTREAMS] = lexical_cast<string>(val);
+        }
     if (vm.count("timeout"))
-    	{
-			int val = vm["timeout"].as<int>();
-			if (val <= 0) throw string("The timeout has to be greater than 0!");
-			parameters[JobParameterHandler::TIMEOUT] = lexical_cast<string>(val);
-    	}
+        {
+            int val = vm["timeout"].as<int>();
+            if (val <= 0) throw string("The timeout has to be greater than 0!");
+            parameters[JobParameterHandler::TIMEOUT] = lexical_cast<string>(val);
+        }
 
     return parameters;
 }

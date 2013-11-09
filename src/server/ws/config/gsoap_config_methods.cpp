@@ -245,10 +245,10 @@ int fts3::implcfg__doDrain(soap* ctx, bool drain, struct implcfg__doDrainRespons
             stringstream cmd;
             cmd << "fts-config-set --drain " << (drain ? "on" : "off");
 
-			FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Turning " << (drain ? "on" : "off") << " the drain mode" << commit;
-			DrainMode::getInstance() = drain;
-			// audit the operation
-			DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd.str(), "drain");
+            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Turning " << (drain ? "on" : "off") << " the drain mode" << commit;
+            DrainMode::getInstance() = drain;
+            // audit the operation
+            DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd.str(), "drain");
         }
     catch(Err& ex)
         {
