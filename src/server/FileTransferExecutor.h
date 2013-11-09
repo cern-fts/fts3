@@ -154,6 +154,8 @@ private:
 
     /// url_copy command
     static const std::string cmd;
+    
+    std::string ftsHostname;
 };
 
 } /* namespace server */
