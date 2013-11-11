@@ -5,7 +5,7 @@
  *      Author: simonm
  */
 
-#include <stdlib.h>
+
 #include <boost/scoped_ptr.hpp>
 
 #include "FileTransferExecutor.h"
@@ -52,10 +52,7 @@ FileTransferExecutor::FileTransferExecutor(TransferFileHandler& tfh, bool optimi
     scheduled(0)
 
 {
-    char hostname[1024] = {0};
-    hostname[1023] = '\0';
-    gethostname(hostname, 1023);
-    ftsHostname = std::string(hostname);
+
 }
 
 FileTransferExecutor::~FileTransferExecutor()
@@ -375,7 +372,7 @@ void FileTransferExecutor::execute()
 
                             if (ready)
                                 {
-                                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << ftsHostname << " "  << cmd << " " << params << commit;
+                                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd << " " << params << commit;
                                     ExecuteProcess *pr = new ExecuteProcess(cmd, params);
                                     if (pr)
                                         {
