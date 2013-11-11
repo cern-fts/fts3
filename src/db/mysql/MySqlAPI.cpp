@@ -183,6 +183,15 @@ void MySqlAPI::init(std::string username, std::string password, std::string conn
                 }
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            if(connectionPool)
+                {
+                    delete connectionPool;
+                    connectionPool = NULL;
+                }
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }	
 }
 
 
@@ -239,6 +248,12 @@ TransferJobs* MySqlAPI::getTransferJob(std::string jobId, bool archive)
                 delete job;
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            if(job)
+                delete job;
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }	
     return job;
 }
 
@@ -291,6 +306,10 @@ std::map<std::string, double> MySqlAPI::getActivityShareConf(soci::session& sql,
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }	
     return ret;
 }
 
@@ -318,6 +337,10 @@ std::vector<std::string> MySqlAPI::getAllActivityShareConf()
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }	
 
     return ret;
 }
@@ -433,6 +456,10 @@ std::map<std::string, int> MySqlAPI::getFilesNumPerActivity(soci::session& sql, 
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }	
 
     return activityFilesNum;
 }
@@ -746,6 +773,11 @@ void MySqlAPI::setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<i
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            sql.rollback();	
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }	
 }
 
 void MySqlAPI::useFileReplica(std::string jobId, int fileId)
@@ -786,6 +818,11 @@ void MySqlAPI::useFileReplica(std::string jobId, int fileId)
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            sql.rollback();	
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
 
 }
 
@@ -846,6 +883,11 @@ unsigned int MySqlAPI::updateFileStatus(TransferFiles* file, const std::string s
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            sql.rollback();	
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
     return updated;
 }
 
@@ -907,6 +949,20 @@ void MySqlAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::
             files.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            for (std::map< std::string, std::list<TransferFiles*> >::iterator i = files.begin(); i != files.end(); ++i)
+                {
+                    std::list<TransferFiles*>& l = i->second;
+                    for (std::list<TransferFiles*>::iterator it = l.begin(); it != l.end(); ++it)
+                        {
+                            delete *it;
+                        }
+                    l.clear();
+                }
+            files.clear();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }	
 }
 
 
@@ -1084,6 +1140,11 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }	
 }
 
 
@@ -1142,6 +1203,17 @@ void MySqlAPI::getTransferJobStatus(std::string requestID, bool archive, std::ve
             jobs.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
         }
+    catch (...)
+        {
+            std::vector< JobStatus* >::iterator it;
+            for (it = jobs.begin(); it != jobs.end(); ++it)
+                {
+                    if(*it)
+                        delete (*it);
+                }
+            jobs.clear();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }	
 }
 
 
@@ -1245,6 +1317,17 @@ void MySqlAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::stri
             jobs.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
         }
+    catch (...)
+        {
+            std::vector< JobStatus* >::iterator it;
+            for (it = jobs.begin(); it != jobs.end(); ++it)
+                {
+                    if(*it)
+                        delete (*it);
+                }
+            jobs.clear();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }	
 }
 
 
@@ -1309,6 +1392,17 @@ void MySqlAPI::getTransferFileStatus(std::string requestID, bool archive,
             files.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
         }
+    catch (...)
+        {
+            std::vector< FileTransferStatus* >::iterator it;
+            for (it = files.begin(); it != files.end(); ++it)
+                {
+                    if(*it)
+                        delete (*it);
+                }
+            files.clear();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }	
 }
 
 
@@ -1337,6 +1431,12 @@ void MySqlAPI::getSe(Se* &se, std::string seName)
                 delete se;
             throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
         }
+    catch (...)
+        {
+            if(se)
+                delete se;
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }	
 }
 
 
@@ -1363,6 +1463,11 @@ void MySqlAPI::addSe(std::string ENDPOINT, std::string SE_TYPE, std::string SITE
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }	
 }
 
 
@@ -1461,6 +1566,11 @@ void MySqlAPI::updateSe(std::string ENDPOINT, std::string SE_TYPE, std::string S
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }	
 }
 
 
@@ -1587,6 +1697,11 @@ bool MySqlAPI::updateFileTransferStatus(double throughputIn, std::string job_id,
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }	
     return ok;
 }
 
@@ -1740,6 +1855,11 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
             std::string msg = e.what();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + msg);
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }	
 
     return ok;
 }
@@ -1762,6 +1882,11 @@ void MySqlAPI::updateFileTransferProgress(std::string /*job_id*/, int file_id, d
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }	
 }
 
 void MySqlAPI::cancelJob(std::vector<std::string>& requestIDs)
@@ -1811,39 +1936,17 @@ void MySqlAPI::cancelJob(std::vector<std::string>& requestIDs)
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }	
 }
 
 
 
 void MySqlAPI::getCancelJob(std::vector<int>& /*requestIDs*/)
 {
-    /*
-        soci::session sql(*connectionPool);
-
-        try
-            {
-                soci::rowset<soci::row> rs = (sql.prepare << "SELECT f.pid, f.job_id FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
-                                              "WHERE  "
-                                              "      f.start_time IS NOT NULL AND "
-                                              "      f.PID IS NOT NULL AND "
-                                              "      j.cancel_job = 'Y' and transferhost=:hostname and j.job_state='CANCELED' ",soci::use(hostname));
-
-                std::string jobId;
-
-                for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
-                    {
-                        soci::row const& row = *i;
-                        int pid = row.get<int>("pid");
-                        jobId = row.get<std::string>("job_id");
-                        requestIDs.push_back(pid);
-                    }
-            }
-        catch (std::exception& e)
-            {
-                requestIDs.clear();
-                throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-            }
-    */
 }
 
 
@@ -1868,6 +1971,11 @@ void MySqlAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn,
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }	
 }
 
 
@@ -1912,6 +2020,11 @@ void MySqlAPI::updateGrDPStorageCacheElement(std::string dlg_id, std::string dn,
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }	
 }
 
 
@@ -1940,6 +2053,12 @@ CredCache* MySqlAPI::findGrDPStorageCacheElement(std::string delegationID, std::
                 delete cred;
             throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
         }
+    catch (...)
+        {
+            if(cred)
+                delete cred;
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }	
 
     return cred;
 }
@@ -1962,6 +2081,11 @@ void MySqlAPI::deleteGrDPStorageCacheElement(std::string delegationID, std::stri
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }	
 }
 
 
@@ -1987,6 +2111,11 @@ void MySqlAPI::insertGrDPStorageElement(std::string dlg_id, std::string dn, std:
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }	
 }
 
 
@@ -2017,6 +2146,11 @@ void MySqlAPI::updateGrDPStorageElement(std::string dlg_id, std::string dn, std:
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }	
 }
 
 
@@ -2047,6 +2181,12 @@ Cred* MySqlAPI::findGrDPStorageElement(std::string delegationID, std::string dn)
                 delete cred;
             throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
         }
+    catch (...)
+        {
+            if(cred)
+                delete cred;
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }	
 
     return cred;
 }
@@ -2069,6 +2209,11 @@ void MySqlAPI::deleteGrDPStorageElement(std::string delegationID, std::string dn
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }	
 }
 
 
@@ -2090,6 +2235,10 @@ bool MySqlAPI::getDebugMode(std::string source_hostname, std::string destin_host
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
         }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
     return isDebug;
 }
 
@@ -2125,6 +2274,11 @@ void MySqlAPI::setDebugMode(std::string source_hostname, std::string destin_host
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
 }
 
 
@@ -2183,6 +2337,10 @@ void MySqlAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
 }
 
 
@@ -2205,6 +2363,11 @@ void MySqlAPI::auditConfiguration(const std::string & dn, const std::string & co
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
 }
 
 
@@ -2213,122 +2376,9 @@ void MySqlAPI::auditConfiguration(const std::string & dn, const std::string & co
 
 void MySqlAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string & /*source_hostname*/, const std::string & /*destin_hostname*/)
 {
-
     ops->streamsperfile = DEFAULT_NOSTREAMS;
     ops->timeout = MID_TIMEOUT;
     ops->bufsize = DEFAULT_BUFFSIZE;
-
-    /*
-        soci::session sql(*connectionPool);
-
-        try
-            {
-                int numberOfSamples = 0;
-
-                sql <<
-                    " SELECT COUNT(*) "
-                    " FROM t_optimize "
-                    " WHERE throughput is NULL "
-                    "	AND source_se = :source "
-                    "	AND dest_se=:destination "
-                    "	AND file_id=0 ",
-                    soci::use(source_hostname),
-                    soci::use(destin_hostname),
-                    soci::into(numberOfSamples);
-
-                if (numberOfSamples > 0)
-                    {
-
-                        soci::rowset<soci::row> rs = (
-                                                         sql.prepare <<	" SELECT nostreams, timeout, buffer "
-                                                         " FROM t_optimize "
-                                                         " WHERE source_se = :source "
-                                                         "	AND dest_se = :dest "
-                                                         "	AND throughput is NULL "
-                                                         "	AND file_id = 0 "
-                                                         " ORDER BY nostreams ASC, timeout ASC, buffer ASC "
-                                                         " LIMIT 1",
-                                                         soci::use(source_hostname),
-                                                         soci::use(destin_hostname)
-                                                     );
-
-                        soci::rowset<soci::row>::const_iterator r = rs.begin();
-
-                        if (r != rs.end())
-                            {
-                                // we are expecting just one row (LIMIT 1)
-                                ops->streamsperfile = r->get<int>("nostreams");
-                                ops->timeout = r->get<int>("timeout");
-                                ops->bufsize = r->get<int>("buffer");
-                                ops->file_id = 1;
-
-                            }
-                        else
-                            {
-                                // or no row at all
-                                ops->streamsperfile = DEFAULT_NOSTREAMS;
-                                ops->timeout = MID_TIMEOUT;
-                                ops->bufsize = DEFAULT_BUFFSIZE;
-                                ops->file_id = 0;
-                            }
-
-                    }
-                else
-                    {
-
-                        unsigned numberOfActives = 0;
-
-                        sql << " SELECT COUNT(*) "
-                            " FROM t_file "
-                            " WHERE t_file.file_state = 'ACTIVE' "
-                            "	AND t_file.source_se = :source "
-                            "	AND t_file.dest_se = :dest",
-                            soci::use(source_hostname),
-                            soci::use(destin_hostname),
-                            soci::into(numberOfActives);
-
-                        soci::rowset<soci::row> rs = (
-                                                         sql.prepare <<
-                                                         " SELECT throughput, active, nostreams, timeout, buffer "
-                                                         " FROM  "
-                                                         "	t_optimize "
-                                                         "	WHERE source_se = :source "
-                                                         "		AND dest_se = :destination "
-                                                         "		AND throughput IS NOT NULL "
-                                                         "	ORDER BY ABS(active - :active), throughput DESC"
-                                                         " LIMIT 1 ",
-                                                         soci::use(source_hostname),
-                                                         soci::use(destin_hostname),
-                                                         soci::use(numberOfActives)
-                                                     );
-
-                        soci::rowset<soci::row>::const_iterator r = rs.begin();
-
-                        if (r != rs.end())
-                            {
-                                // we are expecting just one row (LIMIT 1)
-                                ops->streamsperfile = r->get<int>("nostreams");
-                                ops->timeout = r->get<int>("timeout");
-                                ops->bufsize = r->get<int>("buffer");
-                                ops->file_id = 1;
-
-                            }
-                        else
-                            {
-                                // or no row at all
-                                ops->streamsperfile = DEFAULT_NOSTREAMS;
-                                ops->timeout = MID_TIMEOUT;
-                                ops->bufsize = DEFAULT_BUFFSIZE;
-                                ops->file_id = 0;
-                            }
-                    }
-
-            }
-        catch (std::exception& e)
-            {
-                throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-            }
-    */
 }
 
 void MySqlAPI::recordOptimizerUpdate(soci::session& sql, int active, double filesize,
@@ -2465,6 +2515,11 @@ bool MySqlAPI::updateOptimizer(double throughputIn, int, double filesize, double
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
     return ok;
 }
 
@@ -2510,6 +2565,11 @@ void MySqlAPI::initOptimizer(const std::string & source_hostname, const std::str
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
 }
 
 
@@ -2537,6 +2597,10 @@ bool MySqlAPI::isCredentialExpired(const std::string & dlg_id, const std::string
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
     return !expired;
 }
 
@@ -2603,6 +2667,10 @@ bool MySqlAPI::isTrAllowed2(const std::string & source_hostname, const std::stri
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
     return allowed;
 }
 
@@ -2890,6 +2958,10 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
     return allowed;
 }
 
@@ -2926,6 +2998,10 @@ int MySqlAPI::getSeOut(const std::string & source, const std::set<std::string> &
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
 
     return ret;
 }
@@ -2962,6 +3038,10 @@ int MySqlAPI::getSeIn(const std::set<std::string> & source, const std::string & 
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
 
     return ret;
 }
@@ -2992,9 +3072,12 @@ int MySqlAPI::getCredits(const std::string & source_hostname, const std::string 
         }
     catch (std::exception& e)
         {
-            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
     return freeCredits;
 }
 
@@ -3022,6 +3105,11 @@ void MySqlAPI::setAllowedNoOptimize(const std::string & job_id, int file_id, con
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }		
 }
 
 
@@ -3103,6 +3191,10 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
 }
 
 
@@ -3139,6 +3231,11 @@ void MySqlAPI::setAllowed(const std::string & job_id, int file_id, const std::st
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }	
 }
 
 
@@ -3169,6 +3266,11 @@ bool MySqlAPI::terminateReuseProcess(const std::string & jobId)
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }	
     return ok;
 }
 
@@ -3190,6 +3292,11 @@ void MySqlAPI::setPid(const std::string & /*jobId*/, int fileId, int pid)
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
 }
 
 
@@ -3221,6 +3328,11 @@ void MySqlAPI::setPidV(int pid, std::map<int, std::string>& pids)
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
 }
 
 
@@ -3302,6 +3414,11 @@ void MySqlAPI::revertToSubmitted()
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
 }
 
 
@@ -3373,6 +3490,11 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
 }
 
 
@@ -3396,6 +3518,11 @@ void MySqlAPI::forkFailedRevertState(const std::string & jobId, int fileId)
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
 }
 
 
@@ -3429,6 +3556,11 @@ void MySqlAPI::forkFailedRevertStateV(std::map<int, std::string>& pids)
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
 }
 
 
@@ -3466,6 +3598,10 @@ bool MySqlAPI::retryFromDead(std::vector<struct message_updater>& messages)
             ok = false;
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
     return ok;
 }
 
@@ -3521,6 +3657,11 @@ void MySqlAPI::blacklistSe(std::string se, std::string vo, std::string status, i
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
 }
 
 
@@ -3542,6 +3683,11 @@ void MySqlAPI::blacklistDn(std::string dn, std::string msg, std::string adm_dn)
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
 }
 
 
@@ -3579,6 +3725,11 @@ void MySqlAPI::unblacklistSe(std::string se)
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
 }
 
 
@@ -3615,6 +3766,11 @@ void MySqlAPI::unblacklistDn(std::string dn)
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
 }
 
 
@@ -3633,6 +3789,10 @@ bool MySqlAPI::isSeBlacklisted(std::string se, std::string vo)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
     return blacklisted;
 }
 
@@ -3651,6 +3811,10 @@ bool MySqlAPI::allowSubmitForBlacklistedSe(std::string se)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
     return ret;
 }
 
@@ -3681,6 +3845,10 @@ boost::optional<int> MySqlAPI::getTimeoutForSe(std::string se)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
 
     return ret;
 }
@@ -3700,13 +3868,15 @@ bool MySqlAPI::isDnBlacklisted(std::string dn)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
     return blacklisted;
 }
 
 
 
-/********* section for the new config API **********/
-/********* section for the new config API **********/
 bool MySqlAPI::isFileReadyState(int fileID)
 {
     soci::session sql(*connectionPool);
@@ -3735,6 +3905,11 @@ bool MySqlAPI::isFileReadyState(int fileID)
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
 
     return (isReadyState && isReadyHost);
 }
@@ -3758,6 +3933,10 @@ bool MySqlAPI::checkGroupExists(const std::string & groupName)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
     return exists;
 }
 
@@ -3780,6 +3959,10 @@ void MySqlAPI::getGroupMembers(const std::string & groupName, std::vector<std::s
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
 }
 
 
@@ -3799,6 +3982,10 @@ std::string MySqlAPI::getGroupForSe(const std::string se)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
     return group;
 }
 
@@ -3831,6 +4018,11 @@ void MySqlAPI::addMemberToGroup(const std::string & groupName, std::vector<std::
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
 }
 
 
@@ -3860,6 +4052,11 @@ void MySqlAPI::deleteMembersFromGroup(const std::string & groupName, std::vector
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
 }
 
 
@@ -3889,6 +4086,11 @@ void MySqlAPI::addLinkConfig(LinkConfig* cfg)
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
 }
 
 
@@ -3919,6 +4121,11 @@ void MySqlAPI::updateLinkConfig(LinkConfig* cfg)
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
 }
 
 
@@ -3941,6 +4148,11 @@ void MySqlAPI::deleteLinkConfig(std::string source, std::string destination)
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
 }
 
 
@@ -3967,6 +4179,12 @@ LinkConfig* MySqlAPI::getLinkConfig(std::string source, std::string destination)
                 delete lnk;
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            if(lnk)
+                delete lnk;
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
     return lnk;
 }
 
@@ -3991,6 +4209,12 @@ std::pair<std::string, std::string>* MySqlAPI::getSourceAndDestination(std::stri
                 delete pair;
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            if(pair)
+                delete pair;
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }	
     return pair;
 }
 
@@ -4013,6 +4237,11 @@ bool MySqlAPI::isGrInPair(std::string group)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }	
     return inPair;
 }
 
@@ -4038,6 +4267,11 @@ void MySqlAPI::addShareConfig(ShareConfig* cfg)
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
 }
 
 
@@ -4063,6 +4297,11 @@ void MySqlAPI::updateShareConfig(ShareConfig* cfg)
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
 }
 
 
@@ -4085,6 +4324,11 @@ void MySqlAPI::deleteShareConfig(std::string source, std::string destination, st
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
 }
 
 
@@ -4107,6 +4351,11 @@ void MySqlAPI::deleteShareConfig(std::string source, std::string destination)
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
 }
 
 
@@ -4132,6 +4381,12 @@ ShareConfig* MySqlAPI::getShareConfig(std::string source, std::string destinatio
                 delete cfg;
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            if(cfg)
+                delete cfg;
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
     return cfg;
 }
 

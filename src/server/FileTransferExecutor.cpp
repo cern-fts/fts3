@@ -4,7 +4,7 @@
  *  Created on: Aug 9, 2013
  *      Author: simonm
  */
-s
+
 #include <boost/scoped_ptr.hpp>
 
 #include "FileTransferExecutor.h"
