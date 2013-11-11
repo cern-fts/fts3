@@ -4548,7 +4548,6 @@ std::map< std::string, double > MySqlAPI::getActivityConfig(std::string vo)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }	
-
 }
 
 
@@ -4990,6 +4989,10 @@ void MySqlAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
     catch (std::exception& ex)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + ex.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
 
 
@@ -6359,7 +6362,7 @@ void MySqlAPI::checkSanityState()
             //now check reverse sanity checks, JOB can't be FINISH,  FINISHEDDIRTY, FAILED is at least one tr is in SUBMITTED, READY, ACTIVE
             soci::rowset<std::string> rs2 = (
                                                 sql.prepare <<
-                                                " select job_id from t_job where job_state in ('FINISHED','FAILED','FINISHEDDIRTY') AND job_finished > (UTC_TIMESTAMP() - interval '30' minute)"
+                                                " select job_id from t_job where job_finished IS NOT NULL "
                                             );
 
             for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
