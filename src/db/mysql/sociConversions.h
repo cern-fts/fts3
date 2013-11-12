@@ -145,7 +145,7 @@ struct type_conversion<TransferFiles>
         file.SOURCE_SE = v.get<std::string>("source_se", "");
         file.DEST_SE = v.get<std::string>("dest_se", "");
         file.SELECTION_STRATEGY = v.get<std::string>("selection_strategy", "");
-        file.INTERNAL_FILE_PARAMS = v.get<std::string>("internal_job_params");
+        file.INTERNAL_FILE_PARAMS = v.get<std::string>("internal_job_params", "");
 
         // filesize and reason are NOT queried by any method that uses this
         // type
