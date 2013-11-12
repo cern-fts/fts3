@@ -12,7 +12,7 @@ License:    ASL 2.0
 URL:        https://svnweb.cern.ch/trac/fts3
 # The source of this package was pulled from upstream's vcs. Use the
 # following commands to generate the tarball:
-# svn export http://svn.cern.ch/guest/fts3/trunk/nagios/ nagios-plugins-fts
+# svn export http://svn.cern.ch/guest/fts3/trunk/nagios/ nagios-plugins-fts-3.2.0
 # tar -czvf nagios-plugins-fts-3.2.0.tar.gz nagios
 Source0:        %{name}-%{version}.tar.gz
 Buildroot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
@@ -29,7 +29,7 @@ in the nagios host, and they will contact the remote services running in the
 FTS3 machines.
 
 %prep
-%setup -q -n %{name}
+%setup -q -n %{name}-%{version}
 
 %build
 %cmake . -DCMAKE_INSTALL_PREFIX=/
