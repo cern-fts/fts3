@@ -11,45 +11,45 @@ EX_CRITICAL = 2
 EX_UNKNOWN  = 3
 
 class FtsProbe:
-	"""
-	Checks if the FTS server is up and running using the
+    """
+    Checks if the FTS server is up and running using the
     getVersion call.
-	"""
+    """
 
-	def __init__(self, argv):
-		self.description = ' '.join(self.__doc__.split())
-		self.scriptName  = os.path.basename(argv[0])
+    def __init__(self, argv):
+        self.description = ' '.join(self.__doc__.split())
+        self.scriptName  = os.path.basename(argv[0])
 
-		# Defaults
-		self.abortMsg = None
-		self.help     = False
-		self.host     = None
-		self.port     = 8443
-		self.cert     = None
-		self.key      = None
+        # Defaults
+        self.abortMsg = None
+        self.help     = False
+        self.host     = None
+        self.port     = 8443
+        self.cert     = None
+        self.key      = None
 
-		# Process args
-		try:
-			opts, args = getopt.getopt(argv[1:], 'hH:p:', ['help', 'host=', 'port=', 'cert=', 'key='])
-			for opt, arg in opts:
-				if opt in ('-h', '--help'):
-					self.help = True
-				elif opt in ('-H', '--host'):
-					self.host = arg
-				elif opt in ('-p', '--port'):
-					self.port = int(arg)
-				elif opt == '--cert':
-					self.cert = arg
-				elif opt == '--key':
-					self.key = arg
-		except Exception, e:
-			self.abortMsg = str(e)
+        # Process args
+        try:
+            opts, args = getopt.getopt(argv[1:], 'hH:p:', ['help', 'host=', 'port=', 'cert=', 'key='])
+            for opt, arg in opts:
+                if opt in ('-h', '--help'):
+                    self.help = True
+                elif opt in ('-H', '--host'):
+                    self.host = arg
+                elif opt in ('-p', '--port'):
+                    self.port = int(arg)
+                elif opt == '--cert':
+                    self.cert = arg
+                elif opt == '--key':
+                    self.key = arg
+        except Exception, e:
+            self.abortMsg = str(e)
 
-		if not self.abortMsg and self.host is None:
-			self.abortMsg = "-H must be specified"
+        if not self.abortMsg and self.host is None:
+            self.abortMsg = "-H must be specified"
 
-	def usage(self):
-		return \
+    def usage(self):
+        return \
 """%s
 
 Usage:
@@ -63,39 +63,39 @@ Options:
 """ % (self.description, self.scriptName)
 
 
-	def __call__(self):
-		if self.help:
-			return (EX_OK, self.usage())
-		elif self.abortMsg:
-			return (EX_CRITICAL, self.abortMsg)
+    def __call__(self):
+        if self.help:
+            return (EX_OK, self.usage())
+        elif self.abortMsg:
+            return (EX_CRITICAL, self.abortMsg)
 
-		try:
-			if self.cert:
-				os.environ['X509_USER_CERT'] = self.cert
-			if self.key:
-				os.environ['X509_USER_KEY'] = self.key
+        try:
+            if self.cert:
+                os.environ['X509_USER_CERT'] = self.cert
+            if self.key:
+                os.environ['X509_USER_KEY'] = self.key
 
-			fts = Fts('https://%s:%d/' % (self.host, self.port))
-		except Exception, e:
-			return (EX_CRITICAL, str(e))
+            fts = Fts('https://%s:%d/' % (self.host, self.port))
+        except Exception, e:
+            return (EX_CRITICAL, str(e))
 
-		version = fts.getVersion()
+        version = fts.getVersion()
 
-		return (EX_OK, "FTS %s" % version)
+        return (EX_OK, "FTS %s" % version)
 
 
 if __name__ == '__main__':
-	probe = FtsProbe(sys.argv)
-	(status, msg) = probe()
+    probe = FtsProbe(sys.argv)
+    (status, msg) = probe()
 
-	if status == EX_OK:
-		print "OK -", msg
-	elif status == EX_WARNING:
-		print "WARNING -", msg
-	elif status == EX_CRITICAL:
-		print "CRITICAL -", msg
-	else:
-		print "UNKNOWN -", msg
+    if status == EX_OK:
+        print "OK -", msg
+    elif status == EX_WARNING:
+        print "WARNING -", msg
+    elif status == EX_CRITICAL:
+        print "CRITICAL -", msg
+    else:
+        print "UNKNOWN -", msg
 
-	sys.exit(status)
+    sys.exit(status)
 
