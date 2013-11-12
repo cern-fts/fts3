@@ -333,7 +333,7 @@ public:
 
     virtual void transferLogFile(const std::string& filePath, const std::string& jobId, int fileId, bool debug) = 0;
 
-    virtual struct message_state getStateOfTransfer(const std::string& jobId, int fileId) = 0;
+    virtual std::vector<struct message_state> getStateOfTransfer(const std::string& jobId, int file_id) = 0;
 
     virtual void getFilesForJob(const std::string& jobId, std::vector<int>& files) = 0;
 
@@ -374,4 +374,7 @@ public:
         *start = 0x0000;
         *end   = 0xFFFF;
     }
+    
+    
+    
 };

@@ -271,7 +271,7 @@ public:
 
     void transferLogFile(const std::string& filePath, const std::string& jobId, int fileId, bool debug);
 
-    struct message_state getStateOfTransfer(const std::string& jobId, int fileId);
+    std::vector<struct message_state> getStateOfTransfer(const std::string& jobId, int file_id);
 
     void getFilesForJob(const std::string& jobId, std::vector<int>& files);
 

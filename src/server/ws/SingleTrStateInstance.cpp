@@ -63,27 +63,30 @@ void SingleTrStateInstance::sendStateMessage(const std::string& jobId, int fileI
     if(!monitoringMessages)
         return;
 
-    struct message_state state;
+    std::vector<struct message_state> files;
     try
         {
             if(fileId != -1)  //both job_id and file_id are provided
                 {
-                    state  = db::DBSingleton::instance().getDBObjectInstance()->getStateOfTransfer(jobId, fileId);
-                    constructJSONMsg(&state);
+                    files  = db::DBSingleton::instance().getDBObjectInstance()->getStateOfTransfer(jobId, fileId);
+		    if(!files.empty()){
+ 		        std::vector<struct message_state>::iterator it;
+		  	for (it = files.begin(); it != files.end(); ++it){
+			        struct message_state tmp = (*it);
+				constructJSONMsg(&tmp);
+			}
+		   }
                 }
             else   //need to get file_id for the given job
                 {
-                    std::vector<int> files;
-                    db::DBSingleton::instance().getDBObjectInstance()->getFilesForJob(jobId, files);
-                    if(!files.empty())
-                        {
-                            std::vector<int>::iterator it;
-                            for (it = files.begin(); it != files.end(); ++it)
-                                {
-                                    state  = db::DBSingleton::instance().getDBObjectInstance()->getStateOfTransfer(jobId, (*it));
-                                    constructJSONMsg(&state);
-                                }
-                        }
+		  files = db::DBSingleton::instance().getDBObjectInstance()->getStateOfTransfer(jobId, -1);
+		  if(!files.empty()){
+ 		        std::vector<struct message_state>::iterator it;
+		  	for (it = files.begin(); it != files.end(); ++it){
+			        struct message_state tmp = (*it);
+				constructJSONMsg(&tmp);
+			}
+		  }		   
                 }
         }
     catch (Err& e)

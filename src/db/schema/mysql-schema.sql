@@ -676,6 +676,129 @@ CREATE TABLE t_optimize_active (
   datetime     TIMESTAMP,
   CONSTRAINT t_optimize_active_pk PRIMARY KEY (source_se, dest_se)
 );
+
+
+--
+-- t_file stores files for data management operations
+--
+CREATE TABLE t_dm (
+-- file_id is a unique identifier 
+--
+  file_id          INTEGER PRIMARY KEY AUTO_INCREMENT,
+--
+-- job_id (used in joins with file table)
+  job_id           CHAR(36) NOT NULL,
+--
+-- The state of this file
+  file_state       VARCHAR(32) NOT NULL,
+-- Hostname which this file was transfered
+  dmHost     VARCHAR(255),
+--
+-- The Source
+  source_surl      VARCHAR(1100),
+--
+-- The Destination
+  dest_surl        VARCHAR(1100),
+--
+-- Source SE host name
+  source_se            VARCHAR(255),
+--
+-- Dest SE host name
+  dest_se              VARCHAR(255),  
+--
+-- The error scope
+  error_scope      VARCHAR(32),
+--
+-- The FTS phase when the error happened
+  error_phase      VARCHAR(32),
+--
+-- The reason the file is in this state
+  reason           VARCHAR(2048),
+--
+-- the nominal size of the file (bytes)
+  filesize           DOUBLE,
+--
+-- the user-defined checksum of the file "checksum_type:checksum"
+  checksum           VARCHAR(100),
+--
+-- the timestamp when the file is in a terminal state
+  finish_time       TIMESTAMP NULL DEFAULT NULL,
+--
+-- the timestamp when the file is in a terminal state
+  start_time        TIMESTAMP NULL DEFAULT NULL,  
+--
+-- internal file parameters for storing information between retry attempts
+  internal_file_params  VARCHAR(255),
+--
+-- this timestamp will be set when the job enter in one of the terminal 
+-- states (Finished, FinishedDirty, Failed, Canceled). Use for table
+-- partitioning
+  job_finished          TIMESTAMP NULL DEFAULT NULL,
+--
+-- the pid of the process which is executing the file transfer
+  pid                   INTEGER,
+--
+-- dm op duration
+  tx_duration           DOUBLE,
+--
+-- How many times should the transfer be retried 
+  retry                 INTEGER DEFAULT 0,
+--
+-- user provided size of the file (bytes)
+-- we use DOUBLE because SOCI truncates BIGINT to int32
+  user_filesize  DOUBLE,    
+--
+-- File metadata
+  file_metadata   VARCHAR(255),  
+--
+-- activity name
+  activity   VARCHAR(255) DEFAULT "default",
+  
+--
+-- selection strategy used in case when multiple protocols were provided
+  selection_strategy VARCHAR(255),
+--
+-- Staging start timestamp
+  dm_start   TIMESTAMP NULL DEFAULT NULL,  
+--
+-- Staging finish timestamp
+  dm_finished   TIMESTAMP NULL DEFAULT NULL,
+--
+-- dm token
+  dm_token VARCHAR(255),
+--
+-- the timestamp that the file will be retried
+  retry_timestamp          TIMESTAMP NULL DEFAULT NULL,
+--
+--
+  wait_timestamp		TIMESTAMP NULL DEFAULT NULL,
+--
+--
+  wait_timeout			INTEGER,
+--
+--
+  hashed_id INTEGER UNSIGNED DEFAULT 0,
+--
+-- The VO that owns this job
+  vo_name              VARCHAR(50),  
+--
+--    
+  FOREIGN KEY (job_id) REFERENCES t_job(job_id)
+);
+
+
+-- t_dm indexes:
+CREATE INDEX dm_job_id     ON t_dm(job_id);
+
+
+
+
+
+
+
+
+
+
 --
 --
 -- Index Section 

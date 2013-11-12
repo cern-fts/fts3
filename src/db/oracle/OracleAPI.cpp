@@ -2519,7 +2519,7 @@ void OracleAPI::initOptimizer(const std::string & source_hostname, const std::st
         {
             unsigned foundRecords = 0;
 
-            sql.begin();
+
 
             sql << "SELECT COUNT(*) FROM t_optimize WHERE source_se = :source AND dest_se=:dest",
                 soci::use(source_hostname), soci::use(destin_hostname),
@@ -2533,8 +2533,9 @@ void OracleAPI::initOptimizer(const std::string & source_hostname, const std::st
                                             "                VALUES (:source, :dest, :timeout, :nostreams, :buffer, 0)",
                                             soci::use(source_hostname), soci::use(destin_hostname), soci::use(timeout),
                                             soci::use(nStreams), soci::use(bufferSize));
-
-                    for (unsigned register int x = 0; x < timeoutslen; x++)
+                    sql.begin();
+                    
+		    for (unsigned register int x = 0; x < timeoutslen; x++)
                         {
                             for (unsigned register int y = 0; y < nostreamslen; y++)
                                 {
@@ -2544,9 +2545,10 @@ void OracleAPI::initOptimizer(const std::string & source_hostname, const std::st
                                     stmt.execute(true);
                                 }
                         }
+		    
+		    sql.commit();			
                 }
-
-            sql.commit();
+            
         }
     catch (std::exception& e)
         {
@@ -3847,8 +3849,6 @@ bool OracleAPI::isDnBlacklisted(std::string dn)
 
 
 
-/********* section for the new config API **********/
-/********* section for the new config API **********/
 bool OracleAPI::isFileReadyState(int fileID)
 {
     soci::session sql(*connectionPool);
@@ -5677,11 +5677,7 @@ void OracleAPI::cancelFilesInTheQueue(const std::string& se, const std::string& 
 
     try
         {
-
-            sql.begin();
-
-            soci::rowset<soci::row> rs = vo.empty() ?
-                                         (
+            soci::rowset<soci::row> rs = vo.empty() ? (
                                              sql.prepare <<
                                              " SELECT file_id, job_id, file_index "
                                              " FROM t_file "
@@ -5703,6 +5699,8 @@ void OracleAPI::cancelFilesInTheQueue(const std::string& se, const std::string& 
                                              soci::use(vo)
                                          );
 
+            sql.begin();
+	    
             soci::rowset<soci::row>::const_iterator it;
             for (it = rs.begin(); it != rs.end(); ++it)
                 {
@@ -5837,52 +5835,72 @@ void OracleAPI::transferLogFile(const std::string& filePath, const std::string& 
 }
 
 
-struct message_state OracleAPI::getStateOfTransfer(const std::string& jobId, int fileId)
+std::vector<struct message_state> OracleAPI::getStateOfTransfer(const std::string& jobId, int fileId)
 {
     soci::session sql(*connectionPool);
 
     message_state ret;
     soci::indicator ind = soci::i_ok;
+    std::vector<struct message_state> temp;
+    int retry = 0;
 
     try
         {
-            soci::rowset<soci::row> rs = (
+	    sql << "SELECT retry FROM "
+                                " (SELECT rownum as rn, retry FROM t_server_config) "
+                                "WHERE rn = 1", soci::into(retry, ind);
+	    
+            soci::rowset<soci::row> rs = (fileId ==-1) ? (
                                              sql.prepare <<
                                              " SELECT "
-                                             "  j.job_id, j.job_state, j.vo_name, "
-                                             "  j.job_metadata, j.retry AS retry_max, f.file_id, "
-                                             "  f.file_state, f.retry AS retry_counter, f.file_metadata, "
-                                             "  f.source_se, f.dest_se "
+                                             "	j.job_id, j.job_state, j.vo_name, "
+                                             "	j.job_metadata, j.retry AS retry_max, f.file_id, "
+                                             "	f.file_state, f.retry AS retry_counter, f.file_metadata, "
+                                             "	f.source_se, f.dest_se "
                                              " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                              " WHERE "
-                                             "  j.job_id = :jobId "
-                                             "  AND f.file_id = :fileId ",
+                                             " 	j.job_id = :jobId ",                                           
+                                             soci::use(jobId)
+                                         )
+					 :
+					 (
+                                             sql.prepare <<
+                                             " SELECT "
+                                             "	j.job_id, j.job_state, j.vo_name, "
+                                             "	j.job_metadata, j.retry AS retry_max, f.file_id, "
+                                             "	f.file_state, f.retry AS retry_counter, f.file_metadata, "
+                                             "	f.source_se, f.dest_se "
+                                             " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
+                                             " WHERE "
+                                             " 	j.job_id = :jobId "
+					     "  AND f.file_id = :fileId ",                                           
                                              soci::use(jobId),
-                                             soci::use(fileId)
-                                         );
+					     soci::use(fileId)
+					  );
+					 
 
-            soci::rowset<soci::row>::const_iterator it = rs.begin();
-            if (it != rs.end())
-                {
-                    ret.job_id = it->get<std::string>("JOB_ID");
-                    ret.job_state = it->get<std::string>("JOB_STATE");
-                    ret.vo_name = it->get<std::string>("VO_NAME");
-                    ret.job_metadata = it->get<std::string>("JOB_METADATA","");
-                    ret.retry_max = static_cast<int>(it->get<long long>("RETRY_MAX", 0));
-                    ret.file_id = static_cast<int>(it->get<long long>("FILE_ID"));
-                    ret.file_state = it->get<std::string>("FILE_STATE");
-                    ret.retry_counter = static_cast<int>(it->get<double>("RETRY_COUNTER", 0));
-                    ret.file_metadata = it->get<std::string>("FILE_METADATA","");
-                    ret.source_se = it->get<std::string>("SOURCE_SE");
-                    ret.dest_se = it->get<std::string>("DEST_SE");
+            soci::rowset<soci::row>::const_iterator it;
+            for (it = rs.begin(); it != rs.end(); ++it)
+                {   
+                    ret.job_id = it->get<std::string>("job_id");
+                    ret.job_state = it->get<std::string>("job_state");
+                    ret.vo_name = it->get<std::string>("vo_name");
+                    ret.job_metadata = it->get<std::string>("job_metadata","");
+                    ret.retry_max = it->get<int>("retry_max",0);
+                    ret.file_id = it->get<int>("file_id");
+                    ret.file_state = it->get<std::string>("file_state");
+                    ret.retry_counter = it->get<int>("retry_counter",0);
+                    ret.file_metadata = it->get<std::string>("file_metadata","");
+                    ret.source_se = it->get<std::string>("source_se");
+                    ret.dest_se = it->get<std::string>("dest_se");
                     ret.timestamp = getStrUTCTimestamp();
-
+			
                     if(ret.retry_max == 0)
                         {
-                            sql << "SELECT retry FROM "
-                                " (SELECT rownum as rn, retry FROM t_server_config) "
-                                "WHERE rn = 1", soci::into(ret.retry_max, ind);
-                        }
+                            ret.retry_max = retry;
+                        }			
+			
+		    temp.push_back(ret);
                 }
 
         }
@@ -5895,7 +5913,7 @@ struct message_state OracleAPI::getStateOfTransfer(const std::string& jobId, int
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }		
 
-    return ret;
+    return temp;
 }
 
 void OracleAPI::getFilesForJob(const std::string& jobId, std::vector<int>& files)

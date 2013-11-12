@@ -298,7 +298,7 @@ public:
 
     virtual void transferLogFile( const std::string& filePath, const std::string& jobId, int fileId, bool debug);
 
-    virtual struct message_state getStateOfTransfer(const std::string& jobId, int fileId);
+    virtual std::vector<struct message_state> getStateOfTransfer(const std::string& jobId, int file_id);
 
     virtual void getFilesForJob(const std::string& jobId, std::vector<int>& files);
 
