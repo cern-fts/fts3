@@ -1026,7 +1026,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
             if (reuseFlag.empty())
                 reuseFlagIndicator = soci::i_null;
             // Insert job
-            sql << "INSERT INTO t_job (job_id, job_state, job_params, user_dn, user_cred, priority,       "
+            soci::statement insertJob = ( sql.prepare << "INSERT INTO t_job (job_id, job_state, job_params, user_dn, user_cred, priority,       "
                 "                   vo_name, submit_time, internal_job_params, submit_host, cred_id,   "
                 "                   myproxy_server, space_token, overwrite_flag, source_space_token,   "
                 "                   copy_pin_lifetime, fail_nearline, checksum_method, "
@@ -1044,7 +1044,9 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
                 soci::use(copyPinLifeTime), soci::use(failNearLine), soci::use(checksumMethod),
                 soci::use(reuseFlag, reuseFlagIndicator), soci::use(bringOnline),
                 soci::use(retry), soci::use(retryDelay), soci::use(metadata),
-                soci::use(sourceSe), soci::use(destinationSe);
+                soci::use(sourceSe), soci::use(destinationSe));
+		
+	    insertJob.execute(true);		
 
             // Insert src/dest pair
             std::string sourceSurl, destSurl, checksum, metadata, selectionStrategy, sourceSe, destSe, activity;
@@ -1069,6 +1071,8 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
                                            soci::use(activity)
                                        );
 
+
+	    
             soci::statement pairStmtSeBlaklisted = (
                     sql.prepare <<
                     "INSERT INTO t_file (vo_name, job_id, file_state, source_surl, dest_surl, checksum, user_filesize, file_metadata, selection_strategy, file_index, source_se, dest_se, wait_timestamp, wait_timeout, activity) "
