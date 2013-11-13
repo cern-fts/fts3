@@ -2535,8 +2535,6 @@ void MySqlAPI::initOptimizer(const std::string & source_hostname, const std::str
         {
             unsigned foundRecords = 0;
 
-            sql.begin();
-
             sql << "SELECT COUNT(*) FROM t_optimize WHERE source_se = :source AND dest_se=:dest",
                 soci::use(source_hostname), soci::use(destin_hostname),
                 soci::into(foundRecords);
@@ -2549,7 +2547,7 @@ void MySqlAPI::initOptimizer(const std::string & source_hostname, const std::str
                                             "                VALUES (:source, :dest, :timeout, :nostreams, :buffer, 0)",
                                             soci::use(source_hostname), soci::use(destin_hostname), soci::use(timeout),
                                             soci::use(nStreams), soci::use(bufferSize));
-
+                    sql.begin();
                     for (unsigned register int x = 0; x < timeoutslen; x++)
                         {
                             for (unsigned register int y = 0; y < nostreamslen; y++)
@@ -2560,9 +2558,8 @@ void MySqlAPI::initOptimizer(const std::string & source_hostname, const std::str
                                     stmt.execute(true);
                                 }
                         }
+                   sql.commit();			
                 }
-
-            sql.commit();
         }
     catch (std::exception& e)
         {
@@ -2960,10 +2957,12 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
         }
     catch (std::exception& e)
         {
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }		
     return allowed;
@@ -2994,7 +2993,7 @@ int MySqlAPI::getSeOut(const std::string & source, const std::set<std::string> &
             for (it = destination.begin(); it != destination.end(); ++it)
                 {
                     std::string destin_hostname = *it;
-                    ret += getCredits(source_hostname, destin_hostname);
+                    ret += getCredits(sql, source_hostname, destin_hostname);
                 }
 
         }
@@ -3034,7 +3033,7 @@ int MySqlAPI::getSeIn(const std::set<std::string> & source, const std::string & 
             for (it = source.begin(); it != source.end(); ++it)
                 {
                     std::string source_hostname = *it;
-                    ret += getCredits(source_hostname, destin_hostname);
+                    ret += getCredits(sql, source_hostname, destin_hostname);
                 }
 
         }
@@ -3050,9 +3049,8 @@ int MySqlAPI::getSeIn(const std::set<std::string> & source, const std::string & 
     return ret;
 }
 
-int MySqlAPI::getCredits(const std::string & source_hostname, const std::string & destin_hostname)
+int MySqlAPI::getCredits(soci::session& sql, const std::string & source_hostname, const std::string & destin_hostname)
 {
-    soci::session sql(*connectionPool);
     int freeCredits = 0;
     int limit = 0;
     int maxActive = 0;
@@ -7270,10 +7268,12 @@ void MySqlAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start
         }
     catch (std::exception& e)
         {
+	    sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }	
 }

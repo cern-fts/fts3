@@ -7250,10 +7250,12 @@ void OracleAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* star
         }
     catch (std::exception& e)
         {
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
+            sql.rollback();	
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }	
 }
