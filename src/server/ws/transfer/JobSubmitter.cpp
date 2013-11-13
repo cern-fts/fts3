@@ -51,6 +51,9 @@
 
 #include "ws/SingleTrStateInstance.h"
 
+#include <time.h>
+#include <iostream>
+
 using namespace db;
 using namespace config;
 using namespace fts3::infosys;
@@ -74,6 +77,8 @@ static bool checkValidUrl(const std::string &uri)
 JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) :
     db (DBSingleton::instance().getDBObjectInstance())
 {
+	long start, stop;
+	time(&start);
 
     GSoapDelegationHandler handler(soap);
     delegationId = handler.makeDelegationId();
@@ -191,11 +196,17 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
             jobs.push_back(tupple);
         }
     //FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's vector has been created" << commit;
+
+    time(&stop);
+
+    std::cout << stop - start << std::endl;
 }
 
 JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
     db (DBSingleton::instance().getDBObjectInstance())
 {
+	long start, stop;
+	time(&start);
 
     GSoapDelegationHandler handler (soap);
     delegationId = handler.makeDelegationId();
@@ -308,11 +319,17 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
             jobs.push_back(tupple);
         }
     //FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's vector has been created" << commit;
+
+    time(&stop);
+
+    std::cout << stop - start << std::endl;
 }
 
 JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
     db (DBSingleton::instance().getDBObjectInstance())
 {
+	time_t start, stop;
+	time(&start);
 
     GSoapDelegationHandler handler (ctx);
     delegationId = handler.makeDelegationId();
@@ -343,6 +360,8 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
     // if at least one source uses different protocol than SRM it will be 'false'
     srm_source = true;
 
+//    jobs.reserve(job->transferJobElements.size());
+
     // extract the job elements from tns3__TransferJob2 object and put them into a vector
     vector<tns3__TransferJobElement3 * >::iterator it;
     for (it = job->transferJobElements.begin(); it < job->transferJobElements.end(); it++, fileIndex++)
@@ -371,7 +390,7 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
                     (*it)->source,
                     (*it)->dest,
                     tupple.selectionStrategy
-                                                 );
+            	);
 
             // if it is not multiple source/destination submission ..
             if (pairs.size() == 1)
@@ -459,9 +478,14 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
 
                     tupple.activity = getActivity(tupple.metadata);
 
-                    jobs.push_back(tupple);
+//                    jobs.push_back(tupple);
+                    jobs.push_front(tupple);
                 }
         }
+
+    time(&stop);
+
+    std::cout << difftime(stop, start) << " seconds" << std::endl;
 }
 
 void JobSubmitter::init(tns3__TransferParams *jobParams)

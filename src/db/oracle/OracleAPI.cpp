@@ -938,7 +938,7 @@ void OracleAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std:
 
 
 
-void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_element_tupple> src_dest_pair,
+void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_tupple> src_dest_pair,
                                const std::string & DN, const std::string & cred,
                                const std::string & voName, const std::string & myProxyServer, const std::string & delegationID,
                                const std::string & sourceSe, const std::string & destinationSe,
@@ -1077,7 +1077,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_elemen
                     soci::use(newFileId)
                                                       );
 
-            std::vector<job_element_tupple>::const_iterator iter;
+            std::list<job_element_tupple>::const_iterator iter;
             for (iter = src_dest_pair.begin(); iter != src_dest_pair.end(); ++iter)
                 {
                     sourceSurl = iter->source;

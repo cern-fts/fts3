@@ -968,7 +968,7 @@ void MySqlAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::
 
 
 
-void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element_tupple> src_dest_pair,
+void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_tupple> src_dest_pair,
                               const std::string & DN, const std::string & cred,
                               const std::string & voName, const std::string & myProxyServer, const std::string & delegationID,
                               const std::string & sourceSe, const std::string & destinationSe,
@@ -1104,7 +1104,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
                     "UPDATE t_file SET hashed_id = conv(substring(md5(job_id) from 1 for 4), 16, 10) WHERE file_id = LAST_INSERT_ID()"
                                                       );
 
-            std::vector<job_element_tupple>::const_iterator iter;
+            std::list<job_element_tupple>::const_iterator iter;
             for (iter = src_dest_pair.begin(); iter != src_dest_pair.end(); ++iter)
                 {
                     sourceSurl = iter->source;

@@ -141,7 +141,7 @@ private:
      * the job elements that have to be submitted (each job is a tuple of source,
      * destination, and optionally checksum)
      */
-    vector<job_element_tupple> jobs;
+    list<job_element_tupple> jobs;
 
     /**
      * The common initialization for both parameterized constructors
