@@ -2205,6 +2205,7 @@ bool MySqlAPI::updateOptimizer(double throughputIn, int, double filesize, double
         {
             double throughput=0;
             int active=0;
+	    soci::indicator isNull = soci::i_ok;	    
 
             sql <<
                 " SELECT active FROM t_optimize_active "
@@ -2212,7 +2213,11 @@ bool MySqlAPI::updateOptimizer(double throughputIn, int, double filesize, double
                 " AND dest_se = :dest_se ",
                 soci::use(source_hostname),
                 soci::use(destin_hostname),
-                soci::into(active);
+                soci::into(active, isNull);
+		
+	       if (isNull == soci::i_null){
+	       		active = 0;
+	       }	
 
             if (filesize > 0 && timeInSecs > 0)
                 {
@@ -5568,6 +5573,9 @@ std::vector<struct message_state> MySqlAPI::getStateOfTransfer(const std::string
     try
         {
 	    sql << " select retry from t_server_config LIMIT 1", soci::into(retry, ind);
+	    if (ind == soci::i_null){
+	    	 retry = 0;
+	    }
 	    
             soci::rowset<soci::row> rs = (fileId ==-1) ? (
                                              sql.prepare <<
