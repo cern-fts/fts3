@@ -709,8 +709,11 @@ void MySqlAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::
     struct tm tTime;
     gmtime_r(&now, &tTime);
 
-    int mode = getOptimizerMode(sql);
-    int filesNum;
+
+    try
+        {
+   int mode = getOptimizerMode(sql);
+    int filesNum = 0;
     if(mode==1)
         {
             filesNum = mode_1[3];
@@ -730,12 +733,10 @@ void MySqlAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::
 
     if(reuse)
         {
-            filesNum = 10000;
+            filesNum = 100000;
         }
 
 
-    try
-        {
             for (std::vector<TransferJobs*>::const_iterator i = jobs.begin(); i != jobs.end(); ++i)
                 {
                     std::string jobId = (*i)->JOB_ID;
@@ -821,11 +822,13 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
     try
         {
             sql.begin();
+	    
             soci::indicator reuseIndicator = soci::i_ok;
             if (reuse.empty())
                 reuseIndicator = soci::i_null;
             // Insert job
-            sql << "INSERT INTO t_job (job_id, job_state, job_params, user_dn, user_cred, priority,       "
+            soci::statement insertJob = (
+                                           sql.prepare << "INSERT INTO t_job (job_id, job_state, job_params, user_dn, user_cred, priority,       "
                 "                   vo_name, submit_time, internal_job_params, submit_host, cred_id,   "
                 "                   myproxy_server, space_token, overwrite_flag, source_space_token,   "
                 "                   copy_pin_lifetime, fail_nearline, checksum_method, "
@@ -843,7 +846,9 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
                 soci::use(copyPinLifeTime), soci::use(failNearLine), soci::use(checksumMethod),
                 soci::use(reuse, reuseIndicator), soci::use(bring_online),
                 soci::use(retry), soci::use(retryDelay), soci::use(metadata),
-                soci::use(sourceSe), soci::use(destinationSe);
+                soci::use(sourceSe), soci::use(destinationSe));
+		
+		insertJob.execute(true);
 
             // Insert src/dest pair
             std::string sourceSurl, destSurl, checksum, metadata, selectionStrategy, sourceSe, destSe;
@@ -2188,8 +2193,6 @@ void MySqlAPI::auditConfiguration(const std::string & dn, const std::string & co
 
 
 
-/*custom optimization stuff*/
-
 void MySqlAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string & /*source_hostname*/, const std::string & /*destin_hostname*/)
 {
     ops->streamsperfile = DEFAULT_NOSTREAMS;
@@ -2348,8 +2351,6 @@ void MySqlAPI::initOptimizer(const std::string & source_hostname, const std::str
         {
             unsigned foundRecords = 0;
 
-            sql.begin();
-
             sql << "SELECT COUNT(*) FROM t_optimize WHERE source_se = :source AND dest_se=:dest",
                 soci::use(source_hostname), soci::use(destin_hostname),
                 soci::into(foundRecords);
@@ -2363,6 +2364,7 @@ void MySqlAPI::initOptimizer(const std::string & source_hostname, const std::str
                                             soci::use(source_hostname), soci::use(destin_hostname), soci::use(timeout),
                                             soci::use(nStreams), soci::use(bufferSize));
 
+		    sql.begin();
                     for (unsigned register int x = 0; x < timeoutslen; x++)
                         {
                             for (unsigned register int y = 0; y < nostreamslen; y++)
@@ -2373,9 +2375,9 @@ void MySqlAPI::initOptimizer(const std::string & source_hostname, const std::str
                                     stmt.execute(true);
                                 }
                         }
+	            sql.commit();
                 }
 
-            sql.commit();
         }
     catch (std::exception& e)
         {
@@ -2685,10 +2687,12 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
         }
     catch (std::exception& e)
         {
+	    sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
+	    sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
     return allowed;
@@ -2719,7 +2723,7 @@ int MySqlAPI::getSeOut(const std::string & source, const std::set<std::string> &
             for (it = destination.begin(); it != destination.end(); ++it)
                 {
                     std::string destin_hostname = *it;
-                    ret += getCredits(source_hostname, destin_hostname);
+                    ret += getCredits(sql, source_hostname, destin_hostname);
                 }
 
         }
@@ -2759,7 +2763,7 @@ int MySqlAPI::getSeIn(const std::set<std::string> & source, const std::string & 
             for (it = source.begin(); it != source.end(); ++it)
                 {
                     std::string source_hostname = *it;
-                    ret += getCredits(source_hostname, destin_hostname);
+                    ret += getCredits(sql, source_hostname, destin_hostname);
                 }
 
         }
@@ -2775,9 +2779,8 @@ int MySqlAPI::getSeIn(const std::set<std::string> & source, const std::string & 
     return ret;
 }
 
-int MySqlAPI::getCredits(const std::string & source_hostname, const std::string & destin_hostname)
-{
-    soci::session sql(*connectionPool);
+int MySqlAPI::getCredits(soci::session& sql, const std::string & source_hostname, const std::string & destin_hostname)
+{   
     int freeCredits = 0;
     int limit = 0;
     int maxActive = 0;
@@ -2801,12 +2804,10 @@ int MySqlAPI::getCredits(const std::string & source_hostname, const std::string 
         }
     catch (std::exception& e)
         {
-            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
     return freeCredits;
@@ -3038,20 +3039,20 @@ void MySqlAPI::setPidV(int pid, std::map<int, std::string>& pids)
 
     try
         {
-            sql.begin();
+  
 
             std::string jobId;
             int fileId=0;
             soci::statement stmt = (sql.prepare << "UPDATE t_file SET pid = :pid WHERE job_id = :jobId AND file_id = :fileId",
                                     soci::use(pid), soci::use(jobId), soci::use(fileId));
 
+            sql.begin();
             for (std::map<int, std::string>::const_iterator i = pids.begin(); i != pids.end(); ++i)
                 {
                     fileId = i->first;
                     jobId  = i->second;
                     stmt.execute(true);
                 }
-
             sql.commit();
         }
     catch (std::exception& e)
@@ -7007,10 +7008,12 @@ void MySqlAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start
         }
     catch (std::exception& e)
         {
+	    sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
 }
