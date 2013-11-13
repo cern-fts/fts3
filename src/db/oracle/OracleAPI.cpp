@@ -9482,104 +9482,120 @@ void OracleAPI::transferLogFile(const std::string& filePath, const std::string& 
 }
 
 
-struct message_state OracleAPI::getStateOfTransfer(const std::string& jobId, int fileId)
+std::vector<struct message_state>  OracleAPI::getStateOfTransfer(const std::string& jobId, int fileId)
 {
-    std::string tag = "getStateOfTransfer";
     std::string tag1 = "getStateOfTransfer1";
+    std::string tag2 = "getStateOfTransfer2";
 
-    std::string query =
+    std::string query1 =
         " select t_job.job_id, t_job.job_state, t_job.vo_name, t_job.job_metadata, t_job.retry, t_file.file_id, t_file.file_state, t_file.retry, "
         " t_file.file_metadata, t_file.source_se, t_file.dest_se "
         " from t_file, t_job "
         " where t_job.job_id = t_file.job_id "
         " and t_job.job_id=:1 and t_file.file_id=:2 ";
+    
+    std::string query2 =
+        " select t_job.job_id, t_job.job_state, t_job.vo_name, t_job.job_metadata, t_job.retry, t_file.file_id, t_file.file_state, t_file.retry, "
+        " t_file.file_metadata, t_file.source_se, t_file.dest_se "
+        " from t_file, t_job "
+        " where t_job.job_id = t_file.job_id "
+        " and t_job.job_id=:1 ";    
 
-    std::string query1 = "select retry from t_server_config";
 
-
-    SafeStatement s;
-    SafeResultSet r;
     SafeStatement s1;
     SafeResultSet r1;
+    SafeStatement s2;
+    SafeResultSet r2;
     SafeConnection pooledConnection;
     struct message_state ret;
+    std::vector<struct message_state> temp;
 
     try
         {
-
             pooledConnection = conn->getPooledConnection();
-            if (!pooledConnection) return ret;
+            if (!pooledConnection) return temp;
 
-            s = conn->createStatement(query, tag, pooledConnection);
-            s->setString(1, jobId);
-            s->setInt(2, fileId);
-            r = conn->createResultset(s, pooledConnection);
-
-            if (r->next())
+            if(fileId != -1){
+            	s1 = conn->createStatement(query1, tag1, pooledConnection);
+            	s1->setString(1, jobId);
+            	s1->setInt(2, fileId);		
+            	r1 = conn->createResultset(s1, pooledConnection);
+                while (r1->next())
                 {
-                    ret.job_id = r->getString(1);
-                    ret.job_state = r->getString(2);
-                    ret.vo_name = r->getString(3);
-                    ret.job_metadata = r->getString(4);
-                    ret.retry_max = r->getInt(5);
-                    ret.file_id = r->getInt(6);
-                    ret.file_state = r->getString(7);
-                    ret.retry_counter = r->getInt(8);
-                    ret.file_metadata = r->getString(9);
-                    ret.source_se = r->getString(10);
-                    ret.dest_se = r->getString(11);
+                    ret.job_id = r1->getString(1);
+                    ret.job_state = r1->getString(2);
+                    ret.vo_name = r1->getString(3);
+                    ret.job_metadata = r1->getString(4);
+                    ret.retry_max = r1->getInt(5);
+                    ret.file_id = r1->getInt(6);
+                    ret.file_state = r1->getString(7);
+                    ret.retry_counter = r1->getInt(8);
+                    ret.file_metadata = r1->getString(9);
+                    ret.source_se = r1->getString(10);
+                    ret.dest_se = r1->getString(11);
                     ret.timestamp = _getTrTimestampUTC();
+		    temp.push_back(ret);
                 }
-            conn->destroyResultset(s, r);
-            conn->destroyStatement(s, tag, pooledConnection);
-
-            if(ret.retry_max == 0)
+            conn->destroyResultset(s1, r1);
+            conn->destroyStatement(s1, tag1, pooledConnection);  		
+	    }else{
+            	s2 = conn->createStatement(query2, tag2, pooledConnection);
+            	s2->setString(1, jobId);
+            	s2->setInt(2, fileId);
+            	r2 = conn->createResultset(s2, pooledConnection);	
+                while (r2->next())
                 {
-                    s1 = conn->createStatement(query1, tag1, pooledConnection);
-                    r1 = conn->createResultset(s1, pooledConnection);
-
-                    if (r1->next())
-                        {
-                            ret.retry_max = r1->getInt(1);
-                        }
-                    conn->destroyResultset(s1, r1);
-                    conn->destroyStatement(s1, tag1, pooledConnection);
+                    ret.job_id = r2->getString(1);
+                    ret.job_state = r2->getString(2);
+                    ret.vo_name = r2->getString(3);
+                    ret.job_metadata = r2->getString(4);
+                    ret.retry_max = r2->getInt(5);
+                    ret.file_id = r2->getInt(6);
+                    ret.file_state = r2->getString(7);
+                    ret.retry_counter = r2->getInt(8);
+                    ret.file_metadata = r2->getString(9);
+                    ret.source_se = r2->getString(10);
+                    ret.dest_se = r2->getString(11);
+                    ret.timestamp = _getTrTimestampUTC();
+		    temp.push_back(ret);
                 }
-
+            conn->destroyResultset(s2, r2);
+            conn->destroyStatement(s2, tag2, pooledConnection); 		    
+	    }         
         }
     catch (oracle::occi::SQLException const &e)
         {
 
             conn->rollback(pooledConnection);
-            if(s && r)
-                conn->destroyResultset(s, r);
-            if (s)
-                conn->destroyStatement(s, tag, pooledConnection);
-
             if(s1 && r1)
                 conn->destroyResultset(s1, r1);
             if (s1)
                 conn->destroyStatement(s1, tag1, pooledConnection);
+
+            if(s2 && r2)
+                conn->destroyResultset(s2, r2);
+            if (s2)
+                conn->destroyStatement(s2, tag2, pooledConnection);
 
             FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
         }
     catch (...)
         {
             conn->rollback(pooledConnection);
-            if(s && r)
-                conn->destroyResultset(s, r);
-            if (s)
-                conn->destroyStatement(s, tag, pooledConnection);
-
             if(s1 && r1)
                 conn->destroyResultset(s1, r1);
             if (s1)
                 conn->destroyStatement(s1, tag1, pooledConnection);
 
+            if(s2 && r2)
+                conn->destroyResultset(s2, r2);
+            if (s2)
+                conn->destroyStatement(s2, tag2, pooledConnection);
+
             FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
         }
     conn->releasePooledConnection(pooledConnection);
-    return ret;
+    return temp;
 }
 
 

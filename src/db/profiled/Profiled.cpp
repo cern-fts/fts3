@@ -764,7 +764,7 @@ void ProfiledDB::transferLogFile(const std::string& filePath, const std::string&
 }
 
 
-struct message_state ProfiledDB::getStateOfTransfer(const std::string& jobId, int fileId)
+std::vector<struct message_state> ProfiledDB::getStateOfTransfer(const std::string& jobId, int fileId)
 {
     PROFILE_PREFIXED("DB::", return db->getStateOfTransfer(jobId, fileId));
 }

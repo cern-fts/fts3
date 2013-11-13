@@ -701,7 +701,7 @@ unsigned int MySqlAPI::updateFileStatus(TransferFiles* file, const std::string s
 }
 
 
-void MySqlAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files, bool reuse)
+void MySqlAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files, bool)
 {
     soci::session sql(*connectionPool);
 
@@ -712,31 +712,6 @@ void MySqlAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::
 
     try
         {
-   int mode = getOptimizerMode(sql);
-    int filesNum = 0;
-    if(mode==1)
-        {
-            filesNum = mode_1[3];
-        }
-    else if(mode==2)
-        {
-            filesNum = mode_2[3];
-        }
-    else if(mode==3)
-        {
-            filesNum = mode_3[3];
-        }
-    else
-        {
-            filesNum = mode_1[3];
-        }
-
-    if(reuse)
-        {
-            filesNum = 100000;
-        }
-
-
             for (std::vector<TransferJobs*>::const_iterator i = jobs.begin(); i != jobs.end(); ++i)
                 {
                     std::string jobId = (*i)->JOB_ID;
@@ -756,11 +731,9 @@ void MySqlAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::
                                                          "    f.job_finished IS NULL AND "
                                                          "    f.wait_timestamp IS NULL AND "
                                                          "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
-                                                         "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) "
-                                                         " LIMIT :filesNum ",soci::use(jobId),
+                                                         "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) ",soci::use(jobId),
                                                          soci::use(tTime),
-                                                         soci::use(hashSegment.start), soci::use(hashSegment.end),
-                                                         soci::use(filesNum)
+                                                         soci::use(hashSegment.start), soci::use(hashSegment.end)
                                                      );
 
 
@@ -5583,16 +5556,33 @@ void MySqlAPI::transferLogFile(const std::string& filePath, const std::string& /
 }
 
 
-struct message_state MySqlAPI::getStateOfTransfer(const std::string& jobId, int fileId)
+std::vector<struct message_state> MySqlAPI::getStateOfTransfer(const std::string& jobId, int fileId)
 {
     soci::session sql(*connectionPool);
 
     message_state ret;
     soci::indicator ind = soci::i_ok;
+    std::vector<struct message_state> temp;
+    int retry = 0;
 
     try
         {
-            soci::rowset<soci::row> rs = (
+	    sql << " select retry from t_server_config LIMIT 1", soci::into(retry, ind);
+	    
+            soci::rowset<soci::row> rs = (fileId ==-1) ? (
+                                             sql.prepare <<
+                                             " SELECT "
+                                             "	j.job_id, j.job_state, j.vo_name, "
+                                             "	j.job_metadata, j.retry AS retry_max, f.file_id, "
+                                             "	f.file_state, f.retry AS retry_counter, f.file_metadata, "
+                                             "	f.source_se, f.dest_se "
+                                             " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
+                                             " WHERE "
+                                             " 	j.job_id = :jobId ",                                           
+                                             soci::use(jobId)
+                                         )
+					 :
+					 (
                                              sql.prepare <<
                                              " SELECT "
                                              "	j.job_id, j.job_state, j.vo_name, "
@@ -5602,14 +5592,15 @@ struct message_state MySqlAPI::getStateOfTransfer(const std::string& jobId, int 
                                              " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                              " WHERE "
                                              " 	j.job_id = :jobId "
-                                             "	AND f.file_id = :fileId ",
+					     "  AND f.file_id = :fileId ",                                           
                                              soci::use(jobId),
-                                             soci::use(fileId)
-                                         );
+					     soci::use(fileId)
+					  );
+					 
 
-            soci::rowset<soci::row>::const_iterator it = rs.begin();
-            if (it != rs.end())
-                {
+            soci::rowset<soci::row>::const_iterator it;
+            for (it = rs.begin(); it != rs.end(); ++it)
+                {                  
                     ret.job_id = it->get<std::string>("job_id");
                     ret.job_state = it->get<std::string>("job_state");
                     ret.vo_name = it->get<std::string>("vo_name");
@@ -5625,10 +5616,11 @@ struct message_state MySqlAPI::getStateOfTransfer(const std::string& jobId, int 
 
                     if(ret.retry_max == 0)
                         {
-                            sql << " select retry from t_server_config LIMIT 1", soci::into(ret.retry_max, ind);
+                            ret.retry_max = retry;
                         }
+			
+		    temp.push_back(ret);
                 }
-
         }
     catch (std::exception& e)
         {
@@ -5636,10 +5628,10 @@ struct message_state MySqlAPI::getStateOfTransfer(const std::string& jobId, int 
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception ");
-        }
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }		
 
-    return ret;
+    return temp;
 }
 
 void MySqlAPI::getFilesForJob(const std::string& jobId, std::vector<int>& files)
