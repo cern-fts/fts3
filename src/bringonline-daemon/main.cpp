@@ -333,6 +333,7 @@ void heartbeat(void)
 
     while (!stopThreads)
         {
+	  try{
             db::DBSingleton::instance().getDBObjectInstance()->updateHeartBeat(
                 &myIndex, &count, &hashStart, &hashEnd);
 
@@ -342,6 +343,14 @@ void heartbeat(void)
                                             << commit;
 
             boost::this_thread::sleep(boost::posix_time::seconds(60));
+	    }catch (std::exception& ex)
+            {
+            	FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
+            }
+    	    catch (...)
+            {
+            	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unhandled exception" << commit;
+            }	    
         }
 }
 
