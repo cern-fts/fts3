@@ -81,11 +81,7 @@ int main(int argc, char** argv)
                     exit(1);
                 }
 
-            FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv);
-
-            int d = daemon(0,0);
-            if(d < 0)
-                std::cerr << "Can't set daemon, will continue attached to tty" << std::endl;
+            FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv);           
 
             std::string logDir = theServerConfig().get<std::string > ("TransferLogDirectory");
             if (logDir.length() > 0)
