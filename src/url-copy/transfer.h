@@ -16,6 +16,8 @@ public:
     std::string fileMetadata;
     std::string tokenBringOnline;
 
+    UrlCopyOpts::CompareChecksum checksumMethod;
+
     // Timestamps in milliseconds
     uint64_t startTime;
     uint64_t finishTime;
@@ -45,6 +47,8 @@ public:
                 checksumAlgorithm.assign(checksum.substr(0, colon));
                 checksumValue.assign(checksum.substr(colon + 1));
             }
+
+        checksumMethod = UrlCopyOpts::getInstance().compareChecksum;
     }
 
     double getTransferDurationInSeconds()

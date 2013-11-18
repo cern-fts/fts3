@@ -663,7 +663,7 @@ int main(int argc, char **argv)
                 logger.INFO() << "Pin lifetime:" << opts.copyPinLifetime << std::endl;
                 logger.INFO() << "BringOnline:" << opts.bringOnline << std::endl;
                 logger.INFO() << "Checksum:" << currentTransfer.checksumValue << std::endl;
-                logger.INFO() << "Checksum enabled:" << opts.compareChecksum << std::endl;
+                logger.INFO() << "Checksum enabled:" << currentTransfer.checksumMethod << std::endl;
                 logger.INFO() << "User filesize:" << currentTransfer.userFileSize << std::endl;
                 logger.INFO() << "File metadata:" << replaceMetadataString(currentTransfer.fileMetadata) << std::endl;
                 logger.INFO() << "Job metadata:" << replaceMetadataString(opts.jobMetadata) << std::endl;
@@ -726,17 +726,17 @@ int main(int argc, char **argv)
                 msg_ifce::getInstance()->set_checksum_timeout(&tr_completed, boost::lexical_cast<std::string > (checksumTimeout));
 
                 /*Checksuming*/
-                if (opts.compareChecksum)
+                if (currentTransfer.checksumMethod)
                     {
                         // Set checksum check
                         gfalt_set_checksum_check(params, TRUE, NULL);
-                        if (opts.compareChecksum == UrlCopyOpts::CompareChecksum::CHECKSUM_RELAXED)
+                        if (currentTransfer.checksumMethod == UrlCopyOpts::CompareChecksum::CHECKSUM_RELAXED)
                             {
                                 gfal2_set_opt_boolean(handle, "SRM PLUGIN", "ALLOW_EMPTY_SOURCE_CHECKSUM", TRUE, NULL);
                                 gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "SKIP_SOURCE_CHECKSUM", TRUE, NULL);
                             }
 
-                        if (!opts.checksumValue.empty() && opts.checksumValue != "x")   //user provided checksum
+                        if (!currentTransfer.checksumValue.empty() && currentTransfer.checksumValue != "x")   //user provided checksum
                             {
                                 logger.INFO() << "User  provided checksum" << std::endl;
                                 gfalt_set_user_defined_checksum(params,

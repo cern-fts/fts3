@@ -380,7 +380,8 @@ protected:
                                 std::string jobMetadata("");
                                 std::string fileMetadata("");
                                 std::string bringonlineToken("");
-				bool userProtocol = false;
+                                bool userProtocol = false;
+                                std::string checksumMethod("");
 
                                 TransferFiles* tempUrl = NULL;
 
@@ -433,6 +434,7 @@ protected:
                                         jobMetadata = prepareMetadataString(temp->JOB_METADATA);
                                         fileMetadata = prepareMetadataString(temp->FILE_METADATA);
                                         bringonlineToken = temp->BRINGONLINE_TOKEN;
+                                        checksumMethod = temp->CHECKSUM_METHOD;
 
                                         if (fileMetadata.length() <= 0)
                                             fileMetadata = "x";
@@ -727,6 +729,12 @@ protected:
                                             {
                                                 params.append(" -J ");
                                                 params.append(jobMetadata);
+                                            }
+
+                                        if (std::string(checksumMethod).length() > 0)
+                                            {
+                                                params.append(" -A ");
+                                                params.append(checksumMethod);
                                             }
 
                                         params.append(" -M ");
