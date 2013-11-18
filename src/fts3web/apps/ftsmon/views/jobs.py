@@ -178,13 +178,18 @@ def archiveJobIndex(httpRequest):
 
 @jsonify
 def jobDetails(httpRequest, jobId):
+    reason = httpRequest.GET.get('reason', None)
     try:
         job = Job.objects.get(job_id = jobId)
         count = File.objects.filter(job = jobId).values('file_state').annotate(count = Count('file_state'))
+        if reason:
+            count = count.filter(reason = reason)
     except Job.DoesNotExist:
         try:
             job = JobArchive.objects.get(job_id = jobId)
             count = FileArchive.objects.filter(job = jobId).values('file_state').annotate(count = Count('file_state'))
+            if reason:
+                count = count.filter(reason = reason)
         except JobArchive.DoesNotExist:
             raise Http404
     
@@ -204,8 +209,11 @@ def jobFiles(httpRequest, jobId):
     if not files:
         raise Http404
     
-    if 'state' in httpRequest.GET and httpRequest.GET['state']:
+    if httpRequest.GET.get('state', None):
         files = files.filter(file_state__in = httpRequest.GET['state'].split(','))
+        
+    if httpRequest.GET.get('reason', None):
+        files = files.filter(reason = httpRequest.GET['reason'])
         
     # Ordering
     (orderBy, orderDesc) = getOrderBy(httpRequest)

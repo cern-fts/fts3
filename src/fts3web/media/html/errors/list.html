@@ -19,7 +19,7 @@
         <tr ng-repeat="file in files.items" ng-class-odd="'odd'">
             <td>{{file.file_id}}</td>
             <td>
-                <a href="#/job/{{file.job_id}}">
+                <a href="#/job/{{file.job_id}}?state=FAILED&reason={{reason | escape}}">
                     {{file.job_id}}
                 </a>
             </td>

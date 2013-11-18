@@ -1,5 +1,11 @@
 <h3>Transfer '{{job.job.job_id}}' {{job.job.job_state}}</h3>
 
+<div class="alert" ng-show="filter.reason">
+    <strong>Filtered by error message</strong>
+    {{filter.reason}}
+    <button type="button" class="close" title="Remove filter" ng-click="resetReasonFilter()">&times;</button>
+</div>
+
 <p>
 	Submitted by <span class="dn">'{{job.job.user_dn}}'</span><br/>
 	VO: <span class="vo">{{job.job.vo_name}}</span><br/>

@@ -123,13 +123,18 @@ function JobViewCtrl($location, $scope, job, files, Job, Files)
 		$location.search('page', newPage);
 	}
 	
-	// Filtering by state
+	// Filtering
 	$scope.filter = {
-		state:       statesFromString($location.search().state)
+		state: statesFromString($location.search().state),
+		reason: $location.search().reason
 	}
 	
 	$scope.filterByState = function() {
 		$location.search('state', joinStates($scope.filter.state));
+	}
+	
+	$scope.resetReasonFilter = function() {
+		$location.search({state: $location.search().state});
 	}
 	
 	// Reloading
@@ -158,8 +163,14 @@ JobViewCtrl.resolve = {
     	loading($rootScope);
     	
     	var deferred = $q.defer();
-
-    	Job.query({jobId: $route.current.params.jobId}, function(data) {
+    	
+    	var filter = {
+			jobId: $route.current.params.jobId
+    	};
+    	if ($route.current.params.reason)
+    		filter.reason = $route.current.params.reason;
+    	
+    	Job.query(filter, function(data) {
 			deferred.resolve(data);
 			stopLoading($rootScope);
     	},
