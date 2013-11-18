@@ -380,6 +380,7 @@ protected:
                                 std::string jobMetadata("");
                                 std::string fileMetadata("");
                                 std::string bringonlineToken("");
+				bool userProtocol = false;
 
                                 TransferFiles* tempUrl = NULL;
 
@@ -496,6 +497,7 @@ protected:
                                                 BufSize = (*p).tcp_buffer_size;
                                                 StreamsperFile = (*p).nostreams;
                                                 Timeout = (*p).urlcopy_tx_to;
+						userProtocol = true;
                                             }
                                         else
                                             {
@@ -543,6 +545,10 @@ protected:
                                                         if (protocol.TCP_BUFFER_SIZE >= 0)
                                                             internalParams << ",buffersize:" << protocol.TCP_BUFFER_SIZE;
                                                     }
+						else if(userProtocol == true)
+						    {
+						        internalParams << "nostreams:" << StreamsperFile << ",timeout:" << Timeout << ",buffersize:" << BufSize;
+						    }    
                                                 else
                                                     {
                                                         internalParams << "nostreams:" << DEFAULT_NOSTREAMS << ",timeout:" << DEFAULT_TIMEOUT << ",buffersize:" << DEFAULT_BUFFSIZE;
@@ -596,7 +602,7 @@ protected:
                                                 params.append(" -F ");
                                             }
 
-                                        if (manualConfigExists)
+                                        if (manualConfigExists || userProtocol)
                                             {
                                                 params.append(" -N ");
                                             }

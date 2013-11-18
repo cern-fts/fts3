@@ -95,6 +95,7 @@ void FileTransferExecutor::execute()
                     int BufSize = 0;
                     int StreamsperFile = 0;
                     int Timeout = 0;
+		    bool manualProtocol = false;
 
                     std::stringstream internalParams;
 
@@ -109,6 +110,7 @@ void FileTransferExecutor::execute()
                                     BufSize = (*p).tcp_buffer_size;
                                     StreamsperFile = (*p).nostreams;
                                     Timeout = (*p).urlcopy_tx_to;
+				    manualProtocol = true;
                                 }
                             else
                                 {
@@ -143,13 +145,21 @@ void FileTransferExecutor::execute()
                             if (optimize && cfgs.empty())
                                 {
                                     DBSingleton::instance().getDBObjectInstance()->setAllowed(temp->JOB_ID, temp->FILE_ID, source_hostname, destin_hostname, StreamsperFile, Timeout, BufSize);
+  				    if (manualProtocol == true)
+				        {
+					    internalParams << "nostreams:" << StreamsperFile << ",timeout:" << Timeout << ",buffersize:" << BufSize;
+					}					
+                                    else    
+				        {
+                                            internalParams << "nostreams:" << DEFAULT_NOSTREAMS << ",timeout:" << DEFAULT_TIMEOUT << ",buffersize:" << DEFAULT_BUFFSIZE;
+                                        }				    
                                 }
                             else
                                 {
                                     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Check link config for: " << source_hostname << " -> " << destin_hostname << commit;
                                     ProtocolResolver resolver(temp.get(), cfgs);
                                     bool protocolExists = resolver.resolve();
-                                    if (protocolExists)
+                                    if (protocolExists == true)
                                         {
                                             manualConfigExists = true;
                                             protocol.NOSTREAMS = resolver.getNoStreams();
@@ -164,8 +174,12 @@ void FileTransferExecutor::execute()
                                             if (protocol.TCP_BUFFER_SIZE >= 0)
                                                 internalParams << ",buffersize:" << protocol.TCP_BUFFER_SIZE;
                                         }
-                                    else
-                                        {
+                                    else if (manualProtocol == true)
+				        {
+					    internalParams << "nostreams:" << StreamsperFile << ",timeout:" << Timeout << ",buffersize:" << BufSize;
+					}					
+                                    else    
+				        {
                                             internalParams << "nostreams:" << DEFAULT_NOSTREAMS << ",timeout:" << DEFAULT_TIMEOUT << ",buffersize:" << DEFAULT_BUFFSIZE;
                                         }
 
@@ -215,7 +229,7 @@ void FileTransferExecutor::execute()
                                     params.append(" -F ");
                                 }
 
-                            if (manualConfigExists)
+                            if (manualConfigExists || manualProtocol)
                                 {
                                     params.append(" -N ");
                                 }
