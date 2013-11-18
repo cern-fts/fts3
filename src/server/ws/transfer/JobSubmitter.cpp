@@ -38,6 +38,7 @@
 
 #include "infosys/OsgParser.h"
 
+#include "profiler/Macros.h"
 
 #include <boost/lexical_cast.hpp>
 
@@ -77,8 +78,7 @@ static bool checkValidUrl(const std::string &uri)
 JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) :
     db (DBSingleton::instance().getDBObjectInstance())
 {
-	long start, stop;
-	time(&start);
+    PROFILE_SCOPE("JobSubmitter::JobSubmitter(soap*, tns3__TransferJob*, bool)");
 
     GSoapDelegationHandler handler(soap);
     delegationId = handler.makeDelegationId();
@@ -196,17 +196,12 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
             jobs.push_back(tupple);
         }
     //FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's vector has been created" << commit;
-
-    time(&stop);
-
-    std::cout << stop - start << std::endl;
 }
 
 JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
     db (DBSingleton::instance().getDBObjectInstance())
 {
-	long start, stop;
-	time(&start);
+    PROFILE_SCOPE("JobSubmitter::JobSubmitter(soap*, tns3__TransferJob2*)");
 
     GSoapDelegationHandler handler (soap);
     delegationId = handler.makeDelegationId();
@@ -319,17 +314,12 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
             jobs.push_back(tupple);
         }
     //FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's vector has been created" << commit;
-
-    time(&stop);
-
-    std::cout << stop - start << std::endl;
 }
 
 JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
     db (DBSingleton::instance().getDBObjectInstance())
 {
-	time_t start, stop;
-	time(&start);
+    PROFILE_SCOPE("JobSubmitter::JobSubmitter(soap*, tns3__TransferJob3*)");
 
     GSoapDelegationHandler handler (ctx);
     delegationId = handler.makeDelegationId();
@@ -481,10 +471,6 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
                     jobs.push_back(tupple);
                 }
         }
-
-    time(&stop);
-
-    std::cout << difftime(stop, start) << " seconds" << std::endl;
 }
 
 void JobSubmitter::init(tns3__TransferParams *jobParams)
