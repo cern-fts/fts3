@@ -3820,6 +3820,30 @@ bool MySqlAPI::allowSubmitForBlacklistedSe(std::string se)
     return ret;
 }
 
+void MySqlAPI::allowSubmit(std::string ses, std::string vo, std::list<std::string>& notAllowed)
+{
+	soci::session sql(*connectionPool);
+
+	std::string query = "SELECT se FROM t_bad_ses WHERE se IN " + ses + " AND status != 'WAIT_AS' AND (vo IS NULL OR vo='' OR vo = :vo)";
+
+    try
+        {
+            soci::rowset<std::string> rs = (sql.prepare << query, soci::use(vo));
+
+            for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+            	{
+                	notAllowed.push_back(*i);
+            	}
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
 
 boost::optional<int> MySqlAPI::getTimeoutForSe(std::string se)
 {
@@ -3853,6 +3877,39 @@ boost::optional<int> MySqlAPI::getTimeoutForSe(std::string se)
         }		
 
     return ret;
+}
+
+void MySqlAPI::getTimeoutForSe(std::string ses, std::map<std::string, int>& ret)
+{
+    soci::session sql(*connectionPool);
+
+    std::string query =
+			 " select se, wait_timeout  "
+			 " from t_bad_ses "
+			 " where se in "
+    		;
+    query += ses;
+
+    try
+        {
+            soci::rowset<soci::row> rs = (
+				 sql.prepare << query
+			 );
+
+            for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+                {
+                    ret[i->get<std::string>("se")] =  i->get<int>("wait_timeout");
+                }
+
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
 }
 
 

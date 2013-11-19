@@ -152,7 +152,11 @@ public:
 
     bool allowSubmitForBlacklistedSe(std::string se);
 
+    void allowSubmit(std::string ses, std::string vo, std::list<std::string>& notAllowed);
+
     boost::optional<int> getTimeoutForSe(std::string se);
+
+    void getTimeoutForSe(std::string ses, std::map<std::string, int>& ret);
 
     bool isDnBlacklisted(std::string dn);
 

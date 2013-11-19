@@ -43,7 +43,9 @@
 #include <boost/lexical_cast.hpp>
 
 #include <algorithm>
+#include <numeric>
 
+#include <boost/lambda/lambda.hpp>
 #include <boost/optional.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/assign.hpp>
@@ -51,9 +53,6 @@
 #include "parse_url.h"
 
 #include "ws/SingleTrStateInstance.h"
-
-#include <time.h>
-#include <iostream>
 
 using namespace db;
 using namespace config;
@@ -69,10 +68,15 @@ const string JobSubmitter::false_str = "false";
 
 const string JobSubmitter::srm_protocol = "srm";
 
-static bool checkValidUrl(const std::string &uri)
+static void checkValidUrl(const std::string &uri)
 {
     Uri u0 = Uri::Parse(uri);
-    return  u0.Host.length() != 0 && u0.Protocol.length() != 0 && u0.Path.length() != 0;
+    bool ok = u0.Host.length() != 0 && u0.Protocol.length() != 0 && u0.Path.length() != 0;
+    if (!ok)
+    	{
+    		std::string errMsg = "Not valid uri format, check submitted uri's";
+    		throw Err_Custom(errMsg);
+    	}
 }
 
 JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) :
@@ -136,22 +140,14 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
     vector<tns3__TransferJobElement * >::iterator it;
     for (it = job->transferJobElements.begin(); it < job->transferJobElements.end(); ++it, ++fileIndex)
         {
-
             string src = *(*it)->source, dest = *(*it)->dest;
 
-            if (!checkValidUrl(src) || !checkValidUrl(dest))
-                {
-                    std::string errMsg = "Not valid uri format, check submitted uri's";
-                    throw Err_Custom(errMsg);
-                }
+            string sourceSe = fileUrlToSeName(src, true);
+            string destinationSe = fileUrlToSeName(dest);
 
-            string sourceSe = fileUrlToSeName(src);
-            if(sourceSe.empty())
-                {
-                    std::string errMsg = "Can't extract hostname from url " + src;
-                    throw Err_Custom(errMsg);
-                }
-            checkSe(sourceSe, vo);
+            addSe(sourceSe);
+            addSe(destinationSe);
+
             // set the source SE for the transfer job,
             // in case of this submission type multiple
             // source/destination submission is not possible
@@ -163,13 +159,7 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
             // check if all the sources use SRM protocol
             srm_source &= sourceSe.find(srm_protocol) == 0;
 
-            string destinationSe = fileUrlToSeName(dest);
-            if(destinationSe.empty())
-                {
-                    std::string errMsg = "Can't extract hostname from url " + dest;
-                    throw Err_Custom(errMsg);
-                }
-            checkSe(destinationSe, vo);
+
             // set the destination SE for the transfer job,
             // in case of this submission type multiple
             // source/destination submission is not possible
@@ -178,10 +168,6 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
                 {
                     this->destinationSe = destinationSe;
                 }
-
-            // check weather the source and destination files are supported
-            if (!checkProtocol(dest)) throw Err_Custom("Destination protocol not supported (" + dest + ")");
-            if (!checkProtocol(src) && !checkIfLfn(src)) throw Err_Custom("Source protocol not supported (" + src + ")");
 
             job_element_tupple tupple;
             tupple.source = src;
@@ -196,6 +182,15 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
             jobs.push_back(tupple);
         }
     //FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's vector has been created" << commit;
+
+    string seStr = getSesStr();
+    checkSe(seStr, vo);
+
+    map<string, int> waitTimeout;
+    db->getTimeoutForSe(seStr, waitTimeout);
+
+    TimeoutHandler th(waitTimeout);
+    for_each(jobs.begin(), jobs.end(), th);
 }
 
 JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
@@ -245,19 +240,11 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
 
             string src = *(*it)->source, dest = *(*it)->dest;
 
-            if (!checkValidUrl(src) || !checkValidUrl(dest))
-                {
-                    std::string errMsg = "Not valid uri format, check submitted uri's";
-                    throw Err_Custom(errMsg);
-                }
+            string sourceSe = fileUrlToSeName(src, true);
+            string destinationSe = fileUrlToSeName(dest);
 
-            string sourceSe = fileUrlToSeName(src);
-            if(sourceSe.empty())
-                {
-                    std::string errMsg = "Can't extract hostname from url " + src;
-                    throw Err_Custom(errMsg);
-                }
-            checkSe(sourceSe, vo);
+            addSe(sourceSe); addSe(destinationSe);
+
             // set the source SE for the transfer job,
             // in case of this submission type multiple
             // source/destination submission is not possible
@@ -270,13 +257,6 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
             // check if all the sources use SRM protocol
             srm_source &= sourceSe.find(srm_protocol) == 0;
 
-            string destinationSe = fileUrlToSeName(dest);
-            if(destinationSe.empty())
-                {
-                    std::string errMsg = "Can't extract hostname from url " + dest;
-                    throw Err_Custom(errMsg);
-                }
-            checkSe(destinationSe, vo);
             // set the destination SE for the transfer job,
             // in case of this submission type multiple
             // source/destination submission is not possible
@@ -286,16 +266,6 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
                     this->destinationSe = destinationSe;
                 }
 
-            // check weather the destination file is supported
-            if (!checkProtocol(dest))
-                {
-                    throw Err_Custom("Destination protocol is not supported for file: " + dest);
-                }
-            // check weather the source file is supported
-            if (!checkProtocol(src) && !checkIfLfn(src))
-                {
-                    throw Err_Custom("Source protocol is not supported for file: " + src);
-                }
             job_element_tupple tupple;
             tupple.source = src;
             tupple.destination = dest;
@@ -314,6 +284,15 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
             jobs.push_back(tupple);
         }
     //FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's vector has been created" << commit;
+
+    string seStr = getSesStr();
+    checkSe(seStr, vo);
+
+    map<string, int> waitTimeout;
+    db->getTimeoutForSe(seStr, waitTimeout);
+
+    TimeoutHandler th(waitTimeout);
+    for_each(jobs.begin(), jobs.end(), th);
 }
 
 JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
@@ -350,25 +329,24 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
     // if at least one source uses different protocol than SRM it will be 'false'
     srm_source = true;
 
-//    jobs.reserve(job->transferJobElements.size());
-
     // extract the job elements from tns3__TransferJob2 object and put them into a vector
     vector<tns3__TransferJobElement3 * >::iterator it;
     for (it = job->transferJobElements.begin(); it < job->transferJobElements.end(); it++, fileIndex++)
         {
+    		tns3__TransferJobElement3* elem = (*it);
 
             // prepare the job element and add it to the job
             job_element_tupple tupple;
 
             // common properties
-            tupple.filesize = (*it)->filesize ? *(*it)->filesize : 0;
-            tupple.metadata = (*it)->metadata ? *(*it)->metadata : string();
-            tupple.selectionStrategy = (*it)->selectionStrategy ? *(*it)->selectionStrategy : string();
+            tupple.filesize = elem->filesize ? *elem->filesize : 0;
+            tupple.metadata = elem->metadata ? *elem->metadata : string();
+            tupple.selectionStrategy = elem->selectionStrategy ? *elem->selectionStrategy : string();
             tupple.fileIndex = fileIndex;
 
             // TODO for now we just use the first one!
             // in the future the checksum should be assigned to pairs!
-            if (!(*it)->checksum.empty())
+            if (!elem->checksum.empty())
                 {
                     tupple.checksum = (*it)->checksum.front();
                     if (!params.isParamSet(JobParameterHandler::CHECKSUM_METHOD))
@@ -376,17 +354,20 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
                 }
 
             // pair sources with destinations
-            list< pair<string, string> > pairs = pairSourceAndDestination(
-                    (*it)->source,
-                    (*it)->dest,
-                    tupple.selectionStrategy
+            list< pair<string, string> > pairs;
+
+            pairSourceAndDestination(
+                    elem->source,
+                    elem->dest,
+                    tupple.selectionStrategy,
+                    pairs
             	);
 
             // if it is not multiple source/destination submission ..
             if (pairs.size() == 1)
                 {
                     // add the source and destination SE for the transfer job
-                    sourceSe = fileUrlToSeName(pairs.front().first);
+                    sourceSe = fileUrlToSeName(pairs.front().first, true);
                     destinationSe = fileUrlToSeName(pairs.front().second);
                 }
 
@@ -405,72 +386,31 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
             list< pair<string, string> >::iterator it_p;
             for (it_p = pairs.begin(); it_p != pairs.end(); it_p++)
                 {
-                    // check wether the destination file is supported
-                    if (!checkProtocol(it_p->second))
-                        {
-                            throw Err_Custom("Destination protocol is not supported for file: " + it_p->second);
-                        }
-                    // check wether the source file is supported
-                    if (!checkProtocol(it_p->first) && !checkIfLfn(it_p->first))
-                        {
-                            throw Err_Custom("Source protocol is not supported for file: " + it_p->first);
-                        }
                     // set the values for source and destination
                     tupple.source = it_p->first;
                     tupple.destination = it_p->second;
 
-                    if (!checkValidUrl(it_p->first) || !checkValidUrl(it_p->second))
-                        {
-                            std::string errMsg = "Not valid uri format, check submitted uri's";
-                            throw Err_Custom(errMsg);
-                        }
+                    string sourceSe = fileUrlToSeName(it_p->first, true), destinationSe = fileUrlToSeName(it_p->second);
+                    addSe(sourceSe); addSe(destinationSe);
 
-
-                    string sourceSe = fileUrlToSeName(it_p->first);
-                    if(sourceSe.empty())
-                        {
-                            string errMsg = "Can't extract hostname from url " + it_p->first;
-                            throw Err_Custom(errMsg);
-                        }
-                    checkSe(sourceSe, vo);
                     // check if all the sources use SRM protocol
                     srm_source &= sourceSe.find(srm_protocol) == 0;
-
-                    string destinationSe = fileUrlToSeName(it_p->second);
-                    if(destinationSe.empty())
-                        {
-                            std::string errMsg = "Can't extract hostname from url " + it_p->second;
-                            throw Err_Custom(errMsg);
-                        }
-                    checkSe(destinationSe, vo);
 
                     tupple.source_se = sourceSe;
                     tupple.dest_se = destinationSe;
 
-                    // check the timeout in case the source has been blacklisted
-                    boost::optional<int> source_timeout = db->getTimeoutForSe(sourceSe);
-                    // check the timeout in case the destination has been blacklisted
-                    boost::optional<int> destin_timeout = db->getTimeoutForSe(destinationSe);
-
-                    // set the wait_timeout for the transfer (in case the source / destination have been blacklisted with '--allow-submit')
-                    if (source_timeout.is_initialized() && destin_timeout.is_initialized())
-                        {
-                            tupple.wait_timeout = *source_timeout < *destin_timeout ? *source_timeout : *destin_timeout;
-                        }
-                    else if (source_timeout.is_initialized())
-                        {
-                            tupple.wait_timeout = source_timeout;
-                        }
-                    else if (destin_timeout.is_initialized())
-                        {
-                            tupple.wait_timeout = destin_timeout;
-                        }
-
-                    tupple.activity = getActivity(tupple.metadata);
-
-                    jobs.push_back(tupple);
+                    jobs.push_front(tupple);
                 }
         }
+
+    string seStr = getSesStr();
+    checkSe(seStr, vo);
+
+    map<string, int> waitTimeout;
+    db->getTimeoutForSe(seStr, waitTimeout);
+
+    TimeoutHandler th(waitTimeout);
+    for_each(jobs.begin(), jobs.end(), th);
 }
 
 void JobSubmitter::init(tns3__TransferParams *jobParams)
@@ -484,6 +424,22 @@ void JobSubmitter::init(tns3__TransferParams *jobParams)
             params(jobParams->keys, jobParams->values);
             //FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Parameter map has been created" << commit;
         }
+}
+
+void JobSubmitter::addSe(string& se)
+{
+    if (!uniqueSes.count(se)) {
+
+    	uniqueSes.insert(se);
+    	uniqueSesStr += "'" + se + "',";
+    }
+}
+
+string JobSubmitter::getSesStr()
+{
+    uniqueSesStr.resize(uniqueSesStr.size() - 1);
+    uniqueSesStr = "(" + uniqueSesStr + ")";
+    return uniqueSesStr;
 }
 
 string JobSubmitter::getActivity(string metadata)
@@ -594,23 +550,31 @@ string JobSubmitter::submit()
     return id;
 }
 
-bool JobSubmitter::checkProtocol(string file)
+void JobSubmitter::checkProtocol(string file, bool source)
 {
     string tmp (file);
     transform(tmp.begin(), tmp.end(), tmp.begin(), ::tolower);
 
-    return tmp.find("root://") == 0 || tmp.find("srm://") == 0 ||
-           tmp.find("gsiftp://") == 0 || tmp.find("https://") == 0 ||
-           tmp.find("lfc://") == 0;
+    bool not_ok =
+    		// check protocol
+    		!(tmp.find("root://") == 0 ||tmp.find("srm://") == 0 || tmp.find("gsiftp://") == 0 || tmp.find("https://") == 0 || tmp.find("lfc://") == 0)
+    		&&
+    		// check if lfn if it is the source
+    		(!source || !(file.find("/") == 0 && file.find(";") == string::npos && file.find(":") == string::npos))
+    		;
+
+    if(not_ok)
+    	{
+    		string msg = (source ? "Source" : "Destination");
+    		msg += " protocol is not supported for file: "  + file;
+    		throw Err_Custom(msg);
+    	}
 }
 
-bool JobSubmitter::checkIfLfn(string file)
+string JobSubmitter::fileUrlToSeName(string url, bool source)
 {
-    return file.find("/") == 0 && file.find(";") == string::npos && file.find(":") == string::npos;
-}
-
-string JobSubmitter::fileUrlToSeName(string url)
-{
+    checkValidUrl(url);
+    checkProtocol(url, source);
 
     smatch what;
     if (regex_match(url, what, fileUrlRegex, match_extra))
@@ -620,19 +584,31 @@ string JobSubmitter::fileUrlToSeName(string url)
 
         }
     else
-        return string();
+    	{
+    		string errMsg = "Can't extract hostname from url: " + url;
+    		throw Err_Custom(errMsg);
+    	}
 }
 
-void JobSubmitter::checkSe(string se, string vo)
+void JobSubmitter::checkSe(string ses, string vo)
 {
+	list<string> notAllowed;
+	db->allowSubmit(ses, vo, notAllowed);
+
+    if (notAllowed.empty()) return;
+
+    string notAllowedStr = accumulate(notAllowed.begin(), notAllowed.end(), string(), lambda::_1 + lambda::_2 + ",");
+    notAllowedStr.resize(notAllowedStr.size() - 1);
+
+    throw Err_Custom("Following SEs: " + notAllowedStr + " are blacklisted!");
 
     // check if the SE is blacklisted
-    if (db->isSeBlacklisted(se, vo))
-        {
-            if (!db->allowSubmitForBlacklistedSe(se)) throw Err_Custom("The SE: " + se + " is blacklisted!");
-        }
+//    if (db->isSeBlacklisted(se, vo))
+//        {
+//            if (!db->allowSubmitForBlacklistedSe(se)) throw Err_Custom("The SE: " + se + " is blacklisted!");
+//        }
     // if we don't care about MyOSQ return
-    if (!theServerConfig().get<bool>("MyOSG")) return;
+//    if (!theServerConfig().get<bool>("MyOSG")) return;
 
     // checking of a state (active, disabled) in MyOSG  is commented out for now
 
@@ -647,26 +623,25 @@ void JobSubmitter::checkSe(string se, string vo)
 
 }
 
-list< pair<string, string> > JobSubmitter::pairSourceAndDestination(
-    vector<string> sources,
-    vector<string> destinations,
-    string selectionStrategy
+void JobSubmitter::pairSourceAndDestination(
+    vector<string>& sources,
+    vector<string>& destinations,
+    string& selectionStrategy,
+    list< pair<string, string> >& ret
 )
 {
 
     if (!selectionStrategy.empty() && selectionStrategy != "orderly" && selectionStrategy != "auto")
         throw Err_Custom("'" + selectionStrategy + "'");
 
-    list< pair<string, string> > ret;
-
     // if it is single source - single destination submission just return the pair
     if (sources.size() == 1 && destinations.size() == 1)
         {
-            ret.push_back(
+            ret.push_front(
                 make_pair(sources.front(), destinations.front())
             );
 
-            return ret;
+            return;
         }
 
     vector<string>::iterator it_s, it_d;
@@ -689,6 +664,6 @@ list< pair<string, string> > JobSubmitter::pairSourceAndDestination(
                 }
         }
 
-    return ret;
+    return;
 }
 

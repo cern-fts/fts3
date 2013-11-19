@@ -177,7 +177,11 @@ public:
 
     virtual bool allowSubmitForBlacklistedSe(std::string se);
 
+    virtual void allowSubmit(std::string ses, std::string vo, std::list<std::string>& notAllowed);
+
     virtual boost::optional<int> getTimeoutForSe(std::string se);
+
+    virtual void getTimeoutForSe(std::string ses, std::map<std::string, int>& ret);
 
     virtual bool isDnBlacklisted(std::string dn);
 
