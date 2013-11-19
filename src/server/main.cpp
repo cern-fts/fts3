@@ -116,7 +116,7 @@ int proc_find()
 static void taskTimer(int time)
 {
     boost::this_thread::sleep(boost::posix_time::seconds(time));
-    exit(0);
+    _exit(0);
 }
 
 
@@ -142,18 +142,6 @@ static int fexists(const char *filename)
     return -1;
 }
 
-void fts3_teardown_db_backend()
-{
-    try
-        {
-            db::DBSingleton::tearDown();
-        }
-    catch (...)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unexpected exception when forcing the database teardown" << commit;
-            exit(1);
-        }
-}
 
 void _handle_sigint(int)
 {
@@ -166,7 +154,7 @@ void _handle_sigint(int)
     try
         {
             theServer().stop();
-            fts3_teardown_db_backend();
+            db::DBSingleton::tearDown();
         }
     catch(...)
         {
@@ -174,7 +162,7 @@ void _handle_sigint(int)
         }
     StaticSslLocking::kill_locks();
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopped" << commit;
-    exit(0);
+    _exit(0);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -326,7 +314,7 @@ void checkDbSchema()
 
             db::DBSingleton::instance().getDBObjectInstance()->checkSchemaLoaded();
 
-            fts3_teardown_db_backend();
+            db::DBSingleton::tearDown();
 
         }
     catch (Err& e)
@@ -440,13 +428,13 @@ int DoServer(int argc, char** argv)
                             if (freopenLogFile == NULL)
                                 {
                                     std::cerr << "fts3 server failed to open log file, errno is:" << strerror(errno) << std::endl;
-                                    exit(1);
+                                    return 1;
                                 }
                         }
                     else
                         {
                             std::cerr << "fts3 server failed to open log file, errno is:" << strerror(errno) << std::endl;
-                            exit(1);
+                            return 1;
                         }
                 }
 
@@ -492,6 +480,41 @@ int DoServer(int argc, char** argv)
     return EXIT_SUCCESS;
 }
 
+/// Spawn the process that runs the server
+/// Returns the child PID on success, -1 on failure
+/// Does NOT return on the child process
+pid_t SpawnServer(int argc, char** argv)
+{
+    pid_t pid = fork();
+    // child
+    if (pid == 0)
+        {
+            int resultExec = DoServer(argc, argv);
+            if (resultExec < 0)
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Can't start the server" << commit;
+                    _exit(1);
+                }
+            _exit(0);
+        }
+    // parent
+    else if (pid > 0)
+        {
+            sleep(2);
+            int err = waitpid(pid, NULL, WNOHANG);
+            if (err != 0)
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "waitpid error: " << strerror(errno) << commit;
+                    return -1;
+                }
+            return pid;
+        }
+    // error
+    else
+        {
+            return -1;
+        }
+}
 
 int main(int argc, char** argv)
 {
@@ -500,8 +523,7 @@ int main(int argc, char** argv)
     setuid(pw_uid);
     seteuid(pw_uid);
 
-    pid_t child;
-    //very first check before it goes to deamon mode
+    //very first check before it goes to daemon mode
     try
         {
             if (fexists(configfile) != 0)
@@ -588,47 +610,25 @@ int main(int argc, char** argv)
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Can't set daemon, will continue attached to tty"  << commit;
         }
 
-    int result = fork();
+    pid_t child_pid = SpawnServer(argc, argv);
 
-    if (result == 0)   //child
-        {
-            int resultExec = DoServer(argc, argv);
-            if (resultExec < 0)
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Can't start the server" << commit;
-                    exit(1);
-                }
-        }
-    else   //parent
-        {
-            child = result;
-            sleep(2);
-            int err  = waitpid(child, NULL, WNOHANG);
-            if(err != 0)
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "waitpid error: " << strerror(errno)  << commit;
-                    return -1;
-                }
-        }
-
-
+    // Watchdog
     for (;;)
         {
+            if (child_pid < 0)
+                return 1;
+
             int status = 0;
             waitpid(-1, &status, 0);
             if (!WIFSTOPPED(status))
                 {
                     if( 1 == proc_find() )
                         {
-                            result = fork();
-                            if (result == 0)
-                                {
-                                    result = DoServer(argc, argv);
-                                }
-                            if (result < 0)
-                                {
-                                    exit(1);
-                                }
+                            child_pid = SpawnServer(argc, argv);
+                        }
+                    else
+                        {
+                            break;
                         }
                 }
             sleep(5);
