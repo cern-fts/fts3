@@ -599,7 +599,9 @@ bool JobSubmitter::checkProtocol(string file)
     string tmp (file);
     transform(tmp.begin(), tmp.end(), tmp.begin(), ::tolower);
 
-    return tmp.find("root://") == 0 ||tmp.find("srm://") == 0 || tmp.find("gsiftp://") == 0 || tmp.find("https://") == 0;
+    return tmp.find("root://") == 0 || tmp.find("srm://") == 0 ||
+           tmp.find("gsiftp://") == 0 || tmp.find("https://") == 0 ||
+           tmp.find("lfc://") == 0;
 }
 
 bool JobSubmitter::checkIfLfn(string file)
