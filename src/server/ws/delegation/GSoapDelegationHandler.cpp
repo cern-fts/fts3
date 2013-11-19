@@ -344,7 +344,8 @@ string GSoapDelegationHandler::addKeyToProxyCertificate(string proxy, string key
     // if the private key does not match throw an exception
     if (mismatch)
         {
-            throw Err_Custom("Failed to add private key to the proxy certificate: key values mismatch!");
+        	// some one else is delegating the proxy concurrently so lets not interfere
+    		return string();
         }
 
     stringstream ss;
@@ -448,6 +449,9 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy)
         }
 
     proxy = addKeyToProxyCertificate(proxy, key);
+    // if the proxy is empty it means there was a key mismatch, which means in turn that
+    // some one else is delegating the proxy concurrently so lets not interfere
+    if (proxy.empty()) return;
 
     Cred* cred = DBSingleton::instance().getDBObjectInstance()->findGrDPStorageElement(delegationId, dn);
     try
