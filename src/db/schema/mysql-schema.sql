@@ -691,7 +691,7 @@ CREATE TABLE t_dm (
 --
 -- The state of this file
   file_state       VARCHAR(32) NOT NULL,
--- Hostname which this file was transfered
+-- Hostname which this file was deleted
   dmHost     VARCHAR(255),
 --
 -- The Source
@@ -714,9 +714,6 @@ CREATE TABLE t_dm (
 --
 -- The reason the file is in this state
   reason           VARCHAR(2048),
---
--- the nominal size of the file (bytes)
-  filesize           DOUBLE,
 --
 -- the user-defined checksum of the file "checksum_type:checksum"
   checksum           VARCHAR(100),
@@ -752,8 +749,7 @@ CREATE TABLE t_dm (
   file_metadata   VARCHAR(255),  
 --
 -- activity name
-  activity   VARCHAR(255) DEFAULT "default",
-  
+  activity   VARCHAR(255) DEFAULT "default",  
 --
 -- selection strategy used in case when multiple protocols were provided
   selection_strategy VARCHAR(255),

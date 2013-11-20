@@ -712,15 +712,15 @@ void MySqlAPI::setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<i
             // count the alternative replicas, if there is more than one it makes sense to set the NOT_USED state
 
             int count = 0;
-
-            sql <<
-                "SELECT COUNT(*) "
-                "FROM t_file "
-                "WHERE job_id = :jobId AND file_index = :fileIndex",
-                soci::use(jobId),
-                soci::use(fileIndex),
-                soci::into(count)
-                ;
+           
+            soci::statement stmt1 = (
+                                        sql.prepare << "SELECT COUNT(*) "
+                			"FROM t_file "
+                			"WHERE job_id = :jobId AND file_index = :fileIndex",
+                			soci::use(jobId),
+                			soci::use(fileIndex),
+                			soci::into(count));
+            stmt1.execute(true);	    		
 
             if (count < 2) return;
 
