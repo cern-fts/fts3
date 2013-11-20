@@ -217,8 +217,9 @@ void FileTransferExecutor::execute()
                                                     ""
                                                 );
 
-                            string sourceSiteName = siteResolver.getSiteName(temp->SOURCE_SURL);
-                            string destSiteName = siteResolver.getSiteName(temp->DEST_SURL);
+			    //disable for now, remove later
+                            string sourceSiteName = ""; //siteResolver.getSiteName(temp->SOURCE_SURL);
+                            string destSiteName = ""; //siteResolver.getSiteName(temp->DEST_SURL);
 
                             bool debug = DBSingleton::instance().getDBObjectInstance()->getDebugMode(source_hostname, destin_hostname);
 

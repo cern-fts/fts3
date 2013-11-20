@@ -477,8 +477,9 @@ protected:
                                         return;
                                     }
 
-                                sourceSiteName = siteResolver.getSiteName(surl);
-                                destSiteName = siteResolver.getSiteName(durl);
+			        //disable for now, remove later
+                                sourceSiteName = ""; //siteResolver.getSiteName(surl);
+                                destSiteName = ""; //siteResolver.getSiteName(durl);
 
                                 createJobFile(job_id, urls);
 
