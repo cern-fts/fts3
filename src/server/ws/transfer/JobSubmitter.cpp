@@ -399,7 +399,7 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
                     tupple.source_se = sourceSe;
                     tupple.dest_se = destinationSe;
 
-                    jobs.push_front(tupple);
+                    jobs.push_back(tupple);
                 }
         }
 
