@@ -334,24 +334,26 @@ void heartbeat(void)
 
     while (!stopThreads)
         {
-	  try{
-            db::DBSingleton::instance().getDBObjectInstance()->updateHeartBeat(
-                &myIndex, &count, &hashStart, &hashEnd);
+            try
+                {
+                    db::DBSingleton::instance().getDBObjectInstance()->updateHeartBeat(
+                        &myIndex, &count, &hashStart, &hashEnd);
 
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Systole: host " << myIndex << " out of " << count
-                                            << " [" << std::hex << hashStart << ':' << std::hex << hashEnd << ']'
-                                            << std::dec
-                                            << commit;
+                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Systole: host " << myIndex << " out of " << count
+                                                    << " [" << std::hex << hashStart << ':' << std::hex << hashEnd << ']'
+                                                    << std::dec
+                                                    << commit;
 
-            boost::this_thread::sleep(boost::posix_time::seconds(60));
-	    }catch (std::exception& ex)
-            {
-            	FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
-            }
-    	    catch (...)
-            {
-            	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unhandled exception" << commit;
-            }	    
+                    boost::this_thread::sleep(boost::posix_time::seconds(60));
+                }
+            catch (std::exception& ex)
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
+                }
+            catch (...)
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unhandled exception" << commit;
+                }
         }
 }
 

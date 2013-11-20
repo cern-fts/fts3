@@ -72,32 +72,32 @@ class JobSubmitter
 
     struct TimeoutHandler
     {
-    	TimeoutHandler(map<string, int>& timeouts) : timeouts(timeouts) {}
+        TimeoutHandler(map<string, int>& timeouts) : timeouts(timeouts) {}
 
-    	template<typename T>
-    	void operator ()(T& t)
-    	{
-    		string& src = t.source_se;
-    		string& dst = t.dest_se;
-    		// if theres's nothing to do continue
-    		if (timeouts.find(src) == timeouts.end() && timeouts.find(dst) == timeouts.end()) return;
-    		// if src has no timeout use destination and continue
-    		if (timeouts.find(src) == timeouts.end())
-    			{
-    				t.wait_timeout = timeouts[dst];
-    				return;
-    			}
-    		// if dst has no time use source
-    		if (timeouts.find(dst) == timeouts.end())
-    			{
-    				t.wait_timeout = timeouts[src];
-    				return;
-    			}
-    		// if both dst and src have timeout pick the lower value
-    		t.wait_timeout = timeouts[src] < timeouts[dst] ? timeouts[src] : timeouts[dst];
-    	}
+        template<typename T>
+        void operator ()(T& t)
+        {
+            string& src = t.source_se;
+            string& dst = t.dest_se;
+            // if theres's nothing to do continue
+            if (timeouts.find(src) == timeouts.end() && timeouts.find(dst) == timeouts.end()) return;
+            // if src has no timeout use destination and continue
+            if (timeouts.find(src) == timeouts.end())
+                {
+                    t.wait_timeout = timeouts[dst];
+                    return;
+                }
+            // if dst has no time use source
+            if (timeouts.find(dst) == timeouts.end())
+                {
+                    t.wait_timeout = timeouts[src];
+                    return;
+                }
+            // if both dst and src have timeout pick the lower value
+            t.wait_timeout = timeouts[src] < timeouts[dst] ? timeouts[src] : timeouts[dst];
+        }
 
-    	map<string, int> timeouts;
+        map<string, int> timeouts;
     };
 
 public:

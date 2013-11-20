@@ -344,8 +344,8 @@ string GSoapDelegationHandler::addKeyToProxyCertificate(string proxy, string key
     // if the private key does not match throw an exception
     if (mismatch)
         {
-        	// some one else is delegating the proxy concurrently so lets not interfere
-    		return string();
+            // some one else is delegating the proxy concurrently so lets not interfere
+            return string();
         }
 
     stringstream ss;

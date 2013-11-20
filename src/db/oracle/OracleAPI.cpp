@@ -158,7 +158,7 @@ void OracleAPI::init(std::string username, std::string password, std::string con
                     connectionPool = NULL;
                 }
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }	
+        }
 }
 
 
@@ -220,7 +220,7 @@ TransferJobs* OracleAPI::getTransferJob(std::string jobId, bool archive)
             if(job)
                 delete job;
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }	
+        }
     return job;
 }
 
@@ -276,7 +276,7 @@ std::map<std::string, double> OracleAPI::getActivityShareConf(soci::session& sql
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }	
+        }
     return ret;
 }
 
@@ -307,7 +307,7 @@ std::vector<std::string> OracleAPI::getAllActivityShareConf()
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }	
+        }
 
     return ret;
 }
@@ -365,7 +365,7 @@ std::map<std::string, long long> OracleAPI::getActivitiesInQueue(soci::session& 
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }	
+        }
 
     return ret;
 }
@@ -430,7 +430,7 @@ std::map<std::string, int> OracleAPI::getFilesNumPerActivity(soci::session& sql,
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }	
+        }
 
     return activityFilesNum;
 }
@@ -748,7 +748,7 @@ void OracleAPI::setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<
         {
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 void OracleAPI::useFileReplica(std::string jobId, int fileId)
@@ -793,7 +793,7 @@ void OracleAPI::useFileReplica(std::string jobId, int fileId)
         {
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 unsigned int OracleAPI::updateFileStatus(TransferFiles* file, const std::string status)
@@ -857,7 +857,7 @@ unsigned int OracleAPI::updateFileStatus(TransferFiles* file, const std::string 
         {
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }	
+        }
     return updated;
 }
 
@@ -932,7 +932,7 @@ void OracleAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std:
                 }
             files.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }	
+        }
 }
 
 
@@ -997,29 +997,29 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
             if (reuseFlag.empty())
                 reuseFlagIndicator = soci::i_null;
             // Insert job
-             soci::statement insertJob = (
-                                           sql.prepare << "INSERT INTO t_job (job_id, job_state, job_params, user_dn, user_cred, priority,       "
-                "                   vo_name, submit_time, internal_job_params, submit_host, cred_id,   "
-                "                   myproxy_server, space_token, overwrite_flag, source_space_token,   "
-                "                   copy_pin_lifetime, fail_nearline, checksum_method, "
-                "                   reuse_job, bring_online, retry, retry_delay, job_metadata,        "
-                "                  source_se, dest_se)                                                "
-                "VALUES (:jobId, :jobState, :jobParams, :userDn, :userCred, :priority,                 "
-                "        :voName, sys_extract_utc(systimestamp), :internalParams, :submitHost, :credId,              "
-                "        :myproxyServer, :spaceToken, :overwriteFlag, :sourceSpaceToken,               "
-                "        :copyPinLifetime, :failNearline, :checksumMethod,             "
-                "        :reuseJob, :bring_online, :retry, :retryDelay, :job_metadata,                "
-                "       :sourceSe, :destSe)                                                           ",
-                soci::use(jobId), soci::use(initialState), soci::use(paramFTP), soci::use(DN), soci::use(cred), soci::use(priority),
-                soci::use(voName), soci::use(jobParams), soci::use(hostname), soci::use(delegationID),
-                soci::use(myProxyServer), soci::use(spaceToken), soci::use(overwrite), soci::use(sourceSpaceToken),
-                soci::use(copyPinLifeTime), soci::use(failNearLine), soci::use(checksumMethod),
-                soci::use(reuseFlag, reuseFlagIndicator), soci::use(bringOnline),
-                soci::use(retry), soci::use(retryDelay), soci::use(metadata),
-                soci::use(sourceSe), soci::use(destinationSe));
+            soci::statement insertJob = (
+                                            sql.prepare << "INSERT INTO t_job (job_id, job_state, job_params, user_dn, user_cred, priority,       "
+                                            "                   vo_name, submit_time, internal_job_params, submit_host, cred_id,   "
+                                            "                   myproxy_server, space_token, overwrite_flag, source_space_token,   "
+                                            "                   copy_pin_lifetime, fail_nearline, checksum_method, "
+                                            "                   reuse_job, bring_online, retry, retry_delay, job_metadata,        "
+                                            "                  source_se, dest_se)                                                "
+                                            "VALUES (:jobId, :jobState, :jobParams, :userDn, :userCred, :priority,                 "
+                                            "        :voName, sys_extract_utc(systimestamp), :internalParams, :submitHost, :credId,              "
+                                            "        :myproxyServer, :spaceToken, :overwriteFlag, :sourceSpaceToken,               "
+                                            "        :copyPinLifetime, :failNearline, :checksumMethod,             "
+                                            "        :reuseJob, :bring_online, :retry, :retryDelay, :job_metadata,                "
+                                            "       :sourceSe, :destSe)                                                           ",
+                                            soci::use(jobId), soci::use(initialState), soci::use(paramFTP), soci::use(DN), soci::use(cred), soci::use(priority),
+                                            soci::use(voName), soci::use(jobParams), soci::use(hostname), soci::use(delegationID),
+                                            soci::use(myProxyServer), soci::use(spaceToken), soci::use(overwrite), soci::use(sourceSpaceToken),
+                                            soci::use(copyPinLifeTime), soci::use(failNearLine), soci::use(checksumMethod),
+                                            soci::use(reuseFlag, reuseFlagIndicator), soci::use(bringOnline),
+                                            soci::use(retry), soci::use(retryDelay), soci::use(metadata),
+                                            soci::use(sourceSe), soci::use(destinationSe));
 
-	    insertJob.execute(true);
-	    
+            insertJob.execute(true);
+
             // Insert src/dest pair
             std::string sourceSurl, destSurl, checksum, metadata, selectionStrategy, sourceSe, destSe, activity;
             double filesize = 0.0;
@@ -1129,7 +1129,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
         {
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }	
+        }
 }
 
 
@@ -1188,7 +1188,7 @@ void OracleAPI::getTransferJobStatus(std::string requestID, bool archive, std::v
             jobs.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
         }
-   catch (...)
+    catch (...)
         {
             std::vector< JobStatus* >::iterator it;
             for (it = jobs.begin(); it != jobs.end(); ++it)
@@ -1198,7 +1198,7 @@ void OracleAPI::getTransferJobStatus(std::string requestID, bool archive, std::v
                 }
             jobs.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }	
+        }
 }
 
 
@@ -1312,7 +1312,7 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
                 }
             jobs.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }	
+        }
 }
 
 
@@ -1378,7 +1378,7 @@ void OracleAPI::getTransferFileStatus(std::string requestID, bool archive,
             files.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
         }
-   catch (...)
+    catch (...)
         {
             std::vector< FileTransferStatus* >::iterator it;
             for (it = files.begin(); it != files.end(); ++it)
@@ -1388,7 +1388,7 @@ void OracleAPI::getTransferFileStatus(std::string requestID, bool archive,
                 }
             files.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }	
+        }
 }
 
 
@@ -1420,9 +1420,9 @@ void OracleAPI::getSe(Se* &se, std::string seName)
     catch (...)
         {
             if(se)
-	    	delete se;
+                delete se;
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -1451,9 +1451,9 @@ void OracleAPI::addSe(std::string ENDPOINT, std::string SE_TYPE, std::string SIT
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -1554,9 +1554,9 @@ void OracleAPI::updateSe(std::string ENDPOINT, std::string SE_TYPE, std::string 
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -1685,9 +1685,9 @@ bool OracleAPI::updateFileTransferStatus(double throughputIn, std::string job_id
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
     return ok;
 }
 
@@ -1843,9 +1843,9 @@ bool OracleAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, cons
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 
     return ok;
 }
@@ -1870,9 +1870,9 @@ void OracleAPI::updateFileTransferProgress(std::string /*job_id*/, int file_id, 
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 void OracleAPI::cancelJob(std::vector<std::string>& requestIDs)
@@ -1924,9 +1924,9 @@ void OracleAPI::cancelJob(std::vector<std::string>& requestIDs)
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -1959,9 +1959,9 @@ void OracleAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -2009,9 +2009,9 @@ void OracleAPI::updateGrDPStorageCacheElement(std::string dlg_id, std::string dn
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -2043,9 +2043,9 @@ CredCache* OracleAPI::findGrDPStorageCacheElement(std::string delegationID, std:
     catch (...)
         {
             if(cred)
-	    	delete cred;
+                delete cred;
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 
     return cred;
 }
@@ -2070,9 +2070,9 @@ void OracleAPI::deleteGrDPStorageCacheElement(std::string delegationID, std::str
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -2100,9 +2100,9 @@ void OracleAPI::insertGrDPStorageElement(std::string dlg_id, std::string dn, std
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -2137,9 +2137,9 @@ void OracleAPI::updateGrDPStorageElement(std::string dlg_id, std::string dn, std
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -2173,9 +2173,9 @@ Cred* OracleAPI::findGrDPStorageElement(std::string delegationID, std::string dn
     catch (...)
         {
             if(cred)
-	    	delete cred;
+                delete cred;
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 
     return cred;
 }
@@ -2200,9 +2200,9 @@ void OracleAPI::deleteGrDPStorageElement(std::string delegationID, std::string d
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -2227,7 +2227,7 @@ bool OracleAPI::getDebugMode(std::string source_hostname, std::string destin_hos
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
     return isDebug;
 }
 
@@ -2265,9 +2265,9 @@ void OracleAPI::setDebugMode(std::string source_hostname, std::string destin_hos
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -2329,7 +2329,7 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const st
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -2354,9 +2354,9 @@ void OracleAPI::auditConfiguration(const std::string & dn, const std::string & c
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -2508,9 +2508,9 @@ bool OracleAPI::updateOptimizer(double throughputIn, int, double filesize, doubl
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
     return ok;
 }
 
@@ -2537,8 +2537,8 @@ void OracleAPI::initOptimizer(const std::string & source_hostname, const std::st
                                             soci::use(source_hostname), soci::use(destin_hostname), soci::use(timeout),
                                             soci::use(nStreams), soci::use(bufferSize));
                     sql.begin();
-                    
-		    for (unsigned register int x = 0; x < timeoutslen; x++)
+
+                    for (unsigned register int x = 0; x < timeoutslen; x++)
                         {
                             for (unsigned register int y = 0; y < nostreamslen; y++)
                                 {
@@ -2548,10 +2548,10 @@ void OracleAPI::initOptimizer(const std::string & source_hostname, const std::st
                                     stmt.execute(true);
                                 }
                         }
-		    
-		    sql.commit();			
+
+                    sql.commit();
                 }
-            
+
         }
     catch (std::exception& e)
         {
@@ -2560,9 +2560,9 @@ void OracleAPI::initOptimizer(const std::string & source_hostname, const std::st
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -2593,7 +2593,7 @@ bool OracleAPI::isCredentialExpired(const std::string & dlg_id, const std::strin
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
     return !expired;
 }
 
@@ -2663,7 +2663,7 @@ bool OracleAPI::isTrAllowed2(const std::string & source_hostname, const std::str
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
     return allowed;
 }
 
@@ -2958,7 +2958,7 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
     return allowed;
 }
 
@@ -2998,7 +2998,7 @@ int OracleAPI::getSeOut(const std::string & source, const std::set<std::string> 
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 
     return ret;
 }
@@ -3038,7 +3038,7 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 
     return ret;
 }
@@ -3074,9 +3074,9 @@ int OracleAPI::getCredits(const std::string & source_hostname, const std::string
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
     return freeCredits;
 }
 
@@ -3106,9 +3106,9 @@ void OracleAPI::setAllowedNoOptimize(const std::string & job_id, int file_id, co
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -3193,7 +3193,7 @@ void OracleAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -3232,9 +3232,9 @@ void OracleAPI::setAllowed(const std::string & job_id, int file_id, const std::s
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -3267,9 +3267,9 @@ bool OracleAPI::terminateReuseProcess(const std::string & jobId)
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
     return ok;
 }
 
@@ -3293,9 +3293,9 @@ void OracleAPI::setPid(const std::string & /*jobId*/, int fileId, int pid)
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -3329,9 +3329,9 @@ void OracleAPI::setPidV(int pid, std::map<int, std::string>& pids)
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -3415,9 +3415,9 @@ void OracleAPI::revertToSubmitted()
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -3461,9 +3461,9 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -3488,9 +3488,9 @@ void OracleAPI::forkFailedRevertState(const std::string & jobId, int fileId)
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -3526,9 +3526,9 @@ void OracleAPI::forkFailedRevertStateV(std::map<int, std::string>& pids)
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -3569,7 +3569,7 @@ bool OracleAPI::retryFromDead(std::vector<struct message_updater>& messages)
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
     return ok;
 }
 
@@ -3627,9 +3627,9 @@ void OracleAPI::blacklistSe(std::string se, std::string vo, std::string status, 
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -3657,9 +3657,9 @@ void OracleAPI::blacklistDn(std::string dn, std::string msg, std::string adm_dn)
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -3700,9 +3700,9 @@ void OracleAPI::unblacklistSe(std::string se)
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -3742,9 +3742,9 @@ void OracleAPI::unblacklistDn(std::string dn)
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -3767,7 +3767,7 @@ bool OracleAPI::isSeBlacklisted(std::string se, std::string vo)
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
     return blacklisted;
 }
 
@@ -3789,24 +3789,24 @@ bool OracleAPI::allowSubmitForBlacklistedSe(std::string se)
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
     return ret;
 }
 
 void OracleAPI::allowSubmit(std::string ses, std::string vo, std::list<std::string>& notAllowed)
 {
-	soci::session sql(*connectionPool);
+    soci::session sql(*connectionPool);
 
-	std::string query = "SELECT se FROM t_bad_ses WHERE se IN " + ses + " AND status != 'WAIT_AS' AND (vo IS NULL OR vo='' OR vo = :vo)";
+    std::string query = "SELECT se FROM t_bad_ses WHERE se IN " + ses + " AND status != 'WAIT_AS' AND (vo IS NULL OR vo='' OR vo = :vo)";
 
     try
         {
             soci::rowset<std::string> rs = (sql.prepare << query, soci::use(vo));
 
             for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
-            	{
-                	notAllowed.push_back(*i);
-            	}
+                {
+                    notAllowed.push_back(*i);
+                }
         }
     catch (std::exception& e)
         {
@@ -3848,7 +3848,7 @@ boost::optional<int> OracleAPI::getTimeoutForSe(std::string se)
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 
     return ret;
 }
@@ -3858,17 +3858,17 @@ void OracleAPI::getTimeoutForSe(std::string ses, std::map<std::string, int>& ret
     soci::session sql(*connectionPool);
 
     std::string query =
-			 " select se, wait_timeout  "
-			 " from t_bad_ses "
-			 " where se in "
-    		;
+        " select se, wait_timeout  "
+        " from t_bad_ses "
+        " where se in "
+        ;
     query += ses;
 
     try
         {
             soci::rowset<soci::row> rs = (
-				 sql.prepare << query
-			 );
+                                             sql.prepare << query
+                                         );
 
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
@@ -3904,7 +3904,7 @@ bool OracleAPI::isDnBlacklisted(std::string dn)
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
     return blacklisted;
 }
 
@@ -3940,9 +3940,9 @@ bool OracleAPI::isFileReadyState(int fileID)
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 
     return (isReadyState && isReadyHost);
 }
@@ -3969,7 +3969,7 @@ bool OracleAPI::checkGroupExists(const std::string & groupName)
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
     return exists;
 }
 
@@ -3995,7 +3995,7 @@ void OracleAPI::getGroupMembers(const std::string & groupName, std::vector<std::
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -4018,7 +4018,7 @@ std::string OracleAPI::getGroupForSe(const std::string se)
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
     return group;
 }
 
@@ -4053,9 +4053,9 @@ void OracleAPI::addMemberToGroup(const std::string & groupName, std::vector<std:
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -4087,9 +4087,9 @@ void OracleAPI::deleteMembersFromGroup(const std::string & groupName, std::vecto
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -4121,9 +4121,9 @@ void OracleAPI::addLinkConfig(LinkConfig* cfg)
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -4156,9 +4156,9 @@ void OracleAPI::updateLinkConfig(LinkConfig* cfg)
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -4185,9 +4185,9 @@ void OracleAPI::deleteLinkConfig(std::string source, std::string destination)
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -4215,7 +4215,7 @@ LinkConfig* OracleAPI::getLinkConfig(std::string source, std::string destination
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
     return lnk;
 }
 
@@ -4236,16 +4236,16 @@ std::pair<std::string, std::string>* OracleAPI::getSourceAndDestination(std::str
         }
     catch (std::exception& e)
         {
-	    if(pair)
-	    	delete pair;
+            if(pair)
+                delete pair;
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-	    if(pair)
-	    	delete pair;
+            if(pair)
+                delete pair;
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
     return pair;
 }
 
@@ -4272,7 +4272,7 @@ bool OracleAPI::isGrInPair(std::string group)
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
     return inPair;
 }
 
@@ -4300,9 +4300,9 @@ void OracleAPI::addShareConfig(ShareConfig* cfg)
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -4330,9 +4330,9 @@ void OracleAPI::updateShareConfig(ShareConfig* cfg)
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -4357,9 +4357,9 @@ void OracleAPI::deleteShareConfig(std::string source, std::string destination, s
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -4384,9 +4384,9 @@ void OracleAPI::deleteShareConfig(std::string source, std::string destination)
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -4408,16 +4408,16 @@ ShareConfig* OracleAPI::getShareConfig(std::string source, std::string destinati
         }
     catch (std::exception& e)
         {
-	    if(cfg)
-	    	delete cfg;
+            if(cfg)
+                delete cfg;
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-	    if(cfg)
-	    	delete cfg;	
+            if(cfg)
+                delete cfg;
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
     return cfg;
 }
 
@@ -4447,7 +4447,7 @@ std::vector<ShareConfig*> OracleAPI::getShareConfig(std::string source, std::str
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
     return cfg;
 }
 
@@ -4478,9 +4478,9 @@ void OracleAPI::addActivityConfig(std::string vo, std::string shares, bool activ
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 void OracleAPI::updateActivityConfig(std::string vo, std::string shares, bool active)
@@ -4511,9 +4511,9 @@ void OracleAPI::updateActivityConfig(std::string vo, std::string shares, bool ac
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 void OracleAPI::deleteActivityConfig(std::string vo)
@@ -4536,9 +4536,9 @@ void OracleAPI::deleteActivityConfig(std::string vo)
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }	
+        }
 }
 
 bool OracleAPI::isActivityConfigActive(std::string vo)
@@ -4561,7 +4561,7 @@ bool OracleAPI::isActivityConfigActive(std::string vo)
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 
     return active == "on";
 }
@@ -4569,16 +4569,18 @@ bool OracleAPI::isActivityConfigActive(std::string vo)
 std::map< std::string, double > OracleAPI::getActivityConfig(std::string vo)
 {
     soci::session sql(*connectionPool);
-    try{
-    	return getActivityShareConf(sql, vo);
-    }catch (std::exception& e)
+    try
+        {
+            return getActivityShareConf(sql, vo);
+        }
+    catch (std::exception& e)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }	
+        }
 }
 
 
@@ -4604,7 +4606,7 @@ bool OracleAPI::isFileReadyStateV(std::map<int, std::string>& fileIds)
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
     return isReady;
 }
 
@@ -4634,7 +4636,7 @@ bool OracleAPI::checkIfSeIsMemberOfAnotherGroup(const std::string & member)
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
     return isMember;
 }
 
@@ -4670,7 +4672,7 @@ void OracleAPI::addFileShareConfig(int file_id, std::string source, std::string 
         {
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -4698,7 +4700,7 @@ int OracleAPI::countActiveTransfers(std::string source, std::string destination,
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
     return nActive;
 }
 
@@ -4727,7 +4729,7 @@ int OracleAPI::countActiveOutboundTransfersUsingDefaultCfg(std::string se, std::
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
     return nActiveOutbound;
 }
 
@@ -4756,7 +4758,7 @@ int OracleAPI::countActiveInboundTransfersUsingDefaultCfg(std::string se, std::s
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
     return nActiveInbound;
 }
 
@@ -4828,7 +4830,7 @@ int OracleAPI::sumUpVoShares (std::string source, std::string destination, std::
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 
     return sum;
 }
@@ -4858,7 +4860,7 @@ void OracleAPI::setPriority(std::string job_id, int priority)
         {
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -4884,7 +4886,7 @@ void OracleAPI::setRetry(int retry)
         {
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -4927,7 +4929,7 @@ int OracleAPI::getRetry(const std::string & jobId)
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
     return nRetries;
 }
 
@@ -4952,7 +4954,7 @@ int OracleAPI::getRetryTimes(const std::string & jobId, int fileId)
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
     return nRetries;
 }
 
@@ -4981,7 +4983,7 @@ int OracleAPI::getMaxTimeInQueue()
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
     return maxTime;
 }
 
@@ -5009,7 +5011,7 @@ void OracleAPI::setMaxTimeInQueue(int afterXHours)
         {
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -5081,9 +5083,9 @@ void OracleAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
         }
     catch (...)
         {
-	    sql.rollback();
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -5119,7 +5121,7 @@ std::vector< std::pair<std::string, std::string> > OracleAPI::getPairsForSe(std:
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 
     return ret;
 }
@@ -5153,7 +5155,7 @@ std::vector<std::string> OracleAPI::getAllStandAlloneCfgs()
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 
     return ret;
 }
@@ -5184,7 +5186,7 @@ std::vector< std::pair<std::string, std::string> > OracleAPI::getAllPairCfgs()
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 
     return ret;
 }
@@ -5206,7 +5208,7 @@ int OracleAPI::activeProcessesForThisHost()
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
     return active;
 }
 
@@ -5246,7 +5248,7 @@ std::vector< boost::tuple<std::string, std::string, int> >  OracleAPI::getVOBrin
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 
     return ret;
 
@@ -5394,7 +5396,7 @@ std::vector<message_bringonline> OracleAPI::getBringOnlineFiles(std::string voNa
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 
     return ret;
 }
@@ -5499,7 +5501,7 @@ void OracleAPI::bringOnlineReportStatus(const std::string & state, const std::st
         {
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 void OracleAPI::addToken(const std::string & job_id, int file_id, const std::string & token)
@@ -5530,9 +5532,9 @@ void OracleAPI::addToken(const std::string & job_id, int file_id, const std::str
         }
     catch (...)
         {
-	    sql.rollback();
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -5558,7 +5560,7 @@ void OracleAPI::getCredentials(std::string & vo_name, const std::string & job_id
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 void OracleAPI::setMaxStageOp(const std::string& se, const std::string& vo, int val)
@@ -5618,7 +5620,7 @@ void OracleAPI::setMaxStageOp(const std::string& se, const std::string& vo, int 
         {
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 void OracleAPI::updateProtocol(const std::string& /*jobId*/, int fileId, int nostreams, int timeout, int buffersize, double filesize)
@@ -5651,7 +5653,7 @@ void OracleAPI::updateProtocol(const std::string& /*jobId*/, int fileId, int nos
         {
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 double OracleAPI::getSuccessRate(std::string source, std::string destination)
@@ -5695,7 +5697,7 @@ double OracleAPI::getSuccessRate(std::string source, std::string destination)
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 
     return ratioSuccessFailure;
 }
@@ -5727,7 +5729,7 @@ double OracleAPI::getAvgThroughput(std::string source, std::string destination)
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 
     return avgThr;
 }
@@ -5761,7 +5763,7 @@ void OracleAPI::cancelFilesInTheQueue(const std::string& se, const std::string& 
                                          );
 
             sql.begin();
-	    
+
             soci::rowset<soci::row>::const_iterator it;
             for (it = rs.begin(); it != rs.end(); ++it)
                 {
@@ -5823,7 +5825,7 @@ void OracleAPI::cancelFilesInTheQueue(const std::string& se, const std::string& 
         {
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 void OracleAPI::cancelJobsInTheQueue(const std::string& dn, std::vector<std::string>& jobs)
@@ -5860,7 +5862,7 @@ void OracleAPI::cancelJobsInTheQueue(const std::string& dn, std::vector<std::str
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 void OracleAPI::transferLogFile(const std::string& filePath, const std::string& /*jobId*/, int fileId, bool debug)
@@ -5892,7 +5894,7 @@ void OracleAPI::transferLogFile(const std::string& filePath, const std::string& 
         {
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -5907,10 +5909,10 @@ std::vector<struct message_state> OracleAPI::getStateOfTransfer(const std::strin
 
     try
         {
-	    sql << "SELECT retry FROM "
-                                " (SELECT rownum as rn, retry FROM t_server_config) "
-                                "WHERE rn = 1", soci::into(retry, ind);
-	    
+            sql << "SELECT retry FROM "
+                " (SELECT rownum as rn, retry FROM t_server_config) "
+                "WHERE rn = 1", soci::into(retry, ind);
+
             soci::rowset<soci::row> rs = (fileId ==-1) ? (
                                              sql.prepare <<
                                              " SELECT "
@@ -5920,11 +5922,11 @@ std::vector<struct message_state> OracleAPI::getStateOfTransfer(const std::strin
                                              "	f.source_se, f.dest_se "
                                              " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                              " WHERE "
-                                             " 	j.job_id = :jobId ",                                           
+                                             " 	j.job_id = :jobId ",
                                              soci::use(jobId)
                                          )
-					 :
-					 (
+                                         :
+                                         (
                                              sql.prepare <<
                                              " SELECT "
                                              "	j.job_id, j.job_state, j.vo_name, "
@@ -5934,15 +5936,15 @@ std::vector<struct message_state> OracleAPI::getStateOfTransfer(const std::strin
                                              " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                              " WHERE "
                                              " 	j.job_id = :jobId "
-					     "  AND f.file_id = :fileId ",                                           
+                                             "  AND f.file_id = :fileId ",
                                              soci::use(jobId),
-					     soci::use(fileId)
-					  );
-					 
+                                             soci::use(fileId)
+                                         );
+
 
             soci::rowset<soci::row>::const_iterator it;
             for (it = rs.begin(); it != rs.end(); ++it)
-                {   
+                {
                     ret.job_id = it->get<std::string>("job_id");
                     ret.job_state = it->get<std::string>("job_state");
                     ret.vo_name = it->get<std::string>("vo_name");
@@ -5955,13 +5957,13 @@ std::vector<struct message_state> OracleAPI::getStateOfTransfer(const std::strin
                     ret.source_se = it->get<std::string>("source_se");
                     ret.dest_se = it->get<std::string>("dest_se");
                     ret.timestamp = getStrUTCTimestamp();
-			
+
                     if(ret.retry_max == 0)
                         {
                             ret.retry_max = retry;
-                        }			
-			
-		    temp.push_back(ret);
+                        }
+
+                    temp.push_back(ret);
                 }
 
         }
@@ -5972,7 +5974,7 @@ std::vector<struct message_state> OracleAPI::getStateOfTransfer(const std::strin
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 
     return temp;
 }
@@ -6008,7 +6010,7 @@ void OracleAPI::getFilesForJob(const std::string& jobId, std::vector<int>& files
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 void OracleAPI::getFilesForJobInCancelState(const std::string& jobId, std::vector<int>& files)
@@ -6043,7 +6045,7 @@ void OracleAPI::getFilesForJobInCancelState(const std::string& jobId, std::vecto
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -6097,7 +6099,7 @@ void OracleAPI::setFilesToWaiting(const std::string& se, const std::string& vo, 
         {
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 void OracleAPI::setFilesToWaiting(const std::string& dn, int timeout)
@@ -6131,7 +6133,7 @@ void OracleAPI::setFilesToWaiting(const std::string& dn, int timeout)
         {
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 void OracleAPI::cancelWaitingFiles(std::set<std::string>& jobs)
@@ -6190,7 +6192,7 @@ void OracleAPI::cancelWaitingFiles(std::set<std::string>& jobs)
         {
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 void OracleAPI::revertNotUsedFiles()
@@ -6256,7 +6258,7 @@ void OracleAPI::revertNotUsedFiles()
         {
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }	
+        }
 }
 
 bool OracleAPI::isShareOnly(std::string se)
@@ -6281,7 +6283,7 @@ bool OracleAPI::isShareOnly(std::string se)
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }	
+        }
 
     return ret;
 }
@@ -6314,7 +6316,7 @@ std::vector<std::string> OracleAPI::getAllShareOnlyCfgs()
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }	
+        }
 
     return ret;
 }
@@ -6442,11 +6444,11 @@ void OracleAPI::checkSanityState()
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
-   catch (...)
+    catch (...)
         {
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 void OracleAPI::countFileInTerminalStates(soci::session& sql, std::string jobId,
@@ -6501,10 +6503,10 @@ void OracleAPI::countFileInTerminalStates(soci::session& sql, std::string jobId,
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
-   catch (...)
+    catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -6537,10 +6539,10 @@ void OracleAPI::getFilesForNewSeCfg(std::string source, std::string destination,
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
-   catch (...)
+    catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 void OracleAPI::getFilesForNewGrCfg(std::string source, std::string destination, std::string vo, std::vector<int>& out)
@@ -6595,10 +6597,10 @@ void OracleAPI::getFilesForNewGrCfg(std::string source, std::string destination,
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
-   catch (...)
+    catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -6627,11 +6629,11 @@ void OracleAPI::delFileShareConfig(int file_id, std::string source, std::string 
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
-   catch (...)
+    catch (...)
         {
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -6665,11 +6667,11 @@ void OracleAPI::delFileShareConfig(std::string group, std::string se)
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
-   catch (...)
+    catch (...)
         {
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 
@@ -6701,10 +6703,10 @@ bool OracleAPI::hasStandAloneSeCfgAssigned(int file_id, std::string vo)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
-   catch (...)
+    catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 
     return count > 0;
 }
@@ -6737,10 +6739,10 @@ bool OracleAPI::hasPairSeCfgAssigned(int file_id, std::string vo)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
-   catch (...)
+    catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 
     return count > 0;
 }
@@ -6775,10 +6777,10 @@ bool OracleAPI::hasPairGrCfgAssigned(int file_id, std::string vo)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
-   catch (...)
+    catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 
     return count > 0;
 }
@@ -6802,10 +6804,10 @@ void OracleAPI::checkSchemaLoaded()
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
-   catch (...)
+    catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 void OracleAPI::storeProfiling(const fts3::ProfilingSubsystem* prof)
@@ -6861,11 +6863,11 @@ void OracleAPI::storeProfiling(const fts3::ProfilingSubsystem* prof)
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
-   catch (...)
+    catch (...)
         {
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 void OracleAPI::setOptimizerMode(int mode)
@@ -6905,11 +6907,11 @@ void OracleAPI::setOptimizerMode(int mode)
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
-   catch (...)
+    catch (...)
         {
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 }
 
 int OracleAPI::getOptimizerMode(soci::session& sql)
@@ -6933,10 +6935,10 @@ int OracleAPI::getOptimizerMode(soci::session& sql)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
-   catch (...)
+    catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 
     return mode;
 }
@@ -7017,7 +7019,7 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
         {
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }	
+        }
 }
 
 void OracleAPI::getTransferRetries(int fileId, std::vector<FileRetry*>& retries)
@@ -7059,7 +7061,7 @@ void OracleAPI::getTransferRetries(int fileId, std::vector<FileRetry*>& retries)
             retries.clear();
 
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }	
+        }
 }
 
 bool OracleAPI::assignSanityRuns(soci::session& sql, struct message_sanity &msg)
@@ -7182,7 +7184,7 @@ bool OracleAPI::assignSanityRuns(soci::session& sql, struct message_sanity &msg)
         {
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }		
+        }
 
     return false;
 }
@@ -7251,7 +7253,7 @@ void OracleAPI::resetSanityRuns(soci::session& sql, struct message_sanity &msg)
         {
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }	
+        }
 }
 
 
@@ -7313,9 +7315,9 @@ void OracleAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* star
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }	
+        }
 }
 
 // the class factories

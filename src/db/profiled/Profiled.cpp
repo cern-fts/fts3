@@ -364,7 +364,7 @@ bool ProfiledDB::allowSubmitForBlacklistedSe(std::string se)
 
 void ProfiledDB::allowSubmit(std::string ses, std::string vo, std::list<std::string>& notAllowed)
 {
-	PROFILE_PREFIXED("DB::", return db->allowSubmit(ses, vo, notAllowed));
+    PROFILE_PREFIXED("DB::", return db->allowSubmit(ses, vo, notAllowed));
 }
 
 boost::optional<int> ProfiledDB::getTimeoutForSe(std::string se)
@@ -374,7 +374,7 @@ boost::optional<int> ProfiledDB::getTimeoutForSe(std::string se)
 
 void ProfiledDB::getTimeoutForSe(std::string ses, std::map<std::string, int>& ret)
 {
-	PROFILE_PREFIXED("DB::", return db->getTimeoutForSe(ses, ret));
+    PROFILE_PREFIXED("DB::", return db->getTimeoutForSe(ses, ret));
 }
 
 bool ProfiledDB::isDnBlacklisted(std::string dn)

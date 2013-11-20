@@ -50,7 +50,7 @@ FileTransferExecutor::FileTransferExecutor(TransferFileHandler& tfh, bool optimi
     active(true),
     scheduled(0)
 
-{  
+{
 }
 
 FileTransferExecutor::~FileTransferExecutor()
@@ -95,7 +95,7 @@ void FileTransferExecutor::execute()
                     int BufSize = 0;
                     int StreamsperFile = 0;
                     int Timeout = 0;
-		    bool manualProtocol = false;
+                    bool manualProtocol = false;
 
                     std::stringstream internalParams;
 
@@ -110,7 +110,7 @@ void FileTransferExecutor::execute()
                                     BufSize = (*p).tcp_buffer_size;
                                     StreamsperFile = (*p).nostreams;
                                     Timeout = (*p).urlcopy_tx_to;
-				    manualProtocol = true;
+                                    manualProtocol = true;
                                 }
                             else
                                 {
@@ -145,14 +145,14 @@ void FileTransferExecutor::execute()
                             if (optimize && cfgs.empty())
                                 {
                                     DBSingleton::instance().getDBObjectInstance()->setAllowed(temp->JOB_ID, temp->FILE_ID, source_hostname, destin_hostname, StreamsperFile, Timeout, BufSize);
-  				    if (manualProtocol == true)
-				        {
-					    internalParams << "nostreams:" << StreamsperFile << ",timeout:" << Timeout << ",buffersize:" << BufSize;
-					}					
-                                    else    
-				        {
+                                    if (manualProtocol == true)
+                                        {
+                                            internalParams << "nostreams:" << StreamsperFile << ",timeout:" << Timeout << ",buffersize:" << BufSize;
+                                        }
+                                    else
+                                        {
                                             internalParams << "nostreams:" << DEFAULT_NOSTREAMS << ",timeout:" << DEFAULT_TIMEOUT << ",buffersize:" << DEFAULT_BUFFSIZE;
-                                        }				    
+                                        }
                                 }
                             else
                                 {
@@ -175,11 +175,11 @@ void FileTransferExecutor::execute()
                                                 internalParams << ",buffersize:" << protocol.TCP_BUFFER_SIZE;
                                         }
                                     else if (manualProtocol == true)
-				        {
-					    internalParams << "nostreams:" << StreamsperFile << ",timeout:" << Timeout << ",buffersize:" << BufSize;
-					}					
-                                    else    
-				        {
+                                        {
+                                            internalParams << "nostreams:" << StreamsperFile << ",timeout:" << Timeout << ",buffersize:" << BufSize;
+                                        }
+                                    else
+                                        {
                                             internalParams << "nostreams:" << DEFAULT_NOSTREAMS << ",timeout:" << DEFAULT_TIMEOUT << ",buffersize:" << DEFAULT_BUFFSIZE;
                                         }
 
@@ -217,7 +217,7 @@ void FileTransferExecutor::execute()
                                                     ""
                                                 );
 
-			    //disable for now, remove later
+                            //disable for now, remove later
                             string sourceSiteName = ""; //siteResolver.getSiteName(temp->SOURCE_SURL);
                             string destSiteName = ""; //siteResolver.getSiteName(temp->DEST_SURL);
 

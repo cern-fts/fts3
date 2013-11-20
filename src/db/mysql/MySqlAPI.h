@@ -141,7 +141,7 @@ public:
 
     virtual int getSeOut(const std::string & source, const std::set<std::string> & destination);
 
-    virtual int getSeIn(const std::set<std::string> & source, const std::string & destination);    
+    virtual int getSeIn(const std::set<std::string> & source, const std::string & destination);
 
     virtual void setAllowed(const std::string & job_id, int file_id, const std::string & source_se, const std::string & dest, int nostreams, int timeout, int buffersize);
 
@@ -344,8 +344,8 @@ private:
     size_t                poolSize;
     soci::connection_pool* connectionPool;
     std::string           hostname;
-    
-    int getCredits(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname);    
+
+    int getCredits(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname);
 
     bool getInOutOfSe(const std::string& sourceSe, const std::string& destSe);
 

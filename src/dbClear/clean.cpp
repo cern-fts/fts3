@@ -81,7 +81,7 @@ int main(int argc, char** argv)
                     exit(1);
                 }
 
-            FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv);           
+            FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv);
 
             std::string logDir = theServerConfig().get<std::string > ("TransferLogDirectory");
             if (logDir.length() > 0)

@@ -477,7 +477,7 @@ protected:
                                         return;
                                     }
 
-			        //disable for now, remove later
+                                //disable for now, remove later
                                 sourceSiteName = ""; //siteResolver.getSiteName(surl);
                                 destSiteName = ""; //siteResolver.getSiteName(durl);
 
@@ -500,7 +500,7 @@ protected:
                                                 BufSize = (*p).tcp_buffer_size;
                                                 StreamsperFile = (*p).nostreams;
                                                 Timeout = (*p).urlcopy_tx_to;
-						userProtocol = true;
+                                                userProtocol = true;
                                             }
                                         else
                                             {
@@ -548,10 +548,10 @@ protected:
                                                         if (protocol.TCP_BUFFER_SIZE >= 0)
                                                             internalParams << ",buffersize:" << protocol.TCP_BUFFER_SIZE;
                                                     }
-						else if(userProtocol == true)
-						    {
-						        internalParams << "nostreams:" << StreamsperFile << ",timeout:" << Timeout << ",buffersize:" << BufSize;
-						    }    
+                                                else if(userProtocol == true)
+                                                    {
+                                                        internalParams << "nostreams:" << StreamsperFile << ",timeout:" << Timeout << ",buffersize:" << BufSize;
+                                                    }
                                                 else
                                                     {
                                                         internalParams << "nostreams:" << DEFAULT_NOSTREAMS << ",timeout:" << DEFAULT_TIMEOUT << ",buffersize:" << DEFAULT_BUFFSIZE;
