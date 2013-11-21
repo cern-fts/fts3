@@ -347,7 +347,6 @@ private:
     soci::connection_pool* connectionPool;
     std::string           hostname;
 
-    bool getInOutOfSe(const std::string& sourceSe, const std::string& destSe);
 
     void recordOptimizerUpdate(soci::session& sql, int active, double filesize, double throughput,
                                int nostreams, int timeout, int buffersize,std::string source_hostname, std::string destin_hostname);

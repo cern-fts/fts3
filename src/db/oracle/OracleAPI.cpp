@@ -163,20 +163,6 @@ void OracleAPI::init(std::string username, std::string password, std::string con
 
 
 
-bool OracleAPI::getInOutOfSe(const std::string & sourceSe, const std::string & destSe)
-{
-    soci::session sql(*connectionPool);
-
-    unsigned nSE = 0;
-    sql << "SELECT COUNT(*) FROM t_se "
-        "WHERE (t_se.name = :source OR t_se.name = :dest) AND "
-        "      t_se.state = 'off'",
-        soci::use(sourceSe), soci::use(destSe), soci::into(nSE);
-
-    return nSE == 0;
-}
-
-
 
 TransferJobs* OracleAPI::getTransferJob(std::string jobId, bool archive)
 {
@@ -5702,25 +5688,41 @@ double OracleAPI::getSuccessRate(std::string source, std::string destination)
     return ratioSuccessFailure;
 }
 
-double OracleAPI::getAvgThroughput(std::string source, std::string destination)
+double OracleAPI::getAvgThroughput(std::string source_hostname, std::string destin_hostname)
 {
     soci::session sql(*connectionPool);
 
-    double avgThr = 0;
+    		    double throughput=0.0;
+                    double filesize = 0.0;
+		    double totalSize = 0.0;
 
     try
         {
-            soci::indicator isNull = soci::i_ok;
+                   // Weighted average for the 5 newest transfers
+                    soci::rowset<soci::row>  rsSizeAndThroughput = (sql.prepare <<
+                                           " SELECT * FROM ("
+                                           " SELECT rownum as rn, filesize, throughput "
+                                           " FROM t_file "
+                                           " WHERE source_se = :source AND dest_se = :dest AND "
+                                           "       file_state IN ('ACTIVE','FINISHED') AND throughput > 0 AND "
+                                           "       filesize > 0  AND "
+                                           "       (start_time >= (sys_extract_utc(systimestamp) - interval '5' minute) OR "
+                                           "        job_finished >= (sys_extract_utc(systimestamp) - interval '5' minute)) "
+                                           " ORDER BY job_finished DESC)"
+                                           " WHERE rn <= 5 ",
+                                           soci::use(source_hostname),soci::use(destin_hostname));
 
-            sql <<
-                " select ROUND(AVG(throughput),2) AS Average  from t_file where"
-                " source_se=:source and dest_se=:dst "
-                " and job_finished >= (sys_extract_utc(systimestamp) - interval '5' minute)",
-                soci::use(source),soci::use(destination), soci::into(avgThr, isNull);
-            if (isNull == soci::i_null)
-                {
-                    avgThr = 0.0;
-                }
+                    for (soci::rowset<soci::row>::const_iterator j = rsSizeAndThroughput.begin();
+                            j != rsSizeAndThroughput.end(); ++j)
+                        {
+                            filesize    = static_cast<double>(j->get<long long>("FILESIZE", 0));
+                            throughput += (j->get<double>("THROUGHPUT", 0) * filesize);
+                            totalSize  += filesize;
+                        }
+                    if (totalSize > 0)
+                        throughput /= totalSize;
+
+
         }
     catch (std::exception& e)
         {
@@ -5731,7 +5733,7 @@ double OracleAPI::getAvgThroughput(std::string source, std::string destination)
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 
-    return avgThr;
+    return throughput;
 }
 
 void OracleAPI::cancelFilesInTheQueue(const std::string& se, const std::string& vo, std::set<std::string>& jobs)
