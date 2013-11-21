@@ -1581,12 +1581,30 @@ void MySqlAPI::updateSe(std::string ENDPOINT, std::string SE_TYPE, std::string S
 }
 
 
-
 bool MySqlAPI::updateFileTransferStatus(double throughputIn, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
+                                        int process_id, double filesize, double duration){
+					
+    soci::session sql(*connectionPool);	
+    try
+        {
+            updateFileTransferStatusInternal(sql, throughputIn, job_id, file_id, transfer_status, transfer_message, process_id, filesize, duration);
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }    					
+  return true;
+}
+
+
+bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throughputIn, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
                                         int process_id, double filesize, double duration)
 {
     bool ok = true;
-    soci::session sql(*connectionPool);
 
     try
         {
@@ -1712,12 +1730,31 @@ bool MySqlAPI::updateFileTransferStatus(double throughputIn, std::string job_id,
 }
 
 
+bool MySqlAPI::updateJobTransferStatus(int fileId, std::string job_id, const std::string status){
 
-bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const std::string status)
+    soci::session sql(*connectionPool);	
+    
+    try
+       {
+        updateJobTransferStatusInternal(sql, fileId, job_id, status);
+       }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+   return true;	
+}
+
+
+
+bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, int fileId, std::string job_id, const std::string status)
 {
     bool ok = true;
-    soci::session sql(*connectionPool);
-
+ 
     try
         {
             int numberOfFilesInJob = 0;
@@ -1959,11 +1996,6 @@ void MySqlAPI::cancelJob(std::vector<std::string>& requestIDs)
         }
 }
 
-
-
-void MySqlAPI::getCancelJob(std::vector<int>& /*requestIDs*/)
-{
-}
 
 
 
@@ -3198,10 +3230,10 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                                             kill(pid, SIGUSR1);
                                         }
                                     collectJobs.insert(std::make_pair(fileId, jobId));
-                                    updateFileTransferStatus(0.0, jobId, fileId,
+                                    updateFileTransferStatusInternal(sql, 0.0, jobId, fileId,
                                                              "FAILED", "Transfer has been forced-killed because it was stalled",
                                                              pid, 0, 0);
-                                    updateJobTransferStatus(fileId, jobId, "FAILED");
+                                    updateJobTransferStatusInternal(sql, fileId, jobId, "FAILED");
                                 }
 
                         }
@@ -3611,8 +3643,8 @@ bool MySqlAPI::retryFromDead(std::vector<struct message_updater>& messages)
                                            );
                     if (rs.begin() != rs.end())
                         {
-                            updateFileTransferStatus(0.0, (*iter).job_id, (*iter).file_id, transfer_status, transfer_message, (*iter).process_id, 0, 0);
-                            updateJobTransferStatus((*iter).file_id, (*iter).job_id, status);
+                            updateFileTransferStatusInternal(sql, 0.0, (*iter).job_id, (*iter).file_id, transfer_status, transfer_message, (*iter).process_id, 0, 0);
+                            updateJobTransferStatusInternal(sql, (*iter).file_id, (*iter).job_id, status);
                         }
                 }
         }
@@ -5520,17 +5552,17 @@ void MySqlAPI::bringOnlineReportStatus(const std::string & state, const std::str
                                 {
                                     if(stage_in_only == 0)
                                         {
-                                            updateJobTransferStatus(0, msg.job_id, "SUBMITTED");
+                                            updateJobTransferStatusInternal(sql, 0, msg.job_id, "SUBMITTED");
                                         }
                                     else
                                         {
-                                            updateJobTransferStatus(0, msg.job_id, dbState);
+                                            updateJobTransferStatusInternal(sql, 0, msg.job_id, dbState);
                                         }
                                 }
                         }
                     else
                         {
-                            updateJobTransferStatus(0, msg.job_id, dbState);
+                            updateJobTransferStatusInternal(sql, 0, msg.job_id, dbState);
                         }
                 }
         }
@@ -5867,7 +5899,7 @@ void MySqlAPI::cancelFilesInTheQueue(const std::string& se, const std::string& v
             std::set<std::string>::iterator job_it;
             for (job_it = jobs.begin(); job_it != jobs.end(); ++job_it)
                 {
-                    updateJobTransferStatus(int(), *job_it, std::string());
+                    updateJobTransferStatusInternal(sql, int(), *job_it, std::string());
                 }
 
         }
@@ -6239,7 +6271,7 @@ void MySqlAPI::cancelWaitingFiles(std::set<std::string>& jobs)
             std::set<std::string>::iterator job_it;
             for (job_it = jobs.begin(); job_it != jobs.end(); ++job_it)
                 {
-                    updateJobTransferStatus(int(), *job_it, std::string());
+                    updateJobTransferStatusInternal(sql, int(), *job_it, std::string());
                 }
         }
     catch (std::exception& e)

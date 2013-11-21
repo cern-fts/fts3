@@ -136,7 +136,6 @@ public:
 
     virtual void cancelJob(std::vector<std::string>& requestIDs) = 0;
 
-    virtual void getCancelJob(std::vector<int>& requestIDs) = 0;
 
 
     /*t_credential API*/
