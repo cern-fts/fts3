@@ -365,4 +365,8 @@ private:
     } hashSegment;
 
     std::vector< boost::tuple<std::string, std::string, double, double, double> > filesMemStore;
+    
+    bool updateFileTransferStatusInternal(soci::session& sql, double throughput, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message, int process_id, double filesize, double duration);
+
+    bool updateJobTransferStatusInternal(soci::session& sql, int file_id, std::string job_id, const std::string status);    
 };
