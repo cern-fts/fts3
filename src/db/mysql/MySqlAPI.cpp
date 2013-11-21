@@ -836,10 +836,8 @@ unsigned int MySqlAPI::updateFileStatus(TransferFiles* file, const std::string s
             int countSame = 0;
 
             soci::statement stmt1 = (
-                                        sql.prepare << "select count(*) from t_file where file_state in ('READY','ACTIVE') and dest_surl=:destUrl and vo_name=:vo_name and dest_se=:dest_se ",
-                                        soci::use(file->DEST_SURL),
-                                        soci::use(file->VO_NAME),
-                                        soci::use(file->DEST_SE),
+                                        sql.prepare << "select count(*) from t_file where file_state in ('READY','ACTIVE') and dest_surl=:destUrl ",
+                                        soci::use(file->DEST_SURL),                                       
                                         soci::into(countSame));
             stmt1.execute(true);
 
