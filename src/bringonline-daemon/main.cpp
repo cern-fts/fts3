@@ -116,7 +116,7 @@ static bool isSrmUrl(const std::string & url)
     return false;
 }
 
-void fts3_teardown_db_backend()
+int fts3_teardown_db_backend()
 {
     try
         {
@@ -125,8 +125,9 @@ void fts3_teardown_db_backend()
     catch (...)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Unexpected exception when forcing the database teardown" << commit;
-            exit(1);
+            return -1;
         }
+    return 0;
 }
 
 void _handle_sigint(int)
@@ -136,9 +137,9 @@ void _handle_sigint(int)
     stopThreads = true;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE daemon stopping" << commit;
     sleep(5);
-    fts3_teardown_db_backend();
+    int db_status = fts3_teardown_db_backend();
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE daemon stopped" << commit;
-    exit(0);
+    _exit(db_status);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -333,26 +334,29 @@ void heartbeat(void)
 
     while (!stopThreads)
         {
-	  try{
-            db::DBSingleton::instance().getDBObjectInstance()->updateHeartBeat(
-                &myIndex, &count, &hashStart, &hashEnd);
+            try
+                {
+                    db::DBSingleton::instance().getDBObjectInstance()->updateHeartBeat(
+                        &myIndex, &count, &hashStart, &hashEnd);
 
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Systole: host " << myIndex << " out of " << count
-                                            << " [" << std::hex << hashStart << ':' << std::hex << hashEnd << ']'
-                                            << std::dec
-                                            << commit;
+                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Systole: host " << myIndex << " out of " << count
+                                                    << " [" << std::hex << hashStart << ':' << std::hex << hashEnd << ']'
+                                                    << std::dec
+                                                    << commit;
 
-            boost::this_thread::sleep(boost::posix_time::seconds(60));
-	    }catch (std::exception& ex)
-            {
-            	FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
-            }
-    	    catch (...)
-            {
-            	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unhandled exception" << commit;
-            }	    
+                    boost::this_thread::sleep(boost::posix_time::seconds(60));
+                }
+            catch (std::exception& ex)
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
+                }
+            catch (...)
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unhandled exception" << commit;
+                }
         }
 }
+
 
 
 int DoServer(int argc, char** argv)
@@ -387,10 +391,11 @@ int DoServer(int argc, char** argv)
                         {
                             arguments += argv[i];
                         }
+                    // Should never happen, actually
                     size_t foundHelp = arguments.find("-h");
                     if (foundHelp != string::npos)
                         {
-                            exit(0);
+                            return -1;
                         }
                 }
 
@@ -406,13 +411,13 @@ int DoServer(int argc, char** argv)
                             if (freopenLogFile == NULL)
                                 {
                                     std::cerr << "BRINGONLINE  daemon failed to open log file, errno is:" << strerror(errno) << std::endl;
-                                    exit(1);
+                                    return -1;
                                 }
                         }
                     else
                         {
                             std::cerr << "BRINGONLINE  daemon failed to open log file, errno is:" << strerror(errno) << std::endl;
-                            exit(1);
+                            return -1;
                         }
                 }
 
@@ -463,13 +468,16 @@ int DoServer(int argc, char** argv)
             catch (Err& e)
                 {
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE " << e.what() << commit;
-                    exit(1);
+                    return -1;
                 }
             catch (...)
                 {
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Fatal error (unknown origin), exiting..." << commit;
-                    exit(1);
+                    return -1;
                 }
+
+            // Start profiling
+            ProfilingSubsystem::getInstance().start();
 
             boost::thread hbThread(heartbeat);
 
@@ -566,14 +574,48 @@ __attribute__((constructor)) void begin(void)
     seteuid(pw_uid);
 }
 
+/// Spawn the process that runs the server
+/// Returns the child PID on success, -1 on failure
+/// Does NOT return on the child process
+pid_t SpawnServer(int argc, char** argv)
+{
+    pid_t pid = fork();
+    // child
+    if (pid == 0)
+        {
+            int resultExec = DoServer(argc, argv);
+            if (resultExec < 0)
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Can't start bringonline daemon" << commit;
+                    _exit(1);
+                }
+            _exit(0);
+        }
+    // parent
+    else if (pid > 0)
+        {
+            sleep(2);
+            int err = waitpid(pid, NULL, WNOHANG);
+            if (err != 0)
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE waitpid error: " << strerror(errno) << commit;
+                    return -1;
+                }
+            return pid;
+        }
+    // error
+    else
+        {
+            return -1;
+        }
+}
+
 int main(int argc, char** argv)
 {
     //switch to non-priviledged user to avoid reading the hostcert
     uid_t pw_uid = name_to_uid();
     setuid(pw_uid);
     seteuid(pw_uid);
-
-    pid_t child;
 
     if (fexists(hostcert) != 0)
         {
@@ -646,44 +688,24 @@ int main(int argc, char** argv)
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Can't set daemon, will continue attached to tty" << commit;
         }
 
-    int result = fork();
 
-    if (result == 0)   //child
-        {
-            int resultExec = DoServer(argc, argv);
-            if (resultExec < 0)
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Can't start bringonline daemon" << commit;
-                    exit(1);
-                }
-        }
-    else     //parent
-        {
-            child = result;
-            sleep(2);
-            int err = waitpid(child, NULL, WNOHANG);
-            if (err != 0)
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE waitpid error: " << strerror(errno) << commit;
-                    return -1;
-                }
-        }
+    pid_t child_pid = SpawnServer(argc, argv);
 
+    // Watchdog
     for (;;)
         {
+            if (child_pid < 0)
+                return 1;
+
             int status = 0;
             waitpid(-1, &status, 0);
             if (!WIFSTOPPED(status))
                 {
-                    result = fork();
-                    if (result == 0)
-                        {
-                            result = DoServer(argc, argv);
-                        }
-                    if (result < 0)
-                        {
-                            exit(1);
-                        }
+                    child_pid = SpawnServer(argc, argv);
+                }
+            else
+                {
+                    break;
                 }
             sleep(5);
         }
