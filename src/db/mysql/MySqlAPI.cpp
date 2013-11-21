@@ -263,21 +263,6 @@ void MySqlAPI::init(std::string username, std::string password, std::string conn
 
 
 
-bool MySqlAPI::getInOutOfSe(const std::string & sourceSe, const std::string & destSe)
-{
-    soci::session sql(*connectionPool);
-
-    unsigned nSE = 0;
-    sql << "SELECT COUNT(*) FROM t_se "
-        "WHERE (t_se.name = :source OR t_se.name = :dest) AND "
-        "      t_se.state = 'off'",
-        soci::use(sourceSe), soci::use(destSe), soci::into(nSE);
-
-    return nSE == 0;
-}
-
-
-
 TransferJobs* MySqlAPI::getTransferJob(std::string jobId, bool archive)
 {
     soci::session sql(*connectionPool);
@@ -5363,25 +5348,38 @@ double MySqlAPI::getSuccessRate(std::string source, std::string destination)
     return ratioSuccessFailure;
 }
 
-double MySqlAPI::getAvgThroughput(std::string source, std::string destination)
+double MySqlAPI::getAvgThroughput(std::string source_hostname, std::string destin_hostname)
 {
     soci::session sql(*connectionPool);
 
-    double avgThr = 0;
+    		    double throughput=0.0;
+                    double filesize = 0.0;
+		    double totalSize = 0.0;
 
     try
         {
-            soci::indicator isNull = soci::i_ok;
+		    // Weighted average for the 5 newest transfers
+                    soci::rowset<soci::row>  rsSizeAndThroughput = (sql.prepare <<
+                                           " SELECT filesize, throughput "
+                                           " FROM t_file use index(t_file_select)"
+                                           " WHERE source_se = :source AND dest_se = :dest AND "
+                                           "       file_state IN ('ACTIVE','FINISHED') AND throughput > 0 AND "
+                                           "       filesize > 0  AND "
+                                           "       (start_time >= date_sub(utc_timestamp(), interval '5' minute) OR "
+                                           "        job_finished >= date_sub(utc_timestamp(), interval '5' minute)) "
+                                           " ORDER BY job_finished DESC LIMIT 5 ",
+                                           soci::use(source_hostname),soci::use(destin_hostname));
 
-            sql <<
-                " select ROUND(AVG(throughput),2) AS Average  from t_file where"
-                " source_se=:source and dest_se=:dst "
-                " and job_finished >= date_sub(utc_timestamp(), interval '5' minute)",
-                soci::use(source),soci::use(destination), soci::into(avgThr, isNull);
-            if (isNull == soci::i_null)
-                {
-                    avgThr = 0.0;
-                }
+                    for (soci::rowset<soci::row>::const_iterator j = rsSizeAndThroughput.begin();
+                            j != rsSizeAndThroughput.end(); ++j)
+                        {
+                            filesize    = j->get<double>("filesize", 0);
+                            throughput += (j->get<double>("throughput", 0) * filesize);
+                            totalSize  += filesize;
+                        }
+                    if (totalSize > 0)
+                        throughput /= totalSize;
+
         }
     catch (std::exception& e)
         {
@@ -5392,7 +5390,7 @@ double MySqlAPI::getAvgThroughput(std::string source, std::string destination)
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
 
-    return avgThr;
+    return throughput;
 }
 
 void MySqlAPI::cancelFilesInTheQueue(const std::string& se, const std::string& vo, std::set<std::string>& jobs)
