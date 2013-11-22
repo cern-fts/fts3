@@ -831,16 +831,17 @@ unsigned int MySqlAPI::updateFileStatus(TransferFiles* file, const std::string s
 
     try
         {
-            sql.begin();
-	
             int countSame = 0;
 
             soci::statement stmt1 = (
-                                        sql.prepare << "select count(*) from t_file where file_state in ('READY','ACTIVE') and dest_surl=:destUrl ",
-                                        soci::use(file->DEST_SURL),                                       
+                                        sql.prepare << "select count(*) from t_file where file_state in ('READY','ACTIVE') and dest_surl=:destUrl and vo_name=:vo_name and dest_se=:dest_se ",
+                                        soci::use(file->DEST_SURL),
+					soci::use(file->VO_NAME),
+					soci::use(file->DEST_SE),                                       
                                         soci::into(countSame));
             stmt1.execute(true);
 
+            sql.begin();
 
             if(countSame > 0)
                 {
@@ -1833,6 +1834,7 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, int fileId, s
             bool jobFinished = (numberOfFilesInJob == numberOfFilesTerminal);
 
             sql.begin();
+	    
             if (jobFinished)
                 {
                     std::string state;
@@ -2770,7 +2772,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                     // Weighted average for the 12 less newest transfers
                     soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
                             " SELECT filesize, throughput "
-                            " FROM t_file "
+                            " FROM t_file use index(t_file_select) "
                             " WHERE source_se = :source_se AND dest_se = :dest_se AND "
                             "       file_state IN ('ACTIVE','FINISHED') AND throughput > 0 AND "
                             "       filesize > 0 AND (start_time >= date_sub(utc_timestamp(), interval '5' minute) OR "
@@ -2794,7 +2796,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                     // Weighted average for the 5 newest transfers
                     rsSizeAndThroughput = (sql.prepare <<
                                            " SELECT filesize, throughput "
-                                           " FROM t_file "
+                                           " FROM t_file use index(t_file_select) "
                                            " WHERE source_se = :source AND dest_se = :dest AND "
                                            "       file_state IN ('ACTIVE','FINISHED') AND throughput > 0 AND "
                                            "       filesize > 0  AND "
@@ -5787,7 +5789,7 @@ double MySqlAPI::getAvgThroughput(std::string source_hostname, std::string desti
 		    // Weighted average for the 5 newest transfers
                     soci::rowset<soci::row>  rsSizeAndThroughput = (sql.prepare <<
                                            " SELECT filesize, throughput "
-                                           " FROM t_file "
+                                           " FROM t_file use index(t_file_select) "
                                            " WHERE source_se = :source AND dest_se = :dest AND "
                                            "       file_state IN ('ACTIVE','FINISHED') AND throughput > 0 AND "
                                            "       filesize > 0  AND "
