@@ -61,6 +61,7 @@ const string Configuration::on = "on";
 const string Configuration::off = "off";
 const string Configuration::pub = "public";
 const string Configuration::share_only = "all";
+const int    Configuration::automatic = -1;
 
 Configuration::Configuration(string dn) :
     dn(dn),
