@@ -142,9 +142,9 @@ protected:
                                         for (iter = messages.begin(); iter != messages.end(); ++iter)
                                             {
                                                 SingleTrStateInstance::instance().sendStateMessage((*iter).job_id, (*iter).file_id);
-                                            }
-                                        messages.clear();
+                                            }                                        
                                     }
+				 messages.clear();
                             }
 
                         /*also get jobs which have been canceled by the client*/

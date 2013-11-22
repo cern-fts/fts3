@@ -105,7 +105,6 @@ void FileTransferExecutor::execute()
                     if (optimize)
                         {
                             OptimizerSample* opt_config = new OptimizerSample();
-                            db->initOptimizer(source_hostname, destin_hostname, 0);
                             db->fetchOptimizationConfig2(opt_config, source_hostname, destin_hostname);
                             BufSize = opt_config->getBufSize();
                             StreamsperFile = opt_config->getStreamsperFile();
