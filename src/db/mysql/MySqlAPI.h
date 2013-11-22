@@ -338,12 +338,16 @@ public:
 
     void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end);
 
+    virtual void updateFileTransferProgressVector(std::vector<struct message_updater>& messages);
+
+    virtual void transferLogFileVector(std::map<int, struct message_log>& messagesLog);
+
 private:
     size_t                poolSize;
     soci::connection_pool* connectionPool;
     std::string           hostname;
-    
-    int getCredits(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname);    
+
+    int getCredits(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname);
 
     void recordOptimizerUpdate(soci::session& sql, int active, double filesize, double throughput,
                                int nostreams, int timeout, int buffersize,std::string source_hostname, std::string destin_hostname);
@@ -365,8 +369,8 @@ private:
     } hashSegment;
 
     std::vector< boost::tuple<std::string, std::string, double, double, double> > filesMemStore;
-    
+
     bool updateFileTransferStatusInternal(soci::session& sql, double throughput, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message, int process_id, double filesize, double duration);
 
-    bool updateJobTransferStatusInternal(soci::session& sql, int file_id, std::string job_id, const std::string status);    
+    bool updateJobTransferStatusInternal(soci::session& sql, int file_id, std::string job_id, const std::string status);
 };

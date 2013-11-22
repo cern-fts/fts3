@@ -2042,6 +2042,27 @@ bool OracleAPI::updateJobTransferStatus(int, std::string job_id, const std::stri
     return ok;
 }
 
+void OracleAPI::updateFileTransferProgressVector(std::vector<struct message_updater>& messages)
+{
+    std::vector<struct message_updater>::iterator iter;
+    for (iter = messages.begin(); iter != messages.end(); ++iter)
+        {
+            if (iter->msg_errno == 0)
+                {
+                    if((*iter).throughput != 0 && (*iter).transferred != 0)
+                        {
+                            updateFileTransferProgress((*iter).job_id, (*iter).file_id, (*iter).throughput, 0.0);
+                        }
+                }
+            else
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to read a stall message: "
+                                                   << iter->msg_error_reason << commit;
+                }
+        }
+}
+
+
 void OracleAPI::updateFileTransferProgress(std::string job_id, int file_id, double throughput, double /*transferred*/)
 {
     const std::string queryTag = "updateFileTransferProgress";
@@ -9482,6 +9503,17 @@ void OracleAPI::transferLogFile(const std::string& filePath, const std::string& 
 }
 
 
+void OracleAPI::transferLogFileVector(std::map<int, struct message_log>& messagesLog)
+{
+    std::map<int, struct message_log>::const_iterator iterLog;
+    for (iterLog = messagesLog.begin(); iterLog != messagesLog.end(); iterLog++)
+        {
+            std::string jobId = std::string(((*iterLog).second).job_id).substr(0, 36);
+            transferLogFile( ((*iterLog).second).filePath, jobId , ((*iterLog).second).file_id, ((*iterLog).second).debugFile);
+        }
+}
+
+
 std::vector<struct message_state>  OracleAPI::getStateOfTransfer(const std::string& jobId, int fileId)
 {
     std::string tag1 = "getStateOfTransfer1";
@@ -9493,13 +9525,13 @@ std::vector<struct message_state>  OracleAPI::getStateOfTransfer(const std::stri
         " from t_file, t_job "
         " where t_job.job_id = t_file.job_id "
         " and t_job.job_id=:1 and t_file.file_id=:2 ";
-    
+
     std::string query2 =
         " select t_job.job_id, t_job.job_state, t_job.vo_name, t_job.job_metadata, t_job.retry, t_file.file_id, t_file.file_state, t_file.retry, "
         " t_file.file_metadata, t_file.source_se, t_file.dest_se "
         " from t_file, t_job "
         " where t_job.job_id = t_file.job_id "
-        " and t_job.job_id=:1 ";    
+        " and t_job.job_id=:1 ";
 
 
     SafeStatement s1;
@@ -9515,53 +9547,56 @@ std::vector<struct message_state>  OracleAPI::getStateOfTransfer(const std::stri
             pooledConnection = conn->getPooledConnection();
             if (!pooledConnection) return temp;
 
-            if(fileId != -1){
-            	s1 = conn->createStatement(query1, tag1, pooledConnection);
-            	s1->setString(1, jobId);
-            	s1->setInt(2, fileId);		
-            	r1 = conn->createResultset(s1, pooledConnection);
-                while (r1->next())
+            if(fileId != -1)
                 {
-                    ret.job_id = r1->getString(1);
-                    ret.job_state = r1->getString(2);
-                    ret.vo_name = r1->getString(3);
-                    ret.job_metadata = r1->getString(4);
-                    ret.retry_max = r1->getInt(5);
-                    ret.file_id = r1->getInt(6);
-                    ret.file_state = r1->getString(7);
-                    ret.retry_counter = r1->getInt(8);
-                    ret.file_metadata = r1->getString(9);
-                    ret.source_se = r1->getString(10);
-                    ret.dest_se = r1->getString(11);
-                    ret.timestamp = _getTrTimestampUTC();
-		    temp.push_back(ret);
+                    s1 = conn->createStatement(query1, tag1, pooledConnection);
+                    s1->setString(1, jobId);
+                    s1->setInt(2, fileId);
+                    r1 = conn->createResultset(s1, pooledConnection);
+                    while (r1->next())
+                        {
+                            ret.job_id = r1->getString(1);
+                            ret.job_state = r1->getString(2);
+                            ret.vo_name = r1->getString(3);
+                            ret.job_metadata = r1->getString(4);
+                            ret.retry_max = r1->getInt(5);
+                            ret.file_id = r1->getInt(6);
+                            ret.file_state = r1->getString(7);
+                            ret.retry_counter = r1->getInt(8);
+                            ret.file_metadata = r1->getString(9);
+                            ret.source_se = r1->getString(10);
+                            ret.dest_se = r1->getString(11);
+                            ret.timestamp = _getTrTimestampUTC();
+                            temp.push_back(ret);
+                        }
+                    conn->destroyResultset(s1, r1);
+                    conn->destroyStatement(s1, tag1, pooledConnection);
                 }
-            conn->destroyResultset(s1, r1);
-            conn->destroyStatement(s1, tag1, pooledConnection);  		
-	    }else{
-            	s2 = conn->createStatement(query2, tag2, pooledConnection);
-            	s2->setString(1, jobId);
-            	s2->setInt(2, fileId);
-            	r2 = conn->createResultset(s2, pooledConnection);	
-                while (r2->next())
+            else
                 {
-                    ret.job_id = r2->getString(1);
-                    ret.job_state = r2->getString(2);
-                    ret.vo_name = r2->getString(3);
-                    ret.job_metadata = r2->getString(4);
-                    ret.retry_max = r2->getInt(5);
-                    ret.file_id = r2->getInt(6);
-                    ret.file_state = r2->getString(7);
-                    ret.retry_counter = r2->getInt(8);
-                    ret.file_metadata = r2->getString(9);
-                    ret.source_se = r2->getString(10);
-                    ret.dest_se = r2->getString(11);
-                    ret.timestamp = _getTrTimestampUTC();
-		    temp.push_back(ret);
+                    s2 = conn->createStatement(query2, tag2, pooledConnection);
+                    s2->setString(1, jobId);
+                    s2->setInt(2, fileId);
+                    r2 = conn->createResultset(s2, pooledConnection);
+                    while (r2->next())
+                        {
+                            ret.job_id = r2->getString(1);
+                            ret.job_state = r2->getString(2);
+                            ret.vo_name = r2->getString(3);
+                            ret.job_metadata = r2->getString(4);
+                            ret.retry_max = r2->getInt(5);
+                            ret.file_id = r2->getInt(6);
+                            ret.file_state = r2->getString(7);
+                            ret.retry_counter = r2->getInt(8);
+                            ret.file_metadata = r2->getString(9);
+                            ret.source_se = r2->getString(10);
+                            ret.dest_se = r2->getString(11);
+                            ret.timestamp = _getTrTimestampUTC();
+                            temp.push_back(ret);
+                        }
+                    conn->destroyResultset(s2, r2);
+                    conn->destroyStatement(s2, tag2, pooledConnection);
                 }
-            conn->destroyResultset(s2, r2);
-            conn->destroyStatement(s2, tag2, pooledConnection); 		    
-	    }         
         }
     catch (oracle::occi::SQLException const &e)
         {

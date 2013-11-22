@@ -352,6 +352,10 @@ public:
 
     void resetSanityRuns(SafeConnection& conn, struct message_sanity &msg);
 
+    virtual void updateFileTransferProgressVector(std::vector<struct message_updater>& messages);
+
+    virtual void transferLogFileVector(std::map<int, struct message_log>& messagesLog);
+
 private:
     OracleConnection *conn;
     OracleTypeConversions *conv;

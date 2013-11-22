@@ -170,13 +170,6 @@ protected:
                                                                                 << "\nTransferred: " << (*iter).transferred
                                                                                 << commit;
                                                 ThreadSafeList::get_instance().updateMsg(*iter);
-                                                if((*iter).throughput != 0 && (*iter).transferred != 0)
-                                                    {
-                                                        DBSingleton::instance().getDBObjectInstance()
-                                                        ->updateFileTransferProgress(job, (*iter).file_id,
-                                                                                     (*iter).throughput,
-                                                                                     (*iter).transferred);
-                                                    }
                                             }
                                         else
                                             {
@@ -184,6 +177,10 @@ protected:
                                                                                << iter->msg_error_reason << commit;
                                             }
                                     }
+
+                                //now update the progress markers in a "bulk fashion"
+                                DBSingleton::instance().getDBObjectInstance()->updateFileTransferProgressVector(messages);
+
 
                                 messages.clear();
                             }

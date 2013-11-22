@@ -368,6 +368,10 @@ public:
 
     virtual void getTransferRetries(int fileId, std::vector<FileRetry*>& retries) = 0;
 
+    virtual void updateFileTransferProgressVector(std::vector<struct message_updater>& messages) = 0;
+
+    virtual void transferLogFileVector(std::map<int, struct message_log>& messagesLog) = 0;
+
     /**
      * Signals that the server is alive
      * The total number of running (alive) servers is put in count
