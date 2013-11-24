@@ -386,7 +386,6 @@ void FileTransferExecutor::execute()
                                                     db->updateFileTransferStatus(0.0, temp->JOB_ID, temp->FILE_ID, "ACTIVE", "",(int) pr->getPid(), 0, 0);
                                                     db->updateJobTransferStatus(0, temp->JOB_ID, "ACTIVE");
                                                     SingleTrStateInstance::instance().sendStateMessage(temp->JOB_ID, temp->FILE_ID);
-                                                    db->setPid(temp->JOB_ID, temp->FILE_ID, pr->getPid());
                                                     struct message_updater msg;
                                                     strcpy(msg.job_id, std::string(temp->JOB_ID).c_str());
                                                     msg.file_id = temp->FILE_ID;

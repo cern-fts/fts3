@@ -142,9 +142,9 @@ protected:
                                         for (iter = messages.begin(); iter != messages.end(); ++iter)
                                             {
                                                 SingleTrStateInstance::instance().sendStateMessage((*iter).job_id, (*iter).file_id);
-                                            }                                        
+                                            }
                                     }
-				 messages.clear();
+                                messages.clear();
                             }
 
                         /*also get jobs which have been canceled by the client*/
@@ -241,11 +241,25 @@ protected:
                                                        << e.what()
                                                        << commit;
                         sleep(1);
+                        //reset
+                        counter1 = 0;
+                        counterFailAll = 0;
+                        countReverted = 0;
+                        counter2 = 0;
+                        counterTimeoutWaiting = 0;
+                        counterCanceled = 0;
                     }
                 catch (...)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
                         sleep(1);
+                        //reset
+                        counter1 = 0;
+                        counterFailAll = 0;
+                        countReverted = 0;
+                        counter2 = 0;
+                        counterTimeoutWaiting = 0;
+                        counterCanceled = 0;
                     }
                 sleep(1);
             }

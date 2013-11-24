@@ -311,6 +311,8 @@ protected:
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a()
     {
+        int logInterval = 0;
+
         while (1)   /*need to receive more than one messages at a time*/
             {
                 try
@@ -329,19 +331,23 @@ protected:
                                     }
                             }
 
-                        if (!fs::is_empty(fs::path(LOG_DIR)))
+                        if(++logInterval > 10)
                             {
-                                if(runConsumerLog(messagesLog) != 0)
+                                if (!fs::is_empty(fs::path(LOG_DIR)))
                                     {
-                                        char buffer[128]= {0};
-                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the log messages:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
+                                        if(runConsumerLog(messagesLog) != 0)
+                                            {
+                                                char buffer[128]= {0};
+                                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the log messages:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
+                                            }
                                     }
-                            }
 
-                        if(!messagesLog.empty())
-                            {
-                                DBSingleton::instance().getDBObjectInstance()->transferLogFileVector(messagesLog);
-                                messagesLog.clear();
+                                if(!messagesLog.empty())
+                                    {
+                                        DBSingleton::instance().getDBObjectInstance()->transferLogFileVector(messagesLog);
+                                        messagesLog.clear();
+                                    }
+                                logInterval = 0;
                             }
 
                         if(!messages.empty())
@@ -402,6 +408,7 @@ protected:
 
 
                         usleep(300000);
+                        logInterval = 0;
                     }
                 catch (std::exception& ex2)
                     {
@@ -423,6 +430,7 @@ protected:
 
 
                         usleep(300000);
+                        logInterval = 0;
                     }
                 catch (...)
                     {
@@ -444,6 +452,7 @@ protected:
 
 
                         usleep(300000);
+                        logInterval = 0;
                     }
             }
     }

@@ -50,10 +50,10 @@ CREATE TABLE t_optimize (
   file_id      INTEGER NOT NULL,
 --
 -- source se
-  source_se    VARCHAR(255),
+  source_se    VARCHAR(150),
 --
 -- dest se  
-  dest_se      VARCHAR(255),
+  dest_se      VARCHAR(150),
 --
 -- number of streams
   nostreams    INTEGER DEFAULT NULL,
@@ -84,8 +84,8 @@ CREATE TABLE t_optimize (
 --
 CREATE TABLE t_optimizer_evolution (
     datetime     TIMESTAMP,
-    source_se    VARCHAR(255),
-    dest_se      VARCHAR(255),
+    source_se    VARCHAR(150),
+    dest_se      VARCHAR(150),
     nostreams    INTEGER DEFAULT NULL,
     timeout      INTEGER DEFAULT NULL,
     active       INTEGER DEFAULT NULL,
@@ -104,7 +104,7 @@ CREATE TABLE t_config_audit (
   datetime     TIMESTAMP,
 --
 -- dn
-  dn           VARCHAR(1024),
+  dn           VARCHAR(255),
 --
 -- what has changed
   config       VARCHAR(4000), 
@@ -120,10 +120,10 @@ CREATE TABLE t_config_audit (
 CREATE TABLE t_debug (
 --
 -- source hostname
-  source_se    VARCHAR(255),
+  source_se    VARCHAR(150),
 --
 -- dest hostanme
-  dest_se      VARCHAR(255),
+  dest_se      VARCHAR(150),
 --
 -- debug on/off
   debug        VARCHAR(3) DEFAULT 'off'
@@ -196,7 +196,7 @@ INSERT INTO t_credential_vers (major,minor,patch) VALUES (1,2,0);
 CREATE TABLE t_se (
 -- The internal id
   se_id_info INTEGER AUTO_INCREMENT,
-  name       VARCHAR(255) NOT NULL,
+  name       VARCHAR(150) NOT NULL,
   endpoint   VARCHAR(1024),
   se_type    VARCHAR(30),
   site       VARCHAR(100),
@@ -216,15 +216,15 @@ CREATE TABLE t_se (
 -- relation of SE and VOs
 --
 CREATE TABLE t_se_acl (
-  name VARCHAR(255),
-  vo   VARCHAR(32),
+  name VARCHAR(150),
+  vo   VARCHAR(100),
   CONSTRAINT se_acl_pk PRIMARY KEY (name, vo)
 );
 
 -- GROUP NAME and its members
 CREATE TABLE t_group_members (
   groupName VARCHAR(255) NOT NULL,
-  member    VARCHAR(255) NOT NULL UNIQUE,
+  member    VARCHAR(150) NOT NULL UNIQUE,
   CONSTRAINT t_group_members_pk PRIMARY KEY (groupName, member),
   CONSTRAINT t_group_members_fk FOREIGN KEY (member) REFERENCES t_se (name)  
 ); 
@@ -232,8 +232,8 @@ CREATE TABLE t_group_members (
 -- SE HOSTNAME / GROUP NAME / *
 
 CREATE TABLE t_link_config ( 
-  source               VARCHAR(255) NOT NULL,
-  destination          VARCHAR(255) NOT NULL,
+  source               VARCHAR(150) NOT NULL,
+  destination          VARCHAR(150) NOT NULL,
   state                VARCHAR(30)  NOT NULL,
   symbolicName         VARCHAR(255) NOT NULL UNIQUE,
   nostreams            INTEGER NOT NULL,
@@ -248,8 +248,8 @@ CREATE TABLE t_link_config (
 );
 
 CREATE TABLE t_share_config ( 
-  source       VARCHAR(255) NOT NULL,
-  destination  VARCHAR(255) NOT NULL,
+  source       VARCHAR(150) NOT NULL,
+  destination  VARCHAR(150) NOT NULL,
   vo           VARCHAR(100) NOT NULL,
   active       INTEGER NOT NULL,
   CONSTRAINT t_share_config_pk PRIMARY KEY (source, destination, vo),
@@ -268,7 +268,7 @@ CREATE TABLE t_activity_share_config (
 CREATE TABLE t_bad_ses (
 --
 -- The hostname of the bad SE   
-  se             VARCHAR(256),
+  se             VARCHAR(150),
 --
 -- The reason this host was added 
   message        VARCHAR(2048) DEFAULT NULL,
@@ -277,10 +277,10 @@ CREATE TABLE t_bad_ses (
   addition_time  TIMESTAMP NULL DEFAULT NULL,
 --
 -- The DN of the administrator who added it
-  admin_dn       VARCHAR(1024),
+  admin_dn       VARCHAR(255),
   --
 -- VO that is banned for the SE
-   vo			 VARCHAR(50) DEFAULT NULL,
+   vo			 VARCHAR(100) DEFAULT NULL,
 --
 -- status: either CANCEL or WAIT or WAIT_AS
    status 		 VARCHAR(10) DEFAULT NULL,
@@ -295,8 +295,8 @@ CREATE TABLE t_bad_ses (
 --
 CREATE TABLE t_bad_dns (
 --
--- The hostname of the bad SE   
-  dn              VARCHAR(256),
+-- The user DN   
+  dn              VARCHAR(255),
 --
 -- The reason this host was added 
   message        VARCHAR(2048) DEFAULT NULL,
@@ -337,7 +337,7 @@ CREATE TABLE t_se_pair_acl (
 CREATE TABLE t_vo_acl (
 --
 -- the name of the VO
-  vo_name     VARCHAR(50) NOT NULL,
+  vo_name     VARCHAR(100) NOT NULL,
 --
 -- The principal name
   principal   VARCHAR(255) NOT NULL,
@@ -367,10 +367,10 @@ CREATE TABLE t_job (
   job_params           VARCHAR(255),
 --
 -- Source SE host name
-  source_se            VARCHAR(255),
+  source_se            VARCHAR(150),
 --
 -- Dest SE host name
-  dest_se              VARCHAR(255),  
+  dest_se              VARCHAR(150),  
 --
 -- the DN of the user starting the job - they are the only one
 -- who can sumbit/cancel
@@ -390,7 +390,7 @@ CREATE TABLE t_job (
   voms_cred            LONGTEXT,
 --
 -- The VO that owns this job
-  vo_name              VARCHAR(50),
+  vo_name              VARCHAR(100),
 --
 -- The reason the job is in the current state
   reason               VARCHAR(2048),
@@ -405,7 +405,7 @@ CREATE TABLE t_job (
   priority             INTEGER DEFAULT 3,
 --
 -- Submitting FTS hostname
-  submit_host          VARCHAR(255),
+  submit_host          VARCHAR(150),
 --
 -- Maximum time in queue before start of transfer (in seconds)
   max_time_in_queue    INTEGER,
@@ -495,19 +495,19 @@ CREATE TABLE t_file (
   symbolicName     VARCHAR(255),  
 --
 -- Hostname which this file was transfered
-  transferHost     VARCHAR(255),
+  transferHost     VARCHAR(150),
 --
 -- The Source
-  source_surl      VARCHAR(1100),
+  source_surl      VARCHAR(900),
 --
 -- The Destination
-  dest_surl        VARCHAR(1100),
+  dest_surl        VARCHAR(900),
 --
 -- Source SE host name
-  source_se            VARCHAR(255),
+  source_se            VARCHAR(150),
 --
 -- Dest SE host name
-  dest_se              VARCHAR(255),  
+  dest_se              VARCHAR(150),  
 --
 -- The agent who is transferring the file. This is only valid when the file
 -- is in 'Active' state
@@ -606,7 +606,7 @@ CREATE TABLE t_file (
   hashed_id INTEGER UNSIGNED DEFAULT 0,
 --
 -- The VO that owns this job
-  vo_name              VARCHAR(50),  
+  vo_name              VARCHAR(100),  
     
   FOREIGN KEY (job_id) REFERENCES t_job(job_id)
 );
@@ -644,9 +644,9 @@ CREATE TABLE t_file_share_config (
 CREATE TABLE t_stage_req (
 --
 -- vo name
-   vo_name           VARCHAR(255) NOT NULL
+   vo_name           VARCHAR(100) NOT NULL
 -- hostname
-   ,host           VARCHAR(255) NOT NULL			
+   ,host           VARCHAR(150) NOT NULL			
 --
 -- parallel bringonline ops
   ,concurrent_ops INTEGER DEFAULT 0
@@ -665,8 +665,8 @@ CREATE TABLE t_hosts (
 
 
 CREATE TABLE t_optimize_active (
-  source_se    VARCHAR(255) NOT NULL,
-  dest_se      VARCHAR(255) NOT NULL,
+  source_se    VARCHAR(150) NOT NULL,
+  dest_se      VARCHAR(150) NOT NULL,
   active INTEGER UNSIGNED DEFAULT 5,
   CONSTRAINT t_optimize_active_pk PRIMARY KEY (source_se, dest_se)
 );
