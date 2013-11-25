@@ -126,6 +126,11 @@ void ProfiledDB::updateFileTransferProgress(std::string job_id, int file_id, dou
     PROFILE_PREFIXED("DB::", db->updateFileTransferProgress(job_id, file_id, throughput, transferred));
 }
 
+void ProfiledDB::updateFileTransferProgressVector(std::vector<struct message_updater>& messages) 
+{ 
+	PROFILE_PREFIXED("DB::", db->updateFileTransferProgressVector(messages)); 
+} 
+
 
 void ProfiledDB::cancelJob(std::vector<std::string>& requestIDs)
 {
@@ -742,6 +747,11 @@ void ProfiledDB::transferLogFile(const std::string& filePath, const std::string&
 {
     PROFILE_PREFIXED("DB::", db->transferLogFile(filePath, jobId, fileId, debug));
 }
+
+void ProfiledDB::transferLogFileVector(std::map<int, struct message_log>& messagesLog) 
+{ 
+	PROFILE_PREFIXED("DB::", db->transferLogFileVector(messagesLog)); 
+} 
 
 
 std::vector<struct message_state> ProfiledDB::getStateOfTransfer(const std::string& jobId, int file_id)

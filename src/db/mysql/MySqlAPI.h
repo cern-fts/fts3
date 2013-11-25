@@ -338,6 +338,11 @@ public:
     std::map<std::string, long long> getActivitiesInQueue(soci::session& sql, std::string src, std::string dst, std::string vo);
 
     std::map<std::string, int> getFilesNumPerActivity(soci::session& sql, std::string src, std::string dst, std::string vo, int filesNum);
+    
+    virtual void updateFileTransferProgressVector(std::vector<struct message_updater>& messages);
+
+    virtual void transferLogFileVector(std::map<int, struct message_log>& messagesLog);
+    
 
 private:
     size_t                poolSize;

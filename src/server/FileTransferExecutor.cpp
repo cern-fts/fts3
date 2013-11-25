@@ -143,7 +143,7 @@ void FileTransferExecutor::execute()
 
                             if (optimize && cfgs.empty())
                                 {
-                                    DBSingleton::instance().getDBObjectInstance()->setAllowed(temp->JOB_ID, temp->FILE_ID, source_hostname, destin_hostname, StreamsperFile, Timeout, BufSize);
+                                    db->setAllowed(temp->JOB_ID, temp->FILE_ID, source_hostname, destin_hostname, StreamsperFile, Timeout, BufSize);
                                     if (manualProtocol == true)
                                         {
                                             internalParams << "nostreams:" << StreamsperFile << ",timeout:" << Timeout << ",buffersize:" << BufSize;
@@ -185,7 +185,7 @@ void FileTransferExecutor::execute()
                                     if (resolver.isAuto())
                                         {
                                             isAutoTuned = true;
-                                            DBSingleton::instance().getDBObjectInstance()->setAllowed(
+                                            db->setAllowed(
                                                 temp->JOB_ID,
                                                 temp->FILE_ID,
                                                 source_hostname,
@@ -197,7 +197,7 @@ void FileTransferExecutor::execute()
                                         }
                                     else
                                         {
-                                            DBSingleton::instance().getDBObjectInstance()->setAllowedNoOptimize(
+                                            db->setAllowedNoOptimize(
                                                 temp->JOB_ID,
                                                 temp->FILE_ID,
                                                 internalParams.str()
@@ -220,7 +220,7 @@ void FileTransferExecutor::execute()
                             string sourceSiteName = ""; //siteResolver.getSiteName(temp->SOURCE_SURL);
                             string destSiteName = ""; //siteResolver.getSiteName(temp->DEST_SURL);
 
-                            bool debug = DBSingleton::instance().getDBObjectInstance()->getDebugMode(source_hostname, destin_hostname);
+                            bool debug = db->getDebugMode(source_hostname, destin_hostname);
 
                             string params;
 
@@ -390,7 +390,7 @@ void FileTransferExecutor::execute()
                             params.append(" -M ");
                             params.append(infosys);
 
-                            bool ready = DBSingleton::instance().getDBObjectInstance()->isFileReadyState(temp->FILE_ID);
+                            bool ready = db->isFileReadyState(temp->FILE_ID);
 
                             if (ready)
                                 {
@@ -402,12 +402,12 @@ void FileTransferExecutor::execute()
                                             if (-1 == pr->executeProcessShell())
                                                 {
                                                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to spawn " <<  temp->JOB_ID << "  " << temp->FILE_ID << commit;
-                                                    DBSingleton::instance().getDBObjectInstance()->forkFailedRevertState(temp->JOB_ID, temp->FILE_ID);
+                                                    db->forkFailedRevertState(temp->JOB_ID, temp->FILE_ID);
                                                 }
                                             else
                                                 {
-                                                    DBSingleton::instance().getDBObjectInstance()->updateFileTransferStatus(0.0, temp->JOB_ID, temp->FILE_ID, "ACTIVE", "",(int) pr->getPid(), 0, 0);
-                                                    DBSingleton::instance().getDBObjectInstance()->updateJobTransferStatus(0, temp->JOB_ID, "ACTIVE");
+                                                    db->updateFileTransferStatus(0.0, temp->JOB_ID, temp->FILE_ID, "ACTIVE", "",(int) pr->getPid(), 0, 0);
+                                                    db->updateJobTransferStatus(0, temp->JOB_ID, "ACTIVE");
                                                     SingleTrStateInstance::instance().sendStateMessage(temp->JOB_ID, temp->FILE_ID);
                                                     struct message_updater msg;
                                                     strcpy(msg.job_id, std::string(temp->JOB_ID).c_str());

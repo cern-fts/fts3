@@ -1937,16 +1937,44 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, int fileId, s
 
 void MySqlAPI::updateFileTransferProgress(std::string /*job_id*/, int file_id, double throughput, double /*transferred*/)
 {
+    //to be removed
+}
+
+void MySqlAPI::updateFileTransferProgressVector(std::vector<struct message_updater>& messages)
+{
+
     soci::session sql(*connectionPool);
+    double throughput = 0.0;
+    int file_id = 0;
 
     try
         {
-            throughput = convertKbToMb(throughput);
+            soci::statement stmt = (sql.prepare << "UPDATE t_file SET throughput = :throughput WHERE file_id = :fileId and (throughput is NULL or throughput=0)",
+                                    soci::use(throughput), soci::use(file_id));
+
             sql.begin();
-            sql << "UPDATE t_file SET throughput = :throughput "
-                "WHERE file_id = :fileId and (throughput is NULL or throughput=0)",
-                soci::use(throughput), soci::use(file_id);
+
+            std::vector<struct message_updater>::iterator iter;
+            for (iter = messages.begin(); iter != messages.end(); ++iter)
+                {
+                    if (iter->msg_errno == 0)
+                        {
+                            if((*iter).throughput != 0)
+                                {
+                                    throughput = (*iter).throughput;
+                                    file_id = (*iter).file_id;
+                                    stmt.execute(true);
+                                }
+                        }
+                    else
+                        {
+                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to read a stall message: "
+                                                           << iter->msg_error_reason << commit;
+                        }
+                }
+
             sql.commit();
+
         }
     catch (std::exception& e)
         {
@@ -1956,8 +1984,10 @@ void MySqlAPI::updateFileTransferProgress(std::string /*job_id*/, int file_id, d
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
+
+
 }
 
 void MySqlAPI::cancelJob(std::vector<std::string>& requestIDs)
@@ -5972,21 +6002,36 @@ void MySqlAPI::cancelJobsInTheQueue(const std::string& dn, std::vector<std::stri
 
 void MySqlAPI::transferLogFile(const std::string& filePath, const std::string& /*jobId*/, int fileId, bool debug)
 {
+    //to be removed
+}
+
+
+void MySqlAPI::transferLogFileVector(std::map<int, struct message_log>& messagesLog)
+{
     soci::session sql(*connectionPool);
 
+    std::string filePath;
     //soci doesn't access bool
-    unsigned int debugFile = debug;
+    unsigned int debugFile = 0;
+    int fileId = 0;
 
     try
         {
+            soci::statement stmt = (sql.prepare << " update t_file set t_log_file=:filePath, t_log_file_debug=:debugFile where file_id=:fileId and file_state<>'SUBMITTED' ",
+                                    soci::use(filePath),
+                                    soci::use(debugFile),
+                                    soci::use(fileId));
+
             sql.begin();
 
-            soci::statement stmt1 = (
-                                        sql.prepare << " update t_file set t_log_file=:filePath, t_log_file_debug=:debugFile where file_id=:fileId and file_state<>'SUBMITTED' ",
-                                        soci::use(filePath),
-                                        soci::use(debugFile),
-                                        soci::use(fileId));
-            stmt1.execute(true);
+            std::map<int, struct message_log>::const_iterator iterLog;
+            for (iterLog = messagesLog.begin(); iterLog != messagesLog.end(); ++iterLog)
+                {
+                    filePath = ((*iterLog).second).filePath;
+                    fileId = ((*iterLog).second).file_id;
+                    debugFile = ((*iterLog).second).debugFile;
+                    stmt.execute(true);
+                }
 
             sql.commit();
 
@@ -5999,7 +6044,7 @@ void MySqlAPI::transferLogFile(const std::string& filePath, const std::string& /
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
 }
 
