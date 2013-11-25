@@ -308,7 +308,6 @@ TransferJobs* MySqlAPI::getTransferJob(std::string jobId, bool archive)
     TransferJobs* job = NULL;
     try
         {
-    	    sql << "SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED";
             job = new TransferJobs();
 
             sql << query,
@@ -325,18 +324,16 @@ TransferJobs* MySqlAPI::getTransferJob(std::string jobId, bool archive)
         {
             if(job)
                 delete job;
-	    sql.commit();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             if(job)
                 delete job;
-	    sql.commit();		
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 	
-    sql.commit();
+
     return job;
 }
 
@@ -966,7 +963,6 @@ void MySqlAPI::getTransferJobStatus(std::string requestID, bool archive, std::ve
 
     try
         {
-   	    sql << "SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED";
             long long numFiles = 0;
             sql << fileCountQuery, soci::use(requestID), soci::into(numFiles);
 
@@ -990,7 +986,6 @@ void MySqlAPI::getTransferJobStatus(std::string requestID, bool archive, std::ve
                         delete (*it);
                 }
             jobs.clear();
-	    sql.commit();
             throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
         }
     catch (...)
@@ -1002,10 +997,8 @@ void MySqlAPI::getTransferJobStatus(std::string requestID, bool archive, std::ve
                         delete (*it);
                 }
             jobs.clear();
-	    sql.commit();	    
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
-    sql.commit();	
 }
 
 
@@ -1022,7 +1015,6 @@ void MySqlAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::stri
     try
         {
 	
-   	    sql << "SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED";
 	    
             std::ostringstream query;
             soci::statement stmt(sql);
@@ -1110,7 +1102,6 @@ void MySqlAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::stri
                         delete (*it);
                 }
             jobs.clear();
-	    sql.commit();
             throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
         }
     catch (...)
@@ -1122,10 +1113,8 @@ void MySqlAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::stri
                         delete (*it);
                 }
             jobs.clear();
-	    sql.commit();	    
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
-    sql.commit();	
 }
 
 
@@ -1139,7 +1128,6 @@ void MySqlAPI::getTransferFileStatus(std::string requestID, bool archive,
         {
             std::string query;
 	    
-	    sql << "SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED";
 
             if (archive)
                 {
@@ -1190,7 +1178,6 @@ void MySqlAPI::getTransferFileStatus(std::string requestID, bool archive,
                         delete (*it);
                 }
             files.clear();
-	    sql.commit();
             throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
         }
     catch (...)
@@ -1202,10 +1189,8 @@ void MySqlAPI::getTransferFileStatus(std::string requestID, bool archive,
                         delete (*it);
                 }
             files.clear();
-	    sql.commit();	    
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
-    sql.commit();
 }
 
 
