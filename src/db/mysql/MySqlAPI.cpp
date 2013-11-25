@@ -7129,7 +7129,7 @@ void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId, int retry
             if (retry_delay > 0)
                 {
                     // update
-                    time_t now = convertToUTC(retry_delay);
+                    time_t now = getUTC(retry_delay);
                     struct tm tTime;
                     gmtime_r(&now, &tTime);
 
@@ -7140,7 +7140,7 @@ void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId, int retry
             else
                 {
                     // update
-                    time_t now = convertToUTC(default_retry_delay);
+                    time_t now = getUTC(default_retry_delay);
                     struct tm tTime;
                     gmtime_r(&now, &tTime);
 
