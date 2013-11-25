@@ -7080,7 +7080,7 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
             // Keep log
             sql << "INSERT INTO t_file_retry_errors "
                 "    (file_id, attempt, datetime, reason) "
-                "VALUES (:fileId, :attempt, UTC_TIMESTAMP(), :reason)",
+                "VALUES (:fileId, :attempt, sys_extract_utc(systimestamp), :reason)",
                 soci::use(fileId), soci::use(retry), soci::use(reason);
 
             sql.commit();
