@@ -31,7 +31,35 @@
 #include "sociConversions.h"
 #include "queue_updater.h"
 
+#include <netdb.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+
 using namespace FTS3_COMMON_NAMESPACE;
+
+/**
+ * Return the full qualified hostname
+ */
+std::string getFullHostname()
+{
+    char hostname[MAXHOSTNAMELEN] = {0};
+    gethostname(hostname, sizeof(hostname));
+
+    struct addrinfo hints, *info;
+    memset(&hints, 0, sizeof(hints));
+
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_CANONNAME;
+
+    // First is OK
+    if (getaddrinfo(hostname, NULL, &hints, &info) == 0)
+        {
+            strncpy(hostname, info->ai_canonname, sizeof(hostname));
+            freeaddrinfo(info);
+        }
+    return hostname;
+}
 
 
 
@@ -169,9 +197,7 @@ static int extractTimeout(std::string & str)
 
 MySqlAPI::MySqlAPI(): poolSize(10), connectionPool(NULL)
 {
-    char chname[MAXHOSTNAMELEN]= {0};
-    gethostname(chname, sizeof(chname));
-    hostname.assign(chname);
+    hostname = getFullHostname();
 }
 
 

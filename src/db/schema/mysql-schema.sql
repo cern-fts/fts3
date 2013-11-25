@@ -677,17 +677,26 @@ CREATE TABLE t_optimize_active (
 --
 -- t_job indexes:
 -- t_job(job_id) is primary key
-CREATE INDEX job_job_state    ON t_job(job_state, vo_name, job_finished, submit_time);
-CREATE INDEX job_reuse  ON t_job(reuse_job); 
+CREATE INDEX job_job_state ON t_job(job_state, vo_name, job_finished, submit_time);
+CREATE INDEX job_vo_name ON t_job(vo_name);
+CREATE INDEX job_jobfinished_id ON t_job(job_finished);
+CREATE INDEX job_priority ON t_job(priority, submit_time);
+CREATE INDEX t_job_submit_host ON t_job(submit_host);
+CREATE INDEX job_reuse ON t_job(reuse_job);
 
 
 -- t_file indexes:
 -- t_file(file_id) is primary key
-CREATE INDEX file_job_id     ON t_file(job_id);
+CREATE INDEX file_job_id ON t_file(job_id);
+CREATE INDEX file_jobfinished_id ON t_file(job_finished);
+CREATE INDEX file_source_dest ON t_file(source_se, dest_se, file_state);
+CREATE INDEX t_waittimeout ON t_file(wait_timeout);
+CREATE INDEX file_id_hashed ON t_file(hashed_id, file_state);
+CREATE INDEX t_retry_timestamp ON t_file(retry_timestamp);
 CREATE INDEX t_file_select ON t_file(dest_se, source_se, job_finished, file_state );
 CREATE INDEX file_vo_name_state ON t_file(file_state, vo_name, source_se, dest_se);
-CREATE INDEX file_source_dest ON t_file(source_se, dest_se, file_state); 
-CREATE INDEX t_waittimeout ON t_file(wait_timeout); 
+CREATE INDEX file_vo_nameON t_file(vo_name, source_se, dest_se, file_state);
+CREATE INDEX file_tr_host ON t_file(transferHost, file_state);
 
 CREATE INDEX optimize_source_a         ON t_optimize(source_se,dest_se);
 

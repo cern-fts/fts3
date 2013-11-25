@@ -26,7 +26,37 @@ limitations under the License. */
 #include <math.h>
 #include "queue_updater.h"
 
+#include <netdb.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+
 using namespace FTS3_COMMON_NAMESPACE;
+
+/**
+ * Return the full qualified hostname
+ */
+std::string getFullHostname()
+{
+    char hostname[MAXHOSTNAMELEN] = {0};
+    gethostname(hostname, sizeof(hostname));
+
+    struct addrinfo hints, *info;
+    memset(&hints, 0, sizeof(hints));
+
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_CANONNAME;
+
+    // First is OK
+    if (getaddrinfo(hostname, NULL, &hints, &info) == 0)
+        {
+            strncpy(hostname, info->ai_canonname, sizeof(hostname));
+            freeaddrinfo(info);
+        }
+    return hostname;
+}
+
+
 
 
 static std::string _getTrTimestampUTC()
@@ -102,9 +132,7 @@ void OracleAPI::init(std::string username, std::string password, std::string con
     if (!conv)
         conv = new OracleTypeConversions();
 
-    char hostname[MAXHOSTNAMELEN];
-    gethostname(hostname, MAXHOSTNAMELEN);
-    ftsHostName = std::string(hostname);
+    ftsHostName = getFullHostname();
 }
 
 bool OracleAPI::getInOutOfSe(const std::string & sourceSe, const std::string & destSe)
