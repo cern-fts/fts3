@@ -1886,7 +1886,7 @@ void OracleAPI::updateFileTransferProgressVector(std::vector<struct message_upda
 
     try
         {
-            soci::statement stmt = (sql.prepare << "UPDATE t_file SET throughput = :throughput WHERE file_id = :fileId and (throughput is NULL or throughput=0)",
+            soci::statement stmt = (sql.prepare << "UPDATE t_file SET throughput = :throughput WHERE file_id = :fileId ",
                                     soci::use(throughput), soci::use(file_id));
 
             sql.begin();
