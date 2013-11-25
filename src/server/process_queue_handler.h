@@ -233,16 +233,6 @@ protected:
                         msgUpdater.transferred = 0.0;
                         ThreadSafeList::get_instance().updateMsg(msgUpdater);
 
-                        if(!messagesLog.empty())
-                            {
-                                std::map<int, struct message_log>::const_iterator iterLog = messagesLog.find(msgUpdater.file_id);
-                                if(iterLog != messagesLog.end())
-                                    {
-                                        DBSingleton::instance().getDBObjectInstance()->
-                                        transferLogFile( ((*iterLog).second).filePath, jobId , ((*iterLog).second).file_id, ((*iterLog).second).debugFile);
-                                    }
-                            }
-
                         if (iter->msg_errno == 0)
                             {
                                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job id:" << jobId
@@ -264,14 +254,56 @@ protected:
         catch (const fs::filesystem_error& e)
             {
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Caught exception " << e.what() << commit;
+                std::vector<struct message>::const_iterator iterBreak;
+                for (iterBreak = messages.begin(); iterBreak != messages.end(); ++iterBreak)
+                    {
+                        struct message msgBreak = (*iterBreak);
+                        runProducerStatus( msgBreak);
+                    }
+
+                std::map<int, struct message_log>::const_iterator iterLogBreak;
+                for (iterLogBreak = messagesLog.begin(); iterLogBreak != messagesLog.end(); ++iterLogBreak)
+                    {
+                        struct message_log msgLogBreak = (*iterLogBreak).second;
+                        runProducerLog( msgLogBreak );
+                    }
+
             }
         catch (std::exception& ex)
             {
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Caught exception " << ex.what() << commit;
+                std::vector<struct message>::const_iterator iterBreak;
+                for (iterBreak = messages.begin(); iterBreak != messages.end(); ++iterBreak)
+                    {
+                        struct message msgBreak = (*iterBreak);
+                        runProducerStatus( msgBreak);
+                    }
+
+                std::map<int, struct message_log>::const_iterator iterLogBreak;
+                for (iterLogBreak = messagesLog.begin(); iterLogBreak != messagesLog.end(); ++iterLogBreak)
+                    {
+                        struct message_log msgLogBreak = (*iterLogBreak).second;
+                        runProducerLog( msgLogBreak );
+                    }
+
             }
         catch (...)
             {
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Caught exception " << commit;
+                std::vector<struct message>::const_iterator iterBreak;
+                for (iterBreak = messages.begin(); iterBreak != messages.end(); ++iterBreak)
+                    {
+                        struct message msgBreak = (*iterBreak);
+                        runProducerStatus( msgBreak);
+                    }
+
+                std::map<int, struct message_log>::const_iterator iterLogBreak;
+                for (iterLogBreak = messagesLog.begin(); iterLogBreak != messagesLog.end(); ++iterLogBreak)
+                    {
+                        struct message_log msgLogBreak = (*iterLogBreak).second;
+                        runProducerLog( msgLogBreak );
+                    }
+
             }
     }
 
@@ -279,6 +311,8 @@ protected:
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a()
     {
+        int logInterval = 0;
+
         while (1)   /*need to receive more than one messages at a time*/
             {
                 try
@@ -297,13 +331,23 @@ protected:
                                     }
                             }
 
-                        if (!fs::is_empty(fs::path(LOG_DIR)))
+                        if(++logInterval > 10)
                             {
-                                if(runConsumerLog(messagesLog) != 0)
+                                if (!fs::is_empty(fs::path(LOG_DIR)))
                                     {
-                                        char buffer[128]= {0};
-                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the log messages:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
+                                        if(runConsumerLog(messagesLog) != 0)
+                                            {
+                                                char buffer[128]= {0};
+                                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the log messages:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
+                                            }
                                     }
+
+                                if(!messagesLog.empty())
+                                    {
+                                        DBSingleton::instance().getDBObjectInstance()->transferLogFileVector(messagesLog);
+                                        messagesLog.clear();
+                                    }
+                                logInterval = 0;
                             }
 
                         if(!messages.empty())
@@ -342,36 +386,73 @@ protected:
                                 messages.clear();
                             }
 
-                        if(!messagesLog.empty())
-                            {
-                                std::map<int, struct message_log>::const_iterator iterLog;
-                                for (iterLog = messagesLog.begin(); iterLog != messagesLog.end(); iterLog++)
-                                    {
-                                        std::string jobId = std::string(((*iterLog).second).job_id).substr(0, 36);
-                                        DBSingleton::instance().getDBObjectInstance()->
-                                        transferLogFile( ((*iterLog).second).filePath, jobId , ((*iterLog).second).file_id, ((*iterLog).second).debugFile);
-                                    }
-                                messagesLog.clear();
-                            }
                         usleep(300000);
                     }
                 catch (const fs::filesystem_error& ex)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
 
+                        std::vector<struct message>::const_iterator iterBreak;
+                        for (iterBreak = messages.begin(); iterBreak != messages.end(); ++iterBreak)
+                            {
+                                struct message msgBreak = (*iterBreak);
+                                runProducerStatus( msgBreak);
+                            }
+
+                        std::map<int, struct message_log>::const_iterator iterLogBreak;
+                        for (iterLogBreak = messagesLog.begin(); iterLogBreak != messagesLog.end(); ++iterLogBreak)
+                            {
+                                struct message_log msgLogBreak = (*iterLogBreak).second;
+                                runProducerLog( msgLogBreak );
+                            }
+
+
                         usleep(300000);
+                        logInterval = 0;
                     }
                 catch (std::exception& ex2)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex2.what() << commit;
 
+                        std::vector<struct message>::const_iterator iterBreak;
+                        for (iterBreak = messages.begin(); iterBreak != messages.end(); ++iterBreak)
+                            {
+                                struct message msgBreak = (*iterBreak);
+                                runProducerStatus( msgBreak);
+                            }
+
+                        std::map<int, struct message_log>::const_iterator iterLogBreak;
+                        for (iterLogBreak = messagesLog.begin(); iterLogBreak != messagesLog.end(); ++iterLogBreak)
+                            {
+                                struct message_log msgLogBreak = (*iterLogBreak).second;
+                                runProducerLog( msgLogBreak );
+                            }
+
+
                         usleep(300000);
+                        logInterval = 0;
                     }
                 catch (...)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue thrown unhandled exception" << commit;
 
+                        std::vector<struct message>::const_iterator iterBreak;
+                        for (iterBreak = messages.begin(); iterBreak != messages.end(); ++iterBreak)
+                            {
+                                struct message msgBreak = (*iterBreak);
+                                runProducerStatus( msgBreak);
+                            }
+
+                        std::map<int, struct message_log>::const_iterator iterLogBreak;
+                        for (iterLogBreak = messagesLog.begin(); iterLogBreak != messagesLog.end(); ++iterLogBreak)
+                            {
+                                struct message_log msgLogBreak = (*iterLogBreak).second;
+                                runProducerLog( msgLogBreak );
+                            }
+
+
                         usleep(300000);
+                        logInterval = 0;
                     }
             }
     }
