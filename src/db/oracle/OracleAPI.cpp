@@ -1898,7 +1898,7 @@ void OracleAPI::updateFileTransferProgressVector(std::vector<struct message_upda
                         {
                             if((*iter).throughput != 0)
                                 {
-                                    throughput = (*iter).throughput;
+                                    throughput = convertKbToMb((*iter).throughput);
                                     file_id = (*iter).file_id;
                                     stmt.execute(true);
                                 }
