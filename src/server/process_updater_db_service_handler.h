@@ -99,16 +99,6 @@ public:
 protected:
     std::vector<struct message_updater> messages;
 
-    void killRunningJob(std::vector<int>& requestIDs)
-    {
-        std::vector<int>::const_iterator iter;
-        for (iter = requestIDs.begin(); iter != requestIDs.end(); ++iter)
-            {
-                int pid = *iter;
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Canceling and killing running processes: " << pid << commit;
-                kill(pid, SIGTERM);
-            }
-    }
 
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a()
@@ -141,9 +131,9 @@ protected:
                                         for (iter = messages.begin(); iter != messages.end(); ++iter)
                                             {
                                                 SingleTrStateInstance::instance().sendStateMessage((*iter).job_id, (*iter).file_id);
-                                            }
-                                        messages.clear();
+                                            }                                        
                                     }
+				messages.clear();				    
                             }
 
 
@@ -228,11 +218,21 @@ protected:
                                                        << e.what()
                                                        << commit;
                         sleep(1);
+			counter1 = 0;
+			counterFailAll = 0;
+			countReverted = 0;
+			counter2 = 0;
+			counterTimeoutWaiting = 0;			
                     }
                 catch (...)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
                         sleep(1);
+			counter1 = 0;
+			counterFailAll = 0;
+			countReverted = 0;
+			counter2 = 0;
+			counterTimeoutWaiting = 0;						
                     }
                 sleep(1);
             }

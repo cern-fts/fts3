@@ -114,8 +114,7 @@ void FileTransferExecutor::execute()
                                 }
                             else
                                 {
-                                    OptimizerSample* opt_config = new OptimizerSample();
-                                    db->initOptimizer(source_hostname, destin_hostname, 0);
+                                    OptimizerSample* opt_config = new OptimizerSample();                                   
                                     db->fetchOptimizationConfig2(opt_config, source_hostname, destin_hostname);
                                     BufSize = opt_config->getBufSize();
                                     StreamsperFile = opt_config->getStreamsperFile();
@@ -410,7 +409,6 @@ void FileTransferExecutor::execute()
                                                     DBSingleton::instance().getDBObjectInstance()->updateFileTransferStatus(0.0, temp->JOB_ID, temp->FILE_ID, "ACTIVE", "",(int) pr->getPid(), 0, 0);
                                                     DBSingleton::instance().getDBObjectInstance()->updateJobTransferStatus(0, temp->JOB_ID, "ACTIVE");
                                                     SingleTrStateInstance::instance().sendStateMessage(temp->JOB_ID, temp->FILE_ID);
-                                                    DBSingleton::instance().getDBObjectInstance()->setPid(temp->JOB_ID, temp->FILE_ID, pr->getPid());
                                                     struct message_updater msg;
                                                     strcpy(msg.job_id, std::string(temp->JOB_ID).c_str());
                                                     msg.file_id = temp->FILE_ID;
