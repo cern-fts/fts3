@@ -1948,7 +1948,7 @@ void MySqlAPI::updateFileTransferProgressVector(std::vector<struct message_updat
                                 {
                                     throughput = (*iter).throughput;
                                     file_id = (*iter).file_id;
-                                    stmt.execute(true);
+                                    stmt.execute();
                                 }
                         }
                     else
