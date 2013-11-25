@@ -84,7 +84,7 @@ def setupFilters(filterForm):
 
 def jobListing(httpRequest, jobModel = Job, filters = None):
     # Initial query
-    jobs = jobModel.objects.extra(select = {'nullFinished': 'coalesce(job_finished, CURRENT_TIMESTAMP)'})
+    jobs = jobModel.objects
     
     # Convert startdate and enddate to datetime
     startdate = enddate = None
@@ -121,15 +121,15 @@ def jobListing(httpRequest, jobModel = Job, filters = None):
     jobs = jobs.values('job_id', 'submit_host', 'submit_time', 'job_state', 'job_finished',
                        'vo_name', 'source_space_token', 'space_token',
                        'priority', 'user_dn', 'reason',
-                       'job_metadata', 'nullFinished', 'source_se', 'dest_se')
+                       'job_metadata', 'source_se', 'dest_se')
     
     # Ordering
     (orderBy, orderDesc) = getOrderBy(httpRequest)
 
     if orderBy == 'submit_time' and not orderDesc:
-        jobs = jobs.order_by('nullFinished', 'submit_time')
+        jobs = jobs.order_by('submit_time')
     else:    
-        jobs = jobs.order_by('-nullFinished', '-submit_time')
+        jobs = jobs.order_by('-submit_time')
     
     # Wrap with a metadata filterer
     msg = None
@@ -240,7 +240,7 @@ def transferList(httpRequest):
     if not filters['time_window']:
         filters['time_window'] = 12
     
-    transfers = File.objects.extra(select = {'nullFinished': 'coalesce(t_file.job_finished, CURRENT_TIMESTAMP)'})
+    transfers = File.objects
     if filters['state']:
         transfers = transfers.filter(file_state__in = filters['state'])
     else:
@@ -255,7 +255,7 @@ def transferList(httpRequest):
         notBefore =  datetime.datetime.utcnow() - datetime.timedelta(hours = filters['time_window'])
         transfers = transfers.filter(Q(job_finished__isnull = True) | (Q(job_finished__gte = notBefore)))
    
-    transfers = transfers.values('nullFinished', 'file_id', 'file_state', 'job_id',
+    transfers = transfers.values('file_id', 'file_state', 'job_id',
                                  'source_se', 'dest_se', 'start_time', 'job__submit_time', 'job__priority')
 
     # Ordering
@@ -269,6 +269,6 @@ def transferList(httpRequest):
     elif orderBy == 'start_time':
         transfers = transfers.order_by(orderedField('start_time', orderDesc))
     else:
-        transfers = transfers.order_by('-nullFinished', '-job__priority', '-file_id')
+        transfers = transfers.order_by('-job__priority', '-file_id')
      
     return transfers
