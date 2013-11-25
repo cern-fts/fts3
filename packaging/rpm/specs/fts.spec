@@ -4,7 +4,7 @@
 
 Name: fts
 Version: 3.1.39
-Release: 1%{?dist}
+Release: 2%{?dist}
 Summary: File Transfer Service V3
 Group: System Environment/Daemons
 License: ASL 2.0
@@ -67,7 +67,7 @@ Requires: fts-libs%{?_isa} = %{version}-%{release}
 Requires: gfal2-plugin-gridftp%{?_isa} >= 2.1.0
 #Requires: gfal2-plugin-http%{?_isa} >= 2.1.0
 Requires: gfal2-plugin-srm%{?_isa} >= 2.1.0
-Requires: gfal2-plugin-xrootd%{?_isa} >= 2.2.0
+Requires: gfal2-plugin-xrootd%{?_isa} >= 0.2.2
 Requires: glue-schema
 Requires: glue-validator
 Requires: gridsite >= 1.7.25
