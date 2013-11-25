@@ -1719,12 +1719,12 @@ void MySqlAPI::updateFileTransferProgressVector(std::vector<struct message_updat
 {
 
     soci::session sql(*connectionPool);
-    double throughput = 0.0;
-    int file_id = 0;
 
     try
         {
-            soci::statement stmt = (sql.prepare << "UPDATE t_file SET throughput = :throughput WHERE file_id = :fileId and (throughput is NULL or throughput=0)",
+            double throughput = 0.0;
+    	    int file_id = 0;
+            soci::statement stmt = (sql.prepare << "UPDATE t_file SET throughput = :throughput WHERE file_id = :fileId ",
                                     soci::use(throughput), soci::use(file_id));
 
             sql.begin();
@@ -1749,7 +1749,6 @@ void MySqlAPI::updateFileTransferProgressVector(std::vector<struct message_updat
                 }
 
             sql.commit();
-
         }
     catch (std::exception& e)
         {
@@ -1761,8 +1760,6 @@ void MySqlAPI::updateFileTransferProgressVector(std::vector<struct message_updat
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
-
-
 }
 
 
