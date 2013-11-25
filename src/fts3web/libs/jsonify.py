@@ -1,4 +1,5 @@
 import json
+import sys
 from datetime import datetime
 from decorator import decorator
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
@@ -65,7 +66,7 @@ def jsonify_paged(f, *args, **kwargs):
     if args[0].GET.get('page', 0) != 'all':
         paginator = Paginator(d, 50)
     else:
-        paginator = Paginator(d, len(d))
+        paginator = Paginator(d, sys.maxint)
     page = getPage(paginator, args[0])
     
     paged = {
