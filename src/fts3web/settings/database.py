@@ -36,3 +36,5 @@ if DATABASES['default']['ENGINE'] == 'django.db.backends.oracle':
 
 if DATABASES['default']['ENGINE'] == 'django.db.backends.mysql':
     DATABASES['default']['OPTIONS']['init_command'] = "SET SESSION TRANSACTION ISOLATION LEVEL READ UNCOMMITTED"
+
+DISABLE_TRANSACTION_MANAGEMENT = True
