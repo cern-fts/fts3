@@ -133,7 +133,7 @@ protected:
                                                 SingleTrStateInstance::instance().sendStateMessage((*iter).job_id, (*iter).file_id);
                                             }                                        
                                     }
-				messages.clear();				    
+                                messages.clear();
                             }
 
 
@@ -145,7 +145,7 @@ protected:
                                 countReverted = 0;
                             }
 
-                        /*this routine is called periodically every 300 ms so 10,000 corresponds to 5 min*/
+                        /*this routine is called periodically every 300 seconds*/
                         counterTimeoutWaiting++;
                         if (counterTimeoutWaiting == 300)
                             {
@@ -218,21 +218,21 @@ protected:
                                                        << e.what()
                                                        << commit;
                         sleep(1);
-			counter1 = 0;
-			counterFailAll = 0;
-			countReverted = 0;
-			counter2 = 0;
-			counterTimeoutWaiting = 0;			
+                        counter1 = 0;
+                        counterFailAll = 0;
+                        countReverted = 0;
+                        counter2 = 0;
+                        counterTimeoutWaiting = 0;
                     }
                 catch (...)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
                         sleep(1);
-			counter1 = 0;
-			counterFailAll = 0;
-			countReverted = 0;
-			counter2 = 0;
-			counterTimeoutWaiting = 0;						
+                        counter1 = 0;
+                        counterFailAll = 0;
+                        countReverted = 0;
+                        counter2 = 0;
+                        counterTimeoutWaiting = 0;
                     }
                 sleep(1);
             }
