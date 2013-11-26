@@ -6023,17 +6023,17 @@ std::vector<struct message_state> OracleAPI::getStateOfTransfer(const std::strin
             soci::rowset<soci::row>::const_iterator it;
             for (it = rs.begin(); it != rs.end(); ++it)
                 {
-                    ret.job_id = it->get<std::string>("job_id");
-                    ret.job_state = it->get<std::string>("job_state");
-                    ret.vo_name = it->get<std::string>("vo_name");
-                    ret.job_metadata = it->get<std::string>("job_metadata","");
-                    ret.retry_max = it->get<int>("retry_max",0);
-                    ret.file_id = it->get<int>("file_id");
-                    ret.file_state = it->get<std::string>("file_state");
-                    ret.retry_counter = it->get<int>("retry_counter",0);
-                    ret.file_metadata = it->get<std::string>("file_metadata","");
-                    ret.source_se = it->get<std::string>("source_se");
-                    ret.dest_se = it->get<std::string>("dest_se");
+                    ret.job_id = it->get<std::string>("JOB_ID");
+                    ret.job_state = it->get<std::string>("JOB_STATE");
+                    ret.vo_name = it->get<std::string>("VO_NAME");
+                    ret.job_metadata = it->get<std::string>("JOB_METADATA","");
+                    ret.retry_max = static_cast<int>(it->get<long long>("RETRY_MAX", 0));
+                    ret.file_id = static_cast<int>(it->get<long long>("FILE_ID"));
+                    ret.file_state = it->get<std::string>("FILE_STATE");
+                    ret.retry_counter = static_cast<int>(it->get<double>("RETRY_COUNTER",0));
+                    ret.file_metadata = it->get<std::string>("FILE_METADATA","");
+                    ret.source_se = it->get<std::string>("SOURCE_SE");
+                    ret.dest_se = it->get<std::string>("DEST_SE");
                     ret.timestamp = getStrUTCTimestamp();
 
                     if(ret.retry_max == 0)
