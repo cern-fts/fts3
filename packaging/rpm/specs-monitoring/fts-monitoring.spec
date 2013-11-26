@@ -40,10 +40,11 @@ It also labels /var/log/fts3/ with httpd_sys_content_t, so the log files
 can be served.
 
 %post selinux
-if [ "$1" -le "1" ] ; then # First install
+if [ $1 -gt 0 ] ; then # First install
     semanage port -a -t http_port_t -p tcp 8449
     setsebool -P httpd_can_network_connect=1 
-    chcon -R system_u:object_r:httpd_sys_content_t:s0 /var/log/fts3/
+    semanage fcontext -a -t httpd_sys_content_t "/var/log/fts3(/.*)?"
+    restorecon -R /var/log/fts3/
     libnzz="/usr/lib64/oracle/11.2.0.3.0/client/lib64/libnnz11.so"
     if [ -f "$libnzz" ]; then
         execstack -c "$libnzz"
@@ -51,10 +52,11 @@ if [ "$1" -le "1" ] ; then # First install
 fi
 
 %preun selinux
-if [ "$1" -lt "1" ] ; then # Final removal
+if [ $1 -eq 0 ] ; then # Final removal
     semanage port -d -t http_port_t -p tcp 8449
     setsebool -P httpd_can_network_connect=0
-    chcon -R system_u:object_r:var_log_t:s0 /var/log/fts3/
+    semanage fcontext -d -t httpd_sys_content_t "/var/log/fts3(/.*)?"
+    restorecon -R /var/log/fts3
     libnzz="/usr/lib64/oracle/11.2.0.3.0/client/lib64/libnnz11.so"
     if [ -f "$libnzz" ]; then
         execstack -s "$libnzz"
