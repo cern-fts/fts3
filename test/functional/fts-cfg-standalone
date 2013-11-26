@@ -60,6 +60,7 @@ class TestCfgStandAlone(base.TestBase):
         jobIds = []
         for (src, dst) in transfers:
             jobIds.append(self.client.submit([{'sources': [src], 'destinations': [dst]}]))
+        logging.info("Jobs ids: %s" % (', '.join(jobIds)))
         # Query state and count actives
         logging.info("Entering polling...")
         submittedCount = len(transfers)
