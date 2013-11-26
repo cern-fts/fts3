@@ -6233,7 +6233,7 @@ void OracleAPI::cancelWaitingFiles(std::set<std::string>& jobs)
                                              " SELECT file_id, job_id "
                                              " FROM t_file "
                                              " WHERE wait_timeout <> 0 "
-                                             "  AND TIMESTAMPDIFF(SECOND, wait_timestamp, sys_extract_utc(systimestamp)) > wait_timeout "
+                                             "  AND (sys_extract_utc(systimestamp) - wait_timestamp) > numtodsinterval(wait_timeout, 'second') "
                                              "  AND file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED')"
                                          );
 
