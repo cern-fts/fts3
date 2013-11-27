@@ -18,14 +18,17 @@
             <th style="width: 15%">Job Id</th>
             <th style="width: 19%">Source</th>
             <th style="width: 19%">Destination</th>
-            <th style="width: 9%">
+            <th style="width: 6%">
                 <span order-by="priority">Priority</span>
             </th>
-            <th style="width: 12%">
+            <th style="width: 9%">
                 <span order-by="submit_time">Submision time</span>
             </th>
-            <th style="width: 12%">
+            <th style="width: 9%">
                 <span order-by="start_time">Start time</span>
+            </th>
+            <th style="width: 9%">
+                <span order-by="finish_time" title="Job finish time">Finish time*</span>
             </th>
         </tr>
     </thead>
@@ -41,6 +44,7 @@
             <td style="text-align: center">{{t.job__priority}}</td>
             <td>{{t.job__submit_time}}</td>
             <td>{{t.start_time}}</td>
+            <td>{{t.job_finished}}</td>
         </tr>
     </tbody>
 </table>

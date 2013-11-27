@@ -267,7 +267,8 @@ def transferList(httpRequest):
         transfers = transfers.filter(activity = filters['activity'])
    
     transfers = transfers.values('file_id', 'file_state', 'job_id',
-                                 'source_se', 'dest_se', 'start_time', 'job__submit_time', 'job__priority')
+                                 'source_se', 'dest_se', 'start_time', 'job_finished',
+                                 'job__submit_time', 'job__priority')
 
     # Ordering
     (orderBy, orderDesc) = getOrderBy(httpRequest)
@@ -279,6 +280,8 @@ def transferList(httpRequest):
         transfers = transfers.order_by(orderedField('job__submit_time', orderDesc))
     elif orderBy == 'start_time':
         transfers = transfers.order_by(orderedField('start_time', orderDesc))
+    elif orderBy == 'finish_time':
+        transfers = transfers.order_by(orderedField('job_finished', orderDesc))
     else:
         transfers = transfers.order_by('-job__priority', '-file_id')
      

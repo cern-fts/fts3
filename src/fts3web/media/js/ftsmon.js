@@ -138,6 +138,7 @@ config(function($routeProvider) {
 		link: function(scope, element, attr) {
 			var content = element.text();
 			var field = attr.orderBy;
+			var title = attr.title;
 			var orderedBy = $location.search().orderby;
 			if (!orderedBy)
 				orderedBy = '';
@@ -159,7 +160,7 @@ config(function($routeProvider) {
 			}
 			
 			// HTML
-			var html = '<span class="orderby">' + icon + content + '</span>';
+			var html = '<span class="orderby" title="' + title + '">' + icon + content + '</span>';
 			var replacement = angular.element(html);
 			
 			// Bind the method
