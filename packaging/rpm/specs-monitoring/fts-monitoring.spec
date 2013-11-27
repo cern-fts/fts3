@@ -1,7 +1,7 @@
 Summary: FTS3 Web Application for monitoring
 Name: fts-monitoring
 Version: 3.1.41
-Release: 1%{?dist}
+Release: 2%{?dist}
 URL: https://svnweb.cern.ch/trac/fts3
 License: ASL 2.0
 Group: Applications/Internet
@@ -25,6 +25,9 @@ including the queue with submitted transfer-jobs,
 the active, failed and finished transfers, as well
 as some statistics (e.g. success rate)
 
+%post
+service httpd condrestart
+
 %package selinux
 Summary:		SELinux support for fts-monitoring
 Group:			Applications/Internet
@@ -37,10 +40,11 @@ It also labels /var/log/fts3/ with httpd_sys_content_t, so the log files
 can be served.
 
 %post selinux
-if [ "$1" -le "1" ] ; then # First install
+if [ $1 -gt 0 ] ; then # First install
     semanage port -a -t http_port_t -p tcp 8449
     setsebool -P httpd_can_network_connect=1 
-    chcon -R system_u:object_r:httpd_sys_content_t:s0 /var/log/fts3/
+    semanage fcontext -a -t httpd_sys_content_t "/var/log/fts3(/.*)?"
+    restorecon -R /var/log/fts3/
     libnzz="/usr/lib64/oracle/11.2.0.3.0/client/lib64/libnnz11.so"
     if [ -f "$libnzz" ]; then
         execstack -c "$libnzz"
@@ -48,10 +52,11 @@ if [ "$1" -le "1" ] ; then # First install
 fi
 
 %preun selinux
-if [ "$1" -lt "1" ] ; then # Final removal
+if [ $1 -eq 0 ] ; then # Final removal
     semanage port -d -t http_port_t -p tcp 8449
     setsebool -P httpd_can_network_connect=0
-    chcon -R system_u:object_r:var_log_t:s0 /var/log/fts3/
+    semanage fcontext -d -t httpd_sys_content_t "/var/log/fts3(/.*)?"
+    restorecon -R /var/log/fts3
     libnzz="/usr/lib64/oracle/11.2.0.3.0/client/lib64/libnnz11.so"
     if [ -f "$libnzz" ]; then
         execstack -s "$libnzz"
@@ -83,6 +88,11 @@ install -m 644 httpd.conf.d/ftsmon.conf           %{buildroot}%{_sysconfdir}/htt
 %files selinux
 
 %changelog
+ * Wed Nov 27 2013 Alejandro Alvarez <aalvarez@cern.ch> - 3.1.41-2
+  - Using semanage instead of chcon to get permanent changes in
+    the SELinux context for /var/log/fts3
+  - Restart httpd on installation/upgrade
+
  * Mon Oct 28 2013 Alejandro Alvarez <aalvarez@cern.ch> - 3.1.33-3
   - Added versioned dependency fts-monitoring
 
