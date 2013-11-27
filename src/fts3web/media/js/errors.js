@@ -50,10 +50,9 @@ ErrorsCtrl.resolve = {
     	if (!page || page < 1)
     		page = 1;
     	
-    	Errors.query($location.search(), function(data) {
-    		deferred.resolve(data);
-    		stopLoading($rootScope);
-    	});
+    	Errors.query($location.search(),
+  			  genericSuccessMethod(deferred, $rootScope),
+			  genericFailureMethod(deferred, $rootScope, $location));
     	
     	return deferred.promise;
     }		
@@ -86,10 +85,9 @@ FilesWithErrorCtrl.resolve = {
     	if (!page || page < 1)
     		page = 1;
     	
-    	FilesWithError.query($location.search(), function(data) {
-    		deferred.resolve(data);
-    		stopLoading($rootScope);
-    	});
+    	FilesWithError.query($location.search(),
+  			  genericSuccessMethod(deferred, $rootScope),
+			  genericFailureMethod(deferred, $rootScope, $location));
     	
     	return deferred.promise;
     }

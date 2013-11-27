@@ -41,10 +41,9 @@ ConfigAuditCtrl.resolve = {
     	
     	var deferred = $q.defer();
 
-    	ConfigAudit.query($location.search(), function(data) {
-    		deferred.resolve(data);
-    		stopLoading($rootScope);
-    	});
+    	ConfigAudit.query($location.search(),
+  			  genericSuccessMethod(deferred, $rootScope),
+			  genericFailureMethod(deferred, $rootScope, $location));
     	
     	return deferred.promise;
 	}
@@ -68,11 +67,10 @@ ConfigStatusCtrl.resolve = {
 		
 		var deferred = $q.defer();
 		
-		ConfigServer.all(function(data) {
-			deferred.resolve(data);
-			stopLoading($rootScope);
-		});
-		
+		ConfigServer.all(
+  			  genericSuccessMethod(deferred, $rootScope),
+			  genericFailureMethod(deferred, $rootScope, $location));
+
 		return deferred.promise;
 	},
 	
@@ -81,10 +79,9 @@ ConfigStatusCtrl.resolve = {
 		
 		var deferred = $q.defer();
 		
-		ConfigLinks.query($location.search(), function(data) {
-			deferred.resolve(data);
-			stopLoading($rootScope);
-		});
+		ConfigLinks.query($location.search(),
+  			  genericSuccessMethod(deferred, $rootScope),
+			  genericFailureMethod(deferred, $rootScope, $location));
 		
 		return deferred.promise;
 	}

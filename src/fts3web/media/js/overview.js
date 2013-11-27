@@ -93,10 +93,9 @@ OverviewCtrl.resolve = {
 		if (!page || page < 1)
 			page = 1;
 		
-		Overview.query($location.search(), function(data) {
-			deferred.resolve(data);
-			stopLoading($rootScope);
-		});
+		Overview.query($location.search(),
+  			  genericSuccessMethod(deferred, $rootScope),
+			  genericFailureMethod(deferred, $rootScope, $location));
 		
 		return deferred.promise;
 	}

@@ -71,10 +71,9 @@ JobListCtrl.resolve = {
     	if (!page || page < 1)
     		page = 1;
     	
-    	Job.query($location.search(), function(data) {
-    		deferred.resolve(data);
-    		stopLoading($rootScope);
-    	});
+    	Job.query($location.search(),
+  			  genericSuccessMethod(deferred, $rootScope),
+			  genericFailureMethod(deferred, $rootScope, $location));
     	
     	return deferred.promise;
     }
@@ -96,10 +95,9 @@ ArchiveCtrl.resolve = {
     	if (!page || page < 1)
     		page = 1;
     	
-    	ArchivedJobs.query($location.search(), function(data) {
-    		deferred.resolve(data);
-    		stopLoading($rootScope);
-    	});
+    	ArchivedJobs.query($location.search(),
+  			  genericSuccessMethod(deferred, $rootScope),
+			  genericFailureMethod(deferred, $rootScope, $location));
     	
     	return deferred.promise;
     }
@@ -170,15 +168,9 @@ JobViewCtrl.resolve = {
     	if ($route.current.params.reason)
     		filter.reason = $route.current.params.reason;
     	
-    	Job.query(filter, function(data) {
-			deferred.resolve(data);
-			stopLoading($rootScope);
-    	},
-    	function () {
-    		deferred.resolve(false);
-    		stopLoading($rootScope);
-    		$location.path('/404');
-    	});
+    	Job.query(filter,
+    			  genericSuccessMethod(deferred, $rootScope),
+    			  genericFailureMethod(deferred, $rootScope));
     	
     	return deferred.promise;
     },
@@ -190,15 +182,9 @@ JobViewCtrl.resolve = {
 
     	var filter = $location.search();
     	filter.jobId = $route.current.params.jobId
-		Files.query(filter, function(data) {
-			deferred.resolve(data);
-			stopLoading($rootScope);
-		},
-		function () {
-			deferred.resolve(false);
-			stopLoading($rootScope);
-			$location.path('/404');
-		});
+		Files.query(filter,
+  			  genericSuccessMethod(deferred, $rootScope),
+			  genericFailureMethod(deferred, $rootScope, $location));
     	
     	return deferred.promise;
     }

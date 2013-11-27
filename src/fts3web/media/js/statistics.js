@@ -24,10 +24,9 @@ StatsOverviewCtrl.resolve = {
     	if (!page || page < 1)
     		page = 1;
     	
-    	Statistics.query($location.search(), function(data) {
-    		deferred.resolve(data);
-    		stopLoading($rootScope);
-    	});
+    	Statistics.query($location.search(),
+  			  genericSuccessMethod(deferred, $rootScope),
+			  genericFailureMethod(deferred, $rootScope, $location));
     	
     	return deferred.promise;
 	}
@@ -59,10 +58,9 @@ StatsServersCtrl.resolve = {
     	if (!page || page < 1)
     		page = 1;
     	
-    	Servers.query($location.search(), function(data) {
-    		deferred.resolve(data);
-    		stopLoading($rootScope);
-    	});
+    	Servers.query($location.search(),
+  			  genericSuccessMethod(deferred, $rootScope),
+			  genericFailureMethod(deferred, $rootScope, $location));
     	
     	return deferred.promise;
 	}
@@ -109,10 +107,9 @@ StatsVosCtrl.resolve = {
     	if (!page || page < 1)
     		page = 1;
     	
-    	StatsVO.query($location.search(), function(data) {
-    		deferred.resolve(data);
-    		stopLoading($rootScope);
-    	});
+    	StatsVO.query($location.search(),
+  			  genericSuccessMethod(deferred, $rootScope),
+			  genericFailureMethod(deferred, $rootScope, $location));
     	
     	return deferred.promise;
 	}
@@ -144,10 +141,9 @@ StatsProfilingCtrl.resolve = {
     	if (!page || page < 1)
     		page = 1;
     	
-    	Profile.query($location.search(), function(data) {
-    		deferred.resolve(data);
-    		stopLoading($rootScope);
-    	});
+    	Profile.query($location.search(),
+  			  genericSuccessMethod(deferred, $rootScope),
+			  genericFailureMethod(deferred, $rootScope, $location));
     	
     	return deferred.promise;
 	}
@@ -169,10 +165,9 @@ SlowQueriesCtrl.resolve = {
     	if (!page || page < 1)
     		page = 1;
     	
-    	SlowQueries.query($location.search(), function(data) {
-    		deferred.resolve(data);
-    		stopLoading($rootScope);
-    	});
+    	SlowQueries.query($location.search(),
+  			  genericSuccessMethod(deferred, $rootScope),
+			  genericFailureMethod(deferred, $rootScope, $location));
     	
     	return deferred.promise;
 	}

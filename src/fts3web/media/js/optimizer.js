@@ -26,10 +26,9 @@ OptimizerCtrl.resolve = {
     	
     	var deferred = $q.defer();
 
-    	Optimizer.query($location.search(), function(data) {
-    		deferred.resolve(data);
-    		stopLoading($rootScope);
-    	});
+    	Optimizer.query($location.search(),
+  			  genericSuccessMethod(deferred, $rootScope),
+			  genericFailureMethod(deferred, $rootScope, $location));
     	
     	return deferred.promise;
 	}
@@ -64,10 +63,9 @@ OptimizerDetailedCtrl.resolve = {
     	
     	var deferred = $q.defer();
 
-    	OptimizerDetailed.query($location.search(), function(data) {
-    		deferred.resolve(data);
-    		stopLoading($rootScope);
-    	});
+    	OptimizerDetailed.query($location.search(),
+  			  genericSuccessMethod(deferred, $rootScope),
+			  genericFailureMethod(deferred, $rootScope, $location));
     	
     	return deferred.promise;
 	}
@@ -117,10 +115,9 @@ OptimizerDecisionsCtrl.resolve = {
 		
 		var deferred = $q.defer();
 		
-		OptimizerDecisions.query($location.search(), function(data) {
-			deferred.resolve(data);
-			stopLoading($rootScope);
-		});
+		OptimizerDecisions.query($location.search(),
+  			  genericSuccessMethod(deferred, $rootScope),
+			  genericFailureMethod(deferred, $rootScope, $location));
 		
 		return deferred.promise;
 	}

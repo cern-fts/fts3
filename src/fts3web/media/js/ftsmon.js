@@ -62,6 +62,8 @@ config(function($routeProvider) {
         when('/statistics/slowqueries', {templateUrl: STATIC_ROOT + 'html/statistics/slowqueries.html',
                                          controller:  SlowQueriesCtrl,
                                          resolve:     SlowQueriesCtrl.resolve}).
+
+        when('/500',                    {templateUrl: STATIC_ROOT + 'html/500.html'}).
 							         
 		otherwise({templateUrl: STATIC_ROOT + 'html/404.html'});
 })
@@ -338,3 +340,24 @@ function validVo(v)
 		return '';
 }
 
+
+/** Generic callbacks */
+function genericSuccessMethod(deferred, $rootScope) {
+	return function(data) {
+		deferred.resolve(data);
+		stopLoading($rootScope);
+	}
+}
+
+function genericFailureMethod(deferred, $rootScope, $location) {
+	return function (response) {
+		deferred.resolve(false);
+		stopLoading($rootScope);
+		if (response.status == 404)
+			$location.path('/404');
+		else if (response.status == 500)
+			$location.path('/500');
+		else
+			$location.path('/generic-error');
+	}
+}

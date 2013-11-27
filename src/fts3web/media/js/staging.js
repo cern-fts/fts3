@@ -33,10 +33,9 @@ StagingCtrl.resolve = {
     	if (!page || page < 1)
     		page = 1;
     	
-    	Staging.query($location.search(), function(data) {
-    		deferred.resolve(data);
-    		stopLoading($rootScope);
-    	});
+    	Staging.query($location.search(),
+  			  genericSuccessMethod(deferred, $rootScope),
+			  genericFailureMethod(deferred, $rootScope, $location));
     	
     	return deferred.promise;
     }

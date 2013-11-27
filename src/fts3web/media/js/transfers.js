@@ -66,10 +66,9 @@ TransfersCtrl.resolve = {
 		if (!page || page < 1)
 			page = 1;
 		
-		Transfers.query($location.search(), function(data) {
-			deferred.resolve(data);
-			stopLoading($rootScope);
-		});
+		Transfers.query($location.search(),
+  			            genericSuccessMethod(deferred, $rootScope),
+			            genericFailureMethod(deferred, $rootScope, $location));
 		
 		return deferred.promise;
 	}
