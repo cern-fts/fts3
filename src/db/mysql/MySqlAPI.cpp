@@ -332,7 +332,7 @@ TransferJobs* MySqlAPI::getTransferJob(std::string jobId, bool archive)
                 delete job;
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
-	
+
 
     return job;
 }
@@ -1014,8 +1014,8 @@ void MySqlAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::stri
 
     try
         {
-	
-	    
+
+
             std::ostringstream query;
             soci::statement stmt(sql);
             bool searchForCanceling = false;
@@ -1127,7 +1127,7 @@ void MySqlAPI::getTransferFileStatus(std::string requestID, bool archive,
     try
         {
             std::string query;
-	    
+
 
             if (archive)
                 {
@@ -1723,7 +1723,7 @@ void MySqlAPI::updateFileTransferProgressVector(std::vector<struct message_updat
     try
         {
             double throughput = 0.0;
-    	    int file_id = 0;
+            int file_id = 0;
             soci::statement stmt = (sql.prepare << "UPDATE t_file SET throughput = :throughput WHERE file_id = :fileId ",
                                     soci::use(throughput), soci::use(file_id));
 
