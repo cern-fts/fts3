@@ -95,6 +95,7 @@ extern std::string stackTrace;
 gfal_context_t handle = NULL;
 
 
+
 //convert milli to secs
 static double transferDuration(double start , double complete)
 {
@@ -919,8 +920,12 @@ int main(int argc, char **argv)
                 logger.INFO() << "Resetting global timeout thread to " << globalTimeout << " seconds" << std::endl;
 
                 unsigned int experimentalNstreams = adjustStreamsBasedOnSize(statbufsrc.st_size, opts.nStreams);
-                if(!opts.manualConfig || opts.autoTunned || opts.nStreams==0)
-                    opts.nStreams = experimentalNstreams;
+                if(!opts.manualConfig || opts.autoTunned || opts.nStreams==0){
+		     if(true == lanTransfer(fileManagement->getSourceHostname(), fileManagement->getDestHostname()))
+                    	opts.nStreams = (experimentalNstreams * 2) > 20? 20: experimentalNstreams * 2;
+		     else
+		        opts.nStreams = experimentalNstreams;	
+		}
                 gfalt_set_nbstreams(params, opts.nStreams, NULL);
                 nstream_to_string = to_string<unsigned int>(opts.nStreams, std::dec);
                 msg_ifce::getInstance()->set_number_of_streams(&tr_completed, nstream_to_string.c_str());
