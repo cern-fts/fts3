@@ -59,14 +59,26 @@
         <div class="modal-header">
             <h3>Filters</h3>
         </div>
-        <div class="modal-body">
-            <label for="source_se">Source storage element:</label>
-            <input type="text" placeholder="source storage element" id="source_se" ng-model="filter.source_se"
-                   typeahead="source for source in unique.sources | safeFilter:$viewValue"/>
-            
-            <label for="dest_se">Destination storage element:</label>
-            <input type="text" placeholder="destination storage element" name="dest_se" ng-model="filter.dest_se"
-                   typeahead="dest for dest in unique.destinations | safeFilter:$viewValue"/>
+        <div class="modal-body" style="max-height: 600px;">
+            <div class="row-fluid">
+	            <div class="span6">
+		            <label for="source_se">Source storage element:</label>
+		            <input type="text" placeholder="source storage element" id="source_se" ng-model="filter.source_se"
+		                   typeahead="source for source in unique.sources | safeFilter:$viewValue"/>
+	
+	                <label for="source_surl">Source SURL:</label>
+	                <input type="text" placeholder="full source surl" id="source_surl", ng-model="filter.source_surl"/>
+	            </div>
+	
+	            <div class="span6">
+		            <label for="dest_se">Destination storage element:</label>
+		            <input type="text" placeholder="destination storage element" name="dest_se" ng-model="filter.dest_se"
+		                   typeahead="dest for dest in unique.destinations | safeFilter:$viewValue"/>
+		
+		            <label for="dest_surl">Destination SURL:</label>
+		            <input type="text" placeholder="full destination surl" id="dest_surl", ng-model="filter.dest_surl"/>
+	            </div>
+            </div>
     
             <label for="state">State:</label>
             <p class="btn-group">

@@ -85,6 +85,8 @@ class JsonField(forms.CharField):
 class FilterForm(forms.Form):
     source_se   = forms.CharField(required = False)
     dest_se     = forms.CharField(required = False)
+    source_surl = forms.CharField(required = False)
+    dest_surl   = forms.CharField(required = False)
     state       = StateField(required = False)
     vo          = forms.CharField(required = False)
     metadata    = JsonField(required = False)

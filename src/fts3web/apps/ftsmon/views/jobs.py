@@ -64,6 +64,8 @@ def setupFilters(filterForm):
                'vo': None,
                'source_se': None,
                'dest_se': None,
+               'source_surl': None,
+               'dest_surl': None,
                'metadata': None,
                'startdate': None,
                'enddate': None,
@@ -258,6 +260,10 @@ def transferList(httpRequest):
         transfers = transfers.filter(source_se = filters['source_se'])
     if filters['dest_se']:
         transfers = transfers.filter(dest_se = filters['dest_se'])
+    if filters['source_surl']:
+        transfers = transfers.filter(source_surl = filters['source_surl'])
+    if filters['dest_surl']:
+        transfers = transfers.filter(dest_surl = filters['dest_surl'])
     if filters['vo']:
         transfers = transfers.filter(job__vo_name = filters['vo'])
     if filters['time_window']:
@@ -284,5 +290,5 @@ def transferList(httpRequest):
         transfers = transfers.order_by(orderedField('job_finished', orderDesc))
     else:
         transfers = transfers.order_by('-job__priority', '-file_id')
-     
+
     return transfers

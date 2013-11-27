@@ -32,6 +32,8 @@ function TransfersCtrl($location, $scope, transfers, Transfers, Unique)
 		vo:          undefinedAsEmpty($location.search().vo),
 		source_se:   undefinedAsEmpty($location.search().source_se),
 		dest_se:     undefinedAsEmpty($location.search().dest_se),
+		source_surl: undefinedAsEmpty($location.search().source_surl),
+		dest_surl:   undefinedAsEmpty($location.search().dest_surl),
 		time_window: undefinedAsEmpty($location.search().time_window),
 		state:       statesFromString($location.search().state),
 		activity:    undefinedAsEmpty($location.search().activity)
@@ -43,6 +45,8 @@ function TransfersCtrl($location, $scope, transfers, Transfers, Unique)
 			vo:           validVo($scope.filter.vo),
 			source_se:    $scope.filter.source_se,
 			dest_se:      $scope.filter.dest_se,
+			source_surl:  $scope.filter.source_surl,
+			dest_surl:    $scope.filter.dest_surl,
 			time_window:  $scope.filter.time_window,
 			state:        joinStates($scope.filter.state),
 			activity:     $scope.filter.activity
