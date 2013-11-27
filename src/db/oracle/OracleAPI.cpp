@@ -1547,9 +1547,10 @@ void OracleAPI::updateSe(std::string ENDPOINT, std::string SE_TYPE, std::string 
 
 
 bool OracleAPI::updateFileTransferStatus(double throughputIn, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
-                                        int process_id, double filesize, double duration){
-					
-    soci::session sql(*connectionPool);	
+        int process_id, double filesize, double duration)
+{
+
+    soci::session sql(*connectionPool);
     try
         {
             updateFileTransferStatusInternal(sql, throughputIn, job_id, file_id, transfer_status, transfer_message, process_id, filesize, duration);
@@ -1561,8 +1562,8 @@ bool OracleAPI::updateFileTransferStatus(double throughputIn, std::string job_id
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }    					
-  return true;
+        }
+    return true;
 }
 
 
@@ -1695,14 +1696,15 @@ bool OracleAPI::updateFileTransferStatusInternal(soci::session& sql, double thro
     return ok;
 }
 
-bool OracleAPI::updateJobTransferStatus(int fileId, std::string job_id, const std::string status){
+bool OracleAPI::updateJobTransferStatus(int fileId, std::string job_id, const std::string status)
+{
 
-    soci::session sql(*connectionPool);	
-    
+    soci::session sql(*connectionPool);
+
     try
-       {
-        updateJobTransferStatusInternal(sql, fileId, job_id, status);
-       }
+        {
+            updateJobTransferStatusInternal(sql, fileId, job_id, status);
+        }
     catch (std::exception& e)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
@@ -1711,7 +1713,7 @@ bool OracleAPI::updateJobTransferStatus(int fileId, std::string job_id, const st
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
-   return true;	
+    return true;
 }
 
 
@@ -3223,8 +3225,8 @@ void OracleAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                                         }
                                     collectJobs.insert(std::make_pair<int, std::string > (fileId, jobId));
                                     updateFileTransferStatusInternal(sql, 0.0, jobId, fileId,
-                                                             "FAILED", "Transfer has been forced-killed because it was stalled",
-                                                             pid, 0, 0);
+                                                                     "FAILED", "Transfer has been forced-killed because it was stalled",
+                                                                     pid, 0, 0);
                                     updateJobTransferStatusInternal(sql, fileId, jobId, "FAILED");
                                 }
 
@@ -5752,35 +5754,35 @@ double OracleAPI::getAvgThroughput(std::string source_hostname, std::string dest
 {
     soci::session sql(*connectionPool);
 
-    		    double throughput=0.0;
-                    double filesize = 0.0;
-		    double totalSize = 0.0;
+    double throughput=0.0;
+    double filesize = 0.0;
+    double totalSize = 0.0;
 
     try
         {
-                   // Weighted average for the 5 newest transfers
-                    soci::rowset<soci::row>  rsSizeAndThroughput = (sql.prepare <<
-                                           " SELECT * FROM ("
-                                           " SELECT rownum as rn, filesize, throughput "
-                                           " FROM t_file "
-                                           " WHERE source_se = :source AND dest_se = :dest AND "
-                                           "       file_state IN ('ACTIVE','FINISHED') AND throughput > 0 AND "
-                                           "       filesize > 0  AND "
-                                           "       (start_time >= (sys_extract_utc(systimestamp) - interval '5' minute) OR "
-                                           "        job_finished >= (sys_extract_utc(systimestamp) - interval '5' minute)) "
-                                           " ORDER BY job_finished DESC)"
-                                           " WHERE rn <= 5 ",
-                                           soci::use(source_hostname),soci::use(destin_hostname));
+            // Weighted average for the 5 newest transfers
+            soci::rowset<soci::row>  rsSizeAndThroughput = (sql.prepare <<
+                    " SELECT * FROM ("
+                    " SELECT rownum as rn, filesize, throughput "
+                    " FROM t_file "
+                    " WHERE source_se = :source AND dest_se = :dest AND "
+                    "       file_state IN ('ACTIVE','FINISHED') AND throughput > 0 AND "
+                    "       filesize > 0  AND "
+                    "       (start_time >= (sys_extract_utc(systimestamp) - interval '5' minute) OR "
+                    "        job_finished >= (sys_extract_utc(systimestamp) - interval '5' minute)) "
+                    " ORDER BY job_finished DESC)"
+                    " WHERE rn <= 5 ",
+                    soci::use(source_hostname),soci::use(destin_hostname));
 
-                    for (soci::rowset<soci::row>::const_iterator j = rsSizeAndThroughput.begin();
-                            j != rsSizeAndThroughput.end(); ++j)
-                        {
-                            filesize    = static_cast<double>(j->get<long long>("FILESIZE", 0));
-                            throughput += (j->get<double>("THROUGHPUT", 0) * filesize);
-                            totalSize  += filesize;
-                        }
-                    if (totalSize > 0)
-                        throughput /= totalSize;
+            for (soci::rowset<soci::row>::const_iterator j = rsSizeAndThroughput.begin();
+                    j != rsSizeAndThroughput.end(); ++j)
+                {
+                    filesize    = static_cast<double>(j->get<long long>("FILESIZE", 0));
+                    throughput += (j->get<double>("THROUGHPUT", 0) * filesize);
+                    totalSize  += filesize;
+                }
+            if (totalSize > 0)
+                throughput /= totalSize;
 
 
         }

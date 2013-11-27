@@ -835,8 +835,12 @@ int main(int argc, char **argv)
                 logger.INFO() << "Resetting global timeout thread to " << globalTimeout << " seconds" << std::endl;
 
                 unsigned int experimentalNstreams = adjustStreamsBasedOnSize(currentTransfer.fileSize, opts.nStreams);
-                if(!opts.manualConfig || opts.autoTunned || opts.nStreams==0)
-                    opts.nStreams = experimentalNstreams;
+		if(!opts.manualConfig || opts.autoTunned || opts.nStreams==0){
+		     if(true == lanTransfer(fileManagement.getSourceHostname(), fileManagement.getDestHostname()))
+                    	opts.nStreams = (experimentalNstreams * 2) > 16? 16: experimentalNstreams * 2;
+		     else
+		        opts.nStreams = experimentalNstreams;	
+		}
                 gfalt_set_nbstreams(params, opts.nStreams, NULL);
                 msg_ifce::getInstance()->set_number_of_streams(&tr_completed, opts.nStreams);
                 logger.INFO() << "nbstreams:" << opts.nStreams << std::endl;

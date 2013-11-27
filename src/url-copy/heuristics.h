@@ -17,3 +17,10 @@ unsigned adjustStreamsBasedOnSize(off_t sizeInBytes, unsigned int currentStreams
  * Return a reasonable timeout for the given filesize
  */
 unsigned adjustTimeoutBasedOnSize(off_t sizeInBytes, unsigned int timeout);
+
+/**
+ * Extract domain name from url and compare to see if it's a LAN transfer
+ */
+bool lanTransfer(const std::string source, const std::string dest); 
+
+

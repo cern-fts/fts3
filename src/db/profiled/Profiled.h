@@ -74,7 +74,7 @@ public:
 
     void updateFileTransferProgress(std::string job_id, int file_id, double throughput, double transferred);
 
-    void updateFileTransferProgressVector(std::vector<struct message_updater>& messages); 
+    void updateFileTransferProgressVector(std::vector<struct message_updater>& messages);
 
     void cancelJob(std::vector<std::string>& requestIDs);
 
@@ -275,7 +275,7 @@ public:
 
     void transferLogFile(const std::string& filePath, const std::string& jobId, int fileId, bool debug);
 
-    void transferLogFileVector(std::map<int, struct message_log>& messagesLog);    
+    void transferLogFileVector(std::map<int, struct message_log>& messagesLog);
 
     std::vector<struct message_state> getStateOfTransfer(const std::string& jobId, int file_id);
 

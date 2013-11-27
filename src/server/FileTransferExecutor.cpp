@@ -114,7 +114,7 @@ void FileTransferExecutor::execute()
                                 }
                             else
                                 {
-                                    OptimizerSample* opt_config = new OptimizerSample();                                   
+                                    OptimizerSample* opt_config = new OptimizerSample();
                                     db->fetchOptimizationConfig2(opt_config, source_hostname, destin_hostname);
                                     BufSize = opt_config->getBufSize();
                                     StreamsperFile = opt_config->getStreamsperFile();

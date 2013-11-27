@@ -3,6 +3,28 @@
 #include "common/definitions.h"
 #include "heuristics.h"
 
+bool lanTransfer(const std::string source, const std::string dest){
+	
+	std::string sourceDomain;
+	std::string destinDomain;	
+	
+	std::size_t foundSource = source.find(".");
+	std::size_t foundDestin = dest.find(".");
+	
+	if (foundSource!=std::string::npos){
+		sourceDomain = source.substr (foundSource,source.length());
+	}	
+
+	if (foundDestin!=std::string::npos){
+		destinDomain = dest.substr (foundDestin, dest.length());	
+	}	
+
+	if(sourceDomain == destinDomain)
+		return true;
+
+	return false;
+}
+
 
 
 bool retryTransfer(int errorNo, const std::string& category)
@@ -70,7 +92,7 @@ bool retryTransfer(int errorNo, const std::string& category)
 
 
 
-unsigned adjustStreamsBasedOnSize(off_t sizeInBytes, unsigned int currentStreams)
+unsigned adjustStreamsBasedOnSize(off_t sizeInBytes, unsigned int /*currentStreams*/)
 {
     if (sizeInBytes <= 5242880) //starting with 5MB
         return 1;
@@ -90,8 +112,14 @@ unsigned adjustStreamsBasedOnSize(off_t sizeInBytes, unsigned int currentStreams
         return 8;
     else if (sizeInBytes > 1610612736 && sizeInBytes <= 2010612736)
         return 9;
-    else if (currentStreams < 10)
-        return 10;
+    else if (sizeInBytes > 2010612736 && sizeInBytes <= 2576980377)
+        return 10;	
+    else if (sizeInBytes > 2576980377 && sizeInBytes <= 3758096384)
+        return 12;	
+    else if (sizeInBytes > 3758096384 && sizeInBytes <= 4858096384)
+        return 14;			
+    else 
+        return 16;
     return 6;
 }
 
