@@ -922,7 +922,7 @@ int main(int argc, char **argv)
                 unsigned int experimentalNstreams = adjustStreamsBasedOnSize(statbufsrc.st_size, opts.nStreams);
                 if(!opts.manualConfig || opts.autoTunned || opts.nStreams==0){
 		     if(true == lanTransfer(fileManagement->getSourceHostname(), fileManagement->getDestHostname()))
-                    	opts.nStreams = (experimentalNstreams * 2) > 20? 20: experimentalNstreams * 2;
+                    	opts.nStreams = (experimentalNstreams * 2) > 16? 16: experimentalNstreams * 2;
 		     else
 		        opts.nStreams = experimentalNstreams;	
 		}
