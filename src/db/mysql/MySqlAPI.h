@@ -338,11 +338,11 @@ public:
     std::map<std::string, long long> getActivitiesInQueue(soci::session& sql, std::string src, std::string dst, std::string vo);
 
     std::map<std::string, int> getFilesNumPerActivity(soci::session& sql, std::string src, std::string dst, std::string vo, int filesNum);
-    
+
     virtual void updateFileTransferProgressVector(std::vector<struct message_updater>& messages);
 
     virtual void transferLogFileVector(std::map<int, struct message_log>& messagesLog);
-    
+
 
 private:
     size_t                poolSize;
@@ -372,9 +372,9 @@ private:
     } hashSegment;
 
     std::vector< boost::tuple<std::string, std::string, double, double, double> > filesMemStore;
-    
+
     bool updateFileTransferStatusInternal(soci::session& sql, double throughput, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message, int process_id, double filesize, double duration);
 
-    bool updateJobTransferStatusInternal(soci::session& sql, int file_id, std::string job_id, const std::string status);    
-    
+    bool updateJobTransferStatusInternal(soci::session& sql, int file_id, std::string job_id, const std::string status);
+
 };

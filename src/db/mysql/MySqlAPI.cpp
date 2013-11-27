@@ -343,9 +343,9 @@ std::map<std::string, long long> MySqlAPI::getActivitiesInQueue(soci::session& s
         {
             soci::rowset<soci::row> rs = (
                                              sql.prepare <<
-                                             " SELECT activity, COUNT(DISTINCT f.job_id, file_index) AS count "
-                                             " FROM t_job j, t_file f "
-                                             " WHERE j.job_id = f.job_id AND j.vo_name = f.vo_name AND f.file_state = 'SUBMITTED' AND "
+                                             " SELECT activity, COUNT(DISTINCT f.job_id, f.file_index) AS count "
+                                             " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) WHERE "
+                                             "  j.vo_name = f.vo_name AND f.file_state = 'SUBMITTED' AND "
                                              "	f.source_se = :source AND f.dest_se = :dest AND "
                                              "	f.vo_name = :vo_name AND "
                                              "	f.wait_timestamp IS NULL AND "
@@ -836,8 +836,8 @@ unsigned int MySqlAPI::updateFileStatus(TransferFiles* file, const std::string s
             soci::statement stmt1 = (
                                         sql.prepare << "select count(*) from t_file where file_state in ('READY','ACTIVE') and dest_surl=:destUrl and vo_name=:vo_name and dest_se=:dest_se ",
                                         soci::use(file->DEST_SURL),
-					soci::use(file->VO_NAME),
-					soci::use(file->DEST_SE),                                       
+                                        soci::use(file->VO_NAME),
+                                        soci::use(file->DEST_SE),
                                         soci::into(countSame));
             stmt1.execute(true);
 
@@ -1238,7 +1238,7 @@ void MySqlAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::stri
             std::ostringstream query;
             soci::statement stmt(sql);
             bool searchForCanceling = false;
-	    
+
 
             query << "SELECT DISTINCT job_id, job_state, reason, submit_time, user_dn, "
                   "                 vo_name, priority, cancel_job, "
@@ -1365,7 +1365,7 @@ void MySqlAPI::getTransferFileStatus(std::string requestID, bool archive,
                 query += " LIMIT :offset,:limit";
             else
                 query += " LIMIT :offset,18446744073709551615";
-		
+
 
 
             FileTransferStatus transfer;
@@ -1583,9 +1583,10 @@ void MySqlAPI::updateSe(std::string ENDPOINT, std::string SE_TYPE, std::string S
 
 
 bool MySqlAPI::updateFileTransferStatus(double throughputIn, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
-                                        int process_id, double filesize, double duration){
-					
-    soci::session sql(*connectionPool);	
+                                        int process_id, double filesize, double duration)
+{
+
+    soci::session sql(*connectionPool);
     try
         {
             updateFileTransferStatusInternal(sql, throughputIn, job_id, file_id, transfer_status, transfer_message, process_id, filesize, duration);
@@ -1597,13 +1598,13 @@ bool MySqlAPI::updateFileTransferStatus(double throughputIn, std::string job_id,
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }    					
-  return true;
+        }
+    return true;
 }
 
 
 bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throughputIn, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
-                                        int process_id, double filesize, double duration)
+        int process_id, double filesize, double duration)
 {
     bool ok = true;
 
@@ -1731,14 +1732,15 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
 }
 
 
-bool MySqlAPI::updateJobTransferStatus(int fileId, std::string job_id, const std::string status){
+bool MySqlAPI::updateJobTransferStatus(int fileId, std::string job_id, const std::string status)
+{
 
-    soci::session sql(*connectionPool);	
-    
+    soci::session sql(*connectionPool);
+
     try
-       {
-        updateJobTransferStatusInternal(sql, fileId, job_id, status);
-       }
+        {
+            updateJobTransferStatusInternal(sql, fileId, job_id, status);
+        }
     catch (std::exception& e)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
@@ -1747,7 +1749,7 @@ bool MySqlAPI::updateJobTransferStatus(int fileId, std::string job_id, const std
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
-   return true;	
+    return true;
 }
 
 
@@ -1755,7 +1757,7 @@ bool MySqlAPI::updateJobTransferStatus(int fileId, std::string job_id, const std
 bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, int fileId, std::string job_id, const std::string status)
 {
     bool ok = true;
- 
+
     try
         {
             int numberOfFilesInJob = 0;
@@ -1836,7 +1838,7 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, int fileId, s
             bool jobFinished = (numberOfFilesInJob == numberOfFilesTerminal);
 
             sql.begin();
-	    
+
             if (jobFinished)
                 {
                     std::string state;
@@ -3264,8 +3266,8 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                                         }
                                     collectJobs.insert(std::make_pair(fileId, jobId));
                                     updateFileTransferStatusInternal(sql, 0.0, jobId, fileId,
-                                                             "FAILED", "Transfer has been forced-killed because it was stalled",
-                                                             pid, 0, 0);
+                                                                     "FAILED", "Transfer has been forced-killed because it was stalled",
+                                                                     pid, 0, 0);
                                     updateJobTransferStatusInternal(sql, fileId, jobId, "FAILED");
                                 }
 
@@ -5305,8 +5307,8 @@ int MySqlAPI::activeProcessesForThisHost()
     try
         {
             soci::statement stmt1 = (
-               sql.prepare << "select count(*) from t_file where TRANSFERHOST=:host AND file_state in ('READY','ACTIVE')  ", soci::use(hostname), soci::into(active));
-            stmt1.execute(true);	    
+                                        sql.prepare << "select count(*) from t_file where TRANSFERHOST=:host AND file_state in ('READY','ACTIVE')  ", soci::use(hostname), soci::into(active));
+            stmt1.execute(true);
         }
     catch (std::exception& e)
         {
@@ -5813,33 +5815,33 @@ double MySqlAPI::getAvgThroughput(std::string source_hostname, std::string desti
 {
     soci::session sql(*connectionPool);
 
-    		    double throughput=0.0;
-                    double filesize = 0.0;
-		    double totalSize = 0.0;
+    double throughput=0.0;
+    double filesize = 0.0;
+    double totalSize = 0.0;
 
     try
         {
-		    // Weighted average for the 5 newest transfers
-                    soci::rowset<soci::row>  rsSizeAndThroughput = (sql.prepare <<
-                                           " SELECT filesize, throughput "
-                                           " FROM t_file use index(t_file_select) "
-                                           " WHERE source_se = :source AND dest_se = :dest AND "
-                                           "       file_state IN ('ACTIVE','FINISHED') AND throughput > 0 AND "
-                                           "       filesize > 0  AND "
-                                           "       (start_time >= date_sub(utc_timestamp(), interval '5' minute) OR "
-                                           "        job_finished >= date_sub(utc_timestamp(), interval '5' minute)) "
-                                           " ORDER BY job_finished DESC LIMIT 5 ",
-                                           soci::use(source_hostname),soci::use(destin_hostname));
+            // Weighted average for the 5 newest transfers
+            soci::rowset<soci::row>  rsSizeAndThroughput = (sql.prepare <<
+                    " SELECT filesize, throughput "
+                    " FROM t_file use index(t_file_select) "
+                    " WHERE source_se = :source AND dest_se = :dest AND "
+                    "       file_state IN ('ACTIVE','FINISHED') AND throughput > 0 AND "
+                    "       filesize > 0  AND "
+                    "       (start_time >= date_sub(utc_timestamp(), interval '5' minute) OR "
+                    "        job_finished >= date_sub(utc_timestamp(), interval '5' minute)) "
+                    " ORDER BY job_finished DESC LIMIT 5 ",
+                    soci::use(source_hostname),soci::use(destin_hostname));
 
-                    for (soci::rowset<soci::row>::const_iterator j = rsSizeAndThroughput.begin();
-                            j != rsSizeAndThroughput.end(); ++j)
-                        {
-                            filesize    = j->get<double>("filesize", 0);
-                            throughput += (j->get<double>("throughput", 0) * filesize);
-                            totalSize  += filesize;
-                        }
-                    if (totalSize > 0)
-                        throughput /= totalSize;
+            for (soci::rowset<soci::row>::const_iterator j = rsSizeAndThroughput.begin();
+                    j != rsSizeAndThroughput.end(); ++j)
+                {
+                    filesize    = j->get<double>("filesize", 0);
+                    throughput += (j->get<double>("throughput", 0) * filesize);
+                    totalSize  += filesize;
+                }
+            if (totalSize > 0)
+                throughput /= totalSize;
 
         }
     catch (std::exception& e)
@@ -7401,16 +7403,16 @@ void MySqlAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start
             // Update beat
             soci::statement stmt1 = (
                                         sql.prepare << "INSERT INTO t_hosts (hostname, beat) VALUES (:host, UTC_TIMESTAMP()) "
-                				"  ON DUPLICATE KEY UPDATE beat = UTC_TIMESTAMP()",
-                				soci::use(hostname));
-            stmt1.execute(true);		
+                                        "  ON DUPLICATE KEY UPDATE beat = UTC_TIMESTAMP()",
+                                        soci::use(hostname));
+            stmt1.execute(true);
 
             // Total number of working instances
             soci::statement stmt2 = (
                                         sql.prepare << "SELECT COUNT(hostname) FROM t_hosts "
-                				"  WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval 2 minute)",
-                				soci::into(*count));
-            stmt2.execute(true);		
+                                        "  WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval 2 minute)",
+                                        soci::into(*count));
+            stmt2.execute(true);
 
             // This instance index
             // Mind that MySQL does not have rownum
