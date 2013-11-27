@@ -510,11 +510,7 @@ int main(int argc, char **argv)
 
     hostname[1023] = '\0';
     gethostname(hostname, 1023);
-
-
-    /*TODO: until we find a way to calculate RTT(perfsonar) accurately, OS tcp auto-tuning does a better job*/
-    opts.tcpBuffersize = DEFAULT_BUFFSIZE;
-
+ 
     if(argc < 4)
         {
             errorMessage = "Failed to read url-copy process arguments";
