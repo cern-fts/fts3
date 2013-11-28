@@ -7,6 +7,7 @@ import os
 import subprocess
 import tempfile
 import time
+import random
 
 
 class Cli:
@@ -59,6 +60,13 @@ class Cli:
         cmdArray = ['fts-transfer-status', '-s', config.Fts3Endpoint, jobId]
         return self._spawn(cmdArray)
 
+    def setPriority(self, jobId,priority):
+
+#        verbose = random.randint(1,5)
+        cmdArray = ['fts-set-priority', '-s',config.Fts3Endpoint, jobId, str(priority)]
+#        print "Prior = ", priority
+        logging.info("Set priority " + str(priority) + " to job with ID " + str(jobId) + ".")
+        self._spawn(cmdArray)       
 
     def poll(self, jobId):
         state = self.getJobState(jobId)
