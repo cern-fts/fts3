@@ -510,7 +510,7 @@ int main(int argc, char **argv)
 
     hostname[1023] = '\0';
     gethostname(hostname, 1023);
- 
+
     if(argc < 4)
         {
             errorMessage = "Failed to read url-copy process arguments";
@@ -916,12 +916,13 @@ int main(int argc, char **argv)
                 logger.INFO() << "Resetting global timeout thread to " << globalTimeout << " seconds" << std::endl;
 
                 unsigned int experimentalNstreams = adjustStreamsBasedOnSize(statbufsrc.st_size, opts.nStreams);
-                if(!opts.manualConfig || opts.autoTunned || opts.nStreams==0){
-		     if(true == lanTransfer(fileManagement->getSourceHostname(), fileManagement->getDestHostname()))
-                    	opts.nStreams = (experimentalNstreams * 2) > 16? 16: experimentalNstreams * 2;
-		     else
-		        opts.nStreams = experimentalNstreams;	
-		}
+                if(!opts.manualConfig || opts.autoTunned || opts.nStreams==0)
+                    {
+                        if(true == lanTransfer(fileManagement->getSourceHostname(), fileManagement->getDestHostname()))
+                            opts.nStreams = (experimentalNstreams * 2) > 16? 16: experimentalNstreams * 2;
+                        else
+                            opts.nStreams = experimentalNstreams;
+                    }
                 gfalt_set_nbstreams(params, opts.nStreams, NULL);
                 nstream_to_string = to_string<unsigned int>(opts.nStreams, std::dec);
                 msg_ifce::getInstance()->set_number_of_streams(&tr_completed, nstream_to_string.c_str());

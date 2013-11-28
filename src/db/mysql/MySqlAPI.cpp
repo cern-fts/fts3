@@ -2242,14 +2242,59 @@ void MySqlAPI::auditConfiguration(const std::string & dn, const std::string & co
         }
 }
 
-
-
-void MySqlAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string & /*source_hostname*/, const std::string & /*destin_hostname*/)
+void MySqlAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string & source_hostname, const std::string & destin_hostname)
 {
-    ops->streamsperfile = DEFAULT_NOSTREAMS;
-    ops->timeout = MID_TIMEOUT;
-    ops->bufsize = DEFAULT_BUFFSIZE;
+           ops->streamsperfile = DEFAULT_NOSTREAMS;
+           ops->timeout = MID_TIMEOUT;
+	   ops->bufsize = DEFAULT_BUFFSIZE;
 }
+
+/*
+void MySqlAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string & source_hostname, const std::string & destin_hostname)
+{
+    soci::session sql(*connectionPool);
+    std::string bufferSize;
+    std::string pairSe;
+    soci::indicator isNull1 = soci::i_ok;
+    soci::indicator isNull2 = soci::i_ok;
+    int buffSizeInt = 0;
+
+    try
+        {
+            ops->streamsperfile = DEFAULT_NOSTREAMS;
+            ops->timeout = MID_TIMEOUT;
+
+            //temporarly get it from a not relevant table/column (t_vo_acl)
+            sql <<
+                " SELECT vo_name, principal FROM t_vo_acl ",
+                soci::into(bufferSize, isNull1), soci::into(pairSe, isNull2);
+
+            if (bufferSize.length()>0 && pairSe.length()>0)
+                {
+                    std::size_t sourceHost = source_hostname.find(pairSe);
+                    std::size_t  destinHost = destin_hostname.find(pairSe);
+                    buffSizeInt = boost::lexical_cast<int>(bufferSize);
+
+                    if( buffSizeInt>0 && sourceHost!=std::string::npos && destinHost!=std::string::npos)
+                        {
+                            ops->bufsize = (buffSizeInt * 1024 * 1024); //convert MB to B
+                        }
+                }
+            else
+                {
+                    ops->bufsize = DEFAULT_BUFFSIZE;
+                }
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+*/
 
 void MySqlAPI::recordOptimizerUpdate(soci::session& sql, int active, double filesize,
                                      double throughput, int nostreams, int timeout, int buffersize,
