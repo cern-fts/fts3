@@ -2725,7 +2725,6 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
     soci::session sql(*connectionPool);
 
     int allowed = false;
-    soci::indicator isNull = soci::i_ok;
 
     try
         {
@@ -2771,6 +2770,8 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                     int active = 0;
                     int maxActive = 0;	
                     std::stringstream message;
+		    soci::indicator isNullRetry = soci::i_ok;  
+		    soci::indicator isNullMaxActive = soci::i_ok;  		    
 
                     // Weighted average for the 5 newest transfers
                     soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
@@ -2834,12 +2835,16 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                     soci::statement stmt8 = (
                                                 sql.prepare << "SELECT active FROM t_optimize_active "
                                                 "WHERE source_se = :source AND dest_se = :dest_se ",
-                                                soci::use(source_hostname),soci::use(destin_hostname), soci::into(maxActive));
+                                                soci::use(source_hostname),soci::use(destin_hostname), soci::into(maxActive, isNullMaxActive));
                     stmt8.execute(true);
+		    		    
 
 		    sql << "select * from (SELECT rownum as rn, sum(retry) from t_file WHERE source_se = :source AND dest_se = :dest_se and "
 		    	   "file_state in ('ACTIVE','SUBMITTED') order by start_time) WHERE rn <= 50 ", 
-		    		soci::use(source_hostname),soci::use(destin_hostname), soci::into(retry);					   		
+		    		soci::use(source_hostname),soci::use(destin_hostname), soci::into(retry, isNullRetry);
+				
+		    if (isNullRetry == soci::i_null) 
+		    	retry = 0;									   		
 		     
                     //only apply the logic below if any of these values changes
                     bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, throughput, thrStored, retry, retryStored);
@@ -2939,7 +2944,7 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                                     sql << "update t_optimize_active set datetime=sys_extract_utc(systimestamp), message=:message, active=:active where source_se=:source and dest_se=:dest ",
                                         soci::use(message.str()), soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
                                 }
-                            else if(active == 0 && isNull == soci::i_null )
+                            else if(active == 0 || isNullMaxActive == soci::i_null )
                                 {
                                     active = highDefault;
 
