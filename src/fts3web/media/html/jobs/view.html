@@ -90,7 +90,7 @@
             <td class="status {{file.file_state}}">
                 {{file.file_state}}
             </td>
-            <td>{{file.filesize/(1024*1024)|number:2}} MB</td>
+            <td>{{file.filesize|filesize}}</td>
             <td>{{file.throughput|number:2}} MB/s</td>
             <td>{{file.start_time}}</td>
             <td>{{file.finish_time}}</td>

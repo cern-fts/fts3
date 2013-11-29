@@ -191,6 +191,18 @@ config(function($routeProvider) {
 		return $filter('filter')(list, expr);
 	}
 })
+.filter('filesize', function($filter) {
+	return function(bytes) {
+		if (bytes < 1024)
+			return bytes.toString() + ' bytes';
+		else if (bytes < 1048576)
+			return (bytes / 1024.0).toFixed(2).toString() + ' KiB';
+		else if (bytes < 1073741824)
+			return (bytes / 1048576.0).toFixed(2).toString() + ' MiB';
+		else
+			return (bytes / 1073741824.0).toFixed(2).toString() + ' GiB';
+	}
+})
 ;
 
 /** Refresh interval in ms */
