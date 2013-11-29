@@ -63,13 +63,13 @@ std::string getFullHostname()
 
 
 
-bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate, double thr, double avgThr)
+bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate, double thr, double& thrStored, double retry, double& retryStored)
 {
     bool returnValue = false;
 
     if(filesMemStore.empty())
         {
-            boost::tuple<std::string, std::string, double, double, double> record(source, dest, rate, thr, avgThr);
+            boost::tuple<std::string, std::string, double, double, double> record(source, dest, rate, thr, retry);
             filesMemStore.push_back(record);
         }
     else
@@ -89,7 +89,7 @@ bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate
                 }
             if (!found)
                 {
-                    boost::tuple<std::string, std::string, double, double, double> record(source, dest, rate, thr, avgThr);
+                    boost::tuple<std::string, std::string, double, double, double> record(source, dest, rate, thr, retry);
                     filesMemStore.push_back(record);
                 }
 
@@ -101,13 +101,16 @@ bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate
                     std::string destLocal = boost::get<1>(tupleRecord);
                     double rateLocal = boost::get<2>(tupleRecord);
                     double thrLocal = boost::get<3>(tupleRecord);
-
+		    double retryThr = boost::get<4>(tupleRecord);
+		    
                     if(sourceLocal == source && destLocal == dest)
                         {
-                            if(rateLocal != rate || thrLocal != thr)
+			    retryStored = retryThr;
+			    thrStored = thrLocal;			
+                            if(rateLocal != rate || thrLocal != thr || retry != retryThr)
                                 {
                                     it = filesMemStore.erase(it);
-                                    boost::tuple<std::string, std::string, double, double, double> record(source, dest, rate, thr, avgThr);
+                                    boost::tuple<std::string, std::string, double, double, double> record(source, dest, rate, thr, retry);
                                     filesMemStore.push_back(record);
                                     returnValue = true;
                                     break;
@@ -2639,38 +2642,18 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                     std::string source_hostname = i->get<std::string>("source_se");
                     std::string destin_hostname = i->get<std::string>("dest_se");
 
-                    double nFailedLastHour=0, nFinishedLastHour=0;
-                    double throughput=0.0, avgThr = 0.0;
+                    double nFailedLastHour=0.0, nFinishedLastHour=0.0;
+                    double throughput=0.0;
                     double filesize = 0.0;
+                    double totalSize = 0.0;		    
+   	            double retry = 0.0;   //latest from db
+		    double retryStored = 0.0; //stored in mem
+		    double thrStored = 0.0; //stored in mem                    
                     int active = 0;
-                    int maxActive = 0;
-
-                    // Weighted average for the 12 less newest transfers
-                    soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
-                            " SELECT filesize, throughput "
-                            " FROM t_file use index(t_file_select) "
-                            " WHERE source_se = :source_se AND dest_se = :dest_se AND "
-                            "       file_state IN ('ACTIVE','FINISHED') AND throughput > 0 AND "
-                            "       filesize > 0 AND (start_time >= date_sub(utc_timestamp(), interval '5' minute) OR "
-                            "                         job_finished >= date_sub(utc_timestamp(), interval '5' minute)) "
-                            " ORDER BY job_finished DESC LIMIT 6, 12",
-                            soci::use(source_hostname), soci::use(destin_hostname));
-
-                    double totalSize = 0.0;
-                    for (soci::rowset<soci::row>::const_iterator j = rsSizeAndThroughput.begin();
-                            j != rsSizeAndThroughput.end(); ++j)
-                        {
-                            filesize   = j->get<double>("filesize", 0);
-                            throughput = j->get<double>("throughput", 0);
-
-                            totalSize += filesize;
-                            avgThr    += filesize * throughput;
-                        }
-                    if (totalSize > 0)
-                        avgThr /= totalSize;
+                    int maxActive = 0;		    
 
                     // Weighted average for the 5 newest transfers
-                    rsSizeAndThroughput = (sql.prepare <<
+                    soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
                                            " SELECT filesize, throughput "
                                            " FROM t_file use index(t_file_select) "
                                            " WHERE source_se = :source AND dest_se = :dest AND "
@@ -2681,8 +2664,6 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                            " ORDER BY job_finished DESC LIMIT 5 ",
                                            soci::use(source_hostname),soci::use(destin_hostname));
 
-                    throughput = 0.0;
-                    totalSize = 0.0;
                     for (soci::rowset<soci::row>::const_iterator j = rsSizeAndThroughput.begin();
                             j != rsSizeAndThroughput.end(); ++j)
                         {
@@ -2708,7 +2689,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                             else if (i->compare("FINISHED") == 0) ++nFinishedLastHour+=1.0;
                         }
 
-                    double ratioSuccessFailure = 0;
+                    double ratioSuccessFailure = 0.0;
                     if(nFinishedLastHour > 0)
                         {
                             ratioSuccessFailure = nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0);
@@ -2732,47 +2713,59 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                                 "WHERE source_se = :source AND dest_se = :dest_se ",
                                                 soci::use(source_hostname),soci::use(destin_hostname), soci::into(maxActive));
                     stmt8.execute(true);
-
+		    
+		    
+		    sql << "select sum(retry) from t_file WHERE source_se = :source AND dest_se = :dest_se and "
+		    	   "file_state in ('ACTIVE','SUBMITTED') order by start_time DESC LIMIT 50 ", 
+		    		soci::use(source_hostname),soci::use(destin_hostname), soci::into(retry);					   		
+		     
                     //only apply the logic below if any of these values changes
-                    bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, throughput, avgThr);
+                    bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, throughput, thrStored, retry, retryStored);
+
+std::cout << "SIMPLE Changed:" << changed << "   Rate:" << ratioSuccessFailure << "    Max:"  << maxActive << "   Thr:" <<  throughput << "    ThrStored:"    << thrStored  <<  "  Retry:" << retry << "   RetryStored:" << retryStored << std::endl;
 
                     if(changed)
                         {
                             sql.begin();
 
-                            if(ratioSuccessFailure == 100 && throughput != 0 && avgThr !=0 && throughput > avgThr)
+                            if(ratioSuccessFailure == 100 && throughput != 0 && thrStored !=0 && throughput > thrStored && retry <= retryStored)
                                 {
                                     active = maxActive + 1;
-                                    sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
+                                    sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",
+				    	soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
                                 }
-                            else if(ratioSuccessFailure == 100 && throughput != 0 && avgThr !=0 && throughput == avgThr)
+                            else if(ratioSuccessFailure == 100 && throughput != 0 && thrStored !=0 && throughput == thrStored && retry <= retryStored)
                                 {
                                     if(mode==2 || mode==3)
                                         active = maxActive + 1;
                                     else
                                         active = maxActive;
-                                    sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
+                                    sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",
+				    	soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
                                 }
-                            else if(ratioSuccessFailure == 100 && throughput != 0 && avgThr !=0 && throughput < avgThr)
+                            else if(ratioSuccessFailure == 100 && throughput != 0 && thrStored !=0 && (throughput < thrStored || retry > retryStored))
                                 {
                                     if(active < highDefault || maxActive < highDefault)
                                         active = highDefault;
                                     else
                                         active = maxActive - 1;
-                                    sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
+                                    sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",
+				    	soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
                                 }
-                            else if (ratioSuccessFailure < 100)
+                            else if (ratioSuccessFailure < 100 || retry > retryStored)
                                 {
                                     if(active < highDefault || maxActive < highDefault)
                                         active = highDefault;
                                     else
                                         active = maxActive - 2;
-                                    sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
+                                    sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",
+				    	soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
                                 }
                             else if(active == 0 && isNull == soci::i_null )
                                 {
                                     active = highDefault;
-                                    sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
+                                    sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",
+				    	soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
                                 }
                             else
                                 {
@@ -2780,7 +2773,8 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                         active = highDefault;
                                     else
                                         active = maxActive;
-                                    sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
+                                    sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",
+				    	soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
                                 }
 
                             sql.commit();
