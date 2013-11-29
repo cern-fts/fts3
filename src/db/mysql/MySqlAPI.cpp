@@ -2605,7 +2605,6 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
     soci::session sql(*connectionPool);
 
     int allowed = false;
-    soci::indicator isNull = soci::i_ok;
 
     try
         {
@@ -2650,7 +2649,9 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 		    double retryStored = 0.0; //stored in mem
 		    double thrStored = 0.0; //stored in mem                    
                     int active = 0;
-                    int maxActive = 0;		    
+                    int maxActive = 0;		  
+		    soci::indicator isNullRetry = soci::i_ok;  
+		    soci::indicator isNullMaxActive = soci::i_ok;  		    
 
                     // Weighted average for the 5 newest transfers
                     soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
@@ -2711,13 +2712,15 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                     soci::statement stmt8 = (
                                                 sql.prepare << "SELECT active FROM t_optimize_active "
                                                 "WHERE source_se = :source AND dest_se = :dest_se ",
-                                                soci::use(source_hostname),soci::use(destin_hostname), soci::into(maxActive));
-                    stmt8.execute(true);
-		    
+                                                soci::use(source_hostname),soci::use(destin_hostname), soci::into(maxActive, isNullMaxActive));
+                    stmt8.execute(true);		    		    
 		    
 		    sql << "select sum(retry) from t_file WHERE source_se = :source AND dest_se = :dest_se and "
 		    	   "file_state in ('ACTIVE','SUBMITTED') order by start_time DESC LIMIT 50 ", 
-		    		soci::use(source_hostname),soci::use(destin_hostname), soci::into(retry);					   		
+		    		soci::use(source_hostname),soci::use(destin_hostname), soci::into(retry, isNullRetry);	
+				
+		    if (isNullRetry == soci::i_null) 
+		    	retry = 0;								   		
 		     
                     //only apply the logic below if any of these values changes
                     bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, throughput, thrStored, retry, retryStored);
@@ -2759,7 +2762,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                     sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",
 				    	soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
                                 }
-                            else if(active == 0 && isNull == soci::i_null )
+                            else if(active == 0 || isNullMaxActive == soci::i_null )
                                 {
                                     active = highDefault;
                                     sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",
