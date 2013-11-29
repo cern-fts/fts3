@@ -2722,8 +2722,6 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                     //only apply the logic below if any of these values changes
                     bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, throughput, thrStored, retry, retryStored);
 
-std::cout << "SIMPLE Changed:" << changed << "   Rate:" << ratioSuccessFailure << "    Max:"  << maxActive << "   Thr:" <<  throughput << "    ThrStored:"    << thrStored  <<  "  Retry:" << retry << "   RetryStored:" << retryStored << std::endl;
-
                     if(changed)
                         {
                             sql.begin();
