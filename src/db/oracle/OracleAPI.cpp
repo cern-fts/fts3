@@ -38,13 +38,13 @@ using namespace FTS3_COMMON_NAMESPACE;
 using namespace db;
 
 
-bool OracleAPI::getChangedFile (std::string source, std::string dest, double rate, double thr, double avgThr)
+bool OracleAPI::getChangedFile (std::string source, std::string dest, double rate, double thr, double& thrStored, double retry, double& retryStored)
 {
     bool returnValue = false;
 
     if(filesMemStore.empty())
         {
-            boost::tuple<std::string, std::string, double, double, double> record(source, dest, rate, thr, avgThr);
+            boost::tuple<std::string, std::string, double, double, double> record(source, dest, rate, thr, retry);
             filesMemStore.push_back(record);
         }
     else
@@ -64,7 +64,7 @@ bool OracleAPI::getChangedFile (std::string source, std::string dest, double rat
                 }
             if (!found)
                 {
-                    boost::tuple<std::string, std::string, double, double, double> record(source, dest, rate, thr, avgThr);
+                    boost::tuple<std::string, std::string, double, double, double> record(source, dest, rate, thr, retry);
                     filesMemStore.push_back(record);
                 }
 
@@ -76,13 +76,16 @@ bool OracleAPI::getChangedFile (std::string source, std::string dest, double rat
                     std::string destLocal = boost::get<1>(tupleRecord);
                     double rateLocal = boost::get<2>(tupleRecord);
                     double thrLocal = boost::get<3>(tupleRecord);
-
+		    double retryThr = boost::get<4>(tupleRecord);
+		    
                     if(sourceLocal == source && destLocal == dest)
                         {
-                            if(rateLocal != rate || thrLocal != thr)
+			    retryStored = retryThr;
+			    thrStored = thrLocal;			
+                            if(rateLocal != rate || thrLocal != thr || retry != retryThr)
                                 {
                                     it = filesMemStore.erase(it);
-                                    boost::tuple<std::string, std::string, double, double, double> record(source, dest, rate, thr, avgThr);
+                                    boost::tuple<std::string, std::string, double, double, double> record(source, dest, rate, thr, retry);
                                     filesMemStore.push_back(record);
                                     returnValue = true;
                                     break;
@@ -2758,41 +2761,19 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                     std::string source_hostname = i->get<std::string>("SOURCE_SE");
                     std::string destin_hostname = i->get<std::string>("DEST_SE");
 
-                    double nFailedLastHour=0, nFinishedLastHour=0;
-                    double throughput=0.0, avgThr = 0.0;
+                    double nFailedLastHour=0.0, nFinishedLastHour=0.0;
+                    double throughput=0.0;
                     double filesize = 0.0;
+                    double totalSize = 0.0;		    
+   	            double retry = 0.0;   //latest from db
+		    double retryStored = 0.0; //stored in mem
+		    double thrStored = 0.0; //stored in mem                    
                     int active = 0;
-                    int maxActive = 0;
+                    int maxActive = 0;	
                     std::stringstream message;
 
-                    // Weighted average for the 12 less newest transfers
-                    soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
-                            " SELECT * FROM ("
-                            " SELECT rownum as rn, filesize, throughput "
-                            " FROM t_file "
-                            " WHERE source_se = :source_se AND dest_se = :dest_se AND "
-                            "       file_state IN ('ACTIVE','FINISHED') AND throughput > 0 AND "
-                            "       filesize > 0 AND (start_time >= (sys_extract_utc(systimestamp) - interval '5' minute) OR "
-                            "                         job_finished >= (sys_extract_utc(systimestamp) - interval '5' minute)) "
-                            " ORDER BY job_finished DESC "
-                            " ) WHERE rn >= 6 and rn <= 18",
-                            soci::use(source_hostname), soci::use(destin_hostname));
-
-                    double totalSize = 0.0;
-                    for (soci::rowset<soci::row>::const_iterator j = rsSizeAndThroughput.begin();
-                            j != rsSizeAndThroughput.end(); ++j)
-                        {
-                            filesize   = static_cast<double>(j->get<long long>("FILESIZE", 0));
-                            throughput = j->get<double>("THROUGHPUT", 0);
-
-                            totalSize += filesize;
-                            avgThr    += filesize * throughput;
-                        }
-                    if (totalSize > 0)
-                        avgThr /= totalSize;
-
                     // Weighted average for the 5 newest transfers
-                    rsSizeAndThroughput = (sql.prepare <<
+                    soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
                                            " SELECT * FROM ("
                                            " SELECT rownum as rn, filesize, throughput "
                                            " FROM t_file "
@@ -2805,13 +2786,11 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                                            " WHERE rn <= 5 ",
                                            soci::use(source_hostname),soci::use(destin_hostname));
 
-                    throughput = 0.0;
-                    totalSize = 0.0;
                     for (soci::rowset<soci::row>::const_iterator j = rsSizeAndThroughput.begin();
                             j != rsSizeAndThroughput.end(); ++j)
                         {
                             filesize    = static_cast<double>(j->get<long long>("FILESIZE", 0));
-                            throughput += (j->get<double>("THROUGHPUT", 0) * filesize);
+                            throughput += (j->get<double>("THROUGHPUT", 0.0) * filesize);
                             totalSize  += filesize;
                         }
                     if (totalSize > 0)
@@ -2833,7 +2812,7 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                             else if (i->compare("FINISHED") == 0) ++nFinishedLastHour+=1.0;
                         }
 
-                    double ratioSuccessFailure = 0;
+                    double ratioSuccessFailure = 0.0;
                     if(nFinishedLastHour > 0)
                         {
                             ratioSuccessFailure = nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0);
@@ -2858,14 +2837,18 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                                                 soci::use(source_hostname),soci::use(destin_hostname), soci::into(maxActive));
                     stmt8.execute(true);
 
+		    sql << "select * from (SELECT rownum as rn, sum(retry) from t_file WHERE source_se = :source AND dest_se = :dest_se and "
+		    	   "file_state in ('ACTIVE','SUBMITTED') order by start_time) WHERE rn <= 50 ", 
+		    		soci::use(source_hostname),soci::use(destin_hostname), soci::into(retry);					   		
+		     
                     //only apply the logic below if any of these values changes
-                    bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, throughput, avgThr);
+                    bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, throughput, thrStored, retry, retryStored);
 
                     if(changed)
                         {
                             sql.begin();
 
-                            if(ratioSuccessFailure == 100 && throughput != 0 && avgThr !=0 && throughput > avgThr)
+                            if(ratioSuccessFailure == 100 && throughput != 0 && thrStored !=0 && throughput > thrStored && retry <= retryStored)
                                 {
                                     active = maxActive + 1;
 
@@ -2879,15 +2862,15 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                                             << destin_hostname
                                             << " because success rate is "
                                             << ratioSuccessFailure
-                                            << "% and current throughput is "
+                                            << "% and current throughput "
                                             << throughput
-                                            << " and is bigger than previous "
-                                            << avgThr;
+                                            << " is higher than previous "
+                                            << thrStored;
 
                                     sql << "update t_optimize_active set datetime=sys_extract_utc(systimestamp), message=:message, active=:active where source_se=:source and dest_se=:dest ",
                                         soci::use(message.str()), soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
                                 }
-                            else if(ratioSuccessFailure == 100 && throughput != 0 && avgThr !=0 && throughput == avgThr)
+                            else if(ratioSuccessFailure == 100 && throughput != 0 && thrStored !=0 && throughput == thrStored && retry <= retryStored)
                                 {
                                     if(mode==2 || mode==3)
                                         active = maxActive + 1;
@@ -2903,14 +2886,14 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                                             << " and current throughput is "
                                             << throughput
                                             << " equal to previous "
-                                            << avgThr
+                                            << thrStored
                                             << " so max active remains "
                                             << maxActive;
 
                                     sql << "update t_optimize_active set datetime=sys_extract_utc(systimestamp), message=:message, active=:active where source_se=:source and dest_se=:dest ",
                                         soci::use(message.str()), soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
                                 }
-                            else if(ratioSuccessFailure == 100 && throughput != 0 && avgThr !=0 && throughput < avgThr)
+                            else if(ratioSuccessFailure == 100 && throughput != 0 && thrStored !=0 && (throughput < thrStored || retry > retryStored))
                                 {
                                     if(active < highDefault || maxActive < highDefault)
                                         active = highDefault;
@@ -2926,14 +2909,14 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                                             << " and current throughput "
                                             << throughput
                                             << " is less than previous sample "
-                                            << avgThr
+                                            << thrStored
                                             << " so max active is decreased by 2 and now is "
                                             << active;
 
                                     sql << "update t_optimize_active set datetime=sys_extract_utc(systimestamp), message=:message, active=:active where source_se=:source and dest_se=:dest ",
                                         soci::use(message.str()), soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
                                 }
-                            else if (ratioSuccessFailure < 100)
+                            else if (ratioSuccessFailure < 100 || retry > retryStored)
                                 {
                                     if(active < highDefault || maxActive < highDefault)
                                         active = highDefault;
@@ -2948,8 +2931,8 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                                             << destin_hostname
                                             << " and current throughput is "
                                             << throughput
-                                            << " while previous is "
-                                            << avgThr
+                                            << " while previous was "
+                                            << thrStored
                                             << " so max active is decreased by 2 and now is "
                                             << active;
 
@@ -2989,7 +2972,7 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                                             << "% current throughput is "
                                             << throughput
                                             << " and previous throughput is "
-                                            << avgThr;
+                                            << thrStored;
 
                                     sql << "update t_optimize_active set datetime=sys_extract_utc(systimestamp), message=:message, active=:active where source_se=:source and dest_se=:dest ",
                                         soci::use(message.str()), soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);

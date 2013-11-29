@@ -360,7 +360,7 @@ private:
                                    unsigned int& finished, unsigned int& cancelled, unsigned int& failed);
 
 
-    bool getChangedFile (std::string source, std::string dest, double rate, double thr, double avgThr);
+    bool getChangedFile (std::string source, std::string dest, double rate, double thr, double& thrStored, double retry, double& retryStored);
 
     struct HashSegment
     {
