@@ -59,7 +59,7 @@ using namespace boost;
 using namespace boost::assign;
 
 
-const regex JobSubmitter::fileUrlRegex("(.+://[a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
+const regex JobSubmitter::fileUrlRegex("([a-zA-Z][a-zA-Z0-9+\.-]*://[a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
 
 const string JobSubmitter::false_str = "false";
 
