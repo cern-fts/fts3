@@ -671,9 +671,9 @@ void ProfiledDB::setFilesToNotUsed(std::string jobId, int fileIndex, std::vector
 }
 
 
-std::vector< boost::tuple<std::string, std::string, int> > ProfiledDB::getVOBringonlimeMax()
+std::vector< boost::tuple<std::string, std::string, int> > ProfiledDB::getVOBringonlineMax()
 {
-    PROFILE_PREFIXED("DB::", return db->getVOBringonlimeMax());
+    PROFILE_PREFIXED("DB::", return db->getVOBringonlineMax());
 }
 
 

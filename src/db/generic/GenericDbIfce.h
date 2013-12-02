@@ -310,7 +310,7 @@ public:
 
     virtual void setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<int>& files) = 0;
 
-    virtual std::vector< boost::tuple<std::string, std::string, int> >  getVOBringonlimeMax() = 0;
+    virtual std::vector< boost::tuple<std::string, std::string, int> >  getVOBringonlineMax() = 0;
 
     virtual std::vector<struct message_bringonline> getBringOnlineFiles(std::string voName, std::string hostName, int maxValue) = 0;
 

@@ -5311,7 +5311,7 @@ int MySqlAPI::activeProcessesForThisHost()
 }
 
 
-std::vector< boost::tuple<std::string, std::string, int> >  MySqlAPI::getVOBringonlimeMax()
+std::vector< boost::tuple<std::string, std::string, int> >  MySqlAPI::getVOBringonlineMax()
 {
 
     soci::session sql(*connectionPool);

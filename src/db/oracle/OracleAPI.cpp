@@ -5249,7 +5249,7 @@ int OracleAPI::activeProcessesForThisHost()
 }
 
 
-std::vector< boost::tuple<std::string, std::string, int> >  OracleAPI::getVOBringonlimeMax()
+std::vector< boost::tuple<std::string, std::string, int> >  OracleAPI::getVOBringonlineMax()
 {
 
     soci::session sql(*connectionPool);
