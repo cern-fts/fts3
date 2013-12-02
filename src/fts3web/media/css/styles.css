@@ -13,6 +13,15 @@ div[role="main"] {
     margin-bottom: 6em;
 }
 
+.navbar-search label input {
+	display: inline;
+}
+
+.navbar-search label {
+	display: block-inline;
+	color: #999999;
+}
+
 /* Tables */
 table.table {
 	font-family: monospace;

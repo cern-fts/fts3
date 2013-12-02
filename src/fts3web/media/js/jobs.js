@@ -163,7 +163,8 @@ JobViewCtrl.resolve = {
     	var deferred = $q.defer();
     	
     	var filter = {
-			jobId: $route.current.params.jobId
+			jobId: $route.current.params.jobId,
+			archive: $route.current.params.archive
     	};
     	if ($route.current.params.reason)
     		filter.reason = $route.current.params.reason;

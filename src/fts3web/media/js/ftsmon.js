@@ -177,7 +177,10 @@ config(function($routeProvider) {
 }])
 .run(function($rootScope, $location) {
 	$rootScope.searchJob = function() {
-		$location.path('/job/' + $rootScope.jobId);
+		var inArchive = 0;
+		if ($rootScope.inArchive)
+			inArchive = 1;
+		$location.path('/job/' + $rootScope.jobId).search({'archive': inArchive});
 	}
 })
 .filter('safeFilter', function($filter) {
