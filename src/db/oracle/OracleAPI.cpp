@@ -1841,10 +1841,10 @@ bool OracleAPI::updateFileTransferStatus(double throughputIn, std::string job_id
             if(s->executeUpdate()!=0)
                 conn->commit(pooledConnection);
             conn->destroyStatement(s, tag, pooledConnection);
-	    
-	    if(transfer_status == "FAILED")
-	    	useFileReplica(job_id, file_id);	    
-	    
+
+            if(transfer_status == "FAILED")
+                useFileReplica(job_id, file_id);
+
         }
     catch (oracle::occi::SQLException const &e)
         {

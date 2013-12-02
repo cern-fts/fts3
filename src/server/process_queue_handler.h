@@ -161,7 +161,7 @@ public:
                                   getDBObjectInstance()->
                                   updateFileTransferStatus(msg.throughput, job, msg.file_id, std::string(msg.transfer_status),
                                                            std::string(msg.transfer_message), static_cast<int> (msg.process_id),
-                                                           msg.filesize, msg.timeInSecs);                      
+                                                           msg.filesize, msg.timeInSecs);
                     }
                 if(updated == true)
                     {

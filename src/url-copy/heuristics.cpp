@@ -88,33 +88,33 @@ bool retryTransfer(int errorNo, const std::string& category, const std::string& 
                     break;
                 }
         }
-	
-    //search for error patterns not reported by SRM or GSIFTP    
-    std::size_t found = message.find("proxy expired");	
-    if (found!=std::string::npos)	
-    	retry = false;
-    found = message.find("File exists and overwrite");	
-    if (found!=std::string::npos)	
-    	retry = false;
-    found = message.find("No such file or directory");  
-    if (found!=std::string::npos)	
-    	retry = false;    
-    found = message.find("SRM_INVALID_PATH");  
-    if (found!=std::string::npos)	
-    	retry = false;    	
-    found = message.find("The certificate has expired");  
-    if (found!=std::string::npos)	
-    	retry = false;    
-    found = message.find("The available CRL has expired");  
-    if (found!=std::string::npos)	
-    	retry = false;    	
-    found = message.find("SRM Authentication failed");  
-    if (found!=std::string::npos)	
-    	retry = false;   	
-    found = message.find("SRM_DUPLICATION_ERROR");  
-    if (found!=std::string::npos)	
-    	retry = false;   		
-												
+
+    //search for error patterns not reported by SRM or GSIFTP
+    std::size_t found = message.find("proxy expired");
+    if (found!=std::string::npos)
+        retry = false;
+    found = message.find("File exists and overwrite");
+    if (found!=std::string::npos)
+        retry = false;
+    found = message.find("No such file or directory");
+    if (found!=std::string::npos)
+        retry = false;
+    found = message.find("SRM_INVALID_PATH");
+    if (found!=std::string::npos)
+        retry = false;
+    found = message.find("The certificate has expired");
+    if (found!=std::string::npos)
+        retry = false;
+    found = message.find("The available CRL has expired");
+    if (found!=std::string::npos)
+        retry = false;
+    found = message.find("SRM Authentication failed");
+    if (found!=std::string::npos)
+        retry = false;
+    found = message.find("SRM_DUPLICATION_ERROR");
+    if (found!=std::string::npos)
+        retry = false;
+
     return retry;
 }
 

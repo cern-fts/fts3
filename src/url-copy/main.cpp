@@ -216,7 +216,7 @@ void abnormalTermination(const std::string& classification, const std::string&, 
             errorMessage += " " + globalErrorMessage;
         }
     if(classification != "CANCELED")
-    	retry = true;	
+        retry = true;
 
     diff = transferDuration(transfer_start, transfer_complete);
     msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());

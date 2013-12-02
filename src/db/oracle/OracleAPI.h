@@ -361,7 +361,7 @@ private:
     int getOptimizerMode();
     void countFileInTerminalStates(SafeConnection& pooledConnection, std::string jobId,
                                    unsigned int& finished, unsigned int& cancelled, unsigned int& failed);
-    void useFileReplica(std::string jobId, int fileId);				   
+    void useFileReplica(std::string jobId, int fileId);
     OptimizerSample optimizerObject;
     std::string ftsHostName;
     int lowDefault;
