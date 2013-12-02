@@ -307,8 +307,6 @@ public:
 
     virtual void setMaxStageOp(const std::string& se, const std::string& vo, int val);
 
-    virtual void useFileReplica(std::string jobId, int fileId);
-
     virtual double getSuccessRate(std::string source, std::string destination);
 
     virtual double getAvgThroughput(std::string source, std::string destination);
@@ -363,6 +361,7 @@ private:
     int getOptimizerMode();
     void countFileInTerminalStates(SafeConnection& pooledConnection, std::string jobId,
                                    unsigned int& finished, unsigned int& cancelled, unsigned int& failed);
+    void useFileReplica(std::string jobId, int fileId);				   
     OptimizerSample optimizerObject;
     std::string ftsHostName;
     int lowDefault;

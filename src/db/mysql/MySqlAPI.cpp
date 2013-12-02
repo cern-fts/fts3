@@ -605,10 +605,8 @@ void MySqlAPI::setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<i
         }
 }
 
-void MySqlAPI::useFileReplica(std::string jobId, int fileId)
+void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId)
 {
-    soci::session sql(*connectionPool);
-
     try
         {
             soci::indicator ind = soci::i_ok;
@@ -1524,8 +1522,11 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
             stmt.prepare(query.str());
             stmt.define_and_bind();
             stmt.execute(true);
-
+	    
             sql.commit();
+	    
+	    if(transfer_status == "FAILED")
+	    	useFileReplica(sql, job_id, file_id);
 
         }
     catch (std::exception& e)

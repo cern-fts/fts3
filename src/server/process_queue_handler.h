@@ -136,7 +136,7 @@ public:
                             }
                     }
 
-                if (std::string(msg.transfer_status).compare("FINISHED") == 0 && enableOptimization.compare("true") == 0)
+                if (std::string(msg.transfer_status).compare("FINISHED") == 0)
                     {
                         updated = DBSingleton::instance().
                                   getDBObjectInstance()->
@@ -161,13 +161,7 @@ public:
                                   getDBObjectInstance()->
                                   updateFileTransferStatus(msg.throughput, job, msg.file_id, std::string(msg.transfer_status),
                                                            std::string(msg.transfer_message), static_cast<int> (msg.process_id),
-                                                           msg.filesize, msg.timeInSecs);
-
-                        if (std::string(msg.transfer_status) == "FAILED")
-                            {
-                                DBSingleton::instance().
-                                getDBObjectInstance()->useFileReplica(msg.job_id, msg.file_id);
-                            }
+                                                           msg.filesize, msg.timeInSecs);                      
                     }
                 if(updated == true)
                     {

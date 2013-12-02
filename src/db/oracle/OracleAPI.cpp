@@ -1841,6 +1841,10 @@ bool OracleAPI::updateFileTransferStatus(double throughputIn, std::string job_id
             if(s->executeUpdate()!=0)
                 conn->commit(pooledConnection);
             conn->destroyStatement(s, tag, pooledConnection);
+	    
+	    if(transfer_status == "FAILED")
+	    	useFileReplica(job_id, file_id);	    
+	    
         }
     catch (oracle::occi::SQLException const &e)
         {
@@ -9604,7 +9608,6 @@ std::vector<struct message_state>  OracleAPI::getStateOfTransfer(const std::stri
                 {
                     s2 = conn->createStatement(query2, tag2, pooledConnection);
                     s2->setString(1, jobId);
-                    s2->setInt(2, fileId);
                     r2 = conn->createResultset(s2, pooledConnection);
                     while (r2->next())
                         {

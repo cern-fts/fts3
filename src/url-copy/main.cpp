@@ -215,6 +215,8 @@ void abnormalTermination(const std::string& classification, const std::string&, 
         {
             errorMessage += " " + globalErrorMessage;
         }
+    if(classification != "CANCELED")
+    	retry = true;	
 
     diff = transferDuration(transfer_start, transfer_complete);
     msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());
@@ -817,7 +819,7 @@ int main(int argc, char **argv)
                                 errorScope = SOURCE;
                                 reasonClass = mapErrnoToString(errCode);
                                 errorPhase = TRANSFER_PREPARATION;
-                                retry = retryTransfer(tmp_err->code, "SOURCE" );
+                                retry = retryTransfer(tmp_err->code, "SOURCE", tempError);
                                 if (sourceStatRetry == 3 || retry == false)
                                     {
                                         logger.INFO() << "No more retries for stat the source" << std::endl;
@@ -981,7 +983,7 @@ int main(int argc, char **argv)
                             }
                         if(tmp_err)
                             {
-                                retry = retryTransfer(tmp_err->code, "TRANSFER" );
+                                retry = retryTransfer(tmp_err->code, "TRANSFER", std::string(tmp_err->message) );
                                 g_clear_error(&tmp_err);
                             }
                         g_clear_error(&tmp_err);
@@ -1011,7 +1013,7 @@ int main(int argc, char **argv)
                                 errorScope = DESTINATION;
                                 reasonClass = mapErrnoToString(tmp_err->code);
                                 errorPhase = TRANSFER_FINALIZATION;
-                                retry = retryTransfer(tmp_err->code, "DESTINATION" );
+                                retry = retryTransfer(tmp_err->code, "DESTINATION", tempError);
                                 if (destStatRetry == 3 || false == retry)
                                     {
                                         logger.INFO() << "No more retry stating the destination" << std::endl;

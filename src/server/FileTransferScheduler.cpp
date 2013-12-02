@@ -115,7 +115,6 @@ bool FileTransferScheduler::schedule(bool optimize)
 
     try
         {
-
             if(optimize && cfgs.empty())
                 {
                     bool allowed = db->isTrAllowed2(srcSeName, destSeName);
