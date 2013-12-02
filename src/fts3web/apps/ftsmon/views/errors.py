@@ -57,7 +57,7 @@ def transfersWithError(httpRequest):
     if httpRequest.GET.get('dest_se', None):
         transfers = transfers.filter(dest_se = httpRequest.GET['dest_se'])
     
-    transfers = transfers.values('file_id', 'job_id', 'source_surl', 'dest_surl', 'job__vo_name')\
+    transfers = transfers.values('file_id', 'job_id', 'source_surl', 'dest_surl', 'vo_name')\
                          .order_by('file_id')
                             
     return transfers

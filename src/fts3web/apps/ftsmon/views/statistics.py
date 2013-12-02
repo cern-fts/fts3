@@ -172,7 +172,7 @@ def servers(httpRequest):
 def pervo(httpRequest):
     notBefore = datetime.utcnow() - timedelta(minutes = 30)
     
-    query = File.objects.values('file_state', 'job__vo_name')\
+    query = File.objects.values('file_state', 'vo_name')\
                         .filter(Q(job_finished__gte = notBefore) | Q(job_finished__isnull = True))\
                         .annotate(count = Count('file_state'))
                         
@@ -185,7 +185,7 @@ def pervo(httpRequest):
                         
     perVo = {}
     for voJob in query:
-        vo = voJob['job__vo_name']
+        vo = voJob['vo_name']
         if vo not in perVo:
             perVo[vo] = {}
         perVo[vo][voJob['file_state']] = voJob['count']

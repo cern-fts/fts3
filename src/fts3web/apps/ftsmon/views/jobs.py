@@ -269,7 +269,7 @@ def transferList(httpRequest):
     if filters['dest_surl']:
         transfers = transfers.filter(dest_surl = filters['dest_surl'])
     if filters['vo']:
-        transfers = transfers.filter(job__vo_name = filters['vo'])
+        transfers = transfers.filter(vo_name = filters['vo'])
     if filters['time_window']:
         notBefore =  datetime.datetime.utcnow() - datetime.timedelta(hours = filters['time_window'])
         transfers = transfers.filter(Q(job_finished__isnull = True) | (Q(job_finished__gte = notBefore)))
