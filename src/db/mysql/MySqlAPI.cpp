@@ -2661,8 +2661,8 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                             " WHERE source_se = :source AND dest_se = :dest AND "
                             "       file_state IN ('ACTIVE','FINISHED') AND throughput > 0 AND "
                             "       filesize > 0  AND "
-                            "       (start_time >= date_sub(utc_timestamp(), interval '5' minute) OR "
-                            "        job_finished >= date_sub(utc_timestamp(), interval '5' minute)) "
+                            "       (start_time >= date_sub(utc_timestamp(), interval '1' minute) OR "
+                            "        job_finished >= date_sub(utc_timestamp(), interval '1' minute)) "
                             " ORDER BY job_finished DESC LIMIT 5 ",
                             soci::use(source_hostname),soci::use(destin_hostname));
 
@@ -4107,7 +4107,7 @@ void MySqlAPI::addShareConfig(ShareConfig* cfg)
         {
             sql.begin();
 
-            sql << "INSERT INTO t_share_config (source, destination, vo, active) "
+            sql << "INSERT IGNORE INTO t_share_config (source, destination, vo, active) "
                 "                    VALUES (:source, :destination, :vo, :active)",
                 soci::use(cfg->source), soci::use(cfg->destination), soci::use(cfg->vo),
                 soci::use(cfg->active_transfers);
