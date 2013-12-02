@@ -234,15 +234,6 @@ def jobFiles(httpRequest, jobId):
 
 
 @jsonify_paged
-def staging(httpRequest):
-    transfers = File.objects.filter(file_state = 'STAGING')
-    transfers = transfers.order_by('-job__submit_time', '-file_id')
-    transfers = transfers.extra(select = {'vo_name': 'vo_name', 'bring_online': 'bring_online', 'copy_pin_lifetime': 'copy_pin_lifetime'})
-        
-    return transfers
-
-
-@jsonify_paged
 def transferList(httpRequest):
     filterForm = forms.FilterForm(httpRequest.GET)
     filters    = setupFilters(filterForm)

@@ -55,7 +55,7 @@ class StateField(forms.CharField):
         states = self.to_python(value)
         if states is not None:
             for s in states:
-                if s not in ['SUBMITTED', 'READY', 'ACTIVE', 'FINISHED', 'FINISHEDDIRTY', 'FAILED', 'CANCELED', 'NOT_USED']:
+                if s not in ['SUBMITTED', 'READY', 'ACTIVE', 'FINISHED', 'FINISHEDDIRTY', 'FAILED', 'CANCELED', 'NOT_USED', 'STAGING']:
                     raise ValidationError("'%s' is not a valid state" % s)
 
 

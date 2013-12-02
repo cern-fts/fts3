@@ -17,10 +17,6 @@ config(function($routeProvider) {
         when('/transfers',            {templateUrl: STATIC_ROOT + 'html/transfers.html',
 					                   controller:  TransfersCtrl,
 					                   resolve:     TransfersCtrl.resolve}).
-
-		when('/staging/',             {templateUrl: STATIC_ROOT + 'html/staging.html',
-			                           controller:  StagingCtrl,
-					                   resolve:     StagingCtrl.resolve}).
 					       
         when('/optimizer/',           {templateUrl: STATIC_ROOT + 'html/optimizer/optimizer.html',
 				                       controller:  OptimizerCtrl,
@@ -280,6 +276,8 @@ function joinStates(states)
 		str += 'SUBMITTED,';
 	if (states.ready)
 		str += 'READY,';
+	if (states.staging)
+		str += 'STAGING,';
 	if (states.active)
 		str += 'ACTIVE,';
 	if (states.canceled)
@@ -309,6 +307,8 @@ function statesFromString(str)
 				st.submitted= true;
 			if (states[i] == 'READY')
 				st.ready = true;
+			if (states[i] == 'STAGING')
+				st.staging = true;
 			if (states[i] == 'ACTIVE')
 				st.active = true;
 			if (states[i] == 'CANCELED')
