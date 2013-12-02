@@ -41,14 +41,6 @@ class TestBanSe(base.TestBase):
             self.assertRaises(Exception, self.client.submit, [{'sources': [src], 'destinations': [dst]}])
             self.client.unbanSe(dstSE)
 
-#    def remove(self):
-#        """
-#        Remove created files
-#        """
-#        for (src,dst) in self.transfers:
-#            logging.info("Starting to remove")
-#            self.surl.removeFiles(src,dst)
-
 if __name__ == '__main__':
     import sys
     sys.exit(TestBanSe().run())

@@ -146,7 +146,6 @@ class Cli:
         self._spawn(cmdArray)
 
     def banSEcancel(self, se):
-        #cmdArray = ['fts-set-blacklist','--status=CANCEL', '-s', config.Fts3Endpoint, 'se', se, 'ON']
         cmdArray = ['fts-set-blacklist','--status=CANCEL', '-s', config.Fts3Endpoint, 'se', se, 'ON']
         self._spawn(cmdArray)
 
@@ -155,7 +154,6 @@ class Cli:
         self._spawn(cmdArray)
 
     def unbanSEcancel(self, se):
-        #cmdArray = ['fts-set-blacklist', '-s', config.Fts3Endpoint, 'se', se, '--status=CANCEL', 'OFF']
         cmdArray = ['fts-set-blacklist', '--status=CANCEL', '-s', config.Fts3Endpoint, 'se', se,  'OFF']
         self._spawn(cmdArray)
 
