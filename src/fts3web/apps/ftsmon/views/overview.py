@@ -16,13 +16,14 @@
 # limitations under the License.
 
 from datetime import datetime, timedelta
+from django.db import connection
 from django.db.models import Count, Sum, Q
 from django.core.paginator import Paginator
 from django.shortcuts import render
 from ftsmon import forms
 from ftsweb.models import File
 from jobs import setupFilters
-from jsonify import jsonify_paged
+from jsonify import jsonify_paged, jsonify
 from urllib import urlencode
 from util import getOrderBy
 
@@ -32,36 +33,50 @@ def overview(httpRequest):
     filterForm = forms.FilterForm(httpRequest.GET)
     filters    = setupFilters(filterForm)
     notBefore  = datetime.utcnow() - timedelta(hours = 1)
+    throughputWindow = datetime.utcnow() - timedelta(seconds = 45)
+
+    query = '''
+    SELECT source_se, dest_se, vo_name, file_state, count(file_id),
+           sum(CASE WHEN job_finished >= %s OR job_finished IS NULL THEN throughput ELSE 0 END)
+    FROM t_file
+    WHERE (job_finished IS NULL OR job_finished >= %s)
+    '''
+    params = [throughputWindow, notBefore]
     
-    pairs = File.objects\
-                .filter(Q(job_finished__isnull = True) | Q(job_finished__gte = notBefore))
-    
+    # Filtering
     if filters['vo']:
-        pairs = pairs.filter(job__vo_name = filters['vo'])
+        query += ' AND vo_name = %s '
+        params.append(filters['vo'])
     if filters['source_se']:
-        pairs = pairs.filter(source_se = filters['source_se'])
+        query += ' AND source_se = %s '
+        params.append(filters['source_se'])
     if filters['dest_se']:
-        pairs = pairs.filter(dest_se = filters['dest_se'])
+        query += ' AND dest_se = %s '
+        params.append(filters['dest_se'])
     
-    pairs = pairs.values('source_se', 'dest_se', 'job__vo_name', 'file_state')
-    pairs = pairs.annotate(ntransfers = Count('file_id'), throughput = Sum('throughput'))
+    query += ' GROUP BY source_se, dest_se, vo_name, file_state '    
+
+    cursor = connection.cursor()
+    cursor.execute(query, params)
     
     # Need to group by pairs :(
     grouped = {}
-    for p in pairs:
-        triplet = (p['source_se'], p['dest_se'], p['job__vo_name'])
+    for p in cursor.fetchall():
+        triplet = p[0:3]
         if triplet not in grouped:
             grouped[triplet] = {}
-        grouped[triplet][p['file_state'].lower()] = p['ntransfers']
-        if p['file_state'] == 'ACTIVE':
-            grouped[triplet]['current'] = grouped[triplet].get('current', 0) + p['throughput']
-        
+        grouped[triplet][p[3].lower()] = p[4]
+        if p[5]:
+            grouped[triplet]['current'] = grouped[triplet].get('current', 0) + p[5]
+            
     # And transform into a list
     objs = []
     for (triplet, obj) in grouped.iteritems():
         obj['source_se'] = triplet[0]
         obj['dest_se']   = triplet[1]
         obj['vo_name']   = triplet[2]
+        if 'current' not in obj and 'active' in obj:
+            obj['current'] = 0 
         objs.append(obj)
     
     # Ordering
@@ -79,4 +94,3 @@ def overview(httpRequest):
         sortingMethod = lambda o: (o.get('submitted', 0), o.get('active', 0))
     
     return sorted(objs, key = sortingMethod, reverse = orderDesc)
-
