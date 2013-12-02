@@ -261,8 +261,6 @@ public:
 
     void setMaxStageOp(const std::string& se, const std::string& vo, int val);
 
-    void useFileReplica(std::string jobId, int fileId);
-
     double getSuccessRate(std::string source, std::string destination);
 
     double getAvgThroughput(std::string source, std::string destination);

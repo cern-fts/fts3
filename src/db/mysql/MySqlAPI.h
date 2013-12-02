@@ -285,8 +285,6 @@ public:
 
     virtual void setMaxStageOp(const std::string& se, const std::string& vo, int val);
 
-    virtual void useFileReplica(std::string jobId, int fileId);
-
     virtual double getSuccessRate(std::string source, std::string destination);
 
     virtual double getAvgThroughput(std::string source, std::string destination);
@@ -376,5 +374,7 @@ private:
     bool updateFileTransferStatusInternal(soci::session& sql, double throughput, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message, int process_id, double filesize, double duration);
 
     bool updateJobTransferStatusInternal(soci::session& sql, int file_id, std::string job_id, const std::string status);
+
+    void useFileReplica(soci::session& sql, std::string jobId, int fileId);
 
 };

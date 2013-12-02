@@ -6,7 +6,7 @@
  * Return true if the error is considered recoverable
  * (i.e. ENOENT is not recoverable)
  */
-bool retryTransfer(int errorNo, const std::string& category);
+bool retryTransfer(int errorNo, const std::string& category, const std::string& message);
 
 /**
  * Return the best number of streams for the given file size
@@ -21,6 +21,6 @@ unsigned adjustTimeoutBasedOnSize(off_t sizeInBytes, unsigned int timeout);
 /**
  * Extract domain name from url and compare to see if it's a LAN transfer
  */
-bool lanTransfer(const std::string source, const std::string dest); 
+bool lanTransfer(const std::string source, const std::string dest);
 
 

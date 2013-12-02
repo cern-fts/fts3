@@ -3,31 +3,34 @@
 #include "common/definitions.h"
 #include "heuristics.h"
 
-bool lanTransfer(const std::string source, const std::string dest){
-	
-	std::string sourceDomain;
-	std::string destinDomain;	
-	
-	std::size_t foundSource = source.find(".");
-	std::size_t foundDestin = dest.find(".");
-	
-	if (foundSource!=std::string::npos){
-		sourceDomain = source.substr (foundSource,source.length());
-	}	
+bool lanTransfer(const std::string source, const std::string dest)
+{
 
-	if (foundDestin!=std::string::npos){
-		destinDomain = dest.substr (foundDestin, dest.length());	
-	}	
+    std::string sourceDomain;
+    std::string destinDomain;
 
-	if(sourceDomain == destinDomain)
-		return true;
+    std::size_t foundSource = source.find(".");
+    std::size_t foundDestin = dest.find(".");
 
-	return false;
+    if (foundSource!=std::string::npos)
+        {
+            sourceDomain = source.substr (foundSource,source.length());
+        }
+
+    if (foundDestin!=std::string::npos)
+        {
+            destinDomain = dest.substr (foundDestin, dest.length());
+        }
+
+    if(sourceDomain == destinDomain)
+        return true;
+
+    return false;
 }
 
 
 
-bool retryTransfer(int errorNo, const std::string& category)
+bool retryTransfer(int errorNo, const std::string& category, const std::string& message)
 {
     bool retry = true;
 
@@ -87,6 +90,32 @@ bool retryTransfer(int errorNo, const std::string& category)
                 }
         }
 
+    //search for error patterns not reported by SRM or GSIFTP
+    std::size_t found = message.find("proxy expired");
+    if (found!=std::string::npos)
+        retry = false;
+    found = message.find("File exists and overwrite");
+    if (found!=std::string::npos)
+        retry = false;
+    found = message.find("No such file or directory");
+    if (found!=std::string::npos)
+        retry = false;
+    found = message.find("SRM_INVALID_PATH");
+    if (found!=std::string::npos)
+        retry = false;
+    found = message.find("The certificate has expired");
+    if (found!=std::string::npos)
+        retry = false;
+    found = message.find("The available CRL has expired");
+    if (found!=std::string::npos)
+        retry = false;
+    found = message.find("SRM Authentication failed");
+    if (found!=std::string::npos)
+        retry = false;
+    found = message.find("SRM_DUPLICATION_ERROR");
+    if (found!=std::string::npos)
+        retry = false;
+
     return retry;
 }
 
@@ -113,12 +142,12 @@ unsigned adjustStreamsBasedOnSize(off_t sizeInBytes, unsigned int /*currentStrea
     else if (sizeInBytes > 1610612736 && sizeInBytes <= 2010612736)
         return 9;
     else if (sizeInBytes > 2010612736 && sizeInBytes <= 2576980377)
-        return 10;	
+        return 10;
     else if (sizeInBytes > 2576980377 && sizeInBytes <= 3758096384)
-        return 12;	
+        return 12;
     else if (sizeInBytes > 3758096384 && sizeInBytes <= 4858096384)
-        return 14;			
-    else 
+        return 14;
+    else
         return 16;
     return 6;
 }

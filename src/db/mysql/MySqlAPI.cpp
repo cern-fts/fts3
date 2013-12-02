@@ -77,12 +77,12 @@ bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate
                     std::string destLocal = boost::get<1>(tupleRecord);
                     double rateLocal = boost::get<2>(tupleRecord);
                     double thrLocal = boost::get<3>(tupleRecord);
-		    double retryThr = boost::get<4>(tupleRecord);
-		    
+                    double retryThr = boost::get<4>(tupleRecord);
+
                     if(sourceLocal == source && destLocal == dest)
                         {
-			    retryStored = retryThr;
-			    thrStored = thrLocal;			
+                            retryStored = retryThr;
+                            thrStored = thrLocal;
                             if(rateLocal != rate || thrLocal != thr || retry != retryThr)
                                 {
                                     it = filesMemStore.erase(it);
@@ -779,13 +779,10 @@ void MySqlAPI::setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<i
         }
 }
 
-void MySqlAPI::useFileReplica(std::string jobId, int fileId)
+void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId)
 {
-    soci::session sql(*connectionPool);
-
     try
         {
-
             soci::indicator ind = soci::i_ok;
             int fileIndex=0;
 
@@ -1719,6 +1716,9 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
             stmt.execute(true);
 
             sql.commit();
+
+            if(transfer_status == "FAILED")
+                useFileReplica(sql, job_id, file_id);
 
         }
     catch (std::exception& e)
@@ -2803,27 +2803,27 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                     double nFailedLastHour=0.0, nFinishedLastHour=0.0;
                     double throughput=0.0;
                     double filesize = 0.0;
-                    double totalSize = 0.0;		    
-   	            double retry = 0.0;   //latest from db
-		    double retryStored = 0.0; //stored in mem
-		    double thrStored = 0.0; //stored in mem                    
+                    double totalSize = 0.0;
+                    double retry = 0.0;   //latest from db
+                    double retryStored = 0.0; //stored in mem
+                    double thrStored = 0.0; //stored in mem
                     int active = 0;
-                    int maxActive = 0;	
-		    std::stringstream message;	   
-		    soci::indicator isNullRetry = soci::i_ok;  
-		    soci::indicator isNullMaxActive = soci::i_ok;  
+                    int maxActive = 0;
+                    std::stringstream message;
+                    soci::indicator isNullRetry = soci::i_ok;
+                    soci::indicator isNullMaxActive = soci::i_ok;
 
                     // Weighted average for the 5 newest transfers
                     soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
-                                           " SELECT filesize, throughput "
-                                           " FROM t_file use index(t_file_select) "
-                                           " WHERE source_se = :source AND dest_se = :dest AND "
-                                           "       file_state IN ('ACTIVE','FINISHED') AND throughput > 0 AND "
-                                           "       filesize > 0  AND "
-                                           "       (start_time >= date_sub(utc_timestamp(), interval '5' minute) OR "
-                                           "        job_finished >= date_sub(utc_timestamp(), interval '5' minute)) "
-                                           " ORDER BY job_finished DESC LIMIT 5 ",
-                                           soci::use(source_hostname),soci::use(destin_hostname));
+                            " SELECT filesize, throughput "
+                            " FROM t_file use index(t_file_select) "
+                            " WHERE source_se = :source AND dest_se = :dest AND "
+                            "       file_state IN ('ACTIVE','FINISHED') AND throughput > 0 AND "
+                            "       filesize > 0  AND "
+                            "       (start_time >= date_sub(utc_timestamp(), interval '5' minute) OR "
+                            "        job_finished >= date_sub(utc_timestamp(), interval '5' minute)) "
+                            " ORDER BY job_finished DESC LIMIT 5 ",
+                            soci::use(source_hostname),soci::use(destin_hostname));
 
                     for (soci::rowset<soci::row>::const_iterator j = rsSizeAndThroughput.begin();
                             j != rsSizeAndThroughput.end(); ++j)
@@ -2873,18 +2873,18 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                                 sql.prepare << "SELECT active FROM t_optimize_active "
                                                 "WHERE source_se = :source AND dest_se = :dest_se ",
                                                 soci::use(source_hostname),soci::use(destin_hostname), soci::into(maxActive, isNullMaxActive));
-                    stmt8.execute(true);		    		    
-		    
-		    sql << "select sum(retry) from t_file WHERE source_se = :source AND dest_se = :dest_se and "
-		    	   "file_state in ('ACTIVE','SUBMITTED') order by start_time DESC LIMIT 50 ", 
-		    		soci::use(source_hostname),soci::use(destin_hostname), soci::into(retry, isNullRetry);					   		
-		     
-		    if (isNullRetry == soci::i_null) 
-		    	retry = 0;
-		     
+                    stmt8.execute(true);
+
+                    sql << "select sum(retry) from t_file WHERE source_se = :source AND dest_se = :dest_se and "
+                        "file_state in ('ACTIVE','SUBMITTED') order by start_time DESC LIMIT 50 ",
+                        soci::use(source_hostname),soci::use(destin_hostname), soci::into(retry, isNullRetry);
+
+                    if (isNullRetry == soci::i_null)
+                        retry = 0;
+
                     //only apply the logic below if any of these values changes
                     bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, throughput, thrStored, retry, retryStored);
-		    
+
                     if(changed)
                         {
                             sql.begin();

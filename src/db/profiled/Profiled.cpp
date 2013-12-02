@@ -707,12 +707,6 @@ void ProfiledDB::setMaxStageOp(const std::string& se, const std::string& vo, int
 }
 
 
-void ProfiledDB::useFileReplica(std::string jobId, int fileId)
-{
-    PROFILE_PREFIXED("DB::", db->useFileReplica(jobId, fileId));
-}
-
-
 double ProfiledDB::getSuccessRate(std::string source, std::string destination)
 {
     PROFILE_PREFIXED("DB::", return db->getSuccessRate(source, destination));

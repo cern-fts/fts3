@@ -322,8 +322,6 @@ public:
 
     virtual void setMaxStageOp(const std::string& se, const std::string& vo, int val) = 0;
 
-    virtual void useFileReplica(std::string jobId, int fileId) = 0;
-
     virtual double getSuccessRate(std::string source, std::string destination) = 0;
 
     virtual double getAvgThroughput(std::string source, std::string destination) = 0;

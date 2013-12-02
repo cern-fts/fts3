@@ -146,6 +146,9 @@ void abnormalTermination(const std::string& classification, const std::string&, 
         {
             errorMessage += " " + globalErrorMessage;
         }
+	
+     if(classification != "CANCELED")
+    	retry = true;		
 
     Logger::getInstance().ERROR() << errorMessage << std::endl;
 
@@ -405,7 +408,7 @@ int statWithRetries(gfal_context_t handle, const std::string& category, const st
                     errMsg->assign(statError->message);
                     g_clear_error(&statError);
 
-                    canBeRetried = retryTransfer(errorCode, category);
+                    canBeRetried = retryTransfer(errorCode, category, std::string(statError->message));
                     if (!canBeRetried)
                         return errorCode;
                 }
@@ -762,7 +765,7 @@ int main(int argc, char **argv)
                         errorScope = SOURCE;
                         reasonClass = mapErrnoToString(errorCode);
                         errorPhase = TRANSFER_PREPARATION;
-                        retry = retryTransfer(errorCode, "SOURCE");
+                        retry = retryTransfer(errorCode, "SOURCE", errorMessage);
                         goto stop;
                     }
 
@@ -835,12 +838,13 @@ int main(int argc, char **argv)
                 logger.INFO() << "Resetting global timeout thread to " << globalTimeout << " seconds" << std::endl;
 
                 unsigned int experimentalNstreams = adjustStreamsBasedOnSize(currentTransfer.fileSize, opts.nStreams);
-		if(!opts.manualConfig || opts.autoTunned || opts.nStreams==0){
-		     if(true == lanTransfer(fileManagement.getSourceHostname(), fileManagement.getDestHostname()))
-                    	opts.nStreams = (experimentalNstreams * 2) > 16? 16: experimentalNstreams * 2;
-		     else
-		        opts.nStreams = experimentalNstreams;	
-		}
+                if(!opts.manualConfig || opts.autoTunned || opts.nStreams==0)
+                    {
+                        if(true == lanTransfer(fileManagement.getSourceHostname(), fileManagement.getDestHostname()))
+                            opts.nStreams = (experimentalNstreams * 2) > 16? 16: experimentalNstreams * 2;
+                        else
+                            opts.nStreams = experimentalNstreams;
+                    }
                 gfalt_set_nbstreams(params, opts.nStreams, NULL);
                 msg_ifce::getInstance()->set_number_of_streams(&tr_completed, opts.nStreams);
                 logger.INFO() << "nbstreams:" << opts.nStreams << std::endl;
@@ -901,7 +905,7 @@ int main(int argc, char **argv)
                             }
                         if(tmp_err)
                             {
-                                retry = retryTransfer(tmp_err->code, "TRANSFER" );
+                                retry = retryTransfer(tmp_err->code, "TRANSFER", std::string(tmp_err->message) );
                                 g_clear_error(&tmp_err);
                             }
                         g_clear_error(&tmp_err);
@@ -927,7 +931,7 @@ int main(int argc, char **argv)
                         errorScope = DESTINATION;
                         reasonClass = mapErrnoToString(errorCode);
                         errorPhase = TRANSFER_FINALIZATION;
-                        retry = retryTransfer(errorCode, "DESTINATION");
+                        retry = retryTransfer(errorCode, "DESTINATION", errorMessage);
                         goto stop;
                     }
 
