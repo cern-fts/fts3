@@ -163,3 +163,6 @@ class Cli:
         cmdArray = ['fts-set-blacklist', '-s', config.Fts3Endpoint, 'se', se, '--status=WAIT', 'OFF']
         self._spawn(cmdArray)
 
+    def setDebug(self, src, dst, status):
+        cmdArray = ['fts-set-debug','-s', config.Fts3Endpoint, src, dst, status]
+        self._spawn(cmdArray)
