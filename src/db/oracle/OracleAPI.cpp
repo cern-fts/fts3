@@ -6946,15 +6946,13 @@ void OracleAPI::setOptimizerMode(int mode)
 
     try
         {
-            sql << "select count(*) from t_optimize_mode", soci::into(_mode);
+            sql << "SELECT COUNT(*) FROM t_optimize_mode", soci::into(_mode);
             if (_mode == 0)
                 {
                     sql.begin();
 
-                    sql << "INSERT INTO t_optimize_mode (mode_opt) VALUES (:mode) ON DUPLICATE KEY UPDATE mode_opt=:mode",
-                        soci::use(mode),
-                        soci::use(mode)
-                        ;
+                    sql << "INSERT INTO t_optimize_mode (mode_opt) VALUES (:mode_opt)",
+                            soci::use(mode);
 
                     sql.commit();
 
@@ -6963,9 +6961,8 @@ void OracleAPI::setOptimizerMode(int mode)
                 {
                     sql.begin();
 
-                    sql << "update t_optimize_mode set mode_opt = :mode",
-                        soci::use(mode)
-                        ;
+                    sql << "UPDATE t_optimize_mode SET mode_opt = :mode_opt",
+                        soci::use(mode);
 
                     sql.commit();
                 }
