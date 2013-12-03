@@ -2693,7 +2693,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                     if(active < highDefault || maxActive < highDefault)
                                         active = highDefault;
                                     else
-                                        active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
+                                        active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
                                     sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",
                                         soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
                                 }
@@ -2702,7 +2702,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                     if(active < highDefault || maxActive < highDefault)
                                         active = highDefault;
                                     else
-                                        active = ((maxActive - 3) < highDefault)? highDefault: (maxActive - 3);
+                                        active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
                                     sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",
                                         soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
                                 }
