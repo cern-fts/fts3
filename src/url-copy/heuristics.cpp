@@ -3,33 +3,6 @@
 #include "common/definitions.h"
 #include "heuristics.h"
 
-bool lanTransfer(const std::string source, const std::string dest)
-{
-
-    std::string sourceDomain;
-    std::string destinDomain;
-
-    std::size_t foundSource = source.find(".");
-    std::size_t foundDestin = dest.find(".");
-
-    if (foundSource!=std::string::npos)
-        {
-            sourceDomain = source.substr (foundSource,source.length());
-        }
-
-    if (foundDestin!=std::string::npos)
-        {
-            destinDomain = dest.substr (foundDestin, dest.length());
-        }
-
-    if(sourceDomain == destinDomain)
-        return true;
-
-    return false;
-}
-
-
-
 bool retryTransfer(int errorNo, const std::string& category, const std::string& message)
 {
     bool retry = true;

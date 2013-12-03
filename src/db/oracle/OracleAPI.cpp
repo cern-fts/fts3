@@ -437,24 +437,7 @@ void OracleAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& f
 
     try
         {
-            int mode = getOptimizerMode(sql);
-            int defaultFilesNum = 0;
-            if(mode==1)
-                {
-                    defaultFilesNum = mode_1[3];
-                }
-            else if(mode==2)
-                {
-                    defaultFilesNum = mode_2[3];
-                }
-            else if(mode==3)
-                {
-                    defaultFilesNum = mode_3[3];
-                }
-            else
-                {
-                    defaultFilesNum = mode_1[3];
-                }
+            int defaultFilesNum = getOptimizerMode(sql);
 
             soci::rowset<soci::row> rs = (
                                              sql.prepare <<
@@ -1547,13 +1530,13 @@ void OracleAPI::updateSe(std::string ENDPOINT, std::string SE_TYPE, std::string 
 
 
 bool OracleAPI::updateFileTransferStatus(double throughputIn, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
-        int process_id, double filesize, double duration)
+        int process_id, double filesize, double duration, bool retry)
 {
 
     soci::session sql(*connectionPool);
     try
         {
-            updateFileTransferStatusInternal(sql, throughputIn, job_id, file_id, transfer_status, transfer_message, process_id, filesize, duration);
+            updateFileTransferStatusInternal(sql, throughputIn, job_id, file_id, transfer_status, transfer_message, process_id, filesize, duration, retry);
         }
     catch (std::exception& e)
         {
@@ -1568,7 +1551,7 @@ bool OracleAPI::updateFileTransferStatus(double throughputIn, std::string job_id
 
 
 bool OracleAPI::updateFileTransferStatusInternal(soci::session& sql, double throughputIn, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
-        int process_id, double filesize, double duration)
+        int process_id, double filesize, double duration, bool retry)
 {
     bool ok = true;
 
@@ -1577,6 +1560,8 @@ bool OracleAPI::updateFileTransferStatusInternal(soci::session& sql, double thro
             double throughput = 0.0;
 
             bool staging = false;
+
+            int current_failures = retry;
 
             time_t now = time(NULL);
             struct tm tTime;
@@ -1667,12 +1652,13 @@ bool OracleAPI::updateFileTransferStatusInternal(soci::session& sql, double thro
                     throughput = 0.0;
                 }
 
-            query << "   , pid = :pid, filesize = :filesize, tx_duration = :duration, throughput = :throughput "
+            query << "   , pid = :pid, filesize = :filesize, tx_duration = :duration, throughput = :throughput, current_failures = :current_failures "
                   "WHERE file_id = :fileId AND file_state NOT IN ('FAILED', 'FINISHED', 'CANCELED')";
             stmt.exchange(soci::use(process_id, "pid"));
             stmt.exchange(soci::use(filesize, "filesize"));
             stmt.exchange(soci::use(duration, "duration"));
             stmt.exchange(soci::use(throughput, "throughput"));
+            stmt.exchange(soci::use(current_failures, "current_failures"));
             stmt.exchange(soci::use(file_id, "fileId"));
             stmt.alloc();
             stmt.prepare(query.str());
@@ -2656,29 +2642,7 @@ bool OracleAPI::isTrAllowed2(const std::string & source_hostname, const std::str
 
     try
         {
-            int mode = getOptimizerMode(sql);
-            int lowDefault = 3, highDefault = 5, jobsNum = 3;
-            if(mode==1)
-                {
-                    lowDefault = mode_1[0];
-                    highDefault = mode_1[1];
-                }
-            else if(mode==2)
-                {
-                    lowDefault = mode_2[0];
-                    highDefault = mode_2[1];
-                }
-            else if(mode==3)
-                {
-                    lowDefault = mode_3[0];
-                    highDefault = mode_3[1];
-                }
-            else
-                {
-                    jobsNum = mode_1[0];
-                    highDefault = mode_1[1];
-                }
-
+            int highDefault = getOptimizerMode(sql);
 
             soci::statement stmt1 = (
                                         sql.prepare << "SELECT active FROM t_optimize_active "
@@ -2725,28 +2689,8 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
 
     try
         {
-            int mode = getOptimizerMode(sql);
-            int lowDefault = 3, highDefault = 5, jobsNum = 3;
-            if(mode==1)
-                {
-                    lowDefault = mode_1[0];
-                    highDefault = mode_1[1];
-                }
-            else if(mode==2)
-                {
-                    lowDefault = mode_2[0];
-                    highDefault = mode_2[1];
-                }
-            else if(mode==3)
-                {
-                    lowDefault = mode_3[0];
-                    highDefault = mode_3[1];
-                }
-            else
-                {
-                    jobsNum = mode_1[0];
-                    highDefault = mode_1[1];
-                }
+            int highDefault = getOptimizerMode(sql);
+            int tempDefault =   highDefault;
 
             soci::rowset<soci::row> rs = ( sql.prepare << " select  distinct o.source_se, o.dest_se from t_optimize_active o INNER JOIN "
                                            " t_file f ON (o.source_se = f.source_se) where o.dest_se=f.dest_se and "
@@ -2756,6 +2700,11 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                 {
                     std::string source_hostname = i->get<std::string>("SOURCE_SE");
                     std::string destin_hostname = i->get<std::string>("DEST_SE");
+
+                    if(true == lanTransfer(source_hostname, destin_hostname))
+                        highDefault *= 3;
+                    else //default
+                        highDefault = tempDefault;
 
                     double nFailedLastHour=0.0, nFinishedLastHour=0.0;
                     double throughput=0.0;
@@ -2778,8 +2727,8 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                             " WHERE source_se = :source AND dest_se = :dest AND "
                             "       file_state IN ('ACTIVE','FINISHED') AND throughput > 0 AND "
                             "       filesize > 0  AND "
-                            "       (start_time >= (sys_extract_utc(systimestamp) - interval '5' minute) OR "
-                            "        job_finished >= (sys_extract_utc(systimestamp) - interval '5' minute)) "
+                            "       (start_time >= (sys_extract_utc(systimestamp) - interval '1' minute) OR "
+                            "        job_finished >= (sys_extract_utc(systimestamp) - interval '1' minute)) "
                             " ORDER BY job_finished DESC)"
                             " WHERE rn <= 5 ",
                             soci::use(source_hostname),soci::use(destin_hostname));
@@ -2796,18 +2745,21 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
 
 
                     // Ratio of success
-                    soci::rowset<std::string> rs = (sql.prepare << "SELECT file_state FROM t_file "
-                                                    "WHERE "
-                                                    "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                                                    "      (t_file.job_finished > (sys_extract_utc(systimestamp) - interval '5' minute)) AND "
-                                                    "      file_state IN ('FAILED','FINISHED') ",
-                                                    soci::use(source_hostname), soci::use(destin_hostname));
+                    soci::rowset<soci::row> rs = (sql.prepare << "SELECT file_state, current_failures FROM t_file "
+                                                  "WHERE "
+                                                  "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
+                                                  "      (t_file.job_finished > (sys_extract_utc(systimestamp) - interval '1' minute)) AND "
+                                                  "      file_state IN ('FAILED','FINISHED') ",
+                                                  soci::use(source_hostname), soci::use(destin_hostname));
 
-                    for (soci::rowset<std::string>::const_iterator i = rs.begin();
+                    for (soci::rowset<soci::row>::const_iterator i = rs.begin();
                             i != rs.end(); ++i)
                         {
-                            if      (i->compare("FAILED") == 0)   nFailedLastHour+=1.0;
-                            else if (i->compare("FINISHED") == 0) ++nFinishedLastHour+=1.0;
+                            std::string fileState = i->get<std::string>("FILE_STATE", "");
+                            int retry = static_cast<int>(i->get<long long>("CURRENT_FAILURES",0));
+
+                            if      (fileState.compare("FAILED") == 0 && retry==0 )   nFailedLastHour+=1.0;
+                            else if (fileState.compare("FINISHED") == 0) ++nFinishedLastHour+=1.0;
                         }
 
                     double ratioSuccessFailure = 0.0;
@@ -2815,11 +2767,6 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                         {
                             ratioSuccessFailure = nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0);
                         }
-
-                    if(ratioSuccessFailure == 100)
-                        highDefault = mode_2[1];
-                    else
-                        highDefault = mode_1[1];
 
                     // Active transfers
                     soci::statement stmt7 = (
@@ -2836,8 +2783,8 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                     stmt8.execute(true);
 
 
-                    sql << "select * from (SELECT rownum as rn, sum(retry) from t_file WHERE source_se = :source AND dest_se = :dest_se and "
-                        "file_state in ('ACTIVE','SUBMITTED') order by start_time) WHERE rn <= 50 ",
+                    sql << "select * from (SELECT sum(retry) from t_file WHERE source_se = :source AND dest_se = :dest_se and "
+                        "file_state in ('ACTIVE','SUBMITTED') order by start_time) WHERE ROWNUM <= 50 ",
                         soci::use(source_hostname),soci::use(destin_hostname), soci::into(retry, isNullRetry);
 
                     if (isNullRetry == soci::i_null)
@@ -2852,7 +2799,10 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
 
                             if(ratioSuccessFailure == 100 && throughput != 0 && thrStored !=0 && throughput > thrStored && retry <= retryStored)
                                 {
-                                    active = maxActive + 1;
+                                    if(active < highDefault || maxActive < highDefault)
+                                        active = highDefault;
+                                    else
+                                        active = maxActive + 2;
 
                                     message << "Increasing active by 1, previously "
                                             << maxActive
@@ -2874,10 +2824,10 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                                 }
                             else if(ratioSuccessFailure == 100 && throughput != 0 && thrStored !=0 && throughput == thrStored && retry <= retryStored)
                                 {
-                                    if(mode==2 || mode==3)
-                                        active = maxActive + 1;
+                                    if(active < highDefault || maxActive < highDefault)
+                                        active = highDefault;
                                     else
-                                        active = maxActive;
+                                        active = maxActive + 1;
 
                                     message << "Success rate is "
                                             << ratioSuccessFailure
@@ -2900,7 +2850,7 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                                     if(active < highDefault || maxActive < highDefault)
                                         active = highDefault;
                                     else
-                                        active = maxActive - 1;
+                                        active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
 
                                     message << "Success rate is "
                                             << ratioSuccessFailure
@@ -2923,7 +2873,7 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                                     if(active < highDefault || maxActive < highDefault)
                                         active = highDefault;
                                     else
-                                        active = maxActive - 2;
+                                        active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
 
                                     message << "Success rate is "
                                             << ratioSuccessFailure
@@ -3211,7 +3161,7 @@ void OracleAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                                     collectJobs.insert(std::make_pair<int, std::string > (fileId, jobId));
                                     updateFileTransferStatusInternal(sql, 0.0, jobId, fileId,
                                                                      "FAILED", "Transfer has been forced-killed because it was stalled",
-                                                                     pid, 0, 0);
+                                                                     pid, 0, 0, false);
                                     updateJobTransferStatusInternal(sql, jobId, "FAILED");
                                 }
 
@@ -3589,7 +3539,7 @@ bool OracleAPI::retryFromDead(std::vector<struct message_updater>& messages)
                                            );
                     if (rs.begin() != rs.end())
                         {
-                            updateFileTransferStatusInternal(sql, 0.0, (*iter).job_id, (*iter).file_id, transfer_status, transfer_message, (*iter).process_id, 0, 0);
+                            updateFileTransferStatusInternal(sql, 0.0, (*iter).job_id, (*iter).file_id, transfer_status, transfer_message, (*iter).process_id, 0, 0,false);
                             updateJobTransferStatusInternal(sql, (*iter).job_id, status);
                         }
                 }
@@ -6940,7 +6890,7 @@ void OracleAPI::setOptimizerMode(int mode)
                     sql.begin();
 
                     sql << "INSERT INTO t_optimize_mode (mode_opt) VALUES (:mode_opt)",
-                            soci::use(mode);
+                        soci::use(mode);
 
                     sql.commit();
 
@@ -6969,7 +6919,7 @@ void OracleAPI::setOptimizerMode(int mode)
 
 int OracleAPI::getOptimizerMode(soci::session& sql)
 {
-    int mode = 0;
+    int mode = 5;
     soci::indicator ind = soci::i_ok;
 
     try
@@ -6980,9 +6930,27 @@ int OracleAPI::getOptimizerMode(soci::session& sql)
                 " WHERE rn = 1",
                 soci::into(mode, ind)
                 ;
-            if (ind == soci::i_ok)
-                return mode;
 
+            if (ind == soci::i_ok)
+                {
+                    if(mode==1)
+                        {
+                            return mode;
+                        }
+                    else if(mode==2)
+                        {
+                            return (mode *2);
+                        }
+                    else if(mode==3)
+                        {
+                            return (mode *3);
+                        }
+                    else
+                        {
+                            return mode;
+                        }
+                }
+            return mode;
         }
     catch (std::exception& e)
         {

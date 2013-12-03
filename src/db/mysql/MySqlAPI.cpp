@@ -466,24 +466,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
 
     try
         {
-            int mode = getOptimizerMode(sql);
-            int defaultFilesNum = 0;
-            if(mode==1)
-                {
-                    defaultFilesNum = mode_1[3];
-                }
-            else if(mode==2)
-                {
-                    defaultFilesNum = mode_2[3];
-                }
-            else if(mode==3)
-                {
-                    defaultFilesNum = mode_3[3];
-                }
-            else
-                {
-                    defaultFilesNum = mode_1[3];
-                }
+            int defaultFilesNum = getOptimizerMode(sql);
 
             soci::rowset<soci::row> rs = (
                                              sql.prepare <<
@@ -833,6 +816,8 @@ unsigned int MySqlAPI::updateFileStatus(TransferFiles* file, const std::string s
         {
             int countSame = 0;
 
+            sql.begin();
+
             soci::statement stmt1 = (
                                         sql.prepare << "select count(*) from t_file where file_state in ('READY','ACTIVE') and dest_surl=:destUrl and vo_name=:vo_name and dest_se=:dest_se ",
                                         soci::use(file->DEST_SURL),
@@ -841,7 +826,6 @@ unsigned int MySqlAPI::updateFileStatus(TransferFiles* file, const std::string s
                                         soci::into(countSame));
             stmt1.execute(true);
 
-            sql.begin();
 
             if(countSame > 0)
                 {
@@ -1583,13 +1567,13 @@ void MySqlAPI::updateSe(std::string ENDPOINT, std::string SE_TYPE, std::string S
 
 
 bool MySqlAPI::updateFileTransferStatus(double throughputIn, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
-                                        int process_id, double filesize, double duration)
+                                        int process_id, double filesize, double duration, bool retry)
 {
 
     soci::session sql(*connectionPool);
     try
         {
-            updateFileTransferStatusInternal(sql, throughputIn, job_id, file_id, transfer_status, transfer_message, process_id, filesize, duration);
+            updateFileTransferStatusInternal(sql, throughputIn, job_id, file_id, transfer_status, transfer_message, process_id, filesize, duration, retry);
         }
     catch (std::exception& e)
         {
@@ -1604,7 +1588,7 @@ bool MySqlAPI::updateFileTransferStatus(double throughputIn, std::string job_id,
 
 
 bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throughputIn, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
-        int process_id, double filesize, double duration)
+        int process_id, double filesize, double duration, bool retry)
 {
     bool ok = true;
 
@@ -1613,6 +1597,8 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
             double throughput = 0.0;
 
             bool staging = false;
+
+            int current_failures = retry;
 
             time_t now = time(NULL);
             struct tm tTime;
@@ -1703,12 +1689,13 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
                     throughput = 0.0;
                 }
 
-            query << "   , pid = :pid, filesize = :filesize, tx_duration = :duration, throughput = :throughput "
+            query << "   , pid = :pid, filesize = :filesize, tx_duration = :duration, throughput = :throughput, current_failures = :current_failures "
                   "WHERE file_id = :fileId AND file_state NOT IN ('FAILED', 'FINISHED', 'CANCELED')";
             stmt.exchange(soci::use(process_id, "pid"));
             stmt.exchange(soci::use(filesize, "filesize"));
             stmt.exchange(soci::use(duration, "duration"));
             stmt.exchange(soci::use(throughput, "throughput"));
+            stmt.exchange(soci::use(current_failures, "current_failures"));
             stmt.exchange(soci::use(file_id, "fileId"));
             stmt.alloc();
             stmt.prepare(query.str());
@@ -2695,29 +2682,7 @@ bool MySqlAPI::isTrAllowed2(const std::string & source_hostname, const std::stri
 
     try
         {
-            int mode = getOptimizerMode(sql);
-            int lowDefault = 3, highDefault = 5, jobsNum = 3;
-            if(mode==1)
-                {
-                    lowDefault = mode_1[0];
-                    highDefault = mode_1[1];
-                }
-            else if(mode==2)
-                {
-                    lowDefault = mode_2[0];
-                    highDefault = mode_2[1];
-                }
-            else if(mode==3)
-                {
-                    lowDefault = mode_3[0];
-                    highDefault = mode_3[1];
-                }
-            else
-                {
-                    jobsNum = mode_1[0];
-                    highDefault = mode_1[1];
-                }
-
+            int highDefault = getOptimizerMode(sql);
 
             soci::statement stmt1 = (
                                         sql.prepare << "SELECT active FROM t_optimize_active "
@@ -2764,28 +2729,8 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 
     try
         {
-            int mode = getOptimizerMode(sql);
-            int lowDefault = 3, highDefault = 5, jobsNum = 3;
-            if(mode==1)
-                {
-                    lowDefault = mode_1[0];
-                    highDefault = mode_1[1];
-                }
-            else if(mode==2)
-                {
-                    lowDefault = mode_2[0];
-                    highDefault = mode_2[1];
-                }
-            else if(mode==3)
-                {
-                    lowDefault = mode_3[0];
-                    highDefault = mode_3[1];
-                }
-            else
-                {
-                    jobsNum = mode_1[0];
-                    highDefault = mode_1[1];
-                }
+            int highDefault = getOptimizerMode(sql);
+            int tempDefault =   highDefault;
 
             soci::rowset<soci::row> rs = ( sql.prepare <<
                                            " select  distinct o.source_se, o.dest_se from t_optimize_active o INNER JOIN "
@@ -2796,6 +2741,11 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                 {
                     std::string source_hostname = i->get<std::string>("source_se");
                     std::string destin_hostname = i->get<std::string>("dest_se");
+
+                    if(true == lanTransfer(source_hostname, destin_hostname))
+                        highDefault *= 3;
+                    else //default
+                        highDefault = tempDefault;
 
                     double nFailedLastHour=0.0, nFinishedLastHour=0.0;
                     double throughput=0.0;
@@ -2817,8 +2767,8 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                             " WHERE source_se = :source AND dest_se = :dest AND "
                             "       file_state IN ('ACTIVE','FINISHED') AND throughput > 0 AND "
                             "       filesize > 0  AND "
-                            "       (start_time >= date_sub(utc_timestamp(), interval '5' minute) OR "
-                            "        job_finished >= date_sub(utc_timestamp(), interval '5' minute)) "
+                            "       (start_time >= date_sub(utc_timestamp(), interval '1' minute) OR "
+                            "        job_finished >= date_sub(utc_timestamp(), interval '1' minute)) "
                             " ORDER BY job_finished DESC LIMIT 5 ",
                             soci::use(source_hostname),soci::use(destin_hostname));
 
@@ -2833,18 +2783,21 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                         throughput /= totalSize;
 
                     // Ratio of success
-                    soci::rowset<std::string> rs = (sql.prepare << "SELECT file_state FROM t_file "
-                                                    "WHERE "
-                                                    "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                                                    "      (t_file.job_finished > (UTC_TIMESTAMP() - interval '5' minute)) AND "
-                                                    "      file_state IN ('FAILED','FINISHED') ",
-                                                    soci::use(source_hostname), soci::use(destin_hostname));
+                    soci::rowset<soci::row> rs = (sql.prepare << "SELECT file_state, current_failures FROM t_file "
+                                                  "WHERE "
+                                                  "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
+                                                  "      (t_file.job_finished > (UTC_TIMESTAMP() - interval '1' minute)) AND "
+                                                  "      file_state IN ('FAILED','FINISHED') ",
+                                                  soci::use(source_hostname), soci::use(destin_hostname));
 
-                    for (soci::rowset<std::string>::const_iterator i = rs.begin();
+                    for (soci::rowset<soci::row>::const_iterator i = rs.begin();
                             i != rs.end(); ++i)
                         {
-                            if      (i->compare("FAILED") == 0)   nFailedLastHour+=1.0;
-                            else if (i->compare("FINISHED") == 0) ++nFinishedLastHour+=1.0;
+                            std::string fileState = i->get<std::string>("file_state", "");
+                            int retry = i->get<int>("current_failures", 0);
+
+                            if      (fileState.compare("FAILED") == 0 && retry==0 )   nFailedLastHour+=1.0;
+                            else if (fileState.compare("FINISHED") == 0) ++nFinishedLastHour+=1.0;
                         }
 
                     double ratioSuccessFailure = 0.0;
@@ -2888,21 +2841,24 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 
                             if(ratioSuccessFailure == 100 && throughput != 0 && thrStored !=0 && throughput > thrStored && retry <= retryStored)
                                 {
-                                    active = maxActive + 1;
+                                    if(active < highDefault || maxActive < highDefault)
+                                        active = highDefault;
+                                    else
+                                        active = maxActive + 2;
 
-                                    message << "Increasing max active by 1, previously "
+                                    message << "Max active now "
                                             << maxActive
-                                            << " now max active "
+                                            << ", previously "
                                             << active
                                             << " for link "
                                             << source_hostname
                                             << " -> "
                                             << destin_hostname
-                                            << " because success rate is "
+                                            << ", success rate is "
                                             << ratioSuccessFailure
-                                            << "% and current throughput is "
+                                            << "%, current throughput "
                                             << throughput
-                                            << " and is higher than previous "
+                                            << " while previous was "
                                             << thrStored;
 
                                     sql << "update t_optimize_active set datetime=UTC_TIMESTAMP(), message=:message, active=:active where source_se=:source and dest_se=:dest ",
@@ -2910,10 +2866,10 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                 }
                             else if(ratioSuccessFailure == 100 && throughput != 0 && thrStored !=0 && throughput == thrStored && retry <= retryStored)
                                 {
-                                    if(mode==2 || mode==3)
-                                        active = maxActive + 1;
+                                    if(active < highDefault || maxActive < highDefault)
+                                        active = highDefault;
                                     else
-                                        active = maxActive;
+                                        active = maxActive + 1;
 
                                     message << "Success rate is "
                                             << ratioSuccessFailure
@@ -2936,7 +2892,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                     if(active < highDefault || maxActive < highDefault)
                                         active = highDefault;
                                     else
-                                        active = maxActive - 1;
+                                        active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
 
                                     message << "Success rate is "
                                             << ratioSuccessFailure
@@ -2959,7 +2915,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                     if(active < highDefault || maxActive < highDefault)
                                         active = highDefault;
                                     else
-                                        active = maxActive - 2;
+                                        active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
 
                                     message << "Success rate is "
                                             << ratioSuccessFailure
@@ -3253,7 +3209,7 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                                     collectJobs.insert(std::make_pair(fileId, jobId));
                                     updateFileTransferStatusInternal(sql, 0.0, jobId, fileId,
                                                                      "FAILED", "Transfer has been forced-killed because it was stalled",
-                                                                     pid, 0, 0);
+                                                                     pid, 0, 0, false);
                                     updateJobTransferStatusInternal(sql, jobId, "FAILED");
                                 }
 
@@ -3664,7 +3620,7 @@ bool MySqlAPI::retryFromDead(std::vector<struct message_updater>& messages)
                                            );
                     if (rs.begin() != rs.end())
                         {
-                            updateFileTransferStatusInternal(sql, 0.0, (*iter).job_id, (*iter).file_id, transfer_status, transfer_message, (*iter).process_id, 0, 0);
+                            updateFileTransferStatusInternal(sql, 0.0, (*iter).job_id, (*iter).file_id, transfer_status, transfer_message, (*iter).process_id, 0, 0,false);
                             updateJobTransferStatusInternal(sql, (*iter).job_id, status);
                         }
                 }
@@ -4388,7 +4344,7 @@ void MySqlAPI::addShareConfig(ShareConfig* cfg)
         {
             sql.begin();
 
-            sql << "INSERT INTO t_share_config (source, destination, vo, active) "
+            sql << "INSERT IGNORE INTO t_share_config (source, destination, vo, active) "
                 "                    VALUES (:source, :destination, :vo, :active)",
                 soci::use(cfg->source), soci::use(cfg->destination), soci::use(cfg->vo),
                 soci::use(cfg->active_transfers);
@@ -7047,7 +7003,25 @@ int MySqlAPI::getOptimizerMode(soci::session& sql)
                 soci::into(mode, ind)
                 ;
             if (ind == soci::i_ok)
-                return mode;
+                {
+                    if(mode==1)
+                        {
+                            return mode;
+                        }
+                    else if(mode==2)
+                        {
+                            return (mode *2);
+                        }
+                    else if(mode==3)
+                        {
+                            return (mode *3);
+                        }
+                    else
+                        {
+                            return mode;
+                        }
+                }
+            return mode;
 
         }
     catch (std::exception& e)
@@ -7102,8 +7076,9 @@ void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId, int retry
                     struct tm tTime;
                     gmtime_r(&now, &tTime);
 
-                    sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'SUBMITTED', start_time=NULL, transferHost=NULL, t_log_file=NULL, t_log_file_debug=NULL, throughput = 0 "
-                        "WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
+                    sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'SUBMITTED', start_time=NULL, transferHost=NULL, t_log_file=NULL,"
+                        " t_log_file_debug=NULL, throughput = 0, current_failures = 1 "
+                        " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
                         soci::use(tTime), soci::use(retry), soci::use(fileId), soci::use(jobId);
                 }
             else
@@ -7113,8 +7088,9 @@ void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId, int retry
                     struct tm tTime;
                     gmtime_r(&now, &tTime);
 
-                    sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'SUBMITTED', start_time=NULL, transferHost=NULL, t_log_file=NULL, t_log_file_debug=NULL, throughput = 0 "
-                        "WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
+                    sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'SUBMITTED', start_time=NULL, transferHost=NULL, "
+                        " t_log_file=NULL, t_log_file_debug=NULL, throughput = 0,  current_failures = 1 "
+                        " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
                         soci::use(tTime), soci::use(retry), soci::use(fileId), soci::use(jobId);
                 }
 

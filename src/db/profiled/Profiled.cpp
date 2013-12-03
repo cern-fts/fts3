@@ -107,11 +107,11 @@ void ProfiledDB::updateSe(std::string endpoint, std::string se_type, std::string
 
 
 bool ProfiledDB::updateFileTransferStatus(double throughput, std::string job_id, int file_id, std::string transfer_status,
-        std::string transfer_message, int process_id, double filesize, double duration)
+        std::string transfer_message, int process_id, double filesize, double duration, bool retry)
 {
     PROFILE_PREFIXED("DB::", return db->updateFileTransferStatus(throughput, job_id, file_id, transfer_status,
                                     transfer_message, process_id,
-                                    filesize, duration));
+                                    filesize, duration, retry));
 }
 
 

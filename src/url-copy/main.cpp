@@ -146,9 +146,9 @@ void abnormalTermination(const std::string& classification, const std::string&, 
         {
             errorMessage += " " + globalErrorMessage;
         }
-	
-     if(classification != "CANCELED")
-    	retry = true;		
+
+    if(classification != "CANCELED")
+        retry = true;
 
     Logger::getInstance().ERROR() << errorMessage << std::endl;
 
@@ -405,9 +405,9 @@ int statWithRetries(gfal_context_t handle, const std::string& category, const st
             if (gfal2_stat(handle, url.c_str(), &statBuffer, &statError) < 0)
                 {
                     errorCode = statError->code;
-                    errMsg->assign(statError->message);		    
+                    errMsg->assign(statError->message);
                     g_clear_error(&statError);
-		    
+
                     canBeRetried = retryTransfer(errorCode, category, std::string(*errMsg));
                     if (!canBeRetried)
                         return errorCode;

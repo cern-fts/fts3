@@ -167,7 +167,8 @@ bool FileTransferScheduler::schedule(bool optimize)
                                 msg,
                                 0,
                                 0,
-                                0
+                                0,
+                                false
                             );
                             // set job states if necessary
                             db->updateJobTransferStatus(
