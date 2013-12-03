@@ -126,13 +126,23 @@ class Cli:
         self._spawn(cmdArray)
 
 
-    def banSe(self, se):
-        cmdArray = ['fts-set-blacklist', '-s', config.Fts3Endpoint, 'se', se, 'ON']
+    def banSe(self, se, status = None):
+        if status == None:
+            cmdArray = ['fts-set-blacklist', '-s', config.Fts3Endpoint, 'se', se, 'ON']
+        elif status == "CANCEL" or status == "WAIT":
+            cmdArray = ['fts-set-blacklist', '-s', config.Fts3Endpoint, 'se', se, '--status=%s' % status, 'ON']
+        else:
+            raise Exception("Wrong status argument in fts-set-blacklist")
         self._spawn(cmdArray)
 
 
-    def unbanSe(self, se):
-        cmdArray = ['fts-set-blacklist', '-s', config.Fts3Endpoint, 'se', se, 'OFF']
+    def unbanSe(self, se, status = None):
+        if status == None:
+            cmdArray = ['fts-set-blacklist', '-s', config.Fts3Endpoint, 'se', se, 'OFF']
+        elif status == "CANCEL" or status == "WAIT":
+            cmdArray = ['fts-set-blacklist', '-s', config.Fts3Endpoint, 'se', se, '--status=%s' % status, 'OFF']
+        else:
+            raise Exception("Wrong status argument in fts-set-blacklist")
         self._spawn(cmdArray)
 
 
@@ -140,25 +150,8 @@ class Cli:
         cmdArray = ['fts-set-blacklist', '-s', config.Fts3Endpoint, 'dn', dn, 'ON']
         self._spawn(cmdArray)
 
-
     def unBanDn(self, dn):
         cmdArray = ['fts-set-blacklist', '-s', config.Fts3Endpoint, 'dn', dn, 'OFF']
-        self._spawn(cmdArray)
-
-    def banSEcancel(self, se):
-        cmdArray = ['fts-set-blacklist','--status=CANCEL', '-s', config.Fts3Endpoint, 'se', se, 'ON']
-        self._spawn(cmdArray)
-
-    def banSEwait(self, se):
-        cmdArray = ['fts-set-blacklist', '-s', config.Fts3Endpoint, 'se', se, '--status=WAIT', 'ON']
-        self._spawn(cmdArray)
-
-    def unbanSEcancel(self, se):
-        cmdArray = ['fts-set-blacklist', '--status=CANCEL', '-s', config.Fts3Endpoint, 'se', se,  'OFF']
-        self._spawn(cmdArray)
-
-    def unbanSEwait(self, se):
-        cmdArray = ['fts-set-blacklist', '-s', config.Fts3Endpoint, 'se', se, '--status=WAIT', 'OFF']
         self._spawn(cmdArray)
 
     def setDebug(self, src, dst, status):

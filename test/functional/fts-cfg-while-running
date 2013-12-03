@@ -62,17 +62,16 @@ class TestCfgWhileRunning(base.TestBase):
         logging.info("Entering polling...")
         submittedCount = len(transfers)
         activeCount = 0
+        srcSE = storage.getStorageElement(src)
+        dstSE = storage.getStorageElement(dst)
+        self.updateConfig(srcSE, dstSE)
         while (submittedCount + activeCount) > 0:
             states = map(lambda id: self.client.getJobState(id), jobIds)
             terminalCount = sum([1 for state in states if state in fts3.JobTerminalStates])
             activeCount = states.count('ACTIVE') + states.count('READY')
             submittedCount = states.count('SUBMITTED')
-            
             totalCount = terminalCount + activeCount + submittedCount
             self.assertEqual(len(transfers), totalCount, 'jobs.count()')
-            srcSE = storage.getStorageElement(src)
-            dstSE = storage.getStorageElement(dst)
-            self.updateConfig(srcSE,dstSE)
             logging.debug("%d submitted, %d active, %d terminal" % (submittedCount, activeCount, terminalCount))
             time.sleep(1)
         return states
@@ -98,7 +97,6 @@ class TestCfgWhileRunning(base.TestBase):
         """
         for (srcSE, dstSE) in self.transfers:
             # Set up link config
-            logging.info("Limiting inbound/outbound for %s => %s (%s) to 1" % (srcSE, dstSE, self.voName))
             transfers = self.transfers[(srcSE, dstSE)]
             states = self.transfer_and_poll(transfers)
             self.assertEqual(len(transfers), states.count('FINISHED'), 'jobs.count("FINISHED")')
