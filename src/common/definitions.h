@@ -264,3 +264,30 @@ const int mode_2[] = {4,6,5,8};
 const int mode_3[] = {6,8,7,10};
 
 
+inline bool lanTransfer(const std::string source, const std::string dest)
+{
+
+    std::string sourceDomain;
+    std::string destinDomain;
+
+    std::size_t foundSource = source.find(".");
+    std::size_t foundDestin = dest.find(".");
+
+    if (foundSource!=std::string::npos)
+        {
+            sourceDomain = source.substr (foundSource,source.length());
+        }
+
+    if (foundDestin!=std::string::npos)
+        {
+            destinDomain = dest.substr (foundDestin, dest.length());
+        }
+
+    if(sourceDomain == destinDomain)
+        return true;
+
+    return false;
+}
+
+
+
