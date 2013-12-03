@@ -269,8 +269,6 @@ public:
 
     void cancelJobsInTheQueue(const std::string& dn, std::vector<std::string>& jobs);
 
-    void transferLogFile(const std::string& filePath, const std::string& jobId, int fileId, bool debug);
-
     void transferLogFileVector(std::map<int, struct message_log>& messagesLog);
 
     std::vector<struct message_state> getStateOfTransfer(const std::string& jobId, int file_id);

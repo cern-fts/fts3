@@ -5909,10 +5909,6 @@ void OracleAPI::cancelJobsInTheQueue(const std::string& dn, std::vector<std::str
         }
 }
 
-void OracleAPI::transferLogFile(const std::string& filePath, const std::string& /*jobId*/, int fileId, bool debug)
-{
-    //to be removed
-}
 
 
 void OracleAPI::transferLogFileVector(std::map<int, struct message_log>& messagesLog)
