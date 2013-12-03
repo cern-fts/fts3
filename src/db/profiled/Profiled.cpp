@@ -115,9 +115,9 @@ bool ProfiledDB::updateFileTransferStatus(double throughput, std::string job_id,
 }
 
 
-bool ProfiledDB::updateJobTransferStatus(int file_id, std::string job_id, const std::string status)
+bool ProfiledDB::updateJobTransferStatus(std::string job_id, const std::string status)
 {
-    PROFILE_PREFIXED("DB::", return db->updateJobTransferStatus(file_id, job_id, status));
+    PROFILE_PREFIXED("DB::", return db->updateJobTransferStatus(job_id, status));
 }
 
 

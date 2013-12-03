@@ -1699,7 +1699,7 @@ bool OracleAPI::updateFileTransferStatusInternal(soci::session& sql, double thro
     return ok;
 }
 
-bool OracleAPI::updateJobTransferStatus(int fileId, std::string job_id, const std::string status)
+bool OracleAPI::updateJobTransferStatus(std::string job_id, const std::string status)
 {
 
     soci::session sql(*connectionPool);

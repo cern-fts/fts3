@@ -167,7 +167,7 @@ public:
                     {
                         updated = DBSingleton::instance().
                                   getDBObjectInstance()->
-                                  updateJobTransferStatus(msg.file_id, job, std::string(msg.transfer_status));
+                                  updateJobTransferStatus(job, std::string(msg.transfer_status));
                     }
 
                 SingleTrStateInstance::instance().sendStateMessage(job, msg.file_id);

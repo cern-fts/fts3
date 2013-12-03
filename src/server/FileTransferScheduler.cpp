@@ -171,7 +171,6 @@ bool FileTransferScheduler::schedule(bool optimize)
                             );
                             // set job states if necessary
                             db->updateJobTransferStatus(
-                                file->FILE_ID,
                                 file->JOB_ID,
                                 JobStatusHandler::FTS3_STATUS_FAILED
                             );

@@ -1735,7 +1735,7 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
 }
 
 
-bool MySqlAPI::updateJobTransferStatus(int fileId, std::string job_id, const std::string status)
+bool MySqlAPI::updateJobTransferStatus(std::string job_id, const std::string status)
 {
 
     soci::session sql(*connectionPool);
