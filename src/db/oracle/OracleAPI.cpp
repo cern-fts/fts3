@@ -1877,10 +1877,7 @@ bool OracleAPI::updateJobTransferStatusInternal(soci::session& sql, int fileId, 
     return ok;
 }
 
-void OracleAPI::updateFileTransferProgress(std::string /*job_id*/, int file_id, double throughput, double /*transferred*/)
-{
-    //to be removed
-}
+
 
 void OracleAPI::updateFileTransferProgressVector(std::vector<struct message_updater>& messages)
 {

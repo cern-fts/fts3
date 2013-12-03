@@ -1924,10 +1924,7 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, int fileId, s
     return ok;
 }
 
-void MySqlAPI::updateFileTransferProgress(std::string /*job_id*/, int file_id, double throughput, double /*transferred*/)
-{
-    //to be removed
-}
+
 
 void MySqlAPI::updateFileTransferProgressVector(std::vector<struct message_updater>& messages)
 {

@@ -121,11 +121,6 @@ bool ProfiledDB::updateJobTransferStatus(int file_id, std::string job_id, const 
 }
 
 
-void ProfiledDB::updateFileTransferProgress(std::string job_id, int file_id, double throughput, double transferred)
-{
-    PROFILE_PREFIXED("DB::", db->updateFileTransferProgress(job_id, file_id, throughput, transferred));
-}
-
 void ProfiledDB::updateFileTransferProgressVector(std::vector<struct message_updater>& messages)
 {
     PROFILE_PREFIXED("DB::", db->updateFileTransferProgressVector(messages));
