@@ -1547,7 +1547,7 @@ bool MySqlAPI::updateJobTransferStatus(int fileId, std::string job_id, const std
 
 
 
-bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, int fileId, std::string job_id, const std::string status)
+bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, int /*fileId*/, std::string job_id, const std::string status)
 {
     bool ok = true;
 
@@ -1697,7 +1697,7 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, int fileId, s
     return ok;
 }
 
-void MySqlAPI::updateFileTransferProgress(std::string /*job_id*/, int file_id, double throughput, double /*transferred*/)
+void MySqlAPI::updateFileTransferProgress(std::string /*job_id*/, int /*file_id*/, double /*throughput*/, double /*transferred*/)
 {
     //to be removed
 }
@@ -2229,7 +2229,7 @@ void MySqlAPI::auditConfiguration(const std::string & dn, const std::string & co
         }
 }
 
-void MySqlAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string & source_hostname, const std::string & destin_hostname)
+void MySqlAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string & /*source_hostname*/, const std::string & /*destin_hostname*/)
 {
     ops->streamsperfile = DEFAULT_NOSTREAMS;
     ops->timeout = MID_TIMEOUT;
@@ -2625,7 +2625,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                     soci::rowset<std::string> rs = (sql.prepare << "SELECT file_state FROM t_file "
                                                     "WHERE "
                                                     "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                                                    "      (t_file.job_finished > (UTC_TIMESTAMP() - interval '5' minute)) AND "
+                                                    "      (t_file.job_finished > (UTC_TIMESTAMP() - interval '1' minute)) AND "
                                                     "      file_state IN ('FAILED','FINISHED') ",
                                                     soci::use(source_hostname), soci::use(destin_hostname));
 
@@ -2665,7 +2665,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 
                     //only apply the logic below if any of these values changes
                     bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, throughput, thrStored, retry, retryStored);
-
+		    
                     if(changed)
                         {
                             sql.begin();
@@ -2693,7 +2693,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                     if(active < highDefault || maxActive < highDefault)
                                         active = highDefault;
                                     else
-                                        active = maxActive - 1;
+                                        active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
                                     sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",
                                         soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
                                 }
@@ -2702,7 +2702,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                     if(active < highDefault || maxActive < highDefault)
                                         active = highDefault;
                                     else
-                                        active = maxActive - 2;
+                                        active = ((maxActive - 3) < highDefault)? highDefault: (maxActive - 3);
                                     sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",
                                         soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
                                 }
@@ -5604,7 +5604,7 @@ void MySqlAPI::cancelJobsInTheQueue(const std::string& dn, std::vector<std::stri
         }
 }
 
-void MySqlAPI::transferLogFile(const std::string& filePath, const std::string& /*jobId*/, int fileId, bool debug)
+void MySqlAPI::transferLogFile(const std::string& /*filePath*/, const std::string& /*jobId*/, int /*fileId*/, bool /*debug*/)
 {
     //to be removed
 }
