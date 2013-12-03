@@ -27,6 +27,15 @@ from jsonify import jsonify_paged, jsonify
 from urllib import urlencode
 from util import getOrderBy
 
+import settings
+
+def _db_to_date():
+    if settings.DATABASES['default']['ENGINE'] == 'django.db.backends.oracle':
+        return 'TO_DATE(%s, \'YYYY-MM-DD HH:MI:SS\')'
+    elif settings.DATABASES['default']['ENGINE'] == 'django.db.backends.mysql':
+        return 'STR_TO_DATE(%s, \'%%Y-%%m-%%d %%H:%%i:%%S\')'
+    else:
+        return '%s'
 
 @jsonify_paged
 def overview(httpRequest):
@@ -35,13 +44,15 @@ def overview(httpRequest):
     notBefore  = datetime.utcnow() - timedelta(hours = 1)
     throughputWindow = datetime.utcnow() - timedelta(seconds = 45)
 
-    query = '''
+    query = """
     SELECT source_se, dest_se, vo_name, file_state, count(file_id),
-           sum(CASE WHEN job_finished >= %s OR job_finished IS NULL THEN throughput ELSE 0 END)
+           SUM(CASE WHEN job_finished >= %s OR job_finished IS NULL THEN throughput ELSE 0 END)
     FROM t_file
     WHERE (job_finished IS NULL OR job_finished >= %s)
-    '''
-    params = [throughputWindow, notBefore]
+    """ % (_db_to_date(), _db_to_date())
+    
+    params = [throughputWindow.strftime('%Y-%m-%d %H:%M:%S'),
+              notBefore.strftime('%Y-%m-%d %H:%M:%S')]
     
     # Filtering
     if filters['vo']:
