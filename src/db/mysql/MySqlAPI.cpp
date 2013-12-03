@@ -354,7 +354,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
 
     try
         {
-            int defaultFilesNum = getOptimizerMode(sql);
+            int defaultFilesNum = 5;
 
             soci::rowset<soci::row> rs = (
                                              sql.prepare <<
@@ -2569,8 +2569,8 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 
     try
         {
-            int highDefault = getOptimizerMode(sql);	
-	    int tempDefault =   highDefault;  
+            int highDefault = getOptimizerMode(sql);
+            int tempDefault =   highDefault;
 
             soci::rowset<soci::row> rs = ( sql.prepare <<
                                            " select  distinct o.source_se, o.dest_se from t_optimize_active o INNER JOIN "
@@ -2581,11 +2581,11 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                 {
                     std::string source_hostname = i->get<std::string>("source_se");
                     std::string destin_hostname = i->get<std::string>("dest_se");
-		    
-		    if(true == lanTransfer(source_hostname, destin_hostname))
-		    	highDefault *= 3;
-		    else //default
-		        highDefault = tempDefault;
+
+                    if(true == lanTransfer(source_hostname, destin_hostname))
+                        highDefault = (highDefault * 3);
+                    else //default
+                        highDefault = tempDefault;
 
                     double nFailedLastHour=0.0, nFinishedLastHour=0.0;
                     double throughput=0.0;
@@ -2641,7 +2641,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                         {
                             ratioSuccessFailure = nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0);
                         }
-                  
+
                     // Active transfers
                     soci::statement stmt7 = (
                                                 sql.prepare << "SELECT count(*) FROM t_file "
@@ -2665,7 +2665,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 
                     //only apply the logic below if any of these values changes
                     bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, throughput, thrStored, retry, retryStored);
-		    
+
                     if(changed)
                         {
                             sql.begin();
@@ -2675,16 +2675,16 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                     if(active < highDefault || maxActive < highDefault)
                                         active = highDefault;
                                     else
-                                        active = maxActive + 2;	
+                                        active = maxActive + 2;
                                     sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",
                                         soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
                                 }
                             else if(ratioSuccessFailure == 100 && throughput != 0 && thrStored !=0 && throughput == thrStored && retry <= retryStored)
-                                {                                   
+                                {
                                     if(active < highDefault || maxActive < highDefault)
                                         active = highDefault;
                                     else
-                                        active = maxActive + 1;				    
+                                        active = maxActive + 1;
                                     sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",
                                         soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
                                 }
@@ -6709,7 +6709,8 @@ void MySqlAPI::setOptimizerMode(int mode)
 
 int MySqlAPI::getOptimizerMode(soci::session& sql)
 {
-    int mode = 5;
+    int modeDefault = 5;
+    int mode = 0;
     soci::indicator ind = soci::i_ok;
 
     try
@@ -6719,27 +6720,28 @@ int MySqlAPI::getOptimizerMode(soci::session& sql)
                 " from t_optimize_mode LIMIT 1",
                 soci::into(mode, ind)
                 ;
-		
-            if (ind == soci::i_ok){
-	    
-	       if(mode==1)
+
+            if (ind == soci::i_ok)
                 {
-                    return mode;
+
+                    if(mode==1)
+                        {
+                            return modeDefault;
+                        }
+                    else if(mode==2)
+                        {
+                            return (modeDefault *2);
+                        }
+                    else if(mode==3)
+                        {
+                            return (modeDefault *3);
+                        }
+                    else
+                        {
+                            return modeDefault;
+                        }
                 }
-            else if(mode==2)
-                {
-                    return (mode *2);
-                }
-            else if(mode==3)
-                {
-                    return (mode *3);
-                }
-            else
-                {
-                    return mode;
-                }
-	    }          
-	  return mode;
+            return modeDefault;
         }
     catch (std::exception& e)
         {
@@ -6750,7 +6752,7 @@ int MySqlAPI::getOptimizerMode(soci::session& sql)
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
 
-    return mode;
+    return modeDefault;
 }
 
 void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId, int retry, const std::string& reason)
