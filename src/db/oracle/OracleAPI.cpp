@@ -5842,15 +5842,10 @@ void OracleAPI::cancelFilesInTheQueue(const std::string& se, const std::string& 
                         "   AND file_index = :fileIndex "
                         "   AND NOT EXISTS ( "
                         "       SELECT NULL "
-                        "       FROM ( "
-                        "           SELECT NULL "
-                        "           FROM t_file "
-                        "           WHERE job_id = :jobId "
-                        "               AND file_index = :fileIndex "
-                        "               AND file_state <> 'NOT_USED' "
-                        "               AND file_state <> 'FAILED' "
-                        "               AND file_state <> 'CANCELED' "
-                        "       ) AS tmp "
+                        "       FROM t_file "
+                        "       WHERE job_id = :jobId "
+                        "           AND file_index = :fileIndex "
+                        "           AND file_state NOT IN ('NOT_USED', 'FAILED', 'CANCELED') "
                         "   ) ",
                         soci::use(jobId),
                         soci::use(fileIndex),
