@@ -6732,7 +6732,7 @@ int MySqlAPI::getOptimizerMode(soci::session& sql)
                 }
             else if(mode==3)
                 {
-                    return (mode *2);
+                    return (mode *3);
                 }
             else
                 {
