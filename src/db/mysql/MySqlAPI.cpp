@@ -1742,7 +1742,7 @@ bool MySqlAPI::updateJobTransferStatus(int fileId, std::string job_id, const std
 
     try
         {
-            updateJobTransferStatusInternal(sql, fileId, job_id, status);
+            updateJobTransferStatusInternal(sql, job_id, status);
         }
     catch (std::exception& e)
         {
@@ -1757,7 +1757,7 @@ bool MySqlAPI::updateJobTransferStatus(int fileId, std::string job_id, const std
 
 
 
-bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, int fileId, std::string job_id, const std::string status)
+bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string job_id, const std::string status)
 {
     bool ok = true;
 
@@ -3254,7 +3254,7 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                                     updateFileTransferStatusInternal(sql, 0.0, jobId, fileId,
                                                                      "FAILED", "Transfer has been forced-killed because it was stalled",
                                                                      pid, 0, 0);
-                                    updateJobTransferStatusInternal(sql, fileId, jobId, "FAILED");
+                                    updateJobTransferStatusInternal(sql, jobId, "FAILED");
                                 }
 
                         }
@@ -3665,7 +3665,7 @@ bool MySqlAPI::retryFromDead(std::vector<struct message_updater>& messages)
                     if (rs.begin() != rs.end())
                         {
                             updateFileTransferStatusInternal(sql, 0.0, (*iter).job_id, (*iter).file_id, transfer_status, transfer_message, (*iter).process_id, 0, 0);
-                            updateJobTransferStatusInternal(sql, (*iter).file_id, (*iter).job_id, status);
+                            updateJobTransferStatusInternal(sql, (*iter).job_id, status);
                         }
                 }
         }
@@ -5573,17 +5573,17 @@ void MySqlAPI::bringOnlineReportStatus(const std::string & state, const std::str
                                 {
                                     if(stage_in_only == 0)
                                         {
-                                            updateJobTransferStatusInternal(sql, 0, msg.job_id, "SUBMITTED");
+                                            updateJobTransferStatusInternal(sql, msg.job_id, "SUBMITTED");
                                         }
                                     else
                                         {
-                                            updateJobTransferStatusInternal(sql, 0, msg.job_id, dbState);
+                                            updateJobTransferStatusInternal(sql, msg.job_id, dbState);
                                         }
                                 }
                         }
                     else
                         {
-                            updateJobTransferStatusInternal(sql, 0, msg.job_id, dbState);
+                            updateJobTransferStatusInternal(sql, msg.job_id, dbState);
                         }
                 }
         }
@@ -5920,7 +5920,7 @@ void MySqlAPI::cancelFilesInTheQueue(const std::string& se, const std::string& v
             std::set<std::string>::iterator job_it;
             for (job_it = jobs.begin(); job_it != jobs.end(); ++job_it)
                 {
-                    updateJobTransferStatusInternal(sql, int(), *job_it, std::string());
+                    updateJobTransferStatusInternal(sql, *job_it, std::string());
                 }
 
         }
@@ -6303,7 +6303,7 @@ void MySqlAPI::cancelWaitingFiles(std::set<std::string>& jobs)
             std::set<std::string>::iterator job_it;
             for (job_it = jobs.begin(); job_it != jobs.end(); ++job_it)
                 {
-                    updateJobTransferStatusInternal(sql, int(), *job_it, std::string());
+                    updateJobTransferStatusInternal(sql, *job_it, std::string());
                 }
         }
     catch (std::exception& e)
