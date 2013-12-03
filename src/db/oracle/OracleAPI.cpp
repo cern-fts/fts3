@@ -437,7 +437,7 @@ void OracleAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& f
 
     try
         {
-            int defaultFilesNum = getOptimizerMode(sql);
+            int defaultFilesNum = 5;
 
             soci::rowset<soci::row> rs = (
                                              sql.prepare <<
@@ -6919,50 +6919,52 @@ void OracleAPI::setOptimizerMode(int mode)
 
 int OracleAPI::getOptimizerMode(soci::session& sql)
 {
-    int mode = 5;
+    int modeDefault = 5;
+    int mode = 0;
     soci::indicator ind = soci::i_ok;
 
     try
         {
             sql <<
-                " SELECT mode_opt FROM"
-                " (SELECT rownum as rn, mode_opt FROM t_optimize_mode)"
-                " WHERE rn = 1",
+                " select mode_opt "
+                " from t_optimize_mode LIMIT 1",
                 soci::into(mode, ind)
                 ;
 
             if (ind == soci::i_ok)
                 {
+
                     if(mode==1)
                         {
-                            return mode;
+                            return modeDefault;
                         }
                     else if(mode==2)
                         {
-                            return (mode *2);
+                            return (modeDefault *2);
                         }
                     else if(mode==3)
                         {
-                            return (mode *3);
+                            return (modeDefault *3);
                         }
                     else
                         {
-                            return mode;
+                            return modeDefault;
                         }
                 }
-            return mode;
+            return modeDefault;
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw Err_Custom(std::string(__func__) + ": Caught mode exception " + e.what());
         }
     catch (...)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
 
-    return mode;
+    return modeDefault;
 }
+
 
 void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retry, const std::string& reason)
 {
