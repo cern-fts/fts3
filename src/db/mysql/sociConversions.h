@@ -35,6 +35,14 @@
 #include <soci.h>
 #include <time.h>
 
+inline time_t timeUTC()
+{
+    time_t now = time(NULL);
+    struct tm *utc;
+    utc = gmtime(&now);
+    return timegm(utc);
+}
+
 namespace soci
 {
 template <>
@@ -49,7 +57,7 @@ struct type_conversion<Cred>
         cred.delegationID     = v.get<std::string>("dlg_id");
         cred.proxy            = v.get<std::string>("proxy");
         termination_st        = v.get<struct tm>("termination_time");
-        cred.termination_time = mktime(&termination_st);
+        cred.termination_time = timegm(&termination_st);
         cred.vomsAttributes   = v.get<std::string>("voms_attrs", std::string());
     }
 };
@@ -100,7 +108,7 @@ struct type_conversion<TransferJobs>
         job.BRINGONLINE 	= v.get<int>("bring_online");
         job.CHECKSUM_METHOD    = v.get<std::string>("checksum_method");
         aux_tm = v.get<struct tm>("submit_time");
-        job.SUBMIT_TIME = mktime(&aux_tm);
+        job.SUBMIT_TIME = timegm(&aux_tm);
 
         try
             {
@@ -194,7 +202,7 @@ struct type_conversion<JobStatus>
         job.clientDN   = v.get<std::string>("user_dn");
         job.reason     = v.get<std::string>("reason", "");
         aux_tm         = v.get<struct tm>("submit_time");
-        job.submitTime = mktime(&aux_tm);
+        job.submitTime = timegm(&aux_tm);
         job.priority   = v.get<int>("priority");
         job.voName     = v.get<std::string>("vo_name");
 
@@ -246,7 +254,7 @@ struct type_conversion<FileTransferStatus>
         if (v.get_indicator("start_time") == soci::i_ok)
             {
                 aux_tm = v.get<struct tm>("start_time");
-                transfer.start_time = mktime(&aux_tm);
+                transfer.start_time = timegm(&aux_tm);
             }
         else
             {
@@ -255,11 +263,11 @@ struct type_conversion<FileTransferStatus>
         if (v.get_indicator("finish_time") == soci::i_ok)
             {
                 aux_tm = v.get<struct tm>("finish_time");
-                transfer.finish_time = mktime(&aux_tm);
+                transfer.finish_time = timegm(&aux_tm);
             }
         else
             {
-                transfer.finish_time = time(NULL);
+                transfer.finish_time = timeUTC();
             }
     }
 };
@@ -361,7 +369,7 @@ struct type_conversion<FileRetry>
 
         struct tm aux_tm;
         aux_tm = v.get<tm>("datetime");
-        retry.datetime = mktime(&aux_tm);
+        retry.datetime = timegm(&aux_tm);
     }
 };
 
