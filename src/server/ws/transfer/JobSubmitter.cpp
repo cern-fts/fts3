@@ -551,7 +551,7 @@ void JobSubmitter::checkProtocol(string file, bool source)
 
     bool not_ok =
         // check protocol
-        !(tmp.find("root://") == 0 ||tmp.find("srm://") == 0 || tmp.find("gsiftp://") == 0 || tmp.find("https://") == 0 || tmp.find("lfc://") == 0)
+        !(tmp.find("mock://") == 0 || tmp.find("root://") == 0 ||tmp.find("srm://") == 0 || tmp.find("gsiftp://") == 0 || tmp.find("https://") == 0 || tmp.find("lfc://") == 0)
         &&
         // check if lfn if it is the source
         (!source || !(file.find("/") == 0 && file.find(";") == string::npos && file.find(":") == string::npos))
