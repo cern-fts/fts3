@@ -290,7 +290,7 @@ int fts3::impltns__getFileStatus3(soap *soap, fts3::tns3__FileRequest *req,
                     status->transferFileState = soap_new_std__string(soap, -1);
                     *status->transferFileState = tmp->transferFileState;
 
-                    status->duration = tmp->duration;
+                    status->duration = tmp->finish_time - tmp->start_time;
                     status->numFailures = tmp->numFailures;
 
                     // Retries only on request!
@@ -381,7 +381,7 @@ int fts3::impltns__getFileStatus2(soap *soap, string _requestID, int _offset, in
                     status->transferFileState = soap_new_std__string(soap, -1);
                     *status->transferFileState = tmp->transferFileState;
 
-                    status->duration = tmp->duration;
+                    status->duration = tmp->finish_time - tmp->start_time;
                     status->numFailures = tmp->numFailures;
 
                     _param_10._getFileStatus2Return->item.push_back(status);
