@@ -49,6 +49,7 @@
 #include <boost/optional.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/assign.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include "parse_url.h"
 
@@ -548,6 +549,7 @@ void JobSubmitter::checkProtocol(string file, bool source)
 {
     string tmp (file);
     transform(tmp.begin(), tmp.end(), tmp.begin(), ::tolower);
+    trim(tmp);
 
     bool not_ok =
         // check protocol
