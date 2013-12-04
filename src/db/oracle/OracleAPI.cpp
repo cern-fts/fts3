@@ -1299,13 +1299,13 @@ void OracleAPI::getTransferFileStatus(std::string requestID, bool archive,
                 {
                     query = "SELECT * FROM (SELECT rownum as rn, t_file_backup.file_id, t_file_backup.source_surl, t_file_backup.dest_surl, t_file_backup.file_state, "
                             "       t_file_backup.reason, t_file_backup.start_time, "
-                            "       t_file_backup.finish_time, t_file_backup.retry "
+                            "       t_file_backup.finish_time, t_file_backup.retry, t_file_backup.tx_duration "
                             "FROM t_file_backup WHERE t_file_backup.job_id = :jobId ";
                 }
             else
                 {
                     query = "SELECT * FROM (SELECT rownum as rn, t_file.file_id, t_file.source_surl, t_file.dest_surl, t_file.file_state, "
-                            "       t_file.reason, t_file.start_time, t_file.finish_time, t_file.retry "
+                            "       t_file.reason, t_file.start_time, t_file.finish_time, t_file.retry, t_file.tx_duration "
                             "FROM t_file WHERE t_file.job_id = :jobId ";
                 }
 
@@ -6927,7 +6927,7 @@ int OracleAPI::getOptimizerMode(soci::session& sql)
         {
             sql <<
                 " select mode_opt "
-                " from t_optimize_mode LIMIT 1",
+                " from t_optimize_mode",
                 soci::into(mode, ind)
                 ;
 
