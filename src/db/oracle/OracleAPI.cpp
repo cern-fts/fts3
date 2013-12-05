@@ -2802,7 +2802,7 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                                     if(active < highDefault || maxActive < highDefault)
                                         active = highDefault;
                                     else
-                                        active = maxActive + 2;
+                                        active = maxActive + 1;
 
                                     message << "Increasing active by 1, previously "
                                             << maxActive
@@ -2827,7 +2827,7 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                                     if(active < highDefault || maxActive < highDefault)
                                         active = highDefault;
                                     else
-                                        active = maxActive + 1;
+                                        active = maxActive;
 
                                     message << "Success rate is "
                                             << ratioSuccessFailure

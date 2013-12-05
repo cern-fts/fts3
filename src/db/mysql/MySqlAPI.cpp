@@ -2844,7 +2844,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                     if(active < highDefault || maxActive < highDefault)
                                         active = highDefault;
                                     else
-                                        active = maxActive + 2;
+                                        active = maxActive + 1;
 
                                     message << "Max active now "
                                             << maxActive
@@ -2869,7 +2869,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                     if(active < highDefault || maxActive < highDefault)
                                         active = highDefault;
                                     else
-                                        active = maxActive + 1;
+                                        active = maxActive;
 
                                     message << "Success rate is "
                                             << ratioSuccessFailure
