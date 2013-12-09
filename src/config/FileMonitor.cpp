@@ -34,7 +34,7 @@ FTS3_CONFIG_NAMESPACE_START
 
 using namespace fts3::common;
 
-FileMonitor::FileMonitor(ServerConfig* sc) : sc(sc), running(false), timestamp(NULL)
+FileMonitor::FileMonitor(ServerConfig* sc) : sc(sc), running(false), timestamp(0)
 {
 
 }
