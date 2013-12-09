@@ -111,8 +111,7 @@ int main(int argc, char** argv)
             std::string cleanRecordsHost = theServerConfig().get<std::string>("CleanRecordsHost");
 
 
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Backup starting" << commit;
-            if(cleanRecordsHost.compare("true")==0)
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Backup starting" << commit;          
                 db::DBSingleton::instance().getDBObjectInstance()->backup();
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Backup ending" << commit;
 
