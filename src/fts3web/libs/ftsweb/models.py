@@ -132,6 +132,22 @@ class FileArchive(FileBase):
         db_table = 't_file_backup'
 
 
+class RetryError(models.Model):
+    attempt  = models.IntegerField()
+    datetime = models.DateTimeField()
+    reason   = models.CharField(max_length = 2048)
+    
+    file_id = models.ForeignKey('File', db_column = 'file_id', related_name = '+', primary_key = True)
+    
+    class Meta:
+        db_table = 't_file_retry_errors'
+    
+    def __eq__(self, b):
+        return isinstance(b, self.__class__) and \
+            self.file_id == b.file_id and \
+            self.attempt == b.attempt
+
+
 class  ConfigAudit(models.Model):
     # This field is definitely NOT the primary key, but since we are not modifying
     # this from Django, we can live with this workaround until Django supports fully

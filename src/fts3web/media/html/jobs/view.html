@@ -123,6 +123,12 @@
 				    <li>Metadata:
 				        <pre>{{file.file_metadata}}</pre>
 				    </li>
+				    <li ng-show="file.retry">Retries:
+				        <dl ng-repeat="retry in file.retries">
+				            <dt>{{retry.datetime}}</dt>
+				            <dd>{{retry.reason}}</dd>
+				        </dl>
+				    </li>
 				</ul>
             </td>
         </tr>

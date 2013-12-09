@@ -20,7 +20,7 @@ from django.http import Http404
 from django.shortcuts import render, redirect
 from jsonify import jsonify, jsonify_paged
 from ftsmon import forms
-from ftsweb.models import Job, File, JobArchive, FileArchive
+from ftsweb.models import Job, File, JobArchive, FileArchive, RetryError
 from util import getOrderBy, orderedField
 import datetime
 import json
@@ -211,6 +211,28 @@ def jobDetails(httpRequest, jobId):
     return {'job': job, 'states': stateCount}
 
 
+class RetriesFetcher(object):
+    """
+    Fetches, on demand and if necessary, the retry error messages
+    """
+    
+    def __init__(self, files):
+        self.files = files
+        
+    def __len__(self):
+        return len(self.files)
+    
+    def __getitem__(self, i):
+        for f in self.files[i]:
+            retries = RetryError.objects.filter(file_id = f.file_id)
+            f.retries = map(lambda r: {
+                   'reason': r.reason,
+                   'datetime': r.datetime,
+                   'attempt': r.attempt
+            }, retries.all())
+            yield f
+
+
 @jsonify_paged
 def jobFiles(httpRequest, jobId):
     files = File.objects.filter(job = jobId)
@@ -243,7 +265,7 @@ def jobFiles(httpRequest, jobId):
     elif orderBy == 'end_time':
         files = files.order_by(orderedField('end_time', orderDesc))
         
-    return files
+    return RetriesFetcher(files)
 
 
 @jsonify_paged
