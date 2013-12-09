@@ -113,10 +113,9 @@ int main(int argc, char** argv)
 
             FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Backup starting" << commit;
             long nJobs = 0, nFiles = 0;
-            if (cleanRecordsHost.compare("true") == 0)
-                {
+           
                     db::DBSingleton::instance().getDBObjectInstance()->backup(&nJobs, &nFiles);
-                }
+           
             FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Backup ending: "
                                            << nJobs << " jobs and "
                                            << nFiles << " files affected"
