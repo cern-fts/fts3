@@ -46,8 +46,10 @@ public:
      */
     void put(T* e)
     {
-        boost::mutex::scoped_lock lock(qm);
-        ts_queue.push(e);
+    	{
+    		boost::mutex::scoped_lock lock(qm);
+    		ts_queue.push(e);
+    	}
         qv.notify_all();
     }
 
@@ -80,8 +82,10 @@ public:
 
     void noMoreData ()
     {
-        boost::mutex::scoped_lock lock(qm);
-        no_more_data = true;
+    	{
+    		boost::mutex::scoped_lock lock(qm);
+    		no_more_data = true;
+    	}
         qv.notify_all();
     }
 
