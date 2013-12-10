@@ -90,7 +90,10 @@ bool retryTransfer(int errorNo, const std::string& category, const std::string& 
     found = message.find("SRM_DUPLICATION_ERROR");
     if (found!=std::string::npos)
         retry = false;
-
+    found = message.find("SRM_AUTHENTICATION_FAILURE");
+    if (found!=std::string::npos)
+        retry = false;	
+		
     return retry;
 }
 
