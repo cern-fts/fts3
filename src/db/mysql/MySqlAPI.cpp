@@ -2893,13 +2893,6 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
 
     try
         {
-            struct message_sanity msg;
-            msg.forceFailTransfers = true;
-            CleanUpSanityChecks temp(this, sql, msg);
-            if(!temp.getCleanUpSanityCheck())
-                return;
-
-
             std::string jobId, params, tHost,reuse;
             int fileId=0, pid=0, timeout=0;
             struct tm startTimeSt;
@@ -2914,12 +2907,12 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                                        " f.transferHost, j.reuse_job "
                                        " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                        " WHERE f.file_state='ACTIVE' AND f.pid IS NOT NULL and f.job_finished is NULL "
-                                       " and f.internal_file_params is not null and f.transferHost is not null",
+                                       " and f.internal_file_params is not null and f.transferHost is not null"
+				       " AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) ",
+				       soci::use(hashSegment.start), soci::use(hashSegment.end),
                                        soci::into(jobId), soci::into(fileId), soci::into(startTimeSt),
                                        soci::into(pid), soci::into(params), soci::into(tHost), soci::into(reuse, isNull)
                                    );
-
-
 
             if (stmt.execute(true))
                 {
@@ -3116,28 +3109,24 @@ void MySqlAPI::revertToSubmitted()
 
     try
         {
-            struct message_sanity msg;
-            msg.revertToSubmitted = true;
-            CleanUpSanityChecks temp(this, sql, msg);
-            if(!temp.getCleanUpSanityCheck())
-                return;
-
             struct tm startTime;
             int fileId=0;
             std::string jobId, reuseJob;
             time_t now2 = convertToUTC(0);
 
-            sql.begin();
 
             soci::indicator reuseInd = soci::i_ok;
             soci::statement readyStmt = (sql.prepare << "SELECT f.start_time, f.file_id, f.job_id, j.reuse_job "
                                          " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
-                                         " WHERE f.file_state = 'READY' and j.job_finished is null ",
+                                         " WHERE f.file_state = 'READY' and j.job_finished is null "
+					 " AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) ",
+					 soci::use(hashSegment.start), soci::use(hashSegment.end),
                                          soci::into(startTime),
                                          soci::into(fileId),
                                          soci::into(jobId),
                                          soci::into(reuseJob, reuseInd));
 
+            sql.begin();
             if (readyStmt.execute(true))
                 {
                     do
@@ -3198,37 +3187,42 @@ void MySqlAPI::revertToSubmitted()
 
 void MySqlAPI::backup()
 {
+    try
+        {
+            unsigned index=0, count=0, start=0, end=0;
+            updateHeartBeat(&index, &count, &start, &end);
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+
+
     soci::session sql(*connectionPool);
     int count = 0;
 
     try
         {
-            struct message_sanity msg;
-            msg.cleanUpRecords = true;
-            CleanUpSanityChecks temp(this, sql, msg);
-            if(!temp.getCleanUpSanityCheck())
-                return;
-
-            sql << "SET AUTOCOMMIT = 0";
-            sql << "SET FOREIGN_KEY_CHECKS = 0";
-            sql << "SET UNIQUE_CHECKS = 0";
-            sql << "SET SESSION tx_isolation='READ-UNCOMMITTED'";
-            sql << "SET sql_log_bin = 0";
-
             soci::rowset<soci::row> rs = (
                                              sql.prepare <<
-                                             " SELECT job_id "
-                                             " FROM t_job "
-                                             " WHERE "
-                                             "      job_finished < (UTC_TIMESTAMP() - interval '4' DAY ) AND "
-                                             "      job_state IN ('FINISHED', 'FAILED', 'CANCELED', 'FINISHEDDIRTY') "
+                                             " SELECT distinct t_job.job_id "
+                                             " FROM t_file, t_job "
+                                             " WHERE t_job.job_id = t_file.job_id AND "
+                                             "      t_job.job_finished < (UTC_TIMESTAMP() - interval '4' DAY ) AND "
+                                             "      t_job.job_state IN ('FINISHED', 'FAILED', 'CANCELED','FINISHEDDIRTY') AND "
+                                             "      (t_file.hashed_id >= :hStart AND t_file.hashed_id <= :hEnd) ",
+                                             soci::use(hashSegment.start), soci::use(hashSegment.end)
                                          );
 
             std::string job_id;
-            soci::statement delFilesStmt = (sql.prepare << "DELETE FROM t_file WHERE job_id = :job_id", soci::use(job_id));
-            soci::statement delJobsStmt = (sql.prepare << "DELETE FROM t_job WHERE job_id = :job_id", soci::use(job_id));
             soci::statement insertJobsStmt = (sql.prepare << "INSERT INTO t_job_backup SELECT * FROM t_job WHERE job_id = :job_id", soci::use(job_id));
             soci::statement insertFileStmt = (sql.prepare << "INSERT INTO t_file_backup SELECT * FROM t_file WHERE job_id = :job_id", soci::use(job_id));
+            soci::statement delFilesStmt = (sql.prepare << "DELETE FROM t_file WHERE job_id = :job_id", soci::use(job_id));
+            soci::statement delJobsStmt = (sql.prepare << "DELETE FROM t_job WHERE job_id = :job_id", soci::use(job_id));
 
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
@@ -5904,15 +5898,6 @@ void MySqlAPI::cancelWaitingFiles(std::set<std::string>& jobs)
 
     try
         {
-
-            struct message_sanity msg;
-            msg.cancelWaitingFiles = true;
-            CleanUpSanityChecks temp(this, sql, msg);
-            if(!temp.getCleanUpSanityCheck())
-                return;
-
-
-
             soci::rowset<soci::row> rs = (
                                              sql.prepare <<
                                              " SELECT file_id, job_id "
@@ -5920,6 +5905,8 @@ void MySqlAPI::cancelWaitingFiles(std::set<std::string>& jobs)
                                              " WHERE wait_timeout <> 0 "
                                              "	AND TIMESTAMPDIFF(SECOND, wait_timestamp, UTC_TIMESTAMP()) > wait_timeout "
                                              "	AND file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED')"
+					     "  AND (hashed_id >= :hStart AND hashed_id <= :hEnd) ",
+					     soci::use(hashSegment.start), soci::use(hashSegment.end)
                                          );
 
             sql.begin();
@@ -5965,17 +5952,12 @@ void MySqlAPI::revertNotUsedFiles()
 
     try
         {
-            struct message_sanity msg;
-            msg.revertNotUsedFiles = true;
-            CleanUpSanityChecks temp(this, sql, msg);
-            if(!temp.getCleanUpSanityCheck())
-                return;
-
-
             soci::rowset<std::string> rs = (
                                                sql.prepare <<
                                                "select distinct f.job_id from t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
-                                               " WHERE file_state = 'NOT_USED' and j.job_finished is NULL"
+                                               " WHERE file_state = 'NOT_USED' and j.job_finished is NULL "
+    					       "  AND (hashed_id >= :hStart AND hashed_id <= :hEnd) ",
+					       soci::use(hashSegment.start), soci::use(hashSegment.end)					       
                                            );
             sql.begin();
 
@@ -6101,19 +6083,13 @@ void MySqlAPI::checkSanityState()
 
 
     try
-        {
-            struct message_sanity msg;
-            msg.checkSanityState = true;
-            CleanUpSanityChecks temp(this, sql, msg);
-            if(!temp.getCleanUpSanityCheck())
-                {
-                    return;
-                }
-
-
+        {          
             soci::rowset<std::string> rs = (
                                                sql.prepare <<
-                                               " select job_id from t_job where job_finished is null "
+                                               " select distinct t_job.job_id from t_job, t_file where t_job.job_id = t_file.job_id AND "
+					       " t_job.job_finished is null AND "
+                                               " (t_file.hashed_id >= :hStart AND t_file.hashed_id <= :hEnd) ",
+                                             soci::use(hashSegment.start), soci::use(hashSegment.end)
                                            );
 
             sql.begin();
@@ -6181,9 +6157,12 @@ void MySqlAPI::checkSanityState()
             //now check reverse sanity checks, JOB can't be FINISH,  FINISHEDDIRTY, FAILED is at least one tr is in SUBMITTED, READY, ACTIVE
             //special case for canceled
             soci::rowset<std::string> rs2 = (
-                                                sql.prepare <<
-                                                " select job_id from t_job where job_finished IS NOT NULL "
-                                            );
+                                               sql.prepare <<
+                                               " select distinct t_job.job_id from t_job, t_file where t_job.job_id = t_file.job_id AND "
+					       " t_job.job_finished IS NOT NULL AND "
+                                               " (t_file.hashed_id >= :hStart AND t_file.hashed_id <= :hEnd) ",
+                                             soci::use(hashSegment.start), soci::use(hashSegment.end)
+                                           );
 
             sql.begin();
             for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
