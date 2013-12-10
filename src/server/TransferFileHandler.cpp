@@ -25,11 +25,6 @@
 
 #include "TransferFileHandler.h"
 
-#include <algorithm>
-
-#include <boost/lambda/lambda.hpp>
-#include <boost/lambda/bind.hpp>
-
 namespace fts3
 {
 namespace server

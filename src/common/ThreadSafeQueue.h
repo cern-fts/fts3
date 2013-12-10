@@ -1,16 +1,32 @@
 /*
+ *	Copyright notice:
+ *	Copyright © Members of the EMI Collaboration, 2010.
+ *
+ *	See www.eu-emi.eu for details on the copyright holders
+ *
+ *	Licensed under the Apache License, Version 2.0 (the "License");
+ *	you may not use this file except in compliance with the License.
+ *	You may obtain a copy of the License at
+ *
+ *		http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *	Unless required by applicable law or agreed to in writing, software
+ *	distributed under the License is distributed on an "AS IS" BASIS,
+ *	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *	See the License for the specific language governing permissions and
+ *	limitations under the License.
+ *
  * ThreadSafeQueue.h
  *
  *  Created on: Aug 9, 2013
- *      Author: simonm
+ *      Author: simonmMichał Simon
  */
 
 #ifndef THREADSAFEQUEUE_H_
 #define THREADSAFEQUEUE_H_
 
-#include <queue>
 #include <boost/thread.hpp>
-#include <iostream>
+#include <boost/ptr_container/ptr_list.hpp>
 
 namespace fts3
 {
@@ -19,67 +35,70 @@ namespace common
 {
 
 /**
- * A thread safe queue, allows only for putting and getting
+ * A thread safe queue, allows only for putting and popping
  *
  * An element is a pointer to the type specified by the template parameter
  *
- * If get called and queue is empty blocks until some element will be inserted.
- * If no_more_data is set to true wont block if there are no data in the queue.
+ * If empty is called and queue is empty but 'no_more_date' flag is set to false
+ * blocks until some element will be inserted
+ *
+ * Handles the memory deallocation for user.
  */
 template<typename T>
 class ThreadSafeQueue
 {
 
 public:
-    ThreadSafeQueue() : no_more_data(false)
-    {
 
-    }
+	/// Constructor, sets no_more_data to false
+    ThreadSafeQueue() : no_more_data(false) {}
 
-    virtual ~ThreadSafeQueue()
-    {
-
-    }
+    /// Destructor
+    virtual ~ThreadSafeQueue() {}
 
     /**
-     * Insert element
+     * Insert an element
      */
-    void put(T* e)
+    void push(T* e)
     {
     	{
     		boost::mutex::scoped_lock lock(qm);
-    		ts_queue.push(e);
+    		ts_queue.push_back(e);
     	}
         qv.notify_all();
     }
 
     /**
-     * Get next element
+     * Get a reference to the element in front
      */
-    T* get()
+    T& front()
     {
-        // get the mutex
-        boost::mutex::scoped_lock lock(qm);
-        // if the queue is empty ...
-        while (ts_queue.empty())
-            {
-                // if no data will be put into the queue ever return 0
-                if (no_more_data) return 0;
-                // otherwise wait
-                qv.wait(lock);
-            }
-        // get an item from the queue
-        T* e = ts_queue.front();
-        ts_queue.pop();
-        return e;
+    	boost::mutex::scoped_lock lock(qm);
+    	return ts_queue.front();
     }
 
-    bool hasData()
+    /**
+     * Remove the element in front from queue (this deallocates the memory)
+     */
+    void pop()
     {
-        boost::mutex::scoped_lock lock(qm);
-        return !ts_queue.empty() || !no_more_data;
+    	boost::mutex::scoped_lock lock(qm);
+    	ts_queue.pop_front();
     }
 
+    /**
+     * Check if the queue is empty (blocks if there is no data in the queue and no_more_data is set to false)
+     */
+    bool empty()
+    {
+        boost::mutex::scoped_lock lock(qm);
+        while (ts_queue.empty() && !no_more_data) qv.wait(lock);
+        return ts_queue.empty();
+    }
+
+    /**
+     * Sets no_more_data to ture
+     */
     void noMoreData ()
     {
     	{
@@ -90,9 +109,9 @@ public:
     }
 
 private:
-    /// the queue itself
 
-    std::queue<T*> ts_queue;
+    /// the queue itself
+    boost::ptr_list<T> ts_queue;
 
     /// the mutex preventing concurrent browsing and reconnecting
     boost::mutex qm;

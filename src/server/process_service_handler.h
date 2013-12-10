@@ -23,6 +23,7 @@ limitations under the License. */
 #include "SingleDbInstance.h"
 #include "common/logger.h"
 #include "common/error.h"
+#include "common/ExecutorPool.h"
 #include "process.h"
 #include <iostream>
 #include <map>
@@ -32,7 +33,7 @@ limitations under the License. */
 #include <sstream>
 #include "site_name.h"
 #include "FileTransferScheduler.h"
-#include "FileTransferExecutorPool.h"
+#include "FileTransferExecutor.h"
 #include "TransferFileHandler.h"
 #include "ConfigurationAssigner.h"
 #include "ProtocolResolver.h"
@@ -322,7 +323,7 @@ protected:
                             }
 
                         // the worker thread pool
-                        FileTransferExecutorPool execPool(execPoolSize, tfh, monitoringMessages, infosys, ftsHostName);
+                        ExecutorPool<FileTransferExecutor> execPool(execPoolSize);
 
                         // loop until all files have been served
 
@@ -339,18 +340,27 @@ protected:
                                     {
                                         if (stopThreads)
                                             {
-                                                execPool.stopAll();
+                                                execPool.stop();
                                                 return;
                                             }
 
-                                        execPool.add(tfh.get(*it_vo), enableOptimization.compare("true") == 0);
+                                        FileTransferExecutor* exec = new FileTransferExecutor(
+                                        		tfh.get(*it_vo),
+                                        		tfh,
+                                        		enableOptimization.compare("true") == 0,
+                                        		monitoringMessages,
+                                        		infosys,
+                                        		ftsHostName
+                                        	);
+
+                                        execPool.add(exec);
                                     }
                             }
 
                         // wait for all the workers to finish
                         execPool.join();
 
-                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Threadpool processed: " << initial_size << " files (" << execPool.getNumberOfScheduled() << " have been scheduled)" << commit;
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Threadpool processed: " << initial_size << " files (" << execPool.executed() << " have been scheduled)" << commit;
                     }
                 else     /*reuse session*/
                     {
