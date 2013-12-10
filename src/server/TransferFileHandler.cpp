@@ -25,6 +25,11 @@
 
 #include "TransferFileHandler.h"
 
+#include <algorithm>
+
+#include <boost/lambda/lambda.hpp>
+#include <boost/lambda/bind.hpp>
+
 namespace fts3
 {
 namespace server
@@ -296,13 +301,14 @@ const set<string> TransferFileHandler::getDestinationsVos(string se) const
 
 int TransferFileHandler::size()
 {
-    int sum = 0;
+	int sum = 0;
 
-    map< string, map< pair<string, string>, list<FileIndex> > >::iterator it;
-    for (it = voToFileIndexes.begin(); it != voToFileIndexes.end(); it++)
-        {
-            sum += (unsigned int) it->second.size();
-        }
+    map< string, map< pair<string, string>, list<FileIndex> > >::iterator iout;
+    map< pair<string, string>, list<FileIndex> >::iterator iin;
+
+    for (iout = voToFileIndexes.begin(); iout != voToFileIndexes.end(); iout++)
+   		for (iin = iout->second.begin(); iin != iout->second.end(); iin++)
+    			sum += (unsigned int) iin->second.size();
 
     return sum;
 }
