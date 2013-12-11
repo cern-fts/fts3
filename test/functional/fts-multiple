@@ -42,7 +42,7 @@ class TestMultiple(base.TestBase):
             i = 0
             for pair in files.keys():
                 label = 'jobs.files[' + str(i) + '].state'
-                self.assertEqual('FINISHED', files[pair]['file_state'], label)
+                self.assertEqual('FINISHED', files[pair]['state'], label)
                 i += 1
     
 
@@ -77,10 +77,11 @@ class TestMultiple(base.TestBase):
             for (src, dst) in files.keys():
                 label = 'jobs.files[' + str(i) + '].state'
                 if src in created:
-                    self.assertEqual('FINISHED', files[(src, dst)]['file_state'], label)
+                    self.assertEqual('FINISHED', files[(src, dst)]['state'], label)
                 else:
-                    self.assertEqual('FAILED', files[(src, dst)]['file_state'], label)
+                    self.assertEqual('FAILED', files[(src, dst)]['state'], label)
                 i += 1
+
 
 if __name__ == '__main__':
     import sys
