@@ -192,7 +192,9 @@ config(function($routeProvider) {
 })
 .filter('filesize', function($filter) {
     return function(bytes) {
-        if (bytes < 1024)
+    	if (bytes == null)
+    		return '-';
+    	else if (bytes < 1024)
             return bytes.toString() + ' bytes';
         else if (bytes < 1048576)
             return (bytes / 1024.0).toFixed(2).toString() + ' KiB';
