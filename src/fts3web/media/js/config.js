@@ -5,9 +5,9 @@ function ConfigAuditCtrl($location, $scope, config, ConfigAudit)
 
 	// Filter
 	$scope.filter = {
-		action:   undefinedAsEmpty($location.search().action),
-		user:     undefinedAsEmpty($location.search().user),
-		contains: undefinedAsEmpty($location.search().contains)
+		action:   validString($location.search().action),
+		user:     validString($location.search().user),
+		contains: validString($location.search().contains)
 	};
 	
 	$scope.applyFilters = function() {

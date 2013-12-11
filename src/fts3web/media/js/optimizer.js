@@ -51,8 +51,8 @@ function OptimizerDetailedCtrl($location, $scope, optimizer, OptimizerDetailed)
 	
 	// Set up filters
 	$scope.filter = {
-			source:      undefinedAsEmpty($location.search().source),
-			destination: undefinedAsEmpty($location.search().destination)
+			source:      validString($location.search().source),
+			destination: validString($location.search().destination)
 	}
 }
 
@@ -103,8 +103,8 @@ function OptimizerDecisionsCtrl($location, $scope, decisions, OptimizerDecisions
 	}
 	
 	$scope.filter = {
-		source_se: undefinedAsEmpty($location.search().source_se),
-		dest_se:   undefinedAsEmpty($location.search().dest_se)
+		source_se: validString($location.search().source_se),
+		dest_se:   validString($location.search().dest_se)
 	}
 }
 

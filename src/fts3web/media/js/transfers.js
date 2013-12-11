@@ -9,7 +9,8 @@ function TransfersCtrl($location, $scope, transfers, Transfers, Unique)
 		sources: Unique('sources'),
 		destinations: Unique('destinations'),
 		vos: Unique('vos'),
-		activities: Unique('activities')
+		activities: Unique('activities'),
+		hostnames: Unique('hostnames')
 	}
 
 	// On page change, reload
@@ -29,27 +30,29 @@ function TransfersCtrl($location, $scope, transfers, Transfers, Unique)
 	
 	// Set up filters
 	$scope.filter = {
-		vo:          undefinedAsEmpty($location.search().vo),
-		source_se:   undefinedAsEmpty($location.search().source_se),
-		dest_se:     undefinedAsEmpty($location.search().dest_se),
-		source_surl: undefinedAsEmpty($location.search().source_surl),
-		dest_surl:   undefinedAsEmpty($location.search().dest_surl),
-		time_window: undefinedAsEmpty($location.search().time_window),
+		vo:          validString($location.search().vo),
+		source_se:   validString($location.search().source_se),
+		dest_se:     validString($location.search().dest_se),
+		source_surl: validString($location.search().source_surl),
+		dest_surl:   validString($location.search().dest_surl),
+		time_window: validString($location.search().time_window),
 		state:       statesFromString($location.search().state),
-		activity:    undefinedAsEmpty($location.search().activity)
+		activity:    validString($location.search().activity),
+		hostname:    validString($location.search().hostname),
 	}
 	
 	$scope.applyFilters = function() {
 		$location.search({
 			page:         1,
-			vo:           validVo($scope.filter.vo),
+			vo:           validString($scope.filter.vo),
 			source_se:    $scope.filter.source_se,
 			dest_se:      $scope.filter.dest_se,
 			source_surl:  $scope.filter.source_surl,
 			dest_surl:    $scope.filter.dest_surl,
 			time_window:  $scope.filter.time_window,
 			state:        joinStates($scope.filter.state),
-			activity:     $scope.filter.activity
+			activity:     validString($scope.filter.activity),
+			hostname:     validString($scope.filter.hostname),
 		});
 		$scope.filtersModal = false;
 	}	

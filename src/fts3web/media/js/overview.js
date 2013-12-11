@@ -76,9 +76,9 @@ function OverviewCtrl($location, $scope, overview, Overview, Unique)
 	}
 	
 	$scope.filter = {
-		vo:        undefinedAsEmpty($location.search().vo),
-		source_se: undefinedAsEmpty($location.search().source_se),
-		dest_se:   undefinedAsEmpty($location.search().dest_se)
+		vo:        validString($location.search().vo),
+		source_se: validString($location.search().source_se),
+		dest_se:   validString($location.search().dest_se)
 	}
 }
 

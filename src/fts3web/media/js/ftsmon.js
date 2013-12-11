@@ -333,9 +333,9 @@ function statesFromString(str)
 }
 
 /** Get default if undefined **/
-function undefinedAsEmpty(v)
+function validString(v)
 {
-    if (typeof(v) != 'undefined')
+    if (typeof(v) == 'string')
         return v;
     else
         return '';
@@ -347,14 +347,6 @@ function undefinedAsZero(v)
         return v;
     else
         return 0;
-}
-
-function validVo(v)
-{
-    if (typeof(v) == 'string')
-        return v;
-    else
-        return '';
 }
 
 

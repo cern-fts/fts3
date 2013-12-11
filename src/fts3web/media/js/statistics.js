@@ -87,8 +87,8 @@ function StatsVosCtrl($location, $scope, vos, StatsVO, Unique)
 	}
 	
 	$scope.filter = {
-		'source_se': undefinedAsEmpty($location.search().source_se),
-		'dest_se':   undefinedAsEmpty($location.search().dest_se),
+		'source_se': validString($location.search().source_se),
+		'dest_se':   validString($location.search().dest_se),
 	}
 	
 	$scope.applyFilters = function() {

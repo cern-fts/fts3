@@ -18,9 +18,9 @@ function ErrorsCtrl($location, $scope, errors, Errors, Unique)
 	}
 	
 	$scope.filter = {
-		contains:  undefinedAsEmpty($location.search().contains),
-		source_se: undefinedAsEmpty($location.search().source_se),
-		dest_se:   undefinedAsEmpty($location.search().dest_se),
+		contains:  validString($location.search().contains),
+		source_se: validString($location.search().source_se),
+		dest_se:   validString($location.search().dest_se),
 	}
 	
 	// On page change, reload

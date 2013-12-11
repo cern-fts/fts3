@@ -94,6 +94,7 @@ class FilterForm(forms.Form):
     startdate   = forms.DateField(required = False)
     enddate     = forms.DateField(required = False)
     activity    = forms.CharField(required = False)
+    hostname    = forms.CharField(required = False)
     
     def is_empty(self):
         if self['source_se'].data or self['dest_se'].data or\
