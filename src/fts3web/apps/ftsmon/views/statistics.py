@@ -31,13 +31,15 @@ ACTIVE_STATES        = ['SUBMITTED', 'READY', 'ACTIVE', 'STAGING']
 FILE_TERMINAL_STATES = ['FINISHED', 'FAILED', 'CANCELED']
 
 
-def _getCountPerState(age = None):
+def _getCountPerState(age = None, hostname = None):
     count = {}
     
     query = File.objects
     if age:
         notBefore = datetime.utcnow() - age
         query = query.filter(Q(job_finished__gte = notBefore) | Q(job_finished__isnull = True))
+    if hostname:
+        query = query.filter(transferHost = hostname)
     
     query = query.values('file_state').annotate(number = Count('file_state'))
     
@@ -97,11 +99,14 @@ def _getTransferAndSubmissionPerHost(timewindow):
     return servers
 
 
-def _getRetriedStats(timewindow):
+def _getRetriedStats(timewindow, hostname):
     notBefore = datetime.utcnow() - timewindow
     
-    retriedObjs = File.objects.filter(file_state__in = ['FAILED', 'FINISHED'], job_finished__gte = notBefore, retry__gt = 0)\
-                          .values('file_state').annotate(number = Count('file_state'))
+    retriedObjs = File.objects.filter(file_state__in = ['FAILED', 'FINISHED'], job_finished__gte = notBefore, retry__gt = 0)
+    if hostname:
+        retriedObjs = retriedObjs.filter(transferHost = hostname)
+    retriedObjs = retriedObjs.values('file_state').annotate(number = Count('file_state'))
+                          
     retried = {}
     for f in retriedObjs:
         retried[f['file_state'].lower()] = f['number']
@@ -113,9 +118,11 @@ def _getRetriedStats(timewindow):
 
 @jsonify
 def overview(httpRequest):
-    overall = _getCountPerState(timedelta(hours = 24))
-    lastHour = _getCountPerState(timedelta(hours = 1))
-    retried = _getRetriedStats(timedelta(hours = 1))
+    hostname = httpRequest.GET.get('hostname', None)
+    
+    overall = _getCountPerState(timedelta(hours = 24), hostname)
+    lastHour = _getCountPerState(timedelta(hours = 1), hostname)
+    retried = _getRetriedStats(timedelta(hours = 1), hostname)
         
     return {
        'lastday': overall,

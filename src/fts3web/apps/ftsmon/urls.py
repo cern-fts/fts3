@@ -51,4 +51,5 @@ urlpatterns = patterns('ftsmon.views',
     url(r'^unique/destinations', 'autocomplete.destinations'),
     url(r'^unique/sources', 'autocomplete.sources'),
     url(r'^unique/vos', 'autocomplete.vos'),
+    url(r'^unique/hostnames', 'autocomplete.hostnames')
 )

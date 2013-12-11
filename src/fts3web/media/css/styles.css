@@ -22,6 +22,16 @@ div[role="main"] {
 	color: #999999;
 }
 
+h2 div {
+	display: inline;
+}
+
+/* This trick avoids flapping layout */
+plot {
+    display: block;
+    height: 301px;
+}
+
 /* Tables */
 table.table {
 	font-family: monospace;

@@ -1,7 +1,20 @@
 
-function StatsOverviewCtrl($location, $scope, stats, Statistics)
+function StatsOverviewCtrl($routeParams, $location, $scope, stats, Statistics, Unique)
 {
 	$scope.stats = stats;
+	$scope.host = $location.search().hostname;
+	
+	$scope.hostnames = Unique('hostnames')
+	
+	$scope.filterHost = function(host) {
+		var filter = $location.search();
+		if (host)
+			filter.hostname = host;
+		else
+			delete filter.hostname;
+		$location.search(filter);
+		$scope.host = host;
+	}
 	
 	// Set timer to trigger autorefresh
 	$scope.autoRefresh = setInterval(function() {
@@ -15,15 +28,11 @@ function StatsOverviewCtrl($location, $scope, stats, Statistics)
 
 
 StatsOverviewCtrl.resolve = {
-	stats: function($rootScope, $location, $q, Statistics) {
+	stats: function($route, $rootScope, $location, $q, Statistics) {
     	loading($rootScope);
     	
     	var deferred = $q.defer();
 
-    	var page = $location.search().page;
-    	if (!page || page < 1)
-    		page = 1;
-    	
     	Statistics.query($location.search(),
   			  genericSuccessMethod(deferred, $rootScope),
 			  genericFailureMethod(deferred, $rootScope, $location));

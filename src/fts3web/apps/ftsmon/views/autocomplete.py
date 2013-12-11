@@ -19,7 +19,7 @@ import simplejson
 from datetime import datetime, timedelta
 from django.db.models import Q
 from django.http import HttpResponse
-from ftsweb.models import Job, File
+from ftsweb.models import Job, File, Host
 from jsonify import jsonify
 
 @jsonify
@@ -46,3 +46,9 @@ def vos(httpRequest):
     vos = Job.objects.values('vo_name').distinct()
     return [row['vo_name'] for row in vos]
 
+
+@jsonify
+def hostnames(httpRequest):
+    notBefore = datetime.utcnow() - timedelta(hours = 12)
+    hosts = Host.objects.values('hostname').filter(beat__gte = notBefore)
+    return [h['hostname'] for h in hosts]

@@ -1,4 +1,20 @@
-<h2>Statistics - Overview</h2>
+<h2>
+    Statistics -
+    <div class="dropdown">
+	    <a class="dropdown-toggle">
+	        <span ng-show="host">{{host}}</span>
+	        <span ng-show="!host">All</span>
+	    </a>
+	    <ul class="dropdown-menu">
+	        <li>
+	           <a ng-click="filterHost(null)">All</a>
+	        </li> 
+	        <li ng-repeat="host in hostnames">
+	           <a ng-click="filterHost(host)">{{host}}</a>
+            </li>
+	    </ul>
+    </div>
+</h2>
 
 <div class="row-fluid">
     <div class="row-fluid">
