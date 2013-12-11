@@ -93,6 +93,9 @@ bool retryTransfer(int errorNo, const std::string& category, const std::string& 
     found = message.find("SRM_AUTHENTICATION_FAILURE");
     if (found!=std::string::npos)
         retry = false;	
+    found = message.find("SRM_NO_FREE_SPACE");
+    if (found!=std::string::npos)
+        retry = false;		
 		
     return retry;
 }
