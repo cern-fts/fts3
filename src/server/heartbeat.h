@@ -18,6 +18,7 @@ limitations under the License. */
 #include "active_object.h"
 #include "SingleDbInstance.h"
 #include "threadpool.h"
+#include "DrainMode.h"
 
 extern bool stopThreads;
 
@@ -47,6 +48,12 @@ private:
     {
         while (!stopThreads)
             {
+	        //if we drain a host, we need to let the other hosts know about it
+		if (DrainMode::getInstance()){
+			sleep(1);
+			continue;
+		}
+
                 unsigned index=0, count=0, start=0, end=0;
                 try
                     {
