@@ -432,7 +432,7 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy)
                     delete cred;
                 }
             // log the termination time of the current the new proxy
-            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Current proxy termination time: " << storedExpirationTime << ", new proxy proxy termination time: " << storedExpirationTime << commit;
+            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Current proxy termination time: " << storedExpirationTime << ", new proxy proxy termination time: " << incomingExpirationTime << commit;
             // check if the termination time is better than for the current proxy (if not we don't bother)
             if (incomingExpirationTime < storedExpirationTime) return;
         }
