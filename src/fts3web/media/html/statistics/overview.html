@@ -31,10 +31,18 @@
 			    </thead>
 			    <tbody>
 			        <tr>
-			            <td>{{stats.lasthour.submitted}}</td>
-			            <td>{{stats.lasthour.ready}}</td>
-			            <td>{{stats.lasthour.active}}</td>
-			            <td>{{stats.lasthour.staging}}</td>
+			            <td>
+			                <a href="#/transfers?hostname={{host}}&state=SUBMITTED">{{stats.lasthour.submitted}}</a>
+			            </td>
+			            <td>
+			                <a href="#/transfers?hostname={{host}}&state=READY">{{stats.lasthour.ready}}</a>
+			            </td>
+			            <td>
+			                <a href="#/transfers?hostname={{host}}&state=ACTIVE">{{stats.lasthour.active}}</a>
+		                </td>
+			            <td>
+			                <a href="#/transfers?hostname={{host}}&state=STAGING">{{stats.lasthour.staging}}</a>
+			            </td>
 			        </tr>
 			    </tbody>
 			</table>
@@ -53,9 +61,15 @@
 			    </thead>
 			    <tbody>
 			        <tr>
-			            <td>{{stats.lasthour.finished}}</td>
-			            <td>{{stats.lasthour.failed}}</td>
-			            <td>{{stats.lasthour.canceled}}</td>
+			            <td>
+			                <a href="#/transfers?time_window=1&hostname={{host}}&state=FINISHED">{{stats.lasthour.finished}}</a>
+                        </td>
+			            <td>
+                            <a href="#/transfers?time_window=1&hostname={{host}}&state=FAILED">{{stats.lasthour.failed}}</a>
+                        </td>
+			            <td>
+			                <a href="#/transfers?time_window=1&hostname={{host}}&state=CANCELED">{{stats.lasthour.canceled}}</a>
+			            </td>
 			        </tr>
 			    </tbody>
 			</table>
@@ -75,11 +89,17 @@
 	                    </tr>
 	                </thead>
 	                <tbody>
-	                    <tr>
-	                        <td>{{stats.lastday.finished}}</td>
-	                        <td>{{stats.lastday.failed}}</td>
-	                        <td>{{stats.lastday.canceled}}</td>
-	                    </tr>
+                    <tr>
+                        <td>
+                            <a href="#/transfers?time_window=24&hostname={{host}}&state=FINISHED">{{stats.lastday.finished}}</a>
+                        </td>
+                        <td>
+                            <a href="#/transfers?time_window=24&hostname={{host}}&state=FAILED">{{stats.lastday.failed}}</a>
+                        </td>
+                        <td>
+                            <a href="#/transfers?time_window=24&hostname={{host}}&state=CANCELED">{{stats.lastday.canceled}}</a>
+                        </td>
+                    </tr>
 	                </tbody>
 	            </table>
 	            <plot title="24h" list="stats.lastday" labels="finished,failed,canceled" colors="5bb75b,bd362f,8a2822"></plot>
