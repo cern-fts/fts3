@@ -33,6 +33,7 @@ limitations under the License. */
 #include <boost/thread.hpp>
 
 extern bool stopThreads;
+extern time_t updateRecords;
 
 namespace fs = boost::filesystem;
 
@@ -309,6 +310,8 @@ protected:
 
         while (1)   /*need to receive more than one messages at a time*/
             {
+                updateRecords = time(0);
+
                 try
                     {
                         if(stopThreads && messages.empty() && messagesLog.empty() )

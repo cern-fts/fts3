@@ -41,6 +41,7 @@ limitations under the License. */
 #include "ws/SingleTrStateInstance.h"
 
 extern bool stopThreads;
+extern time_t stallRecords;
 
 
 FTS3_SERVER_NAMESPACE_START
@@ -125,6 +126,8 @@ protected:
             {
                 try
                     {
+                        stallRecords = time(0);
+
                         if(stopThreads && messages.empty() && requestIDs.empty())
                             {
                                 break;
