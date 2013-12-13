@@ -69,6 +69,7 @@ limitations under the License. */
 #include <boost/thread.hpp>
 
 extern bool stopThreads;
+extern time_t retrieveRecords;
 
 
 FTS3_SERVER_NAMESPACE_START
@@ -824,6 +825,8 @@ protected:
 
         while (1)
             {
+                retrieveRecords = time(0);	    
+	    
                 try
                     {
                         if (stopThreads)
