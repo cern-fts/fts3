@@ -32,20 +32,23 @@
 #include <boost/thread.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
 
-namespace fts3 {
-namespace common {
+namespace fts3
+{
+namespace common
+{
 
 using namespace boost;
 
 template <typename T>
-class ExecutorPool {
+class ExecutorPool
+{
 
 
 public:
 
-	ExecutorPool(int size) : index(0), size(size), noexec(0) {}
+    ExecutorPool(int size) : index(0), size(size), noexec(0) {}
 
-	virtual ~ExecutorPool() {}
+    virtual ~ExecutorPool() {}
 
     /**
      * Adds new TransferFile to the queue of one of the FileTransferExecutors
@@ -58,7 +61,7 @@ public:
         // if needed add new worker loop
         if (executors.size() < size)
             {
-        		Executor<T>* exec = new Executor<T>();
+                Executor<T>* exec = new Executor<T>();
                 executors.push_back(exec);
                 group.create_thread(bind(&Executor<T>::execute, exec));
             }
@@ -73,12 +76,12 @@ public:
      */
     void join()
     {
-    	// notify each executor that there are no more data
-    	for_each(executors.begin(), executors.end(), bind(&Executor<T>::noMoreData, _1));
-    	// wait until all threads terminate
-    	group.join_all();
-    	// sum up the number of successfully executed elements
-    	for_each(executors.begin(), executors.end(), bind(&ExecutorPool<T>::sum, this, _1));
+        // notify each executor that there are no more data
+        for_each(executors.begin(), executors.end(), bind(&Executor<T>::noMoreData, _1));
+        // wait until all threads terminate
+        group.join_all();
+        // sum up the number of successfully executed elements
+        for_each(executors.begin(), executors.end(), bind(&ExecutorPool<T>::sum, this, _1));
     }
 
     /**
@@ -86,19 +89,19 @@ public:
      */
     void stop()
     {
-    	group.interrupt_all();
+        group.interrupt_all();
     }
 
     int executed()
     {
-    	return noexec;
+        return noexec;
     }
 
 private:
 
     void sum(Executor<T>& exec)
     {
-    	noexec += exec.executed();
+        noexec += exec.executed();
     }
 
     /// vector with executors

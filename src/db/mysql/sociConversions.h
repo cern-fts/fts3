@@ -250,7 +250,7 @@ struct type_conversion<FileTransferStatus>
         transfer.transferFileState = v.get<std::string>("file_state");
         transfer.reason            = v.get<std::string>("reason", "");
         transfer.numFailures	   = v.get<int>("retry");
-	transfer.duration	   = v.get<double>("tx_duration",0);
+        transfer.duration	   = v.get<double>("tx_duration",0);
         if (v.get_indicator("start_time") == soci::i_ok)
             {
                 aux_tm = v.get<struct tm>("start_time");

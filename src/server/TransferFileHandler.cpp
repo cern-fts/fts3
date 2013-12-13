@@ -296,14 +296,14 @@ const set<string> TransferFileHandler::getDestinationsVos(string se) const
 
 int TransferFileHandler::size()
 {
-	int sum = 0;
+    int sum = 0;
 
     map< string, map< pair<string, string>, list<FileIndex> > >::iterator iout;
     map< pair<string, string>, list<FileIndex> >::iterator iin;
 
     for (iout = voToFileIndexes.begin(); iout != voToFileIndexes.end(); iout++)
-   		for (iin = iout->second.begin(); iin != iout->second.end(); iin++)
-    			sum += (unsigned int) iin->second.size();
+        for (iin = iout->second.begin(); iin != iout->second.end(); iin++)
+            sum += (unsigned int) iin->second.size();
 
     return sum;
 }

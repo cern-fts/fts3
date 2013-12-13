@@ -113,7 +113,7 @@ protected:
 
         while (1)   /*need to receive more than one messages at a time*/
             {
-                stallRecords = time(0);	    
+                stallRecords = time(0);
                 try
                     {
                         if(stopThreads && messages.empty() && requestIDs.empty())

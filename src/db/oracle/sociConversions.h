@@ -264,7 +264,7 @@ struct type_conversion<FileTransferStatus>
         transfer.transferFileState = v.get<std::string>("FILE_STATE");
         transfer.reason            = v.get<std::string>("REASON", "");
         transfer.numFailures	   = static_cast<int>(v.get<double>("RETRY", 0));
-	transfer.duration	   = v.get<double>("TX_DURATION",0);
+        transfer.duration	   = v.get<double>("TX_DURATION",0);
 
         transfer.start_time        = getTimeT(v, "START_TIME");
         transfer.finish_time       = getTimeT(v, "FINISH_TIME");

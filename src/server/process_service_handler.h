@@ -346,13 +346,13 @@ protected:
                                             }
 
                                         FileTransferExecutor* exec = new FileTransferExecutor(
-                                        		tfh.get(*it_vo),
-                                        		tfh,
-                                        		enableOptimization.compare("true") == 0,
-                                        		monitoringMessages,
-                                        		infosys,
-                                        		ftsHostName
-                                        	);
+                                            tfh.get(*it_vo),
+                                            tfh,
+                                            enableOptimization.compare("true") == 0,
+                                            monitoringMessages,
+                                            infosys,
+                                            ftsHostName
+                                        );
 
                                         execPool.add(exec);
                                     }
@@ -825,8 +825,8 @@ protected:
 
         while (1)
             {
-                retrieveRecords = time(0);	    
-	    
+                retrieveRecords = time(0);
+
                 try
                     {
                         if (stopThreads)

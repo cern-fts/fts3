@@ -46,8 +46,8 @@ public:
         boost::function<void() > op = boost::bind(&HeartBeatHandler::beat_impl, this);
         this->_enqueue(op);
     }
-    
-   bool criticalThreadExpired(time_t retrieveRecords, time_t updateRecords ,time_t stallRecords)
+
+    bool criticalThreadExpired(time_t retrieveRecords, time_t updateRecords ,time_t stallRecords)
     {
         double diffTime  = 0.0;
 
@@ -74,7 +74,7 @@ public:
 
         return false;
     }
-    
+
 
 private:
 

@@ -50,7 +50,7 @@ class ThreadSafeQueue
 
 public:
 
-	/// Constructor, sets no_more_data to false
+    /// Constructor, sets no_more_data to false
     ThreadSafeQueue() : no_more_data(false) {}
 
     /// Destructor
@@ -61,10 +61,10 @@ public:
      */
     void push(T* e)
     {
-    	{
-    		boost::mutex::scoped_lock lock(qm);
-    		ts_queue.push_back(e);
-    	}
+        {
+            boost::mutex::scoped_lock lock(qm);
+            ts_queue.push_back(e);
+        }
         qv.notify_all();
     }
 
@@ -73,8 +73,8 @@ public:
      */
     T& front()
     {
-    	boost::mutex::scoped_lock lock(qm);
-    	return ts_queue.front();
+        boost::mutex::scoped_lock lock(qm);
+        return ts_queue.front();
     }
 
     /**
@@ -82,8 +82,8 @@ public:
      */
     void pop()
     {
-    	boost::mutex::scoped_lock lock(qm);
-    	ts_queue.pop_front();
+        boost::mutex::scoped_lock lock(qm);
+        ts_queue.pop_front();
     }
 
     /**
@@ -101,10 +101,10 @@ public:
      */
     void noMoreData ()
     {
-    	{
-    		boost::mutex::scoped_lock lock(qm);
-    		no_more_data = true;
-    	}
+        {
+            boost::mutex::scoped_lock lock(qm);
+            no_more_data = true;
+        }
         qv.notify_all();
     }
 

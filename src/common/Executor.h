@@ -43,18 +43,18 @@ class Executor
 
 public:
 
-	/**
-	 * Constructor
-	 */
-	Executor() : active(true), noexec(0) {}
+    /**
+     * Constructor
+     */
+    Executor() : active(true), noexec(0) {}
 
-	/**
-	 * Destructor
-	 */
-	virtual ~Executor()
-	{
-		active = false;
-	}
+    /**
+     * Destructor
+     */
+    virtual ~Executor()
+    {
+        active = false;
+    }
 
     /**
      * Worker loop that is executed in a separate thread
@@ -63,10 +63,10 @@ public:
     {
         while (active && !queue.empty() && !stopThreads)
             {
-				// execute get the element in front
-				noexec += queue.front().execute();
-				// remove the element from queue (it also deallocates the memory)
-				queue.pop();
+                // execute get the element in front
+                noexec += queue.front().execute();
+                // remove the element from queue (it also deallocates the memory)
+                queue.pop();
             }
 
         // the thread is not active anymore
@@ -99,7 +99,7 @@ public:
 
     int executed() const
     {
-    	return noexec;
+        return noexec;
     }
 
 private:

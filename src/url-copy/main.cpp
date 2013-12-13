@@ -158,7 +158,7 @@ void abnormalTermination(const std::string& classification, const std::string&, 
     msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
     msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, finalState);
     msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
-    if(UrlCopyOpts::getInstance().monitoringMessages)
+    if(UrlCopyOpts::getInstance().monitoringMessages && !(UrlCopyOpts::getInstance().retry))
         msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
 
     reporter.timeout = UrlCopyOpts::getInstance().timeout;
@@ -631,7 +631,7 @@ int main(int argc, char **argv)
             msg_ifce::getInstance()->set_srm_space_token_dest(&tr_completed, opts.destTokenDescription);
             msg_ifce::getInstance()->set_srm_space_token_source(&tr_completed, opts.sourceTokenDescription);
 
-            if(opts.monitoringMessages)
+            if(opts.monitoringMessages && opts.firstTime)
                 msg_ifce::getInstance()->SendTransferStartMessage(&tr_completed);
 
             if (!opts.logToStderr)
@@ -1042,7 +1042,7 @@ stop:
             logger.INFO() << "Send monitoring complete message" << std::endl;
             msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
-            if(opts.monitoringMessages)
+            if(opts.monitoringMessages && !opts.retry)
                 msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
 
             std::string archiveErr = fileManagement.archive();

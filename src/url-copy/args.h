@@ -23,6 +23,8 @@ public:
     bool logToStderr;
     bool reuse;
     bool multihop;
+    bool retry;
+    bool firstTime;
 
     enum CompareChecksum
     {
