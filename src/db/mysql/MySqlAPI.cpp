@@ -3510,6 +3510,17 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                         }
                 }
             sql.commit();
+	    
+	    //delete from t_optimizer_evolution > 3 days old records
+            sql.begin();
+            	sql << "delete from t_optimizer_evolution where datetime < (UTC_TIMESTAMP() - interval '3' DAY )";
+            sql.commit();
+	    
+	    //delete from t_optimizer_evolution > 3 days old records
+            sql.begin();
+            	sql << "delete from t_optimize where datetime < (UTC_TIMESTAMP() - interval '3' DAY )";
+            sql.commit();		    
+	    
         }
     catch (std::exception& e)
         {
