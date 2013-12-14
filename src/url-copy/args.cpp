@@ -8,8 +8,6 @@ UrlCopyOpts UrlCopyOpts::instance;
 
 const option UrlCopyOpts::long_options[] =
 {
-    {"first-time",        no_argument,       0, 'T'},
-    {"retry",         	  no_argument,       0, 'S'},
     {"monitoring",        no_argument,       0, 'P'},
     {"auto-tunned",       no_argument,       0, 'O'},
     {"manual-config",     no_argument,       0, 'N'},
@@ -44,12 +42,12 @@ const option UrlCopyOpts::long_options[] =
     {0, 0, 0, 0}
 };
 
-const char UrlCopyOpts::short_options[] = "TSPONM:L:K:J:I:H:GRFD:E:C:z:A:t:a:b:c:de:f:h:ij:k:B:5:";
+const char UrlCopyOpts::short_options[] = "PONM:L:K:J:I:H:GRFD:E:C:z:A:t:a:b:c:de:f:h:ij:k:B:5:";
 
 
 UrlCopyOpts::UrlCopyOpts(): monitoringMessages(false), autoTunned(false),
     manualConfig(false), debug(false), overwrite(false), daemonize(false),
-    logToStderr(false), reuse(false), multihop(false), retry(false),firstTime(false), compareChecksum(CHECKSUM_DONT_CHECK),
+    logToStderr(false), reuse(false), multihop(false), compareChecksum(CHECKSUM_DONT_CHECK),
     fileId(0), userFileSize(0), bringOnline(-1), copyPinLifetime(-1),
     nStreams(DEFAULT_NOSTREAMS), tcpBuffersize(DEFAULT_BUFFSIZE),
     blockSize(0), timeout(DEFAULT_TIMEOUT)
@@ -131,12 +129,6 @@ int UrlCopyOpts::parse(int argc, char * const argv[])
                             break;
                         case 'R':
                             multihop = true;
-                            break;
-                        case 'S':
-                            retry = true;
-                            break;
-                        case 'T':
-                            firstTime = true;
                             break;
                         case 'F':
                             debug = true;

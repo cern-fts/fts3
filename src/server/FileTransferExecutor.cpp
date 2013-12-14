@@ -383,25 +383,6 @@ int FileTransferExecutor::execute()
 
                     if (ready)
                         {
-                            int retry = db->getRetry(tf->JOB_ID);
-                            if(retry > 0)
-                                {
-                                    int retryTimes = db->getRetryTimes(tf->JOB_ID, tf->FILE_ID);
-                                    if(retryTimes == 0)
-                                        {
-                                            params.append(" -T ");
-                                            params.append(" -S ");
-                                        }
-                                    if(retryTimes !=0 && retryTimes < retry)
-                                        {
-                                            params.append(" -S ");
-                                        }
-                                }
-                            else
-                                {
-                                    params.append(" -T ");
-                                }
-
                             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd << " " << params << commit;
                             ExecuteProcess *pr = new ExecuteProcess(cmd, params);
                             if (pr)
