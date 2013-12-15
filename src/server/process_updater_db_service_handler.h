@@ -206,7 +206,7 @@ protected:
                             }
 
                         counter2++;
-                        if (counter2 == 300)
+                        if (counter2 == 3600)
                             {
                                 DBSingleton::instance().getDBObjectInstance()->checkSanityState();
                                 counter2 = 0;
