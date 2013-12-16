@@ -4828,7 +4828,7 @@ int MySqlAPI::activeProcessesForThisHost()
     unsigned active = 0;
     try
         {
-            sql << "select count(*) from t_file where TRANSFERHOST=:host AND file_state 'ACTIVE'  ", soci::use(hostname), soci::into(active);
+            sql << "select count(*) from t_file where TRANSFERHOST=:host AND file_state = 'ACTIVE'  ", soci::use(hostname), soci::into(active);
         }
     catch (std::exception& e)
         {
