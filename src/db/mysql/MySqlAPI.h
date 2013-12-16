@@ -335,8 +335,8 @@ public:
     virtual void updateFileTransferProgressVector(std::vector<struct message_updater>& messages);
 
     virtual void transferLogFileVector(std::map<int, struct message_log>& messagesLog);
-    
-    virtual void updateOptimizerEvolution();        
+
+    virtual void updateOptimizerEvolution();
 
 private:
     size_t                poolSize;
@@ -364,6 +364,6 @@ private:
     bool updateJobTransferStatusInternal(soci::session& sql, int file_id, std::string job_id, const std::string status);
 
     void useFileReplica(soci::session& sql, std::string jobId, int fileId);
-    
+
     void bringOnlineReportStatusInternal(soci::session& sql, const std::string & state, const std::string & message, struct message_bringonline msg);
 };

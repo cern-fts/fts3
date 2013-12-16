@@ -11226,7 +11226,8 @@ void OracleAPI::resetSanityRuns(SafeConnection& pooled, struct message_sanity &m
         }
 }
 
-void OracleAPI::updateOptimizerEvolution(){
+void OracleAPI::updateOptimizerEvolution()
+{
 }
 
 

@@ -135,7 +135,7 @@ public:
                                         return true;
                                     }
                             }
-                    }               
+                    }
 
                 /*session reuse process died or terminated unexpected*/
                 if ( (updated == true) && (std::string(msg.transfer_message).find("Transfer terminate handler called") != string::npos ||
