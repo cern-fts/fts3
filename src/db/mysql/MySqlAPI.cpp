@@ -2476,195 +2476,6 @@ void MySqlAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string 
     ops->bufsize = DEFAULT_BUFFSIZE;
 }
 
-void MySqlAPI::recordOptimizerUpdate(soci::session& sql, int active, double filesize,
-                                     double throughput, int nostreams, int timeout, int buffersize,
-                                     std::string source_hostname, std::string destin_hostname)
-{
-    try
-        {
-	if(throughput > 0){
-            sql.begin();
-            sql << "INSERT INTO t_optimizer_evolution "
-                " (datetime, source_se, dest_se, nostreams, timeout, active, throughput, buffer, filesize) "
-                " VALUES "
-                " (UTC_TIMESTAMP(), :source, :dest, :nostreams, :timeout, :active, :throughput, :buffer, :filesize)",
-                soci::use(source_hostname), soci::use(destin_hostname), soci::use(nostreams),
-                soci::use(timeout), soci::use(active), soci::use(throughput), soci::use(buffersize), soci::use(filesize);
-            sql.commit();
-	 }
-        }
-    catch (...)
-        {
-            sql.rollback();
-        }
-}
-
-bool MySqlAPI::updateOptimizer(double throughputIn, int, double filesize, double timeInSecs, int nostreams,
-                               int timeout, int buffersize,
-                               std::string source_hostname, std::string destin_hostname)
-{
-    bool ok = true;
-    soci::session sql(*connectionPool);
-
-    try
-        {
-            double throughput=0;
-            int active=0;
-
-            sql <<
-                " SELECT active FROM t_optimize_active "
-                " WHERE source_se = :source_se "
-                " AND dest_se = :dest_se ",
-                soci::use(source_hostname),
-                soci::use(destin_hostname),
-                soci::into(active);
-
-            if (filesize > 0 && timeInSecs > 0)
-                {
-                    if(throughputIn != 0.0)
-                        throughput = convertKbToMb(throughputIn);
-                    else
-                        throughput = convertBtoM(filesize, timeInSecs);
-                }
-            else
-                {
-                    if(throughputIn != 0.0)
-                        throughput = convertKbToMb(throughputIn);
-                    else
-                        throughput = convertBtoM(filesize, 1);
-                }
-            if (filesize <= 0)
-                filesize = 0;
-            if (buffersize <= 0)
-                buffersize = 0;
-
-            sql.begin();
-
-            soci::statement stmt (sql);
-
-            stmt.exchange(soci::use(filesize, "fsize"));
-            stmt.exchange(soci::use(throughput, "throughput"));
-            stmt.exchange(soci::use(active, "active"));
-            stmt.exchange(soci::use(timeout, "timeout"));
-            stmt.exchange(soci::use(nostreams, "nstreams"));
-            stmt.exchange(soci::use(buffersize, "buffer"));
-            stmt.exchange(soci::use(source_hostname, "source_se"));
-            stmt.exchange(soci::use(destin_hostname, "dest_se"));
-
-            stmt.alloc();
-
-            stmt.prepare(
-                " UPDATE t_optimize "
-                " SET filesize = :fsize, throughput = :throughput, active = :active, datetime = UTC_TIMESTAMP(), timeout= :timeout "
-                " WHERE nostreams = :nstreams "
-                "	AND buffer = :buffer "
-                "	AND source_se = :source_se "
-                "	AND dest_se = :dest_se "
-                " 	AND (throughput IS NULL OR throughput<=:throughput) "
-                "	AND (active<=:active OR active IS NULL)"
-            );
-
-            stmt.define_and_bind();
-            stmt.execute(true);
-            long long affected_rows = stmt.get_affected_rows();
-
-            sql.commit();
-
-            if ( affected_rows == 0)
-                {
-
-                    sql.begin();
-
-                    soci::statement stmt2(sql);
-
-                    stmt2.exchange(soci::use(active, "active"));
-                    stmt2.exchange(soci::use(nostreams, "nstreams"));
-                    stmt2.exchange(soci::use(buffersize, "buffer"));
-                    stmt2.exchange(soci::use(source_hostname, "source_se"));
-                    stmt2.exchange(soci::use(destin_hostname, "dest_se"));
-
-                    stmt2.alloc();
-
-                    stmt2.prepare("UPDATE t_optimize "
-                                  " SET datetime = UTC_TIMESTAMP() "
-                                  " WHERE nostreams = :nstreams "
-                                  "	AND buffer = :buffer "
-                                  "	AND source_se = :source_se "
-                                  "	AND dest_se = :dest_se "
-                                  " 	AND (active <= :active OR active IS NULL)");
-
-                    stmt2.define_and_bind();
-                    stmt2.execute(true);
-                    affected_rows += stmt2.get_affected_rows();
-                    sql.commit();
-                }
-
-            // Historical data
-            if (affected_rows)
-                recordOptimizerUpdate(sql, active, filesize, throughput, nostreams,
-                                      timeout, buffersize,
-                                      source_hostname, destin_hostname);
-
-        }
-    catch (std::exception& e)
-        {
-            ok = false;
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-    catch (...)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }
-    return ok;
-}
-
-void MySqlAPI::initOptimizer(const std::string & source_hostname, const std::string & destin_hostname, int)
-{
-    soci::session sql(*connectionPool);
-
-    try
-        {
-            unsigned foundRecords = 0;
-
-            sql << "SELECT COUNT(*) FROM t_optimize WHERE source_se = :source AND dest_se=:dest",
-                soci::use(source_hostname), soci::use(destin_hostname),
-                soci::into(foundRecords);
-
-            if (foundRecords == 0)
-                {
-                    int timeout=0, nStreams=0, bufferSize=0;
-
-                    soci::statement stmt = (sql.prepare << "INSERT INTO t_optimize (source_se, dest_se, timeout, nostreams, buffer, file_id) "
-                                            "                VALUES (:source, :dest, :timeout, :nostreams, :buffer, 0)",
-                                            soci::use(source_hostname), soci::use(destin_hostname), soci::use(timeout),
-                                            soci::use(nStreams), soci::use(bufferSize));
-                    sql.begin();
-                    for (unsigned register int x = 0; x < timeoutslen; x++)
-                        {
-                            for (unsigned register int y = 0; y < nostreamslen; y++)
-                                {
-                                    timeout    = timeouts[x];
-                                    nStreams   = nostreams[y];
-                                    bufferSize = 0;
-                                    stmt.execute(true);
-                                }
-                        }
-                    sql.commit();
-                }
-        }
-    catch (std::exception& e)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-    catch (...)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }
-}
 
 
 
@@ -7406,6 +7217,81 @@ void MySqlAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }
+
+void MySqlAPI::updateOptimizerEvolution()
+{
+    	   soci::session sql(*connectionPool);
+	   
+	   std::string source_hostname;
+	   std::string destin_hostname;
+	   int countActive = 0;
+	   int sumThroughput = 0;
+	   int noStreams = 0;
+
+    try
+        {
+	   soci::rowset<soci::row> rs = ( sql.prepare << " select distinct source_se, dest_se from t_file where file_state in ('READY','ACTIVE') ");
+	   
+           soci::statement stmt1 = (
+                                                sql.prepare << " SELECT count(*) FROM t_file "
+                                                " WHERE source_se = :source AND dest_se = :dest_se and file_state in ('READY','ACTIVE') ",
+                                                soci::use(source_hostname),soci::use(destin_hostname), soci::into(countActive));	   
+						
+           soci::statement stmt2 = (
+                                                sql.prepare << " select sum(throughput) FROM t_file where "
+						" source_se = :source_se and dest_se = :dest_se and file_state in ('READY','ACTIVE') ",
+                                                soci::use(source_hostname),soci::use(destin_hostname), soci::into(sumThroughput));
+						
+           soci::statement stmt3 = (
+                                                sql.prepare << " INSERT INTO t_optimizer_evolution "
+                				" (datetime, source_se, dest_se, nostreams, active, throughput) "
+                				" VALUES "
+                				" (UTC_TIMESTAMP(), :source, :dest, :nostreams, :active, :throughput)",
+                				soci::use(source_hostname), soci::use(destin_hostname), soci::use(noStreams),
+                				soci::use(countActive), soci::use(sumThroughput));						           
+						
+	   soci::rowset<std::string> rs2 = ( sql.prepare << " select internal_file_params FROM t_file WHERE internal_file_params is not null "
+						" AND file_state in ('READY','ACTIVE') "
+						" AND source_se = :source_se and dest_se = :dest_se ",
+                                                soci::use(source_hostname),soci::use(destin_hostname));																			   						
+	   
+           for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+                {
+                    source_hostname = i->get<std::string>("source_se");
+                    destin_hostname = i->get<std::string>("dest_se");
+		    countActive = 0;
+		    sumThroughput = 0;
+		    noStreams = 0;		    
+		    
+		    stmt1.execute(true);	   
+		    
+		    stmt2.execute(true);
+		    
+		    for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
+                    {
+		      std::string fileParamsLocal = (*i2);
+		      noStreams += extractStreams(fileParamsLocal);
+		    }
+		    		    
+		    if(countActive > 0 && sumThroughput > 0){
+            		sql.begin();
+          			stmt3.execute(true);
+	                sql.commit();		    
+		    }	   		    					   	
+	        }
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }
+}
+
 
 // the class factories
 

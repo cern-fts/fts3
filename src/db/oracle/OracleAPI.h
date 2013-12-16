@@ -126,10 +126,6 @@ public:
 
     virtual void fetchOptimizationConfig2(OptimizerSample* ops, const std::string & source_hostname, const std::string & destin_hostname);
 
-    virtual bool updateOptimizer(double throughput, int file_id , double filesize, double timeInSecs, int nostreams, int timeout, int buffersize,std::string source_hostname, std::string destin_hostname);
-
-    virtual void initOptimizer(const std::string & source_hostname, const std::string & destin_hostname, int file_id);
-
     virtual bool isCredentialExpired(const std::string & dlg_id, const std::string & dn);
 
     virtual bool isTrAllowed(const std::string & source_se, const std::string & dest);
@@ -338,16 +334,13 @@ public:
     virtual void updateFileTransferProgressVector(std::vector<struct message_updater>& messages);
 
     virtual void transferLogFileVector(std::map<int, struct message_log>& messagesLog);
-
+    
+    virtual void updateOptimizerEvolution();
 
 private:
     size_t                poolSize;
     soci::connection_pool* connectionPool;
     std::string           hostname;
-
-
-    void recordOptimizerUpdate(soci::session& sql, int active, double filesize, double throughput,
-                               int nostreams, int timeout, int buffersize,std::string source_hostname, std::string destin_hostname);
 
     int getOptimizerMode(soci::session& sql);
 

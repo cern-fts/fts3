@@ -128,5 +128,24 @@ inline std::string getFullHostname()
     return hostname;
 }
 
+inline int extractStreams(std::string & str)
+{
+    size_t found;
+    found = str.find("nostreams:");
+    if (found != std::string::npos)
+        {            
+            size_t found2;
+            found2 = str.find(",timeout:");
+            if (found2 != std::string::npos)
+                {
+                    str = str.substr(0, found2);
+                    str = str.substr(10, str.length());
+                    return atoi(str.c_str());
+                }
+        }
+    return 0;
+}
+
+
 }
 
