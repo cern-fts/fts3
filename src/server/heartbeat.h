@@ -78,6 +78,8 @@ private:
 
     void beat_impl(void)
     {
+        int beat = 0;
+    
         while (!stopThreads)
             {
                 //if we drain a host, we need to let the other hosts know about it, hand-over all files to the rest
@@ -102,14 +104,22 @@ private:
                                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Systole: host " << index << " out of " << count
                                                                 << " [" << start << ':' << end << ']'
                                                                 << commit;
+									
+                        	if (++beat == 300){												
+			        	db::DBSingleton::instance().getDBObjectInstance()->updateOptimizerEvolution();	
+					beat = 0;
+				}							
+				
                             }
                         catch (const std::exception& e)
                             {
                                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Hearbeat failed: " << e.what() << commit;
+				beat = 0;
                             }
                         catch (...)
                             {
                                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Hearbeat failed " << commit;
+				beat = 0;
                             }
                     }
                 sleep(60);

@@ -111,10 +111,6 @@ public:
 
     void fetchOptimizationConfig2(OptimizerSample* ops, const std::string & source_hostname, const std::string & destin_hostname);
 
-    bool updateOptimizer(double throughput, int file_id , double filesize, double timeInSecs, int nostreams, int timeout, int buffersize,std::string source_hostname, std::string destin_hostname);
-
-    void initOptimizer(const std::string & source_hostname, const std::string & destin_hostname, int file_id);
-
     bool isCredentialExpired(const std::string & dlg_id, const std::string & dn);
 
     bool isTrAllowed(const std::string & source_se, const std::string & dest);
@@ -311,6 +307,8 @@ public:
     void getTransferRetries(int fileId, std::vector<FileRetry*>& retries);
 
     void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end);
+    
+    void updateOptimizerEvolution();     
 };
 
 

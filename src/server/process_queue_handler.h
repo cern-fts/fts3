@@ -135,17 +135,7 @@ public:
                                         return true;
                                     }
                             }
-                    }
-
-                if (std::string(msg.transfer_status).compare("FINISHED") == 0)
-                    {
-                        updated = DBSingleton::instance().
-                                  getDBObjectInstance()->
-                                  updateOptimizer(msg.throughput, msg.file_id, msg.filesize, msg.timeInSecs,
-                                                  static_cast<int> (msg.nostreams), static_cast<int> (msg.timeout),
-                                                  static_cast<int> (msg.buffersize), std::string(msg.source_se),
-                                                  std::string(msg.dest_se));
-                    }
+                    }               
 
                 /*session reuse process died or terminated unexpected*/
                 if ( (updated == true) && (std::string(msg.transfer_message).find("Transfer terminate handler called") != string::npos ||

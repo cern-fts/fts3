@@ -169,10 +169,6 @@ public:
 
     virtual void fetchOptimizationConfig2(OptimizerSample* ops, const std::string & source_hostname, const std::string & destin_hostname) = 0;
 
-    virtual bool updateOptimizer(double throughput, int file_id , double filesize, double timeInSecs, int nostreams, int timeout, int buffersize,std::string source_hostname, std::string destin_hostname) = 0;
-
-    virtual void initOptimizer(const std::string & source_hostname, const std::string & destin_hostname, int file_id) = 0;
-
     virtual bool isCredentialExpired(const std::string & dlg_id, const std::string & dn) = 0;
 
     virtual bool isTrAllowed(const std::string & source_se, const std::string & dest) = 0;
@@ -385,5 +381,7 @@ public:
         *start = 0x0000;
         *end   = 0xFFFF;
     }
+    
+    virtual void updateOptimizerEvolution() = 0;    
 
 };

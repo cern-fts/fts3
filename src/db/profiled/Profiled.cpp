@@ -232,20 +232,6 @@ void ProfiledDB::fetchOptimizationConfig2(OptimizerSample* ops, const std::strin
 }
 
 
-bool ProfiledDB::updateOptimizer(double throughput, int file_id , double filesize, double timeInSecs, int nostreams, int timeout, int buffersize,
-                                 std::string source_hostname, std::string destin_hostname)
-{
-    PROFILE_PREFIXED("DB::", return db->updateOptimizer(throughput, file_id, filesize, timeInSecs, nostreams, timeout, buffersize,
-                                    source_hostname, destin_hostname));
-}
-
-
-void ProfiledDB::initOptimizer(const std::string & source_hostname, const std::string & destin_hostname, int file_id)
-{
-    PROFILE_PREFIXED("DB::", db->initOptimizer(source_hostname, destin_hostname, file_id));
-}
-
-
 bool ProfiledDB::isCredentialExpired(const std::string & dlg_id, const std::string & dn)
 {
     PROFILE_PREFIXED("DB::", return db->isCredentialExpired(dlg_id, dn));
@@ -846,4 +832,9 @@ void ProfiledDB::getTransferRetries(int fileId, std::vector<FileRetry*>& retries
 void ProfiledDB::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end)
 {
     PROFILE_PREFIXED("DB::", db->updateHeartBeat(index, count, start, end));
+}
+
+void ProfiledDB::updateOptimizerEvolution()
+{
+    PROFILE_PREFIXED("DB::", db->updateOptimizerEvolution());
 }
