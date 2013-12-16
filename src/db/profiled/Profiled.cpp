@@ -838,3 +838,8 @@ void ProfiledDB::updateOptimizerEvolution()
 {
     PROFILE_PREFIXED("DB::", db->updateOptimizerEvolution());
 }
+
+unsigned int ProfiledDB::updateFileStatusReuse(TransferFiles* file, const std::string status)
+{
+    PROFILE_PREFIXED("DB::", return db->updateFileStatusReuse(file, status));
+}
