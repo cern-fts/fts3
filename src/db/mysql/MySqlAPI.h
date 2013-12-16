@@ -335,6 +335,8 @@ public:
     virtual void transferLogFileVector(std::map<int, struct message_log>& messagesLog);
 
     virtual void updateOptimizerEvolution();
+    
+    unsigned int updateFileStatusReuse(TransferFiles* file, const std::string status);    
 
 
 private:

@@ -823,6 +823,61 @@ void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId)
 
 }
 
+unsigned int MySqlAPI::updateFileStatusReuse(TransferFiles* file, const std::string status)
+{
+    soci::session sql(*connectionPool);
+
+    unsigned int updated = 0;
+
+
+    try
+        {
+            sql.begin();
+           
+            soci::statement stmt(sql);
+
+            stmt.exchange(soci::use(status, "state"));
+            stmt.exchange(soci::use(file->JOB_ID, "jobId"));
+            stmt.exchange(soci::use(hostname, "hostname"));
+            stmt.alloc();
+            stmt.prepare("UPDATE t_file SET "
+                         "    file_state = :state, start_time = UTC_TIMESTAMP(), transferHost = :hostname "
+                         "WHERE job_id = :jobId AND file_state = 'SUBMITTED'");
+            stmt.define_and_bind();
+            stmt.execute(true);
+
+            updated = (unsigned int) stmt.get_affected_rows();
+	    std::cout << "Updated = " << updated << std::endl;
+	    
+            if (updated > 0)
+                {
+                    soci::statement jobStmt(sql);
+                    jobStmt.exchange(soci::use(status, "state"));
+                    jobStmt.exchange(soci::use(file->JOB_ID, "jobId"));
+                    jobStmt.alloc();
+                    jobStmt.prepare("UPDATE t_job SET "
+                                    "    job_state = :state "
+                                    "WHERE job_id = :jobId AND job_state = 'SUBMITTED'");
+                    jobStmt.define_and_bind();
+                    jobStmt.execute(true);
+                }
+
+            sql.commit();
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+    return updated;
+}
+
+
 unsigned int MySqlAPI::updateFileStatus(TransferFiles* file, const std::string status)
 {
     soci::session sql(*connectionPool);
@@ -2010,7 +2065,7 @@ void MySqlAPI::cancelJob(std::vector<std::string>& requestIDs)
                     // Cancel job
                     stmt1.execute(true);
 
-                    soci::rowset<soci::row> rs = (sql.prepare << "SELECT f.pid FROM t_file f "
+                    soci::rowset<soci::row> rs = (sql.prepare << "SELECT distinct f.pid FROM t_file f "
                                                   "WHERE  "
                                                   "      f.FILE_STATE IN ('ACTIVE','READY') AND "
                                                   "      f.PID IS NOT NULL AND "
