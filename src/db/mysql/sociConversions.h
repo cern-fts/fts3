@@ -249,8 +249,9 @@ struct type_conversion<FileTransferStatus>
         transfer.destSURL          = v.get<std::string>("dest_surl");
         transfer.transferFileState = v.get<std::string>("file_state");
         transfer.reason            = v.get<std::string>("reason", "");
-        transfer.numFailures	   = v.get<int>("retry");
-        transfer.duration	   = v.get<double>("tx_duration",0);
+        transfer.numFailures	   = v.get<int>("retry", 0);
+        transfer.duration	       = v.get<double>("tx_duration", 0);
+
         if (v.get_indicator("start_time") == soci::i_ok)
             {
                 aux_tm = v.get<struct tm>("start_time");
@@ -258,7 +259,7 @@ struct type_conversion<FileTransferStatus>
             }
         else
             {
-                transfer.start_time = time(NULL);
+                transfer.start_time = timeUTC();
             }
         if (v.get_indicator("finish_time") == soci::i_ok)
             {
