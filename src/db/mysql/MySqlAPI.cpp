@@ -7024,15 +7024,15 @@ void MySqlAPI::updateOptimizerEvolution()
 		    
 		    stmt1.execute(true);	   
 		    
-		    stmt2.execute(true);
-		    
-		    for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
-                    {
-		      std::string fileParamsLocal = (*i2);
-		      noStreams += extractStreams(fileParamsLocal);
-		    }
+		    stmt2.execute(true);		   
 		    		    
 		    if(countActive > 0 && sumThroughput > 0){
+		    	for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
+                    	{
+		      		std::string fileParamsLocal = (*i2);
+		      		noStreams += extractStreams(fileParamsLocal);
+		    	}	
+				    
             		sql.begin();
           			stmt3.execute(true);
 	                sql.commit();		    
