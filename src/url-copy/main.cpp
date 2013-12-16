@@ -726,6 +726,7 @@ int main(int argc, char **argv)
                         reporter.sendMessage(throughput, false, opts.jobId, strArray[0], "ACTIVE", "", diff, source_size);
                     }
 
+
                 if (fexists(opts.proxy.c_str()) != 0)
                     {
                         errorMessage = "Proxy doesn't exist, probably expired and not renewed " + opts.proxy;

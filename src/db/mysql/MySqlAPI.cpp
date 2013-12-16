@@ -1876,17 +1876,17 @@ void MySqlAPI::cancelJob(std::vector<std::string>& requestIDs)
                     // Cancel job
                     stmt1.execute(true);
 
-                    soci::rowset<soci::row> rs = (sql.prepare << "SELECT distinct f.pid FROM t_file f "
-                                                  "WHERE  "
-                                                  "      f.FILE_STATE IN ('ACTIVE','READY') AND "
-                                                  "      f.PID IS NOT NULL AND "
-                                                  "      f.job_id=:job_id ", soci::use(*i, "job_id"));
+                    soci::rowset<soci::row> rs = (sql.prepare << " SELECT distinct pid FROM t_file "
+                                                  "      WHERE  "                                                 
+                                                  "      PID IS NOT NULL AND "
+                                                  "      job_id=:job_id ", soci::use(*i, "job_id"));
 
 
                     for (soci::rowset<soci::row>::const_iterator i2 = rs.begin(); i2 != rs.end(); ++i2)
                         {
                             soci::row const& row = *i2;
                             int pid = row.get<int>("pid");
+			    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Canceling pid:" << pid << ", jobid:" << job_id  << commit;
                             kill(pid, SIGTERM);
                         }
 
@@ -4828,7 +4828,7 @@ int MySqlAPI::activeProcessesForThisHost()
     unsigned active = 0;
     try
         {
-            sql << "select count(*) from t_file where TRANSFERHOST=:host AND file_state in ('READY','ACTIVE')  ", soci::use(hostname), soci::into(active);
+            sql << "select count(*) from t_file where TRANSFERHOST=:host AND file_state 'ACTIVE'  ", soci::use(hostname), soci::into(active);
         }
     catch (std::exception& e)
         {
