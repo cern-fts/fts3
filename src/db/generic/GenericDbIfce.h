@@ -373,6 +373,6 @@ public:
         *end   = 0xFFFF;
     }
 
-    virtual void updateOptimizerEvolution() = 0; 
+    virtual void updateOptimizerEvolution() = 0;
 
 };

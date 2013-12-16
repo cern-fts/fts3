@@ -334,7 +334,7 @@ public:
     virtual void updateFileTransferProgressVector(std::vector<struct message_updater>& messages);
 
     virtual void transferLogFileVector(std::map<int, struct message_log>& messagesLog);
-    
+
     virtual void updateOptimizerEvolution();
 
 private:

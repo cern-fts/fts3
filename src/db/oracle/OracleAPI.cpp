@@ -7166,65 +7166,66 @@ void OracleAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* star
 
 void OracleAPI::updateOptimizerEvolution()
 {
-    	   soci::session sql(*connectionPool);
-	   
-	   std::string source_hostname;
-	   std::string destin_hostname;
-	   int countActive = 0;
-	   int sumThroughput = 0;
-	   int noStreams = 0;
+    soci::session sql(*connectionPool);
+
+    std::string source_hostname;
+    std::string destin_hostname;
+    int countActive = 0;
+    int sumThroughput = 0;
+    int noStreams = 0;
 
     try
         {
-	   soci::rowset<soci::row> rs = ( sql.prepare << " select distinct source_se, dest_se from t_file where file_state in ('READY','ACTIVE') ");
-	   
-           soci::statement stmt1 = (
-                                                sql.prepare << " SELECT count(*) FROM t_file "
-                                                " WHERE source_se = :source AND dest_se = :dest_se and file_state in ('READY','ACTIVE') ",
-                                                soci::use(source_hostname),soci::use(destin_hostname), soci::into(countActive));	   
-						
-           soci::statement stmt2 = (
-                                                sql.prepare << " select sum(throughput) FROM t_file where "
-						" source_se = :source_se and dest_se = :dest_se and file_state in ('READY','ACTIVE') ",
-                                                soci::use(source_hostname),soci::use(destin_hostname), soci::into(sumThroughput));
-						
-           soci::statement stmt3 = (
-                                                sql.prepare << " INSERT INTO t_optimizer_evolution "
-                				" (datetime, source_se, dest_se, nostreams, active, throughput) "
-                				" VALUES "
-                				" (sys_extract_utc(systimestamp), :source, :dest, :nostreams, :active, :throughput)",
-                				soci::use(source_hostname), soci::use(destin_hostname), soci::use(noStreams),
-                				soci::use(countActive), soci::use(sumThroughput));						           
-						
-	   soci::rowset<std::string> rs2 = ( sql.prepare << " select internal_file_params FROM t_file WHERE internal_file_params is not null "
-						" AND file_state in ('READY','ACTIVE') "
-						" AND source_se = :source_se and dest_se = :dest_se ",
-                                                soci::use(source_hostname),soci::use(destin_hostname));																			   						
-	   
-           for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+            soci::rowset<soci::row> rs = ( sql.prepare << " select distinct source_se, dest_se from t_file where file_state in ('READY','ACTIVE') ");
+
+            soci::statement stmt1 = (
+                                        sql.prepare << " SELECT count(*) FROM t_file "
+                                        " WHERE source_se = :source AND dest_se = :dest_se and file_state in ('READY','ACTIVE') ",
+                                        soci::use(source_hostname),soci::use(destin_hostname), soci::into(countActive));
+
+            soci::statement stmt2 = (
+                                        sql.prepare << " select sum(throughput) FROM t_file where "
+                                        " source_se = :source_se and dest_se = :dest_se and file_state in ('READY','ACTIVE') ",
+                                        soci::use(source_hostname),soci::use(destin_hostname), soci::into(sumThroughput));
+
+            soci::statement stmt3 = (
+                                        sql.prepare << " INSERT INTO t_optimizer_evolution "
+                                        " (datetime, source_se, dest_se, nostreams, active, throughput) "
+                                        " VALUES "
+                                        " (sys_extract_utc(systimestamp), :source, :dest, :nostreams, :active, :throughput)",
+                                        soci::use(source_hostname), soci::use(destin_hostname), soci::use(noStreams),
+                                        soci::use(countActive), soci::use(sumThroughput));
+
+            soci::rowset<std::string> rs2 = ( sql.prepare << " select internal_file_params FROM t_file WHERE internal_file_params is not null "
+                                              " AND file_state in ('READY','ACTIVE') "
+                                              " AND source_se = :source_se and dest_se = :dest_se ",
+                                              soci::use(source_hostname),soci::use(destin_hostname));
+
+            for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
                     source_hostname = i->get<std::string>("source_se");
                     destin_hostname = i->get<std::string>("dest_se");
-		    countActive = 0;
-		    sumThroughput = 0;
-		    noStreams = 0;		    
-		    
-		    stmt1.execute(true);	   
-		    
-		    stmt2.execute(true);
-		    
-		    if(countActive > 0 && sumThroughput > 0){
-		    	for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
-                    	{
-		      		std::string fileParamsLocal = (*i2);
-		      		noStreams += extractStreams(fileParamsLocal);
-		    	}
+                    countActive = 0;
+                    sumThroughput = 0;
+                    noStreams = 0;
 
-            		sql.begin();
-          			stmt3.execute(true);
-	                sql.commit();		    
-		    }	   		    					   	
-	        }
+                    stmt1.execute(true);
+
+                    stmt2.execute(true);
+
+                    if(countActive > 0 && sumThroughput > 0)
+                        {
+                            for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
+                                {
+                                    std::string fileParamsLocal = (*i2);
+                                    noStreams += extractStreams(fileParamsLocal);
+                                }
+
+                            sql.begin();
+                            stmt3.execute(true);
+                            sql.commit();
+                        }
+                }
         }
     catch (std::exception& e)
         {

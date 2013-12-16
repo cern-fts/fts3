@@ -309,7 +309,7 @@ protected:
                             return;
 
                         // create transfer-file handler
-                        TransferFileHandler tfh(voQueues);                        
+                        TransferFileHandler tfh(voQueues);
 
                         // the worker thread pool
                         ExecutorPool<FileTransferExecutor> execPool(execPoolSize);

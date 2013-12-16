@@ -133,7 +133,7 @@ inline int extractStreams(std::string & str)
     size_t found;
     found = str.find("nostreams:");
     if (found != std::string::npos)
-        {            
+        {
             size_t found2;
             found2 = str.find(",timeout:");
             if (found2 != std::string::npos)
