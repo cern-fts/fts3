@@ -352,10 +352,6 @@ private:
 
     int getOptimizerMode(soci::session& sql);
 
-    void countFileInTerminalStates(soci::session& sql, std::string jobId,
-                                   unsigned int& finished, unsigned int& cancelled, unsigned int& failed);
-
-
     bool getChangedFile (std::string source, std::string dest, double rate, double thr, double& thrStored, double retry, double& retryStored);
 
     struct HashSegment
@@ -373,4 +369,6 @@ private:
     bool updateJobTransferStatusInternal(soci::session& sql, int file_id, std::string job_id, const std::string status);
 
     void useFileReplica(soci::session& sql, std::string jobId, int fileId);
+    
+    void bringOnlineReportStatusInternal(soci::session& sql, const std::string & state, const std::string & message, struct message_bringonline msg);
 };
