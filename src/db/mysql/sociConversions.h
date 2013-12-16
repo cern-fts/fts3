@@ -259,7 +259,7 @@ struct type_conversion<FileTransferStatus>
             }
         else
             {
-                transfer.start_time = timeUTC();
+                transfer.start_time = 0;
             }
         if (v.get_indicator("finish_time") == soci::i_ok)
             {
