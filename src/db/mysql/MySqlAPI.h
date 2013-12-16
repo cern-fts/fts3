@@ -337,6 +337,7 @@ public:
     virtual void updateFileTransferProgressVector(std::vector<struct message_updater>& messages);
 
     virtual void transferLogFileVector(std::map<int, struct message_log>& messagesLog);
+   
 
 
 private:
@@ -351,10 +352,6 @@ private:
                                int nostreams, int timeout, int buffersize,std::string source_hostname, std::string destin_hostname);
 
     int getOptimizerMode(soci::session& sql);
-
-    void countFileInTerminalStates(soci::session& sql, std::string jobId,
-                                   unsigned int& finished, unsigned int& cancelled, unsigned int& failed);
-
 
     bool getChangedFile (std::string source, std::string dest, double rate, double thr, double& thrStored, double retry, double& retryStored);
 
@@ -374,5 +371,7 @@ private:
     bool updateJobTransferStatusInternal(soci::session& sql, std::string job_id, const std::string status);
 
     void useFileReplica(soci::session& sql, std::string jobId, int fileId);
+    
+    void bringOnlineReportStatusInternal(soci::session& sql, const std::string & state, const std::string & message, struct message_bringonline msg);    
 
 };
