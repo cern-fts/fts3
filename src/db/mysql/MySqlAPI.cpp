@@ -2958,21 +2958,11 @@ void MySqlAPI::setPidV(int pid, std::map<int, std::string>& pids)
 
     try
         {
-
-
-            std::string jobId;
-            int fileId=0;
-            soci::statement stmt = (sql.prepare << "UPDATE t_file SET pid = :pid WHERE job_id = :jobId AND file_id = :fileId",
-                                    soci::use(pid), soci::use(jobId), soci::use(fileId));
-
             sql.begin();
-            for (std::map<int, std::string>::const_iterator i = pids.begin(); i != pids.end(); ++i)
-                {
-                    fileId = i->first;
-                    jobId  = i->second;
-                    stmt.execute(true);
-                }
-            sql.commit();
+	    
+            	sql << "UPDATE t_file SET pid = :pid WHERE job_id = :jobId ", soci::use(pid), soci::use(pids.begin()->second);
+
+            sql.commit();           
         }
     catch (std::exception& e)
         {
