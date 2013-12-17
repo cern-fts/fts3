@@ -290,7 +290,9 @@ AuthorizationManager::Level AuthorizationManager::getGrantedLvl(soap* ctx, Opera
     else
         {
             string msg = "Authorization failed, access was not granted. ";
-            msg += "(The user has not the right Role to perform '";
+            msg += "(The user: ";
+            msg += cgsi.getClientDn();
+            msg += ") has not the right Role to perform '";
             msg += op_str;
             msg += 	"' operation)";
             throw Err_Custom(msg);
