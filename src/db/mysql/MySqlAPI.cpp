@@ -7053,6 +7053,7 @@ void MySqlAPI::updateOptimizerEvolution()
     long long countActive = 0;
     double sumThroughput = 0;
     long long noStreams = 0;
+    long long entryExists  = 0;
 
     try
         {
@@ -7080,6 +7081,12 @@ void MySqlAPI::updateOptimizerEvolution()
                                               " AND file_state in ('READY','ACTIVE') "
                                               " AND source_se = :source_se and dest_se = :dest_se ",
                                               soci::use(source_hostname),soci::use(destin_hostname));
+					      
+            soci::statement stmt4 = (
+                                        sql.prepare << " select count(*) FROM t_optimizer_evolution where "
+                                        " source_se = :source_se and dest_se = :dest_se and nostreams = :nostreams and throughput = :sumThroughput and active = :countActive and datetime > (UTC_TIMESTAMP() - INTERVAL '5' minute) ",
+                                        soci::use(source_hostname), soci::use(destin_hostname), soci::use(noStreams), soci::use(sumThroughput), soci::use(countActive), soci::into(entryExists) );
+            					      
 
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
@@ -7088,6 +7095,7 @@ void MySqlAPI::updateOptimizerEvolution()
                     countActive = 0;
                     sumThroughput = 0;
                     noStreams = 0;
+		    entryExists  = 0;
 
                     stmt1.execute(true);
 
@@ -7101,9 +7109,13 @@ void MySqlAPI::updateOptimizerEvolution()
                                     noStreams += extractStreams(fileParamsLocal);
                                 }
 
-                            sql.begin();
-                            stmt3.execute(true);
-                            sql.commit();
+			    stmt4.execute(true);
+			    if(entryExists == 0)
+                               {
+                            		sql.begin();
+                            			stmt3.execute(true);
+                            		sql.commit();			       
+			       }
                         }
                 }
         }
