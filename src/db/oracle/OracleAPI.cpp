@@ -7329,8 +7329,7 @@ void OracleAPI::updateOptimizerEvolution()
                         {
                             for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
                                 {
-                                    std::string fileParamsLocal = (*i2);
-                                    noStreams += extractStreams(fileParamsLocal);
+                                    noStreams += extractStreams(*i2);
                                 }
 
 			    stmt4.execute(true);
