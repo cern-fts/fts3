@@ -7050,9 +7050,9 @@ void MySqlAPI::updateOptimizerEvolution()
 
     std::string source_hostname;
     std::string destin_hostname;
-    int countActive = 0;
-    int sumThroughput = 0;
-    int noStreams = 0;
+    long long countActive = 0;
+    double sumThroughput = 0;
+    long long noStreams = 0;
 
     try
         {
