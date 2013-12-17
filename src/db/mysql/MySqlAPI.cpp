@@ -1862,7 +1862,7 @@ void MySqlAPI::cancelJob(std::vector<std::string>& requestIDs)
                                      "WHERE job_id = :jobId AND job_state NOT IN ('CANCELED','FINISHEDDIRTY', 'FINISHED', 'FAILED')",
                                      soci::use(reason, "reason"), soci::use(job_id, "jobId"));
 
-            soci::statement stmt2 = (sql.prepare << "UPDATE t_file SET file_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+            soci::statement stmt2 = (sql.prepare << "UPDATE t_file SET file_state = 'CANCELED',  finish_time = UTC_TIMESTAMP(), "
                                      "                  reason = :reason "
                                      "WHERE job_id = :jobId AND file_state NOT IN ('CANCELED','FINISHED','FAILED')",
                                      soci::use(reason, "reason"), soci::use(job_id, "jobId"));
@@ -1874,21 +1874,7 @@ void MySqlAPI::cancelJob(std::vector<std::string>& requestIDs)
                     job_id = (*i);
 
                     // Cancel job
-                    stmt1.execute(true);
-
-                    soci::rowset<soci::row> rs = (sql.prepare << " SELECT distinct pid FROM t_file "
-                                                  "      WHERE  "                                                 
-                                                  "      PID IS NOT NULL AND "
-                                                  "      job_id=:job_id ", soci::use(*i, "job_id"));
-
-
-                    for (soci::rowset<soci::row>::const_iterator i2 = rs.begin(); i2 != rs.end(); ++i2)
-                        {
-                            soci::row const& row = *i2;
-                            int pid = row.get<int>("pid");
-			    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Canceling pid:" << pid << ", jobid:" << job_id  << commit;
-                            kill(pid, SIGTERM);
-                        }
+                    stmt1.execute(true);                  
 
                     // Cancel files
                     stmt2.execute(true);
@@ -1910,8 +1896,44 @@ void MySqlAPI::cancelJob(std::vector<std::string>& requestIDs)
 
 
 
-void MySqlAPI::getCancelJob(std::vector<int>& /*requestIDs*/)
+void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
 {
+   soci::session sql(*connectionPool);
+   std::string job_id;
+   int pid = 0;
+
+    try
+        {
+            soci::rowset<soci::row> rs = (sql.prepare << " select distinct pid, job_id from t_file where PID IS NOT NULL AND file_state='CANCELED' and job_finished is NULL AND TRANSFERHOST = :transferHost", soci::use(hostname));	    
+
+            soci::statement stmt1 = (sql.prepare << "UPDATE t_file SET  job_finished = UTC_TIMESTAMP() "
+                                     "WHERE job_id = :jobId and pid = :pid ",
+                                     soci::use(job_id, "jobId"), soci::use(pid, "pid"));
+
+            // Cancel files
+            sql.begin();
+            for (soci::rowset<soci::row>::const_iterator i2 = rs.begin(); i2 != rs.end(); ++i2)
+                 {
+                            soci::row const& row = *i2;
+                            pid = row.get<int>("pid");
+			    job_id = row.get<std::string>("job_id");
+			    requestIDs.push_back(pid);
+			    
+                    stmt1.execute(true);
+                  }
+            sql.commit();
+	    
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
 }
 
 
