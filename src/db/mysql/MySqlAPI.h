@@ -336,7 +336,9 @@ public:
 
     virtual void updateOptimizerEvolution();
     
-    unsigned int updateFileStatusReuse(TransferFiles* file, const std::string status);    
+    unsigned int updateFileStatusReuse(TransferFiles* file, const std::string status);
+    
+    void getCancelJob(std::vector<int>& requestIDs);
 
 
 private:

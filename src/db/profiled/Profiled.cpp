@@ -814,3 +814,8 @@ unsigned int ProfiledDB::updateFileStatusReuse(TransferFiles* file, const std::s
     PROFILE_PREFIXED("DB::", return db->updateFileStatusReuse(file, status));
 }
 
+void ProfiledDB::getCancelJob(std::vector<int>& requestIDs)
+{
+    PROFILE_PREFIXED("DB::", db->getCancelJob(requestIDs));
+}
+
