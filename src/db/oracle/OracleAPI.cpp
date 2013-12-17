@@ -7273,9 +7273,9 @@ void OracleAPI::updateOptimizerEvolution()
 
     std::string source_hostname;
     std::string destin_hostname;
-    int countActive = 0;
-    int sumThroughput = 0;
-    int noStreams = 0;
+    long long countActive = 0;
+    double sumThroughput = 0;
+    long long noStreams = 0;
 
     try
         {
@@ -7306,8 +7306,8 @@ void OracleAPI::updateOptimizerEvolution()
 
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
-                    source_hostname = i->get<std::string>("source_se");
-                    destin_hostname = i->get<std::string>("dest_se");
+                    source_hostname = i->get<std::string>("SOURCE_SE");
+                    destin_hostname = i->get<std::string>("DEST_SE");
                     countActive = 0;
                     sumThroughput = 0;
                     noStreams = 0;
