@@ -7069,7 +7069,7 @@ void MySqlAPI::updateOptimizerEvolution()
                                         soci::use(source_hostname),soci::use(destin_hostname), soci::into(sumThroughput));
 
             soci::statement stmt3 = (
-                                        sql.prepare << " INSERT INTO t_optimizer_evolution "
+                                        sql.prepare << " INSERT IGNORE INTO t_optimizer_evolution "
                                         " (datetime, source_se, dest_se, nostreams, active, throughput) "
                                         " VALUES "
                                         " (UTC_TIMESTAMP(), :source, :dest, :nostreams, :active, :throughput)",
