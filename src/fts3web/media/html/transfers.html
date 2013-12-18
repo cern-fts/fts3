@@ -34,7 +34,9 @@
     </thead>
     <tbody>
         <tr ng-repeat="t in transfers.items" ng-class-odd="'odd'">
-            <td>{{t.file_id}}</td>
+            <td>
+                <a href="#/job/{{t.job_id}}?file={{t.file_id}}">{{t.file_id}}</a>
+            </td>
             <td class="status {{t.file_state}}">{{t.file_state}}</td>
             <td>
                 <a href="#/job/{{t.job_id}}">{{t.job_id}}</a>

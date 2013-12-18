@@ -164,7 +164,8 @@ JobViewCtrl.resolve = {
     	
     	var filter = {
 			jobId: $route.current.params.jobId,
-			archive: $route.current.params.archive
+			archive: $route.current.params.archive,
+			file: $route.current.params.file
     	};
     	if ($route.current.params.reason)
     		filter.reason = $route.current.params.reason;
@@ -184,7 +185,13 @@ JobViewCtrl.resolve = {
     	var filter = $location.search();
     	filter.jobId = $route.current.params.jobId
 		Files.query(filter,
-  			  genericSuccessMethod(deferred, $rootScope),
+  			  function (data) {
+				genericSuccessMethod(deferred, $rootScope)(data);
+				// If file filter is set, by default show the details
+				if ($location.search().file) {
+					data.items[0].show = true;
+				}
+		      },
 			  genericFailureMethod(deferred, $rootScope, $location));
     	
     	return deferred.promise;
