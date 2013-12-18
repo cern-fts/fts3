@@ -70,7 +70,8 @@ def setupFilters(filterForm):
                'startdate': None,
                'enddate': None,
                'activity': None,
-               'hostname': None
+               'hostname': None,
+               'reason': None
               }
     
     # Process filter form
@@ -300,6 +301,8 @@ def transferList(httpRequest):
         transfers = transfers.filter(activity = filters['activity'])
     if filters['hostname']:
         transfers = transfers.filter(transferHost = filters['hostname'])
+    if filters['reason']:
+        transfers = transfers.filter(reason = filters['reason'])
    
     transfers = transfers.values('file_id', 'file_state', 'job_id',
                                  'source_se', 'dest_se', 'start_time', 'job_finished',

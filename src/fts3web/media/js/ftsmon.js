@@ -29,8 +29,8 @@ config(function($routeProvider) {
                                        controller:  ErrorsCtrl,
                                        resolve:     ErrorsCtrl.resolve}).
         when('/errors/list',          {templateUrl: STATIC_ROOT + 'html/errors/list.html',
-                                       controller:  FilesWithErrorCtrl,
-                                       resolve:     FilesWithErrorCtrl.resolve}).
+                                       controller:  ErrorsForPairCtrl,
+                                       resolve:     ErrorsForPairCtrl.resolve}).
                               
         when('/config/audit',         {templateUrl: STATIC_ROOT + 'html/config/audit.html',
                                        controller:  ConfigAuditCtrl,

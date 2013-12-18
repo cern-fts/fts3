@@ -1,9 +1,9 @@
 
 
-function ErrorsCtrl($location, $scope, errors, Errors, Unique)
+function ErrorsCtrl($location, $scope, pairs, Errors, Unique)
 {
 	// Errors
-	$scope.errors = errors;
+	$scope.pairs = pairs;
 	
 	// Unique values
 	$scope.unique = {
@@ -12,13 +12,12 @@ function ErrorsCtrl($location, $scope, errors, Errors, Unique)
 	}
 	
 	// Filter
-	$scope.filterReason = function(filter) {
+	$scope.applyFilter = function(filter) {
 		$location.search(filter);
 		$scope.filtersModal = false;
 	}
 	
 	$scope.filter = {
-		contains:  validString($location.search().contains),
 		source_se: validString($location.search().source_se),
 		dest_se:   validString($location.search().dest_se),
 	}
@@ -41,7 +40,7 @@ function ErrorsCtrl($location, $scope, errors, Errors, Unique)
 
 
 ErrorsCtrl.resolve = {
-    errors: function($rootScope, $q, $location, Errors) {
+	pairs: function($rootScope, $q, $location, Errors) {
     	loading($rootScope);
     	
     	var deferred = $q.defer();
@@ -60,12 +59,24 @@ ErrorsCtrl.resolve = {
 
 
 
-function FilesWithErrorCtrl($location, $scope, files, FilesWithError)
+function ErrorsForPairCtrl($location, $scope, errors, ErrorsForPair)
 {
 	$scope.reason    = $location.search().reason;
-	$scope.files     = files
+	$scope.errors    = errors
 	$scope.source_se = $location.search().source_se;
 	$scope.dest_se   = $location.search().dest_se;
+	
+	// Filter
+	$scope.filterReason = function(filter) {
+		$location.search(filter);
+		$scope.filtersModal = false;
+	}
+	
+	$scope.filter = {
+		source_se: validString($location.search().source_se),
+		dest_se:   validString($location.search().dest_se),
+		reason:    validString($location.search().reason)
+	}
 	
 	// On page change, reload
 	$scope.pageChanged = function(newPage) {
@@ -75,8 +86,8 @@ function FilesWithErrorCtrl($location, $scope, files, FilesWithError)
 
 
 
-FilesWithErrorCtrl.resolve = {
-    files: function($rootScope, $q, $location, FilesWithError) {
+ErrorsForPairCtrl.resolve = {
+    errors: function($rootScope, $q, $location, ErrorsForPair) {
     	loading($rootScope);
     	
     	var deferred = $q.defer();
@@ -85,7 +96,7 @@ FilesWithErrorCtrl.resolve = {
     	if (!page || page < 1)
     		page = 1;
     	
-    	FilesWithError.query($location.search(),
+    	ErrorsForPair.query($location.search(),
   			  genericSuccessMethod(deferred, $rootScope),
 			  genericFailureMethod(deferred, $rootScope, $location));
     	

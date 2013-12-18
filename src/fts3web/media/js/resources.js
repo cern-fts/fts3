@@ -42,7 +42,7 @@ angular.module('ftsmon.resources', ['ngResource'])
 		query: {method: 'GET', isArray: false}
 	})
 })
-.factory('FilesWithError', function($resource) {
+.factory('ErrorsForPair', function($resource) {
 	return $resource('errors/list', {}, {
 		query: {method: 'GET', isArray: false}
 	})
