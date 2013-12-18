@@ -87,7 +87,12 @@ def overview(httpRequest):
         obj['dest_se']   = triplet[1]
         obj['vo_name']   = triplet[2]
         if 'current' not in obj and 'active' in obj:
-            obj['current'] = 0 
+            obj['current'] = 0
+        failed = obj.get('failed', 0) + obj.get('canceled', 0)
+        finished = obj.get('finished', 0)
+        total = failed + finished
+        if total > 0:
+            obj['rate'] = (finished * 100.0) / total
         objs.append(obj)
     
     # Ordering
@@ -103,5 +108,5 @@ def overview(httpRequest):
         sortingMethod = lambda o: (o.get('current', 0), o.get('active', 0))
     else:
         sortingMethod = lambda o: (o.get('submitted', 0), o.get('active', 0))
-    
+
     return sorted(objs, key = sortingMethod, reverse = orderDesc)
