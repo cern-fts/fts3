@@ -680,7 +680,7 @@ unsigned int MySqlAPI::updateFileStatusReuse(TransferFiles* file, const std::str
     try
         {
             sql.begin();
-           
+
             soci::statement stmt(sql);
 
             stmt.exchange(soci::use(status, "state"));
@@ -694,8 +694,8 @@ unsigned int MySqlAPI::updateFileStatusReuse(TransferFiles* file, const std::str
             stmt.execute(true);
 
             updated = (unsigned int) stmt.get_affected_rows();
-	    std::cout << "Updated = " << updated << std::endl;
-	    
+            std::cout << "Updated = " << updated << std::endl;
+
             if (updated > 0)
                 {
                     soci::statement jobStmt(sql);
@@ -1874,7 +1874,7 @@ void MySqlAPI::cancelJob(std::vector<std::string>& requestIDs)
                     job_id = (*i);
 
                     // Cancel job
-                    stmt1.execute(true);                  
+                    stmt1.execute(true);
 
                     // Cancel files
                     stmt2.execute(true);
@@ -1898,13 +1898,13 @@ void MySqlAPI::cancelJob(std::vector<std::string>& requestIDs)
 
 void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
 {
-   soci::session sql(*connectionPool);
-   std::string job_id;
-   int pid = 0;
+    soci::session sql(*connectionPool);
+    std::string job_id;
+    int pid = 0;
 
     try
         {
-            soci::rowset<soci::row> rs = (sql.prepare << " select distinct pid, job_id from t_file where PID IS NOT NULL AND file_state='CANCELED' and job_finished is NULL AND TRANSFERHOST = :transferHost", soci::use(hostname));	    
+            soci::rowset<soci::row> rs = (sql.prepare << " select distinct pid, job_id from t_file where PID IS NOT NULL AND file_state='CANCELED' and job_finished is NULL AND TRANSFERHOST = :transferHost", soci::use(hostname));
 
             soci::statement stmt1 = (sql.prepare << "UPDATE t_file SET  job_finished = UTC_TIMESTAMP() "
                                      "WHERE job_id = :jobId and pid = :pid ",
@@ -1913,16 +1913,16 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
             // Cancel files
             sql.begin();
             for (soci::rowset<soci::row>::const_iterator i2 = rs.begin(); i2 != rs.end(); ++i2)
-                 {
-                            soci::row const& row = *i2;
-                            pid = row.get<int>("pid");
-			    job_id = row.get<std::string>("job_id");
-			    requestIDs.push_back(pid);
-			    
+                {
+                    soci::row const& row = *i2;
+                    pid = row.get<int>("pid");
+                    job_id = row.get<std::string>("job_id");
+                    requestIDs.push_back(pid);
+
                     stmt1.execute(true);
-                  }
+                }
             sql.commit();
-	    
+
         }
     catch (std::exception& e)
         {
@@ -2981,10 +2981,10 @@ void MySqlAPI::setPidV(int pid, std::map<int, std::string>& pids)
     try
         {
             sql.begin();
-	    
-            	sql << "UPDATE t_file SET pid = :pid WHERE job_id = :jobId ", soci::use(pid), soci::use(pids.begin()->second);
 
-            sql.commit();           
+            sql << "UPDATE t_file SET pid = :pid WHERE job_id = :jobId ", soci::use(pid), soci::use(pids.begin()->second);
+
+            sql.commit();
         }
     catch (std::exception& e)
         {
@@ -7057,17 +7057,8 @@ void MySqlAPI::updateOptimizerEvolution()
 
     try
         {
-            soci::rowset<soci::row> rs = ( sql.prepare << " select distinct source_se, dest_se from t_file where file_state in ('READY','ACTIVE') ");
+            soci::rowset<soci::row> rs = ( sql.prepare << " select count(*), sum(throughput), source_se, dest_se from t_file where file_state in ('READY','ACTIVE') group by source_se, dest_se order by NULL");
 
-            soci::statement stmt1 = (
-                                        sql.prepare << " SELECT count(*) FROM t_file "
-                                        " WHERE source_se = :source AND dest_se = :dest_se and file_state in ('READY','ACTIVE') ",
-                                        soci::use(source_hostname),soci::use(destin_hostname), soci::into(countActive));
-
-            soci::statement stmt2 = (
-                                        sql.prepare << " select sum(throughput) FROM t_file where "
-                                        " source_se = :source_se and dest_se = :dest_se and file_state in ('READY','ACTIVE') ",
-                                        soci::use(source_hostname),soci::use(destin_hostname), soci::into(sumThroughput));
 
             soci::statement stmt3 = (
                                         sql.prepare << " INSERT IGNORE INTO t_optimizer_evolution "
@@ -7077,44 +7068,40 @@ void MySqlAPI::updateOptimizerEvolution()
                                         soci::use(source_hostname), soci::use(destin_hostname), soci::use(noStreams),
                                         soci::use(countActive), soci::use(sumThroughput));
 
-            soci::rowset<std::string> rs2 = ( sql.prepare << " select internal_file_params FROM t_file WHERE internal_file_params is not null "
-                                              " AND file_state in ('READY','ACTIVE') "
-                                              " AND source_se = :source_se and dest_se = :dest_se ",
-                                              soci::use(source_hostname),soci::use(destin_hostname));
-					      
             soci::statement stmt4 = (
                                         sql.prepare << " select count(*) FROM t_optimizer_evolution where "
                                         " source_se = :source_se and dest_se = :dest_se and nostreams = :nostreams and throughput = :sumThroughput and active = :countActive and datetime > (UTC_TIMESTAMP() - INTERVAL '5' minute) ",
                                         soci::use(source_hostname), soci::use(destin_hostname), soci::use(noStreams), soci::use(sumThroughput), soci::use(countActive), soci::into(entryExists) );
-            					      
+
 
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
-                    source_hostname = i->get<std::string>("source_se");
-                    destin_hostname = i->get<std::string>("dest_se");
-                    countActive = 0;
-                    sumThroughput = 0;
+                    countActive = i->get<long long>(0);
+                    sumThroughput = i->get<double>(1,0);
+                    source_hostname = i->get<std::string>(2);
+                    destin_hostname = i->get<std::string>(3);
                     noStreams = 0;
-		    entryExists  = 0;
-
-                    stmt1.execute(true);
-
-                    stmt2.execute(true);
+                    entryExists  = 0;
 
                     if(countActive > 0 && sumThroughput > 0)
                         {
+                            soci::rowset<std::string> rs2 = ( sql.prepare << " select internal_file_params FROM t_file WHERE internal_file_params is not null "
+                                                              " AND file_state in ('READY','ACTIVE') "
+                                                              " AND source_se = :source_se and dest_se = :dest_se ",
+                                                              soci::use(source_hostname),soci::use(destin_hostname));
+
                             for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
                                 {
-                                    noStreams += extractStreams(*i2);
+                                    noStreams += extractStreams((*i2));
                                 }
 
-			    stmt4.execute(true);
-			    if(entryExists == 0)
-                               {
-                            		sql.begin();
-                            			stmt3.execute(true);
-                            		sql.commit();			       
-			       }
+                            stmt4.execute(true);
+                            if(entryExists == 0)
+                                {
+                                    sql.begin();
+                                    stmt3.execute(true);
+                                    sql.commit();
+                                }
                         }
                 }
         }
