@@ -5923,7 +5923,7 @@ void MySqlAPI::revertNotUsedFiles()
                                 "				AND f2.file_state <> 'FAILED' "
                                 "		) AS t_file_tmp "
                                 "		WHERE t_file_tmp.job_id = f1.job_id "
-                                "			AND t_file_tmp.file_index = f1.file_index AND   "
+                                "			AND t_file_tmp.file_index = f1.file_index  "
                                 "	) ", soci::use(notUsed)
                                ));
 
