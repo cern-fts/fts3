@@ -183,7 +183,13 @@ def archiveJobIndex(httpRequest):
 @jsonify
 def jobDetails(httpRequest, jobId):
     reason  = httpRequest.GET.get('reason', None)
-    file_id = httpRequest.GET.get('file', None)
+    try:
+        file_id = httpRequest.GET.get('file', None)
+        if file_id is not None:
+            file_id = int(file_id)
+    except:
+        file_id = None
+        
     try:
         archived = int(httpRequest.GET.get('archive', 0))
     except:
