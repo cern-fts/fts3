@@ -213,49 +213,17 @@ class ShareConfig(models.Model):
         db_table = 't_share_config'
 
 
-class Optimize(models.Model):
-    file_id    = models.IntegerField(primary_key = True)
-    source_se  = models.CharField(max_length = 255)
-    dest_se    = models.CharField(max_length = 255)
-    nostreams  = models.IntegerField()
-    timeout    = models.IntegerField()
-    active     = models.IntegerField()
-    throughput = models.FloatField()
-    buffer     = models.IntegerField()
-    filesize   = models.FloatField()
-    datetime   = models.DateTimeField()
-    
-    def __eq__(self, other):
-        if type(self) != type(other):
-            return False
-        
-        fields = ['file_id', 'source_se', 'dest_se', 'nostreams', 'timeout',
-                  'active', 'throughput', 'buffer', 'filesize', 'datetime']
-        
-        return reduce(lambda a,b: a and b,
-                      map(lambda attr: getattr(self, attr) == getattr(other, attr),
-                         fields)) 
-    
-    class Meta:
-        db_table = 't_optimize'
-
-
 class OptimizeActive(models.Model):
     source_se  = models.CharField(max_length = 255)
     dest_se    = models.CharField(max_length = 255)
     active     = models.IntegerField(primary_key = True)
-    message    = models.CharField(max_length = 512)
-    datetime   = models.DateTimeField()
     
     def __eq__(self, other):
         if type(self) != type(other):
             return False
         
         return self.source_se == other.source_se and \
-               self.dest_se   == other.dest_se and \
-               self.active    == other.active and \
-               self.message   == other.message and \
-               self.datetime  == other.datetime
+               self.dest_se   == other.dest_se
     
     class Meta:
         db_table = 't_optimize_active'

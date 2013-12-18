@@ -24,9 +24,6 @@ config(function($routeProvider) {
         when('/optimizer/detailed',   {templateUrl: STATIC_ROOT + 'html/optimizer/detailed.html',
                                        controller:  OptimizerDetailedCtrl,
                                        resolve:     OptimizerDetailedCtrl.resolve}).
-        when('/optimizer/decisions',  {templateUrl: STATIC_ROOT + 'html/optimizer/decisions.html',
-                                       controller:  OptimizerDecisionsCtrl,
-                                       resolve:     OptimizerDecisionsCtrl.resolve}).
                                        
         when('/errors/',              {templateUrl: STATIC_ROOT + 'html/errors/errors.html',
                                        controller:  ErrorsCtrl,

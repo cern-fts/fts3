@@ -1,8 +1,25 @@
 
-function OptimizerCtrl($location, $scope, optimizer, Optimizer)
+function OptimizerCtrl($location, $scope, optimizer, Optimizer, Unique)
 {
 	$scope.optimizer = optimizer;
-	
+
+	// Unique values
+	$scope.unique = {
+		sources: Unique('sources'),
+		destinations: Unique('destinations')
+	}
+
+	// Filter
+	$scope.filterReason = function(filter) {
+		$location.search(filter);
+		$scope.filtersModal = false;
+	}
+
+	$scope.filter = {
+		source_se: validString($location.search().source_se),
+		dest_se:   validString($location.search().dest_se),
+	}
+
 	// On page change, reload
 	$scope.pageChanged = function(newPage) {
 		$location.search('page', newPage);
@@ -49,6 +66,11 @@ function OptimizerDetailedCtrl($location, $scope, optimizer, OptimizerDetailed)
 		clearInterval($scope.autoRefresh);
 	});
 	
+	// Page
+	$scope.pageChanged = function(newPage) {
+		$location.search('page', newPage);
+	};
+	
 	// Set up filters
 	$scope.filter = {
 			source:      validString($location.search().source),
@@ -68,57 +90,5 @@ OptimizerDetailedCtrl.resolve = {
 			  genericFailureMethod(deferred, $rootScope, $location));
     	
     	return deferred.promise;
-	}
-}
-
-
-function OptimizerDecisionsCtrl($location, $scope, decisions, OptimizerDecisions, Unique)
-{
-	$scope.decisions = decisions;
-	
-	// Unique pairs and vos
-	$scope.unique = {
-		sources: Unique('sources'),
-		destinations: Unique('destinations')
-	}
-	
-	// On page change, reload
-	$scope.pageChanged = function(newPage) {
-		$location.search('page', newPage);
-	};
-
-	// Set timer to trigger autorefresh
-	$scope.autoRefresh = setInterval(function() {
-		var filter = $location.search();
-		filter.page = $scope.optimizer.page;
-    	$scope.decisions = OptimizerDecisions.query(filter);
-	}, REFRESH_INTERVAL);
-	$scope.$on('$destroy', function() {
-		clearInterval($scope.autoRefresh);
-	});
-	
-	// Set up filters
-	$scope.filterBy = function(filter) {
-		$location.search(filter);
-	}
-	
-	$scope.filter = {
-		source_se: validString($location.search().source_se),
-		dest_se:   validString($location.search().dest_se)
-	}
-}
-
-
-OptimizerDecisionsCtrl.resolve = {
-	decisions: function($rootScope, $location, $route, $q, OptimizerDecisions) {
-		loading($rootScope);
-		
-		var deferred = $q.defer();
-		
-		OptimizerDecisions.query($location.search(),
-  			  genericSuccessMethod(deferred, $rootScope),
-			  genericFailureMethod(deferred, $rootScope, $location));
-		
-		return deferred.promise;
 	}
 }
