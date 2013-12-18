@@ -318,6 +318,6 @@ def transferList(httpRequest):
     elif orderBy == 'finish_time':
         transfers = transfers.order_by(orderedField('job_finished', orderDesc))
     else:
-        transfers = transfers.order_by('-job__priority', '-file_id')
+        transfers = transfers.order_by('-file_id')
 
     return transfers
