@@ -3247,14 +3247,22 @@ void MySqlAPI::forkFailedRevertStateV(std::map<int, std::string>& pids)
 
 
 
-bool MySqlAPI::retryFromDead(std::vector<struct message_updater>& messages)
+bool MySqlAPI::retryFromDead(std::vector<struct message_updater>& messages, bool diskFull)
 {
     soci::session sql(*connectionPool);
 
-    bool ok = true;
     std::vector<struct message_updater>::const_iterator iter;
     const std::string transfer_status = "FAILED";
-    const std::string transfer_message = "no FTS server had updated the transfer status the last 300 seconds, probably stalled in " + hostname;
+    std::string transfer_message;
+    if(diskFull)
+        {
+            transfer_message = "No space left on device in " + hostname;
+        }
+    else
+        {
+            transfer_message = "no FTS server had updated the transfer status the last 300 seconds, probably stalled in " + hostname;
+        }
+
     const std::string status = "FAILED";
 
     try
@@ -3278,15 +3286,13 @@ bool MySqlAPI::retryFromDead(std::vector<struct message_updater>& messages)
         }
     catch (std::exception& e)
         {
-            ok = false;
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            ok = false;
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
-    return ok;
+    return true;
 }
 
 
@@ -7057,7 +7063,8 @@ void MySqlAPI::updateOptimizerEvolution()
 
     try
         {
-            soci::rowset<soci::row> rs = ( sql.prepare << " select count(*), sum(throughput), source_se, dest_se from t_file where file_state in ('READY','ACTIVE') group by source_se, dest_se order by NULL");
+            soci::rowset<soci::row> rs = ( sql.prepare << " select count(*), sum(throughput), source_se, dest_se from t_file "
+	    						  " where file_state in ('READY','ACTIVE') group by source_se, dest_se order by NULL");
 
 
             soci::statement stmt3 = (
@@ -7065,13 +7072,22 @@ void MySqlAPI::updateOptimizerEvolution()
                                         " (datetime, source_se, dest_se, nostreams, active, throughput) "
                                         " VALUES "
                                         " (UTC_TIMESTAMP(), :source, :dest, :nostreams, :active, :throughput)",
-                                        soci::use(source_hostname), soci::use(destin_hostname), soci::use(noStreams),
-                                        soci::use(countActive), soci::use(sumThroughput));
+                                        soci::use(source_hostname), 
+					soci::use(destin_hostname), 
+					soci::use(noStreams),
+                                        soci::use(countActive), 
+					soci::use(sumThroughput));
 
             soci::statement stmt4 = (
                                         sql.prepare << " select count(*) FROM t_optimizer_evolution where "
-                                        " source_se = :source_se and dest_se = :dest_se and nostreams = :nostreams and throughput = :sumThroughput and active = :countActive and datetime > (UTC_TIMESTAMP() - INTERVAL '5' minute) ",
-                                        soci::use(source_hostname), soci::use(destin_hostname), soci::use(noStreams), soci::use(sumThroughput), soci::use(countActive), soci::into(entryExists) );
+                                        " source_se = :source_se and dest_se = :dest_se and nostreams = :nostreams and throughput = :sumThroughput and "
+					" active = :countActive and datetime > (UTC_TIMESTAMP() - INTERVAL '5' minute) ",
+                                        soci::use(source_hostname), 
+					soci::use(destin_hostname), 
+					soci::use(noStreams), 
+					soci::use(sumThroughput), 
+					soci::use(countActive), 
+					soci::into(entryExists));
 
 
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)

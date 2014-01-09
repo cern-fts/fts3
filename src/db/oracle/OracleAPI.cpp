@@ -4710,12 +4710,21 @@ void OracleAPI::forkFailedRevertStateV(std::map<int, std::string>& pids)
     conn->releasePooledConnection(pooledConnection);
 }
 
-bool OracleAPI::retryFromDead(std::vector<struct message_updater>& messages)
+bool OracleAPI::retryFromDead(std::vector<struct message_updater>& messages, bool diskFull)
 {
     std::vector<struct message_updater>::const_iterator iter;
     bool isUpdated = true;
     const std::string transfer_status = "FAILED";
-    const std::string transfer_message = "no FTS server had updated the transfer status the last 300 seconds, probably stalled in " + ftsHostName;
+    std::string transfer_message;
+    if(diskFull)
+        {
+            transfer_message = "No space left on device in " + ftsHostName;
+        }
+    else
+        {
+            transfer_message = "no FTS server had updated the transfer status the last 300 seconds, probably stalled in " + ftsHostName;
+        }
+
     const std::string status = "FAILED";
     SafeStatement s;
     SafeResultSet r;
