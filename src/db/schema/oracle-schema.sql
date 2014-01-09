@@ -486,7 +486,7 @@ CREATE TABLE t_job (
   ,retry_delay INTEGER default 0
 --
 -- user provided metadata
-  ,job_metadata    VARCHAR2(255)
+  ,job_metadata    VARCHAR2(1024)
   );
 
 --
