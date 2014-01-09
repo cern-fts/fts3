@@ -39,6 +39,7 @@ limitations under the License. */
 #include "queue_updater.h"
 #include <boost/algorithm/string.hpp>
 #include "ws/SingleTrStateInstance.h"
+#include <boost/filesystem.hpp>
 
 extern bool stopThreads;
 extern time_t stallRecords;
@@ -138,14 +139,33 @@ protected:
 
                         if (!messages.empty())
                             {
-                                bool updated = DBSingleton::instance().getDBObjectInstance()->retryFromDead(messages);
-                                if(updated)
+                                boost::filesystem::path p("/var/lib/fts3/");
+                                boost::filesystem::space_info s = boost::filesystem::space(p);				
+
+                                if(s.free <=0 || s.available <= 0)
                                     {
-                                        ThreadSafeList::get_instance().deleteMsg(messages);
-                                        std::vector<struct message_updater>::const_iterator iter;
-                                        for (iter = messages.begin(); iter != messages.end(); ++iter)
+                                        bool updated = DBSingleton::instance().getDBObjectInstance()->retryFromDead(messages, true);
+                                        if(updated)
                                             {
-                                                SingleTrStateInstance::instance().sendStateMessage((*iter).job_id, (*iter).file_id);
+                                                ThreadSafeList::get_instance().deleteMsg(messages);
+                                                std::vector<struct message_updater>::const_iterator iter;
+                                                for (iter = messages.begin(); iter != messages.end(); ++iter)
+                                                    {
+                                                        SingleTrStateInstance::instance().sendStateMessage((*iter).job_id, (*iter).file_id);
+                                                    }
+                                            }
+                                    }
+                                else
+                                    {
+                                        bool updated = DBSingleton::instance().getDBObjectInstance()->retryFromDead(messages, false);
+                                        if(updated)
+                                            {
+                                                ThreadSafeList::get_instance().deleteMsg(messages);
+                                                std::vector<struct message_updater>::const_iterator iter;
+                                                for (iter = messages.begin(); iter != messages.end(); ++iter)
+                                                    {
+                                                        SingleTrStateInstance::instance().sendStateMessage((*iter).job_id, (*iter).file_id);
+                                                    }
                                             }
                                     }
                                 messages.clear();

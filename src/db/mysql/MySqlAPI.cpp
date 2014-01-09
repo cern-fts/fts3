@@ -3475,14 +3475,23 @@ void MySqlAPI::forkFailedRevertStateV(std::map<int, std::string>& pids)
 
 
 
-bool MySqlAPI::retryFromDead(std::vector<struct message_updater>& messages)
+bool MySqlAPI::retryFromDead(std::vector<struct message_updater>& messages, bool diskFull)
 {
     soci::session sql(*connectionPool);
 
     bool ok = true;
     std::vector<struct message_updater>::const_iterator iter;
     const std::string transfer_status = "FAILED";
-    const std::string transfer_message = "no FTS server had updated the transfer status the last 300 seconds, probably stalled in " + hostname;
+    std::string transfer_message;
+    if(diskFull)
+        {
+            transfer_message = "No space left on device in " + hostname;
+        }
+    else
+        {
+            transfer_message = "no FTS server had updated the transfer status the last 300 seconds, probably stalled in " + hostname;
+        }
+
     const std::string status = "FAILED";
 
     try
