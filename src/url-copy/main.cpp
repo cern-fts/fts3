@@ -821,7 +821,7 @@ int main(int argc, char **argv)
                                 reasonClass = mapErrnoToString(errCode);
                                 errorPhase = TRANSFER_PREPARATION;
                                 retry = retryTransfer(tmp_err->code, "SOURCE", tempError);
-                                if (retry == false)
+                                if (sourceStatRetry == 3 || retry == false)
                                     {
                                         logger.INFO() << "No more retries for stat the source" << std::endl;
                                         g_clear_error(&tmp_err);
