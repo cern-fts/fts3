@@ -198,7 +198,7 @@ int ExecuteProcess::execProcessShell()
     close(pipefds[0]);
 
     // Sleep for awhile but do not block waiting for child
-    usleep(100000);
+    usleep(50000);
     if(waitpid(pid, NULL, WNOHANG) != 0)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "waitpid error: " << strerror(errno)  << commit;
