@@ -35,46 +35,4 @@ struct Pointer
     typedef T* Raw; /**< Raw (not smart, C-like) pointer */
 };
 
-/** Definition if null pointers. See @see Pointer. */
-template <typename T>
-struct NullPointer
-{
-    static typename Pointer<T>::Shared Shared()
-    {
-        return typename Pointer<T>::Shared();
-    }
-    static typename Pointer<T>::Scoped Scoped()
-    {
-        return typename Pointer<T>::Scoped();
-    }
-    static typename Pointer<T>::ScopedArray ScopedArray()
-    {
-        return typename Pointer<T>::ScopedArray();
-    }
-    static typename Pointer<T>::SharedArray SharedArray()
-    {
-        return typename Pointer<T>::SharedArray();
-    }
-    static typename Pointer<T>::Raw Raw()
-    {
-        return NULL;
-    }
-};
-
-/// Retrun true if the parameter does not hold NULL
-template<class T, template <class> class PtrPolicy> bool ptr_assert(const PtrPolicy<T>& p)
-{
-    return p.get() != NULL;
-}
-
-/// Retrun true if the parameter is not NULL
-template<class PTR> bool ptr_assert(const PTR* p)
-{
-    return p != NULL;
-}
-
-/// Debug configuration assertion of the pointer is NULL
-#define FTS3_COMMON_POINTER_ASSERT(p) assert(ptr_assert((p)))
-
 FTS3_COMMON_NAMESPACE_END
-
