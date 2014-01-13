@@ -4,15 +4,15 @@
 
 Name: fts
 Version: 3.2.0
-Release: 1
+Release: 2
 Summary: File Transfer Service V3
 Group: System Environment/Daemons
 License: ASL 2.0
 URL: https://svnweb.cern.ch/trac/fts3/wiki
 # The source for this package was pulled from upstream's vcs.  Use the
 # following commands to generate the tarball:
-#  svn export https://svn.cern.ch/reps/fts3/tags/EPEL_release_1_EPEL_TESTING fts3
-#  tar -czvf fts-0.0.1-60.tar.gz fts-00160
+#  svn export https://svn.cern.ch/reps/fts3/trunk fts3
+#  tar -czvf fts-3.2.0-2.tar.gz fts3
 Source0: https://grid-deployment.web.cern.ch/grid-deployment/dms/fts3/tar/%{name}-%{version}.tar.gz
 
 %if 0%{?el5}
@@ -62,14 +62,12 @@ This package contains development files
 %package server
 Summary: File Transfer Service version 3 server
 Group: System Environment/Daemons
-Requires: bdii
+
 Requires: fts-libs%{?_isa} = %{version}-%{release}
 Requires: gfal2-plugin-gridftp%{?_isa} >= 2.1.0
 Requires: gfal2-plugin-http%{?_isa} >= 2.1.0
 Requires: gfal2-plugin-srm%{?_isa} >= 2.1.0
 Requires: gfal2-plugin-xrootd%{?_isa} >= 0.2.2
-Requires: glue-schema
-Requires: glue-validator
 Requires: gridsite >= 1.7.25
 Requires(post): chkconfig
 Requires(preun): chkconfig
@@ -98,6 +96,29 @@ FTS common libraries used across the client and
 server. This includes among others: configuration
 parsing, logging and error-handling utilities, as
 well as, common definitions and interfaces
+
+%package infosys
+Summary: File Transfer Service version 3 infosys integration
+Group: System Environment/Daemons
+Requires: bdii
+Requires: fts-server%{?_isa} = %{version}-%{release}
+Requires: glue-schema
+Requires: glue-validator
+Requires(post): chkconfig
+Requires(preun): chkconfig
+Requires(postun): initscripts
+Requires(preun): initscripts
+
+%description infosys
+FTS infosys integration
+
+%package msg
+Summary: File Transfer Service version 3 messaging integration
+Group: System Environment/Daemons
+Requires: fts-server%{?_isa} = %{version}-%{release}
+
+%description msg
+FTS messaging integration
 
 %package python
 Summary: File Transfer Service version 3 python bindings
@@ -153,7 +174,7 @@ mkdir -p %{buildroot}%{_sysconfdir}/fts3
 make install DESTDIR=%{buildroot}
 mkdir -p %{buildroot}%{python_sitearch}/fts
 
-
+# Server scriptlets
 %pre server
 getent group fts3 >/dev/null || groupadd -r fts3
 getent passwd fts3 >/dev/null || \
@@ -164,12 +185,7 @@ exit 0
 %post server
 /sbin/chkconfig --add fts-server
 /sbin/chkconfig --add fts-bringonline
-/sbin/chkconfig --add fts-msg-bulk
-/sbin/chkconfig --add fts-msg-cron
 /sbin/chkconfig --add fts-records-cleaner
-/sbin/chkconfig --add fts-info-publisher
-/sbin/chkconfig --add fts-myosg-updater
-/sbin/chkconfig --add fts-bdii-cache-updater
 exit 0
 
 %preun server
@@ -178,12 +194,28 @@ if [ $1 -eq 0 ] ; then
     /sbin/chkconfig --del fts-server
     /sbin/service fts-bringonline stop >/dev/null 2>&1
     /sbin/chkconfig --del fts-bringonline    
-    /sbin/service fts-msg-bulk stop >/dev/null 2>&1
-    /sbin/chkconfig --del fts-msg-bulk
-    /sbin/service fts-msg-cron stop >/dev/null 2>&1
-    /sbin/chkconfig --del fts-msg-cron
     /sbin/service fts-records-cleaner stop >/dev/null 2>&1
     /sbin/chkconfig --del fts-records-cleaner
+fi
+exit 0
+
+%postun server
+if [ "$1" -ge "1" ] ; then
+    /sbin/service fts-server condrestart >/dev/null 2>&1 || :
+    /sbin/service fts-bringonline condrestart >/dev/null 2>&1 || :
+    /sbin/service fts-records-cleaner condrestart >/dev/null 2>&1 || :
+fi
+exit 0
+
+# Infosys scriptlets
+%post infosys
+/sbin/chkconfig --add fts-info-publisher
+/sbin/chkconfig --add fts-myosg-updater
+/sbin/chkconfig --add fts-bdii-cache-updater
+exit 0
+
+%preun infosys
+if [ $1 -eq 0 ] ; then
     /sbin/service fts-info-publisher stop >/dev/null 2>&1
     /sbin/chkconfig --del fts-info-publisher
     /sbin/service fts-myosg-updater stop >/dev/null 2>&1
@@ -193,20 +225,37 @@ if [ $1 -eq 0 ] ; then
 fi
 exit 0
 
-%postun server
+%postun infosys
 if [ "$1" -ge "1" ] ; then
-    /sbin/service fts-server condrestart >/dev/null 2>&1 || :
-    /sbin/service fts-bringonline condrestart >/dev/null 2>&1 || :
-    /sbin/service fts-msg-bulk condrestart >/dev/null 2>&1 || :
-    /sbin/service fts-msg-cron condrestart >/dev/null 2>&1 || :
-    /sbin/service fts-records-cleaner condrestart >/dev/null 2>&1 || :
     /sbin/service fts-info-publisher condrestart >/dev/null 2>&1 || :
     /sbin/service fts-myosg-updater condrestart >/dev/null 2>&1 || :
     /sbin/service fts-bdii-cache-updater condrestart >/dev/null 2>&1 || :
 fi
 exit 0
 
+# Messaging scriptlets
+%post msg
+/sbin/chkconfig --add fts-msg-bulk
+/sbin/chkconfig --add fts-msg-cron
+exit 0
 
+%preun msg
+if [ $1 -eq 0 ] ; then
+    /sbin/service fts-msg-bulk stop >/dev/null 2>&1
+    /sbin/chkconfig --del fts-msg-bulk
+    /sbin/service fts-msg-cron stop >/dev/null 2>&1
+    /sbin/chkconfig --del fts-msg-cron
+fi
+exit 0
+
+%postun msg
+if [ $1 -eq 0 ] ; then
+    /sbin/service fts-msg-bulk condrestart >/dev/null 2>&1 || :
+    /sbin/service fts-msg-cron condrestart >/dev/null 2>&1 || :
+fi
+exit 0
+
+# Libs scriptlets
 %post libs -p /sbin/ldconfig
 
 %postun libs -p /sbin/ldconfig
@@ -221,26 +270,47 @@ exit 0
 %dir %attr(0755,fts3,root) %{_var}/lib/fts3/logs
 %dir %attr(0755,fts3,root) %{_var}/log/fts3
 %dir %attr(0755,fts3,root) %{_sysconfdir}/fts3
-%config(noreplace) %attr(0644,fts3,root) %{_var}/lib/fts3/bdii_cache.xml
-%config(noreplace) %attr(0644,fts3,root) %{_var}/lib/fts3/myosg.xml
-%{_sbindir}/fts*
-%attr(0755,root,root) %{_initddir}/fts-msg-bulk
+
+%{_sbindir}/fts_bringonline
+%{_sbindir}/fts_db_cleaner
+%{_sbindir}/fts_server
+%{_sbindir}/fts_url_copy
 %attr(0755,root,root) %{_initddir}/fts-server
 %attr(0755,root,root) %{_initddir}/fts-bringonline
-%attr(0755,root,root) %{_initddir}/fts-msg-cron
 %attr(0755,root,root) %{_initddir}/fts-records-cleaner
+%attr(0755,root,root) %{_sysconfdir}/cron.daily/fts-records-cleaner
+%config(noreplace) %attr(0640,root,fts3) %{_sysconfdir}/fts3/fts3config
+%config(noreplace) %{_sysconfdir}/logrotate.d/fts-server
+%{_mandir}/man8/fts_bringonline.8.gz
+%{_mandir}/man8/fts_db_cleaner.8.gz
+%{_mandir}/man8/fts_server.8.gz
+%{_mandir}/man8/fts_url_copy.8.gz
+
+%files infosys
+%{_sbindir}/fts_bdii_cache_updater
+%{_sbindir}/fts_info_publisher
+%{_sbindir}/fts_myosg_updater
+%config(noreplace) %attr(0644,fts3,root) %{_var}/lib/fts3/bdii_cache.xml
+%config(noreplace) %attr(0644,fts3,root) %{_var}/lib/fts3/myosg.xml
 %attr(0755,root,root) %{_initddir}/fts-info-publisher
 %attr(0755,root,root) %{_initddir}/fts-myosg-updater
 %attr(0755,root,root) %{_initddir}/fts-bdii-cache-updater
-%attr(0755,root,root) %{_sysconfdir}/cron.daily/fts-records-cleaner
-%attr(0755,root,root) %{_sysconfdir}/cron.hourly/fts-msg-cron
 %attr(0755,root,root) %{_sysconfdir}/cron.hourly/fts-info-publisher
 %attr(0755,root,root) %{_sysconfdir}/cron.daily/fts-myosg-updater
 %attr(0755,root,root) %{_sysconfdir}/cron.daily/fts-bdii-cache-updater
+%{_mandir}/man8/fts_bdii_cache_updater.8.gz
+%{_mandir}/man8/fts_info_publisher.8.gz
+%{_mandir}/man8/fts_myosg_updater.8.gz
+
+%files msg
+%{_sbindir}/fts_msg_bulk
+%{_sbindir}/fts_msg_cron
+%attr(0755,root,root) %{_initddir}/fts-msg-bulk
+%attr(0755,root,root) %{_initddir}/fts-msg-cron
+%attr(0755,root,root) %{_sysconfdir}/cron.hourly/fts-msg-cron
 %config(noreplace) %attr(0640,root,fts3) %{_sysconfdir}/fts3/fts-msg-monitoring.conf
-%config(noreplace) %attr(0640,root,fts3) %{_sysconfdir}/fts3/fts3config
-%config(noreplace) %{_sysconfdir}/logrotate.d/fts-server
-%{_mandir}/man8/fts*
+%{_mandir}/man8/fts_msg_bulk.8.gz
+%{_mandir}/man8/fts_msg_cron.8.gz
 
 %files client
 %{_bindir}/fts-config-set
@@ -298,6 +368,8 @@ exit 0
 
 
 %changelog
+* Mon Jan 13 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.0-2
+  - separated rpms for messaging and infosys subsystems
 * Wed Aug 07 2013 Michal Simon <michal.simon@cern.ch> - 3.1.1-2
   - no longer linking explicitly to boost libraries with '-mt' sufix 
 * Sat Aug 03 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 3.1.0-3

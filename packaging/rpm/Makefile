@@ -17,7 +17,8 @@ prepare: dist
 	@mkdir -p  $(rpmbuild)/SPECS/
 	@mkdir -p  $(rpmbuild)/SOURCES/
 	@mkdir -p  $(rpmbuild)/BUILD/
-	mv ${name}-${version}.tar.gz $(rpmbuild)/SOURCES 
+	@mkdir -p $(rpmbuild)/fts/
+	mv ${name}-${version}.tar.gz $(rpmbuild)/fts 
 
 srpm: prepare ./specs/$(name).spec
 	rpmbuild --nodeps -bs --define='_topdir ${rpmbuild}' ./specs/$(name).spec
