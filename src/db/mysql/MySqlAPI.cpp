@@ -465,7 +465,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
     distinct.reserve(1500); //approximation
     int count = 0;
     bool manualConfigExists = false;
-    int defaultFilesNum = 5;
+    int defaultFilesNum = 10;
     int filesNum = defaultFilesNum;
     int limit = 0;
     int maxActive = 0;
@@ -506,6 +506,16 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
 
             if(distinct.empty())
                 return;
+
+            unsigned hostCount = 0;
+            sql <<
+            		" SELECT COUNT(hostname) "
+            		" FROM t_hosts "
+            		" WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval 2 minute)",
+            		soci::into(hostCount)
+            ;
+
+
             // Iterate through pairs, getting jobs IF the VO has not run out of credits
             // AND there are pending file transfers within the job
             boost::tuple<std::string, std::string, std::string> triplet;
@@ -572,6 +582,13 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                         continue;
                                 }
                         }
+                    else
+                    	{
+                    		// round it up
+                    		filesNum = (double)filesNum / hostCount + 0.5;
+                    		// not less than 2
+                    		if (filesNum < 2) filesNum = 2;
+                    	}
 
                     std::map<std::string, int> activityFilesNum =
                         getFilesNumPerActivity(sql, boost::get<0>(triplet), boost::get<1>(triplet), boost::get<2>(triplet), filesNum);
