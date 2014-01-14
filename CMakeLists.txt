@@ -83,6 +83,7 @@ set(Boost_ADDITIONAL_VERSIONS
     "1.46" "1.47.0" "1.48" "1.49.0" "1.50" "1.51.0"
 )
 set(Boost_USE_MULTITHREADED ON)
+set (Boost_NO_BOOST_CMAKE ON)
 
 find_package(Boost)
 

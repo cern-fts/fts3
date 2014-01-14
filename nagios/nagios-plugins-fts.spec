@@ -17,7 +17,11 @@ URL:        https://svnweb.cern.ch/trac/fts3
 Source0:        %{name}-%{version}.tar.gz
 Buildroot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
+%if %{?fedora}%{!?fedora:0} >= 18 || %{?rhel}%{!?rhel:0} >= 7
 BuildRequires:  cmake
+%else
+BuildRequires:  cmake28
+%endif
 
 Requires:   nagios%{?_isa}
 Requires:   python%{?_isa}
@@ -32,7 +36,11 @@ FTS3 machines.
 %setup -q -n %{name}-%{version}
 
 %build
+%if %{?fedora}%{!?fedora:0} >= 18 || %{?rhel}%{!?rhel:0} >= 7
 %cmake . -DCMAKE_INSTALL_PREFIX=/
+%else
+%cmake28 . -DCMAKE_INSTALL_PREFIX=/
+%endif
 
 make %{?_smp_mflags}
 
