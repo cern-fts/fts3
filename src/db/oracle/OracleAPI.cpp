@@ -437,7 +437,7 @@ void OracleAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& f
 
     try
         {
-            int defaultFilesNum = 5;
+            int defaultFilesNum = 10;
 
             soci::rowset<soci::row> rs = (
                                              sql.prepare <<
@@ -464,6 +464,13 @@ void OracleAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& f
             if(distinct.empty())
                 return;
 
+            unsigned hostCount = 0;
+            sql <<
+            		" SELECT COUNT(hostname) "
+            		" FROM t_hosts "
+            		"  WHERE beat >= (sys_extract_utc(systimestamp) - interval '2' minute)",
+            		soci::into(hostCount)
+            ;
             // Iterate through pairs, getting jobs IF the VO has not run out of credits
             // AND there are pending file transfers within the job
             std::vector< boost::tuple<std::string, std::string, std::string> >::iterator it;
@@ -511,6 +518,13 @@ void OracleAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& f
                                         continue;
                                 }
                         }
+                    else
+                    	{
+							// round it up
+							filesNum = (double)filesNum / hostCount + 0.5;
+							// not less than 2
+							if (filesNum < 2) filesNum = 2;
+                    	}
 
                     std::map<std::string, int> activityFilesNum =
                         getFilesNumPerActivity(sql, boost::get<0>(triplet), boost::get<1>(triplet), boost::get<2>(triplet), filesNum);
