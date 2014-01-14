@@ -82,6 +82,9 @@ class TestBase():
                     for line in test.__doc__.split('\n'):
                         logging.info(line)
                 test()
+            except KeyboardInterrupt:
+                logging.error("Ctrl+C! Abort")
+                return -1
             except Exception, e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 logging.error(str(e))
