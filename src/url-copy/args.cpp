@@ -218,13 +218,13 @@ std::ostream& operator << (std::ostream& out, const UrlCopyOpts::CompareChecksum
 {
     switch (c)
         {
-        case UrlCopyOpts::CompareChecksum::CHECKSUM_DONT_CHECK:
+        case UrlCopyOpts::CHECKSUM_DONT_CHECK:
             out << "No checksum comparison";
             break;
-        case UrlCopyOpts::CompareChecksum::CHECKSUM_STRICT:
+        case UrlCopyOpts::CHECKSUM_STRICT:
             out << "Strict comparison";
             break;
-        case UrlCopyOpts::CompareChecksum::CHECKSUM_RELAXED:
+        case UrlCopyOpts::CHECKSUM_RELAXED:
             out << "Relaxed comparison";
             break;
         default:

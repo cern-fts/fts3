@@ -4,7 +4,7 @@
 
 Name: fts
 Version: 3.2.0
-Release: 2
+Release: 3
 Summary: File Transfer Service V3
 Group: System Environment/Daemons
 License: ASL 2.0
@@ -24,7 +24,13 @@ BuildRequires:  apr-devel
 BuildRequires:  apr-util-devel
 BuildRequires:  boost-devel
 BuildRequires:  CGSI-gSOAP-devel
+
+%if %{?fedora}%{!?fedora:0} >= 18 || %{?rhel}%{!?rhel:0} >= 7
 BuildRequires:  cmake
+%else
+BuildRequires:  cmake28
+%endif
+
 BuildRequires:  doxygen
 %if 0%{?el5}
 BuildRequires:  e2fsprogs-devel
@@ -158,7 +164,12 @@ fi
 # Build
 mkdir build
 cd build
-%cmake -DMAINBUILD=ON -D CMAKE_BUILD_TYPE=RelWithDebInfo -D CMAKE_INSTALL_PREFIX='' ..
+%if %{?fedora}%{!?fedora:0} >= 18 || %{?rhel}%{!?rhel:0} >= 7
+    %cmake -DMAINBUILD=ON -D CMAKE_BUILD_TYPE=RelWithDebInfo -D CMAKE_INSTALL_PREFIX='' ..
+%else
+    %cmake28 -DBoost_NO_BOOST_CMAKE=ON -DMAINBUILD=ON -D CMAKE_BUILD_TYPE=RelWithDebInfo -D CMAKE_INSTALL_PREFIX='' ..
+%endif
+
 make %{?_smp_mflags}
 
 
@@ -368,6 +379,8 @@ exit 0
 
 
 %changelog
+* Tue Jan 14 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.0-3
+  - using cmake28
 * Mon Jan 13 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.0-2
   - separated rpms for messaging and infosys subsystems
 * Wed Aug 07 2013 Michal Simon <michal.simon@cern.ch> - 3.1.1-2

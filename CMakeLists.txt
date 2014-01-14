@@ -12,9 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
 # See the License for the specific language governing permissions and 
 # limitations under the License. 
-  
- 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8)
 project(fts3)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
@@ -40,7 +38,9 @@ ADD_DEFINITIONS(-DNDEBUG)
 ADD_DEFINITIONS(-DSOCKET_CLOSE_ON_EXIT)
 ADD_DEFINITIONS(-D_REENTRANT)
 ADD_DEFINITIONS(-DBOOST_DATE_TIME_HAS_REENTRANT_STD_FUNCTIONS)
-ADD_DEFINITIONS(-std=c++0x)
+
+# Enable C++11
+include(EnableCpp11 REQUIRED)
 
 set(libsubdirs "lib64;lib" CACHE STRING "The path suffixes to find libraries")
 # load module
