@@ -1,8 +1,15 @@
-version=${shell grep '^Version:' ./specs/fts.spec | awk '{print $$2}' }
 name=fts
+spec=./specs/fts.spec
+version=${shell grep '^Version:' $(spec) | awk '{print $$2}' }
 rpmbuild=${shell pwd}/rpmbuild
 MOCKENV=epel-6-cernonly-x86_64
 MOCKARGS=--trace --verbose
+
+rpmdefines=--define='_topdir ${rpmbuild}' \
+	--define='_sourcedir %{_topdir}/SOURCES' \
+	--define='_builddir %{_topdir}/BUILD' \
+	--define='_srcrpmdir %{_topdir}/SRPMS' \
+	--define='_rpmdir %{_topdir}/RPMS'
 
 dist: clean
 	tar --create --gzip --directory ../.. --file ./${name}-${version}.tar.gz --exclude=./packaging --exclude .svn --exclude .git .
@@ -17,14 +24,13 @@ prepare: dist
 	@mkdir -p  $(rpmbuild)/SPECS/
 	@mkdir -p  $(rpmbuild)/SOURCES/
 	@mkdir -p  $(rpmbuild)/BUILD/
-	@mkdir -p $(rpmbuild)/fts/
-	mv ${name}-${version}.tar.gz $(rpmbuild)/fts 
+	mv ${name}-${version}.tar.gz $(rpmbuild)/SOURCES 
 
-srpm: prepare ./specs/$(name).spec
-	rpmbuild --nodeps -bs --define='_topdir ${rpmbuild}' ./specs/$(name).spec
+srpm: prepare $(spec)
+	rpmbuild --nodeps -bs $(rpmdefines) $(spec)
 
 rpm: srpm
-	rpmbuild --nodeps -bb --define='_topdir ${rpmbuild}' ./specs/$(name).spec
+	rpmbuild --nodeps -bb $(rpmdefines) $(spec) 
 
 mock: srpm
 	/usr/bin/mock $(MOCKARGS) -r $(MOCKENV) --rebuild $(rpmbuild)/SRPMS/$(name)-$(version)-*.src.rpm

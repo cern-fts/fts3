@@ -167,7 +167,7 @@ cd build
 %if %{?fedora}%{!?fedora:0} >= 18 || %{?rhel}%{!?rhel:0} >= 7
     %cmake -DMAINBUILD=ON -D CMAKE_BUILD_TYPE=RelWithDebInfo -D CMAKE_INSTALL_PREFIX='' ..
 %else
-    %cmake28 -DBoost_NO_BOOST_CMAKE=ON -DMAINBUILD=ON -D CMAKE_BUILD_TYPE=RelWithDebInfo -D CMAKE_INSTALL_PREFIX='' ..
+    %cmake28 -DMAINBUILD=ON -D CMAKE_BUILD_TYPE=RelWithDebInfo -D CMAKE_INSTALL_PREFIX='' ..
 %endif
 
 make %{?_smp_mflags}
