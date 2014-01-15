@@ -505,16 +505,18 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                 }
 
             if(distinct.empty())
-                return;
+                return;				
 
-            unsigned hostCount = 0;
+            long long hostCount = 0;
             sql <<
             		" SELECT COUNT(hostname) "
             		" FROM t_hosts "
             		" WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval 2 minute)",
             		soci::into(hostCount)
             ;
-
+	    
+	    if(hostCount < 1)
+	    	hostCount = 1;	    
 
             // Iterate through pairs, getting jobs IF the VO has not run out of credits
             // AND there are pending file transfers within the job
@@ -585,7 +587,8 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                     else
                     	{
                     		// round it up
-                    		filesNum = (double)filesNum / hostCount + 0.5;
+				double temp = (double) filesNum / (double)hostCount;
+                    		filesNum = static_cast<int>(ceil(temp));
                     		// not less than 2
                     		if (filesNum < 2) filesNum = 2;
                     	}
