@@ -6869,7 +6869,7 @@ void OracleAPI::setOptimizerMode(int mode)
 
 int OracleAPI::getOptimizerMode(soci::session& sql)
 {
-    int modeDefault = 5;
+    int modeDefault = 3;
     int mode = 0;
     soci::indicator ind = soci::i_ok;
 
