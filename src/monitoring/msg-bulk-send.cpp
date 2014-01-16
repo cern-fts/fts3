@@ -62,35 +62,41 @@ using namespace std;
 	If the child hangs or for any reason die, transparently it's restarting it and restoring all mesgs
 */
 
-void DoServer()
+void DoServer() throw()
 {
+    try {
+        activemq::library::ActiveMQCPP::initializeLibrary();
 
-    activemq::library::ActiveMQCPP::initializeLibrary();
+        //initialize here to avoid race conditions
+        concurrent_queue::getInstance();
 
-    //initialize here to avoid race conditions
-    concurrent_queue::getInstance();
+        MsgPipe pipeMsg1;
+        MsgProducer producer;
 
-    MsgPipe pipeMsg1;
-    MsgProducer producer;
+        // Start the pipe thread.
+        Thread pipeThread(&pipeMsg1);
+        pipeThread.start();
 
-    // Start the pipe thread.
-    Thread pipeThread(&pipeMsg1);
-    pipeThread.start();
-
-    // Start the producer thread.
-    Thread producerThread(&producer);
-    producerThread.start();
+        // Start the producer thread.
+        Thread producerThread(&producer);
+        producerThread.start();
 
 
-    // Wait for the threads to complete.
-    pipeThread.join();
-    producerThread.join();
+        // Wait for the threads to complete.
+        pipeThread.join();
+        producerThread.join();
 
-    pipeMsg1.cleanup();
-    producer.cleanup();
+        pipeMsg1.cleanup();
+        producer.cleanup();
 
-    activemq::library::ActiveMQCPP::shutdownLibrary();
-
+        activemq::library::ActiveMQCPP::shutdownLibrary();
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Exception caught: " << e.what() << std::endl;
+    }
+    catch (...) {
+        std::cerr << "Unexpected exception! Aborting" << std::endl;
+    }
 }
 
 int main()

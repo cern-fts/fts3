@@ -375,15 +375,25 @@ private:
 int main(int argc, char** argv)
 {
 
-    FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv);
-    MsgProducer producer;
+    try {
+        FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv);
+        MsgProducer producer;
 
-    // Start the producer thread.
-    Thread producerThread(&producer);
-    producerThread.start();
+        // Start the producer thread.
+        Thread producerThread(&producer);
+        producerThread.start();
 
-    // Wait for the threads to complete.
-    producerThread.join();
+        // Wait for the threads to complete.
+        producerThread.join();
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Exception caught: " << e.what() << std::endl;
+        return -1;
+    }
+    catch (...) {
+        std::cerr << "Unexpected exception" << std::endl;
+        return -1;
+    }
 
     return 0;
 
