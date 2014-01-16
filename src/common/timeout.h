@@ -91,8 +91,6 @@ public:
     /** Return true if timeout occured else false. */
     virtual bool occured() const;
 
-    virtual timeval* tval() const;
-
     virtual Timeout* clone() const;
 
 protected:
@@ -108,7 +106,6 @@ private:
     int _us; /**< microsecond part of the timeout */
     int _ns; /**< nanosecond part of the timeout */
     TimeTraits::TIME _xt; /**< absolut time of timeout (the @see actualize() method sets it) */
-    mutable timeval _tval;
 };
 
 /** Class representing infinite timeout (timeout never occurs...) */
@@ -119,8 +116,6 @@ public:
     virtual ~InfiniteTimeout() {}
 
     virtual bool occured() const;
-
-    virtual timeval* tval() const;
 
     virtual Timeout* clone() const;
 

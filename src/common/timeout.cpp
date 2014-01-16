@@ -63,15 +63,6 @@ bool Timeout::occured() const
 
 /* ---------------------------------------------------------------------- */
 
-timeval* Timeout::tval() const
-{
-    _tval.tv_sec = sec();
-    _tval.tv_usec = usec();
-    return &_tval;
-}
-
-/* ---------------------------------------------------------------------- */
-
 Timeout* Timeout::clone() const
 {
     return new Timeout(*this);
@@ -82,13 +73,6 @@ Timeout* Timeout::clone() const
 bool InfiniteTimeout::occured() const
 {
     return false;
-}
-
-/* ---------------------------------------------------------------------- */
-
-timeval* InfiniteTimeout::tval() const
-{
-    return NULL;
 }
 
 /* ---------------------------------------------------------------------- */
