@@ -92,8 +92,6 @@ private:
     static bool instanceFlag;
     static msg_ifce *single;
     std::string errorMessage;
-    char * queue_name;
-    char * connection_hostname;
     bool read_initial_config();
     msg_ifce(); /*private constructor*/
 
