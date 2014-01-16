@@ -265,7 +265,8 @@ const char *glite_delegation_get_endpoint(glite_delegation_ctx *ctx)
 int glite_delegation_delegate(glite_delegation_ctx *ctx,
                               const char *delegationID, int expiration, int force)
 {
-    char *sdelegationID = (char *) "", *localproxy, *certreq, *certtxt, *scerttxt;
+    char *sdelegationID = (char *) "", *localproxy, *certtxt, *scerttxt;
+    std::string certreq;
 
     struct delegation__getProxyReqResponse get_resp;
     struct delegation__renewProxyReqResponse renew_resp;
@@ -304,7 +305,6 @@ int glite_delegation_delegate(glite_delegation_ctx *ctx,
         }
 
     /* using certreq as a marker */
-    certreq = NULL;
     if (force)
         {
             /* force the renewal of the proxy */
@@ -314,11 +314,11 @@ int glite_delegation_delegate(glite_delegation_ctx *ctx,
                     _fault_to_error(ctx, __func__);
                     return -1;
                 }
-            certreq = (char *) std::string(renew_resp._renewProxyReqReturn).c_str();
+            certreq = renew_resp._renewProxyReqReturn;
         }
 
     /* if it was forced and failed, or if it was not forced at all */
-    if (NULL == certreq)
+    if (certreq.empty())
         {
             /* there was no proxy, or not forcing -- the normal path */
             ret = soap_call_delegation__getProxyReq(ctx->soap, ctx->endpoint, NULL, sdelegationID, get_resp);
@@ -327,13 +327,13 @@ int glite_delegation_delegate(glite_delegation_ctx *ctx,
                     _fault_to_error(ctx, __func__);
                     return -1;
                 }
-            certreq = (char*) std::string(get_resp._getProxyReqReturn).c_str();
+            certreq = get_resp._getProxyReqReturn;
         }
 
     /* generating a certificate from the request */
-    if(certreq)
+    if(!certreq.empty())
         {
-            ret = GRSTx509MakeProxyCert(&certtxt, stderr, certreq,
+            ret = GRSTx509MakeProxyCert(&certtxt, stderr, (char*)certreq.c_str(),
                                         localproxy, localproxy, expiration);
         }
     else
