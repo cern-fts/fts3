@@ -156,8 +156,8 @@ string GSoapDelegationHandler::getProxyReq(string delegationId)
 
     if (err)
         {
-            if (reqtxt) free (reqtxt);
-            if (keytxt) free (keytxt);
+            free(reqtxt);
+            free(keytxt);
             throw Err_Custom("'GRSTx509CreateProxyRequest' failed!");
         }
 
@@ -192,23 +192,19 @@ string GSoapDelegationHandler::getProxyReq(string delegationId)
         }
     catch(Err& ex)
         {
-            if (reqtxt) free (reqtxt);
-            reqtxt=NULL;
-            if (keytxt) free (keytxt);
-            keytxt=NULL;
+            free(reqtxt);
+            free(keytxt);
             throw Err_Custom(ex.what());
 
         }
     catch(...)
         {
-            if (reqtxt) free (reqtxt);
-            reqtxt=NULL;
-            if (keytxt) free (keytxt);
-            keytxt=NULL;
+            free(reqtxt);
+            free (keytxt);
             throw Err_Custom("Problem while renewing proxy");
         }
-    if (reqtxt) free (reqtxt);
-    if (keytxt) free (keytxt);
+    free(reqtxt);
+    free(keytxt);
 
     rqstCache.put(delegationId, req);
 
