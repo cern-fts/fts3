@@ -99,7 +99,7 @@ protected:
      * Copies the second, nanosecond, microsecond values and actualizes the timeout
      * (the countdown starts immediately).
      */
-    Timeout(const Timeout& x) : _s(x._s), _us(x._us), _ns(x._ns) {};
+    Timeout(const Timeout& x) : _s(x._s), _us(x._us), _ns(x._ns), _xt(x._xt) {};
 
 private:
     int _s; /**< second part of the timeout */
