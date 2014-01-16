@@ -878,7 +878,8 @@ bool send_message(std::string & text)
     if(text.length() < 3000)
         {
             struct message_monitoring message;
-            strcpy(message.msg, text.c_str());
+            strncpy(message.msg, text.c_str(), sizeof(message.msg));
+            message.msg[sizeof(message.msg) - 1] = '\0';
             message.timestamp = milliseconds_since_epoch();
             runProducerMonitoring(message);
         }

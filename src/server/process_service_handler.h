@@ -765,7 +765,8 @@ protected:
                                                                         struct message_updater msg2;
                                                                         if(std::string(job_id).length() <= 37)
                                                                             {
-                                                                                strcpy(msg2.job_id, std::string(job_id).c_str());
+                                                                                strncpy(msg2.job_id, std::string(job_id).c_str(), sizeof(msg2.job_id));
+                                                                                msg2.job_id[sizeof(msg2.job_id) - 1] = '\0';
                                                                                 msg2.file_id = iterFileIds->first;
                                                                                 msg2.process_id = (int) pr->getPid();
                                                                                 msg2.timestamp = milliseconds_since_epoch();

@@ -399,7 +399,8 @@ int FileTransferExecutor::execute()
                                             db->updateJobTransferStatus(tf->JOB_ID, "ACTIVE");
                                             SingleTrStateInstance::instance().sendStateMessage(tf->JOB_ID, tf->FILE_ID);
                                             struct message_updater msg;
-                                            strcpy(msg.job_id, std::string(tf->JOB_ID).c_str());
+                                            strncpy(msg.job_id, std::string(tf->JOB_ID).c_str(), sizeof(msg.job_id));
+                                            msg.job_id[sizeof(msg.job_id) - 1] = '\0';
                                             msg.file_id = tf->FILE_ID;
                                             msg.process_id = (int) pr->getPid();
                                             msg.timestamp = milliseconds_since_epoch();
