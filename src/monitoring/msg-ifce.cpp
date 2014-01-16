@@ -514,10 +514,10 @@ void msg_ifce::set_transfer_timeout(transfer_completed* tr_completed, unsigned v
         tr_completed->transfer_timeout = to_string<unsigned int>(value, std::dec);
 }
 
-void msg_ifce::set_checksum_timeout(transfer_completed* tr_completed, const std::string & value)
+void msg_ifce::set_checksum_timeout(transfer_completed* tr_completed, int value)
 {
     if (tr_completed)
-        tr_completed->checksum_timeout = value;
+        tr_completed->checksum_timeout = to_string<unsigned int>(value, std::dec);
 }
 
 void msg_ifce::set_transfer_error_code(transfer_completed* tr_completed, const std::string & value)

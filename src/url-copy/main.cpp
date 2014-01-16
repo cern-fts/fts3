@@ -726,7 +726,7 @@ int main(int argc, char **argv)
                 //get checksum timeout from gfal2
                 logger.INFO() << "Get checksum timeout" << std::endl;
                 int checksumTimeout = gfal2_get_opt_integer(handle, "GRIDFTP PLUGIN", "CHECKSUM_CALC_TIMEOUT", NULL);
-                msg_ifce::getInstance()->set_checksum_timeout(&tr_completed, boost::lexical_cast<std::string > (checksumTimeout));
+                msg_ifce::getInstance()->set_checksum_timeout(&tr_completed, checksumTimeout);
 
                 /*Checksuming*/
                 if (currentTransfer.checksumMethod)

@@ -116,7 +116,7 @@ public:
     void set_timestamp_checksum_dest_started(transfer_completed* tr_completed, const std::string & value);
     void set_timestamp_checksum_dest_ended(transfer_completed* tr_completed, const std::string & value);
     void set_transfer_timeout(transfer_completed* tr_completed, unsigned value);
-    void set_checksum_timeout(transfer_completed* tr_completed, const std::string & value);
+    void set_checksum_timeout(transfer_completed* tr_completed, int value);
     void set_total_bytes_transfered(transfer_completed* tr_completed, off_t value);
     void set_number_of_streams(transfer_completed* tr_completed, unsigned value);
     void set_tcp_buffer_size(transfer_completed* tr_completed, unsigned value);
