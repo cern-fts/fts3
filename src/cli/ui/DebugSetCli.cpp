@@ -31,6 +31,7 @@ const string DebugSetCli::OFF = "off";
 
 DebugSetCli::DebugSetCli()
 {
+    mode = false;
 
     // add hidden options
     hidden.add_options()

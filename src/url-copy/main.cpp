@@ -905,8 +905,10 @@ int main(int argc, char **argv)
                             }
                         if(tmp_err)
                             {
-                                retry = retryTransfer(tmp_err->code, "TRANSFER", std::string(tmp_err->message) );
-                                g_clear_error(&tmp_err);
+                                std::string message;
+                                if (tmp_err->message)
+                                    message.assign(tmp_err->message);
+                                retry = retryTransfer(tmp_err->code, "TRANSFER", message);
                             }
                         g_clear_error(&tmp_err);
                         goto stop;

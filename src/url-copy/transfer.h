@@ -29,7 +29,8 @@ public:
     double throughput;
     off_t transferredBytes;
 
-    Transfer(): fileId(0), userFileSize(0), startTime(0), finishTime(0),
+    Transfer(): fileId(0), userFileSize(0), checksumMethod(UrlCopyOpts::CHECKSUM_STRICT),
+        startTime(0), finishTime(0),
         fileSize(0), throughput(0.0), transferredBytes(0)
     {
     }

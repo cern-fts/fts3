@@ -103,6 +103,7 @@ public:
 
         activemq::library::ActiveMQCPP::initializeLibrary();
 
+        this->monitoringDb = NULL;
         this->connection = NULL;
         this->session = NULL;
         this->destination = NULL;

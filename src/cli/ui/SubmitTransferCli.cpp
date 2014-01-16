@@ -46,6 +46,7 @@ using namespace fts3::common;
 
 SubmitTransferCli::SubmitTransferCli()
 {
+    delegate = true;
 
     /// 8 housrs in seconds
     static const int eight_hours = 28800;

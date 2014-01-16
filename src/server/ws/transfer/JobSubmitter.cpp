@@ -81,7 +81,8 @@ static void checkValidUrl(const std::string &uri)
 }
 
 JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) :
-    db (DBSingleton::instance().getDBObjectInstance())
+    db (DBSingleton::instance().getDBObjectInstance()),
+    copyPinLifeTime(-1)
 {
     PROFILE_SCOPE("JobSubmitter::JobSubmitter(soap*, tns3__TransferJob*, bool)");
 
@@ -195,7 +196,8 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
 }
 
 JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
-    db (DBSingleton::instance().getDBObjectInstance())
+    db (DBSingleton::instance().getDBObjectInstance()),
+    copyPinLifeTime(-1)
 {
     PROFILE_SCOPE("JobSubmitter::JobSubmitter(soap*, tns3__TransferJob2*)");
 
@@ -298,7 +300,8 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
 }
 
 JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
-    db (DBSingleton::instance().getDBObjectInstance())
+    db (DBSingleton::instance().getDBObjectInstance()),
+    copyPinLifeTime(-1)
 {
     PROFILE_SCOPE("JobSubmitter::JobSubmitter(soap*, tns3__TransferJob3*)");
 

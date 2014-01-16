@@ -33,6 +33,7 @@ using namespace fts3::cli;
 
 SetCfgCli::SetCfgCli(bool spec)
 {
+    type = CfgParser::NOT_A_CFG;
 
     if (spec)
         {
