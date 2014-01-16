@@ -22,6 +22,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/stat.h>
 #include "common/logger.h"
 #include "common/error.h"
 
@@ -134,7 +135,9 @@ public:
             {
                 snprintf(tmp_proxy,FILENAME_MAX,"%s.XXXXXX",prefix.c_str());
             }
+        mode_t restore = umask(0077);
         *fd = mkstemp(tmp_proxy);
+        umask(restore);
         if (*fd == -1)
             {
                 std::string reason = (std::string)"Cannot create temporary file <" +
