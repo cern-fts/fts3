@@ -123,6 +123,7 @@ inline std::string getFullHostname()
     if (getaddrinfo(hostname, NULL, &hints, &info) == 0)
         {
             strncpy(hostname, info->ai_canonname, sizeof(hostname));
+            hostname[MAXHOSTNAMELEN - 1] = '\0';
             freeaddrinfo(info);
         }
     return hostname;

@@ -587,7 +587,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                     else
                     	{
                     		// round it up
-				double temp = (double) filesNum / (double)hostCount;
+                            double temp = (double) filesNum / (double)hostCount;
                     		filesNum = static_cast<int>(ceil(temp));
                     		// not less than 2
                     		if (filesNum < 2) filesNum = 2;
@@ -5364,7 +5364,9 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
     return ret;
 }
 
-void MySqlAPI::bringOnlineReportStatusInternal(soci::session& sql, const std::string & state, const std::string & message, struct message_bringonline msg)
+void MySqlAPI::bringOnlineReportStatusInternal(soci::session& sql,
+        const std::string & state, const std::string & message,
+        const struct message_bringonline& msg)
 {
 
     if (state != "STARTED" && state != "FINISHED" && state != "FAILED") return;
@@ -5464,7 +5466,7 @@ void MySqlAPI::bringOnlineReportStatusInternal(soci::session& sql, const std::st
 
 }
 
-void MySqlAPI::bringOnlineReportStatus(const std::string & state, const std::string & message, struct message_bringonline msg)
+void MySqlAPI::bringOnlineReportStatus(const std::string & state, const std::string & message, const struct message_bringonline& msg)
 {
     soci::session sql(*connectionPool);
     try

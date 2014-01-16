@@ -664,7 +664,8 @@ std::vector<struct message_bringonline> ProfiledDB::getBringOnlineFiles(std::str
 }
 
 
-void ProfiledDB::bringOnlineReportStatus(const std::string & state, const std::string & message, struct message_bringonline msg)
+void ProfiledDB::bringOnlineReportStatus(const std::string & state,
+        const std::string & message, const struct message_bringonline& msg)
 {
     PROFILE_PREFIXED("DB::", db->bringOnlineReportStatus(state, message, msg));
 }

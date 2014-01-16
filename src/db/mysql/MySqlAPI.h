@@ -272,7 +272,7 @@ public:
 
     virtual std::vector<struct message_bringonline> getBringOnlineFiles(std::string voName, std::string hostName, int maxValue);
 
-    virtual void bringOnlineReportStatus(const std::string & state, const std::string & message, struct message_bringonline msg);
+    virtual void bringOnlineReportStatus(const std::string & state, const std::string & message, const struct message_bringonline& msg);
 
     virtual void addToken(const std::string & job_id, int file_id, const std::string & token);
 
@@ -363,12 +363,13 @@ private:
     std::vector< boost::tuple<std::string, std::string, double, double, double> > filesMemStore;
 
     bool updateFileTransferStatusInternal(soci::session& sql, double throughput, std::string job_id, int file_id, std::string transfer_status,
-                                          std::string transfer_message, int process_id, double filesize, double duration, bool retry);
+            std::string transfer_message, int process_id, double filesize, double duration, bool retry);
 
     bool updateJobTransferStatusInternal(soci::session& sql, std::string job_id, const std::string status);
 
     void useFileReplica(soci::session& sql, std::string jobId, int fileId);
 
-    void bringOnlineReportStatusInternal(soci::session& sql, const std::string & state, const std::string & message, struct message_bringonline msg);
+    void bringOnlineReportStatusInternal(soci::session& sql, const std::string & state, const std::string & message,
+            const struct message_bringonline& msg);
 
 };

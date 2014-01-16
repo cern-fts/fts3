@@ -526,7 +526,7 @@ void OracleAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& f
                     else
                     	{
                     		// round it up
-				double temp = (double) filesNum / (double)hostCount;
+                            double temp = (double) filesNum / (double)hostCount;
                     		filesNum = static_cast<int>(ceil(temp));
                     		// not less than 2
                     		if (filesNum < 2) filesNum = 2;
@@ -5352,7 +5352,7 @@ std::vector<message_bringonline> OracleAPI::getBringOnlineFiles(std::string voNa
     return ret;
 }
 
-void OracleAPI::bringOnlineReportStatus(const std::string & state, const std::string & message, struct message_bringonline msg)
+void OracleAPI::bringOnlineReportStatus(const std::string & state, const std::string & message, const struct message_bringonline& msg)
 {
 
     if (state != "STARTED" && state != "FINISHED" && state != "FAILED") return;
