@@ -61,8 +61,10 @@ void FileMonitor::start(string path)
 
     // check the timestamp
     struct stat st;
-    stat (path.c_str(), &st);
-    timestamp = st.st_mtime;
+    if (stat (path.c_str(), &st) == 0)
+        timestamp = st.st_mtime;
+    else
+        timestamp = time(NULL);
 
     // start monitoring thread
     monitor_thread.reset (
@@ -86,15 +88,16 @@ void FileMonitor::run (FileMonitor* const me)
             // we will check the timestamp periodically every minute
             sleep(60);
             // check the timestamp
-            stat (me->path.c_str(), &st);
-            time_t new_timestamp = st.st_mtime;
-            // compare with the old one
-            if (new_timestamp != me->timestamp)
-                {
-                    // if the file has been changed reload the configuration
-                    me->timestamp = new_timestamp;
-                    me->sc->read(0, 0);
-                }
+            if (stat (me->path.c_str(), &st) == 0) {
+                time_t new_timestamp = st.st_mtime;
+                // compare with the old one
+                if (new_timestamp != me->timestamp)
+                    {
+                        // if the file has been changed reload the configuration
+                        me->timestamp = new_timestamp;
+                        me->sc->read(0, 0);
+                    }
+            }
         }
 }
 

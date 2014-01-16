@@ -128,6 +128,9 @@ const SDService * select_service_by_version(const SDServiceList * list, const ch
                     // Create the Version List
                     fill_version(version,&req_version);
                     srv_versions = (version_t*)calloc(sizeof(version_t), static_cast<size_t>(list->numServices));
+                    if (srv_versions == NULL)
+                        return NULL;
+
                     for(i = 0; i < list->numServices; ++i)
                         {
                             fill_version(list->services[i]->version,&srv_versions[i]);
