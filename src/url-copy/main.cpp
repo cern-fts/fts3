@@ -874,7 +874,7 @@ int main(int argc, char **argv)
                                     }
                             }
                         logger.INFO() <<"Stat the source file will be retried" << std::endl;
-                        sleep(3); //give it some time to breath
+                        sleep(5); //give it some time to breath
                     }
 
                 //overwrite dest file if exists
@@ -1063,7 +1063,7 @@ int main(int argc, char **argv)
                                     }
                             }
                         logger.WARNING() << "Stat the destination will be retried" << std::endl;
-                        sleep(3); //give it some time to breath
+                        sleep(5); //give it some time to breath
                     }
 
                 //check source and dest file sizes
