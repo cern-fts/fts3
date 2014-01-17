@@ -19,7 +19,7 @@ set(fts_include_dir "${PROJECT_SOURCE_DIR}/src/")
 include_directories (${fts_include_dir})
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(fts_delegation_api_simple_SOURCES uri.cpp util.cpp cfg.cpp delegation_simple_api.cpp)
+set(fts_delegation_api_simple_SOURCES util.cpp cfg.cpp delegation_simple_api.cpp)
 
 add_library(fts_delegation_api_simple SHARED ${fts_delegation_api_simple_SOURCES})
 add_dependencies(fts_delegation_api_simple fts_delegation_api_cpp)

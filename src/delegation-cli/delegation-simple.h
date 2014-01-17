@@ -82,14 +82,6 @@ glite_delegation_ctx *glite_delegation_new(const char *endpoint);
 void glite_delegation_free(glite_delegation_ctx *ctx);
 
 /**
- * Get the current endpoint.
- *
- * @param ctx The global context.
- * @return the current endpoint used by the fireman context.
- */
-const char *glite_delegation_get_endpoint(glite_delegation_ctx *ctx);
-
-/**
  * \brief Gets the error message for the last failed operation.
  *
  * The returned pointer is valid only till the next call to any of
@@ -129,53 +121,6 @@ int glite_delegation_delegate(glite_delegation_ctx *ctx,
  */
 int glite_delegation_info(glite_delegation_ctx *ctx,
                           const char *delegationID, time_t *expiration);
-
-/**
- * Destroy the delegated credential.
- *
- * @param ctx The global context.
- * @param delegationID The id used to identify the delegation process and the
- *                     resulting delegated credentials in the server.
- *
- * @return 0 if ok, -1 in case of error
- */
-int glite_delegation_destroy(glite_delegation_ctx *ctx,
-                             const char *delegationID);
-
-/**
- * Get service interface version.
- *
- * The returned string must be freed by the caller.
- *
- * @param ctx The global context.
- *
- * @return The interface version string, or NULL in case of an error.
- */
-char *glite_delegation_getInterfaceVersion(glite_delegation_ctx *ctx);
-
-/**
- * Get service implementation version.
- *
- * The returned string must be freed by the caller.
- *
- * @param ctx The global context.
- *
- * @return The implementation version string, or NULL in case of an error.
- */
-char *glite_delegation_getVersion(glite_delegation_ctx *ctx);
-
-/**
- * Get service metadata for a given key.
- *
- * The key must not be NULL.
- * The returned string must be freed by the caller.
- *
- * @param ctx The global context.
- * @param key The key that's metadata we are looking for.
- *
- * @return The metadata string, or NULL, if there was an error.
- */
-char *glite_delegation_getServiceMetadata(glite_delegation_ctx *ctx, const char *key);
 
 /**
  * @}

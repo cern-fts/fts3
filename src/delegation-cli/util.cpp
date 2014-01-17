@@ -51,7 +51,6 @@ typedef struct version_struct
 /**********************************************************************
  * Internal function
  */
-
 void SD_I_freeVOList(SDVOList *vos)
 {
     int i;
@@ -72,8 +71,6 @@ void SD_I_freeVOList(SDVOList *vos)
             free(vos);
         }
 }
-
-
 
 
 static void fill_version(const char * version, version_t * v)
@@ -107,6 +104,7 @@ static void fill_version(const char * version, version_t * v)
             free(tmp);
         }
 }
+
 
 const SDService * select_service_by_version(const SDServiceList * list, const char * version)
 {
@@ -184,16 +182,6 @@ const SDService * select_service_by_version(const SDServiceList * list, const ch
 /**********************************************************************
  * Utilities
  */
-
-void glite_freeStringArray(int nitems, char *array[])
-{
-    int i;
-
-    for (i = 0; i < nitems; i++)
-        free(array[i]);
-    free(array);
-}
-
 
 char *glite_discover_service_by_version(const char *type, const char *name, const char * version, char **error)
 {
@@ -325,11 +313,6 @@ char *glite_discover_service_by_version(const char *type, const char *name, cons
     return result;
 }
 
-char *glite_discover_service(const char *type, const char *name, char **error)
-{
-    return glite_discover_service_by_version(type, name, NULL, error);
-}
-
 
 char *glite_discover_endpoint_by_version(const char *type, const char *name, const char * version, char **error)
 {
@@ -365,171 +348,9 @@ char *glite_discover_endpoint(const char *type, const char *name, char **error)
     return glite_discover_endpoint_by_version(type,name,NULL,error);
 }
 
-SDServiceDetails *glite_discover_getservicedetails_by_version(const char *type, const char *name, const char *version, char **error)
-{
-    char *srvname;
-    SDServiceDetails *servicedetails;
-    SDException exc;
-
-    srvname = glite_discover_service_by_version(type, name, version ,error);
-    if (!srvname)
-        return NULL;
-
-    servicedetails = SD_getServiceDetails(srvname, &exc);
-    if (!servicedetails)
-        {
-            GString *str;
-
-            str = g_string_new("");
-            g_string_append_printf(str, "Service discovery lookup failed "
-                                   "for %s: %s", srvname, exc.reason);
-            SD_freeException(&exc);
-            free(srvname);
-            return NULL;
-        }
-
-    free(srvname);
-    return servicedetails;
-}
-
-SDServiceDetails *glite_discover_getservicedetails(const char *type, const char *name, char **error)
-{
-    return glite_discover_getservicedetails_by_version(type,name,NULL,error);
-}
-
-char *glite_discover_version(const char *type, const char *name, char **error)
-{
-    char *srvname, *version;
-    SDService *service;
-    SDException exc;
-
-    srvname = glite_discover_service(type, name, error);
-    if (!srvname)
-        return NULL;
-
-    service = SD_getService(srvname, &exc);
-    if (!service)
-        {
-            GString *str;
-
-            str = g_string_new("");
-            g_string_append_printf(str, "Service discovery lookup failed "
-                                   "for %s: %s", srvname, exc.reason);
-            SD_freeException(&exc);
-            free(srvname);
-            return NULL;
-        }
-
-    free(srvname);
-    version = strdup(service->version);
-    SD_freeService(service);
-    return version;
-}
-
-char *glite_discover_service_by_data(const char *type, const SDServiceDataList *datas, char **error)
-{
-    SDServiceList *list;
-    SDException exc;
-    SDVOList *vos;
-    GString *str;
-    char *result;
-
-    /** VO detection - check the SD_VO environment variable first */
-    vos = check_vo_env();
-
-    /** VO detection - if not defined yet, try the VOMS proxy */
-    if (vos == NULL)
-        vos = check_voms_proxy();
-
-    str = g_string_new("");
-
-    list = SD_listServicesByData(datas, type, NULL, vos, &exc);
-    if (!list || !list->numServices)
-        {
-            if (exc.status == SDStatus_SUCCESS)
-                g_string_append_printf(str, "No services of "
-                                       "type %s were found", type);
-            else
-                g_string_append_printf(str, "Locating services "
-                                       "of type %s have failed: %s", type,
-                                       exc.reason);
-            SD_freeServiceList(list);
-            SD_freeException(&exc);
-            if (error)
-                *error = g_string_free(str, FALSE);
-            else
-                g_string_free(str, TRUE);
-            return NULL;
-        }
-    result = strdup(list->services[0]->name);
-    SD_freeServiceList(list);
-
-    g_string_free(str, TRUE);
-    if (error)
-        *error = NULL;
-    return result;
-}
-
-int glite_check_versions(const char *client_ver, const char *service_ver)
-{
-    int ns_v1, ns_v2, ns_v3;
-    int nc_v1, nc_v2, nc_v3;
-    char *sv, *cv;
-    char *s_v1, *s_v2, *s_v3;
-    char *c_v1, *c_v2, *c_v3;
-
-    if (!client_ver || !service_ver)
-        return 0;
-
-    if (NULL == (sv = strdup(service_ver)))
-        return 0;
-
-    if (NULL == (cv = strdup(client_ver)))
-        {
-            free(sv);
-            return 0;
-        }
-
-    s_v1 = strtok(sv, ".");
-    s_v2 = strtok(NULL, ".");
-    s_v3 = strtok(NULL, ".");
-    c_v1 = strtok(cv, ".");
-    c_v2 = strtok(NULL, ".");
-    c_v3 = strtok(NULL, ".");
-
-    if (!s_v1 || !s_v2 || !s_v3 || !c_v1 || !c_v2 || !c_v3)
-        {
-            free(sv);
-            free(cv);
-            return 0;
-        }
-
-    ns_v1 = atoi(s_v1);
-    ns_v2 = atoi(s_v2);
-    ns_v3 = atoi(s_v3);
-    nc_v1 = atoi(c_v1);
-    nc_v2 = atoi(c_v2);
-    nc_v3 = atoi(c_v3);
-    free(sv);
-    free(cv);
-
-    /* Major version must be the same */
-    if (ns_v1 != nc_v1)
-        return 0;
-
-    /* Ignore minor and patch version for now - please see glite_fts_submit
-       vs glite_fts_{transfer,placement}Submit methods */
-    return 1;
-
-    /* Server minor must be greater or equal */
-    /*if (ns_v2 < nc_v2)
-    	return 0;*/
-
-    /* Patch is ignored */
-    /*return 1;*/
-}
 
 /* Build an SDVOList from the list of VOs in the VOMS proxy certificate */
+
 SDVOList *check_voms_proxy(void)
 {
     STACK_OF(X509_INFO) *info;
@@ -675,7 +496,6 @@ SDVOList *check_voms_proxy(void)
 }
 
 
-
 /* Convert the value of the SD_VO env. variable to an SDVOList */
 SDVOList *check_vo_env(void)
 {
@@ -707,4 +527,3 @@ SDVOList *check_vo_env(void)
         }
     return volist;
 }
-
