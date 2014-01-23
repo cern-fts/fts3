@@ -100,7 +100,7 @@ int proc_find()
                                     fclose(fp);
                                     fp = NULL;
                                     ++count;
-                                    continue;
+                                    break;//continue;
                                 }
                         }
                     if(fp)
