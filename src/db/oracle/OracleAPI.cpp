@@ -6887,7 +6887,7 @@ int OracleAPI::getOptimizerDefaultMode(soci::session& sql){
         {
             sql <<
                 " select mode_opt "
-                " from t_optimize_mode LIMIT 1",
+                " from t_optimize_mode",
                 soci::into(mode, ind)
                 ;
 
