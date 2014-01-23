@@ -348,6 +348,8 @@ private:
     int getCredits(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname);
 
     int getOptimizerMode(soci::session& sql);
+    
+    int getOptimizerDefaultMode(soci::session& sql);
 
     bool getChangedFile (std::string source, std::string dest, double rate, double thr, double& thrStored, double retry, double& retryStored);
 

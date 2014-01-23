@@ -714,7 +714,6 @@ unsigned int MySqlAPI::updateFileStatusReuse(TransferFiles* file, const std::str
             stmt.execute(true);
 
             updated = (unsigned int) stmt.get_affected_rows();
-            std::cout << "Updated = " << updated << std::endl;
 
             if (updated > 0)
                 {
@@ -2482,6 +2481,8 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
         {
             int highDefault = getOptimizerMode(sql);
             int tempDefault =   highDefault;
+	    
+	    int spawnActive = getOptimizerDefaultMode(sql);
 
             soci::rowset<soci::row> rs = ( sql.prepare <<
                                            " select  distinct o.source_se, o.dest_se from t_optimize_active o INNER JOIN "
@@ -2595,7 +2596,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                     if(active < highDefault || maxActive < highDefault)
                                         active = highDefault;
                                     else
-                                        active = maxActive + 1;
+                                        active = maxActive + spawnActive;
 
                                     stmt10.execute(true);
                                 }
@@ -6646,6 +6647,41 @@ void MySqlAPI::setOptimizerMode(int mode)
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
+}
+
+
+int MySqlAPI::getOptimizerDefaultMode(soci::session& sql){
+    int modeDefault = 1;
+    int mode = 0;
+    soci::indicator ind = soci::i_ok;
+
+    try
+        {
+            sql <<
+                " select mode_opt "
+                " from t_optimize_mode LIMIT 1",
+                soci::into(mode, ind)
+                ;
+
+            if (ind == soci::i_ok)
+                {
+			if(mode == 0)
+				return mode + 1;
+			else
+				return mode; 
+                }
+            return modeDefault;
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught mode exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }
+
+    return modeDefault;
 }
 
 int MySqlAPI::getOptimizerMode(soci::session& sql)
