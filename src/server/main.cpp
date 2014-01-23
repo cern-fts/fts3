@@ -100,7 +100,7 @@ int proc_find()
                                     fclose(fp);
                                     fp = NULL;
                                     ++count;
-                                    break;
+                                    continue;
                                 }
                         }
                     if(fp)
@@ -518,6 +518,17 @@ pid_t SpawnServer(int argc, char** argv)
 
 int main(int argc, char** argv)
 {
+    // Do not even try if already running
+    int n_running = proc_find();
+    if (n_running < 0) {
+        std::cerr << "Could not check if FTS3 is already running" << std::endl;
+        return EXIT_FAILURE;
+    }
+    else if (n_running > 1) {
+        std::cerr << "Only one instance of FTS3 can run at the time" << std::endl;
+        return EXIT_FAILURE;
+    }
+
     //switch to non-priviledged user to avoid reading the hostcert
     uid_t pw_uid = name_to_uid();
     setuid(pw_uid);
