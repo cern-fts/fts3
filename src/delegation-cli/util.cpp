@@ -276,6 +276,7 @@ char *glite_discover_service_by_version(const char *type, const char *name, cons
                         *error = g_string_free(str, FALSE);
                     else
                         g_string_free(str, TRUE);
+                    free(vos);
                     SD_freeException(&exc);
                     return NULL;
                 }
@@ -308,6 +309,7 @@ char *glite_discover_service_by_version(const char *type, const char *name, cons
         }
 
     g_string_free(str, TRUE);
+    free(vos);
     if (error)
         *error = NULL;
     return result;
