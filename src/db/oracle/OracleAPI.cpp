@@ -2618,6 +2618,8 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
         {
             int highDefault = getOptimizerMode(sql);
             int tempDefault =   highDefault;
+	    
+	    int spawnActive = getOptimizerDefaultMode(sql);	    
 
             soci::rowset<soci::row> rs = ( sql.prepare << " select  distinct o.source_se, o.dest_se from t_optimize_active o INNER JOIN "
                                            " t_file f ON (o.source_se = f.source_se) where o.dest_se=f.dest_se and "
@@ -2729,9 +2731,11 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                                     if(active < highDefault || maxActive < highDefault)
                                         active = highDefault;
                                     else
-                                        active = maxActive + 1;
+                                        active = maxActive + spawnActive;
 
-                                    message << "Increasing active by 1, previously "
+                                    message << "Increasing active by "
+				            << spawnActive
+					    << ", previously "
                                             << maxActive
                                             << " now max active "
                                             << active
@@ -6872,6 +6876,42 @@ void OracleAPI::setOptimizerMode(int mode)
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }
+
+
+int OracleAPI::getOptimizerDefaultMode(soci::session& sql){
+    int modeDefault = 1;
+    int mode = 0;
+    soci::indicator ind = soci::i_ok;
+
+    try
+        {
+            sql <<
+                " select mode_opt "
+                " from t_optimize_mode LIMIT 1",
+                soci::into(mode, ind)
+                ;
+
+            if (ind == soci::i_ok)
+                {
+			if(mode == 0)
+				return mode + 1;
+			else
+				return mode; 
+                }
+            return modeDefault;
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught mode exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }
+
+    return modeDefault;
+}
+
 
 int OracleAPI::getOptimizerMode(soci::session& sql)
 {

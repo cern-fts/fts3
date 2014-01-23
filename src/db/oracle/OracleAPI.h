@@ -347,6 +347,8 @@ private:
     std::string           hostname;
 
     int getOptimizerMode(soci::session& sql);
+    
+    int getOptimizerDefaultMode(soci::session& sql);    
 
     void countFileInTerminalStates(soci::session& sql, std::string jobId,
                                    unsigned int& finished, unsigned int& cancelled, unsigned int& failed);
