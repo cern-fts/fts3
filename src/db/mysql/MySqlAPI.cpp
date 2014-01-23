@@ -6650,7 +6650,7 @@ void MySqlAPI::setOptimizerMode(int mode)
 
 int MySqlAPI::getOptimizerMode(soci::session& sql)
 {
-    int modeDefault = 3;
+    int modeDefault = 4;
     int mode = 0;
     soci::indicator ind = soci::i_ok;
 
