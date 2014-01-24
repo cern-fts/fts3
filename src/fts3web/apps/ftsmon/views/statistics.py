@@ -266,5 +266,5 @@ def slowQueries(httpRequest):
         cursor.execute("SELECT * FROM mysql.slow_log WHERE db = %s ORDER BY query_time DESC" , (dbName))
         return {'queries': _slowEntry2Dict(cursor.fetchall())}
     except DatabaseError, e:
-        return {'message': str(e)}
+        return {'message': 'Could not execute the query'}
 
