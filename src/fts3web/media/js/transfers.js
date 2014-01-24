@@ -5,12 +5,12 @@ function TransfersCtrl($location, $scope, transfers, Transfers, Unique)
 	$scope.transfers = transfers;
 	
 	// Unique values
-	$scope.unique = Unique.all();
-	
-	// Paginator	
-	$scope.pageMax   = 15;
-	$scope.page      = $scope.transfers.page;
-	$scope.pageCount = $scope.transfers.pageCount;
+	$scope.unique = {
+		sources: Unique('sources'),
+		destinations: Unique('destinations'),
+		vos: Unique('vos'),
+		hostnames: Unique('hostnames')
+	}
 
 	// On page change, reload
 	$scope.pageChanged = function(newPage) {
@@ -29,21 +29,27 @@ function TransfersCtrl($location, $scope, transfers, Transfers, Unique)
 	
 	// Set up filters
 	$scope.filter = {
-		vo:          undefinedAsEmpty($location.search().vo),
-		source_se:   undefinedAsEmpty($location.search().source_se),
-		dest_se:     undefinedAsEmpty($location.search().dest_se),
-		time_window: undefinedAsEmpty($location.search().time_window),
-		state:       statesFromString($location.search().state)
+		vo:          validString($location.search().vo),
+		source_se:   validString($location.search().source_se),
+		dest_se:     validString($location.search().dest_se),
+		source_surl: validString($location.search().source_surl),
+		dest_surl:   validString($location.search().dest_surl),
+		time_window: validString($location.search().time_window),
+		state:       statesFromString($location.search().state),
+		hostname:    validString($location.search().hostname),
 	}
 	
 	$scope.applyFilters = function() {
 		$location.search({
 			page:         1,
-			vo:           validVo($scope.filter.vo),
+			vo:           validString($scope.filter.vo),
 			source_se:    $scope.filter.source_se,
 			dest_se:      $scope.filter.dest_se,
+			source_surl:  $scope.filter.source_surl,
+			dest_surl:    $scope.filter.dest_surl,
 			time_window:  $scope.filter.time_window,
-			state:        joinStates($scope.filter.state)
+			state:        joinStates($scope.filter.state),
+			hostname:     validString($scope.filter.hostname),
 		});
 		$scope.filtersModal = false;
 	}	
@@ -60,10 +66,9 @@ TransfersCtrl.resolve = {
 		if (!page || page < 1)
 			page = 1;
 		
-		Transfers.query($location.search(), function(data) {
-			deferred.resolve(data);
-			stopLoading($rootScope);
-		});
+		Transfers.query($location.search(),
+  			            genericSuccessMethod(deferred, $rootScope),
+			            genericFailureMethod(deferred, $rootScope, $location));
 		
 		return deferred.promise;
 	}

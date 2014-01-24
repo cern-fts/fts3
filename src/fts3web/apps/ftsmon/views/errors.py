@@ -18,46 +18,48 @@
 from datetime import datetime, timedelta
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q, Count, Avg
+from django.http import Http404
 from django.shortcuts import render, redirect
 from ftsweb.models import File
 from jsonify import jsonify_paged
 
+_TIMEDELTA = timedelta(hours = 1)
+
 @jsonify_paged
 def showErrors(httpRequest):
-    notbefore = datetime.utcnow() - timedelta(hours = 12)
-    errors = File.objects.filter(reason__isnull = False, job_finished__gte = notbefore)\
-                         .exclude(reason = '')
-                         
-    if httpRequest.GET.get('contains', None):
-        errors = errors.filter(reason__contains = httpRequest.GET['contains'])
+    notBefore = datetime.utcnow() - _TIMEDELTA
+    errors = File.objects.filter(file_state = 'FAILED', job_finished__gte = notBefore)
+
     if httpRequest.GET.get('source_se', None):
         errors = errors.filter(source_se = httpRequest.GET['source_se'])
     if httpRequest.GET.get('dest_se', None):
         errors = errors.filter(dest_se = httpRequest.GET['dest_se'])
                          
-    errors = errors .values('reason', 'source_se', 'dest_se')\
-                         .annotate(count = Count('reason'))\
+    errors = errors.values('source_se', 'dest_se')\
+                         .annotate(count = Count('file_state'))\
                          .order_by('-count')
-    
+
     return errors
 
 
 @jsonify_paged
-def transfersWithError(httpRequest):
-    if 'reason' not in httpRequest.GET or not httpRequest.GET['reason']:
-        return redirect('ftsmon.views.showErrors')
+def errorsForPair(httpRequest):
+    source_se = httpRequest.GET.get('source_se', None)
+    dest_se   = httpRequest.GET.get('dest_se', None)
+    reason    = httpRequest.GET.get('reason', None)
     
-    reason = httpRequest.GET['reason']
+    if not source_se or not dest_se:
+        raise Http404
 
-    notbefore = datetime.utcnow() - timedelta(hours = 12)
-    transfers = File.objects.filter(reason = reason, job_finished__gte = notbefore)
+    notBefore = datetime.utcnow() - _TIMEDELTA
+    transfers = File.objects.filter(file_state = 'FAILED',
+                                    job_finished__gte = notBefore,
+                                    source_se = source_se, dest_se = dest_se)
+    if reason:
+        transfers = transfers.filter(reason__icontains = reason)
     
-    if httpRequest.GET.get('source_se', None):
-        transfers = transfers.filter(source_se = httpRequest.GET['source_se'])
-    if httpRequest.GET.get('dest_se', None):
-        transfers = transfers.filter(dest_se = httpRequest.GET['dest_se'])
+    transfers = transfers.values('vo_name', 'reason')
     
-    transfers = transfers.values('file_id', 'job_id', 'source_surl', 'dest_surl', 'job__vo_name')\
-                         .order_by('file_id')
+    transfers = transfers.annotate(count = Count('reason'))
                             
-    return transfers
+    return transfers.order_by('-count')

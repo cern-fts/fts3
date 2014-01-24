@@ -4,7 +4,7 @@ from common import get_url
 from optparse import OptionParser
 
 def get_slow_pairs(threshold = 1, vo = None):
-    content = get_url('https://fts3-pilot-mon.cern.ch/ftsmon/overview', vo = vo, page = 'all')
+    content = get_url('https://fts3-pilot.cern.ch:8449/fts3/ftsmon/overview', vo = vo, page = 'all')
     pairs = json.loads(content)
     
     slow = []

@@ -20,7 +20,7 @@ from django.http import Http404
 from django.shortcuts import render, redirect
 from jsonify import jsonify, jsonify_paged
 from ftsmon import forms
-from ftsweb.models import Job, File, JobArchive, FileArchive
+from ftsweb.models import Job, File, JobArchive, FileArchive, RetryError
 from util import getOrderBy, orderedField
 import datetime
 import json
@@ -64,9 +64,13 @@ def setupFilters(filterForm):
                'vo': None,
                'source_se': None,
                'dest_se': None,
+               'source_surl': None,
+               'dest_surl': None,
                'metadata': None,
                'startdate': None,
-               'enddate': None
+               'enddate': None,
+               'hostname': None,
+               'reason': None
               }
     
     # Process filter form
@@ -177,15 +181,37 @@ def archiveJobIndex(httpRequest):
 
 @jsonify
 def jobDetails(httpRequest, jobId):
+    reason  = httpRequest.GET.get('reason', None)
+    try:
+        file_id = httpRequest.GET.get('file', None)
+        if file_id is not None:
+            file_id = int(file_id)
+    except:
+        file_id = None
+        
+    try:
+        archived = int(httpRequest.GET.get('archive', 0))
+    except:
+        archived = 0
+
     try:
         job = Job.objects.get(job_id = jobId)
-        count = File.objects.filter(job = jobId).values('file_state').annotate(count = Count('file_state'))
+        count = File.objects.filter(job = jobId)
     except Job.DoesNotExist:
-        try:
-            job = JobArchive.objects.get(job_id = jobId)
-            count = FileArchive.objects.filter(job = jobId).values('file_state').annotate(count = Count('file_state'))
-        except JobArchive.DoesNotExist:
+        if archived:
+            try:
+                job = JobArchive.objects.get(job_id = jobId)
+                count = FileArchive.objects.filter(job = jobId)
+            except JobArchive.DoesNotExist:
+                raise Http404
+        else:
             raise Http404
+        
+    if reason:
+        count = count.filter(reason = reason)
+    if file_id:
+        count = count.filter(file_id = file_id)
+    count = count.values('file_state').annotate(count = Count('file_state'))
     
     # Count as dictionary
     stateCount = {}
@@ -195,16 +221,47 @@ def jobDetails(httpRequest, jobId):
     return {'job': job, 'states': stateCount}
 
 
+class RetriesFetcher(object):
+    """
+    Fetches, on demand and if necessary, the retry error messages
+    """
+    
+    def __init__(self, files):
+        self.files = files
+        
+    def __len__(self):
+        return len(self.files)
+    
+    def __getitem__(self, i):
+        for f in self.files[i]:
+            retries = RetryError.objects.filter(file_id = f.file_id)
+            f.retries = map(lambda r: {
+                   'reason': r.reason,
+                   'datetime': r.datetime,
+                   'attempt': r.attempt
+            }, retries.all())
+            yield f
+
+
 @jsonify_paged
 def jobFiles(httpRequest, jobId):
     files = File.objects.filter(job = jobId)
-    if not files:
+    try:
+        archived = int(httpRequest.GET.get('archive', 0))
+    except:
+        archived = 0
+
+    if not files and archived:
         files = FileArchive.objects.filter(job = jobId)
     if not files:
         raise Http404
     
-    if 'state' in httpRequest.GET and httpRequest.GET['state']:
+    if httpRequest.GET.get('state', None):
         files = files.filter(file_state__in = httpRequest.GET['state'].split(','))
+    if httpRequest.GET.get('reason', None):
+        files = files.filter(reason = httpRequest.GET['reason'])
+    if httpRequest.GET.get('file', None):
+        files = files.filter(file_id = httpRequest.GET['file'])
         
     # Ordering
     (orderBy, orderDesc) = getOrderBy(httpRequest)
@@ -219,16 +276,7 @@ def jobFiles(httpRequest, jobId):
     elif orderBy == 'end_time':
         files = files.order_by(orderedField('end_time', orderDesc))
         
-    return files
-
-
-@jsonify_paged
-def staging(httpRequest):
-    transfers = File.objects.filter(file_state = 'STAGING')
-    transfers = transfers.order_by('-job__submit_time', '-file_id')
-    transfers = transfers.extra(select = {'vo_name': 'vo_name', 'bring_online': 'bring_online', 'copy_pin_lifetime': 'copy_pin_lifetime'})
-        
-    return transfers
+    return RetriesFetcher(files)
 
 
 @jsonify_paged
@@ -249,14 +297,23 @@ def transferList(httpRequest):
         transfers = transfers.filter(source_se = filters['source_se'])
     if filters['dest_se']:
         transfers = transfers.filter(dest_se = filters['dest_se'])
+    if filters['source_surl']:
+        transfers = transfers.filter(source_surl = filters['source_surl'])
+    if filters['dest_surl']:
+        transfers = transfers.filter(dest_surl = filters['dest_surl'])
     if filters['vo']:
-        transfers = transfers.filter(job__vo_name = filters['vo'])
+        transfers = transfers.filter(vo_name = filters['vo'])
     if filters['time_window']:
         notBefore =  datetime.datetime.utcnow() - datetime.timedelta(hours = filters['time_window'])
         transfers = transfers.filter(Q(job_finished__isnull = True) | (Q(job_finished__gte = notBefore)))
+    if filters['hostname']:
+        transfers = transfers.filter(transferHost = filters['hostname'])
+    if filters['reason']:
+        transfers = transfers.filter(reason = filters['reason'])
    
     transfers = transfers.values('file_id', 'file_state', 'job_id',
-                                 'source_se', 'dest_se', 'start_time', 'job__submit_time', 'job__priority')
+                                 'source_se', 'dest_se', 'start_time', 'job_finished',
+                                 'job__submit_time', 'job__priority')
 
     # Ordering
     (orderBy, orderDesc) = getOrderBy(httpRequest)
@@ -268,7 +325,9 @@ def transferList(httpRequest):
         transfers = transfers.order_by(orderedField('job__submit_time', orderDesc))
     elif orderBy == 'start_time':
         transfers = transfers.order_by(orderedField('start_time', orderDesc))
+    elif orderBy == 'finish_time':
+        transfers = transfers.order_by(orderedField('job_finished', orderDesc))
     else:
-        transfers = transfers.order_by('-job__priority', '-file_id')
-     
+        transfers = transfers.order_by('-file_id')
+
     return transfers

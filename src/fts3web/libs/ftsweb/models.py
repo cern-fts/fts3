@@ -77,6 +77,7 @@ class JobArchive(JobBase):
 
 class FileBase(models.Model):
     file_id      = models.IntegerField(primary_key = True)
+    vo_name      = models.CharField(max_length = 255)
     source_se    = models.CharField(max_length = 255)
     dest_se      = models.CharField(max_length = 255)
     symbolicName = models.CharField(max_length = 255)
@@ -130,6 +131,22 @@ class FileArchive(FileBase):
         db_table = 't_file_backup'
 
 
+class RetryError(models.Model):
+    attempt  = models.IntegerField()
+    datetime = models.DateTimeField()
+    reason   = models.CharField(max_length = 2048)
+    
+    file_id = models.ForeignKey('File', db_column = 'file_id', related_name = '+', primary_key = True)
+    
+    class Meta:
+        db_table = 't_file_retry_errors'
+    
+    def __eq__(self, b):
+        return isinstance(b, self.__class__) and \
+            self.file_id == b.file_id and \
+            self.attempt == b.attempt
+
+
 class  ConfigAudit(models.Model):
     # This field is definitely NOT the primary key, but since we are not modifying
     # this from Django, we can live with this workaround until Django supports fully
@@ -147,34 +164,52 @@ class  ConfigAudit(models.Model):
     
     def __eq__(self, b):
         return isinstance(b, self.__class__) and \
-               self.datetime == b.datetime and self.config == b.config and self.dn == b.dn
+               self.datetime == b.datetime and self.dn == b.dn and \
+               self.config == b.config and self.action == b.action
 
 
-class Optimize(models.Model):
-    file_id    = models.IntegerField(primary_key = True)
-    source_se  = models.CharField(max_length = 255)
-    dest_se    = models.CharField(max_length = 255)
-    nostreams  = models.IntegerField()
-    timeout    = models.IntegerField()
-    active     = models.IntegerField()
-    throughput = models.FloatField()
-    buffer     = models.IntegerField()
-    filesize   = models.FloatField()
-    datetime   = models.DateTimeField()
-    
-    def __eq__(self, other):
-        if type(self) != type(other):
-            return False
-        
-        fields = ['file_id', 'source_se', 'dest_se', 'nostreams', 'timeout',
-                  'active', 'throughput', 'buffer', 'filesize', 'datetime']
-        
-        return reduce(lambda a,b: a and b,
-                      map(lambda attr: getattr(self, attr) == getattr(other, attr),
-                         fields)) 
+class ServerConfig(models.Model):
+    # Same thing: composite primary keys not supported
+    retry          = models.IntegerField(primary_key = True)
+    max_time_queue = models.IntegerField()
     
     class Meta:
-        db_table = 't_optimize'
+        db_table = 't_server_config'
+
+
+class LinkConfig(models.Model):
+    source            = models.CharField(max_length = 255, primary_key = True)
+    destination       = models.CharField(max_length = 255)
+    state             = models.CharField(max_length = 30)
+    symbolicName      = models.CharField(max_length = 255)
+    nostreams         = models.IntegerField()
+    tcp_buffer_size   = models.IntegerField()
+    urlcopy_tx_to     = models.IntegerField()
+    auto_tuning       = models.CharField(max_length = 3)
+    
+    def __eq__(self, b):
+        return isinstance(b, self.__class__) and \
+               self.source == b.source and \
+               self.destination == b.destination
+    
+    class Meta:
+        db_table = 't_link_config'
+
+
+class ShareConfig(models.Model):
+    source      = models.CharField(max_length = 255, primary_key = True)
+    destination = models.CharField(max_length = 255)
+    vo          = models.CharField(max_length = 100)
+    active      = models.IntegerField()
+    
+    def __eq__(self, b):
+        return isinstance(b, self.__class__) and \
+               self.source == b.source and \
+               self.destination == b.destination and \
+               self.vo == b.vo
+    
+    class Meta:
+        db_table = 't_share_config'
 
 
 class OptimizeActive(models.Model):

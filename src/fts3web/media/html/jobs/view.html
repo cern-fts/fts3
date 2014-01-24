@@ -1,5 +1,11 @@
 <h3>Transfer '{{job.job.job_id}}' {{job.job.job_state}}</h3>
 
+<div class="alert" ng-show="filter.reason">
+    <strong>Filtered by error message</strong>
+    {{filter.reason}}
+    <button type="button" class="close" title="Remove filter" ng-click="resetReasonFilter()">&times;</button>
+</div>
+
 <p>
 	Submitted by <span class="dn">'{{job.job.user_dn}}'</span><br/>
 	VO: <span class="vo">{{job.job.vo_name}}</span><br/>
@@ -39,8 +45,8 @@
             ng-disabled="!job.states.NOT_USED">{{job.states.NOT_USED}} NOT_USED</button>
 </p>
 
-<pagination rotate="false" num-pages="pageCount" current-page="page"
-    max-size="pageMax" class="pagination" boundary-links="true"
+<pagination rotate="false" num-pages="files.pageCount" current-page="files.page"
+    max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>
 
 <table class="table">
@@ -84,7 +90,7 @@
             <td class="status {{file.file_state}}">
                 {{file.file_state}}
             </td>
-            <td>{{file.filesize/(1024*1024)|number:2}} MB</td>
+            <td>{{file.filesize|filesize}}</td>
             <td>{{file.throughput|number:2}} MB/s</td>
             <td>{{file.start_time}}</td>
             <td>{{file.finish_time}}</td>
@@ -116,8 +122,18 @@
 				    <li>Metadata:
 				        <pre>{{file.file_metadata}}</pre>
 				    </li>
+				    <li ng-show="file.retry">Retries:
+				        <dl ng-repeat="retry in file.retries">
+				            <dt>{{retry.datetime}}</dt>
+				            <dd>{{retry.reason}}</dd>
+				        </dl>
+				    </li>
 				</ul>
             </td>
         </tr>
     </tbody>
 </table>
+
+<pagination rotate="false" num-pages="files.pageCount" current-page="files.page"
+    max-size="15" class="pagination" boundary-links="true"
+    on-select-page="pageChanged(page)"></pagination>

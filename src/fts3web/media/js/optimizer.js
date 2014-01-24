@@ -1,13 +1,25 @@
 
-function OptimizerCtrl($location, $scope, optimizer, Optimizer)
+function OptimizerCtrl($location, $scope, optimizer, Optimizer, Unique)
 {
 	$scope.optimizer = optimizer;
-	
-	// Paginator	
-	$scope.pageMax   = 15;
-	$scope.page      = $scope.optimizer.page;
-	$scope.pageCount = $scope.optimizer.pageCount;
-	
+
+	// Unique values
+	$scope.unique = {
+		sources: Unique('sources'),
+		destinations: Unique('destinations')
+	}
+
+	// Filter
+	$scope.filterReason = function(filter) {
+		$location.search(filter);
+		$scope.filtersModal = false;
+	}
+
+	$scope.filter = {
+		source_se: validString($location.search().source_se),
+		dest_se:   validString($location.search().dest_se),
+	}
+
 	// On page change, reload
 	$scope.pageChanged = function(newPage) {
 		$location.search('page', newPage);
@@ -31,10 +43,9 @@ OptimizerCtrl.resolve = {
     	
     	var deferred = $q.defer();
 
-    	Optimizer.query($location.search(), function(data) {
-    		deferred.resolve(data);
-    		stopLoading($rootScope);
-    	});
+    	Optimizer.query($location.search(),
+  			  genericSuccessMethod(deferred, $rootScope),
+			  genericFailureMethod(deferred, $rootScope, $location));
     	
     	return deferred.promise;
 	}
@@ -55,10 +66,15 @@ function OptimizerDetailedCtrl($location, $scope, optimizer, OptimizerDetailed)
 		clearInterval($scope.autoRefresh);
 	});
 	
+	// Page
+	$scope.pageChanged = function(newPage) {
+		$location.search('page', newPage);
+	};
+	
 	// Set up filters
 	$scope.filter = {
-			source:      undefinedAsEmpty($location.search().source),
-			destination: undefinedAsEmpty($location.search().destination)
+			source:      validString($location.search().source),
+			destination: validString($location.search().destination)
 	}
 }
 
@@ -69,66 +85,10 @@ OptimizerDetailedCtrl.resolve = {
     	
     	var deferred = $q.defer();
 
-    	OptimizerDetailed.query($location.search(), function(data) {
-    		deferred.resolve(data);
-    		stopLoading($rootScope);
-    	});
+    	OptimizerDetailed.query($location.search(),
+  			  genericSuccessMethod(deferred, $rootScope),
+			  genericFailureMethod(deferred, $rootScope, $location));
     	
     	return deferred.promise;
-	}
-}
-
-
-function OptimizerActiveCtrl($location, $scope, active, OptimizerActive, Unique)
-{
-	$scope.active = active;
-	
-	// Unique pairs and vos
-	$scope.unique = Unique.all();
-	
-	// Paginator	
-	$scope.pageMax   = 15;
-	$scope.page      = $scope.active.page;
-	$scope.pageCount = $scope.active.pageCount;
-	
-	// On page change, reload
-	$scope.pageChanged = function(newPage) {
-		$location.search('page', newPage);
-	};
-
-	// Set timer to trigger autorefresh
-	$scope.autoRefresh = setInterval(function() {
-		var filter = $location.search();
-		filter.page = $scope.optimizer.page;
-    	$scope.active = OptimizerActive.query(filter);
-	}, REFRESH_INTERVAL);
-	$scope.$on('$destroy', function() {
-		clearInterval($scope.autoRefresh);
-	});
-	
-	// Set up filters
-	$scope.filterBy = function(filter) {
-		$location.search(filter);
-	}
-	
-	$scope.filter = {
-		source_se: undefinedAsEmpty($location.search().source_se),
-		dest_se:   undefinedAsEmpty($location.search().dest_se)
-	}
-}
-
-
-OptimizerActiveCtrl.resolve = {
-	active: function($rootScope, $location, $route, $q, OptimizerActive) {
-		loading($rootScope);
-		
-		var deferred = $q.defer();
-		
-		OptimizerActive.query($location.search(), function(data) {
-			deferred.resolve(data);
-			stopLoading($rootScope);
-		});
-		
-		return deferred.promise;
 	}
 }

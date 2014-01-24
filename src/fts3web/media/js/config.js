@@ -1,12 +1,23 @@
 
-function ConfigCtrl($location, $scope, config, Configuration)
+function ConfigAuditCtrl($location, $scope, config, ConfigAudit)
 {
 	$scope.config = config;
+
+	// Filter
+	$scope.filter = {
+		action:   validString($location.search().action),
+		user:     validString($location.search().user),
+		contains: validString($location.search().contains)
+	};
 	
-	// Paginator	
-	$scope.pageMax   = 15;
-	$scope.page      = $scope.config.page;
-	$scope.pageCount = $scope.config.pageCount;
+	$scope.applyFilters = function() {
+		$location.search({
+			page:        1,
+			action:   $scope.filter.action,
+			user:     $scope.filter.user,
+			contains: $scope.filter.contains
+		});
+	}
 	
 	// On page change, reload
 	$scope.pageChanged = function(newPage) {
@@ -24,17 +35,54 @@ function ConfigCtrl($location, $scope, config, Configuration)
 	});
 }
 
-ConfigCtrl.resolve = {
-	config: function ($rootScope, $location, $route, $q, Configuration) {
+ConfigAuditCtrl.resolve = {
+	config: function ($rootScope, $location, $route, $q, ConfigAudit) {
     	loading($rootScope);
     	
     	var deferred = $q.defer();
 
-    	Configuration.query($location.search(), function(data) {
-    		deferred.resolve(data);
-    		stopLoading($rootScope);
-    	});
+    	ConfigAudit.query($location.search(),
+  			  genericSuccessMethod(deferred, $rootScope),
+			  genericFailureMethod(deferred, $rootScope, $location));
     	
     	return deferred.promise;
+	}
+}
+
+
+function ConfigStatusCtrl($location, $scope, server, links)
+{
+	$scope.server = server;
+	$scope.links = links;
+	
+	// On page change, reload
+	$scope.pageChanged = function(newPage) {
+		$location.search('page', newPage);
+	};
+}
+
+ConfigStatusCtrl.resolve = {
+	server: function ($rootScope, $location, $route, $q, ConfigServer) {
+		loading($rootScope);
+		
+		var deferred = $q.defer();
+		
+		ConfigServer.all(
+  			  genericSuccessMethod(deferred, $rootScope),
+			  genericFailureMethod(deferred, $rootScope, $location));
+
+		return deferred.promise;
+	},
+	
+	links: function($rootScope, $location, $route, $q, ConfigLinks) {
+		loading($rootScope);
+		
+		var deferred = $q.defer();
+		
+		ConfigLinks.query($location.search(),
+  			  genericSuccessMethod(deferred, $rootScope),
+			  genericFailureMethod(deferred, $rootScope, $location));
+		
+		return deferred.promise;
 	}
 }

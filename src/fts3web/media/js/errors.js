@@ -1,28 +1,25 @@
 
 
-function ErrorsCtrl($location, $scope, errors, Errors, Unique)
+function ErrorsCtrl($location, $scope, pairs, Errors, Unique)
 {
 	// Errors
-	$scope.errors = errors;
+	$scope.pairs = pairs;
 	
 	// Unique values
-	$scope.unique = Unique.all();
-	
-	// Paginator	
-	$scope.pageMax   = 15;
-	$scope.page      = $scope.errors.page;
-	$scope.pageCount = $scope.errors.pageCount;
+	$scope.unique = {
+		sources: Unique('sources'),
+		destinations: Unique('destinations')
+	}
 	
 	// Filter
-	$scope.filterReason = function(filter) {
+	$scope.applyFilter = function(filter) {
 		$location.search(filter);
 		$scope.filtersModal = false;
 	}
 	
 	$scope.filter = {
-		contains:  undefinedAsEmpty($location.search().contains),
-		source_se: undefinedAsEmpty($location.search().source_se),
-		dest_se:   undefinedAsEmpty($location.search().dest_se),
+		source_se: validString($location.search().source_se),
+		dest_se:   validString($location.search().dest_se),
 	}
 	
 	// On page change, reload
@@ -43,7 +40,7 @@ function ErrorsCtrl($location, $scope, errors, Errors, Unique)
 
 
 ErrorsCtrl.resolve = {
-    errors: function($rootScope, $q, $location, Errors) {
+	pairs: function($rootScope, $q, $location, Errors) {
     	loading($rootScope);
     	
     	var deferred = $q.defer();
@@ -52,10 +49,9 @@ ErrorsCtrl.resolve = {
     	if (!page || page < 1)
     		page = 1;
     	
-    	Errors.query($location.search(), function(data) {
-    		deferred.resolve(data);
-    		stopLoading($rootScope);
-    	});
+    	Errors.query($location.search(),
+  			  genericSuccessMethod(deferred, $rootScope),
+			  genericFailureMethod(deferred, $rootScope, $location));
     	
     	return deferred.promise;
     }		
@@ -63,24 +59,35 @@ ErrorsCtrl.resolve = {
 
 
 
-function FilesWithErrorCtrl($location, $scope, files, FilesWithError)
+function ErrorsForPairCtrl($location, $scope, errors, ErrorsForPair)
 {
 	$scope.reason    = $location.search().reason;
-	$scope.files     = files
+	$scope.errors    = errors
 	$scope.source_se = $location.search().source_se;
 	$scope.dest_se   = $location.search().dest_se;
 	
-	// Paginator	
-	$scope.pageMax   = 15;
-	$scope.page      = $scope.files.page;
-	$scope.pageCount = $scope.files.pageCount;
+	// Filter
+	$scope.filterReason = function(filter) {
+		$location.search(filter);
+		$scope.filtersModal = false;
+	}
 	
+	$scope.filter = {
+		source_se: validString($location.search().source_se),
+		dest_se:   validString($location.search().dest_se),
+		reason:    validString($location.search().reason)
+	}
+	
+	// On page change, reload
+	$scope.pageChanged = function(newPage) {
+		$location.search('page', newPage);
+	};
 }
 
 
 
-FilesWithErrorCtrl.resolve = {
-    files: function($rootScope, $q, $location, FilesWithError) {
+ErrorsForPairCtrl.resolve = {
+    errors: function($rootScope, $q, $location, ErrorsForPair) {
     	loading($rootScope);
     	
     	var deferred = $q.defer();
@@ -89,10 +96,9 @@ FilesWithErrorCtrl.resolve = {
     	if (!page || page < 1)
     		page = 1;
     	
-    	FilesWithError.query($location.search(), function(data) {
-    		deferred.resolve(data);
-    		stopLoading($rootScope);
-    	});
+    	ErrorsForPair.query($location.search(),
+  			  genericSuccessMethod(deferred, $rootScope),
+			  genericFailureMethod(deferred, $rootScope, $location));
     	
     	return deferred.promise;
     }

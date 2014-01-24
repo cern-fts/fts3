@@ -41,7 +41,6 @@
                                 <li><a href="#" data-toggle="collapse" data-target=".nav-collapse">Overview</a></li>
                                 <li><a href="#jobs" data-toggle="collapse" data-target=".nav-collapse">Jobs</a></li>
                                 <li><a href="#transfers" data-toggle="collapse" data-target=".nav-collapse">Transfers</a></li>
-                                <li><a href="#staging" data-toggle="collapse" data-target=".nav-collapse">Staging</a></li>
                                 <li><a href="#optimizer" data-toggle="collapse" data-target=".nav-collapse">Optimizer</a></li>
                                 <li><a href="#errors" data-toggle="collapse" data-target=".nav-collapse">Error reasons</a></li>
                                 <li class="dropdown">
@@ -51,17 +50,41 @@
                                     <ul class="dropdown-menu">
                                         <li><a href="#statistics/overview" data-toggle="collapse" data-target=".nav-collapse">Overview</a></li>
                                         <li><a href="#statistics/servers" data-toggle="collapse" data-target=".nav-collapse">FTS3 Servers</a></li>
-                                        <li><a href="#statistics/pairs" data-toggle="collapse" data-target=".nav-collapse">Per pair</a></li>
                                         <li><a href="#statistics/vos" data-toggle="collapse" data-target=".nav-collapse">Per VO</a></li>
-                                        <li><a href="#statistics/profiling" data-toggle="collapse" data-target=".nav-collapse">Profiling</a></li>
+                                        
+                                        <li class="dropdown-submenu">
+                                            <a href="#" class="drowpdown-toggle">
+                                                Profiling<b class="caret"></b>
+                                            </a>
+                                            <ul class="dropdown-menu">
+                                                <li>
+                                                    <a href="#statistics/profiling" data-toggle="collapse" data-target=".nav-collapse">Code profiling</a>
+                                                </li>
+                                                <li>
+                                                    <a href="#statistics/slowqueries" data-toggle="collapse" data-target=".nav-collapse">Slow queries</a>
+                                                </li>
+                                            </ul>
+                                        </li>
                                     </ul>
                                 </li>
-                                <li><a href="#configaudit" data-toggle="collapse" data-target=".nav-collapse">Configuration audit</a></li>
+                                <li class="dropdown">
+                                    <a href="#" class="dropdown-toggle">
+                                        Configuration<b class="caret"></b>
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        <li><a href="#config/status" data-toggle="collapse" data-target=".nav-collapse">Configuration status</a></li>
+                                        <li><a href="#config/audit" data-toggle="collapse" data-target=".nav-collapse">Configuration audit</a></li>
+                                    </ul>
+                                </li>
                                 <li><a href="#archive" data-toggle="collapse" data-target=".nav-collapse">Archive</a></li>
                             </ul>
                             <div class="pull-right">
                                 <form class="navbar-search ng-pristine ng-valid" ng-submit="searchJob()">
                                     <input type="text" ng-model="jobId" class="search-query" placeholder="Job id"/>
+                                    <label class="checkbox inline" title="Search also in the archive">
+                                        <input type="checkbox" ng-model="inArchive" id="search-in-archive"/>
+                                        Archive
+                                    </label>
                                 </form>
                             </div>
                         </div>
@@ -75,11 +98,11 @@
 
         <!--  Scripts -->
 
-        <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.5/angular.js"></script>
-        <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.5/angular-resource.js"></script>
+        <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.8/angular.js"></script>
+        <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.8/angular-resource.js"></script>
         <script src="{{STATIC_URL}}/js/ui-bootstrap-tpls-0.5.0.min.js"></script>
 
-        <script src="//codeorigin.jquery.com/jquery-1.10.2.min.js"></script>
+        <script src="//code.jquery.com/jquery-1.10.2.min.js"></script>
         <script src="//netdna.bootstrapcdn.com/bootstrap/2.3.2/js/bootstrap.min.js"></script>
 
         <script>var STATIC_ROOT="{{STATIC_URL}}";</script>
@@ -89,7 +112,6 @@
         <script src="{{STATIC_URL}}js/jobs.js"></script>
         <script src="{{STATIC_URL}}js/transfers.js"></script>
         <script src="{{STATIC_URL}}js/overview.js"></script>
-        <script src="{{STATIC_URL}}js/staging.js"></script>
         <script src="{{STATIC_URL}}js/optimizer.js"></script>
         <script src="{{STATIC_URL}}js/errors.js"></script>
         <script src="{{STATIC_URL}}js/config.js"></script>

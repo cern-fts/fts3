@@ -1,10 +1,11 @@
+<h2>Transfers</h2>
 <h3>
     Showing {{transfers.startIndex}} to {{transfers.endIndex}} out of {{transfers.count}}
     <button class="btn btn-mini btn-info" type="button" ng-click="filtersModal = true">Filter</button>
 </h3>
 
-<pagination rotate="false" num-pages="pageCount" current-page="page"
-    max-size="pageMax" class="pagination" boundary-links="true"
+<pagination rotate="false" num-pages="transfers.pageCount" current-page="transfers.page"
+    max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>
     
 <table class="table">
@@ -17,20 +18,25 @@
             <th style="width: 15%">Job Id</th>
             <th style="width: 19%">Source</th>
             <th style="width: 19%">Destination</th>
-            <th style="width: 9%">
+            <th style="width: 6%">
                 <span order-by="priority">Priority</span>
             </th>
-            <th style="width: 12%">
+            <th style="width: 9%">
                 <span order-by="submit_time">Submision time</span>
             </th>
-            <th style="width: 12%">
+            <th style="width: 9%">
                 <span order-by="start_time">Start time</span>
+            </th>
+            <th style="width: 9%">
+                <span order-by="finish_time" title="Job finish time">Finish time*</span>
             </th>
         </tr>
     </thead>
     <tbody>
         <tr ng-repeat="t in transfers.items" ng-class-odd="'odd'">
-            <td>{{t.file_id}}</td>
+            <td>
+                <a href="#/job/{{t.job_id}}?file={{t.file_id}}">{{t.file_id}}</a>
+            </td>
             <td class="status {{t.file_state}}">{{t.file_state}}</td>
             <td>
                 <a href="#/job/{{t.job_id}}">{{t.job_id}}</a>
@@ -40,12 +46,13 @@
             <td style="text-align: center">{{t.job__priority}}</td>
             <td>{{t.job__submit_time}}</td>
             <td>{{t.start_time}}</td>
+            <td>{{t.job_finished}}</td>
         </tr>
     </tbody>
 </table>
 
-<pagination rotate="false" num-pages="pageCount" current-page="page"
-    max-size="pageMax" class="pagination" boundary-links="true"
+<pagination rotate="false" num-pages="transfers.pageCount" current-page="transfers.page"
+    max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>
 
 <!-- Modals -->
@@ -54,19 +61,42 @@
         <div class="modal-header">
             <h3>Filters</h3>
         </div>
-        <div class="modal-body">
-            <label for="source_se">Source storage element:</label>
-            <input type="text" placeholder="source storage element" id="source_se" ng-model="filter.source_se"
-                   typeahead="source for source in unique.sources | filter:$viewValue"/>
+        <div class="modal-body" style="max-height: 600px;">
+            <div class="row-fluid">
+	            <div class="span6">
+		            <label for="source_se">Source storage element:</label>
+		            <input type="text" placeholder="source storage element" id="source_se" ng-model="filter.source_se"
+		                   typeahead="source for source in unique.sources | safeFilter:$viewValue"/>
+
+	                <label for="source_surl">Source SURL:</label>
+	                <input type="text" placeholder="full source surl" id="source_surl", ng-model="filter.source_surl"/>
+
+		            <label for="vo">VO:</label>
+		            <select id="vo" ng-model="filter.vo" ng-options="vo for vo in unique.vos">
+		              <option value="">-- All VOs --</option>
+		            </select>
+	            </div>
+	
+	            <div class="span6">
+		            <label for="dest_se">Destination storage element:</label>
+		            <input type="text" placeholder="destination storage element" name="dest_se" ng-model="filter.dest_se"
+		                   typeahead="dest for dest in unique.destinations | safeFilter:$viewValue"/>
+		
+		            <label for="dest_surl">Destination SURL:</label>
+		            <input type="text" placeholder="full destination surl" id="dest_surl", ng-model="filter.dest_surl"/>
+	            </div>
+            </div>
             
-            <label for="dest_se">Destination storage element:</label>
-            <input type="text" placeholder="destination storage element" name="dest_se" ng-model="filter.dest_se"
-                   typeahead="dest for dest in unique.destinations | filter:$viewValue"/>
-    
+            <label for="hostname">Transfer host:</label>
+            <select id="hostname" ng-model="filter.hostname" ng-options="hostname for hostname in unique.hostnames">
+              <option value="">-- All hosts --</option>
+            </select>
+
             <label for="state">State:</label>
             <p class="btn-group">
                 <button type="button" class="btn btn-info btn-small" ng-model="filter.state.submitted" btn-checkbox>SUBMITTED</button>
                 <button type="button" class="btn btn-info btn-small" ng-model="filter.state.ready" btn-checkbox>READY</button>
+                <button type="button" class="btn btn-primary btn-small" ng-model="filter.state.staging" btn-checkbox>STAGING</button>
                 <button type="button" class="btn btn-primary btn-small" ng-model="filter.state.active" btn-checkbox>ACTIVE</button>
                 <br/>
                 <button type="button" class="btn btn-danger  btn-small" ng-model="filter.state.canceled" btn-checkbox>CANCELED</button>
@@ -74,11 +104,6 @@
                 <button type="button" class="btn btn-success btn-small" ng-model="filter.state.finished" btn-checkbox>FINISHED</button>
                 <button type="button" class="btn btn-small" ng-model="filter.state.not_used" btn-checkbox>NOT USED</button>
             </p>
-            
-            <label for="vo">VO:</label>
-            <select id="vo" ng-model="filter.vo" ng-options="vo for vo in unique.vos">
-              <option value="">-- All VOs --</option>
-            </select>
             
             <label for="timewindow">Time window:</label>
             <input type="number" placeholder="time window in hours" id="timewindow" ng-model="filter.time_window"/>

@@ -1,0 +1,38 @@
+<h2>Statistics - Slow queries</h2>
+
+<div ng-show="slowQueries.message">
+    <div class="alert">{{ slowQueries.message }}</div>
+</div>
+
+<table ng-show="!slowQueries.message" class="table">
+    <thead>
+        <tr>
+            <th>Start time</th>
+            <th>Database</th>
+            <th>User &amp; Host</th>
+            <th>Query time</th>
+            <th>Lock time</th>
+            <th>Rows examined</th>
+            <th>Rows sent</th>
+        </tr>
+    </thead>
+    <tbody ng-repeat="q in slowQueries.queries" ng-class-odd="'odd'">
+        <tr>
+            <td>
+                <i class="icon-plus" ng-click="query.show = !query.show"></i>
+                {{ q.start_time }}
+            </td>
+            <td>{{ q.db }}</td>
+            <td>{{ q.user_host }}</td>
+            <td>{{ q.query_time }}</td>
+            <td>{{ q.lock_time }}</td>
+            <td>{{ q.rows_examined }}</td>
+            <td>{{ q.rows_sent }}</td>
+        </tr>
+        <tr>
+            <td colspan="7" style="background: #CCC" ng-show="query.show">
+                <pre>{{ q.sql_text }}</pre>
+            </td>
+        </tr>
+    </tbody>
+</table>

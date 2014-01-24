@@ -1,5 +1,5 @@
-<h3>Statistics / Servers</h3>
-<h4>For the last 24 hours</h4>
+<h2>Statistics - Servers</h2>
+<h3>For the last 24 hours</h3>
 
 <table class="table">
     <thead>
@@ -14,7 +14,7 @@
     </thead>
     <tbody>
         <tr ng-repeat="(k, s) in servers" ng-class-odd="'odd'">
-            <td>{{k}}</td>
+            <td><a href="#/statistics/overview?hostname={{k}}">{{k}}</a></td>
             <td>[{{s.segment.start}}, {{s.segment.end}}]</td>
             <td>{{s.submissions}}</td>
             <td>{{s.transfers}}</td>

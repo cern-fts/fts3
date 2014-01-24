@@ -46,12 +46,11 @@ function OverviewCtrl($location, $scope, overview, Overview, Unique)
 	$scope.overview = overview;
 	
 	// Unique pairs and vos
-	$scope.unique = Unique.all();
-	
-	// Paginator	
-	$scope.pageMax   = 15;
-	$scope.page      = $scope.overview.page;
-	$scope.pageCount = $scope.overview.pageCount;
+	$scope.unique = {
+		sources: Unique('sources'),
+		destinations: Unique('destinations'),
+		vos: Unique('vos')
+	}
 
 	// On page change, reload
 	$scope.pageChanged = function(newPage) {
@@ -77,9 +76,9 @@ function OverviewCtrl($location, $scope, overview, Overview, Unique)
 	}
 	
 	$scope.filter = {
-		vo:        undefinedAsEmpty($location.search().vo),
-		source_se: undefinedAsEmpty($location.search().source_se),
-		dest_se:   undefinedAsEmpty($location.search().dest_se)
+		vo:        validString($location.search().vo),
+		source_se: validString($location.search().source_se),
+		dest_se:   validString($location.search().dest_se)
 	}
 }
 
@@ -94,10 +93,9 @@ OverviewCtrl.resolve = {
 		if (!page || page < 1)
 			page = 1;
 		
-		Overview.query($location.search(), function(data) {
-			deferred.resolve(data);
-			stopLoading($rootScope);
-		});
+		Overview.query($location.search(),
+  			  genericSuccessMethod(deferred, $rootScope),
+			  genericFailureMethod(deferred, $rootScope, $location));
 		
 		return deferred.promise;
 	}

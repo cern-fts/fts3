@@ -1,0 +1,68 @@
+<h2>Configuration status</h2>
+
+<h3>Server config</h3>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Retry</th>
+            <th>Max. Time in queue</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>{{ server.retry }}</td>
+            <td>{{ server.max_time_queue }}</td>
+        </tr>
+    </tbody>
+</table>
+
+<h3>Link config</h3>
+
+<pagination rotate="false" num-pages="links.pageCount" current-page="links.page"
+    max-size="15" class="pagination" boundary-links="true"
+    on-select-page="pageChanged(page)"></pagination>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>State</th>
+            <th>Source</th>
+            <th>Destination</th>
+            <th>Auto tuning</th>
+        </tr>
+    </thead>
+    <tbody ng-repeat="link in links.items" ng-class-odd="'odd'">
+        <tr>
+            <td>
+                <i class="icon-plus" ng-click="config.show = !config.show"></i>
+                {{ link.symbolicName }}
+            </td>
+            <td>{{ link.state }}</td>
+            <td>{{ link.source }}</td>
+            <td>{{ link.destination }}</td>
+            <td>{{ link.auto_tuning }}</td>
+        </tr>
+        <tr style="background: #CCC" ng-show="config.show">
+            <td colspan="5">
+                <ul>
+                    <li>TCP Buffer Size: {{ link.tcp_buffer_size }}</li>
+                    <li>Number of streams: {{ link.nostreams }}</li>
+                    <li>Timeout: {{ link.urlcopy_tx_to }}</li>
+                    <li>Shares:
+                        <ul>
+                            <li ng-repeat="(vo, active) in link.shares">
+                                {{ vo }}: {{ active }}
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<pagination rotate="false" num-pages="links.pageCount" current-page="links.page"
+    max-size="15" class="pagination" boundary-links="true"
+    on-select-page="pageChanged(page)"></pagination>

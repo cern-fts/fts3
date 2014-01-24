@@ -1,6 +1,6 @@
 import json
 import sys
-from datetime import datetime
+from datetime import datetime, time
 from decorator import decorator
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.db.models import Model
@@ -22,6 +22,8 @@ class ClassEncoder(json.JSONEncoder):
         
         if isinstance(obj, datetime):
             return obj.strftime('%Y-%m-%dT%H:%M:%S%z')
+        elif isinstance(obj, time):
+            return obj.strftime('%H:%M:%S')
         elif not isinstance(obj, dict) and hasattr(obj, '__iter__'):
             self.visited.append(obj)
             return [self.default(o) for o in obj]
@@ -61,12 +63,14 @@ def getPage(paginator, request):
 
 @decorator
 def jsonify_paged(f, *args, **kwargs):
+    pageSize = 50
+    
     d = f(*args, **kwargs)
     
-    if args[0].GET.get('page', 0) != 'all':
-        paginator = Paginator(d, 50)
-    else:
-        paginator = Paginator(d, sys.maxint)
+    if args[0].GET.get('page', 0) == 'all':
+        pageSize = sys.maxint
+    
+    paginator = Paginator(d, pageSize)
     page = getPage(paginator, args[0])
     
     paged = {
@@ -75,6 +79,7 @@ def jsonify_paged(f, *args, **kwargs):
         'startIndex': page.start_index(),
         'page':       page.number,
         'pageCount':  paginator.num_pages,
+        'pageSize':   pageSize,
         'items':      page.object_list
     }
     

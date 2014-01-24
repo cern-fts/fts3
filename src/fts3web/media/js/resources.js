@@ -22,18 +22,8 @@ angular.module('ftsmon.resources', ['ngResource'])
 		query: {method: 'GET', isArray: false}
 	})
 })
-.factory('Unique', function($resource) {
-	return $resource('unique/', {}, {
-		all: {method: 'GET', isArray: false}
-	})
-})
 .factory('Overview', function($resource) {
 	return $resource('overview', {}, {
-		query: {method: 'GET', isArray: false}
-	})
-})
-.factory('Staging', function($resource) {
-	return $resource('staging', {}, {
 		query: {method: 'GET', isArray: false}
 	})
 })
@@ -47,23 +37,18 @@ angular.module('ftsmon.resources', ['ngResource'])
 		query: {method: 'GET', isArray: false}
 	})
 })
-.factory('OptimizerActive', function($resource) {
-	return $resource('optimizer/active', {}, {
-		query: {method: 'GET', isArray: false}
-	})
-})
 .factory('Errors', function($resource) {
 	return $resource('errors', {}, {
 		query: {method: 'GET', isArray: false}
 	})
 })
-.factory('FilesWithError', function($resource) {
+.factory('ErrorsForPair', function($resource) {
 	return $resource('errors/list', {}, {
 		query: {method: 'GET', isArray: false}
 	})
 })
-.factory('Configuration', function($resource) {
-	return $resource('configuration', {}, {
+.factory('ConfigAudit', function($resource) {
+	return $resource('config/audit', {}, {
 		query: {method: 'GET', isArray: false}
 	})
 })
@@ -77,11 +62,6 @@ angular.module('ftsmon.resources', ['ngResource'])
 		query: {method: 'GET', isArray: false}
 	})
 })
-.factory('Pairs', function($resource) {
-	return $resource('stats/pairs', {}, {
-		query: {method: 'GET', isArray: false}
-	})
-})
 .factory('StatsVO', function($resource) {
 	return $resource('stats/vo', {}, {
 		query: {method: 'GET', isArray: false}
@@ -89,6 +69,34 @@ angular.module('ftsmon.resources', ['ngResource'])
 })
 .factory('Profile', function($resource) {
 	return $resource('stats/profiling', {}, {
+		query: {method: 'GET', isArray: false}
+	})
+})
+.factory('SlowQueries', function($resource) {
+	return $resource('stats/slowqueries', {}, {
+		query: {method: 'GET', isArray: false}
+	})
+})
+.factory('Unique', function($q, $http) {
+	return function(field) {
+		var deferred = $q.defer();
+		$http({method: 'GET', url: 'unique/' + field})
+			.success(function(data) {
+				deferred.resolve(data);
+			})
+			.error(function(data) {
+				deferred.resolve([]);
+			});
+		return deferred.promise;
+	}
+})
+.factory('ConfigServer', function($resource) {
+	return $resource('config/server', {}, {
+		all: {method: 'GET', isArray: false}
+	})
+})
+.factory('ConfigLinks', function($resource) {
+	return $resource('config/links', {}, {
 		query: {method: 'GET', isArray: false}
 	})
 })

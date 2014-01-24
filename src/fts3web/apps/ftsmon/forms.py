@@ -55,7 +55,7 @@ class StateField(forms.CharField):
         states = self.to_python(value)
         if states is not None:
             for s in states:
-                if s not in ['SUBMITTED', 'READY', 'ACTIVE', 'FINISHED', 'FINISHEDDIRTY', 'FAILED', 'CANCELED', 'NOT_USED']:
+                if s not in ['SUBMITTED', 'READY', 'ACTIVE', 'FINISHED', 'FINISHEDDIRTY', 'FAILED', 'CANCELED', 'NOT_USED', 'STAGING']:
                     raise ValidationError("'%s' is not a valid state" % s)
 
 
@@ -85,12 +85,16 @@ class JsonField(forms.CharField):
 class FilterForm(forms.Form):
     source_se   = forms.CharField(required = False)
     dest_se     = forms.CharField(required = False)
+    source_surl = forms.CharField(required = False)
+    dest_surl   = forms.CharField(required = False)
     state       = StateField(required = False)
     vo          = forms.CharField(required = False)
     metadata    = JsonField(required = False)
     time_window = forms.IntegerField(required = False)
     startdate   = forms.DateField(required = False)
     enddate     = forms.DateField(required = False)
+    hostname    = forms.CharField(required = False)
+    reason      = forms.CharField(required = False)
     
     def is_empty(self):
         if self['source_se'].data or self['dest_se'].data or\

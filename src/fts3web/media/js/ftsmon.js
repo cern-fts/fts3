@@ -1,181 +1,205 @@
 angular.module('ftsmon', ['ftsmon.resources', 'ui.bootstrap']).
 config(function($routeProvider) {
-	$routeProvider.
-		when('/',                     {templateUrl: STATIC_ROOT + 'html/overview.html',
-				                       controller:  OverviewCtrl,
-			                           resolve:     OverviewCtrl.resolve}).
+    $routeProvider.
+        when('/',                     {templateUrl: STATIC_ROOT + 'html/overview.html',
+                                       controller:  OverviewCtrl,
+                                       resolve:     OverviewCtrl.resolve}).
         when('/jobs',                 {templateUrl: STATIC_ROOT + 'html/jobs/index.html',
-					                       controller:  JobListCtrl,
-				                           resolve:     JobListCtrl.resolve}).
-		when('/job/:jobId',           {templateUrl: STATIC_ROOT + 'html/jobs/view.html',
-			                           controller:  JobViewCtrl,
-			                           resolve:     JobViewCtrl.resolve}).
- 		when('/archive',              {templateUrl: STATIC_ROOT + 'html/jobs/index.html',
-				                       controller:  ArchiveCtrl,
-				                       resolve:     ArchiveCtrl.resolve}).
+                                           controller:  JobListCtrl,
+                                           resolve:     JobListCtrl.resolve}).
+        when('/job/:jobId',           {templateUrl: STATIC_ROOT + 'html/jobs/view.html',
+                                       controller:  JobViewCtrl,
+                                       resolve:     JobViewCtrl.resolve}).
+        when('/archive',              {templateUrl: STATIC_ROOT + 'html/jobs/index.html',
+                                       controller:  ArchiveCtrl,
+                                       resolve:     ArchiveCtrl.resolve}).
 
         when('/transfers',            {templateUrl: STATIC_ROOT + 'html/transfers.html',
-					                   controller:  TransfersCtrl,
-					                   resolve:     TransfersCtrl.resolve}).
-
-		when('/staging/',             {templateUrl: STATIC_ROOT + 'html/staging.html',
-			                           controller:  StagingCtrl,
-					                   resolve:     StagingCtrl.resolve}).
-					       
+                                       controller:  TransfersCtrl,
+                                       resolve:     TransfersCtrl.resolve}).
+                           
         when('/optimizer/',           {templateUrl: STATIC_ROOT + 'html/optimizer/optimizer.html',
-				                       controller:  OptimizerCtrl,
-						               resolve:     OptimizerCtrl.resolve}).
+                                       controller:  OptimizerCtrl,
+                                       resolve:     OptimizerCtrl.resolve}).
         when('/optimizer/detailed',   {templateUrl: STATIC_ROOT + 'html/optimizer/detailed.html',
-					                   controller:  OptimizerDetailedCtrl,
-							           resolve:     OptimizerDetailedCtrl.resolve}).
-        when('/optimizer/active',     {templateUrl: STATIC_ROOT + 'html/optimizer/active.html',
-			                           controller:  OptimizerActiveCtrl,
-							           resolve:     OptimizerActiveCtrl.resolve}).
-							           
+                                       controller:  OptimizerDetailedCtrl,
+                                       resolve:     OptimizerDetailedCtrl.resolve}).
+                                       
         when('/errors/',              {templateUrl: STATIC_ROOT + 'html/errors/errors.html',
                                        controller:  ErrorsCtrl,
-	                                   resolve:     ErrorsCtrl.resolve}).
+                                       resolve:     ErrorsCtrl.resolve}).
         when('/errors/list',          {templateUrl: STATIC_ROOT + 'html/errors/list.html',
-	                                   controller:  FilesWithErrorCtrl,
-		                               resolve:     FilesWithErrorCtrl.resolve}).
-		                      
-        when('/configaudit',          {templateUrl: STATIC_ROOT + 'html/config.html',
-		                               controller:  ConfigCtrl,
-			                           resolve:     ConfigCtrl.resolve}).
-			                  
+                                       controller:  ErrorsForPairCtrl,
+                                       resolve:     ErrorsForPairCtrl.resolve}).
+                              
+        when('/config/audit',         {templateUrl: STATIC_ROOT + 'html/config/audit.html',
+                                       controller:  ConfigAuditCtrl,
+                                       resolve:     ConfigAuditCtrl.resolve}).
+        when('/config/status',        {templateUrl: STATIC_ROOT + 'html/config/status.html',
+                                       controller:  ConfigStatusCtrl,
+                                       resolve:     ConfigStatusCtrl.resolve}).
+                              
         when('/statistics/overview',  {templateUrl: STATIC_ROOT + 'html/statistics/overview.html',
-			                           controller:  StatsOverviewCtrl,
-				                       resolve:     StatsOverviewCtrl.resolve}).
+                                       controller:  StatsOverviewCtrl,
+                                       resolve:     StatsOverviewCtrl.resolve}).
         when('/statistics/servers',   {templateUrl: STATIC_ROOT + 'html/statistics/servers.html',
-			                           controller:  StatsServersCtrl,
-				                       resolve:     StatsServersCtrl.resolve}).
-        when('/statistics/pairs',     {templateUrl: STATIC_ROOT + 'html/statistics/pairs.html',
-		                               controller:  StatsPairsCtrl,
-				                       resolve:     StatsPairsCtrl.resolve}).
+                                       controller:  StatsServersCtrl,
+                                       resolve:     StatsServersCtrl.resolve}).
         when('/statistics/vos',       {templateUrl: STATIC_ROOT + 'html/statistics/vos.html',
                                        controller:  StatsVosCtrl,
-				                       resolve:     StatsVosCtrl.resolve}).
+                                       resolve:     StatsVosCtrl.resolve}).
+
         when('/statistics/profiling', {templateUrl: STATIC_ROOT + 'html/statistics/profiling.html',
                                        controller:  StatsProfilingCtrl,
                                        resolve:     StatsProfilingCtrl.resolve}).
-							         
-		otherwise({templateUrl: STATIC_ROOT + 'html/404.html'});
+        when('/statistics/slowqueries', {templateUrl: STATIC_ROOT + 'html/statistics/slowqueries.html',
+                                         controller:  SlowQueriesCtrl,
+                                         resolve:     SlowQueriesCtrl.resolve}).
+
+        when('/500',                    {templateUrl: STATIC_ROOT + 'html/500.html'}).
+                                     
+        otherwise({templateUrl: STATIC_ROOT + 'html/404.html'});
 })
 .filter('escape', function() {
-	return window.escape;
+    return window.escape;
 })
 .directive('plot', function() {
-	return {
-		restrict: 'E',
-		scope: 'isolate',
-		template: '<img ng-src="plot/pie?t={{title}}&l={{labels}}&v={{values}}&c={{colors}}"></img>',
-		link: function(scope, iterStartElement, attr) {
-			var list = scope.$eval(attr.list);
-			
-			// If label and value are specified, list is an array of
-			// objects, and label and value specify the fields to use
-			if (attr.label && attr.value)
-				plotArrayOfObjects(scope, list, attr.label, attr.value);
-			// If labels is specified, then list is an object, and labels
-			// specify the attributes to plot
-			else if (attr.labels)
-				plotObject(scope, list, attr.labels.split(','));
-			// If only value is specified, then the list is a dictionary,
-			// value specify the field to plot for each entry
-			else if (attr.value)
-				plotDictionary(scope, list, attr.value);
-			// Otherwise, we don't know!
-			else
-				throw new Error('Invalid usage of plot!');
+    return {
+        restrict: 'E',
+        scope: 'isolate',
+        template: '<img ng-src="plot/pie?t={{title}}&l={{labels}}&v={{values}}&c={{colors}}"></img>',
+        link: function(scope, iterStartElement, attr) {
+            var list = scope.$eval(attr.list);
+            
+            // If label and value are specified, list is an array of
+            // objects, and label and value specify the fields to use
+            if (attr.label && attr.value)
+                plotArrayOfObjects(scope, list, attr.label, attr.value);
+            // If labels is specified, then list is an object, and labels
+            // specify the attributes to plot
+            else if (attr.labels)
+                plotObject(scope, list, attr.labels.split(','));
+            // If only value is specified, then the list is a dictionary,
+            // value specify the field to plot for each entry
+            else if (attr.value)
+                plotDictionary(scope, list, attr.value);
+            // Otherwise, we don't know!
+            else
+                throw new Error('Invalid usage of plot!');
 
-			// Set title and colors
-			scope.title  = attr.title;
-			if (attr.colors)
-				scope.colors = attr.colors; 
-		}
-	};
+            // Set title and colors
+            scope.title  = attr.title;
+            if (attr.colors)
+                scope.colors = attr.colors; 
+        }
+    };
 })
 .directive('log', function() {
-	return {
-		restrict: 'A',
-		scope: 'isolate',
-		replace: true,
-		template: '<a href="{{logUrl}}">{{log}}</a>',
-		link: function(scope, element, attr) {
-			scope.log = scope.$eval(attr.log);
-			scope.logUrl = LOG_BASE_URL.replace('%(host)', scope.$eval(attr.host)) + scope.log;
-		}
-	}
+    return {
+        restrict: 'A',
+        scope: 'isolate',
+        replace: true,
+        template: '<a href="{{logUrl}}">{{log}}</a>',
+        link: function(scope, element, attr) {
+            scope.log = scope.$eval(attr.log);
+            scope.logUrl = LOG_BASE_URL.replace('%(host)', scope.$eval(attr.host)) + scope.log;
+        }
+    }
 })
 .directive('optionalNumber', function() {
-	return {
-		restrict: 'A',
-		scope: 'isolate',
-		replace: false,
-		template: '{{ value }} {{ suffix }}',
-		link: function(scope, element, attr) {
-			scope.value = scope.$eval(attr.optionalNumber);
-			scope.decimals = scope.$eval(attr.decimals);
-			if (scope.value == null || scope.value == undefined) {
-				scope.value = '-';
-			}
-			else {
-				scope.value = Number(scope.value).toFixed(scope.decimals);
-				scope.suffix = attr.suffix;
-			}
-		}
-	}
+    return {
+        restrict: 'A',
+        scope: 'isolate',
+        replace: false,
+        template: '{{ value }} {{ suffix }}',
+        link: function(scope, element, attr) {
+            scope.value = scope.$eval(attr.optionalNumber);
+            scope.decimals = scope.$eval(attr.decimals);
+            if (scope.value == null || scope.value == undefined) {
+                scope.value = '-';
+            }
+            else {
+                scope.value = Number(scope.value).toFixed(scope.decimals);
+                scope.suffix = attr.suffix;
+            }
+        }
+    }
 })
 .directive('orderBy', ['$location', function($location) {
-	return {
-		restrict: 'A',
-		scope: 'isolate',
-		replace: true,
-		link: function(scope, element, attr) {
-			var content = element.text();
-			var field = attr.orderBy;
-			var orderedBy = $location.search().orderby;
-			if (!orderedBy)
-				orderedBy = '';
-			
-			// Differentiate between field and ordering (asc/desc)
-			var orderedDesc = false;
-			if (orderedBy && orderedBy[0] == '-') {
-				orderedDesc = true;
-				orderedBy = orderedBy.slice(1);
-			}
-			
-			// Now, add the icon if this is the field used for the ordering
-			var icon = '';
-			if (orderedBy == field) {
-				if (orderedDesc)
-					icon = '<i class="icon-arrow-down"></i>';
-				else
-					icon = '<i class="icon-arrow-up"></i>';
-			}
-			
-			// HTML
-			var html = '<span class="orderby">' + icon + content + '</span>';
-			var replacement = angular.element(html);
-			
-			// Bind the method
-			replacement.bind('click', function() {
-				if (orderedDesc && field == orderedBy)
-					$location.search('orderby', field);
-				else
-					$location.search('orderby', '-' + field);
-				scope.$apply();
-			});
-			
-			// Replace
-			element.replaceWith(replacement);
-		}
-	}
+    return {
+        restrict: 'A',
+        scope: 'isolate',
+        replace: true,
+        link: function(scope, element, attr) {
+            var content = element.text();
+            var field = attr.orderBy;
+            var title = attr.title;
+            var orderedBy = $location.search().orderby;
+            if (!orderedBy)
+                orderedBy = '';
+            
+            // Differentiate between field and ordering (asc/desc)
+            var orderedDesc = false;
+            if (orderedBy && orderedBy[0] == '-') {
+                orderedDesc = true;
+                orderedBy = orderedBy.slice(1);
+            }
+            
+            // Now, add the icon if this is the field used for the ordering
+            var icon = '';
+            if (orderedBy == field) {
+                if (orderedDesc)
+                    icon = '<i class="icon-arrow-down"></i>';
+                else
+                    icon = '<i class="icon-arrow-up"></i>';
+            }
+            
+            // HTML
+            var html = '<span class="orderby" title="' + title + '">' + icon + content + '</span>';
+            var replacement = angular.element(html);
+            
+            // Bind the method
+            replacement.bind('click', function() {
+                if (orderedDesc && field == orderedBy)
+                    $location.search('orderby', field);
+                else
+                    $location.search('orderby', '-' + field);
+                scope.$apply();
+            });
+            
+            // Replace
+            element.replaceWith(replacement);
+        }
+    }
 }])
 .run(function($rootScope, $location) {
-	$rootScope.searchJob = function() {
-		$location.path('/job/' + $rootScope.jobId);
-	}
+    $rootScope.searchJob = function() {
+        var inArchive = 0;
+        if ($rootScope.inArchive)
+            inArchive = 1;
+        $location.path('/job/' + $rootScope.jobId).search({'archive': inArchive});
+    }
+})
+.filter('safeFilter', function($filter) {
+    return function(list, expr) {
+        if (typeof(list) == 'undefined')
+            return [];
+        return $filter('filter')(list, expr);
+    }
+})
+.filter('filesize', function($filter) {
+    return function(bytes) {
+    	if (bytes == null)
+    		return '-';
+    	else if (bytes < 1024)
+            return bytes.toString() + ' bytes';
+        else if (bytes < 1048576)
+            return (bytes / 1024.0).toFixed(2).toString() + ' KiB';
+        else if (bytes < 1073741824)
+            return (bytes / 1048576.0).toFixed(2).toString() + ' MiB';
+        else
+            return (bytes / 1073741824.0).toFixed(2).toString() + ' GiB';
+    }
 })
 ;
 
@@ -185,135 +209,161 @@ var REFRESH_INTERVAL = 60000;
 /** Pie plotting */
 function plotArrayOfObjects(scope, list, labelAttr, valueAttr)
 {
-	var labelStr = '', valueStr = '';
-	for (var i in list) {
-		var item = list[i];
-		labelStr += firstUpper(item[labelAttr]) + ',';
-		valueStr += item[valueAttr] + ',';
-	}
-	
-	scope.labels = labelStr;
-	scope.values = valueStr;
+    var labelStr = '', valueStr = '';
+    for (var i in list) {
+        var item = list[i];
+        labelStr += firstUpper(item[labelAttr]) + ',';
+        valueStr += undefinedAsZero(item[valueAttr]) + ',';
+    }
+    
+    scope.labels = labelStr;
+    scope.values = valueStr;
 }
 
 function plotObject(scope, obj, labelsAttr)
 {
-	var labelStr = '', valueStr = '';
-	for (var i in labelsAttr) {
-		var label = labelsAttr[i];
-		labelStr += firstUpper(label) + ',';
-		valueStr += obj[label] + ',';
-	}
-	
-	scope.labels = labelStr;
-	scope.values = valueStr;
+    var labelStr = '', valueStr = '';
+    for (var i in labelsAttr) {
+        var label = labelsAttr[i];
+        labelStr += firstUpper(label) + ',';
+        valueStr += undefinedAsZero(obj[label]) + ',';
+    }
+    
+    scope.labels = labelStr;
+    scope.values = valueStr;
 }
 
 function plotDictionary(scope, list, value)
 {
-	var labelStr = '', valueStr = '';
-	for (var i  in list) {
-		if (i[0] != '$') {
-			labelStr += i + ',';
-			valueStr += list[i][value] + ',';
-		}
-	}
-	
-	scope.labels = labelStr;
-	scope.values = valueStr;	
+    var labelStr = '', valueStr = '';
+    for (var i  in list) {
+        if (i[0] != '$') {
+            labelStr += i + ',';
+            valueStr += undefinedAsZero(list[i][value]) + ',';
+        }
+    }
+    
+    scope.labels = labelStr;
+    scope.values = valueStr;    
 }
 
 /** First letter uppercase */
 function firstUpper(str)
 {
-	return str.charAt(0).toUpperCase() + str.substr(1).toLowerCase();
+    return str.charAt(0).toUpperCase() + str.substr(1).toLowerCase();
 }
 
 /** Show loading **/
 var nLoading = 0;
 function loading($rootScope)
 {
-	nLoading += 1;
-	if (nLoading)
-		$rootScope.loading = true;	
+    nLoading += 1;
+    if (nLoading)
+        $rootScope.loading = true;  
 }
 
 function stopLoading($rootScope)
 {
-	if (nLoading > 0)
-		nLoading -= 1;
-	if (!nLoading)
-		$rootScope.loading = false;
+    if (nLoading > 0)
+        nLoading -= 1;
+    if (!nLoading)
+        $rootScope.loading = false;
 }
 
 /** Join states with commas */
 function joinStates(states)
 {
-	var str = '';
-	if (states.submitted)
-		str += 'SUBMITTED,';
-	if (states.ready)
-		str += 'READY,';
-	if (states.active)
-		str += 'ACTIVE,';
-	if (states.canceled)
-		str += 'CANCELED,';
-	if (states.failed)
-		str += 'FAILED,';
-	if (states.finished)
-		str += 'FINISHED,';
-	if (states.finisheddirty)
-		str += 'FINISHEDDIRTY,';
-	if (states.not_used)
-		str += 'NOT_USED,';
-	if (str.length > 0)
-		str = str.slice(0, -1);
-	return str;
+    var str = '';
+    if (states.submitted)
+        str += 'SUBMITTED,';
+    if (states.ready)
+        str += 'READY,';
+    if (states.staging)
+        str += 'STAGING,';
+    if (states.active)
+        str += 'ACTIVE,';
+    if (states.canceled)
+        str += 'CANCELED,';
+    if (states.failed)
+        str += 'FAILED,';
+    if (states.finished)
+        str += 'FINISHED,';
+    if (states.finisheddirty)
+        str += 'FINISHEDDIRTY,';
+    if (states.not_used)
+        str += 'NOT_USED,';
+    if (str.length > 0)
+        str = str.slice(0, -1);
+    return str;
 }
 
 function statesFromString(str)
 {
-	var st = {ready: false, active: false, canceled: false, failed: false, finished: false, finisheddirty: false};
-	
-	if (typeof(str) != "undefined") {
-		var states = str.split(',');
-		
-		for (var i in states) {
-			if (states[i] == 'SUBMITTED')
-				st.submitted= true;
-			if (states[i] == 'READY')
-				st.ready = true;
-			if (states[i] == 'ACTIVE')
-				st.active = true;
-			if (states[i] == 'CANCELED')
-				st.canceled = true;
-			if (states[i] == 'FAILED')
-				st.failed = true;
-			if (states[i] == 'FINISHED')
-				st.finished = true;
-			if (states[i] == 'FINISHEDDIRTY')
-				st.finisheddirty = true;
-			if (states[i] == 'NOT_USED')
-				st.not_used = true;
-		}
-	}
-	
-	return st;
+    var st = {ready: false, active: false, canceled: false, failed: false, finished: false, finisheddirty: false};
+    
+    if (typeof(str) != "undefined") {
+        var states = str.split(',');
+        
+        for (var i in states) {
+            if (states[i] == 'SUBMITTED')
+                st.submitted= true;
+            if (states[i] == 'READY')
+                st.ready = true;
+            if (states[i] == 'STAGING')
+                st.staging = true;
+            if (states[i] == 'ACTIVE')
+                st.active = true;
+            if (states[i] == 'CANCELED')
+                st.canceled = true;
+            if (states[i] == 'FAILED')
+                st.failed = true;
+            if (states[i] == 'FINISHED')
+                st.finished = true;
+            if (states[i] == 'FINISHEDDIRTY')
+                st.finisheddirty = true;
+            if (states[i] == 'NOT_USED')
+                st.not_used = true;
+        }
+    }
+    
+    return st;
 }
 
 /** Get default if undefined **/
-function undefinedAsEmpty(v)
+function validString(v)
 {
-	if (typeof(v) != 'undefined')
-		return v;
-	else
-		return '';
+    if (typeof(v) == 'string')
+        return v;
+    else
+        return '';
 }
 
-function validVo(v)
+function undefinedAsZero(v)
 {
-	if (typeof(v) == 'string')
-		return v;
-	else
-		return '';
+    if (typeof(v) != 'undefined')
+        return v;
+    else
+        return 0;
+}
+
+
+/** Generic callbacks */
+function genericSuccessMethod(deferred, $rootScope) {
+    return function(data) {
+        deferred.resolve(data);
+        stopLoading($rootScope);
+    }
+}
+
+function genericFailureMethod(deferred, $rootScope, $location) {
+    return function (response) {
+        deferred.resolve(false);
+        stopLoading($rootScope);
+        if (response.status == 404)
+            $location.path('/404');
+        else if (response.status == 500)
+            $location.path('/500');
+        else
+            $location.path('/generic-error');
+    }
 }

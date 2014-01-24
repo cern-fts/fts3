@@ -1,73 +1,30 @@
 <h3>
-    Details for {{filter.source}} → {{filter.destination}}
+    Details for {{filter.source}} → {{filter.destination}} for the last hour
 </h3>
 
-<h4>File sizes</h4>
-<table class="table">
-    <thead>
-        <tr>
-            <th>Count</th>
-            <th>Smallest</th>
-            <th>Biggest</th>
-            <th>Average</th>
-            <th>Std. Deviation</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>{{ optimizer.fsizes.nfiles }}</td>
-            <td>{{ optimizer.fsizes.smallest/(1024*1024)|number:2 }} MiB</td>
-            <td>{{ optimizer.fsizes.biggest/(1024*1024)|number:2 }} MiB</td>
-            <td>{{ optimizer.fsizes.average/(1024*1024)|number:2 }} MiB</td>
-            <td>{{ optimizer.fsizes.deviation/(1024*1024)|number:2 }} MiB</td>
-        </tr>
-    </tbody>
-</table>
+<pagination rotate="false" num-pages="optimizer.pageCount" current-page="optimizer.page"
+    max-size="15" class="pagination" boundary-links="true"
+    on-select-page="pageChanged(page)"></pagination>
 
-<h4>Optimizer snapshot</h4>
 <table class="table">
     <thead>
         <tr>
             <th>Timestamp</th>
+            <th>Streams</th>
             <th>Active</th>
-            <th>Number of streams</th>
-            <th>Timeout</th>
-            <th>Buffer size</th>
-            <th>Max. Throughput</th>
+            <th>Throughput</th>
         </tr>
     </thead>
     <tbody>
-        <tr ng-repeat="s in optimizer.snapshot" ng-class-odd="'odd'">
-            <td>{{ s.datetime }}</td>
-            <td>{{ s.active }}</td>
-            <td>{{ s.nostreams }}</td>
-            <td>{{ s.timeout }}</td>
-            <td>{{ s.buffer }}</td>
-            <td>{{ s.throughput|number:2 }} MiB/s</td>
+        <tr ng-repeat="o in optimizer.items" ng-class-odd="'odd'">
+            <td>{{ o.datetime }}</td>
+            <td>{{ o.nostreams }}</td>
+            <td>{{ o.active }}</td>
+            <td>{{ o.throughput }}</td>
         </tr>
     </tbody>
 </table>
 
-<h4>Optimizer evolution</h4>
-<table class="table">
-    <thead>
-        <tr>
-            <th>Timestamp</th>
-            <th>Active</th>
-            <th>Number of streams</th>
-            <th>Timeout</th>
-            <th>Buffer size</th>
-            <th>Max. Throughput</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr ng-repeat="s in optimizer.history" ng-class-odd="'odd'">
-            <td>{{ s.datetime }}</td>
-            <td>{{ s.active }}</td>
-            <td>{{ s.nostreams }}</td>
-            <td>{{ s.timeout }}</td>
-            <td>{{ s.buffer }}</td>
-            <td>{{ s.throughput|number:2 }} MiB/s</td>
-        </tr>
-    </tbody>
-</table>
+<pagination rotate="false" num-pages="optimizer.pageCount" current-page="optimizer.page"
+    max-size="15" class="pagination" boundary-links="true"
+    on-select-page="pageChanged(page)"></pagination>
