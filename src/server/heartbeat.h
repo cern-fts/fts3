@@ -105,7 +105,7 @@ private:
                                                                 << " [" << start << ':' << end << ']'
                                                                 << commit;
 
-                                if (++beat == 60)
+                                if (++beat == 180)
                                     {
                                         db::DBSingleton::instance().getDBObjectInstance()->updateOptimizerEvolution();
                                         beat = 0;
