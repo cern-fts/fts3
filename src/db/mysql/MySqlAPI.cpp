@@ -3179,12 +3179,12 @@ void MySqlAPI::backup()
 
             //delete from t_optimizer_evolution > 3 days old records
             sql.begin();
-            sql << "delete from t_optimizer_evolution where datetime < (UTC_TIMESTAMP() - interval '3' DAY )";
+            sql << "delete from t_optimizer_evolution where datetime < (UTC_TIMESTAMP() - interval '2' DAY )";
             sql.commit();
 
             //delete from t_optimizer_evolution > 3 days old records
             sql.begin();
-            sql << "delete from t_optimize where datetime < (UTC_TIMESTAMP() - interval '3' DAY )";
+            sql << "delete from t_optimize where datetime < (UTC_TIMESTAMP() - interval '2' DAY )";
             sql.commit();
 
         }
@@ -7120,29 +7120,22 @@ void MySqlAPI::updateOptimizerEvolution()
     try
         {
             soci::rowset<soci::row> rs = ( sql.prepare << " select count(*), sum(throughput), source_se, dest_se from t_file "
-	    						  " where file_state in ('READY','ACTIVE') group by source_se, dest_se order by NULL");
-
+	    						  " where throughput <> 0 AND file_state = 'ACTIVE' group by source_se, dest_se order by NULL");
 
             soci::statement stmt3 = (
-                                        sql.prepare << " INSERT IGNORE INTO t_optimizer_evolution "
-                                        " (datetime, source_se, dest_se, nostreams, active, throughput) "
-                                        " VALUES "
-                                        " (UTC_TIMESTAMP(), :source, :dest, :nostreams, :active, :throughput)",
+                                        sql.prepare << 	" INSERT INTO t_optimizer_evolution (datetime, source_se, dest_se, nostreams, active, throughput) "
+						        " SELECT UTC_TIMESTAMP(), :source, :dest, :nostreams, :active, :throughput FROM dual "
+							" WHERE not exists (SELECT * FROM t_optimizer_evolution "
+							" WHERE source_se=:source and dest_se=:dest and datetime >= (UTC_TIMESTAMP() - INTERVAL '1' minute) )",
                                         soci::use(source_hostname), 
 					soci::use(destin_hostname), 
 					soci::use(noStreams),
                                         soci::use(countActive), 
-					soci::use(sumThroughput));
+					soci::use(sumThroughput),
+					soci::use(source_hostname), 
+					soci::use(destin_hostname));          
 
-            soci::statement stmt4 = (
-                                        sql.prepare << " select count(*) FROM t_optimizer_evolution where "
-                                        " source_se = :source_se and dest_se = :dest_se "
-					" and datetime >= (UTC_TIMESTAMP() - INTERVAL '5' minute) ",
-                                        soci::use(source_hostname), 
-					soci::use(destin_hostname), 					
-					soci::into(entryExists));
-
-
+	    sql.begin();
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
                     countActive = i->get<long long>(0);
@@ -7164,15 +7157,10 @@ void MySqlAPI::updateOptimizerEvolution()
                                     noStreams += extractStreams((*i2));
                                 }
 
-                            stmt4.execute(true);
-                            if(entryExists == 0)
-                                {
-                                    sql.begin();
-                                    stmt3.execute(true);
-                                    sql.commit();
-                                }
-                        }
-                }			 		
+				stmt3.execute(true);
+			}
+                }
+		sql.commit();			 		
         }
     catch (std::exception& e)
         {
