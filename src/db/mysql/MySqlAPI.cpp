@@ -7136,13 +7136,10 @@ void MySqlAPI::updateOptimizerEvolution()
 
             soci::statement stmt4 = (
                                         sql.prepare << " select count(*) FROM t_optimizer_evolution where "
-                                        " source_se = :source_se and dest_se = :dest_se and nostreams = :nostreams and throughput = :sumThroughput and "
-					" active = :countActive and datetime > (UTC_TIMESTAMP() - INTERVAL '5' minute) ",
+                                        " source_se = :source_se and dest_se = :dest_se "
+					" and datetime >= (UTC_TIMESTAMP() - INTERVAL '5' minute) ",
                                         soci::use(source_hostname), 
-					soci::use(destin_hostname), 
-					soci::use(noStreams), 
-					soci::use(sumThroughput), 
-					soci::use(countActive), 
+					soci::use(destin_hostname), 					
 					soci::into(entryExists));
 
 
@@ -7158,7 +7155,7 @@ void MySqlAPI::updateOptimizerEvolution()
                     if(countActive > 0 && sumThroughput > 0)
                         {
                             soci::rowset<std::string> rs2 = ( sql.prepare << " select internal_file_params FROM t_file WHERE internal_file_params is not null "
-                                                              " AND file_state in ('READY','ACTIVE') "
+                                                              " AND file_state = 'ACTIVE' "
                                                               " AND source_se = :source_se and dest_se = :dest_se ",
                                                               soci::use(source_hostname),soci::use(destin_hostname));
 
@@ -7175,7 +7172,7 @@ void MySqlAPI::updateOptimizerEvolution()
                                     sql.commit();
                                 }
                         }
-                }
+                }			 		
         }
     catch (std::exception& e)
         {
