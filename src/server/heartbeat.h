@@ -108,7 +108,7 @@ private:
                                                                 << commit;
 
 
-                                if (++beat == 300)
+                                if (++beat == 3)
                                     {
                                         db::DBSingleton::instance().getDBObjectInstance()->updateOptimizerEvolution();
                                         beat = 0;

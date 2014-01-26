@@ -3393,12 +3393,12 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
 
             //delete from t_optimizer_evolution > 10 days old records
             sql.begin();
-            sql << "delete from t_optimizer_evolution where datetime < (systimestamp - interval '3' DAY )";
+            sql << "delete from t_optimizer_evolution where datetime < (systimestamp - interval '1' DAY )";
             sql.commit();
 
             //delete from t_optimizer_evolution > 10 days old records
             sql.begin();
-            sql << "delete from t_optimize where datetime < (systimestamp - interval '3' DAY )";
+            sql << "delete from t_optimize where datetime < (systimestamp - interval '1' DAY )";
             sql.commit();
 
         }
@@ -7337,6 +7337,7 @@ void OracleAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* star
 }
 
 
+
 void OracleAPI::updateOptimizerEvolution()
 {
     soci::session sql(*connectionPool);
@@ -7350,23 +7351,23 @@ void OracleAPI::updateOptimizerEvolution()
 
     try
         {
-            soci::rowset<soci::row> rs = ( sql.prepare << " select count(*), sum(throughput), source_se, dest_se from t_file where file_state in ('READY','ACTIVE') group by source_se, dest_se order by NULL");
-
+            soci::rowset<soci::row> rs = ( sql.prepare << " select count(*), sum(throughput), source_se, dest_se from t_file "
+	    						  " where throughput <> 0 AND file_state = 'ACTIVE' group by source_se, dest_se order by NULL");
 
             soci::statement stmt3 = (
-                                        sql.prepare << " INSERT IGNORE INTO t_optimizer_evolution "
-                                        " (datetime, source_se, dest_se, nostreams, active, throughput) "
-                                        " VALUES "
-                                        " (sys_extract_utc(systimestamp), :source, :dest, :nostreams, :active, :throughput)",
-                                        soci::use(source_hostname), soci::use(destin_hostname), soci::use(noStreams),
-                                        soci::use(countActive), soci::use(sumThroughput));
+                                        sql.prepare << 	" INSERT INTO t_optimizer_evolution (datetime, source_se, dest_se, nostreams, active, throughput) "
+						        " SELECT sys_extract_utc(systimestamp), :source, :dest, :nostreams, :active, :throughput FROM dual "
+							" WHERE not exists (SELECT * FROM t_optimizer_evolution "
+							" WHERE source_se=:source and dest_se=:dest and datetime >= (sys_extract_utc(systimestamp) - INTERVAL '1' minute) )",
+                                        soci::use(source_hostname), 
+					soci::use(destin_hostname), 
+					soci::use(noStreams),
+                                        soci::use(countActive), 
+					soci::use(sumThroughput),
+					soci::use(source_hostname), 
+					soci::use(destin_hostname));          
 
-            soci::statement stmt4 = (
-                                        sql.prepare << " select count(*) FROM t_optimizer_evolution where "
-                                        " source_se = :source_se and dest_se = :dest_se and nostreams = :nostreams and throughput = :sumThroughput and active = :countActive and datetime > (sys_extract_utc(systimestamp) - INTERVAL '5' minute) ",
-                                        soci::use(source_hostname), soci::use(destin_hostname), soci::use(noStreams), soci::use(sumThroughput), soci::use(countActive), soci::into(entryExists) );
-
-
+	    sql.begin();
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
                     countActive = i->get<long long>(0);
@@ -7379,7 +7380,7 @@ void OracleAPI::updateOptimizerEvolution()
                     if(countActive > 0 && sumThroughput > 0)
                         {
                             soci::rowset<std::string> rs2 = ( sql.prepare << " select internal_file_params FROM t_file WHERE internal_file_params is not null "
-                                                              " AND file_state in ('READY','ACTIVE') "
+                                                              " AND file_state = 'ACTIVE' "
                                                               " AND source_se = :source_se and dest_se = :dest_se ",
                                                               soci::use(source_hostname),soci::use(destin_hostname));
 
@@ -7388,15 +7389,10 @@ void OracleAPI::updateOptimizerEvolution()
                                     noStreams += extractStreams((*i2));
                                 }
 
-                            stmt4.execute(true);
-                            if(entryExists == 0)
-                                {
-                                    sql.begin();
-                                    stmt3.execute(true);
-                                    sql.commit();
-                                }
-                        }
+				stmt3.execute(true);
+			}
                 }
+		sql.commit();			 		
         }
     catch (std::exception& e)
         {
@@ -7409,6 +7405,7 @@ void OracleAPI::updateOptimizerEvolution()
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
 }
+
 
 
 
