@@ -189,7 +189,7 @@ def lines(httpRequest):
         x_range = range(len(x_axis))
         (left_color, right_color) = ('#0044cc', '#51a351')
         
-        fig = Figure(figsize = (6,3))
+        fig = Figure(figsize = (15,3))
         canvas = FigureCanvas(fig)
         
         ax_left = fig.add_subplot(1,1,1)
@@ -209,6 +209,7 @@ def lines(httpRequest):
                 ax_right.set_ylabel(label_right, color=right_color)
 
         ax_left.get_yaxis().set_major_locator(MaxNLocator(integer=True))
+        ax_left.set_xticks(x_range)
         x_labels = ax_left.set_xticklabels(x_axis)
         for l in x_labels:
             l.set_horizontalalignment('right')
