@@ -2,6 +2,13 @@
     Details for {{filter.source}} → {{filter.destination}} for the last hour
 </h3>
 
+<div style="text-align: center">
+    <plot-lines title="Evolution" list="optimizer.items"
+        x="datetime"
+        y-left="active"
+        y-right="throughput"/>
+</div>
+
 <pagination rotate="false" num-pages="optimizer.pageCount" current-page="optimizer.page"
     max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>
