@@ -23,11 +23,11 @@ os.environ['MPLCONFIGDIR'] = tempfile.mkdtemp()
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 from matplotlib.font_manager import FontProperties
+from matplotlib.ticker import MaxNLocator
 from django.http import HttpResponse
 
 
-
-def strToArray(str):
+def _strToArray(str):
     a = []
     for e in str.split(','):
         if e:
@@ -35,8 +35,7 @@ def strToArray(str):
     return a
 
 
-
-def error(httpRequest, msg = 'Error on plotting. Probably wrong query format.'):
+def _error(httpRequest, msg = 'Error on plotting. Probably wrong query format.'):
     fig = Figure(figsize = (3, 3))
     canvas = FigureCanvas(fig)
     
@@ -80,9 +79,18 @@ def _generateColors(number):
     RGB_255_tuples = map(lambda rgb: (rgb[0] * 255, rgb[1] * 255, rgb[2] * 255), RGB_tuples)
     WEB_tuples = map(lambda rgb: "%02X%02X%02X" % rgb, RGB_255_tuples)
     
-    return WEB_tuples
+    return WEB_tuples[:number]
 
 
+def _adjust(values, length, default = 0):
+    if values is not None:
+        missing = length - len(values)
+        if missing > 0:
+            values.extend([default] * missing)
+        elif missing < 0:
+            values = values[:length]
+
+# Draw a pie
 def pie(httpRequest):
     try:
         labels = []
@@ -94,36 +102,33 @@ def pie(httpRequest):
             if arg == 't':
                 title = argv
             elif arg == 'l':
-               labels = strToArray(argv)
+               labels = _strToArray(argv)
             elif arg == 'v':
-                values = strToArray(argv)
+                values = _strToArray(argv)
             elif arg == 'c':
-                cx = strToArray(argv)
+                cx = _strToArray(argv)
                 if len(cx):
                     colors = cx
-                    
-        # Truncate values if there are more
-        if len(labels) < len(values):
-            values = values[:len(labels)]
-            
-        # Extend if there are less
-        if len(labels) > len(values):
-            values.extend([values[-1]] * (len(labels) - len(values)))
-        
+
+        n_items = len(labels)
+        _adjust(values, n_items)
+                
         # Generate color list if not specified
         if not colors:
-            colors = _generateColors(len(labels))
+            colors = _generateColors(n_items)
+        else:
+            _adjust(colors, n_items, '0')
 
         # Append # if the color is a full RGB                    
-        for c in range(len(colors)):
+        for c in range(n_items):
             if len(colors[c]) > 1:
                 colors[c] = '#' + colors[c]
                 
         if not values:
-            return error(httpRequest, 'No values')
+            return _error(httpRequest, 'No values')
         
         if sum(map(int, values)) == 0:
-            return error(httpRequest, 'Total is 0')
+            return _error(httpRequest, 'Total is 0')
                 
         fig = Figure(figsize = (6,3))
         canvas = FigureCanvas(fig)
@@ -147,4 +152,73 @@ def pie(httpRequest):
                 
         return response
     except Exception, e:
-        return error(httpRequest, str(e))
+        return _error(httpRequest, str(e))
+
+
+# Draw a line chart
+def lines(httpRequest):
+    try:
+        left = None
+        right = None
+        x_axis = None
+        title = None
+        label_left = None
+        label_right = None
+
+        for (arg, argv) in httpRequest.GET.iteritems():
+            if arg == 't':
+                title = argv
+            elif arg == 'l':
+               left =  map(lambda x: float(x), _strToArray(argv))
+            elif arg == 'r':
+                right = map(lambda x: float(x), _strToArray(argv))
+            elif arg == 'x':
+                x_axis = _strToArray(argv)
+            elif arg == 'll':
+                label_left = argv
+            elif arg == 'lr':
+                label_right = argv
+                
+        n_items = len(x_axis)
+        
+        # Fill or truncate
+        _adjust(left, n_items)
+        _adjust(right, n_items)
+
+        # Draw
+        x_range = range(len(x_axis))
+        (left_color, right_color) = ('#0044cc', '#51a351')
+        
+        fig = Figure(figsize = (6,3))
+        canvas = FigureCanvas(fig)
+        
+        ax_left = fig.add_subplot(1,1,1)
+        ax_left.plot(x_range, left, color=left_color, lw=2)
+        ax_left.set_ylim(0, max(left) + 1)
+        ax_left.grid()
+        if label_left:
+            ax_left.set_ylabel(label_left, color=left_color)
+        if title:
+            ax_left.set_title(title)
+        
+        if right:
+            ax_right = ax_left.twinx()
+            ax_right.plot(x_range, right, color=right_color, lw=2)
+            ax_right.set_ylim(0)
+            if label_right:
+                ax_right.set_ylabel(label_right, color=right_color)
+
+        ax_left.get_yaxis().set_major_locator(MaxNLocator(integer=True))
+        x_labels = ax_left.set_xticklabels(x_axis)
+        for l in x_labels:
+            l.set_horizontalalignment('right')
+            l.set_rotation(30)
+            l.set_size('small')
+        
+        response = HttpResponse(content_type = 'image/png')
+        fig.savefig(response, format='png', bbox_inches = 'tight', transparent = True)
+        
+        return response
+    except:
+        #return _error(httpRequest, str(e))
+        raise

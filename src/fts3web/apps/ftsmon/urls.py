@@ -37,6 +37,7 @@ urlpatterns = patterns('ftsmon.views',
     url(r'^stats/slowqueries', 'statistics.slowQueries'),
     
     url(r'^plot/pie', 'plots.pie'),
+    url(r'^plot/lines', 'plots.lines'),
     
     url(r'^optimizer/$', 'optimizer.optimizer'),
     url(r'^optimizer/detailed$', 'optimizer.optimizerDetailed'),
