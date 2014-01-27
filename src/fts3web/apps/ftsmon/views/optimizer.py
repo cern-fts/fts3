@@ -54,7 +54,7 @@ def optimizerDetailed(httpRequest):
     if not source_se or not dest_se:
         raise Http404
         
-    notBefore = datetime.utcnow() - timedelta(hours = 12)
+    notBefore = datetime.utcnow() - timedelta(hours = 1)
 
     optimizer = OptimizerEvolution.objects.filter(source_se = source_se, dest_se = dest_se)
     optimizer = optimizer.filter(datetime__gte = notBefore)
