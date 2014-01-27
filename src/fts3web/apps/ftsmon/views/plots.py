@@ -180,7 +180,10 @@ def lines(httpRequest):
                 label_right = argv
                 
         n_items = len(x_axis)
-        
+
+        if not n_items:
+            raise Exception("No data available")
+
         # Fill or truncate
         _adjust(left, n_items)
         _adjust(right, n_items)
@@ -220,6 +223,5 @@ def lines(httpRequest):
         fig.savefig(response, format='png', bbox_inches = 'tight', transparent = True)
         
         return response
-    except:
-        #return _error(httpRequest, str(e))
-        raise
+    except Exception, e:
+        return _error(httpRequest, str(e))
