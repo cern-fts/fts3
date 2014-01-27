@@ -42,9 +42,10 @@
             <th style="width: 6%">
                 <span order-by="rate">Rate</span>
             </th>
-            <th style="width: 10%">
+            <th style="width: 8%">
                 <span order-by="throughput">Current throughput</span>
             </th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
@@ -88,8 +89,17 @@
                     <span optional-number="o.canceled" decimals="0"></span>
                 </a>
             </td>
-            <td><span optional-number="o.rate" suffix="%" decimals="2"></span></td>
-            <td><span optional-number="o.current" suffix="MB/s" decimals="2"></span></td>
+            <td>
+                <span optional-number="o.rate" suffix="%" decimals="2"></span>
+            </td>
+            <td>
+                <span optional-number="o.current" suffix="MB/s" decimals="2"></span>
+            </td>
+            <td>
+                <a href="#/optimizer/detailed?source={{o.source_se}}&destination={{o.dest_se}}">
+                    <i class="icon-signal"></i>
+                </a>
+            </td>
         </tr>
     </tbody>
 </table>
