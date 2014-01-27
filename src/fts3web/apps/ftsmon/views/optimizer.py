@@ -40,7 +40,7 @@ def optimizer(httpRequest):
         if filterForm['dest_se'].value():
             pairs = pairs.filter(dest_se = filterForm['dest_se'].value())
 
-    notBefore = datetime.utcnow() - timedelta(hours = 12)
+    notBefore = datetime.utcnow() - timedelta(hours = 1)
     pairs = pairs.filter(datetime__gte = notBefore)
 
     return pairs.distinct()
