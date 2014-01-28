@@ -42,7 +42,7 @@ def overview(httpRequest):
     filterForm = forms.FilterForm(httpRequest.GET)
     filters    = setupFilters(filterForm)
     notBefore  = datetime.utcnow() - timedelta(hours = 1)
-    throughputWindow = datetime.utcnow() - timedelta(seconds = 45)
+    throughputWindow = datetime.utcnow() - timedelta(seconds = 15)
 
     query = """
     SELECT source_se, dest_se, vo_name, file_state, count(file_id),
