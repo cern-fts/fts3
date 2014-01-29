@@ -2475,6 +2475,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
     int maxActive = 0;
     soci::indicator isNullRetry = soci::i_ok;
     soci::indicator isNullMaxActive = soci::i_ok;
+    soci::indicator isNullRate = soci::i_ok;
     double retry = 0.0;   //latest from db
     double lastSuccessRate = 0.0;
 
@@ -2510,11 +2511,11 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                          soci::use(active), soci::use(source_hostname), soci::use(destin_hostname));
 
             soci::statement stmt11 = (
-                                         sql.prepare << 	" SELECT filesize from t_optimizer_evolution WHERE source_se=:source and dest_se=:dest "
+                                         sql.prepare << " SELECT filesize from t_optimizer_evolution WHERE source_se=:source and dest_se=:dest "
                                          " order by datetime DESC LIMIT 1 ",
                                          soci::use(source_hostname),
                                          soci::use(destin_hostname),
-                                         soci::into(lastSuccessRate));
+                                         soci::into(lastSuccessRate, isNullRate));
 
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
@@ -2538,6 +2539,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                     isNullRetry = soci::i_ok;
                     isNullMaxActive = soci::i_ok;
                     lastSuccessRate = 0.0;
+		    isNullRate = soci::i_ok;
 
                     // Weighted average for the 5 newest transfers
                     soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
@@ -2592,7 +2594,9 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                     else      //get last reported success rate
                         {
                             stmt11.execute(true);
-                            ratioSuccessFailure = lastSuccessRate;
+			    if (isNullRate == soci::i_ok){
+                            	ratioSuccessFailure = lastSuccessRate;
+			    }
                         }
 
 
@@ -5370,6 +5374,7 @@ double MySqlAPI::getSuccessRate(std::string source, std::string destination)
 
     double ratioSuccessFailure = 0.0;
     double lastSuccessRate = 0.0;
+    soci::indicator isNull = soci::i_ok;
 
     try
         {
@@ -5391,7 +5396,7 @@ double MySqlAPI::getSuccessRate(std::string source, std::string destination)
                                         " order by datetime DESC LIMIT 1 ",
                                         soci::use(source),
                                         soci::use(destination),
-                                        soci::into(lastSuccessRate));
+                                        soci::into(lastSuccessRate, isNull));
 
             bool recordsFound = false;
             for (soci::rowset<std::string>::const_iterator i = rs.begin();
@@ -5413,7 +5418,9 @@ double MySqlAPI::getSuccessRate(std::string source, std::string destination)
             else      //get last reported success rate
                 {
                     stmt4.execute(true);
-                    ratioSuccessFailure = lastSuccessRate;
+		    if (isNull == soci::i_ok){
+                    	ratioSuccessFailure = lastSuccessRate;
+		    }
                 }
         }
     catch (std::exception& e)
@@ -7162,6 +7169,7 @@ void MySqlAPI::updateOptimizerEvolution()
     long long entryExists  = 0;
     double ratioSuccessFailure = 0.0;
     double lastSuccessRate = 0.0;
+    soci::indicator isNull = soci::i_ok;
 
     try
         {
@@ -7188,7 +7196,7 @@ void MySqlAPI::updateOptimizerEvolution()
                                         " order by datetime DESC LIMIT 1 ",
                                         soci::use(source_hostname),
                                         soci::use(destin_hostname),
-                                        soci::into(lastSuccessRate));
+                                        soci::into(lastSuccessRate, isNull));
 
             sql.begin();
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
@@ -7203,6 +7211,7 @@ void MySqlAPI::updateOptimizerEvolution()
                     nFailedLastHour = 0.0;
                     nFinishedLastHour = 0.0;
                     ratioSuccessFailure = 0.0;
+		    isNull = soci::i_ok;
 
                     if(countActive > 0 && sumThroughput > 0)
                         {
@@ -7245,7 +7254,10 @@ void MySqlAPI::updateOptimizerEvolution()
                             else      //get last reported success rate
                                 {
                                     stmt4.execute(true);
-                                    ratioSuccessFailure = lastSuccessRate;
+				    if (isNull == soci::i_ok){
+				    	ratioSuccessFailure = lastSuccessRate;
+				    }
+                                    
                                 }
 
                             stmt3.execute(true);
