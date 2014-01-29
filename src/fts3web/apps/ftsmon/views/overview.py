@@ -106,6 +106,8 @@ def overview(httpRequest):
         sortingMethod = lambda o: (o.get('failed', 0), o.get('finished', 0))
     elif orderBy == 'throughput':
         sortingMethod = lambda o: (o.get('current', 0), o.get('active', 0))
+    elif orderBy == 'rate':
+        sortingMethod = lambda o: (o.get('rate', 0), o.get('finished', 0))
     else:
         sortingMethod = lambda o: (o.get('submitted', 0), o.get('active', 0))
 
