@@ -2817,13 +2817,15 @@ void OracleAPI::deleteGrDPStorageElement(std::string delegationID, std::string d
 
 bool OracleAPI::getDebugMode(std::string source_hostname, std::string destin_hostname)
 {
-    std::string tag = "getDebugMode";
-    std::string query;
+    std::string tag1 = "getDebugMode1", tag2 = "getDebugMode2", tag3 = "getDebugMode3";
+    std::string query1, query3;
     bool debug = false;
-    query = "SELECT source_se, dest_se, debug FROM t_debug WHERE source_se = :1 AND (dest_se = :2 or dest_se is null)";
 
-    SafeStatement s;
-    SafeResultSet r;
+    query1 = "SELECT debug FROM t_debug WHERE source_se = :1 AND (dest_se = '' OR dest_se IS NULL) ";
+    query3 = "SELECT debug FROM t_debug WHERE source_se = :1 AND dest_se = :2";
+
+    SafeStatement s1, s2, s3;
+    SafeResultSet r1, r2, r3;
     SafeConnection pooledConnection;
 
     try
@@ -2833,26 +2835,62 @@ bool OracleAPI::getDebugMode(std::string source_hostname, std::string destin_hos
             if (!pooledConnection)
                 return false;
 
-            s = conn->createStatement(query, tag, pooledConnection);
-            s->setString(1, source_hostname);
-            s->setString(2, destin_hostname);
-            r = conn->createResultset(s, pooledConnection);
+            s1 = conn->createStatement(query1, tag1, pooledConnection);
+            s1->setString(1, source_hostname);
+            r1 = conn->createResultset(s1, pooledConnection);
 
-            if (r->next())
+            if (r1->next())
                 {
-                    debug = std::string(r->getString(3)).compare("on") == 0 ? true : false;
+                    debug = std::string(r1->getString(1)).compare("on") == 0 ? true : false;
                 }
-            conn->destroyResultset(s, r);
-            conn->destroyStatement(s, tag, pooledConnection);
+            conn->destroyResultset(s1, r1);
+            conn->destroyStatement(s1, tag1, pooledConnection);
+
+            if (debug) return debug;
+
+            s2 = conn->createStatement(query1, tag2, pooledConnection);
+            s2->setString(1, destin_hostname);
+            r2 = conn->createResultset(s2, pooledConnection);
+
+            if (r2->next())
+                {
+                    debug = std::string(r2->getString(1)).compare("on") == 0 ? true : false;
+                }
+            conn->destroyResultset(s2, r2);
+            conn->destroyStatement(s2, tag2, pooledConnection);
+
+            if (debug) return debug;
+
+            s3 = conn->createStatement(query3, tag3, pooledConnection);
+            s3->setString(1, source_hostname);
+            s3->setString(2, destin_hostname);
+            r3 = conn->createResultset(s3, pooledConnection);
+
+            if (r3->next())
+                {
+                    debug = std::string(r3->getString(1)).compare("on") == 0 ? true : false;
+                }
+            conn->destroyResultset(s3, r3);
+            conn->destroyStatement(s3, tag3, pooledConnection);
         }
     catch (oracle::occi::SQLException const &e)
         {
 
             conn->rollback(pooledConnection);
-            if (s && r)
-                conn->destroyResultset(s, r);
-            if (s)
-                conn->destroyStatement(s, tag, pooledConnection);
+            if (s1 && r1)
+                conn->destroyResultset(s1, r1);
+            if (s1)
+                conn->destroyStatement(s1, tag1, pooledConnection);
+
+            if (s2 && r2)
+                conn->destroyResultset(s2, r2);
+            if (s2)
+                conn->destroyStatement(s2, tag2, pooledConnection);
+
+            if (s3 && r3)
+                conn->destroyResultset(s3, r3);
+            if (s3)
+                conn->destroyStatement(s3, tag3, pooledConnection);
 
             FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
             conn->releasePooledConnection(pooledConnection);
@@ -2861,10 +2899,20 @@ bool OracleAPI::getDebugMode(std::string source_hostname, std::string destin_hos
         {
 
             conn->rollback(pooledConnection);
-            if (s && r)
-                conn->destroyResultset(s, r);
-            if (s)
-                conn->destroyStatement(s, tag, pooledConnection);
+            if (s1 && r1)
+                conn->destroyResultset(s1, r1);
+            if (s1)
+                conn->destroyStatement(s1, tag1, pooledConnection);
+
+            if (s2 && r2)
+                conn->destroyResultset(s2, r2);
+            if (s2)
+                conn->destroyStatement(s2, tag2, pooledConnection);
+
+            if (s3 && r3)
+                conn->destroyResultset(s3, r3);
+            if (s3)
+                conn->destroyStatement(s3, tag3, pooledConnection);
 
             FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
             conn->releasePooledConnection(pooledConnection);
