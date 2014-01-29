@@ -139,7 +139,7 @@ protected:
                         if (!messages.empty())
                             {
                                 boost::filesystem::path p("/var/lib/fts3/");
-                                boost::filesystem::space_info s = boost::filesystem::space(p);				
+                                boost::filesystem::space_info s = boost::filesystem::space(p);
 
                                 if(s.free <=0 || s.available <= 0)
                                     {

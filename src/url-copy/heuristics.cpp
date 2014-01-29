@@ -64,10 +64,10 @@ bool retryTransfer(int errorNo, const std::string& category, const std::string& 
                     break;
                 }
         }
-	
+
     // ETIMEDOUT shortcuts the following
     if (errorNo == ETIMEDOUT)
-        return true;	
+        return true;
 
     //search for error patterns not reported by SRM or GSIFTP
     std::size_t found = message.find("proxy expired");
@@ -102,7 +102,7 @@ bool retryTransfer(int errorNo, const std::string& category, const std::string& 
         retry = false;
     found = message.find("digest too big for rsa key");
     if (found!=std::string::npos)
-        retry = false;			
+        retry = false;
 
     return retry;
 }
