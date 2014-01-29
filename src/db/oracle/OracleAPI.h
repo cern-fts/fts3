@@ -144,8 +144,6 @@ public:
 
     virtual void fetchOptimizationConfig2(OptimizerSample* ops, const std::string & source_hostname, const std::string & destin_hostname);
 
-    virtual void recordOptimizerUpdate(int active, double filesize, double throughput, int nostreams, int timeout, int buffersize,std::string source_hostname, std::string destin_hostname);
-
     virtual bool isCredentialExpired(const std::string & dlg_id, const std::string & dn);
 
     virtual bool isTrAllowed(const std::string & source_se, const std::string & dest);
