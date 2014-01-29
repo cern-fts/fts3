@@ -8,3 +8,5 @@ export FTS3_REST_PORT=${FTS3_REST_PORT-8446}
 export BDII_HOST=${BDII_HOST-"lcg-bdii.cern.ch"}
 export LCG_GFAL_INFOSYS=${LCG_GFAL_INFOSYS-"$BDII_HOST:2170"}
 
+rpm -qa | grep fts
+
