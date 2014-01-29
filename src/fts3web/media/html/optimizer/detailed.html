@@ -3,10 +3,17 @@
 </h3>
 
 <div style="text-align: center">
-    <plot-lines title="Evolution" list="optimizer.items"
+    <plot-lines title="Throughput evolution" list="optimizer.items"
         x="datetime"
         y-left="active"
         y-right="throughput"/>
+</div>
+
+<div style="text-align: center">
+    <plot-lines title="Success rate evolution" list="optimizer.items"
+        x="datetime"
+        y-left="active"
+        y-right="success"/>
 </div>
 
 <pagination rotate="false" num-pages="optimizer.pageCount" current-page="optimizer.page"
@@ -19,6 +26,7 @@
             <th>Timestamp</th>
             <th>Streams</th>
             <th>Active</th>
+            <th>Success rate</th>
             <th>Throughput</th>
         </tr>
     </thead>
@@ -27,7 +35,8 @@
             <td>{{ o.datetime }}</td>
             <td>{{ o.nostreams }}</td>
             <td>{{ o.active }}</td>
-            <td>{{ o.throughput }}</td>
+            <td>{{ o.success|number:2 }}%</td>
+            <td>{{ o.throughput|number:3 }}</td>
         </tr>
     </tbody>
 </table>

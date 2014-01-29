@@ -58,7 +58,7 @@ def optimizerDetailed(httpRequest):
 
     optimizer = OptimizerEvolution.objects.filter(source_se = source_se, dest_se = dest_se)
     optimizer = optimizer.filter(datetime__gte = notBefore)
-    optimizer = optimizer.values('datetime', 'nostreams', 'active', 'throughput')
+    optimizer = optimizer.values('datetime', 'nostreams', 'active', 'throughput', 'success')
     optimizer = optimizer.order_by('-datetime')
 
     return optimizer

@@ -155,6 +155,12 @@ def pie(httpRequest):
         return _error(httpRequest, str(e))
 
 
+def _safe_float(f):
+    try:
+        return float(f)
+    except:
+        return 0.0
+
 # Draw a line chart
 def lines(httpRequest):
     try:
@@ -169,9 +175,9 @@ def lines(httpRequest):
             if arg == 't':
                 title = argv
             elif arg == 'l':
-               left =  map(lambda x: float(x), _strToArray(argv))
+               left =  map(lambda x: _safe_float(x), _strToArray(argv))
             elif arg == 'r':
-                right = map(lambda x: float(x), _strToArray(argv))
+                right = map(lambda x: _safe_float(x), _strToArray(argv))
             elif arg == 'x':
                 x_axis = _strToArray(argv)
             elif arg == 'll':

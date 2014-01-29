@@ -238,7 +238,7 @@ class OptimizerEvolution(models.Model):
     active       = models.IntegerField()
     throughput   = models.FloatField()
     buffer       = models.IntegerField()
-    filesize     = models.FloatField()
+    success      = models.FloatField(db_column = 'filesize')
     
     class Meta:
         db_table = 't_optimizer_evolution'
