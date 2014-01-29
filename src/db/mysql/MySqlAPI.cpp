@@ -2423,10 +2423,32 @@ bool MySqlAPI::getDebugMode(std::string source_hostname, std::string destin_host
     try
         {
             std::string debug;
-            sql << "SELECT debug FROM t_debug WHERE source_se = :source AND (dest_se = :dest OR dest_se IS NULL)",
-                soci::use(source_hostname), soci::use(destin_hostname), soci::into(debug);
+            sql <<
+            		" SELECT debug "
+            		" FROM t_debug "
+            		" WHERE source_se = :source "
+            		"	AND (dest_se = '' OR dest_se IS NULL) ",
+            		soci::use(source_hostname),
+            		soci::into(debug)
+            ;
 
             isDebug = (debug == "on");
+
+            sql <<
+            		" SELECT debug "
+            		" FROM t_debug "
+            		" WHERE source_se = :destin "
+            		"	AND (dest_se = '' OR dest_se IS NULL) ",
+            		soci::use(destin_hostname),
+            		soci::into(debug)
+            ;
+
+            isDebug |= (debug == "on");
+
+            sql << "SELECT debug FROM t_debug WHERE source_se = :source AND dest_se = :dest",
+            		soci::use(source_hostname), soci::use(destin_hostname), soci::into(debug);
+
+       		isDebug |= (debug == "on");
         }
     catch (std::exception& e)
         {
