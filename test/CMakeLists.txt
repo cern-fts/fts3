@@ -10,7 +10,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 install (PROGRAMS FTS3-config
          DESTINATION ${SHARE_INSTALL_PREFIX}/fts3/tests)
 
-install (DIRECTORY functional stress
+install (DIRECTORY functional stress rest
          DESTINATION ${SHARE_INSTALL_PREFIX}/fts3/tests
          USE_SOURCE_PERMISSIONS)
 endif ()

@@ -1,5 +1,5 @@
 Name:    fts-tests
-Version: 0.0.3
+Version: 3.2.0
 Release: 1%{?dist}
 Summary: Testing package for FTS3
 Group:   Application/Internet
@@ -11,6 +11,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: cmake
 
 Requires: fts-client
+Requires: fts-rest-cli
 Requires: gfal2-python
 Requires: gfal2-plugin-srm
 Requires: gfal2-plugin-gridftp
