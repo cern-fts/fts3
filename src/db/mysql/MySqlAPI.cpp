@@ -6819,8 +6819,9 @@ void MySqlAPI::storeProfiling(const fts3::ProfilingSubsystem* prof)
             sql << "UPDATE t_profiling_snapshot SET "
                 "    cnt = 0, exceptions = 0, total = 0, average = 0";
 
+            std::map<std::string, fts3::Profile> profiles = prof->getProfiles();
             std::map<std::string, fts3::Profile>::const_iterator i;
-            for (i = prof->profiles.begin(); i != prof->profiles.end(); ++i)
+            for (i = profiles.begin(); i != profiles.end(); ++i)
                 {
                     sql << "INSERT INTO t_profiling_snapshot (scope, cnt, exceptions, total, average) "
                         "VALUES (:scope, :cnt, :exceptions, :total, :avg) "
