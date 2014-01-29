@@ -2433,6 +2433,7 @@ bool MySqlAPI::getDebugMode(std::string source_hostname, std::string destin_host
             ;
 
             isDebug = (debug == "on");
+            if (isDebug) return isDebug;
 
             sql <<
             		" SELECT debug "
@@ -2443,12 +2444,13 @@ bool MySqlAPI::getDebugMode(std::string source_hostname, std::string destin_host
             		soci::into(debug)
             ;
 
-            isDebug |= (debug == "on");
+            isDebug = (debug == "on");
+            if (isDebug) return isDebug;
 
             sql << "SELECT debug FROM t_debug WHERE source_se = :source AND dest_se = :dest",
             		soci::use(source_hostname), soci::use(destin_hostname), soci::into(debug);
 
-       		isDebug |= (debug == "on");
+       		isDebug = (debug == "on");
         }
     catch (std::exception& e)
         {
