@@ -24,7 +24,6 @@
     <thead>
         <tr>
             <th>Timestamp</th>
-            <th>Streams</th>
             <th>Active</th>
             <th>Success rate</th>
             <th>Throughput</th>
@@ -33,7 +32,6 @@
     <tbody>
         <tr ng-repeat="o in optimizer.items" ng-class-odd="'odd'">
             <td>{{ o.datetime }}</td>
-            <td>{{ o.nostreams }}</td>
             <td>{{ o.active }}</td>
             <td>{{ o.success|number:2 }}%</td>
             <td>{{ o.throughput|number:3 }}</td>

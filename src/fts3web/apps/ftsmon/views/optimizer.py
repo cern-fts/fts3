@@ -40,7 +40,7 @@ def optimizer(httpRequest):
         if filterForm['dest_se'].value():
             pairs = pairs.filter(dest_se = filterForm['dest_se'].value())
 
-    notBefore = datetime.utcnow() - timedelta(hours = 12)
+    notBefore = datetime.utcnow() - timedelta(hours = 1)
     pairs = pairs.filter(datetime__gte = notBefore)
 
     return pairs.distinct()
@@ -58,7 +58,7 @@ def optimizerDetailed(httpRequest):
 
     optimizer = OptimizerEvolution.objects.filter(source_se = source_se, dest_se = dest_se)
     optimizer = optimizer.filter(datetime__gte = notBefore)
-    optimizer = optimizer.values('datetime', 'nostreams', 'active', 'throughput', 'success')
+    optimizer = optimizer.values('datetime', 'active', 'throughput', 'success')
     optimizer = optimizer.order_by('-datetime')
 
     return optimizer
