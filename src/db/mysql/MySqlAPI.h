@@ -349,7 +349,7 @@ private:
 
     int getOptimizerDefaultMode(soci::session& sql);
 
-    bool getChangedFile (std::string source, std::string dest, double rate, double thr, double& thrStored, double retry, double& retryStored);
+    bool getChangedFile (std::string source, std::string dest, double rate, double& rateStored, double thr, double& thrStored, double retry, double& retryStored);
 
     struct HashSegment
     {
