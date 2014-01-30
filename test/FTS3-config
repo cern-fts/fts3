@@ -10,3 +10,5 @@ export LCG_GFAL_INFOSYS=${LCG_GFAL_INFOSYS-"$BDII_HOST:2170"}
 
 rpm -qa | grep fts
 
+export DEBUG=1
+
