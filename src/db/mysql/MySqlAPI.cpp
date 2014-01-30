@@ -2623,7 +2623,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                         {
                             sql.begin();
 
-                            if(ratioSuccessFailure == 99 && throughput != 0 && thrStored !=0 && throughput > thrStored && retry <= retryStored)
+                            if(ratioSuccessFailure == 100 && throughput != 0 && thrStored !=0 && throughput > thrStored && retry <= retryStored)
                                 {
                                     if(active < highDefault || maxActive < highDefault)
                                         active = highDefault;
@@ -2632,7 +2632,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 
                                     stmt10.execute(true);
                                 }
-                            else if(ratioSuccessFailure == 99 && throughput != 0 && thrStored !=0 && throughput == thrStored && retry <= retryStored)
+                            else if(ratioSuccessFailure == 100 && throughput != 0 && thrStored !=0 && throughput == thrStored && retry <= retryStored)
                                 {
                                     if(active < highDefault || maxActive < highDefault)
                                         active = highDefault;
@@ -2641,7 +2641,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 
                                     stmt10.execute(true);
                                 }
-                            else if(ratioSuccessFailure == 99 && throughput != 0 && thrStored !=0 && (throughput < thrStored || retry > retryStored))
+                            else if(ratioSuccessFailure == 100 && throughput != 0 && thrStored !=0 && (throughput < thrStored || retry > retryStored))
                                 {
                                     if(active < highDefault || maxActive < highDefault)
                                         active = highDefault;
@@ -2650,7 +2650,16 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 
                                     stmt10.execute(true);
                                 }
-                            else if (ratioSuccessFailure < 99 || retry > retryStored)
+                            else if ( (ratioSuccessFailure < 100 && ratioSuccessFailure >= 97) || retry > retryStored)
+                                {
+                                    if(active < highDefault || maxActive < highDefault)
+                                        active = highDefault;
+                                    else
+                                        active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
+
+                                    stmt10.execute(true);
+                                }
+                            else if ( ratioSuccessFailure < 97 || retry > retryStored)
                                 {
                                     if(active < highDefault || maxActive < highDefault)
                                         active = highDefault;
@@ -2658,7 +2667,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                         active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
 
                                     stmt10.execute(true);
-                                }
+                                }				
                             else if(active == 0 || isNullMaxActive == soci::i_null )
                                 {
                                     active = highDefault;
