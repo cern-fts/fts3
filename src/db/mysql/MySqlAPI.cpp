@@ -2592,15 +2592,15 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                                     soci::use(source_hostname), soci::use(destin_hostname));
 
                     double ratioSuccessFailure = 0.0;
-		    bool sampleFound = false;
+                    bool sampleFound = false;
 
                     for (soci::rowset<std::string>::const_iterator i = rs.begin();
                             i != rs.end(); ++i)
                         {
                             if      (i->compare("FAILED") == 0)   nFailedLastHour+=1.0;
                             else if (i->compare("FINISHED") == 0) nFinishedLastHour+=1.0;
-			    
-			    sampleFound = true;
+
+                            sampleFound = true;
                         }
 
 
@@ -2689,10 +2689,12 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                 }
 
                             sql.commit();
-		    
-		   if(active > 0 && throughput > 0 && ratioSuccessFailure > 0){		   					
-                   		//update evolution
-                    		updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure);
+
+                            if(active > 0 && throughput > 0 && ratioSuccessFailure > 0)
+                                {
+                                    //update evolution
+                                    updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure);
+                                }
                         }
                 } //end for
         } //end try
