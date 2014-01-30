@@ -173,7 +173,7 @@ static double my_round(double x, unsigned int digits)
 
 static double convertKbToMb(double throughput)
 {
-    return throughput != 0.0? my_round((throughput / 1024), 6): 0.0;
+    return throughput != 0.0? my_round((throughput / 1024), 1): 0.0;
 }
 
 static int extractTimeout(std::string & str)
@@ -225,8 +225,10 @@ MySqlAPI::MySqlAPI(): poolSize(10), connectionPool(NULL)
 
 MySqlAPI::~MySqlAPI()
 {
-    if(connectionPool)
+    if(connectionPool){
         delete connectionPool;
+	connectionPool = NULL;
+	}
 }
 
 
@@ -2532,14 +2534,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 
             soci::statement stmt10 = (
                                          sql.prepare << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",
-                                         soci::use(active), soci::use(source_hostname), soci::use(destin_hostname));
-
-            soci::statement stmt11 = (
-                                         sql.prepare << " SELECT filesize from t_optimizer_evolution WHERE source_se=:source and dest_se=:dest "
-                                         " order by datetime DESC LIMIT 1 ",
-                                         soci::use(source_hostname),
-                                         soci::use(destin_hostname),
-                                         soci::into(lastSuccessRate, isNullRate));
+                                         soci::use(active), soci::use(source_hostname), soci::use(destin_hostname));            
 
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
@@ -2594,35 +2589,21 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                                     "      (t_file.job_finished > (UTC_TIMESTAMP() - interval '1' minute)) AND "
                                                     "      file_state IN ('FAILED','FINISHED') ",
                                                     soci::use(source_hostname), soci::use(destin_hostname));
-
-                    bool recordsFound = false;
+                   
                     double ratioSuccessFailure = 0.0;
 
                     for (soci::rowset<std::string>::const_iterator i = rs.begin();
                             i != rs.end(); ++i)
                         {
                             if      (i->compare("FAILED") == 0)   nFailedLastHour+=1.0;
-                            else if (i->compare("FINISHED") == 0) nFinishedLastHour+=1.0;
-
-                            recordsFound = true;
+                            else if (i->compare("FINISHED") == 0) nFinishedLastHour+=1.0;                           
                         }
 
-
-                    if(recordsFound)
-                        {
-                            if(nFinishedLastHour > 0)
+                   
+                            if(nFinishedLastHour > 0.0)
                                 {
-                                    ratioSuccessFailure = nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0);
+                                    ratioSuccessFailure = ceil(nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0));
                                 }
-                        }
-                    else      //get last reported success rate
-                        {
-                            stmt11.execute(true);
-			    if (isNullRate == soci::i_ok){
-                            	ratioSuccessFailure = lastSuccessRate;
-			    }
-                        }
-
 
                     // Active transfers
                     stmt7.execute(true);
@@ -2642,7 +2623,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                         {
                             sql.begin();
 
-                            if(ratioSuccessFailure == 100 && throughput != 0 && thrStored !=0 && throughput > thrStored && retry <= retryStored)
+                            if(ratioSuccessFailure == 99 && throughput != 0 && thrStored !=0 && throughput > thrStored && retry <= retryStored)
                                 {
                                     if(active < highDefault || maxActive < highDefault)
                                         active = highDefault;
@@ -2651,7 +2632,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 
                                     stmt10.execute(true);
                                 }
-                            else if(ratioSuccessFailure == 100 && throughput != 0 && thrStored !=0 && throughput == thrStored && retry <= retryStored)
+                            else if(ratioSuccessFailure == 99 && throughput != 0 && thrStored !=0 && throughput == thrStored && retry <= retryStored)
                                 {
                                     if(active < highDefault || maxActive < highDefault)
                                         active = highDefault;
@@ -2660,7 +2641,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 
                                     stmt10.execute(true);
                                 }
-                            else if(ratioSuccessFailure == 100 && throughput != 0 && thrStored !=0 && (throughput < thrStored || retry > retryStored))
+                            else if(ratioSuccessFailure == 99 && throughput != 0 && thrStored !=0 && (throughput < thrStored || retry > retryStored))
                                 {
                                     if(active < highDefault || maxActive < highDefault)
                                         active = highDefault;
@@ -2669,7 +2650,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 
                                     stmt10.execute(true);
                                 }
-                            else if (ratioSuccessFailure < 100 || retry > retryStored)
+                            else if (ratioSuccessFailure < 99 || retry > retryStored)
                                 {
                                     if(active < highDefault || maxActive < highDefault)
                                         active = highDefault;
@@ -2696,8 +2677,11 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 
                             sql.commit();
                         }
-                }
-        }
+			
+			//update evolution
+			updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure);			
+                } //end for
+        } //end try
     catch (std::exception& e)
         {
             sql.rollback();
@@ -5417,6 +5401,7 @@ double MySqlAPI::getSuccessRate(std::string source, std::string destination)
 
             soci::statement stmt4 = (
                                         sql.prepare << 	" SELECT filesize from t_optimizer_evolution WHERE source_se=:source and dest_se=:dest "
+					" and datetime >= (UTC_TIMESTAMP() - INTERVAL '5' minute) "
                                         " order by datetime DESC LIMIT 1 ",
                                         soci::use(source),
                                         soci::use(destination),
@@ -5426,15 +5411,15 @@ double MySqlAPI::getSuccessRate(std::string source, std::string destination)
             for (soci::rowset<std::string>::const_iterator i = rs.begin();
                     i != rs.end(); ++i)
                 {
-                    if      (i->compare("FAILED") == 0)   ++nFailedLastHour;
-                    else if (i->compare("FINISHED") == 0) ++nFinishedLastHour;
+                    if      (i->compare("FAILED") == 0)   nFailedLastHour+=1.0;
+                    else if (i->compare("FINISHED") == 0) nFinishedLastHour+=1.0;
 
                     recordsFound = true;
                 }
 
             if(recordsFound)
                 {
-                    if(nFinishedLastHour > 0)
+                    if(nFinishedLastHour > 0.0)
                         {
                             ratioSuccessFailure = nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0);
                         }
@@ -5456,7 +5441,7 @@ double MySqlAPI::getSuccessRate(std::string source, std::string destination)
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
 
-    return ratioSuccessFailure;
+    return ceil(ratioSuccessFailure);
 }
 
 double MySqlAPI::getAvgThroughput(std::string source_hostname, std::string destin_hostname)
@@ -7179,115 +7164,23 @@ void MySqlAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start
 }
 
 
-void MySqlAPI::updateOptimizerEvolution()
+void MySqlAPI::updateOptimizerEvolution(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname, int active, double throughput, double successRate)
 {
-    soci::session sql(*connectionPool);
-
-    std::string source_hostname;
-    std::string destin_hostname;
-    long long countActive = 0;
-    double sumThroughput = 0.0;
-    double nFailedLastHour = 0.0;
-    double nFinishedLastHour = 0.0;
-    long long noStreams = 0;
-    long long entryExists  = 0;
-    double ratioSuccessFailure = 0.0;
-    double lastSuccessRate = 0.0;
-    soci::indicator isNull = soci::i_ok;
-
     try
-        {
-            soci::rowset<soci::row> rs = ( sql.prepare << " select count(*), sum(throughput), source_se, dest_se from t_file "
-                                           " where throughput <> 0 AND file_state = 'ACTIVE' group by source_se, dest_se order by NULL");
-
-            soci::statement stmt3 = (
-                                        sql.prepare << 	" INSERT INTO t_optimizer_evolution (datetime, source_se, dest_se, nostreams, active, throughput, filesize) "
-                                        " SELECT UTC_TIMESTAMP(), :source, :dest, :nostreams, :active, :throughput, :filesize FROM dual "
+        {            
+	    sql.begin();
+            sql << " INSERT INTO t_optimizer_evolution (datetime, source_se, dest_se, active, throughput, filesize) "
+                                        " SELECT UTC_TIMESTAMP(), :source, :dest, :active, :throughput, :filesize FROM dual "
                                         " WHERE not exists (SELECT * FROM t_optimizer_evolution "
                                         " WHERE source_se=:source and dest_se=:dest and datetime >= (UTC_TIMESTAMP() - INTERVAL '1' minute) )",
                                         soci::use(source_hostname),
-                                        soci::use(destin_hostname),
-                                        soci::use(noStreams),
-                                        soci::use(countActive),
-                                        soci::use(sumThroughput),
-                                        soci::use(ratioSuccessFailure),
+                                        soci::use(destination_hostname),
+                                        soci::use(active),
+                                        soci::use(throughput),
+                                        soci::use(successRate),
                                         soci::use(source_hostname),
-                                        soci::use(destin_hostname));
-
-
-            soci::statement stmt4 = (
-                                        sql.prepare << 	" SELECT filesize from t_optimizer_evolution WHERE source_se=:source and dest_se=:dest "
-                                        " order by datetime DESC LIMIT 1 ",
-                                        soci::use(source_hostname),
-                                        soci::use(destin_hostname),
-                                        soci::into(lastSuccessRate, isNull));
-
-            sql.begin();
-            for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
-                {
-                    countActive = i->get<long long>(0);
-                    sumThroughput = i->get<double>(1,0);
-                    source_hostname = i->get<std::string>(2);
-                    destin_hostname = i->get<std::string>(3);
-                    noStreams = 0;
-                    entryExists  = 0;
-                    lastSuccessRate = 0.0;
-                    nFailedLastHour = 0.0;
-                    nFinishedLastHour = 0.0;
-                    ratioSuccessFailure = 0.0;
-		    isNull = soci::i_ok;
-
-                    if(countActive > 0 && sumThroughput > 0)
-                        {
-                            soci::rowset<std::string> rs2 = ( sql.prepare << " select internal_file_params FROM t_file WHERE internal_file_params is not null "
-                                                              " AND file_state = 'ACTIVE' "
-                                                              " AND source_se = :source_se and dest_se = :dest_se ",
-                                                              soci::use(source_hostname),soci::use(destin_hostname));
-
-                            for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
-                                {
-                                    noStreams += extractStreams((*i2));
-                                }
-
-                            // Ratio of success
-                            soci::rowset<std::string> rs3 = (sql.prepare << "SELECT file_state FROM t_file "
-                                                             "WHERE "
-                                                             "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                                                             "      (t_file.job_finished > (UTC_TIMESTAMP() - interval '1' minute)) AND "
-                                                             "      file_state IN ('FAILED','FINISHED') ",
-                                                             soci::use(source_hostname), soci::use(destin_hostname));
-
-                            bool recordsFound = false;
-                            for (soci::rowset<std::string>::const_iterator i3 = rs3.begin();
-                                    i3 != rs3.end(); ++i3)
-                                {
-                                    if      (i3->compare("FAILED") == 0)   nFailedLastHour+=1.0;
-                                    else if (i3->compare("FINISHED") == 0) nFinishedLastHour+=1.0;
-
-                                    recordsFound = true;
-                                }
-
-
-                            if(recordsFound)
-                                {
-                                    if(nFinishedLastHour > 0)
-                                        {
-                                            ratioSuccessFailure = nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0);
-                                        }
-                                }
-                            else      //get last reported success rate
-                                {
-                                    stmt4.execute(true);
-				    if (isNull == soci::i_ok){
-				    	ratioSuccessFailure = lastSuccessRate;
-				    }
-                                    
-                                }
-
-                            stmt3.execute(true);
-                        }
-                }
-            sql.commit();
+                                        soci::use(destination_hostname);
+	    sql.commit();
         }
     catch (std::exception& e)
         {

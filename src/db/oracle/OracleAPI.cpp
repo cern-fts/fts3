@@ -11387,10 +11387,6 @@ void OracleAPI::resetSanityRuns(SafeConnection& pooled, struct message_sanity &m
         }
 }
 
-void OracleAPI::updateOptimizerEvolution()
-{
-}
-
 
 // the class factories
 

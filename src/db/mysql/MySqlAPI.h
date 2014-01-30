@@ -336,8 +336,6 @@ public:
 
     virtual void transferLogFileVector(std::map<int, struct message_log>& messagesLog);
 
-    virtual void updateOptimizerEvolution();
-
     unsigned int updateFileStatusReuse(TransferFiles* file, const std::string status);
 
 private:
@@ -370,4 +368,6 @@ private:
     void useFileReplica(soci::session& sql, std::string jobId, int fileId);
 
     void bringOnlineReportStatusInternal(soci::session& sql, const std::string & state, const std::string & message, struct message_bringonline msg);
+    
+    void updateOptimizerEvolution(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname, int active, double throughput, double successRate);
 };
