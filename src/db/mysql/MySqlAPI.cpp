@@ -7172,7 +7172,7 @@ void MySqlAPI::updateOptimizerEvolution(soci::session& sql, const std::string & 
             sql << " INSERT INTO t_optimizer_evolution (datetime, source_se, dest_se, active, throughput, filesize) "
                                         " SELECT UTC_TIMESTAMP(), :source, :dest, :active, :throughput, :filesize FROM dual "
                                         " WHERE not exists (SELECT * FROM t_optimizer_evolution "
-                                        " WHERE source_se=:source and dest_se=:dest and datetime >= (UTC_TIMESTAMP() - INTERVAL '1' minute) )",
+                                        " WHERE source_se=:source and dest_se=:dest and datetime >= (UTC_TIMESTAMP() - INTERVAL '50' second) )",
                                         soci::use(source_hostname),
                                         soci::use(destination_hostname),
                                         soci::use(active),
