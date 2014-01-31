@@ -2571,7 +2571,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                     // Weighted average for the 5 newest transfers
                     soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
                             " SELECT filesize, throughput "
-                            " FROM t_file use index(t_file_select) "
+                            " FROM t_file "
                             " WHERE source_se = :source AND dest_se = :dest AND "
                             "       file_state = 'ACTIVE' AND throughput > 0 AND "
                             "       filesize > 0 ",
@@ -5474,14 +5474,11 @@ double MySqlAPI::getAvgThroughput(std::string source_hostname, std::string desti
         {
             // Weighted average for the 5 newest transfers
             soci::rowset<soci::row>  rsSizeAndThroughput = (sql.prepare <<
-                    " SELECT filesize, throughput "
-                    " FROM t_file use index(t_file_select) "
-                    " WHERE source_se = :source AND dest_se = :dest AND "
-                    "       file_state IN ('ACTIVE','FINISHED') AND throughput > 0 AND "
-                    "       filesize > 0  AND "
-                    "       (start_time >= date_sub(utc_timestamp(), interval '5' minute) OR "
-                    "        job_finished >= date_sub(utc_timestamp(), interval '5' minute)) "
-                    " ORDER BY job_finished DESC LIMIT 5 ",
+                     " SELECT filesize, throughput "
+                            " FROM t_file "
+                            " WHERE source_se = :source AND dest_se = :dest AND "
+                            "       file_state = 'ACTIVE' AND throughput > 0 AND "
+                            "       filesize > 0 ",
                     soci::use(source_hostname),soci::use(destin_hostname));
 
             for (soci::rowset<soci::row>::const_iterator j = rsSizeAndThroughput.begin();
