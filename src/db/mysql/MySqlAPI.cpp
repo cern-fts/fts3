@@ -1966,11 +1966,6 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
                     // And file finish timestamp
                     sql << "UPDATE t_file SET job_finished = UTC_TIMESTAMP() WHERE job_id = :jobId ",
                         soci::use(job_id, "jobId");
-
-                    soci::statement stmt7 = (
-                                                sql.prepare << "UPDATE t_file SET job_finished = UTC_TIMESTAMP() WHERE job_id = :jobId ",
-                                                soci::use(job_id, "jobId"));
-                    stmt7.execute(true);
                 }
             // Job not finished yet
             else
