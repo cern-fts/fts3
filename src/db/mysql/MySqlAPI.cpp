@@ -1788,7 +1788,7 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, int /*fileId*
                         soci::use(job_id, "jobId");
 
                     // And file finish timestamp
-                    sql << "UPDATE t_file SET job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP() WHERE job_id = :jobId ",
+                    sql << "UPDATE t_file SET job_finished = UTC_TIMESTAMP() WHERE job_id = :jobId ",
                         soci::use(job_id, "jobId");
 
                 }
