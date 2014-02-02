@@ -2583,10 +2583,10 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                             filesize    = j->get<double>("filesize", 0);
                             throughput += (j->get<double>("throughput", 0) * filesize);
                             totalSize  += filesize;
+                            totalThroughput += j->get<double>("throughput", 0);			    
                         }
                     if (totalSize > 0)
                         {
-                            totalThroughput = throughput;
                             throughput /= totalSize;
                         }
 
@@ -2609,7 +2609,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 
                     if(nFinishedLastHour > 0.0)
                         {
-                            ratioSuccessFailure = ceil(nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0));
+                            ratioSuccessFailure = nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0);
                         }
 
                     // Active transfers
@@ -2626,47 +2626,56 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                     //only apply the logic below if any of these values changes
                     bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, rateStored, throughput, thrStored, retry, retryStored);
 
-                    if(changed)
+		    //ratioSuccessFailure, rateStored, throughput, thrStored MUST never be zero
+                    if(changed == true)
                         {
                             sql.begin();
 
-                            if( (ratioSuccessFailure != 0 && (ratioSuccessFailure == 100 || ratioSuccessFailure >= rateStored)) && throughput != 0 && thrStored !=0 && throughput > thrStored && retry <= retryStored)
+                            if( (ratioSuccessFailure == 100 || ratioSuccessFailure > rateStored) && throughput > thrStored && retry <= retryStored)
                                 {
-                                    if(active < highDefault || maxActive < highDefault)
+				    if(maxActive > 0)
+				    	active = maxActive + spawnActive;									
+                                    else if(active < highDefault || maxActive < highDefault)
                                         active = highDefault;
                                     else
                                         active = maxActive + spawnActive;
 
                                     stmt10.execute(true);
                                 }
-                            else if( (ratioSuccessFailure != 0 && (ratioSuccessFailure == 100 || ratioSuccessFailure >= rateStored)) && throughput != 0 && thrStored !=0 && throughput == thrStored && retry <= retryStored)
+                            else if( (ratioSuccessFailure == 100 || ratioSuccessFailure > rateStored) && throughput == thrStored && retry <= retryStored)
                                 {
-                                    if(active < highDefault || maxActive < highDefault)
+				    if(maxActive > 0)
+				    	active = maxActive;									
+                                    else if(active < highDefault || maxActive < highDefault)
                                         active = highDefault;
                                     else
                                         active = maxActive;
 
                                     stmt10.execute(true);
                                 }
-                            else if( (ratioSuccessFailure != 0 && (ratioSuccessFailure == 100 || ratioSuccessFailure >= rateStored)) && throughput != 0 && thrStored !=0 && (throughput < thrStored || retry > retryStored))
+                            else if( (ratioSuccessFailure == 100 || ratioSuccessFailure > rateStored) && (throughput < thrStored || retry > retryStored))
                                 {
-                                    if(active < highDefault || maxActive < highDefault)
+				    if(maxActive > 0)
+				    	active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);									
+                                    else if(active < highDefault || maxActive < highDefault)
                                         active = highDefault;
                                     else
-                                        active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
+                                        active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);					
+					
+                                    stmt10.execute(true);
+                                }
+                            else if ( ratioSuccessFailure < 100 || retry > retryStored)
+                                {
+				    if(maxActive > 0)
+				    	active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);									
+                                    else if(active < highDefault || maxActive < highDefault)
+                                        active = highDefault;
+                                    else
+                                        active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);	
 
                                     stmt10.execute(true);
                                 }
-                            else if ( (ratioSuccessFailure != 0 && (ratioSuccessFailure < 100 || ratioSuccessFailure < rateStored)) || retry > retryStored)
-                                {
-                                    if(active < highDefault || maxActive < highDefault)
-                                        active = highDefault;
-                                    else
-                                        active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
-
-                                    stmt10.execute(true);
-                                }
-                            else if(active == 0 || isNullMaxActive == soci::i_null )
+                            else
                                 {
                                     if(maxActive > 0)
                                         active = maxActive;
@@ -2675,22 +2684,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 
                                     stmt10.execute(true);
                                 }
-                            else
-                                {
-                                    if(active < highDefault || maxActive < highDefault)
-                                        active = highDefault;
-                                    else
-                                        active = maxActive;
-
-                                    stmt10.execute(true);
-                                }
-
-                            //update evolution
-                            if(ratioSuccessFailure == 0)
-                                ratioSuccessFailure = rateStored;
-                            if(totalThroughput == 0)
-                                totalThroughput = thrStored;
-				
+                                                      
 		            double tempThroughput = convertKbToMb(totalThroughput);
 
                             updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, tempThroughput, ratioSuccessFailure);
