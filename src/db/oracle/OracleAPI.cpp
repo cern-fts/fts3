@@ -68,7 +68,7 @@ bool OracleAPI::getChangedFile (std::string source, std::string dest, double rat
             if (!found)
                 {
                     boost::tuple<std::string, std::string, double, double, double> record(source, dest, rate, thr, retry);
-                OracleAPI    filesMemStore.push_back(record);
+                    filesMemStore.push_back(record);
                 }
 
             std::vector< boost::tuple<std::string, std::string, double, double, double> >::iterator it =  filesMemStore.begin();
