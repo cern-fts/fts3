@@ -5408,7 +5408,7 @@ double MySqlAPI::getSuccessRate(std::string source, std::string destination)
                 {
                     if(nFinishedLastHour > 0.0)
                         {
-                            ratioSuccessFailure = nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0);
+                            ratioSuccessFailure = ceil(nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0));
                         }
                 }
             else      //get last reported success rate
