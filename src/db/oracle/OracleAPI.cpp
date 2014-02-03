@@ -38,7 +38,7 @@ using namespace FTS3_COMMON_NAMESPACE;
 using namespace db;
 
 
-bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate, double& rateStored, double thr, double& thrStored, double retry, double& retryStored)
+bool OracleAPI::getChangedFile (std::string source, std::string dest, double rate, double& rateStored, double thr, double& thrStored, double retry, double& retryStored)
 {
     bool returnValue = false;
 
@@ -68,7 +68,7 @@ bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate
             if (!found)
                 {
                     boost::tuple<std::string, std::string, double, double, double> record(source, dest, rate, thr, retry);
-                    filesMemStore.push_back(record);
+                OracleAPI    filesMemStore.push_back(record);
                 }
 
             std::vector< boost::tuple<std::string, std::string, double, double, double> >::iterator it =  filesMemStore.begin();
