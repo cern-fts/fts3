@@ -334,8 +334,6 @@ public:
     virtual void updateFileTransferProgressVector(std::vector<struct message_updater>& messages);
 
     virtual void transferLogFileVector(std::map<int, struct message_log>& messagesLog);
-
-    virtual void updateOptimizerEvolution();
     
     unsigned int updateFileStatusReuse(TransferFiles* file, const std::string status);
     
@@ -354,7 +352,7 @@ private:
                                    unsigned int& finished, unsigned int& cancelled, unsigned int& failed);
 
 
-    bool getChangedFile (std::string source, std::string dest, double rate, double thr, double& thrStored, double retry, double& retryStored);
+    bool getChangedFile (std::string source, std::string dest, double rate, double& rateStored, double thr, double& thrStored, double retry, double& retryStored);
 
     struct HashSegment
     {
@@ -372,5 +370,7 @@ private:
     bool updateJobTransferStatusInternal(soci::session& sql, std::string job_id, const std::string status);
 
     void useFileReplica(soci::session& sql, std::string jobId, int fileId);
+    
+    void updateOptimizerEvolution(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname, int active, double throughput, double successRate);    
 
 };

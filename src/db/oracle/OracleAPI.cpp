@@ -38,9 +38,12 @@ using namespace FTS3_COMMON_NAMESPACE;
 using namespace db;
 
 
-bool OracleAPI::getChangedFile (std::string source, std::string dest, double rate, double thr, double& thrStored, double retry, double& retryStored)
+bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate, double& rateStored, double thr, double& thrStored, double retry, double& retryStored)
 {
     bool returnValue = false;
+
+    if(rate == 0 || thr == 0)
+        return returnValue;
 
     if(filesMemStore.empty())
         {
@@ -82,6 +85,7 @@ bool OracleAPI::getChangedFile (std::string source, std::string dest, double rat
                         {
                             retryStored = retryThr;
                             thrStored = thrLocal;
+                            rateStored = rateLocal;
                             if(rateLocal != rate || thrLocal != thr || retry != retryThr)
                                 {
                                     it = filesMemStore.erase(it);
@@ -2666,6 +2670,7 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                     double retry = 0.0;   //latest from db
                     double retryStored = 0.0; //stored in mem
                     double thrStored = 0.0; //stored in mem
+		    double rateStored = 0.0; //stored in mem
                     int active = 0;
                     int maxActive = 0;
                     std::stringstream message;
@@ -2680,10 +2685,7 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                             " WHERE source_se = :source AND dest_se = :dest AND "
                             "       file_state IN ('ACTIVE','FINISHED') AND throughput > 0 AND "
                             "       filesize > 0  AND "
-                            "       (start_time >= (sys_extract_utc(systimestamp) - interval '1' minute) OR "
-                            "        job_finished >= (sys_extract_utc(systimestamp) - interval '1' minute)) "
-                            " ORDER BY job_finished DESC)"
-                            " WHERE rn <= 5 ",
+                            "        job_finished >= (sys_extract_utc(systimestamp) - interval '1' minute)) ",
                             soci::use(source_hostname),soci::use(destin_hostname));
 
                     for (soci::rowset<soci::row>::const_iterator j = rsSizeAndThroughput.begin();
@@ -2718,7 +2720,7 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                     double ratioSuccessFailure = 0.0;
                     if(nFinishedLastHour > 0)
                         {
-                            ratioSuccessFailure = nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0);
+                            ratioSuccessFailure = ceil(nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0));
                         }
 
                     // Active transfers
@@ -2734,6 +2736,10 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                                                 "WHERE source_se = :source AND dest_se = :dest_se ",
                                                 soci::use(source_hostname),soci::use(destin_hostname), soci::into(maxActive, isNullMaxActive));
                     stmt8.execute(true);
+		    
+            	    soci::statement stmt10 = (
+                                         sql.prepare << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",
+                                         soci::use(active), soci::use(source_hostname), soci::use(destin_hostname));		    
 
 
                     sql << "select * from (SELECT sum(retry) from t_file WHERE source_se = :source AND dest_se = :dest_se and "
@@ -2742,153 +2748,55 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
 
                     if (isNullRetry == soci::i_null)
                         retry = 0;
+			
+                    if (isNullMaxActive == soci::i_null)
+                        maxActive = highDefault;			
 
                     //only apply the logic below if any of these values changes
-                    bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, throughput, thrStored, retry, retryStored);
+                    bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, rateStored, throughput, thrStored, retry, retryStored);
 
+                    //ratioSuccessFailure, rateStored, throughput, thrStored MUST never be zero
                     if(changed)
                         {
                             sql.begin();
 
-                            if(ratioSuccessFailure == 100 && throughput != 0 && thrStored !=0 && throughput > thrStored && retry <= retryStored)
+                            if( (ratioSuccessFailure == 100 || ratioSuccessFailure > rateStored) && throughput > thrStored && retry <= retryStored)
                                 {
-                                    if(active < highDefault || maxActive < highDefault)
-                                        active = highDefault;
-                                    else
-                                        active = maxActive + spawnActive;
+                                    active = maxActive + spawnActive;
 
-                                    message << "Increasing active by "
-				            << spawnActive
-					    << ", previously "
-                                            << maxActive
-                                            << " now max active "
-                                            << active
-                                            << " for link "
-                                            << source_hostname
-                                            << " -> "
-                                            << destin_hostname
-                                            << " because success rate is "
-                                            << ratioSuccessFailure
-                                            << "% and current throughput "
-                                            << throughput
-                                            << " is higher than previous "
-                                            << thrStored;
-
-                                    sql << "update t_optimize_active set datetime=sys_extract_utc(systimestamp), message=:message, active=:active where source_se=:source and dest_se=:dest ",
-                                        soci::use(message.str()), soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
+                                    stmt10.execute(true);
                                 }
-                            else if(ratioSuccessFailure == 100 && throughput != 0 && thrStored !=0 && throughput == thrStored && retry <= retryStored)
+                            else if( (ratioSuccessFailure == 100 || ratioSuccessFailure > rateStored) && throughput == thrStored && retry <= retryStored)
                                 {
-                                    if(active < highDefault || maxActive < highDefault)
-                                        active = highDefault;
-                                    else
-                                        active = maxActive;
+                                    active = maxActive;
 
-                                    message << "Success rate is "
-                                            << ratioSuccessFailure
-                                            << "% for link "
-                                            << source_hostname
-                                            << " -> "
-                                            << destin_hostname
-                                            << " and current throughput is "
-                                            << throughput
-                                            << " equal to previous "
-                                            << thrStored
-                                            << " so max active remains "
-                                            << maxActive;
-
-                                    sql << "update t_optimize_active set datetime=sys_extract_utc(systimestamp), message=:message, active=:active where source_se=:source and dest_se=:dest ",
-                                        soci::use(message.str()), soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
+                                    stmt10.execute(true);
                                 }
-                            else if(ratioSuccessFailure == 100 && throughput != 0 && thrStored !=0 && (throughput < thrStored || retry > retryStored))
-                                {
-                                    if(active < highDefault || maxActive < highDefault)
-                                        active = highDefault;
-                                    else
-                                        active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
+                            else if( (ratioSuccessFailure == 100 || ratioSuccessFailure > rateStored) && (throughput < thrStored || retry > retryStored))
+                                {                                    
+                                    active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
 
-                                    message << "Success rate is "
-                                            << ratioSuccessFailure
-                                            << "% for link "
-                                            << source_hostname
-                                            << " -> "
-                                            << destin_hostname
-                                            << " and current throughput "
-                                            << throughput
-                                            << " is less than previous sample "
-                                            << thrStored
-                                            << " so max active is decreased by 2 and now is "
-                                            << active;
-
-                                    sql << "update t_optimize_active set datetime=sys_extract_utc(systimestamp), message=:message, active=:active where source_se=:source and dest_se=:dest ",
-                                        soci::use(message.str()), soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
+                                    stmt10.execute(true);
                                 }
-                            else if (ratioSuccessFailure < 100 || retry > retryStored)
+                            else if ( ratioSuccessFailure < 99 || retry > retryStored)
                                 {
-                                    if(active < highDefault || maxActive < highDefault)
-                                        active = highDefault;
-                                    else
-                                        active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
+                                    active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
 
-                                    message << "Success rate is "
-                                            << ratioSuccessFailure
-                                            << "% for link "
-                                            << source_hostname
-                                            << " -> "
-                                            << destin_hostname
-                                            << " and current throughput is "
-                                            << throughput
-                                            << " while previous was "
-                                            << thrStored
-                                            << " so max active is decreased by 2 and now is "
-                                            << active;
-
-                                    sql << "update t_optimize_active set datetime=sys_extract_utc(systimestamp), message=:message, active=:active where source_se=:source and dest_se=:dest ",
-                                        soci::use(message.str()), soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
-                                }
-                            else if(active == 0 || isNullMaxActive == soci::i_null )
-                                {
-                                    active = highDefault;
-
-                                    message << "Number of active for link "
-                                            << source_hostname
-                                            << " -> "
-                                            << destin_hostname
-                                            << " is 0 and there is no max active yet into the db (no samples) "
-                                            << " so max active now is the default "
-                                            << active;
-
-                                    sql << "update t_optimize_active set datetime=sys_extract_utc(systimestamp), message=:message, active=:active where source_se=:source and dest_se=:dest ",
-                                        soci::use(message.str()), soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
+                                    stmt10.execute(true);
                                 }
                             else
                                 {
-                                    if(active < highDefault || maxActive < highDefault)
-                                        active = highDefault;
-                                    else
-                                        active = maxActive;
+                                    active = maxActive;
 
-                                    message << "Number of active for link "
-                                            << source_hostname
-                                            << " -> "
-                                            << destin_hostname
-                                            << " is "
-                                            << active
-                                            <<  " success rate is "
-                                            << ratioSuccessFailure
-                                            << "% current throughput is "
-                                            << throughput
-                                            << " and previous throughput is "
-                                            << thrStored;
-
-                                    sql << "update t_optimize_active set datetime=sys_extract_utc(systimestamp), message=:message, active=:active where source_se=:source and dest_se=:dest ",
-                                        soci::use(message.str()), soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
+                                    stmt10.execute(true);
                                 }
+
+                            updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure);
 
                             sql.commit();
                         }
-                }
-        }
+                } //end for
+        } //end try
     catch (std::exception& e)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
@@ -5665,7 +5573,7 @@ double OracleAPI::getSuccessRate(std::string source, std::string destination)
 
             if(nFinishedLastHour > 0)
                 {
-                    ratioSuccessFailure = nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0);
+                    ratioSuccessFailure = ceil(nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0));
                 }
 
         }
@@ -7358,6 +7266,34 @@ void OracleAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* star
         {
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+
+
+
+void OracleAPI::updateOptimizerEvolution(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname, int active, double throughput, double successRate)
+{
+    try
+        {
+            sql << " INSERT INTO t_optimizer_evolution (datetime, source_se, dest_se, active, throughput, filesize) "
+                " SELECT sys_extract_utc(systimestamp), :source, :dest, :active, :throughput, :filesize FROM dual "
+                " WHERE not exists (SELECT * FROM t_optimizer_evolution "
+                " WHERE source_se=:source and dest_se=:dest and datetime >= (sys_extract_utc(systimestamp) - INTERVAL '50' second) )",
+                soci::use(source_hostname),
+                soci::use(destination_hostname),
+                soci::use(active),
+                soci::use(throughput),
+                soci::use(successRate),
+                soci::use(source_hostname),
+                soci::use(destination_hostname);
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
 }
 

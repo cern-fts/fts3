@@ -333,8 +333,6 @@ public:
     virtual void updateFileTransferProgressVector(std::vector<struct message_updater>& messages);
 
     virtual void transferLogFileVector(std::map<int, struct message_log>& messagesLog);
-
-    virtual void updateOptimizerEvolution();
     
     unsigned int updateFileStatusReuse(TransferFiles* file, const std::string status);
     
@@ -352,7 +350,7 @@ private:
     
     int getOptimizerDefaultMode(soci::session& sql);    
 
-    bool getChangedFile (std::string source, std::string dest, double rate, double thr, double& thrStored, double retry, double& retryStored);
+    bool getChangedFile (std::string source, std::string dest, double rate, double& rateStored, double thr, double& thrStored, double retry, double& retryStored);
 
     struct HashSegment
     {
@@ -373,5 +371,7 @@ private:
 
     void bringOnlineReportStatusInternal(soci::session& sql, const std::string & state, const std::string & message,
             const struct message_bringonline& msg);
+	    
+    void updateOptimizerEvolution(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname, int active, double throughput, double successRate);	    
 
 };

@@ -372,8 +372,6 @@ public:
         *start = 0x0000;
         *end   = 0xFFFF;
     }
-
-    virtual void updateOptimizerEvolution() = 0;
     
     virtual unsigned int updateFileStatusReuse(TransferFiles* file, const std::string status) = 0; 
     
