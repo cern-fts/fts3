@@ -2529,12 +2529,12 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 
             soci::statement stmt8 = (
                                         sql.prepare << "SELECT active FROM t_optimize_active "
-                                        "WHERE source_se = :source AND dest_se = :dest_se ",
+                                        "WHERE source_se = :source AND dest_se = :dest_se LIMIT 1",
                                         soci::use(source_hostname),soci::use(destin_hostname), soci::into(maxActive, isNullMaxActive));
 
             soci::statement stmt9 = (
                                         sql.prepare << "select sum(retry) from t_file WHERE source_se = :source AND dest_se = :dest_se and "
-                                        "file_state in ('ACTIVE','SUBMITTED') order by start_time DESC LIMIT 50 ",
+                                        "file_state in ('READY','ACTIVE','SUBMITTED') order by start_time DESC LIMIT 50 ",
                                         soci::use(source_hostname),soci::use(destin_hostname), soci::into(retry, isNullRetry));
 
             soci::statement stmt10 = (
@@ -2559,7 +2559,6 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                     double retryStored = 0.0; //stored in mem
                     double thrStored = 0.0; //stored in mem
                     double rateStored = 0.0; //stored in mem
-                    double totalThroughput = 0.0;
                     double ratioSuccessFailure = 0.0;
                     active = 0;
                     maxActive = 0;
@@ -2568,13 +2567,13 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                     lastSuccessRate = 0.0;
                     isNullRate = soci::i_ok;
 
-                    // Weighted average for the 5 newest transfers
+                    // Weighted average
                     soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
                             " SELECT filesize, throughput "
-                            " FROM t_file "
+                            " FROM t_file use index(t_file_select) "
                             " WHERE source_se = :source AND dest_se = :dest AND "
-                            "       file_state = 'ACTIVE' AND throughput > 0 AND "
-                            "       filesize > 0 ",
+                            "       file_state  in ('ACTIVE','FINISHED') AND throughput > 0 AND "
+                            "       filesize > 0 and (job_finished is null or job_finished > (UTC_TIMESTAMP() - interval '1' minute))",
                             soci::use(source_hostname),soci::use(destin_hostname));
 
                     for (soci::rowset<soci::row>::const_iterator j = rsSizeAndThroughput.begin();
@@ -2583,7 +2582,6 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                             filesize    = j->get<double>("filesize", 0);
                             throughput += (j->get<double>("throughput", 0) * filesize);
                             totalSize  += filesize;
-                            totalThroughput += j->get<double>("throughput", 0);			    
                         }
                     if (totalSize > 0)
                         {
@@ -2609,7 +2607,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 
                     if(nFinishedLastHour > 0.0)
                         {
-                            ratioSuccessFailure = nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0);
+                            ratioSuccessFailure = ceil(nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0));
                         }
 
                     // Active transfers
@@ -2623,71 +2621,52 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                     if (isNullRetry == soci::i_null)
                         retry = 0;
 
+                    if (isNullMaxActive == soci::i_null)
+                        maxActive = highDefault;
+
                     //only apply the logic below if any of these values changes
                     bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, rateStored, throughput, thrStored, retry, retryStored);
 
-		    //ratioSuccessFailure, rateStored, throughput, thrStored MUST never be zero
-                    if(changed == true)
+                    //ratioSuccessFailure, rateStored, throughput, thrStored MUST never be zero
+                    if(changed)
                         {
                             sql.begin();
 
                             if( (ratioSuccessFailure == 100 || ratioSuccessFailure > rateStored) && throughput > thrStored && retry <= retryStored)
                                 {
-				    if(maxActive > 0)
-				    	active = maxActive + spawnActive;									
-                                    else if(active < highDefault || maxActive < highDefault)
-                                        active = highDefault;
-                                    else
-                                        active = maxActive + spawnActive;
+                                    active = maxActive + spawnActive;
 
                                     stmt10.execute(true);
                                 }
                             else if( (ratioSuccessFailure == 100 || ratioSuccessFailure > rateStored) && throughput == thrStored && retry <= retryStored)
                                 {
-				    if(maxActive > 0)
-				    	active = maxActive;									
-                                    else if(active < highDefault || maxActive < highDefault)
-                                        active = highDefault;
-                                    else
-                                        active = maxActive;
+                                    active = maxActive;
 
                                     stmt10.execute(true);
                                 }
                             else if( (ratioSuccessFailure == 100 || ratioSuccessFailure > rateStored) && (throughput < thrStored || retry > retryStored))
                                 {
-				    if(maxActive > 0)
-				    	active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);									
-                                    else if(active < highDefault || maxActive < highDefault)
-                                        active = highDefault;
+                                    if(ratioSuccessFailure >= 98)
+                                        active = maxActive;
                                     else
-                                        active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);					
-					
+                                        active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
+
                                     stmt10.execute(true);
                                 }
-                            else if ( ratioSuccessFailure < 100 || retry > retryStored)
+                            else if ( ratioSuccessFailure < 98 || retry > retryStored)
                                 {
-				    if(maxActive > 0)
-				    	active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);									
-                                    else if(active < highDefault || maxActive < highDefault)
-                                        active = highDefault;
-                                    else
-                                        active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);	
+                                    active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
 
                                     stmt10.execute(true);
                                 }
                             else
                                 {
-                                    if(maxActive > 0)
-                                        active = maxActive;
-                                    else
-                                        active = highDefault;
+                                    active = maxActive;
 
                                     stmt10.execute(true);
                                 }
-                                                      
-		            double tempThroughput = convertKbToMb(totalThroughput);
 
-                            updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, tempThroughput, ratioSuccessFailure);
+                            updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure);
 
                             sql.commit();
                         }
@@ -5468,11 +5447,11 @@ double MySqlAPI::getAvgThroughput(std::string source_hostname, std::string desti
         {
             // Weighted average for the 5 newest transfers
             soci::rowset<soci::row>  rsSizeAndThroughput = (sql.prepare <<
-                     " SELECT filesize, throughput "
-                            " FROM t_file "
-                            " WHERE source_se = :source AND dest_se = :dest AND "
-                            "       file_state = 'ACTIVE' AND throughput > 0 AND "
-                            "       filesize > 0 ",
+                    " SELECT filesize, throughput "
+                    " FROM t_file "
+                    " WHERE source_se = :source AND dest_se = :dest AND "
+                    "       file_state = 'ACTIVE' AND throughput > 0 AND "
+                    "       filesize > 0 ",
                     soci::use(source_hostname),soci::use(destin_hostname));
 
             for (soci::rowset<soci::row>::const_iterator j = rsSizeAndThroughput.begin();
