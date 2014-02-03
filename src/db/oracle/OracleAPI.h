@@ -334,9 +334,9 @@ public:
     virtual void updateFileTransferProgressVector(std::vector<struct message_updater>& messages);
 
     virtual void transferLogFileVector(std::map<int, struct message_log>& messagesLog);
-    
+
     unsigned int updateFileStatusReuse(TransferFiles* file, const std::string status);
-    
+
     void getCancelJob(std::vector<int>& requestIDs);
 
 private:
@@ -345,8 +345,8 @@ private:
     std::string           hostname;
 
     int getOptimizerMode(soci::session& sql);
-    
-    int getOptimizerDefaultMode(soci::session& sql);    
+
+    int getOptimizerDefaultMode(soci::session& sql);
 
     void countFileInTerminalStates(soci::session& sql, std::string jobId,
                                    unsigned int& finished, unsigned int& cancelled, unsigned int& failed);
@@ -370,7 +370,7 @@ private:
     bool updateJobTransferStatusInternal(soci::session& sql, std::string job_id, const std::string status);
 
     void useFileReplica(soci::session& sql, std::string jobId, int fileId);
-    
-    void updateOptimizerEvolution(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname, int active, double throughput, double successRate);    
+
+    void updateOptimizerEvolution(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname, int active, double throughput, double successRate);
 
 };

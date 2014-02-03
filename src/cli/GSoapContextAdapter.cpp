@@ -40,7 +40,7 @@ namespace cli
 {
 
 GSoapContextAdapter::GSoapContextAdapter(string endpoint):
-        endpoint(endpoint), ctx(soap_new2(SOAP_IO_KEEPALIVE, SOAP_IO_KEEPALIVE)/*soap_new1(SOAP_ENC_MTOM)*/)
+    endpoint(endpoint), ctx(soap_new2(SOAP_IO_KEEPALIVE, SOAP_IO_KEEPALIVE)/*soap_new1(SOAP_ENC_MTOM)*/)
 {
     this->major = 0;
     this->minor = 0;

@@ -268,7 +268,8 @@ private:
     bool connected;
 
     /// Constructor
-    BdiiBrowser() : ld(NULL), querying(0), connected(false) {
+    BdiiBrowser() : ld(NULL), querying(0), connected(false)
+    {
         memset(&timeout, 0, sizeof(timeout));
         memset(&search_timeout, 0, sizeof(search_timeout));
     };

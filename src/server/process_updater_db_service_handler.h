@@ -100,7 +100,7 @@ public:
 
 protected:
     std::vector<struct message_updater> messages;
-    
+
     void killRunningJob(std::vector<int>& requestIDs)
     {
         std::vector<int>::const_iterator iter;
@@ -111,7 +111,7 @@ protected:
                 kill(pid, SIGTERM);
             }
     }
-    
+
 
 
     /* ---------------------------------------------------------------------- */
@@ -122,7 +122,7 @@ protected:
         static unsigned int countReverted = 0;
         static unsigned int counter2 = 0;
         static unsigned int counterTimeoutWaiting = 0;
-	static unsigned int counterCanceled = 0;
+        static unsigned int counterCanceled = 0;
         std::vector<int> requestIDs;
 
         while (1)   /*need to receive more than one messages at a time*/
@@ -140,7 +140,7 @@ protected:
                         if (!messages.empty())
                             {
                                 boost::filesystem::path p("/var/lib/fts3/");
-                                boost::filesystem::space_info s = boost::filesystem::space(p);				
+                                boost::filesystem::space_info s = boost::filesystem::space(p);
 
                                 if(s.free <=0 || s.available <= 0)
                                     {
@@ -170,7 +170,7 @@ protected:
                                     }
                                 messages.clear();
                             }
-			    
+
                         /*also get jobs which have been canceled by the client*/
                         counterCanceled++;
                         if (counterCanceled == 3)
@@ -183,7 +183,7 @@ protected:
                                     }
                                 counterCanceled = 0;
                             }
-			    
+
 
 
                         /*revert to SUBMITTED if stayed in READY for too long (300 secs)*/
@@ -272,7 +272,7 @@ protected:
                         countReverted = 0;
                         counter2 = 0;
                         counterTimeoutWaiting = 0;
-			counterCanceled = 0;
+                        counterCanceled = 0;
                     }
                 catch (...)
                     {
@@ -283,7 +283,7 @@ protected:
                         countReverted = 0;
                         counter2 = 0;
                         counterTimeoutWaiting = 0;
-			counterCanceled = 0;
+                        counterCanceled = 0;
                     }
                 sleep(1);
             }

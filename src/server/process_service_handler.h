@@ -588,16 +588,16 @@ protected:
                                                          "", // assoc_service_type
                                                          false,
                                                          "");
-                                       /*set all to ready, special case for session reuse*/
-					DBSingleton::instance().getDBObjectInstance()->updateFileStatusReuse(tempUrl, "READY");
-					
+                                        /*set all to ready, special case for session reuse*/
+                                        DBSingleton::instance().getDBObjectInstance()->updateFileStatusReuse(tempUrl, "READY");
+
                                         for (queueiter = voQueues[vo].begin(); queueiter != voQueues[vo].end(); ++queueiter)
                                             {
-                                                TransferFiles* temp = (TransferFiles*) * queueiter;                                                
-                                                fileIds.insert(std::make_pair(temp->FILE_ID, temp->JOB_ID));                                                
+                                                TransferFiles* temp = (TransferFiles*) * queueiter;
+                                                fileIds.insert(std::make_pair(temp->FILE_ID, temp->JOB_ID));
                                             }
-					
-					SingleTrStateInstance::instance().sendStateMessage(tempUrl->JOB_ID, -1);    
+
+                                        SingleTrStateInstance::instance().sendStateMessage(tempUrl->JOB_ID, -1);
 
 
                                         debug = DBSingleton::instance().getDBObjectInstance()->getDebugMode(source_hostname, destin_hostname);

@@ -88,16 +88,17 @@ void FileMonitor::run (FileMonitor* const me)
             // we will check the timestamp periodically every minute
             sleep(60);
             // check the timestamp
-            if (stat (me->path.c_str(), &st) == 0) {
-                time_t new_timestamp = st.st_mtime;
-                // compare with the old one
-                if (new_timestamp != me->timestamp)
-                    {
-                        // if the file has been changed reload the configuration
-                        me->timestamp = new_timestamp;
-                        me->sc->read(0, 0);
-                    }
-            }
+            if (stat (me->path.c_str(), &st) == 0)
+                {
+                    time_t new_timestamp = st.st_mtime;
+                    // compare with the old one
+                    if (new_timestamp != me->timestamp)
+                        {
+                            // if the file has been changed reload the configuration
+                            me->timestamp = new_timestamp;
+                            me->sc->read(0, 0);
+                        }
+                }
         }
 }
 

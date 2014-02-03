@@ -509,18 +509,18 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                 }
 
             if(distinct.empty())
-                return;				
+                return;
 
             long long hostCount = 0;
             sql <<
-            		" SELECT COUNT(hostname) "
-            		" FROM t_hosts "
-            		" WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval 2 minute)",
-            		soci::into(hostCount)
-            ;
-	    
-	    if(hostCount < 1)
-	    	hostCount = 1;	    
+                " SELECT COUNT(hostname) "
+                " FROM t_hosts "
+                " WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval 2 minute)",
+                soci::into(hostCount)
+                ;
+
+            if(hostCount < 1)
+                hostCount = 1;
 
             // Iterate through pairs, getting jobs IF the VO has not run out of credits
             // AND there are pending file transfers within the job
@@ -589,13 +589,13 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                 }
                         }
                     else
-                    	{
-                    		// round it up
+                        {
+                            // round it up
                             double temp = (double) filesNum / (double)hostCount;
-                    		filesNum = static_cast<int>(ceil(temp));
-                    		// not less than 2
-                    		if (filesNum < 2) filesNum = 2;
-                    	}
+                            filesNum = static_cast<int>(ceil(temp));
+                            // not less than 2
+                            if (filesNum < 2) filesNum = 2;
+                        }
 
                     std::map<std::string, int> activityFilesNum =
                         getFilesNumPerActivity(sql, boost::get<0>(triplet), boost::get<1>(triplet), boost::get<2>(triplet), filesNum);
@@ -857,7 +857,7 @@ unsigned int MySqlAPI::updateFileStatusReuse(TransferFiles* file, const std::str
     try
         {
             sql.begin();
-           
+
             soci::statement stmt(sql);
 
             stmt.exchange(soci::use(status, "state"));
@@ -871,8 +871,7 @@ unsigned int MySqlAPI::updateFileStatusReuse(TransferFiles* file, const std::str
             stmt.execute(true);
 
             updated = (unsigned int) stmt.get_affected_rows();
-	    std::cout << "Updated = " << updated << std::endl;
-	    
+
             if (updated > 0)
                 {
                     soci::statement jobStmt(sql);
@@ -2082,7 +2081,7 @@ void MySqlAPI::cancelJob(std::vector<std::string>& requestIDs)
                     job_id = (*i);
 
                     // Cancel job
-                    stmt1.execute(true);                  
+                    stmt1.execute(true);
 
                     // Cancel files
                     stmt2.execute(true);
@@ -2106,13 +2105,13 @@ void MySqlAPI::cancelJob(std::vector<std::string>& requestIDs)
 
 void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
 {
-   soci::session sql(*connectionPool);
-   std::string job_id;
-   int pid = 0;
+    soci::session sql(*connectionPool);
+    std::string job_id;
+    int pid = 0;
 
     try
         {
-            soci::rowset<soci::row> rs = (sql.prepare << " select distinct pid, job_id from t_file where PID IS NOT NULL AND file_state='CANCELED' and job_finished is NULL AND TRANSFERHOST = :transferHost", soci::use(hostname));	    
+            soci::rowset<soci::row> rs = (sql.prepare << " select distinct pid, job_id from t_file where PID IS NOT NULL AND file_state='CANCELED' and job_finished is NULL AND TRANSFERHOST = :transferHost", soci::use(hostname));
 
             soci::statement stmt1 = (sql.prepare << "UPDATE t_file SET  job_finished = UTC_TIMESTAMP() "
                                      "WHERE job_id = :jobId and pid = :pid ",
@@ -2121,16 +2120,16 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
             // Cancel files
             sql.begin();
             for (soci::rowset<soci::row>::const_iterator i2 = rs.begin(); i2 != rs.end(); ++i2)
-                 {
-                            soci::row const& row = *i2;
-                            pid = row.get<int>("pid");
-			    job_id = row.get<std::string>("job_id");
-			    requestIDs.push_back(pid);
-			    
+                {
+                    soci::row const& row = *i2;
+                    pid = row.get<int>("pid");
+                    job_id = row.get<std::string>("job_id");
+                    requestIDs.push_back(pid);
+
                     stmt1.execute(true);
-                  }
+                }
             sql.commit();
-	    
+
         }
     catch (std::exception& e)
         {
@@ -2423,33 +2422,33 @@ bool MySqlAPI::getDebugMode(std::string source_hostname, std::string destin_host
         {
             std::string debug;
             sql <<
-            		" SELECT debug "
-            		" FROM t_debug "
-            		" WHERE source_se = :source "
-            		"	AND (dest_se = '' OR dest_se IS NULL) ",
-            		soci::use(source_hostname),
-            		soci::into(debug)
-            ;
+                " SELECT debug "
+                " FROM t_debug "
+                " WHERE source_se = :source "
+                "	AND (dest_se = '' OR dest_se IS NULL) ",
+                soci::use(source_hostname),
+                soci::into(debug)
+                ;
 
             isDebug = (debug == "on");
             if (isDebug) return isDebug;
 
             sql <<
-            		" SELECT debug "
-            		" FROM t_debug "
-            		" WHERE source_se = :destin "
-            		"	AND (dest_se = '' OR dest_se IS NULL) ",
-            		soci::use(destin_hostname),
-            		soci::into(debug)
-            ;
+                " SELECT debug "
+                " FROM t_debug "
+                " WHERE source_se = :destin "
+                "	AND (dest_se = '' OR dest_se IS NULL) ",
+                soci::use(destin_hostname),
+                soci::into(debug)
+                ;
 
             isDebug = (debug == "on");
             if (isDebug) return isDebug;
 
             sql << "SELECT debug FROM t_debug WHERE source_se = :source AND dest_se = :dest",
-            		soci::use(source_hostname), soci::use(destin_hostname), soci::into(debug);
+                soci::use(source_hostname), soci::use(destin_hostname), soci::into(debug);
 
-       		isDebug = (debug == "on");
+            isDebug = (debug == "on");
         }
     catch (std::exception& e)
         {
@@ -2834,7 +2833,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                     stmt10.execute(true);
                                 }
                             else if( (ratioSuccessFailure == 100 || ratioSuccessFailure > rateStored) && (throughput < thrStored || retry > retryStored))
-                                {                                    
+                                {
                                     active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
 
                                     stmt10.execute(true);
@@ -5731,9 +5730,7 @@ double MySqlAPI::getAvgThroughput(std::string source_hostname, std::string desti
                     " WHERE source_se = :source AND dest_se = :dest AND "
                     "       file_state IN ('ACTIVE','FINISHED') AND throughput > 0 AND "
                     "       filesize > 0  AND "
-                    "       (start_time >= date_sub(utc_timestamp(), interval '5' minute) OR "
-                    "        job_finished >= date_sub(utc_timestamp(), interval '5' minute)) "
-                    " ORDER BY job_finished DESC LIMIT 5 ",
+                    "        job_finished >= date_sub(utc_timestamp(), interval '1' minute) ",
                     soci::use(source_hostname),soci::use(destin_hostname));
 
             for (soci::rowset<soci::row>::const_iterator j = rsSizeAndThroughput.begin();
@@ -6938,7 +6935,8 @@ void MySqlAPI::setOptimizerMode(int mode)
         }
 }
 
-int MySqlAPI::getOptimizerDefaultMode(soci::session& sql){
+int MySqlAPI::getOptimizerDefaultMode(soci::session& sql)
+{
     int modeDefault = 1;
     int mode = 0;
     soci::indicator ind = soci::i_ok;
@@ -6953,10 +6951,10 @@ int MySqlAPI::getOptimizerDefaultMode(soci::session& sql){
 
             if (ind == soci::i_ok)
                 {
-			if(mode == 0)
-				return mode + 1;
-			else
-				return mode; 
+                    if(mode == 0)
+                        return mode + 1;
+                    else
+                        return mode;
                 }
             return modeDefault;
         }
