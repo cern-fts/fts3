@@ -1168,5 +1168,6 @@ stop:
 
     StaticSslLocking::kill_locks();
 
+    sleep(1);
     return EXIT_SUCCESS;
 }
