@@ -4,7 +4,7 @@
 
 Name: fts
 Version: 3.2.0
-Release: 3
+Release: 4%{?dist}
 Summary: File Transfer Service V3
 Group: System Environment/Daemons
 License: ASL 2.0
@@ -379,6 +379,8 @@ exit 0
 
 
 %changelog
+* Tue Feb 04 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.0-4
+  - introduced dist back in the release
 * Tue Jan 14 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.0-3
   - using cmake28
 * Mon Jan 13 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.0-2
