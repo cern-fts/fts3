@@ -2601,7 +2601,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                             j != rsSizeAndThroughput.end(); ++j)
                         {
                             filesize    = j->get<double>("filesize", 0);
-                            throughput += (j->get<double>("throughput", 0) * filesize);
+                            throughput += (j->get<double>("throughput", 0.0) * filesize);
                             totalSize  += filesize;
                         }
                     if (totalSize > 0)
