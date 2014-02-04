@@ -16,6 +16,11 @@ limitations under the License. */
 #include "error.h"
 #include "timeout.h"
 
+#include <boost/version.hpp>
+#if BOOST_VERSION < 105000
+#define TIME_UTC_ TIME_UTC
+#endif
+
 FTS3_COMMON_NAMESPACE_START
 
 /* ---------------------------------------------------------------------- */
@@ -27,9 +32,9 @@ Timeout& Timeout::actualize()
     static const int MILLISECONDS_PER_SECOND = 1000;
     static const int NANOSECONDS_PER_SECOND = 1000000000;
     static const int NANOSECONDS_PER_MILLISECOND = 1000000;
-    int res = boost::xtime_get (&_xt, TIME_UTC);
+    int res = boost::xtime_get (&_xt, TIME_UTC_);
 
-    if (TIME_UTC != res) FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Time error"));
+    if (TIME_UTC_ != res) FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Time error"));
 
     int nsecs = _ns + (int) _xt.nsec;
     int usecs = _us + nsecs / NANOSECONDS_PER_MILLISECOND;
