@@ -290,7 +290,7 @@ std::vector<std::string> OracleAPI::getAllActivityShareConf()
             soci::rowset<soci::row>::const_iterator it;
             for (it = rs.begin(); it != rs.end(); it++)
                 {
-                    ret.push_back(it->get<std::string>("vo"));
+                    ret.push_back(it->get<std::string>("VO"));
                 }
         }
     catch (std::exception& e)
@@ -2063,8 +2063,8 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs)
             for (soci::rowset<soci::row>::const_iterator i2 = rs.begin(); i2 != rs.end(); ++i2)
                 {
                     soci::row const& row = *i2;
-                    pid = row.get<int>("pid");
-                    job_id = row.get<std::string>("job_id");
+                    pid = row.get<int>("PID");
+                    job_id = row.get<std::string>("JOB_ID");
                     requestIDs.push_back(pid);
 
                     stmt1.execute(true);
@@ -2635,31 +2635,80 @@ bool OracleAPI::isTrAllowed2(const std::string & source_hostname, const std::str
 }
 
 
-
 bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::string & /*destin_hostname1*/)
 {
     soci::session sql(*connectionPool);
 
     int allowed = false;
+    std::string source_hostname;
+    std::string destin_hostname;
+    int active = 0;
+    int maxActive = 0;
+    soci::indicator isNullRetry = soci::i_ok;
+    soci::indicator isNullMaxActive = soci::i_ok;
+    soci::indicator isNullRate = soci::i_ok;
+    double retry = 0.0;   //latest from db
+    double lastSuccessRate = 0.0;
+    int retrySet = 0;
+    soci::indicator isRetry = soci::i_ok;
 
     try
         {
+	    //check optimizer level, minimum active per link
             int highDefault = getOptimizerMode(sql);
+	    
+	    //store the default
             int tempDefault =   highDefault;
 
+	    //based on the level, how many transfers will be spawned
             int spawnActive = getOptimizerDefaultMode(sql);
 
-            soci::rowset<soci::row> rs = ( sql.prepare << " select  distinct o.source_se, o.dest_se from t_optimize_active o INNER JOIN "
+	    //fetch the records from db for distinct links
+            soci::rowset<soci::row> rs = ( sql.prepare <<
+                                           " select  distinct o.source_se, o.dest_se from t_optimize_active o INNER JOIN "
                                            " t_file f ON (o.source_se = f.source_se) where o.dest_se=f.dest_se and "
                                            " f.file_state='SUBMITTED'");
 
+	    //snapshot of active transfers
+            soci::statement stmt7 = (
+                                        sql.prepare << "SELECT count(*) FROM t_file "
+                                        "WHERE source_se = :source AND dest_se = :dest_se and file_state in ('READY','ACTIVE') ",
+                                        soci::use(source_hostname),soci::use(destin_hostname), soci::into(active));
+
+	    //max number of active allowed per link
+            soci::statement stmt8 = (
+                                        sql.prepare << "SELECT active FROM t_optimize_active "
+                                        "WHERE source_se = :source AND dest_se = :dest_se ",
+                                        soci::use(source_hostname),soci::use(destin_hostname), soci::into(maxActive, isNullMaxActive));
+
+	    //sum of retried transfers per link
+            soci::statement stmt9 = (
+                                        sql.prepare << "select * from (SELECT sum(retry) from t_file WHERE source_se = :source AND dest_se = :dest_se and "
+                        			      "file_state in ('READY','ACTIVE','SUBMITTED') order by start_time DESC) WHERE ROWNUM <= 50 ",
+                                        	soci::use(source_hostname),soci::use(destin_hostname), soci::into(retry, isNullRetry));
+
+            soci::statement stmt10 = (
+                                         sql.prepare << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",
+                                         soci::use(active), soci::use(source_hostname), soci::use(destin_hostname));
+
+            //check if retry is set at global level
+            sql <<
+                " SELECT retry "
+                " FROM t_server_config ",soci::into(retrySet, isRetry)
+                ;
+		
+	    //if not set, flag as 0	
+            if (isRetry == soci::i_null || retrySet == 0)
+                retrySet = 0;
+
+
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
-                    std::string source_hostname = i->get<std::string>("SOURCE_SE");
-                    std::string destin_hostname = i->get<std::string>("DEST_SE");
+                    source_hostname = i->get<std::string>("SOURCE_SE");
+                    destin_hostname = i->get<std::string>("DEST_SE");
 
                     if(true == lanTransfer(source_hostname, destin_hostname))
-                        highDefault *= 3;
+                        highDefault = (highDefault * 3);
                     else //default
                         highDefault = tempDefault;
 
@@ -2667,24 +2716,26 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                     double throughput=0.0;
                     double filesize = 0.0;
                     double totalSize = 0.0;
-                    double retry = 0.0;   //latest from db
+                    retry = 0.0;   //latest from db
                     double retryStored = 0.0; //stored in mem
                     double thrStored = 0.0; //stored in mem
                     double rateStored = 0.0; //stored in mem
-                    int active = 0;
-                    int maxActive = 0;
-                    std::stringstream message;
-                    soci::indicator isNullRetry = soci::i_ok;
-                    soci::indicator isNullMaxActive = soci::i_ok;
+                    double ratioSuccessFailure = 0.0;
+                    active = 0;
+                    maxActive = 0;
+                    isNullRetry = soci::i_ok;
+                    isNullMaxActive = soci::i_ok;
+                    lastSuccessRate = 0.0;
+                    isNullRate = soci::i_ok;
 
-                    // Weighted average for the 5 newest transfers
+                    // Weighted average  		   
                     soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
                             " SELECT * FROM ("
                             " SELECT rownum as rn, filesize, throughput "
                             " FROM t_file "
                             " WHERE source_se = :source AND dest_se = :dest AND "
                             "       file_state IN ('ACTIVE','FINISHED') AND throughput > 0 AND "
-                            "       filesize > 0  AND "
+                            "       filesize > 0  AND (job_finished is NULL OR"
                             "        job_finished >= (sys_extract_utc(systimestamp) - interval '1' minute)) ",
                             soci::use(source_hostname),soci::use(destin_hostname));
 
@@ -2700,54 +2751,54 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
 
 
                     // Ratio of success
-                    soci::rowset<soci::row> rs = (sql.prepare << "SELECT file_state, current_failures FROM t_file "
+                    soci::rowset<soci::row> rs = (sql.prepare << "SELECT file_state, retry FROM t_file "
                                                   "WHERE "
                                                   "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
                                                   "      (t_file.job_finished > (sys_extract_utc(systimestamp) - interval '1' minute)) AND "
                                                   "      file_state IN ('FAILED','FINISHED') ",
                                                   soci::use(source_hostname), soci::use(destin_hostname));
 
+
+		    //we need to exclude non-recoverable errors so as not to count as failures and affect effiency
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin();
                             i != rs.end(); ++i)
                         {
-                            std::string fileState = i->get<std::string>("FILE_STATE", "");
-                            int retry = static_cast<int>(i->get<long long>("CURRENT_FAILURES",0));
+                            std::string state = i->get<std::string>("FILE_STATE", "");
+                            int retryNum = i->get<int>("RETRY", 0);
 
-                            if      (fileState.compare("FAILED") == 0 && retry==0 )   nFailedLastHour+=1.0;
-                            else if (fileState.compare("FINISHED") == 0) ++nFinishedLastHour+=1.0;
+                            if (state.compare("FAILED") == 0 && retrySet > 0 && retryNum > 0)
+                                {
+                                    nFailedLastHour+=1.0;
+                                }
+                            else if (state.compare("FAILED") == 0 && retrySet == 0)
+                                {
+                                    nFailedLastHour+=1.0;
+                                }
+                            else if (state.compare("FINISHED") == 0)
+                                {
+                                    nFinishedLastHour+=1.0;
+                                }
                         }
 
-                    double ratioSuccessFailure = 0.0;
-                    if(nFinishedLastHour > 0)
+		    //round up efficiency
+                    if(nFinishedLastHour > 0.0)
                         {
                             ratioSuccessFailure = ceil(nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0));
                         }
 
                     // Active transfers
-                    soci::statement stmt7 = (
-                                                sql.prepare << "SELECT count(*) FROM t_file "
-                                                "WHERE source_se = :source AND dest_se = :dest_se and file_state in ('READY','ACTIVE') ",
-                                                soci::use(source_hostname),soci::use(destin_hostname), soci::into(active));
                     stmt7.execute(true);
 
                     // Max active transfers
-                    soci::statement stmt8 = (
-                                                sql.prepare << "SELECT active FROM t_optimize_active "
-                                                "WHERE source_se = :source AND dest_se = :dest_se ",
-                                                soci::use(source_hostname),soci::use(destin_hostname), soci::into(maxActive, isNullMaxActive));
                     stmt8.execute(true);
 
-                    soci::statement stmt10 = (
-                                                 sql.prepare << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",
-                                                 soci::use(active), soci::use(source_hostname), soci::use(destin_hostname));
-
-
-                    sql << "select * from (SELECT sum(retry) from t_file WHERE source_se = :source AND dest_se = :dest_se and "
-                        "file_state in ('ACTIVE','SUBMITTED') order by start_time) WHERE ROWNUM <= 50 ",
-                        soci::use(source_hostname),soci::use(destin_hostname), soci::into(retry, isNullRetry);
-
-                    if (isNullRetry == soci::i_null)
-                        retry = 0;
+                    //check if have been retried
+                    if (retrySet > 0)
+                        {
+                            stmt9.execute(true);
+                            if (isNullRetry == soci::i_null)
+                                retry = 0;
+                        }
 
                     if (isNullMaxActive == soci::i_null)
                         maxActive = highDefault;
@@ -2799,14 +2850,19 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
         } //end try
     catch (std::exception& e)
         {
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
     return allowed;
 }
+
+
+
 
 
 int OracleAPI::getSeOut(const std::string & source, const std::set<std::string> & destination)
@@ -3303,7 +3359,7 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
                 {
                     count++;
                     soci::row const& r = *i;
-                    job_id = r.get<std::string>("job_id");
+                    job_id = r.get<std::string>("JOB_ID");
 
                     insertJobsStmt.execute(true);
                     insertFileStmt.execute(true);
@@ -5748,7 +5804,7 @@ void OracleAPI::cancelJobsInTheQueue(const std::string& dn, std::vector<std::str
             for (it = rs.begin(); it != rs.end(); ++it)
                 {
 
-                    jobs.push_back(it->get<std::string>("job_id"));
+                    jobs.push_back(it->get<std::string>("JOB_ID"));
                 }
 
             cancelJob(jobs);

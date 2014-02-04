@@ -2697,29 +2697,39 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
     soci::indicator isNullRate = soci::i_ok;
     double retry = 0.0;   //latest from db
     double lastSuccessRate = 0.0;
+    int retrySet = 0;
+    soci::indicator isRetry = soci::i_ok;
 
     try
         {
+	    //check optimizer level, minimum active per link
             int highDefault = getOptimizerMode(sql);
+	    
+	    //store the default
             int tempDefault =   highDefault;
 
+	    //based on the level, how many transfers will be spawned
             int spawnActive = getOptimizerDefaultMode(sql);
 
+	    //fetch the records from db for distinct links
             soci::rowset<soci::row> rs = ( sql.prepare <<
                                            " select  distinct o.source_se, o.dest_se from t_optimize_active o INNER JOIN "
                                            " t_file f ON (o.source_se = f.source_se) where o.dest_se=f.dest_se and "
                                            " f.file_state='SUBMITTED'");
 
+	    //snapshot of active transfers
             soci::statement stmt7 = (
                                         sql.prepare << "SELECT count(*) FROM t_file "
                                         "WHERE source_se = :source AND dest_se = :dest_se and file_state in ('READY','ACTIVE') ",
                                         soci::use(source_hostname),soci::use(destin_hostname), soci::into(active));
 
+	    //max number of active allowed per link
             soci::statement stmt8 = (
                                         sql.prepare << "SELECT active FROM t_optimize_active "
                                         "WHERE source_se = :source AND dest_se = :dest_se LIMIT 1",
                                         soci::use(source_hostname),soci::use(destin_hostname), soci::into(maxActive, isNullMaxActive));
 
+	    //sum of retried transfers per link
             soci::statement stmt9 = (
                                         sql.prepare << "select sum(retry) from t_file WHERE source_se = :source AND dest_se = :dest_se and "
                                         "file_state in ('READY','ACTIVE','SUBMITTED') order by start_time DESC LIMIT 50 ",
@@ -2728,6 +2738,17 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
             soci::statement stmt10 = (
                                          sql.prepare << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",
                                          soci::use(active), soci::use(source_hostname), soci::use(destin_hostname));
+
+            //check if retry is set at global level
+            sql <<
+                " SELECT retry "
+                " FROM t_server_config LIMIT 1",soci::into(retrySet, isRetry)
+                ;
+		
+	    //if not set, flag as 0	
+            if (isRetry == soci::i_null || retrySet == 0)
+                retrySet = 0;
+
 
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
@@ -2768,7 +2789,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                             j != rsSizeAndThroughput.end(); ++j)
                         {
                             filesize    = j->get<double>("filesize", 0);
-                            throughput += (j->get<double>("throughput", 0) * filesize);
+                            throughput += (j->get<double>("throughput", 0.0) * filesize);
                             totalSize  += filesize;
                         }
                     if (totalSize > 0)
@@ -2777,22 +2798,36 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                         }
 
                     // Ratio of success
-                    soci::rowset<std::string> rs = (sql.prepare << "SELECT file_state FROM t_file "
-                                                    "WHERE "
-                                                    "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                                                    "      (t_file.job_finished > (UTC_TIMESTAMP() - interval '1' minute)) AND "
-                                                    "      file_state IN ('FAILED','FINISHED') ",
-                                                    soci::use(source_hostname), soci::use(destin_hostname));
+                    soci::rowset<soci::row> rs = (sql.prepare << "SELECT file_state, retry FROM t_file "
+                                                  "WHERE "
+                                                  "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
+                                                  "      (t_file.job_finished > (UTC_TIMESTAMP() - interval '1' minute)) AND "
+                                                  "      file_state IN ('FAILED','FINISHED') ",
+                                                  soci::use(source_hostname), soci::use(destin_hostname));
 
 
-                    for (soci::rowset<std::string>::const_iterator i = rs.begin();
+		    //we need to exclude non-recoverable errors so as not to count as failures and affect effiency
+                    for (soci::rowset<soci::row>::const_iterator i = rs.begin();
                             i != rs.end(); ++i)
                         {
-                            if      (i->compare("FAILED") == 0)   nFailedLastHour+=1.0;
-                            else if (i->compare("FINISHED") == 0) nFinishedLastHour+=1.0;
+                            std::string state = i->get<std::string>("file_state", "");
+                            int retryNum = i->get<int>("retry", 0);
+
+                            if (state.compare("FAILED") == 0 && retrySet > 0 && retryNum > 0)
+                                {
+                                    nFailedLastHour+=1.0;
+                                }
+                            else if (state.compare("FAILED") == 0 && retrySet == 0)
+                                {
+                                    nFailedLastHour+=1.0;
+                                }
+                            else if (state.compare("FINISHED") == 0)
+                                {
+                                    nFinishedLastHour+=1.0;
+                                }
                         }
 
-
+		    //round up efficiency
                     if(nFinishedLastHour > 0.0)
                         {
                             ratioSuccessFailure = ceil(nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0));
@@ -2805,9 +2840,12 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                     stmt8.execute(true);
 
                     //check if have been retried
-                    stmt9.execute(true);
-                    if (isNullRetry == soci::i_null)
-                        retry = 0;
+                    if (retrySet > 0)
+                        {
+                            stmt9.execute(true);
+                            if (isNullRetry == soci::i_null)
+                                retry = 0;
+                        }
 
                     if (isNullMaxActive == soci::i_null)
                         maxActive = highDefault;
