@@ -46,6 +46,8 @@ public:
         this->_enqueue(op);
     }
 
+private:
+
     bool criticalThreadExpired(time_t retrieveRecords, time_t updateRecords ,time_t stallRecords)
     {
         double diffTime  = 0.0;
@@ -74,8 +76,6 @@ public:
         return false;
     }
 
-private:
-
     void beat_impl(void)
     {
         while (!stopThreads)
@@ -89,9 +89,9 @@ private:
                     }
                 else if (true == criticalThreadExpired(retrieveRecords, updateRecords , stallRecords))
                     {
-                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "One of the critical threads looks stalled, run pstack to check and restart fts-server!" << commit;
-                        sleep(1);
-                        continue;
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "One of the critical threads looks stalled" << commit;
+                        // Note: Would be nice to get the pstack output in the log
+                        ordered_shutdown();
                     }
                 else
                     {
@@ -114,6 +114,17 @@ private:
                     }
                 sleep(60);
             }
+    }
+
+    void ordered_shutdown()
+    {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Stopping other threads..." << commit;
+        // Give other threads a chance to finish gracefully
+        stopThreads = true;
+        sleep(30);
+
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exiting" << commit;
+        _exit(1);
     }
 };
 
