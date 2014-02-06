@@ -50,17 +50,17 @@ private:
                 try
                     {
                         db::DBSingleton::instance().getDBObjectInstance()->isTrAllowed("", "");
-                        sleep(60);
+                        sleep(120);
                     }
                 catch(std::exception& e)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Process thread HeartBeatHandlerActive " << e.what() <<  commit;
-                        sleep(60);
+                        sleep(120);
                     }
                 catch(...)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Process thread HeartBeatHandlerActive unknown" <<  commit;
-                        sleep(60);
+                        sleep(120);
                     }
             }
     }
