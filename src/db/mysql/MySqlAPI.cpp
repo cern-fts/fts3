@@ -63,25 +63,25 @@ std::string getFullHostname()
 
 
 
-bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate, double& rateStored, double thr, double& thrStored, double retry, double& retryStored)
+bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate, double& rateStored, double thr, double& thrStored, double retry, double& retryStored, int active, int& activeStored)
 {
     bool returnValue = false;
 
-    if(rate == 0 || thr == 0)
+    if(rate == 0 || thr == 0 || active == 0)
         return returnValue;
 
     if(filesMemStore.empty())
         {
-            boost::tuple<std::string, std::string, double, double, double> record(source, dest, rate, thr, retry);
+            boost::tuple<std::string, std::string, double, double, double, int> record(source, dest, rate, thr, retry, active);
             filesMemStore.push_back(record);
         }
     else
         {
             bool found = false;
-            std::vector< boost::tuple<std::string, std::string, double, double, double> >::iterator itFind;
+            std::vector< boost::tuple<std::string, std::string, double, double, double, int> >::iterator itFind;
             for (itFind = filesMemStore.begin(); itFind < filesMemStore.end(); ++itFind)
                 {
-                    boost::tuple<std::string, std::string, double, double, double>& tupleRecord = *itFind;
+                    boost::tuple<std::string, std::string, double, double, double, int>& tupleRecord = *itFind;
                     std::string sourceLocal = boost::get<0>(tupleRecord);
                     std::string destLocal = boost::get<1>(tupleRecord);
                     if(sourceLocal == source && destLocal == dest)
@@ -92,29 +92,31 @@ bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate
                 }
             if (!found)
                 {
-                    boost::tuple<std::string, std::string, double, double, double> record(source, dest, rate, thr, retry);
+                    boost::tuple<std::string, std::string, double, double, double, int> record(source, dest, rate, thr, retry, active);
                     filesMemStore.push_back(record);
                 }
 
-            std::vector< boost::tuple<std::string, std::string, double, double, double> >::iterator it =  filesMemStore.begin();
+            std::vector< boost::tuple<std::string, std::string, double, double, double, int> >::iterator it =  filesMemStore.begin();
             while (it != filesMemStore.end())
                 {
-                    boost::tuple<std::string, std::string, double, double, double>& tupleRecord = *it;
+                    boost::tuple<std::string, std::string, double, double, double, int>& tupleRecord = *it;
                     std::string sourceLocal = boost::get<0>(tupleRecord);
                     std::string destLocal = boost::get<1>(tupleRecord);
                     double rateLocal = boost::get<2>(tupleRecord);
                     double thrLocal = boost::get<3>(tupleRecord);
                     double retryThr = boost::get<4>(tupleRecord);
+                    int activeLocal = boost::get<5>(tupleRecord);
 
                     if(sourceLocal == source && destLocal == dest)
                         {
                             retryStored = retryThr;
                             thrStored = thrLocal;
                             rateStored = rateLocal;
+                            activeStored = activeLocal;
                             if(rateLocal != rate || thrLocal != thr || retry != retryThr)
                                 {
                                     it = filesMemStore.erase(it);
-                                    boost::tuple<std::string, std::string, double, double, double> record(source, dest, rate, thr, retry);
+                                    boost::tuple<std::string, std::string, double, double, double, int> record(source, dest, rate, thr, retry, active);
                                     filesMemStore.push_back(record);
                                     returnValue = true;
                                     break;
@@ -2514,34 +2516,34 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 
     try
         {
-	    //check optimizer level, minimum active per link
+            //check optimizer level, minimum active per link
             int highDefault = getOptimizerMode(sql);
-	    
-	    //store the default
+
+            //store the default
             int tempDefault =   highDefault;
 
-	    //based on the level, how many transfers will be spawned
+            //based on the level, how many transfers will be spawned
             int spawnActive = getOptimizerDefaultMode(sql);
 
-	    //fetch the records from db for distinct links
+            //fetch the records from db for distinct links
             soci::rowset<soci::row> rs = ( sql.prepare <<
                                            " select  distinct o.source_se, o.dest_se from t_optimize_active o INNER JOIN "
                                            " t_file f ON (o.source_se = f.source_se) where o.dest_se=f.dest_se and "
                                            " f.file_state='SUBMITTED'");
 
-	    //snapshot of active transfers
+            //snapshot of active transfers
             soci::statement stmt7 = (
                                         sql.prepare << "SELECT count(*) FROM t_file "
                                         "WHERE source_se = :source AND dest_se = :dest_se and file_state in ('READY','ACTIVE') ",
                                         soci::use(source_hostname),soci::use(destin_hostname), soci::into(active));
 
-	    //max number of active allowed per link
+            //max number of active allowed per link
             soci::statement stmt8 = (
                                         sql.prepare << "SELECT active FROM t_optimize_active "
                                         "WHERE source_se = :source AND dest_se = :dest_se LIMIT 1",
                                         soci::use(source_hostname),soci::use(destin_hostname), soci::into(maxActive, isNullMaxActive));
 
-	    //sum of retried transfers per link
+            //sum of retried transfers per link
             soci::statement stmt9 = (
                                         sql.prepare << "select sum(retry) from t_file WHERE source_se = :source AND dest_se = :dest_se and "
                                         "file_state in ('READY','ACTIVE','SUBMITTED') order by start_time DESC LIMIT 50 ",
@@ -2549,7 +2551,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 
             soci::statement stmt10 = (
                                          sql.prepare << "update t_optimize_active set active=:active where "
-					 		" source_se=:source and dest_se=:dest and active=:maxActive ",
+                                         " source_se=:source and dest_se=:dest and active=:maxActive ",
                                          soci::use(active), soci::use(source_hostname), soci::use(destin_hostname), soci::use(maxActive));
 
             //check if retry is set at global level
@@ -2557,8 +2559,8 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                 " SELECT retry "
                 " FROM t_server_config LIMIT 1",soci::into(retrySet, isRetry)
                 ;
-		
-	    //if not set, flag as 0	
+
+            //if not set, flag as 0
             if (isRetry == soci::i_null || retrySet == 0)
                 retrySet = 0;
 
@@ -2581,6 +2583,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                     double retryStored = 0.0; //stored in mem
                     double thrStored = 0.0; //stored in mem
                     double rateStored = 0.0; //stored in mem
+                    int activeStored = 0; //stored in mem
                     double ratioSuccessFailure = 0.0;
                     active = 0;
                     maxActive = 0;
@@ -2619,7 +2622,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                                   soci::use(source_hostname), soci::use(destin_hostname));
 
 
-		    //we need to exclude non-recoverable errors so as not to count as failures and affect effiency
+                    //we need to exclude non-recoverable errors so as not to count as failures and affect effiency
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin();
                             i != rs.end(); ++i)
                         {
@@ -2640,7 +2643,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                 }
                         }
 
-		    //round up efficiency
+                    //round up efficiency
                     if(nFinishedLastHour > 0.0)
                         {
                             ratioSuccessFailure = ceil(nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0));
@@ -2664,7 +2667,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                         maxActive = highDefault;
 
                     //only apply the logic below if any of these values changes
-                    bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, rateStored, throughput, thrStored, retry, retryStored);
+                    bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, rateStored, throughput, thrStored, retry, retryStored, active, activeStored);
 
                     //ratioSuccessFailure, rateStored, throughput, thrStored MUST never be zero
                     if(changed)
@@ -2683,9 +2686,19 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 
                                     stmt10.execute(true);
                                 }
-                            else if( (ratioSuccessFailure == 100 || ratioSuccessFailure > rateStored) && (throughput < thrStored || retry > retryStored))
+                            else if( (ratioSuccessFailure == 100 || ratioSuccessFailure > rateStored) && throughput < thrStored)
                                 {
-                                    active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
+                                    if(retry > retryStored)
+                                        {
+                                            active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
+                                        }
+                                    else
+                                        {
+                                            if(active > activeStored)
+                                                active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
+                                            else
+                                                active = maxActive;
+                                        }
 
                                     stmt10.execute(true);
                                 }

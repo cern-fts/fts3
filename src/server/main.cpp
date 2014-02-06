@@ -606,7 +606,7 @@ int main(int argc, char** argv)
         }
 
     pid_t child_pid = SpawnServer(argc, argv);
-   
+
     return 0;
 }
 

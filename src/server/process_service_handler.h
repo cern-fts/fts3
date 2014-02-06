@@ -713,8 +713,8 @@ protected:
                         else
                             {
                                 drainMode = false;
-                            }                       
-		        
+                            }
+
                         /*check for non-reused jobs*/
                         executeUrlcopy(jobsReuse, false);
 
