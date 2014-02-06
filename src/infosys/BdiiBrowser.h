@@ -41,6 +41,7 @@
 
 
 #include <boost/thread.hpp>
+#include <boost/thread/locks.hpp>
 
 namespace fts3
 {
@@ -227,30 +228,30 @@ private:
     int querying;
 
     /// the mutex preventing concurrent browsing and reconnecting
-    mutex qm;
+    shared_mutex qm;
 
     /// conditional variable preventing concurrent browsing and reconnecting
-    condition_variable qv;
+//    condition_variable qv;
 
     /**
      * Blocks until all threads finish browsing
      */
-    void waitIfBrowsing();
+//    void waitIfBrowsing();
 
     /**
      * Notify all threads that want to do browsing after reconnection happened
      */
-    void notifyBrowsers();
+//    void notifyBrowsers();
 
     /**
      * Blocks until the reconnection is finished
      */
-    void waitIfReconnecting();
+//    void waitIfReconnecting();
 
     /**
      * Notify all threads that want to perform reconnection after all the browsing is finished
      */
-    void notifyReconnector();
+//    void notifyReconnector();
 
     /// not used for now
     static const char* ATTR_STATUS;
@@ -323,9 +324,12 @@ list< map<string, R> > BdiiBrowser::browse(string base, string query, const char
 
     int rc = 0;
     LDAPMessage *reply = 0;
-    waitIfReconnecting();
-    rc = ldap_search_ext_s(ld, base.c_str(), LDAP_SCOPE_SUBTREE, query.c_str(), const_cast<char**>(attr), 0, 0, 0, &timeout, 0, &reply);
-    notifyReconnector();
+
+    // used shared lock - many concurrent reads are allowed
+    {
+    	shared_lock<shared_mutex> lock(qm);
+    	rc = ldap_search_ext_s(ld, base.c_str(), LDAP_SCOPE_SUBTREE, query.c_str(), const_cast<char**>(attr), 0, 0, 0, &timeout, 0, &reply);
+    }
 
     if (rc != LDAP_SUCCESS)
         {
