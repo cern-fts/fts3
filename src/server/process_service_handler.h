@@ -795,43 +795,8 @@ protected:
                         else
                             {
                                 drainMode = false;
-                            }
-
-                        //check for available resources
-                        int currentActiveTransfers = DBSingleton::instance().getDBObjectInstance()->activeProcessesForThisHost();
-                        if (maximumThreads != 0 && currentActiveTransfers != 0 && (currentActiveTransfers * 8) >= static_cast<int>(maximumThreads))
-                            {
-                                /*verify it's correct, you never know */
-                                int countTr = proc_find(cmd.c_str());
-                                if (countTr == -1)
-                                    {
-                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to open proc fs" << commit;
-                                    }
-                                else if(countTr == 0)
-                                    {
-                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Something is not right, active in db " <<  currentActiveTransfers << " and proc fs " << countTr << commit;
-                                    }
-                                else
-                                    {
-                                        if(countTr < currentActiveTransfers || (countTr * 8) <= static_cast<int>(maximumThreads))
-                                            {
-                                                /*do nothing*/
-                                            }
-                                        else
-                                            {
-                                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Enforced soft limits, currently " << currentActiveTransfers << " are running" << commit;
-                                                continue;
-                                            }
-                                    }
-                            }
-
-                        long unsigned int freeRam = getAvailableMemory();
-                        if (freeRam != 0 && freeRam < 150)
-                            {
-                                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Enforced limits, free RAM is " << freeRam << "MB and " << currentActiveTransfers << " are running" << commit;
-                                continue;
-                            }
-
+                            }                       
+		        
                         /*check for non-reused jobs*/
                         executeUrlcopy(jobsReuse, false);
 
