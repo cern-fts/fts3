@@ -50,7 +50,7 @@ private:
                 try
                     {
                         db::DBSingleton::instance().getDBObjectInstance()->isTrAllowed("", "");
-                        sleep(60);
+                        sleep(10);
                     }
                 catch(std::exception& e)
                     {

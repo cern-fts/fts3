@@ -2548,8 +2548,9 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                         soci::use(source_hostname),soci::use(destin_hostname), soci::into(retry, isNullRetry));
 
             soci::statement stmt10 = (
-                                         sql.prepare << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",
-                                         soci::use(active), soci::use(source_hostname), soci::use(destin_hostname));
+                                         sql.prepare << "update t_optimize_active set active=:active where "
+					 		" source_se=:source and dest_se=:dest and active=:maxActive ",
+                                         soci::use(active), soci::use(source_hostname), soci::use(destin_hostname), soci::use(maxActive));
 
             //check if retry is set at global level
             sql <<
