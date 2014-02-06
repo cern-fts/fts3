@@ -34,6 +34,8 @@ def showErrors(httpRequest):
         errors = errors.filter(source_se = httpRequest.GET['source_se'])
     if httpRequest.GET.get('dest_se', None):
         errors = errors.filter(dest_se = httpRequest.GET['dest_se'])
+    if httpRequest.GET.get('reason', None):
+        errors = errors.filter(reason__icontains = httpRequest.GET['reason'])
                          
     errors = errors.values('source_se', 'dest_se')\
                          .annotate(count = Count('file_state'))\
