@@ -56,6 +56,7 @@ set (fts_cli_internal_libs
 set(fts_cli_libs
     ${fts_cli_internal_libs}
     gridsite
+    curl
     cgsi_plugin_cpp
     ${Boost_PROGRAM_OPTIONS_LIBRARY}
     fts_delegation_api_simple
@@ -84,6 +85,8 @@ set(fts_cli_common_sources
 	ui/VoNameCli.cpp
 	ui/BlacklistCli.cpp
 	ui/PriorityCli.cpp
+	ui/RestCli.cpp
+	rest/RestTransferStatus.cpp
     GSoapContextAdapter.cpp
     ProxyCertificateDelegator.cpp
     MsgPrinter.cpp

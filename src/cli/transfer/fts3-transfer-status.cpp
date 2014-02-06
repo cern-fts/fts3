@@ -20,6 +20,7 @@
 #include "GSoapContextAdapter.h"
 #include "TransferTypes.h"
 #include "ui/TransferStatusCli.h"
+#include "rest/RestTransferStatus.h"
 
 #include "common/JobStatusHandler.h"
 
@@ -59,6 +60,19 @@ int main(int ac, char* av[])
             cli.reset (
                 getCli<TransferStatusCli>(ac, av)
             );
+
+            if (cli->rest())
+            	{
+            		vector<string> jobIds = cli->getJobIds();
+            		vector<string>::iterator itr;
+
+            		for (itr = jobIds.begin(); itr != jobIds.end(); ++itr)
+            			{
+            				RestTransferStatus rest(cli->getService(), *itr, cli->printer());
+            				rest.print();
+            			}
+            		return 0;
+            	}
 
             // validate command line options, and return respective gsoap context
             optional<GSoapContextAdapter&> opt = cli->validate();
