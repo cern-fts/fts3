@@ -20,6 +20,7 @@ function ErrorsCtrl($location, $scope, pairs, Errors, Unique)
 	$scope.filter = {
 		source_se: validString($location.search().source_se),
 		dest_se:   validString($location.search().dest_se),
+		reason:    validString($location.search().reason)
 	}
 	
 	// On page change, reload

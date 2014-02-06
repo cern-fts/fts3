@@ -23,7 +23,7 @@
             <td>{{pair.source_se}}</td>
             <td>{{pair.dest_se}}</td>
             <td>
-                <a href="#/errors/list?source_se={{pair.source_se | escape}}&dest_se={{pair.dest_se | escape}}">
+                <a href="#/errors/list?source_se={{pair.source_se | escape}}&dest_se={{pair.dest_se | escape}}&reason={{filter.reason | escape}}">
                     {{pair.count}}
                 </a>
             </td>
@@ -48,6 +48,8 @@
             <label for="dest_se">Destination:</label>
             <input type="text" placeholder="destination se" id="dest_se" ng-model="filter.dest_se"
                    typeahead="dest for dest in unique.destinations | safeFilter:$viewValue"/>
+            <label for="reason">Reason:</label>
+            <input type="text" placeholder="reason" id="reason" ng-model="filter.reason"/>
         </div>
         <div class="modal-footer">
             <button class="btn btn-success" ng-click="applyFilter(filter)">Apply</button>
