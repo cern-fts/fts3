@@ -65,7 +65,8 @@ def overview(httpRequest):
         query += ' AND dest_se = %s '
         params.append(filters['dest_se'])
     
-    query += ' GROUP BY source_se, dest_se, vo_name, file_state '    
+    query += ' GROUP BY source_se, dest_se, vo_name, file_state '
+    query += ' ORDER BY NULL'
 
     cursor = connection.cursor()
     cursor.execute(query, params)
