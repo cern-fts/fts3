@@ -119,10 +119,13 @@ int runConsumerMonitoring(std::vector<struct message_monitoring>& messages)
 
                     unlink(files[i].c_str());
                     fclose(fp);
+		    fp = NULL;
                 }
             else
                 {
                     msg.set_error(errno);
+		    if(fp != NULL)
+	                    fclose(fp);		    		    	
                 }
         }
     files.clear();
@@ -160,6 +163,8 @@ int runConsumerStatus(std::vector<struct message>& messages)
             else
                 {
                     msg.set_error(errno);
+		    if(fp != NULL)
+	                    fclose(fp);		    		    			    
                 }
         }
     files.clear();
@@ -197,6 +202,8 @@ int runConsumerStall(std::vector<struct message_updater>& messages)
             else
                 {
                     msg_local.set_error(errno);
+		    if(fp != NULL)
+	                    fclose(fp);		    		    			    
                 }
         }
     files.clear();
@@ -236,6 +243,8 @@ int runConsumerLog(std::map<int, struct message_log>& messages)
             else
                 {
                     msg.set_error(errno);
+		    if(fp != NULL)
+	                    fclose(fp);		    		    			    
                 }
         }
     files.clear();
