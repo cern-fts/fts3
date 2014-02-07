@@ -2786,7 +2786,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                             " FROM t_file use index(t_file_select) "
                             " WHERE source_se = :source AND dest_se = :dest AND "
                             "       file_state  in ('ACTIVE','FINISHED') AND throughput > 0 AND "
-                            "       filesize > 0 and (job_finished is null or job_finished > (UTC_TIMESTAMP() - interval '2' minute))",
+                            "       filesize > 0 and (job_finished is null or job_finished > (UTC_TIMESTAMP() - interval '1' minute))",
                             soci::use(source_hostname),soci::use(destin_hostname));
 
                     for (soci::rowset<soci::row>::const_iterator j = rsSizeAndThroughput.begin();
@@ -2805,7 +2805,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                     soci::rowset<soci::row> rs = (sql.prepare << "SELECT file_state, retry FROM t_file "
                                                   "WHERE "
                                                   "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                                                  "      (t_file.job_finished > (UTC_TIMESTAMP() - interval '2' minute)) AND "
+                                                  "      (t_file.job_finished > (UTC_TIMESTAMP() - interval '1' minute)) AND "
                                                   "      file_state IN ('FAILED','FINISHED') ",
                                                   soci::use(source_hostname), soci::use(destin_hostname));
 
@@ -2856,7 +2856,9 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 
                     //only apply the logic below if any of these values changes
                     bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, rateStored, throughput, thrStored, retry, retryStored, active, activeStored);
-
+	            if(!changed && retry > 0)
+		    	changed = true;
+			
                     //ratioSuccessFailure, rateStored, throughput, thrStored MUST never be zero
                     if(changed)
                         {
@@ -2892,7 +2894,10 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                 }
                             else if ( ratioSuccessFailure < 99 || retry > retryStored)
                                 {
-                                    active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
+				    if(ratioSuccessFailure > rateStored && retry < retryStored)
+				        active = maxActive;
+				    else
+                                    	active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
 
                                     stmt10.execute(true);
                                 }
