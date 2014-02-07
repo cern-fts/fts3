@@ -38,7 +38,7 @@ using namespace FTS3_COMMON_NAMESPACE;
 using namespace db;
 
 
-bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate, double& rateStored, double thr, double& thrStored, double retry, double& retryStored, int active, int& activeStored)
+bool OracleAPI::getChangedFile (std::string source, std::string dest, double rate, double& rateStored, double thr, double& thrStored, double retry, double& retryStored, int active, int& activeStored)
 {
     bool returnValue = false;
 
@@ -2723,6 +2723,7 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                     double retryStored = 0.0; //stored in mem
                     double thrStored = 0.0; //stored in mem
                     double rateStored = 0.0; //stored in mem
+                    int activeStored = 0; //stored in mem
                     double ratioSuccessFailure = 0.0;
                     active = 0;
                     maxActive = 0;
