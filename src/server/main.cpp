@@ -120,20 +120,7 @@ static void taskTimer(int time)
 }
 
 
-static void setLimits()
-{
-    struct rlimit rl;
-    int maxNumberOfProcesses = theServerConfig().get<int> ("MaxNumberOfProcesses");
-    if(maxNumberOfProcesses != -1)
-        {
-            rl.rlim_cur = maxNumberOfProcesses;
-            rl.rlim_max = maxNumberOfProcesses;
-            if (setrlimit(RLIMIT_NPROC, &rl) == -1)
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "setrlimit RLIMIT_NPROC failed" << commit;
-                }
-        }
-}
+
 
 static int fexists(const char *filename)
 {
@@ -390,9 +377,6 @@ int DoServer(int argc, char** argv)
             REGISTER_SIGNAL(SIGSYS);
 
 
-            //set soft and hard limits
-            setLimits();
-
             std::string arguments("");
             size_t foundHelp;
             if (argc > 1)
@@ -623,29 +607,7 @@ int main(int argc, char** argv)
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Can't set daemon, will continue attached to tty"  << commit;
         }
 
-    pid_t child_pid = SpawnServer(argc, argv);
-
-    // Watchdog
-    for (;;)
-        {
-            if (child_pid < 0)
-                return 1;
-
-            int status = 0;
-            waitpid(-1, &status, 0);
-            if (!WIFSTOPPED(status))
-                {
-                    if( 1 == proc_find() )
-                        {
-                            child_pid = SpawnServer(argc, argv);
-                        }
-                    else
-                        {
-                            break;
-                        }
-                }
-            sleep(5);
-        }
+    pid_t child_pid = SpawnServer(argc, argv);   
 
     return 0;
 }

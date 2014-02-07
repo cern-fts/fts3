@@ -78,86 +78,6 @@ using namespace FTS3_COMMON_NAMESPACE;
 using namespace db;
 using namespace FTS3_CONFIG_NAMESPACE;
 
-int proc_find(const char* name)
-{
-    DIR* dir=NULL;
-    struct dirent* ent=NULL;
-    char* endptr=NULL;
-    char buf[512]= {0};
-    unsigned count = 0;
-
-    if (!(dir = opendir("/proc")))
-        {
-            return -1;
-        }
-
-    while((ent = readdir(dir)) != NULL)
-        {
-            /* if endptr is not a null character, the directory is not
-             * entirely numeric, so ignore it */
-            long lpid = strtol(ent->d_name, &endptr, 10);
-            if (*endptr != '\0')
-                {
-                    continue;
-                }
-
-            /* try to open the cmdline file */
-            snprintf(buf, sizeof(buf), "/proc/%ld/cmdline", lpid);
-            FILE* fp = fopen(buf, "r");
-
-            if (fp)
-                {
-                    if (fgets(buf, sizeof(buf), fp) != NULL)
-                        {
-                            /* check the first token in the file, the program name */
-                            char* first = NULL;
-                            first = strtok(buf, " ");
-
-                            if (first && !strcmp(first, name))
-                                {
-                                    fclose(fp);
-                                    fp = NULL;
-                                    ++count;
-                                }
-                        }
-                    if(fp)
-                        fclose(fp);
-                }
-
-        }
-
-    closedir(dir);
-    return count;
-}
-
-
-
-/*resource resource management as not to run out of memory or too many processes*/
-static rlim_t getMaxThreads()
-{
-    struct rlimit rlim;
-    int err = -1;
-    err = getrlimit(RLIMIT_NPROC, &rlim);
-    if (0 != err)
-        {
-            return 0;
-        }
-    else
-        {
-            return rlim.rlim_cur;
-        }
-    return 0;
-}
-
-
-static long unsigned int getAvailableMemory()
-{
-    struct sysinfo info;
-    if (sysinfo(&info) != 0)
-        return 0;
-
-    return (info.freeram) / (1024 * 1024);
-}
 
 
 static std::string prepareMetadataString(std::string text)
@@ -195,8 +115,7 @@ public:
     ) :
         TRAITS::ActiveObjectType("ProcessServiceHandler", desc)
     {
-        cmd = "fts_url_copy";
-        maximumThreads = getMaxThreads();
+        cmd = "fts_url_copy";       
 
         execPoolSize = theServerConfig().get<int> ("InternalThreadPool");
 
@@ -257,7 +176,6 @@ protected:
     std::string ftsHostName;
     std::string allowedVOs;
     std::vector<TransferJobs*> jobsReuse;
-    rlim_t maximumThreads;
     std::string infosys;
     bool monitoringMessages;
     int execPoolSize;
@@ -836,42 +754,7 @@ protected:
                         else
                             {
                                 drainMode = false;
-                            }
-
-                        //check for available resources
-                        int currentActiveTransfers = DBSingleton::instance().getDBObjectInstance()->activeProcessesForThisHost();
-                        if (maximumThreads != 0 && currentActiveTransfers != 0 && (currentActiveTransfers * 8) >= static_cast<int>(maximumThreads))
-                            {
-                                /*verify it's correct, you never know */
-                                int countTr = proc_find(cmd.c_str());
-                                if (countTr == -1)
-                                    {
-                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to open proc fs" << commit;
-                                    }
-                                else if(countTr == 0)
-                                    {
-                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Something is not right, active in db " <<  currentActiveTransfers << " and proc fs " << countTr << commit;
-                                    }
-                                else
-                                    {
-                                        if(countTr < currentActiveTransfers || (countTr * 8) <= static_cast<int>(maximumThreads))
-                                            {
-                                                /*do nothing*/
-                                            }
-                                        else
-                                            {
-                                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Enforced soft limits, currently " << currentActiveTransfers << " are running" << commit;
-                                                continue;
-                                            }
-                                    }
-                            }
-
-                        long unsigned int freeRam = getAvailableMemory();
-                        if (freeRam != 0 && freeRam < 150)
-                            {
-                                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Enforced limits, free RAM is " << freeRam << "MB and " << currentActiveTransfers << " are running" << commit;
-                                continue;
-                            }
+                            }                        
 
                         /*check for non-reused jobs*/
                         executeUrlcopy(jobsReuse, false);

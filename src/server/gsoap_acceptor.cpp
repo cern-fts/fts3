@@ -68,14 +68,17 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip)
                 {
                     FTS3_COMMON_EXCEPTION_THROW (Err_System ("Unable to bound to socket."));
                     fclose (stderr);
-                    kill(getpid(), SIGINT);
+                    _exit(1);
                 }
 
         }
     else
         {
             ctx = soap_new();
-
+            ctx->socket_flags = MSG_NOSIGNAL; // use this, prevent sigpipe
+            ctx->recv_timeout = 120; // Timeout after 2 minutes stall on recv
+            ctx->send_timeout = 120; // Timeout after 2 minute stall on send	
+	    ctx->accept_timeout = 0;   
             ctx->bind_flags |= SO_REUSEADDR;
             soap_cgsi_init(ctx,  CGSI_OPT_SERVER | CGSI_OPT_SSL_COMPATIBLE | CGSI_OPT_DISABLE_MAPPING);// | CGSI_OPT_DISABLE_NAME_CHECK);
             soap_set_namespaces(ctx, fts3_namespaces);
@@ -90,7 +93,7 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip)
                 {
                     FTS3_COMMON_EXCEPTION_THROW (Err_System ("Unable to bound to socket."));
                     fclose (stderr);
-                    kill(getpid(), SIGINT);
+                    _exit(1);
                 }
         }
 }

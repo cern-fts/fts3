@@ -38,25 +38,25 @@ using namespace FTS3_COMMON_NAMESPACE;
 using namespace db;
 
 
-bool OracleAPI::getChangedFile (std::string source, std::string dest, double rate, double& rateStored, double thr, double& thrStored, double retry, double& retryStored)
+bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate, double& rateStored, double thr, double& thrStored, double retry, double& retryStored, int active, int& activeStored)
 {
     bool returnValue = false;
 
-    if(rate == 0 || thr == 0)
+    if(rate == 0 || thr == 0 || active == 0)
         return returnValue;
 
     if(filesMemStore.empty())
         {
-            boost::tuple<std::string, std::string, double, double, double> record(source, dest, rate, thr, retry);
+            boost::tuple<std::string, std::string, double, double, double, int> record(source, dest, rate, thr, retry, active);
             filesMemStore.push_back(record);
         }
     else
         {
             bool found = false;
-            std::vector< boost::tuple<std::string, std::string, double, double, double> >::iterator itFind;
+            std::vector< boost::tuple<std::string, std::string, double, double, double, int> >::iterator itFind;
             for (itFind = filesMemStore.begin(); itFind < filesMemStore.end(); ++itFind)
                 {
-                    boost::tuple<std::string, std::string, double, double, double>& tupleRecord = *itFind;
+                    boost::tuple<std::string, std::string, double, double, double, int>& tupleRecord = *itFind;
                     std::string sourceLocal = boost::get<0>(tupleRecord);
                     std::string destLocal = boost::get<1>(tupleRecord);
                     if(sourceLocal == source && destLocal == dest)
@@ -67,29 +67,31 @@ bool OracleAPI::getChangedFile (std::string source, std::string dest, double rat
                 }
             if (!found)
                 {
-                    boost::tuple<std::string, std::string, double, double, double> record(source, dest, rate, thr, retry);
+                    boost::tuple<std::string, std::string, double, double, double, int> record(source, dest, rate, thr, retry, active);
                     filesMemStore.push_back(record);
                 }
 
-            std::vector< boost::tuple<std::string, std::string, double, double, double> >::iterator it =  filesMemStore.begin();
+            std::vector< boost::tuple<std::string, std::string, double, double, double, int> >::iterator it =  filesMemStore.begin();
             while (it != filesMemStore.end())
                 {
-                    boost::tuple<std::string, std::string, double, double, double>& tupleRecord = *it;
+                    boost::tuple<std::string, std::string, double, double, double, int>& tupleRecord = *it;
                     std::string sourceLocal = boost::get<0>(tupleRecord);
                     std::string destLocal = boost::get<1>(tupleRecord);
                     double rateLocal = boost::get<2>(tupleRecord);
                     double thrLocal = boost::get<3>(tupleRecord);
                     double retryThr = boost::get<4>(tupleRecord);
+                    int activeLocal = boost::get<5>(tupleRecord);
 
                     if(sourceLocal == source && destLocal == dest)
                         {
                             retryStored = retryThr;
                             thrStored = thrLocal;
                             rateStored = rateLocal;
+                            activeStored = activeLocal;
                             if(rateLocal != rate || thrLocal != thr || retry != retryThr)
                                 {
                                     it = filesMemStore.erase(it);
-                                    boost::tuple<std::string, std::string, double, double, double> record(source, dest, rate, thr, retry);
+                                    boost::tuple<std::string, std::string, double, double, double, int> record(source, dest, rate, thr, retry, active);
                                     filesMemStore.push_back(record);
                                     returnValue = true;
                                     break;
@@ -2688,8 +2690,9 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                                         	soci::use(source_hostname),soci::use(destin_hostname), soci::into(retry, isNullRetry));
 
             soci::statement stmt10 = (
-                                         sql.prepare << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",
-                                         soci::use(active), soci::use(source_hostname), soci::use(destin_hostname));
+                                         sql.prepare << "update t_optimize_active set active=:active where "
+                                         " source_se=:source and dest_se=:dest and active=:maxActive ",
+                                         soci::use(active), soci::use(source_hostname), soci::use(destin_hostname), soci::use(maxActive));
 
             //check if retry is set at global level
             sql <<
@@ -2736,7 +2739,7 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                             " WHERE source_se = :source AND dest_se = :dest AND "
                             "       file_state IN ('ACTIVE','FINISHED') AND throughput > 0 AND "
                             "       filesize > 0  AND (job_finished is NULL OR"
-                            "        job_finished >= (sys_extract_utc(systimestamp) - interval '1' minute)) ",
+                            "        job_finished >= (sys_extract_utc(systimestamp) - interval '2' minute)) ",
                             soci::use(source_hostname),soci::use(destin_hostname));
 
                     for (soci::rowset<soci::row>::const_iterator j = rsSizeAndThroughput.begin();
@@ -2754,7 +2757,7 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                     soci::rowset<soci::row> rs = (sql.prepare << "SELECT file_state, retry FROM t_file "
                                                   "WHERE "
                                                   "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                                                  "      (t_file.job_finished > (sys_extract_utc(systimestamp) - interval '1' minute)) AND "
+                                                  "      (t_file.job_finished > (sys_extract_utc(systimestamp) - interval '2' minute)) AND "
                                                   "      file_state IN ('FAILED','FINISHED') ",
                                                   soci::use(source_hostname), soci::use(destin_hostname));
 
@@ -2804,7 +2807,7 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                         maxActive = highDefault;
 
                     //only apply the logic below if any of these values changes
-                    bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, rateStored, throughput, thrStored, retry, retryStored);
+                    bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, rateStored, throughput, thrStored, retry, retryStored, active, activeStored);
 
                     //ratioSuccessFailure, rateStored, throughput, thrStored MUST never be zero
                     if(changed)
@@ -2823,9 +2826,19 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
 
                                     stmt10.execute(true);
                                 }
-                            else if( (ratioSuccessFailure == 100 || ratioSuccessFailure > rateStored) && (throughput < thrStored || retry > retryStored))
+                            else if( (ratioSuccessFailure == 100 || ratioSuccessFailure > rateStored) && throughput < thrStored)
                                 {
-                                    active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
+                                    if(retry > retryStored)
+                                        {
+                                            active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
+                                        }
+                                    else
+                                        {
+                                            if(active > activeStored)
+                                                active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
+                                            else
+                                                active = maxActive;
+                                        }
 
                                     stmt10.execute(true);
                                 }
