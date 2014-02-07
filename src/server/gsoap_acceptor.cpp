@@ -49,10 +49,7 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip)
             ctx = soap_new2(SOAP_IO_KEEPALIVE, SOAP_IO_KEEPALIVE);
 
             ctx->bind_flags |= SO_REUSEADDR;
-            ctx->max_keep_alive = 100; // at most 100 calls per keep-alive session
-            ctx->tcp_keep_alive = 1;
-            ctx->accept_timeout = 0;
-            ctx->socket_flags = MSG_NOSIGNAL; // use this, prevent sigpipe
+            ctx->accept_timeout = 180;
             ctx->recv_timeout = 120; // Timeout after 2 minutes stall on recv
             ctx->send_timeout = 120; // Timeout after 2 minute stall on send
 
@@ -60,9 +57,10 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip)
             soap_set_namespaces(ctx, fts3_namespaces);
 
 
-            SOAP_SOCKET sock = soap_bind(ctx, ip.c_str(), static_cast<int>(port), 200);
+            SOAP_SOCKET sock = soap_bind(ctx, ip.c_str(), static_cast<int>(port), 300);
             if (sock >= 0)
                 {
+	            ctx->socket_flags |= MSG_NOSIGNAL; // use this, prevent sigpipe		   
                     FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Soap service " << sock << " IP:" << ip << " Port:" << port << commit;
                 }
             else
@@ -75,19 +73,19 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip)
         }
     else
         {
-            ctx = soap_new();
-            ctx->socket_flags = MSG_NOSIGNAL; // use this, prevent sigpipe
+            ctx = soap_new();            
             ctx->recv_timeout = 120; // Timeout after 2 minutes stall on recv
             ctx->send_timeout = 120; // Timeout after 2 minute stall on send	
-	    ctx->accept_timeout = 0;    
+	    ctx->accept_timeout = 180;    
             ctx->bind_flags |= SO_REUSEADDR;
             soap_cgsi_init(ctx,  CGSI_OPT_SERVER | CGSI_OPT_SSL_COMPATIBLE | CGSI_OPT_DISABLE_MAPPING);// | CGSI_OPT_DISABLE_NAME_CHECK);
             soap_set_namespaces(ctx, fts3_namespaces);
 
-            SOAP_SOCKET sock = soap_bind(ctx, ip.c_str(), static_cast<int>(port), 200);
+            SOAP_SOCKET sock = soap_bind(ctx, ip.c_str(), static_cast<int>(port), 300);
 
             if (sock >= 0)
                 {
+		    ctx->socket_flags |= MSG_NOSIGNAL; // use this, prevent sigpipe
                     FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Soap service " << sock << " IP:" << ip << " Port:" << port << commit;
                 }
             else
