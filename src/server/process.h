@@ -25,26 +25,18 @@ class ExecuteProcess
 public:
     ExecuteProcess( const string& app, const string& arguments);
     int executeProcessShell();
-    void setPid(const string& jobId, const string& fileId);
-    void setPidV(std::map<int,std::string>& pids);
 
     inline int getPid()
     {
         return pid;
     }
-    int check_pid(int pid);
 
 protected:
     int execProcessShell();
-    int execProcessShellLog(const char* shell);
     void getArgv(list<string>& argsHolder, size_t* argc, char*** argv);
 
 private:
-    map<int,string> _fileIds;
     int pid;
-    string _jobId;
-    string _fileId;
     string m_app;
     string m_arguments;
 };
-
