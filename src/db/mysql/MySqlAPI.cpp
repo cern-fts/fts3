@@ -398,7 +398,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                              " FROM t_file "
                                              " WHERE "
                                              "      file_state = 'SUBMITTED' AND "
-                                             "      (hashed_id >= :hStart AND hashed_id <= :hEnd) ",
+                                             "      (hashed_id >= :hStart AND hashed_id <= :hEnd) and job_finished is null ",
                                              soci::use(hashSegment.start), soci::use(hashSegment.end)
                                          );
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
@@ -2533,7 +2533,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
             soci::rowset<soci::row> rs = ( sql.prepare <<
                                            " select  distinct o.source_se, o.dest_se from t_optimize_active o INNER JOIN "
                                            " t_file f ON (o.source_se = f.source_se) where o.dest_se=f.dest_se and "
-                                           " f.file_state='SUBMITTED'");
+                                           " f.file_state='SUBMITTED' ");
 
             //snapshot of active transfers
             soci::statement stmt7 = (
