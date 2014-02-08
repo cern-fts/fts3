@@ -232,7 +232,12 @@ MySqlAPI::MySqlAPI(): poolSize(10), connectionPool(NULL)
 MySqlAPI::~MySqlAPI()
 {
     if(connectionPool)
-        {
+        {	  
+  	   for (size_t i = 0; i < poolSize; ++i)
+                {
+                    soci::session& sql = (*connectionPool).at(i);
+                    sql.close();
+		 }
             delete connectionPool;
             connectionPool = NULL;
         }

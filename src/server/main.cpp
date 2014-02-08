@@ -465,37 +465,14 @@ int DoServer(int argc, char** argv)
 /// Spawn the process that runs the server
 /// Returns the child PID on success, -1 on failure
 /// Does NOT return on the child process
-pid_t SpawnServer(int argc, char** argv)
+void SpawnServer(int argc, char** argv)
 {
-    pid_t pid = fork();
-    // child
-    if (pid == 0)
-        {
             int resultExec = DoServer(argc, argv);
             if (resultExec < 0)
                 {
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Can't start the server" << commit;
-                    _exit(1);
+                    exit(1);
                 }
-            _exit(0);
-        }
-    // parent
-    else if (pid > 0)
-        {
-            sleep(2);
-            int err = waitpid(pid, NULL, WNOHANG);
-            if (err != 0)
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "waitpid error: " << strerror(errno) << commit;
-                    return -1;
-                }
-            return pid;
-        }
-    // error
-    else
-        {
-            return -1;
-        }
 }
 
 int main(int argc, char** argv)
@@ -601,11 +578,13 @@ int main(int argc, char** argv)
     else
         {
             d = daemon(0, 0);
-            if (d < 0)
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Can't set daemon, will continue attached to tty"  << commit;
+            if (d < 0){
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Can't set daemon"  << commit;
+		exit(1);
+	    }
         }
 
-    pid_t child_pid = SpawnServer(argc, argv);
+    SpawnServer(argc, argv);
 
     return 0;
 }
