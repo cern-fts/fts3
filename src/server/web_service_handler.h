@@ -106,6 +106,10 @@ protected:
                         boost::function<void()> op = boost::bind(&WebServiceHandler::_handle_a, this, handler);
                         this->_enqueue(op);
                     }
+		else
+		    {
+		    	sleep(1);
+		    }
 
                 if (_testHelper.loopOver)
                     {
