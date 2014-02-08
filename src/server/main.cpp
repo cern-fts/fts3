@@ -134,13 +134,16 @@ void _handle_sigint(int)
     stopThreads = true;
     if (stackTrace.length() > 0)
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << stackTrace << commit;
-    boost::thread bt(taskTimer, 20);
+    boost::thread bt(taskTimer, 30);
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopping" << commit;
-    sleep(10);
+    sleep(15);
     try
         {
-            theServer().stop();
-            db::DBSingleton::tearDown();
+            theServer().stop();           
+	    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS db connections closing" << commit;
+	    db::DBSingleton::tearDown();
+	    sleep(10);
+	    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS db connections closed" << commit;	    	    
         }
     catch(...)
         {

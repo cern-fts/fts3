@@ -72,7 +72,7 @@ stop() {
     fi
     # Kill it gracefully and give some time
     killproc $prog -2
-    sleep 25
+    sleep 30
     pgrep $prog &> /dev/null
     if [ $? -eq 0 ]; then
         # Force it

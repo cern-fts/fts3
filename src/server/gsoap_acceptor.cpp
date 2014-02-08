@@ -129,7 +129,6 @@ GSoapAcceptor::~GSoapAcceptor()
 
 boost::shared_ptr<GSoapRequestHandler> GSoapAcceptor::accept()
 {
-
     SOAP_SOCKET sock = soap_accept(ctx);
     boost::shared_ptr<GSoapRequestHandler> handler;
 

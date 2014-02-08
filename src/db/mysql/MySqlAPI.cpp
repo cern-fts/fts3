@@ -236,10 +236,8 @@ MySqlAPI::~MySqlAPI()
   	   for (size_t i = 0; i < poolSize; ++i)
                 {
                     soci::session& sql = (*connectionPool).at(i);
-                    sql.close();
+                    sql << "select concat('KILL ',id,';') from information_schema.processlist where user=:username", soci::use(username_);
 		 }
-            delete connectionPool;
-            connectionPool = NULL;
         }
 }
 
@@ -285,6 +283,7 @@ void MySqlAPI::init(std::string username, std::string password, std::string conn
                        << "pass='" << password << "'";
 
             std::string connStr = connParams.str();
+	    username_ = username;
 
             // Connect
             static const my_bool reconnect = 1;

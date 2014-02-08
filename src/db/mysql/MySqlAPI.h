@@ -342,6 +342,7 @@ private:
     size_t                poolSize;
     soci::connection_pool* connectionPool;
     std::string           hostname;
+    std::string username_;
 
     int getCredits(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname);
 
