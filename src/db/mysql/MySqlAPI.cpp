@@ -6889,7 +6889,7 @@ void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId, int retry
                 }
 
             // Keep log
-            sql << "INSERT INTO t_file_retry_errors "
+            sql << "INSERT IGNORE INTO t_file_retry_errors "
                 "    (file_id, attempt, datetime, reason) "
                 "VALUES (:fileId, :attempt, UTC_TIMESTAMP(), :reason)",
                 soci::use(fileId), soci::use(retry), soci::use(reason);
