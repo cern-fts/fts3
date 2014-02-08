@@ -956,8 +956,6 @@ int main(int argc, char **argv)
                 logger.INFO() << "Transfer Starting" << std::endl;
                 if ((ret = gfalt_copy_file(handle, params, (strArray[1]).c_str(), (strArray[2]).c_str(), &tmp_err)) != 0)
                     {
-                        if (tmp_err != NULL && tmp_err->message != NULL)
-                            {
                                 logger.ERROR() << "Transfer failed - errno: " << tmp_err->code
                                                << " Error message:" << tmp_err->message
                                                << std::endl;
@@ -973,22 +971,10 @@ int main(int argc, char **argv)
                                 errorScope = TRANSFER;
                                 reasonClass = mapErrnoToString(tmp_err->code);
                                 errorPhase = TRANSFER;
-                            }
-                        else
-                            {
-                                logger.ERROR() << "Transfer failed - Error message: Unresolved error" << std::endl;
-                                errorMessage = std::string("Unresolved error");
-                                errorScope = TRANSFER;
-                                reasonClass = GENERAL_FAILURE;
-                                errorPhase = TRANSFER;
-                            }
-                        if(tmp_err)
-                            {
-                                retry = retryTransfer(tmp_err->code, "TRANSFER", std::string(tmp_err->message) );
-                                g_clear_error(&tmp_err);
-                            }
-                        g_clear_error(&tmp_err);
-                        goto stop;
+                                retry = retryTransfer(tmp_err->code, "TRANSFER", std::string(tmp_err->message) );                                
+                     
+                        	g_clear_error(&tmp_err);
+                        	goto stop;
                     }
                 else
                     {
@@ -1078,6 +1064,7 @@ int main(int argc, char **argv)
                         errorScope = DESTINATION;
                         reasonClass = mapErrnoToString(gfal_posix_code_error());
                         errorPhase = TRANSFER_FINALIZATION;
+			retry = true;
                         goto stop;
                     }
 
