@@ -139,11 +139,11 @@ void _handle_sigint(int)
     sleep(15);
     try
         {
-            theServer().stop();           
-	    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS db connections closing" << commit;
-	    db::DBSingleton::tearDown();
-	    sleep(10);
-	    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS db connections closed" << commit;	    	    
+            theServer().stop();
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS db connections closing" << commit;
+            db::DBSingleton::tearDown();
+            sleep(10);
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS db connections closed" << commit;
         }
     catch(...)
         {
@@ -470,12 +470,12 @@ int DoServer(int argc, char** argv)
 /// Does NOT return on the child process
 void SpawnServer(int argc, char** argv)
 {
-            int resultExec = DoServer(argc, argv);
-            if (resultExec < 0)
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Can't start the server" << commit;
-                    exit(1);
-                }
+    int resultExec = DoServer(argc, argv);
+    if (resultExec < 0)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Can't start the server" << commit;
+            exit(1);
+        }
 }
 
 int main(int argc, char** argv)
@@ -581,10 +581,11 @@ int main(int argc, char** argv)
     else
         {
             d = daemon(0, 0);
-            if (d < 0){
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Can't set daemon"  << commit;
-		exit(1);
-	    }
+            if (d < 0)
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Can't set daemon"  << commit;
+                    exit(1);
+                }
         }
 
     SpawnServer(argc, argv);

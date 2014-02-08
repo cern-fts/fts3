@@ -698,7 +698,7 @@ protected:
                 try
                     {
                         if (stopThreads)
-                                return;                       
+                            return;
 
                         if (DrainMode::getInstance())
                             {
@@ -715,9 +715,9 @@ protected:
 
                         /*check for non-reused jobs*/
                         executeUrlcopy(jobsReuse, false);
-			
-			if (stopThreads)
-                                return;
+
+                        if (stopThreads)
+                            return;
 
                         /* --- session reuse section ---*/
                         /*get jobs in submitted state and session reuse on*/
@@ -729,9 +729,9 @@ protected:
                             }
 
 
-			if (stopThreads)
-                                return;
-				
+                        if (stopThreads)
+                            return;
+
                         if (!jobsReuse.empty())
                             {
                                 executeUrlcopy(jobsReuse, true);

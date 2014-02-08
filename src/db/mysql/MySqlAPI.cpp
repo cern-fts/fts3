@@ -232,12 +232,12 @@ MySqlAPI::MySqlAPI(): poolSize(10), connectionPool(NULL)
 MySqlAPI::~MySqlAPI()
 {
     if(connectionPool)
-        {	  
-  	   for (size_t i = 0; i < poolSize; ++i)
+        {
+            for (size_t i = 0; i < poolSize; ++i)
                 {
                     soci::session& sql = (*connectionPool).at(i);
                     sql << "select concat('KILL ',id,';') from information_schema.processlist where user=:username", soci::use(username_);
-		 }
+                }
         }
 }
 
@@ -283,7 +283,7 @@ void MySqlAPI::init(std::string username, std::string password, std::string conn
                        << "pass='" << password << "'";
 
             std::string connStr = connParams.str();
-	    username_ = username;
+            username_ = username;
 
             // Connect
             static const my_bool reconnect = 1;
@@ -2672,9 +2672,9 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 
                     //only apply the logic below if any of these values changes
                     bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, rateStored, throughput, thrStored, retry, retryStored, active, activeStored);
-	            if(!changed && retry > 0)
-		    	changed = true;
-			
+                    if(!changed && retry > 0)
+                        changed = true;
+
                     //ratioSuccessFailure, rateStored, throughput, thrStored MUST never be zero
                     if(changed)
                         {
@@ -2710,10 +2710,10 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                 }
                             else if ( ratioSuccessFailure < 99 || retry > retryStored)
                                 {
-				    if(ratioSuccessFailure > rateStored && retry < retryStored)
-				        active = maxActive;
-				    else
-                                    	active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
+                                    if(ratioSuccessFailure > rateStored && retry < retryStored)
+                                        active = maxActive;
+                                    else
+                                        active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
 
                                     stmt10.execute(true);
                                 }
