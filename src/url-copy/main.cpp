@@ -956,25 +956,25 @@ int main(int argc, char **argv)
                 logger.INFO() << "Transfer Starting" << std::endl;
                 if ((ret = gfalt_copy_file(handle, params, (strArray[1]).c_str(), (strArray[2]).c_str(), &tmp_err)) != 0)
                     {
-                                logger.ERROR() << "Transfer failed - errno: " << tmp_err->code
-                                               << " Error message:" << tmp_err->message
-                                               << std::endl;
-                                if (tmp_err->code == 110)
-                                    {
-                                        errorMessage = std::string(tmp_err->message);
-                                        errorMessage += ", operation timeout";
-                                    }
-                                else
-                                    {
-                                        errorMessage = std::string(tmp_err->message);
-                                    }
-                                errorScope = TRANSFER;
-                                reasonClass = mapErrnoToString(tmp_err->code);
-                                errorPhase = TRANSFER;
-                                retry = retryTransfer(tmp_err->code, "TRANSFER", std::string(tmp_err->message) );                                
-                     
-                        	g_clear_error(&tmp_err);
-                        	goto stop;
+                        logger.ERROR() << "Transfer failed - errno: " << tmp_err->code
+                                       << " Error message:" << tmp_err->message
+                                       << std::endl;
+                        if (tmp_err->code == 110)
+                            {
+                                errorMessage = std::string(tmp_err->message);
+                                errorMessage += ", operation timeout";
+                            }
+                        else
+                            {
+                                errorMessage = std::string(tmp_err->message);
+                            }
+                        errorScope = TRANSFER;
+                        reasonClass = mapErrnoToString(tmp_err->code);
+                        errorPhase = TRANSFER;
+                        retry = retryTransfer(tmp_err->code, "TRANSFER", std::string(tmp_err->message) );
+
+                        g_clear_error(&tmp_err);
+                        goto stop;
                     }
                 else
                     {
@@ -1064,7 +1064,7 @@ int main(int argc, char **argv)
                         errorScope = DESTINATION;
                         reasonClass = mapErrnoToString(gfal_posix_code_error());
                         errorPhase = TRANSFER_FINALIZATION;
-			retry = true;
+                        retry = true;
                         goto stop;
                     }
 

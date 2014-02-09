@@ -48,6 +48,9 @@ public:
         typename TRAITS::HeartBeatTypeActive heartBeatHandlerActive;
         heartBeatHandlerActive.beat();
 
+        typename TRAITS::CleanLogsTypeActive cLeanLogsHandlerActive;
+        cLeanLogsHandlerActive.beat();
+
         typename TRAITS::ProcessUpdaterDBServiceType processUpdaterDBHandler;
         processUpdaterDBHandler.executeTransfer_p();
 

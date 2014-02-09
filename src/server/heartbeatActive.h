@@ -52,58 +52,23 @@ public:
 
 private:
 
-    void deleteFiles(void)
-    {
-        try
-            {
-                for ( boost::filesystem::recursive_directory_iterator end, dir("/var/lib/fts3/");
-                        dir != end; ++dir )
-                    {
-                        std::time_t t = boost::filesystem::last_write_time( *dir ) ;
-                        std::time_t now = time(NULL);
-
-                        double x =  difftime (now, t);
-                        if(x > 1296000)  //15 days
-                            {
-				FTS3_COMMON_LOGGER_NEWLOG(INFO) << " Deleting file " << *dir << " because it was created " << std::ctime( &t ) <<  commit;
-                                boost::filesystem::remove(*dir);
-                            }
-                    }
-            }
-        catch(...)
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot delete old files" <<  commit;
-            }
-    }
-
-
     void beat_impl(void)
     {
-        int deleteOldFiles = 0;
-
         while (!stopThreads)
             {
                 try
                     {
                         db::DBSingleton::instance().getDBObjectInstance()->isTrAllowed("", "");
                         sleep(60);
-
-                        if (++deleteOldFiles > 1450) //once a day
-                            {
-			        deleteOldFiles = 0;
-                                deleteFiles();
-                            }
                     }
                 catch(std::exception& e)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Process thread HeartBeatHandlerActive " << e.what() <<  commit;
-			deleteOldFiles = 0;
                         sleep(60);
                     }
                 catch(...)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Process thread HeartBeatHandlerActive unknown" <<  commit;
-			deleteOldFiles = 0;
                         sleep(60);
                     }
             }
