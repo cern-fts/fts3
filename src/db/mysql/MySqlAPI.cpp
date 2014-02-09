@@ -398,7 +398,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                              " FROM t_file "
                                              " WHERE "
                                              "      file_state = 'SUBMITTED' AND "
-                                             "      (hashed_id >= :hStart AND hashed_id <= :hEnd) and job_finished is null ",
+                                             "      (hashed_id >= :hStart AND hashed_id <= :hEnd) ",
                                              soci::use(hashSegment.start), soci::use(hashSegment.end)
                                          );
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
