@@ -151,7 +151,7 @@ string GSoapDelegationHandler::getProxyReq(string delegationId)
             return rqstCache.get(delegationId);
         }
 
-    char *reqtxt = 0, *keytxt = 0;
+    char *reqtxt = NULL, *keytxt = NULL;
     int err = GRSTx509CreateProxyRequest(&reqtxt, &keytxt, 0);
 
     if (err)
