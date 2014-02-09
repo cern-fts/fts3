@@ -455,12 +455,12 @@ int DoServer(int argc, char** argv)
     catch (Err& e)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
-            return -1;
+            exit(1);
         }
     catch (...)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Fatal error (unknown origin), exiting..." << commit;
-            return -1;
+            exit(1);
         }
     return EXIT_SUCCESS;
 }
