@@ -2720,8 +2720,12 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                 }
                             else if ( ratioSuccessFailure < 99 || retry > retryStored)
                                 {                                   
-                                    active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
-                                    pathFollowed = 6;                                   
+					if(ratioSuccessFailure > rateStored && retry < retryStored)
+	                                        active = maxActive;
+	                                    else
+	                                        active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);                                    
+                                    	
+					pathFollowed = 6;                                   
 
                                     stmt10.execute(true);
                                 }
