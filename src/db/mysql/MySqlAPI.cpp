@@ -2752,7 +2752,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                             else
                                 {
                                     active = maxActive;
-                                    pathFollowed = 8;
+                                    pathFollowed = 9;
 
                                     stmt10.execute(true);
                                 }
