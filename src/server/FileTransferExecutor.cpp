@@ -364,10 +364,11 @@ void FileTransferExecutor::execute()
                                     params.append(temp->BRINGONLINE_TOKEN);
                                 }
 
-			    if(infosys.length() > 0){
-                            	params.append(" -M ");
-                            	params.append(infosys);
-			    }
+                            if(infosys.length() > 0)
+                                {
+                                    params.append(" -M ");
+                                    params.append(infosys);
+                                }
 
                             bool ready = db->isFileReadyState(temp->FILE_ID);
 
