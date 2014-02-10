@@ -30,14 +30,20 @@
 #include <boost/lexical_cast.hpp>
 
 #include <cgsi_plugin.h>
+#include <signal.h>
 
 #include <sstream>
 #include <fstream>
+
+#include <algorithm>
+#include <boost/lambda/lambda.hpp>
 
 namespace fts3
 {
 namespace cli
 {
+
+vector<GSoapContextAdapter::Cleaner> GSoapContextAdapter::cleaners;
 
 GSoapContextAdapter::GSoapContextAdapter(string endpoint):
     endpoint(endpoint), ctx(soap_new2(SOAP_IO_KEEPALIVE, SOAP_IO_KEEPALIVE)/*soap_new1(SOAP_ENC_MTOM)*/)
@@ -55,9 +61,21 @@ GSoapContextAdapter::GSoapContextAdapter(string endpoint):
 
     soap_set_imode(ctx, SOAP_ENC_MTOM | SOAP_IO_CHUNK);
     soap_set_omode(ctx, SOAP_ENC_MTOM | SOAP_IO_CHUNK);
+
+    cleaners.push_back(Cleaner(this));
+    signal(SIGINT, signalCallback);
+    signal(SIGQUIT, signalCallback);
+    signal(SIGILL, signalCallback);
+    signal(SIGABRT, signalCallback);
+    signal(SIGBUS, signalCallback);
+    signal(SIGFPE, signalCallback);
+    signal(SIGSEGV, signalCallback);
+    signal(SIGPIPE, signalCallback);
+	signal(SIGTERM, signalCallback);
+	signal(SIGSTOP, signalCallback);
 }
 
-GSoapContextAdapter::~GSoapContextAdapter()
+void GSoapContextAdapter::clean()
 {
     soap_clr_omode(ctx, SOAP_IO_KEEPALIVE);
     shutdown(ctx->socket,2);
@@ -66,6 +84,11 @@ GSoapContextAdapter::~GSoapContextAdapter()
     soap_end(ctx);
     soap_done(ctx);
     soap_free(ctx);
+}
+
+GSoapContextAdapter::~GSoapContextAdapter()
+{
+    clean();
 }
 
 void GSoapContextAdapter::init()
@@ -599,6 +622,24 @@ void GSoapContextAdapter::setInterfaceVersion(string interface)
 
     s = *it;
     patch = boost::lexical_cast<long>(s);
+}
+
+void GSoapContextAdapter::signalCallback(int signum)
+{
+	// check if it is the right signal
+	if (signum != SIGINT &&
+		signum != SIGQUIT &&
+		signum != SIGILL &&
+		signum != SIGABRT &&
+		signum != SIGBUS &&
+		signum != SIGFPE &&
+		signum != SIGSEGV &&
+		signum != SIGPIPE &&
+		signum != SIGTERM &&
+		signum != SIGSTOP) exit(signum);
+	// call all the cleaners
+	for_each(cleaners.begin(), cleaners.end(), boost::lambda::_1);
+	exit(signum);
 }
 
 }
