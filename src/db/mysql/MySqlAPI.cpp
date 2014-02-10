@@ -63,7 +63,7 @@ std::string getFullHostname()
 
 
 
-bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate, double& rateStored, double thr, double& thrStored, double retry, double& retryStored, int active, int& activeStored)
+bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate, double& rateStored, double thr, double& thrStored, double retry, double& retryStored, int active, int& activeStored, int throughputSamples, int& throughputSamplesStored)
 {
     bool returnValue = false;
 
@@ -72,16 +72,16 @@ bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate
 
     if(filesMemStore.empty())
         {
-            boost::tuple<std::string, std::string, double, double, double, int> record(source, dest, rate, thr, retry, active);
+            boost::tuple<std::string, std::string, double, double, double, int, int> record(source, dest, rate, thr, retry, active, throughputSamples);
             filesMemStore.push_back(record);
         }
     else
         {
             bool found = false;
-            std::vector< boost::tuple<std::string, std::string, double, double, double, int> >::iterator itFind;
+            std::vector< boost::tuple<std::string, std::string, double, double, double, int, int> >::iterator itFind;
             for (itFind = filesMemStore.begin(); itFind < filesMemStore.end(); ++itFind)
                 {
-                    boost::tuple<std::string, std::string, double, double, double, int>& tupleRecord = *itFind;
+                    boost::tuple<std::string, std::string, double, double, double, int, int>& tupleRecord = *itFind;
                     std::string sourceLocal = boost::get<0>(tupleRecord);
                     std::string destLocal = boost::get<1>(tupleRecord);
                     if(sourceLocal == source && destLocal == dest)
@@ -92,20 +92,21 @@ bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate
                 }
             if (!found)
                 {
-                    boost::tuple<std::string, std::string, double, double, double, int> record(source, dest, rate, thr, retry, active);
+                    boost::tuple<std::string, std::string, double, double, double, int, int> record(source, dest, rate, thr, retry, active, throughputSamples);
                     filesMemStore.push_back(record);
                 }
 
-            std::vector< boost::tuple<std::string, std::string, double, double, double, int> >::iterator it =  filesMemStore.begin();
+            std::vector< boost::tuple<std::string, std::string, double, double, double, int, int> >::iterator it =  filesMemStore.begin();
             while (it != filesMemStore.end())
                 {
-                    boost::tuple<std::string, std::string, double, double, double, int>& tupleRecord = *it;
+                    boost::tuple<std::string, std::string, double, double, double, int, int>& tupleRecord = *it;
                     std::string sourceLocal = boost::get<0>(tupleRecord);
                     std::string destLocal = boost::get<1>(tupleRecord);
                     double rateLocal = boost::get<2>(tupleRecord);
                     double thrLocal = boost::get<3>(tupleRecord);
                     double retryThr = boost::get<4>(tupleRecord);
                     int activeLocal = boost::get<5>(tupleRecord);
+                    int throughputSamplesLocal = boost::get<6>(tupleRecord);
 
                     if(sourceLocal == source && destLocal == dest)
                         {
@@ -113,10 +114,18 @@ bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate
                             thrStored = thrLocal;
                             rateStored = rateLocal;
                             activeStored = activeLocal;
+
+                            if(thr < thrLocal)
+                                throughputSamplesLocal += 1;
+                            if(throughputSamplesLocal == 2)
+                                throughputSamplesLocal = 0;
+
+                            throughputSamplesStored = throughputSamplesLocal;
+
                             if(rateLocal != rate || thrLocal != thr || retry != retryThr)
                                 {
                                     it = filesMemStore.erase(it);
-                                    boost::tuple<std::string, std::string, double, double, double, int> record(source, dest, rate, thr, retry, active);
+                                    boost::tuple<std::string, std::string, double, double, double, int, int> record(source, dest, rate, thr, retry, active, throughputSamplesLocal);
                                     filesMemStore.push_back(record);
                                     returnValue = true;
                                     break;
@@ -2587,6 +2596,8 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                     double thrStored = 0.0; //stored in mem
                     double rateStored = 0.0; //stored in mem
                     int activeStored = 0; //stored in mem
+                    int thrSamplesStored = 0; //stored in mem
+                    int throughputSamples = 0;
                     double ratioSuccessFailure = 0.0;
                     active = 0;
                     maxActive = 0;
@@ -2670,7 +2681,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                         maxActive = highDefault;
 
                     //only apply the logic below if any of these values changes
-                    bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, rateStored, throughput, thrStored, retry, retryStored, active, activeStored);
+                    bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, rateStored, throughput, thrStored, retry, retryStored, active, activeStored, throughputSamples, thrSamplesStored);
                     if(!changed && retry > 0)
                         changed = true;
 
@@ -2702,17 +2713,22 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                             active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
                                             pathFollowed = 3;
                                         }
+                                    else if(thrSamplesStored == 2)
+                                        {
+                                            active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
+                                            pathFollowed = 4;
+                                        }
                                     else
                                         {
                                             if(active > activeStored)
                                                 {
                                                     active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
-                                                    pathFollowed = 4;
+                                                    pathFollowed = 5;
                                                 }
                                             else
                                                 {
                                                     active = maxActive;
-                                                    pathFollowed = 5;
+                                                    pathFollowed = 6;
                                                 }
                                         }
 
@@ -2723,12 +2739,12 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                     if(ratioSuccessFailure > rateStored && retry < retryStored)
                                         {
                                             active = maxActive;
-                                            pathFollowed = 6;
+                                            pathFollowed = 7;
                                         }
                                     else
                                         {
                                             active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
-                                            pathFollowed = 7;
+                                            pathFollowed = 8;
                                         }
 
                                     stmt10.execute(true);
