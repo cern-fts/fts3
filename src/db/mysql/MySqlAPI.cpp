@@ -67,9 +67,6 @@ bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate
 {
     bool returnValue = false;
 
-    if(rate == 0 || thr == 0 || active == 0)
-        return returnValue;
-
     if(filesMemStore.empty())
         {
             boost::tuple<std::string, std::string, double, double, double, int> record(source, dest, rate, thr, retry, active);
@@ -115,6 +112,11 @@ bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate
                             activeStored = activeLocal;
                             if(rateLocal != rate || thrLocal != thr || retry != retryThr)
                                 {
+                                    if(rate == 0)
+                                        rate = rateStored;
+                                    if(thr == 0)
+                                        thr = thrLocal;
+
                                     it = filesMemStore.erase(it);
                                     boost::tuple<std::string, std::string, double, double, double, int> record(source, dest, rate, thr, retry, active);
                                     filesMemStore.push_back(record);
@@ -2671,24 +2673,26 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                         maxActive = highDefault;
 
                     //only apply the logic below if any of these values changes
-                    bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, rateStored, throughput, thrStored, retry, retryStored, active, activeStored);
-                    if(!changed && retry > 0)
-                        changed = true;
+                    bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, rateStored, throughput, thrStored, retry, retryStored, active, activeStored);		    		   
 
                     //ratioSuccessFailure, rateStored, throughput, thrStored MUST never be zero
                     if(changed)
                         {
                             sql.begin();
 
+                            int pathFollowed = 0;
+
                             if( (ratioSuccessFailure == 100 || ratioSuccessFailure > rateStored) && throughput > thrStored && retry <= retryStored)
                                 {
                                     active = maxActive + spawnActive;
+                                    pathFollowed = 1;
 
                                     stmt10.execute(true);
                                 }
                             else if( (ratioSuccessFailure == 100 || ratioSuccessFailure > rateStored) && throughput == thrStored && retry <= retryStored)
                                 {
                                     active = maxActive;
+                                    pathFollowed = 2;
 
                                     stmt10.execute(true);
                                 }
@@ -2697,13 +2701,20 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                     if(retry > retryStored)
                                         {
                                             active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
+                                            pathFollowed = 3;
                                         }
                                     else
                                         {
                                             if(active > activeStored)
-                                                active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
+                                                {
+                                                    active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
+                                                    pathFollowed = 4;
+                                                }
                                             else
-                                                active = maxActive;
+                                                {
+                                                    active = maxActive;
+                                                    pathFollowed = 5;
+                                                }
                                         }
 
                                     stmt10.execute(true);
@@ -2711,20 +2722,28 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                             else if ( ratioSuccessFailure < 99 || retry > retryStored)
                                 {
                                     if(ratioSuccessFailure > rateStored && retry < retryStored)
-                                        active = maxActive;
+                                        {
+                                            active = maxActive;
+                                            pathFollowed = 6;
+                                        }
                                     else
-                                        active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
+                                        {
+                                            active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
+                                            pathFollowed = 7;
+                                        }
 
                                     stmt10.execute(true);
                                 }
                             else
                                 {
                                     active = maxActive;
+                                    pathFollowed = 8;
 
                                     stmt10.execute(true);
                                 }
 
-                            updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure);
+                            if(active > 0 || retry > 0)
+                                updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, pathFollowed);
 
                             sql.commit();
                         }
@@ -7210,12 +7229,12 @@ void MySqlAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start
 }
 
 
-void MySqlAPI::updateOptimizerEvolution(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname, int active, double throughput, double successRate)
+void MySqlAPI::updateOptimizerEvolution(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname, int active, double throughput, double successRate, int buffer)
 {
     try
         {
-            sql << " INSERT INTO t_optimizer_evolution (datetime, source_se, dest_se, active, throughput, filesize) "
-                " SELECT UTC_TIMESTAMP(), :source, :dest, :active, :throughput, :filesize FROM dual "
+            sql << " INSERT INTO t_optimizer_evolution (datetime, source_se, dest_se, active, throughput, filesize, buffer) "
+                " SELECT UTC_TIMESTAMP(), :source, :dest, :active, :throughput, :filesize, :buffer FROM dual "
                 " WHERE not exists (SELECT * FROM t_optimizer_evolution "
                 " WHERE source_se=:source and dest_se=:dest and datetime >= (UTC_TIMESTAMP() - INTERVAL '50' second) )",
                 soci::use(source_hostname),
@@ -7223,6 +7242,7 @@ void MySqlAPI::updateOptimizerEvolution(soci::session& sql, const std::string & 
                 soci::use(active),
                 soci::use(throughput),
                 soci::use(successRate),
+                soci::use(buffer),
                 soci::use(source_hostname),
                 soci::use(destination_hostname);
         }
