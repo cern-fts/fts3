@@ -66,6 +66,9 @@ std::string getFullHostname()
 bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate, double& rateStored, double thr, double& thrStored, double retry, double& retryStored, int active, int& activeStored)
 {
     bool returnValue = false;
+    
+    if(thr == 0 || rate == 0 || active == 0)
+    	return returnValue;
 
     if(filesMemStore.empty())
         {
@@ -111,18 +114,12 @@ bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate
                             rateStored = rateLocal;
                             activeStored = activeLocal;
                             if(rateLocal != rate || thrLocal != thr || retry != retryThr)
-                                {
-                                    if(rate == 0)
-                                        rate = rateStored;
-                                    if(thr == 0)
-                                        thr = thrLocal;
-
+                                {                                   
                                     it = filesMemStore.erase(it);
                                     boost::tuple<std::string, std::string, double, double, double, int> record(source, dest, rate, thr, retry, active);
                                     filesMemStore.push_back(record);
                                     returnValue = true;
                                     break;
-
                                 }
                             break;
                         }
@@ -2673,7 +2670,9 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                         maxActive = highDefault;
 
                     //only apply the logic below if any of these values changes
-                    bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, rateStored, throughput, thrStored, retry, retryStored, active, activeStored);		    		   
+                    bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, rateStored, throughput, thrStored, retry, retryStored, active, activeStored);	
+		    if(!changed && retry > 0)
+		    		changed = true;   				
 
                     //ratioSuccessFailure, rateStored, throughput, thrStored MUST never be zero
                     if(changed)
@@ -2720,29 +2719,20 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                     stmt10.execute(true);
                                 }
                             else if ( ratioSuccessFailure < 99 || retry > retryStored)
-                                {
-                                    if(ratioSuccessFailure > rateStored && retry < retryStored)
-                                        {
-                                            active = maxActive;
-                                            pathFollowed = 6;
-                                        }
-                                    else
-                                        {
-                                            active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
-                                            pathFollowed = 7;
-                                        }
+                                {                                   
+                                    active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
+                                    pathFollowed = 6;                                   
 
                                     stmt10.execute(true);
                                 }
                             else
                                 {
                                     active = maxActive;
-                                    pathFollowed = 8;
+                                    pathFollowed = 7;
 
                                     stmt10.execute(true);
                                 }
 
-                            if(active > 0 || retry > 0)
                                 updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, pathFollowed);
 
                             sql.commit();
