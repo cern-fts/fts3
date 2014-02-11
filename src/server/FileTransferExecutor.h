@@ -20,6 +20,17 @@
 #include <set>
 #include <string>
 
+#ifdef __STDC_NO_ATOMICS__
+#include <atomic>
+#else
+#if BOOST_VERSION >= 105300
+#include <boost/atomic.hpp>
+#else
+#include <stdatomic.h>
+#endif
+#endif
+
+
 namespace fts3
 {
 
@@ -147,10 +158,21 @@ private:
     thread t;
 
     /// state of the worker
-    bool active;
-
+#ifdef __STDC_NO_ATOMICS__
+    std::atomic<bool> active;
     /// number of files that went to ready state
-    int scheduled;
+    std::atomic<int>  scheduled;    
+#else
+#if BOOST_VERSION >= 105300
+    boost::atomic<bool> active;
+    boost::atomic<int> scheduled;    
+#else
+    std::atomic_bool active;
+    std::atomic_int scheduled;    
+#endif
+#endif    
+
+
 
     /// url_copy command
     static const std::string cmd;

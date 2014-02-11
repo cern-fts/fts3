@@ -250,8 +250,8 @@ protected:
                                                 execPool.stopAll();
                                                 return;
                                             }
-
-                                        execPool.add(tfh.get(*it_vo), enableOptimization.compare("true") == 0);
+					
+                                        execPool.add(tfh.get(*it_vo), true);
                                     }
                             }
 

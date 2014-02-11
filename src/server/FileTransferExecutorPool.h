@@ -15,6 +15,18 @@
 #include "db/generic/TransferFiles.h"
 #include "TransferFileHandler.h"
 
+#ifdef __STDC_NO_ATOMICS__
+#include <atomic>
+#else
+#if BOOST_VERSION >= 105300
+#include <boost/atomic.hpp>
+#else
+#include <stdatomic.h>
+#endif
+#endif
+
+
+
 
 namespace fts3
 {
@@ -93,7 +105,16 @@ private:
     string ftsHostName;
 
     /// number of files scheduled by the thread pool
-    int scheduled;
+#ifdef __STDC_NO_ATOMICS__
+    std::atomic<int> scheduled;
+#else
+#if BOOST_VERSION >= 105300
+    boost::atomic<int> scheduled;
+#else
+    std::atomic_int scheduled;
+#endif
+#endif        
+   
 };
 
 } /* namespace server */

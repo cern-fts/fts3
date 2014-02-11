@@ -14,12 +14,12 @@ namespace server
 {
 
 FileTransferExecutorPool::FileTransferExecutorPool(int size, TransferFileHandler& tfh, bool monitoringMsg, string infosys, string ftsHostName) :
+    index(0),
     size (size),
     tfh(tfh),
     monitoringMsg(monitoringMsg),
     infosys(infosys),
     ftsHostName(ftsHostName),
-    index(0),
     scheduled(0)
 {
 }
