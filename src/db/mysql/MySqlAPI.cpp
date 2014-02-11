@@ -117,11 +117,12 @@ bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate
 
                             if(thr < thrLocal)
                                 throughputSamplesLocal += 1;
-                            if(throughputSamplesLocal == 3){
-			        throughputSamplesStored = throughputSamplesLocal;
-                                throughputSamplesLocal = 0;
-			    }
-                           
+                            if(throughputSamplesLocal == 3)
+                                {
+                                    throughputSamplesStored = throughputSamplesLocal;
+                                    throughputSamplesLocal = 0;
+                                }
+
                             if(rateLocal != rate || thrLocal != thr || retry != retryThr)
                                 {
                                     it = filesMemStore.erase(it);

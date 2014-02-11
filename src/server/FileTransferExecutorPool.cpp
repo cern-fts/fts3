@@ -18,10 +18,10 @@ FileTransferExecutorPool::FileTransferExecutorPool(int size, TransferFileHandler
     tfh(tfh),
     monitoringMsg(monitoringMsg),
     infosys(infosys),
-    ftsHostName(ftsHostName)
+    ftsHostName(ftsHostName),
+    index(0),
+    scheduled(0)
 {
-    index = 0;
-    scheduled = 0;
 }
 
 FileTransferExecutorPool::~FileTransferExecutorPool()
@@ -54,19 +54,23 @@ void FileTransferExecutorPool::join()
     // first let each of the worker threads know that there are no more data
     for (it = executors.begin(); it != executors.end(); it++)
         {
-            (*it)->noMoreData();
+            if (*it)
+                (*it)->noMoreData();
         }
 
     // then if a thread is active join
     for (it = executors.begin(); it != executors.end(); it++)
         {
             FileTransferExecutor* exec = *it;
-            if (exec->isActive())
+            if(exec)
                 {
-                    exec->join();
-                }
+                    if (exec->isActive())
+                        {
+                            exec->join();
+                        }
 
-            scheduled += exec->getNumberOfScheduled();
+                    scheduled += exec->getNumberOfScheduled();
+                }
         }
 }
 
@@ -76,7 +80,8 @@ void FileTransferExecutorPool::stopAll()
 
     for (it = executors.begin(); it != executors.end(); it++)
         {
-            (*it)->stop();
+            if (*it)
+                (*it)->stop();
         }
 }
 
