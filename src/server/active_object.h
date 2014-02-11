@@ -178,7 +178,6 @@ protected:
 
     void _decrease()
     {
-        assert(_runningMethods > 0);
         --_runningMethods;
         _notRunning.notify_all();
     }
