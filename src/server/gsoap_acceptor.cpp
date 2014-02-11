@@ -161,8 +161,14 @@ soap* GSoapAcceptor::getSoapContext()
                 }
         }
 
-
-    return soap_copy(ctx);
+    soap* temp = soap_copy(ctx);
+    temp->bind_flags |= SO_REUSEADDR;
+    temp->accept_timeout = 180;
+    temp->recv_timeout = 110; // Timeout after 2 minutes stall on recv
+    temp->send_timeout = 110; // Timeout after 2 minute stall on send
+    temp->socket_flags |= MSG_NOSIGNAL; // use this, prevent sigpipe
+    
+    return temp;
 }
 
 void GSoapAcceptor::recycleSoapContext(soap* ctx)
@@ -175,6 +181,12 @@ void GSoapAcceptor::recycleSoapContext(soap* ctx)
             soap_destroy(ctx);
             soap_end(ctx);
             ThreadTraits::LOCK_R lock(_mutex);
+
+            ctx->bind_flags |= SO_REUSEADDR;
+            ctx->accept_timeout = 180;
+            ctx->recv_timeout = 110; // Timeout after 2 minutes stall on recv
+            ctx->send_timeout = 110; // Timeout after 2 minute stall on send
+            ctx->socket_flags |= MSG_NOSIGNAL; // use this, prevent sigpipe
             recycle.push(ctx);
         }
 }
