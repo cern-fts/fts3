@@ -39,25 +39,25 @@ using namespace FTS3_COMMON_NAMESPACE;
 using namespace db;
 
 
-bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate, double& rateStored, double thr, double& thrStored, double retry, double& retryStored, int active, int& activeStored)
+bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate, double& rateStored, double thr, double& thrStored, double retry, double& retryStored, int active, int& activeStored, int throughputSamples, int& throughputSamplesStored)
 {
     bool returnValue = false;
 
-    if(rate == 0 || thr == 0 || active == 0)
+    if(thr == 0 || rate == 0 || active == 0)
         return returnValue;
 
     if(filesMemStore.empty())
         {
-            boost::tuple<std::string, std::string, double, double, double, int> record(source, dest, rate, thr, retry, active);
+            boost::tuple<std::string, std::string, double, double, double, int, int> record(source, dest, rate, thr, retry, active, throughputSamples);
             filesMemStore.push_back(record);
         }
     else
         {
             bool found = false;
-            std::vector< boost::tuple<std::string, std::string, double, double, double, int> >::iterator itFind;
+            std::vector< boost::tuple<std::string, std::string, double, double, double, int, int> >::iterator itFind;
             for (itFind = filesMemStore.begin(); itFind < filesMemStore.end(); ++itFind)
                 {
-                    boost::tuple<std::string, std::string, double, double, double, int>& tupleRecord = *itFind;
+                    boost::tuple<std::string, std::string, double, double, double, int, int>& tupleRecord = *itFind;
                     std::string sourceLocal = boost::get<0>(tupleRecord);
                     std::string destLocal = boost::get<1>(tupleRecord);
                     if(sourceLocal == source && destLocal == dest)
@@ -68,20 +68,21 @@ bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate
                 }
             if (!found)
                 {
-                    boost::tuple<std::string, std::string, double, double, double, int> record(source, dest, rate, thr, retry, active);
+                    boost::tuple<std::string, std::string, double, double, double, int, int> record(source, dest, rate, thr, retry, active, throughputSamples);
                     filesMemStore.push_back(record);
                 }
 
-            std::vector< boost::tuple<std::string, std::string, double, double, double, int> >::iterator it =  filesMemStore.begin();
+            std::vector< boost::tuple<std::string, std::string, double, double, double, int, int> >::iterator it =  filesMemStore.begin();
             while (it != filesMemStore.end())
                 {
-                    boost::tuple<std::string, std::string, double, double, double, int>& tupleRecord = *it;
+                    boost::tuple<std::string, std::string, double, double, double, int, int>& tupleRecord = *it;
                     std::string sourceLocal = boost::get<0>(tupleRecord);
                     std::string destLocal = boost::get<1>(tupleRecord);
                     double rateLocal = boost::get<2>(tupleRecord);
                     double thrLocal = boost::get<3>(tupleRecord);
                     double retryThr = boost::get<4>(tupleRecord);
                     int activeLocal = boost::get<5>(tupleRecord);
+                    int throughputSamplesLocal = boost::get<6>(tupleRecord);
 
                     if(sourceLocal == source && destLocal == dest)
                         {
@@ -89,14 +90,22 @@ bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate
                             thrStored = thrLocal;
                             rateStored = rateLocal;
                             activeStored = activeLocal;
+
+                            if(thr < thrLocal)
+                                throughputSamplesLocal += 1;
+                            if(throughputSamplesLocal == 3)
+                                {
+                                    throughputSamplesStored = throughputSamplesLocal;
+                                    throughputSamplesLocal = 0;
+                                }
+
                             if(rateLocal != rate || thrLocal != thr || retry != retryThr)
                                 {
                                     it = filesMemStore.erase(it);
-                                    boost::tuple<std::string, std::string, double, double, double, int> record(source, dest, rate, thr, retry, active);
+                                    boost::tuple<std::string, std::string, double, double, double, int, int> record(source, dest, rate, thr, retry, active, throughputSamplesLocal);
                                     filesMemStore.push_back(record);
                                     returnValue = true;
                                     break;
-
                                 }
                             break;
                         }
@@ -121,7 +130,13 @@ MySqlAPI::MySqlAPI(): poolSize(10), connectionPool(NULL), hostname(getFullHostna
 MySqlAPI::~MySqlAPI()
 {
     if(connectionPool)
-        delete connectionPool;
+        {
+            for (size_t i = 0; i < poolSize; ++i)
+                {
+                    soci::session& sql = (*connectionPool).at(i);
+                    sql << "select concat('KILL ',id,';') from information_schema.processlist where user=:username", soci::use(username_);
+                }
+        }
 }
 
 
@@ -164,6 +179,7 @@ void MySqlAPI::init(std::string username, std::string password, std::string conn
             // Build connection string
             connParams << "user='" << username << "' "
                        << "pass='" << password << "'";
+	    username_ = username;		       
 
             std::string connStr = connParams.str();
 
@@ -2717,7 +2733,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
             soci::rowset<soci::row> rs = ( sql.prepare <<
                                            " select  distinct o.source_se, o.dest_se from t_optimize_active o INNER JOIN "
                                            " t_file f ON (o.source_se = f.source_se) where o.dest_se=f.dest_se and "
-                                           " f.file_state='SUBMITTED'");
+                                           " f.file_state='SUBMITTED' ");
 
             //snapshot of active transfers
             soci::statement stmt7 = (
@@ -2772,6 +2788,8 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                     double thrStored = 0.0; //stored in mem
                     double rateStored = 0.0; //stored in mem
                     int activeStored = 0; //stored in mem
+                    int thrSamplesStored = 0; //stored in mem
+                    int throughputSamples = 0;
                     double ratioSuccessFailure = 0.0;
                     active = 0;
                     maxActive = 0;
@@ -2855,24 +2873,28 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                         maxActive = highDefault;
 
                     //only apply the logic below if any of these values changes
-                    bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, rateStored, throughput, thrStored, retry, retryStored, active, activeStored);
-	            if(!changed && retry > 0)
-		    	changed = true;
-			
+                    bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, rateStored, throughput, thrStored, retry, retryStored, active, activeStored, throughputSamples, thrSamplesStored);
+                    if(!changed && retry > 0)
+                        changed = true;
+
                     //ratioSuccessFailure, rateStored, throughput, thrStored MUST never be zero
                     if(changed)
                         {
                             sql.begin();
 
+                            int pathFollowed = 0;
+
                             if( (ratioSuccessFailure == 100 || ratioSuccessFailure > rateStored) && throughput > thrStored && retry <= retryStored)
                                 {
                                     active = maxActive + spawnActive;
+                                    pathFollowed = 1;
 
                                     stmt10.execute(true);
                                 }
                             else if( (ratioSuccessFailure == 100 || ratioSuccessFailure > rateStored) && throughput == thrStored && retry <= retryStored)
                                 {
                                     active = maxActive;
+                                    pathFollowed = 2;
 
                                     stmt10.execute(true);
                                 }
@@ -2881,34 +2903,51 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                     if(retry > retryStored)
                                         {
                                             active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
+                                            pathFollowed = 3;
+                                        }
+                                    else if(thrSamplesStored == 3)
+                                        {
+                                            active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
+                                            pathFollowed = 4;
                                         }
                                     else
                                         {
                                             if(active > activeStored)
-                                                active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
+                                                {
+                                                    active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
+                                                    pathFollowed = 5;
+                                                }
                                             else
-                                                active = maxActive;
+                                                {
+                                                    active = maxActive;
+                                                    pathFollowed = 6;
+                                                }
                                         }
-
                                     stmt10.execute(true);
                                 }
                             else if ( ratioSuccessFailure < 99 || retry > retryStored)
                                 {
-				    if(ratioSuccessFailure > rateStored && retry < retryStored)
-				        active = maxActive;
-				    else
-                                    	active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
-
+                                    if(ratioSuccessFailure > rateStored && retry < retryStored)
+                                        {
+                                            active = maxActive;
+                                            pathFollowed = 7;
+                                        }
+                                    else
+                                        {
+                                            active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
+                                            pathFollowed = 8;
+                                        }
                                     stmt10.execute(true);
                                 }
                             else
                                 {
                                     active = maxActive;
+                                    pathFollowed = 9;
 
                                     stmt10.execute(true);
                                 }
 
-                            updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure);
+                            updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, pathFollowed);
 
                             sql.commit();
                         }
@@ -2926,6 +2965,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
         }
     return allowed;
 }
+
 
 
 int MySqlAPI::getSeOut(const std::string & source, const std::set<std::string> & destination)
@@ -7135,7 +7175,7 @@ void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId, int retry
                 }
 
             // Keep log
-            sql << "INSERT INTO t_file_retry_errors "
+            sql << "INSERT IGNORE INTO t_file_retry_errors "
                 "    (file_id, attempt, datetime, reason) "
                 "VALUES (:fileId, :attempt, UTC_TIMESTAMP(), :reason)",
                 soci::use(fileId), soci::use(retry), soci::use(reason);
@@ -7455,12 +7495,12 @@ void MySqlAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start
         }
 }
 
-void MySqlAPI::updateOptimizerEvolution(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname, int active, double throughput, double successRate)
+void MySqlAPI::updateOptimizerEvolution(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname, int active, double throughput, double successRate, int buffer)
 {
     try
         {
-            sql << " INSERT INTO t_optimizer_evolution (datetime, source_se, dest_se, active, throughput, filesize) "
-                " SELECT UTC_TIMESTAMP(), :source, :dest, :active, :throughput, :filesize FROM dual "
+            sql << " INSERT INTO t_optimizer_evolution (datetime, source_se, dest_se, active, throughput, filesize, buffer) "
+                " SELECT UTC_TIMESTAMP(), :source, :dest, :active, :throughput, :filesize, :buffer FROM dual "
                 " WHERE not exists (SELECT * FROM t_optimizer_evolution "
                 " WHERE source_se=:source and dest_se=:dest and datetime >= (UTC_TIMESTAMP() - INTERVAL '50' second) )",
                 soci::use(source_hostname),
@@ -7468,6 +7508,7 @@ void MySqlAPI::updateOptimizerEvolution(soci::session& sql, const std::string & 
                 soci::use(active),
                 soci::use(throughput),
                 soci::use(successRate),
+                soci::use(buffer),
                 soci::use(source_hostname),
                 soci::use(destination_hostname);
         }
@@ -7480,7 +7521,6 @@ void MySqlAPI::updateOptimizerEvolution(soci::session& sql, const std::string & 
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
 }
-
 
 // the class factories
 

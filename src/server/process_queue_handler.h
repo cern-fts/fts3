@@ -319,7 +319,7 @@ protected:
                                     }
                             }
 
-                        if(++logInterval > 10)
+                        if(++logInterval > 5)
                             {
                                 if (!fs::is_empty(fs::path(LOG_DIR)))
                                     {

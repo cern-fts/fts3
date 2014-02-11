@@ -352,7 +352,7 @@ private:
                                    unsigned int& finished, unsigned int& cancelled, unsigned int& failed);
 
 
-    bool getChangedFile (std::string source, std::string dest, double rate, double& rateStored, double thr, double& thrStored, double retry, double& retryStored, int active, int& activeStored);
+    bool getChangedFile (std::string source, std::string dest, double rate, double& rateStored, double thr, double& thrStored, double retry, double& retryStored, int active, int& activeStored, int throughputSamples, int& throughputSamplesStored);
 
     struct HashSegment
     {
@@ -362,7 +362,7 @@ private:
         HashSegment(): start(0), end(0xFFFF) {}
     } hashSegment;
 
-    std::vector< boost::tuple<std::string, std::string, double, double, double, int> > filesMemStore;
+    std::vector< boost::tuple<std::string, std::string, double, double, double, int, int> > filesMemStore;
 
     bool updateFileTransferStatusInternal(soci::session& sql, double throughput, std::string job_id, int file_id, std::string transfer_status,
                                           std::string transfer_message, int process_id, double filesize, double duration, bool retry);
@@ -371,6 +371,6 @@ private:
 
     void useFileReplica(soci::session& sql, std::string jobId, int fileId);
 
-    void updateOptimizerEvolution(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname, int active, double throughput, double successRate);
+    void updateOptimizerEvolution(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname, int active, double throughput, double successRate, int buffer);
 
 };

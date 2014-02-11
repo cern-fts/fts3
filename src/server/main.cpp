@@ -121,7 +121,6 @@ static void taskTimer(int time)
 
 
 
-
 static int fexists(const char *filename)
 {
     struct stat buffer;
@@ -135,13 +134,16 @@ void _handle_sigint(int)
     stopThreads = true;
     if (stackTrace.length() > 0)
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << stackTrace << commit;
-    boost::thread bt(taskTimer, 20);
+    boost::thread bt(taskTimer, 30);
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopping" << commit;
-    sleep(10);
+    sleep(15);
     try
         {
             theServer().stop();
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS db connections closing" << commit;
             db::DBSingleton::tearDown();
+            sleep(10);
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS db connections closed" << commit;
         }
     catch(...)
         {
@@ -376,7 +378,6 @@ int DoServer(int argc, char** argv)
             REGISTER_SIGNAL(SIGTRAP);
             REGISTER_SIGNAL(SIGSYS);
 
-
             std::string arguments("");
             size_t foundHelp;
             if (argc > 1)
@@ -454,12 +455,12 @@ int DoServer(int argc, char** argv)
     catch (Err& e)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
-            return -1;
+            exit(1);
         }
     catch (...)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Fatal error (unknown origin), exiting..." << commit;
-            return -1;
+            exit(1);
         }
     return EXIT_SUCCESS;
 }
@@ -467,36 +468,13 @@ int DoServer(int argc, char** argv)
 /// Spawn the process that runs the server
 /// Returns the child PID on success, -1 on failure
 /// Does NOT return on the child process
-pid_t SpawnServer(int argc, char** argv)
+void SpawnServer(int argc, char** argv)
 {
-    pid_t pid = fork();
-    // child
-    if (pid == 0)
+    int resultExec = DoServer(argc, argv);
+    if (resultExec < 0)
         {
-            int resultExec = DoServer(argc, argv);
-            if (resultExec < 0)
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Can't start the server" << commit;
-                    _exit(1);
-                }
-            _exit(0);
-        }
-    // parent
-    else if (pid > 0)
-        {
-            sleep(2);
-            int err = waitpid(pid, NULL, WNOHANG);
-            if (err != 0)
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "waitpid error: " << strerror(errno) << commit;
-                    return -1;
-                }
-            return pid;
-        }
-    // error
-    else
-        {
-            return -1;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Can't start the server" << commit;
+            exit(1);
         }
 }
 
@@ -604,10 +582,13 @@ int main(int argc, char** argv)
         {
             d = daemon(0, 0);
             if (d < 0)
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Can't set daemon, will continue attached to tty"  << commit;
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Can't set daemon"  << commit;
+                    exit(1);
+                }
         }
 
-    pid_t child_pid = SpawnServer(argc, argv);   
+    SpawnServer(argc, argv);
 
     return 0;
 }

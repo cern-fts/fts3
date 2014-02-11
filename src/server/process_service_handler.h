@@ -758,6 +758,9 @@ protected:
 
                         /*check for non-reused jobs*/
                         executeUrlcopy(jobsReuse, false);
+			
+		        if (stopThreads)
+				return;
 
 
                         /* --- session reuse section ---*/
@@ -767,6 +770,9 @@ protected:
                                 DBSingleton::instance().getDBObjectInstance()->getSubmittedJobsReuse(jobsReuse, allowedVOs);
                                 reuseExec = 0;
                             }
+
+		        if (stopThreads)
+				return;
 
                         if (!jobsReuse.empty())
                             {

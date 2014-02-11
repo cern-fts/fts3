@@ -26,6 +26,7 @@ limitations under the License. */
 #include "process_updater_service.h"
 #include "process_updater_db_service.h"
 #include "process_queue.h"
+#include "cleanStateLogs.h"
 
 FTS3_SERVER_NAMESPACE_START
 
@@ -41,6 +42,7 @@ struct ServerTraits
     typedef ThreadPool::ThreadPool ThreadPoolType;
     typedef HearBeat HeartBeatType;
     typedef HearBeatActive HeartBeatTypeActive;
+    typedef CleanLogsActive CleanLogsTypeActive;
 };
 
 /* -------------------------------------------------------------------------- */

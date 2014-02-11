@@ -376,8 +376,10 @@ int FileTransferExecutor::execute()
                             params.append(tf->BRINGONLINE_TOKEN);
                         }
 
-                    params.append(" -M ");
-                    params.append(infosys);
+		    if(infosys.length() > 0) {
+                    	params.append(" -M ");
+                    	params.append(infosys);
+		    }
 
                     bool ready = db->isFileReadyState(tf->FILE_ID);
 
