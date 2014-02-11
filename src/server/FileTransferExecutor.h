@@ -161,16 +161,16 @@ private:
 #ifdef __STDC_NO_ATOMICS__
     std::atomic<bool> active;
     /// number of files that went to ready state
-    std::atomic<int>  scheduled;    
+    std::atomic<int>  scheduled;
 #else
 #if BOOST_VERSION >= 105300
     boost::atomic<bool> active;
-    boost::atomic<int> scheduled;    
+    boost::atomic<int> scheduled;
 #else
     std::atomic_bool active;
-    std::atomic_int scheduled;    
+    std::atomic_int scheduled;
 #endif
-#endif    
+#endif
 
 
 

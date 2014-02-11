@@ -113,8 +113,8 @@ private:
 #else
     std::atomic_int scheduled;
 #endif
-#endif        
-   
+#endif
+
 };
 
 } /* namespace server */
