@@ -70,10 +70,10 @@ public:
     /// Constructor
     GenericLogger () :
         LoggerBase(),
-        _logLine (Traits::initialLogLine()),
         _actLogLevel (static_cast<int>(Traits::INFO))
     {
-
+        (*this) << Traits::initialLogLine();
+        _commit();
     }
 
     static std::string timestamp()
@@ -148,16 +148,8 @@ public:
     /// Commits (writes) the actual log line.
     void _commit()
     {
-        //ThreadTraits::LOCK_R lock(_mutex);
-        if ( ! _logLine.str().empty())
-            {
-                fprintf(stderr, "%s\n",_logLine.str().c_str());
-                fflush(stderr);
-                fprintf(stdout, "%s\n",_logLine.str().c_str());
-                fflush(stdout);
-            }
-
-        _logLine.str("");
+        std::cout << std::endl;
+        std::cerr << std::endl;
     }
 
     /* ---------------------------------------------------------------------- */
@@ -174,14 +166,13 @@ public:
         const int aLineNo /**< Line number where the log file was written. */
     )
     {
-        commit(*this);
         _actLogLevel = LOGLEVEL;
-        _logLine << logLevelStringRepresentation(_actLogLevel) << timestamp() << _separator();
-        bool isDebug = (Traits::ERR == _actLogLevel);
+        (*this) << logLevelStringRepresentation(_actLogLevel) << timestamp() << _separator();
 
+        bool isDebug = (Traits::ERR == _actLogLevel);
         if (isDebug)
             {
-                _logLine << aFile << _separator() << aFunc << _separator() << std::dec << aLineNo << _separator();
+                (*this) << aFile << _separator() << aFunc << _separator() << std::dec << aLineNo << _separator();
             }
 
         return *this;
@@ -208,16 +199,11 @@ public:
     {
         if (_isLogOn)
             {
-                _logLine << aSrc;
+                std::cout << aSrc;
+                std::cerr << aSrc;
             }
         return *this;
     }
-
-    /* ====================================================================== */
-
-    /// The source code line where the logging started (i.e. where the
-    /// FTS3_COMMON_LOGGER_NEWLOG macro was called).
-    std::stringstream  _logLine;
 
     /* ---------------------------------------------------------------------- */
 
