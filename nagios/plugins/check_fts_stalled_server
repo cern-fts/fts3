@@ -80,6 +80,7 @@ Options:
         curl.setopt(pycurl.WRITEFUNCTION, buffer.write)
         curl.setopt(pycurl.FOLLOWLOCATION, True)
         curl.setopt(pycurl.URL, self.monitoring)
+        curl.setopt(pycurl.CAPATH, '/etc/grid-security/certificates/')
 
         try:
             curl.perform()
@@ -90,10 +91,13 @@ Options:
             response = json.loads(buffer.getvalue())
         except:
             return (EX_CRITICAL, 'Could not retrieve the status from the monitoring')
+        
+        if self.host not in response:
+            return (EX_CRITICAL, 'The host is not visible in the monitoring. Maybe it is down?')
 
         nHosts = len(response.keys())
-        totalActive = reduce(lambda a, b: a + b , map(lambda h: h['active'], response.values()))
-        thisHostActive = response[self.host]['active']
+        totalActive = reduce(lambda a, b: a + b , map(lambda h: h.get('active', 0), response.values()))
+        thisHostActive = response[self.host].get('active', 0)
 
         msg = "Running %d out of %d" % (thisHostActive, totalActive)
         if thisHostActive == 0 and (totalActive / nHosts) > max(nHosts, 10):
