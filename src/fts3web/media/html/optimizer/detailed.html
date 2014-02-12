@@ -23,21 +23,41 @@
 <table class="table">
     <thead>
         <tr>
-            <th>Timestamp</th>
-            <th>Active</th>
-            <th>Success rate</th>
-            <th>Throughput</th>
+            <th width="10%">Timestamp</th>
+            <th width="10%">Active</th>
+            <th width="10%">Success rate</th>
+            <th width="10%">Throughput</th>
+            <th width="60%">Decision</th>
         </tr>
     </thead>
     <tbody>
-        <tr ng-repeat="o in optimizer.items" ng-class-odd="'odd'">
+        <tr ng-repeat="o in optimizer.items" ng-class-odd="'odd'" class="optimizer-branch-{{o.branch}}">
             <td>{{ o.datetime }}</td>
             <td>{{ o.active }}</td>
             <td>{{ o.success|number:2 }}%</td>
             <td>{{ o.throughput|number:3 }}</td>
+            <td ng-switch on="o.branch">
+                <span ng-switch-when="1">Good success rate, throughput increasing and retrials steady or decreasing</span>
+                <span ng-switch-when="2">Good success rate, throughput steady, retrials steady or decreasing</span>
+                <span ng-switch-when="3">Good success rate, throughput decreasing and retrials increasing</span>
+                <span ng-switch-when="4">Good success rate, throughput decreasing, not enough recent samples</span>
+                <span ng-switch-when="5">Good success rate, throughput decreasing, actives increasing</span>
+                <span ng-switch-when="6">Good success rate, throughput decreasing, actives steady</span>
+                <span ng-switch-when="7">Bad success rate but improving</span>
+                <span ng-switch-when="8">Bad success rate</span>
+                <span ng-switch-when="9">Success rate ~99%</span>
+            </td>
         </tr>
     </tbody>
 </table>
+
+<div>
+    <p>
+        <span class="label label-success">Increase number of active</span><br/>
+        <span class="label label-info">Keep number of active</span><br/>
+        <span class="label label-important">Decrease number of active</span>
+    </p>
+</div>
 
 <pagination rotate="false" num-pages="optimizer.pageCount" current-page="optimizer.page"
     max-size="15" class="pagination" boundary-links="true"

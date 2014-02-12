@@ -119,6 +119,20 @@ td.SUBMITTED, .SUBMITTED {
 	border-left: solid 4px #f89406;
 }
 
+/* Optimizer decisions */
+.optimizer-branch-1 {
+	border-left: solid 4px #468847;
+}
+
+.optimizer-branch-2 {
+	border-left: solid 4px #3a87ad;
+}
+
+.optimizer-branch-3, .optimizer-branch-4, .optimizer-branch-5, .optimizer-branch-6,
+.optimizer-branch-7, .optimizer-branch-8, .optimizer-branch-9 {
+	border-left: solid 4px #b94a48;
+}
+
 /* Ordering */
 .orderby {
     cursor: pointer;
