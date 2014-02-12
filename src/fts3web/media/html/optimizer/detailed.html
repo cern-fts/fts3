@@ -37,15 +37,15 @@
             <td>{{ o.success|number:2 }}%</td>
             <td>{{ o.throughput|number:3 }}</td>
             <td ng-switch on="o.branch">
-                <span ng-switch-when="1">Good success rate, throughput increasing and retrials steady or decreasing</span>
-                <span ng-switch-when="2">Good success rate, throughput steady, retrials steady or decreasing</span>
-                <span ng-switch-when="3">Good success rate, throughput decreasing and retrials increasing</span>
-                <span ng-switch-when="4">Good success rate, throughput decreasing, not enough recent samples</span>
-                <span ng-switch-when="5">Good success rate, throughput decreasing, actives increasing</span>
-                <span ng-switch-when="6">Good success rate, throughput decreasing, actives steady</span>
-                <span ng-switch-when="7">Bad success rate but improving</span>
-                <span ng-switch-when="8">Bad success rate</span>
-                <span ng-switch-when="9">Success rate ~99%</span>
+                <span ng-switch-when="1">Good link efficiency, current average throughput is larger than the preceding average throughput and retrials steady or decreasing</span>
+                <span ng-switch-when="2">Good link efficiency, throughput steady, retrials steady or decreasing</span>
+                <span ng-switch-when="3">Good link efficiency, current average throughput is smaller than the previous average throughput and retrials increasing</span>
+                <span ng-switch-when="4">Good link efficiency, throughput decreasing, not enough recent samples to decide</span>
+                <span ng-switch-when="5">Good link efficiency, throughput deterioration as caused by congestion due to too many transfer</span>
+                <span ng-switch-when="6">Good link efficiency, throughput decreasing, actives remain steady</span>
+                <span ng-switch-when="7">Bad link efficiency but improving, actives remain steady until the next sample to check</span>
+                <span ng-switch-when="8">Bad link efficiency</span>
+                <span ng-switch-when="9">Link efficiency ~99%</span>
             </td>
         </tr>
     </tbody>
