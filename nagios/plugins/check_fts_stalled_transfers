@@ -48,8 +48,8 @@ class FtsStalledTransfersProbe:
         except Exception, e:
             self.abortMsg = str(e)
 
-        if not self.abortMsg and self.host is None:
-            self.abortMsg = "-H must be specified"
+        if not self.abortMsg and (self.host is None and self.monitoring is None):
+            self.abortMsg = "-H OR -m must be specified"
 
         if not self.monitoring:
             self.monitoring = "http://%s/fts3/ftsmon/transfers" % self.host
@@ -82,6 +82,7 @@ Options:
         curl = pycurl.Curl()
         curl.setopt(pycurl.WRITEFUNCTION, buffer.write)
         curl.setopt(pycurl.FOLLOWLOCATION, True)
+        curl.setopt(pycurl.CAPATH, '/etc/grid-security/certificates')
         curl.setopt(pycurl.URL, self.monitoring + '?state=SUBMITTED&orderby=submit_time&page=all')
 
         try:
