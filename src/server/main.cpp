@@ -156,12 +156,14 @@ void _handle_sigint(int)
 
 /* -------------------------------------------------------------------------- */
 
-void fts3_initialize_db_backend()
+void fts3_initialize_db_backend(bool test)
 {
     std::string dbUserName = theServerConfig().get<std::string > ("DbUserName");
     std::string dbPassword = theServerConfig().get<std::string > ("DbPassword");
     std::string dbConnectString = theServerConfig().get<std::string > ("DbConnectString");
     int pooledConn = theServerConfig().get<int> ("DbThreadsNum");
+    if(test)
+    	pooledConn = 2;
 
     try
         {
@@ -299,7 +301,7 @@ void checkDbSchema()
 {
     try
         {
-            fts3_initialize_db_backend();
+            fts3_initialize_db_backend(true);
 
             db::DBSingleton::instance().getDBObjectInstance()->checkSchemaLoaded();
 
@@ -435,7 +437,7 @@ int DoServer(int argc, char** argv)
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Starting server..." << commit;
             fts3::ws::GSoapDelegationHandler::init();
             StaticSslLocking::init_locks();
-            fts3_initialize_db_backend();
+            fts3_initialize_db_backend(false);
             struct sigaction action;
             action.sa_handler = _handle_sigint;
             sigemptyset(&action.sa_mask);
