@@ -81,7 +81,7 @@ CREATE TABLE t_optimize (
 -- Historial optimizer evolution
 --
 CREATE TABLE t_optimizer_evolution (
-    datetime     TIMESTAMP,
+    datetime     TIMESTAMP WITH TIME ZONE,
     source_se    VARCHAR(255),
     dest_se      VARCHAR(255),
     nostreams    NUMBER DEFAULT NULL,
@@ -631,7 +631,7 @@ CREATE TABLE t_file (
 CREATE TABLE t_file_retry_errors (
     file_id   INTEGER NOT NULL,
     attempt   INTEGER NOT NULL,
-    datetime  TIMESTAMP,
+    datetime  TIMESTAMP WITH TIME ZONE,
     reason    VARCHAR2(2048),
     CONSTRAINT t_file_retry_errors_pk PRIMARY KEY(file_id, attempt),
     CONSTRAINT t_file_retry_fk FOREIGN KEY (file_id) REFERENCES t_file(file_id) ON DELETE CASCADE
@@ -716,7 +716,7 @@ CREATE TABLE t_optimize_active (
   dest_se      VARCHAR2(255) NOT NULL,
   active       INTEGER DEFAULT 5,
   message      VARCHAR2(512),
-  datetime  TIMESTAMP,
+  datetime  TIMESTAMP WITH TIME ZONE,
   CONSTRAINT t_optimize_active_pk PRIMARY KEY (source_se, dest_se)
 );
 

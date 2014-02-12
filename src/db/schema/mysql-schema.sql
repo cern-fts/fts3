@@ -74,7 +74,7 @@ CREATE TABLE t_optimize (
   filesize     DOUBLE DEFAULT NULL,
 --
 -- timestamp
-  datetime     TIMESTAMP,
+  datetime     TIMESTAMP NULL DEFAULT NULL,
   
   CONSTRAINT t_optimize_pk PRIMARY KEY (auto_number)
 );
@@ -83,7 +83,7 @@ CREATE TABLE t_optimize (
 -- Historial optimizer evolution
 --
 CREATE TABLE t_optimizer_evolution (
-    datetime     TIMESTAMP,
+    datetime     TIMESTAMP NULL DEFAULT NULL,
     source_se    VARCHAR(150),
     dest_se      VARCHAR(150),
     nostreams    INTEGER DEFAULT NULL,
@@ -101,7 +101,7 @@ CREATE INDEX t_optimizer_source_and_dest ON t_optimizer_evolution(source_se, des
 CREATE TABLE t_config_audit (
 --
 -- timestamp
-  datetime     TIMESTAMP,
+  datetime     TIMESTAMP NULL DEFAULT NULL,
 --
 -- dn
   dn           VARCHAR(255),
@@ -621,7 +621,7 @@ CREATE TABLE t_file (
 CREATE TABLE t_file_retry_errors (
     file_id   INTEGER NOT NULL,
     attempt   INTEGER NOT NULL,
-    datetime  TIMESTAMP,
+    datetime  TIMESTAMP NULL DEFAULT NULL,
     reason    VARCHAR(2048),
     CONSTRAINT t_file_retry_errors_pk PRIMARY KEY(file_id, attempt),
     CONSTRAINT t_file_retry_fk FOREIGN KEY (file_id) REFERENCES t_file(file_id) ON DELETE CASCADE
@@ -671,9 +671,9 @@ CREATE TABLE t_hosts (
 CREATE TABLE t_optimize_active (
   source_se    VARCHAR(150) NOT NULL,
   dest_se      VARCHAR(150) NOT NULL,
-  active INTEGER UNSIGNED DEFAULT 5,
+  active INTEGER UNSIGNED DEFAULT 4,
   message      VARCHAR(512),
-  datetime     TIMESTAMP,
+  datetime     TIMESTAMP  NULL DEFAULT NULL,
   CONSTRAINT t_optimize_active_pk PRIMARY KEY (source_se, dest_se)
 );
 
