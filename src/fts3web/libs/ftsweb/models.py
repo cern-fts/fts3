@@ -236,7 +236,7 @@ class OptimizerEvolution(models.Model):
     timeout      = models.IntegerField()
     active       = models.IntegerField()
     throughput   = models.FloatField()
-    buffer       = models.IntegerField()
+    branch       = models.IntegerField(db_column = 'buffer')
     success      = models.FloatField(db_column = 'filesize')
     
     class Meta:
