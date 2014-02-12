@@ -92,12 +92,24 @@ bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate
                             activeStored = activeLocal;
 
                             if(thr < thrLocal)
-                                throughputSamplesLocal += 1;
+                                {
+                                    throughputSamplesLocal += 1;
+                                }
+                            else if(thr > thrLocal && throughputSamplesLocal > 0)
+                                {
+                                    throughputSamplesLocal -= 1;
+                                }
+                            else
+                                {
+                                    throughputSamplesLocal = 0;
+                                }
+
                             if(throughputSamplesLocal == 3)
                                 {
                                     throughputSamplesStored = throughputSamplesLocal;
                                     throughputSamplesLocal = 0;
                                 }
+
 
                             if(rateLocal != rate || thrLocal != thr || retry != retryThr)
                                 {
