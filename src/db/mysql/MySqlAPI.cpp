@@ -116,12 +116,24 @@ bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate
                             activeStored = activeLocal;
 
                             if(thr < thrLocal)
-                                throughputSamplesLocal += 1;
-                            if(throughputSamplesLocal == 3)
+                                {
+                                    throughputSamplesLocal += 1;
+                                }
+                            else if(thr > thrLocal && throughputSamplesLocal > 0)
+                                {
+                                    throughputSamplesLocal -= 1;
+                                }
+                            else
+                                {
+                                    throughputSamplesLocal = 0;
+                                }
+
+                            if(throughputSamplesLocal == 2)
                                 {
                                     throughputSamplesStored = throughputSamplesLocal;
                                     throughputSamplesLocal = 0;
                                 }
+
 
                             if(rateLocal != rate || thrLocal != thr || retry != retryThr)
                                 {
@@ -2714,7 +2726,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                             active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
                                             pathFollowed = 3;
                                         }
-                                    else if(thrSamplesStored == 3)
+                                    else if(thrSamplesStored == 2)
                                         {
                                             active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
                                             pathFollowed = 4;
