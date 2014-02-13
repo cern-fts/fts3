@@ -420,7 +420,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                          " (reuse_job = 'N' OR reuse_job IS NULL) AND job_id "
                                          " in (SELECT distinct job_id from t_file WHERE source_se = :source_se and dest_se = :dest_se "
                                          " and vo_name = :vo_name AND (hashed_id >= :hStart AND hashed_id <= :hEnd) AND "
-                                         " (retry_timestamp is NULL OR retry_timestamp < :tTime) ) "
+                                         " (retry_timestamp is NULL OR retry_timestamp < :tTime) AND wait_timestamp IS NULL) "
                                          " ORDER BY priority DESC, submit_time LIMIT 1 ",
                                          soci::use(source_se),
                                          soci::use(dest_se),
@@ -550,7 +550,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                                                  "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
                                                                  "       f.source_se, f.dest_se, f.selection_strategy  "
                                                                  " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) WHERE  "
-                                                                 "    f.file_state='SUBMITTED' AND wait_timestamp IS NULL AND j.job_id = :job_id  AND "
+                                                                 "    f.file_state='SUBMITTED' AND f.wait_timestamp IS NULL AND j.job_id = :job_id  AND "
                                                                  "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) "
                                                                  "    LIMIT :filesNum ",
                                                                  soci::use(job_id),
@@ -2947,6 +2947,7 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
             time_t startTime;
             double diff = 0.0;
             soci::indicator isNull = soci::i_ok;
+            soci::indicator isNullParams = soci::i_ok;
             int count = 0;
 
             soci::statement stmt = (
@@ -2959,7 +2960,7 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                                        " AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) ",
                                        soci::use(hashSegment.start), soci::use(hashSegment.end),
                                        soci::into(jobId), soci::into(fileId), soci::into(startTimeSt),
-                                       soci::into(pid), soci::into(params), soci::into(tHost), soci::into(reuse, isNull)
+                                       soci::into(pid), soci::into(params, isNullParams), soci::into(tHost), soci::into(reuse, isNull)
                                    );
 
             soci::statement stmt1 = (
@@ -2974,9 +2975,17 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                     do
                         {
                             startTime = timegm(&startTimeSt); //from db
-                            timeout = extractTimeout(params);
-			    if(timeout == 0)
-			    	timeout = 7200;
+
+                            if (isNullParams != soci::i_null)
+                                {
+                                    timeout = extractTimeout(params);
+                                    if(timeout == 0)
+                                        timeout = 7200;				    
+                                }
+                            else
+                                {
+                                    timeout = 7200;
+                                }
 
                             int terminateTime = timeout + 1000;
 

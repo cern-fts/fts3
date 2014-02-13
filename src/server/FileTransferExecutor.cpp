@@ -161,21 +161,21 @@ void FileTransferExecutor::execute()
 
                                     if (resolver.isAuto())
                                         {
-                                             
-					     isAutoTuned = true;
-                                            
-					    /* Commented for now
-					    db->setAllowed(
-                                                temp->JOB_ID,
-                                                temp->FILE_ID,
-                                                source_hostname,
-                                                destin_hostname,
-                                                resolver.getNoStreams(),
-                                                resolver.getNoTxActiveTo(),
-                                                resolver.getTcpBufferSize()
-                                            );
-					    */
-					    
+
+                                            isAutoTuned = true;
+
+                                            /* Commented for now
+                                            db->setAllowed(
+                                                                    temp->JOB_ID,
+                                                                    temp->FILE_ID,
+                                                                    source_hostname,
+                                                                    destin_hostname,
+                                                                    resolver.getNoStreams(),
+                                                                    resolver.getNoTxActiveTo(),
+                                                                    resolver.getTcpBufferSize()
+                                                                );
+                                            */
+
                                         }
                                     else
                                         {
