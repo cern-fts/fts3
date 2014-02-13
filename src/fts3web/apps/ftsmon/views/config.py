@@ -15,7 +15,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from ftsweb.models import ConfigAudit
-from ftsweb.models import ProfilingSnapshot, ServerConfig, LinkConfig, ShareConfig
+from ftsweb.models import ProfilingSnapshot, ServerConfig
+from ftsweb.models import LinkConfig, ShareConfig
+from ftsweb.models import DebugConfig
 from jsonify import jsonify, jsonify_paged
 
 @jsonify_paged
@@ -64,3 +66,8 @@ def links(httpRequest):
         links = links.filter(destination = httpRequest.GET['dest_se'])
     
     return AppendShares(links.all())
+
+@jsonify
+def debug(httpRequest):
+    return DebugConfig.objects.all()
+    

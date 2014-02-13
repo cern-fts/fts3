@@ -50,10 +50,11 @@ ConfigAuditCtrl.resolve = {
 }
 
 
-function ConfigStatusCtrl($location, $scope, server, links)
+function ConfigStatusCtrl($location, $scope, server, links, debug)
 {
 	$scope.server = server;
 	$scope.links = links;
+	$scope.debug = debug;
 	
 	// On page change, reload
 	$scope.pageChanged = function(newPage) {
@@ -80,6 +81,18 @@ ConfigStatusCtrl.resolve = {
 		var deferred = $q.defer();
 		
 		ConfigLinks.query($location.search(),
+  			  genericSuccessMethod(deferred, $rootScope),
+			  genericFailureMethod(deferred, $rootScope, $location));
+		
+		return deferred.promise;
+	},
+	
+	debug: function($rootScope, $location, $route, $q, ConfigDebug) {
+		loading($rootScope);
+		
+		var deferred = $q.defer();
+		
+		ConfigDebug.query(
   			  genericSuccessMethod(deferred, $rootScope),
 			  genericFailureMethod(deferred, $rootScope, $location));
 		
