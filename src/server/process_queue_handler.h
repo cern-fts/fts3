@@ -317,22 +317,22 @@ protected:
                                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the status messages:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
                                     }
                             }
-                        
-                                if (!fs::is_empty(fs::path(LOG_DIR)))
-                                    {
-                                        if(runConsumerLog(messagesLog) != 0)
-                                            {
-                                                char buffer[128]= {0};
-                                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the log messages:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
-                                            }
-                                    }
 
-                                if(!messagesLog.empty())
+                        if (!fs::is_empty(fs::path(LOG_DIR)))
+                            {
+                                if(runConsumerLog(messagesLog) != 0)
                                     {
-                                        DBSingleton::instance().getDBObjectInstance()->transferLogFileVector(messagesLog);
-                                        messagesLog.clear();
+                                        char buffer[128]= {0};
+                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the log messages:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
                                     }
-                              
+                            }
+
+                        if(!messagesLog.empty())
+                            {
+                                DBSingleton::instance().getDBObjectInstance()->transferLogFileVector(messagesLog);
+                                messagesLog.clear();
+                            }
+
 
                         if(!messages.empty())
                             {
