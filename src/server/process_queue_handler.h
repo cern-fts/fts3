@@ -319,8 +319,7 @@ protected:
                                     }
                             }
 
-                        if(++logInterval > 5)
-                            {
+                  
                                 if (!fs::is_empty(fs::path(LOG_DIR)))
                                     {
                                         if(runConsumerLog(messagesLog) != 0)
@@ -335,8 +334,7 @@ protected:
                                         DBSingleton::instance().getDBObjectInstance()->transferLogFileVector(messagesLog);
                                         messagesLog.clear();
                                     }
-                                logInterval = 0;
-                            }
+                      
 
                         if(!messages.empty())
                             {
