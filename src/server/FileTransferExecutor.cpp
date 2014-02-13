@@ -132,7 +132,7 @@ void FileTransferExecutor::execute()
 
                             if (optimize && cfgs.empty())
                                 {
-                                    db->setAllowed(temp->JOB_ID, temp->FILE_ID, source_hostname, destin_hostname, StreamsperFile, Timeout, BufSize);
+                                    // Commented for now  db->setAllowed(temp->JOB_ID, temp->FILE_ID, source_hostname, destin_hostname, StreamsperFile, Timeout, BufSize);
                                 }
                             else
                                 {
@@ -161,8 +161,11 @@ void FileTransferExecutor::execute()
 
                                     if (resolver.isAuto())
                                         {
-                                            isAutoTuned = true;
-                                            db->setAllowed(
+                                             
+					     isAutoTuned = true;
+                                            
+					    /* Commented for now
+					    db->setAllowed(
                                                 temp->JOB_ID,
                                                 temp->FILE_ID,
                                                 source_hostname,
@@ -171,6 +174,8 @@ void FileTransferExecutor::execute()
                                                 resolver.getNoTxActiveTo(),
                                                 resolver.getTcpBufferSize()
                                             );
+					    */
+					    
                                         }
                                     else
                                         {
