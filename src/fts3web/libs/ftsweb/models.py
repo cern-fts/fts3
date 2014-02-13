@@ -268,3 +268,14 @@ class Host(models.Model):
     
     class Meta:
         db_table = 't_hosts'
+
+
+class DebugConfig(models.Model):
+    source_se = models.CharField(primary_key = True)
+    dest_se   = models.CharField()
+    debug     = models.CharField()
+
+    class Meta:
+        db_table = 't_debug'
+
+    

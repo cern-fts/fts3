@@ -100,4 +100,10 @@ angular.module('ftsmon.resources', ['ngResource'])
 		query: {method: 'GET', isArray: false}
 	})
 })
+.factory('ConfigDebug', function($resource) {
+	return $resource('config/debug', {}, {
+		query: {method: 'GET', isArray: true}
+	})
+})
+
 ;

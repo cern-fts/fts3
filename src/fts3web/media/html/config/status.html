@@ -1,21 +1,43 @@
 <h2>Configuration status</h2>
 
-<h3>Server config</h3>
-
-<table class="table">
-    <thead>
-        <tr>
-            <th>Retry</th>
-            <th>Max. Time in queue</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>{{ server.retry }}</td>
-            <td>{{ server.max_time_queue }}</td>
-        </tr>
-    </tbody>
-</table>
+<div class="row-fluid">
+    <div class="span6">
+       <h3>Debug settings</h3>
+       <table class="table">
+           <thead>
+               <tr>
+                   <th>Source</th>
+                   <th>Destination</th>
+                   <th>Debug enabled</th>
+               </tr>
+           </thead>
+           <tbody>
+               <tr ng-repeat="d in debug" ng-class-odd="'odd'">
+                   <td>{{ d.source_se }}</td>
+                   <td>{{ d.dest_se }}</td>
+                   <td>{{ d.debug }}</td>
+               </tr>
+           </tbody>
+       </table>
+    </div>
+    <div class="span6">
+	    <h3>Server config</h3>
+		<table class="table">
+		    <thead>
+		        <tr>
+		            <th>Retry</th>
+		            <th>Max. Time in queue</th>
+		        </tr>
+		    </thead>
+		    <tbody>
+		        <tr>
+		            <td>{{ server.retry }}</td>
+		            <td>{{ server.max_time_queue }}</td>
+		        </tr>
+		    </tbody>
+		</table>
+	</div>
+</div>
 
 <h3>Link config</h3>
 
