@@ -167,7 +167,7 @@ soap* GSoapAcceptor::getSoapContext()
     temp->recv_timeout = 110; // Timeout after 2 minutes stall on recv
     temp->send_timeout = 110; // Timeout after 2 minute stall on send
     temp->socket_flags |= MSG_NOSIGNAL; // use this, prevent sigpipe
-    
+
     return temp;
 }
 

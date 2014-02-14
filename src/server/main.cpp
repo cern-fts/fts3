@@ -163,7 +163,7 @@ void fts3_initialize_db_backend(bool test)
     std::string dbConnectString = theServerConfig().get<std::string > ("DbConnectString");
     int pooledConn = theServerConfig().get<int> ("DbThreadsNum");
     if(test)
-    	pooledConn = 2;
+        pooledConn = 2;
 
     try
         {

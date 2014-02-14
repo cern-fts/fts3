@@ -191,7 +191,7 @@ void MySqlAPI::init(std::string username, std::string password, std::string conn
             // Build connection string
             connParams << "user='" << username << "' "
                        << "pass='" << password << "'";
-	    username_ = username;		       
+            username_ = username;
 
             std::string connStr = connParams.str();
 
@@ -2717,7 +2717,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 {
     //prevent more than on server to update the optimizer decisions
     if(hashSegment.start != 0)
-    	return false;
+        return false;
 
     soci::session sql(*connectionPool);
 
@@ -2773,7 +2773,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                          sql.prepare << "update t_optimize_active set active=:active where "
                                          " source_se=:source and dest_se=:dest and (datetime is NULL OR datetime >= (UTC_TIMESTAMP() - INTERVAL '50' second)) ",
                                          soci::use(active), soci::use(source_hostname), soci::use(destin_hostname));
-					 
+
             //check if retry is set at global level
             sql <<
                 " SELECT retry "
@@ -3184,7 +3184,7 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                                 {
                                     timeout = extractTimeout(params);
                                     if(timeout == 0)
-                                        timeout = 7200;				    
+                                        timeout = 7200;
                                 }
                             else
                                 {
@@ -3537,16 +3537,24 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                 }
             sql.commit();
 
-            //delete from t_optimizer_evolution > 3 days old records
-            sql.begin();
-            sql << "delete from t_optimizer_evolution where datetime < (UTC_TIMESTAMP() - interval '1' DAY )";
-            sql.commit();
+            //prevent more than on server to update the optimizer decisions
+            if(hashSegment.start == 0)
+                {
+                    //delete from t_optimizer_evolution > 3 days old records
+                    sql.begin();
+                    sql << "delete from t_optimizer_evolution where datetime < (UTC_TIMESTAMP() - interval '1' DAY )";
+                    sql.commit();
 
-            //delete from t_optimizer_evolution > 3 days old records
-            sql.begin();
-            sql << "delete from t_optimize where datetime < (UTC_TIMESTAMP() - interval '1' DAY )";
-            sql.commit();
+                    //delete from t_optimizer_evolution > 3 days old records
+                    sql.begin();
+                    sql << "delete from t_optimize where datetime < (UTC_TIMESTAMP() - interval '1' DAY )";
+                    sql.commit();
 
+                    //delete from t_file_retry_errors > 3 days old records
+                    sql.begin();
+                    sql << "delete from t_file_retry_errors where datetime < (UTC_TIMESTAMP() - interval '3' DAY )";
+                    sql.commit();
+                }
         }
     catch (std::exception& e)
         {

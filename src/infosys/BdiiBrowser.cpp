@@ -176,8 +176,8 @@ bool BdiiBrowser::isValid()
     int rc = 0;
     // used shared lock - many concurrent reads are allowed
     {
-    	shared_lock<shared_mutex> lock(qm);
-    	rc = ldap_search_ext_s(ld, "dc=example,dc=com", LDAP_SCOPE_BASE, "(sn=Curly)", 0, 0, 0, 0, &timeout, 0, &result);
+        shared_lock<shared_mutex> lock(qm);
+        rc = ldap_search_ext_s(ld, "dc=example,dc=com", LDAP_SCOPE_BASE, "(sn=Curly)", 0, 0, 0, 0, &timeout, 0, &result);
     }
 
     if (rc == LDAP_SUCCESS)

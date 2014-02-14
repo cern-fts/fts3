@@ -9,18 +9,21 @@
 
 using namespace fts3::cli;
 
-RestCli::RestCli() {
+RestCli::RestCli()
+{
     // add fts3-transfer-status specific options
     specific.add_options()
     ("rest", "Use the RESTful interface.")
     ;
 }
 
-RestCli::~RestCli() {
+RestCli::~RestCli()
+{
 
 }
 
-bool RestCli::rest() {
-	// return true if rest is in the map
+bool RestCli::rest()
+{
+    // return true if rest is in the map
     return vm.count("rest");
 }

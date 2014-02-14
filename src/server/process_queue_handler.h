@@ -166,14 +166,14 @@ public:
         catch (std::exception& e)
             {
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception " << e.what() << commit;
-		struct message msgTemp = msg; 
-		runProducerStatus( msgTemp);
+                struct message msgTemp = msg;
+                runProducerStatus( msgTemp);
             }
         catch (...)
             {
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception" << commit;
-		struct message msgTemp = msg; 
-		runProducerStatus( msgTemp);		
+                struct message msgTemp = msg;
+                runProducerStatus( msgTemp);
             }
         return updated;
     }
@@ -323,22 +323,22 @@ protected:
                                     }
                             }
 
-                  
-                                if (!fs::is_empty(fs::path(LOG_DIR)))
-                                    {
-                                        if(runConsumerLog(messagesLog) != 0)
-                                            {
-                                                char buffer[128]= {0};
-                                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the log messages:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
-                                            }
-                                    }
 
-                                if(!messagesLog.empty())
+                        if (!fs::is_empty(fs::path(LOG_DIR)))
+                            {
+                                if(runConsumerLog(messagesLog) != 0)
                                     {
-                                        DBSingleton::instance().getDBObjectInstance()->transferLogFileVector(messagesLog);
-                                        messagesLog.clear();
+                                        char buffer[128]= {0};
+                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the log messages:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
                                     }
-                      
+                            }
+
+                        if(!messagesLog.empty())
+                            {
+                                DBSingleton::instance().getDBObjectInstance()->transferLogFileVector(messagesLog);
+                                messagesLog.clear();
+                            }
+
 
                         if(!messages.empty())
                             {

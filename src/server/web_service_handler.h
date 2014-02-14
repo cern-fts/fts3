@@ -107,11 +107,11 @@ protected:
                         this->_enqueue(op);
                     }
                 else
-                	{
-                		// if we were not able to accept the connection lets wait for a sec
-                		// so we don't loop like crazy in case the system is out of descriptors
-                		sleep(1);
-                	}
+                    {
+                        // if we were not able to accept the connection lets wait for a sec
+                        // so we don't loop like crazy in case the system is out of descriptors
+                        sleep(1);
+                    }
 
                 if (_testHelper.loopOver)
                     {

@@ -115,7 +115,7 @@ public:
     ) :
         TRAITS::ActiveObjectType("ProcessServiceHandler", desc)
     {
-        cmd = "fts_url_copy";       
+        cmd = "fts_url_copy";
 
         execPoolSize = theServerConfig().get<int> ("InternalThreadPool");
 
@@ -754,13 +754,13 @@ protected:
                         else
                             {
                                 drainMode = false;
-                            }                        
+                            }
 
                         /*check for non-reused jobs*/
                         executeUrlcopy(jobsReuse, false);
-			
-		        if (stopThreads)
-				return;
+
+                        if (stopThreads)
+                            return;
 
 
                         /* --- session reuse section ---*/
@@ -771,8 +771,8 @@ protected:
                                 reuseExec = 0;
                             }
 
-		        if (stopThreads)
-				return;
+                        if (stopThreads)
+                            return;
 
                         if (!jobsReuse.empty())
                             {

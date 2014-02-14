@@ -2613,7 +2613,7 @@ bool OracleAPI::isTrAllowed2(const std::string & source_hostname, const std::str
 {
     //prevent more than on server to update the optimizer decisions
     if(hashSegment.start != 0)
-    	return false;
+        return false;
 
     soci::session sql(*connectionPool);
 
@@ -2681,38 +2681,38 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
 
     try
         {
-	    //check optimizer level, minimum active per link
+            //check optimizer level, minimum active per link
             int highDefault = getOptimizerMode(sql);
-	    
-	    //store the default
+
+            //store the default
             int tempDefault =   highDefault;
 
-	    //based on the level, how many transfers will be spawned
+            //based on the level, how many transfers will be spawned
             int spawnActive = getOptimizerDefaultMode(sql);
 
-	    //fetch the records from db for distinct links
+            //fetch the records from db for distinct links
             soci::rowset<soci::row> rs = ( sql.prepare <<
                                            " select  distinct o.source_se, o.dest_se from t_optimize_active o INNER JOIN "
                                            " t_file f ON (o.source_se = f.source_se) where o.dest_se=f.dest_se and "
                                            " f.file_state='SUBMITTED'");
 
-	    //snapshot of active transfers
+            //snapshot of active transfers
             soci::statement stmt7 = (
                                         sql.prepare << "SELECT count(*) FROM t_file "
                                         "WHERE source_se = :source AND dest_se = :dest_se and file_state in ('READY','ACTIVE') ",
                                         soci::use(source_hostname),soci::use(destin_hostname), soci::into(active));
 
-	    //max number of active allowed per link
+            //max number of active allowed per link
             soci::statement stmt8 = (
                                         sql.prepare << "SELECT active FROM t_optimize_active "
                                         "WHERE source_se = :source AND dest_se = :dest_se ",
                                         soci::use(source_hostname),soci::use(destin_hostname), soci::into(maxActive, isNullMaxActive));
 
-	    //sum of retried transfers per link
+            //sum of retried transfers per link
             soci::statement stmt9 = (
                                         sql.prepare << "select * from (SELECT sum(retry) from t_file WHERE source_se = :source AND dest_se = :dest_se and "
-                        			      "file_state in ('READY','ACTIVE','SUBMITTED') order by start_time DESC) WHERE ROWNUM <= 50 ",
-                                        	soci::use(source_hostname),soci::use(destin_hostname), soci::into(retry, isNullRetry));
+                                        "file_state in ('READY','ACTIVE','SUBMITTED') order by start_time DESC) WHERE ROWNUM <= 50 ",
+                                        soci::use(source_hostname),soci::use(destin_hostname), soci::into(retry, isNullRetry));
 
             soci::statement stmt10 = (
                                          sql.prepare << "update t_optimize_active set active=:active where "
@@ -2724,8 +2724,8 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                 " SELECT retry "
                 " FROM t_server_config ",soci::into(retrySet, isRetry)
                 ;
-		
-	    //if not set, flag as 0	
+
+            //if not set, flag as 0
             if (isRetry == soci::i_null || retrySet == 0)
                 retrySet = 0;
 
@@ -2751,7 +2751,7 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                     int activeStored = 0; //stored in mem
                     double ratioSuccessFailure = 0.0;
                     int thrSamplesStored = 0; //stored in mem
-                    int throughputSamples = 0;		    
+                    int throughputSamples = 0;
                     active = 0;
                     maxActive = 0;
                     isNullRetry = soci::i_ok;
@@ -2759,7 +2759,7 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                     lastSuccessRate = 0.0;
                     isNullRate = soci::i_ok;
 
-                    // Weighted average  		   
+                    // Weighted average
                     soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
                             " SELECT * FROM ("
                             " SELECT rownum as rn, filesize, throughput "
@@ -2790,7 +2790,7 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                                                   soci::use(source_hostname), soci::use(destin_hostname));
 
 
-		    //we need to exclude non-recoverable errors so as not to count as failures and affect effiency
+                    //we need to exclude non-recoverable errors so as not to count as failures and affect effiency
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin();
                             i != rs.end(); ++i)
                         {
@@ -2811,7 +2811,7 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                                 }
                         }
 
-		    //round up efficiency
+                    //round up efficiency
                     if(nFinishedLastHour > 0.0)
                         {
                             ratioSuccessFailure = ceil(nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0));
@@ -2834,7 +2834,7 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                     if (isNullMaxActive == soci::i_null)
                         maxActive = highDefault;
 
-                   //only apply the logic below if any of these values changes
+                    //only apply the logic below if any of these values changes
                     bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, rateStored, throughput, thrStored, retry, retryStored, active, activeStored, throughputSamples, thrSamplesStored);
                     if(!changed && retry > 0)
                         changed = true;
@@ -3447,16 +3447,23 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
                 }
             sql.commit();
 
-            //delete from t_optimizer_evolution > 10 days old records
-            sql.begin();
-            sql << "delete from t_optimizer_evolution where datetime < (systimestamp - interval '1' DAY )";
-            sql.commit();
+            if(hashSegment.start == 0)
+                {
+                    //delete from t_optimizer_evolution > 10 days old records
+                    sql.begin();
+                    sql << "delete from t_optimizer_evolution where datetime < (systimestamp - interval '1' DAY )";
+                    sql.commit();
 
-            //delete from t_optimizer_evolution > 10 days old records
-            sql.begin();
-            sql << "delete from t_optimize where datetime < (systimestamp - interval '1' DAY )";
-            sql.commit();
+                    //delete from t_optimizer_evolution > 10 days old records
+                    sql.begin();
+                    sql << "delete from t_optimize where datetime < (systimestamp - interval '1' DAY )";
+                    sql.commit();
 
+                    //delete from t_file_retry_errors > 3 days old records
+                    sql.begin();
+                    sql << "delete from t_file_retry_errors where datetime < (systimestamp - interval '3' DAY )";
+                    sql.commit();
+                }
         }
     catch (std::exception& e)
         {
@@ -7409,7 +7416,7 @@ void OracleAPI::updateOptimizerEvolution(soci::session& sql, const std::string &
                 soci::use(active),
                 soci::use(throughput),
                 soci::use(successRate),
-                soci::use(buffer),		
+                soci::use(buffer),
                 soci::use(source_hostname),
                 soci::use(destination_hostname);
         }

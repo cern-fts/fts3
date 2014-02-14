@@ -170,9 +170,9 @@ protected:
                                     }
                                 messages.clear();
                             }
-			    
-			if (stopThreads)
-				return;
+
+                        if (stopThreads)
+                            return;
 
                         /*also get jobs which have been canceled by the client*/
                         counterCanceled++;
@@ -188,8 +188,8 @@ protected:
                             }
 
 
-			if (stopThreads)
-				return;
+                        if (stopThreads)
+                            return;
 
                         /*revert to SUBMITTED if stayed in READY for too long (300 secs)*/
                         countReverted++;
@@ -198,9 +198,9 @@ protected:
                                 DBSingleton::instance().getDBObjectInstance()->revertToSubmitted();
                                 countReverted = 0;
                             }
-			    
-			if (stopThreads)
-				return;			    
+
+                        if (stopThreads)
+                            return;
 
                         /*this routine is called periodically every 300 seconds*/
                         counterTimeoutWaiting++;
@@ -223,9 +223,9 @@ protected:
 
                                 counterTimeoutWaiting = 0;
                             }
-			    
-			if (stopThreads)
-				return;			    
+
+                        if (stopThreads)
+                            return;
 
                         /*force-fail stalled ACTIVE transfers*/
                         counter1++;
@@ -244,9 +244,9 @@ protected:
                                     }
                                 counter1 = 0;
                             }
-			    
-			if (stopThreads)
-				return;			    
+
+                        if (stopThreads)
+                            return;
 
                         /*set to fail all old queued jobs which have exceeded max queue time*/
                         counterFailAll++;
@@ -266,8 +266,8 @@ protected:
                                 counterFailAll = 0;
                             }
 
-			if (stopThreads)
-				return;
+                        if (stopThreads)
+                            return;
 
                         counter2++;
                         if (counter2 == 3600)

@@ -12,7 +12,8 @@
 
 namespace fts3
 {
-namespace cli {
+namespace cli
+{
 
 /**
  * The command line utility for getting the 'rest' option
@@ -20,7 +21,8 @@ namespace cli {
  * The class provides:
  * 		- rest, allows to use the REST interface instead of SOAP
  */
-class RestCli  : public virtual CliBase {
+class RestCli  : public virtual CliBase
+{
 
 public:
 
@@ -29,17 +31,17 @@ public:
      *
      * Creates the REST command line interface.
      */
-	RestCli();
+    RestCli();
 
     /**
      * Destructor.
      */
-	virtual ~RestCli();
+    virtual ~RestCli();
 
     /**
      * @return true if the rest interface has been selected, false otherwise
      */
-	bool rest();
+    bool rest();
 };
 
 } /* namespace cli   */

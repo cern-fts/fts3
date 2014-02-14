@@ -33,34 +33,38 @@
 
 #include "MsgPrinter.h"
 
-namespace fts3 { namespace cli {
+namespace fts3
+{
+namespace cli
+{
 
 using namespace std;
 
-class RestTransferStatus {
+class RestTransferStatus
+{
 
 public:
 
-	RestTransferStatus(string endpoint, string jobId, MsgPrinter& printer);
-	virtual ~RestTransferStatus();
+    RestTransferStatus(string endpoint, string jobId, MsgPrinter& printer);
+    virtual ~RestTransferStatus();
 
-	inline void print()
-	{
-		cout << ss.str() << endl;
-	}
+    inline void print()
+    {
+        cout << ss.str() << endl;
+    }
 
 private:
 
-	static size_t write_data(void *ptr, size_t size, size_t nmemb, stringstream* ss);
+    static size_t write_data(void *ptr, size_t size, size_t nmemb, stringstream* ss);
 
-	void setPort(string& endpoint);
+    void setPort(string& endpoint);
 
-	static const string PORT;
-	static const string CERTIFICATE;
-	static const string CAPATH;
+    static const string PORT;
+    static const string CERTIFICATE;
+    static const string CAPATH;
 
-	// the response is written to this string stream
-	stringstream ss;
+    // the response is written to this string stream
+    stringstream ss;
     // curl context
     CURL *curl;
     // message printer

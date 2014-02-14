@@ -71,8 +71,8 @@ GSoapContextAdapter::GSoapContextAdapter(string endpoint):
     signal(SIGFPE, signalCallback);
     signal(SIGSEGV, signalCallback);
     signal(SIGPIPE, signalCallback);
-	signal(SIGTERM, signalCallback);
-	signal(SIGSTOP, signalCallback);
+    signal(SIGTERM, signalCallback);
+    signal(SIGSTOP, signalCallback);
 }
 
 void GSoapContextAdapter::clean()
@@ -626,20 +626,20 @@ void GSoapContextAdapter::setInterfaceVersion(string interface)
 
 void GSoapContextAdapter::signalCallback(int signum)
 {
-	// check if it is the right signal
-	if (signum != SIGINT &&
-		signum != SIGQUIT &&
-		signum != SIGILL &&
-		signum != SIGABRT &&
-		signum != SIGBUS &&
-		signum != SIGFPE &&
-		signum != SIGSEGV &&
-		signum != SIGPIPE &&
-		signum != SIGTERM &&
-		signum != SIGSTOP) exit(signum);
-	// call all the cleaners
-	for_each(cleaners.begin(), cleaners.end(), boost::lambda::_1);
-	exit(signum);
+    // check if it is the right signal
+    if (signum != SIGINT &&
+            signum != SIGQUIT &&
+            signum != SIGILL &&
+            signum != SIGABRT &&
+            signum != SIGBUS &&
+            signum != SIGFPE &&
+            signum != SIGSEGV &&
+            signum != SIGPIPE &&
+            signum != SIGTERM &&
+            signum != SIGSTOP) exit(signum);
+    // call all the cleaners
+    for_each(cleaners.begin(), cleaners.end(), boost::lambda::_1);
+    exit(signum);
 }
 
 }

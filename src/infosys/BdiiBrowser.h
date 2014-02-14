@@ -327,8 +327,8 @@ list< map<string, R> > BdiiBrowser::browse(string base, string query, const char
 
     // used shared lock - many concurrent reads are allowed
     {
-    	shared_lock<shared_mutex> lock(qm);
-    	rc = ldap_search_ext_s(ld, base.c_str(), LDAP_SCOPE_SUBTREE, query.c_str(), const_cast<char**>(attr), 0, 0, 0, &timeout, 0, &reply);
+        shared_lock<shared_mutex> lock(qm);
+        rc = ldap_search_ext_s(ld, base.c_str(), LDAP_SCOPE_SUBTREE, query.c_str(), const_cast<char**>(attr), 0, 0, 0, &timeout, 0, &reply);
     }
 
     if (rc != LDAP_SUCCESS)

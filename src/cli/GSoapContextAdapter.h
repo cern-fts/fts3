@@ -48,17 +48,17 @@ namespace cli
 class GSoapContextAdapter
 {
 
-	struct Cleaner
-	{
-		Cleaner(GSoapContextAdapter* me) : me(me) {}
+    struct Cleaner
+    {
+        Cleaner(GSoapContextAdapter* me) : me(me) {}
 
-		void operator() ()
-		{
-			me->clean();
-		}
+        void operator() ()
+        {
+            me->clean();
+        }
 
-		GSoapContextAdapter* me;
-	};
+        GSoapContextAdapter* me;
+    };
 
 public:
 
