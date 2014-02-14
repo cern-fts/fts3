@@ -456,7 +456,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
 
             soci::rowset<std::string> rs1 = (
                                                 sql.prepare <<
-                                                " SELECT DISTINCT vo_name from t_job ");
+                                                " SELECT DISTINCT vo_name FROM t_job WHERE job_finished is null ");
 
             for (soci::rowset<std::string>::const_iterator i1 = rs1.begin(); i1 != rs1.end(); ++i1)
                 {
