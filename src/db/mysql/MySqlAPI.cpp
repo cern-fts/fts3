@@ -552,7 +552,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                                                  " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) WHERE  "
                                                                  "    f.file_state='SUBMITTED' AND f.wait_timestamp IS NULL AND j.job_id = :job_id  AND "
                                                                  "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
-								 "    j.job_finished is NULL "
+                                                                 "    j.job_finished is NULL "
                                                                  "    LIMIT :filesNum ",
                                                                  soci::use(job_id),
                                                                  soci::use(hashSegment.start), soci::use(hashSegment.end),
@@ -2526,7 +2526,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 {
     //prevent more than on server to update the optimizer decisions
     if(hashSegment.start != 0)
-    	return false;
+        return false;
 
     soci::session sql(*connectionPool);
 
@@ -2985,7 +2985,7 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                                 {
                                     timeout = extractTimeout(params);
                                     if(timeout == 0)
-                                        timeout = 7200;				    
+                                        timeout = 7200;
                                 }
                             else
                                 {
@@ -3319,16 +3319,24 @@ void MySqlAPI::backup()
                 }
             sql.commit();
 
-            //delete from t_optimizer_evolution > 3 days old records
-            sql.begin();
-            sql << "delete from t_optimizer_evolution where datetime < (UTC_TIMESTAMP() - interval '1' DAY )";
-            sql.commit();
+            //prevent more than on server to update the optimizer decisions
+            if(hashSegment.start == 0)
+                {
+                    //delete from t_optimizer_evolution > 3 days old records
+                    sql.begin();
+                    sql << "delete from t_optimizer_evolution where datetime < (UTC_TIMESTAMP() - interval '1' DAY )";
+                    sql.commit();
 
-            //delete from t_optimizer_evolution > 3 days old records
-            sql.begin();
-            sql << "delete from t_optimize where datetime < (UTC_TIMESTAMP() - interval '1' DAY )";
-            sql.commit();
+                    //delete from t_optimizer_evolution > 3 days old records
+                    sql.begin();
+                    sql << "delete from t_optimize where datetime < (UTC_TIMESTAMP() - interval '1' DAY )";
+                    sql.commit();
 
+                    //delete from t_file_retry_errors > 3 days old records
+                    sql.begin();
+                    sql << "delete from t_file_retry_errors where datetime < (UTC_TIMESTAMP() - interval '3' DAY )";
+                    sql.commit();
+                }
         }
     catch (std::exception& e)
         {
@@ -5556,7 +5564,7 @@ double MySqlAPI::getAvgThroughput(std::string source_hostname, std::string desti
 {
     soci::session sql(*connectionPool);
 
-    double throughput=0.0;
+    double throughput= 0.0;
     double filesize = 0.0;
     double totalSize = 0.0;
 
@@ -5574,8 +5582,8 @@ double MySqlAPI::getAvgThroughput(std::string source_hostname, std::string desti
             for (soci::rowset<soci::row>::const_iterator j = rsSizeAndThroughput.begin();
                     j != rsSizeAndThroughput.end(); ++j)
                 {
-                    filesize    = j->get<double>("filesize", 0);
-                    throughput += (j->get<double>("throughput", 0) * filesize);
+                    filesize    = j->get<double>("filesize", 0,0);
+                    throughput += (j->get<double>("throughput", 0,0) * filesize);
                     totalSize  += filesize;
                 }
             if (totalSize > 0)
