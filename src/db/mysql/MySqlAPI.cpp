@@ -416,7 +416,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
         {
             soci::statement stmtx1 = (
                                          sql.prepare <<
-                                         " SELECT job_id from t_job where  job_state in ('ACTIVE','READY','SUBMITTED') AND  "
+                                         " SELECT job_id from t_job where  job_finished is NULL AND  "
                                          " (reuse_job = 'N' OR reuse_job IS NULL) AND job_id "
                                          " in (SELECT distinct job_id from t_file WHERE source_se = :source_se and dest_se = :dest_se "
                                          " and vo_name = :vo_name AND (hashed_id >= :hStart AND hashed_id <= :hEnd) AND "
@@ -551,7 +551,8 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                                                  "       f.source_se, f.dest_se, f.selection_strategy  "
                                                                  " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) WHERE  "
                                                                  "    f.file_state='SUBMITTED' AND f.wait_timestamp IS NULL AND j.job_id = :job_id  AND "
-                                                                 "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) "
+                                                                 "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
+								 "    j.job_finished is NULL "
                                                                  "    LIMIT :filesNum ",
                                                                  soci::use(job_id),
                                                                  soci::use(hashSegment.start), soci::use(hashSegment.end),
