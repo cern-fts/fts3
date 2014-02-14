@@ -28,7 +28,16 @@ include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/config/)
 include_directories (BEFORE ${PROJECT_BINARY_DIR}/src/config/)
 include_directories (BEFORE ${PROJECT_BINARY_DIR}/src/infosys/)
 
-file(GLOB fts_infosys_sources "*.cpp")
+set(fts_infosys_sources
+    BdiiBrowser.cpp
+    SiteNameCacheRetriever.cpp
+    SiteNameRetriever.cpp
+)
+
+if (PUGIXML_FOUND)
+    list(APPEND fts_infosys_sources BdiiCacheParser.cpp)
+    list(APPEND fts_infosys_sources OsgParser.cpp)
+endif (PUGIXML_FOUND)
 
 find_package (Boost COMPONENTS thread)
 
@@ -36,7 +45,11 @@ add_library(fts_infosys SHARED ${fts_infosys_sources})
 add_dependencies(fts_infosys fts_common fts_config)
 target_link_libraries(fts_infosys fts_common fts_config)
 target_link_libraries(fts_infosys ${Boost_LIBRARIES} )
-target_link_libraries(fts_infosys -lldap_r 	-lpugixml)
+target_link_libraries(fts_infosys -lldap_r)
+
+if (PUGIXML_FOUND)
+    target_link_libraries(fts_infosys -lpugixml)
+endif (PUGIXML_FOUND)
 
 
 set_target_properties(fts_infosys             PROPERTIES

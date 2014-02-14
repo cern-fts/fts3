@@ -36,8 +36,6 @@
 #include "ws/CGsiAdapter.h"
 #include "ws/delegation/GSoapDelegationHandler.h"
 
-#include "infosys/OsgParser.h"
-
 #include "profiler/Macros.h"
 
 #include <boost/lexical_cast.hpp>
@@ -57,7 +55,6 @@
 
 using namespace db;
 using namespace config;
-using namespace fts3::infosys;
 using namespace fts3::ws;
 using namespace boost;
 using namespace boost::assign;
