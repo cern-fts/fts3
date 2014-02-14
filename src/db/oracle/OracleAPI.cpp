@@ -2611,6 +2611,10 @@ bool OracleAPI::isCredentialExpired(const std::string & dlg_id, const std::strin
 
 bool OracleAPI::isTrAllowed2(const std::string & source_hostname, const std::string & destin_hostname)
 {
+    //prevent more than on server to update the optimizer decisions
+    if(hashSegment.start != 0)
+    	return false;
+
     soci::session sql(*connectionPool);
 
     int maxActive = 0;

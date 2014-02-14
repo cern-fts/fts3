@@ -2715,6 +2715,10 @@ bool MySqlAPI::isTrAllowed2(const std::string & source_hostname, const std::stri
 
 bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::string & /*destin_hostname1*/)
 {
+    //prevent more than on server to update the optimizer decisions
+    if(hashSegment.start != 0)
+    	return false;
+
     soci::session sql(*connectionPool);
 
     int allowed = false;
