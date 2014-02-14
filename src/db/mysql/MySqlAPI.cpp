@@ -3143,10 +3143,11 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
             std::string jobId, params, tHost,reuse;
             int fileId=0, pid=0, timeout=0;
             struct tm startTimeSt;
-            time_t now2 = getUTC(0);
+            time_t now2 = convertToUTC(0);
             time_t startTime;
             double diff = 0.0;
             soci::indicator isNull = soci::i_ok;
+            soci::indicator isNullParams = soci::i_ok;
             int count = 0;
 
             soci::statement stmt = (
@@ -3159,7 +3160,7 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                                        " AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) ",
                                        soci::use(hashSegment.start), soci::use(hashSegment.end),
                                        soci::into(jobId), soci::into(fileId), soci::into(startTimeSt),
-                                       soci::into(pid), soci::into(params), soci::into(tHost), soci::into(reuse, isNull)
+                                       soci::into(pid), soci::into(params, isNullParams), soci::into(tHost), soci::into(reuse, isNull)
                                    );
 
             soci::statement stmt1 = (
@@ -3174,7 +3175,17 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                     do
                         {
                             startTime = timegm(&startTimeSt); //from db
-                            timeout = extractTimeout(params);
+
+                            if (isNullParams != soci::i_null)
+                                {
+                                    timeout = extractTimeout(params);
+                                    if(timeout == 0)
+                                        timeout = 7200;				    
+                                }
+                            else
+                                {
+                                    timeout = 7200;
+                                }
 
                             int terminateTime = timeout + 1000;
 
@@ -3199,8 +3210,8 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                                     collectJobs.insert(std::make_pair(fileId, jobId));
                                     updateFileTransferStatusInternal(sql, 0.0, jobId, fileId,
                                                                      "FAILED", "Transfer has been forced-killed because it was stalled",
-                                                                     pid, 0, 0, false);
-                                    updateJobTransferStatusInternal(sql, jobId, "FAILED");
+                                                                     pid, 0, 0);
+                                    updateJobTransferStatusInternal(sql, fileId, jobId, "FAILED");
                                 }
 
                         }
@@ -3216,6 +3227,7 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }
+
 
 
 
