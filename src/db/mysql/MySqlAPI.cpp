@@ -5582,8 +5582,8 @@ double MySqlAPI::getAvgThroughput(std::string source_hostname, std::string desti
             for (soci::rowset<soci::row>::const_iterator j = rsSizeAndThroughput.begin();
                     j != rsSizeAndThroughput.end(); ++j)
                 {
-                    filesize    = j->get<double>("filesize", 0,0);
-                    throughput += (j->get<double>("throughput", 0,0) * filesize);
+                    filesize    = j->get<double>("filesize", 0.0);
+                    throughput += (j->get<double>("throughput", 0.0) * filesize);
                     totalSize  += filesize;
                 }
             if (totalSize > 0)
