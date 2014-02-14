@@ -513,7 +513,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                          sql.prepare <<
                                          " SELECT job_id from t_job where  job_finished is NULL AND  "
                                          " (reuse_job = 'N' OR reuse_job IS NULL) AND job_id "
-                                         " in (SELECT distinct job_id from t_file WHERE source_se = :source_se and dest_se = :dest_se "
+                                         " in (SELECT distinct job_id from t_file WHERE job_finished is null AND source_se = :source_se and dest_se = :dest_se "
                                          " and vo_name = :vo_name AND (hashed_id >= :hStart AND hashed_id <= :hEnd) AND "
                                          " (retry_timestamp is NULL OR retry_timestamp < :tTime) AND wait_timestamp IS NULL) "
                                          " ORDER BY priority DESC, submit_time LIMIT 1 ",
@@ -533,7 +533,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                             " from t_job j inner join t_file f on (f.job_id = j.job_id) "
                                             " where  j.job_finished is NULL AND  "
                                             " 	(j.reuse_job = 'N' OR j.reuse_job IS NULL) AND j.job_id "
-                                            " 	in (SELECT distinct job_id from t_file WHERE source_se = :source_se and dest_se = :dest_se "
+                                            " 	in (SELECT distinct job_id from t_file WHERE job_finished is null AND source_se = :source_se and dest_se = :dest_se "
                                             " 	and vo_name = :vo_name AND (hashed_id >= :hStart AND hashed_id <= :hEnd) AND "
                                             " 	(retry_timestamp is NULL OR retry_timestamp < :tTime) AND wait_timestamp IS NULL) AND "
                                             "	(f.activity = 'default' OR f.activity = '' OR f.activity IS NULL) "
@@ -554,7 +554,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                             " from t_job j inner join t_file f on (f.job_id = j.job_id) "
                                             " where  j.job_finished is NULL AND  "
                                             " 	(j.reuse_job = 'N' OR j.reuse_job IS NULL) AND j.job_id "
-                                            " 	in (SELECT distinct job_id from t_file WHERE source_se = :source_se and dest_se = :dest_se "
+                                            " 	in (SELECT distinct job_id from t_file WHERE job_finished is null AND source_se = :source_se and dest_se = :dest_se "
                                             " 	and vo_name = :vo_name AND (hashed_id >= :hStart AND hashed_id <= :hEnd) AND "
                                             " 	(retry_timestamp is NULL OR retry_timestamp < :tTime) AND wait_timestamp IS NULL) AND "
                                             "	(f.activity = :activity) "
