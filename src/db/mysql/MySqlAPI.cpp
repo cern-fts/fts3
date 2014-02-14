@@ -3143,7 +3143,7 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
             std::string jobId, params, tHost,reuse;
             int fileId=0, pid=0, timeout=0;
             struct tm startTimeSt;
-            time_t now2 = convertToUTC(0);
+            time_t now2 = getUTC(0);
             time_t startTime;
             double diff = 0.0;
             soci::indicator isNull = soci::i_ok;
@@ -3211,7 +3211,7 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                                     updateFileTransferStatusInternal(sql, 0.0, jobId, fileId,
                                                                      "FAILED", "Transfer has been forced-killed because it was stalled",
                                                                      pid, 0, 0);
-                                    updateJobTransferStatusInternal(sql, fileId, jobId, "FAILED");
+                                    updateJobTransferStatusInternal(sql, jobId, "FAILED");
                                 }
 
                         }
