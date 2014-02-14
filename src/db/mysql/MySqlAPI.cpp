@@ -3214,7 +3214,7 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                                     collectJobs.insert(std::make_pair(fileId, jobId));
                                     updateFileTransferStatusInternal(sql, 0.0, jobId, fileId,
                                                                      "FAILED", "Transfer has been forced-killed because it was stalled",
-                                                                     pid, 0, 0);
+                                                                     pid, 0, 0, false);
                                     updateJobTransferStatusInternal(sql, jobId, "FAILED");
                                 }
 
