@@ -484,6 +484,7 @@ JobSubmitter::~JobSubmitter()
 
 string JobSubmitter::submit()
 {
+ try{
 
     // for backwards compatibility check if copy-pin-lifetime and bring-online were set properly
     if (!params.isParamSet(JobParameterHandler::COPY_PIN_LIFETIME))
@@ -541,18 +542,19 @@ string JobSubmitter::submit()
     );
 
     //send state message
-    SingleTrStateInstance::instance().sendStateMessage(id, -1);
-
-    /* Leave it as is just in case
-    vector<job_element_tupple>::const_iterator it;
-    for (it = jobs.begin(); it != jobs.end(); ++it) {
-    SingleTrStateInstance::instance().sendStateMessage(vo, (*it).source_se, (*it).dest_se, id, -1, "SUBMITTED", "SUBMITTED", 0,
-    params.get<int>(JobParameterHandler::RETRY), params.get<string>(JobParameterHandler::JOB_METADATA), (*it).metadata );
-    }
-    */
+    SingleTrStateInstance::instance().sendStateMessage(id, -1);  
 
 
     FTS3_COMMON_LOGGER_NEWLOG (INFO) << "The jobid " << id << " has been submitted successfully" << commit;
+    }
+    catch (std::exception& e)
+        {           
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }    
     return id;
 }
 
