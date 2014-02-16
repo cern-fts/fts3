@@ -114,27 +114,38 @@ public:
                         ThreadSafeList::get_instance().removeFinishedTr(job, msg.file_id);
                     }
 
-                int retry = DBSingleton::instance().getDBObjectInstance()->getRetry(job);
-                if(msg.retry==true && retry > 0 && std::string(msg.transfer_status).compare("FAILED") == 0)
+                try
                     {
-                        int retryTimes = DBSingleton::instance().getDBObjectInstance()->getRetryTimes(job, msg.file_id);
-                        if(retry == -1)  //unlimited times
+                        int retry = DBSingleton::instance().getDBObjectInstance()->getRetry(job);
+                        if(msg.retry==true && retry > 0 && std::string(msg.transfer_status).compare("FAILED") == 0)
                             {
-                                DBSingleton::instance().getDBObjectInstance()
-                                ->setRetryTransfer(job, msg.file_id, retryTimes+1, msg.transfer_message);
-                                SingleTrStateInstance::instance().sendStateMessage(job, msg.file_id);
-                                return true;
-                            }
-                        else
-                            {
-                                if(retryTimes <= retry-1 )
+                                int retryTimes = DBSingleton::instance().getDBObjectInstance()->getRetryTimes(job, msg.file_id);
+                                if(retry == -1)  //unlimited times
                                     {
                                         DBSingleton::instance().getDBObjectInstance()
                                         ->setRetryTransfer(job, msg.file_id, retryTimes+1, msg.transfer_message);
                                         SingleTrStateInstance::instance().sendStateMessage(job, msg.file_id);
                                         return true;
                                     }
+                                else
+                                    {
+                                        if(retryTimes <= retry-1 )
+                                            {
+                                                DBSingleton::instance().getDBObjectInstance()
+                                                ->setRetryTransfer(job, msg.file_id, retryTimes+1, msg.transfer_message);
+                                                SingleTrStateInstance::instance().sendStateMessage(job, msg.file_id);
+                                                return true;
+                                            }
+                                    }
                             }
+                    }
+                catch (std::exception& e)
+                    {
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception when set retry " << e.what() << commit;                        
+                    }
+                catch (...)
+                    {
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception when set retry " << commit;                        
                     }
 
                 /*session reuse process died or terminated unexpected*/
@@ -168,12 +179,14 @@ public:
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception " << e.what() << commit;
                 struct message msgTemp = msg;
                 runProducerStatus( msgTemp);
+		sleep(1);
             }
         catch (...)
             {
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception" << commit;
                 struct message msgTemp = msg;
                 runProducerStatus( msgTemp);
+		sleep(1);
             }
         return updated;
     }
@@ -256,7 +269,7 @@ protected:
                         struct message_log msgLogBreak = (*iterLogBreak).second;
                         runProducerLog( msgLogBreak );
                     }
-
+		sleep(1);
             }
         catch (std::exception& ex)
             {
@@ -274,7 +287,7 @@ protected:
                         struct message_log msgLogBreak = (*iterLogBreak).second;
                         runProducerLog( msgLogBreak );
                     }
-
+		sleep(1);
             }
         catch (...)
             {
@@ -292,7 +305,7 @@ protected:
                         struct message_log msgLogBreak = (*iterLogBreak).second;
                         runProducerLog( msgLogBreak );
                     }
-
+		sleep(1);
             }
     }
 
