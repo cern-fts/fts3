@@ -484,77 +484,78 @@ JobSubmitter::~JobSubmitter()
 
 string JobSubmitter::submit()
 {
- try{
-
-    // for backwards compatibility check if copy-pin-lifetime and bring-online were set properly
-    if (!params.isParamSet(JobParameterHandler::COPY_PIN_LIFETIME))
+    try
         {
-            params.set(JobParameterHandler::COPY_PIN_LIFETIME, "-1");
+
+            // for backwards compatibility check if copy-pin-lifetime and bring-online were set properly
+            if (!params.isParamSet(JobParameterHandler::COPY_PIN_LIFETIME))
+                {
+                    params.set(JobParameterHandler::COPY_PIN_LIFETIME, "-1");
+                }
+
+            if (!params.isParamSet(JobParameterHandler::BRING_ONLINE))
+                {
+                    params.set(JobParameterHandler::BRING_ONLINE, "-1");
+                }
+            else
+                {
+                    // make sure that bring online has been used for SRM source
+                    // (bring online is not supported for multiple source/destination submission)
+                    if (params.get(JobParameterHandler::BRING_ONLINE) != "-1" && !srm_source)
+                        throw Err_Custom("The 'bring-online' operation can be used only with source SEs that are using SRM protocol!");
+                }
+
+            if (!params.isParamSet(JobParameterHandler::RETRY))
+                {
+                    params.set(JobParameterHandler::RETRY, "0");
+                }
+
+            if (!params.isParamSet(JobParameterHandler::RETRY_DELAY))
+                {
+                    params.set(JobParameterHandler::RETRY_DELAY, "0");
+                }
+
+
+            // submit the transfer job (add it to the DB)
+            db->submitPhysical (
+                id,
+                jobs,
+                params.get(JobParameterHandler::GRIDFTP),
+                dn,
+                cred,
+                vo,
+                string(),
+                delegationId,
+                params.get(JobParameterHandler::SPACETOKEN),
+                params.get(JobParameterHandler::OVERWRITEFLAG),
+                params.get(JobParameterHandler::SPACETOKEN_SOURCE),
+                sourceSpaceTokenDescription,
+                params.get<int>(JobParameterHandler::COPY_PIN_LIFETIME),
+                params.get(JobParameterHandler::FAIL_NEARLINE),
+                params.get(JobParameterHandler::CHECKSUM_METHOD),
+                params.get(JobParameterHandler::REUSE),
+                params.get<int>(JobParameterHandler::BRING_ONLINE),
+                params.get<string>(JobParameterHandler::JOB_METADATA),
+                params.get<int>(JobParameterHandler::RETRY),
+                params.get<int>(JobParameterHandler::RETRY_DELAY),
+                sourceSe,
+                destinationSe
+            );
+
+            //send state message
+            SingleTrStateInstance::instance().sendStateMessage(id, -1);
+
+
+            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "The jobid " << id << " has been submitted successfully" << commit;
         }
-
-    if (!params.isParamSet(JobParameterHandler::BRING_ONLINE))
-        {
-            params.set(JobParameterHandler::BRING_ONLINE, "-1");
-        }
-    else
-        {
-            // make sure that bring online has been used for SRM source
-            // (bring online is not supported for multiple source/destination submission)
-            if (params.get(JobParameterHandler::BRING_ONLINE) != "-1" && !srm_source)
-                throw Err_Custom("The 'bring-online' operation can be used only with source SEs that are using SRM protocol!");
-        }
-
-    if (!params.isParamSet(JobParameterHandler::RETRY))
-        {
-            params.set(JobParameterHandler::RETRY, "0");
-        }
-
-    if (!params.isParamSet(JobParameterHandler::RETRY_DELAY))
-        {
-            params.set(JobParameterHandler::RETRY_DELAY, "0");
-        }
-
-
-    // submit the transfer job (add it to the DB)
-    db->submitPhysical (
-        id,
-        jobs,
-        params.get(JobParameterHandler::GRIDFTP),
-        dn,
-        cred,
-        vo,
-        string(),
-        delegationId,
-        params.get(JobParameterHandler::SPACETOKEN),
-        params.get(JobParameterHandler::OVERWRITEFLAG),
-        params.get(JobParameterHandler::SPACETOKEN_SOURCE),
-        sourceSpaceTokenDescription,
-        params.get<int>(JobParameterHandler::COPY_PIN_LIFETIME),
-        params.get(JobParameterHandler::FAIL_NEARLINE),
-        params.get(JobParameterHandler::CHECKSUM_METHOD),
-        params.get(JobParameterHandler::REUSE),
-        params.get<int>(JobParameterHandler::BRING_ONLINE),
-        params.get<string>(JobParameterHandler::JOB_METADATA),
-        params.get<int>(JobParameterHandler::RETRY),
-        params.get<int>(JobParameterHandler::RETRY_DELAY),
-        sourceSe,
-        destinationSe
-    );
-
-    //send state message
-    SingleTrStateInstance::instance().sendStateMessage(id, -1);  
-
-
-    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "The jobid " << id << " has been submitted successfully" << commit;
-    }
     catch (std::exception& e)
-        {           
+        {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }    
+        }
     return id;
 }
 
