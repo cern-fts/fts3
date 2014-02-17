@@ -2762,12 +2762,13 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                     // Weighted average
                     soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
                             " SELECT * FROM ("
-                            " SELECT rownum as rn, filesize, throughput "
-                            " FROM t_file "
-                            " WHERE source_se = :source AND dest_se = :dest AND "
+                            "   SELECT rownum as rn, filesize, throughput "
+                            "   FROM t_file "
+                            "   WHERE source_se = :source AND dest_se = :dest AND "
                             "       file_state IN ('ACTIVE','FINISHED') AND throughput > 0 AND "
                             "       filesize > 0  AND (job_finished is NULL OR"
-                            "        job_finished >= (sys_extract_utc(systimestamp) - interval '1' minute)) ",
+                            "        job_finished >= (sys_extract_utc(systimestamp) - interval '1' minute)) "
+                            " )",
                             soci::use(source_hostname),soci::use(destin_hostname));
 
                     for (soci::rowset<soci::row>::const_iterator j = rsSizeAndThroughput.begin();
