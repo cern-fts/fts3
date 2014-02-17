@@ -74,7 +74,7 @@ CREATE TABLE t_optimize (
   filesize     DOUBLE DEFAULT NULL,
 --
 -- timestamp
-  datetime     TIMESTAMP,
+  datetime     TIMESTAMP NULL DEFAULT NULL,
   
   CONSTRAINT t_optimize_pk PRIMARY KEY (auto_number)
 );
@@ -83,7 +83,7 @@ CREATE TABLE t_optimize (
 -- Historial optimizer evolution
 --
 CREATE TABLE t_optimizer_evolution (
-    datetime     TIMESTAMP,
+    datetime     TIMESTAMP NULL DEFAULT NULL,
     source_se    VARCHAR(150),
     dest_se      VARCHAR(150),
     nostreams    INTEGER DEFAULT NULL,
@@ -305,7 +305,7 @@ CREATE TABLE t_bad_dns (
   addition_time  TIMESTAMP NULL DEFAULT NULL,
 --
 -- The DN of the administrator who added it
-  admin_dn       VARCHAR(1024),
+  admin_dn       VARCHAR(255),
 --
 -- status: either CANCEL or WAIT
   status 		 VARCHAR(10) DEFAULT NULL,
@@ -374,10 +374,10 @@ CREATE TABLE t_job (
 --
 -- the DN of the user starting the job - they are the only one
 -- who can sumbit/cancel
-  user_dn              VARCHAR(1024) NOT NULL,
+  user_dn              VARCHAR(255) NOT NULL,
 --
 -- the DN of the agent currently serving the job
-  agent_dn             VARCHAR(1024),
+  agent_dn             VARCHAR(255),
 --
 -- the user credentials passphrase. This is passed to the movement service in
 -- order to retrieve the appropriate user proxy to do the transfers
@@ -511,7 +511,7 @@ CREATE TABLE t_file (
 --
 -- The agent who is transferring the file. This is only valid when the file
 -- is in 'Active' state
-  agent_dn         VARCHAR(1024),
+  agent_dn         VARCHAR(255),
 --
 -- The error scope
   error_scope      VARCHAR(32),
@@ -677,8 +677,6 @@ CREATE TABLE t_optimize_active (
 -- Index Section 
 --
 --
--- t_job indexes:
--- t_job(job_id) is primary key
 CREATE INDEX job_job_state ON t_job(job_state, vo_name, job_finished, submit_time);
 CREATE INDEX job_vo_name ON t_job(vo_name);
 CREATE INDEX job_jobfinished_id ON t_job(job_finished);
@@ -729,8 +727,8 @@ CREATE TABLE t_profiling_info (
 
 CREATE TABLE t_profiling_snapshot (
     scope      VARCHAR(255) NOT NULL PRIMARY KEY,
-    cnt        LONG NOT NULL,
-    exceptions LONG NOT NULL,
+    cnt        INT NOT NULL,
+    exceptions INT NOT NULL,
     total      DOUBLE NOT NULL,
     average    DOUBLE NOT NULL
 );
