@@ -652,7 +652,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                                                  "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
                                                                  "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params "
                                                                  " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) WHERE  "
-                                                                 " j.vo_name = f.vo_name AND f.file_state = 'SUBMITTED' AND and j.job_finished is NULL  "
+                                                                 " j.vo_name = f.vo_name AND f.file_state = 'SUBMITTED' AND j.job_finished is NULL AND "
                                                                  "    f.source_se = :source AND f.dest_se = :dest AND "
                                                                  "    f.vo_name = :vo_name AND "
                                                                  "    f.wait_timestamp IS NULL AND "
