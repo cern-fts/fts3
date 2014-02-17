@@ -5105,7 +5105,7 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
                                                      " WHERE "
                                                      "	(j.BRING_ONLINE > 0 OR j.COPY_PIN_LIFETIME > 0) "
                                                      "	AND f.file_state = 'STAGING' "
-                                                     "	AND f.staging_start IS NULL and f.source_surl like 'srm%' and j.job_finished is null "
+                                                     "	AND f.staging_start IS NULL and j.job_finished is null "
                                                      "  AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd)",
                                                      soci::use(hashSegment.start), soci::use(hashSegment.end)
                                                  );
@@ -5116,7 +5116,7 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
                                              "       (j.BRING_ONLINE > 0 OR j.COPY_PIN_LIFETIME > 0) "
                                              "	AND f.file_state = 'STAGING' "
                                              "	AND f.staging_start IS NOT NULL "
-                                             "	AND f.source_se = :hostV  and f.source_surl like 'srm%' and j.job_finished is null",
+                                             "	AND f.source_se = :hostV  and j.job_finished is null",
                                              soci::use(hostV),
                                              soci::into(currentStagingFilesNoConfig));
 
@@ -5140,7 +5140,7 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
                                                               " (j.BRING_ONLINE > 0 OR j.COPY_PIN_LIFETIME > 0) "
                                                               "	AND f.staging_start IS NULL "
                                                               "	AND f.file_state = 'STAGING' "
-                                                              "	AND f.source_se = :source_se and f.source_surl like 'srm%'   "
+                                                              "	AND f.source_se = :source_se "
                                                               "	AND j.job_finished is null "
                                                               " LIMIT :limit",
                                                               soci::use(hostV),
@@ -5176,7 +5176,7 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
                         "	AND f.file_state = 'STAGING' "
                         "	AND f.STAGING_START IS NOT NULL "
                         " 	AND j.vo_name = :vo_name "
-                        "	AND f.source_se = :source_se and f.source_surl like 'srm%'   "
+                        "	AND f.source_se = :source_se    "
                         "       AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd)",
                         soci::use(voName),
                         soci::use(hostName),
@@ -5195,7 +5195,7 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
                                                      " 	AND f.staging_START IS NULL "
                                                      "	AND f.file_state = 'STAGING' "
                                                      "	AND f.source_se = :source_se "
-                                                     "	AND j.vo_name = :vo_name and f.source_surl like 'srm%'   "
+                                                     "	AND j.vo_name = :vo_name  "
                                                      "	AND j.job_finished is null"
                                                      " LIMIT :limit",
                                                      soci::use(hostName),
