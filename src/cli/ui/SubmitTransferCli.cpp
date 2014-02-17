@@ -28,6 +28,7 @@
 #include "BulkSubmissionParser.h"
 
 #include "common/JobParameterHandler.h"
+#include "common/parse_url.h"
 
 #include <iostream>
 #include <fstream>
@@ -158,6 +159,17 @@ optional<string> SubmitTransferCli::getMetadata()
     return optional<string>();
 }
 
+void SubmitTransferCli::checkValidUrl(const std::string &uri)
+{
+    Uri u0 = Uri::Parse(uri);
+    bool ok = u0.Host.length() != 0 && u0.Protocol.length() != 0 && u0.Path.length() != 0;
+    if (!ok)
+        {
+            std::string errMsg = "Not valid uri format, check submitted uri's";
+            throw Err_Custom(errMsg);
+        }
+}
+
 
 bool SubmitTransferCli::createJobElements()
 {
@@ -199,7 +211,10 @@ bool SubmitTransferCli::createJobElements()
                             // the first part should be the source
                             it = tokens.begin();
                             if (it != tokens.end())
-                                file.sources.push_back(*it);
+                            	{
+                            		checkValidUrl(*it);
+                                	file.sources.push_back(*it);
+                            	}
                             else
                                 // if the line was empty continue
                                 continue;
@@ -207,12 +222,15 @@ bool SubmitTransferCli::createJobElements()
                             // the second part should be the destination
                             it++;
                             if (it != tokens.end())
-                                file.destinations.push_back(*it);
+                            	{
+                            		checkValidUrl(*it);
+                                	file.destinations.push_back(*it);
+                            	}
                             else
                                 {
                                     // only one element is still not enough to define a job
                                     printer().bulk_submission_error(lineCount, "destination is missing");
-                                    continue;
+                                    return false;
                                 }
 
                             // the third part should be the checksum (but its optional)

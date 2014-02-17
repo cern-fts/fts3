@@ -240,6 +240,11 @@ private:
     string askForPassword();
 
     /**
+     * checks if the provided url is valid
+     */
+    static void checkValidUrl(const std::string &uri);
+
+    /**
      * the name of the file containing bulk-job description
      */
     string bulk_file;
