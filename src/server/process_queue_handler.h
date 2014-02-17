@@ -141,11 +141,11 @@ public:
                     }
                 catch (std::exception& e)
                     {
-                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception when set retry " << e.what() << commit;                        
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception when set retry " << e.what() << commit;
                     }
                 catch (...)
                     {
-                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception when set retry " << commit;                        
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception when set retry " << commit;
                     }
 
                 /*session reuse process died or terminated unexpected*/
@@ -179,14 +179,14 @@ public:
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception " << e.what() << commit;
                 struct message msgTemp = msg;
                 runProducerStatus( msgTemp);
-		sleep(1);
+                sleep(1);
             }
         catch (...)
             {
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception" << commit;
                 struct message msgTemp = msg;
                 runProducerStatus( msgTemp);
-		sleep(1);
+                sleep(1);
             }
         return updated;
     }
@@ -269,7 +269,7 @@ protected:
                         struct message_log msgLogBreak = (*iterLogBreak).second;
                         runProducerLog( msgLogBreak );
                     }
-		sleep(1);
+                sleep(1);
             }
         catch (std::exception& ex)
             {
@@ -287,7 +287,7 @@ protected:
                         struct message_log msgLogBreak = (*iterLogBreak).second;
                         runProducerLog( msgLogBreak );
                     }
-		sleep(1);
+                sleep(1);
             }
         catch (...)
             {
@@ -305,7 +305,7 @@ protected:
                         struct message_log msgLogBreak = (*iterLogBreak).second;
                         runProducerLog( msgLogBreak );
                     }
-		sleep(1);
+                sleep(1);
             }
     }
 
