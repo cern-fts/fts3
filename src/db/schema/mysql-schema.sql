@@ -787,24 +787,13 @@ CREATE TABLE t_dm (
 CREATE INDEX dm_job_id     ON t_dm(job_id);
 
 
-
-
-
-
-
-
-
-
 --
 --
 -- Index Section 
 --
 --
-CREATE INDEX job_job_state ON t_job(job_state, vo_name, job_finished, submit_time);
 CREATE INDEX job_vo_name ON t_job(vo_name);
 CREATE INDEX job_jobfinished_id ON t_job(job_finished);
-CREATE INDEX job_priority ON t_job(priority, submit_time);
-CREATE INDEX t_job_submit_host ON t_job(submit_host);
 
 
 -- t_file indexes:
@@ -815,10 +804,6 @@ CREATE INDEX file_source_dest ON t_file(source_se, dest_se, file_state);
 CREATE INDEX t_waittimeout ON t_file(wait_timeout);
 CREATE INDEX t_file_select ON t_file(dest_se, source_se, job_finished, file_state );
 CREATE INDEX file_vo_name_state ON t_file(file_state, vo_name, source_se, dest_se);
-CREATE INDEX file_vo_name ON t_file(vo_name, source_se, dest_se, file_state);
-CREATE INDEX file_tr_host ON t_file(transferHost, file_state);
-CREATE INDEX t_file_activity ON t_file(activity);
-CREATE INDEX optimize_source_a ON t_optimize(source_se,dest_se);
 
 
 -- 
