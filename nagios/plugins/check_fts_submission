@@ -86,10 +86,11 @@ Options:
         
         try:
             job_id = fts.submit(job)
+            fts.cancel(job_id)
         except Exception, e:
             return (EX_CRITICAL, str(e))
 
-        return (EX_OK, "Job submitted with id %s" % job_id)
+        return (EX_OK, "Job submitted (and cancelled) with id %s" % job_id)
 
 
 if __name__ == '__main__':
