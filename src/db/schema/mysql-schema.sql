@@ -196,7 +196,7 @@ INSERT INTO t_credential_vers (major,minor,patch) VALUES (1,2,0);
 CREATE TABLE t_se (
 -- The internal id
   se_id_info INTEGER AUTO_INCREMENT,
-  name       VARCHAR(255) NOT NULL,
+  name       VARCHAR(150) NOT NULL,
   endpoint   VARCHAR(1024),
   se_type    VARCHAR(30),
   site       VARCHAR(100),
@@ -224,7 +224,7 @@ CREATE TABLE t_se_acl (
 -- GROUP NAME and its members
 CREATE TABLE t_group_members (
   groupName VARCHAR(255) NOT NULL,
-  member    VARCHAR(255) NOT NULL UNIQUE,
+  member    VARCHAR(150) NOT NULL UNIQUE,
   CONSTRAINT t_group_members_pk PRIMARY KEY (groupName, member),
   CONSTRAINT t_group_members_fk FOREIGN KEY (member) REFERENCES t_se (name)  
 ); 
@@ -268,7 +268,7 @@ CREATE TABLE t_activity_share_config (
 CREATE TABLE t_bad_ses (
 --
 -- The hostname of the bad SE   
-  se             VARCHAR(256),
+  se             VARCHAR(150),
 --
 -- The reason this host was added 
   message        VARCHAR(2048) DEFAULT NULL,
@@ -805,7 +805,6 @@ CREATE INDEX job_vo_name ON t_job(vo_name);
 CREATE INDEX job_jobfinished_id ON t_job(job_finished);
 CREATE INDEX job_priority ON t_job(priority, submit_time);
 CREATE INDEX t_job_submit_host ON t_job(submit_host);
-
 
 
 -- t_file indexes:
