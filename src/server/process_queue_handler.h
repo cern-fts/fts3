@@ -177,15 +177,11 @@ public:
         catch (std::exception& e)
             {
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception " << e.what() << commit;
-                struct message msgTemp = msg;
-                runProducerStatus( msgTemp);
                 sleep(1);
             }
         catch (...)
             {
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception" << commit;
-                struct message msgTemp = msg;
-                runProducerStatus( msgTemp);
                 sleep(1);
             }
         return updated;
@@ -408,7 +404,7 @@ protected:
                             }
 
 
-                        usleep(300000);
+                        sleep(1);
                         logInterval = 0;
                     }
                 catch (std::exception& ex2)
@@ -430,7 +426,7 @@ protected:
                             }
 
 
-                        usleep(300000);
+                        sleep(1);
                         logInterval = 0;
                     }
                 catch (...)
@@ -452,7 +448,7 @@ protected:
                             }
 
 
-                        usleep(300000);
+                        sleep(1);
                         logInterval = 0;
                     }
             }

@@ -400,7 +400,6 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
 
     time_t now = time(NULL);
     struct tm tTime;
-    gmtime_r(&now, &tTime);
     std::vector< boost::tuple<std::string, std::string, std::string> > distinct;
     distinct.reserve(1500); //approximation
     int count = 0;
@@ -542,7 +541,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                             if (filesNum < 2) filesNum = 2;
                         }
 
-
+		    gmtime_r(&now, &tTime);
                     soci::rowset<TransferFiles> rs = (
                                                          sql.prepare <<
                                                          " SELECT "
