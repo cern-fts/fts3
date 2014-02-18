@@ -16,14 +16,14 @@
  *	See the License for the specific language governing permissions and
  *	limitations under the License.
  *
- * RestTransferStatus.h
+ * HttpGet.h
  *
- *  Created on: Feb 6, 2014
+ *  Created on: Feb 18, 2014
  *      Author: Michal Simon
  */
 
-#ifndef RESTTRANSFERSTATUS_H_
-#define RESTTRANSFERSTATUS_H_
+#ifndef HTTPGET_H_
+#define HTTPGET_H_
 
 #include <curl/curl.h>
 
@@ -40,18 +40,15 @@ namespace cli
 
 using namespace std;
 
-class RestTransferStatus
+class HttpGet
 {
 
 public:
 
-    RestTransferStatus(string endpoint, string jobId, MsgPrinter& printer);
-    virtual ~RestTransferStatus();
+	HttpGet(string url, MsgPrinter& printer);
+	virtual ~HttpGet();
 
-    inline void print()
-    {
-        cout << ss.str() << endl;
-    }
+	string get() {return ss.str();};
 
 private:
 
@@ -73,4 +70,4 @@ private:
 
 } /* namespace cli  */
 } /* namespace fts3 */
-#endif /* RESTTRANSFERSTATUS_H_ */
+#endif /* HTTPGET_H_ */

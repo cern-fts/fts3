@@ -1,40 +1,20 @@
 /*
- *	Copyright notice:
- *	Copyright © Members of the EMI Collaboration, 2010.
+ * HttpGet.cpp
  *
- *	See www.eu-emi.eu for details on the copyright holders
- *
- *	Licensed under the Apache License, Version 2.0 (the "License");
- *	you may not use this file except in compliance with the License.
- *	You may obtain a copy of the License at
- *
- *		http://www.apache.org/licenses/LICENSE-2.0
- *
- *	Unless required by applicable law or agreed to in writing, software
- *	distributed under the License is distributed on an "AS IS" BASIS,
- *	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *	See the License for the specific language governing permissions and
- *	limitations under the License.
- *
- * RestTransferStatus.cpp
- *
- *  Created on: Feb 6, 2014
- *      Author: Michal Simon
+ *  Created on: Feb 18, 2014
+ *      Author: simonm
  */
 
-#include "RestTransferStatus.h"
+#include "HttpGet.h"
 
 using namespace fts3::cli;
 
-const string RestTransferStatus::PORT = "8446";
-const string RestTransferStatus::CERTIFICATE = "/tmp/x509up_u500";
-const string RestTransferStatus::CAPATH = "/etc/grid-security/certificates";
+const string HttpGet::PORT = "8446";
+const string HttpGet::CERTIFICATE = "/tmp/x509up_u500";
+const string HttpGet::CAPATH = "/etc/grid-security/certificates";
 
-RestTransferStatus::RestTransferStatus(string endpoint, string jobId, MsgPrinter& printer) : curl(curl_easy_init()), printer(printer)
+HttpGet::HttpGet(string url, MsgPrinter& printer) : curl(curl_easy_init()), printer(printer)
 {
-    // use the right web service
-    string url = endpoint + "/jobs/" + jobId;
-
     // return code
     CURLcode res;
 
@@ -71,13 +51,13 @@ RestTransferStatus::RestTransferStatus(string endpoint, string jobId, MsgPrinter
         }
 }
 
-RestTransferStatus::~RestTransferStatus()
+HttpGet::~HttpGet()
 {
     // RAII fashion clean up
     if(curl) curl_easy_cleanup(curl);
 }
 
-size_t RestTransferStatus::write_data(void *ptr, size_t size, size_t nmemb, stringstream* ss)
+size_t HttpGet::write_data(void *ptr, size_t size, size_t nmemb, stringstream* ss)
 {
     // calculate the size in bytes
     size_t realsize = size * nmemb;
@@ -89,7 +69,7 @@ size_t RestTransferStatus::write_data(void *ptr, size_t size, size_t nmemb, stri
     return realsize;
 }
 
-void RestTransferStatus::setPort(string& endpoint)
+void HttpGet::setPort(string& endpoint)
 {
     // look for the colon that separates the hostname from port
     size_t found = endpoint.find_last_of(":");
