@@ -20,7 +20,7 @@
 #include "GSoapContextAdapter.h"
 #include "TransferTypes.h"
 #include "ui/TransferStatusCli.h"
-#include "rest/HttpGet.h"
+#include "rest/HttpRequest.h"
 
 #include "common/JobStatusHandler.h"
 
@@ -69,7 +69,7 @@ int main(int ac, char* av[])
                     for (itr = jobIds.begin(); itr != jobIds.end(); ++itr)
                         {
                     		string url = cli->getService() + "/jobs/" + *itr;
-                    		HttpGet http (url, cli->printer());
+                    		HttpRequest http (url, cli->printer());
                     		cout << http.get() << endl;
                         }
                     return 0;

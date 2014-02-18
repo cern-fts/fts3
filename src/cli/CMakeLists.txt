@@ -86,7 +86,7 @@ set(fts_cli_common_sources
 	ui/BlacklistCli.cpp
 	ui/PriorityCli.cpp
 	ui/RestCli.cpp
-	rest/HttpGet.cpp
+	rest/HttpRequest.cpp
     GSoapContextAdapter.cpp
     ProxyCertificateDelegator.cpp
     MsgPrinter.cpp

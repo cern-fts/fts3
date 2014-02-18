@@ -25,7 +25,7 @@
 
 #include "GSoapContextAdapter.h"
 #include "ui/ListTransferCli.h"
-#include "rest/HttpGet.h"
+#include "rest/HttpRequest.h"
 
 #include "common/JobStatusHandler.h"
 
@@ -91,7 +91,7 @@ int main(int ac, char* av[])
 							prefix = '&';
 						}
 
-					HttpGet http (url, cli->printer());
+					HttpRequest http (url, cli->printer());
 					cout << http.get() << endl;
 
 					return 0;

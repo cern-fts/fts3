@@ -25,6 +25,7 @@
 #ifndef HTTPGET_H_
 #define HTTPGET_H_
 
+#include <stdio.h>
 #include <curl/curl.h>
 
 #include <string>
@@ -40,17 +41,21 @@ namespace cli
 
 using namespace std;
 
-class HttpGet
+class HttpRequest
 {
 
 public:
 
-	HttpGet(string url, MsgPrinter& printer);
-	virtual ~HttpGet();
+	HttpRequest(string url, MsgPrinter& printer);
+	virtual ~HttpRequest();
 
-	string get() {return ss.str();};
+	string get();
+
+	string put(string path);
 
 private:
+
+	void request();
 
     static size_t write_data(void *ptr, size_t size, size_t nmemb, stringstream* ss);
 
@@ -66,6 +71,8 @@ private:
     CURL *curl;
     // message printer
     MsgPrinter& printer;
+    // file to be uploaded (in case of PUT)
+    FILE *fd;
 };
 
 } /* namespace cli  */
