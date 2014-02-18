@@ -25,6 +25,7 @@
 
 #include "GSoapContextAdapter.h"
 #include "ui/ListTransferCli.h"
+#include "rest/HttpGet.h"
 
 #include "common/JobStatusHandler.h"
 
@@ -55,6 +56,46 @@ int main(int ac, char* av[])
             cli.reset(
                 getCli<ListTransferCli>(ac, av)
             );
+
+            if (cli->rest())
+            	{
+            		vector<string> statuses = cli->getStatusArray();
+            		string dn = cli->getUserDn(), vo = cli->getVoName();
+
+					string url = cli->getService() + "/jobs";
+
+					// prefix will be holding '?' at the first contacenation and then '&'
+					char prefix = '?';
+
+					if (!dn.empty())
+						{
+							url += prefix;
+							url += "user_dn=";
+							url += dn;
+							prefix = '&';
+						}
+
+					if (!vo.empty())
+						{
+							url += prefix;
+							url += "vo_name=";
+							url += vo;
+							prefix = '&';
+						}
+
+					if (!statuses.empty())
+						{
+							url += prefix;
+							url += "job_state=";
+							url += *statuses.begin();
+							prefix = '&';
+						}
+
+					HttpGet http (url, cli->printer());
+					cout << http.get() << endl;
+
+					return 0;
+            	}
 
             // validate command line options, and return respective gsoap context
             optional<GSoapContextAdapter&> opt = cli->validate();
