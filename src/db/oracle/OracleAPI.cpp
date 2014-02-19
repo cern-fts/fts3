@@ -3104,7 +3104,7 @@ void OracleAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                                        " f.transferHost, j.reuse_job "
                                        " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                        " WHERE f.file_state='ACTIVE' AND f.pid IS NOT NULL and f.job_finished is NULL "
-                                       " and f.internal_file_params is not null and f.transferHost is not null"
+                                       " and f.transferHost is not null"
                                        " AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) ",
                                        soci::use(hashSegment.start), soci::use(hashSegment.end),
                                        soci::into(jobId), soci::into(fileId), soci::into(startTimeSt),
