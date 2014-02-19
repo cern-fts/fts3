@@ -31,6 +31,7 @@ option(ORACLEBUILD "Build oracle plug-in" OFF)
 option(MYSQLBUILD "Build for EPEL" OFF)
 option(MAINBUILD "Build fts" OFF)
 option(ALLBUILD "Build fts all including db plug-ins" OFF)
+option(CLIENTBUILD "Build only the client libraries, tools and bindings" OFF)
 	 
 ADD_DEFINITIONS(-DWITH_IPV6)
 ADD_DEFINITIONS(-DOPENSSL_THREADS)
