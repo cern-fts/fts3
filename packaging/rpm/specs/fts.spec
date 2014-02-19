@@ -385,8 +385,6 @@ exit 0
   - using cmake28
 * Mon Jan 13 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.0-2
   - separated rpms for messaging and infosys subsystems
-* Tue Feb 11 2014 Michal Simon <michal.simon@cern.ch> - 3.1.33-3
-  - rebuild for libactivemq-cpp
 * Mon Nov 18 2013 Alejandro Alvarez Ayllon <aalvarez@cern.ch> - 3.1.33-2
   - Added missing changelog entry
   - Fixed bogus date
