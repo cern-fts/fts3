@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.6)
 
 include_directories (BEFORE ../generic)
 include_directories (BEFORE ../../common)
@@ -10,9 +10,14 @@ add_library(fts_db_profiled SHARED ${fts_db_profiled})
 
 target_link_libraries (fts_db_profiled fts_profiler)
 
+set_target_properties(fts_db_profiled    PROPERTIES
+                                         VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
+                                         SOVERSION ${VERSION_MAJOR})
+
 if (MAINBUILD STREQUAL "ON" OR ALLBUILD STREQUAL "ON")
 install(TARGETS         fts_db_profiled
         RUNTIME         DESTINATION ${CMAKE_INSTALL_PREFIX} 
-        LIBRARY         DESTINATION ${LIB_INSTALL_DIR})
+        LIBRARY         DESTINATION ${LIB_INSTALL_DIR}
+        NAMELINK_SKIP)
 endif ()
 
