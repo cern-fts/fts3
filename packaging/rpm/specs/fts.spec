@@ -273,7 +273,6 @@ exit 0
 
 
 %files server
-%dir %{_sysconfdir}/fts3
 %dir %attr(0755,fts3,root) %{_var}/lib/fts3
 %dir %attr(0755,fts3,root) %{_var}/lib/fts3/monitoring
 %dir %attr(0755,fts3,root) %{_var}/lib/fts3/status
