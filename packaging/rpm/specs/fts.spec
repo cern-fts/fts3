@@ -385,6 +385,15 @@ exit 0
   - using cmake28
 * Mon Jan 13 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.0-2
   - separated rpms for messaging and infosys subsystems
+* Wed Feb 19 2014 Michal Simon <michal.simon@cern.ch> - 3.1.74-1
+  - Update for new upstream release
+* Tue Feb 11 2014 Michal Simon <michal.simon@cern.ch> - 3.1.33-3
+  - rebuild for libactivemq-cpp
+* Mon Nov 18 2013 Alejandro Alvarez Ayllon <aalvarez@cern.ch> - 3.1.33-2
+  - Added missing changelog entry
+  - Fixed bogus date
+* Tue Oct 29 2013 Michal Simon <michal.simon@cern.ch> - 3.1.33-1
+  - Update for new upstream release
 * Wed Aug 07 2013 Michal Simon <michal.simon@cern.ch> - 3.1.1-2
   - no longer linking explicitly to boost libraries with '-mt' sufix 
 * Sat Aug 03 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 3.1.0-3
