@@ -14,7 +14,6 @@ Requires: httpd
 Requires: mod_wsgi
 Requires: python
 Requires: python-decorator
-Requires: python-matplotlib
 
 Source0: https://grid-deployment.web.cern.ch/grid-deployment/dms/fts3/tar/%{name}-%{version}.tar.gz
 
