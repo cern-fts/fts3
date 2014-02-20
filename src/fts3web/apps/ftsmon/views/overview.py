@@ -42,7 +42,7 @@ def overview(httpRequest):
     filterForm = forms.FilterForm(httpRequest.GET)
     filters    = setupFilters(filterForm)
     notBefore  = datetime.utcnow() - timedelta(hours = 1)
-    throughputWindow = datetime.utcnow() - timedelta(seconds = 15)
+    throughputWindow = datetime.utcnow() - timedelta(seconds = 5)
 
     query = """
     SELECT source_se, dest_se, vo_name, file_state, count(file_id),
@@ -89,7 +89,7 @@ def overview(httpRequest):
         obj['vo_name']   = triplet[2]
         if 'current' not in obj and 'active' in obj:
             obj['current'] = 0
-        failed = obj.get('failed', 0) + obj.get('canceled', 0)
+        failed = obj.get('failed', 0)
         finished = obj.get('finished', 0)
         total = failed + finished
         if total > 0:
@@ -105,6 +105,8 @@ def overview(httpRequest):
         sortingMethod = lambda o: (o.get('finished', 0), o.get('failed', 0))
     elif orderBy == 'failed':
         sortingMethod = lambda o: (o.get('failed', 0), o.get('finished', 0))
+    elif orderBy == 'canceled':
+        sortingMethod = lambda o: (o.get('canceled', 0), o.get('finished', 0))
     elif orderBy == 'throughput':
         sortingMethod = lambda o: (o.get('current', 0), o.get('active', 0))
     elif orderBy == 'rate':
