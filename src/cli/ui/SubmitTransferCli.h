@@ -217,6 +217,11 @@ public:
 
     int recognizeParameter(string str);
 
+    /**
+     * gets the (bulk submission) file name
+     */
+    string getFileName();
+
 
 protected:
 

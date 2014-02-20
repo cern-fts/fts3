@@ -492,3 +492,11 @@ string SubmitTransferCli::getUsageString(string tool)
 {
     return "Usage: " + tool + " [options] SOURCE DEST [CHECKSUM]";
 }
+
+string SubmitTransferCli::getFileName()
+{
+	if (vm.count("file")) return vm["file"].as<string>();
+
+	return string();
+}
+

@@ -52,9 +52,10 @@ int main(int ac, char* av[])
             if (cli->rest())
             	{
             		string url = cli->getService() + "/jobs";
+            		string job = cli->getFileName();
 
             		HttpRequest http(url, cli->printer());
-            		cout << http.put("/home/simonm/workspace/build/src/cli/job.json") << endl;
+            		cout << http.put(job) << endl;
             		return 0;
             	}
 
