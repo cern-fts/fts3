@@ -91,7 +91,10 @@ int main(int ac, char* av[])
 							prefix = '&';
 						}
 
-					HttpRequest http (url, cli->printer());
+					string capath = cli->capath();
+					string proxy = cli->proxy();
+
+					HttpRequest http (url, capath, proxy, cli->printer());
 					cout << http.get() << endl;
 
 					return 0;

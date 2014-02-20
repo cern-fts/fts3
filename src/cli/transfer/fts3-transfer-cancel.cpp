@@ -69,7 +69,7 @@ int main(int ac, char* av[])
 					for (itr = jobIds.begin(); itr != jobIds.end(); ++itr)
 						{
 							string url = cli->getService() + "/jobs/" + *itr;
-							HttpRequest http (url, cli->printer());
+							HttpRequest http (url, cli->capath(), cli->proxy(), cli->printer());
 							cout << http.del() << endl;
 						}
 					return 0;

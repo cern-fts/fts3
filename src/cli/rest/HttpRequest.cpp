@@ -12,10 +12,11 @@
 using namespace fts3::cli;
 
 const string HttpRequest::PORT = "8446";
-const string HttpRequest::CERTIFICATE = "/tmp/x509up_u500";
-const string HttpRequest::CAPATH = "/etc/grid-security/certificates";
 
-HttpRequest::HttpRequest(string url, MsgPrinter& printer) : curl(curl_easy_init()), printer(printer), fd(0)
+HttpRequest::HttpRequest(string url, string capath, string proxy, MsgPrinter& printer) :
+		curl(curl_easy_init()),
+		printer(printer),
+		fd(0)
 {
     if (!curl) throw string("failed to initialize curl context (curl_easy_init)");
 
@@ -23,11 +24,11 @@ HttpRequest::HttpRequest(string url, MsgPrinter& printer) : curl(curl_easy_init(
 	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 	// our proxy certificate (the '-E' option)
-	curl_easy_setopt(curl, CURLOPT_SSLCERT, CERTIFICATE.c_str());
+	curl_easy_setopt(curl, CURLOPT_SSLCERT, proxy.c_str());
 	// path to certificates (the '--capath' option)
-	curl_easy_setopt(curl, CURLOPT_CAPATH, CAPATH.c_str());
+	curl_easy_setopt(curl, CURLOPT_CAPATH, capath.c_str());
 	// our proxy again (the '-cacert' option)
-	curl_easy_setopt(curl, CURLOPT_CAINFO, CERTIFICATE.c_str());
+	curl_easy_setopt(curl, CURLOPT_CAINFO, proxy.c_str());
 	// the callback function
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
 	// the stream the data will be written to

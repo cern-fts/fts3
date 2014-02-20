@@ -46,7 +46,7 @@ class HttpRequest
 
 public:
 
-	HttpRequest(string url, MsgPrinter& printer);
+	HttpRequest(string url, string capath, string proxy, MsgPrinter& printer);
 	virtual ~HttpRequest();
 
 	string get();
@@ -64,8 +64,6 @@ private:
     void setPort(string& endpoint);
 
     static const string PORT;
-    static const string CERTIFICATE;
-    static const string CAPATH;
 
     // the response is written to this string stream
     stringstream ss;

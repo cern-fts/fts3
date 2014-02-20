@@ -54,7 +54,7 @@ int main(int ac, char* av[])
             		string url = cli->getService() + "/jobs";
             		string job = cli->getFileName();
 
-            		HttpRequest http(url, cli->printer());
+            		HttpRequest http (url, cli->capath(), cli->proxy(), cli->printer());
             		cout << http.put(job) << endl;
             		return 0;
             	}

@@ -42,6 +42,16 @@ public:
      * @return true if the rest interface has been selected, false otherwise
      */
     bool rest();
+
+    /**
+     * @return the path to the CA certificates
+     */
+    string capath();
+
+    /**
+     * @return the path to the proxy certificate
+     */
+    string proxy();
 };
 
 } /* namespace cli   */
