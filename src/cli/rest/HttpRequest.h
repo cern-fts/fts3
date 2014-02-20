@@ -51,6 +51,8 @@ public:
 
 	string get();
 
+	string del();
+
 	string put(string path);
 
 private:

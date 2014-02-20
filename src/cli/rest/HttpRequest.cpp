@@ -85,6 +85,16 @@ string HttpRequest::get()
 	return ss.str();
 }
 
+string HttpRequest::del()
+{
+	// make it a delete
+	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE");
+	// do the request
+	request();
+	// return the response
+	return ss.str();
+}
+
 string HttpRequest::put(string path)
 {
 	// close the file descriptor

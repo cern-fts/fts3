@@ -25,6 +25,7 @@
 #include "GSoapContextAdapter.h"
 #include "MsgPrinter.h"
 #include "ui/JobIdCli.h"
+#include "rest/HttpRequest.h"
 
 #include "common/JobStatusHandler.h"
 
@@ -58,6 +59,21 @@ int main(int ac, char* av[])
             cli.reset(
                 getCli<JobIdCli>(ac, av)
             );
+
+
+            if (cli->rest())
+            	{
+					vector<string> jobIds = cli->getJobIds();
+					vector<string>::iterator itr;
+
+					for (itr = jobIds.begin(); itr != jobIds.end(); ++itr)
+						{
+							string url = cli->getService() + "/jobs/" + *itr;
+							HttpRequest http (url, cli->printer());
+							cout << http.del() << endl;
+						}
+					return 0;
+            	}
 
             // validate command line options, and return respective gsoap context
             optional<GSoapContextAdapter&> opt = cli->validate();
