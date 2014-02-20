@@ -91,7 +91,7 @@ string HttpRequest::put(string path)
 	if (fd) fclose(fd);
 
 	// open new one
-	fd = fopen("/home/simonm/workspace/build/src/cli/job.json"/*path.c_str()*/, "rb");
+	fd = fopen(path.c_str(), "rb");
 	// check if we were able to do fopen
 	if(!fd) throw "cannot open the file: " + path;
 
