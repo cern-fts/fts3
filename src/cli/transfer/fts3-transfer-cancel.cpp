@@ -76,7 +76,7 @@ int main(int ac, char* av[])
             	}
 
             // validate command line options, and return respective gsoap context
-            GSoapContextAdapter& ctx opt = cli->getGSoapContext();
+            GSoapContextAdapter& ctx = cli->getGSoapContext();
 
             vector<string> jobs = cli->getJobIds();
 
