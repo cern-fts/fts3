@@ -32,20 +32,20 @@ bool RestCli::rest()
 
 string RestCli::capath()
 {
-	if (vm.count("capath"))
-		{
-			return vm["capath"].as<string>();
-		}
+    if (vm.count("capath"))
+        {
+            return vm["capath"].as<string>();
+        }
 
-	throw string("The CA certificates path has to be specified!");
+    throw string("The CA certificates path has to be specified!");
 }
 
 string RestCli::proxy()
 {
-	if (vm.count("proxy"))
-		{
-			return vm["proxy"].as<string>();
-		}
+    if (vm.count("proxy"))
+        {
+            return vm["proxy"].as<string>();
+        }
 
-	throw string("The path to the proxy certificate has to be specified!");
+    throw string("The path to the proxy certificate has to be specified!");
 }

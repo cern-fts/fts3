@@ -505,7 +505,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
     soci::indicator isNull = soci::i_ok;
     std::string vo_name;
     std::string source_se;
-    std::string dest_se;    
+    std::string dest_se;
 
     try
         {
@@ -637,11 +637,11 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                     std::map<std::string, int> activityFilesNum =
                         getFilesNumPerActivity(sql, boost::get<0>(triplet), boost::get<1>(triplet), boost::get<2>(triplet), filesNum);
 
-    	            gmtime_r(&now, &tTime);
-		    
+                    gmtime_r(&now, &tTime);
+
                     if (activityFilesNum.empty())
                         {
-			   
+
                             soci::rowset<TransferFiles> rs = (
                                                                  sql.prepare <<
                                                                  " SELECT "
@@ -738,8 +738,8 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                     std::list<TransferFiles*>& l = i->second;
                     for (std::list<TransferFiles*>::iterator it = l.begin(); it != l.end(); ++it)
                         {
-			 if(*it)
-                            delete *it;
+                            if(*it)
+                                delete *it;
                         }
                     l.clear();
                 }
@@ -2837,7 +2837,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                     for (soci::rowset<soci::row>::const_iterator j = rsSizeAndThroughput.begin();
                             j != rsSizeAndThroughput.end(); ++j)
                         {
-                            filesize    = j->get<double>("filesize", 0);
+                            filesize    = j->get<double>("filesize", 0.0);
                             throughput += (j->get<double>("throughput", 0.0) * filesize);
                             totalSize  += filesize;
                         }
@@ -3356,20 +3356,9 @@ void MySqlAPI::setPidV(int pid, std::map<int, std::string>& pids)
 
     try
         {
-
-
-            std::string jobId;
-            int fileId=0;
-            soci::statement stmt = (sql.prepare << "UPDATE t_file SET pid = :pid WHERE job_id = :jobId AND file_id = :fileId",
-                                    soci::use(pid), soci::use(jobId), soci::use(fileId));
-
             sql.begin();
-            for (std::map<int, std::string>::const_iterator i = pids.begin(); i != pids.end(); ++i)
-                {
-                    fileId = i->first;
-                    jobId  = i->second;
-                    stmt.execute(true);
-                }
+
+            sql << "UPDATE t_file SET pid = :pid WHERE job_id = :jobId ", soci::use(pid), soci::use(pids.begin()->second);
 
             sql.commit();
         }
@@ -4750,6 +4739,10 @@ bool MySqlAPI::checkIfSeIsMemberOfAnotherGroup(const std::string & member)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
     return isMember;
 }
 
@@ -5857,11 +5850,13 @@ double MySqlAPI::getSuccessRate(std::string source, std::string destination)
 
     return ceil(ratioSuccessFailure);
 }
+
+
 double MySqlAPI::getAvgThroughput(std::string source_hostname, std::string destin_hostname)
 {
     soci::session sql(*connectionPool);
 
-    double throughput=0.0;
+    double throughput= 0.0;
     double filesize = 0.0;
     double totalSize = 0.0;
 
@@ -5870,18 +5865,17 @@ double MySqlAPI::getAvgThroughput(std::string source_hostname, std::string desti
             // Weighted average for the 5 newest transfers
             soci::rowset<soci::row>  rsSizeAndThroughput = (sql.prepare <<
                     " SELECT filesize, throughput "
-                    " FROM t_file use index(t_file_select) "
+                    " FROM t_file "
                     " WHERE source_se = :source AND dest_se = :dest AND "
-                    "       file_state IN ('ACTIVE','FINISHED') AND throughput > 0 AND "
-                    "       filesize > 0  AND "
-                    "        job_finished >= date_sub(utc_timestamp(), interval '1' minute) ",
+                    "       file_state = 'ACTIVE' AND throughput > 0 AND "
+                    "       filesize > 0 ",
                     soci::use(source_hostname),soci::use(destin_hostname));
 
             for (soci::rowset<soci::row>::const_iterator j = rsSizeAndThroughput.begin();
                     j != rsSizeAndThroughput.end(); ++j)
                 {
-                    filesize    = j->get<double>("filesize", 0);
-                    throughput += (j->get<double>("throughput", 0) * filesize);
+                    filesize    = j->get<double>("filesize", 0.0);
+                    throughput += (j->get<double>("throughput", 0.0) * filesize);
                     totalSize  += filesize;
                 }
             if (totalSize > 0)
@@ -6092,6 +6086,10 @@ std::vector<struct message_state> MySqlAPI::getStateOfTransfer(const std::string
     try
         {
             sql << " select retry from t_server_config LIMIT 1", soci::into(retry, ind);
+            if (ind == soci::i_null)
+                {
+                    retry = 0;
+                }
 
             soci::rowset<soci::row> rs = (fileId ==-1) ? (
                                              sql.prepare <<

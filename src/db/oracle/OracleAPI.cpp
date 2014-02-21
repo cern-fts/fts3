@@ -2774,7 +2774,7 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                     for (soci::rowset<soci::row>::const_iterator j = rsSizeAndThroughput.begin();
                             j != rsSizeAndThroughput.end(); ++j)
                         {
-                            filesize    = static_cast<double>(j->get<long long>("FILESIZE", 0));
+                            filesize    = static_cast<double>(j->get<long long>("FILESIZE", 0.0));
                             throughput += (j->get<double>("THROUGHPUT", 0.0) * filesize);
                             totalSize  += filesize;
                         }
@@ -3274,17 +3274,7 @@ void OracleAPI::setPidV(int pid, std::map<int, std::string>& pids)
         {
             sql.begin();
 
-            std::string jobId;
-            int fileId=0;
-            soci::statement stmt = (sql.prepare << "UPDATE t_file SET pid = :pid WHERE job_id = :jobId AND file_id = :fileId",
-                                    soci::use(pid), soci::use(jobId), soci::use(fileId));
-
-            for (std::map<int, std::string>::const_iterator i = pids.begin(); i != pids.end(); ++i)
-                {
-                    fileId = i->first;
-                    jobId  = i->second;
-                    stmt.execute(true);
-                }
+            sql << "UPDATE t_file SET pid = :pid WHERE job_id = :jobId ", soci::use(pid), soci::use(pids.begin()->second);
 
             sql.commit();
         }
@@ -5748,8 +5738,8 @@ double OracleAPI::getAvgThroughput(std::string source_hostname, std::string dest
             for (soci::rowset<soci::row>::const_iterator j = rsSizeAndThroughput.begin();
                     j != rsSizeAndThroughput.end(); ++j)
                 {
-                    filesize    = static_cast<double>(j->get<long long>("FILESIZE", 0));
-                    throughput += (j->get<double>("THROUGHPUT", 0) * filesize);
+                    filesize    = static_cast<double>(j->get<long long>("FILESIZE", 0.0));
+                    throughput += (j->get<double>("THROUGHPUT", 0.0) * filesize);
                     totalSize  += filesize;
                 }
             if (totalSize > 0)
@@ -5954,6 +5944,10 @@ std::vector<struct message_state> OracleAPI::getStateOfTransfer(const std::strin
             sql << "SELECT retry FROM "
                 " (SELECT rownum as rn, retry FROM t_server_config) "
                 "WHERE rn = 1", soci::into(retry, ind);
+            if (ind == soci::i_null)
+                {
+                    retry = 0;
+                }
 
             soci::rowset<soci::row> rs = (fileId ==-1) ? (
                                              sql.prepare <<

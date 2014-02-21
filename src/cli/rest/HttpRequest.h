@@ -46,18 +46,18 @@ class HttpRequest
 
 public:
 
-	HttpRequest(string url, string capath, string proxy, MsgPrinter& printer);
-	virtual ~HttpRequest();
+    HttpRequest(string url, string capath, string proxy, MsgPrinter& printer);
+    virtual ~HttpRequest();
 
-	string get();
+    string get();
 
-	string del();
+    string del();
 
-	string put(string path);
+    string put(string path);
 
 private:
 
-	void request();
+    void request();
 
     static size_t write_data(void *ptr, size_t size, size_t nmemb, stringstream* ss);
 

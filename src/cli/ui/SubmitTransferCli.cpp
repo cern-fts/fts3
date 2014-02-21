@@ -211,10 +211,10 @@ bool SubmitTransferCli::createJobElements()
                             // the first part should be the source
                             it = tokens.begin();
                             if (it != tokens.end())
-                            	{
-                            		checkValidUrl(*it);
-                                	file.sources.push_back(*it);
-                            	}
+                                {
+                                    checkValidUrl(*it);
+                                    file.sources.push_back(*it);
+                                }
                             else
                                 // if the line was empty continue
                                 continue;
@@ -222,10 +222,10 @@ bool SubmitTransferCli::createJobElements()
                             // the second part should be the destination
                             it++;
                             if (it != tokens.end())
-                            	{
-                            		checkValidUrl(*it);
-                                	file.destinations.push_back(*it);
-                            	}
+                                {
+                                    checkValidUrl(*it);
+                                    file.destinations.push_back(*it);
+                                }
                             else
                                 {
                                     // only one element is still not enough to define a job
@@ -495,8 +495,8 @@ string SubmitTransferCli::getUsageString(string tool)
 
 string SubmitTransferCli::getFileName()
 {
-	if (vm.count("file")) return vm["file"].as<string>();
+    if (vm.count("file")) return vm["file"].as<string>();
 
-	return string();
+    return string();
 }
 

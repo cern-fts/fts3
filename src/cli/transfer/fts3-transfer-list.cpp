@@ -58,47 +58,47 @@ int main(int ac, char* av[])
             );
 
             if (cli->rest())
-            	{
-            		vector<string> statuses = cli->getStatusArray();
-            		string dn = cli->getUserDn(), vo = cli->getVoName();
+                {
+                    vector<string> statuses = cli->getStatusArray();
+                    string dn = cli->getUserDn(), vo = cli->getVoName();
 
-					string url = cli->getService() + "/jobs";
+                    string url = cli->getService() + "/jobs";
 
-					// prefix will be holding '?' at the first contacenation and then '&'
-					char prefix = '?';
+                    // prefix will be holding '?' at the first contacenation and then '&'
+                    char prefix = '?';
 
-					if (!dn.empty())
-						{
-							url += prefix;
-							url += "user_dn=";
-							url += dn;
-							prefix = '&';
-						}
+                    if (!dn.empty())
+                        {
+                            url += prefix;
+                            url += "user_dn=";
+                            url += dn;
+                            prefix = '&';
+                        }
 
-					if (!vo.empty())
-						{
-							url += prefix;
-							url += "vo_name=";
-							url += vo;
-							prefix = '&';
-						}
+                    if (!vo.empty())
+                        {
+                            url += prefix;
+                            url += "vo_name=";
+                            url += vo;
+                            prefix = '&';
+                        }
 
-					if (!statuses.empty())
-						{
-							url += prefix;
-							url += "job_state=";
-							url += *statuses.begin();
-							prefix = '&';
-						}
+                    if (!statuses.empty())
+                        {
+                            url += prefix;
+                            url += "job_state=";
+                            url += *statuses.begin();
+                            prefix = '&';
+                        }
 
-					string capath = cli->capath();
-					string proxy = cli->proxy();
+                    string capath = cli->capath();
+                    string proxy = cli->proxy();
 
-					HttpRequest http (url, capath, proxy, cli->printer());
-					cout << http.get() << endl;
+                    HttpRequest http (url, capath, proxy, cli->printer());
+                    cout << http.get() << endl;
 
-					return 0;
-            	}
+                    return 0;
+                }
 
             // validate command line options, and return respective gsoap context
             optional<GSoapContextAdapter&> opt = cli->validate();

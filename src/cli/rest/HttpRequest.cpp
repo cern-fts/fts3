@@ -14,25 +14,25 @@ using namespace fts3::cli;
 const string HttpRequest::PORT = "8446";
 
 HttpRequest::HttpRequest(string url, string capath, string proxy, MsgPrinter& printer) :
-		curl(curl_easy_init()),
-		printer(printer),
-		fd(0)
+    curl(curl_easy_init()),
+    printer(printer),
+    fd(0)
 {
     if (!curl) throw string("failed to initialize curl context (curl_easy_init)");
 
-	// the url we are going to contact
-	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-	// our proxy certificate (the '-E' option)
-	curl_easy_setopt(curl, CURLOPT_SSLCERT, proxy.c_str());
-	// path to certificates (the '--capath' option)
-	curl_easy_setopt(curl, CURLOPT_CAPATH, capath.c_str());
-	// our proxy again (the '-cacert' option)
-	curl_easy_setopt(curl, CURLOPT_CAINFO, proxy.c_str());
-	// the callback function
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
-	// the stream the data will be written to
-	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &ss);
+    // the url we are going to contact
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+    // our proxy certificate (the '-E' option)
+    curl_easy_setopt(curl, CURLOPT_SSLCERT, proxy.c_str());
+    // path to certificates (the '--capath' option)
+    curl_easy_setopt(curl, CURLOPT_CAPATH, capath.c_str());
+    // our proxy again (the '-cacert' option)
+    curl_easy_setopt(curl, CURLOPT_CAINFO, proxy.c_str());
+    // the callback function
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
+    // the stream the data will be written to
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &ss);
 }
 
 HttpRequest::~HttpRequest()
@@ -72,53 +72,53 @@ void HttpRequest::setPort(string& endpoint)
 
 void HttpRequest::request()
 {
-	/* Perform the request, res will get the return code */
-	CURLcode res = curl_easy_perform(curl);
-	/* Check for errors */
-	if(res != CURLE_OK) throw string(curl_easy_strerror(res));
+    /* Perform the request, res will get the return code */
+    CURLcode res = curl_easy_perform(curl);
+    /* Check for errors */
+    if(res != CURLE_OK) throw string(curl_easy_strerror(res));
 }
 
 string HttpRequest::get()
 {
-	// do the request
-	request();
-	// return the response
-	return ss.str();
+    // do the request
+    request();
+    // return the response
+    return ss.str();
 }
 
 string HttpRequest::del()
 {
-	// make it a delete
-	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE");
-	// do the request
-	request();
-	// return the response
-	return ss.str();
+    // make it a delete
+    curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE");
+    // do the request
+    request();
+    // return the response
+    return ss.str();
 }
 
 string HttpRequest::put(string path)
 {
-	// close the file descriptor
-	if (fd) fclose(fd);
+    // close the file descriptor
+    if (fd) fclose(fd);
 
-	// open new one
-	fd = fopen(path.c_str(), "rb");
-	// check if we were able to do fopen
-	if(!fd) throw "cannot open the file: " + path;
+    // open new one
+    fd = fopen(path.c_str(), "rb");
+    // check if we were able to do fopen
+    if(!fd) throw "cannot open the file: " + path;
 
-	/* to get the file size */
-	struct stat file_info;
-	if(fstat(fileno(fd), &file_info) != 0) throw "cannot determine the size of the file: " + path;
+    /* to get the file size */
+    struct stat file_info;
+    if(fstat(fileno(fd), &file_info) != 0) throw "cannot determine the size of the file: " + path;
 
-	/* tell it to "upload" to the URL */
-	curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
-	/* set where to read from (on Windows you need to use READFUNCTION too) */
-	curl_easy_setopt(curl, CURLOPT_READDATA, fd);
-	/* and give the size of the upload (optional) */
-	curl_easy_setopt(curl, CURLOPT_INFILESIZE_LARGE, (curl_off_t)file_info.st_size);
+    /* tell it to "upload" to the URL */
+    curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
+    /* set where to read from (on Windows you need to use READFUNCTION too) */
+    curl_easy_setopt(curl, CURLOPT_READDATA, fd);
+    /* and give the size of the upload (optional) */
+    curl_easy_setopt(curl, CURLOPT_INFILESIZE_LARGE, (curl_off_t)file_info.st_size);
 
-	// do the request
-	request();
-	// return the response
-	return ss.str();
+    // do the request
+    request();
+    // return the response
+    return ss.str();
 }

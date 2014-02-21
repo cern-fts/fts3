@@ -44,20 +44,20 @@ int main(int ac, char* av[])
 
     try
         {
-			// create and initialize the command line utility
-			cli.reset (
-				getCli<SubmitTransferCli>(ac, av)
-			);
+            // create and initialize the command line utility
+            cli.reset (
+                getCli<SubmitTransferCli>(ac, av)
+            );
 
             if (cli->rest())
-            	{
-            		string url = cli->getService() + "/jobs";
-            		string job = cli->getFileName();
+                {
+                    string url = cli->getService() + "/jobs";
+                    string job = cli->getFileName();
 
-            		HttpRequest http (url, cli->capath(), cli->proxy(), cli->printer());
-            		cout << http.put(job) << endl;
-            		return 0;
-            	}
+                    HttpRequest http (url, cli->capath(), cli->proxy(), cli->printer());
+                    cout << http.put(job) << endl;
+                    return 0;
+                }
 
             // validate command line options, and return respective gSOAP context
             optional<GSoapContextAdapter&> opt = cli->validate();
