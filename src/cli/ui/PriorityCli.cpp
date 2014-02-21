@@ -46,19 +46,19 @@ PriorityCli::~PriorityCli()
 {
 }
 
-optional<GSoapContextAdapter&> PriorityCli::validate(bool init)
+bool PriorityCli::validate()
 {
 
     // do the standard validation
-    if (!CliBase::validate(init).is_initialized()) return optional<GSoapContextAdapter&>();
+	if (!CliBase::validate()) return false;
 
     if (priority < 1 || priority > 5)
         {
-            cout << "The priority has to take a value in range of 1 to 5" << endl;
-            return 0;
+    		msgPrinter.error_msg("The priority has to take a value in range of 1 to 5");
+    		return false;
         }
 
-    return *ctx;
+    return true;
 }
 
 string PriorityCli::getUsageString(string tool)

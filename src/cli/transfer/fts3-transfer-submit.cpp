@@ -48,6 +48,7 @@ int main(int ac, char* av[])
             cli.reset (
                 getCli<SubmitTransferCli>(ac, av)
             );
+            if (!cli->validate()) return 0;
 
             if (cli->rest())
                 {
@@ -60,9 +61,7 @@ int main(int ac, char* av[])
             	}
 
             // validate command line options, and return respective gSOAP context
-            optional<GSoapContextAdapter&> opt = cli->validate();
-            if (!opt.is_initialized()) return 0;
-            GSoapContextAdapter& ctx = opt.get();
+            GSoapContextAdapter& ctx = cli->getGSoapContext();
 
             string jobId("");
 

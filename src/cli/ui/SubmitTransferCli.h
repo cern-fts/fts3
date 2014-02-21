@@ -107,7 +107,7 @@ public:
      * @return GSoapContexAdapter instance, or null if all activities
      * 				requested using program options have been done.
      */
-    optional<GSoapContextAdapter&> validate(bool init = true);
+    bool validate();
 
     /**
      * Creates job elements.
@@ -247,7 +247,7 @@ private:
     /**
      * checks if the provided url is valid
      */
-    static void checkValidUrl(const std::string &uri);
+    static bool checkValidUrl(const std::string &uri, MsgPrinter& msgPrinter);
 
     /**
      * the name of the file containing bulk-job description

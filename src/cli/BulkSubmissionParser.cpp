@@ -58,7 +58,7 @@ BulkSubmissionParser::BulkSubmissionParser(ifstream& ifs)
     catch(json_parser_error& ex)
         {
             // handle errors in JSON format
-            throw Err_Custom(ex.message());
+            throw string(ex.message());
         }
 
     parse();

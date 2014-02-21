@@ -100,14 +100,17 @@ public:
      * Validates command line options
      * 1. Checks the endpoint
      * 2. If -h or -V option were used respective informations are printed
-     * 3. GSoapContexAdapter is created, and info about server requested
-     * 4. Additional check regarding server are performed
-     * 5. If verbal additional info is printed
+     * 3. Additional check regarding server are performed
+     */
+    virtual bool validate();
+
+    /**
+     * If verbal additional info is printed
      *
      * @return GSoapContexAdapter instance, or null if all activities
      * 				requested using program options have been done.
      */
-    virtual optional<GSoapContextAdapter&> validate(bool init = true);
+    GSoapContextAdapter& getGSoapContext(bool init = true);
 
     /**
      * Prints help message if the -h option has been used.
@@ -257,6 +260,7 @@ private:
     string FTS3_INTERFACE_VERSION;
     ///@}
 
+protected:
     MsgPrinter msgPrinter;
 };
 

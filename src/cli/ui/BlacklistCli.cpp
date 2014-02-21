@@ -70,45 +70,41 @@ BlacklistCli::~BlacklistCli()
 
 }
 
-optional<GSoapContextAdapter&> BlacklistCli::validate(bool init)
+bool BlacklistCli::validate()
 {
 
     // do the standard validation
-    if (!CliBase::validate(init).is_initialized()) return optional<GSoapContextAdapter&>();
+    if (!CliBase::validate()) return false;
 
     to_lower(mode);
 
     if (mode != ON && mode != OFF)
         {
-            cout << "The mode has to be either 'on' or 'off'" << endl;
-            return 0;
+    		msgPrinter.error_msg("The mode has to be either 'on' or 'off'");
+    		return false;
         }
 
     if (type != SE && type != DN)
         {
-            cout << "The type has to be either 'se' or 'dn'" << endl;
-            return 0;
+    		msgPrinter.error_msg("The type has to be either 'se' or 'dn'");
+    		return false;
         }
 
-//	if ( type != "se" && (vm.count("vo") || vm.count("status") || vm.count("timeout")) ) {
-//		cout << "The vo, status and timeout may only be specified when blacklisting a SE" << endl;
-//		return 0;
-//	}
 
     if ( (!vm.count("status") || status != "WAIT")
             && timeout != 0)
         {
-            cout << "You may only specify the timeout for the 'WAIT' status" << endl;
-            return 0;
+    		msgPrinter.error_msg("You may only specify the timeout for the 'WAIT' status");
+    		return false;
         }
 
     if (vm.count("allow-submit") && status == "CANCEL")
         {
-            cout << "If the 'allow-submit' option is used you may not use 'CANCEL' status" << endl;
-            return 0;
+    		msgPrinter.error_msg("If the 'allow-submit' option is used you may not use 'CANCEL' status");
+    		return false;
         }
 
-    return *ctx;
+    return true;
 }
 
 string BlacklistCli::getUsageString(string tool)

@@ -112,19 +112,19 @@ void SubmitTransferCli::parse(int ac, char* av[])
         }
 }
 
-optional<GSoapContextAdapter&> SubmitTransferCli::validate(bool init)
+bool SubmitTransferCli::validate()
 {
 
     // do the standard validation
-    if (!CliBase::validate(init).is_initialized()) return optional<GSoapContextAdapter&>();
+    if (!CliBase::validate()) return false;
 
     // perform standard checks in order to determine if the job was well specified
-    if(!performChecks()) return optional<GSoapContextAdapter&>();
+    if (!performChecks()) return false;
 
     // prepare job elements
-    if (!createJobElements()) return optional<GSoapContextAdapter&>();
+    if (!createJobElements()) return false;
 
-    return *ctx;
+    return true;
 }
 
 string SubmitTransferCli::getDelegationId()
@@ -159,15 +159,18 @@ optional<string> SubmitTransferCli::getMetadata()
     return optional<string>();
 }
 
-void SubmitTransferCli::checkValidUrl(const std::string &uri)
+bool SubmitTransferCli::checkValidUrl(const std::string &uri, MsgPrinter& msgPrinter)
 {
     Uri u0 = Uri::Parse(uri);
     bool ok = u0.Host.length() != 0 && u0.Protocol.length() != 0 && u0.Path.length() != 0;
     if (!ok)
         {
             std::string errMsg = "Not valid uri format, check submitted uri's";
-            throw Err_Custom(errMsg);
+            msgPrinter.error_msg(errMsg);
+            return false;
         }
+
+    return true;
 }
 
 
@@ -212,7 +215,7 @@ bool SubmitTransferCli::createJobElements()
                             it = tokens.begin();
                             if (it != tokens.end())
                                 {
-                                    checkValidUrl(*it);
+                                    if (!checkValidUrl(*it, msgPrinter)) return false;
                                     file.sources.push_back(*it);
                                 }
                             else
@@ -223,13 +226,13 @@ bool SubmitTransferCli::createJobElements()
                             it++;
                             if (it != tokens.end())
                                 {
-                                    checkValidUrl(*it);
+                            	if (!checkValidUrl(*it, msgPrinter)) return false;
                                     file.destinations.push_back(*it);
                                 }
                             else
                                 {
                                     // only one element is still not enough to define a job
-                                    printer().bulk_submission_error(lineCount, "destination is missing");
+                            		printer().bulk_submission_error(lineCount, "destination is missing");
                                     return false;
                                 }
 
@@ -237,7 +240,6 @@ bool SubmitTransferCli::createJobElements()
                             it++;
                             if (it != tokens.end())
                                 {
-
                                     string checksum_str = *it;
 
                                     checksum = true;
@@ -305,37 +307,23 @@ bool SubmitTransferCli::performChecks()
     // in FTS3 delegation is supported by default
     delegate = true;
 
-//	// if the user specified the password set the value of 'password' variable
-//    if (vm.count("password")) {
-//    	password = vm["password"].as<string>();
-//		if (isVerbose())
-//			cout << "Server supports delegation, however a MyProxy pass phrase was given: will use MyProxy legacy mode." << endl;
-//        delegate = false;
-//    } else {
-//    	// if not, and delegation mode is not use,
-//    	// ask the user to give the password
-//    	if (!delegate) {
-//    		password = askForPassword();
-//    	}
-//    }
-
     // the job cannot be specified twice
     if ((!getSource().empty() || !getDestination().empty()) && vm.count("file"))
         {
-            printer().error_msg("You may not specify a transfer on the command line if the -f option is used.");
-            return false;
+    		msgPrinter.error_msg("You may not specify a transfer on the command line if the -f option is used.");
+    		return false;
         }
 
     if (vm.count("file-size") && vm.count("file"))
         {
-            printer().error_msg("If a bulk submission has been used file size has to be specified inside the bulk file separately for each file and no using '--file-size' option!");
-            return false;
+    		msgPrinter.error_msg("If a bulk submission has been used file size has to be specified inside the bulk file separately for each file and no using '--file-size' option!");
+    		return false;
         }
 
     if (vm.count("file-metadata") && vm.count("file"))
         {
-            printer().error_msg("If a bulk submission has been used file metadata have to be specified inside the bulk file separately for each file and no using '--file-metadata' option!");
-            return false;
+    		msgPrinter.error_msg("If a bulk submission has been used file metadata have to be specified inside the bulk file separately for each file and no using '--file-metadata' option!");
+    		return false;
         }
 
     return true;

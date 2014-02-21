@@ -51,11 +51,11 @@ DebugSetCli::~DebugSetCli()
 
 }
 
-optional<GSoapContextAdapter&> DebugSetCli::validate(bool init)
+bool DebugSetCli::validate()
 {
 
     // do the standard validation
-    if (!CliBase::validate(init).is_initialized()) return optional<GSoapContextAdapter&>();
+    if(!CliBase::validate()) return false;
 
     vector<string> opts;
 
@@ -83,8 +83,8 @@ optional<GSoapContextAdapter&> DebugSetCli::validate(bool init)
     // make sure that at least one SE and debug mode were specified
     if (opts.size() < 2)
         {
-            cout << "SE name and debug mode has to be specified (on/off)!" << endl;
-            return 0;
+    		msgPrinter.error_msg("SE name and debug mode has to be specified (on/off)!");
+    		return false;
         }
 
     // index of debug mode (the last parameter)
@@ -98,8 +98,8 @@ optional<GSoapContextAdapter&> DebugSetCli::validate(bool init)
     // otherwise it's an error
     else
         {
-            cout << "Debug mode has to be specified (on/off)!" << endl;
-            return 0;
+    		msgPrinter.error_msg("Debug mode has to be specified (on/off)!");
+    		return false;
         }
 
     // source is always the first one
@@ -108,7 +108,7 @@ optional<GSoapContextAdapter&> DebugSetCli::validate(bool init)
     // if mode is the second parameter the destination was not specified!
     if (mode_index > 1) destination = opts[1];
 
-    return *ctx;
+    return true;
 }
 
 string DebugSetCli::getUsageString(string tool)

@@ -48,11 +48,10 @@ int main(int ac, char* av[])
             auto_ptr<GetCfgCli> cli (
                 getCli<GetCfgCli>(ac, av)
             );
+            if (!cli->validate()) return 0;
 
             // validate command line options, and return respective gsoap context
-            optional<GSoapContextAdapter&> opt = cli->validate();
-            if (!opt.is_initialized()) return 0;
-            GSoapContextAdapter& ctx = opt.get();
+            GSoapContextAdapter& ctx = cli->getGSoapContext();
 
             string source = cli->getSource();
             string destination =  cli->getDestination();

@@ -41,11 +41,10 @@ int main(int ac, char* av[])
             auto_ptr<BlacklistCli> cli (
                 getCli<BlacklistCli>(ac, av)
             );
+            if (!cli->validate()) return 0;
 
             // validate command line options, and return respective gsoap context
-            optional<GSoapContextAdapter&> opt = cli->validate();
-            if (!opt.is_initialized()) return 0;
-            GSoapContextAdapter& ctx = opt.get();
+            GSoapContextAdapter& ctx opt = cli->getGSoapContext();
 
             string type = cli->getSubjectType();
 

@@ -102,18 +102,18 @@ void SetCfgCli::parse(int ac, char* av[])
         }
 }
 
-optional<GSoapContextAdapter&> SetCfgCli::validate(bool init)
+bool SetCfgCli::validate()
 {
 
-    if (!CliBase::validate(init).is_initialized()) return optional<GSoapContextAdapter&>();
+    if(!CliBase::validate()) return false;
 
     if (vm.count("retry"))
         {
             int val = vm["retry"].as<int>();
             if (val < -1)
                 {
-                    cout << "The retry value has to be greater or equal to -1." << endl;
-                    return optional<GSoapContextAdapter&>();
+            		msgPrinter.error_msg("The retry value has to be greater or equal to -1.");
+            		return false;
                 }
         }
 
@@ -122,8 +122,8 @@ optional<GSoapContextAdapter&> SetCfgCli::validate(bool init)
             int val = vm["queue-timeout"].as<int>();
             if (val < 0)
                 {
-                    cout << "The queue-timeout value has to be greater or equal to 0." << endl;
-                    return optional<GSoapContextAdapter&>();
+            		msgPrinter.error_msg("The queue-timeout value has to be greater or equal to 0.");
+            		return false;
                 }
         }
 
@@ -132,8 +132,8 @@ optional<GSoapContextAdapter&> SetCfgCli::validate(bool init)
             int val = vm["optimizer-mode"].as<int>();
             if (val < 1 || val > 3)
                 {
-                    cout << "optimizer-mode may only take following values: 1, 2 or 3" << endl;
-                    return optional<GSoapContextAdapter&>();
+            		msgPrinter.error_msg("optimizer-mode may only take following values: 1, 2 or 3");
+            		return false;
                 }
         }
 
@@ -145,11 +145,11 @@ optional<GSoapContextAdapter&> SetCfgCli::validate(bool init)
             && !vm.count("optimizer-mode")
        )
         {
-            cout << "No parameters have been specified." << endl;
-            return optional<GSoapContextAdapter&>();
+    		msgPrinter.error_msg("No parameters have been specified.");
+    		return false;
         }
 
-    return *ctx;
+    return true;
 }
 
 string SetCfgCli::getUsageString(string tool)

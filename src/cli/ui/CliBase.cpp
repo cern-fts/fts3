@@ -159,18 +159,23 @@ void CliBase::parse(int ac, char* av[])
         }
 }
 
-optional<GSoapContextAdapter&> CliBase::validate(bool init)
+bool CliBase::validate()
 {
-
     // if applicable print help or version and exit, nothing else needs to be done
-    if (printHelp(toolname) || printVersion()) return optional<GSoapContextAdapter&>();
+    if (printHelp(toolname) || printVersion()) return false;
 
     // if endpoint could not be determined, we cannot do anything
     if (endpoint.empty())
         {
-            throw string("Failed to determine the endpoint");
+    		msgPrinter.error_msg("Failed to determine the endpoint");
+    		return false;
         }
 
+    return true;
+}
+
+GSoapContextAdapter& CliBase::getGSoapContext(bool init)
+{
     // create and initialize gsoap context
     ctx = new GSoapContextAdapter(endpoint);
     if (init) ctx->init();

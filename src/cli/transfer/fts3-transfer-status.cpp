@@ -20,6 +20,8 @@
 #include "GSoapContextAdapter.h"
 #include "TransferTypes.h"
 #include "ui/TransferStatusCli.h"
+
+#include "rest/ResponseParser.h"
 #include "rest/HttpRequest.h"
 
 #include "common/JobStatusHandler.h"
@@ -60,6 +62,7 @@ int main(int ac, char* av[])
             cli.reset (
                 getCli<TransferStatusCli>(ac, av)
             );
+            if (!cli->validate()) return 0;
 
             if (cli->rest())
                 {
@@ -69,16 +72,17 @@ int main(int ac, char* av[])
                     for (itr = jobIds.begin(); itr != jobIds.end(); ++itr)
                         {
                     		string url = cli->getService() + "/jobs/" + *itr;
-                    		HttpRequest http (url, cli->capath(), cli->proxy(), cout);
+
+                    		stringstream ss;
+                    		HttpRequest http (url, cli->capath(), cli->proxy(), ss);
                     		http.get();
+                    		ResponseParser response(ss);
                         }
                     return 0;
                 }
 
             // validate command line options, and return respective gsoap context
-            optional<GSoapContextAdapter&> opt = cli->validate();
-            if (!opt.is_initialized()) return 0;
-            GSoapContextAdapter& ctx = opt.get();
+            GSoapContextAdapter& ctx = cli->getGSoapContext();
 
             // archived content?
             bool archive = cli->queryArchived();
@@ -193,10 +197,11 @@ int main(int ac, char* av[])
         }
     catch(string& ex)
         {
-            if (cli.get())
-                cli->printer().gsoap_error_msg(ex);
-            else
-                std::cerr << ex << std::endl;
+			if (cli.get())
+				cli->printer().gsoap_error_msg(ex);
+			else
+				std::cerr << ex << std::endl;
+				
             return 1;
         }
     catch(...)
