@@ -2796,7 +2796,7 @@ bool OracleAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std:
                             i != rs.end(); ++i)
                         {
                             std::string state = i->get<std::string>("FILE_STATE", "");
-                            int retryNum = i->get<int>("RETRY", 0);
+                            int retryNum = static_cast<int>(i->get<double>("RETRY", 0));
 
                             if (state.compare("FAILED") == 0 && retrySet > 0 && retryNum > 0)
                                 {
