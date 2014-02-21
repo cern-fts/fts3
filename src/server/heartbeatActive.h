@@ -49,7 +49,7 @@ private:
             {
                 try
                     {
-                        db::DBSingleton::instance().getDBObjectInstance()->isTrAllowed("", "");
+                        db::DBSingleton::instance().getDBObjectInstance()->updateOptimizer();
                         sleep(60);
                     }
                 catch(std::exception& e)

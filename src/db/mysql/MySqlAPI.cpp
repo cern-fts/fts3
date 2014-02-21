@@ -2674,7 +2674,7 @@ bool MySqlAPI::isCredentialExpired(const std::string & dlg_id, const std::string
     return !expired;
 }
 
-bool MySqlAPI::isTrAllowed2(const std::string & source_hostname, const std::string & destin_hostname)
+bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::string & destin_hostname)
 {
     soci::session sql(*connectionPool);
 
@@ -2724,7 +2724,7 @@ bool MySqlAPI::isTrAllowed2(const std::string & source_hostname, const std::stri
 
 
 
-bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::string & /*destin_hostname1*/)
+bool MySqlAPI::updateOptimizer()
 {
     //prevent more than on server to update the optimizer decisions
     if(hashSegment.start != 0)

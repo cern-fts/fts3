@@ -128,9 +128,9 @@ public:
 
     virtual bool isCredentialExpired(const std::string & dlg_id, const std::string & dn);
 
-    virtual bool isTrAllowed(const std::string & source_se, const std::string & dest);
+    virtual bool updateOptimizer();
 
-    virtual bool isTrAllowed2(const std::string & source_se, const std::string & dest);
+    virtual bool isTrAllowed(const std::string & source_se, const std::string & dest);
 
     virtual int getSeOut(const std::string & source, const std::set<std::string> & destination);
 

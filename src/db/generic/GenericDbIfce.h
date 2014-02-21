@@ -166,9 +166,9 @@ public:
 
     virtual bool isCredentialExpired(const std::string & dlg_id, const std::string & dn) = 0;
 
-    virtual bool isTrAllowed(const std::string & source_se, const std::string & dest) = 0;
+    virtual bool updateOptimizer() = 0;
 
-    virtual bool isTrAllowed2(const std::string & source_se, const std::string & dest) = 0;
+    virtual bool isTrAllowed(const std::string & source_se, const std::string & dest) = 0;
 
     virtual int getSeOut(const std::string & source, const std::set<std::string> & destination) = 0;
 

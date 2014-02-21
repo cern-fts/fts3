@@ -217,14 +217,14 @@ bool ProfiledDB::isCredentialExpired(const std::string & dlg_id, const std::stri
 }
 
 
+bool ProfiledDB::updateOptimizer()
+{
+    PROFILE_PREFIXED("DB::", return db->updateOptimizer());
+}
+
 bool ProfiledDB::isTrAllowed(const std::string & source_se, const std::string & dest)
 {
     PROFILE_PREFIXED("DB::", return db->isTrAllowed(source_se, dest));
-}
-
-bool ProfiledDB::isTrAllowed2(const std::string & source_se, const std::string & dest)
-{
-    PROFILE_PREFIXED("DB::", return db->isTrAllowed2(source_se, dest));
 }
 
 
