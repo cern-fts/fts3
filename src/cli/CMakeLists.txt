@@ -69,29 +69,7 @@ endif ()
 # ------------------------------------------------------------------------
 # Common CLI library
 
-set(fts_cli_common_sources
-	ui/CliBase.cpp
-	ui/TransferCliBase.cpp
-	ui/DebugSetCli.cpp
-	ui/DnCli.cpp
-	ui/GetCfgCli.cpp
-	ui/DelCfgCli.cpp
-	ui/JobIdCli.cpp
-	ui/ListTransferCli.cpp
-	ui/SetCfgCli.cpp
-	ui/SrcDestCli.cpp
-	ui/SubmitTransferCli.cpp
-	ui/TransferStatusCli.cpp
-	ui/VoNameCli.cpp
-	ui/BlacklistCli.cpp
-	ui/PriorityCli.cpp
-	ui/RestCli.cpp
-	rest/HttpRequest.cpp
-    GSoapContextAdapter.cpp
-    ProxyCertificateDelegator.cpp
-    MsgPrinter.cpp
-    BulkSubmissionParser.cpp
-)
+file(GLOB fts_cli_common_sources "*.cpp" "ui/*.cpp" "rest/*.cpp")
 
 add_library(fts_cli_common SHARED ${fts_cli_common_sources})
 target_link_libraries(fts_cli_common ${fts_cli_libs})
