@@ -76,7 +76,10 @@ int main(int ac, char* av[])
                     		stringstream ss;
                     		HttpRequest http (url, cli->capath(), cli->proxy(), ss);
                     		http.get();
-                    		ResponseParser response(ss);
+                    		ResponseParser respons(ss);
+
+                    		cout << respons.get("job_state") << endl;
+
                         }
                     return 0;
                 }

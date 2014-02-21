@@ -59,7 +59,7 @@ private:
 
     void request();
 
-    static size_t write_data(void *ptr, size_t size, size_t nmemb, stringstream* ss);
+    static size_t write_data(void *ptr, size_t size, size_t nmemb, ostream* ss);
 
     void setPort(string& endpoint);
 

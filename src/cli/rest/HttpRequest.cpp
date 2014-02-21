@@ -43,7 +43,7 @@ HttpRequest::~HttpRequest()
     if(fd) fclose(fd);
 }
 
-size_t HttpRequest::write_data(void *ptr, size_t size, size_t nmemb, stringstream* ss)
+size_t HttpRequest::write_data(void *ptr, size_t size, size_t nmemb, ostream* ss)
 {
     // calculate the size in bytes
     size_t realsize = size * nmemb;
