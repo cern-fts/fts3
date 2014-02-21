@@ -5669,11 +5669,11 @@ double OracleAPI::getSuccessRate(std::string source, std::string destination)
 {
     soci::session sql(*connectionPool);
 
-    double ratioSuccessFailure = 0;
+    double ratioSuccessFailure = 0.0;
 
     try
         {
-            double nFailedLastHour=0, nFinishedLastHour=0;
+            double nFailedLastHour=0.0, nFinishedLastHour=0.0;
 
             soci::rowset<std::string> rs = (
                                                sql.prepare <<
