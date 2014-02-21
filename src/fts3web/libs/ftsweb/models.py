@@ -77,6 +77,7 @@ class JobArchive(JobBase):
 
 class FileBase(models.Model):
     file_id      = models.IntegerField(primary_key = True)
+    hashed_id    = models.IntegerField()
     vo_name      = models.CharField(max_length = 255)
     source_se    = models.CharField(max_length = 255)
     dest_se      = models.CharField(max_length = 255)
