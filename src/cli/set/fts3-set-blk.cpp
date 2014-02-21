@@ -44,7 +44,7 @@ int main(int ac, char* av[])
             if (!cli->validate()) return 0;
 
             // validate command line options, and return respective gsoap context
-            GSoapContextAdapter& ctx opt = cli->getGSoapContext();
+            GSoapContextAdapter& ctx = cli->getGSoapContext();
 
             string type = cli->getSubjectType();
 
