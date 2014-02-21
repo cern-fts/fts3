@@ -46,14 +46,14 @@ class HttpRequest
 
 public:
 
-    HttpRequest(string url, string capath, string proxy, MsgPrinter& printer);
-    virtual ~HttpRequest();
+	HttpRequest(string url, string capath, string proxy, ostream& stream);
+	virtual ~HttpRequest();
 
-    string get();
+	void get();
 
-    string del();
+	void del();
 
-    string put(string path);
+	void put(string path);
 
 private:
 
@@ -66,11 +66,9 @@ private:
     static const string PORT;
 
     // the response is written to this string stream
-    stringstream ss;
+    ostream& stream;
     // curl context
     CURL *curl;
-    // message printer
-    MsgPrinter& printer;
     // file to be uploaded (in case of PUT)
     FILE *fd;
 };

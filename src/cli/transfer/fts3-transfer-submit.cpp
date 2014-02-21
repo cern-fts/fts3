@@ -54,10 +54,10 @@ int main(int ac, char* av[])
                     string url = cli->getService() + "/jobs";
                     string job = cli->getFileName();
 
-                    HttpRequest http (url, cli->capath(), cli->proxy(), cli->printer());
-                    cout << http.put(job) << endl;
-                    return 0;
-                }
+            		HttpRequest http (url, cli->capath(), cli->proxy(), cout);
+            		http.put(job);
+            		return 0;
+            	}
 
             // validate command line options, and return respective gSOAP context
             optional<GSoapContextAdapter&> opt = cli->validate();

@@ -94,9 +94,8 @@ int main(int ac, char* av[])
                     string capath = cli->capath();
                     string proxy = cli->proxy();
 
-                    HttpRequest http (url, capath, proxy, cli->printer());
-                    cout << http.get() << endl;
-
+					HttpRequest http (url, capath, proxy, cout);
+					http.get();
                     return 0;
                 }
 

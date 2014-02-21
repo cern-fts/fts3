@@ -66,14 +66,14 @@ int main(int ac, char* av[])
                     vector<string> jobIds = cli->getJobIds();
                     vector<string>::iterator itr;
 
-                    for (itr = jobIds.begin(); itr != jobIds.end(); ++itr)
-                        {
-                            string url = cli->getService() + "/jobs/" + *itr;
-                            HttpRequest http (url, cli->capath(), cli->proxy(), cli->printer());
-                            cout << http.del() << endl;
-                        }
-                    return 0;
-                }
+					for (itr = jobIds.begin(); itr != jobIds.end(); ++itr)
+						{
+							string url = cli->getService() + "/jobs/" + *itr;
+							HttpRequest http (url, cli->capath(), cli->proxy(), cout);
+							http.del();
+						}
+					return 0;
+            	}
 
             // validate command line options, and return respective gsoap context
             optional<GSoapContextAdapter&> opt = cli->validate();

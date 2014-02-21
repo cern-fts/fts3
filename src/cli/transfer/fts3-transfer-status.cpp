@@ -68,9 +68,9 @@ int main(int ac, char* av[])
 
                     for (itr = jobIds.begin(); itr != jobIds.end(); ++itr)
                         {
-                            string url = cli->getService() + "/jobs/" + *itr;
-                            HttpRequest http (url, cli->capath(), cli->proxy(), cli->printer());
-                            cout << http.get() << endl;
+                    		string url = cli->getService() + "/jobs/" + *itr;
+                    		HttpRequest http (url, cli->capath(), cli->proxy(), cout);
+                    		http.get();
                         }
                     return 0;
                 }
