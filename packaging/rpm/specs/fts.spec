@@ -20,8 +20,6 @@ BuildRequires:  activemq-cpp-library
 %else
 BuildRequires:  activemq-cpp-devel
 %endif
-BuildRequires:  apr-devel
-BuildRequires:  apr-util-devel
 BuildRequires:  boost-devel
 BuildRequires:  CGSI-gSOAP-devel
 
