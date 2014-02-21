@@ -19,7 +19,6 @@ limitations under the License. */
 #include "common/timeout.h"
 #include "common/logger.h"
 #include "common/error.h"
-#include "common/cloneable.h"
 #include "common/monitorobject.h"
 
 #include <limits>
