@@ -26,7 +26,9 @@
 #include <logger.h>
 #include <mysql/soci-mysql.h>
 #include <mysql/mysql.h>
+#include <random>
 #include <signal.h>
+#include <stdint.h>
 #include <sys/param.h>
 #include <unistd.h>
 #include "MySqlAPI.h"
@@ -37,6 +39,17 @@
 
 using namespace FTS3_COMMON_NAMESPACE;
 using namespace db;
+
+
+static unsigned getHashedId(void)
+{
+    static __thread std::mt19937 *generator = NULL;
+    if (!generator) {
+        generator = new std::mt19937(clock());
+    }
+    std::uniform_int<unsigned> distribution(0, UINT16_MAX);
+    return distribution(*generator);
+}
 
 
 bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate, double& rateStored, double thr, double& thrStored, double retry, double& retryStored, int active, int& activeStored, int throughputSamples, int& throughputSamplesStored)
@@ -1170,58 +1183,68 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
             // Insert src/dest pair
             std::string sourceSurl, destSurl, checksum, metadata, selectionStrategy, sourceSe, destSe, activity;
             double filesize = 0.0;
+            unsigned hashedId;
             int fileIndex = 0, timeout = 0;
             soci::statement pairStmt = (
-                                           sql.prepare <<
-                                           "INSERT INTO t_file (vo_name, job_id, file_state, source_surl, dest_surl, checksum, user_filesize, file_metadata, selection_strategy, file_index, source_se, dest_se, activity) "
-                                           "VALUES (:voName, :jobId, :fileState, :sourceSurl, :destSurl, :checksum, :filesize, :metadata, :ss, :fileIndex, :source_se, :dest_se, :activity)",
-                                           soci::use(voName),
-                                           soci::use(jobId),
-                                           soci::use(initialState),
-                                           soci::use(sourceSurl),
-                                           soci::use(destSurl),
-                                           soci::use(checksum),
-                                           soci::use(filesize),
-                                           soci::use(metadata),
-                                           soci::use(selectionStrategy),
-                                           soci::use(fileIndex),
-                                           soci::use(sourceSe),
-                                           soci::use(destSe),
-                                           soci::use(activity)
-                                       );
+                sql.prepare <<
+                "INSERT INTO t_file "
+                "    (vo_name, job_id, file_state, source_surl, dest_surl,"
+                "     checksum, user_filesize, file_metadata, selection_strategy,"
+                "     file_index, source_se, dest_se, activity, hashed_id) "
+                "VALUES"
+                "    (:voName, :jobId, :fileState, :sourceSurl, :destSurl,"
+                "     :checksum, :filesize, :metadata, :ss,"
+                "     :fileIndex, :source_se, :dest_se, :activity, :hashedId)",
+                soci::use(voName),
+                soci::use(jobId),
+                soci::use(initialState),
+                soci::use(sourceSurl),
+                soci::use(destSurl),
+                soci::use(checksum),
+                soci::use(filesize),
+                soci::use(metadata),
+                soci::use(selectionStrategy),
+                soci::use(fileIndex),
+                soci::use(sourceSe),
+                soci::use(destSe),
+                soci::use(activity),
+                soci::use(hashedId)
+            );
 
 
 
             soci::statement pairStmtSeBlaklisted = (
-                    sql.prepare <<
-                    "INSERT INTO t_file (vo_name, job_id, file_state, source_surl, dest_surl, checksum, user_filesize, file_metadata, selection_strategy, file_index, source_se, dest_se, wait_timestamp, wait_timeout, activity) "
-                    "VALUES (:voName, :jobId, :fileState, :sourceSurl, :destSurl, :checksum, :filesize, :metadata, :ss, :fileIndex, :source_se, :dest_se, UTC_TIMESTAMP(), :timeout, :activity)",
-                    soci::use(voName),
-                    soci::use(jobId),
-                    soci::use(initialState),
-                    soci::use(sourceSurl),
-                    soci::use(destSurl),
-                    soci::use(checksum),
-                    soci::use(filesize),
-                    soci::use(metadata),
-                    soci::use(selectionStrategy),
-                    soci::use(fileIndex),
-                    soci::use(sourceSe),
-                    soci::use(destSe),
-                    soci::use(timeout),
-                    soci::use(activity)
-                                                   );
+                sql.prepare <<
+                "INSERT INTO t_file"
+                "   (vo_name, job_id, file_state, source_surl, dest_surl,"
+                "    checksum, user_filesize, file_metadata, selection_strategy,"
+                "    file_index, source_se, dest_se, wait_timestamp, wait_timeout, activity, hashed_id) "
+                "VALUES"
+                "   (:voName, :jobId, :fileState, :sourceSurl, :destSurl,"
+                "    :checksum, :filesize, :metadata, :ss,"
+                "    :fileIndex, :source_se, :dest_se, UTC_TIMESTAMP(), :timeout, :activity, :hashedId)",
+                soci::use(voName),
+                soci::use(jobId),
+                soci::use(initialState),
+                soci::use(sourceSurl),
+                soci::use(destSurl),
+                soci::use(checksum),
+                soci::use(filesize),
+                soci::use(metadata),
+                soci::use(selectionStrategy),
+                soci::use(fileIndex),
+                soci::use(sourceSe),
+                soci::use(destSe),
+                soci::use(timeout),
+                soci::use(activity),
+                soci::use(hashedId)
+            );
 
-            // When reuse is enabled, we hash the job id instead of the file ID
+            // When reuse is enabled, we use the same random number for the whole job
             // This guarantees that the whole set belong to the same machine, but keeping
             // the load balance between hosts
-            soci::statement updateHashedId = (sql.prepare <<
-                                              "UPDATE t_file SET hashed_id = conv(substring(md5(file_id) from 1 for 4), 16, 10) WHERE file_id = LAST_INSERT_ID()"
-                                             );
-
-            soci::statement updateHashedIdWithJobId = (sql.prepare <<
-                    "UPDATE t_file SET hashed_id = conv(substring(md5(job_id) from 1 for 4), 16, 10) WHERE file_id = LAST_INSERT_ID()"
-                                                      );
+            if (reuseFlag != "N")
+                hashedId = getHashedId();
 
             soci::statement updateOptimizeActive = (sql.prepare <<
                                                     "INSERT IGNORE INTO t_optimize_active (source_se, dest_se) VALUES (:sourceSe, :destSe) ", soci::use(sourceSe), soci::use(destSe)
@@ -1241,6 +1264,10 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
                     destSe = iter->dest_se;
                     activity = iter->activity;
 
+                    // No reuse, one random per file
+                    if (reuseFlag == "N")
+                        hashedId = getHashedId();
+
                     updateOptimizeActive.execute();
 
                     if (iter->wait_timeout.is_initialized())
@@ -1252,12 +1279,6 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
                         {
                             pairStmt.execute();
                         }
-
-                    // Update hash
-                    if (reuseFlag == "N")
-                        updateHashedId.execute();
-                    else
-                        updateHashedIdWithJobId.execute();
                 }
 
             sql.commit();
@@ -7515,8 +7536,8 @@ void MySqlAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start
             sql.commit();
 
             // Calculate start and end hash values
-            unsigned segsize = 0xFFFF / *count;
-            unsigned segmod  = 0xFFFF % *count;
+            unsigned segsize = UINT16_MAX / *count;
+            unsigned segmod  = UINT16_MAX % *count;
 
             *start = segsize * (*index);
             *end   = segsize * (*index + 1) - 1;
