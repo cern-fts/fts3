@@ -114,6 +114,8 @@ public:
                         ThreadSafeList::get_instance().removeFinishedTr(job, msg.file_id);
                     }
 
+                try
+                    {
                 int retry = DBSingleton::instance().getDBObjectInstance()->getRetry(job);
                 if(msg.retry==true && retry > 0 && std::string(msg.transfer_status).compare("FAILED") == 0)
                     {
@@ -136,6 +138,15 @@ public:
                                     }
                             }
                     }
+		    }
+                catch (std::exception& e)
+                    {
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception when set retry " << e.what() << commit;
+                    }
+                catch (...)
+                    {
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception when set retry " << commit;
+                    }		    		    
 
                 /*session reuse process died or terminated unexpected*/
                 if ( (updated == true) && (std::string(msg.transfer_message).find("Transfer terminate handler called") != string::npos ||
