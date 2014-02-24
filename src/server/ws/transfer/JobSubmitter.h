@@ -70,6 +70,36 @@ class JobSubmitter
         VO
     };
 
+    struct TimeoutHandler
+    {
+        TimeoutHandler(map<string, int>& timeouts) : timeouts(timeouts) {}
+
+        template<typename T>
+        void operator ()(T& t)
+        {
+            string& src = t.source_se;
+            string& dst = t.dest_se;
+            // if theres's nothing to do continue
+            if (timeouts.find(src) == timeouts.end() && timeouts.find(dst) == timeouts.end()) return;
+            // if src has no timeout use destination and continue
+            if (timeouts.find(src) == timeouts.end())
+                {
+                    t.wait_timeout = timeouts[dst];
+                    return;
+                }
+            // if dst has no time use source
+            if (timeouts.find(dst) == timeouts.end())
+                {
+                    t.wait_timeout = timeouts[src];
+                    return;
+                }
+            // if both dst and src have timeout pick the lower value
+            t.wait_timeout = timeouts[src] < timeouts[dst] ? timeouts[src] : timeouts[dst];
+        }
+
+        map<string, int> timeouts;
+    };
+
 public:
     /**
      * Constructor - creates a submitter object that should be used
@@ -129,8 +159,6 @@ private:
     string vo;
     /// delegation ID
     string delegationId;
-    /// used only for compatibility reason
-    string sourceSpaceTokenDescription;
     /// user password
     string cred;
     /// copy lifetime pin
@@ -143,7 +171,7 @@ private:
      * the job elements that have to be submitted (each job is a tuple of source,
      * destination, and optionally checksum)
      */
-    vector<job_element_tupple> jobs;
+    list<job_element_tupple> jobs;
 
     /**
      * The common initialization for both parameterized constructors
@@ -162,7 +190,7 @@ private:
      * - if the SE is in the OSG and if is's active and not disabled
      *   (it it is in BDII but the conditions are not met an exception is thrown)
      */
-    void checkSe(string se, string vo);
+    void checkSe(string ses, string vo);
 
     /**
      * Checks whether the right protocol has been used
@@ -170,17 +198,13 @@ private:
      * @file - source or destination file
      * @return true if right protol has been used
      */
-    bool checkProtocol(string file);
+    void checkProtocol(string file, bool source);
 
-    /**
-     * Checks if the file is given as a logical file name
-     *
-     * @param - file name
-     * @return true if its a logical file name
-     */
-    bool checkIfLfn(string file);
+    void pairSourceAndDestination(vector<string>& sources, vector<string>& destinations, string& selectionStrategy, list< pair<string, string> >& ret);
 
-    list< pair<string, string> > pairSourceAndDestination(vector<string> sources, vector<string> destinations, string selectionStrategy);
+    inline void addSe(string& se);
+
+    inline string getSesStr();
 
     ///
     static const regex fileUrlRegex;
@@ -195,11 +219,13 @@ private:
     /**
      *
      */
-    string fileUrlToSeName(string url);
+    string fileUrlToSeName(string url, bool source = false);
 
     string sourceSe;
     string destinationSe;
 
+    set<string> uniqueSes;
+    string uniqueSesStr;
 };
 
 }

@@ -75,7 +75,7 @@ public:
     /**
      * Submit a transfer request to be stored in the database
      **/
-    virtual void submitPhysical(const std::string & jobId, std::vector<job_element_tupple> job_elements, const std::string & paramFTP,
+    virtual void submitPhysical(const std::string & jobId, std::list<job_element_tupple>& job_elements, const std::string & paramFTP,
                                 const std::string & DN, const std::string & cred, const std::string & voName, const std::string & myProxyServer,
                                 const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite,
                                 const std::string & sourceSpaceToken, const std::string & sourceSpaceTokenDescription, int copyPinLifeTime,
@@ -192,7 +192,11 @@ public:
 
     virtual bool allowSubmitForBlacklistedSe(std::string se);
 
+    virtual void allowSubmit(std::string ses, std::string vo, std::list<std::string>& notAllowed);
+
     virtual boost::optional<int> getTimeoutForSe(std::string se);
+
+    virtual void getTimeoutForSe(std::string ses, std::map<std::string, int>& ret);
 
     virtual bool isDnBlacklisted(std::string dn);
 

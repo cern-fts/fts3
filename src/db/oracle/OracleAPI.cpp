@@ -953,7 +953,7 @@ void OracleAPI::getByJobId(std::map<std::string, std::list<TransferFiles*> >& fi
 
 
 
-void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_element_tupple> job_elements, const std::string & paramFTP,
+void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_tupple>& job_elements, const std::string & paramFTP,
                                const std::string & DN, const std::string & cred, const std::string & voName, const std::string & myProxyServer,
                                const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite,
                                const std::string & sourceSpaceToken, const std::string &, int copyPinLifeTime,
@@ -1040,7 +1040,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_elemen
             s_job_statement->executeUpdate();
 
             //now insert each src/dest pair for this job id
-            std::vector<job_element_tupple>::const_iterator iter;
+            std::list<job_element_tupple>::const_iterator iter;
             s_file_statement = conn->createStatement(file_statement, tag_file_statement, pooledConnection);
 
             for (iter = job_elements.begin(); iter != job_elements.end(); ++iter)
@@ -5262,6 +5262,33 @@ bool OracleAPI::allowSubmitForBlacklistedSe(std::string se)
     return ret;
 }
 
+void OracleAPI::allowSubmit(std::string ses, std::string vo, std::list<std::string>& notAllowed)
+{
+	// TODO soci not yet supported
+//    soci::session sql(*connectionPool);
+//
+//    std::string query = "SELECT se FROM t_bad_ses WHERE se IN " + ses + " AND status != 'WAIT_AS' AND (vo IS NULL OR vo='' OR vo = :vo)";
+//
+//    try
+//        {
+//            soci::rowset<std::string> rs = (sql.prepare << query, soci::use(vo));
+//
+//            for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+//                {
+//                    notAllowed.push_back(*i);
+//                }
+//        }
+//    catch (std::exception& e)
+//        {
+//            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+//        }
+//    catch (...)
+//        {
+//            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+//        }
+}
+
+
 boost::optional<int> OracleAPI::getTimeoutForSe(std::string se)
 {
     std::string tag = "getTimeoutForSe";
@@ -5319,6 +5346,40 @@ boost::optional<int> OracleAPI::getTimeoutForSe(std::string se)
     conn->releasePooledConnection(pooledConnection);
 
     return ret;
+}
+
+void OracleAPI::getTimeoutForSe(std::string ses, std::map<std::string, int>& ret)
+{
+// TODO soci not yet supported
+//    soci::session sql(*connectionPool);
+//
+//    std::string query =
+//        " select se, wait_timeout  "
+//        " from t_bad_ses "
+//        " where se in "
+//        ;
+//    query += ses;
+//
+//    try
+//        {
+//            soci::rowset<soci::row> rs = (
+//                                             sql.prepare << query
+//                                         );
+//
+//            for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+//                {
+//                    ret[i->get<std::string>("se")] =  i->get<int>("wait_timeout");
+//                }
+//
+//        }
+//    catch (std::exception& e)
+//        {
+//            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+//        }
+//    catch (...)
+//        {
+//            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+//        }
 }
 
 bool OracleAPI::isDnBlacklisted(std::string dn)

@@ -923,7 +923,7 @@ void MySqlAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::
 }
 
 
-void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element_tupple> src_dest_pair, const std::string & paramFTP,
+void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_tupple>& src_dest_pair, const std::string & paramFTP,
                               const std::string & DN, const std::string & cred, const std::string & voName, const std::string & myProxyServer,
                               const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite,
                               const std::string & sourceSpaceToken, const std::string &, int copyPinLifeTime,
@@ -1003,7 +1003,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
             if (reuseFlag != "N")
                 hashedId = getHashedId();
 
-            std::vector<job_element_tupple>::const_iterator iter;
+            std::list<job_element_tupple>::const_iterator iter;
             for (iter = src_dest_pair.begin(); iter != src_dest_pair.end(); ++iter)
                 {
                     sourceSurl = iter->source;
@@ -3775,6 +3775,30 @@ bool MySqlAPI::allowSubmitForBlacklistedSe(std::string se)
     return ret;
 }
 
+void MySqlAPI::allowSubmit(std::string ses, std::string vo, std::list<std::string>& notAllowed)
+{
+    soci::session sql(*connectionPool);
+
+    std::string query = "SELECT se FROM t_bad_ses WHERE se IN " + ses + " AND status != 'WAIT_AS' AND (vo IS NULL OR vo='' OR vo = :vo)";
+
+    try
+        {
+            soci::rowset<std::string> rs = (sql.prepare << query, soci::use(vo));
+
+            for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+                {
+                    notAllowed.push_back(*i);
+                }
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
 
 boost::optional<int> MySqlAPI::getTimeoutForSe(std::string se)
 {
@@ -3810,6 +3834,38 @@ boost::optional<int> MySqlAPI::getTimeoutForSe(std::string se)
     return ret;
 }
 
+void MySqlAPI::getTimeoutForSe(std::string ses, std::map<std::string, int>& ret)
+{
+    soci::session sql(*connectionPool);
+
+    std::string query =
+        " select se, wait_timeout  "
+        " from t_bad_ses "
+        " where se in "
+        ;
+    query += ses;
+
+    try
+        {
+            soci::rowset<soci::row> rs = (
+                                             sql.prepare << query
+                                         );
+
+            for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+                {
+                    ret[i->get<std::string>("se")] =  i->get<int>("wait_timeout");
+                }
+
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
 
 bool MySqlAPI::isDnBlacklisted(std::string dn)
 {
