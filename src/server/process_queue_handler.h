@@ -116,29 +116,29 @@ public:
 
                 try
                     {
-                int retry = DBSingleton::instance().getDBObjectInstance()->getRetry(job);
-                if(msg.retry==true && retry > 0 && std::string(msg.transfer_status).compare("FAILED") == 0)
-                    {
-                        int retryTimes = DBSingleton::instance().getDBObjectInstance()->getRetryTimes(job, msg.file_id);
-                        if(retry == -1)  //unlimited times
+                        int retry = DBSingleton::instance().getDBObjectInstance()->getRetry(job);
+                        if(msg.retry==true && retry > 0 && std::string(msg.transfer_status).compare("FAILED") == 0)
                             {
-                                DBSingleton::instance().getDBObjectInstance()
-                                ->setRetryTransfer(job, msg.file_id, retryTimes+1, msg.transfer_message);
-                                SingleTrStateInstance::instance().sendStateMessage(job, msg.file_id);
-                                return true;
-                            }
-                        else
-                            {
-                                if(retryTimes <= retry-1 )
+                                int retryTimes = DBSingleton::instance().getDBObjectInstance()->getRetryTimes(job, msg.file_id);
+                                if(retry == -1)  //unlimited times
                                     {
                                         DBSingleton::instance().getDBObjectInstance()
                                         ->setRetryTransfer(job, msg.file_id, retryTimes+1, msg.transfer_message);
                                         SingleTrStateInstance::instance().sendStateMessage(job, msg.file_id);
                                         return true;
                                     }
+                                else
+                                    {
+                                        if(retryTimes <= retry-1 )
+                                            {
+                                                DBSingleton::instance().getDBObjectInstance()
+                                                ->setRetryTransfer(job, msg.file_id, retryTimes+1, msg.transfer_message);
+                                                SingleTrStateInstance::instance().sendStateMessage(job, msg.file_id);
+                                                return true;
+                                            }
+                                    }
                             }
                     }
-		    }
                 catch (std::exception& e)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception when set retry " << e.what() << commit;
@@ -146,7 +146,7 @@ public:
                 catch (...)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception when set retry " << commit;
-                    }		    		    
+                    }
 
                 /*session reuse process died or terminated unexpected*/
                 if ( (updated == true) && (std::string(msg.transfer_message).find("Transfer terminate handler called") != string::npos ||

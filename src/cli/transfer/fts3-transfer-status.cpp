@@ -71,14 +71,14 @@ int main(int ac, char* av[])
 
                     for (itr = jobIds.begin(); itr != jobIds.end(); ++itr)
                         {
-                    		string url = cli->getService() + "/jobs/" + *itr;
+                            string url = cli->getService() + "/jobs/" + *itr;
 
-                    		stringstream ss;
-                    		HttpRequest http (url, cli->capath(), cli->proxy(), ss);
-                    		http.get();
-                    		ResponseParser respons(ss);
+                            stringstream ss;
+                            HttpRequest http (url, cli->capath(), cli->proxy(), ss);
+                            http.get();
+                            ResponseParser respons(ss);
 
-                    		cout << respons.get("job_state") << endl;
+                            cout << respons.get("job_state") << endl;
 
                         }
                     return 0;
@@ -200,11 +200,11 @@ int main(int ac, char* av[])
         }
     catch(string& ex)
         {
-			if (cli.get())
-				cli->printer().gsoap_error_msg(ex);
-			else
-				std::cerr << ex << std::endl;
-				
+            if (cli.get())
+                cli->printer().gsoap_error_msg(ex);
+            else
+                std::cerr << ex << std::endl;
+
             return 1;
         }
     catch(...)

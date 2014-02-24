@@ -56,14 +56,14 @@ VoNameCli::~VoNameCli()
 bool VoNameCli::validate()
 {
 
-   if (!CliBase::validate()) return false;
+    if (!CliBase::validate()) return false;
 
     if (pos)
         {
             if (getVoName().empty())
                 {
-            		msgPrinter.error_msg("The VO name has to be specified");
-            		return false;
+                    msgPrinter.error_msg("The VO name has to be specified");
+                    return false;
                 }
         }
 

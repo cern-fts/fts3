@@ -46,14 +46,14 @@ class HttpRequest
 
 public:
 
-	HttpRequest(string url, string capath, string proxy, ostream& stream);
-	virtual ~HttpRequest();
+    HttpRequest(string url, string capath, string proxy, ostream& stream);
+    virtual ~HttpRequest();
 
-	void get();
+    void get();
 
-	void del();
+    void del();
 
-	void put(string path);
+    void put(string path);
 
 private:
 

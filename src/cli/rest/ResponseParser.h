@@ -27,11 +27,11 @@ class ResponseParser
 
 public:
 
-	ResponseParser(istream& stream);
+    ResponseParser(istream& stream);
 
-	virtual ~ResponseParser();
+    virtual ~ResponseParser();
 
-	string get(string path);
+    string get(string path);
 
 private:
     /// The object that contains the response

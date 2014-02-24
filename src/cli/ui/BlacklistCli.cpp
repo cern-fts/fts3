@@ -80,28 +80,28 @@ bool BlacklistCli::validate()
 
     if (mode != ON && mode != OFF)
         {
-    		msgPrinter.error_msg("The mode has to be either 'on' or 'off'");
-    		return false;
+            msgPrinter.error_msg("The mode has to be either 'on' or 'off'");
+            return false;
         }
 
     if (type != SE && type != DN)
         {
-    		msgPrinter.error_msg("The type has to be either 'se' or 'dn'");
-    		return false;
+            msgPrinter.error_msg("The type has to be either 'se' or 'dn'");
+            return false;
         }
 
 
     if ( (!vm.count("status") || status != "WAIT")
             && timeout != 0)
         {
-    		msgPrinter.error_msg("You may only specify the timeout for the 'WAIT' status");
-    		return false;
+            msgPrinter.error_msg("You may only specify the timeout for the 'WAIT' status");
+            return false;
         }
 
     if (vm.count("allow-submit") && status == "CANCEL")
         {
-    		msgPrinter.error_msg("If the 'allow-submit' option is used you may not use 'CANCEL' status");
-    		return false;
+            msgPrinter.error_msg("If the 'allow-submit' option is used you may not use 'CANCEL' status");
+            return false;
         }
 
     return true;

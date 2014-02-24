@@ -14,26 +14,26 @@ using namespace fts3::cli;
 const string HttpRequest::PORT = "8446";
 
 HttpRequest::HttpRequest(string url, string capath, string proxy, ostream& stream) :
-		stream(stream),
-		curl(curl_easy_init()),
-		fd(0)
+    stream(stream),
+    curl(curl_easy_init()),
+    fd(0)
 
 {
     if (!curl) throw string("failed to initialize curl context (curl_easy_init)");
 
-	// the url we are going to contact
-	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-	// our proxy certificate (the '-E' option)
-	curl_easy_setopt(curl, CURLOPT_SSLCERT, proxy.c_str());
-	// path to certificates (the '--capath' option)
-	curl_easy_setopt(curl, CURLOPT_CAPATH, capath.c_str());
-	// our proxy again (the '-cacert' option)
-	curl_easy_setopt(curl, CURLOPT_CAINFO, proxy.c_str());
-	// the callback function
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
-	// the stream the data will be written to
-	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &stream);
+    // the url we are going to contact
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+    // our proxy certificate (the '-E' option)
+    curl_easy_setopt(curl, CURLOPT_SSLCERT, proxy.c_str());
+    // path to certificates (the '--capath' option)
+    curl_easy_setopt(curl, CURLOPT_CAPATH, capath.c_str());
+    // our proxy again (the '-cacert' option)
+    curl_easy_setopt(curl, CURLOPT_CAINFO, proxy.c_str());
+    // the callback function
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
+    // the stream the data will be written to
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &stream);
 }
 
 HttpRequest::~HttpRequest()
@@ -81,16 +81,16 @@ void HttpRequest::request()
 
 void HttpRequest::get()
 {
-	// do the request
-	request();
+    // do the request
+    request();
 }
 
 void HttpRequest::del()
 {
-	// make it a delete
-	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE");
-	// do the request
-	request();
+    // make it a delete
+    curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE");
+    // do the request
+    request();
 }
 
 void HttpRequest::put(string path)
@@ -114,6 +114,6 @@ void HttpRequest::put(string path)
     /* and give the size of the upload (optional) */
     curl_easy_setopt(curl, CURLOPT_INFILESIZE_LARGE, (curl_off_t)file_info.st_size);
 
-	// do the request
-	request();
+    // do the request
+    request();
 }

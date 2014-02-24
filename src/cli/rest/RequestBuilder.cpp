@@ -10,13 +10,15 @@
 
 using namespace fts3::cli;
 
-RequestBuilder::RequestBuilder() {
-	// TODO Auto-generated constructor stub
+RequestBuilder::RequestBuilder()
+{
+    // TODO Auto-generated constructor stub
 
 }
 
-RequestBuilder::~RequestBuilder() {
-	// TODO Auto-generated destructor stub
+RequestBuilder::~RequestBuilder()
+{
+    // TODO Auto-generated destructor stub
 }
 
 

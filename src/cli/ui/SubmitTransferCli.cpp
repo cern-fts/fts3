@@ -226,13 +226,13 @@ bool SubmitTransferCli::createJobElements()
                             it++;
                             if (it != tokens.end())
                                 {
-                            	if (!checkValidUrl(*it, msgPrinter)) return false;
+                                    if (!checkValidUrl(*it, msgPrinter)) return false;
                                     file.destinations.push_back(*it);
                                 }
                             else
                                 {
                                     // only one element is still not enough to define a job
-                            		printer().bulk_submission_error(lineCount, "destination is missing");
+                                    printer().bulk_submission_error(lineCount, "destination is missing");
                                     return false;
                                 }
 
@@ -310,20 +310,20 @@ bool SubmitTransferCli::performChecks()
     // the job cannot be specified twice
     if ((!getSource().empty() || !getDestination().empty()) && vm.count("file"))
         {
-    		msgPrinter.error_msg("You may not specify a transfer on the command line if the -f option is used.");
-    		return false;
+            msgPrinter.error_msg("You may not specify a transfer on the command line if the -f option is used.");
+            return false;
         }
 
     if (vm.count("file-size") && vm.count("file"))
         {
-    		msgPrinter.error_msg("If a bulk submission has been used file size has to be specified inside the bulk file separately for each file and no using '--file-size' option!");
-    		return false;
+            msgPrinter.error_msg("If a bulk submission has been used file size has to be specified inside the bulk file separately for each file and no using '--file-size' option!");
+            return false;
         }
 
     if (vm.count("file-metadata") && vm.count("file"))
         {
-    		msgPrinter.error_msg("If a bulk submission has been used file metadata have to be specified inside the bulk file separately for each file and no using '--file-metadata' option!");
-    		return false;
+            msgPrinter.error_msg("If a bulk submission has been used file metadata have to be specified inside the bulk file separately for each file and no using '--file-metadata' option!");
+            return false;
         }
 
     return true;

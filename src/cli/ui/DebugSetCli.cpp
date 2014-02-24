@@ -83,8 +83,8 @@ bool DebugSetCli::validate()
     // make sure that at least one SE and debug mode were specified
     if (opts.size() < 2)
         {
-    		msgPrinter.error_msg("SE name and debug mode has to be specified (on/off)!");
-    		return false;
+            msgPrinter.error_msg("SE name and debug mode has to be specified (on/off)!");
+            return false;
         }
 
     // index of debug mode (the last parameter)
@@ -98,8 +98,8 @@ bool DebugSetCli::validate()
     // otherwise it's an error
     else
         {
-    		msgPrinter.error_msg("Debug mode has to be specified (on/off)!");
-    		return false;
+            msgPrinter.error_msg("Debug mode has to be specified (on/off)!");
+            return false;
         }
 
     // source is always the first one

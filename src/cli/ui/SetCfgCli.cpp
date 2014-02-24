@@ -112,8 +112,8 @@ bool SetCfgCli::validate()
             int val = vm["retry"].as<int>();
             if (val < -1)
                 {
-            		msgPrinter.error_msg("The retry value has to be greater or equal to -1.");
-            		return false;
+                    msgPrinter.error_msg("The retry value has to be greater or equal to -1.");
+                    return false;
                 }
         }
 
@@ -122,8 +122,8 @@ bool SetCfgCli::validate()
             int val = vm["queue-timeout"].as<int>();
             if (val < 0)
                 {
-            		msgPrinter.error_msg("The queue-timeout value has to be greater or equal to 0.");
-            		return false;
+                    msgPrinter.error_msg("The queue-timeout value has to be greater or equal to 0.");
+                    return false;
                 }
         }
 
@@ -132,8 +132,8 @@ bool SetCfgCli::validate()
             int val = vm["optimizer-mode"].as<int>();
             if (val < 1 || val > 3)
                 {
-            		msgPrinter.error_msg("optimizer-mode may only take following values: 1, 2 or 3");
-            		return false;
+                    msgPrinter.error_msg("optimizer-mode may only take following values: 1, 2 or 3");
+                    return false;
                 }
         }
 
@@ -145,8 +145,8 @@ bool SetCfgCli::validate()
             && !vm.count("optimizer-mode")
        )
         {
-    		msgPrinter.error_msg("No parameters have been specified.");
-    		return false;
+            msgPrinter.error_msg("No parameters have been specified.");
+            return false;
         }
 
     return true;

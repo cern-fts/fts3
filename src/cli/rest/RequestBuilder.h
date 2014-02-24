@@ -13,10 +13,11 @@ namespace fts3
 namespace cli
 {
 
-class RequestBuilder {
+class RequestBuilder
+{
 public:
-	RequestBuilder();
-	virtual ~RequestBuilder();
+    RequestBuilder();
+    virtual ~RequestBuilder();
 };
 
 }

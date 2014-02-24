@@ -50,12 +50,12 @@ bool PriorityCli::validate()
 {
 
     // do the standard validation
-	if (!CliBase::validate()) return false;
+    if (!CliBase::validate()) return false;
 
     if (priority < 1 || priority > 5)
         {
-    		msgPrinter.error_msg("The priority has to take a value in range of 1 to 5");
-    		return false;
+            msgPrinter.error_msg("The priority has to take a value in range of 1 to 5");
+            return false;
         }
 
     return true;
