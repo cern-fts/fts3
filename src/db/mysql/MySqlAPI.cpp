@@ -2642,14 +2642,13 @@ void MySqlAPI::setDebugMode(std::string source_hostname, std::string destin_host
 
 
 
-void MySqlAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std::string & vos)
+void MySqlAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std::string &)
 {
     soci::session sql(*connectionPool);
 
     try
         {
-            std::string query;
-            query = "SELECT "
+            soci::rowset<TransferJobs> rs = (sql.prepare << "SELECT "
                     "   job_id, "
                     "   job_state, "
                     "   vo_name,  "
@@ -2670,22 +2669,13 @@ void MySqlAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std
                     "   copy_pin_lifetime, "
                     "   checksum_method, "
                     "   bring_online, "
-                    "   submit_time,"
-                    "   reuse_job "
-                    "FROM t_job WHERE "
-                    "    job_state = 'SUBMITTED' AND job_finished IS NULL AND "
-                    "    cancel_job IS NULL AND "
-                    "    (reuse_job IS NOT NULL and reuse_job != 'N')";
-
-            if (vos != "*")
-                {
-                    query += " AND t_job.vo_name IN " + vos + " ";
-                }
-
-            query += " ORDER BY priority DESC, submit_time "
-                     "LIMIT 1";
-
-            soci::rowset<TransferJobs> rs = (sql.prepare << query);
+                    "   submit_time "
+                    "   FROM t_job WHERE "
+                    "   job_state = 'SUBMITTED' AND job_finished IS NULL AND "
+                    "   cancel_job IS NULL AND "
+                    "   reuse_job='Y' "		                                                     
+		    " ORDER BY priority DESC, submit_time LIMIT 1 ");
+		    
             for (soci::rowset<TransferJobs>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
                     TransferJobs const& tjob = *i;
@@ -2701,6 +2691,7 @@ void MySqlAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }
+
 
 
 

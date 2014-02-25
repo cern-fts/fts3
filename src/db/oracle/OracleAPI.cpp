@@ -2480,14 +2480,13 @@ void OracleAPI::setDebugMode(std::string source_hostname, std::string destin_hos
 
 
 
-void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std::string & vos)
+void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std::string &)
 {
     soci::session sql(*connectionPool);
 
     try
         {
-            std::string query;
-            query = "SELECT * FROM (SELECT "
+            soci::rowset<TransferJobs> rs = (sql.prepare << " SELECT * FROM (SELECT "
                     "   job_id, "
                     "   job_state, "
                     "   vo_name,  "
@@ -2513,17 +2512,10 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const st
                     "FROM t_job WHERE "
                     "    job_state = 'SUBMITTED' AND job_finished IS NULL AND "
                     "    cancel_job IS NULL AND "
-                    "    (reuse_job IS NOT NULL and reuse_job != 'N') ";
-
-            if (vos != "*")
-                {
-                    query += " AND t_job.vo_name IN " + vos + " ";
-                }
-
-            query += " ORDER BY priority DESC, SYS_EXTRACT_UTC(submit_time) "
-                     ") WHERE ROWNUM <= 1";
-
-            soci::rowset<TransferJobs> rs = (sql.prepare << query);
+                    "    reuse_job='Y' "
+		    " ORDER BY priority DESC, SYS_EXTRACT_UTC(submit_time) "
+                    ") WHERE ROWNUM <= 1");
+		    
             for (soci::rowset<TransferJobs>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
                     TransferJobs const& tjob = *i;
