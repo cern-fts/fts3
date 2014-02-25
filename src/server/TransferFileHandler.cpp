@@ -187,7 +187,7 @@ TransferFiles* TransferFileHandler::getFile(FileIndex index)
                             double tmpAvgThr = db->getAvgThroughput((*it)->SOURCE_SE, (*it)->DEST_SE);
 
                             // we are interested in all pairs that have success rate equal or greater to 99%
-                            if (tmpRate > 99) tmpRate = 99;
+                            if (tmpRate >= 99) tmpRate = 99;
 
                             if (tmpRate > maxSuccessRate)
                                 {
@@ -228,7 +228,8 @@ void TransferFileHandler::freeList(list<TransferFiles*>& l)
     for (it = l.begin(); it != l.end(); ++it)
         {
             // and release the memory
-            delete *it;
+	    if(*it)
+            	delete *it;
         }
     // clear the list
     l.clear();
