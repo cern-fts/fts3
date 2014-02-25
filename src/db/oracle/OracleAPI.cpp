@@ -5054,7 +5054,7 @@ void OracleAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
 
             sql.begin();
             soci::rowset<std::string> rs = (sql.prepare << "SELECT job_id FROM t_job WHERE "
-                                            "    submit_time < (sys_extract_utc(systimestamp) - interval :interval hour) AND "
+                                            "    submit_time < (sys_extract_utc(systimestamp) - numtodsinterval(:interval, 'hour')) AND "
                                             "    job_state in ('SUBMITTED', 'READY')",
                                             soci::use(maxTime));
 
