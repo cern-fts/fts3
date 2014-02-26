@@ -784,12 +784,12 @@ int main(int argc, char **argv)
                             }
 
                         if (!opts.checksumValue.empty() && opts.checksumValue != "x")   //user provided checksum
-                            {
-                                logger.INFO() << "User  provided checksum" << std::endl;
+                            {                                
                                 //check if only alg is specified
                                 if (std::string::npos == (strArray[3]).find(":"))
                                     {
                                         gfalt_set_user_defined_checksum(params, (strArray[3]).c_str(), NULL, NULL);
+					logger.INFO() << "Checksum: " << strArray[3] << std::endl;
                                     }
                                 else
                                     {
@@ -797,6 +797,7 @@ int main(int argc, char **argv)
                                         std::string checkAlg = token[0];
                                         std::string csk = token[1];
                                         gfalt_set_user_defined_checksum(params, checkAlg.c_str(), csk.c_str(), NULL);
+					logger.INFO() << "Checksum: " << checkAlg << " " << csk << std::endl;					
                                     }
                             }
                         else    //use auto checksum
