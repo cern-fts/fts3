@@ -932,6 +932,8 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
                               int retry, int retryDelay, std::string sourceSe, std::string destinationSe)
 {
 
+
+
     const std::string initialState = bring_online > 0 || copyPinLifeTime > 0 ? "STAGING" : "SUBMITTED";
     const int priority = 3;
     const std::string params;
@@ -993,9 +995,9 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
 	    
 	        
             //create the insertion statements here and populate values inside the loop
-            pairStmt << "INSERT INTO t_file (vo_name, job_id, file_state, source_surl, dest_surl,checksum, user_filesize, file_metadata, selection_strategy, file_index, source_se, dest_se, hashed_id) VALUES ";
+            pairStmt << fixed << "INSERT INTO t_file (vo_name, job_id, file_state, source_surl, dest_surl,checksum, user_filesize, file_metadata, selection_strategy, file_index, source_se, dest_se, hashed_id) VALUES ";
 
-            pairStmtSeBlaklisted << "INSERT INTO t_file (vo_name, job_id, file_state, source_surl, dest_surl, checksum, user_filesize, file_metadata, selection_strategy, file_index, source_se, dest_se, wait_timestamp, wait_timeout, hashed_id) VALUES ";
+            pairStmtSeBlaklisted << fixed << "INSERT INTO t_file (vo_name, job_id, file_state, source_surl, dest_surl, checksum, user_filesize, file_metadata, selection_strategy, file_index, source_se, dest_se, wait_timestamp, wait_timeout, hashed_id) VALUES ";
 
             // When reuse is enabled, we use the same random number for the whole job
             // This guarantees that the whole set belong to the same machine, but keeping
@@ -1014,8 +1016,8 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
                     selectionStrategy = iter->selectionStrategy;
                     fileIndex = iter->fileIndex;
                     sourceSe = iter->source_se;
-                    destSe = iter->dest_se;                    
-
+                    destSe = iter->dest_se;      
+		    
                     // No reuse, one random per file
                     if (reuseFlag == "N")
                         hashedId = getHashedId();
@@ -1115,7 +1117,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
             if(timeout == 0)
                 {
                     std::string queryStr = pairStmt.str();
-                    sql << queryStr.substr(0, queryStr.length() - 1);
+                    sql << queryStr.substr(0, queryStr.length() - 1);		    
                 }
             else
                 {

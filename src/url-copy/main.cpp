@@ -849,7 +849,7 @@ int main(int argc, char **argv)
                                 else if (strArray[4]!= "x" && boost::lexical_cast<double>(strArray[4]) != 0 && boost::lexical_cast<double>(strArray[4]) != statbufsrc.st_size)
                                     {
                                         std::stringstream error_;
-                                        error_ << "User specified source file size is " << strArray[4] << " but stat returned " << statbufsrc.st_size;
+                                        error_ << fixed << "User specified source file size is " << strArray[4] << " but stat returned " << statbufsrc.st_size;
                                         errorMessage = error_.str();
                                         logger.ERROR() << errorMessage << std::endl;
                                         errorScope = SOURCE;
