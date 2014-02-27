@@ -1199,9 +1199,9 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
             Mapa mapa;
 
             //create the insertion statements here and populate values inside the loop
-            pairStmt << "INSERT INTO t_file (vo_name, job_id, file_state, source_surl, dest_surl,checksum, user_filesize, file_metadata, selection_strategy, file_index, source_se, dest_se, activity, hashed_id) VALUES ";
+            pairStmt << std::fixed << "INSERT INTO t_file (vo_name, job_id, file_state, source_surl, dest_surl,checksum, user_filesize, file_metadata, selection_strategy, file_index, source_se, dest_se, activity, hashed_id) VALUES ";
 
-            pairStmtSeBlaklisted << "INSERT INTO t_file (vo_name, job_id, file_state, source_surl, dest_surl, checksum, user_filesize, file_metadata, selection_strategy, file_index, source_se, dest_se, wait_timestamp, wait_timeout, activity, hashed_id) VALUES ";
+            pairStmtSeBlaklisted << std::fixed << "INSERT INTO t_file (vo_name, job_id, file_state, source_surl, dest_surl, checksum, user_filesize, file_metadata, selection_strategy, file_index, source_se, dest_se, wait_timestamp, wait_timeout, activity, hashed_id) VALUES ";
 
             // When reuse is enabled, we use the same random number for the whole job
             // This guarantees that the whole set belong to the same machine, but keeping
