@@ -47,7 +47,7 @@ public:
     std::string destTokenDescription;
     unsigned    fileId;
     std::string proxy;
-    double      userFileSize;
+    long long   userFileSize;
     int         bringOnline;
     int         copyPinLifetime;
     int         nStreams;

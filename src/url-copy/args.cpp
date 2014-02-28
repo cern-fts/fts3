@@ -119,7 +119,7 @@ int UrlCopyOpts::parse(int argc, char * const argv[])
                             jobMetadata = optarg;
                             break;
                         case 'I':
-                            userFileSize = boost::lexical_cast<double>(optarg);
+                            userFileSize = boost::lexical_cast<long long>(optarg);
                             break;
                         case 'H':
                             bringOnline = boost::lexical_cast<int>(optarg);
