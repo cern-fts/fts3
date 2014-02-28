@@ -633,7 +633,7 @@ int main(int argc, char **argv)
                     strArray[2] = opts.destUrl;
                     strArray[3] = opts.checksumValue;
                     if(opts.userFileSize > 0)
-                        strArray[4] = to_string<double >(opts.userFileSize, std::dec);
+                        strArray[4] = boost::lexical_cast<std::string>(opts.userFileSize);
                     else
                         strArray[4] = "0";
                     strArray[5] = opts.fileMetadata;
@@ -713,7 +713,7 @@ int main(int argc, char **argv)
                 logger.INFO() << "BringOnline:" << opts.bringOnline << std::endl;
                 logger.INFO() << "Checksum:" << strArray[3] << std::endl;
                 logger.INFO() << "Checksum enabled:" << opts.compareChecksum << std::endl;
-                logger.INFO() << "User filesize:" << strArray[4] << std::endl;
+                logger.INFO() << "User filesize:" << opts.userFileSize << std::endl;
                 logger.INFO() << "File metadata:" << replaceMetadataString(strArray[5]) << std::endl;
                 logger.INFO() << "Job metadata:" << replaceMetadataString(opts.jobMetadata) << std::endl;
                 logger.INFO() << "Bringonline token:" << strArray[6] << std::endl;
@@ -846,10 +846,10 @@ int main(int argc, char **argv)
                                                 goto stop;
                                             }
                                     }
-                                else if (strArray[4]!= "x" && boost::lexical_cast<double>(strArray[4]) != 0 && boost::lexical_cast<double>(strArray[4]) != statbufsrc.st_size)
+                                else if (strArray[4]!= "x" && opts.userFileSize != 0 && opts.userFileSize != statbufsrc.st_size)
                                     {
                                         std::stringstream error_;
-                                        error_ << fixed << "User specified source file size is " << strArray[4] << " but stat returned " << statbufsrc.st_size;
+                                        error_ << fixed << "User specified source file size is " << opts.userFileSize << " but stat returned " << statbufsrc.st_size;
                                         errorMessage = error_.str();
                                         logger.ERROR() << errorMessage << std::endl;
                                         errorScope = SOURCE;
@@ -1026,10 +1026,10 @@ int main(int argc, char **argv)
                                                 goto stop;
                                             }
                                     }
-                                else if (strArray[4]!= "x" && boost::lexical_cast<double>(strArray[4]) != 0 && boost::lexical_cast<double>(strArray[4]) != statbufdest.st_size)
+                                else if (strArray[4]!= "x" && opts.userFileSize != 0 && opts.userFileSize != statbufdest.st_size)
                                     {
                                         std::stringstream error_;
-                                        error_ << "User specified destination file size is " << strArray[4] << " but stat returned " << statbufdest.st_size;
+                                        error_ << "User specified destination file size is " << opts.userFileSize << " but stat returned " << statbufdest.st_size;
                                         errorMessage = error_.str();
                                         logger.ERROR() << errorMessage << std::endl;
                                         errorScope = DESTINATION;
