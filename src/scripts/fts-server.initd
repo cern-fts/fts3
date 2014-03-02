@@ -39,7 +39,7 @@ start() {
     retval=$?    
     if [ ! -f $lockfile ] && [ $retval -eq 1 ] ; then
         touch "$lockfile" && success || failure
-        daemon $prog
+        daemon $prog -t 25
         retval=$?
         echo
          [ $retval -eq 0 ] && touch $lockfile
