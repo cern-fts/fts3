@@ -7603,7 +7603,9 @@ void MySqlAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start
                 }
 
             sql.commit();
-
+	    
+	    if(*count != 0)
+	    {
             // Calculate start and end hash values
             unsigned segsize = UINT16_MAX / *count;
             unsigned segmod  = UINT16_MAX % *count;
@@ -7617,6 +7619,7 @@ void MySqlAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start
 
             this->hashSegment.start = *start;
             this->hashSegment.end   = *end;
+	    }
         }
     catch (std::exception& e)
         {

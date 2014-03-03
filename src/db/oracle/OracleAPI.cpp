@@ -7361,7 +7361,9 @@ void OracleAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* star
                 }
 
             sql.commit();
-
+	    
+	    if(*count != 0)
+	    {
             // Calculate start and end hash values
             unsigned segsize = 0xFFFF / *count;
             unsigned segmod  = 0xFFFF % *count;
@@ -7375,6 +7377,7 @@ void OracleAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* star
 
             this->hashSegment.start = *start;
             this->hashSegment.end   = *end;
+	    }
         }
     catch (std::exception& e)
         {
