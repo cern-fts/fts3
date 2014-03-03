@@ -419,12 +419,10 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                     vo_name = (*i1);
 
                     soci::rowset<soci::row> rs2 = (sql.prepare <<
-                                                   " SELECT SQL_NO_CACHE DISTINCT source_se, dest_se "
-                                                   " FROM t_file "
-                                                   " WHERE "
-                                                   "      file_state = 'SUBMITTED' AND "
-                                                   "      (hashed_id >= :hStart AND hashed_id <= :hEnd) AND vo_name = :vo_name ",
-                                                   soci::use(hashSegment.start), soci::use(hashSegment.end),soci::use(vo_name)
+						" SELECT SQL_NO_CACHE  o.source_se, o.dest_se  FROM t_optimize_active o  WHERE  EXISTS (select distinct "
+						" f.source_se, f.dest_se  from t_file f where   f.file_state "
+						" = 'SUBMITTED' AND       (hashed_id >= :hStart AND hashed_id <= :hEnd) AND f.vo_name = :vo_name and o.source_se=f.source_se and o.dest_se = f.dest_se)"		    
+                                                 ,soci::use(hashSegment.start), soci::use(hashSegment.end),soci::use(vo_name)
                                                   );
                     for (soci::rowset<soci::row>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
                         {
@@ -2646,9 +2644,9 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 
             //fetch the records from db for distinct links
             soci::rowset<soci::row> rs = ( sql.prepare <<
-                                           " select  distinct o.source_se, o.dest_se from t_optimize_active o LEFT JOIN "
-                                           " t_file f ON (o.source_se = f.source_se) where o.dest_se=f.dest_se and "
-                                           " f.job_finished is NULL ");
+                                                " SELECT SQL_NO_CACHE  o.source_se, o.dest_se FROM t_optimize_active o WHERE  EXISTS (select distinct "
+						" f.source_se, f.dest_se  from t_file f where   f.file_state "
+						" = 'SUBMITTED' AND o.source_se=f.source_se and o.dest_se = f.dest_se)");
 
             //snapshot of active transfers
             soci::statement stmt7 = (
