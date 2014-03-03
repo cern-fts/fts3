@@ -2646,9 +2646,9 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 
             //fetch the records from db for distinct links
             soci::rowset<soci::row> rs = ( sql.prepare <<
-                                           " select  distinct o.source_se, o.dest_se from t_optimize_active o INNER JOIN "
+                                           " select  distinct o.source_se, o.dest_se from t_optimize_active o LEFT JOIN "
                                            " t_file f ON (o.source_se = f.source_se) where o.dest_se=f.dest_se and "
-                                           " f.file_state='SUBMITTED' ");
+                                           " f.job_finished is NULL ");
 
             //snapshot of active transfers
             soci::statement stmt7 = (
