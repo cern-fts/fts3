@@ -2848,7 +2848,7 @@ bool MySqlAPI::updateOptimizer()
 
             //fetch the records from db for distinct links
             soci::rowset<soci::row> rs = ( sql.prepare <<
-                                           " select o.source_se, o.dest_se from t_optimize_active o LEFT JOIN "
+                                           " select  distinct o.source_se, o.dest_se from t_optimize_active o LEFT JOIN "
                                            " t_file f ON (o.source_se = f.source_se) where o.dest_se=f.dest_se and "
                                            " f.job_finished is NULL ");
 
