@@ -419,7 +419,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                     vo_name = (*i1);
 
                     soci::rowset<soci::row> rs2 = (sql.prepare <<
-						" SELECT SQL_NO_CACHE  o.source_se, o.dest_se  FROM t_optimize_active o  WHERE  EXISTS (select distinct "
+						" SELECT SQL_NO_CACHE  o.source_se, o.dest_se  FROM t_optimize_active o  WHERE  EXISTS (select "
 						" f.source_se, f.dest_se  from t_file f where   f.file_state "
 						" = 'SUBMITTED' AND       (hashed_id >= :hStart AND hashed_id <= :hEnd) AND f.vo_name = :vo_name and o.source_se=f.source_se and o.dest_se = f.dest_se)"		    
                                                  ,soci::use(hashSegment.start), soci::use(hashSegment.end),soci::use(vo_name)
@@ -2644,7 +2644,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 
             //fetch the records from db for distinct links
             soci::rowset<soci::row> rs = ( sql.prepare <<
-                                                " SELECT SQL_NO_CACHE  o.source_se, o.dest_se FROM t_optimize_active o WHERE  EXISTS (select distinct "
+                                                " SELECT SQL_NO_CACHE  o.source_se, o.dest_se FROM t_optimize_active o WHERE  EXISTS (select "
 						" f.source_se, f.dest_se  from t_file f where   f.file_state "
 						" = 'SUBMITTED' AND o.source_se=f.source_se and o.dest_se = f.dest_se)");
 
