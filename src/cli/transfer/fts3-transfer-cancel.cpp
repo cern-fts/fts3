@@ -24,7 +24,7 @@
 
 #include "GSoapContextAdapter.h"
 #include "MsgPrinter.h"
-#include "ui/JobIdCli.h"
+#include "ui/CancelCli.h"
 #include "rest/HttpRequest.h"
 
 #include "common/JobStatusHandler.h"
@@ -51,13 +51,13 @@ using namespace fts3::common;
 int main(int ac, char* av[])
 {
 
-    scoped_ptr<JobIdCli> cli;
+    scoped_ptr<CancelCli> cli;
 
     try
         {
             // create and initialize the command line utility
             cli.reset(
-                getCli<JobIdCli>(ac, av)
+                getCli<CancelCli>(ac, av)
             );
             if (!cli->validate()) return 0;
 
