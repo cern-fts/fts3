@@ -26,7 +26,7 @@
 #define SUBMITTRANSFERCLI_H_
 
 #include "SrcDestCli.h"
-#include "TransferCliBase.h"
+#include "DelegationCli.h"
 #include "TransferTypes.h"
 
 #include <vector>
@@ -64,7 +64,7 @@ namespace cli
  *
  * @see CliBase
  */
-class SubmitTransferCli : public SrcDestCli, public TransferCliBase
+class SubmitTransferCli : public SrcDestCli, public DelegationCli
 {
 
 public:
@@ -145,20 +145,6 @@ public:
      * @see SubmitTransferCli::performChecks()
      */
     string getPassword();
-
-    /**
-     * Gets the delegation ID (string).
-     *
-     * @return delegation ID string if it was given as a CLI option, or an empty string if not
-     */
-    string getDelegationId();
-
-    /**
-     * Gets user's set expiration time in seconds (long).
-     *
-     * @return expiration time in seconds if it was given as a CLI option, or 0 string if not
-     */
-    long getExpirationTime();
 
     /**
      * Gets a vector containing string-string pairs.

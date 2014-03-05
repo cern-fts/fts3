@@ -92,6 +92,15 @@ add_dependencies(fts-transfer-submit fts_cli_common)
 target_link_libraries (fts-transfer-submit fts_cli_common)
 
 # ------------------------------------------------------------------------
+# fts-delegation-init
+add_executable(fts-delegation-init
+    transfer/fts3-delegation-init.cpp
+    ui/DelegationCli.cpp
+)
+add_dependencies(fts-delegation-init fts_cli_common)
+target_link_libraries (fts-delegation-init fts_cli_common)
+
+# ------------------------------------------------------------------------
 # fts-transfer-status
 
 add_executable(fts-transfer-status

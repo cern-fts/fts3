@@ -63,8 +63,6 @@ SubmitTransferCli::SubmitTransferCli()
     ("interval,i", value<int>(), "Interval between two poll operations in blocking mode.")
 //			("myproxysrv,m", value<string>(), "MyProxy server to use.")
 //			("password,p", value<string>(), "MyProxy password to send with the job")
-    ("id,I", value<string>(), "Delegation with ID as the delegation identifier.")
-    ("expire,e", value<long>(), "Expiration time of the delegation in minutes.")
     ("overwrite,o", "Overwrite files.")
     ("dest-token,t", value<string>(),  "The destination space token or its description (for SRM 2.2 transfers).")
     ("source-token,S", value<string>(), "The source space token or its description (for SRM 2.2 transfers).")
@@ -126,28 +124,6 @@ bool SubmitTransferCli::validate()
 
     return true;
 }
-
-string SubmitTransferCli::getDelegationId()
-{
-
-    // check if destination was passed via command line options
-    if (vm.count("id"))
-        {
-            return vm["id"].as<string>();
-        }
-    return "";
-}
-
-long SubmitTransferCli::getExpirationTime()
-{
-
-    if (vm.count("expire"))
-        {
-            return vm["expire"].as<long>();
-        }
-    return 0;
-}
-
 
 optional<string> SubmitTransferCli::getMetadata()
 {

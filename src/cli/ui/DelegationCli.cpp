@@ -1,0 +1,55 @@
+/*
+ * DelegationCli.cpp
+ *
+ *  Created on: Mar 5, 2014
+ *      Author: simonm
+ */
+
+#include "DelegationCli.h"
+
+namespace fts3
+{
+namespace cli
+{
+
+DelegationCli::DelegationCli()
+{
+    /// 8 housrs in seconds
+    static const int eight_hours = 28800;
+
+    // add commandline options specific for fts3-transfer-submit
+    specific.add_options()
+    ("id,I", value<string>(), "Delegation with ID as the delegation identifier.")
+    ("expire,e", value<long>(), "Expiration time of the delegation in minutes.")
+    ;
+}
+
+DelegationCli::~DelegationCli()
+{
+
+}
+
+
+string DelegationCli::getDelegationId()
+{
+
+    // check if destination was passed via command line options
+    if (vm.count("id"))
+        {
+            return vm["id"].as<string>();
+        }
+    return "";
+}
+
+long DelegationCli::getExpirationTime()
+{
+
+    if (vm.count("expire"))
+        {
+            return vm["expire"].as<long>();
+        }
+    return 0;
+}
+
+} /* namespace cli */
+} /* namespace fts3 */
