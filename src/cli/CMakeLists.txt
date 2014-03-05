@@ -84,6 +84,7 @@ set(fts_cli_common_sources
 	ui/VoNameCli.cpp
 	ui/BlacklistCli.cpp
 	ui/PriorityCli.cpp
+	ui/CancelCli.cpp
     GSoapContextAdapter.cpp
     ProxyCertificateDelegator.cpp
     MsgPrinter.cpp
