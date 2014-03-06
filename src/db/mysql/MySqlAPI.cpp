@@ -2199,44 +2199,87 @@ void MySqlAPI::updateFileTransferProgressVector(std::vector<struct message_updat
 void MySqlAPI::cancelJob(std::vector<std::string>& requestIDs)
 {
     soci::session sql(*connectionPool);
+    const std::string reason = "Job canceled by the user";
+    std::string job_id;
+    std::ostringstream cancelStmt1;
+    std::ostringstream cancelStmt2;
+    std::ostringstream jobIdStmt;
 
     try
         {
-            const std::string reason = "Job canceled by the user";
-            std::string job_id;
-
-            soci::statement stmt1 = (sql.prepare << "UPDATE t_job SET job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), cancel_job='Y' "
-                                     "                 ,reason = :reason "
-                                     "WHERE job_id = :jobId AND job_state NOT IN ('CANCELED','FINISHEDDIRTY', 'FINISHED', 'FAILED')",
-                                     soci::use(reason, "reason"), soci::use(job_id, "jobId"));
-
-            soci::statement stmt2 = (sql.prepare << "UPDATE t_file SET file_state = 'CANCELED',  finish_time = UTC_TIMESTAMP(), "
-                                     "                  reason = :reason "
-                                     "WHERE job_id = :jobId AND file_state NOT IN ('CANCELED','FINISHED','FAILED')",
-                                     soci::use(reason, "reason"), soci::use(job_id, "jobId"));
-
-            sql.begin();
-
             for (std::vector<std::string>::const_iterator i = requestIDs.begin(); i != requestIDs.end(); ++i)
                 {
                     job_id = (*i);
-
-                    // Cancel job
-                    stmt1.execute(true);
-
-                    // Cancel files
-                    stmt2.execute(true);
+                    jobIdStmt << "'";
+                    jobIdStmt << job_id;
+                    jobIdStmt << "',";
                 }
+		
+            std::string queryStr = jobIdStmt.str();
+            job_id = queryStr.substr(0, queryStr.length() - 1);
 
+            cancelStmt1 << "UPDATE t_job SET job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), cancel_job='Y' ";
+            cancelStmt1 << " ,reason = '";
+            cancelStmt1 << reason;
+            cancelStmt1 << "'";
+            cancelStmt1 << " WHERE job_id IN (";
+            cancelStmt1 << job_id;
+            cancelStmt1 << ")";
+            cancelStmt1 << " AND job_state NOT IN ('CANCELED','FINISHEDDIRTY', 'FINISHED', 'FAILED')";
+
+            cancelStmt2 << "UPDATE t_file SET file_state = 'CANCELED',  finish_time = UTC_TIMESTAMP() ";
+            cancelStmt2 << " ,reason = '";
+            cancelStmt2 << reason;
+            cancelStmt2 << "'";
+            cancelStmt2 << " WHERE job_id IN (";
+            cancelStmt2 << job_id;
+            cancelStmt2 << ")";
+            cancelStmt2 << " AND file_state NOT IN ('CANCELED','FINISHED','FAILED')";
+	    
+	    std::cout << cancelStmt1.str() << std::endl;
+	    std::cout << cancelStmt2.str() << std::endl;	    
+
+            soci::statement stmt1 = (sql.prepare << cancelStmt1.str());
+            soci::statement stmt2 = (sql.prepare << cancelStmt2.str());
+
+
+            sql.begin();
+            // Cancel job
+            stmt1.execute(true);
+
+            // Cancel files
+            stmt2.execute(true);
             sql.commit();
+	    
+            jobIdStmt.str(std::string());
+            jobIdStmt.clear();	    
+            cancelStmt1.str(std::string());
+            cancelStmt1.clear();	    
+            cancelStmt2.str(std::string());
+            cancelStmt2.clear();	    	    	    
+
         }
     catch (std::exception& e)
         {
+            jobIdStmt.str(std::string());
+            jobIdStmt.clear();	    
+            cancelStmt1.str(std::string());
+            cancelStmt1.clear();	    
+            cancelStmt2.str(std::string());
+            cancelStmt2.clear();	 
+	    	
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
+            jobIdStmt.str(std::string());
+            jobIdStmt.clear();	    
+            cancelStmt1.str(std::string());
+            cancelStmt1.clear();	    
+            cancelStmt2.str(std::string());
+            cancelStmt2.clear();	 
+	    	
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
