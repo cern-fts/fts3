@@ -394,6 +394,7 @@ void MsgPrinter::job_status(JobStatus js)
             cout << "Files: " << js.numFiles << endl;
             cout << "Priority: " << js.priority << endl;
             cout << "VOName: " << js.voName << endl;
+            cout << endl;
 
             return;
         }
