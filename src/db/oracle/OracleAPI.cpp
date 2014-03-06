@@ -5264,7 +5264,7 @@ bool OracleAPI::allowSubmitForBlacklistedSe(std::string se)
 
 void OracleAPI::allowSubmit(std::string ses, std::string vo, std::list<std::string>& notAllowed)
 {
-	// TODO soci not yet supported
+    // TODO soci not yet supported
 //    soci::session sql(*connectionPool);
 //
 //    std::string query = "SELECT se FROM t_bad_ses WHERE se IN " + ses + " AND status != 'WAIT_AS' AND (vo IS NULL OR vo='' OR vo = :vo)";

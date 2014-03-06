@@ -21,9 +21,9 @@
 #include <boost/lexical_cast.hpp>
 #include <error.h>
 #include <logger.h>
-#include <random> 
+#include <random>
 #include <stdint.h>
-#include <map> 
+#include <map>
 #include <mysql/soci-mysql.h>
 #include <mysql/mysql.h>
 #include <signal.h>
@@ -426,7 +426,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                                    "      (hashed_id >= :hStart AND hashed_id <= :hEnd) AND vo_name = :vo_name ",
                                                    soci::use(hashSegment.start), soci::use(hashSegment.end),soci::use(vo_name)
                                                   );
-						  
+
                     for (soci::rowset<soci::row>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
                         {
                             soci::row const& r2 = *i2;
@@ -537,7 +537,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                             if (filesNum < 2) filesNum = 2;
                         }
 
-		    gmtime_r(&now, &tTime);
+                    gmtime_r(&now, &tTime);
                     soci::rowset<TransferFiles> rs = (
                                                          sql.prepare <<
                                                          " SELECT SQL_NO_CACHE "
@@ -938,13 +938,13 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
     const std::string initialState = bring_online > 0 || copyPinLifeTime > 0 ? "STAGING" : "SUBMITTED";
     const int priority = 3;
     const std::string params;
-    
+
     std::string reuseFlag = "N";
     if (reuse == "Y")
-        reuseFlag = "Y";   
+        reuseFlag = "Y";
 
     soci::session sql(*connectionPool);
-    
+
     //multiple insert statements
     std::ostringstream pairStmt;
     std::ostringstream pairStmtSeBlaklisted;
@@ -952,7 +952,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
     //we can no longer use mysql functions, so create UTC timestamp outside
     time_t now = time(NULL);
     struct tm tTime;
-    gmtime_r(&now, &tTime);    
+    gmtime_r(&now, &tTime);
 
     try
         {
@@ -992,9 +992,9 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
             unsigned hashedId = 0;
             typedef std::pair<std::string, std::string> Key;
             typedef std::map< Key , int> Mapa;
-            Mapa mapa;	
-	    
-	        
+            Mapa mapa;
+
+
             //create the insertion statements here and populate values inside the loop
             pairStmt << fixed << "INSERT INTO t_file (vo_name, job_id, file_state, source_surl, dest_surl,checksum, user_filesize, file_metadata, selection_strategy, file_index, source_se, dest_se, hashed_id) VALUES ";
 
@@ -1017,8 +1017,8 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
                     selectionStrategy = iter->selectionStrategy;
                     fileIndex = iter->fileIndex;
                     sourceSe = iter->source_se;
-                    destSe = iter->dest_se;      
-		    
+                    destSe = iter->dest_se;
+
                     // No reuse, one random per file
                     if (reuseFlag == "N")
                         hashedId = getHashedId();
@@ -1118,7 +1118,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
             if(timeout == 0)
                 {
                     std::string queryStr = pairStmt.str();
-                    sql << queryStr.substr(0, queryStr.length() - 1);		    
+                    sql << queryStr.substr(0, queryStr.length() - 1);
                 }
             else
                 {
@@ -2003,44 +2003,87 @@ void MySqlAPI::updateFileTransferProgressVector(std::vector<struct message_updat
 void MySqlAPI::cancelJob(std::vector<std::string>& requestIDs)
 {
     soci::session sql(*connectionPool);
+    const std::string reason = "Job canceled by the user";
+    std::string job_id;
+    std::ostringstream cancelStmt1;
+    std::ostringstream cancelStmt2;
+    std::ostringstream jobIdStmt;
 
     try
         {
-            const std::string reason = "Job canceled by the user";
-            std::string job_id;
-
-            soci::statement stmt1 = (sql.prepare << "UPDATE t_job SET job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), cancel_job='Y' "
-                                     "                 ,reason = :reason "
-                                     "WHERE job_id = :jobId AND job_state NOT IN ('CANCELED','FINISHEDDIRTY', 'FINISHED', 'FAILED')",
-                                     soci::use(reason, "reason"), soci::use(job_id, "jobId"));
-
-            soci::statement stmt2 = (sql.prepare << "UPDATE t_file SET file_state = 'CANCELED',  finish_time = UTC_TIMESTAMP(), "
-                                     "                  reason = :reason "
-                                     "WHERE job_id = :jobId AND file_state NOT IN ('CANCELED','FINISHED','FAILED')",
-                                     soci::use(reason, "reason"), soci::use(job_id, "jobId"));
-
-            sql.begin();
-
             for (std::vector<std::string>::const_iterator i = requestIDs.begin(); i != requestIDs.end(); ++i)
                 {
                     job_id = (*i);
-
-                    // Cancel job
-                    stmt1.execute(true);
-
-                    // Cancel files
-                    stmt2.execute(true);
+                    jobIdStmt << "'";
+                    jobIdStmt << job_id;
+                    jobIdStmt << "',";
                 }
+		
+            std::string queryStr = jobIdStmt.str();
+            job_id = queryStr.substr(0, queryStr.length() - 1);
 
+            cancelStmt1 << "UPDATE t_job SET job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), cancel_job='Y' ";
+            cancelStmt1 << " ,reason = '";
+            cancelStmt1 << reason;
+            cancelStmt1 << "'";
+            cancelStmt1 << " WHERE job_id IN (";
+            cancelStmt1 << job_id;
+            cancelStmt1 << ")";
+            cancelStmt1 << " AND job_state NOT IN ('CANCELED','FINISHEDDIRTY', 'FINISHED', 'FAILED')";
+
+            cancelStmt2 << "UPDATE t_file SET file_state = 'CANCELED',  finish_time = UTC_TIMESTAMP() ";
+            cancelStmt2 << " ,reason = '";
+            cancelStmt2 << reason;
+            cancelStmt2 << "'";
+            cancelStmt2 << " WHERE job_id IN (";
+            cancelStmt2 << job_id;
+            cancelStmt2 << ")";
+            cancelStmt2 << " AND file_state NOT IN ('CANCELED','FINISHED','FAILED')";
+	    
+	    std::cout << cancelStmt1.str() << std::endl;
+	    std::cout << cancelStmt2.str() << std::endl;	    
+
+            soci::statement stmt1 = (sql.prepare << cancelStmt1.str());
+            soci::statement stmt2 = (sql.prepare << cancelStmt2.str());
+
+
+            sql.begin();
+            // Cancel job
+            stmt1.execute(true);
+
+            // Cancel files
+            stmt2.execute(true);
             sql.commit();
+	    
+            jobIdStmt.str(std::string());
+            jobIdStmt.clear();	    
+            cancelStmt1.str(std::string());
+            cancelStmt1.clear();	    
+            cancelStmt2.str(std::string());
+            cancelStmt2.clear();	    	    	    
+
         }
     catch (std::exception& e)
         {
+            jobIdStmt.str(std::string());
+            jobIdStmt.clear();	    
+            cancelStmt1.str(std::string());
+            cancelStmt1.clear();	    
+            cancelStmt2.str(std::string());
+            cancelStmt2.clear();	 
+	    	
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
+            jobIdStmt.str(std::string());
+            jobIdStmt.clear();	    
+            cancelStmt1.str(std::string());
+            cancelStmt1.clear();	    
+            cancelStmt2.str(std::string());
+            cancelStmt2.clear();	 
+	    	
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
@@ -2453,33 +2496,33 @@ void MySqlAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std
     try
         {
             soci::rowset<TransferJobs> rs = (sql.prepare << "SELECT "
-                    "   job_id, "
-                    "   job_state, "
-                    "   vo_name,  "
-                    "   priority,  "
-                    "   source_se, "
-                    "   dest_se,  "
-                    "   agent_dn, "
-                    "   submit_host, "
-                    "   user_dn, "
-                    "   user_cred, "
-                    "   cred_id,  "
-                    "   space_token, "
-                    "   storage_class,  "
-                    "   job_params, "
-                    "   overwrite_flag, "
-                    "   source_space_token, "
-                    "   source_token_description,"
-                    "   copy_pin_lifetime, "
-                    "   checksum_method, "
-                    "   bring_online, "
-                    "   submit_time "
-                    "   FROM t_job WHERE "
-                    "   job_state = 'SUBMITTED' AND job_finished IS NULL AND "
-                    "   cancel_job IS NULL AND "
-                    "   reuse_job='Y' "		                                                     
-		    " ORDER BY priority DESC, submit_time LIMIT 1 ");
-		    
+                                             "   job_id, "
+                                             "   job_state, "
+                                             "   vo_name,  "
+                                             "   priority,  "
+                                             "   source_se, "
+                                             "   dest_se,  "
+                                             "   agent_dn, "
+                                             "   submit_host, "
+                                             "   user_dn, "
+                                             "   user_cred, "
+                                             "   cred_id,  "
+                                             "   space_token, "
+                                             "   storage_class,  "
+                                             "   job_params, "
+                                             "   overwrite_flag, "
+                                             "   source_space_token, "
+                                             "   source_token_description,"
+                                             "   copy_pin_lifetime, "
+                                             "   checksum_method, "
+                                             "   bring_online, "
+                                             "   submit_time "
+                                             "   FROM t_job WHERE "
+                                             "   job_state = 'SUBMITTED' AND job_finished IS NULL AND "
+                                             "   cancel_job IS NULL AND "
+                                             "   reuse_job='Y' "
+                                             " ORDER BY priority DESC, submit_time LIMIT 1 ");
+
             for (soci::rowset<TransferJobs>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
                     TransferJobs const& tjob = *i;
@@ -7396,22 +7439,23 @@ void MySqlAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start
                 }
 
             sql.commit();
-	    
-	    if(*count != 0){ //prevent division by 0
-            // Calculate start and end hash values
-            unsigned segsize = UINT16_MAX / *count;
-            unsigned segmod  = UINT16_MAX % *count;
 
-            *start = segsize * (*index);
-            *end   = segsize * (*index + 1) - 1;
+            if(*count != 0)  //prevent division by 0
+                {
+                    // Calculate start and end hash values
+                    unsigned segsize = UINT16_MAX / *count;
+                    unsigned segmod  = UINT16_MAX % *count;
 
-            // Last one take over what is left
-            if (*index == *count - 1)
-                *end += segmod + 1;
+                    *start = segsize * (*index);
+                    *end   = segsize * (*index + 1) - 1;
 
-            this->hashSegment.start = *start;
-            this->hashSegment.end   = *end;
-	   }
+                    // Last one take over what is left
+                    if (*index == *count - 1)
+                        *end += segmod + 1;
+
+                    this->hashSegment.start = *start;
+                    this->hashSegment.end   = *end;
+                }
         }
     catch (std::exception& e)
         {

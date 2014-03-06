@@ -128,12 +128,12 @@ bool FileTransferScheduler::schedule(bool optimize)
                             if(!notUsed.empty())
                                 {
                                     /* disabled for now put pls do not remove
-				    std::vector<int>::const_iterator iter;
-                                    for (iter = notUsed.begin(); iter != notUsed.end(); ++iter)
-                                        {
-                                            SingleTrStateInstance::instance().sendStateMessage(file->JOB_ID, (*iter));
-                                        }
-				    */	
+                                    std::vector<int>::const_iterator iter;
+                                                                for (iter = notUsed.begin(); iter != notUsed.end(); ++iter)
+                                                                    {
+                                                                        SingleTrStateInstance::instance().sendStateMessage(file->JOB_ID, (*iter));
+                                                                    }
+                                    		    */
                                     notUsed.clear();
                                 }
                             return true;
@@ -211,13 +211,13 @@ bool FileTransferScheduler::schedule(bool optimize)
             db->setFilesToNotUsed(file->JOB_ID, file->FILE_INDEX, notUsed);
             if(!notUsed.empty())
                 {
-		    /*disabled for now but pls do not remove
-                    std::vector<int>::const_iterator iter;
-                    for (iter = notUsed.begin(); iter != notUsed.end(); ++iter)
-                        {
-                            SingleTrStateInstance::instance().sendStateMessage(file->JOB_ID, (*iter));
-                        }
-		    */
+                    /*disabled for now but pls do not remove
+                            std::vector<int>::const_iterator iter;
+                            for (iter = notUsed.begin(); iter != notUsed.end(); ++iter)
+                                {
+                                    SingleTrStateInstance::instance().sendStateMessage(file->JOB_ID, (*iter));
+                                }
+                    */
                     notUsed.clear();
                 }
 

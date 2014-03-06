@@ -452,46 +452,46 @@ string JobSubmitter::submit()
 {
     try
         {
-			// for backwards compatibility check if copy-pin-lifetime and bring-online were set properly
-			if (!params.isParamSet(JobParameterHandler::COPY_PIN_LIFETIME))
-				{
-					params.set(JobParameterHandler::COPY_PIN_LIFETIME, "-1");
-				}
+            // for backwards compatibility check if copy-pin-lifetime and bring-online were set properly
+            if (!params.isParamSet(JobParameterHandler::COPY_PIN_LIFETIME))
+                {
+                    params.set(JobParameterHandler::COPY_PIN_LIFETIME, "-1");
+                }
 
-			if (!params.isParamSet(JobParameterHandler::BRING_ONLINE))
-				{
-					params.set(JobParameterHandler::BRING_ONLINE, "-1");
-				}
-			else
-				{
-					// make sure that bring online has been used for SRM source
-					// (bring online is not supported for multiple source/destination submission)
-					if (params.get(JobParameterHandler::BRING_ONLINE) != "-1" && !srm_source)
-						throw Err_Custom("The 'bring-online' operation can be used only with source SEs that are using SRM protocol!");
-				}
+            if (!params.isParamSet(JobParameterHandler::BRING_ONLINE))
+                {
+                    params.set(JobParameterHandler::BRING_ONLINE, "-1");
+                }
+            else
+                {
+                    // make sure that bring online has been used for SRM source
+                    // (bring online is not supported for multiple source/destination submission)
+                    if (params.get(JobParameterHandler::BRING_ONLINE) != "-1" && !srm_source)
+                        throw Err_Custom("The 'bring-online' operation can be used only with source SEs that are using SRM protocol!");
+                }
 
-			if (!params.isParamSet(JobParameterHandler::RETRY))
-				{
-					params.set(JobParameterHandler::RETRY, "0");
-				}
+            if (!params.isParamSet(JobParameterHandler::RETRY))
+                {
+                    params.set(JobParameterHandler::RETRY, "0");
+                }
 
-			if (!params.isParamSet(JobParameterHandler::RETRY_DELAY))
-				{
-					params.set(JobParameterHandler::RETRY_DELAY, "0");
-				}
+            if (!params.isParamSet(JobParameterHandler::RETRY_DELAY))
+                {
+                    params.set(JobParameterHandler::RETRY_DELAY, "0");
+                }
 
-			string sourceSpaceTokenDescription;
+            string sourceSpaceTokenDescription;
 
-			// submit the transfer job (add it to the DB)
-			db->submitPhysical (
-				id,
-				jobs,
-				params.get(JobParameterHandler::GRIDFTP),
-				dn,
-				cred,
-				vo,
-				string(),
-				delegationId,
+            // submit the transfer job (add it to the DB)
+            db->submitPhysical (
+                id,
+                jobs,
+                params.get(JobParameterHandler::GRIDFTP),
+                dn,
+                cred,
+                vo,
+                string(),
+                delegationId,
                 params.get(JobParameterHandler::SPACETOKEN),
                 params.get(JobParameterHandler::OVERWRITEFLAG),
                 params.get(JobParameterHandler::SPACETOKEN_SOURCE),
@@ -503,15 +503,15 @@ string JobSubmitter::submit()
                 params.get<int>(JobParameterHandler::BRING_ONLINE),
                 params.get<string>(JobParameterHandler::JOB_METADATA),
                 params.get<int>(JobParameterHandler::RETRY),
-                params.get<int>(JobParameterHandler::RETRY_DELAY),				
-				sourceSe,
-				destinationSe
-			);
+                params.get<int>(JobParameterHandler::RETRY_DELAY),
+                sourceSe,
+                destinationSe
+            );
 
-			//send state message - disabled for now but pls do not remove it
-			//SingleTrStateInstance::instance().sendStateMessage(id, -1);
+            //send state message - disabled for now but pls do not remove it
+            //SingleTrStateInstance::instance().sendStateMessage(id, -1);
 
-			FTS3_COMMON_LOGGER_NEWLOG (INFO) << "The jobid " << id << " has been submitted successfully" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "The jobid " << id << " has been submitted successfully" << commit;
         }
     catch (std::exception& e)
         {
