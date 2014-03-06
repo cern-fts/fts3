@@ -477,7 +477,20 @@
    </message>
 
    <message name="cancelResponse">
+   
+   </message>
+   
+   <message name="cancel2Request">
+   
+      <part name="requestIDs" type="impl:ArrayOf_soapenc_string"/>
+      
+   </message>
 
+   <message name="cancel2Response">
+   
+      <part name="jobIDs" type="impl:ArrayOf_soapenc_string"/>
+      <part name="status" type="impl:ArrayOf_soapenc_string"/>
+      
    </message>
 
    <message name="CannotCancelException">
@@ -978,6 +991,24 @@
          <input message="impl:cancelRequest" name="cancelRequest"/>
 
          <output message="impl:cancelResponse" name="cancelResponse"/>
+
+         <fault message="impl:CannotCancelException" name="CannotCancelException"/>
+
+         <fault message="impl:AuthorizationException" name="AuthorizationException"/>
+
+         <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
+
+         <fault message="impl:NotExistsException" name="NotExistsException"/>
+
+         <fault message="impl:InternalException" name="InternalException"/>
+
+      </operation>
+      
+      <operation name="cancel2" parameterOrder="requestIDs">
+
+         <input message="impl:cancel2Request" name="cancel2Request"/>
+
+         <output message="impl:cancel2Response" name="cancel2Response"/>
 
          <fault message="impl:CannotCancelException" name="CannotCancelException"/>
 
@@ -1891,6 +1922,54 @@
          </input>
 
          <output name="cancelResponse">
+
+            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
+
+         </output>
+
+         <fault name="CannotCancelException">
+
+            <wsdlsoap:fault name="CannotCancelException" use="literal"/>
+
+         </fault>
+
+         <fault name="AuthorizationException">
+
+            <wsdlsoap:fault name="AuthorizationException" use="literal"/>
+
+         </fault>
+
+         <fault name="ServiceBusyException">
+
+            <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
+
+         </fault>
+
+         <fault name="NotExistsException">
+
+            <wsdlsoap:fault name="NotExistsException" use="literal"/>
+
+         </fault>
+
+         <fault name="InternalException">
+
+            <wsdlsoap:fault name="InternalException" use="literal"/>
+
+         </fault>
+
+      </operation>
+      
+      <operation name="cancel2">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <input name="cancel2Request">
+
+            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
+
+         </input>
+
+         <output name="cancel2Response">
 
             <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
 

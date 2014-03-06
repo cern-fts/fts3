@@ -157,7 +157,7 @@ public:
      *
      * @param jobIds list of job IDs
      */
-    void cancel(vector<string> jobIds);
+    vector< pair<string, string>  > cancel(vector<string> jobIds);
 
     /**
      * Remote call to listRequests

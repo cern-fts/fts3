@@ -228,16 +228,16 @@ void MsgPrinter::client_interface(string interface)
     json_out.put("client_interface", interface);
 }
 
-void MsgPrinter::cancelled_job(string job_id)
+void MsgPrinter::cancelled_job( pair<string, string> id_status)
 {
 
     if (!json)
         {
-            cout << "job " << job_id << ": " << JobStatusHandler::FTS3_STATUS_CANCELED << endl;
+            cout << "job " << id_status.first << ": " << id_status.second << endl;
             return;
         }
 
-    map<string, string> object = map_list_of ("job_id", job_id) ("status", JobStatusHandler::FTS3_STATUS_CANCELED);
+    map<string, string> object = map_list_of ("job_id", id_status.first) ("status", id_status.second);
 
     addToArray(
         json_out,

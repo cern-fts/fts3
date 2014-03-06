@@ -86,9 +86,9 @@ int main(int ac, char* av[])
                     return 0;
                 }
 
-            ctx.cancel(jobs);
+            vector< pair<string, string> > ret = ctx.cancel(jobs);
 
-            for_each(jobs.begin(), jobs.end(), lambda::bind(&MsgPrinter::cancelled_job, &(cli->printer()), lambda::_1));
+            for_each(ret.begin(), ret.end(), lambda::bind(&MsgPrinter::cancelled_job, &(cli->printer()), lambda::_1));
         }
     catch(std::exception& ex)
         {

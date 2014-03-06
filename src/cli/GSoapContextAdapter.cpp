@@ -330,15 +330,33 @@ JobStatus GSoapContextAdapter::getTransferJobStatus (string jobId, bool archive)
            );
 }
 
-void GSoapContextAdapter::cancel(vector<string> jobIds)
+vector< pair<string, string> > GSoapContextAdapter::cancel(vector<string> jobIds)
 {
 
     impltns__ArrayOf_USCOREsoapenc_USCOREstring rqst;
     rqst.item = jobIds;
 
-    impltns__cancelResponse resp;
-    if (soap_call_impltns__cancel(ctx, endpoint.c_str(), 0, &rqst, resp))
+    impltns__cancel2Response resp;
+
+
+    if (soap_call_impltns__cancel2(ctx, endpoint.c_str(), 0, &rqst, resp))
         handleSoapFault("Failed to cancel jobs: cancel.");
+
+    vector< pair<string, string> > ret;
+
+    if (resp._jobIDs && resp._status)
+		{
+    		// zip two vectors
+    		vector<string> &ids = resp._jobIDs->item, &stats = resp._status->item;
+    		vector<string>::iterator itr_id = ids.begin(), itr_stat = stats.begin();
+
+    		for (; itr_id != ids.end() && itr_stat != stats.end(); ++itr_id, ++ itr_stat)
+    			{
+    				ret.push_back(make_pair(*itr_id, *itr_stat));
+    			}
+		}
+
+    return ret;
 }
 
 void GSoapContextAdapter::getRoles (impltns__getRolesResponse& resp)

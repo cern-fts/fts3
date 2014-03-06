@@ -47,7 +47,7 @@ int main(int ac, char* av[])
             if (!cli->validate()) return 0;
 
             // validate command line options, and return respective gSOAP context
-            GSoapContextAdapter& ctx = cli->getGSoapContext();
+            cli->getGSoapContext();
 
             // delegate Proxy Certificate
             ProxyCertificateDelegator handler (

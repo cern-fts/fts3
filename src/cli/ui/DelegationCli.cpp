@@ -14,9 +14,6 @@ namespace cli
 
 DelegationCli::DelegationCli()
 {
-    /// 8 housrs in seconds
-    static const int eight_hours = 28800;
-
     // add commandline options specific for fts3-transfer-submit
     specific.add_options()
     ("id,I", value<string>(), "Delegation with ID as the delegation identifier.")
