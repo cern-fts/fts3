@@ -2040,9 +2040,6 @@ void MySqlAPI::cancelJob(std::vector<std::string>& requestIDs)
             cancelStmt2 << ")";
             cancelStmt2 << " AND file_state NOT IN ('CANCELED','FINISHED','FAILED')";
 	    
-	    std::cout << cancelStmt1.str() << std::endl;
-	    std::cout << cancelStmt2.str() << std::endl;	    
-
             soci::statement stmt1 = (sql.prepare << cancelStmt1.str());
             soci::statement stmt2 = (sql.prepare << cancelStmt2.str());
 
