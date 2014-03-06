@@ -66,6 +66,7 @@ MonitoringMessaging=true
 Profiling=0
 
 [roles]
-Public = vo:transfer
+Public = transfer
+lcgadmin = vo:transfer
 production = all:config
 
