@@ -97,8 +97,8 @@ string GSoapDelegationHandler::makeDelegationId()
     // use last voms attribute if available!
     if (!attrs.empty())
         {
-            vector<string>::iterator fqan = attrs.end() - 1;
-            EVP_DigestUpdate(&ctx, fqan->c_str(), fqan->size());
+	    for (std::vector<std::string>::iterator fqan = attrs.begin(); fqan != attrs.end(); ++fqan)
+            	EVP_DigestUpdate(&ctx, fqan->c_str(), fqan->size());
         }
 
     EVP_DigestFinal(&ctx, hash_delegation_id, &delegation_id_len);
