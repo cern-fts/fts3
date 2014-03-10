@@ -35,7 +35,7 @@ function TransfersCtrl($location, $scope, transfers, Transfers, Unique)
 		dest_se:     validString($location.search().dest_se),
 		source_surl: validString($location.search().source_surl),
 		dest_surl:   validString($location.search().dest_surl),
-		time_window: validString($location.search().time_window),
+		time_window: parseInt(validString($location.search().time_window)),
 		state:       statesFromString($location.search().state),
 		activity:    validString($location.search().activity),
 		hostname:    validString($location.search().hostname),
