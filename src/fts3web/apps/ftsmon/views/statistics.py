@@ -31,24 +31,18 @@ ACTIVE_STATES        = ['SUBMITTED', 'READY', 'ACTIVE', 'STAGING']
 FILE_TERMINAL_STATES = ['FINISHED', 'FAILED', 'CANCELED']
 
 
-def _getCountPerState(age = None, hostname = None):
+def _getCountPerState(age, hostname):
     count = {}
     
-    query = File.objects
-    if age:
-        notBefore = datetime.utcnow() - age
+    notBefore = datetime.utcnow() - age
+    for state in STATES:
+        query = File.objects
         query = query.filter(Q(job_finished__gte = notBefore) | Q(job_finished__isnull = True))
-    if hostname:
-        query = query.filter(transferHost = hostname)
-    
-    query = query.values('file_state').annotate(number = Count('file_state'))
-    
-    for row in query:
-        count[row['file_state'].lower()] = row['number']
-    
-    for s in filter(lambda s: s not in count, map(lambda s: s.lower(), STATES)):
-        count[s] = 0
-    
+        if hostname:
+            query = query.filter(transferHost = hostname)
+        query = query.filter(file_state = state)
+        count[state.lower()] = query.count()
+
     # Couple of aggregations
     count['queued'] = count['submitted'] + count['ready']
     count['total'] = count['finished'] + count['failed'] + count['canceled']
