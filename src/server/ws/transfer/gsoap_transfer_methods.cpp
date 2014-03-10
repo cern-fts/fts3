@@ -1302,20 +1302,33 @@ int fts3::impltns__prioritySet(soap* ctx, string job_id, int priority, impltns__
 
 int fts3::impltns__getSnapshot(soap* ctx, string vo, string src, string dst, impltns__getSnapshotResponse& resp)
 {
+    try
+        {
+            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::CONFIG, AuthorizationManager::dummy);
 
-	resp._active = 5;
-	resp._avgQueuingTime = 45;
-	resp._avgTransfrDuration = 10000;
-	resp._dst = "srm://destination";
-	resp._maxActive = 10;
-	resp._recentError= "unknown error";
-	resp._src = "srm;//source";
-	resp._submitted = 5;
-	resp._successRate = 100;
-	resp._vo = "atlas";
-	resp._wavgThroughpu = 234;
+//            DBSingleton::instance().getDBObjectInstance()->
 
-	return SOAP_OK;
+        	resp._active = 5;
+        	resp._avgQueuingTime = 45;
+        	resp._avgTransfrDuration = 10000;
+        	resp._dst = "srm://destination";
+        	resp._maxActive = 10;
+        	resp._recentError= "unknown error";
+        	resp._src = "srm;//source";
+        	resp._submitted = 5;
+        	resp._successRate = 100;
+        	resp._vo = "atlas";
+        	resp._wavgThroughpu = 234;
+        }
+    catch(Err& ex)
+        {
+
+            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "An exception has been caught: " << ex.what() << commit;
+            soap_receiver_fault(ctx, ex.what(), "TransferException");
+            return SOAP_FAULT;
+        }
+
+    return SOAP_OK;
 }
 
 int fts3::log__GetLog(struct soap* soap, string jobId, struct log__GetLogResponse &_param_36)
