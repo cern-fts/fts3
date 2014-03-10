@@ -582,6 +582,30 @@ void GSoapContextAdapter::queueTimeoutSet(unsigned timeout)
         }
 }
 
+ptree GSoapContextAdapter::getSnapShot(string vo, string src, string dst)
+{
+	impltns__getSnapshotResponse resp;
+	if (soap_call_impltns__getSnapshot(ctx, endpoint.c_str(), 0, vo, src, dst, resp))
+		{
+			handleSoapFault("Operation queueTimeoutSet failed.");
+		}
+
+	ptree ret;
+	ret.put("vo", resp._vo);
+	ret.put("source", resp._src);
+	ret.put("destination", resp._dst);
+	ret.put("active", resp._active);
+	ret.put("max active", resp._maxActive);
+	ret.put("submitted", resp._submitted);
+	ret.put("weighted-average throughput of active", resp._wavgThroughpu);
+	ret.put("success rate the last 10 min", resp._successRate);
+	ret.put("average transfer duration", resp._avgTransfrDuration);
+	ret.put("average queuing time", resp._avgQueuingTime);
+	ret.put("most frequent error", resp._recentError);
+
+	return ret;
+}
+
 void GSoapContextAdapter::getLog(string& logname, string jobId)
 {
 

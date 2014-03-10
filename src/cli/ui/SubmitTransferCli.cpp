@@ -191,8 +191,9 @@ bool SubmitTransferCli::createJobElements()
                             it = tokens.begin();
                             if (it != tokens.end())
                                 {
-                                    if (!checkValidUrl(*it, msgPrinter)) return false;
-                                    file.sources.push_back(*it);
+                            		string s = *it;
+                                    if (!checkValidUrl(s, msgPrinter)) return false;
+                                    file.sources.push_back(s);
                                 }
                             else
                                 // if the line was empty continue
@@ -202,8 +203,9 @@ bool SubmitTransferCli::createJobElements()
                             it++;
                             if (it != tokens.end())
                                 {
-                                    if (!checkValidUrl(*it, msgPrinter)) return false;
-                                    file.destinations.push_back(*it);
+                            		string s = *it;
+                                    if (!checkValidUrl(s, msgPrinter)) return false;
+                                    file.destinations.push_back(s);
                                 }
                             else
                                 {

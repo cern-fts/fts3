@@ -687,6 +687,28 @@
 
       <part name="inGivenStates" type="impl:ArrayOf_soapenc_string"/>
 
+   </message>
+   
+   
+   <message name="getSnapshotRequest">
+      <part name="vo" type="xsd:string"/>
+      <part name="src" type="xsd:string"/>
+      <part name="dst" type="xsd:string"/>
+   </message>
+
+   <message name="getSnapshotResponse">
+
+      <part name="vo" type="xsd:string"/>
+      <part name="src" type="xsd:string"/>
+      <part name="dst" type="xsd:string"/>
+      <part name="active" type="xsd:int"/>
+      <part name="maxActive" type="xsd:int"/>
+      <part name="submitted" type="xsd:int"/>
+      <part name="wavgThroughpu" type="xsd:double"/>
+      <part name="successRate" type="xsd:double"/>
+      <part name="avgTransfrDuration" type="xsd:double"/>
+      <part name="avgQueuingTime" type="xsd:double"/>
+      <part name="recentError" type="xsd:string"/>
 
    </message>
 
@@ -1027,6 +1049,25 @@
          <input message="impl:setJobPriorityRequest" name="setJobPriorityRequest"/>
 
          <output message="impl:setJobPriorityResponse" name="setJobPriorityResponse"/>
+
+         <fault message="impl:AuthorizationException" name="AuthorizationException"/>
+
+         <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
+
+         <fault message="impl:NotExistsException" name="NotExistsException"/>
+
+         <fault message="impl:InvalidArgumentException" name="InvalidArgumentException"/>
+
+         <fault message="impl:InternalException" name="InternalException"/>
+
+      </operation>
+      
+      
+	  <operation name="getSnapshot" parameterOrder="getSnapshot">
+
+         <input message="impl:getSnapshotRequest" name="getSnapshotRequest"/>
+
+         <output message="impl:getSnapshotResponse" name="getSnapshotResponse"/>
 
          <fault message="impl:AuthorizationException" name="AuthorizationException"/>
 
@@ -2054,6 +2095,57 @@
          </fault>
 
       </operation>
+      
+      
+	  <operation name="getSnapshot">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <input name="getSnapshotRequest">
+
+            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
+
+         </input>
+
+         <output name="getSnapshotResponse">
+
+            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
+
+         </output>
+
+         <fault name="AuthorizationException">
+
+            <wsdlsoap:fault name="AuthorizationException" use="literal"/>
+
+         </fault>
+
+         <fault name="ServiceBusyException">
+
+            <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
+
+         </fault>
+
+         <fault name="NotExistsException">
+
+            <wsdlsoap:fault name="NotExistsException" use="literal"/>
+
+         </fault>
+
+         <fault name="InvalidArgumentException">
+
+            <wsdlsoap:fault name="InvalidArgumentException" use="literal"/>
+
+         </fault>
+
+         <fault name="InternalException">
+
+            <wsdlsoap:fault name="InternalException" use="literal"/>
+
+         </fault>
+
+      </operation>
+      
+      
 
       <operation name="addVOManager">
 

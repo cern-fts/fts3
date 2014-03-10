@@ -1300,6 +1300,23 @@ int fts3::impltns__prioritySet(soap* ctx, string job_id, int priority, impltns__
     return SOAP_OK;
 }
 
+int fts3::impltns__getSnapshot(soap* ctx, string vo, string src, string dst, impltns__getSnapshotResponse& resp)
+{
+
+	resp._active = 5;
+	resp._avgQueuingTime = 45;
+	resp._avgTransfrDuration = 10000;
+	resp._dst = "srm://destination";
+	resp._maxActive = 10;
+	resp._recentError= "unknown error";
+	resp._src = "srm;//source";
+	resp._submitted = 5;
+	resp._successRate = 100;
+	resp._vo = "atlas";
+	resp._wavgThroughpu = 234;
+
+	return SOAP_OK;
+}
 
 int fts3::log__GetLog(struct soap* soap, string jobId, struct log__GetLogResponse &_param_36)
 {

@@ -29,8 +29,10 @@
 
 #include <vector>
 #include <map>
+#include <boost/property_tree/ptree.hpp>
 
 using namespace std;
+using namespace boost::property_tree;
 
 namespace fts3
 {
@@ -316,6 +318,8 @@ public:
      * Remote call to queueTimeoutSet
      */
     void queueTimeoutSet(unsigned timeout);
+
+    ptree getSnapShot(string vo, string src, string dst);
 
     /**
      * Remote call to getLog (not used!)

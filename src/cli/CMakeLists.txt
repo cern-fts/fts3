@@ -101,6 +101,15 @@ add_dependencies(fts-delegation-init fts_cli_common)
 target_link_libraries (fts-delegation-init fts_cli_common)
 
 # ------------------------------------------------------------------------
+# fts-transfer-snapshot
+add_executable(fts-transfer-snapshot
+    transfer/fts3-transfer-snapshot.cpp
+    ui/SnapshotCli.cpp
+)
+add_dependencies(fts-transfer-snapshot fts_cli_common)
+target_link_libraries (fts-transfer-snapshot fts_cli_common)
+
+# ------------------------------------------------------------------------
 # fts-transfer-status
 
 add_executable(fts-transfer-status
