@@ -50,46 +50,19 @@ def _getCountPerState(age, hostname):
     return count
 
 
-
 def _getTransferAndSubmissionPerHost(timewindow):
-    hostnames = []
+    servers = {}
     
     notBefore = datetime.utcnow() - timewindow
+    hostnames = Host.objects.filter(beat__gte = notBefore).all()
+
+    for host in hostnames:
+        submissions = Job.objects.filter(submit_time__gte = notBefore, submit_host = host.hostname).count()
+        transfers = File.objects.filter(job__submit_time__gte = notBefore, transferHost = host.hostname).count()
+        actives = File.objects.filter(file_state = 'ACTIVE', transferHost = host.hostname).count()
         
-    submissions = {}
-    query = Job.objects.values('submit_host')\
-                       .filter(submit_time__gte = notBefore)\
-                       .annotate(count = Count('submit_host'))
-    for j in query:
-        submissions[j['submit_host']] = j['count']
-        hostnames.append(j['submit_host'])
-        
-    transfers = {}
-    query = File.objects.values('transferHost')\
-                        .filter(Q(job_finished__gte = notBefore) | Q(job_finished__isnull = True))\
-                        .annotate(count = Count('transferHost'))
-    for t in query:
-        # Submitted do not have a transfer host!
-        if t['transferHost']:
-            transfers[t['transferHost']] = t['count']
-            if t['transferHost'] not in hostnames:
-                hostnames.append(t['transferHost'])
-                
-    active = {}
-    query = File.objects.filter(file_state = 'ACTIVE').values('transferHost').annotate(count = Count('transferHost'))
-    for t in query:
-        active[t['transferHost']] = t['count']
-        
-    servers = {}
-    for h in hostnames:
-        if h in submissions: s = submissions[h]
-        else:                s = 0
-        if h in transfers:   t = transfers[h]
-        else:                t = 0
-        if h in active:      a = active[h]
-        else:                a = 0
-        servers[h] = {'submissions': s, 'transfers': t, 'active': a}
-        
+        servers[host.hostname] = {'submissions': submissions, 'transfers': transfers, 'active': actives}
+
     return servers
 
 
@@ -123,7 +96,7 @@ def overview(httpRequest):
        'lasthour': lastHour,
        'retried': retried
     }
-    
+
 
 def _getHostHeartBeatAndSegment():
     allHosts = Host.objects.order_by('hostname').filter(beat__gte = datetime.utcnow() - timedelta(minutes = 2))
