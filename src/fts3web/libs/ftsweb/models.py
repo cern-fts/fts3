@@ -122,7 +122,7 @@ class FileBase(models.Model):
 
 
 class File(FileBase):
-    job = models.ForeignKey('Job', db_column = 'job_id', related_name = '+')
+    job = models.ForeignKey('Job', db_column = 'job_id', related_name = '+', null = True)
     class Meta:
         db_table = 't_file' 
 
