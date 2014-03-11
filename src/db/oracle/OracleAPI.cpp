@@ -3386,15 +3386,14 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
 
     try
         {
+            if(hashSegment.start == 0)
+            {	
             soci::rowset<soci::row> rs = (
                                              sql.prepare <<
-                                             " SELECT distinct t_job.job_id "
-                                             " FROM t_file, t_job "
-                                             " WHERE t_job.job_id = t_file.job_id AND "
-                                             "      t_job.job_finished < (systimestamp - interval '4' DAY ) AND "
-                                             "      t_job.job_state IN ('FINISHED', 'FAILED', 'CANCELED','FINISHEDDIRTY') AND "
-                                             "      (t_file.hashed_id >= :hStart AND t_file.hashed_id <= :hEnd) ",
-                                             soci::use(hashSegment.start), soci::use(hashSegment.end)
+                                             " SELECT job_id "
+                                             " FROM  t_job "
+                                             " WHERE "
+                                             " job_finished < (systimestamp - interval '4' DAY ) "
                                          );
 
             std::string job_id;
@@ -3429,8 +3428,6 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
                 }
             sql.commit();
 
-            if(hashSegment.start == 0)
-                {
                     //delete from t_optimizer_evolution > 10 days old records
                     sql.begin();
                     sql << "delete from t_optimizer_evolution where datetime < (systimestamp - interval '1' DAY )";
@@ -6356,12 +6353,11 @@ void OracleAPI::checkSanityState()
 
     try
         {
+	  if(hashSegment.start == 0)
+             {	
             soci::rowset<std::string> rs = (
                                                sql.prepare <<
-                                               " select distinct t_job.job_id from t_job, t_file where t_job.job_id = t_file.job_id AND "
-                                               " t_job.job_finished is null AND "
-                                               " (t_file.hashed_id >= :hStart AND t_file.hashed_id <= :hEnd) ",
-                                               soci::use(hashSegment.start), soci::use(hashSegment.end)
+                                               " select job_id from t_job  where job_finished is null "
                                            );
 
             sql.begin();
@@ -6429,10 +6425,7 @@ void OracleAPI::checkSanityState()
             //now check reverse sanity checks, JOB can't be FINISH,  FINISHEDDIRTY, FAILED is at least one tr is in SUBMITTED, READY, ACTIVE
             soci::rowset<std::string> rs2 = (
                                                 sql.prepare <<
-                                                " select distinct t_job.job_id from t_job, t_file where t_job.job_id = t_file.job_id AND "
-                                                " t_job.job_finished IS NOT NULL AND "
-                                                " (t_file.hashed_id >= :hStart AND t_file.hashed_id <= :hEnd) ",
-                                                soci::use(hashSegment.start), soci::use(hashSegment.end)
+                                                " select job_id from t_job where job_finished is not null " 
                                             );
 
             for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
@@ -6452,7 +6445,7 @@ void OracleAPI::checkSanityState()
                 }
 
             sql.commit();
-
+          }
         }
     catch (std::exception& e)
         {

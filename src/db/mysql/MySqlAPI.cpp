@@ -3625,11 +3625,13 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
 
     try
         {
+	
+	            //prevent more than on server to update the optimizer decisions
+            if(hashSegment.start == 0)
+             {
              soci::rowset<soci::row> rs = (
                                              sql.prepare <<
-                                             "  select  distinct j.job_id from t_job j inner join t_file f on(j.job_id = f.job_id) where  j.job_finished < (UTC_TIMESTAMP() - interval '4' DAY )  AND "
-                                             "  (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) ",
-                                             soci::use(hashSegment.start), soci::use(hashSegment.end)
+                                             "  select  job_id from t_job where job_finished < (UTC_TIMESTAMP() - interval '4' DAY ) "
                                          );
 
             std::string job_id;
@@ -3664,9 +3666,7 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                 }
             sql.commit();
 
-            //prevent more than on server to update the optimizer decisions
-            if(hashSegment.start == 0)
-                {
+
                     //delete from t_optimizer_evolution > 3 days old records
                     sql.begin();
                     sql << "delete from t_optimizer_evolution where datetime < (UTC_TIMESTAMP() - interval '1' DAY )";
@@ -6640,11 +6640,11 @@ void MySqlAPI::checkSanityState()
 
     try
         {
+	  if(hashSegment.start == 0)
+             {
             soci::rowset<std::string> rs = (
                                                sql.prepare <<
-                                               " select distinct j.job_id from t_job j inner join t_file f on(j.job_id = f.job_id) where j.job_finished is null AND  "
-                                               " (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) ",
-                                               soci::use(hashSegment.start), soci::use(hashSegment.end)
+                                               " select job_id from t_job  where job_finished is null "
                                            );
 
             soci::statement stmt1 = (sql.prepare << "SELECT COUNT(DISTINCT file_index) FROM t_file where job_id=:jobId ", soci::use(job_id), soci::into(numberOfFiles));
@@ -6767,10 +6767,8 @@ void MySqlAPI::checkSanityState()
             //special case for canceled
             soci::rowset<std::string> rs2 = (
                                                sql.prepare <<
-                                               " select distinct j.job_id from t_job j inner join t_file f on(j.job_id = f.job_id) where j.job_finished > (UTC_TIMESTAMP() - interval '1' DAY ) AND  "
-                                               " (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) ",
-                                               soci::use(hashSegment.start), soci::use(hashSegment.end)
-                                           );
+                                               " select job_id from t_job where job_finished is not null  "
+                                            );
 
             sql.begin();
             for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
@@ -6786,6 +6784,7 @@ void MySqlAPI::checkSanityState()
                         }
                 }
             sql.commit();
+	 }
 
         }
     catch (std::exception& e)
