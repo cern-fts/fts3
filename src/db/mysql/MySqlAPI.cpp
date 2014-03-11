@@ -2714,7 +2714,7 @@ void MySqlAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std
                     "   FROM t_job WHERE "
                     "   job_state = 'SUBMITTED' AND job_finished IS NULL AND "
                     "   cancel_job IS NULL AND "
-                    "   reuse_job='Y' "		                                                     
+                    "   (reuse_job IS NOT NULL AND reuse_job != 'N') "
 		    " ORDER BY priority DESC, submit_time LIMIT 1 ");
 		    
             for (soci::rowset<TransferJobs>::const_iterator i = rs.begin(); i != rs.end(); ++i)
