@@ -258,7 +258,7 @@ CREATE TABLE t_share_config (
 
 CREATE TABLE t_activity_share_config (
   vo 			 VARCHAR(100) NOT NULL PRIMARY KEY,
-  activity_share VARCHAR(255) NOT NULL,
+  activity_share 	 VARCHAR(255) NOT NULL,
   active		 VARCHAR(3) check (active in ('on', 'off'))
 );
 
@@ -664,7 +664,8 @@ CREATE TABLE t_stage_req (
 --
 CREATE TABLE t_hosts (
     hostname    VARCHAR(64) PRIMARY KEY NOT NULL,
-    beat        TIMESTAMP NULL DEFAULT NULL
+    beat        TIMESTAMP NULL DEFAULT NULL,
+    drain 	INTEGER DEFAULT 0
 );
 
 

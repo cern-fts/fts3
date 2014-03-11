@@ -707,7 +707,8 @@ CREATE TABLE t_stage_req (
 --
 CREATE TABLE t_hosts (
     hostname    VARCHAR2(64) PRIMARY KEY NOT NULL,
-    beat        TIMESTAMP WITH TIME ZONE DEFAULT NULL
+    beat        TIMESTAMP WITH TIME ZONE DEFAULT NULL,
+    drain 	INTEGER DEFAULT 0
 );
 
 
