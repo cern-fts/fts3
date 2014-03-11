@@ -342,6 +342,8 @@ public:
 
     unsigned int updateFileStatusReuse(TransferFiles* file, const std::string status);
 
+    void snapshot(const std::string & vo_name, const std::string & source_se, const std::string & dest_se, const std::string & endpoint,  std::stringstream & result);
+
 private:
     size_t                poolSize;
     soci::connection_pool* connectionPool;

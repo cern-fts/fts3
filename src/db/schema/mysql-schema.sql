@@ -258,7 +258,7 @@ CREATE TABLE t_share_config (
 
 CREATE TABLE t_activity_share_config (
   vo 			 VARCHAR(100) NOT NULL PRIMARY KEY,
-  activity_share DOUBLE check (activity_share >= 0 AND activity_share <= 1),
+  activity_share 	 VARCHAR(255) NOT NULL,
   active		 VARCHAR(3) check (active in ('on', 'off'))
 );
 

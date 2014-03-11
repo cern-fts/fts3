@@ -714,7 +714,7 @@ protected:
                             }
 
                         /*check for non-reused jobs*/
-                        executeUrlcopy(jobsReuse, false);
+                        executeUrlcopy(jobsReuse, false);                       
 
                         if (stopThreads)
                             return;

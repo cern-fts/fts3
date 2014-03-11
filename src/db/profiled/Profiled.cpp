@@ -849,3 +849,8 @@ unsigned int ProfiledDB::updateFileStatusReuse(TransferFiles* file, const std::s
 {
     PROFILE_PREFIXED("DB::", return db->updateFileStatusReuse(file, status));
 }
+
+void ProfiledDB::snapshot(const std::string & vo_name, const std::string & source_se, const std::string & dest_se, const std::string & endpoint,  std::stringstream & result)
+{
+    PROFILE_PREFIXED("DB::", snapshot(vo_name, source_se, dest_se, endpoint, result));
+}

@@ -97,8 +97,8 @@ string GSoapDelegationHandler::makeDelegationId()
     // use last voms attribute if available!
     if (!attrs.empty())
         {
-	    for (std::vector<std::string>::iterator fqan = attrs.begin(); fqan != attrs.end(); ++fqan)
-            	EVP_DigestUpdate(&ctx, fqan->c_str(), fqan->size());
+            for (std::vector<std::string>::iterator fqan = attrs.begin(); fqan != attrs.end(); ++fqan)
+                EVP_DigestUpdate(&ctx, fqan->c_str(), fqan->size());
         }
 
     EVP_DigestFinal(&ctx, hash_delegation_id, &delegation_id_len);
@@ -107,7 +107,7 @@ string GSoapDelegationHandler::makeDelegationId()
         sprintf(&delegation_id[i*2], "%02x", hash_delegation_id[i]);
 
     delegation_id[16] = '\0';
-    
+
     EVP_MD_CTX_cleanup(&ctx);
 
     return delegation_id;
@@ -149,13 +149,13 @@ string GSoapDelegationHandler::getProxyReq(string delegationId)
 
     // check if the public - private key pair has been already generated and is in the DB cache
     scoped_ptr<CredCache> cache (
-    		DBSingleton::instance().getDBObjectInstance()->findGrDPStorageCacheElement(delegationId, dn)
-    	);
+        DBSingleton::instance().getDBObjectInstance()->findGrDPStorageCacheElement(delegationId, dn)
+    );
 
     if (cache.get())
-    	{
-    		return cache->certificateRequest;
-    	}
+        {
+            return cache->certificateRequest;
+        }
 
     char *reqtxt = 0, *keytxt = 0;
     int err = GRSTx509CreateProxyRequest(&reqtxt, &keytxt, 0);
@@ -171,13 +171,13 @@ string GSoapDelegationHandler::getProxyReq(string delegationId)
 
     try
         {
-			DBSingleton::instance().getDBObjectInstance()->insertGrDPStorageCacheElement(
-				delegationId,
-				dn,
-				req,
-				keytxt,
-				fqansToString(attrs)
-			);
+            DBSingleton::instance().getDBObjectInstance()->insertGrDPStorageCacheElement(
+                delegationId,
+                dn,
+                req,
+                keytxt,
+                fqansToString(attrs)
+            );
         }
     catch(Err& ex)
         {
@@ -207,18 +207,18 @@ delegation__NewProxyReq* GSoapDelegationHandler::getNewProxyReq()
     if (delegationId.empty()) throw Err_Custom("'getDelegationId' failed!");
 
     scoped_ptr<CredCache> cache (
-    		DBSingleton::instance().getDBObjectInstance()->findGrDPStorageCacheElement(delegationId, dn)
-    	);
+        DBSingleton::instance().getDBObjectInstance()->findGrDPStorageCacheElement(delegationId, dn)
+    );
 
     if (cache.get())
-    	{
-			delegation__NewProxyReq* ret = soap_new_delegation__NewProxyReq(ctx, -1);
-			ret->proxyRequest = soap_new_std__string(ctx, -1);
-			*ret->proxyRequest = cache->certificateRequest;
-			ret->delegationID = soap_new_std__string(ctx, -1);
-			*ret->delegationID = delegationId;
-			return ret;
-    	}
+        {
+            delegation__NewProxyReq* ret = soap_new_delegation__NewProxyReq(ctx, -1);
+            ret->proxyRequest = soap_new_std__string(ctx, -1);
+            *ret->proxyRequest = cache->certificateRequest;
+            ret->delegationID = soap_new_std__string(ctx, -1);
+            *ret->delegationID = delegationId;
+            return ret;
+        }
 
     char *reqtxt = 0, *keytxt = 0;
     int err = GRSTx509CreateProxyRequest(&reqtxt, &keytxt, 0);
@@ -234,13 +234,13 @@ delegation__NewProxyReq* GSoapDelegationHandler::getNewProxyReq()
 
     try
         {
-			DBSingleton::instance().getDBObjectInstance()->insertGrDPStorageCacheElement(
-				delegationId,
-				dn,
-				req,
-				keytxt,
-				fqansToString(attrs)
-			);
+            DBSingleton::instance().getDBObjectInstance()->insertGrDPStorageCacheElement(
+                delegationId,
+                dn,
+                req,
+                keytxt,
+                fqansToString(attrs)
+            );
         }
     catch(Err& ex)
         {
@@ -308,7 +308,7 @@ string GSoapDelegationHandler::addKeyToProxyCertificate(string proxy, string key
     // if the private key does not match throw an exception
     if (mismatch)
         {
-    		throw Err_Custom("Failed to add private key to the proxy certificate: key values mismatch!");
+            throw Err_Custom("Failed to add private key to the proxy certificate: key values mismatch!");
         }
 
     stringstream ss;
@@ -382,8 +382,8 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy)
     time_t incomingExpirationTime = readTerminationTime(proxy);
 
     scoped_ptr<CredCache> cache (
-    		DBSingleton::instance().getDBObjectInstance()->findGrDPStorageCacheElement(delegationId, dn)
-    	);
+        DBSingleton::instance().getDBObjectInstance()->findGrDPStorageCacheElement(delegationId, dn)
+    );
 
     // if the DB cache is empty it means someone else
     // already delegated and cleared the cache
@@ -392,24 +392,24 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy)
     proxy = addKeyToProxyCertificate(proxy, cache->privateKey);
 
     scoped_ptr<Cred> cred (
-    		DBSingleton::instance().getDBObjectInstance()->findGrDPStorageElement(delegationId, dn)
-    	);
+        DBSingleton::instance().getDBObjectInstance()->findGrDPStorageElement(delegationId, dn)
+    );
 
     try
         {
             if (cred.get())
                 {
-					// check if the termination time is better than for the current proxy (if not we don't bother)
-					if (incomingExpirationTime < cred->termination_time)
-						{
-							// log the termination time of the current and the new proxy
-							FTS3_COMMON_LOGGER_NEWLOG (INFO)
-									<< "Current proxy termination time: "
-									<< cred->termination_time
-									<< ", new proxy proxy termination time: "
-									<< incomingExpirationTime << commit;
-							return;
-						}
+                    // check if the termination time is better than for the current proxy (if not we don't bother)
+                    if (incomingExpirationTime < cred->termination_time)
+                        {
+                            // log the termination time of the current and the new proxy
+                            FTS3_COMMON_LOGGER_NEWLOG (INFO)
+                                    << "Current proxy termination time: "
+                                    << cred->termination_time
+                                    << ", new proxy proxy termination time: "
+                                    << incomingExpirationTime << commit;
+                            return;
+                        }
 
                     DBSingleton::instance().getDBObjectInstance()->updateGrDPStorageElement(
                         delegationId,
@@ -454,13 +454,13 @@ string GSoapDelegationHandler::renewProxyReq(string delegationId)
     if (delegationId.empty()) throw Err_Custom("'handleDelegationId' failed!");
 
     scoped_ptr<CredCache> cache (
-    		DBSingleton::instance().getDBObjectInstance()->findGrDPStorageCacheElement(delegationId, dn)
-    	);
+        DBSingleton::instance().getDBObjectInstance()->findGrDPStorageCacheElement(delegationId, dn)
+    );
 
     if(cache.get())
-    	{
-    		return cache->certificateRequest;
-    	}
+        {
+            return cache->certificateRequest;
+        }
 
     char *reqtxt = 0, *keytxt = 0;
     int err = GRSTx509CreateProxyRequest(&reqtxt, &keytxt, 0);
@@ -476,13 +476,13 @@ string GSoapDelegationHandler::renewProxyReq(string delegationId)
 
     try
         {
-			DBSingleton::instance().getDBObjectInstance()->insertGrDPStorageCacheElement(
-				delegationId,
-				dn,
-				req,
-				keytxt,
-				fqansToString(attrs)
-			);
+            DBSingleton::instance().getDBObjectInstance()->insertGrDPStorageCacheElement(
+                delegationId,
+                dn,
+                req,
+                keytxt,
+                fqansToString(attrs)
+            );
         }
     catch(Err& ex)
         {
@@ -512,8 +512,8 @@ time_t GSoapDelegationHandler::getTerminationTime(string delegationId)
 
     time_t time;
     scoped_ptr<Cred> cred (
-    		DBSingleton::instance().getDBObjectInstance()->findGrDPStorageElement(delegationId, dn)
-    	);
+        DBSingleton::instance().getDBObjectInstance()->findGrDPStorageElement(delegationId, dn)
+    );
 
     if (cred.get())
         {
