@@ -7726,7 +7726,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
     if(!vo_name.empty())
         {
             vo_name_local = vo_name;
-            queryVo = "select vo_name from t_job where job_finished is null AND vo_name = ";
+            queryVo = "select distinct vo_name from t_job where job_finished is null AND vo_name = ";
             queryVo += "'";
             queryVo += vo_name;
             queryVo += "'";
@@ -7818,6 +7818,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
 				           
 	    	    	   
             soci::rowset<std::string> rs = (sql.prepare << queryVo);
+	    
 
             for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
@@ -7832,8 +7833,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
 		
        	            tempSeQuery += " AND vo_name= '";
 		    tempSeQuery += vo_name_local;
-		    tempSeQuery += "' ";		    		   
-		
+		    tempSeQuery += "' ";		    		   		
 		    		   
                     soci::rowset<soci::row> rs2 = (sql.prepare << tempSeQuery);		    		    
 

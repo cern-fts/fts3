@@ -7423,7 +7423,7 @@ void OracleAPI::updateOptimizerEvolution(soci::session& sql, const std::string &
 void OracleAPI::snapshot(const std::string & vo_name, const std::string & source_se_p, const std::string & dest_se_p, const std::string &, std::stringstream & result)
 {
     soci::session sql(*connectionPool);
-
+    
     std::string vo_name_local;
     std::string dest_se;
     std::string source_se;
@@ -7451,7 +7451,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
     if(!vo_name.empty())
         {
             vo_name_local = vo_name;
-            queryVo = "select vo_name from t_job where job_finished is null AND vo_name = ";
+            queryVo = "select distinct vo_name from t_job where job_finished is null AND vo_name = ";
             queryVo += "'";
             queryVo += vo_name;
             queryVo += "'";
@@ -7543,6 +7543,8 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                                 ));				           
 	    	    	   
             soci::rowset<std::string> rs = (sql.prepare << queryVo);
+	    
+	    
 
             for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
@@ -7557,7 +7559,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
 		
        	            tempSeQuery += " AND vo_name= '";
 		    tempSeQuery += vo_name_local;
-		    tempSeQuery += "' ";		    		   
+		    tempSeQuery += "' ";		    
 		
 		    		   
                     soci::rowset<soci::row> rs2 = (sql.prepare << tempSeQuery);		    		    

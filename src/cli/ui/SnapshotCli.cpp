@@ -28,8 +28,8 @@ SnapshotCli::~SnapshotCli()
 
 string SnapshotCli::getVo()
 {
-    // check if destination was passed via command line options
-    if (vm.count("von"))
+    // check if vo was passed via command line options
+    if (vm.count("vo"))
         {
             return vm["vo"].as<string>();
         }
