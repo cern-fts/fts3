@@ -319,7 +319,7 @@ public:
      */
     void queueTimeoutSet(unsigned timeout);
 
-    ptree getSnapShot(string vo, string src, string dst);
+    std::string getSnapShot(string vo, string src, string dst);
 
     /**
      * Remote call to getLog (not used!)

@@ -7695,7 +7695,7 @@ void MySqlAPI::updateOptimizerEvolution(soci::session& sql, const std::string & 
         }
 }
 
-void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_se_p, const std::string & dest_se_p, const std::string & endpoint, std::stringstream & result)
+void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_se_p, const std::string & dest_se_p, const std::string &, std::stringstream & result)
 {
     soci::session sql(*connectionPool);
 
@@ -7815,14 +7815,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                                  soci::use(vo_name_local),
                                  soci::into(queuingTime, isNull5)
                                 ));
-				
-
-            result << std::fixed <<  "FTS uri: https://";
-            result <<  endpoint;
-            result <<  ":8443\n";
-            result <<  "Timestamp:";
-            result <<  asctime(&tTime);
-	    result <<   "\n";
+				           
 	    	    	   
             soci::rowset<std::string> rs = (sql.prepare << queryVo);
 
@@ -7851,7 +7844,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                             submitted = 0;
                             throughput = 0.0;	
 			    
-                            result <<   "vo_name: ";
+                            result << std::fixed << "VO: ";
                             result <<   vo_name_local;
                             result <<   "\n";			    		
 			

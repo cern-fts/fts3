@@ -1308,7 +1308,9 @@ int fts3::impltns__getSnapshot(soap* ctx, string vo, string src, string dst, imp
 
 	    std::string endpoint = theServerConfig().get<std::string > ("Alias");
 	    std::stringstream result;
-	    DBSingleton::instance().getDBObjectInstance()->snapshot(vo, src, dst, endpoint, result);        	
+	    DBSingleton::instance().getDBObjectInstance()->snapshot(vo, src, dst, endpoint, result);   
+	    
+	    resp._result = result.str();      	
         }
     catch(Err& ex)
         {

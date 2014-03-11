@@ -66,8 +66,8 @@ int main(int ac, char* av[])
             string src = cli->getSource(), dst = cli->getDestination(), vo = cli->getVo();
 
 
-            ptree resp = ctx.getSnapShot(vo, src, dst);
-            write_json(cout, resp);
+            std::string resp = ctx.getSnapShot(vo, src, dst);
+            std::cout << resp << std::endl;
 
         }
     catch(std::exception& ex)

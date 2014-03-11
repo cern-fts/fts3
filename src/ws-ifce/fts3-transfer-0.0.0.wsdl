@@ -698,17 +698,7 @@
 
    <message name="getSnapshotResponse">
 
-      <part name="vo" type="xsd:string"/>
-      <part name="src" type="xsd:string"/>
-      <part name="dst" type="xsd:string"/>
-      <part name="active" type="xsd:int"/>
-      <part name="maxActive" type="xsd:int"/>
-      <part name="submitted" type="xsd:int"/>
-      <part name="wavgThroughpu" type="xsd:double"/>
-      <part name="successRate" type="xsd:double"/>
-      <part name="avgTransfrDuration" type="xsd:double"/>
-      <part name="avgQueuingTime" type="xsd:double"/>
-      <part name="recentError" type="xsd:string"/>
+      <part name="result" type="xsd:string"/>     
 
    </message>
 
