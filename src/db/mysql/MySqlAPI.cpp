@@ -3625,14 +3625,10 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
 
     try
         {
-            soci::rowset<soci::row> rs = (
+             soci::rowset<soci::row> rs = (
                                              sql.prepare <<
-                                             " SELECT distinct t_job.job_id "
-                                             " FROM t_file, t_job "
-                                             " WHERE t_job.job_id = t_file.job_id AND "
-                                             "      t_job.job_finished < (UTC_TIMESTAMP() - interval '4' DAY ) AND "
-                                             "      t_job.job_state IN ('FINISHED', 'FAILED', 'CANCELED','FINISHEDDIRTY') AND "
-                                             "      (t_file.hashed_id >= :hStart AND t_file.hashed_id <= :hEnd) ",
+                                             "  select  distinct j.job_id from t_job j inner join t_file f on(j.job_id = f.job_id) where  j.job_finished < (UTC_TIMESTAMP() - interval '4' DAY )  AND "
+                                             "  (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) ",
                                              soci::use(hashSegment.start), soci::use(hashSegment.end)
                                          );
 
@@ -6646,9 +6642,8 @@ void MySqlAPI::checkSanityState()
         {
             soci::rowset<std::string> rs = (
                                                sql.prepare <<
-                                               " select distinct t_job.job_id from t_job, t_file where t_job.job_id = t_file.job_id AND "
-                                               " t_job.job_finished is null AND "
-                                               " (t_file.hashed_id >= :hStart AND t_file.hashed_id <= :hEnd) ",
+                                               " select distinct j.job_id from t_job j inner join t_file f on(j.job_id = f.job_id) where j.job_finished is null AND  "
+                                               " (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) ",
                                                soci::use(hashSegment.start), soci::use(hashSegment.end)
                                            );
 
@@ -6771,12 +6766,11 @@ void MySqlAPI::checkSanityState()
             //now check reverse sanity checks, JOB can't be FINISH,  FINISHEDDIRTY, FAILED is at least one tr is in SUBMITTED, READY, ACTIVE
             //special case for canceled
             soci::rowset<std::string> rs2 = (
-                                                sql.prepare <<
-                                                " select distinct t_job.job_id from t_job, t_file where t_job.job_id = t_file.job_id AND "
-                                                " t_job.job_finished IS NOT NULL AND "
-                                                " (t_file.hashed_id >= :hStart AND t_file.hashed_id <= :hEnd) ",
-                                                soci::use(hashSegment.start), soci::use(hashSegment.end)
-                                            );
+                                               sql.prepare <<
+                                               " select distinct j.job_id from t_job j inner join t_file f on(j.job_id = f.job_id) where j.job_finished > (UTC_TIMESTAMP() - interval '1' DAY ) AND  "
+                                               " (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) ",
+                                               soci::use(hashSegment.start), soci::use(hashSegment.end)
+                                           );
 
             sql.begin();
             for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
@@ -7700,6 +7694,277 @@ void MySqlAPI::updateOptimizerEvolution(soci::session& sql, const std::string & 
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
 }
+
+void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_se_p, const std::string & dest_se_p, const std::string & endpoint, std::stringstream & result)
+{
+    soci::session sql(*connectionPool);
+
+    std::string vo_name_local;
+    std::string dest_se;
+    std::string source_se;
+    std::string reason;
+    std::string queryVo;
+    long long countReason = 0;
+    long long active = 0;
+    long long maxActive = 0;
+    long long submitted = 0;
+    double throughput = 0.0;
+    double tx_duration = 0.0;
+    double queuingTime = 0.0;
+    std::string querySe = " SELECT DISTINCT source_se, dest_se FROM t_file WHERE file_state in ('ACTIVE','SUBMITTED') ";
+
+    time_t now = time(NULL);
+    struct tm tTime;
+    gmtime_r(&now, &tTime);
+
+    soci::indicator isNull1 = soci::i_ok;
+    soci::indicator isNull2 = soci::i_ok;
+    soci::indicator isNull3 = soci::i_ok;
+    soci::indicator isNull4 = soci::i_ok;
+    soci::indicator isNull5 = soci::i_ok;
+
+    if(!vo_name.empty())
+        {
+            vo_name_local = vo_name;
+            queryVo = "select vo_name from t_job where job_finished is null AND vo_name = ";
+            queryVo += "'";
+            queryVo += vo_name;
+            queryVo += "'";
+        }
+    else
+        {
+            queryVo = "select distinct vo_name from t_job WHERE job_finished is null ";
+        }
+
+    if(!source_se_p.empty())
+        {
+            source_se = source_se_p;
+            querySe += " AND source_se = '" + source_se;
+            querySe += "' ";                     
+        }
+
+    if(!dest_se_p.empty())
+        {
+            dest_se = dest_se_p;
+	    querySe += " AND dest_se = '" + dest_se;                 
+            querySe += "' ";                     		    
+        }
+	
+    try
+        {
+            soci::statement st1((sql.prepare << "select count(*) from t_file where "
+                                 " file_state='ACTIVE' and vo_name=:vo_name_local and "
+                                 " source_se=:source_se and dest_se=:dest_se",
+                                 soci::use(vo_name_local),
+                                 soci::use(source_se),
+                                 soci::use(dest_se),
+                                 soci::into(active)));
+
+            soci::statement st2((sql.prepare << "select active from t_optimize_active where "
+                                 " source_se=:source_se and dest_se=:dest_se",
+                                 soci::use(source_se),
+                                 soci::use(dest_se),
+                                 soci::into(maxActive, isNull1)
+                                ));
+
+            soci::statement st3((sql.prepare << "select count(*) from t_file where "
+                                 " file_state='SUBMITTED' and vo_name=:vo_name_local and "
+                                 " source_se=:source_se and dest_se=:dest_se",
+                                 soci::use(vo_name_local),
+                                 soci::use(source_se),
+                                 soci::use(dest_se),
+                                 soci::into(submitted)
+                                ));
+
+            soci::statement st4((sql.prepare << "select throughput from t_optimizer_evolution where  "
+                                 " source_se=:source_se and dest_se=:dest_se"
+                                 " order by datetime DESC limit 1",
+                                 soci::use(source_se),
+                                 soci::use(dest_se),
+                                 soci::into(throughput, isNull2)
+                                ));
+
+            soci::statement st5((sql.prepare << "select reason, count(reason) as c from t_file where "
+                                 " (job_finished > (UTC_TIMESTAMP() - interval '15' minute)) "
+                                 " AND file_state='FAILED' and "
+                                 " source_se=:source_se and dest_se=:dest_se and vo_name =:vo_name_local   "
+                                 " group by reason order by c desc limit 1",
+                                 soci::use(source_se),
+                                 soci::use(dest_se),
+                                 soci::use(vo_name_local),
+                                 soci::into(reason, isNull3),
+                                 soci::into(countReason)
+                                ));
+
+
+            soci::statement st6((sql.prepare << " select avg(tx_duration) from t_file where file_state='FINISHED'  "                                
+                                 " AND source_se=:source_se and dest_se=:dest_se and vo_name =:vo_name_local ",
+                                 soci::use(source_se),
+                                 soci::use(dest_se),
+                                 soci::use(vo_name_local),
+                                 soci::into(tx_duration, isNull4)
+                                ));
+
+
+            soci::statement st7((sql.prepare << "  select avg(TIMESTAMPDIFF(SECOND, t_job.submit_time, t_file.start_time))  from t_file, t_job "
+                                 "  where t_job.job_id=t_file.job_id  "
+                                 " AND t_file.source_se=:source_se and t_file.dest_se=:dest_se and t_job.vo_name =:vo_name_local "
+                                 " AND t_job.job_finished is NULL and t_file.job_finished is NULL order by start_time DESC LIMIT 5 ",
+                                 soci::use(source_se),
+                                 soci::use(dest_se),
+                                 soci::use(vo_name_local),
+                                 soci::into(queuingTime, isNull5)
+                                ));
+				
+
+            result << std::fixed <<  "FTS uri: https://";
+            result <<  endpoint;
+            result <<  ":8443\n";
+            result <<  "Timestamp:";
+            result <<  asctime(&tTime);
+	    result <<   "\n";
+	    	    	   
+            soci::rowset<std::string> rs = (sql.prepare << queryVo);
+
+            for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+                {
+                    vo_name_local = *i;
+
+                    if(source_se_p.empty())
+                        source_se = "";
+                    if(dest_se_p.empty())
+                        dest_se = "";
+			
+		    std::string tempSeQuery = querySe;	
+		
+       	            tempSeQuery += " AND vo_name= '";
+		    tempSeQuery += vo_name_local;
+		    tempSeQuery += "' ";		    		   
+		
+		    		   
+                    soci::rowset<soci::row> rs2 = (sql.prepare << tempSeQuery);		    		    
+
+                    for (soci::rowset<soci::row>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
+                        {
+                    	    active = 0;
+                            maxActive = 0;
+                            submitted = 0;
+                            throughput = 0.0;	
+			    
+                            result <<   "vo_name: ";
+                            result <<   vo_name_local;
+                            result <<   "\n";			    		
+			
+                            soci::row const& r2 = *i2;
+                            source_se = r2.get<std::string>("source_se","");
+                            dest_se = r2.get<std::string>("dest_se","");
+
+                            result <<   "Source endpoint: ";
+                            result <<   source_se;
+                            result <<   "\n";
+                            result <<   "Destination endpoint: ";
+                            result <<   dest_se;
+                            result <<   "\n";
+
+                            //get active for this pair and vo
+                            st1.execute(true);
+                            result <<   "Current active transfers: ";
+                            result <<   active;
+                            result <<   "\n";
+
+                            //get max active for this pair no matter the vo
+                            st2.execute(true);
+                            result <<   "Max active transfers: ";
+                            result <<   maxActive;
+                            result <<   "\n";
+
+                            //get submitted for this pair and vo
+                            st3.execute(true);
+                            result <<   "Queued files: ";
+                            result <<   submitted;
+                            result <<   "\n";
+
+                            //weighted-average throughput last sample
+                            st4.execute(true);
+                            result <<   "Avg throughout: ";
+                            result <<  std::setprecision(2) << throughput * active;
+                            result <<   " MB/s\n";
+
+                            //success rate the last 15 min
+                            soci::rowset<soci::row> rs = (sql.prepare << "SELECT file_state FROM t_file "
+                                                          "WHERE "
+                                                          "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
+                                                          "      (t_file.job_finished > (UTC_TIMESTAMP() - interval '15' minute)) AND "
+                                                          "      file_state IN ('FAILED','FINISHED') and vo_name = :vo_name_local ",
+                                                          soci::use(source_se), soci::use(dest_se),soci::use(vo_name_local));
+
+
+                            double nFailedLastHour = 0.0;
+                            double nFinishedLastHour = 0.0;
+                            double ratioSuccessFailure = 0.0;
+                            for (soci::rowset<soci::row>::const_iterator i = rs.begin();
+                                    i != rs.end(); ++i)
+                                {
+                                    std::string state = i->get<std::string>("file_state", "");
+
+                                    if (state.compare("FAILED") == 0)
+                                        {
+                                            nFailedLastHour+=1.0;
+                                        }
+                                    else if (state.compare("FINISHED") == 0)
+                                        {
+                                            nFinishedLastHour+=1.0;
+                                        }
+                                }
+
+                            //round up efficiency
+                            if(nFinishedLastHour > 0.0)
+                                {
+                                    ratioSuccessFailure = ceil(nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0));
+                                }
+
+                            result <<   "Link efficiency: ";
+                            result <<   long(ratioSuccessFailure);
+                            result <<   "%\n";
+
+                            //average transfer duration the last 30min
+                            tx_duration = 0.0;
+                            st6.execute(true);
+                            result <<   "Avg transfer duration: ";
+                            result <<   long(tx_duration);
+                            result <<   " secs\n";
+
+                            //average queuing time expressed in secs
+                            queuingTime = 0;
+                            st7.execute(true);
+                            result <<   "Avg queuing time: ";
+                            result <<   long(queuingTime);
+                            result <<   " secs\n";
+
+                            //most frequent error and number the last 30min
+                            reason = "";
+                            countReason = 0;
+                            st5.execute(true);
+                            result <<   "Most frequent error: ";
+                            result <<   countReason;
+                            result <<   " times: ";
+                            result <<   reason;
+
+                            result << "\n\n";
+                        }
+                }
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }
+}
+
+
 
 // the class factories
 

@@ -1280,7 +1280,7 @@ int fts3::impltns__prioritySet(soap* ctx, string job_id, int priority, impltns__
             string cmd = "fts-set-priority " + job_id + " " + lexical_cast<string>(priority);
 
             DBSingleton::instance().getDBObjectInstance()->setPriority(job_id, priority);
-            //DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd, "set_priority");
+           
             // log it
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << dn << " had set priority of transfer job: " << job_id << " to " << priority << commit;
 
@@ -1306,19 +1306,9 @@ int fts3::impltns__getSnapshot(soap* ctx, string vo, string src, string dst, imp
         {
             AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::CONFIG, AuthorizationManager::dummy);
 
-//            DBSingleton::instance().getDBObjectInstance()->
-
-        	resp._active = 5;
-        	resp._avgQueuingTime = 45;
-        	resp._avgTransfrDuration = 10000;
-        	resp._dst = "srm://destination";
-        	resp._maxActive = 10;
-        	resp._recentError= "unknown error";
-        	resp._src = "srm;//source";
-        	resp._submitted = 5;
-        	resp._successRate = 100;
-        	resp._vo = "atlas";
-        	resp._wavgThroughpu = 234;
+	    std::string endpoint = theServerConfig().get<std::string > ("Alias");
+	    std::stringstream result;
+	    DBSingleton::instance().getDBObjectInstance()->snapshot(vo, src, dst, endpoint, result);        	
         }
     catch(Err& ex)
         {
