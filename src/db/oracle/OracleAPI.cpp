@@ -3430,7 +3430,7 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
 
                     //delete from t_optimizer_evolution > 10 days old records
                     sql.begin();
-                    sql << "delete from t_optimizer_evolution where datetime < (systimestamp - interval '1' DAY )";
+                    sql << "delete from t_optimizer_evolution where datetime < (systimestamp - interval '3' DAY )";
                     sql.commit();
 
                     //delete from t_optimizer_evolution > 10 days old records

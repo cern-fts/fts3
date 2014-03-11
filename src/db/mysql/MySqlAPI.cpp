@@ -2891,7 +2891,7 @@ bool MySqlAPI::updateOptimizer()
             soci::rowset<soci::row> rs = ( sql.prepare <<
                                            " select  distinct o.source_se, o.dest_se from t_optimize_active o INNER JOIN "
                                            " t_file f ON (o.source_se = f.source_se) where o.dest_se=f.dest_se and "
-                                           " f.file_state='SUBMITTED' ");
+                                           " f.file_state='SUBMITTED' and f.job_finished is null ");
 
             //snapshot of active transfers
             soci::statement stmt7 = (
@@ -3669,7 +3669,7 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
 
                     //delete from t_optimizer_evolution > 3 days old records
                     sql.begin();
-                    sql << "delete from t_optimizer_evolution where datetime < (UTC_TIMESTAMP() - interval '1' DAY )";
+                    sql << "delete from t_optimizer_evolution where datetime < (UTC_TIMESTAMP() - interval '3' DAY )";
                     sql.commit();
 
                     //delete from t_optimizer_evolution > 3 days old records
