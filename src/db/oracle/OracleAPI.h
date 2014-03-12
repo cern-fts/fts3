@@ -338,8 +338,12 @@ public:
     unsigned int updateFileStatusReuse(TransferFiles* file, const std::string status);
 
     void getCancelJob(std::vector<int>& requestIDs);
-    
-    virtual void snapshot(const std::string & vo_name, const std::string & source_se_p, const std::string & dest_se_p, const std::string & endpoint, std::stringstream & result);    
+
+    virtual void snapshot(const std::string & vo_name, const std::string & source_se_p, const std::string & dest_se_p, const std::string & endpoint, std::stringstream & result);
+
+    virtual bool getDrain();
+
+    virtual void setDrain(bool drain);
 
 private:
     size_t                poolSize;

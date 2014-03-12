@@ -22,11 +22,11 @@ class CancelCli : public JobIdCli
 {
 
 public:
-	CancelCli();
-	virtual ~CancelCli();
+    CancelCli();
+    virtual ~CancelCli();
 
     /**
-	 * parses the bulk submission file if necessary
+     * parses the bulk submission file if necessary
      */
     bool validate();
 
@@ -37,9 +37,9 @@ public:
      * 			vector containing job IDs otherwise an empty vector
      */
     vector<string> getJobIds()
-	{
-    	return jobIds;
-	}
+    {
+        return jobIds;
+    }
 
 private:
 

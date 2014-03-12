@@ -228,8 +228,8 @@ void TransferFileHandler::freeList(list<TransferFiles*>& l)
     for (it = l.begin(); it != l.end(); ++it)
         {
             // and release the memory
-	    if(*it)
-            	delete *it;
+            if(*it)
+                delete *it;
         }
     // clear the list
     l.clear();

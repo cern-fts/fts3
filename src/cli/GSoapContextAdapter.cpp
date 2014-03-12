@@ -345,16 +345,16 @@ vector< pair<string, string> > GSoapContextAdapter::cancel(vector<string> jobIds
     vector< pair<string, string> > ret;
 
     if (resp._jobIDs && resp._status)
-		{
-    		// zip two vectors
-    		vector<string> &ids = resp._jobIDs->item, &stats = resp._status->item;
-    		vector<string>::iterator itr_id = ids.begin(), itr_stat = stats.begin();
+        {
+            // zip two vectors
+            vector<string> &ids = resp._jobIDs->item, &stats = resp._status->item;
+            vector<string>::iterator itr_id = ids.begin(), itr_stat = stats.begin();
 
-    		for (; itr_id != ids.end() && itr_stat != stats.end(); ++itr_id, ++ itr_stat)
-    			{
-    				ret.push_back(make_pair(*itr_id, *itr_stat));
-    			}
-		}
+            for (; itr_id != ids.end() && itr_stat != stats.end(); ++itr_id, ++ itr_stat)
+                {
+                    ret.push_back(make_pair(*itr_id, *itr_stat));
+                }
+        }
 
     return ret;
 }
@@ -584,13 +584,13 @@ void GSoapContextAdapter::queueTimeoutSet(unsigned timeout)
 
 std::string GSoapContextAdapter::getSnapShot(string vo, string src, string dst)
 {
-	impltns__getSnapshotResponse resp;
-	if (soap_call_impltns__getSnapshot(ctx, endpoint.c_str(), 0, vo, src, dst, resp))
-		{
-			handleSoapFault("Operation failed.");
-		}
+    impltns__getSnapshotResponse resp;
+    if (soap_call_impltns__getSnapshot(ctx, endpoint.c_str(), 0, vo, src, dst, resp))
+        {
+            handleSoapFault("Operation failed.");
+        }
 
-	return resp._result;
+    return resp._result;
 }
 
 void GSoapContextAdapter::getLog(string& logname, string jobId)

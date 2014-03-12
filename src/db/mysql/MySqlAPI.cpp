@@ -531,7 +531,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                 {
                     vo_name = (*i1);
 
-                     soci::rowset<soci::row> rs2 = (sql.prepare <<
+                    soci::rowset<soci::row> rs2 = (sql.prepare <<
                                                    " SELECT SQL_NO_CACHE DISTINCT source_se, dest_se "
                                                    " FROM t_file "
                                                    " WHERE "
@@ -539,7 +539,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                                    "      (hashed_id >= :hStart AND hashed_id <= :hEnd) AND vo_name = :vo_name ",
                                                    soci::use(hashSegment.start), soci::use(hashSegment.end),soci::use(vo_name)
                                                   );
-						  
+
                     for (soci::rowset<soci::row>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
                         {
                             soci::row const& r2 = *i2;
@@ -2214,7 +2214,7 @@ void MySqlAPI::cancelJob(std::vector<std::string>& requestIDs)
                     jobIdStmt << job_id;
                     jobIdStmt << "',";
                 }
-		
+
             std::string queryStr = jobIdStmt.str();
             job_id = queryStr.substr(0, queryStr.length() - 1);
 
@@ -2247,36 +2247,36 @@ void MySqlAPI::cancelJob(std::vector<std::string>& requestIDs)
             // Cancel files
             stmt2.execute(true);
             sql.commit();
-	    
+
             jobIdStmt.str(std::string());
-            jobIdStmt.clear();	    
+            jobIdStmt.clear();
             cancelStmt1.str(std::string());
-            cancelStmt1.clear();	    
+            cancelStmt1.clear();
             cancelStmt2.str(std::string());
-            cancelStmt2.clear();	    	    	    
+            cancelStmt2.clear();
 
         }
     catch (std::exception& e)
         {
             jobIdStmt.str(std::string());
-            jobIdStmt.clear();	    
+            jobIdStmt.clear();
             cancelStmt1.str(std::string());
-            cancelStmt1.clear();	    
+            cancelStmt1.clear();
             cancelStmt2.str(std::string());
-            cancelStmt2.clear();	 
-	    	
+            cancelStmt2.clear();
+
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             jobIdStmt.str(std::string());
-            jobIdStmt.clear();	    
+            jobIdStmt.clear();
             cancelStmt1.str(std::string());
-            cancelStmt1.clear();	    
+            cancelStmt1.clear();
             cancelStmt2.str(std::string());
-            cancelStmt2.clear();	 
-	    	
+            cancelStmt2.clear();
+
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
@@ -2690,33 +2690,33 @@ void MySqlAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std
     try
         {
             soci::rowset<TransferJobs> rs = (sql.prepare << "SELECT "
-                    "   job_id, "
-                    "   job_state, "
-                    "   vo_name,  "
-                    "   priority,  "
-                    "   source_se, "
-                    "   dest_se,  "
-                    "   agent_dn, "
-                    "   submit_host, "
-                    "   user_dn, "
-                    "   user_cred, "
-                    "   cred_id,  "
-                    "   space_token, "
-                    "   storage_class,  "
-                    "   job_params, "
-                    "   overwrite_flag, "
-                    "   source_space_token, "
-                    "   source_token_description,"
-                    "   copy_pin_lifetime, "
-                    "   checksum_method, "
-                    "   bring_online, "
-                    "   submit_time "
-                    "   FROM t_job WHERE "
-                    "   job_state = 'SUBMITTED' AND job_finished IS NULL AND "
-                    "   cancel_job IS NULL AND "
-                    "   (reuse_job IS NOT NULL AND reuse_job != 'N') "
-		    " ORDER BY priority DESC, submit_time LIMIT 1 ");
-		    
+                                             "   job_id, "
+                                             "   job_state, "
+                                             "   vo_name,  "
+                                             "   priority,  "
+                                             "   source_se, "
+                                             "   dest_se,  "
+                                             "   agent_dn, "
+                                             "   submit_host, "
+                                             "   user_dn, "
+                                             "   user_cred, "
+                                             "   cred_id,  "
+                                             "   space_token, "
+                                             "   storage_class,  "
+                                             "   job_params, "
+                                             "   overwrite_flag, "
+                                             "   source_space_token, "
+                                             "   source_token_description,"
+                                             "   copy_pin_lifetime, "
+                                             "   checksum_method, "
+                                             "   bring_online, "
+                                             "   submit_time "
+                                             "   FROM t_job WHERE "
+                                             "   job_state = 'SUBMITTED' AND job_finished IS NULL AND "
+                                             "   cancel_job IS NULL AND "
+                                             "   (reuse_job IS NOT NULL AND reuse_job != 'N') "
+                                             " ORDER BY priority DESC, submit_time LIMIT 1 ");
+
             for (soci::rowset<TransferJobs>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
                     TransferJobs const& tjob = *i;
@@ -3625,46 +3625,46 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
 
     try
         {
-	
-	            //prevent more than on server to update the optimizer decisions
+
+            //prevent more than on server to update the optimizer decisions
             if(hashSegment.start == 0)
-             {
-             soci::rowset<soci::row> rs = (
-                                             sql.prepare <<
-                                             "  select  job_id from t_job where job_finished < (UTC_TIMESTAMP() - interval '4' DAY ) "
-                                         );
-
-            std::string job_id;
-            soci::statement delFilesStmt = (sql.prepare << "DELETE FROM t_file WHERE job_id = :job_id", soci::use(job_id));
-            soci::statement delJobsStmt = (sql.prepare << "DELETE FROM t_job WHERE job_id = :job_id", soci::use(job_id));
-
-            soci::statement insertJobsStmt = (sql.prepare << "INSERT INTO t_job_backup SELECT * FROM t_job WHERE job_id = :job_id", soci::use(job_id));
-            soci::statement insertFileStmt = (sql.prepare << "INSERT INTO t_file_backup SELECT * FROM t_file WHERE job_id = :job_id", soci::use(job_id));
-
-            int count = 0;
-            for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
-                    count++;
-                    soci::row const& r = *i;
-                    job_id = r.get<std::string>("job_id");
+                    soci::rowset<soci::row> rs = (
+                                                     sql.prepare <<
+                                                     "  select  job_id from t_job where job_finished < (UTC_TIMESTAMP() - interval '4' DAY ) "
+                                                 );
 
-                    insertJobsStmt.execute(true);
-                    insertFileStmt.execute(true);
+                    std::string job_id;
+                    soci::statement delFilesStmt = (sql.prepare << "DELETE FROM t_file WHERE job_id = :job_id", soci::use(job_id));
+                    soci::statement delJobsStmt = (sql.prepare << "DELETE FROM t_job WHERE job_id = :job_id", soci::use(job_id));
 
-                    delFilesStmt.execute(true);
-                    *nFiles += delFilesStmt.get_affected_rows();
+                    soci::statement insertJobsStmt = (sql.prepare << "INSERT INTO t_job_backup SELECT * FROM t_job WHERE job_id = :job_id", soci::use(job_id));
+                    soci::statement insertFileStmt = (sql.prepare << "INSERT INTO t_file_backup SELECT * FROM t_file WHERE job_id = :job_id", soci::use(job_id));
 
-                    delJobsStmt.execute(true);
-                    *nJobs += delJobsStmt.get_affected_rows();
-
-                    //commit every 10 records
-                    if(count==10)
+                    int count = 0;
+                    for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                         {
-                            count = 0;
-                            sql.commit();
+                            count++;
+                            soci::row const& r = *i;
+                            job_id = r.get<std::string>("job_id");
+
+                            insertJobsStmt.execute(true);
+                            insertFileStmt.execute(true);
+
+                            delFilesStmt.execute(true);
+                            *nFiles += delFilesStmt.get_affected_rows();
+
+                            delJobsStmt.execute(true);
+                            *nJobs += delJobsStmt.get_affected_rows();
+
+                            //commit every 10 records
+                            if(count==10)
+                                {
+                                    count = 0;
+                                    sql.commit();
+                                }
                         }
-                }
-            sql.commit();
+                    sql.commit();
 
 
                     //delete from t_optimizer_evolution > 3 days old records
@@ -6640,151 +6640,151 @@ void MySqlAPI::checkSanityState()
 
     try
         {
-	  if(hashSegment.start == 0)
-             {
-            soci::rowset<std::string> rs = (
-                                               sql.prepare <<
-                                               " select job_id from t_job  where job_finished is null "
-                                           );
-
-            soci::statement stmt1 = (sql.prepare << "SELECT COUNT(DISTINCT file_index) FROM t_file where job_id=:jobId ", soci::use(job_id), soci::into(numberOfFiles));
-
-            soci::statement stmt2 = (sql.prepare << "UPDATE t_job SET "
-                                     "    job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
-                                     "    reason = :canceledMessage "
-                                     "    WHERE job_id = :jobId ", soci::use(canceledMessage), soci::use(job_id));
-
-            soci::statement stmt3 = (sql.prepare << "UPDATE t_job SET "
-                                     "    job_state = 'FINISHED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP() "
-                                     "    WHERE job_id = :jobId", soci::use(job_id));
-
-            soci::statement stmt4 = (sql.prepare << "UPDATE t_job SET "
-                                     "    job_state = 'FAILED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
-                                     "    reason = :failed "
-                                     "    WHERE job_id = :jobId", soci::use(failed), soci::use(job_id));
-
-
-            soci::statement stmt5 = (sql.prepare << "UPDATE t_job SET "
-                                     "    job_state = 'FINISHEDDIRTY', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
-                                     "    reason = :failed "
-                                     "    WHERE job_id = :jobId", soci::use(failed), soci::use(job_id));
-
-            soci::statement stmt6 = (sql.prepare << "SELECT COUNT(*) FROM t_file where job_id=:jobId AND file_state in ('ACTIVE','READY','SUBMITTED','STAGING') ", soci::use(job_id), soci::into(numberOfFilesRevert));
-
-            soci::statement stmt7 = (sql.prepare << "UPDATE t_job SET "
-                                     "    job_state = 'SUBMITTED', job_finished = NULL, finish_time = NULL, "
-                                     "    reason = NULL "
-                                     "    WHERE job_id = :jobId", soci::use(job_id));
-
-            soci::statement stmt8 = (sql.prepare << " select count(*)  "
-                                     " from t_file "
-                                     " where job_id = :jobId "
-                                     "	and  file_state = 'FINISHED' ",
-                                     soci::use(job_id),
-                                     soci::into(allFinished));
-
-            soci::statement stmt9 = (sql.prepare << " select count(distinct f1.file_index) "
-                                     " from t_file f1 "
-                                     " where f1.job_id = :jobId "
-                                     "	and f1.file_state = 'CANCELED' "
-                                     "	and NOT EXISTS ( "
-                                     "		select null "
-                                     "		from t_file f2 "
-                                     "		where f2.job_id = :jobId "
-                                     "			and f1.file_index = f2.file_index "
-                                     "			and f2.file_state <> 'CANCELED' "
-                                     " 	) ",
-                                     soci::use(job_id),
-                                     soci::use(job_id),
-                                     soci::into(allCanceled));
-
-            soci::statement stmt10 = (sql.prepare << " select count(distinct f1.file_index) "
-                                      " from t_file f1 "
-                                      " where f1.job_id = :jobId "
-                                      "	and f1.file_state = 'FAILED' "
-                                      "	and NOT EXISTS ( "
-                                      "		select null "
-                                      "		from t_file f2 "
-                                      "		where f2.job_id = :jobId "
-                                      "			and f1.file_index = f2.file_index "
-                                      "			and f2.file_state NOT IN ('CANCELED', 'FAILED') "
-                                      " 	) ",
-                                      soci::use(job_id),
-                                      soci::use(job_id),
-                                      soci::into(allFailed));
-
-            sql.begin();
-            for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+            if(hashSegment.start == 0)
                 {
-                    job_id = (*i);
-                    numberOfFiles = 0;
-                    allFinished = 0;
-                    allCanceled = 0;
-                    allFailed = 0;
-                    terminalState = 0;
+                    soci::rowset<std::string> rs = (
+                                                       sql.prepare <<
+                                                       " select job_id from t_job  where job_finished is null "
+                                                   );
 
-                    stmt1.execute(true);
+                    soci::statement stmt1 = (sql.prepare << "SELECT COUNT(DISTINCT file_index) FROM t_file where job_id=:jobId ", soci::use(job_id), soci::into(numberOfFiles));
 
-                    if(numberOfFiles > 0)
+                    soci::statement stmt2 = (sql.prepare << "UPDATE t_job SET "
+                                             "    job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+                                             "    reason = :canceledMessage "
+                                             "    WHERE job_id = :jobId ", soci::use(canceledMessage), soci::use(job_id));
+
+                    soci::statement stmt3 = (sql.prepare << "UPDATE t_job SET "
+                                             "    job_state = 'FINISHED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP() "
+                                             "    WHERE job_id = :jobId", soci::use(job_id));
+
+                    soci::statement stmt4 = (sql.prepare << "UPDATE t_job SET "
+                                             "    job_state = 'FAILED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+                                             "    reason = :failed "
+                                             "    WHERE job_id = :jobId", soci::use(failed), soci::use(job_id));
+
+
+                    soci::statement stmt5 = (sql.prepare << "UPDATE t_job SET "
+                                             "    job_state = 'FINISHEDDIRTY', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+                                             "    reason = :failed "
+                                             "    WHERE job_id = :jobId", soci::use(failed), soci::use(job_id));
+
+                    soci::statement stmt6 = (sql.prepare << "SELECT COUNT(*) FROM t_file where job_id=:jobId AND file_state in ('ACTIVE','READY','SUBMITTED','STAGING') ", soci::use(job_id), soci::into(numberOfFilesRevert));
+
+                    soci::statement stmt7 = (sql.prepare << "UPDATE t_job SET "
+                                             "    job_state = 'SUBMITTED', job_finished = NULL, finish_time = NULL, "
+                                             "    reason = NULL "
+                                             "    WHERE job_id = :jobId", soci::use(job_id));
+
+                    soci::statement stmt8 = (sql.prepare << " select count(*)  "
+                                             " from t_file "
+                                             " where job_id = :jobId "
+                                             "	and  file_state = 'FINISHED' ",
+                                             soci::use(job_id),
+                                             soci::into(allFinished));
+
+                    soci::statement stmt9 = (sql.prepare << " select count(distinct f1.file_index) "
+                                             " from t_file f1 "
+                                             " where f1.job_id = :jobId "
+                                             "	and f1.file_state = 'CANCELED' "
+                                             "	and NOT EXISTS ( "
+                                             "		select null "
+                                             "		from t_file f2 "
+                                             "		where f2.job_id = :jobId "
+                                             "			and f1.file_index = f2.file_index "
+                                             "			and f2.file_state <> 'CANCELED' "
+                                             " 	) ",
+                                             soci::use(job_id),
+                                             soci::use(job_id),
+                                             soci::into(allCanceled));
+
+                    soci::statement stmt10 = (sql.prepare << " select count(distinct f1.file_index) "
+                                              " from t_file f1 "
+                                              " where f1.job_id = :jobId "
+                                              "	and f1.file_state = 'FAILED' "
+                                              "	and NOT EXISTS ( "
+                                              "		select null "
+                                              "		from t_file f2 "
+                                              "		where f2.job_id = :jobId "
+                                              "			and f1.file_index = f2.file_index "
+                                              "			and f2.file_state NOT IN ('CANCELED', 'FAILED') "
+                                              " 	) ",
+                                              soci::use(job_id),
+                                              soci::use(job_id),
+                                              soci::into(allFailed));
+
+                    sql.begin();
+                    for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                         {
-                            stmt8.execute(true);
-                            stmt9.execute(true);
-                            stmt10.execute(true);
+                            job_id = (*i);
+                            numberOfFiles = 0;
+                            allFinished = 0;
+                            allCanceled = 0;
+                            allFailed = 0;
+                            terminalState = 0;
 
-                            terminalState = allFinished + allCanceled + allFailed;
+                            stmt1.execute(true);
 
-                            if(numberOfFiles == terminalState)  /* all files terminal state but job in ('ACTIVE','READY','SUBMITTED','STAGING') */
+                            if(numberOfFiles > 0)
                                 {
-                                    if(allCanceled > 0)
+                                    stmt8.execute(true);
+                                    stmt9.execute(true);
+                                    stmt10.execute(true);
+
+                                    terminalState = allFinished + allCanceled + allFailed;
+
+                                    if(numberOfFiles == terminalState)  /* all files terminal state but job in ('ACTIVE','READY','SUBMITTED','STAGING') */
                                         {
-                                            stmt2.execute(true);
-                                        }
-                                    else   //non canceled, check other states: "FINISHED" and FAILED"
-                                        {
-                                            if(numberOfFiles == allFinished)  /*all files finished*/
+                                            if(allCanceled > 0)
                                                 {
-                                                    stmt3.execute(true);
+                                                    stmt2.execute(true);
                                                 }
-                                            else
+                                            else   //non canceled, check other states: "FINISHED" and FAILED"
                                                 {
-                                                    if(numberOfFiles == allFailed)  /*all files failed*/
+                                                    if(numberOfFiles == allFinished)  /*all files finished*/
                                                         {
-                                                            stmt4.execute(true);
+                                                            stmt3.execute(true);
                                                         }
-                                                    else   // otherwise it is FINISHEDDIRTY
+                                                    else
                                                         {
-                                                            stmt5.execute(true);
+                                                            if(numberOfFiles == allFailed)  /*all files failed*/
+                                                                {
+                                                                    stmt4.execute(true);
+                                                                }
+                                                            else   // otherwise it is FINISHEDDIRTY
+                                                                {
+                                                                    stmt5.execute(true);
+                                                                }
                                                         }
                                                 }
                                         }
                                 }
                         }
-                }
-            sql.commit();
+                    sql.commit();
 
 
-            //now check reverse sanity checks, JOB can't be FINISH,  FINISHEDDIRTY, FAILED is at least one tr is in SUBMITTED, READY, ACTIVE
-            //special case for canceled
-            soci::rowset<std::string> rs2 = (
-                                               sql.prepare <<
-                                               " select job_id from t_job where job_finished is not null  "
-                                            );
+                    //now check reverse sanity checks, JOB can't be FINISH,  FINISHEDDIRTY, FAILED is at least one tr is in SUBMITTED, READY, ACTIVE
+                    //special case for canceled
+                    soci::rowset<std::string> rs2 = (
+                                                        sql.prepare <<
+                                                        " select job_id from t_job where job_finished is not null  "
+                                                    );
 
-            sql.begin();
-            for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
-                {
-                    job_id = (*i2);
-                    numberOfFilesRevert = 0;
-
-                    stmt6.execute(true);
-
-                    if(numberOfFilesRevert > 0)
+                    sql.begin();
+                    for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
                         {
-                            stmt7.execute(true);
+                            job_id = (*i2);
+                            numberOfFilesRevert = 0;
+
+                            stmt6.execute(true);
+
+                            if(numberOfFilesRevert > 0)
+                                {
+                                    stmt7.execute(true);
+                                }
                         }
+                    sql.commit();
                 }
-            sql.commit();
-	 }
 
         }
     catch (std::exception& e)
@@ -7637,23 +7637,23 @@ void MySqlAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start
                 }
 
             sql.commit();
-	    
-	    if(*count != 0)
-	    {
-            // Calculate start and end hash values
-            unsigned segsize = UINT16_MAX / *count;
-            unsigned segmod  = UINT16_MAX % *count;
 
-            *start = segsize * (*index);
-            *end   = segsize * (*index + 1) - 1;
+            if(*count != 0)
+                {
+                    // Calculate start and end hash values
+                    unsigned segsize = UINT16_MAX / *count;
+                    unsigned segmod  = UINT16_MAX % *count;
 
-            // Last one take over what is left
-            if (*index == *count - 1)
-                *end += segmod + 1;
+                    *start = segsize * (*index);
+                    *end   = segsize * (*index + 1) - 1;
 
-            this->hashSegment.start = *start;
-            this->hashSegment.end   = *end;
-	    }
+                    // Last one take over what is left
+                    if (*index == *count - 1)
+                        *end += segmod + 1;
+
+                    this->hashSegment.start = *start;
+                    this->hashSegment.end   = *end;
+                }
         }
     catch (std::exception& e)
         {
@@ -7739,16 +7739,16 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
         {
             source_se = source_se_p;
             querySe += " AND source_se = '" + source_se;
-            querySe += "' ";                     
+            querySe += "' ";
         }
 
     if(!dest_se_p.empty())
         {
             dest_se = dest_se_p;
-	    querySe += " AND dest_se = '" + dest_se;                 
-            querySe += "' ";                     		    
+            querySe += " AND dest_se = '" + dest_se;
+            querySe += "' ";
         }
-	
+
     try
         {
             soci::statement st1((sql.prepare << "select count(*) from t_file where "
@@ -7796,7 +7796,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                                 ));
 
 
-            soci::statement st6((sql.prepare << " select avg(tx_duration) from t_file where file_state='FINISHED'  "                                
+            soci::statement st6((sql.prepare << " select avg(tx_duration) from t_file where file_state='FINISHED'  "
                                  " AND source_se=:source_se and dest_se=:dest_se and vo_name =:vo_name_local ",
                                  soci::use(source_se),
                                  soci::use(dest_se),
@@ -7814,10 +7814,10 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                                  soci::use(vo_name_local),
                                  soci::into(queuingTime, isNull5)
                                 ));
-				           
-	    	    	   
+
+
             soci::rowset<std::string> rs = (sql.prepare << queryVo);
-	    
+
 
             for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
@@ -7827,26 +7827,26 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                         source_se = "";
                     if(dest_se_p.empty())
                         dest_se = "";
-			
-		    std::string tempSeQuery = querySe;	
-		
-       	            tempSeQuery += " AND vo_name= '";
-		    tempSeQuery += vo_name_local;
-		    tempSeQuery += "' ";		    		   		
-		    		   
-                    soci::rowset<soci::row> rs2 = (sql.prepare << tempSeQuery);		    		    
+
+                    std::string tempSeQuery = querySe;
+
+                    tempSeQuery += " AND vo_name= '";
+                    tempSeQuery += vo_name_local;
+                    tempSeQuery += "' ";
+
+                    soci::rowset<soci::row> rs2 = (sql.prepare << tempSeQuery);
 
                     for (soci::rowset<soci::row>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
                         {
-                    	    active = 0;
+                            active = 0;
                             maxActive = 0;
                             submitted = 0;
-                            throughput = 0.0;	
-			    
+                            throughput = 0.0;
+
                             result << std::fixed << "VO: ";
                             result <<   vo_name_local;
-                            result <<   "\n";			    		
-			
+                            result <<   "\n";
+
                             soci::row const& r2 = *i2;
                             source_se = r2.get<std::string>("source_se","");
                             dest_se = r2.get<std::string>("dest_se","");
@@ -7957,27 +7957,85 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
 }
 
 
+bool MySqlAPI::getDrain()
+{
+
+    soci::session sql(*connectionPool);
+
+    int drain = 0;
+    try
+        {
+            soci::indicator isNull = soci::i_ok;
+
+            sql << "SELECT drain FROM t_hosts WHERE hostname = :hostname",soci::use(hostname), soci::into(drain, isNull);
+
+            if(isNull == soci::i_null || drain == 0)
+                return false;
+
+
+            return true;
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+    return true;
+}
+
+
+void MySqlAPI::setDrain(bool drain)
+{
+
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            sql.begin();
+            if(drain == true)
+                sql << " update t_hosts set drain=1 where hostname = :hostname ",soci::use(hostname);
+            else
+                sql << " update t_hosts set drain=0 where hostname = :hostname ",soci::use(hostname);
+            sql.commit();
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }
+}
+
+
+
 
 // the class factories
 
-extern "C" GenericDbIfce* create()
-{
-    return new MySqlAPI;
-}
+    extern "C" GenericDbIfce* create()
+    {
+        return new MySqlAPI;
+    }
 
-extern "C" void destroy(GenericDbIfce* p)
-{
-    if (p)
-        delete p;
-}
+    extern "C" void destroy(GenericDbIfce* p)
+    {
+        if (p)
+            delete p;
+    }
 
-extern "C" MonitoringDbIfce* create_monitoring()
-{
-    return new MySqlMonitoring;
-}
+    extern "C" MonitoringDbIfce* create_monitoring()
+    {
+        return new MySqlMonitoring;
+    }
 
-extern "C" void destroy_monitoring(MonitoringDbIfce* p)
-{
-    if (p)
-        delete p;
-}
+    extern "C" void destroy_monitoring(MonitoringDbIfce* p)
+    {
+        if (p)
+            delete p;
+    }

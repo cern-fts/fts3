@@ -922,99 +922,99 @@ int fts3::impltns__cancel2(soap* ctx, impltns__ArrayOf_USCOREsoapenc_USCOREstrin
             if (!request) return SOAP_OK;
 
             // check if there are jobs to cancel in the request
-			vector<string> &jobs = request->item;
+            vector<string> &jobs = request->item;
             if (jobs.empty()) return SOAP_OK;
 
             // create the response
-			resp._jobIDs = soap_new_impltns__ArrayOf_USCOREsoapenc_USCOREstring(ctx, -1);
-			resp._status = soap_new_impltns__ArrayOf_USCOREsoapenc_USCOREstring(ctx, -1);
+            resp._jobIDs = soap_new_impltns__ArrayOf_USCOREsoapenc_USCOREstring(ctx, -1);
+            resp._status = soap_new_impltns__ArrayOf_USCOREsoapenc_USCOREstring(ctx, -1);
 
-			// helper vectors
-			vector<string> &resp_job_ids = resp._jobIDs->item;
-			vector<string> &resp_job_status = resp._status->item;
-			vector<string> cancel;
+            // helper vectors
+            vector<string> &resp_job_ids = resp._jobIDs->item;
+            vector<string> &resp_job_status = resp._status->item;
+            vector<string> cancel;
 
-			std::vector<std::string>::iterator it;
+            std::vector<std::string>::iterator it;
 
-			std::string jobId;
-			for (it = jobs.begin(); it != jobs.end(); ++it)
-				{
-					// authorize the operation for each job ID
-					scoped_ptr<TransferJobs> job (
-						DBSingleton::instance().getDBObjectInstance()->getTransferJob(*it, false)
-					);
+            std::string jobId;
+            for (it = jobs.begin(); it != jobs.end(); ++it)
+                {
+                    // authorize the operation for each job ID
+                    scoped_ptr<TransferJobs> job (
+                        DBSingleton::instance().getDBObjectInstance()->getTransferJob(*it, false)
+                    );
 
-					AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get());
+                    AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get());
 
-					// check if the job ID exists
-					scoped_ptr<TransferJobs> ptr (
-						DBSingleton::instance().getDBObjectInstance()->getTransferJob(*it, false)
-					);
+                    // check if the job ID exists
+                    scoped_ptr<TransferJobs> ptr (
+                        DBSingleton::instance().getDBObjectInstance()->getTransferJob(*it, false)
+                    );
 
-					// if not add appropriate response
-					if (!ptr.get())
-						{
-							resp_job_ids.push_back(*it);
-							resp_job_status.push_back("DOES_NOT_EXIST");
-							continue;
-						}
+                    // if not add appropriate response
+                    if (!ptr.get())
+                        {
+                            resp_job_ids.push_back(*it);
+                            resp_job_status.push_back("DOES_NOT_EXIST");
+                            continue;
+                        }
 
-					vector<JobStatus*> status;
-					DBSingleton::instance().getDBObjectInstance()->getTransferJobStatus(*it, false, status);
+                    vector<JobStatus*> status;
+                    DBSingleton::instance().getDBObjectInstance()->getTransferJobStatus(*it, false, status);
 
-					if (!status.empty())
-						{
-							// get transfer-job status
-							string stat = (*status.begin())->jobStatus;
-							// release the memory
-							vector<JobStatus*>::iterator it_s;
-							for (it_s = status.begin(); it_s != status.end(); it_s++)
-								{
-									delete *it_s;
-								}
-							// check if transfer-job is finished
-							if (JobStatusHandler::getInstance().isTransferFinished(stat))
-								{
-									resp_job_ids.push_back(*it);
-									resp_job_status.push_back(stat);
-									continue;
-								}
-						}
+                    if (!status.empty())
+                        {
+                            // get transfer-job status
+                            string stat = (*status.begin())->jobStatus;
+                            // release the memory
+                            vector<JobStatus*>::iterator it_s;
+                            for (it_s = status.begin(); it_s != status.end(); it_s++)
+                                {
+                                    delete *it_s;
+                                }
+                            // check if transfer-job is finished
+                            if (JobStatusHandler::getInstance().isTransferFinished(stat))
+                                {
+                                    resp_job_ids.push_back(*it);
+                                    resp_job_status.push_back(stat);
+                                    continue;
+                                }
+                        }
 
-					cancel.push_back(*it);
+                    cancel.push_back(*it);
 
-					jobId += *it ;
-					jobId += ", ";
-				}
+                    jobId += *it ;
+                    jobId += ", ";
+                }
 
-			if (cancel.empty()) return SOAP_OK;
+            if (cancel.empty()) return SOAP_OK;
 
-			FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << "is canceling a transfer jobs: " << jobId << commit;
+            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << "is canceling a transfer jobs: " << jobId << commit;
 
-			DBSingleton::instance().getDBObjectInstance()->cancelJob(cancel);
+            DBSingleton::instance().getDBObjectInstance()->cancelJob(cancel);
 
-			//send state message for cancellation
-			std::vector<int> files;
-			std::vector<std::string>::iterator it2;
-			std::vector<int>::iterator it3;
-			for (it2 = jobs.begin(); it2 != jobs.end(); ++it2)
-				{
-					DBSingleton::instance().getDBObjectInstance()->getFilesForJobInCancelState((*it2), files);
-					if(!files.empty())
-						{
-							for (it3 = files.begin(); it3 != files.end(); ++it3)
-								{
-									SingleTrStateInstance::instance().sendStateMessage((*it2), (*it3));
-								}
-							files.clear();
-						}
-				}
+            //send state message for cancellation
+            std::vector<int> files;
+            std::vector<std::string>::iterator it2;
+            std::vector<int>::iterator it3;
+            for (it2 = jobs.begin(); it2 != jobs.end(); ++it2)
+                {
+                    DBSingleton::instance().getDBObjectInstance()->getFilesForJobInCancelState((*it2), files);
+                    if(!files.empty())
+                        {
+                            for (it3 = files.begin(); it3 != files.end(); ++it3)
+                                {
+                                    SingleTrStateInstance::instance().sendStateMessage((*it2), (*it3));
+                                }
+                            files.clear();
+                        }
+                }
 
-			for (it = cancel.begin(); it != cancel.end(); ++it)
-				{
-					resp_job_ids.push_back(*it);
-					resp_job_status.push_back("CANCELED");
-				}
+            for (it = cancel.begin(); it != cancel.end(); ++it)
+                {
+                    resp_job_ids.push_back(*it);
+                    resp_job_status.push_back("CANCELED");
+                }
 
         }
     catch(Err& ex)
@@ -1280,7 +1280,7 @@ int fts3::impltns__prioritySet(soap* ctx, string job_id, int priority, impltns__
             string cmd = "fts-set-priority " + job_id + " " + lexical_cast<string>(priority);
 
             DBSingleton::instance().getDBObjectInstance()->setPriority(job_id, priority);
-           
+
             // log it
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << dn << " had set priority of transfer job: " << job_id << " to " << priority << commit;
 
@@ -1306,11 +1306,11 @@ int fts3::impltns__getSnapshot(soap* ctx, string vo, string src, string dst, imp
         {
             AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::CONFIG, AuthorizationManager::dummy);
 
-	    std::string endpoint = theServerConfig().get<std::string > ("Alias");
-	    std::stringstream result;
-	    DBSingleton::instance().getDBObjectInstance()->snapshot(vo, src, dst, endpoint, result);   
-	    
-	    resp._result = result.str();      	
+            std::string endpoint = theServerConfig().get<std::string > ("Alias");
+            std::stringstream result;
+            DBSingleton::instance().getDBObjectInstance()->snapshot(vo, src, dst, endpoint, result);
+
+            resp._result = result.str();
         }
     catch(Err& ex)
         {

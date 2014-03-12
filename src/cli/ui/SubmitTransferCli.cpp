@@ -191,7 +191,7 @@ bool SubmitTransferCli::createJobElements()
                             it = tokens.begin();
                             if (it != tokens.end())
                                 {
-                            		string s = *it;
+                                    string s = *it;
                                     if (!checkValidUrl(s, msgPrinter)) return false;
                                     file.sources.push_back(s);
                                 }
@@ -203,7 +203,7 @@ bool SubmitTransferCli::createJobElements()
                             it++;
                             if (it != tokens.end())
                                 {
-                            		string s = *it;
+                                    string s = *it;
                                     if (!checkValidUrl(s, msgPrinter)) return false;
                                     file.destinations.push_back(s);
                                 }

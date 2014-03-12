@@ -20,9 +20,9 @@ class DelegationCli : public TransferCliBase
 
 public:
 
-	DelegationCli();
+    DelegationCli();
 
-	virtual ~DelegationCli();
+    virtual ~DelegationCli();
 
     /**
      * Gets the delegation ID (string).

@@ -820,3 +820,13 @@ void ProfiledDB::snapshot(const std::string & vo_name, const std::string & sourc
     PROFILE_PREFIXED("DB::", snapshot(vo_name, source_se, dest_se, endpoint, result));
 }
 
+bool ProfiledDB::getDrain()
+{
+    PROFILE_PREFIXED("DB::", return db->getDrain());
+}
+
+void ProfiledDB::setDrain(bool drain)
+{
+    PROFILE_PREFIXED("DB::", db->setDrain(drain));
+}
+

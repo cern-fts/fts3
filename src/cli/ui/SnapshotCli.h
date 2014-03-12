@@ -23,10 +23,10 @@ class SnapshotCli : public SrcDestCli
 
 public:
 
-	SnapshotCli();
-	virtual ~SnapshotCli();
+    SnapshotCli();
+    virtual ~SnapshotCli();
 
-	string getVo();
+    string getVo();
 };
 
 } /* namespace cli */
