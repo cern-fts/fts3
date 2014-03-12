@@ -228,15 +228,17 @@ install(FILES "${MAN_INPUT_DIR}/fts-set-blacklist.1" DESTINATION ${MAN_INSTALL_D
 
 install(TARGETS
 	fts-transfer-submit
-    fts-transfer-status
-    fts-transfer-cancel
-    fts-transfer-list
+        fts-transfer-status
+        fts-transfer-cancel
+        fts-transfer-list
 	fts-config-get
 	fts-config-set
 	fts-config-del
 	fts-set-debug
 	fts-set-blacklist
 	fts-set-priority
+	fts-transfer-snapshot
+	fts-delegation-init
 	RUNTIME             DESTINATION ${BIN_INSTALL_DIR} )
 
 install(TARGETS         fts_cli_common 
