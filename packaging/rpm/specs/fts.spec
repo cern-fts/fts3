@@ -383,7 +383,7 @@ exit 0
   - introduced dist back in the release
 * Tue Jan 14 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.3-3
   - using cmake28
-* Mon Jan 13.2.34 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.3-2
+* Mon Jan 13 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.3-2
   - separated rpms for messaging and infosys subsystems
 * Mon Nov 18 2013 Alejandro Alvarez Ayllon <aalvarez@cern.ch> - 3.1.33-2
   - Added missing changelog entry
@@ -392,7 +392,7 @@ exit 0
   - Update for new upstream release
 * Wed Aug 07 2013 Michal Simon <michal.simon@cern.ch> - 3.1.1-2
   - no longer linking explicitly to boost libraries with '-mt' sufix 
-* Sat Aug 03.2.33 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 3.1.0-3
+* Sat Aug 03 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 3.1.0-3
   - Rebuilt for https://fedoraproject.org/wiki/Fedora_20_Mass_Rebuild
 * Sat Jul 27 2013 Petr Machata <pmachata@redhat.com> - 3.1.0-2
   - rebuild for boost 1.54.0
