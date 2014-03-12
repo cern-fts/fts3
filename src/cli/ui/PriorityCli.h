@@ -59,7 +59,7 @@ public:
      * @return GSoapContexAdapter instance, or null if all activities
      * 				requested using program options have been done.
      */
-    virtual optional<GSoapContextAdapter&> validate(bool init = true);
+    bool validate();
 
 
     /**

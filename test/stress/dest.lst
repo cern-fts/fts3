@@ -26,4 +26,5 @@ gsiftp://noho121st:8446/srm/managervs?SFN=/fake/path$TIMESTAMP
 https://lxfs212ra04a04.cern.ch/dpm/cern.ch/home/dteam/vector-sample.txt$TIMESTAMP
 https://lxfsr122a04a04.cern.ch/dpm/cern.ch/home/dteam/does-not-exist$TIMESTAMP
 srm://noho22st1:8446/srm/managervs?SFN=/fake/path$TIMESTAMP
-
+https://lxf22sr1a04203.cern.ch/dpm/cern.ch/home/dteam/does-not-exist$TIMESTAMP
+gsiftp://noh22o1st:8446/srm/managervs?SFN=/fake/path$TIMESTAMP

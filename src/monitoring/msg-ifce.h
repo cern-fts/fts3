@@ -92,8 +92,6 @@ private:
     static bool instanceFlag;
     static msg_ifce *single;
     std::string errorMessage;
-    char * queue_name;
-    char * connection_hostname;
     bool read_initial_config();
     msg_ifce(); /*private constructor*/
 
@@ -117,13 +115,13 @@ public:
     void set_timestamp_checksum_source_ended(transfer_completed* tr_completed, const std::string & value);
     void set_timestamp_checksum_dest_started(transfer_completed* tr_completed, const std::string & value);
     void set_timestamp_checksum_dest_ended(transfer_completed* tr_completed, const std::string & value);
-    void set_transfer_timeout(transfer_completed* tr_completed, const std::string & value);
-    void set_checksum_timeout(transfer_completed* tr_completed, const std::string & value);
-    void set_total_bytes_transfered(transfer_completed* tr_completed, const std::string & value);
-    void set_number_of_streams(transfer_completed* tr_completed, const std::string & value);
-    void set_tcp_buffer_size(transfer_completed* tr_completed, const std::string & value);
-    void set_block_size(transfer_completed* tr_completed, const std::string & value);
-    void set_file_size(transfer_completed* tr_completed, const std::string & value);
+    void set_transfer_timeout(transfer_completed* tr_completed, unsigned value);
+    void set_checksum_timeout(transfer_completed* tr_completed, int value);
+    void set_total_bytes_transfered(transfer_completed* tr_completed, off_t value);
+    void set_number_of_streams(transfer_completed* tr_completed, unsigned value);
+    void set_tcp_buffer_size(transfer_completed* tr_completed, unsigned value);
+    void set_block_size(transfer_completed* tr_completed, unsigned value);
+    void set_file_size(transfer_completed* tr_completed, off_t value);
     void set_time_spent_in_srm_preparation_start(transfer_completed* tr_completed, const std::string & value);
     void set_time_spent_in_srm_preparation_end(transfer_completed* tr_completed, const std::string & value);
     void set_time_spent_in_srm_finalization_start(transfer_completed* tr_completed, const std::string & value);

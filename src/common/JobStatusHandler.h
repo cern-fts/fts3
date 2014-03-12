@@ -33,10 +33,6 @@
 
 #include "db/generic/JobStatus.h"
 
-
-using namespace std;
-using namespace boost;
-
 namespace fts3
 {
 namespace common
@@ -81,16 +77,16 @@ public:
     /**
      * names of transfer job statuses
      */
-    static const string FTS3_STATUS_FINISHEDDIRTY;
-    static const string FTS3_STATUS_CANCELED;
-    static const string FTS3_STATUS_UNKNOWN;
-    static const string FTS3_STATUS_FAILED;
-    static const string FTS3_STATUS_FINISHED;
-    static const string FTS3_STATUS_SUBMITTED;
-    static const string FTS3_STATUS_READY;
-    static const string FTS3_STATUS_ACTIVE;
-    static const string FTS3_STATUS_STAGING;
-    static const string FTS3_STATUS_NOT_USED;
+    static const std::string FTS3_STATUS_FINISHEDDIRTY;
+    static const std::string FTS3_STATUS_CANCELED;
+    static const std::string FTS3_STATUS_UNKNOWN;
+    static const std::string FTS3_STATUS_FAILED;
+    static const std::string FTS3_STATUS_FINISHED;
+    static const std::string FTS3_STATUS_SUBMITTED;
+    static const std::string FTS3_STATUS_READY;
+    static const std::string FTS3_STATUS_ACTIVE;
+    static const std::string FTS3_STATUS_STAGING;
+    static const std::string FTS3_STATUS_NOT_USED;
     ///@}
 
     /**
@@ -103,7 +99,7 @@ public:
      *
      * @return true if the transfer is ready
      */
-    bool isTransferFinished(string status);
+    bool isTransferFinished(std::string status);
 
     /**
      * Check weather the given state is valid
@@ -111,7 +107,7 @@ public:
      *
      * @return true if the the state is valid
      */
-    bool isStatusValid(string& status);
+    bool isStatusValid(std::string& status);
 
     /**
      * Counts how many states in the given vector are equal to given state
@@ -121,7 +117,7 @@ public:
      *
      * @return
      */
-    size_t countInState(string status, vector<JobStatus*>& statuses);
+    size_t countInState(std::string status, std::vector<JobStatus*>& statuses);
 
 protected:
 
@@ -149,7 +145,7 @@ private:
     JobStatusHandler & operator=(JobStatusHandler const&);
 
     /// maps job status name to job status id
-    const map<string, JobStatusEnum> statusNameToId;
+    const std::map<std::string, JobStatusEnum> statusNameToId;
 };
 
 

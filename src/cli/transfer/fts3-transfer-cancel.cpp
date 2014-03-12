@@ -25,6 +25,7 @@
 #include "GSoapContextAdapter.h"
 #include "MsgPrinter.h"
 #include "ui/CancelCli.h"
+#include "rest/HttpRequest.h"
 
 #include "common/JobStatusHandler.h"
 
@@ -32,8 +33,12 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <algorithm>
 
 #include <boost/scoped_ptr.hpp>
+
+#include <boost/lambda/bind.hpp>
+#include <boost/lambda/lambda.hpp>
 
 using namespace boost;
 using namespace std;
@@ -54,11 +59,24 @@ int main(int ac, char* av[])
             cli.reset(
                 getCli<CancelCli>(ac, av)
             );
+            if (!cli->validate()) return 0;
+
+            if (cli->rest())
+                {
+                    vector<string> jobIds = cli->getJobIds();
+                    vector<string>::iterator itr;
+
+                    for (itr = jobIds.begin(); itr != jobIds.end(); ++itr)
+                        {
+                            string url = cli->getService() + "/jobs/" + *itr;
+                            HttpRequest http (url, cli->capath(), cli->proxy(), cout);
+                            http.del();
+                        }
+                    return 0;
+                }
 
             // validate command line options, and return respective gsoap context
-            optional<GSoapContextAdapter&> opt = cli->validate();
-            if (!opt.is_initialized()) return 0;
-            GSoapContextAdapter& ctx = opt.get();
+            GSoapContextAdapter& ctx = cli->getGSoapContext();
 
             vector<string> jobs = cli->getJobIds();
 
@@ -68,15 +86,9 @@ int main(int ac, char* av[])
                     return 0;
                 }
 
-            ctx.cancel(jobs);
+            vector< pair<string, string> > ret = ctx.cancel(jobs);
 
-            vector<string>::iterator it;
-            for (it = jobs.begin(); it < jobs.end(); it++)
-                {
-                    cli->printer().cancelled_job(*it);
-
-                }
-
+            for_each(ret.begin(), ret.end(), lambda::bind(&MsgPrinter::cancelled_job, &(cli->printer()), lambda::_1));
         }
     catch(std::exception& ex)
         {

@@ -43,22 +43,22 @@ public:
 
     // Send to the server a message with the current status
     void sendMessage(double throughput, bool retry,
-                     const std::string& job_id, const std::string& file_id,
+                     const std::string& job_id, unsigned file_id,
                      const std::string& transfer_status, const std::string& transfer_message,
-                     double timeInSecs,  double fileSize);
+                     double timeInSecs,  off_t fileSize);
 
     // Same as before, but it can be run only once!
     void sendTerminal(double throughput, bool retry,
-                      const std::string& job_id, const std::string& file_id,
+                      const std::string& job_id, unsigned file_id,
                       const std::string& transfer_status, const std::string& transfer_message,
-                      double timeInSecs,  double fileSize);
+                      double timeInSecs,  off_t fileSize);
 
     // Let the server know that we are alive, and how are we doing
-    void sendPing(const std::string& job_id, const std::string& file_id,
-                  double throughput, double transferred);
+    void sendPing(const std::string& job_id, unsigned file_id,
+                  double throughput, off_t transferred);
 
     // Send to the server the log file
-    void sendLog(const std::string& job_id, const std::string& file_id,
+    void sendLog(const std::string& job_id, unsigned file_id,
                  const std::string& logFileName, bool debug);
 
     unsigned int nostreams;
@@ -67,9 +67,9 @@ public:
     std::string source_se;
     std::string dest_se;
     static std::string ReplaceNonPrintableCharacters(std::string s);
-    void setReuseTransfer(bool state)
+    void setMultipleTransfers(bool state)
     {
-        reuse = state;
+        multiple = state;
     }
 
 private:
@@ -90,5 +90,5 @@ private:
 #endif
 #endif
 
-    bool reuse;
+    bool multiple;
 };

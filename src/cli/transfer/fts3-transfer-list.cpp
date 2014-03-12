@@ -25,10 +25,16 @@
 
 #include "GSoapContextAdapter.h"
 #include "ui/ListTransferCli.h"
+#include "rest/HttpRequest.h"
 
 #include "common/JobStatusHandler.h"
 
 #include <boost/scoped_ptr.hpp>
+
+#include <boost/lambda/lambda.hpp>
+#include <boost/lambda/bind.hpp>
+
+#include <algorithm>
 
 using namespace std;
 using namespace boost;
@@ -50,22 +56,58 @@ int main(int ac, char* av[])
             cli.reset(
                 getCli<ListTransferCli>(ac, av)
             );
+            if (!cli->validate()) return 0;
+
+            if (cli->rest())
+                {
+                    vector<string> statuses = cli->getStatusArray();
+                    string dn = cli->getUserDn(), vo = cli->getVoName();
+
+                    string url = cli->getService() + "/jobs";
+
+                    // prefix will be holding '?' at the first contacenation and then '&'
+                    char prefix = '?';
+
+                    if (!dn.empty())
+                        {
+                            url += prefix;
+                            url += "user_dn=";
+                            url += dn;
+                            prefix = '&';
+                        }
+
+                    if (!vo.empty())
+                        {
+                            url += prefix;
+                            url += "vo_name=";
+                            url += vo;
+                            prefix = '&';
+                        }
+
+                    if (!statuses.empty())
+                        {
+                            url += prefix;
+                            url += "job_state=";
+                            url += *statuses.begin();
+                            prefix = '&';
+                        }
+
+                    string capath = cli->capath();
+                    string proxy = cli->proxy();
+
+                    HttpRequest http (url, capath, proxy, cout);
+                    http.get();
+                    return 0;
+                }
 
             // validate command line options, and return respective gsoap context
-            optional<GSoapContextAdapter&> opt = cli->validate();
-            if (!opt.is_initialized()) return 0;
-            GSoapContextAdapter& ctx = opt.get();
+            GSoapContextAdapter& ctx = cli->getGSoapContext();
 
             vector<string> array = cli->getStatusArray();
             vector<fts3::cli::JobStatus> statuses;
             statuses = ctx.listRequests(array, cli->getUserDn(), cli->getVoName());
 
-            vector<fts3::cli::JobStatus>::iterator it;
-            for (it = statuses.begin(); it < statuses.end(); it++)
-                {
-                    cli->printer().job_status(*it);
-                }
-
+            for_each(statuses.begin(), statuses.end(), lambda::bind(&MsgPrinter::job_status, &cli->printer(), lambda::_1));
         }
     catch(std::exception& ex)
         {

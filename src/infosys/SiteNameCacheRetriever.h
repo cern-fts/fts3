@@ -31,7 +31,6 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include "BdiiBrowser.h"
-#include "OsgParser.h"
 
 #include "common/ThreadSafeInstanceHolder.h"
 

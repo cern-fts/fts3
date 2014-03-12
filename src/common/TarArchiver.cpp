@@ -63,7 +63,7 @@ void TarArchiver::setSize(PosixTarHeader& header, unsigned long fileSize)
     sprintf(header.size,"%011llo", (long long unsigned int)fileSize);
 }
 
-void TarArchiver::setFilename(PosixTarHeader& header, string filename)
+void TarArchiver::setFilename(PosixTarHeader& header, std::string filename)
 {
 
     if(filename.empty() || filename.size() >= 100)
@@ -84,7 +84,7 @@ void TarArchiver::endRecord(size_t len)
         }
 }
 
-TarArchiver::TarArchiver(ostream& out):finished(false),out(out)
+TarArchiver::TarArchiver(std::ostream& out):finished(false),out(out)
 {
 
     if(sizeof(PosixTarHeader)!=512)
@@ -115,16 +115,16 @@ void TarArchiver::finish()
     out.flush();
 }
 
-void TarArchiver::putFile(istream& in, string nameInArchive)
+void TarArchiver::putFile(std::istream& in, std::string nameInArchive)
 {
 
     // buffer
     char buff[BUFSIZ];
 
     // check file size
-    in.seekg (0, ios::end);
+    in.seekg (0, std::ios::end);
     long len = in.tellg();
-    in.seekg (0, ios::beg);
+    in.seekg (0, std::ios::beg);
 
     // create tar header
     PosixTarHeader header;

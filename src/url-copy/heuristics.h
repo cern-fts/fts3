@@ -18,5 +18,3 @@ unsigned adjustStreamsBasedOnSize(off_t sizeInBytes, unsigned int currentStreams
  */
 unsigned adjustTimeoutBasedOnSize(off_t sizeInBytes, unsigned int timeout);
 
-
-

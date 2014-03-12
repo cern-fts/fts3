@@ -28,7 +28,7 @@
 #include <uuid/uuid.h>
 
 
-string UuidGenerator::generateUUID()
+std::string UuidGenerator::generateUUID()
 {
 
     uuid_t id;
@@ -40,6 +40,6 @@ string UuidGenerator::generateUUID()
     //uuid_generate_time(id);
     uuid_unparse(id, c_str);
 
-    string str = c_str;
+    std::string str = c_str;
     return str;
 }

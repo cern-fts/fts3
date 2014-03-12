@@ -30,10 +30,12 @@
 #include <boost/optional.hpp>
 #include <boost/assign.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/lambda/lambda.hpp>
 
 #include <utility>
 #include <sstream>
 #include <iostream>
+#include <algorithm>
 
 namespace fts3
 {
@@ -226,16 +228,16 @@ void MsgPrinter::client_interface(string interface)
     json_out.put("client_interface", interface);
 }
 
-void MsgPrinter::cancelled_job(string job_id)
+void MsgPrinter::cancelled_job( pair<string, string> id_status)
 {
 
     if (!json)
         {
-            cout << "job " << job_id << ": " << JobStatusHandler::FTS3_STATUS_CANCELED << endl;
+            cout << "job " << id_status.first << ": " << id_status.second << endl;
             return;
         }
 
-    map<string, string> object = map_list_of ("job_id", job_id) ("status", JobStatusHandler::FTS3_STATUS_CANCELED);
+    map<string, string> object = map_list_of ("job_id", id_status.first) ("status", id_status.second);
 
     addToArray(
         json_out,
@@ -490,9 +492,7 @@ void MsgPrinter::file_list(vector<string> values, vector<string> retries)
             if (retries.size() > 0)
                 {
                     cout << "  Retries: " << endl;
-                    vector<string>::const_iterator i;
-                    for (i = retries.begin(); i != retries.end(); ++i)
-                        cout << "    " << *i << std::endl;
+                    for_each(retries.begin(), retries.end(), cout << ("    " + lambda::_1) << '\n');
                 }
             else
                 {
@@ -600,11 +600,13 @@ void MsgPrinter::addToArray(ptree& root, string name, const ptree& node)
     optional<ptree&> child = root.get_child_optional(name);
     if (child.is_initialized())
         {
-            child.get().push_front(std::make_pair("", node));
+            child.get().push_back(make_pair("", node));
         }
     else
         {
-            root.put_child(name, node);
+            ptree files;
+            files.push_back(std::make_pair("", node));
+            root.put_child(name, files);
         }
 }
 

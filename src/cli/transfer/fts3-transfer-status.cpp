@@ -21,13 +21,20 @@
 #include "TransferTypes.h"
 #include "ui/TransferStatusCli.h"
 
+#include "rest/ResponseParser.h"
+#include "rest/HttpRequest.h"
+
 #include "common/JobStatusHandler.h"
 
+#include <algorithm>
 #include <vector>
 #include <string>
+#include <iterator>
 
 #include <boost/scoped_ptr.hpp>
 #include <boost/assign.hpp>
+#include <boost/lambda/lambda.hpp>
+#include <boost/lambda/bind.hpp>
 
 using namespace std;
 using namespace boost;
@@ -55,11 +62,30 @@ int main(int ac, char* av[])
             cli.reset (
                 getCli<TransferStatusCli>(ac, av)
             );
+            if (!cli->validate()) return 0;
+
+            if (cli->rest())
+                {
+                    vector<string> jobIds = cli->getJobIds();
+                    vector<string>::iterator itr;
+
+                    for (itr = jobIds.begin(); itr != jobIds.end(); ++itr)
+                        {
+                            string url = cli->getService() + "/jobs/" + *itr;
+
+                            stringstream ss;
+                            HttpRequest http (url, cli->capath(), cli->proxy(), ss);
+                            http.get();
+                            ResponseParser respons(ss);
+
+                            cout << respons.get("job_state") << endl;
+
+                        }
+                    return 0;
+                }
 
             // validate command line options, and return respective gsoap context
-            optional<GSoapContextAdapter&> opt = cli->validate();
-            if (!opt.is_initialized()) return 0;
-            GSoapContextAdapter& ctx = opt.get();
+            GSoapContextAdapter& ctx = cli->getGSoapContext();
 
             // archived content?
             bool archive = cli->queryArchived();
@@ -138,11 +164,12 @@ int main(int ac, char* av[])
                                                                 ;
 
                                                             vector<string> retries;
-                                                            for (ri = stat->retries.begin(); ri != stat->retries.end(); ++ri)
-                                                                {
-                                                                    retries.resize((*ri)->attempt);
-                                                                    retries[(*ri)->attempt - 1] = (*ri)->reason;
-                                                                }
+                                                            transform(
+                                                                stat->retries.begin(),
+                                                                stat->retries.end(),
+                                                                inserter(retries, retries.begin()),
+                                                                lambda::bind(&tns3__FileTransferRetry::reason, lambda::_1)
+                                                            );
 
                                                             cli->printer().file_list(values, retries);
                                                         }
@@ -177,6 +204,7 @@ int main(int ac, char* av[])
                 cli->printer().gsoap_error_msg(ex);
             else
                 std::cerr << ex << std::endl;
+
             return 1;
         }
     catch(...)

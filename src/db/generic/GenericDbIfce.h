@@ -33,6 +33,7 @@
 #include <set>
 #include <list>
 #include "JobStatus.h"
+#include "JobParameterHandler.h"
 #include "FileTransferStatus.h"
 #include "SePair.h"
 #include "TransferJobSummary.h"
@@ -78,6 +79,7 @@ struct job_element_tupple
     std::string selectionStrategy;
     int fileIndex;
     boost::optional<int> wait_timeout;
+    std::string activity;
 };
 
 class GenericDbIfce
@@ -95,14 +97,11 @@ public:
     /**
      * Submit a transfer request to be stored in the database
      **/
-    virtual void submitPhysical(const std::string & jobId, std::list<job_element_tupple>& src_dest_pair, const std::string & paramFTP,
-                                const std::string & DN, const std::string & cred, const std::string & voName, const std::string & myProxyServer,
-                                const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite,
-                                const std::string & sourceSpaceToken, const std::string & sourceSpaceTokenDescription, int copyPinLifeTime,
-                                const std::string & failNearLine, const std::string & checksumMethod, const std::string & reuse,
-                                int bringonline, std::string metadata,
-                                int retry, int retryDelay, std::string sourceSe, std::string destinationSe) = 0;
-
+    virtual void submitPhysical(const std::string & jobId, std::list<job_element_tupple> src_dest_pair,
+                                const std::string & DN, const std::string & cred,
+                                const std::string & voName, const std::string & myProxyServer, const std::string & delegationID,
+                                const std::string & sourceSe, const std::string & destinationSe,
+                                const JobParameterHandler & params) = 0;
 
     virtual void getTransferJobStatus(std::string requestID, bool archive, std::vector<JobStatus*>& jobs) = 0;
 
@@ -115,7 +114,7 @@ public:
 
     virtual TransferJobs* getTransferJob(std::string jobId, bool archive) = 0;
 
-    virtual void getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files, bool reuse) = 0;
+    virtual void getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files) = 0;
 
     virtual void getByJobId(std::map< std::string, std::list<TransferFiles*> >& files) = 0;
 
@@ -129,17 +128,13 @@ public:
     virtual void updateSe(std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
                           std::string SE_TRANSFER_TYPE, std::string SE_TRANSFER_PROTOCOL, std::string SE_CONTROL_PROTOCOL, std::string GOCDB_ID) = 0;
 
-    virtual void deleteSe(std::string NAME) = 0;
+    virtual bool updateFileTransferStatus(double throughput, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
+                                          int process_id, double filesize, double duration, bool retry) = 0;
 
-    virtual bool updateFileTransferStatus(double throughput, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message, int process_id, double filesize, double duration) = 0;
-
-    virtual bool updateJobTransferStatus(int file_id, std::string job_id, const std::string status) = 0;
-
-    virtual void updateFileTransferProgress(std::string job_id, int file_id, double throughput, double transferred) = 0;
+    virtual bool updateJobTransferStatus(std::string job_id, const std::string status) = 0;
 
     virtual void cancelJob(std::vector<std::string>& requestIDs) = 0;
 
-    virtual void getCancelJob(std::vector<int>& requestIDs) = 0;
 
 
     /*t_credential API*/
@@ -171,9 +166,9 @@ public:
 
     virtual bool isCredentialExpired(const std::string & dlg_id, const std::string & dn) = 0;
 
-    virtual bool isTrAllowed(const std::string & source_se, const std::string & dest) = 0;
+    virtual bool updateOptimizer() = 0;
 
-    virtual bool isTrAllowed2(const std::string & source_se, const std::string & dest) = 0;
+    virtual bool isTrAllowed(const std::string & source_se, const std::string & dest) = 0;
 
     virtual int getSeOut(const std::string & source, const std::set<std::string> & destination) = 0;
 
@@ -193,7 +188,7 @@ public:
 
     virtual void revertToSubmitted() = 0;
 
-    virtual void backup() = 0;
+    virtual void backup(long* nJobs, long* nFiles) = 0;
 
     virtual void forkFailedRevertState(const std::string & jobId, int fileId) = 0;
 
@@ -236,19 +231,11 @@ public:
 
     virtual std::string getGroupForSe(const std::string se) = 0;
 
-
-    virtual void submitHost(const std::string & jobId) = 0;
-
-    virtual std::string transferHost(int fileId) = 0;
-
-    virtual std::string transferHostV(std::map<int,std::string>& fileIds) = 0;
-
     //t_config_symbolic
     virtual void addLinkConfig(LinkConfig* cfg) = 0;
     virtual void updateLinkConfig(LinkConfig* cfg) = 0;
     virtual void deleteLinkConfig(std::string source, std::string destination) = 0;
     virtual LinkConfig* getLinkConfig(std::string source, std::string destination) = 0;
-    virtual bool isThereLinkConfig(std::string source, std::string destination) = 0;
     virtual std::pair<std::string, std::string>* getSourceAndDestination(std::string symbolic_name) = 0;
     virtual bool isGrInPair(std::string group) = 0;
     virtual bool isShareOnly(std::string se) = 0;
@@ -259,6 +246,12 @@ public:
     virtual void deleteShareConfig(std::string source, std::string destination) = 0;
     virtual ShareConfig* getShareConfig(std::string source, std::string destination, std::string vo) = 0;
     virtual std::vector<ShareConfig*> getShareConfig(std::string source, std::string destination) = 0;
+
+    virtual void addActivityConfig(std::string vo, std::string shares, bool active) = 0;
+    virtual void updateActivityConfig(std::string vo, std::string shares, bool active) = 0;
+    virtual void deleteActivityConfig(std::string vo) = 0;
+    virtual bool isActivityConfigActive(std::string vo) = 0;
+    virtual std::map< std::string, double > getActivityConfig(std::string vo) = 0;
 
     virtual bool checkIfSeIsMemberOfAnotherGroup( const std::string & member) = 0;
 
@@ -276,8 +269,6 @@ public:
 
     virtual bool hasPairSeCfgAssigned(int file_id, std::string vo) = 0;
 
-    virtual bool hasStandAloneGrCfgAssigned(int file_id, std::string vo) = 0;
-
     virtual bool hasPairGrCfgAssigned(int file_id, std::string vo) = 0;
 
     virtual int countActiveTransfers(std::string source, std::string destination, std::string vo) = 0;
@@ -288,8 +279,6 @@ public:
 
     virtual int sumUpVoShares (std::string source, std::string destination, std::set<std::string> vos) = 0;
 
-    virtual bool checkConnectionStatus() = 0;
-
     virtual void setPriority(std::string jobId, int priority) = 0;
 
     virtual void setRetry(int retry) = 0;
@@ -298,13 +287,13 @@ public:
 
     virtual int getRetryTimes(const std::string & jobId, int fileId) = 0;
 
-    virtual int getMaxTimeInQueue() = 0;
-
     virtual void setMaxTimeInQueue(int afterXHours) = 0;
 
     virtual void setToFailOldQueuedJobs(std::vector<std::string>& jobs) = 0;
 
     virtual std::vector< std::pair<std::string, std::string> > getPairsForSe(std::string se) = 0;
+
+    virtual std::vector<std::string> getAllActivityShareConf() = 0;
 
     virtual std::vector<std::string> getAllStandAlloneCfgs() = 0;
 
@@ -316,11 +305,11 @@ public:
 
     virtual void setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<int>& files) = 0;
 
-    virtual std::vector< boost::tuple<std::string, std::string, int> >  getVOBringonlimeMax() = 0;
+    virtual std::vector< boost::tuple<std::string, std::string, int> >  getVOBringonlineMax() = 0;
 
     virtual std::vector<struct message_bringonline> getBringOnlineFiles(std::string voName, std::string hostName, int maxValue) = 0;
 
-    virtual void bringOnlineReportStatus(const std::string & state, const std::string & message, struct message_bringonline msg) = 0;
+    virtual void bringOnlineReportStatus(const std::string & state, const std::string & message, const struct message_bringonline& msg) = 0;
 
     virtual void addToken(const std::string & job_id, int file_id, const std::string & token) = 0;
 
@@ -338,9 +327,7 @@ public:
 
     virtual void cancelJobsInTheQueue(const std::string& dn, std::vector<std::string>& jobs) = 0;
 
-    virtual void transferLogFile(const std::string& filePath, const std::string& jobId, int fileId, bool debug) = 0;
-
-    virtual std::vector<struct message_state>  getStateOfTransfer(const std::string& jobId, int fileId) = 0;
+    virtual std::vector<struct message_state> getStateOfTransfer(const std::string& jobId, int file_id) = 0;
 
     virtual void getFilesForJob(const std::string& jobId, std::vector<int>& files) = 0;
 
@@ -386,9 +373,16 @@ public:
         *end   = 0xFFFF;
     }
 
-
     virtual unsigned int updateFileStatusReuse(TransferFiles* file, const std::string status) = 0;
 
+    virtual void getCancelJob(std::vector<int>& requestIDs) = 0;
+
     virtual void snapshot(const std::string & vo_name, const std::string & source_se, const std::string & dest_se, const std::string & endpoint, std::stringstream & result) = 0;
+
+    virtual bool getDrain() = 0;
+
+    virtual void setDrain(bool drain) = 0;
+
+
 
 };

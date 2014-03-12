@@ -20,7 +20,7 @@
 #include "GSoapContextAdapter.h"
 #include "ProxyCertificateDelegator.h"
 #include "ui/SubmitTransferCli.h"
-
+#include "rest/HttpRequest.h"
 #include "common/JobStatusHandler.h"
 
 #include "TransferTypes.h"
@@ -46,15 +46,22 @@ int main(int ac, char* av[])
         {
             // create and initialize the command line utility
             cli.reset (
-                new SubmitTransferCli
+                getCli<SubmitTransferCli>(ac, av)
             );
+            if (!cli->validate()) return 0;
 
-            cli->parse(ac, av);
+            if (cli->rest())
+                {
+                    string url = cli->getService() + "/jobs";
+                    string job = cli->getFileName();
+
+                    HttpRequest http (url, cli->capath(), cli->proxy(), cout);
+                    http.put(job);
+                    return 0;
+                }
 
             // validate command line options, and return respective gSOAP context
-            optional<GSoapContextAdapter&> opt = cli->validate();
-            if (!opt.is_initialized()) return 0;
-            GSoapContextAdapter& ctx = opt.get();
+            GSoapContextAdapter& ctx = cli->getGSoapContext();
 
             string jobId("");
 

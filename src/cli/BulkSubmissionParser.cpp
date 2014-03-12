@@ -58,7 +58,7 @@ BulkSubmissionParser::BulkSubmissionParser(ifstream& ifs)
     catch(json_parser_error& ex)
         {
             // handle errors in JSON format
-            throw Err_Custom(ex.message());
+            throw string(ex.message());
         }
 
     parse();
@@ -228,6 +228,10 @@ optional<string> BulkSubmissionParser::getMetadata(ptree& item)
     // the potential array
     ptree& metadata = value.get();
     // parse the metadata back to JSON
+
+    string str = metadata.get_value<string>();
+    if (!str.empty()) return str;
+
     stringstream ss;
     write_json(ss, metadata);
     // return the string

@@ -18,6 +18,7 @@ const option UrlCopyOpts::long_options[] =
     {"user-filesize",     required_argument, 0, 'I'},
     {"bringonline",       required_argument, 0, 'H'},
     {"reuse",             no_argument,       0, 'G'},
+    {"multi-hop",         no_argument,       0, 'R'},
     {"debug",             no_argument,       0, 'F'},
     {"source-site",       required_argument, 0, 'D'},
     {"dest-site",         required_argument, 0, 'E'},
@@ -41,13 +42,13 @@ const option UrlCopyOpts::long_options[] =
     {0, 0, 0, 0}
 };
 
-const char UrlCopyOpts::short_options[] = "PONM:L:K:J:I:H:GFD:E:C:z:A:t:a:b:c:de:f:h:ij:k:B:5:";
+const char UrlCopyOpts::short_options[] = "PONM:L:K:J:I:H:GRFD:E:C:z:A:t:a:b:c:de:f:h:ij:k:B:5:";
 
 
 UrlCopyOpts::UrlCopyOpts(): monitoringMessages(false), autoTunned(false),
     manualConfig(false), debug(false), overwrite(false), daemonize(false),
-    logToStderr(false),reuseFile(false), compareChecksum(CHECKSUM_DONT_CHECK),
-    fileId("0"), userFileSize(0), bringOnline(-1), copyPinLifetime(-1),
+    logToStderr(false), reuse(false), multihop(false), compareChecksum(CHECKSUM_DONT_CHECK),
+    fileId(0), userFileSize(0), bringOnline(-1), copyPinLifetime(-1),
     nStreams(DEFAULT_NOSTREAMS), tcpBuffersize(DEFAULT_BUFFSIZE),
     blockSize(0), timeout(DEFAULT_TIMEOUT)
 {
@@ -118,13 +119,16 @@ int UrlCopyOpts::parse(int argc, char * const argv[])
                             jobMetadata = optarg;
                             break;
                         case 'I':
-                            userFileSize = boost::lexical_cast<double>(optarg);
+                            userFileSize = boost::lexical_cast<long long>(optarg);
                             break;
                         case 'H':
                             bringOnline = boost::lexical_cast<int>(optarg);
                             break;
                         case 'G':
-                            reuseFile = true;
+                            reuse = true;
+                            break;
+                        case 'R':
+                            multihop = true;
                             break;
                         case 'F':
                             debug = true;
@@ -184,7 +188,7 @@ int UrlCopyOpts::parse(int argc, char * const argv[])
                             sourceTokenDescription = optarg;
                             break;
                         case 'B':
-                            fileId = optarg;
+                            fileId = boost::lexical_cast<unsigned>(optarg);
                             break;
                         case '5':
                             proxy = optarg;
@@ -214,13 +218,13 @@ std::ostream& operator << (std::ostream& out, const UrlCopyOpts::CompareChecksum
 {
     switch (c)
         {
-        case UrlCopyOpts::CompareChecksum::CHECKSUM_DONT_CHECK:
+        case UrlCopyOpts::CHECKSUM_DONT_CHECK:
             out << "No checksum comparison";
             break;
-        case UrlCopyOpts::CompareChecksum::CHECKSUM_STRICT:
+        case UrlCopyOpts::CHECKSUM_STRICT:
             out << "Strict comparison";
             break;
-        case UrlCopyOpts::CompareChecksum::CHECKSUM_RELAXED:
+        case UrlCopyOpts::CHECKSUM_RELAXED:
             out << "Relaxed comparison";
             break;
         default:

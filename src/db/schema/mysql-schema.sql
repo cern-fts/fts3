@@ -295,7 +295,7 @@ CREATE TABLE t_bad_ses (
 --
 CREATE TABLE t_bad_dns (
 --
--- The user DN   
+-- The hostname of the bad SE   
   dn              VARCHAR(255),
 --
 -- The reason this host was added 
@@ -337,7 +337,7 @@ CREATE TABLE t_se_pair_acl (
 CREATE TABLE t_vo_acl (
 --
 -- the name of the VO
-  vo_name     VARCHAR(100) NOT NULL,
+  vo_name     VARCHAR(50) NOT NULL,
 --
 -- The principal name
   principal   VARCHAR(255) NOT NULL,
@@ -357,7 +357,7 @@ CREATE TABLE t_job (
 -- The state the job is currently in
   job_state            VARCHAR(32) NOT NULL,
 --
--- Session reuse for this job. Allowed values are Y, (N), NULL
+-- Session reuse for this job. Allowed values are Y, N, H (multihop) NULL
   reuse_job            VARCHAR(3), 
 --
 -- Canceling flag. Allowed values are Y, (N), NULL
@@ -579,6 +579,10 @@ CREATE TABLE t_file (
   file_metadata   VARCHAR(255),
   
 --
+-- activity name
+  activity   VARCHAR(255) DEFAULT "default",
+  
+--
 -- selection strategy used in case when multiple protocols were provided
   selection_strategy VARCHAR(255),
 --
@@ -617,7 +621,7 @@ CREATE TABLE t_file (
 CREATE TABLE t_file_retry_errors (
     file_id   INTEGER NOT NULL,
     attempt   INTEGER NOT NULL,
-    datetime  TIMESTAMP  NULL DEFAULT NULL,
+    datetime  TIMESTAMP NULL DEFAULT NULL,
     reason    VARCHAR(2048),
     CONSTRAINT t_file_retry_errors_pk PRIMARY KEY(file_id, attempt),
     CONSTRAINT t_file_retry_fk FOREIGN KEY (file_id) REFERENCES t_file(file_id) ON DELETE CASCADE
@@ -629,8 +633,8 @@ CREATE TABLE t_file_retry_errors (
 --
 CREATE TABLE t_file_share_config (
   file_id         INTEGER       NOT NULL,
-  source          VARCHAR(255)   NOT NULL,
-  destination     VARCHAR(255)   NOT NULL,
+  source          VARCHAR(150)   NOT NULL,
+  destination     VARCHAR(150)   NOT NULL,
   vo              VARCHAR(100)   NOT NULL,
   CONSTRAINT t_file_share_config_pk PRIMARY KEY (file_id, source, destination, vo),
   CONSTRAINT t_share_config_fk1 FOREIGN KEY (source, destination, vo) REFERENCES t_share_config (source, destination, vo) ON DELETE CASCADE,
@@ -660,7 +664,8 @@ CREATE TABLE t_stage_req (
 --
 CREATE TABLE t_hosts (
     hostname    VARCHAR(64) PRIMARY KEY NOT NULL,
-    beat        TIMESTAMP NULL DEFAULT NULL
+    beat        TIMESTAMP NULL DEFAULT NULL,
+    drain 	INTEGER DEFAULT 0
 );
 
 
@@ -668,11 +673,119 @@ CREATE TABLE t_optimize_active (
   source_se    VARCHAR(150) NOT NULL,
   dest_se      VARCHAR(150) NOT NULL,
   active INTEGER UNSIGNED DEFAULT 4,
-  message      VARCHAR(512),  
+  message      VARCHAR(512),
   datetime     TIMESTAMP  NULL DEFAULT NULL,
   CONSTRAINT t_optimize_active_pk PRIMARY KEY (source_se, dest_se)
 );
 
+
+--
+-- t_file stores files for data management operations
+--
+CREATE TABLE t_dm (
+-- file_id is a unique identifier 
+--
+  file_id          INTEGER PRIMARY KEY AUTO_INCREMENT,
+--
+-- job_id (used in joins with file table)
+  job_id           CHAR(36) NOT NULL,
+--
+-- The state of this file
+  file_state       VARCHAR(32) NOT NULL,
+-- Hostname which this file was deleted
+  dmHost     VARCHAR(150),
+--
+-- The Source
+  source_surl      VARCHAR(900),
+--
+-- The Destination
+  dest_surl        VARCHAR(900),
+--
+-- Source SE host name
+  source_se            VARCHAR(150),
+--
+-- Dest SE host name
+  dest_se              VARCHAR(150),  
+--
+-- The error scope
+  error_scope      VARCHAR(32),
+--
+-- The FTS phase when the error happened
+  error_phase      VARCHAR(32),
+--
+-- The reason the file is in this state
+  reason           VARCHAR(2048),
+--
+-- the user-defined checksum of the file "checksum_type:checksum"
+  checksum           VARCHAR(100),
+--
+-- the timestamp when the file is in a terminal state
+  finish_time       TIMESTAMP NULL DEFAULT NULL,
+--
+-- the timestamp when the file is in a terminal state
+  start_time        TIMESTAMP NULL DEFAULT NULL,  
+--
+-- internal file parameters for storing information between retry attempts
+  internal_file_params  VARCHAR(255),
+--
+-- this timestamp will be set when the job enter in one of the terminal 
+-- states (Finished, FinishedDirty, Failed, Canceled). Use for table
+-- partitioning
+  job_finished          TIMESTAMP NULL DEFAULT NULL,
+--
+-- the pid of the process which is executing the file transfer
+  pid                   INTEGER,
+--
+-- dm op duration
+  tx_duration           DOUBLE,
+--
+-- How many times should the transfer be retried 
+  retry                 INTEGER DEFAULT 0,
+--
+-- user provided size of the file (bytes)
+-- we use DOUBLE because SOCI truncates BIGINT to int32
+  user_filesize  DOUBLE,    
+--
+-- File metadata
+  file_metadata   VARCHAR(255),  
+--
+-- activity name
+  activity   VARCHAR(255) DEFAULT "default",  
+--
+-- selection strategy used in case when multiple protocols were provided
+  selection_strategy VARCHAR(255),
+--
+-- Staging start timestamp
+  dm_start   TIMESTAMP NULL DEFAULT NULL,  
+--
+-- Staging finish timestamp
+  dm_finished   TIMESTAMP NULL DEFAULT NULL,
+--
+-- dm token
+  dm_token VARCHAR(255),
+--
+-- the timestamp that the file will be retried
+  retry_timestamp          TIMESTAMP NULL DEFAULT NULL,
+--
+--
+  wait_timestamp		TIMESTAMP NULL DEFAULT NULL,
+--
+--
+  wait_timeout			INTEGER,
+--
+--
+  hashed_id INTEGER UNSIGNED DEFAULT 0,
+--
+-- The VO that owns this job
+  vo_name              VARCHAR(100),  
+--
+--    
+  FOREIGN KEY (job_id) REFERENCES t_job(job_id)
+);
+
+
+-- t_dm indexes:
+CREATE INDEX dm_job_id     ON t_dm(job_id);
 
 
 --
@@ -693,7 +806,6 @@ CREATE INDEX t_waittimeout ON t_file(wait_timeout);
 CREATE INDEX t_file_select ON t_file(dest_se, source_se, job_finished, file_state );
 CREATE INDEX file_vo_name_state ON t_file(file_state, vo_name, source_se, dest_se);
 CREATE INDEX file_tr_host ON t_file(transferHost, file_state);
-
 
 -- 
 --

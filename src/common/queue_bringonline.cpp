@@ -27,7 +27,7 @@ ThreadSafeBringOnlineList::~ThreadSafeBringOnlineList()
 {
 }
 
-void ThreadSafeBringOnlineList::push_back(struct message_bringonline msg)
+void ThreadSafeBringOnlineList::push_back(const struct message_bringonline& msg)
 {
     ThreadTraits::LOCK lock(_mutex);
     m_list.push_back(msg);
@@ -39,21 +39,21 @@ void ThreadSafeBringOnlineList::clear()
     m_list.clear();
 }
 
-void ThreadSafeBringOnlineList::checkExpiredMsg(std::vector<struct message_bringonline>&)
+void ThreadSafeBringOnlineList::checkExpiredMsg(const std::vector<struct message_bringonline>&)
 {
     ThreadTraits::LOCK lock(_mutex);
 }
 
-void ThreadSafeBringOnlineList::updateMsg(struct message_bringonline)
+void ThreadSafeBringOnlineList::updateMsg(const struct message_bringonline&)
 {
     ThreadTraits::LOCK lock(_mutex);
 }
 
-void ThreadSafeBringOnlineList::deleteMsg(std::vector<struct message_bringonline>& messages)
+void ThreadSafeBringOnlineList::deleteMsg(const std::vector<struct message_bringonline>& messages)
 {
     ThreadTraits::LOCK lock(_mutex);
     std::list<struct message_bringonline>::iterator i = m_list.begin();
-    for (std::vector<struct message_bringonline>::iterator iter = messages.begin(); iter != messages.end(); ++iter)
+    for (std::vector<struct message_bringonline>::const_iterator iter = messages.begin(); iter != messages.end(); ++iter)
         {
             i = m_list.begin();
             while (i != m_list.end())
@@ -70,7 +70,7 @@ void ThreadSafeBringOnlineList::deleteMsg(std::vector<struct message_bringonline
         }
 }
 
-void ThreadSafeBringOnlineList::removeFinishedTr(struct message_bringonline msg)
+void ThreadSafeBringOnlineList::removeFinishedTr(const struct message_bringonline& msg)
 {
     ThreadTraits::LOCK lock(_mutex);
     std::list<struct message_bringonline>::iterator i = m_list.begin();

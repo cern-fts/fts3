@@ -20,6 +20,11 @@ limitations under the License. */
 #include <time.h>
 #include <ctime>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
+#include <netdb.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/param.h>
+#include <unistd.h>
 
 #define JOB_ID_LEN 36+1
 #define FILE_ID_LEN 36
@@ -28,9 +33,6 @@ limitations under the License. */
 #define MAX_NUM_MSGS 50000
 #define SOURCE_SE_ 100
 #define DEST_SE_ 100
-
-
-using namespace std;
 
 struct message_base
 {
@@ -263,7 +265,6 @@ const int mode_1[] = {2,4,3,5};
 const int mode_2[] = {4,6,5,8};
 const int mode_3[] = {6,8,7,10};
 
-
 inline bool lanTransfer(const std::string source, const std::string dest)
 {
 
@@ -290,4 +291,28 @@ inline bool lanTransfer(const std::string source, const std::string dest)
 }
 
 
+/**
+ * Return the full qualified hostname
+ */
+inline std::string getFullHostname()
+{
+    char hostname[MAXHOSTNAMELEN] = {0};
+    gethostname(hostname, sizeof(hostname));
+
+    struct addrinfo hints, *info;
+    memset(&hints, 0, sizeof(hints));
+
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_CANONNAME;
+
+    // First is OK
+    if (getaddrinfo(hostname, NULL, &hints, &info) == 0)
+        {
+            strncpy(hostname, info->ai_canonname, sizeof(hostname));
+            hostname[MAXHOSTNAMELEN - 1] = '\0';
+            freeaddrinfo(info);
+        }
+    return hostname;
+}
 

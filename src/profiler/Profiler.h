@@ -32,7 +32,7 @@ namespace fts3
  */
 struct Profile
 {
-    boost::mutex    mutex;
+    mutable boost::mutex mutex;
 
     unsigned long   nCalled;
     unsigned long   nExceptions;
@@ -54,6 +54,8 @@ struct Profile
         else
             return 0;
     }
+
+    const Profile& operator = (const Profile&) = delete;
 };
 
 std::ostream& operator << (std::ostream& out, const Profile& prof);
@@ -74,6 +76,9 @@ public:
     ~ScopeProfiler();
 
     void exception();
+
+    ScopeProfiler(const ScopeProfiler&) = delete;
+    const ScopeProfiler& operator = (const ScopeProfiler&) = delete;
 };
 
 
@@ -87,19 +92,26 @@ private:
 
     unsigned dumpInterval;
 
-public:
-    static ProfilingSubsystem& getInstance();
-
+    mutable boost::mutex mutex;
     std::map<std::string, Profile> profiles;
+
+    friend std::ostream& operator << (std::ostream& out, const ProfilingSubsystem& profSubsys);
 
     ProfilingSubsystem();
     ~ProfilingSubsystem();
+
+public:
+    static ProfilingSubsystem& getInstance();
 
     void start();
 
     Profile& getProfile(const std::string &scope);
     unsigned getInterval() const;
 
+    // Copying may be expensive, but keeping the lock during the DB loop is probably more
+    // (Plus, this is done once every n-tens of seconds, so doesn't really matter)
+    std::map<std::string, Profile> getProfiles() const;
+    void clear();
 };
 
 std::ostream& operator << (std::ostream& out, const ProfilingSubsystem& profSubsys);

@@ -28,7 +28,7 @@ public:
     /**
      * parses the bulk submission file if necessary
      */
-    virtual optional<GSoapContextAdapter&> validate(bool init = true);
+    bool validate();
 
     /**
      * Gets a vector with job IDs.

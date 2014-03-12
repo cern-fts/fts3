@@ -31,8 +31,11 @@
 #include <boost/thread.hpp>
 
 #include "BdiiBrowser.h"
-#include "OsgParser.h"
-#include "BdiiCacheParser.h"
+
+#ifndef WITHOUT_PUGI
+#  include "OsgParser.h"
+#  include "BdiiCacheParser.h"
+#endif
 
 #include "common/ThreadSafeInstanceHolder.h"
 

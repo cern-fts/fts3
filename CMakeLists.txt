@@ -12,17 +12,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
 # See the License for the specific language governing permissions and 
 # limitations under the License. 
-  
- 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8)
 project(fts3)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
 
 
 set(VERSION_MAJOR 3)
-set(VERSION_MINOR 1)
-set(VERSION_PATCH 80)
+set(VERSION_MINOR 2)
+set(VERSION_PATCH 0)
 set(VERSION_STRING ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 
 FILE(WRITE ${PROJECT_SOURCE_DIR}/src/common/version.h
@@ -33,6 +31,7 @@ option(ORACLEBUILD "Build oracle plug-in" OFF)
 option(MYSQLBUILD "Build for EPEL" OFF)
 option(MAINBUILD "Build fts" OFF)
 option(ALLBUILD "Build fts all including db plug-ins" OFF)
+option(CLIENTBUILD "Build only the client libraries, tools and bindings" OFF)
 	 
 ADD_DEFINITIONS(-DWITH_IPV6)
 ADD_DEFINITIONS(-DOPENSSL_THREADS)
@@ -40,7 +39,9 @@ ADD_DEFINITIONS(-DNDEBUG)
 ADD_DEFINITIONS(-DSOCKET_CLOSE_ON_EXIT)
 ADD_DEFINITIONS(-D_REENTRANT)
 ADD_DEFINITIONS(-DBOOST_DATE_TIME_HAS_REENTRANT_STD_FUNCTIONS)
-ADD_DEFINITIONS(-std=c++0x)
+
+# Enable C++11
+include(EnableCpp11 REQUIRED)
 
 set(libsubdirs "lib64;lib" CACHE STRING "The path suffixes to find libraries")
 # load module
@@ -64,16 +65,18 @@ endif ()
 
 if (ALLBUILD STREQUAL "ON")
 find_package(OCCI)
-find_package(APR 1.2.7 REQUIRED)
-find_package(APRUtil 1.2.7 REQUIRED)
 find_package(ActiveMQcpp 3.2.0 REQUIRED)
+find_package(PugiXML)
 endif ()
 
 if (MAINBUILD STREQUAL "ON")
-find_package(APR 1.2.7 REQUIRED)
-find_package(APRUtil 1.2.7 REQUIRED)
 find_package(ActiveMQcpp 3.2.0 REQUIRED)
+find_package(PugiXML)
 endif ()
+
+if (NOT PUGIXML_FOUND)
+    add_definitions(-DWITHOUT_PUGI)
+endif (NOT PUGIXML_FOUND)
 
 find_package(Threads)
 find_package(OpenSSL)
@@ -83,6 +86,7 @@ set(Boost_ADDITIONAL_VERSIONS
     "1.46" "1.47.0" "1.48" "1.49.0" "1.50" "1.51.0"
 )
 set(Boost_USE_MULTITHREADED ON)
+set (Boost_NO_BOOST_CMAKE ON)
 
 find_package(Boost)
 

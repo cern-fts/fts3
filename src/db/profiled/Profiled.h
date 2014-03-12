@@ -20,7 +20,6 @@
 #include <common_dev.h>
 #include <iomanip>
 #include <map>
-#include <sstream>
 #include "GenericDbIfce.h"
 
 /**
@@ -39,14 +38,11 @@ public:
 
     void init(std::string username, std::string password, std::string connectString, int pooledConn);
 
-    void submitPhysical(const std::string & jobId, std::list<job_element_tupple>& src_dest_pair, const std::string & paramFTP,
-                        const std::string & DN, const std::string & cred, const std::string & voName, const std::string & myProxyServer,
-                        const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite,
-                        const std::string & sourceSpaceToken, const std::string & sourceSpaceTokenDescription, int copyPinLifeTime,
-                        const std::string & failNearLine, const std::string & checksumMethod, const std::string & reuse,
-                        int bringonline, std::string metadata,
-                        int retry, int retryDelay, std::string sourceSe, std::string destinationSe);
-
+    void submitPhysical(const std::string & jobId, std::list<job_element_tupple> src_dest_pair,
+                        const std::string & DN, const std::string & cred,
+                        const std::string & voName, const std::string & myProxyServer, const std::string & delegationID,
+                        const std::string & sourceSe, const std::string & destinationSe,
+                        const JobParameterHandler & params);
 
     void getTransferJobStatus(std::string requestID, bool archive, std::vector<JobStatus*>& jobs);
 
@@ -58,9 +54,9 @@ public:
 
     TransferJobs* getTransferJob(std::string jobId, bool archive);
 
-    void getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files, bool reuse);
+    void getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files);
 
-    void getByJobId(std::map< std::string, std::list<TransferFiles*> >& files);
+    void getByJobId( std::map< std::string, std::list<TransferFiles*> >& files);
 
     void getSe(Se* &se, std::string seName);
 
@@ -72,19 +68,14 @@ public:
     void updateSe(std::string endpoint, std::string se_type, std::string site, std::string name, std::string state, std::string version, std::string host,
                   std::string se_transfer_type, std::string se_transfer_protocol, std::string se_control_protocol, std::string gocdb_id);
 
-    void deleteSe(std::string NAME);
+    bool updateFileTransferStatus(double throughput, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
+                                  int process_id, double filesize, double duration, bool retry);
 
-    bool updateFileTransferStatus(double throughput, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message, int process_id, double filesize, double duration);
-
-    bool updateJobTransferStatus(int file_id, std::string job_id, const std::string status);
-
-    void updateFileTransferProgress(std::string job_id, int file_id, double throughput, double transferred);
+    bool updateJobTransferStatus(std::string job_id, const std::string status);
 
     void updateFileTransferProgressVector(std::vector<struct message_updater>& messages);
 
     void cancelJob(std::vector<std::string>& requestIDs);
-
-    void getCancelJob(std::vector<int>& requestIDs);
 
     void insertGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs);
 
@@ -114,9 +105,9 @@ public:
 
     bool isCredentialExpired(const std::string & dlg_id, const std::string & dn);
 
-    bool isTrAllowed(const std::string & source_se, const std::string & dest);
+    bool updateOptimizer();
 
-    bool isTrAllowed2(const std::string & source_se, const std::string & dest);
+    bool isTrAllowed(const std::string & source_se, const std::string & dest);
 
     int getSeOut(const std::string & source, const std::set<std::string> & destination);
 
@@ -136,7 +127,7 @@ public:
 
     void revertToSubmitted();
 
-    void backup();
+    void backup(long* nJobs, long* nFiles);
 
     void forkFailedRevertState(const std::string & jobId, int fileId);
 
@@ -178,18 +169,10 @@ public:
 
     std::string getGroupForSe(const std::string se);
 
-
-    void submitHost(const std::string & jobId);
-
-    std::string transferHost(int fileId);
-
-    std::string transferHostV(std::map<int,std::string>& fileIds);
-
     void addLinkConfig(LinkConfig* cfg);
     void updateLinkConfig(LinkConfig* cfg);
     void deleteLinkConfig(std::string source, std::string destination);
     LinkConfig* getLinkConfig(std::string source, std::string destination);
-    bool isThereLinkConfig(std::string source, std::string destination);
     std::pair<std::string, std::string>* getSourceAndDestination(std::string symbolic_name);
     bool isGrInPair(std::string group);
     bool isShareOnly(std::string se);
@@ -200,6 +183,12 @@ public:
     void deleteShareConfig(std::string source, std::string destination);
     ShareConfig* getShareConfig(std::string source, std::string destination, std::string vo);
     std::vector<ShareConfig*> getShareConfig(std::string source, std::string destination);
+
+    virtual void addActivityConfig(std::string vo, std::string shares, bool active);
+    virtual void updateActivityConfig(std::string vo, std::string shares, bool active);
+    virtual void deleteActivityConfig(std::string vo);
+    virtual bool isActivityConfigActive(std::string vo);
+    virtual std::map< std::string, double > getActivityConfig(std::string vo);
 
     bool checkIfSeIsMemberOfAnotherGroup( const std::string & member);
 
@@ -217,8 +206,6 @@ public:
 
     bool hasPairSeCfgAssigned(int file_id, std::string vo);
 
-    bool hasStandAloneGrCfgAssigned(int file_id, std::string vo);
-
     bool hasPairGrCfgAssigned(int file_id, std::string vo);
 
     int countActiveTransfers(std::string source, std::string destination, std::string vo);
@@ -228,8 +215,6 @@ public:
     int countActiveInboundTransfersUsingDefaultCfg(std::string se, std::string vo);
 
     int sumUpVoShares (std::string source, std::string destination, std::set<std::string> vos);
-
-    bool checkConnectionStatus();
 
     void setPriority(std::string jobId, int priority);
 
@@ -241,13 +226,13 @@ public:
 
     void setRetryTransfer(const std::string & jobId, int fileId);
 
-    int getMaxTimeInQueue();
-
     void setMaxTimeInQueue(int afterXHours);
 
     void setToFailOldQueuedJobs(std::vector<std::string>& jobs);
 
     std::vector< std::pair<std::string, std::string> > getPairsForSe(std::string se);
+
+    virtual std::vector<std::string> getAllActivityShareConf();
 
     std::vector<std::string> getAllStandAlloneCfgs();
 
@@ -259,11 +244,11 @@ public:
 
     void setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<int>& files);
 
-    std::vector< boost::tuple<std::string, std::string, int> >  getVOBringonlimeMax();
+    std::vector< boost::tuple<std::string, std::string, int> >  getVOBringonlineMax();
 
     std::vector<struct message_bringonline> getBringOnlineFiles(std::string voName, std::string hostName, int maxValue);
 
-    void bringOnlineReportStatus(const std::string & state, const std::string & message, struct message_bringonline msg);
+    void bringOnlineReportStatus(const std::string & state, const std::string & message, const struct message_bringonline& msg);
 
     void addToken(const std::string & job_id, int file_id, const std::string & token);
 
@@ -281,11 +266,9 @@ public:
 
     void cancelJobsInTheQueue(const std::string& dn, std::vector<std::string>& jobs);
 
-    void transferLogFile(const std::string& filePath, const std::string& jobId, int fileId, bool debug);
-
     void transferLogFileVector(std::map<int, struct message_log>& messagesLog);
 
-    std::vector<struct message_state> getStateOfTransfer(const std::string& jobId, int fileId);
+    std::vector<struct message_state> getStateOfTransfer(const std::string& jobId, int file_id);
 
     void getFilesForJob(const std::string& jobId, std::vector<int>& files);
 
@@ -315,7 +298,13 @@ public:
 
     unsigned int updateFileStatusReuse(TransferFiles* file, const std::string status);
 
+    void getCancelJob(std::vector<int>& requestIDs);
+
     void snapshot(const std::string & vo_name, const std::string & source_se, const std::string & dest_se, const std::string & endpoint, std::stringstream & result);
+
+    bool getDrain();
+
+    void setDrain(bool drain);
 };
 
 

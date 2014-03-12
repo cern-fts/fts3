@@ -23,24 +23,21 @@ ProfiledDB::~ProfiledDB()
 
 void ProfiledDB::init(std::string username, std::string password, std::string connectString, int pooledConn)
 {
-    db->init(username, password, connectString, pooledConn);
+    PROFILE_PREFIXED("DB::", db->init(username, password, connectString, pooledConn));
 }
 
-void ProfiledDB::submitPhysical(const std::string & jobId, std::list<job_element_tupple>& src_dest_pair, const std::string & paramFTP,
-                                const std::string & DN, const std::string & cred, const std::string & voName, const std::string & myProxyServer,
-                                const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite,
-                                const std::string & sourceSpaceToken, const std::string & sourceSpaceTokenDescription, int copyPinLifeTime,
-                                const std::string & failNearLine, const std::string & checksumMethod, const std::string & reuse,
-                                int bringonline, std::string metadata,
-                                int retry, int retryDelay, std::string sourceSe, std::string destinationSe)
+void ProfiledDB::submitPhysical(const std::string & jobId, std::list<job_element_tupple> src_dest_pair,
+                                const std::string & DN, const std::string & cred,
+                                const std::string & voName, const std::string & myProxyServer, const std::string & delegationID,
+                                const std::string & sourceSe, const std::string & destinationSe,
+                                const JobParameterHandler & params)
 {
-    PROFILE_PREFIXED("DB::", db->submitPhysical(jobId, src_dest_pair, paramFTP,
-                     DN, cred, voName, myProxyServer,
-                     delegationID, spaceToken, overwrite,
-                     sourceSpaceToken, sourceSpaceTokenDescription, copyPinLifeTime,
-                     failNearLine, checksumMethod, reuse,
-                     bringonline, metadata,
-                     retry, retryDelay, sourceSe, destinationSe));
+    PROFILE_PREFIXED("DB::", db->submitPhysical(
+                         jobId, src_dest_pair,
+                         DN, cred,
+                         voName, myProxyServer, delegationID,
+                         sourceSe, destinationSe,
+                         params));
 }
 
 void ProfiledDB::getTransferJobStatus(std::string requestID, bool archive, std::vector<JobStatus*>& jobs)
@@ -70,11 +67,10 @@ TransferJobs* ProfiledDB::getTransferJob(std::string jobId, bool archive)
 }
 
 
-void ProfiledDB::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files, bool reuse)
+void ProfiledDB::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files)
 {
-    PROFILE_PREFIXED("DB::", db->getByJobIdReuse(jobs, files, reuse));
+    PROFILE_PREFIXED("DB::", db->getByJobIdReuse(jobs, files));
 }
-
 
 void ProfiledDB::getByJobId(std::map< std::string, std::list<TransferFiles*> >& files)
 {
@@ -110,30 +106,18 @@ void ProfiledDB::updateSe(std::string endpoint, std::string se_type, std::string
 }
 
 
-void ProfiledDB::deleteSe(std::string NAME)
-{
-    PROFILE_PREFIXED("DB::", db->deleteSe(NAME));
-}
-
-
 bool ProfiledDB::updateFileTransferStatus(double throughput, std::string job_id, int file_id, std::string transfer_status,
-        std::string transfer_message, int process_id, double filesize, double duration)
+        std::string transfer_message, int process_id, double filesize, double duration, bool retry)
 {
     PROFILE_PREFIXED("DB::", return db->updateFileTransferStatus(throughput, job_id, file_id, transfer_status,
                                     transfer_message, process_id,
-                                    filesize, duration));
+                                    filesize, duration, retry));
 }
 
 
-bool ProfiledDB::updateJobTransferStatus(int file_id, std::string job_id, const std::string status)
+bool ProfiledDB::updateJobTransferStatus(std::string job_id, const std::string status)
 {
-    PROFILE_PREFIXED("DB::", return db->updateJobTransferStatus(file_id, job_id, status));
-}
-
-
-void ProfiledDB::updateFileTransferProgress(std::string job_id, int file_id, double throughput, double transferred)
-{
-    PROFILE_PREFIXED("DB::", db->updateFileTransferProgress(job_id, file_id, throughput, transferred));
+    PROFILE_PREFIXED("DB::", return db->updateJobTransferStatus(job_id, status));
 }
 
 
@@ -142,15 +126,10 @@ void ProfiledDB::updateFileTransferProgressVector(std::vector<struct message_upd
     PROFILE_PREFIXED("DB::", db->updateFileTransferProgressVector(messages));
 }
 
+
 void ProfiledDB::cancelJob(std::vector<std::string>& requestIDs)
 {
     PROFILE_PREFIXED("DB::", db->cancelJob(requestIDs));
-}
-
-
-void ProfiledDB::getCancelJob(std::vector<int>& requestIDs)
-{
-    PROFILE_PREFIXED("DB::", db->getCancelJob(requestIDs));
 }
 
 
@@ -238,14 +217,14 @@ bool ProfiledDB::isCredentialExpired(const std::string & dlg_id, const std::stri
 }
 
 
+bool ProfiledDB::updateOptimizer()
+{
+    PROFILE_PREFIXED("DB::", return db->updateOptimizer());
+}
+
 bool ProfiledDB::isTrAllowed(const std::string & source_se, const std::string & dest)
 {
     PROFILE_PREFIXED("DB::", return db->isTrAllowed(source_se, dest));
-}
-
-bool ProfiledDB::isTrAllowed2(const std::string & source_se, const std::string & dest)
-{
-    PROFILE_PREFIXED("DB::", return db->isTrAllowed2(source_se, dest));
 }
 
 
@@ -304,9 +283,9 @@ void ProfiledDB::revertToSubmitted()
 }
 
 
-void ProfiledDB::backup()
+void ProfiledDB::backup(long* nJobs, long* nFiles)
 {
-    PROFILE_PREFIXED("DB::", db->backup());
+    PROFILE_PREFIXED("DB::", db->backup(nJobs, nFiles));
 }
 
 
@@ -363,12 +342,10 @@ bool ProfiledDB::allowSubmitForBlacklistedSe(std::string se)
     PROFILE_PREFIXED("DB::", return db->allowSubmitForBlacklistedSe(se));
 }
 
-
 void ProfiledDB::allowSubmit(std::string ses, std::string vo, std::list<std::string>& notAllowed)
 {
     PROFILE_PREFIXED("DB::", return db->allowSubmit(ses, vo, notAllowed));
 }
-
 
 boost::optional<int> ProfiledDB::getTimeoutForSe(std::string se)
 {
@@ -379,7 +356,6 @@ void ProfiledDB::getTimeoutForSe(std::string ses, std::map<std::string, int>& re
 {
     PROFILE_PREFIXED("DB::", return db->getTimeoutForSe(ses, ret));
 }
-
 
 bool ProfiledDB::isDnBlacklisted(std::string dn)
 {
@@ -429,25 +405,6 @@ std::string ProfiledDB::getGroupForSe(const std::string se)
 }
 
 
-
-void ProfiledDB::submitHost(const std::string & jobId)
-{
-    PROFILE_PREFIXED("DB::", db->submitHost(jobId));
-}
-
-
-std::string ProfiledDB::transferHost(int fileId)
-{
-    PROFILE_PREFIXED("DB::", return db->transferHost(fileId));
-}
-
-
-std::string ProfiledDB::transferHostV(std::map<int,std::string>& fileIds)
-{
-    PROFILE_PREFIXED("DB::", return db->transferHostV(fileIds));
-}
-
-
 void ProfiledDB::addLinkConfig(LinkConfig* cfg)
 {
     PROFILE_PREFIXED("DB::", db->addLinkConfig(cfg));
@@ -466,11 +423,6 @@ void ProfiledDB::deleteLinkConfig(std::string source, std::string destination)
 LinkConfig* ProfiledDB::getLinkConfig(std::string source, std::string destination)
 {
     PROFILE_PREFIXED("DB::", return db->getLinkConfig(source, destination));
-}
-
-bool ProfiledDB::isThereLinkConfig(std::string source, std::string destination)
-{
-    PROFILE_PREFIXED("DB::", return db->isThereLinkConfig(source, destination));
 }
 
 std::pair<std::string, std::string>* ProfiledDB::getSourceAndDestination(std::string symbolic_name)
@@ -519,6 +471,30 @@ std::vector<ShareConfig*> ProfiledDB::getShareConfig(std::string source, std::st
     PROFILE_PREFIXED("DB::", return db->getShareConfig(source, destination));
 }
 
+void ProfiledDB::addActivityConfig(std::string vo, std::string shares, bool active)
+{
+    PROFILE_PREFIXED("DB::", db->addActivityConfig(vo, shares, active));
+}
+
+void ProfiledDB::updateActivityConfig(std::string vo, std::string shares, bool active)
+{
+    PROFILE_PREFIXED("DB::", db->updateActivityConfig(vo, shares, active));
+}
+
+void ProfiledDB::deleteActivityConfig(std::string vo)
+{
+    PROFILE_PREFIXED("DB::", db->deleteActivityConfig(vo));
+}
+
+bool ProfiledDB::isActivityConfigActive(std::string vo)
+{
+    PROFILE_PREFIXED("DB::", return db->isActivityConfigActive(vo));
+}
+
+std::map< std::string, double > ProfiledDB::getActivityConfig(std::string vo)
+{
+    PROFILE_PREFIXED("DB::", return db->getActivityConfig(vo));
+}
 
 bool ProfiledDB::checkIfSeIsMemberOfAnotherGroup( const std::string & member)
 {
@@ -568,12 +544,6 @@ bool ProfiledDB::hasPairSeCfgAssigned(int file_id, std::string vo)
 }
 
 
-bool ProfiledDB::hasStandAloneGrCfgAssigned(int file_id, std::string vo)
-{
-    PROFILE_PREFIXED("DB::", return db->hasStandAloneGrCfgAssigned(file_id, vo));
-}
-
-
 bool ProfiledDB::hasPairGrCfgAssigned(int file_id, std::string vo)
 {
     PROFILE_PREFIXED("DB::", return db->hasPairGrCfgAssigned(file_id, vo));
@@ -604,12 +574,6 @@ int ProfiledDB::sumUpVoShares (std::string source, std::string destination, std:
 }
 
 
-bool ProfiledDB::checkConnectionStatus()
-{
-    PROFILE_PREFIXED("DB::", return db->checkConnectionStatus());
-}
-
-
 void ProfiledDB::setPriority(std::string jobId, int priority)
 {
     PROFILE_PREFIXED("DB::", db->setPriority(jobId, priority));
@@ -634,12 +598,6 @@ int ProfiledDB::getRetryTimes(const std::string & jobId, int fileId)
 }
 
 
-int ProfiledDB::getMaxTimeInQueue()
-{
-    PROFILE_PREFIXED("DB::", return db->getMaxTimeInQueue());
-}
-
-
 void ProfiledDB::setMaxTimeInQueue(int afterXHours)
 {
     PROFILE_PREFIXED("DB::", db->setMaxTimeInQueue(afterXHours));
@@ -655,6 +613,12 @@ void ProfiledDB::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
 std::vector< std::pair<std::string, std::string> > ProfiledDB::getPairsForSe(std::string se)
 {
     PROFILE_PREFIXED("DB::", return db->getPairsForSe(se));
+}
+
+
+std::vector<std::string> ProfiledDB::getAllActivityShareConf()
+{
+    PROFILE_PREFIXED("DB::", return db->getAllActivityShareConf());
 }
 
 
@@ -688,9 +652,9 @@ void ProfiledDB::setFilesToNotUsed(std::string jobId, int fileIndex, std::vector
 }
 
 
-std::vector< boost::tuple<std::string, std::string, int> > ProfiledDB::getVOBringonlimeMax()
+std::vector< boost::tuple<std::string, std::string, int> > ProfiledDB::getVOBringonlineMax()
 {
-    PROFILE_PREFIXED("DB::", return db->getVOBringonlimeMax());
+    PROFILE_PREFIXED("DB::", return db->getVOBringonlineMax());
 }
 
 
@@ -700,7 +664,8 @@ std::vector<struct message_bringonline> ProfiledDB::getBringOnlineFiles(std::str
 }
 
 
-void ProfiledDB::bringOnlineReportStatus(const std::string & state, const std::string & message, struct message_bringonline msg)
+void ProfiledDB::bringOnlineReportStatus(const std::string & state,
+        const std::string & message, const struct message_bringonline& msg)
 {
     PROFILE_PREFIXED("DB::", db->bringOnlineReportStatus(state, message, msg));
 }
@@ -754,20 +719,15 @@ void ProfiledDB::cancelJobsInTheQueue(const std::string& dn, std::vector<std::st
 }
 
 
-void ProfiledDB::transferLogFile(const std::string& filePath, const std::string& jobId, int fileId, bool debug)
-{
-    PROFILE_PREFIXED("DB::", db->transferLogFile(filePath, jobId, fileId, debug));
-}
-
 void ProfiledDB::transferLogFileVector(std::map<int, struct message_log>& messagesLog)
 {
     PROFILE_PREFIXED("DB::", db->transferLogFileVector(messagesLog));
 }
 
 
-std::vector<struct message_state> ProfiledDB::getStateOfTransfer(const std::string& jobId, int fileId)
+std::vector<struct message_state> ProfiledDB::getStateOfTransfer(const std::string& jobId, int file_id)
 {
-    PROFILE_PREFIXED("DB::", return db->getStateOfTransfer(jobId, fileId));
+    PROFILE_PREFIXED("DB::", return db->getStateOfTransfer(jobId, file_id));
 }
 
 
@@ -821,12 +781,12 @@ void ProfiledDB::checkSchemaLoaded()
 
 void ProfiledDB::storeProfiling(const fts3::ProfilingSubsystem* prof)
 {
-    db->storeProfiling(prof);
+    PROFILE_PREFIXED("DB::", db->storeProfiling(prof));
 }
 
 void ProfiledDB::setOptimizerMode(int mode)
 {
-    db->setOptimizerMode(mode);
+    PROFILE_PREFIXED("DB::", db->setOptimizerMode(mode));
 }
 
 void ProfiledDB::setRetryTransfer(const std::string & jobId, int fileId,
@@ -850,7 +810,23 @@ unsigned int ProfiledDB::updateFileStatusReuse(TransferFiles* file, const std::s
     PROFILE_PREFIXED("DB::", return db->updateFileStatusReuse(file, status));
 }
 
+void ProfiledDB::getCancelJob(std::vector<int>& requestIDs)
+{
+    PROFILE_PREFIXED("DB::", db->getCancelJob(requestIDs));
+}
+
 void ProfiledDB::snapshot(const std::string & vo_name, const std::string & source_se, const std::string & dest_se, const std::string & endpoint,  std::stringstream & result)
 {
     PROFILE_PREFIXED("DB::", snapshot(vo_name, source_se, dest_se, endpoint, result));
 }
+
+bool ProfiledDB::getDrain()
+{
+    PROFILE_PREFIXED("DB::", return db->getDrain());
+}
+
+void ProfiledDB::setDrain(bool drain)
+{
+    PROFILE_PREFIXED("DB::", db->setDrain(drain));
+}
+

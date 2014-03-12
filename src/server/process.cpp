@@ -60,24 +60,13 @@ using namespace db;
 
 
 ExecuteProcess::ExecuteProcess(const string& app, const string& arguments)
-    : pid(0), _jobId(""), _fileId(""), m_app(app), m_arguments(arguments)
+    : pid(0), m_app(app), m_arguments(arguments)
 {
 }
 
 int ExecuteProcess::executeProcessShell()
 {
     return execProcessShell();
-}
-
-void ExecuteProcess::setPid(const string& jobId, const string& fileId)
-{
-    _jobId = jobId;
-    _fileId = fileId;
-}
-
-void ExecuteProcess::setPidV(std::map<int,std::string>& pids)
-{
-    _fileIds.insert(pids.begin(), pids.end());
 }
 
 // argsHolder is used to keep the argument pointers alive
@@ -197,7 +186,7 @@ int ExecuteProcess::execProcessShell()
     // Close reading end
     close(pipefds[0]);
 
-    // Sleep for awhile but do not block waiting for child
+    // Sleep for awhile but do not block waiting for child - 100ms
     usleep(50000);
     if(waitpid(pid, NULL, WNOHANG) != 0)
         {
@@ -207,51 +196,3 @@ int ExecuteProcess::execProcessShell()
 
     return 0;
 }
-
-
-
-int ExecuteProcess::check_pid(int pid)
-{
-    int result = -1;
-    const char * PROC_DIR = "/proc";
-
-    char pidstr[256];
-    sprintf(pidstr,"%d",pid);
-    std::string dir_name = (std::string)PROC_DIR + "/"+ pidstr;
-    // Search the process in the /proc dir
-    DIR * dir = opendir(dir_name.c_str());
-    if(0 != dir)
-        {
-            closedir(dir);
-            // Try to open the cmdline file
-            std::string fname = (std::string)PROC_DIR + "/"+ pidstr + "/cmdline";
-            std::ifstream cmdline_file(fname.c_str());
-            if(cmdline_file.is_open())
-                {
-                    //try to read a char
-                    char c;
-                    cmdline_file.read(&c,1);
-                    if(cmdline_file.good())
-                        {
-                            result = 0;
-                        }
-                    else
-                        {
-                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Checking cmdline_file.good(): " << pid << " " << strerror(errno) << commit;
-                            result = -1;
-                        }
-                }
-            else
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Checking cmdline_file.is_open() : " << pid << " " << strerror(errno) << commit;
-                    result = -1;
-                }
-        }
-    else
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Checking 0 != dir: " << pid << " " << strerror(errno) << commit;
-            result = -1;
-        }
-    return result;
-}
-

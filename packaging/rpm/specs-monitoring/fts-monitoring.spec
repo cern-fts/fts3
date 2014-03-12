@@ -1,7 +1,7 @@
 Summary: FTS3 Web Application for monitoring
 Name: fts-monitoring
-Version: 3.1.80
-Release: 1%{?dist}
+Version: 3.2.0
+Release: 2%{?dist}
 URL: https://svnweb.cern.ch/trac/fts3
 License: ASL 2.0
 Group: Applications/Internet
@@ -14,7 +14,6 @@ Requires: httpd
 Requires: mod_wsgi
 Requires: python
 Requires: python-decorator
-Requires: python-matplotlib
 
 Source0: https://grid-deployment.web.cern.ch/grid-deployment/dms/fts3/tar/%{name}-%{version}.tar.gz
 
@@ -88,26 +87,15 @@ install -m 644 httpd.conf.d/ftsmon.conf           %{buildroot}%{_sysconfdir}/htt
 %files selinux
 
 %changelog
- * Wed Nov 27 2013 Alejandro Alvarez <aalvarez@cern.ch> - 3.1.41-2
-  - Using semanage instead of chcon to get permanent changes in
-    the SELinux context for /var/log/fts3
-  - Restart httpd on installation/upgrade
-
- * Mon Oct 28 2013 Alejandro Alvarez <aalvarez@cern.ch> - 3.1.33-3
-  - Added versioned dependency fts-monitoring
-
- * Tue Oct 08 2013 Alejandro Alvarez <aalvarez@cern.ch> - 3.1.33-2
+ * Tue Oct 08 2013 Alejandro Alvarez <aalvarez@cern.ch> - 3.1.27-1
   - Added selinux rpm
-
  * Mon Sep 02 2013 Michal Simon <michal.simon@cern.ch> - 3.1.1-2
   - since it is a noarch package removing '%{?_isa}' sufix
-
  * Wed Aug 28 2013 Michal Simon <michal.simon@cern.ch> - 3.1.1-1
   - replacing '--no-preserve=ownership'
   - python macros have been removed
   - comments regarding svn have been removed
   - '%{_builddir}/%{name}-%{version}/' prefix is not used anymore
   - more detailed description
-
  * Tue Apr 30 2013 Michal Simon <michal.simon@cern.ch> - 3.1.0-1
   - First EPEL release

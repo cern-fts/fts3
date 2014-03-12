@@ -1,0 +1,34 @@
+#!/usr/bin/env python
+# meta: proxy=true
+# meta: preconfig=../FTS3-config
+import itertools
+import logging
+from lib import base
+
+class TestBanDn(base.TestBase):
+    
+    FAKE_DN = '/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=fake/CN=12345/CN=Fake Fakeson'
+    
+    def setUp(self):
+        pass
+    
+    def tearDown(self):
+        self.client.unBanDn(TestBanDn.FAKE_DN)
+        
+    def test_ban_self(self):
+        """
+        Any attempt to ban him/herself must fail.
+        """
+        self.assertRaises(Exception, self.client.banDn, self.userDn)
+        self.assertRaises(Exception, self.client.unBanDn, self.userDn)
+        
+    def test_ban_dn(self):
+        """
+        Ban any user
+        """
+        self.client.banDn(TestBanDn.FAKE_DN)
+
+
+if __name__ == '__main__':
+    import sys
+    sys.exit(TestBanDn().run())

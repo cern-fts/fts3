@@ -26,6 +26,9 @@
 #define FTSDRAIN_H_
 
 #include "common/ThreadSafeInstanceHolder.h"
+#include "SingleDbInstance.h"
+
+using namespace db;
 
 namespace fts3
 {
@@ -57,8 +60,8 @@ public:
      * @return reference to this
      */
     DrainMode& operator= (const bool drain)
-    {
-        this->drain = drain;
+    {        
+	DBSingleton::instance().getDBObjectInstance()->setDrain(drain);
         return *this;
     }
 
@@ -70,7 +73,7 @@ public:
      */
     operator bool() const
     {
-        return drain;
+        return DBSingleton::instance().getDBObjectInstance()->getDrain();
     }
 
     /**
@@ -85,7 +88,7 @@ private:
      *
      * Private, should not be used
      */
-    DrainMode(): drain(false) {} ;
+    DrainMode() {} ;
 
     /**
      * Copying constructor
@@ -101,8 +104,6 @@ private:
      */
     DrainMode& operator=(DrainMode const&);
 
-    /// drain value for the system (true means the drain mode is on)
-    bool drain;
 };
 
 }

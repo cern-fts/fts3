@@ -110,6 +110,14 @@ struct type_conversion<TransferJobs>
         aux_tm = v.get<struct tm>("submit_time");
         job.SUBMIT_TIME = timegm(&aux_tm);
 
+        try
+            {
+                job.REUSE = v.get<std::string>("reuse_job");
+            }
+        catch (...)
+            {
+            }
+
         // No method that uses this type asks for finish_time
         job.FINISH_TIME = 0;
     }
@@ -145,6 +153,7 @@ struct type_conversion<TransferFiles>
         file.SOURCE_SE = v.get<std::string>("source_se", "");
         file.DEST_SE = v.get<std::string>("dest_se", "");
         file.SELECTION_STRATEGY = v.get<std::string>("selection_strategy", "");
+        file.INTERNAL_FILE_PARAMS = v.get<std::string>("internal_job_params", "");
 
         // filesize and reason are NOT queried by any method that uses this
         // type
@@ -240,8 +249,9 @@ struct type_conversion<FileTransferStatus>
         transfer.destSURL          = v.get<std::string>("dest_surl");
         transfer.transferFileState = v.get<std::string>("file_state");
         transfer.reason            = v.get<std::string>("reason", "");
-        transfer.numFailures	   = v.get<int>("retry",0);
-        transfer.duration	   = v.get<double>("tx_duration",0);
+        transfer.numFailures	   = v.get<int>("retry", 0);
+        transfer.duration	       = v.get<double>("tx_duration", 0);
+
         if (v.get_indicator("start_time") == soci::i_ok)
             {
                 aux_tm = v.get<struct tm>("start_time");
@@ -249,7 +259,7 @@ struct type_conversion<FileTransferStatus>
             }
         else
             {
-                transfer.start_time = timeUTC();
+                transfer.start_time = 0;
             }
         if (v.get_indicator("finish_time") == soci::i_ok)
             {

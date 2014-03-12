@@ -16,8 +16,9 @@ function OptimizerCtrl($location, $scope, optimizer, Optimizer, Unique)
 	}
 
 	$scope.filter = {
-		source_se: validString($location.search().source_se),
-		dest_se:   validString($location.search().dest_se),
+		source_se:   validString($location.search().source_se),
+		dest_se:     validString($location.search().dest_se),
+		time_window: parseInt($location.search().time_window)
 	}
 
 	// On page change, reload

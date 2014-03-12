@@ -15,28 +15,15 @@
  * limitations under the License.
  ***********************************************/
 
-/**
- * @file OracleMonitoring.h
- * @brief Oracle implementation of the monitoring API
- * @author Alejandro Alvarez Ayll
- * @date 18/10/2012
- *
- **/
-
-
 #pragma once
 
+#include <common_dev.h>
+#include <soci.h>
 #include "MonitoringDbIfce.h"
-#include "OracleConnection.h"
-#include "OracleTypeConversions.h"
-#include "threadtraits.h"
 #include "definitions.h"
 
 using namespace FTS3_COMMON_NAMESPACE;
 
-/**
- * Oracle concrete implementation of the Monitoring API
- **/
 class OracleMonitoring: public MonitoringDbIfce
 {
 public:
@@ -46,15 +33,14 @@ public:
     class CleanUpSanityChecks
     {
     public:
-        CleanUpSanityChecks(OracleMonitoring* instanceLocal,SafeConnection& pooled, struct message_sanity &msg):
-            instanceLocal(instanceLocal), pooled(pooled), msg(msg), returnValue(false)
+        CleanUpSanityChecks(OracleMonitoring* instanceLocal, soci::session& sql, struct message_sanity &msg):instanceLocal(instanceLocal), sql(sql), msg(msg), returnValue(false)
         {
-            returnValue = instanceLocal->assignSanityRuns(pooled, msg);
+            returnValue = instanceLocal->assignSanityRuns(sql, msg);
         }
 
         ~CleanUpSanityChecks()
         {
-            instanceLocal->resetSanityRuns(pooled, msg);
+            instanceLocal->resetSanityRuns(sql, msg);
         }
 
         bool getCleanUpSanityCheck()
@@ -63,10 +49,11 @@ public:
         }
 
         OracleMonitoring* instanceLocal;
-        SafeConnection& pooled;
+        soci::session& sql;
         struct message_sanity &msg;
         bool returnValue;
     };
+
 
     void init(const std::string& username, const std::string& password, const std::string& connectString, int pooledConn);
 
@@ -107,13 +94,12 @@ public:
 
     void getJobVOAndSites(const std::string& jobId, JobVOAndSites& voAndSites);
 
-    // These are not exposed by the db interface
-    bool assignSanityRuns(SafeConnection& conn, struct message_sanity &msg);
+    bool assignSanityRuns(soci::session& sql, struct message_sanity &msg);
 
-    void resetSanityRuns(SafeConnection& conn, struct message_sanity &msg);
+    void resetSanityRuns(soci::session& sql, struct message_sanity &msg);
 
 private:
-    OracleConnection *conn;
-    OracleTypeConversions *conv;
-    oracle::occi::Timestamp notBefore;
+    size_t                poolSize;
+    soci::connection_pool connectionPool;
+    struct tm             notBefore;
 };

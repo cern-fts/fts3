@@ -150,43 +150,15 @@ void BdiiBrowser::disconnect()
     connected = false;
 }
 
-void BdiiBrowser::waitIfBrowsing()
-{
-    mutex::scoped_lock lock(qm);
-    while (querying != 0) qv.wait(lock);
-    --querying;
-}
-
-void BdiiBrowser::notifyBrowsers()
-{
-    mutex::scoped_lock lock(qm);
-    ++querying;
-    qv.notify_all();
-}
-
-void BdiiBrowser::waitIfReconnecting()
-{
-    mutex::scoped_lock lock(qm);
-    while (querying < 0) qv.wait(lock);
-    ++querying;
-}
-
-void BdiiBrowser::notifyReconnector()
-{
-    mutex::scoped_lock lock(qm);
-    --querying;
-    qv.notify_one();
-}
-
 bool BdiiBrowser::reconnect()
 {
     signal(SIGPIPE, SIG_IGN);
-    waitIfBrowsing();
+
+    // use unique locking - while reconnecting noone else can acquire the mutex
+    unique_lock<shared_mutex> lock(qm);
 
     if (connected) disconnect();
     bool ret = connect(theServerConfig().get<string>("Infosys"));
-
-    notifyBrowsers();
 
     return ret;
 }
@@ -201,9 +173,12 @@ bool BdiiBrowser::isValid()
 
     LDAPMessage *result = 0;
     signal(SIGPIPE, SIG_IGN);
-    waitIfReconnecting();
-    int rc = ldap_search_ext_s(ld, "dc=example,dc=com", LDAP_SCOPE_BASE, "(sn=Curly)", 0, 0, 0, 0, &timeout, 0, &result);
-    notifyReconnector();
+    int rc = 0;
+    // used shared lock - many concurrent reads are allowed
+    {
+        shared_lock<shared_mutex> lock(qm);
+        rc = ldap_search_ext_s(ld, "dc=example,dc=com", LDAP_SCOPE_BASE, "(sn=Curly)", 0, 0, 0, 0, &timeout, 0, &result);
+    }
 
     if (rc == LDAP_SUCCESS)
         {

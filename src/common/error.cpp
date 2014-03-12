@@ -34,14 +34,6 @@ void Error<true>::_logSystemError()
 
 /* -------------------------------------------------------------------------- */
 
-template<>
-const char* Error<false, Err::e_detailedReport>::what() const throw()
-{
-    return _description().c_str();
-}
-
-/* -------------------------------------------------------------------------- */
-
 void Err::log(const char* aFile, const char* aFunc, const int aLineNo)
 {
     theLogger().newLog<Logger::type_traits::ERR>(aFile, aFunc, aLineNo) << _description();

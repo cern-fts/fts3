@@ -33,7 +33,8 @@ using namespace FTS3_COMMON_NAMESPACE;
 
 /* ---------------------------------------------------------------------- */
 
-ServerConfig::ServerConfig() : cfgmonitor (this), reading(0), getting(0)
+ServerConfig::ServerConfig() : cfgmonitor (this), reading(0), getting(0),
+    readTime(0)
 {
     // EMPTY
 }

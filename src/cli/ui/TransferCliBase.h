@@ -25,14 +25,14 @@
 #ifndef TRANSFERCLIBASE_H_
 #define TRANSFERCLIBASE_H_
 
-#include "CliBase.h"
+#include "RestCli.h"
 
 namespace fts3
 {
 namespace cli
 {
 
-class TransferCliBase : virtual public CliBase
+class TransferCliBase : public RestCli
 {
 public:
     TransferCliBase();

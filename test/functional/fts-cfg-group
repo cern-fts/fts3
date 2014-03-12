@@ -1,0 +1,95 @@
+#!/usr/bin/env python
+# meta: proxy=true
+# meta: preconfig=../FTS3-config
+import logging
+from lib import base, storage, surl
+
+
+class TestCfgGroup(base.TestBase):
+    
+    def setUp(self):
+        self.transfers = []
+        self.configurations = []
+        self.pairs = storage.getStoragePairs()
+
+
+    def tearDown(self):
+        self._removeFiles(self.transfers)
+
+        for cfg in reversed(self.configurations):
+            logging.info("Removing configuration '%s'" % (str(cfg)))
+            try:
+                self.client.delConfig(cfg)
+            except:
+                pass # Ignore
+
+
+    def _createGroup(self, groupName, groupMembers):
+        logging.info("Create group %s" % groupName)
+        for member in groupMembers:
+            logging.info("\t%s" % member)
+            
+        newConfig = {
+            'group': groupName,
+            'members': groupMembers,
+            'active': True,
+            'in': {
+                'protocol': 'auto',
+                'share': [{self.voName: 10}]
+            },
+            'out': {
+                'protocol': 'auto',
+                'share': [{self.voName: 10}]
+            }
+        }
+        self.client.setConfig(newConfig)
+        self.configurations.append(newConfig)
+
+
+    def test_create_groups(self):
+        """
+        Create a couple of groups
+        """
+        group1 = [storage.getStorageElement(pair[0]) for pair in self.pairs]
+        group2 = [storage.getStorageElement(pair[1]) for pair in self.pairs]
+        self._createGroup('test-group-1', group1)
+        self._createGroup('test-group-2', group2)
+
+
+    def test_create_group_pair(self):
+        """
+        Create two groups and then a group pair
+        """
+        self.test_create_groups()
+        newConfig = {
+            'symbolic_name': 'test-group-link',
+            'source_group': 'test-group-1',
+            'destination_group': 'test-group-2',
+            'share': [{self.voName: 10}],
+            'protocol': 'auto',
+            'active': True
+        }
+        self.client.setConfig(newConfig)
+        self.configurations.append(newConfig)
+
+
+    def test_create_pair_and_submit(self):
+        """
+        Create two groups, a group pair, and submit some transfers
+        """
+        self.test_create_group_pair()
+        (srcBase, dstBase) = self.pairs[0]
+        src = self.surl.generate(srcBase)
+        dst = self.surl.generate(dstBase)
+        self.transfers.append((src, dst))
+        self.surl.create(src)
+        
+        jobId = self.client.submit([{'sources': [src], 'destinations': [dst]}])
+        state = self.client.poll(jobId)
+        
+        self.assertEqual('FINISHED', state, 'job.state')
+
+
+if __name__ == '__main__':
+    import sys
+    sys.exit(TestCfgGroup().run())

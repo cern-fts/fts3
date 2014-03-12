@@ -70,12 +70,14 @@ void find_and_replace(string &source, const string & find, string & replace)
 
 MsgProducer::MsgProducer()
 {
-    this->connection = NULL;
-    this->session = NULL;
+    connection = NULL;
+    session = NULL;
     destination_transfer_started = NULL;
     destination_transfer_completed = NULL;
     producer_transfer_completed = NULL;
     producer_transfer_started = NULL;
+    producer_transfer_state = NULL;
+    destination_transfer_state = NULL;
     connectionIsOK = false;
     FTS3_CONFIG_NAMESPACE::theServerConfig().read(0, NULL);
     FTSEndpoint = FTS3_CONFIG_NAMESPACE::theServerConfig().get<std::string>("Alias");

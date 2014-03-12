@@ -29,8 +29,10 @@
 
 #include <vector>
 #include <map>
+#include <boost/property_tree/ptree.hpp>
 
 using namespace std;
+using namespace boost::property_tree;
 
 namespace fts3
 {
@@ -47,6 +49,18 @@ namespace cli
  */
 class GSoapContextAdapter
 {
+
+    struct Cleaner
+    {
+        Cleaner(GSoapContextAdapter* me) : me(me) {}
+
+        void operator() ()
+        {
+            me->clean();
+        }
+
+        GSoapContextAdapter* me;
+    };
 
 public:
 
@@ -126,14 +140,14 @@ public:
      */
     JobStatus getTransferJobStatus (string jobId, bool archive);
 
-    /** TODO
+    /**
      * Remote call to getRoles
      *
      * @param resp server response (roles)
      */
     void getRoles (impltns__getRolesResponse& resp);
 
-    /** TODO
+    /**
      * Remote call to getRolesOf
      *
      * @param resp server response (roles)
@@ -145,7 +159,7 @@ public:
      *
      * @param jobIds list of job IDs
      */
-    void cancel(vector<string> jobIds);
+    vector< pair<string, string>  > cancel(vector<string> jobIds);
 
     /**
      * Remote call to listRequests
@@ -158,7 +172,7 @@ public:
      */
     vector<JobStatus> listRequests (vector<string> statuses, string dn, string vo);
 
-    /** TODO
+    /**
      * Remote call to listVOManagers
      *
      * @param vo vo name
@@ -235,44 +249,80 @@ public:
     void setInterfaceVersion(string interface);
 
     /**
-     * TODO
+     * Remote call to debugSet
+     *
+     * set the debug mode to on/off for
+     * a given pair of SEs or a single SE
+     *
+     * @param source - source se (or the single SE
+     * @param destination - destination se (might be empty)
+     * @param debug - debug mode
      */
     void debugSet(string source, string destination, bool debug);
 
     /**
-     * TODO
+     * Remote call to blacklistDN
+     *
+     * @param subject - the DN that will be added/removed from blacklist
+     * @param status  - either CANCEL or WAIT
+     * @param timeout - the timeout for the jobs already in queue
+     * @param mode    - on/off
      */
     void blacklistDn(string subject, string status, int timeout, bool mode);
 
+    /**
+     * Remote call to blacklistSe
+     *
+     * @param name    - name of the SE
+     * @param vo      - name of the VO for whom the SE should be blacklisted (optional)
+     * @param status  - either CANCEL or WAIT
+     * @param timeout - the timeout for the jobs already in queue
+     * @param mode    - on/off
+     */
     void blacklistSe(string name, string vo, string status, int timeout, bool mode);
 
     /**
-     * TODO
+     * Remote call to doDrain
+     *
+     * switches the drain mode
+     *
+     * @param  drain - on/off
      */
     void doDrain(bool drain);
 
     /**
-     * TODO
+     * Remote call to prioritySet
+     *
+     * Sets priority for the given job
+     *
+     * @param jobId - the id of the job
+     * @param priority - the priority to be set
      */
     void prioritySet(string jobId, int priority);
 
     /**
-     * TODO
+     * Remote call to retrySet
+     *
+     * @param retry - number of retries to be set
      */
     void retrySet(int retry);
 
     /**
+     * Remote call to optimizerModeSet
      *
+     * @param mode - optimizer mode
      */
     void optimizerModeSet(int mode);
 
     /**
-     * TODO
+     * Remote call to queueTimeoutSet
      */
     void queueTimeoutSet(unsigned timeout);
 
+    std::string getSnapShot(string vo, string src, string dst);
+
     /**
-     * TODO
+     * Remote call to getLog (not used!)
      */
     void getLog(string& logname, string jobId);
 
@@ -307,6 +357,11 @@ public:
     ///@}
 
 private:
+
+    void clean();
+
+    static void signalCallback(int signum);
+    static vector<Cleaner> cleaners;
 
     ///
     string endpoint;

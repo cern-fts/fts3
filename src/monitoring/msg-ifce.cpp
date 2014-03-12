@@ -508,16 +508,16 @@ void msg_ifce::set_timestamp_checksum_dest_ended(transfer_completed* tr_complete
         tr_completed->timestamp_checksum_dest_ended = value;
 }
 
-void msg_ifce::set_transfer_timeout(transfer_completed* tr_completed, const std::string & value)
+void msg_ifce::set_transfer_timeout(transfer_completed* tr_completed, unsigned value)
 {
     if (tr_completed)
-        tr_completed->transfer_timeout = value;
+        tr_completed->transfer_timeout = to_string<unsigned int>(value, std::dec);
 }
 
-void msg_ifce::set_checksum_timeout(transfer_completed* tr_completed, const std::string & value)
+void msg_ifce::set_checksum_timeout(transfer_completed* tr_completed, int value)
 {
     if (tr_completed)
-        tr_completed->checksum_timeout = value;
+        tr_completed->checksum_timeout = to_string<unsigned int>(value, std::dec);
 }
 
 void msg_ifce::set_transfer_error_code(transfer_completed* tr_completed, const std::string & value)
@@ -560,34 +560,34 @@ void msg_ifce::set_final_transfer_state(transfer_completed* tr_completed, const 
         tr_completed->final_transfer_state = value;
 }
 
-void msg_ifce::set_total_bytes_transfered(transfer_completed* tr_completed, const std::string & value)
+void msg_ifce::set_total_bytes_transfered(transfer_completed* tr_completed, off_t value)
 {
     if (tr_completed)
-        tr_completed->total_bytes_transfered = value;
+        tr_completed->total_bytes_transfered = to_string<off_t>(value, std::dec);
 }
 
-void msg_ifce::set_number_of_streams(transfer_completed* tr_completed, const std::string & value)
+void msg_ifce::set_number_of_streams(transfer_completed* tr_completed, unsigned value)
 {
     if (tr_completed)
-        tr_completed->number_of_streams = value;
+        tr_completed->number_of_streams = to_string<unsigned int>(value, std::dec);
 }
 
-void msg_ifce::set_tcp_buffer_size(transfer_completed* tr_completed, const std::string & value)
+void msg_ifce::set_tcp_buffer_size(transfer_completed* tr_completed, unsigned value)
 {
     if (tr_completed)
-        tr_completed->tcp_buffer_size = value;
+        tr_completed->tcp_buffer_size = to_string<unsigned int>(value, std::dec);
 }
 
-void msg_ifce::set_block_size(transfer_completed* tr_completed, const std::string & value)
+void msg_ifce::set_block_size(transfer_completed* tr_completed, unsigned value)
 {
     if (tr_completed)
-        tr_completed->block_size = value;
+        tr_completed->block_size = to_string<unsigned int>(value, std::dec);
 }
 
-void msg_ifce::set_file_size(transfer_completed* tr_completed, const std::string & value)
+void msg_ifce::set_file_size(transfer_completed* tr_completed, off_t value)
 {
     if (tr_completed)
-        tr_completed->file_size = value;
+        tr_completed->file_size = to_string<off_t>(value, std::dec);
 }
 
 void msg_ifce::set_time_spent_in_srm_preparation_start(transfer_completed* tr_completed, const std::string & value)

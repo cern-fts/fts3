@@ -111,9 +111,18 @@ int main(int argc, char** argv)
             std::string cleanRecordsHost = theServerConfig().get<std::string>("CleanRecordsHost");
 
 
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Backup starting" << commit;
-            db::DBSingleton::instance().getDBObjectInstance()->backup();
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Backup ending" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Backup starting" << commit;
+            long nJobs = 0, nFiles = 0;
+
+            db::DBSingleton::instance().getDBObjectInstance()->backup(&nJobs, &nFiles);
+
+            FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Backup ending: "
+                                           << nJobs << " jobs and "
+                                           << nFiles << " files affected"
+                                           << commit;
+
+            // If profiling is configured, dump the timing
+            db::DBSingleton::instance().getDBObjectInstance()->storeProfiling(&ProfilingSubsystem::getInstance());
 
         }
     catch (Err& e)

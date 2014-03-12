@@ -26,10 +26,15 @@
 
 #include "common/logger.h"
 
+#include "config/serverconfig.h"
+
+
 namespace fts3
 {
 namespace infosys
 {
+
+using namespace config;
 
 const char* SiteNameRetriever::ATTR_GLUE1_SERVICE = "GlueServiceUniqueID";
 const char* SiteNameRetriever::ATTR_GLUE1_SERVICE_URI = "GlueServiceURI";
@@ -121,6 +126,10 @@ string SiteNameRetriever::getFromBdii(string se)
 
 string SiteNameRetriever::getSiteName(string se)
 {
+    // check if the infosys has been activated in the fts3config file
+    bool active = theServerConfig().get<bool>("Infosys");
+    if (!active) return string();
+
     // lock the cache
     mutex::scoped_lock lock(m);
 
@@ -131,8 +140,11 @@ string SiteNameRetriever::getSiteName(string se)
             return it->second;
         }
 
+    string site;
+
+#ifndef WITHOUT_PUGI
     // check in BDII cache
-    string site = BdiiCacheParser::getInstance().getSiteName(se);
+    site = BdiiCacheParser::getInstance().getSiteName(se);
     if (!site.empty())
         {
             // save it in cache
@@ -141,6 +153,7 @@ string SiteNameRetriever::getSiteName(string se)
             if(seToSite.size() > 5000) seToSite.clear();
             return site;
         }
+#endif
 
     // check in BDII
     site = getFromBdii(se);
@@ -153,6 +166,7 @@ string SiteNameRetriever::getSiteName(string se)
             return site;
         }
 
+#ifndef WITHOUT_PUGI
     // check in MyOSG
     site = OsgParser::getInstance().getSiteName(se);
 
@@ -164,6 +178,7 @@ string SiteNameRetriever::getSiteName(string se)
             // clear the cache if there are too many entries
             if(seToSite.size() > 5000) seToSite.clear();
         }
+#endif
 
     return site;
 }

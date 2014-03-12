@@ -40,6 +40,7 @@ limitations under the License. */
 #include <boost/algorithm/string.hpp>
 #include "ws/SingleTrStateInstance.h"
 #include <boost/filesystem.hpp>
+#include "DrainMode.h"
 
 extern bool stopThreads;
 extern time_t stallRecords;
@@ -112,6 +113,8 @@ protected:
             }
     }
 
+
+
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a()
     {
@@ -125,16 +128,22 @@ protected:
 
         while (1)   /*need to receive more than one messages at a time*/
             {
+                stallRecords = time(0);
                 try
                     {
-                        stallRecords = time(0);
-
                         if(stopThreads && messages.empty() && requestIDs.empty())
                             {
                                 break;
                             }
 
                         ThreadSafeList::get_instance().checkExpiredMsg(messages);
+			
+                        //if we drain a host, no need to check if url_copy are reporting being alive
+                        if (DrainMode::getInstance())
+                        {
+                        	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking url_copy for this instance!" << commit;
+				messages.clear();                       	       
+                        }			
 
                         if (!messages.empty())
                             {
@@ -186,6 +195,7 @@ protected:
                                 counterCanceled = 0;
                             }
 
+
                         if (stopThreads)
                             return;
 
@@ -200,7 +210,7 @@ protected:
                         if (stopThreads)
                             return;
 
-                        /*this routine is called periodically every 300 ms so 10,000 corresponds to 5 min*/
+                        /*this routine is called periodically every 300 seconds*/
                         counterTimeoutWaiting++;
                         if (counterTimeoutWaiting == 300)
                             {
@@ -282,7 +292,6 @@ protected:
                                                        << e.what()
                                                        << commit;
                         sleep(1);
-                        //reset
                         counter1 = 0;
                         counterFailAll = 0;
                         countReverted = 0;
@@ -294,7 +303,6 @@ protected:
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
                         sleep(1);
-                        //reset
                         counter1 = 0;
                         counterFailAll = 0;
                         countReverted = 0;

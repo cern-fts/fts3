@@ -28,6 +28,7 @@
 #include "BulkSubmissionParser.h"
 
 #include "common/JobParameterHandler.h"
+#include "common/parse_url.h"
 
 #include <iostream>
 #include <fstream>
@@ -46,6 +47,7 @@ using namespace fts3::common;
 
 SubmitTransferCli::SubmitTransferCli()
 {
+    delegate = true;
 
     /// 8 housrs in seconds
     static const int eight_hours = 28800;
@@ -61,8 +63,6 @@ SubmitTransferCli::SubmitTransferCli()
     ("interval,i", value<int>(), "Interval between two poll operations in blocking mode.")
 //			("myproxysrv,m", value<string>(), "MyProxy server to use.")
 //			("password,p", value<string>(), "MyProxy password to send with the job")
-    ("id,I", value<string>(), "Delegation with ID as the delegation identifier.")
-    ("expire,e", value<long>(), "Expiration time of the delegation in minutes.")
     ("overwrite,o", "Overwrite files.")
     ("dest-token,t", value<string>(),  "The destination space token or its description (for SRM 2.2 transfers).")
     ("source-token,S", value<string>(), "The source space token or its description (for SRM 2.2 transfers).")
@@ -70,12 +70,16 @@ SubmitTransferCli::SubmitTransferCli()
     ("copy-pin-lifetime", value<int>()->implicit_value(eight_hours)->default_value(-1), "Pin lifetime of the copy of the file (seconds), if the argument is not specified a default value of 28800 seconds (8 hours) is used.")
     ("bring-online", value<int>()->implicit_value(eight_hours)->default_value(-1), "Bring online timeout expressed in seconds, if the argument is not specified a default value of 28800 seconds (8 hours) is used.")
     ("reuse,r", "enable session reuse for the transfer job")
+    ("multi-hop,m", "enable multi-hopping")
     ("job-metadata", value<string>(), "transfer-job metadata")
     ("file-metadata", value<string>(), "file metadata")
     ("file-size", value<double>(), "file size (in Bytes)")
     ("new-bulk-format", "New JSON format for bulk submission will be used")
     ("retry", value<int>(), "Number of retries. If 0, the server default will be used. If negative, there will be no retries.")
     ("retry-delay", value<int>()->default_value(0), "Retry delay in seconds")
+    ("nostreams", value<int>(), "number of streams that will be used for the given transfer-job")
+    ("timeout", value<int>(), "timeout (expressed in seconds) that will be used for the given job")
+    ("buff-size", value<int>(), "buffer size (expressed in bytes) that will be used for the given transfer-job")
     ;
 
     // add hidden options
@@ -106,42 +110,20 @@ void SubmitTransferCli::parse(int ac, char* av[])
         }
 }
 
-optional<GSoapContextAdapter&> SubmitTransferCli::validate(bool init)
+bool SubmitTransferCli::validate()
 {
 
     // do the standard validation
-    if (!CliBase::validate(init).is_initialized()) return optional<GSoapContextAdapter&>();
+    if (!CliBase::validate()) return false;
 
     // perform standard checks in order to determine if the job was well specified
-    if(!performChecks()) return optional<GSoapContextAdapter&>();
+    if (!performChecks()) return false;
 
     // prepare job elements
-    if (!createJobElements()) return optional<GSoapContextAdapter&>();
+    if (!createJobElements()) return false;
 
-    return *ctx;
+    return true;
 }
-
-string SubmitTransferCli::getDelegationId()
-{
-
-    // check if destination was passed via command line options
-    if (vm.count("id"))
-        {
-            return vm["id"].as<string>();
-        }
-    return "";
-}
-
-long SubmitTransferCli::getExpirationTime()
-{
-
-    if (vm.count("expire"))
-        {
-            return vm["expire"].as<long>();
-        }
-    return 0;
-}
-
 
 optional<string> SubmitTransferCli::getMetadata()
 {
@@ -151,6 +133,20 @@ optional<string> SubmitTransferCli::getMetadata()
             return vm["job-metadata"].as<string>();
         }
     return optional<string>();
+}
+
+bool SubmitTransferCli::checkValidUrl(const std::string &uri, MsgPrinter& msgPrinter)
+{
+    Uri u0 = Uri::Parse(uri);
+    bool ok = u0.Host.length() != 0 && u0.Protocol.length() != 0 && u0.Path.length() != 0;
+    if (!ok)
+        {
+            std::string errMsg = "Not valid uri format, check submitted uri's";
+            msgPrinter.error_msg(errMsg);
+            return false;
+        }
+
+    return true;
 }
 
 
@@ -194,7 +190,11 @@ bool SubmitTransferCli::createJobElements()
                             // the first part should be the source
                             it = tokens.begin();
                             if (it != tokens.end())
-                                file.sources.push_back(*it);
+                                {
+                                    string s = *it;
+                                    if (!checkValidUrl(s, msgPrinter)) return false;
+                                    file.sources.push_back(s);
+                                }
                             else
                                 // if the line was empty continue
                                 continue;
@@ -202,19 +202,22 @@ bool SubmitTransferCli::createJobElements()
                             // the second part should be the destination
                             it++;
                             if (it != tokens.end())
-                                file.destinations.push_back(*it);
+                                {
+                                    string s = *it;
+                                    if (!checkValidUrl(s, msgPrinter)) return false;
+                                    file.destinations.push_back(s);
+                                }
                             else
                                 {
                                     // only one element is still not enough to define a job
                                     printer().bulk_submission_error(lineCount, "destination is missing");
-                                    continue;
+                                    return false;
                                 }
 
                             // the third part should be the checksum (but its optional)
                             it++;
                             if (it != tokens.end())
                                 {
-
                                     string checksum_str = *it;
 
                                     checksum = true;
@@ -282,36 +285,22 @@ bool SubmitTransferCli::performChecks()
     // in FTS3 delegation is supported by default
     delegate = true;
 
-//	// if the user specified the password set the value of 'password' variable
-//    if (vm.count("password")) {
-//    	password = vm["password"].as<string>();
-//		if (isVerbose())
-//			cout << "Server supports delegation, however a MyProxy pass phrase was given: will use MyProxy legacy mode." << endl;
-//        delegate = false;
-//    } else {
-//    	// if not, and delegation mode is not use,
-//    	// ask the user to give the password
-//    	if (!delegate) {
-//    		password = askForPassword();
-//    	}
-//    }
-
     // the job cannot be specified twice
     if ((!getSource().empty() || !getDestination().empty()) && vm.count("file"))
         {
-            printer().error_msg("You may not specify a transfer on the command line if the -f option is used.");
+            msgPrinter.error_msg("You may not specify a transfer on the command line if the -f option is used.");
             return false;
         }
 
     if (vm.count("file-size") && vm.count("file"))
         {
-            printer().error_msg("If a bulk submission has been used file size has to be specified inside the bulk file separately for each file and no using '--file-size' option!");
+            msgPrinter.error_msg("If a bulk submission has been used file size has to be specified inside the bulk file separately for each file and no using '--file-size' option!");
             return false;
         }
 
     if (vm.count("file-metadata") && vm.count("file"))
         {
-            printer().error_msg("If a bulk submission has been used file metadata have to be specified inside the bulk file separately for each file and no using '--file-metadata' option!");
+            msgPrinter.error_msg("If a bulk submission has been used file metadata have to be specified inside the bulk file separately for each file and no using '--file-metadata' option!");
             return false;
         }
 
@@ -411,6 +400,11 @@ map<string, string> SubmitTransferCli::getParams()
             parameters[JobParameterHandler::REUSE] = "Y";
         }
 
+    if (vm.count("multi-hop"))
+        {
+            parameters[JobParameterHandler::MULTIHOP] = "Y";
+        }
+
     if (vm.count("job-metadata"))
         {
             parameters[JobParameterHandler::JOB_METADATA] = vm["job-metadata"].as<string>();
@@ -427,6 +421,24 @@ map<string, string> SubmitTransferCli::getParams()
             int val = vm["retry-delay"].as<int>();
             if (val < 0) throw string("The 'retry-delay' value has to be positive!");
             parameters[JobParameterHandler::RETRY_DELAY] = lexical_cast<string>(val);
+        }
+    if (vm.count("buff-size"))
+        {
+            int val = vm["buff-size"].as<int>();
+            if (val <= 0) throw string("The buffer size has to greater than 0!");
+            parameters[JobParameterHandler::BUFFER_SIZE] = lexical_cast<string>(val);
+        }
+    if (vm.count("nostreams"))
+        {
+            int val = vm["nostreams"].as<int>();
+            if (val <= 0) throw string("The number of streams has to be greater than 0!");
+            parameters[JobParameterHandler::NOSTREAMS] = lexical_cast<string>(val);
+        }
+    if (vm.count("timeout"))
+        {
+            int val = vm["timeout"].as<int>();
+            if (val <= 0) throw string("The timeout has to be greater than 0!");
+            parameters[JobParameterHandler::TIMEOUT] = lexical_cast<string>(val);
         }
 
     return parameters;
@@ -446,3 +458,11 @@ string SubmitTransferCli::getUsageString(string tool)
 {
     return "Usage: " + tool + " [options] SOURCE DEST [CHECKSUM]";
 }
+
+string SubmitTransferCli::getFileName()
+{
+    if (vm.count("file")) return vm["file"].as<string>();
+
+    return string();
+}
+

@@ -23,6 +23,7 @@ limitations under the License. */
 #include "SingleDbInstance.h"
 #include "common/logger.h"
 #include "common/error.h"
+#include "common/ExecutorPool.h"
 #include "process.h"
 #include <iostream>
 #include <map>
@@ -32,7 +33,7 @@ limitations under the License. */
 #include <sstream>
 #include "site_name.h"
 #include "FileTransferScheduler.h"
-#include "FileTransferExecutorPool.h"
+#include "FileTransferExecutor.h"
 #include "TransferFileHandler.h"
 #include "ConfigurationAssigner.h"
 #include "ProtocolResolver.h"
@@ -69,7 +70,6 @@ limitations under the License. */
 
 extern bool stopThreads;
 extern time_t retrieveRecords;
-
 
 
 FTS3_SERVER_NAMESPACE_START
@@ -230,7 +230,7 @@ protected:
                         TransferFileHandler tfh(voQueues);
 
                         // the worker thread pool
-                        FileTransferExecutorPool execPool(execPoolSize, tfh, monitoringMessages, infosys, ftsHostName);
+                        ExecutorPool<FileTransferExecutor> execPool(execPoolSize);
 
                         // loop until all files have been served
 
@@ -247,18 +247,27 @@ protected:
                                     {
                                         if (stopThreads)
                                             {
-                                                execPool.stopAll();
+                                                execPool.stop();
                                                 return;
                                             }
 
-                                        execPool.add(tfh.get(*it_vo), true);
+                                        FileTransferExecutor* exec = new FileTransferExecutor(
+                                            tfh.get(*it_vo),
+                                            tfh,
+                                            enableOptimization.compare("true") == 0,
+                                            monitoringMessages,
+                                            infosys,
+                                            ftsHostName
+                                        );
+
+                                        execPool.add(exec);
                                     }
                             }
 
                         // wait for all the workers to finish
                         execPool.join();
 
-                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Threadpool processed: " << initial_size << " files (" << execPool.getNumberOfScheduled() << " have been scheduled)" << commit;
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Threadpool processed: " << initial_size << " files (" << execPool.executed() << " have been scheduled)" << commit;
                     }
                 else     /*reuse session*/
                     {
@@ -288,13 +297,15 @@ protected:
                                 std::string jobMetadata("");
                                 std::string fileMetadata("");
                                 std::string bringonlineToken("");
+                                bool userProtocol = false;
+                                std::string checksumMethod("");
 
                                 TransferFiles* tempUrl = NULL;
 
                                 std::map< std::string, std::list<TransferFiles*> > voQueues;
                                 std::list<TransferFiles*>::const_iterator queueiter;
 
-                                DBSingleton::instance().getDBObjectInstance()->getByJobIdReuse(jobsReuse2, voQueues, reuse);
+                                DBSingleton::instance().getDBObjectInstance()->getByJobIdReuse(jobsReuse2, voQueues);
 
                                 if (voQueues.empty())
                                     {
@@ -310,6 +321,7 @@ protected:
 
                                 // since there will be just one VO pick it (TODO)
                                 std::string vo = jobsReuse2.front()->VO_NAME;
+                                bool multihop = (jobsReuse2.front()->REUSE == "H");
 
                                 for (queueiter = voQueues[vo].begin(); queueiter != voQueues[vo].end(); ++queueiter)
                                     {
@@ -339,6 +351,7 @@ protected:
                                         jobMetadata = prepareMetadataString(temp->JOB_METADATA);
                                         fileMetadata = prepareMetadataString(temp->FILE_METADATA);
                                         bringonlineToken = temp->BRINGONLINE_TOKEN;
+                                        checksumMethod = temp->CHECKSUM_METHOD;
 
                                         if (fileMetadata.length() <= 0)
                                             fileMetadata = "x";
@@ -381,7 +394,7 @@ protected:
                                         return;
                                     }
 
-                                //temporarly disabled BDII access for getting the site name, pls do not remove the following 2 lines
+                                //disable for now, remove later
                                 sourceSiteName = ""; //siteResolver.getSiteName(surl);
                                 destSiteName = ""; //siteResolver.getSiteName(durl);
 
@@ -396,14 +409,27 @@ protected:
 
                                 if (enableOptimization.compare("true") == 0 && cfgs.empty())
                                     {
-                                        optimize = true;
-                                        opt_config = new OptimizerSample();
-                                        DBSingleton::instance().getDBObjectInstance()->fetchOptimizationConfig2(opt_config, source_hostname, destin_hostname);
-                                        BufSize = opt_config->getBufSize();
-                                        StreamsperFile = opt_config->getStreamsperFile();
-                                        Timeout = opt_config->getTimeout();
-                                        delete opt_config;
-                                        opt_config = NULL;
+                                        optional<ProtocolResolver::protocol> p =
+                                            ProtocolResolver::getUserDefinedProtocol(tempUrl);
+
+                                        if (p.is_initialized())
+                                            {
+                                                BufSize = (*p).tcp_buffer_size;
+                                                StreamsperFile = (*p).nostreams;
+                                                Timeout = (*p).urlcopy_tx_to;
+                                                userProtocol = true;
+                                            }
+                                        else
+                                            {
+                                                optimize = true;
+                                                opt_config = new OptimizerSample();
+                                                DBSingleton::instance().getDBObjectInstance()->fetchOptimizationConfig2(opt_config, source_hostname, destin_hostname);
+                                                BufSize = opt_config->getBufSize();
+                                                StreamsperFile = opt_config->getStreamsperFile();
+                                                Timeout = opt_config->getTimeout();
+                                                delete opt_config;
+                                                opt_config = NULL;
+                                            }
                                     }
                                 else
                                     {
@@ -438,6 +464,10 @@ protected:
                                                             internalParams << ",timeout:" << protocol.URLCOPY_TX_TO;
                                                         if (protocol.TCP_BUFFER_SIZE >= 0)
                                                             internalParams << ",buffersize:" << protocol.TCP_BUFFER_SIZE;
+                                                    }
+                                                else if(userProtocol == true)
+                                                    {
+                                                        internalParams << "nostreams:" << StreamsperFile << ",timeout:" << Timeout << ",buffersize:" << BufSize;
                                                     }
                                                 else
                                                     {
@@ -476,7 +506,6 @@ protected:
                                                          "", // assoc_service_type
                                                          false,
                                                          "");
-
                                         /*set all to ready, special case for session reuse*/
                                         DBSingleton::instance().getDBObjectInstance()->updateFileStatusReuse(tempUrl, "READY");
 
@@ -488,13 +517,14 @@ protected:
 
                                         SingleTrStateInstance::instance().sendStateMessage(tempUrl->JOB_ID, -1);
 
+
                                         debug = DBSingleton::instance().getDBObjectInstance()->getDebugMode(source_hostname, destin_hostname);
                                         if (debug == true)
                                             {
                                                 params.append(" -F ");
                                             }
 
-                                        if (manualConfigExists)
+                                        if (manualConfigExists || userProtocol)
                                             {
                                                 params.append(" -N ");
                                             }
@@ -515,7 +545,11 @@ protected:
                                                 params.append(proxy_file);
                                             }
 
-                                        params.append(" -G ");
+                                        if (multihop)
+                                            params.append(" --multi-hop ");
+                                        else
+                                            params.append(" -G ");
+
                                         params.append(" -a ");
                                         params.append(job_id);
                                         params.append(" -C ");
@@ -617,6 +651,12 @@ protected:
                                                 params.append(jobMetadata);
                                             }
 
+                                        if (std::string(checksumMethod).length() > 0)
+                                            {
+                                                params.append(" -A ");
+                                                params.append(checksumMethod);
+                                            }
+
                                         params.append(" -M ");
                                         params.append(infosys);
 
@@ -643,7 +683,8 @@ protected:
                                                                         struct message_updater msg2;
                                                                         if(std::string(job_id).length() <= 37)
                                                                             {
-                                                                                strcpy(msg2.job_id, std::string(job_id).c_str());
+                                                                                strncpy(msg2.job_id, std::string(job_id).c_str(), sizeof(msg2.job_id));
+                                                                                msg2.job_id[sizeof(msg2.job_id) - 1] = '\0';
                                                                                 msg2.file_id = iterFileIds->first;
                                                                                 msg2.process_id = (int) pr->getPid();
                                                                                 msg2.timestamp = milliseconds_since_epoch();
@@ -698,7 +739,9 @@ protected:
                 try
                     {
                         if (stopThreads)
-                            return;
+                            {
+                                return;
+                            }
 
                         if (DrainMode::getInstance())
                             {
@@ -714,20 +757,19 @@ protected:
                             }
 
                         /*check for non-reused jobs*/
-                        executeUrlcopy(jobsReuse, false);                       
+                        executeUrlcopy(jobsReuse, false);
 
                         if (stopThreads)
                             return;
 
+
                         /* --- session reuse section ---*/
                         /*get jobs in submitted state and session reuse on*/
-
                         if(++reuseExec == 2)
                             {
                                 DBSingleton::instance().getDBObjectInstance()->getSubmittedJobsReuse(jobsReuse, allowedVOs);
                                 reuseExec = 0;
                             }
-
 
                         if (stopThreads)
                             return;

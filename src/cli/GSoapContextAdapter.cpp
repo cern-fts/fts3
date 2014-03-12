@@ -30,17 +30,28 @@
 #include <boost/lexical_cast.hpp>
 
 #include <cgsi_plugin.h>
+#include <signal.h>
 
 #include <sstream>
 #include <fstream>
+
+#include <algorithm>
+#include <boost/lambda/lambda.hpp>
 
 namespace fts3
 {
 namespace cli
 {
 
-GSoapContextAdapter::GSoapContextAdapter(string endpoint): endpoint(endpoint), ctx(soap_new2(SOAP_IO_KEEPALIVE, SOAP_IO_KEEPALIVE)/*soap_new1(SOAP_ENC_MTOM)*/)
+vector<GSoapContextAdapter::Cleaner> GSoapContextAdapter::cleaners;
+
+GSoapContextAdapter::GSoapContextAdapter(string endpoint):
+    endpoint(endpoint), ctx(soap_new2(SOAP_IO_KEEPALIVE, SOAP_IO_KEEPALIVE)/*soap_new1(SOAP_ENC_MTOM)*/)
 {
+    this->major = 0;
+    this->minor = 0;
+    this->patch = 0;
+
     ctx->socket_flags = MSG_NOSIGNAL;
     ctx->tcp_keep_alive = 1; // enable tcp keep alive
     ctx->bind_flags |= SO_REUSEADDR;
@@ -50,9 +61,21 @@ GSoapContextAdapter::GSoapContextAdapter(string endpoint): endpoint(endpoint), c
 
     soap_set_imode(ctx, SOAP_ENC_MTOM | SOAP_IO_CHUNK);
     soap_set_omode(ctx, SOAP_ENC_MTOM | SOAP_IO_CHUNK);
+
+    cleaners.push_back(Cleaner(this));
+    signal(SIGINT, signalCallback);
+    signal(SIGQUIT, signalCallback);
+    signal(SIGILL, signalCallback);
+    signal(SIGABRT, signalCallback);
+    signal(SIGBUS, signalCallback);
+    signal(SIGFPE, signalCallback);
+    signal(SIGSEGV, signalCallback);
+    signal(SIGPIPE, signalCallback);
+    signal(SIGTERM, signalCallback);
+    signal(SIGSTOP, signalCallback);
 }
 
-GSoapContextAdapter::~GSoapContextAdapter()
+void GSoapContextAdapter::clean()
 {
     soap_clr_omode(ctx, SOAP_IO_KEEPALIVE);
     shutdown(ctx->socket,2);
@@ -61,6 +84,11 @@ GSoapContextAdapter::~GSoapContextAdapter()
     soap_end(ctx);
     soap_done(ctx);
     soap_free(ctx);
+}
+
+GSoapContextAdapter::~GSoapContextAdapter()
+{
+    clean();
 }
 
 void GSoapContextAdapter::init()
@@ -302,15 +330,33 @@ JobStatus GSoapContextAdapter::getTransferJobStatus (string jobId, bool archive)
            );
 }
 
-void GSoapContextAdapter::cancel(vector<string> jobIds)
+vector< pair<string, string> > GSoapContextAdapter::cancel(vector<string> jobIds)
 {
 
     impltns__ArrayOf_USCOREsoapenc_USCOREstring rqst;
     rqst.item = jobIds;
 
-    impltns__cancelResponse resp;
-    if (soap_call_impltns__cancel(ctx, endpoint.c_str(), 0, &rqst, resp))
+    impltns__cancel2Response resp;
+
+
+    if (soap_call_impltns__cancel2(ctx, endpoint.c_str(), 0, &rqst, resp))
         handleSoapFault("Failed to cancel jobs: cancel.");
+
+    vector< pair<string, string> > ret;
+
+    if (resp._jobIDs && resp._status)
+        {
+            // zip two vectors
+            vector<string> &ids = resp._jobIDs->item, &stats = resp._status->item;
+            vector<string>::iterator itr_id = ids.begin(), itr_stat = stats.begin();
+
+            for (; itr_id != ids.end() && itr_stat != stats.end(); ++itr_id, ++ itr_stat)
+                {
+                    ret.push_back(make_pair(*itr_id, *itr_stat));
+                }
+        }
+
+    return ret;
 }
 
 void GSoapContextAdapter::getRoles (impltns__getRolesResponse& resp)
@@ -536,6 +582,17 @@ void GSoapContextAdapter::queueTimeoutSet(unsigned timeout)
         }
 }
 
+std::string GSoapContextAdapter::getSnapShot(string vo, string src, string dst)
+{
+    impltns__getSnapshotResponse resp;
+    if (soap_call_impltns__getSnapshot(ctx, endpoint.c_str(), 0, vo, src, dst, resp))
+        {
+            handleSoapFault("Operation failed.");
+        }
+
+    return resp._result;
+}
+
 void GSoapContextAdapter::getLog(string& logname, string jobId)
 {
 
@@ -594,6 +651,24 @@ void GSoapContextAdapter::setInterfaceVersion(string interface)
 
     s = *it;
     patch = boost::lexical_cast<long>(s);
+}
+
+void GSoapContextAdapter::signalCallback(int signum)
+{
+    // check if it is the right signal
+    if (signum != SIGINT &&
+            signum != SIGQUIT &&
+            signum != SIGILL &&
+            signum != SIGABRT &&
+            signum != SIGBUS &&
+            signum != SIGFPE &&
+            signum != SIGSEGV &&
+            signum != SIGPIPE &&
+            signum != SIGTERM &&
+            signum != SIGSTOP) exit(signum);
+    // call all the cleaners
+    for_each(cleaners.begin(), cleaners.end(), boost::lambda::_1);
+    exit(signum);
 }
 
 }

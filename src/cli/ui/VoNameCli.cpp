@@ -53,21 +53,21 @@ VoNameCli::~VoNameCli()
 {
 }
 
-optional<GSoapContextAdapter&> VoNameCli::validate(bool init)
+bool VoNameCli::validate()
 {
 
-    if (!CliBase::validate(init).is_initialized()) return optional<GSoapContextAdapter&>();
+    if (!CliBase::validate()) return false;
 
     if (pos)
         {
             if (getVoName().empty())
                 {
-                    cout << "The VO name has to be specified" << endl;
-                    return 0;
+                    msgPrinter.error_msg("The VO name has to be specified");
+                    return false;
                 }
         }
 
-    return *ctx;
+    return true;
 }
 
 string VoNameCli::getUsageString(string tool)

@@ -36,7 +36,7 @@ using namespace std;
 
 
 
-FileManagement::FileManagement() : logFileName("/var/log/fts3/"), base_scheme(NULL), base_host(NULL), base_path(NULL), base_port(0)
+FileManagement::FileManagement() :file_id(0), logFileName("/var/log/fts3/"), base_scheme(NULL), base_host(NULL), base_path(NULL), base_port(0)
 {
     try
         {
@@ -120,7 +120,7 @@ void FileManagement::setDestUrl(std::string& dest_url)
         free(base_path);
 }
 
-void FileManagement::setFileId(std::string& file_id)
+void FileManagement::setFileId(unsigned file_id)
 {
     this->file_id = file_id;
 }
@@ -218,7 +218,7 @@ std::string FileManagement::dateDir()
     return ss.str();
 }
 
-std::string FileManagement::generateLogFileName(std::string, std::string, std::string & file_id, std::string & job_id)
+std::string FileManagement::generateLogFileName(std::string, std::string, unsigned file_id, std::string & job_id)
 {
     std::string new_name = std::string("");
     archiveFileName = shostFile + "__" + dhostFile;

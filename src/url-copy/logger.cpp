@@ -83,7 +83,6 @@ int Logger::redirectTo(const std::string& path, bool debug)
     if (logHandle.fail())
         return errno;
     chmod(path.c_str(), 0644);
-    logHandle << std::fixed;
     log = &logHandle;
 
     // Debug output

@@ -30,22 +30,22 @@ CancelCli::~CancelCli()
 }
 
 
-optional<GSoapContextAdapter&> CancelCli::validate(bool init)
+bool CancelCli::validate()
 {
 
     // do the standard validation
-    if (!CliBase::validate(init).is_initialized()) return optional<GSoapContextAdapter&>();
+    if (!CliBase::validate()) return false;
 
     // check whether to use delegation
     if (vm.count("file") && vm.count("jobid"))
         {
-            cout << "Either the bulk file or job ID list may be used!" << endl;
-            return optional<GSoapContextAdapter&>();
+            msgPrinter.error_msg("Either the bulk file or job ID list may be used!");
+            return false;
         }
 
     prepareJobIds();
 
-    return *ctx;
+    return true;
 }
 
 void CancelCli::prepareJobIds()

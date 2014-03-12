@@ -32,6 +32,7 @@ GetCfgCli::GetCfgCli() : SrcDestCli(true)
     specific.add_options()
     ("name,n", value<string>(), "Restrict to specific symbolic (configuration) name.")
     ("all", "Get all the configurations (standalone and pairs) for the given SE.")
+    ("vo", "Get activity share configuration for the given VO.")
     ;
 }
 
@@ -60,17 +61,8 @@ bool GetCfgCli::all()
     return vm.count("all");
 }
 
-//optional<GSoapContextAdapter&> GetCfgCli::validate(bool init) {
-//
-//	if (!CliBase::validate(init).is_initialized()) return optional<GSoapContextAdapter&>();
-//
-//	bool standalone = !getSource().empty();
-//	bool pair = standalone && !getDestination().empty();
-//
-//	if ( (standalone || pair) && !getName().empty()) {
-//		throw string("You may specify either a stand alone configuration, pair configuration or the symbolic name for querying!");
-//	}
-//
-//	return *ctx;
-//}
+bool GetCfgCli::vo()
+{
+    return vm.count("vo");
+}
 

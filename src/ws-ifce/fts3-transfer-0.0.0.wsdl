@@ -477,7 +477,20 @@
    </message>
 
    <message name="cancelResponse">
+   
+   </message>
+   
+   <message name="cancel2Request">
+   
+      <part name="requestIDs" type="impl:ArrayOf_soapenc_string"/>
+      
+   </message>
 
+   <message name="cancel2Response">
+   
+      <part name="jobIDs" type="impl:ArrayOf_soapenc_string"/>
+      <part name="status" type="impl:ArrayOf_soapenc_string"/>
+      
    </message>
 
    <message name="CannotCancelException">
@@ -674,6 +687,18 @@
 
       <part name="inGivenStates" type="impl:ArrayOf_soapenc_string"/>
 
+   </message>
+   
+   
+   <message name="getSnapshotRequest">
+      <part name="vo" type="xsd:string"/>
+      <part name="src" type="xsd:string"/>
+      <part name="dst" type="xsd:string"/>
+   </message>
+
+   <message name="getSnapshotResponse">
+
+      <part name="result" type="xsd:string"/>     
 
    </message>
 
@@ -990,12 +1015,49 @@
          <fault message="impl:InternalException" name="InternalException"/>
 
       </operation>
+      
+      <operation name="cancel2" parameterOrder="requestIDs">
+
+         <input message="impl:cancel2Request" name="cancel2Request"/>
+
+         <output message="impl:cancel2Response" name="cancel2Response"/>
+
+         <fault message="impl:CannotCancelException" name="CannotCancelException"/>
+
+         <fault message="impl:AuthorizationException" name="AuthorizationException"/>
+
+         <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
+
+         <fault message="impl:NotExistsException" name="NotExistsException"/>
+
+         <fault message="impl:InternalException" name="InternalException"/>
+
+      </operation>
 
       <operation name="setJobPriority" parameterOrder="requestID priority">
 
          <input message="impl:setJobPriorityRequest" name="setJobPriorityRequest"/>
 
          <output message="impl:setJobPriorityResponse" name="setJobPriorityResponse"/>
+
+         <fault message="impl:AuthorizationException" name="AuthorizationException"/>
+
+         <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
+
+         <fault message="impl:NotExistsException" name="NotExistsException"/>
+
+         <fault message="impl:InvalidArgumentException" name="InvalidArgumentException"/>
+
+         <fault message="impl:InternalException" name="InternalException"/>
+
+      </operation>
+      
+      
+	  <operation name="getSnapshot" parameterOrder="getSnapshot">
+
+         <input message="impl:getSnapshotRequest" name="getSnapshotRequest"/>
+
+         <output message="impl:getSnapshotResponse" name="getSnapshotResponse"/>
 
          <fault message="impl:AuthorizationException" name="AuthorizationException"/>
 
@@ -1927,6 +1989,54 @@
          </fault>
 
       </operation>
+      
+      <operation name="cancel2">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <input name="cancel2Request">
+
+            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
+
+         </input>
+
+         <output name="cancel2Response">
+
+            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
+
+         </output>
+
+         <fault name="CannotCancelException">
+
+            <wsdlsoap:fault name="CannotCancelException" use="literal"/>
+
+         </fault>
+
+         <fault name="AuthorizationException">
+
+            <wsdlsoap:fault name="AuthorizationException" use="literal"/>
+
+         </fault>
+
+         <fault name="ServiceBusyException">
+
+            <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
+
+         </fault>
+
+         <fault name="NotExistsException">
+
+            <wsdlsoap:fault name="NotExistsException" use="literal"/>
+
+         </fault>
+
+         <fault name="InternalException">
+
+            <wsdlsoap:fault name="InternalException" use="literal"/>
+
+         </fault>
+
+      </operation>
 
       <operation name="setJobPriority">
 
@@ -1975,6 +2085,57 @@
          </fault>
 
       </operation>
+      
+      
+	  <operation name="getSnapshot">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <input name="getSnapshotRequest">
+
+            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
+
+         </input>
+
+         <output name="getSnapshotResponse">
+
+            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
+
+         </output>
+
+         <fault name="AuthorizationException">
+
+            <wsdlsoap:fault name="AuthorizationException" use="literal"/>
+
+         </fault>
+
+         <fault name="ServiceBusyException">
+
+            <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
+
+         </fault>
+
+         <fault name="NotExistsException">
+
+            <wsdlsoap:fault name="NotExistsException" use="literal"/>
+
+         </fault>
+
+         <fault name="InvalidArgumentException">
+
+            <wsdlsoap:fault name="InvalidArgumentException" use="literal"/>
+
+         </fault>
+
+         <fault name="InternalException">
+
+            <wsdlsoap:fault name="InternalException" use="literal"/>
+
+         </fault>
+
+      </operation>
+      
+      
 
       <operation name="addVOManager">
 

@@ -148,6 +148,14 @@ protected:
     static string json(map<string, int>& params);
 
     /**
+     * Converts a STL map to JSON configuration string
+     *
+     * @param params - the parameters to be converted to JSON
+     * @return string containing the JSON configuration
+     */
+    static string json(map<string, double>& params);
+
+    /**
      * Converts a STL map to JSON configuration string,
      * 	if the optional is not initialized "auto" value is used
      *

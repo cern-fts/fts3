@@ -36,12 +36,12 @@ public:
     ThreadSafeBringOnlineList();
     ~ThreadSafeBringOnlineList();
 
-    void push_back(struct message_bringonline message);
+    void push_back(const struct message_bringonline& message);
     void clear();
-    void updateMsg(struct message_bringonline msg);
-    void checkExpiredMsg(std::vector<struct message_bringonline>& messages);
-    void deleteMsg(std::vector<struct message_bringonline>& messages);
-    void removeFinishedTr(struct message_bringonline message);
+    void updateMsg(const struct message_bringonline& msg);
+    void checkExpiredMsg(const std::vector<struct message_bringonline>& messages);
+    void deleteMsg(const std::vector<struct message_bringonline>& messages);
+    void removeFinishedTr(const struct message_bringonline& message);
     std::list<struct message_bringonline> m_list;
 
 private:

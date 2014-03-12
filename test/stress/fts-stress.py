@@ -36,8 +36,8 @@ class Bully:
 
   def spawn(self, src, dst):
     return subprocess.Popen(['fts-transfer-submit',
-                             '-s', self.endpoint,
-                             src, dst])
+                             '-o', '-s', self.endpoint,
+			     src, dst])
 
   def __call__(self):
     self.log("Transfers per attack: %d"   % self.parallel)

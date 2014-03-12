@@ -19,11 +19,7 @@ CREATE TABLE t_server_sanity (
   t_cleanUpRecords          TIMESTAMP WITH TIME ZONE,
   t_msgcron                 TIMESTAMP WITH TIME ZONE  
 ); 
-INSERT INTO t_server_sanity
-    (revertToSubmitted, cancelWaitingFiles, revertNotUsedFiles, forceFailTransfers, setToFailOldQueuedJobs, checkSanityState, cleanUpRecords, msgcron,
-     t_revertToSubmitted, t_cancelWaitingFiles, t_revertNotUsedFiles, t_forceFailTransfers, t_setToFailOldQueuedJobs, t_checkSanityState, t_cleanUpRecords, t_msgcron)
-VALUES (0, 0, 0, 0, 0, 0, 0, 0,
-        CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO t_server_sanity (revertToSubmitted, cancelWaitingFiles, revertNotUsedFiles, forceFailTransfers, setToFailOldQueuedJobs, checkSanityState, cleanUpRecords,msgcron, t_revertToSubmitted, t_cancelWaitingFiles, t_revertNotUsedFiles, t_forceFailTransfers, t_setToFailOldQueuedJobs, t_checkSanityState, t_cleanUpRecords, t_msgcron) VALUES (0, 0, 0, 0, 0, 0, 0, 0,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 --
 -- Holds various server configuration options
@@ -85,7 +81,7 @@ CREATE TABLE t_optimize (
 -- Historial optimizer evolution
 --
 CREATE TABLE t_optimizer_evolution (
-    datetime     TIMESTAMP,
+    datetime     TIMESTAMP WITH TIME ZONE,
     source_se    VARCHAR(255),
     dest_se      VARCHAR(255),
     nostreams    NUMBER DEFAULT NULL,
@@ -274,6 +270,12 @@ CREATE TABLE t_share_config (
    ,active INTEGER NOT NULL
    ,CONSTRAINT t_share_config_pk PRIMARY KEY (source, destination, vo)
    ,CONSTRAINT t_share_config_fk FOREIGN KEY (source, destination) REFERENCES t_link_config (source, destination)
+);
+
+CREATE TABLE t_activity_share_config (
+  vo             VARCHAR(100) NOT NULL PRIMARY KEY,
+  activity_share VARCHAR(255) NOT NULL,
+  active         VARCHAR(3) check (active in ('on', 'off'))
 );
 
 --
@@ -597,6 +599,9 @@ CREATE TABLE t_file (
 -- user provided metadata
   ,file_metadata    VARCHAR2(255)
 --
+-- activity name
+  ,activity   VARCHAR(255) DEFAULT 'default'
+--
 -- selection strategy used in case when multiple protocols were provided
   ,selection_strategy VARCHAR(255)
 --
@@ -613,6 +618,11 @@ CREATE TABLE t_file (
   ,wait_timeout			NUMBER
   ,t_log_file        VARCHAR2(2048)
   ,t_log_file_debug  INTEGER
+--
+  ,hashed_id       INTEGER DEFAULT 0
+--
+-- The VO that owns this job
+  ,vo_name              VARCHAR(50)  
 );
 
 --
@@ -621,7 +631,7 @@ CREATE TABLE t_file (
 CREATE TABLE t_file_retry_errors (
     file_id   INTEGER NOT NULL,
     attempt   INTEGER NOT NULL,
-    datetime  TIMESTAMP,
+    datetime  TIMESTAMP WITH TIME ZONE,
     reason    VARCHAR2(2048),
     CONSTRAINT t_file_retry_errors_pk PRIMARY KEY(file_id, attempt),
     CONSTRAINT t_file_retry_fk FOREIGN KEY (file_id) REFERENCES t_file(file_id) ON DELETE CASCADE
@@ -692,62 +702,55 @@ CREATE TABLE t_stage_req (
   ,CONSTRAINT stagereq_pk PRIMARY KEY (vo_name, host)
 );
 
+--
+-- Host hearbeats
+--
+CREATE TABLE t_hosts (
+    hostname    VARCHAR2(64) PRIMARY KEY NOT NULL,
+    beat        TIMESTAMP WITH TIME ZONE DEFAULT NULL,
+    drain 	INTEGER DEFAULT 0
+);
 
 
---
---
--- Index Section
---
---
+CREATE TABLE t_optimize_active (
+  source_se    VARCHAR2(255) NOT NULL,
+  dest_se      VARCHAR2(255) NOT NULL,
+  active       INTEGER DEFAULT 5,
+  message      VARCHAR2(512),
+  datetime  TIMESTAMP WITH TIME ZONE,
+  CONSTRAINT t_optimize_active_pk PRIMARY KEY (source_se, dest_se)
+);
 
+--
+--
+-- Index Section 
+--
+--
 -- t_job indexes:
 -- t_job(job_id) is primary key
-CREATE INDEX job_job_state    ON t_job(job_state);
+CREATE INDEX job_job_state    ON t_job(job_state, vo_name, job_finished, submit_time);
 CREATE INDEX job_vo_name      ON t_job(vo_name);
 CREATE INDEX job_cred_id      ON t_job(user_dn,cred_id);
 CREATE INDEX job_jobfinished_id     ON t_job(job_finished);
-CREATE INDEX job_priority     ON t_job(priority);
-CREATE INDEX job_submit_time     ON t_job(submit_time);
-CREATE INDEX job_priority_s_time     ON t_job(priority,submit_time);
-CREATE INDEX job_list     ON t_job(job_id, job_state, reason, submit_time, user_dn,vo_name, priority, cancel_job);
+CREATE INDEX job_priority     ON t_job(priority, submit_time);
+CREATE INDEX t_job_submit_host ON t_job(submit_host);
 
 -- t_file indexes:
 -- t_file(file_id) is primary key
 CREATE INDEX file_job_id     ON t_file(job_id);
-CREATE INDEX file_file_state_job_id ON t_file(file_state,file_id);
 CREATE INDEX file_jobfinished_id ON t_file(job_finished);
-CREATE INDEX file_job_id_a ON t_file(job_id, FINISH_TIME);
-CREATE INDEX file_finish_time ON t_file(finish_time);
-CREATE INDEX file_file_index ON t_file(file_index);
-CREATE INDEX file_job_id_file_index ON t_file(job_id, file_index);
-CREATE INDEX file_retry_timestamp ON t_file(retry_timestamp);
-CREATE INDEX file_file_throughput ON t_file(throughput);
-CREATE INDEX file_file_src_dest ON t_file(source_se, dest_se);
-CREATE INDEX file_file_src_dest_job_id ON t_file(source_se, dest_se, job_id);
-CREATE INDEX file_file_state_job_id4 ON t_file(file_state, dest_se);
-CREATE INDEX file_pid_job_id ON t_file(pid, job_id);
+CREATE INDEX job_reuse  ON t_job(reuse_job);
+CREATE INDEX file_source_dest ON t_file(source_se, dest_se, file_state); 
+CREATE INDEX t_waittimeout ON t_file(wait_timeout);
+CREATE INDEX file_id_hashed ON t_file(hashed_id, file_state);
+CREATE INDEX t_retry_timestamp ON t_file(retry_timestamp);
+CREATE INDEX t_file_select ON t_file(dest_se, source_se, job_finished, file_state );
+CREATE INDEX file_vo_name_state ON t_file(file_state, vo_name, source_se, dest_se);
+CREATE INDEX file_vo_name ON t_file( vo_name, source_se, dest_se, file_state);
+CREATE INDEX file_tr_host  ON t_file(TRANSFERHOST);
+CREATE INDEX t_file_activity ON t_file(activity);
 
-
-CREATE INDEX optimize_active         ON t_optimize(active);
 CREATE INDEX optimize_source_a         ON t_optimize(source_se,dest_se);
-CREATE INDEX optimize_dest_se           ON t_optimize(dest_se);
-CREATE INDEX optimize_nostreams         ON t_optimize(nostreams);
-CREATE INDEX optimize_timeout           ON t_optimize(timeout);
-CREATE INDEX optimize_buffer            ON t_optimize(buffer);
-CREATE INDEX optimize_order         ON t_optimize(nostreams,timeout,buffer);
-CREATE INDEX optimize_prot         ON t_optimize(nostreams,active,throughput);
-CREATE INDEX optimize_prot2         ON t_optimize(throughput, active, nostreams, timeout, buffer);
-
-
-
-CREATE INDEX t_server_config_max_time         ON t_server_config(max_time_queue);
-CREATE INDEX t_server_config_retry         ON t_server_config(retry);
-
-CREATE index idx_report_job      ON t_job (vo_name,job_id);
-
-
--- Config index
-CREATE INDEX t_group_members  ON t_group_members(groupName);
 
 --
 --
@@ -767,7 +770,7 @@ CREATE TABLE t_file_backup AS (SELECT * FROM t_file);
 CREATE TABLE t_job_backup  AS (SELECT * FROM t_job);
 
 CREATE INDEX t_job_backup_1            ON t_job_backup(job_id);
-CREATE INDEX t_file_backup_1            ON t_file_backup(file_id);
+CREATE INDEX t_file_backup_1            ON t_file_backup(job_id);
 
 
 -- Profiling information
@@ -786,5 +789,5 @@ CREATE TABLE t_profiling_snapshot (
 
 CREATE INDEX t_prof_snapshot_total ON t_profiling_snapshot(total);
 
-
 exit;
+

@@ -45,18 +45,18 @@ TransferStatusCli::~TransferStatusCli()
 {
 }
 
-optional<GSoapContextAdapter&> TransferStatusCli::validate(bool init)
+bool TransferStatusCli::validate()
 {
 
-    if (!CliBase::validate(init).is_initialized()) return optional<GSoapContextAdapter&>();
+    if (!CliBase::validate()) return false;
 
     if (getJobIds().empty())
         {
             printer().missing_parameter("Request ID");
-            return 0;
+            return false;
         }
 
-    return *ctx;
+    return true;
 }
 
 bool TransferStatusCli::list()

@@ -491,7 +491,7 @@ int DoServer(int argc, char** argv)
                 {
 
                     //select from the database the config for bringonline for each VO / hostname
-                    voHostnameConfig = db::DBSingleton::instance().getDBObjectInstance()->getVOBringonlimeMax();
+                    voHostnameConfig = db::DBSingleton::instance().getDBObjectInstance()->getVOBringonlineMax();
 
                     if (!voHostnameConfig.empty())
                         {

@@ -38,7 +38,6 @@ using namespace boost;
 
 StandaloneSeCfg::StandaloneSeCfg(string dn, string name) : StandaloneCfg(dn), se(name)
 {
-
     if (notAllowed.count(se))
         throw Err_Custom("The SE name is not a valid!");
 

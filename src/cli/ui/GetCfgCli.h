@@ -73,6 +73,12 @@ public:
     bool all();
 
     /**
+     * true if the user is quering the activity configuration for given VO,
+     * false otherwise
+     */
+    bool vo();
+
+    /**
      * Validates command line options
      * 1. Checks the endpoint
      * 2. If -h or -V option were used respective informations are printed

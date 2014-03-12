@@ -40,15 +40,16 @@ namespace common
 
 using namespace boost::assign;
 
-const map<string, set <string> > CfgParser::standaloneSeCfgTokens = CfgParser::initStandaloneSeCfgTokens();
-const map<string, set <string> > CfgParser::standaloneGrCfgTokens = CfgParser::initStandaloneGrCfgTokens();
-const map<string, set <string> > CfgParser::sePairCfgTokens = CfgParser::initSePairCfgTokens();
-const map<string, set <string> > CfgParser::grPairCfgTokens = CfgParser::initGrPairCfgTokens();
-const map<string, set <string> > CfgParser::shareOnlyCfgTokens = CfgParser::initShareOnlyCfgTokens();
+const std::map<std::string, std::set <std::string> > CfgParser::standaloneSeCfgTokens = CfgParser::initStandaloneSeCfgTokens();
+const std::map<std::string, std::set <std::string> > CfgParser::standaloneGrCfgTokens = CfgParser::initStandaloneGrCfgTokens();
+const std::map<std::string, std::set <std::string> > CfgParser::sePairCfgTokens = CfgParser::initSePairCfgTokens();
+const std::map<std::string, std::set <std::string> > CfgParser::grPairCfgTokens = CfgParser::initGrPairCfgTokens();
+const std::map<std::string, std::set <std::string> > CfgParser::shareOnlyCfgTokens = CfgParser::initShareOnlyCfgTokens();
+const std::map<std::string, std::set <std::string> > CfgParser::activityShareCfgTokens = CfgParser::initActivityShareCfgTokens();
 
-const string CfgParser::auto_value = "auto";
+const std::string CfgParser::auto_value = "auto";
 
-const set<string> CfgParser::allTokens =
+const std::set<std::string> CfgParser::allTokens =
     list_of
     ("se")
     ("group")
@@ -63,103 +64,112 @@ const set<string> CfgParser::allTokens =
     ("destination_se")
     ("source_group")
     ("destination_group")
+    ("vo")
     ;
 
-const map< string, set <string> > CfgParser::initStandaloneSeCfgTokens()
+const std::map< std::string, std::set <std::string> > CfgParser::initStandaloneSeCfgTokens()
 {
+    std::set<std::string> root = list_of
+                                 ("se")
+                                 ("active")
+                                 ("in")
+                                 ("out")
+                                 ;
 
-    set<string> root = list_of
-                       ("se")
-                       ("active")
-                       ("in")
-                       ("out")
-                       ;
-
-    set<string> cfg = list_of
-                      ("share")
-                      ("protocol")
-                      ;
+    std::set<std::string> cfg = list_of
+                                ("share")
+                                ("protocol")
+                                ;
 
     return map_list_of
-           (string(), root)
+           (std::string(), root)
            ("in", cfg)
            ("out", cfg)
            ;
 }
 
-const map< string, set <string> > CfgParser::initStandaloneGrCfgTokens()
+const std::map< std::string, std::set <std::string> > CfgParser::initStandaloneGrCfgTokens()
 {
+    std::set<std::string> root = list_of
+                                 ("group")
+                                 ("members")
+                                 ("active")
+                                 ("in")
+                                 ("out")
+                                 ;
 
-    set<string> root = list_of
-                       ("group")
-                       ("members")
-                       ("active")
-                       ("in")
-                       ("out")
-                       ;
-
-    set<string> cfg = list_of
-                      ("share")
-                      ("protocol")
-                      ;
+    std::set<std::string> cfg = list_of
+                                ("share")
+                                ("protocol")
+                                ;
 
     return map_list_of
-           (string(), root)
+           (std::string(), root)
            ("in", cfg)
            ("out", cfg)
            ;
 }
 
-const map< string, set <string> > CfgParser::initSePairCfgTokens()
+const std::map< std::string, std::set <std::string> > CfgParser::initSePairCfgTokens()
 {
-
-    set<string> root = list_of
-                       ("symbolic_name")
-                       ("active")
-                       ("source_se")
-                       ("destination_se")
-                       ("share")
-                       ("protocol")
-                       ;
+    std::set<std::string> root = list_of
+                                 ("symbolic_name")
+                                 ("active")
+                                 ("source_se")
+                                 ("destination_se")
+                                 ("share")
+                                 ("protocol")
+                                 ;
 
     return map_list_of
-           (string(), root)
+           (std::string(), root)
            ;
 }
 
-const map< string, set <string> > CfgParser::initGrPairCfgTokens()
+const std::map< std::string, std::set <std::string> > CfgParser::initGrPairCfgTokens()
 {
-
-    set<string> root = list_of
-                       ("symbolic_name")
-                       ("active")
-                       ("source_group")
-                       ("destination_group")
-                       ("share")
-                       ("protocol")
-                       ;
+    std::set<std::string> root = list_of
+                                 ("symbolic_name")
+                                 ("active")
+                                 ("source_group")
+                                 ("destination_group")
+                                 ("share")
+                                 ("protocol")
+                                 ;
 
     return map_list_of
-           (string(), root)
+           (std::string(), root)
            ;
 }
 
-const map<string, set <string> > CfgParser::initShareOnlyCfgTokens()
+const std::map<std::string, std::set <std::string> > CfgParser::initShareOnlyCfgTokens()
 {
-
-    set<string> root = list_of
-                       ("se")
-                       ("active")
-                       ("in")
-                       ("out")
-                       ;
+    std::set<std::string> root = list_of
+                                 ("se")
+                                 ("active")
+                                 ("in")
+                                 ("out")
+                                 ;
 
     return map_list_of
-           (string(), root)
+           (std::string(), root)
            ;
 }
 
-CfgParser::CfgParser(string configuration)
+const std::map<std::string, std::set <std::string> > CfgParser::initActivityShareCfgTokens()
+{
+    std::set<std::string> root = list_of
+                                 ("vo")
+                                 ("active")
+                                 ("share")
+                                 ;
+
+    return map_list_of
+           (std::string(), root)
+           ;
+}
+
+CfgParser::CfgParser(std::string configuration)
 {
 
     size_t opening = count(configuration.begin(), configuration.end(), '{');
@@ -174,22 +184,22 @@ CfgParser::CfgParser(string configuration)
     replace_all(configuration, ",", ",\n");
 
     // store the lines in a vector
-    vector<string> lines;
+    std::vector<std::string> lines;
     char_separator<char> sep("\n");
     tokenizer< char_separator<char> > tokens(configuration, sep);
     tokenizer< char_separator<char> >::iterator it;
 
     // put the configuration into a stream
-    stringstream ss;
+    std::stringstream ss;
 
     for(it = tokens.begin(); it != tokens.end(); it++)
         {
-            string s = *it;
+            std::string s = *it;
             trim(s);
             if (!s.empty())
                 {
                     lines.push_back(s);
-                    ss << s << endl;
+                    ss << s << std::endl;
                 }
         }
 
@@ -202,7 +212,7 @@ CfgParser::CfgParser(string configuration)
     catch(json_parser_error& ex)
         {
             // handle errors in JSON format
-            string msg =
+            std::string msg =
                 ex.message() +
                 "(around: '" + lines[ex.line() - 1] + "')"
                 ;
@@ -240,6 +250,12 @@ CfgParser::CfgParser(string configuration)
             return;
         }
 
+    if (validate(pt, activityShareCfgTokens))
+        {
+            type = ACTIVITY_SHARE_CFG;
+            return;
+        }
+
     type = NOT_A_CFG;
 }
 
@@ -248,12 +264,12 @@ CfgParser::~CfgParser()
 
 }
 
-bool CfgParser::validate(ptree pt, map< string, set <string> > allowed, string path)
+bool CfgParser::validate(ptree pt, std::map< std::string, std::set <std::string> > allowed, std::string path)
 {
 
     // get the allowed names
-    set<string> names;
-    const map< string, set<string> >::const_iterator m_it = allowed.find(path);
+    std::set<std::string> names;
+    const std::map< std::string, std::set<std::string> >::const_iterator m_it = allowed.find(path);
     if (m_it != allowed.end())
         {
             names = m_it->second;
@@ -262,7 +278,7 @@ bool CfgParser::validate(ptree pt, map< string, set <string> > allowed, string p
     ptree::iterator it;
     for (it = pt.begin(); it != pt.end(); it++)
         {
-            pair<string, ptree> p = *it;
+            std::pair<std::string, ptree> p = *it;
 
             // if it's an array entry just continue
             if (p.first.empty()) continue;
@@ -272,7 +288,7 @@ bool CfgParser::validate(ptree pt, map< string, set <string> > allowed, string p
                 {
                     if (!allTokens.count(p.first))
                         {
-                            string msg = "unexpected identifier: " + p.first;
+                            std::string msg = "unexpected identifier: " + p.first;
                             if (!path.empty()) msg += " in " + path + " object";
                             throw Err_Custom(msg);
                         }
@@ -300,14 +316,14 @@ bool CfgParser::validate(ptree pt, map< string, set <string> > allowed, string p
     return true;
 }
 
-optional<string> CfgParser::get_opt(string path)
+optional<std::string> CfgParser::get_opt(std::string path)
 {
 
-    optional<string> v;
+    optional<std::string> v;
     try
         {
 
-            v = pt.get_optional<string>(path);
+            v = pt.get_optional<std::string>(path);
 
         }
     catch (ptree_bad_data& ex)
@@ -319,14 +335,14 @@ optional<string> CfgParser::get_opt(string path)
     return v;
 }
 
-bool CfgParser::isAuto(string path)
+bool CfgParser::isAuto(std::string path)
 {
 
-    string v;
+    std::string v;
     try
         {
 
-            v = pt.get<string>(path);
+            v = pt.get<std::string>(path);
 
         }
     catch (ptree_bad_path& ex)

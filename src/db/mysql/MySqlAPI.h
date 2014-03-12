@@ -63,13 +63,11 @@ public:
     /**
      * Submit a transfer request to be stored in the database
      **/
-    virtual void submitPhysical(const std::string & jobId, std::list<job_element_tupple>& src_dest_pair, const std::string & paramFTP,
-                                const std::string & DN, const std::string & cred, const std::string & voName, const std::string & myProxyServer,
-                                const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite,
-                                const std::string & sourceSpaceToken, const std::string & sourceSpaceTokenDescription, int copyPinLifeTime,
-                                const std::string & failNearLine, const std::string & checksumMethod, const std::string & reuse,
-                                int bringonline, std::string metadata,
-                                int retry, int retryDelay, std::string sourceSe, std::string destinationSe);
+    virtual void submitPhysical(const std::string & jobId, std::list<job_element_tupple> src_dest_pair,
+                                const std::string & DN, const std::string & cred,
+                                const std::string & voName, const std::string & myProxyServer, const std::string & delegationID,
+                                const std::string & sourceSe, const std::string & destinationSe,
+                                const JobParameterHandler & params);
 
     virtual void getTransferJobStatus(std::string requestID, bool archive, std::vector<JobStatus*>& jobs);
 
@@ -81,7 +79,7 @@ public:
 
     virtual void getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std::string & vos);
 
-    virtual void getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files, bool reuse);
+    virtual void getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files);
 
     virtual void getByJobId(std::map< std::string, std::list<TransferFiles*> >& files);
 
@@ -95,17 +93,13 @@ public:
     virtual void updateSe(std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
                           std::string SE_TRANSFER_TYPE, std::string SE_TRANSFER_PROTOCOL, std::string SE_CONTROL_PROTOCOL, std::string GOCDB_ID);
 
-    virtual void deleteSe(std::string NAME);
+    virtual bool updateFileTransferStatus(double throughput, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
+                                          int process_id, double filesize, double duration, bool retry);
 
-    virtual bool updateFileTransferStatus(double throughput, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message, int process_id, double filesize, double duration);
-
-    virtual bool updateJobTransferStatus(int file_id, std::string job_id, const std::string status);
-
-    virtual void updateFileTransferProgress(std::string job_id, int file_id, double throughput, double transferred);
+    virtual bool updateJobTransferStatus(std::string job_id, const std::string status);
 
     virtual void cancelJob(std::vector<std::string>& requestIDs);
 
-    virtual void getCancelJob(std::vector<int>& requestIDs);
 
 
     /*t_credential API*/
@@ -135,9 +129,9 @@ public:
 
     virtual bool isCredentialExpired(const std::string & dlg_id, const std::string & dn);
 
-    virtual bool isTrAllowed(const std::string & source_se, const std::string & dest);
+    virtual bool updateOptimizer();
 
-    virtual bool isTrAllowed2(const std::string & source_se, const std::string & dest);
+    virtual bool isTrAllowed(const std::string & source_se, const std::string & dest);
 
     virtual int getSeOut(const std::string & source, const std::set<std::string> & destination);
 
@@ -157,7 +151,7 @@ public:
 
     virtual void revertToSubmitted();
 
-    virtual void backup();
+    virtual void backup(long* nJobs, long* nFiles);
 
     virtual void forkFailedRevertState(const std::string & jobId, int fileId);
 
@@ -200,19 +194,11 @@ public:
 
     virtual std::string getGroupForSe(const std::string se);
 
-
-    virtual void submitHost(const std::string & jobId);
-
-    virtual std::string transferHost(int fileId);
-
-    virtual std::string transferHostV(std::map<int,std::string>& fileIds);
-
     //t_config_symbolic
     virtual void addLinkConfig(LinkConfig* cfg);
     virtual void updateLinkConfig(LinkConfig* cfg);
     virtual void deleteLinkConfig(std::string source, std::string destination);
     virtual LinkConfig* getLinkConfig(std::string source, std::string destination);
-    virtual bool isThereLinkConfig(std::string source, std::string destination);
     virtual std::pair<std::string, std::string>* getSourceAndDestination(std::string symbolic_name);
     virtual bool isGrInPair(std::string group);
     virtual bool isShareOnly(std::string se);
@@ -223,6 +209,12 @@ public:
     virtual void deleteShareConfig(std::string source, std::string destination);
     virtual ShareConfig* getShareConfig(std::string source, std::string destination, std::string vo);
     virtual std::vector<ShareConfig*> getShareConfig(std::string source, std::string destination);
+
+    virtual void addActivityConfig(std::string vo, std::string shares, bool active);
+    virtual void updateActivityConfig(std::string vo, std::string shares, bool active);
+    virtual void deleteActivityConfig(std::string vo);
+    virtual bool isActivityConfigActive(std::string vo);
+    virtual std::map< std::string, double > getActivityConfig(std::string vo);
 
     virtual bool checkIfSeIsMemberOfAnotherGroup( const std::string & member);
 
@@ -240,8 +232,6 @@ public:
 
     virtual bool hasPairSeCfgAssigned(int file_id, std::string vo);
 
-    virtual bool hasStandAloneGrCfgAssigned(int file_id, std::string vo);
-
     virtual bool hasPairGrCfgAssigned(int file_id, std::string vo);
 
     virtual int countActiveTransfers(std::string source, std::string destination, std::string vo);
@@ -253,8 +243,6 @@ public:
     virtual int sumUpVoShares (std::string source, std::string destination, std::set<std::string> vos);
 
     virtual void setPriority(std::string jobId, int priority);
-
-    virtual bool checkConnectionStatus();
 
     virtual void setRetry(int retry);
 
@@ -280,11 +268,11 @@ public:
 
     virtual void setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<int>& files);
 
-    virtual std::vector< boost::tuple<std::string, std::string, int> >  getVOBringonlimeMax();
+    virtual std::vector< boost::tuple<std::string, std::string, int> >  getVOBringonlineMax();
 
     virtual std::vector<struct message_bringonline> getBringOnlineFiles(std::string voName, std::string hostName, int maxValue);
 
-    virtual void bringOnlineReportStatus(const std::string & state, const std::string & message, struct message_bringonline msg);
+    virtual void bringOnlineReportStatus(const std::string & state, const std::string & message, const struct message_bringonline& msg);
 
     virtual void addToken(const std::string & job_id, int file_id, const std::string & token);
 
@@ -302,9 +290,7 @@ public:
 
     virtual void cancelJobsInTheQueue(const std::string& dn, std::vector<std::string>& jobs);
 
-    virtual void transferLogFile( const std::string& filePath, const std::string& jobId, int fileId, bool debug);
-
-    virtual std::vector<struct message_state> getStateOfTransfer(const std::string& jobId, int fileId);
+    virtual std::vector<struct message_state> getStateOfTransfer(const std::string& jobId, int file_id);
 
     virtual void getFilesForJob(const std::string& jobId, std::vector<int>& files);
 
@@ -336,13 +322,29 @@ public:
 
     void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end);
 
+    std::map<std::string, double> getActivityShareConf(soci::session& sql, std::string vo);
+
+    virtual std::vector<std::string> getAllActivityShareConf();
+
+    std::map<std::string, long long> getActivitiesInQueue(soci::session& sql, std::string src, std::string dst, std::string vo);
+
+    std::map<std::string, int> getFilesNumPerActivity(soci::session& sql, std::string src, std::string dst, std::string vo, int filesNum);
+
     virtual void updateFileTransferProgressVector(std::vector<struct message_updater>& messages);
 
     virtual void transferLogFileVector(std::map<int, struct message_log>& messagesLog);
 
     unsigned int updateFileStatusReuse(TransferFiles* file, const std::string status);
 
+    void getCancelJob(std::vector<int>& requestIDs);
+
     void snapshot(const std::string & vo_name, const std::string & source_se, const std::string & dest_se, const std::string & endpoint,  std::stringstream & result);
+
+    virtual bool getDrain();
+
+    virtual void setDrain(bool drain);
+
+
 
 private:
     size_t                poolSize;
@@ -368,13 +370,16 @@ private:
 
     std::vector< boost::tuple<std::string, std::string, double, double, double, int, int> > filesMemStore;
 
-    bool updateFileTransferStatusInternal(soci::session& sql, double throughput, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message, int process_id, double filesize, double duration);
+    bool updateFileTransferStatusInternal(soci::session& sql, double throughput, std::string job_id, int file_id, std::string transfer_status,
+                                          std::string transfer_message, int process_id, double filesize, double duration, bool retry);
 
-    bool updateJobTransferStatusInternal(soci::session& sql, int file_id, std::string job_id, const std::string status);
+    bool updateJobTransferStatusInternal(soci::session& sql, std::string job_id, const std::string status);
 
     void useFileReplica(soci::session& sql, std::string jobId, int fileId);
 
-    void bringOnlineReportStatusInternal(soci::session& sql, const std::string & state, const std::string & message, struct message_bringonline msg);
+    void bringOnlineReportStatusInternal(soci::session& sql, const std::string & state, const std::string & message,
+                                         const struct message_bringonline& msg);
 
-    void updateOptimizerEvolution(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname, int active, double throughput, double successRate, int bufffer);
+    void updateOptimizerEvolution(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname, int active, double throughput, double successRate, int buffer);
+
 };

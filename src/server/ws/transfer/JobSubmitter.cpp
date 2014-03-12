@@ -81,6 +81,7 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
     db (DBSingleton::instance().getDBObjectInstance()),
     copyPinLifeTime(-1)
 {
+    PROFILE_SCOPE("JobSubmitter::JobSubmitter(soap*, tns3__TransferJob*, bool)");
 
     GSoapDelegationHandler handler(soap);
     delegationId = handler.makeDelegationId();
@@ -195,6 +196,7 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
     db (DBSingleton::instance().getDBObjectInstance()),
     copyPinLifeTime(-1)
 {
+    PROFILE_SCOPE("JobSubmitter::JobSubmitter(soap*, tns3__TransferJob2*)");
 
     GSoapDelegationHandler handler (soap);
     delegationId = handler.makeDelegationId();
@@ -298,6 +300,7 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
     db (DBSingleton::instance().getDBObjectInstance()),
     copyPinLifeTime(-1)
 {
+    PROFILE_SCOPE("JobSubmitter::JobSubmitter(soap*, tns3__TransferJob3*)");
 
     GSoapDelegationHandler handler (ctx);
     delegationId = handler.makeDelegationId();
@@ -443,6 +446,21 @@ string JobSubmitter::getSesStr()
     return uniqueSesStr;
 }
 
+string JobSubmitter::getActivity(string metadata)
+{
+    // default value returned if the metadata are empty or an activity was not specified
+    static const string defstr = "default";
+    // if metadata are empty return default
+    if (metadata.empty()) return defstr;
+    // regular expression for finding the activity value
+    static const regex re("^.*\"activity\"\\s*:\\s*\"(.+)\".*$");
+    // look for the activity in the string and if it's there return the value
+    smatch what;
+    if (regex_match(metadata, what, re, match_extra)) return what[1];
+    // if the activity was not found return default
+    return defstr;
+}
+
 JobSubmitter::~JobSubmitter()
 {
 
@@ -450,77 +468,80 @@ JobSubmitter::~JobSubmitter()
 
 string JobSubmitter::submit()
 {
-    try
+
+    // for backwards compatibility check if copy-pin-lifetime and bring-online were set properly
+    if (!params.isParamSet(JobParameterHandler::COPY_PIN_LIFETIME))
         {
-            // for backwards compatibility check if copy-pin-lifetime and bring-online were set properly
-            if (!params.isParamSet(JobParameterHandler::COPY_PIN_LIFETIME))
-                {
-                    params.set(JobParameterHandler::COPY_PIN_LIFETIME, "-1");
-                }
-
-            if (!params.isParamSet(JobParameterHandler::BRING_ONLINE))
-                {
-                    params.set(JobParameterHandler::BRING_ONLINE, "-1");
-                }
-            else
-                {
-                    // make sure that bring online has been used for SRM source
-                    // (bring online is not supported for multiple source/destination submission)
-                    if (params.get(JobParameterHandler::BRING_ONLINE) != "-1" && !srm_source)
-                        throw Err_Custom("The 'bring-online' operation can be used only with source SEs that are using SRM protocol!");
-                }
-
-            if (!params.isParamSet(JobParameterHandler::RETRY))
-                {
-                    params.set(JobParameterHandler::RETRY, "0");
-                }
-
-            if (!params.isParamSet(JobParameterHandler::RETRY_DELAY))
-                {
-                    params.set(JobParameterHandler::RETRY_DELAY, "0");
-                }
-
-            string sourceSpaceTokenDescription;
-
-            // submit the transfer job (add it to the DB)
-            db->submitPhysical (
-                id,
-                jobs,
-                params.get(JobParameterHandler::GRIDFTP),
-                dn,
-                cred,
-                vo,
-                string(),
-                delegationId,
-                params.get(JobParameterHandler::SPACETOKEN),
-                params.get(JobParameterHandler::OVERWRITEFLAG),
-                params.get(JobParameterHandler::SPACETOKEN_SOURCE),
-                sourceSpaceTokenDescription,
-                params.get<int>(JobParameterHandler::COPY_PIN_LIFETIME),
-                params.get(JobParameterHandler::FAIL_NEARLINE),
-                params.get(JobParameterHandler::CHECKSUM_METHOD),
-                params.get(JobParameterHandler::REUSE),
-                params.get<int>(JobParameterHandler::BRING_ONLINE),
-                params.get<string>(JobParameterHandler::JOB_METADATA),
-                params.get<int>(JobParameterHandler::RETRY),
-                params.get<int>(JobParameterHandler::RETRY_DELAY),
-                sourceSe,
-                destinationSe
-            );
-
-            //send state message - disabled for now but pls do not remove it
-            //SingleTrStateInstance::instance().sendStateMessage(id, -1);
-
-            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "The jobid " << id << " has been submitted successfully" << commit;
+            params.set(JobParameterHandler::COPY_PIN_LIFETIME, "-1");
         }
-    catch (std::exception& e)
+
+    if (!params.isParamSet(JobParameterHandler::BRING_ONLINE))
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            params.set(JobParameterHandler::BRING_ONLINE, "-1");
         }
-    catch (...)
+    else
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            // make sure that bring online has been used for SRM source
+            // (bring online is not supported for multiple source/destination submission)
+            if (params.get(JobParameterHandler::BRING_ONLINE) != "-1" && !srm_source)
+                throw Err_Custom("The 'bring-online' operation can be used only with source SEs that are using SRM protocol!");
         }
+
+    if (!params.isParamSet(JobParameterHandler::RETRY))
+        {
+            params.set(JobParameterHandler::RETRY, "0");
+        }
+
+    if (!params.isParamSet(JobParameterHandler::RETRY_DELAY))
+        {
+            params.set(JobParameterHandler::RETRY_DELAY, "0");
+        }
+
+    bool protocol =
+        params.isParamSet(JobParameterHandler::TIMEOUT) ||
+        params.isParamSet(JobParameterHandler::NOSTREAMS) ||
+        params.isParamSet(JobParameterHandler::BUFFER_SIZE)
+        ;
+
+    // if at least one protocol parameter was set make sure they are all set
+    // use the defaults to fill the gaps
+    if (protocol)
+        {
+            if (!params.isParamSet(JobParameterHandler::TIMEOUT))
+                {
+                    params.set(JobParameterHandler::TIMEOUT, "3600");
+                }
+
+            if (!params.isParamSet(JobParameterHandler::NOSTREAMS))
+                {
+                    params.set(JobParameterHandler::NOSTREAMS, "4");
+                }
+
+            if (!params.isParamSet(JobParameterHandler::BUFFER_SIZE))
+                {
+                    params.set(JobParameterHandler::BUFFER_SIZE, "0");
+                }
+        }
+
+
+    // submit the transfer job (add it to the DB)
+    db->submitPhysical (
+        id,
+        jobs,
+        dn,
+        cred,
+        vo,
+        string(),
+        delegationId,
+        sourceSe,
+        destinationSe,
+        params
+    );
+
+    //send state message - disabled for now but pls do not remove it
+    //SingleTrStateInstance::instance().sendStateMessage(id, -1);
+
+    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "The jobid " << id << " has been submitted successfully" << commit;
     return id;
 }
 

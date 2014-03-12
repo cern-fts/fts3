@@ -71,7 +71,8 @@ public:
     void error_msg(string msg); //
     void gsoap_error_msg(string msg); //
 
-    void cancelled_job(string job_id);
+    void cancelled_job( pair<string, string> id_status);
+
     void job_id(string job_id); //
     void status(JobStatus js);
     void job_status(JobStatus js);

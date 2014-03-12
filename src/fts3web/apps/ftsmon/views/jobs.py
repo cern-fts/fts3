@@ -69,6 +69,7 @@ def setupFilters(filterForm):
                'metadata': None,
                'startdate': None,
                'enddate': None,
+               'activity': None,
                'hostname': None,
                'reason': None
               }
@@ -306,6 +307,8 @@ def transferList(httpRequest):
     if filters['time_window']:
         notBefore =  datetime.datetime.utcnow() - datetime.timedelta(hours = filters['time_window'])
         transfers = transfers.filter(Q(job_finished__isnull = True) | (Q(job_finished__gte = notBefore)))
+    if filters['activity']:
+        transfers = transfers.filter(activity = filters['activity'])
     if filters['hostname']:
         transfers = transfers.filter(transferHost = filters['hostname'])
     if filters['reason']:

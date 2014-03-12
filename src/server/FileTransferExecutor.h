@@ -20,16 +20,7 @@
 #include <set>
 #include <string>
 
-#ifdef __STDC_NO_ATOMICS__
-#include <atomic>
-#else
-#if BOOST_VERSION >= 105300
-#include <boost/atomic.hpp>
-#else
-#include <stdatomic.h>
-#endif
-#endif
-
+#include <boost/scoped_ptr.hpp>
 
 namespace fts3
 {
@@ -65,7 +56,7 @@ public:
      * @param infosys - information system host
      * @param ftsHostName - hostname of the machine hosting FTS3
      */
-    FileTransferExecutor(TransferFileHandler& tfh, bool optimize, bool monitoringMsg, string infosys, string ftsHostName);
+    FileTransferExecutor(TransferFiles* tf, TransferFileHandler& tfh, bool optimize, bool monitoringMsg, string infosys, string ftsHostName);
 
     /**
      * Destructor.
@@ -73,62 +64,11 @@ public:
     virtual ~FileTransferExecutor();
 
     /**
-     * Worker loop that is executed in a separate thread
-     */
-    void execute();
-
-    /**
-     * Add new FileTransfer to the queue
+     * spawns a url_copy
      *
-     * @param tf - the FileTransfer
+     * @return 0 if the file was not scheduled, 1 otherwise
      */
-    void put(TransferFiles* tf)
-    {
-        queue.put(tf);
-    }
-
-    /**
-     * Calling this method indicates that no more data will be pushed into the queue
-     */
-    void noMoreData()
-    {
-        queue.noMoreData();
-    }
-
-    /**
-     * @return true if the worker loop is active, fale otherwise
-     */
-    bool isActive()
-    {
-        return active;
-    }
-
-    /**
-     * Waits until the worker thread finishes
-     */
-    void join()
-    {
-        t.join();
-    }
-
-    /**
-     * Stops the worker thread
-     */
-    void stop()
-    {
-        active = false;
-        // t.interrupt();
-    }
-
-    /**
-     * Gets the number of TransferFiles that were scheduled
-     *
-     * @return number of TransferFiles that were scheduled
-     */
-    int getNumberOfScheduled()
-    {
-        return scheduled;
-    }
+    int execute();
 
 private:
 
@@ -137,13 +77,11 @@ private:
      */
     static string prepareMetadataString(std::string text);
 
-    /// queue with all the tasks
-    ThreadSafeQueue<TransferFiles> queue;
-
     /// pairs that were already checked and were not scheduled
     set< pair<string, string> > notScheduled;
 
     /// variables from process_service_handler
+    scoped_ptr<TransferFiles> tf;
     TransferFileHandler& tfh;
     bool optimize;
     bool monitoringMsg;
@@ -153,26 +91,6 @@ private:
 
     // DB interface
     GenericDbIfce* db;
-
-    /// worker thread
-    thread t;
-
-    /// state of the worker
-#ifdef __STDC_NO_ATOMICS__
-    std::atomic<bool> active;
-    /// number of files that went to ready state
-    std::atomic<int>  scheduled;
-#else
-#if BOOST_VERSION >= 105300
-    boost::atomic<bool> active;
-    boost::atomic<int> scheduled;
-#else
-    std::atomic_bool active;
-    std::atomic_int scheduled;
-#endif
-#endif
-
-
 
     /// url_copy command
     static const std::string cmd;

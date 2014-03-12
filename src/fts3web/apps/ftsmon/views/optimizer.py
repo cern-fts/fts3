@@ -29,19 +29,25 @@ from util import getOrderBy, orderedField
 @jsonify_paged
 def optimizer(httpRequest):
     # Initialize forms
-    filterForm    = forms.FilterForm(httpRequest.GET)
+    filter_form = forms.FilterForm(httpRequest.GET)
+    time_window = timedelta(minutes = 30)
     
     # Query
     pairs = OptimizerEvolution.objects.filter(throughput__isnull = False)\
                         .values('source_se', 'dest_se')
-    if filterForm.is_valid():
-        if filterForm['source_se'].value():
-            pairs = pairs.filter(source_se = filterForm['source_se'].value())
-        if filterForm['dest_se'].value():
-            pairs = pairs.filter(dest_se = filterForm['dest_se'].value())
+    if filter_form.is_valid():
+        if filter_form['source_se'].value():
+            pairs = pairs.filter(source_se = filter_form['source_se'].value())
+        if filter_form['dest_se'].value():
+            pairs = pairs.filter(dest_se = filter_form['dest_se'].value())
+        if filter_form['time_window'].value():
+            try:
+                time_window = timedelta(hours = int(filter_form['time_window'].value()))
+            except:
+                pass
 
-    notBefore = datetime.utcnow() - timedelta(hours = 1)
-    #pairs = pairs.filter(datetime__gte = notBefore)
+    not_before = datetime.utcnow() - time_window
+    pairs = pairs.filter(datetime__gte = not_before)
 
     return pairs.distinct()
 
@@ -53,11 +59,15 @@ def optimizerDetailed(httpRequest):
 
     if not source_se or not dest_se:
         raise Http404
-        
-    notBefore = datetime.utcnow() - timedelta(hours = 1)
+
+    try:
+        time_window = httpRequest.GET['time_window']
+        not_before = datetime.utcnow() - timedelta(hours = int(time_window))
+    except:
+        not_before = datetime.utcnow() - timedelta(minutes = 30)
 
     optimizer = OptimizerEvolution.objects.filter(source_se = source_se, dest_se = dest_se)
-    #optimizer = optimizer.filter(datetime__gte = notBefore)
+    optimizer = optimizer.filter(datetime__gte = not_before)
     optimizer = optimizer.values('datetime', 'active', 'throughput', 'success', 'branch')
     optimizer = optimizer.order_by('-datetime')
     return optimizer

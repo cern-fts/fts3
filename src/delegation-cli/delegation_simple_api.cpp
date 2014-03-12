@@ -254,18 +254,11 @@ void glite_delegation_free(glite_delegation_ctx *ctx)
     free(ctx);
 }
 
-const char *glite_delegation_get_endpoint(glite_delegation_ctx *ctx)
-{
-    if(!ctx)
-        return NULL;
-
-    return ctx->endpoint;
-}
-
 int glite_delegation_delegate(glite_delegation_ctx *ctx,
                               const char *delegationID, int expiration, int force)
 {
-    char *sdelegationID = (char *) "", *localproxy, *certreq, *certtxt, *scerttxt;
+    char *sdelegationID = (char *) "", *localproxy, *certtxt, *scerttxt;
+    std::string certreq;
 
     struct delegation__getProxyReqResponse get_resp;
     struct delegation__renewProxyReqResponse renew_resp;
@@ -304,7 +297,6 @@ int glite_delegation_delegate(glite_delegation_ctx *ctx,
         }
 
     /* using certreq as a marker */
-    certreq = NULL;
     if (force)
         {
             /* force the renewal of the proxy */
@@ -314,11 +306,11 @@ int glite_delegation_delegate(glite_delegation_ctx *ctx,
                     _fault_to_error(ctx, __func__);
                     return -1;
                 }
-            certreq = (char *) std::string(renew_resp._renewProxyReqReturn).c_str();
+            certreq = renew_resp._renewProxyReqReturn;
         }
 
     /* if it was forced and failed, or if it was not forced at all */
-    if (NULL == certreq)
+    if (certreq.empty())
         {
             /* there was no proxy, or not forcing -- the normal path */
             ret = soap_call_delegation__getProxyReq(ctx->soap, ctx->endpoint, NULL, sdelegationID, get_resp);
@@ -327,13 +319,13 @@ int glite_delegation_delegate(glite_delegation_ctx *ctx,
                     _fault_to_error(ctx, __func__);
                     return -1;
                 }
-            certreq = (char*) std::string(get_resp._getProxyReqReturn).c_str();
+            certreq = get_resp._getProxyReqReturn;
         }
 
     /* generating a certificate from the request */
-    if(certreq)
+    if(!certreq.empty())
         {
-            ret = GRSTx509MakeProxyCert(&certtxt, stderr, certreq,
+            ret = GRSTx509MakeProxyCert(&certtxt, stderr, (char*)certreq.c_str(),
                                         localproxy, localproxy, expiration);
         }
     else
@@ -402,141 +394,3 @@ int glite_delegation_info(glite_delegation_ctx *ctx,
 
     return 0;
 }
-
-int glite_delegation_destroy(glite_delegation_ctx *ctx, const char *delegationID)
-{
-    char *sdelegationID = (char *) "";
-    struct delegation__destroyResponse dest_resp;
-
-    if(!ctx)
-        return -1;
-
-    /* error is already set */
-    if (!ctx->soap)
-        return -1;
-
-    if (delegationID)
-        {
-            sdelegationID = soap_strdup(ctx->soap, delegationID);
-            if (!sdelegationID)
-                {
-                    glite_delegation_set_error(ctx, (char *) "glite_delegation_destroy: soap_strdup()"
-                                               " of delegationID failed!");
-                    return -1;
-                }
-        }
-
-    if (SOAP_OK != soap_call_delegation__destroy(ctx->soap, ctx->endpoint, NULL, std::string(sdelegationID), dest_resp))
-        {
-            _fault_to_error(ctx, __func__);
-            return -1;
-        }
-
-    return 0;
-}
-
-char *glite_delegation_getVersion(glite_delegation_ctx *ctx)
-{
-    struct delegation__getVersionResponse resp;
-    char *version;
-
-    if(!ctx)
-        return NULL;
-
-    /* error is already set */
-    if (!ctx->soap)
-        return NULL;
-
-    if (SOAP_OK != soap_call_delegation__getVersion(ctx->soap, ctx->endpoint, NULL, resp))
-        {
-            _fault_to_error(ctx, __func__);
-            return NULL;
-        }
-
-    if (!resp.getVersionReturn.empty())
-        {
-            glite_delegation_set_error(ctx, (char *)"%s: service sent empty version", __func__);
-            soap_end(ctx->soap);
-            return NULL;
-        }
-
-    version = strdup( (const char*) std::string(resp.getVersionReturn).c_str());
-    soap_end(ctx->soap);
-    return version;
-}
-
-char *glite_delegation_getInterfaceVersion(glite_delegation_ctx *ctx)
-{
-    struct delegation__getInterfaceVersionResponse resp;
-    char *version;
-
-    if(!ctx)
-        return NULL;
-
-    /* error is already set */
-    if (!ctx->soap)
-        return NULL;
-
-    if (SOAP_OK != soap_call_delegation__getInterfaceVersion(ctx->soap, ctx->endpoint, NULL, resp))
-        {
-            _fault_to_error(ctx, __func__);
-            return NULL;
-        }
-
-    if (!resp.getInterfaceVersionReturn.empty())
-        {
-            glite_delegation_set_error(ctx, (char *) "%s: service sent empty version", __func__);
-            soap_end(ctx->soap);
-            return NULL;
-        }
-
-    version = strdup( (const char*) std::string(resp.getInterfaceVersionReturn).c_str());
-    soap_end(ctx->soap);
-    return version;
-}
-
-char *glite_delegation_getServiceMetadata(glite_delegation_ctx *ctx,
-        const char *key)
-{
-    struct delegation__getServiceMetadataResponse resp;
-    char *req_key, *value;
-
-    if (!key)
-        {
-            glite_delegation_set_error(ctx, (char *) "%s: key must not be NULL", __func__);
-            return NULL;
-        }
-
-    if(!ctx)
-        return NULL;
-
-    /* error is already set */
-    if (!ctx->soap)
-        return NULL;
-
-    /* Turning 'const char *' into 'char *' */
-    req_key = soap_strdup(ctx->soap, key);
-    if (!req_key)
-        {
-            glite_delegation_set_error(ctx, (char *) "%s: out of memory", __func__);
-            return NULL;
-        }
-
-    if (SOAP_OK != soap_call_delegation__getServiceMetadata(ctx->soap, ctx->endpoint, NULL, req_key, resp))
-        {
-            _fault_to_error(ctx, __func__);
-            return NULL;
-        }
-
-    if (!resp._getServiceMetadataReturn.empty())
-        {
-            glite_delegation_set_error(ctx, (char *) "%s: service had no value for key '%s'", __func__, key);
-            soap_end(ctx->soap);
-            return NULL;
-        }
-
-    value= strdup((const char*) std::string(resp._getServiceMetadataReturn).c_str());
-    soap_end(ctx->soap);
-    return value;
-}
-

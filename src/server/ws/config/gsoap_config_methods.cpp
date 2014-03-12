@@ -127,13 +127,20 @@ int fts3::implcfg__getConfiguration(soap* soap, string all, string name, string 
                 }
             else if (standalone)
                 {
-                    if (all.empty())
+                    // the user is querying for activity share configuration
+                    if (all == "vo")
                         {
-                            response.configuration->cfg.push_back(handler.get(source));
+                            response.configuration->cfg.push_back(handler.getVo(source));
                         }
-                    else
+                    // the user is querying for all configuration regarding given SE
+                    else if (all == "all")
                         {
                             response.configuration->cfg = handler.getAll(source);
+                        }
+                    // standard standalone configuration
+                    else
+                        {
+                            response.configuration->cfg.push_back(handler.get(source));
                         }
                 }
             else if (pair)
@@ -221,7 +228,6 @@ int fts3::implcfg__delConfiguration(soap* soap, config__Configuration *_configur
 
 int fts3::implcfg__doDrain(soap* ctx, bool drain, struct implcfg__doDrainResponse &_param_13)
 {
-
     try
         {
             // authorize

@@ -26,7 +26,7 @@
 #define SUBMITTRANSFERCLI_H_
 
 #include "SrcDestCli.h"
-#include "TransferCliBase.h"
+#include "DelegationCli.h"
 #include "TransferTypes.h"
 
 #include <vector>
@@ -64,7 +64,7 @@ namespace cli
  *
  * @see CliBase
  */
-class SubmitTransferCli : public SrcDestCli, public TransferCliBase
+class SubmitTransferCli : public SrcDestCli, public DelegationCli
 {
 
 public:
@@ -107,7 +107,7 @@ public:
      * @return GSoapContexAdapter instance, or null if all activities
      * 				requested using program options have been done.
      */
-    optional<GSoapContextAdapter&> validate(bool init = true);
+    bool validate();
 
     /**
      * Creates job elements.
@@ -145,20 +145,6 @@ public:
      * @see SubmitTransferCli::performChecks()
      */
     string getPassword();
-
-    /**
-     * Gets the delegation ID (string).
-     *
-     * @return delegation ID string if it was given as a CLI option, or an empty string if not
-     */
-    string getDelegationId();
-
-    /**
-     * Gets user's set expiration time in seconds (long).
-     *
-     * @return expiration time in seconds if it was given as a CLI option, or 0 string if not
-     */
-    long getExpirationTime();
 
     /**
      * Gets a vector containing string-string pairs.
@@ -217,6 +203,11 @@ public:
 
     int recognizeParameter(string str);
 
+    /**
+     * gets the (bulk submission) file name
+     */
+    string getFileName();
+
 
 protected:
 
@@ -238,6 +229,11 @@ private:
      * @return user password
      */
     string askForPassword();
+
+    /**
+     * checks if the provided url is valid
+     */
+    static bool checkValidUrl(const std::string &uri, MsgPrinter& msgPrinter);
 
     /**
      * the name of the file containing bulk-job description

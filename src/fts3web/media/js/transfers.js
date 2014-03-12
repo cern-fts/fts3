@@ -9,6 +9,7 @@ function TransfersCtrl($location, $scope, transfers, Transfers, Unique)
 		sources: Unique('sources'),
 		destinations: Unique('destinations'),
 		vos: Unique('vos'),
+		activities: Unique('activities'),
 		hostnames: Unique('hostnames')
 	}
 
@@ -34,8 +35,9 @@ function TransfersCtrl($location, $scope, transfers, Transfers, Unique)
 		dest_se:     validString($location.search().dest_se),
 		source_surl: validString($location.search().source_surl),
 		dest_surl:   validString($location.search().dest_surl),
-		time_window: validString($location.search().time_window),
+		time_window: parseInt(validString($location.search().time_window)),
 		state:       statesFromString($location.search().state),
+		activity:    validString($location.search().activity),
 		hostname:    validString($location.search().hostname),
 	}
 	
@@ -49,6 +51,7 @@ function TransfersCtrl($location, $scope, transfers, Transfers, Unique)
 			dest_surl:    $scope.filter.dest_surl,
 			time_window:  $scope.filter.time_window,
 			state:        joinStates($scope.filter.state),
+			activity:     validString($scope.filter.activity),
 			hostname:     validString($scope.filter.hostname),
 		});
 		$scope.filtersModal = false;

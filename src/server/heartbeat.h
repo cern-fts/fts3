@@ -26,6 +26,7 @@ extern time_t retrieveRecords;
 extern time_t updateRecords;
 extern time_t stallRecords;
 
+
 FTS3_SERVER_NAMESPACE_START
 
 template <typename TRAITS>
@@ -69,12 +70,13 @@ private:
         diffTime = std::difftime(std::time(NULL), stallRecords);
         if(diffTime > 3600)
             {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Wall time passed: stallRecords" << diffTime << " secs "<< commit;
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Wall time passed stallRecords: " << diffTime << " secs "<< commit;
                 return true;
             }
 
         return false;
     }
+
 
     void beat_impl(void)
     {

@@ -28,10 +28,7 @@
 #define UUIDGENERATOR_H_
 
 #include <string>
-using namespace std;
 
-
-\
 
 /**
  * UuidGenerator is a static class encapsulating libuuid.
@@ -48,7 +45,7 @@ public:
      *
      * @return uuid (string)
      */
-    static string generateUUID();
+    static std::string generateUUID();
 
     /**
      * Destructor.

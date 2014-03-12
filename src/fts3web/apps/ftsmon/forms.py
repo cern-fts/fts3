@@ -93,6 +93,7 @@ class FilterForm(forms.Form):
     time_window = forms.IntegerField(required = False)
     startdate   = forms.DateField(required = False)
     enddate     = forms.DateField(required = False)
+    activity    = forms.CharField(required = False)
     hostname    = forms.CharField(required = False)
     reason      = forms.CharField(required = False)
     

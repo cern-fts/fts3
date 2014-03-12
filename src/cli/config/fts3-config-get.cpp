@@ -30,6 +30,8 @@
 #include <vector>
 #include <iostream>
 #include <memory>
+#include <iterator>
+#include <algorithm>
 
 using namespace std;
 using namespace fts3::cli;
@@ -46,11 +48,10 @@ int main(int ac, char* av[])
             auto_ptr<GetCfgCli> cli (
                 getCli<GetCfgCli>(ac, av)
             );
+            if (!cli->validate()) return 0;
 
             // validate command line options, and return respective gsoap context
-            optional<GSoapContextAdapter&> opt = cli->validate();
-            if (!opt.is_initialized()) return 0;
-            GSoapContextAdapter& ctx = opt.get();
+            GSoapContextAdapter& ctx = cli->getGSoapContext();
 
             string source = cli->getSource();
             string destination =  cli->getDestination();
@@ -62,17 +63,14 @@ int main(int ac, char* av[])
                     all = "all";
                 }
 
+            if (cli->vo()) all = "vo";
+
             implcfg__getConfigurationResponse resp;
             ctx.getConfiguration(source, destination, all, cli->getName(), resp);
 
             vector<string> &cfgs = resp.configuration->cfg;
-            vector<string>::iterator it;
-
-            for (it = cfgs.begin(); it < cfgs.end(); it++)
-                {
-                    cout << *it << endl;
-                }
-
+            ostream_iterator<string> it(cout, "\n");
+            copy(cfgs.begin(), cfgs.end(), it);
         }
     catch(std::exception& e)
         {

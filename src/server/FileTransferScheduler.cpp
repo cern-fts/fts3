@@ -115,9 +115,10 @@ bool FileTransferScheduler::schedule(bool optimize)
 
     try
         {
+
             if(optimize && cfgs.empty())
                 {
-                    bool allowed = db->isTrAllowed2(srcSeName, destSeName);
+                    bool allowed = db->isTrAllowed(srcSeName, destSeName);
                     // update file state to READY
                     if(allowed)
                         {
@@ -127,13 +128,13 @@ bool FileTransferScheduler::schedule(bool optimize)
                             db->setFilesToNotUsed(file->JOB_ID, file->FILE_INDEX, notUsed);
                             if(!notUsed.empty())
                                 {
-                                    /* disabled for now put pls do not remove
-                                    std::vector<int>::const_iterator iter;
-                                                                for (iter = notUsed.begin(); iter != notUsed.end(); ++iter)
-                                                                    {
-                                                                        SingleTrStateInstance::instance().sendStateMessage(file->JOB_ID, (*iter));
-                                                                    }
-                                    		    */
+                                    /*disabled for now but pls do not remove
+                                                    std::vector<int>::const_iterator iter;
+                                                    for (iter = notUsed.begin(); iter != notUsed.end(); ++iter)
+                                                        {
+                                                            SingleTrStateInstance::instance().sendStateMessage(file->JOB_ID, (*iter));
+                                                        }
+                                    */
                                     notUsed.clear();
                                 }
                             return true;
@@ -168,11 +169,11 @@ bool FileTransferScheduler::schedule(bool optimize)
                                 msg,
                                 0,
                                 0,
-                                0
+                                0,
+                                false
                             );
                             // set job states if necessary
                             db->updateJobTransferStatus(
-                                file->FILE_ID,
                                 file->JOB_ID,
                                 JobStatusHandler::FTS3_STATUS_FAILED
                             );

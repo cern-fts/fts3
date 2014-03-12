@@ -13,94 +13,51 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
-#include "args.h"
-#include "heuristics.h"
-#include <iostream>
-#include <algorithm>
-#include <ctype.h>
-#include <cstdlib>
-#include <unistd.h>
-#include <string>
-#include <sys/stat.h>
-#include <vector>
-#include <stdio.h>
-#include <pwd.h>
-#include <transfer/gfal_transfer.h>
-#include <fstream>
-#include "boost/date_time/gregorian/gregorian.hpp"
-#include <vector>
+#include <boost/algorithm/string/replace.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/thread.hpp>
+#include <boost/tokenizer.hpp>
+#include <execinfo.h>
 #include <gfal_api.h>
-#include <memory>
+#include <string>
+#include <transfer/gfal_transfer.h>
+
+#include "args.h"
+#include "definitions.h"
+#include "errors.h"
 #include "file_management.h"
-#include "reporter.h"
+#include "heuristics.h"
 #include "logger.h"
 #include "msg-ifce.h"
-#include "errors.h"
-#include "signal_logger.h"
-#include "UserProxyEnv.h"
-#include <sys/param.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <grp.h>
-#include <boost/tokenizer.hpp>
-#include <cstdio>
-#include <ctime>
-#include "definitions.h"
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <exception>
-#include "monitoring/utility_routines.h"
-#include <ctime>
 #include "name_to_uid.h"
-#include <boost/thread.hpp>
+#include "reporter.h"
 #include "StaticSslLocking.h"
-#include <sys/resource.h>
-#include <boost/algorithm/string/replace.hpp>
-#include <execinfo.h>
+#include "transfer.h"
+#include "UserProxyEnv.h"
+
 
 using namespace std;
 using boost::thread;
 
-FileManagement* fileManagement = NULL;
+static FileManagement fileManagement;
 static Reporter reporter;
 static transfer_completed tr_completed;
 static bool retry = true;
-static std::string strArray[7];
-static std::string g_file_id("0");
-static std::string g_job_id("");
 static std::string errorScope("");
 static std::string errorPhase("");
 static std::string reasonClass("");
 static std::string errorMessage("");
 static std::string readFile("");
-static double source_size = 0.0;
-static double dest_size = 0.0;
-static double diff = 0.0;
-static double transfer_start = 0.0;
-static double transfer_complete = 0.0;
-static uid_t pw_uid;
 static char hostname[1024] = {0};
 static volatile bool propagated = false;
-static volatile bool canceled = false;
 static volatile bool terminalState = false;
-static std::string nstream_to_string("");
-static std::string tcpbuffer_to_string("");
-static std::string block_to_string("");
-static std::string timeout_to_string("");
 static std::string globalErrorMessage("");
-static double throughput = 0.0;
-static double transferred_bytes = 0;
+
 time_t globalTimeout;
 
-extern std::string stackTrace;
+Transfer currentTransfer;
+
 gfal_context_t handle = NULL;
-
-
-
-//convert milli to secs
-static double transferDuration(double start , double complete)
-{
-    return (start==0 || complete==0)? 0.0: (complete - start) / 1000;
-}
 
 static std::string replaceMetadataString(std::string text)
 {
@@ -113,6 +70,7 @@ static std::string replaceMetadataString(std::string text)
 
 static void cancelTransfer()
 {
+    static volatile bool canceled = false;
     if (handle && !canceled)   // finish all transfer in a clean way
         {
             canceled = true;
@@ -120,12 +78,6 @@ static void cancelTransfer()
         }
 }
 
-static int fexists(const char *filename)
-{
-    struct stat buffer;
-    if (stat(filename, &buffer) == 0) return 0;
-    return -1;
-}
 
 static std::string srmVersion(const std::string & url)
 {
@@ -133,27 +85,6 @@ static std::string srmVersion(const std::string & url)
         return std::string("2.2.0");
 
     return std::string("");
-}
-
-
-static std::vector<std::string> split(const char *str, char c = ':')
-{
-    std::vector<std::string> result;
-
-    while (1)
-        {
-            const char *begin = str;
-
-            while (*str != c && *str)
-                str++;
-
-            result.push_back(string(begin, str));
-
-            if (0 == *str++)
-                break;
-        }
-
-    return result;
 }
 
 static void call_perf(gfalt_transfer_status_t h, const char*, const char*, gpointer)
@@ -186,8 +117,8 @@ static void call_perf(gfalt_transfer_status_t h, const char*, const char*, gpoin
                                          << ", inst KB/sec:" << inst
                                          << ", elapsed:" << elapsed
                                          << std::endl;
-            throughput        = (double) avg;
-            transferred_bytes = (double) trans;
+            currentTransfer.throughput       = (double) avg;
+            currentTransfer.transferredBytes = trans;
         }
 
 }
@@ -215,10 +146,12 @@ void abnormalTermination(const std::string& classification, const std::string&, 
         {
             errorMessage += " " + globalErrorMessage;
         }
+
     if(classification != "CANCELED")
         retry = true;
 
-    diff = transferDuration(transfer_start, transfer_complete);
+    Logger::getInstance().ERROR() << errorMessage << std::endl;
+
     msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());
     msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, getDefaultReasonClass());
     msg_ifce::getInstance()->set_failure_phase(&tr_completed, getDefaultErrorPhase());
@@ -232,25 +165,24 @@ void abnormalTermination(const std::string& classification, const std::string&, 
     reporter.nostreams = UrlCopyOpts::getInstance().nStreams;
     reporter.buffersize = UrlCopyOpts::getInstance().tcpBuffersize;
 
-    if (strArray[0].length() > 0)
-        reporter.sendTerminal(throughput, retry, g_job_id, strArray[0], classification, errorMessage, diff, source_size);
-    else
-        reporter.sendTerminal(throughput, retry, g_job_id, g_file_id, classification, errorMessage, diff, source_size);
 
-    std::string moveFile = fileManagement->archive();
-    if (strArray[0].length() > 0)
-        reporter.sendLog(g_job_id, strArray[0], fileManagement->_getLogArchivedFileFullPath(),
-                         UrlCopyOpts::getInstance().debug);
-    else
-        reporter.sendLog(g_job_id, g_file_id, fileManagement->_getLogArchivedFileFullPath(),
-                         UrlCopyOpts::getInstance().debug);
+    reporter.sendTerminal(currentTransfer.throughput, retry,
+                          currentTransfer.jobId, currentTransfer.fileId,
+                          classification, errorMessage,
+                          currentTransfer.getTransferDurationInSeconds(),
+                          currentTransfer.fileSize);
+
+    std::string moveFile = fileManagement.archive();
+
+    reporter.sendLog(currentTransfer.jobId, currentTransfer.fileId, fileManagement._getLogArchivedFileFullPath(),
+                     UrlCopyOpts::getInstance().debug);
 
     if (moveFile.length() != 0)
         {
             Logger::getInstance().ERROR() << "Failed to archive file: " << moveFile
                                           << std::endl;
         }
-    if (UrlCopyOpts::getInstance().reuseFile && readFile.length() > 0)
+    if (UrlCopyOpts::getInstance().areTransfersOnFile() && readFile.length() > 0)
         unlink(readFile.c_str());
 
     cancelTransfer();
@@ -260,7 +192,7 @@ void abnormalTermination(const std::string& classification, const std::string&, 
 
 void canceler()
 {
-    errorMessage = "Transfer " + g_job_id + " was canceled because it was not responding";
+    errorMessage = "Transfer " + currentTransfer.jobId + " was canceled because it was not responding";
 
     Logger::getInstance().WARNING() << errorMessage << std::endl;
 
@@ -287,26 +219,20 @@ void taskStatusUpdater(int time)
 {
     while (time)
         {
-            if (strArray[0].length() > 0)
-                {
-                    Logger::getInstance().INFO() << "Sending back to the server url-copy is still alive : " <<  throughput << "  " <<  transferred_bytes
-                                                 << std::endl;
-                    reporter.sendPing(UrlCopyOpts::getInstance().jobId, strArray[0], throughput, transferred_bytes);
-                }
-            else
-                {
-                    Logger::getInstance().INFO() << "Sending back to the server url-copy is still alive : "  <<  throughput << "  " <<  transferred_bytes
-                                                 << std::endl;
-                    reporter.sendPing(UrlCopyOpts::getInstance().jobId, UrlCopyOpts::getInstance().fileId,
-                                      throughput, transferred_bytes);
-                }
+            Logger::getInstance().INFO() << "Sending back to the server url-copy is still alive : "
+                                         <<  currentTransfer.throughput << "  " <<  currentTransfer.transferredBytes
+                                         << std::endl;
+            reporter.sendPing(currentTransfer.jobId, currentTransfer.fileId,
+                              currentTransfer.throughput, currentTransfer.transferredBytes);
             boost::this_thread::sleep(boost::posix_time::seconds(time));
         }
 }
 
 
-void log_stack(int sig)
+std::string log_stack(int sig)
 {
+    std::string stackTrace;
+
     if(sig == SIGSEGV || sig == SIGBUS || sig == SIGABRT)
         {
             const int stack_size = 25;
@@ -317,7 +243,7 @@ void log_stack(int sig)
                 {
                     if(symbols && symbols[i])
                         {
-                            stackTrace+=std::string(symbols[i]) + '\n';
+                            stackTrace += std::string(symbols[i]) + '\n';
                         }
                 }
             if(symbols)
@@ -325,6 +251,7 @@ void log_stack(int sig)
                     free(symbols);
                 }
         }
+    return stackTrace;
 }
 
 
@@ -334,16 +261,16 @@ void signalHandler(int signum)
 
     logger.WARNING() << "Received signal " << signum << std::endl;
 
-    log_stack(signum);
+    std::string stackTrace = log_stack(signum);
     if (stackTrace.length() > 0)
         {
             propagated = true;
 
-            logger.ERROR() << "Transfer process died " << g_job_id << std::endl;
+            logger.ERROR() << "Transfer process died " << currentTransfer.jobId << std::endl;
             logger.ERROR() << "Received signal " << signum << std::endl;
             logger.ERROR() << stackTrace << std::endl;
 
-            errorMessage = "Transfer process died " + g_job_id;
+            errorMessage = "Transfer process died " + currentTransfer.jobId;
             errorMessage += stackTrace;
             abnormalTermination("FAILED", errorMessage, "Error");
         }
@@ -352,7 +279,7 @@ void signalHandler(int signum)
             if (propagated == false)
                 {
                     propagated = true;
-                    errorMessage = "Transfer " + g_job_id + " canceled by the user";
+                    errorMessage = "Transfer " + currentTransfer.jobId + " canceled by the user";
                     logger.WARNING() << errorMessage << std::endl;
                     abnormalTermination("CANCELED", errorMessage, "Abort");
                 }
@@ -362,7 +289,7 @@ void signalHandler(int signum)
             if (propagated == false)
                 {
                     propagated = true;
-                    errorMessage = "Transfer " + g_job_id + " has been forced-canceled because it was stalled";
+                    errorMessage = "Transfer " + currentTransfer.jobId + " has been forced-canceled because it was stalled";
                     logger.WARNING() << errorMessage << std::endl;
                     abnormalTermination("FAILED", errorMessage, "Abort");
                 }
@@ -372,7 +299,7 @@ void signalHandler(int signum)
             if (propagated == false)
                 {
                     propagated = true;
-                    errorMessage = "Transfer " + g_job_id + " aborted, check log file for details, received signum " + boost::lexical_cast<std::string>(signum);
+                    errorMessage = "Transfer " + currentTransfer.jobId + " aborted, check log file for details, received signum " + boost::lexical_cast<std::string>(signum);
                     logger.WARNING() << errorMessage << std::endl;
                     abnormalTermination("FAILED", errorMessage, "Abort");
                 }
@@ -398,12 +325,12 @@ static void event_logger(const gfalt_event_t e, gpointer /*udata*/)
     if (e->stage == GFAL_EVENT_TRANSFER_ENTER)
         {
             msg->set_timestamp_transfer_started(&tr_completed, timestampStr);
-            transfer_start = boost::lexical_cast<double>(e->timestamp);
+            currentTransfer.startTime = e->timestamp;
         }
     else if (e->stage == GFAL_EVENT_TRANSFER_EXIT)
         {
             msg->set_timestamp_transfer_completed(&tr_completed, timestampStr);
-            transfer_complete = boost::lexical_cast<double>(e->timestamp);
+            currentTransfer.finishTime = e->timestamp;
         }
 
     else if (e->stage == GFAL_EVENT_CHECKSUM_ENTER && e->side == GFAL_EVENT_SOURCE)
@@ -440,7 +367,7 @@ void myunexpected()
     if (propagated == false)
         {
             propagated = true;
-            errorMessage = "Transfer unexpected handler called " + g_job_id;
+            errorMessage = "Transfer unexpected handler called " + currentTransfer.jobId;
             errorMessage += " Source: " + UrlCopyOpts::getInstance().sourceUrl;
             errorMessage += " Dest: " + UrlCopyOpts::getInstance().destUrl;
             Logger::getInstance().ERROR() << errorMessage << std::endl;
@@ -454,7 +381,7 @@ void myterminate()
     if (propagated == false)
         {
             propagated = true;
-            errorMessage = "Transfer terminate handler called:" + g_job_id;
+            errorMessage = "Transfer terminate handler called:" + currentTransfer.jobId;
             errorMessage += " Source: " + UrlCopyOpts::getInstance().sourceUrl;
             errorMessage += " Dest: " + UrlCopyOpts::getInstance().destUrl;
             Logger::getInstance().ERROR() << errorMessage << std::endl;
@@ -464,15 +391,73 @@ void myterminate()
 }
 
 
+int statWithRetries(gfal_context_t handle, const std::string& category, const std::string& url, off_t* size, std::string* errMsg)
+{
+    struct stat statBuffer;
+    GError* statError = NULL;
+    bool canBeRetried = false;
+
+    int errorCode = 0;
+
+    errMsg->clear();
+    for (int attempt = 0; attempt < 4; attempt++)
+        {
+            if (gfal2_stat(handle, url.c_str(), &statBuffer, &statError) < 0)
+                {
+                    errorCode = statError->code;
+                    errMsg->assign(statError->message);
+                    g_clear_error(&statError);
+
+                    canBeRetried = retryTransfer(errorCode, category, std::string(*errMsg));
+                    if (!canBeRetried)
+                        return errorCode;
+                }
+            else
+                {
+                    *size = statBuffer.st_size;
+                    return 0;
+                }
+            Logger::getInstance().WARNING() << "Stat the file will be retried" << std::endl;
+            sleep(3); //give it some time to breath
+        }
+
+    Logger::getInstance().ERROR() << "No more retries for stat the file" << std::endl;
+    return errorCode;
+}
+
+void setRemainingTransfersToFailed(std::vector<Transfer>& transferList, unsigned currentIndex)
+{
+    for (unsigned i = currentIndex + 1; i < transferList.size(); ++i)
+        {
+            Transfer& t = transferList[i];
+            Logger::getInstance().INFO() << "Report FAILED back to the server for " << t.fileId << std::endl;
+
+            msg_ifce::getInstance()->set_source_srm_version(&tr_completed, srmVersion(t.sourceUrl));
+            msg_ifce::getInstance()->set_destination_srm_version(&tr_completed, srmVersion(t.destUrl));
+            msg_ifce::getInstance()->set_source_url(&tr_completed, t.sourceUrl);
+            msg_ifce::getInstance()->set_dest_url(&tr_completed, t.destUrl);
+            msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, TRANSFER);
+            msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, GENERAL_FAILURE);
+            msg_ifce::getInstance()->set_failure_phase(&tr_completed, TRANSFER);
+            msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, "Not executed because a previous hop failed");
+            if(UrlCopyOpts::getInstance().monitoringMessages)
+                msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
+
+            reporter.sendTerminal(0, false,
+                                  t.jobId, t.fileId,
+                                  "FAILED", "Not executed because a previous hop failed",
+                                  0, 0);
+        }
+}
+
 
 __attribute__((constructor)) void begin(void)
 {
     //switch to non-priviledged user to avoid reading the hostcert
-    pw_uid = name_to_uid();
+    uid_t pw_uid = name_to_uid();
     setuid(pw_uid);
     seteuid(pw_uid);
     StaticSslLocking::init_locks();
-    fileManagement = new FileManagement();
 }
 
 int main(int argc, char **argv)
@@ -500,14 +485,8 @@ int main(int argc, char **argv)
             return 1;
         }
 
-    g_file_id = opts.fileId;
-    g_job_id = opts.jobId;
+    currentTransfer.jobId = opts.jobId;
 
-    std::string bytes_to_string("");
-    struct stat statbufsrc;
-    struct stat statbufdest;
-    struct stat statbufdestOver;
-    int ret = -1;
     UserProxyEnv* cert = NULL;
 
     hostname[1023] = '\0';
@@ -542,24 +521,23 @@ int main(int argc, char **argv)
             cert = new UserProxyEnv(opts.proxy);
         }
 
-    std::vector<std::string> urlsFile;
-    std::string line("");
-    readFile = "/var/lib/fts3/" + opts.jobId;
-    if (opts.reuseFile)
+    // Populate the transfer list
+    std::vector<Transfer> transferList;
+
+    if (opts.areTransfersOnFile())
         {
-            std::ifstream infile(readFile.c_str(), std::ios_base::in);
-            while (getline(infile, line, '\n'))
-                {
-                    urlsFile.push_back(line);
-                }
-            infile.close();
-            if(readFile.length() > 0)
-                unlink(readFile.c_str());
+            readFile = "/var/lib/fts3/" + opts.jobId;
+            Transfer::initListFromFile(opts.jobId, readFile, &transferList);
+        }
+    else
+        {
+            transferList.push_back(Transfer::createFromOptions(opts));
         }
 
+
     //cancelation point
-    long unsigned int reuseOrNot = (urlsFile.empty() == true) ? 1 : urlsFile.size();
-    globalTimeout = reuseOrNot * 6000;
+    long unsigned int numberOfFiles = transferList.size();
+    globalTimeout = numberOfFiles * 6000;
 
     try
         {
@@ -576,9 +554,9 @@ int main(int argc, char **argv)
             throw;
         }
 
-    if (opts.reuseFile && urlsFile.empty() == true)
+    if (opts.areTransfersOnFile() && transferList.empty() == true)
         {
-            errorMessage = "Transfer " + g_job_id + " containes no urls with session reuse enabled";
+            errorMessage = "Transfer " + currentTransfer.jobId + " contains no urls with session reuse/multihop enabled";
 
             abnormalTermination("FAILED", errorMessage, "Error");
         }
@@ -593,7 +571,7 @@ int main(int argc, char **argv)
 
 
     //reuse session
-    if (opts.reuseFile)
+    if (opts.areTransfersOnFile())
         {
             gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "SESSION_REUSE", TRUE, NULL);
         }
@@ -610,70 +588,46 @@ int main(int argc, char **argv)
         }
 
 
-    for (register unsigned int ii = 0; ii < reuseOrNot; ii++)
+    for (register unsigned int ii = 0; ii < numberOfFiles; ii++)
         {
             errorScope = std::string("");
             reasonClass = std::string("");
             errorPhase = std::string("");
             retry = true;
             errorMessage = std::string("");
-            throughput = 0.0;
+            currentTransfer.throughput = 0.0;
 
-            if (opts.reuseFile)
-                {
-                    std::string mid_str(urlsFile[ii]);
-                    typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
-                    tokenizer tokens(mid_str, boost::char_separator<char> (" "));
-                    std::copy(tokens.begin(), tokens.end(), strArray);
-                }
-            else
-                {
-                    strArray[0] = opts.fileId;
-                    strArray[1] = opts.sourceUrl;
-                    strArray[2] = opts.destUrl;
-                    strArray[3] = opts.checksumValue;
-                    if(opts.userFileSize > 0)
-                        strArray[4] = boost::lexical_cast<std::string>(opts.userFileSize);
-                    else
-                        strArray[4] = "0";
-                    strArray[5] = opts.fileMetadata;
-                    strArray[6] = opts.tokenBringOnline;
-                }
+            currentTransfer = transferList[ii];
 
-            fileManagement->setSourceUrl(strArray[1]);
-            fileManagement->setDestUrl(strArray[2]);
-            fileManagement->setFileId(strArray[0]);
-            fileManagement->setJobId(opts.jobId);
-            g_file_id = strArray[0];
-            g_job_id = opts.jobId;
+            fileManagement.setSourceUrl(currentTransfer.sourceUrl);
+            fileManagement.setDestUrl(currentTransfer.destUrl);
+            fileManagement.setFileId(currentTransfer.fileId);
+            fileManagement.setJobId(currentTransfer.jobId);
 
             reporter.timeout = opts.timeout;
             reporter.nostreams = opts.nStreams;
             reporter.buffersize = opts.tcpBuffersize;
-            reporter.source_se = fileManagement->getSourceHostname();
-            reporter.dest_se = fileManagement->getDestHostname();
-            fileManagement->generateLogFile();
+            reporter.source_se = fileManagement.getSourceHostname();
+            reporter.dest_se = fileManagement.getDestHostname();
+            fileManagement.generateLogFile();
 
             msg_ifce::getInstance()->set_tr_timestamp_start(&tr_completed, msg_ifce::getInstance()->getTimestamp());
             msg_ifce::getInstance()->set_agent_fqdn(&tr_completed, hostname);
-            msg_ifce::getInstance()->set_t_channel(&tr_completed, fileManagement->getSePair());
-            msg_ifce::getInstance()->set_transfer_id(&tr_completed, fileManagement->getLogFileName());
-            msg_ifce::getInstance()->set_source_srm_version(&tr_completed, srmVersion(strArray[1]));
-            msg_ifce::getInstance()->set_destination_srm_version(&tr_completed, srmVersion(strArray[2]));
-            msg_ifce::getInstance()->set_source_url(&tr_completed, strArray[1]);
-            msg_ifce::getInstance()->set_dest_url(&tr_completed, strArray[2]);
-            msg_ifce::getInstance()->set_source_hostname(&tr_completed, fileManagement->getSourceHostnameFile());
-            msg_ifce::getInstance()->set_dest_hostname(&tr_completed, fileManagement->getDestHostnameFile());
+            msg_ifce::getInstance()->set_t_channel(&tr_completed, fileManagement.getSePair());
+            msg_ifce::getInstance()->set_transfer_id(&tr_completed, fileManagement.getLogFileName());
+            msg_ifce::getInstance()->set_source_srm_version(&tr_completed, srmVersion(currentTransfer.sourceUrl));
+            msg_ifce::getInstance()->set_destination_srm_version(&tr_completed, srmVersion(currentTransfer.destUrl));
+            msg_ifce::getInstance()->set_source_url(&tr_completed, currentTransfer.sourceUrl);
+            msg_ifce::getInstance()->set_dest_url(&tr_completed, currentTransfer.destUrl);
+            msg_ifce::getInstance()->set_source_hostname(&tr_completed, fileManagement.getSourceHostnameFile());
+            msg_ifce::getInstance()->set_dest_hostname(&tr_completed, fileManagement.getDestHostnameFile());
             msg_ifce::getInstance()->set_channel_type(&tr_completed, "urlcopy");
             msg_ifce::getInstance()->set_vo(&tr_completed, opts.vo);
             msg_ifce::getInstance()->set_source_site_name(&tr_completed, opts.sourceSiteName);
             msg_ifce::getInstance()->set_dest_site_name(&tr_completed, opts.destSiteName);
-            nstream_to_string = to_string<unsigned int>(opts.nStreams, std::dec);
-            msg_ifce::getInstance()->set_number_of_streams(&tr_completed, nstream_to_string.c_str());
-            tcpbuffer_to_string = to_string<unsigned int>(opts.tcpBuffersize, std::dec);
-            msg_ifce::getInstance()->set_tcp_buffer_size(&tr_completed, tcpbuffer_to_string.c_str());
-            block_to_string = to_string<unsigned int>(opts.blockSize, std::dec);
-            msg_ifce::getInstance()->set_block_size(&tr_completed, block_to_string.c_str());
+            msg_ifce::getInstance()->set_number_of_streams(&tr_completed, opts.nStreams);
+            msg_ifce::getInstance()->set_tcp_buffer_size(&tr_completed, opts.tcpBuffersize);
+            msg_ifce::getInstance()->set_block_size(&tr_completed, opts.blockSize);
             msg_ifce::getInstance()->set_srm_space_token_dest(&tr_completed, opts.destTokenDescription);
             msg_ifce::getInstance()->set_srm_space_token_source(&tr_completed, opts.sourceTokenDescription);
 
@@ -682,7 +636,7 @@ int main(int argc, char **argv)
 
             if (!opts.logToStderr)
                 {
-                    int checkError = Logger::getInstance().redirectTo(fileManagement->getLogFilePath(), opts.debug);
+                    int checkError = Logger::getInstance().redirectTo(fileManagement.getLogFilePath(), opts.debug);
                     if (checkError != 0)
                         {
                             std::string message = mapErrnoToString(checkError);
@@ -693,7 +647,7 @@ int main(int argc, char **argv)
 
             // Scope
             {
-                reporter.sendLog(opts.jobId, strArray[0], fileManagement->getLogFilePath(),
+                reporter.sendLog(opts.jobId, currentTransfer.fileId, fileManagement.getLogFilePath(),
                                  opts.debug);
 
                 gfalt_set_user_data(params, NULL, NULL);
@@ -702,32 +656,34 @@ int main(int argc, char **argv)
                 logger.INFO() << "Proxy:" << opts.proxy << std::endl;
                 logger.INFO() << "VO:" << opts.vo << std::endl; //a
                 logger.INFO() << "Job id:" << opts.jobId << std::endl;
-                logger.INFO() << "File id:" << strArray[0] << std::endl;
-                logger.INFO() << "Source url:" << strArray[1] << std::endl;
-                logger.INFO() << "Dest url:" << strArray[2] << std::endl;
+                logger.INFO() << "File id:" << currentTransfer.fileId << std::endl;
+                logger.INFO() << "Source url:" << currentTransfer.sourceUrl << std::endl;
+                logger.INFO() << "Dest url:" << currentTransfer.destUrl << std::endl;
                 logger.INFO() << "Overwrite enabled:" << opts.overwrite << std::endl;
                 logger.INFO() << "Tcp buffer size:" << opts.tcpBuffersize << std::endl;
                 logger.INFO() << "Dest space token:" << opts.destTokenDescription << std::endl;
                 logger.INFO() << "Source space token:" << opts.sourceTokenDescription << std::endl;
                 logger.INFO() << "Pin lifetime:" << opts.copyPinLifetime << std::endl;
                 logger.INFO() << "BringOnline:" << opts.bringOnline << std::endl;
-                logger.INFO() << "Checksum:" << strArray[3] << std::endl;
-                logger.INFO() << "Checksum enabled:" << opts.compareChecksum << std::endl;
-                logger.INFO() << "User filesize:" << opts.userFileSize << std::endl;
-                logger.INFO() << "File metadata:" << replaceMetadataString(strArray[5]) << std::endl;
+                logger.INFO() << "Checksum:" << currentTransfer.checksumValue << std::endl;
+                logger.INFO() << "Checksum enabled:" << currentTransfer.checksumMethod << std::endl;
+                logger.INFO() << "User filesize:" << currentTransfer.userFileSize << std::endl;
+                logger.INFO() << "File metadata:" << replaceMetadataString(currentTransfer.fileMetadata) << std::endl;
                 logger.INFO() << "Job metadata:" << replaceMetadataString(opts.jobMetadata) << std::endl;
-                logger.INFO() << "Bringonline token:" << strArray[6] << std::endl;
+                logger.INFO() << "Bringonline token:" << currentTransfer.tokenBringOnline << std::endl;
 
                 //set to active only for reuse
-                if (opts.reuseFile)
+                if (opts.areTransfersOnFile())
                     {
                         logger.INFO() << "Set the transfer to ACTIVE, report back to the server" << std::endl;
-                        reporter.setReuseTransfer(true);
-                        reporter.sendMessage(throughput, false, opts.jobId, strArray[0], "ACTIVE", "", diff, source_size);
+                        reporter.setMultipleTransfers(true);
+                        reporter.sendMessage(currentTransfer.throughput, false,
+                                             opts.jobId, currentTransfer.fileId,
+                                             "ACTIVE", "", 0,
+                                             currentTransfer.fileSize);
                     }
 
-
-                if (fexists(opts.proxy.c_str()) != 0)
+                if (access(opts.proxy.c_str(), F_OK) != 0)
                     {
                         errorMessage = "Proxy doesn't exist, probably expired and not renewed " + opts.proxy;
                         errorScope = SOURCE;
@@ -770,35 +726,26 @@ int main(int argc, char **argv)
                 //get checksum timeout from gfal2
                 logger.INFO() << "Get checksum timeout" << std::endl;
                 int checksumTimeout = gfal2_get_opt_integer(handle, "GRIDFTP PLUGIN", "CHECKSUM_CALC_TIMEOUT", NULL);
-                msg_ifce::getInstance()->set_checksum_timeout(&tr_completed, boost::lexical_cast<std::string > (checksumTimeout));
+                msg_ifce::getInstance()->set_checksum_timeout(&tr_completed, checksumTimeout);
 
                 /*Checksuming*/
-                if (opts.compareChecksum)
+                if (currentTransfer.checksumMethod)
                     {
                         // Set checksum check
                         gfalt_set_checksum_check(params, TRUE, NULL);
-                        if (opts.compareChecksum == UrlCopyOpts::CompareChecksum::CHECKSUM_RELAXED)
+                        if (currentTransfer.checksumMethod == UrlCopyOpts::CompareChecksum::CHECKSUM_RELAXED)
                             {
                                 gfal2_set_opt_boolean(handle, "SRM PLUGIN", "ALLOW_EMPTY_SOURCE_CHECKSUM", TRUE, NULL);
                                 gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "SKIP_SOURCE_CHECKSUM", TRUE, NULL);
                             }
 
-                        if (!opts.checksumValue.empty() && opts.checksumValue != "x")   //user provided checksum
+                        if (!currentTransfer.checksumValue.empty() && currentTransfer.checksumValue != "x")   //user provided checksum
                             {
-                                //check if only alg is specified
-                                if (std::string::npos == (strArray[3]).find(":"))
-                                    {
-                                        gfalt_set_user_defined_checksum(params, (strArray[3]).c_str(), NULL, NULL);
-                                        logger.INFO() << "Checksum: " << strArray[3] << std::endl;
-                                    }
-                                else
-                                    {
-                                        std::vector<std::string> token = split((strArray[3]).c_str());
-                                        std::string checkAlg = token[0];
-                                        std::string csk = token[1];
-                                        gfalt_set_user_defined_checksum(params, checkAlg.c_str(), csk.c_str(), NULL);
-                                        logger.INFO() << "Checksum: " << checkAlg << " " << csk << std::endl;
-                                    }
+                                logger.INFO() << "User  provided checksum" << std::endl;
+                                gfalt_set_user_defined_checksum(params,
+                                                                currentTransfer.checksumAlgorithm.c_str(),
+                                                                currentTransfer.checksumValue.c_str(),
+                                                                NULL);
                             }
                         else    //use auto checksum
                             {
@@ -806,77 +753,48 @@ int main(int argc, char **argv)
                             }
                     }
 
+                /* Stat source file */
                 logger.INFO() << "Stat the source surl start" << std::endl;
-                for (int sourceStatRetry = 0; sourceStatRetry < 4; sourceStatRetry++)
+                int errorCode = statWithRetries(handle, "SOURCE", currentTransfer.sourceUrl, &currentTransfer.fileSize, &errorMessage);
+                if (errorCode != 0)
                     {
-                        errorMessage = ""; //reset
-                        if (gfal2_stat(handle, (strArray[1]).c_str(), &statbufsrc, &tmp_err) < 0)
-                            {
-                                std::string tempError(tmp_err->message);
-                                const int errCode = tmp_err->code;
-                                logger.ERROR() << "Failed to get source file size, errno:"
-                                               << errCode << ", " << tempError
-                                               << std::endl;
-                                errorMessage = "Failed to get source file size: " + tempError;
-                                errorScope = SOURCE;
-                                reasonClass = mapErrnoToString(errCode);
-                                errorPhase = TRANSFER_PREPARATION;
-                                retry = retryTransfer(tmp_err->code, "SOURCE", tempError);
-                                if (sourceStatRetry == 3 || retry == false)
-                                    {
-                                        logger.INFO() << "No more retries for stat the source" << std::endl;
-                                        g_clear_error(&tmp_err);
-                                        goto stop;
-                                    }
-                                g_clear_error(&tmp_err);
-                            }
-                        else
-                            {
-                                if (statbufsrc.st_size <= 0)
-                                    {
-                                        errorMessage = "Source file size is 0";
-                                        logger.ERROR() << errorMessage << std::endl;
-                                        errorScope = SOURCE;
-                                        reasonClass = mapErrnoToString(gfal_posix_code_error());
-                                        errorPhase = TRANSFER_PREPARATION;
-                                        if (sourceStatRetry == 3)
-                                            {
-                                                logger.INFO() << "No more retries for stat the source" << std::endl;
-                                                retry = true;
-                                                goto stop;
-                                            }
-                                    }
-                                else if (strArray[4]!= "x" && opts.userFileSize != 0 && opts.userFileSize != statbufsrc.st_size)
-                                    {
-                                        std::stringstream error_;
-                                        error_ << fixed << "User specified source file size is " << opts.userFileSize << " but stat returned " << statbufsrc.st_size;
-                                        errorMessage = error_.str();
-                                        logger.ERROR() << errorMessage << std::endl;
-                                        errorScope = SOURCE;
-                                        reasonClass = mapErrnoToString(gfal_posix_code_error());
-                                        errorPhase = TRANSFER_PREPARATION;
-                                        if (sourceStatRetry == 3)
-                                            {
-                                                logger.INFO() << "No more retries for stat the source" << std::endl;
-                                                retry = true;
-                                                goto stop;
-                                            }
-                                    }
-                                else
-                                    {
-                                        logger.INFO() << "Source file size: " << statbufsrc.st_size << std::endl;
-                                        if (statbufsrc.st_size > 0)
-                                            source_size = (double) statbufsrc.st_size;
-                                        //conver longlong to string
-                                        std::string size_to_string = to_string<double > (source_size, std::dec);
-                                        //set the value of file size to the message
-                                        msg_ifce::getInstance()->set_file_size(&tr_completed, size_to_string.c_str());
-                                        break;
-                                    }
-                            }
-                        logger.INFO() <<"Stat the source file will be retried" << std::endl;
-                        sleep(5); //give it some time to breath
+                        logger.ERROR() << "Failed to get source file size, errno:"
+                                       << errorCode << ", " << errorMessage << std::endl;
+
+                        errorMessage = "Failed to get source file size: " + errorMessage;
+                        errorScope = SOURCE;
+                        reasonClass = mapErrnoToString(errorCode);
+                        errorPhase = TRANSFER_PREPARATION;
+                        retry = retryTransfer(errorCode, "SOURCE", errorMessage);
+                        goto stop;
                     }
+
+                if (currentTransfer.fileSize == 0)
+                    {
+                        errorMessage = "Source file size is 0";
+                        logger.ERROR() << errorMessage << std::endl;
+                        errorScope = SOURCE;
+                        reasonClass = mapErrnoToString(gfal_posix_code_error());
+                        errorPhase = TRANSFER_PREPARATION;
+                        retry = true;
+                        goto stop;
+                    }
+
+                if (currentTransfer.userFileSize != 0 && currentTransfer.userFileSize != currentTransfer.fileSize)
+                    {
+                        std::stringstream error_;
+                        error_ << "User specified source file size is " << currentTransfer.userFileSize << " but stat returned " << currentTransfer.fileSize;
+                        errorMessage = error_.str();
+                        logger.ERROR() << errorMessage << std::endl;
+                        errorScope = SOURCE;
+                        reasonClass = mapErrnoToString(gfal_posix_code_error());
+                        errorPhase = TRANSFER_PREPARATION;
+                        retry = true;
+                        goto stop;
+                    }
+
+                logger.INFO() << "Source file size: " << currentTransfer.fileSize << std::endl;
+                msg_ifce::getInstance()->set_file_size(&tr_completed, currentTransfer.fileSize);
 
                 //overwrite dest file if exists
                 if (opts.overwrite)
@@ -886,10 +804,11 @@ int main(int argc, char **argv)
                     }
                 else
                     {
+                        struct stat statbufdestOver;
                         //if overwrite is not enabled, check if  exists and stop the transfer if it does
                         logger.INFO() << "Stat the dest surl to check if file already exists" << std::endl;
                         errorMessage = ""; //reset
-                        if (gfal2_stat(handle, (strArray[2]).c_str(), &statbufdestOver, &tmp_err) == 0)
+                        if (gfal2_stat(handle, (currentTransfer.destUrl).c_str(), &statbufdestOver, &tmp_err) == 0)
                             {
                                 double dest_sizeOver = (double) statbufdestOver.st_size;
                                 if(dest_sizeOver > 0)
@@ -909,27 +828,25 @@ int main(int argc, char **argv)
                             }
                     }
 
-                unsigned int experimentalTimeout = adjustTimeoutBasedOnSize(statbufsrc.st_size, opts.timeout);
+                unsigned int experimentalTimeout = adjustTimeoutBasedOnSize(currentTransfer.fileSize, opts.timeout);
                 if(!opts.manualConfig || opts.autoTunned || opts.timeout==0)
                     opts.timeout = experimentalTimeout;
                 gfalt_set_timeout(params, opts.timeout, NULL);
-                timeout_to_string = to_string<unsigned int>(opts.timeout, std::dec);
-                msg_ifce::getInstance()->set_transfer_timeout(&tr_completed, timeout_to_string.c_str());
+                msg_ifce::getInstance()->set_transfer_timeout(&tr_completed, opts.timeout);
                 logger.INFO() << "Timeout:" << opts.timeout << std::endl;
                 globalTimeout = experimentalTimeout + 500;
                 logger.INFO() << "Resetting global timeout thread to " << globalTimeout << " seconds" << std::endl;
 
-                unsigned int experimentalNstreams = adjustStreamsBasedOnSize(statbufsrc.st_size, opts.nStreams);
+                unsigned int experimentalNstreams = adjustStreamsBasedOnSize(currentTransfer.fileSize, opts.nStreams);
                 if(!opts.manualConfig || opts.autoTunned || opts.nStreams==0)
                     {
-                        if(true == lanTransfer(fileManagement->getSourceHostname(), fileManagement->getDestHostname()))
+                        if(true == lanTransfer(fileManagement.getSourceHostname(), fileManagement.getDestHostname()))
                             opts.nStreams = (experimentalNstreams * 2) > 16? 16: experimentalNstreams * 2;
                         else
                             opts.nStreams = experimentalNstreams;
                     }
                 gfalt_set_nbstreams(params, opts.nStreams, NULL);
-                nstream_to_string = to_string<unsigned int>(opts.nStreams, std::dec);
-                msg_ifce::getInstance()->set_number_of_streams(&tr_completed, nstream_to_string.c_str());
+                msg_ifce::getInstance()->set_number_of_streams(&tr_completed, opts.nStreams);
                 logger.INFO() << "nbstreams:" << opts.nStreams << std::endl;
 
                 //update protocol stuff
@@ -937,13 +854,16 @@ int main(int argc, char **argv)
                 reporter.timeout = opts.timeout;
                 reporter.nostreams = opts.nStreams;
                 reporter.buffersize = opts.tcpBuffersize;
-                reporter.sendMessage(throughput, false, opts.jobId, strArray[0], "UPDATE", "", diff, source_size);
+                reporter.sendMessage(currentTransfer.throughput, false,
+                                     opts.jobId, currentTransfer.fileId,
+                                     "UPDATE", "",
+                                     0, currentTransfer.fileSize);
 
                 gfalt_set_tcp_buffer_size(params, opts.tcpBuffersize, NULL);
                 gfalt_set_monitor_callback(params, &call_perf, NULL);
 
                 //check all params before passed to gfal2
-                if ((strArray[1]).c_str() == NULL || (strArray[2]).c_str() == NULL)
+                if ((currentTransfer.sourceUrl).c_str() == NULL || (currentTransfer.destUrl).c_str() == NULL)
                     {
                         errorMessage = "Failed to get source or dest surl";
                         logger.ERROR() << errorMessage << std::endl;
@@ -955,25 +875,41 @@ int main(int argc, char **argv)
 
 
                 logger.INFO() << "Transfer Starting" << std::endl;
-                if ((ret = gfalt_copy_file(handle, params, (strArray[1]).c_str(), (strArray[2]).c_str(), &tmp_err)) != 0)
+                if (gfalt_copy_file(handle, params, (currentTransfer.sourceUrl).c_str(), (currentTransfer.destUrl).c_str(), &tmp_err) != 0)
                     {
-                        logger.ERROR() << "Transfer failed - errno: " << tmp_err->code
-                                       << " Error message:" << tmp_err->message
-                                       << std::endl;
-                        if (tmp_err->code == 110)
+                        if (tmp_err != NULL && tmp_err->message != NULL)
                             {
-                                errorMessage = std::string(tmp_err->message);
-                                errorMessage += ", operation timeout";
+                                logger.ERROR() << "Transfer failed - errno: " << tmp_err->code
+                                               << " Error message:" << tmp_err->message
+                                               << std::endl;
+                                if (tmp_err->code == 110)
+                                    {
+                                        errorMessage = std::string(tmp_err->message);
+                                        errorMessage += ", operation timeout";
+                                    }
+                                else
+                                    {
+                                        errorMessage = std::string(tmp_err->message);
+                                    }
+                                errorScope = TRANSFER;
+                                reasonClass = mapErrnoToString(tmp_err->code);
+                                errorPhase = TRANSFER;
                             }
                         else
                             {
-                                errorMessage = std::string(tmp_err->message);
+                                logger.ERROR() << "Transfer failed - Error message: Unresolved error" << std::endl;
+                                errorMessage = std::string("Unresolved error");
+                                errorScope = TRANSFER;
+                                reasonClass = GENERAL_FAILURE;
+                                errorPhase = TRANSFER;
                             }
-                        errorScope = TRANSFER;
-                        reasonClass = mapErrnoToString(tmp_err->code);
-                        errorPhase = TRANSFER;
-                        retry = retryTransfer(tmp_err->code, "TRANSFER", std::string(tmp_err->message) );
-
+                        if(tmp_err)
+                            {
+                                std::string message;
+                                if (tmp_err->message)
+                                    message.assign(tmp_err->message);
+                                retry = retryTransfer(tmp_err->code, "TRANSFER", message);
+                            }
                         g_clear_error(&tmp_err);
                         goto stop;
                     }
@@ -983,78 +919,52 @@ int main(int argc, char **argv)
                     }
 
 
-                transferred_bytes = (double) source_size;
-                bytes_to_string = to_string<double>(transferred_bytes, std::dec);
-                msg_ifce::getInstance()->set_total_bytes_transfered(&tr_completed, bytes_to_string.c_str());
+                currentTransfer.transferredBytes = currentTransfer.fileSize;
+                msg_ifce::getInstance()->set_total_bytes_transfered(&tr_completed, currentTransfer.transferredBytes);
 
                 logger.INFO() << "Stat the dest surl start" << std::endl;
-                for (int destStatRetry = 0; destStatRetry < 4; destStatRetry++)
+                off_t dest_size;
+                errorCode = statWithRetries(handle, "DESTINATION", currentTransfer.destUrl, &dest_size, &errorMessage);
+                if (errorCode != 0)
                     {
-                        errorMessage = ""; //reset
-                        if (gfal2_stat(handle, (strArray[2]).c_str(), &statbufdest, &tmp_err) < 0)
-                            {
-                                std::string tempError(tmp_err->message);
-                                logger.ERROR() << "Failed to get dest file size, errno:" << tmp_err->code << ", "
-                                               << tempError
-                                               << std::endl;
-                                errorMessage = "Failed to get dest file size: " + tempError;
-                                errorScope = DESTINATION;
-                                reasonClass = mapErrnoToString(tmp_err->code);
-                                errorPhase = TRANSFER_FINALIZATION;
-                                retry = retryTransfer(tmp_err->code, "DESTINATION", tempError);
-                                if (destStatRetry == 3 || false == retry)
-                                    {
-                                        logger.INFO() << "No more retry stating the destination" << std::endl;
-                                        g_clear_error(&tmp_err);
-                                        goto stop;
-                                    }
-                                g_clear_error(&tmp_err);
-                            }
-                        else
-                            {
-                                if (statbufdest.st_size <= 0)
-                                    {
-                                        errorMessage = "Destination file size is 0";
-                                        logger.ERROR() << errorMessage << std::endl;
-                                        errorScope = DESTINATION;
-                                        reasonClass = mapErrnoToString(gfal_posix_code_error());
-                                        errorPhase = TRANSFER_FINALIZATION;
-                                        if (destStatRetry == 3)
-                                            {
-                                                logger.INFO() << "No more retry stating the destination" << std::endl;
-                                                retry = true;
-                                                goto stop;
-                                            }
-                                    }
-                                else if (strArray[4]!= "x" && opts.userFileSize != 0 && opts.userFileSize != statbufdest.st_size)
-                                    {
-                                        std::stringstream error_;
-                                        error_ << "User specified destination file size is " << opts.userFileSize << " but stat returned " << statbufdest.st_size;
-                                        errorMessage = error_.str();
-                                        logger.ERROR() << errorMessage << std::endl;
-                                        errorScope = DESTINATION;
-                                        reasonClass = mapErrnoToString(gfal_posix_code_error());
-                                        errorPhase = TRANSFER_FINALIZATION;
-                                        if (destStatRetry == 3)
-                                            {
-                                                retry = true;
-                                                logger.INFO() << "No more retry stating the destination" << std::endl;
-                                                goto stop;
-                                            }
-                                    }
-                                else
-                                    {
-                                        logger.INFO() << "Destination file size: " << statbufdest.st_size << std::endl;
-                                        dest_size = (double) statbufdest.st_size;
-                                        break;
-                                    }
-                            }
-                        logger.WARNING() << "Stat the destination will be retried" << std::endl;
-                        sleep(5); //give it some time to breath
+                        logger.ERROR() << "Failed to get dest file size, errno:" << errorCode << ", "
+                                       << errorMessage << std::endl;
+                        errorMessage = "Failed to get dest file size: " + errorMessage;
+                        errorScope = DESTINATION;
+                        reasonClass = mapErrnoToString(errorCode);
+                        errorPhase = TRANSFER_FINALIZATION;
+                        retry = retryTransfer(errorCode, "DESTINATION", errorMessage);
+                        goto stop;
                     }
 
+                if (dest_size <= 0)
+                    {
+                        errorMessage = "Destination file size is 0";
+                        logger.ERROR() << errorMessage << std::endl;
+                        errorScope = DESTINATION;
+                        reasonClass = mapErrnoToString(gfal_posix_code_error());
+                        errorPhase = TRANSFER_FINALIZATION;
+                        retry = true;
+                        goto stop;
+                    }
+
+                if (currentTransfer.userFileSize != 0 && currentTransfer.userFileSize != dest_size)
+                    {
+                        std::stringstream error_;
+                        error_ << "User specified destination file size is " << currentTransfer.userFileSize << " but stat returned " << dest_size;
+                        errorMessage = error_.str();
+                        logger.ERROR() << errorMessage << std::endl;
+                        errorScope = DESTINATION;
+                        reasonClass = mapErrnoToString(gfal_posix_code_error());
+                        errorPhase = TRANSFER_FINALIZATION;
+                        retry = true;
+                        goto stop;
+                    }
+
+                logger.INFO() << "Destination file size: " << dest_size << std::endl;
+
                 //check source and dest file sizes
-                if (source_size == dest_size)
+                if (currentTransfer.fileSize == dest_size)
                     {
                         logger.INFO() << "Source and destination file size matching" << std::endl;
                     }
@@ -1065,14 +975,12 @@ int main(int argc, char **argv)
                         errorScope = DESTINATION;
                         reasonClass = mapErrnoToString(gfal_posix_code_error());
                         errorPhase = TRANSFER_FINALIZATION;
-                        retry = true;
                         goto stop;
                     }
 
                 gfalt_set_user_data(params, NULL, NULL);
             }//logStream
 stop:
-            diff = transferDuration(transfer_start, transfer_complete);
             msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
             msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
             msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
@@ -1086,7 +994,20 @@ stop:
                     if (!terminalState)
                         {
                             logger.INFO() << "Report FAILED back to the server" << std::endl;
-                            reporter.sendTerminal(throughput, retry, opts.jobId, strArray[0], "FAILED", errorMessage, diff, source_size);
+                            reporter.sendTerminal(currentTransfer.throughput, retry,
+                                                  opts.jobId, currentTransfer.fileId,
+                                                  "FAILED", errorMessage,
+                                                  currentTransfer.getTransferDurationInSeconds(),
+                                                  currentTransfer.fileSize);
+                        }
+
+                    // In case of failure, if this is a multihop transfer, set to fail
+                    // all the remaining transfers
+                    if (opts.multihop)
+                        {
+                            logger.ERROR() << "Setting to fail the remaining transfers" << std::endl;
+                            setRemainingTransfersToFailed(transferList, ii);
+                            break; // exit the loop
                         }
                 }
             else
@@ -1096,14 +1017,18 @@ stop:
                     reporter.nostreams = opts.nStreams;
                     reporter.buffersize = opts.tcpBuffersize;
                     logger.INFO() << "Report FINISHED back to the server" << std::endl;
-                    reporter.sendTerminal(throughput, false, opts.jobId, strArray[0], "FINISHED", errorMessage, diff, source_size);
+                    reporter.sendTerminal(currentTransfer.throughput, false,
+                                          opts.jobId, currentTransfer.fileId,
+                                          "FINISHED", errorMessage,
+                                          currentTransfer.getTransferDurationInSeconds(),
+                                          currentTransfer.fileSize);
                     /*unpin the file here and report the result in the log file...*/
                     g_clear_error(&tmp_err);
 
                     if (opts.bringOnline > 0)
                         {
-                            logger.INFO() << "Token will be unpinned: " << strArray[6] << std::endl;
-                            if(gfal2_release_file(handle, (strArray[1]).c_str(), (strArray[6]).c_str(), &tmp_err) < 0)
+                            logger.INFO() << "Token will be unpinned: " << currentTransfer.tokenBringOnline << std::endl;
+                            if(gfal2_release_file(handle, (currentTransfer.sourceUrl).c_str(), (currentTransfer.tokenBringOnline).c_str(), &tmp_err) < 0)
                                 {
                                     if (tmp_err && tmp_err->message)
                                         {
@@ -1112,7 +1037,7 @@ stop:
                                 }
                             else
                                 {
-                                    logger.INFO() << "Token unpinned: " << strArray[6] << std::endl;
+                                    logger.INFO() << "Token unpinned: " << currentTransfer.tokenBringOnline << std::endl;
                                 }
                         }
                 }
@@ -1122,10 +1047,10 @@ stop:
             if(opts.monitoringMessages)
                 msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
 
-            std::string archiveErr = fileManagement->archive();
+            std::string archiveErr = fileManagement.archive();
             if (!archiveErr.empty())
                 logger.ERROR() << "Could not archive: " << archiveErr << std::endl;
-            reporter.sendLog(opts.jobId, strArray[0], fileManagement->_getLogArchivedFileFullPath(),
+            reporter.sendLog(opts.jobId, currentTransfer.fileId, fileManagement._getLogArchivedFileFullPath(),
                              opts.debug);
         }//end for reuse loop
 
@@ -1146,13 +1071,8 @@ stop:
             cert = NULL;
         }
 
-    if (opts.reuseFile && readFile.length() > 0)
+    if (opts.areTransfersOnFile() && readFile.length() > 0)
         unlink(readFile.c_str());
-
-
-    if (fileManagement)
-        delete fileManagement;
-
 
     StaticSslLocking::kill_locks();
 

@@ -41,7 +41,6 @@ namespace fts3
 namespace common
 {
 
-using namespace std;
 using namespace boost;
 using namespace boost::property_tree;
 
@@ -49,7 +48,7 @@ using namespace boost::property_tree;
 /**
  * CfgParser is a wrapper class for boost ptree.
  *
- * It allows to parse a configuration string in JSON format.
+ * It allows to parse a configuration std::string in JSON format.
  * After parsing a given value can be accessed using a specific path
  * e.g.: 'share.in' will provide access to the value inbound
  * value specified in share JSON object
@@ -70,7 +69,8 @@ public:
         STANDALONE_GR_CFG,
         SE_PAIR_CFG,
         GR_PAIR_CFG,
-        SHARE_ONLY_CFG
+        SHARE_ONLY_CFG,
+        ACTIVITY_SHARE_CFG
     };
 
     /**
@@ -79,7 +79,7 @@ public:
      *
      * @param configuration - the configuration in JSON format
      */
-    CfgParser(string configuration);
+    CfgParser(std::string configuration);
 
     /**
      * Destructor.
@@ -89,16 +89,16 @@ public:
     /**
      * Gets the specific value from the JSON object
      *
-     * Please not that in case of a map<string, int> negative values are not allowed, they will result
+     * Please not that in case of a std::map<std::string, int> negative values are not allowed, they will result
      * in throwing an exception. However, a 'auto' value is allowed that will be indicated by -1 value!
      *
      * @param path - path that specifies the value, e.g. 'share.in'
-     * @param T - the expected type of the value (int, string, bool, vector and map are supported)
+     * @param T - the expected type of the value (int, std::string, bool, vector and std::map are supported)
      *
      * @return the value
      */
     template <typename T>
-    T get(string path);
+    T get(std::string path);
 
     /**
      * Gets the specific value for an optional object in JSON configuration
@@ -107,14 +107,14 @@ public:
      *
      * @return an instance of optional which holds the value
      */
-    optional<string> get_opt(string path);
+    optional<std::string> get_opt(std::string path);
 
     /**
-     * Checks if the given property was set to 'auto'
+     * Checks if the given property was std::set to 'auto'
      *
-     * @return true if the property of interest was set to 'auto', false otherwise
+     * @return true if the property of interest was std::set to 'auto', false otherwise
      */
-    bool isAuto(string path);
+    bool isAuto(std::string path);
 
     /**
      *
@@ -125,7 +125,7 @@ public:
     }
 
     /// the auto value of a share
-    static const string auto_value;
+    static const std::string auto_value;
 
 private:
 
@@ -141,38 +141,42 @@ private:
      *
      * @return true if it's a configuration of a given type, false otherwise
      */
-    bool validate(ptree pt, map< string, set <string> > allowed, string path = string());
+    bool validate(ptree pt, std::map< std::string, std::set <std::string> > allowed, std::string path = std::string());
 
     /// The object that contains the parsed configuration
     ptree pt;
 
     /// the tokens used in standalone SE configuration
-    static const map<string, set <string> > standaloneSeCfgTokens;
+    static const std::map<std::string, std::set <std::string> > standaloneSeCfgTokens;
     /// the tokens used in standalone SE groupconfiguration
-    static const map<string, set <string> > standaloneGrCfgTokens;
-    /// the tokens used in se pair configuration
-    static const map<string, set <string> > sePairCfgTokens;
-    /// the tokens used in se group pair configuration
-    static const map<string, set <string> > grPairCfgTokens;
+    static const std::map<std::string, std::set <std::string> > standaloneGrCfgTokens;
+    /// the tokens used in se std::pair configuration
+    static const std::map<std::string, std::set <std::string> > sePairCfgTokens;
+    /// the tokens used in se group std::pair configuration
+    static const std::map<std::string, std::set <std::string> > grPairCfgTokens;
     /// the tokens used  in a share-only configuration
-    static const map<string, set <string> > shareOnlyCfgTokens;
+    static const std::map<std::string, std::set <std::string> > shareOnlyCfgTokens;
+    /// the tokens used  in a share-only configuration
+    static const std::map<std::string, std::set <std::string> > activityShareCfgTokens;
     /// all the allowed tokens
-    static const set<string> allTokens;
+    static const std::set<std::string> allTokens;
 
     /// initializes allowed JSON members for se config
-    static const map< string, set <string> > initStandaloneSeCfgTokens();
+    static const std::map< std::string, std::set <std::string> > initStandaloneSeCfgTokens();
     /// initializes allowed JSON members for se group config
-    static const map< string, set <string> > initStandaloneGrCfgTokens();
-    /// initializes allowed JSON members for se pair
-    static const map< string, set <string> > initSePairCfgTokens();
-    /// initializes allowed JSON members for se group pair
-    static const map< string, set <string> > initGrPairCfgTokens();
+    static const std::map< std::string, std::set <std::string> > initStandaloneGrCfgTokens();
+    /// initializes allowed JSON members for se std::pair
+    static const std::map< std::string, std::set <std::string> > initSePairCfgTokens();
+    /// initializes allowed JSON members for se group std::pair
+    static const std::map< std::string, std::set <std::string> > initGrPairCfgTokens();
     /// initializes allowed JSON members for share-only configuration
-    static const map<string, set <string> > initShareOnlyCfgTokens();
+    static const std::map<std::string, std::set <std::string> > initShareOnlyCfgTokens();
+    /// initializes allowed JSON members for activity share configuration
+    static const std::map<std::string, std::set <std::string> > initActivityShareCfgTokens();
 };
 
 template <typename T>
-T CfgParser::get(string path)
+T CfgParser::get(std::string path)
 {
 
     T v;
@@ -197,10 +201,10 @@ T CfgParser::get(string path)
 }
 
 template <>
-inline vector<string> CfgParser::get< vector<string> >(string path)
+inline std::vector<std::string> CfgParser::get< std::vector<std::string> >(std::string path)
 {
 
-    vector<string> ret;
+    std::vector<std::string> ret;
 
     optional<ptree&> value = pt.get_child_optional(path);
     if (!value.is_initialized())
@@ -212,7 +216,7 @@ inline vector<string> CfgParser::get< vector<string> >(string path)
 
     // check if the node has a value,
     // accordingly to boost it should be empty if array syntax was used in JSON
-    string wrong = array.get_value<string>();
+    std::string wrong = array.get_value<std::string>();
     if (!wrong.empty())
         {
             throw Err_Custom("Wrong value: '" + wrong + "'");
@@ -221,7 +225,7 @@ inline vector<string> CfgParser::get< vector<string> >(string path)
     ptree::iterator it;
     for (it = array.begin(); it != array.end(); ++it)
         {
-            pair<string, ptree> v = *it;
+            std::pair<std::string, ptree> v = *it;
 
             // check if the node has a name,
             // accordingly to boost it should be empty if object weren't
@@ -237,17 +241,17 @@ inline vector<string> CfgParser::get< vector<string> >(string path)
                     throw Err_Custom("Unexpected object in array '" + path + "' (only a list of values was expected)");
                 }
 
-            ret.push_back(v.second.get_value<string>());
+            ret.push_back(v.second.get_value<std::string>());
         }
 
     return ret;
 }
 
 template <>
-inline map <string, int> CfgParser::get< map<string, int> >(string path)
+inline std::map <std::string, int> CfgParser::get< std::map<std::string, int> >(std::string path)
 {
 
-    map<string, int> ret;
+    std::map<std::string, int> ret;
 
     optional<ptree&> value = pt.get_child_optional(path);
     if (!value.is_initialized()) throw Err_Custom("The " + path + " has to be specified!");
@@ -255,7 +259,7 @@ inline map <string, int> CfgParser::get< map<string, int> >(string path)
 
     // check if the node has a value,
     // accordingly to boost it should be empty if array syntax was used in JSON
-    string wrong = array.get_value<string>();
+    std::string wrong = array.get_value<std::string>();
     if (!wrong.empty())
         {
             throw Err_Custom("Wrong value: '" + wrong + "'");
@@ -264,7 +268,7 @@ inline map <string, int> CfgParser::get< map<string, int> >(string path)
     ptree::iterator it;
     for (it = array.begin(); it != array.end(); ++it)
         {
-            pair<string, ptree> v = *it;
+            std::pair<std::string, ptree> v = *it;
 
             // check if the node has a name,
             // accordingly to boost it should be empty if object weren't
@@ -276,7 +280,7 @@ inline map <string, int> CfgParser::get< map<string, int> >(string path)
 
             // check if there is a value,
             // the value should be empty because only a 'key:value' object should be specified
-            if (!v.second.get_value<string>().empty())
+            if (!v.second.get_value<std::string>().empty())
                 {
                     throw Err_Custom("'{key:value}' object was expected, not just the value");
                 }
@@ -287,11 +291,11 @@ inline map <string, int> CfgParser::get< map<string, int> >(string path)
                     throw Err_Custom("In array '" + path + "' only ('{key:value}' objects were expected)");
                 }
 
-            pair<string, ptree> kv = v.second.front();
+            std::pair<std::string, ptree> kv = v.second.front();
             try
                 {
-                    // get the string value
-                    string str_value = kv.second.get_value<string>();
+                    // get the std::string value
+                    std::string str_value = kv.second.get_value<std::string>();
                     // check if it's auto-value
                     if (str_value == auto_value)
                         {
@@ -303,7 +307,81 @@ inline map <string, int> CfgParser::get< map<string, int> >(string path)
                             int value = kv.second.get_value<int>();
                             // make sure it's not negative
                             if (value < 0) throw Err_Custom("The value of " + kv.first + " cannot be negative!");
-                            // set the value
+                            // std::set the value
+                            ret[kv.first] = value;
+                        }
+
+                }
+            catch(ptree_bad_data& ex)
+                {
+                    throw Err_Custom("Wrong value type of " + kv.first);
+                }
+        }
+
+    return ret;
+}
+
+template <>
+inline std::map <std::string, double> CfgParser::get< std::map<std::string, double> >(std::string path)
+{
+
+    std::map<std::string, double> ret;
+
+    optional<ptree&> value = pt.get_child_optional(path);
+    if (!value.is_initialized()) throw Err_Custom("The " + path + " has to be specified!");
+    ptree& array = value.get();
+
+    // check if the node has a value,
+    // accordingly to boost it should be empty if array syntax was used in JSON
+    std::string wrong = array.get_value<std::string>();
+    if (!wrong.empty())
+        {
+            throw Err_Custom("Wrong value: '" + wrong + "'");
+        }
+
+    ptree::iterator it;
+    for (it = array.begin(); it != array.end(); ++it)
+        {
+            std::pair<std::string, ptree> v = *it;
+
+            // check if the node has a name,
+            // accordingly to boost it should be empty if object weren't
+            // members of the array (our case)
+            if (!v.first.empty())
+                {
+                    throw Err_Custom("An array was expected, instead an object was found (at '" + path + "', name: '" + v.first + "')");
+                }
+
+            // check if there is a value,
+            // the value should be empty because only a 'key:value' object should be specified
+            if (!v.second.get_value<std::string>().empty())
+                {
+                    throw Err_Custom("'{key:value}' object was expected, not just the value");
+                }
+
+            // there should be only one child the 'key:value' object
+            if (v.second.size() != 1)
+                {
+                    throw Err_Custom("In array '" + path + "' only ('{key:value}' objects were expected)");
+                }
+
+            std::pair<std::string, ptree> kv = v.second.front();
+            try
+                {
+                    // get the std::string value
+                    std::string str_value = kv.second.get_value<std::string>();
+                    // check if it's auto-value
+                    if (str_value == auto_value)
+                        {
+                            ret[kv.first] = -1;
+                        }
+                    else
+                        {
+                            // get the integer value
+                            double value = kv.second.get_value<double>();
+                            // make sure it's not negative
+                            if (value < 0) throw Err_Custom("The value of " + kv.first + " cannot be negative!");
+                            // Set the value
                             ret[kv.first] = value;
                         }
 

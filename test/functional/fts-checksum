@@ -19,13 +19,12 @@ class TestChecksum(base.TestBase):
 			logging.info("Got job id %s" % jobId)
 			state = self.client.poll(jobId)
 			logging.info("Finished with %s" % state)
-			self.assertEqual('FINISHED', state)
+			self.assertEqual('FINISHED', state, 'job.state')
 			dstChecksum = self.surl.checksum(dst)
-			self.assertEqual(srcChecksum, dstChecksum)
+			self.assertEqual(srcChecksum, dstChecksum, 'file.checksum')
 
 
 
 if __name__ == '__main__':
 	import sys
 	sys.exit(TestChecksum().run())
-

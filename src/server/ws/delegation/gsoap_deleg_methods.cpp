@@ -140,11 +140,6 @@ int fts3::delegation__putProxy(struct soap* soap, std::string _delegationID, std
         {
             string msg = ex.what();
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << msg << commit;
-            if (msg.find("key values mismatch") != string::npos)
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Exception was not propagated to the client" << commit;
-                    return SOAP_OK;
-                }
             soap_receiver_fault(soap, ex.what(), "DelegationException");
             return SOAP_FAULT;
         }

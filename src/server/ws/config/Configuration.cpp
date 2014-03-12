@@ -117,6 +117,26 @@ string Configuration::json(map<string, int>& params)
     return ss.str();
 }
 
+string Configuration::json(map<string, double>& params)
+{
+
+    stringstream ss;
+
+    ss << "[";
+
+    map<string, double>::iterator it;
+    for (it = params.begin(); it != params.end();)
+        {
+            ss << "{\"" << it->first << "\":" << it->second << "}";
+            it++;
+            if (it != params.end()) ss << ",";
+        }
+
+    ss << "]";
+
+    return ss.str();
+}
+
 string Configuration::json(optional< map<string, int> >& params)
 {
 
@@ -326,6 +346,13 @@ void Configuration::addLinkCfg(string source, string destination, bool active, s
 
 void Configuration::addShareCfg(string source, string destination, map<string, int>& share)
 {
+    if (share.empty())
+        {
+            // if no share was defined it means that autotuner should take care if all the transfers
+            // so it is a public auto-share
+            share.insert(make_pair(pub, automatic));
+        }
+
     // set with VOs that need an update
     set<string> update;
     // find all share configuration for source and destination
@@ -339,7 +366,8 @@ void Configuration::addShareCfg(string source, string destination, map<string, i
                 {
                     // if the VO was not in the new configuration remove the record
                     db->deleteShareConfig(source, destination, cfg->vo);
-                    deleteCount++;
+                    // Although it is a deletion it is done due to an update
+                    updateCount++;
                 }
             else
                 {

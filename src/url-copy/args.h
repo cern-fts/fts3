@@ -21,7 +21,8 @@ public:
     bool overwrite;
     bool daemonize;
     bool logToStderr;
-    bool reuseFile;
+    bool reuse;
+    bool multihop;
 
     enum CompareChecksum
     {
@@ -44,15 +45,20 @@ public:
     std::string destUrl;
     std::string sourceTokenDescription;
     std::string destTokenDescription;
-    std::string fileId;
+    unsigned    fileId;
     std::string proxy;
-    double      userFileSize;
+    long long   userFileSize;
     int         bringOnline;
     int         copyPinLifetime;
     int         nStreams;
     unsigned    tcpBuffersize;
     unsigned    blockSize;
     unsigned    timeout;
+
+    bool areTransfersOnFile() const
+    {
+        return reuse || multihop;
+    }
 
 private:
     static UrlCopyOpts instance;

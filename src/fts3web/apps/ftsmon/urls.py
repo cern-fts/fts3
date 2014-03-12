@@ -48,6 +48,7 @@ urlpatterns = patterns('ftsmon.views',
     
     url(r'^archive/$', 'jobs.archiveJobIndex'),
     
+    url(r'^unique/activities', 'autocomplete.activities'),
     url(r'^unique/destinations', 'autocomplete.destinations'),
     url(r'^unique/sources', 'autocomplete.sources'),
     url(r'^unique/vos', 'autocomplete.vos'),

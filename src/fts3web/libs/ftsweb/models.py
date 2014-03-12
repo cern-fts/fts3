@@ -77,6 +77,7 @@ class JobArchive(JobBase):
 
 class FileBase(models.Model):
     file_id      = models.IntegerField(primary_key = True)
+    hashed_id    = models.IntegerField()
     vo_name      = models.CharField(max_length = 255)
     source_se    = models.CharField(max_length = 255)
     dest_se      = models.CharField(max_length = 255)
@@ -111,6 +112,7 @@ class FileBase(models.Model):
     bringonline_token = models.CharField(max_length = 255)
     log_file        = models.CharField(max_length = 2048, db_column = 't_log_file')
     log_debug       = models.IntegerField(db_column = 't_log_file_debug')
+    activity        = models.CharField(max_length = 255)
     
     def __str__(self):
         return str(self.file_id)
@@ -120,7 +122,7 @@ class FileBase(models.Model):
 
 
 class File(FileBase):
-    job = models.ForeignKey('Job', db_column = 'job_id', related_name = '+')
+    job = models.ForeignKey('Job', db_column = 'job_id', related_name = '+', null = True)
     class Meta:
         db_table = 't_file' 
 

@@ -86,11 +86,10 @@ int main(int argc, char** argv)
     // path to local BDII cache
     const string bdii_path = "/var/lib/fts3/bdii_cache.xml";
 
-    // instance of the site name cache retriever
-    SiteNameCacheRetriever& bdii_cache = SiteNameCacheRetriever::getInstance();
-
     try
         {
+            // instance of the site name cache retriever
+            SiteNameCacheRetriever& bdii_cache = SiteNameCacheRetriever::getInstance();
 
             xml_document doc;
             doc.load_file(bdii_path.c_str());

@@ -3,8 +3,6 @@
 #include "common/definitions.h"
 #include "heuristics.h"
 
-
-
 bool retryTransfer(int errorNo, const std::string& category, const std::string& message)
 {
     bool retry = true;

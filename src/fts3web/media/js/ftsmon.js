@@ -63,6 +63,12 @@ config(function($routeProvider) {
 .filter('escape', function() {
     return window.escape;
 })
+.filter('hex', function() {
+	return function(value) {
+		hex = value.toString(16);
+		return ("0000".substr(0, 4 - hex.length) + hex).toUpperCase();
+	};
+})
 .directive('log', function() {
     return {
         restrict: 'A',

@@ -163,13 +163,13 @@ public:
                                   getDBObjectInstance()->
                                   updateFileTransferStatus(msg.throughput, job, msg.file_id, std::string(msg.transfer_status),
                                                            std::string(msg.transfer_message), static_cast<int> (msg.process_id),
-                                                           msg.filesize, msg.timeInSecs);
+                                                           msg.filesize, msg.timeInSecs, msg.retry);
                     }
                 if(updated == true)
                     {
                         updated = DBSingleton::instance().
                                   getDBObjectInstance()->
-                                  updateJobTransferStatus(msg.file_id, job, std::string(msg.transfer_status));
+                                  updateJobTransferStatus(job, std::string(msg.transfer_status));
                     }
 
                 SingleTrStateInstance::instance().sendStateMessage(job, msg.file_id);
@@ -177,12 +177,14 @@ public:
         catch (std::exception& e)
             {
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception " << e.what() << commit;
-                sleep(1);
+		struct message msgTemp = msg; 
+                runProducerStatus( msgTemp); 
             }
         catch (...)
             {
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception" << commit;
-                sleep(1);
+		struct message msgTemp = msg; 
+                runProducerStatus( msgTemp);		
             }
         return updated;
     }
@@ -223,7 +225,8 @@ protected:
                             }
 
                         std::string jobId = std::string((*iter).job_id).substr(0, 36);
-                        strcpy(msgUpdater.job_id, jobId.c_str());
+                        strncpy(msgUpdater.job_id, jobId.c_str(), sizeof(msgUpdater.job_id));
+                        msgUpdater.job_id[sizeof(msgUpdater.job_id) - 1] = '\0';
                         msgUpdater.file_id = (*iter).file_id;
                         msgUpdater.process_id = (*iter).process_id;
                         msgUpdater.timestamp = (*iter).timestamp;
@@ -265,7 +268,7 @@ protected:
                         struct message_log msgLogBreak = (*iterLogBreak).second;
                         runProducerLog( msgLogBreak );
                     }
-                sleep(1);
+
             }
         catch (std::exception& ex)
             {
@@ -283,7 +286,7 @@ protected:
                         struct message_log msgLogBreak = (*iterLogBreak).second;
                         runProducerLog( msgLogBreak );
                     }
-                sleep(1);
+
             }
         catch (...)
             {
@@ -301,7 +304,7 @@ protected:
                         struct message_log msgLogBreak = (*iterLogBreak).second;
                         runProducerLog( msgLogBreak );
                     }
-                sleep(1);
+
             }
     }
 
@@ -321,6 +324,18 @@ protected:
                             {
                                 break;
                             }
+			    
+			//if conn to the db is lost, do not retrieve state, save it for later
+			//use one fast query
+			try    
+			    {
+				DBSingleton::instance().getDBObjectInstance()->getDrain();
+			    }   
+			catch(...)
+			    {
+			    	sleep(1);
+				continue;			    
+			    }  
 
                         if(!fs::is_empty(fs::path(STATUS_DIR)))
                             {
@@ -330,6 +345,7 @@ protected:
                                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the status messages:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
                                     }
                             }
+
 
                         if (!fs::is_empty(fs::path(LOG_DIR)))
                             {

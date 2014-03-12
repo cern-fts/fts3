@@ -84,6 +84,11 @@
 		
 		            <label for="dest_surl">Destination SURL:</label>
 		            <input type="text" placeholder="full destination surl" id="dest_surl", ng-model="filter.dest_surl"/>
+		            
+	                <label for="activity">Activity:</label>
+		            <select id="activity" ng-model="filter.activity" ng-options="activity for activity in unique.activities">
+		              <option value="">-- All activities --</option>
+		            </select>
 	            </div>
             </div>
             

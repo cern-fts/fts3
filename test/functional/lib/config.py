@@ -24,7 +24,7 @@ Checksum = 'ADLER32'
 
 # Dictionary that can be used to parametrize the storage areas
 StorageParametrization = {
-	'vo': Vo
+    'vo': Vo
 }
 
 # Storage areas
@@ -32,31 +32,35 @@ StorageParametrization = {
 # You can use string formatting to replace some parts of it,
 # i.e. %(vo)s
 # They will be replaced with the values of StorageParametrization
-StorageAreas = [
-	#'srm://hepgrid11.ph.liv.ac.uk:8446/srm/managerv2?SFN=/dpm/ph.liv.ac.uk/home/%(vo)s/',
-	'gsiftp://hepgrid11.ph.liv.ac.uk/dpm/ph.liv.ac.uk/home/%(vo)s/',
-	#'srm://ccsrm.in2p3.fr:8443/srm/managerv2?SFN=/pnfs/in2p3.fr/data/%(vo)s/',
-	'gsiftp://lpsc-se-dpm-server.in2p3.fr/dpm/in2p3.fr/home/%(vo)s/'
+StorageAreaPairs = [
+    (
+        'gsiftp://hepgrid11.ph.liv.ac.uk/dpm/ph.liv.ac.uk/home/%(vo)s/',
+        'gsiftp://lpsc-se-dpm-server.in2p3.fr/dpm/in2p3.fr/home/%(vo)s/'
+    ),
+    (
+        'srm://hepgrid11.ph.liv.ac.uk:8446/srm/managerv2?SFN=/dpm/ph.liv.ac.uk/home/%(vo)s/',
+        'srm://storage01.lcg.cscs.ch:8443/srm/managerv2?SFN=/pnfs/lcg.cscs.ch/%(vo)s/'
+    )
 ]
 
 # Logging level
 import logging
 try:
-	debug = int(os.environ.get('DEBUG', 0))
+    debug = int(os.environ.get('DEBUG', 0))
 except:
-	debug = 1
+    debug = 1
 if debug:
-	logLevel = logging.DEBUG
+    logLevel = logging.DEBUG
 else:
-	logLevel = logging.INFO
+    logLevel = logging.INFO
 
 # Let's make it nicer
 logging.basicConfig(level = logLevel, format = '%(levelname)s %(message)s')
 
 if sys.stdout.isatty():
-	logging.addLevelName(logging.DEBUG, "\033[1;2m%-8s\033[1;m" % logging.getLevelName(logging.DEBUG))
-	logging.addLevelName(logging.INFO, "\033[1;34m%-8s\033[1;m" % logging.getLevelName(logging.INFO))
-	logging.addLevelName(logging.ERROR, "\033[1;31m%-8s\033[1;m" % logging.getLevelName(logging.ERROR))
-	logging.addLevelName(logging.WARNING, "\033[1;33m%-8s\033[1;m" % logging.getLevelName(logging.WARNING))
+    logging.addLevelName(logging.DEBUG, "\033[1;2m%-8s\033[1;m" % logging.getLevelName(logging.DEBUG))
+    logging.addLevelName(logging.INFO, "\033[1;34m%-8s\033[1;m" % logging.getLevelName(logging.INFO))
+    logging.addLevelName(logging.ERROR, "\033[1;31m%-8s\033[1;m" % logging.getLevelName(logging.ERROR))
+    logging.addLevelName(logging.WARNING, "\033[1;33m%-8s\033[1;m" % logging.getLevelName(logging.WARNING))
 
 

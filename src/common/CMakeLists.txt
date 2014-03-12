@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and 
 # limitations under the License. 
 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(fts_include_dir 
@@ -46,7 +46,7 @@ include_directories(${LIBUUID_INCLUDE_DIRS})
 find_package(Boost COMPONENTS regex iostreams system thread)
 
 add_library(fts_common SHARED ${fts_common_sources})
-target_link_libraries(fts_common ${Boost_LIBRARIES} ${LIBUUID_LIBRARIES} -lpthread)
+target_link_libraries(fts_common ${Boost_LIBRARIES} ${LIBUUID_LIBRARIES}  -lpthread )
 if (ORACLEBUILD STREQUAL "OFF")
 target_link_libraries(fts_common ${OPENSSL_LIBRARIES})
 target_link_libraries(fts_common ${LIBUUID_LIBRARIES})
@@ -65,7 +65,7 @@ ${PROJECT_BINARY_DIR}/src/common
 
 if(FTS3_COMPILE_WITH_UNITTEST)
     find_package (Boost COMPONENTS unit_test_framework REQUIRED)
-	target_link_libraries(fts_common -${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES} )
+	target_link_libraries(fts_common ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES} )
 endif()
 
 

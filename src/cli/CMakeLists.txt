@@ -56,6 +56,7 @@ set (fts_cli_internal_libs
 set(fts_cli_libs
     ${fts_cli_internal_libs}
     gridsite
+    curl
     cgsi_plugin_cpp
     ${Boost_PROGRAM_OPTIONS_LIBRARY}
     fts_delegation_api_simple
@@ -68,28 +69,7 @@ endif ()
 # ------------------------------------------------------------------------
 # Common CLI library
 
-set(fts_cli_common_sources
-	ui/CliBase.cpp
-	ui/TransferCliBase.cpp
-	ui/DebugSetCli.cpp
-	ui/DnCli.cpp
-	ui/GetCfgCli.cpp
-	ui/DelCfgCli.cpp
-	ui/JobIdCli.cpp
-	ui/ListTransferCli.cpp
-	ui/SetCfgCli.cpp
-	ui/SrcDestCli.cpp
-	ui/SubmitTransferCli.cpp
-	ui/TransferStatusCli.cpp
-	ui/VoNameCli.cpp
-	ui/BlacklistCli.cpp
-	ui/PriorityCli.cpp
-	ui/CancelCli.cpp
-    GSoapContextAdapter.cpp
-    ProxyCertificateDelegator.cpp
-    MsgPrinter.cpp
-    BulkSubmissionParser.cpp
-)
+file(GLOB fts_cli_common_sources "*.cpp" "ui/*.cpp" "rest/*.cpp")
 
 add_library(fts_cli_common SHARED ${fts_cli_common_sources})
 target_link_libraries(fts_cli_common ${fts_cli_libs})
@@ -110,6 +90,24 @@ add_executable(fts-transfer-submit
 )
 add_dependencies(fts-transfer-submit fts_cli_common)
 target_link_libraries (fts-transfer-submit fts_cli_common)
+
+# ------------------------------------------------------------------------
+# fts-delegation-init
+add_executable(fts-delegation-init
+    transfer/fts3-delegation-init.cpp
+    ui/DelegationCli.cpp
+)
+add_dependencies(fts-delegation-init fts_cli_common)
+target_link_libraries (fts-delegation-init fts_cli_common)
+
+# ------------------------------------------------------------------------
+# fts-transfer-snapshot
+add_executable(fts-transfer-snapshot
+    transfer/fts3-transfer-snapshot.cpp
+    ui/SnapshotCli.cpp
+)
+add_dependencies(fts-transfer-snapshot fts_cli_common)
+target_link_libraries (fts-transfer-snapshot fts_cli_common)
 
 # ------------------------------------------------------------------------
 # fts-transfer-status

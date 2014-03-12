@@ -1,6 +1,5 @@
 <h3>
     Showing {{optimizer.startIndex}} to {{optimizer.endIndex}} out of {{optimizer.count}}
-    for the last hour
     <button class="btn btn-mini btn-info" type="button" ng-click="filtersModal = true">Filter</button>
 </h3>
 
@@ -18,7 +17,7 @@
     <tbody>
         <tr ng-repeat="o in optimizer.items" ng-class-odd="'odd'">
             <td>
-                <a href="#/optimizer/detailed?source={{o.source_se}}&destination={{o.dest_se}}">
+                <a href="#/optimizer/detailed?source={{o.source_se}}&destination={{o.dest_se}}&time_window={{filter.time_window}}">
                     <i class="icon-search"></i>
                 </a>
                 {{ o.source_se }}
@@ -45,6 +44,8 @@
             <label for="dest_se">Destination:</label>
             <input type="text" placeholder="destination se" id="dest_se" ng-model="filter.dest_se"
                    typeahead="dest for dest in unique.destinations | safeFilter:$viewValue"/>
+            <label for="timewindow">Time window:</label>
+            <input type="number" placeholder="time window in hours" id="timewindow" ng-model="filter.time_window"/>
         </div>
         <div class="modal-footer">
             <button class="btn btn-success" ng-click="filterReason(filter)">Apply</button>

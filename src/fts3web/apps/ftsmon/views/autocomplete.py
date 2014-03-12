@@ -23,6 +23,11 @@ from ftsweb.models import Job, File, Host
 from jsonify import jsonify
 
 @jsonify
+def activities(httpRequest):
+    activities = File.objects.values('activity').distinct()
+    return [row['activity'] for row in activities]
+
+@jsonify
 def sources(httpRequest):
     notBefore = datetime.utcnow() - timedelta(hours = 12)
     sources = Job.objects.filter(Q(job_finished__isnull = True) | Q(job_finished__gte = notBefore))\

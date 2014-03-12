@@ -18,15 +18,6 @@ limitations under the License. */
 #include "active_object.h"
 #include "SingleDbInstance.h"
 #include "threadpool.h"
-#include <utility>
-#include <boost/filesystem.hpp>
-#include <boost/foreach.hpp>
-#include <iostream>
-#include <boost/filesystem/operations.hpp>
-#include <ctime>
-
-#define foreach BOOST_FOREACH
-namespace fs = boost::filesystem;
 
 extern bool stopThreads;
 
@@ -58,7 +49,7 @@ private:
             {
                 try
                     {
-                        db::DBSingleton::instance().getDBObjectInstance()->isTrAllowed("", "");
+                        db::DBSingleton::instance().getDBObjectInstance()->updateOptimizer();
                         sleep(60);
                     }
                 catch(std::exception& e)

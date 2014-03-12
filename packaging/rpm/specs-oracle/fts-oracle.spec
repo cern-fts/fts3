@@ -1,6 +1,6 @@
 Name: fts-oracle
-Version: 3.1.80
-Release: 1%{?dist}
+Version: 3.2.0
+Release: 2%{?dist}
 Summary: File Transfer Service V3 oracle plug-in
 Group: Applications/Internet
 License: ASL 2.0
@@ -11,12 +11,19 @@ URL: https://svnweb.cern.ch/trac/fts3/wiki
 #  tar -czvf fts-oracle-0.0.1-60.tar.gz fts-oracle-00160
 Source0: %{name}-%{version}.tar.gz
 
+%if %{?fedora}%{!?fedora:0} >= 18 || %{?rhel}%{!?rhel:0} >= 7
 BuildRequires:  cmake
+%else
+BuildRequires:  cmake28
+%endif
 BuildRequires:  boost-devel%{?_isa}
 BuildRequires:  glib2-devel%{?_isa}
 BuildRequires:  oracle-instantclient-devel%{?_isa}
 BuildRequires:  libuuid-devel%{?_isa}
 Requires(pre):  shadow-utils
+BuildRequires:  soci-oracle-devel
+
+Requires:  soci-oracle%{?_isa}
 
 AutoReq: no
 AutoProv: yes
@@ -40,7 +47,11 @@ fi
 # Build
 mkdir build
 cd build
+%if %{?fedora}%{!?fedora:0} >= 18 || %{?rhel}%{!?rhel:0} >= 7
 %cmake -DORACLEBUILD=ON -D CMAKE_BUILD_TYPE=RelWithDebInfo -D CMAKE_INSTALL_PREFIX='' ..
+%else
+%cmake28 -DORACLEBUILD=ON -D CMAKE_BUILD_TYPE=RelWithDebInfo -D CMAKE_INSTALL_PREFIX='' ..
+%endif
 make %{?_smp_mflags}
 
 %install
