@@ -331,6 +331,8 @@ exit 0
 %{_bindir}/fts-transfer-status
 %{_bindir}/fts-transfer-submit
 %{_bindir}/fts-transfer-cancel
+%{_bindir}/fts-transfer-snapshot
+
 %{_mandir}/man1/fts*
 
 %files libs
