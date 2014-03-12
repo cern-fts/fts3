@@ -40,6 +40,7 @@ limitations under the License. */
 #include <boost/algorithm/string.hpp>
 #include "ws/SingleTrStateInstance.h"
 #include <boost/filesystem.hpp>
+#include "DrainMode.h"
 
 extern bool stopThreads;
 extern time_t stallRecords;
@@ -136,6 +137,13 @@ protected:
                             }
 
                         ThreadSafeList::get_instance().checkExpiredMsg(messages);
+			
+                        //if we drain a host, no need to check if url_copy are reporting being alive
+                        if (DrainMode::getInstance())
+                        {
+                        	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking url_copy for this instance!" << commit;
+				messages.clear();                       	       
+                        }			
 
                         if (!messages.empty())
                             {
