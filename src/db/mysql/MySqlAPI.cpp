@@ -7808,7 +7808,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
             soci::statement st7((sql.prepare << "  select avg(TIMESTAMPDIFF(SECOND, t_job.submit_time, t_file.start_time))  from t_file, t_job "
                                  "  where t_job.job_id=t_file.job_id  "
                                  " AND t_file.source_se=:source_se and t_file.dest_se=:dest_se and t_job.vo_name =:vo_name_local "
-                                 " AND t_job.job_finished is NULL and t_file.job_finished is NULL order by start_time DESC LIMIT 5 ",
+                                 " AND t_job.job_finished is NULL and t_file.job_finished is NULL and start_time is not NULL order by start_time DESC LIMIT 5 ",
                                  soci::use(source_se),
                                  soci::use(dest_se),
                                  soci::use(vo_name_local),

@@ -7528,7 +7528,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                                  " FROM t_file, t_job "
                                  " WHERE t_job.job_id=t_file.job_id  "
                                  " AND t_file.source_se=:source_se and t_file.dest_se=:dest_se and t_job.vo_name =:vo_name_local "
-                                 " AND t_job.job_finished is NULL and t_file.job_finished is NULL order by start_time DESC ",
+                                 " AND t_job.job_finished is NULL and t_file.job_finished is NULL and start_time is not NULL order by start_time DESC ",
                                  soci::use(source_se),
                                  soci::use(dest_se),
                                  soci::use(vo_name_local),
