@@ -64,6 +64,9 @@ int FileTransferExecutor::execute()
 {
     int scheduled = 0;
 
+    if (!tf)
+        return 0;
+
     try
         {
             string source_hostname = tf->SOURCE_SE;

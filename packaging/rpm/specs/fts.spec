@@ -3,7 +3,7 @@
 %global __provides_exclude_from ^%{python_sitearch}/fts/.*\\.so$
 
 Name: fts
-Version: 3.2.1
+Version: 3.2.2
 Release: 5%{?dist}
 Summary: File Transfer Service V3
 Group: System Environment/Daemons
@@ -12,7 +12,7 @@ URL: https://svnweb.cern.ch/trac/fts3/wiki
 # The source for this package was pulled from upstream's vcs.  Use the
 # following commands to generate the tarball:
 #  svn export https://svn.cern.ch/reps/fts3/trunk fts3
-#  tar -czvf fts-3.2.1-2.tar.gz fts3
+#  tar -czvf fts-3.2.2-2.tar.gz fts3
 Source0: https://grid-deployment.web.cern.ch/grid-deployment/dms/fts3/tar/%{name}-%{version}.tar.gz
 
 %if 0%{?el5}
@@ -379,11 +379,11 @@ exit 0
 
 
 %changelog
-* Tue Feb 04 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.1-4
+* Tue Feb 04 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.2-4
   - introduced dist back in the release
-* Tue Jan 14 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.1-3
+* Tue Jan 14 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.2-3
   - using cmake28
-* Mon Jan 13 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.1-2
+* Mon Jan 13.2.24 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.2-2
   - separated rpms for messaging and infosys subsystems
 * Mon Nov 18 2013 Alejandro Alvarez Ayllon <aalvarez@cern.ch> - 3.1.33-2
   - Added missing changelog entry
@@ -392,7 +392,7 @@ exit 0
   - Update for new upstream release
 * Wed Aug 07 2013 Michal Simon <michal.simon@cern.ch> - 3.1.1-2
   - no longer linking explicitly to boost libraries with '-mt' sufix 
-* Sat Aug 03 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 3.1.0-3
+* Sat Aug 03.2.23 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 3.1.0-3
   - Rebuilt for https://fedoraproject.org/wiki/Fedora_20_Mass_Rebuild
 * Sat Jul 27 2013 Petr Machata <pmachata@redhat.com> - 3.1.0-2
   - rebuild for boost 1.54.0
