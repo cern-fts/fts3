@@ -4,7 +4,7 @@
 
 Name: fts
 Version: 3.2.0
-Release: 4%{?dist}
+Release: 5%{?dist}
 Summary: File Transfer Service V3
 Group: System Environment/Daemons
 License: ASL 2.0
@@ -331,6 +331,9 @@ exit 0
 %{_bindir}/fts-transfer-status
 %{_bindir}/fts-transfer-submit
 %{_bindir}/fts-transfer-cancel
+%{_bindir}/fts-transfer-snapshot
+%{_bindir}/fts-delegation-init
+
 %{_mandir}/man1/fts*
 
 %files libs

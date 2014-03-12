@@ -1997,13 +1997,14 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
 
             std::string currentState("");
             std::string reuseFlag;
+	    soci::indicator isNull = soci::i_ok;
 
             soci::statement stmt1 = (
                                         sql.prepare << " SELECT job_state, reuse_job from t_job  "
                                         " WHERE job_id = :job_id ",
                                         soci::use(job_id),
                                         soci::into(currentState),
-                                        soci::into(reuseFlag));
+                                        soci::into(reuseFlag, isNull));
             stmt1.execute(true);
 
             if(currentState == status)

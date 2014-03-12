@@ -1822,6 +1822,7 @@ bool OracleAPI::updateJobTransferStatusInternal(soci::session& sql, std::string 
 
             int numberOfFilesNotCanceled = 0;
             int numberOfFilesNotCanceledNorFailed = 0;
+	    soci::indicator isNull = soci::i_ok;
 
             std::string currentState("");
             std::string reuseFlag;
@@ -1832,7 +1833,7 @@ bool OracleAPI::updateJobTransferStatusInternal(soci::session& sql, std::string 
                 " WHERE job_id = :job_id ",
                 soci::use(job_id),
                 soci::into(currentState),
-                soci::into(reuseFlag)
+                soci::into(reuseFlag, isNull)
                 ;
 
             if(currentState == status)
