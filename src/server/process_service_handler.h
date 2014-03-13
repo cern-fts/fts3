@@ -251,16 +251,21 @@ protected:
                                                 return;
                                             }
 
-                                        FileTransferExecutor* exec = new FileTransferExecutor(
-                                            tfh.get(*it_vo),
-                                            tfh,
-                                            enableOptimization.compare("true") == 0,
-                                            monitoringMessages,
-                                            infosys,
-                                            ftsHostName
-                                        );
+                                        TransferFiles* tf = tfh.get(*it_vo);
 
-                                        execPool.add(exec);
+                                        if (tf)
+											{
+												FileTransferExecutor* exec = new FileTransferExecutor(
+													tfh.get(*it_vo),
+													tfh,
+													enableOptimization.compare("true") == 0,
+													monitoringMessages,
+													infosys,
+													ftsHostName
+												);
+
+												execPool.add(exec);
+											}
                                     }
                             }
 
