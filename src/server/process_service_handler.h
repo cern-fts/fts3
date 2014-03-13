@@ -256,7 +256,7 @@ protected:
                                         if (tf)
 											{
 												FileTransferExecutor* exec = new FileTransferExecutor(
-													tfh.get(*it_vo),
+													tf,
 													tfh,
 													enableOptimization.compare("true") == 0,
 													monitoringMessages,
