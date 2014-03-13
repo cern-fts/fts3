@@ -547,7 +547,15 @@ void OracleAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& f
                                 {
                                     filesNum = (maxActive - limit);
                                     if(filesNum <=0 )
-                                        continue;
+                                        {
+                                            continue;
+                                        }
+                                    else
+                                        {
+                                            filesNum /= int(hostCount);
+                                            if(filesNum < 1)
+                                                filesNum = 1;
+                                        }
                                 }
                         }
                     else
@@ -664,7 +672,8 @@ void OracleAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& f
                     std::list<TransferFiles*>& l = i->second;
                     for (std::list<TransferFiles*>::iterator it = l.begin(); it != l.end(); ++it)
                         {
-                            delete *it;
+			    if(*it)
+                            	delete *it;
                         }
                     l.clear();
                 }
@@ -1822,7 +1831,7 @@ bool OracleAPI::updateJobTransferStatusInternal(soci::session& sql, std::string 
 
             int numberOfFilesNotCanceled = 0;
             int numberOfFilesNotCanceledNorFailed = 0;
-	    soci::indicator isNull = soci::i_ok;
+            soci::indicator isNull = soci::i_ok;
 
             std::string currentState("");
             std::string reuseFlag;
@@ -7746,24 +7755,24 @@ void OracleAPI::setDrain(bool drain)
 
 // the class factories
 
-    extern "C" GenericDbIfce* create()
-    {
-        return new OracleAPI;
-    }
+extern "C" GenericDbIfce* create()
+{
+    return new OracleAPI;
+}
 
-    extern "C" void destroy(GenericDbIfce* p)
-    {
-        if (p)
-            delete p;
-    }
+extern "C" void destroy(GenericDbIfce* p)
+{
+    if (p)
+        delete p;
+}
 
-    extern "C" MonitoringDbIfce* create_monitoring()
-    {
-        return new OracleMonitoring;
-    }
+extern "C" MonitoringDbIfce* create_monitoring()
+{
+    return new OracleMonitoring;
+}
 
-    extern "C" void destroy_monitoring(MonitoringDbIfce* p)
-    {
-        if (p)
-            delete p;
-    }
+extern "C" void destroy_monitoring(MonitoringDbIfce* p)
+{
+    if (p)
+        delete p;
+}

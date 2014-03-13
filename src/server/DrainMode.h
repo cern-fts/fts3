@@ -60,8 +60,8 @@ public:
      * @return reference to this
      */
     DrainMode& operator= (const bool drain)
-    {        
-	DBSingleton::instance().getDBObjectInstance()->setDrain(drain);
+    {
+        DBSingleton::instance().getDBObjectInstance()->setDrain(drain);
         return *this;
     }
 

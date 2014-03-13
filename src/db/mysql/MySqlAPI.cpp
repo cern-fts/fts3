@@ -637,7 +637,15 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                 {
                                     filesNum = (maxActive - limit);
                                     if(filesNum <=0 )
-                                        continue;
+                                        {
+                                            continue;
+                                        }
+                                    else
+                                        {
+                                            filesNum /= int(hostCount);
+                                            if(filesNum < 1)
+                                                filesNum = 1;
+                                        }
                                 }
                         }
                     else
@@ -1997,7 +2005,7 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
 
             std::string currentState("");
             std::string reuseFlag;
-	    soci::indicator isNull = soci::i_ok;
+            soci::indicator isNull = soci::i_ok;
 
             soci::statement stmt1 = (
                                         sql.prepare << " SELECT job_state, reuse_job from t_job  "
@@ -8019,24 +8027,24 @@ void MySqlAPI::setDrain(bool drain)
 
 // the class factories
 
-    extern "C" GenericDbIfce* create()
-    {
-        return new MySqlAPI;
-    }
+extern "C" GenericDbIfce* create()
+{
+    return new MySqlAPI;
+}
 
-    extern "C" void destroy(GenericDbIfce* p)
-    {
-        if (p)
-            delete p;
-    }
+extern "C" void destroy(GenericDbIfce* p)
+{
+    if (p)
+        delete p;
+}
 
-    extern "C" MonitoringDbIfce* create_monitoring()
-    {
-        return new MySqlMonitoring;
-    }
+extern "C" MonitoringDbIfce* create_monitoring()
+{
+    return new MySqlMonitoring;
+}
 
-    extern "C" void destroy_monitoring(MonitoringDbIfce* p)
-    {
-        if (p)
-            delete p;
-    }
+extern "C" void destroy_monitoring(MonitoringDbIfce* p)
+{
+    if (p)
+        delete p;
+}

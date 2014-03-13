@@ -177,14 +177,14 @@ public:
         catch (std::exception& e)
             {
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception " << e.what() << commit;
-		struct message msgTemp = msg; 
-                runProducerStatus( msgTemp); 
+                struct message msgTemp = msg;
+                runProducerStatus( msgTemp);
             }
         catch (...)
             {
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception" << commit;
-		struct message msgTemp = msg; 
-                runProducerStatus( msgTemp);		
+                struct message msgTemp = msg;
+                runProducerStatus( msgTemp);
             }
         return updated;
     }
@@ -324,18 +324,18 @@ protected:
                             {
                                 break;
                             }
-			    
-			//if conn to the db is lost, do not retrieve state, save it for later
-			//use one fast query
-			try    
-			    {
-				DBSingleton::instance().getDBObjectInstance()->getDrain();
-			    }   
-			catch(...)
-			    {
-			    	sleep(1);
-				continue;			    
-			    }  
+
+                        //if conn to the db is lost, do not retrieve state, save it for later
+                        //use one fast query
+                        try
+                            {
+                                DBSingleton::instance().getDBObjectInstance()->getDrain();
+                            }
+                        catch(...)
+                            {
+                                sleep(1);
+                                continue;
+                            }
 
                         if(!fs::is_empty(fs::path(STATUS_DIR)))
                             {
