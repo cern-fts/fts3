@@ -3386,20 +3386,6 @@ void OracleAPI::revertToSubmitted()
 
 void OracleAPI::backup(long* nJobs, long* nFiles)
 {
-    try
-        {
-            unsigned index=0, count=0, start=0, end=0;
-            updateHeartBeat(&index, &count, &start, &end);
-        }
-    catch (std::exception& e)
-        {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-    catch (...)
-        {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }
-
     soci::session sql(*connectionPool);
 
     *nJobs = 0;
@@ -7334,7 +7320,7 @@ void OracleAPI::resetSanityRuns(soci::session& sql, struct message_sanity &msg)
 
 
 
-void OracleAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end)
+void OracleAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end, std::string service_name)
 {
     soci::session sql(*connectionPool);
 
@@ -7344,21 +7330,23 @@ void OracleAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* star
 
             // Update beat
             sql << "MERGE INTO t_hosts USING "
-                " (SELECT :hostname AS hostname FROM dual) Hostname ON (t_hosts.hostname = Hostname.hostname) "
+                " (SELECT :hostname AS hostname, :service_name AS service_name FROM dual) Hostname ON "
+		" (t_hosts.hostname = Hostname.hostname AND t_hosts.service_name = Hostname.service_name ) "
                 " WHEN     MATCHED THEN UPDATE SET t_hosts.beat = sys_extract_utc(systimestamp)"
-                " WHEN NOT MATCHED THEN INSERT (hostname, beat) VALUES (Hostname.hostname, sys_extract_utc(systimestamp))",
-                soci::use(hostname);
+                " WHEN NOT MATCHED THEN INSERT (hostname, beat, service_name) VALUES (Hostname.hostname, sys_extract_utc(systimestamp), Hostname.service_name)",
+                soci::use(hostname),soci::use(service_name);
 
             // Total number of working instances
             sql << "SELECT COUNT(hostname) FROM t_hosts "
-                "  WHERE beat >= (sys_extract_utc(systimestamp) - interval '2' minute)",
+                "  WHERE beat >= (sys_extract_utc(systimestamp) - interval '2' minute) and service_name = :service_name",
+		soci::use(service_name),
                 soci::into(*count);
 
             // This instance index
             soci::rowset<std::string> rsHosts = (sql.prepare <<
                                                  "SELECT hostname FROM t_hosts "
-                                                 "WHERE beat >= (sys_extract_utc(systimestamp) - interval '2' minute)"
-                                                 "ORDER BY hostname");
+                                                 "WHERE beat >= (sys_extract_utc(systimestamp) - interval '2' minute)  and service_name = :service_name "
+                                                 "ORDER BY hostname ", soci::use(service_name) );
 
             soci::rowset<std::string>::const_iterator i;
             for (*index = 0, i = rsHosts.begin(); i != rsHosts.end(); ++i, ++(*index))

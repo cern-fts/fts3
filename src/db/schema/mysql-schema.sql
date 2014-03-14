@@ -663,9 +663,11 @@ CREATE TABLE t_stage_req (
 -- Host hearbeats
 --
 CREATE TABLE t_hosts (
-    hostname    VARCHAR(64) PRIMARY KEY NOT NULL,
+    hostname    VARCHAR(64) NOT NULL,
+    service_name    VARCHAR(64) NOT NULL,
     beat        TIMESTAMP NULL DEFAULT NULL,
-    drain 	INTEGER DEFAULT 0
+    drain 	INTEGER DEFAULT 0,
+    CONSTRAINT t_hosts_pk PRIMARY KEY (hostname, service_name)
 );
 
 

@@ -800,9 +800,9 @@ void ProfiledDB::getTransferRetries(int fileId, std::vector<FileRetry*>& retries
     PROFILE_PREFIXED("DB::", db->getTransferRetries(fileId, retries));
 }
 
-void ProfiledDB::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end)
+void ProfiledDB::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end, std::string service_name)
 {
-    PROFILE_PREFIXED("DB::", db->updateHeartBeat(index, count, start, end));
+    PROFILE_PREFIXED("DB::", db->updateHeartBeat(index, count, start, end, service_name));
 }
 
 unsigned int ProfiledDB::updateFileStatusReuse(TransferFiles* file, const std::string status)

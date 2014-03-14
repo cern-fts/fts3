@@ -294,7 +294,7 @@ public:
 
     void getTransferRetries(int fileId, std::vector<FileRetry*>& retries);
 
-    void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end);
+    void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end, std::string service_name);
 
     unsigned int updateFileStatusReuse(TransferFiles* file, const std::string status);
 

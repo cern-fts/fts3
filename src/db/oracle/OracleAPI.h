@@ -321,7 +321,7 @@ public:
 
     void resetSanityRuns(soci::session& sql, struct message_sanity &msg);
 
-    void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end);
+    void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end, std::string service_name);
 
     std::map<std::string, double> getActivityShareConf(soci::session& sql, std::string vo);
 

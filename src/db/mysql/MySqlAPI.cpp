@@ -3703,21 +3703,7 @@ void MySqlAPI::revertToSubmitted()
 
 
 void MySqlAPI::backup(long* nJobs, long* nFiles)
-{
-    try
-        {
-            unsigned index=0, count=0, start=0, end=0;
-            updateHeartBeat(&index, &count, &start, &end);
-        }
-    catch (std::exception& e)
-        {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-    catch (...)
-        {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }
-
+{   
     soci::session sql(*connectionPool);
 
     *nJobs = 0;
@@ -3725,7 +3711,6 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
 
     try
         {
-
             //prevent more than on server to update the optimizer decisions
             if(hashSegment.start == 0)
                 {
@@ -7694,7 +7679,7 @@ void MySqlAPI::resetSanityRuns(soci::session& sql, struct message_sanity &msg)
 
 
 
-void MySqlAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end)
+void MySqlAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end, std::string service_name)
 {
     soci::session sql(*connectionPool);
 
@@ -7704,15 +7689,16 @@ void MySqlAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start
 
             // Update beat
             soci::statement stmt1 = (
-                                        sql.prepare << "INSERT INTO t_hosts (hostname, beat) VALUES (:host, UTC_TIMESTAMP()) "
+                                        sql.prepare << "INSERT INTO t_hosts (hostname, beat, service_name) VALUES (:host, UTC_TIMESTAMP(), :service_name) "
                                         "  ON DUPLICATE KEY UPDATE beat = UTC_TIMESTAMP()",
-                                        soci::use(hostname));
+                                        soci::use(hostname), soci::use(service_name));
             stmt1.execute(true);
 
             // Total number of working instances
             soci::statement stmt2 = (
                                         sql.prepare << "SELECT COUNT(hostname) FROM t_hosts "
-                                        "  WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval 2 minute)",
+                                        "  WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval 2 minute) and service_name = :service_name",
+					soci::use(service_name),
                                         soci::into(*count));
             stmt2.execute(true);
 
@@ -7720,8 +7706,10 @@ void MySqlAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start
             // Mind that MySQL does not have rownum
             soci::rowset<std::string> rsHosts = (sql.prepare <<
                                                  "SELECT hostname FROM t_hosts "
-                                                 "WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval 2 minute)"
-                                                 "ORDER BY hostname");
+                                                 "WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval 2 minute) and service_name = :service_name "
+                                                 "ORDER BY hostname", 
+						 soci::use(service_name)
+						 );
 
             soci::rowset<std::string>::const_iterator i;
             for (*index = 0, i = rsHosts.begin(); i != rsHosts.end(); ++i, ++(*index))

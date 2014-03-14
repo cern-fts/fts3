@@ -365,12 +365,13 @@ public:
      * so it is not mandatory.
      * start and end are set to the interval of hash values this host will process
      */
-    virtual void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end)
+    virtual void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end, std::string service_name)
     {
         *index = 0;
         *count = 1;
         *start = 0x0000;
         *end   = 0xFFFF;
+	service_name = std::string("");
     }
 
     virtual unsigned int updateFileStatusReuse(TransferFiles* file, const std::string status) = 0;

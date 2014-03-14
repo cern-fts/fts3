@@ -98,9 +98,10 @@ private:
                 else
                     {
                         unsigned index=0, count=0, start=0, end=0;
+			std::string serviceName = "fts_server";
                         try
                             {
-                                db::DBSingleton::instance().getDBObjectInstance()->updateHeartBeat(&index, &count, &start, &end);
+                                db::DBSingleton::instance().getDBObjectInstance()->updateHeartBeat(&index, &count, &start, &end, serviceName);
                                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Systole: host " << index << " out of " << count
                                                                 << " [" << start << ':' << end << ']'
                                                                 << commit;
