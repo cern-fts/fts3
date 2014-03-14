@@ -830,3 +830,14 @@ void ProfiledDB::setDrain(bool drain)
     PROFILE_PREFIXED("DB::", db->setDrain(drain));
 }
 
+void ProfiledDB::setBandwidthLimit(const std::string & source_hostname, const std::string & destination_hostname, int bandwidthLimit)
+{
+    PROFILE_PREFIXED("DB::", db->setBandwidthLimit(source_hostname, destination_hostname, bandwidthLimit));
+}
+
+
+std::string ProfiledDB::getBandwidthLimit()
+{
+    PROFILE_PREFIXED("DB::", return db->getBandwidthLimit());
+}
+

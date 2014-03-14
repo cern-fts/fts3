@@ -305,6 +305,10 @@ public:
     bool getDrain();
 
     void setDrain(bool drain);
+
+    void setBandwidthLimit(const std::string & source_hostname, const std::string & destination_hostname, int bandwidthLimit);
+
+    std::string getBandwidthLimit();
 };
 
 

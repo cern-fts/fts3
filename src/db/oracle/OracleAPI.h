@@ -345,10 +345,18 @@ public:
 
     virtual void setDrain(bool drain);
 
+    virtual void setBandwidthLimit(const std::string & source_hostname, const std::string & destination_hostname, int bandwidthLimit);
+
+    virtual std::string getBandwidthLimit();
+
 private:
     size_t                poolSize;
     soci::connection_pool* connectionPool;
     std::string           hostname;
+
+    std::string getBandwidthLimitInternal(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname);
+
+    bool bandwidthChecker(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname, int& bandwidth);
 
     int getOptimizerMode(soci::session& sql);
 
@@ -377,6 +385,6 @@ private:
 
     void useFileReplica(soci::session& sql, std::string jobId, int fileId);
 
-    void updateOptimizerEvolution(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname, int active, double throughput, double successRate, int buffer);
+    void updateOptimizerEvolution(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname, int active, double throughput, double successRate, int buffer, int bandwidth);
 
 };

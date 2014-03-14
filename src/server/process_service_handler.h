@@ -254,18 +254,18 @@ protected:
                                         TransferFiles* tf = tfh.get(*it_vo);
 
                                         if (tf)
-											{
-												FileTransferExecutor* exec = new FileTransferExecutor(
-													tf,
-													tfh,
-													enableOptimization.compare("true") == 0,
-													monitoringMessages,
-													infosys,
-													ftsHostName
-												);
+                                            {
+                                                FileTransferExecutor* exec = new FileTransferExecutor(
+                                                    tf,
+                                                    tfh,
+                                                    enableOptimization.compare("true") == 0,
+                                                    monitoringMessages,
+                                                    infosys,
+                                                    ftsHostName
+                                                );
 
-												execPool.add(exec);
-											}
+                                                execPool.add(exec);
+                                            }
                                     }
                             }
 

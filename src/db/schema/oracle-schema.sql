@@ -209,7 +209,7 @@ CREATE TABLE t_se (
   ,se_transfer_type VARCHAR2(30)
   ,se_transfer_protocol VARCHAR2(30)
   ,se_control_protocol VARCHAR2(30)
-  ,gocdb_id VARCHAR2(100)
+  ,bandwidth             INTEGER,
   ,CONSTRAINT se_info_pk PRIMARY KEY (name)
 );
 
@@ -715,7 +715,7 @@ CREATE TABLE t_hosts (
 CREATE TABLE t_optimize_active (
   source_se    VARCHAR2(255) NOT NULL,
   dest_se      VARCHAR2(255) NOT NULL,
-  active       INTEGER DEFAULT 5,
+  active       INTEGER DEFAULT 2,
   message      VARCHAR2(512),
   datetime  TIMESTAMP WITH TIME ZONE,
   CONSTRAINT t_optimize_active_pk PRIMARY KEY (source_se, dest_se)

@@ -640,12 +640,6 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                         {
                                             continue;
                                         }
-                                    else
-                                        {
-                                            filesNum /= int(hostCount);
-                                            if(filesNum < 1)
-                                                filesNum = 1;
-                                        }
                                 }
                         }
                     else
@@ -2862,6 +2856,87 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
     return allowed;
 }
 
+bool MySqlAPI::bandwidthChecker(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname, int& bandwidthIn)
+{
+    long long int bandwidthSrc = 0;
+    long long int bandwidthDst = 0;
+    double througputSrc = 0.0;
+    double througputDst = 0.0;
+
+    soci::indicator isNullBandwidthSrc = soci::i_ok;
+    soci::indicator isNullBandwidthDst = soci::i_ok;
+    soci::indicator isNullThrougputSrc = soci::i_ok;
+    soci::indicator isNullThrougputDst = soci::i_ok;
+
+    //get limit for source
+    sql << "select throughput from t_optimize where source_se= :name ",
+        soci::use(source_hostname), soci::into(bandwidthSrc, isNullBandwidthSrc);
+
+    //get limit for dest
+    sql << "select throughput from t_optimize where dest_se= :name ",
+        soci::use(destination_hostname), soci::into(bandwidthDst, isNullBandwidthDst);
+
+    if(isNullBandwidthSrc == soci::i_null || bandwidthSrc == -1)
+        bandwidthSrc = -1;
+
+    if(isNullBandwidthDst == soci::i_null || bandwidthDst == -1)
+        bandwidthDst = -1;
+
+    //no limits are applied either for source or dest, stop here before executing more expensive queries
+    if(bandwidthDst == -1 && bandwidthSrc == -1)
+        {
+            return true;
+        }
+
+    //get aggregated thr from source
+    sql << "select sum(throughput) from t_file where source_se= :name and file_state='ACTIVE' ",
+        soci::use(source_hostname), soci::into(througputSrc, isNullThrougputSrc);
+
+    //get aggregated thr towards dest
+    sql << "select sum(throughput) from t_file where dest_se= :name and file_state='ACTIVE' ",
+        soci::use(destination_hostname), soci::into(througputDst, isNullThrougputDst);
+
+    if(bandwidthSrc > 0 )
+        {
+            if(bandwidthDst > 0) //both source and dest have limits, take the lowest
+                {
+                    //get the lowest limit to be respected
+                    double lowest = (bandwidthSrc < bandwidthDst) ? bandwidthSrc : bandwidthDst;
+
+                    if (througputSrc > lowest || througputDst > lowest)
+                        {
+                            bandwidthIn = lowest;
+                            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Bandwidth limitation of " << lowest  << " Mbps is set for " << source_hostname << " or " <<  destination_hostname << commit;
+                            return false;
+                        }
+                }
+            //only source limit is set
+            if (througputSrc > bandwidthSrc)
+                {
+                    bandwidthIn = bandwidthSrc;
+                    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Bandwidth limitation of " << bandwidthSrc  << " Mbps is set for " << source_hostname << commit;
+                    return false;
+                }
+
+        }
+    else if(bandwidthDst > 0)  //only destination has limit
+        {
+            if(througputDst > bandwidthDst)
+                {
+                    bandwidthIn = bandwidthDst;
+                    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Bandwidth limitation of " << bandwidthDst  << " Mbps is set for " << destination_hostname << commit;
+                    return false;
+                }
+        }
+    else
+        {
+
+            return true;
+        }
+
+    return true;
+}
+
 
 
 bool MySqlAPI::updateOptimizer()
@@ -3025,6 +3100,9 @@ bool MySqlAPI::updateOptimizer()
                     // Active transfers
                     stmt7.execute(true);
 
+                    //get aggregated throughut
+                    throughput *= active;
+
                     // Max active transfers
                     stmt8.execute(true);
 
@@ -3043,6 +3121,19 @@ bool MySqlAPI::updateOptimizer()
                     bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, rateStored, throughput, thrStored, retry, retryStored, active, activeStored, throughputSamples, thrSamplesStored);
                     if(!changed && retry > 0)
                         changed = true;
+
+                    //check if bandwidth limitation exists, if exists and throughput exceeds the limit then do not proccess with auto-tuning
+                    int bandwidthIn = 0;
+                    bool bandwidth = bandwidthChecker(sql, source_hostname, destin_hostname, bandwidthIn);
+
+                    //make sure bandwidth is respected as also active should be no less than the minimum for each link
+                    if(!bandwidth && active >= highDefault)
+                        {
+                            sql.begin();
+                            updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, 10, bandwidthIn);
+                            sql.commit();
+                            continue;
+                        }
 
                     //ratioSuccessFailure, rateStored, throughput, thrStored MUST never be zero
                     if(changed)
@@ -3114,7 +3205,7 @@ bool MySqlAPI::updateOptimizer()
                                     stmt10.execute(true);
                                 }
 
-                            updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, pathFollowed);
+                            updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, pathFollowed, bandwidthIn);
 
                             sql.commit();
                         }
@@ -3676,14 +3767,9 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                     sql.commit();
 
 
-                    //delete from t_optimizer_evolution > 3 days old records
+                    //delete from t_optimizer_evolution > 5 days old records
                     sql.begin();
-                    sql << "delete from t_optimizer_evolution where datetime < (UTC_TIMESTAMP() - interval '3' DAY )";
-                    sql.commit();
-
-                    //delete from t_optimizer_evolution > 3 days old records
-                    sql.begin();
-                    sql << "delete from t_optimize where datetime < (UTC_TIMESTAMP() - interval '1' DAY )";
+                    sql << "delete from t_optimizer_evolution where datetime < (UTC_TIMESTAMP() - interval '5' DAY )";
                     sql.commit();
 
                     //delete from t_file_retry_errors > 3 days old records
@@ -7248,7 +7334,7 @@ int MySqlAPI::getOptimizerDefaultMode(soci::session& sql)
 
 int MySqlAPI::getOptimizerMode(soci::session& sql)
 {
-    int modeDefault = 4;
+    int modeDefault = 2;
     int mode = 0;
     soci::indicator ind = soci::i_ok;
 
@@ -7676,22 +7762,20 @@ void MySqlAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start
         }
 }
 
-void MySqlAPI::updateOptimizerEvolution(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname, int active, double throughput, double successRate, int buffer)
+
+void MySqlAPI::updateOptimizerEvolution(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname, int active, double throughput, double successRate, int buffer, int bandwidth)
 {
     try
         {
-            sql << " INSERT INTO t_optimizer_evolution (datetime, source_se, dest_se, active, throughput, filesize, buffer) "
-                " SELECT UTC_TIMESTAMP(), :source, :dest, :active, :throughput, :filesize, :buffer FROM dual "
-                " WHERE not exists (SELECT * FROM t_optimizer_evolution "
-                " WHERE source_se=:source and dest_se=:dest and datetime >= (UTC_TIMESTAMP() - INTERVAL '50' second) )",
+            sql << " INSERT INTO t_optimizer_evolution (datetime, source_se, dest_se, active, throughput, filesize, buffer, nostreams) "
+                " values(UTC_TIMESTAMP(), :source, :dest, :active, :throughput, :filesize, :buffer, :nostreams) ",
                 soci::use(source_hostname),
                 soci::use(destination_hostname),
                 soci::use(active),
                 soci::use(throughput),
                 soci::use(successRate),
                 soci::use(buffer),
-                soci::use(source_hostname),
-                soci::use(destination_hostname);
+                soci::use(bandwidth);
         }
     catch (std::exception& e)
         {
@@ -7784,9 +7868,8 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                                  soci::into(submitted)
                                 ));
 
-            soci::statement st4((sql.prepare << "select throughput from t_optimizer_evolution where  "
-                                 " source_se=:source_se and dest_se=:dest_se"
-                                 " order by datetime DESC limit 1",
+            soci::statement st4((sql.prepare << "select sum(throughput) from t_file where  "
+                                 " source_se=:source_se and dest_se=:dest_se and file_state='ACTIVE' ",
                                  soci::use(source_se),
                                  soci::use(dest_se),
                                  soci::into(throughput, isNull2)
@@ -7888,8 +7971,8 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                             //weighted-average throughput last sample
                             st4.execute(true);
                             result <<   "Avg throughout: ";
-                            result <<  std::setprecision(2) << throughput * active;
-                            result <<   " MB/s\n";
+                            result <<  std::setprecision(2) << throughput;
+                            result <<   " Mbps\n";
 
                             //success rate the last 15 min
                             soci::rowset<soci::row> rs = (sql.prepare << "SELECT file_state FROM t_file "
@@ -7950,6 +8033,10 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                             result <<   countReason;
                             result <<   " times: ";
                             result <<   reason;
+                            result <<   "\n";
+
+                            //get bandwidth restrictions (if any)
+                            result << getBandwidthLimitInternal(sql, source_se, dest_se);
 
                             result << "\n\n";
                         }
@@ -8022,7 +8109,183 @@ void MySqlAPI::setDrain(bool drain)
         }
 }
 
+std::string MySqlAPI::getBandwidthLimit()
+{
+    soci::session sql(*connectionPool);
 
+    std::string result;
+
+    try
+        {
+            std::string source_hostname;
+            std::string destination_hostname;
+            result = getBandwidthLimitInternal(sql, source_hostname, destination_hostname);
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }
+
+    return result;
+}
+
+std::string MySqlAPI::getBandwidthLimitInternal(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname)
+{
+
+    std::ostringstream result;
+
+    try
+        {
+            if(!source_hostname.empty())
+                {
+                    double bandwidth = 0;
+                    soci::indicator isNullBandwidth = soci::i_ok;
+                    sql << " select throughput from t_optimize where source_se = :source_se and throughput is not NULL ",
+                        soci::use(source_hostname), soci::into(bandwidth, isNullBandwidth);
+
+                    if(isNullBandwidth != soci::i_null && bandwidth > 0)
+                        result << "Source endpoint: " << source_hostname << "   Bandwidth restriction: " << bandwidth << " Mbps\n";
+                }
+            else if (!destination_hostname.empty())
+                {
+                    double bandwidth = 0;
+                    soci::indicator isNullBandwidth = soci::i_ok;
+                    sql << " select throughput from t_optimize where dest_se = :dest_se  and throughput is not NULL ",
+                        soci::use(destination_hostname), soci::into(bandwidth, isNullBandwidth);
+
+                    if(isNullBandwidth != soci::i_null && bandwidth > 0)
+                        result << "Destination endpoint: " << destination_hostname << "   Bandwidth restriction: " << bandwidth << " Mbps\n";
+                }
+            else
+                {
+                    soci::rowset<soci::row> rs = (
+                                                     sql.prepare <<
+                                                     " SELECT source_se, dest_se, throughput from t_optimize "
+                                                     " WHERE  "
+                                                     " throughput is not NULL "
+                                                 );
+
+                    soci::rowset<soci::row>::const_iterator it;
+                    for (it = rs.begin(); it != rs.end(); ++it)
+                        {
+                            std::string source_se = it->get<std::string>("source_se","");
+                            std::string dest_se = it->get<std::string>("dest_se","");
+                            double bandwidth = it->get<double>("throughput");
+
+                            if(!source_se.length() != 0 && bandwidth > 0)
+                                {
+                                    result << "Source endpoint: " << source_se << "   Bandwidth restriction: " << bandwidth << " Mbps\n";
+                                }
+                            if(!dest_se.length() != 0 && bandwidth > 0)
+                                {
+                                    result << "Destination endpoint: " << dest_se   << "   Bandwidth restriction: " << bandwidth << " Mbps\n";
+                                }
+                        }
+                }
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }
+
+    return result.str();
+}
+
+void MySqlAPI::setBandwidthLimit(const std::string & source_hostname, const std::string & destination_hostname, int bandwidthLimit)
+{
+
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            long long int bandwidthSrc = 0;
+            long long int bandwidthDst = 0;
+
+            soci::indicator isNullBandwidthSrc = soci::i_ok;
+            soci::indicator isNullBandwidthDst = soci::i_ok;
+
+            if(!source_hostname.empty())
+                {
+                    sql << "select throughput from t_optimize where source_se=:source_se ",
+                        soci::use(source_hostname), soci::into(bandwidthSrc, isNullBandwidthSrc);
+
+                    if(isNullBandwidthSrc == soci::i_null && bandwidthLimit > 0)
+                        {
+                            sql.begin();
+                            sql << " insert into t_optimize(throughput, source_se) values(:throughput, :source_se) ",
+                                soci::use(bandwidthLimit), soci::use(source_hostname);
+                            sql.commit();
+                        }
+                    else
+                        {
+                            if(bandwidthLimit == -1)
+                                {
+                                    sql.begin();
+                                    sql << "update t_optimize set throughput=NULL where source_se=:source_se ",
+                                        soci::use(bandwidthLimit), soci::use(source_hostname);
+                                    sql.commit();
+                                }
+                            else
+                                {
+                                    sql.begin();
+                                    sql << "update t_optimize set throughput=:throughput where source_se=:source_se ",
+                                        soci::use(bandwidthLimit), soci::use(source_hostname);
+                                    sql.commit();
+                                }
+                        }
+                }
+
+            if(!destination_hostname.empty())
+                {
+                    sql << "select throughput from t_optimize where dest_se=:dest_se ",
+                        soci::use(destination_hostname), soci::into(bandwidthDst, isNullBandwidthDst);
+
+                    if(isNullBandwidthDst == soci::i_null && bandwidthLimit > 0)
+                        {
+                            sql.begin();
+                            sql << " insert into t_optimize(throughput, dest_se) values(:throughput, :dest_se) ",
+                                soci::use(bandwidthLimit), soci::use(destination_hostname);
+                            sql.commit();
+                        }
+                    else
+                        {
+                            if(bandwidthLimit == -1)
+                                {
+                                    sql.begin();
+                                    sql << "update t_optimize set throughput=NULL where dest_se=:dest_se ",
+                                        soci::use(bandwidthLimit), soci::use(destination_hostname);
+                                    sql.commit();
+                                }
+                            else
+                                {
+                                    sql.begin();
+                                    sql << "update t_optimize set throughput=:throughput where dest_se=:dest_se ",
+                                        soci::use(bandwidthLimit), soci::use(destination_hostname);
+                                    sql.commit();
+                                }
+
+                        }
+                }
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }
+}
 
 
 // the class factories
