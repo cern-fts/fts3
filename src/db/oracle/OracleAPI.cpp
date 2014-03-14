@@ -3449,15 +3449,10 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
                         }
                     sql.commit();
 
-                    //delete from t_optimizer_evolution > 10 days old records
+                    //delete from t_optimizer_evolution > 5 days old records
                     sql.begin();
-                    sql << "delete from t_optimizer_evolution where datetime < (systimestamp - interval '3' DAY )";
-                    sql.commit();
-
-                    //delete from t_optimizer_evolution > 10 days old records
-                    sql.begin();
-                    sql << "delete from t_optimize where datetime < (systimestamp - interval '1' DAY )";
-                    sql.commit();
+                    sql << "delete from t_optimizer_evolution where datetime < (systimestamp - interval '5' DAY )";
+                    sql.commit();                   
 
                     //delete from t_file_retry_errors > 3 days old records
                     sql.begin();
@@ -7511,9 +7506,8 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                                  soci::into(submitted)
                                 ));
 
-            soci::statement st4((sql.prepare << "select throughput from (select throughput from t_optimizer_evolution where  "
-                                 " source_se=:source_se and dest_se=:dest_se"
-                                 " order by datetime DESC) WHERE ROWNUM = 1",
+            soci::statement st4((sql.prepare << "select sum(throughput) from t_file where  "
+                                 " source_se=:source_se and dest_se=:dest_se and file_state='ACTIVE' ",
                                  soci::use(source_se),
                                  soci::use(dest_se),
                                  soci::into(throughput, isNull2)
@@ -7618,7 +7612,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                             st4.execute(true);
                             result <<   "Avg throughout: ";
                             result <<  std::setprecision(2) << throughput * active;
-                            result <<   " MB/s\n";
+                            result <<   " Mbps\n";
 
                             //success rate the last 15 min
                             soci::rowset<soci::row> rs = (sql.prepare << "SELECT file_state FROM t_file "
@@ -7683,7 +7677,10 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                             result <<   countReason;
                             result <<   " times: ";
                             result <<   reason;
-
+			    result <<   "\n";
+			    
+			    //get bandwidth restrictions (if any) 
+			    result << getBandwidthLimitInternal(sql, source_se, dest_se); 			    
 
                             result << "\n\n";
                         }
