@@ -671,6 +671,7 @@ int main(int argc, char **argv)
                 logger.INFO() << "File metadata:" << replaceMetadataString(currentTransfer.fileMetadata) << std::endl;
                 logger.INFO() << "Job metadata:" << replaceMetadataString(opts.jobMetadata) << std::endl;
                 logger.INFO() << "Bringonline token:" << currentTransfer.tokenBringOnline << std::endl;
+                logger.INFO() << "Multihop: " << opts.multihop << std::endl;
 
                 //set to active only for reuse
                 if (opts.areTransfersOnFile())
