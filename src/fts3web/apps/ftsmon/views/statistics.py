@@ -54,14 +54,19 @@ def _getTransferAndSubmissionPerHost(timewindow):
     servers = {}
     
     notBefore = datetime.utcnow() - timewindow
-    hostnames = Host.objects.filter(beat__gte = notBefore).all()
+    hosts = Host.objects.filter().values('hostname').distinct()
 
-    for host in hostnames:
-        submissions = Job.objects.filter(submit_time__gte = notBefore, submit_host = host.hostname).count()
-        transfers = File.objects.filter(job__submit_time__gte = notBefore, transferHost = host.hostname).count()
-        actives = File.objects.filter(file_state = 'ACTIVE', transferHost = host.hostname).count()
-        
-        servers[host.hostname] = {'submissions': submissions, 'transfers': transfers, 'active': actives}
+    for host in map(lambda h: h['hostname'], hosts):
+        submissions = Job.objects.filter(submit_time__gte = notBefore, submit_host = host).count()
+        transfers = File.objects.filter(job__submit_time__gte = notBefore, transferHost = host).count()
+        actives = File.objects.filter(file_state = 'ACTIVE', transferHost = host).count()
+        services = Host.objects.filter(hostname = host, beat__gte = notBefore).values('service_name').all()
+        servers[host] = {
+             'submissions': submissions,
+             'transfers': transfers,
+             'active': actives,
+             'services': map(lambda s: s['service_name'], services)
+        }
 
     return servers
 

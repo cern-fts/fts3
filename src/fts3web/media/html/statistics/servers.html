@@ -12,9 +12,12 @@
             <th>Logs</th>
         </tr>
     </thead>
-    <tbody>
-        <tr ng-repeat="(k, s) in servers" ng-class-odd="'odd'">
-            <td><a href="#/statistics/overview?hostname={{k}}">{{k}}</a></td>
+    <tbody ng-repeat="(k, s) in servers" ng-class-odd="'odd'">
+        <tr>
+            <td>
+                <i class="icon-plus" ng-click="s.show = !s.show"></i>
+                <a href="#/statistics/overview?hostname={{k}}">{{k}}</a>
+            </td>
             <td>[{{s.segment.start}}, {{s.segment.end}}]</td>
             <td>{{s.submissions}}</td>
             <td>{{s.transfers}}</td>
@@ -22,6 +25,12 @@
             <td>
                 <a log="'/var/log/fts3/fts3server.log'" host="k">FTS3</a>
                 <a log="'/var/log/fts3/fts3bringonline.log'" host="k">Bringonline</a>
+            </td>
+        </tr>
+        <tr ng-show="s.show">
+            <td colspan="6" style="background: #CCC">
+                <b>Services alive</b>: 
+                <span ng-repeat="s in s.services">{{s}} </span>
             </td>
         </tr>
     </tbody>
