@@ -2815,6 +2815,9 @@ bool OracleAPI::updateOptimizer()
 
                     // Active transfers
                     stmt7.execute(true);
+		    
+                    //get aggregated throughut
+                    throughput *= active;		    
 
                     // Max active transfers
                     stmt8.execute(true);
