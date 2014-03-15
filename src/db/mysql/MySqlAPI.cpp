@@ -104,12 +104,12 @@ bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate
                             thrStored = thrLocal;
                             rateStored = rateLocal;
                             activeStored = activeLocal;
-
+			    
                             if(thr < thrLocal)
                                 {
                                     throughputSamplesLocal += 1;
                                 }
-                            else if(thr > thrLocal && throughputSamplesLocal > 0)
+                            else if(thr >= thrLocal && throughputSamplesLocal > 0)
                                 {
                                     throughputSamplesLocal -= 1;
                                 }
@@ -119,7 +119,7 @@ bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate
                                 }
 
                             if(throughputSamplesLocal == 3)
-                                {
+                                {				
                                     throughputSamplesStored = throughputSamplesLocal;
                                     throughputSamplesLocal = 0;
                                 }

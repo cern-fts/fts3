@@ -94,7 +94,7 @@ bool OracleAPI::getChangedFile (std::string source, std::string dest, double rat
                                 {
                                     throughputSamplesLocal += 1;
                                 }
-                            else if(thr > thrLocal && throughputSamplesLocal > 0)
+                            else if(thr >= thrLocal && throughputSamplesLocal > 0)
                                 {
                                     throughputSamplesLocal -= 1;
                                 }
