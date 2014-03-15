@@ -258,7 +258,7 @@ protected:
                                                 FileTransferExecutor* exec = new FileTransferExecutor(
                                                     tf,
                                                     tfh,
-                                                    enableOptimization.compare("true") == 0,
+                                                    true,
                                                     monitoringMessages,
                                                     infosys,
                                                     ftsHostName

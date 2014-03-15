@@ -69,7 +69,7 @@ public:
         TRAITS::ActiveObjectType("ProcessQueueHandler", desc)
     {
         enableOptimization = theServerConfig().get<std::string > ("Optimizer");
-        messages.reserve(3000);
+        messages.reserve(1000);
     }
 
     /* ---------------------------------------------------------------------- */
@@ -399,7 +399,7 @@ protected:
                                 messages.clear();
                             }
 
-                        usleep(300000);
+                        sleep(1);
                     }
                 catch (const fs::filesystem_error& ex)
                     {
