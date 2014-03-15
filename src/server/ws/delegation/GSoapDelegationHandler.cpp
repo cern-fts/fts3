@@ -536,8 +536,8 @@ time_t GSoapDelegationHandler::getTerminationTime(string delegationId)
         {
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " gets proxy certificate termination time" << commit;
 
-	    string delegationId = makeDelegationId();
-    	    if (delegationId.empty()) throw Err_Custom("'getDelegationId' failed!");
+            string delegationId = makeDelegationId();
+            if (delegationId.empty()) throw Err_Custom("'getDelegationId' failed!");
 
             time_t time;
             scoped_ptr<Cred> cred (

@@ -98,7 +98,7 @@ private:
                 else
                     {
                         unsigned index=0, count=0, start=0, end=0;
-			std::string serviceName = "fts_server";
+                        std::string serviceName = "fts_server";
                         try
                             {
                                 db::DBSingleton::instance().getDBObjectInstance()->updateHeartBeat(&index, &count, &start, &end, serviceName);

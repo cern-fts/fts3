@@ -2073,16 +2073,15 @@ void OracleAPI::cancelJob(std::vector<std::string>& requestIDs)
 void OracleAPI::getCancelJob(std::vector<int>& requestIDs)
 {
     soci::session sql(*connectionPool);
-    std::string job_id;
     int pid = 0;
 
     try
         {
-            soci::rowset<soci::row> rs = (sql.prepare << " select distinct pid, job_id from t_file where PID IS NOT NULL AND file_state='CANCELED' and job_finished is NULL AND TRANSFERHOST = :transferHost", soci::use(hostname));
+            soci::rowset<soci::row> rs = (sql.prepare << " select pid from t_file where PID IS NOT NULL AND file_state='CANCELED' and job_finished is NULL AND TRANSFERHOST = :transferHost", soci::use(hostname));
 
             soci::statement stmt1 = (sql.prepare << "UPDATE t_file SET  job_finished = sys_extract_utc(systimestamp) "
-                                     "WHERE job_id = :jobId and pid = :pid ",
-                                     soci::use(job_id, "jobId"), soci::use(pid, "pid"));
+                                     "WHERE pid = :pid ",
+                                     soci::use(pid, "pid"));
 
             // Cancel files
             sql.begin();
@@ -2090,7 +2089,6 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs)
                 {
                     soci::row const& row = *i2;
                     pid = row.get<int>("PID");
-                    job_id = row.get<std::string>("JOB_ID");
                     requestIDs.push_back(pid);
 
                     stmt1.execute(true);
@@ -2109,19 +2107,6 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs)
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 /*t_credential API*/
@@ -2815,9 +2800,9 @@ bool OracleAPI::updateOptimizer()
 
                     // Active transfers
                     stmt7.execute(true);
-		    
+
                     //get aggregated throughut
-                    throughput *= active;		    
+                    throughput *= active;
 
                     // Max active transfers
                     stmt8.execute(true);
@@ -3386,6 +3371,22 @@ void OracleAPI::revertToSubmitted()
 
 void OracleAPI::backup(long* nJobs, long* nFiles)
 {
+
+    try
+        {
+            unsigned index=0, count=0, start=0, end=0;
+            std::string service_name = "fts_backup";
+            updateHeartBeat(&index, &count, &start, &end, service_name);
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+
     soci::session sql(*connectionPool);
 
     *nJobs = 0;
@@ -3438,7 +3439,7 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
                     //delete from t_optimizer_evolution > 5 days old records
                     sql.begin();
                     sql << "delete from t_optimizer_evolution where datetime < (systimestamp - interval '5' DAY )";
-                    sql.commit();                   
+                    sql.commit();
 
                     //delete from t_file_retry_errors > 3 days old records
                     sql.begin();
@@ -3920,8 +3921,6 @@ bool OracleAPI::isFileReadyState(int fileID)
 
     try
         {
-            sql.begin();
-
             sql << "SELECT file_state, transferHost FROM t_file WHERE file_id = :fileId",
                 soci::use(fileID), soci::into(state), soci::into(host, isNull);
 
@@ -3930,16 +3929,13 @@ bool OracleAPI::isFileReadyState(int fileID)
             if (isNull != soci::i_null)
                 isReadyHost = (host == hostname);
 
-            sql.commit();
         }
     catch (std::exception& e)
         {
-            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 
@@ -5044,36 +5040,32 @@ void OracleAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
 
     try
         {
-            struct message_sanity msg;
-            msg.setToFailOldQueuedJobs = true;
-            CleanUpSanityChecks temp(this, sql, msg);
-            if(!temp.getCleanUpSanityCheck())
-                return;
-
-            sql.begin();
-            soci::rowset<std::string> rs = (sql.prepare << "SELECT job_id FROM t_job WHERE "
-                                            "    submit_time < (sys_extract_utc(systimestamp) - numtodsinterval(:interval, 'hour')) AND "
-                                            "    job_state in ('SUBMITTED', 'READY')",
-                                            soci::use(maxTime));
-
-
-            for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+            if(hashSegment.start == 0)
                 {
+                    soci::rowset<std::string> rs = (sql.prepare << "SELECT job_id FROM t_job WHERE "
+                                                    "    submit_time < (sys_extract_utc(systimestamp) - numtodsinterval(:interval, 'hour')) AND "
+                                                    "    job_state in ('SUBMITTED', 'READY')",
+                                                    soci::use(maxTime));
 
-                    sql << "UPDATE t_file SET "
-                        "    file_state = 'CANCELED', reason = :reason "
-                        "WHERE job_id = :jobId AND "
-                        "      file_state IN ('SUBMITTED','READY')",
-                        soci::use(message), soci::use(*i);
+                    sql.begin();
+                    for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+                        {
 
-                    sql << "UPDATE t_job SET "
-                        "    job_state = 'CANCELED', reason = :reason "
-                        "WHERE job_id = :jobId AND job_state IN ('SUBMITTED','READY')",
-                        soci::use(message), soci::use(*i);
+                            sql << "UPDATE t_file SET "
+                                "    file_state = 'CANCELED', reason = :reason "
+                                "WHERE job_id = :jobId AND "
+                                "      file_state IN ('SUBMITTED','READY')",
+                                soci::use(message), soci::use(*i);
 
-                    jobs.push_back(*i);
+                            sql << "UPDATE t_job SET "
+                                "    job_state = 'CANCELED', reason = :reason "
+                                "WHERE job_id = :jobId AND job_state IN ('SUBMITTED','READY')",
+                                soci::use(message), soci::use(*i);
+
+                            jobs.push_back(*i);
+                        }
+                    sql.commit();
                 }
-            sql.commit();
         }
     catch (std::exception& e)
         {
@@ -7331,7 +7323,7 @@ void OracleAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* star
             // Update beat
             sql << "MERGE INTO t_hosts USING "
                 " (SELECT :hostname AS hostname, :service_name AS service_name FROM dual) Hostname ON "
-		" (t_hosts.hostname = Hostname.hostname AND t_hosts.service_name = Hostname.service_name ) "
+                " (t_hosts.hostname = Hostname.hostname AND t_hosts.service_name = Hostname.service_name ) "
                 " WHEN     MATCHED THEN UPDATE SET t_hosts.beat = sys_extract_utc(systimestamp)"
                 " WHEN NOT MATCHED THEN INSERT (hostname, beat, service_name) VALUES (Hostname.hostname, sys_extract_utc(systimestamp), Hostname.service_name)",
                 soci::use(hostname),soci::use(service_name);
@@ -7339,7 +7331,7 @@ void OracleAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* star
             // Total number of working instances
             sql << "SELECT COUNT(hostname) FROM t_hosts "
                 "  WHERE beat >= (sys_extract_utc(systimestamp) - interval '2' minute) and service_name = :service_name",
-		soci::use(service_name),
+                soci::use(service_name),
                 soci::into(*count);
 
             // This instance index
@@ -7392,22 +7384,29 @@ void OracleAPI::updateOptimizerEvolution(soci::session& sql, const std::string &
 {
     try
         {
-            sql << " INSERT INTO t_optimizer_evolution (datetime, source_se, dest_se, active, throughput, filesize, buffer, nostreams) "
-                " values(sys_extract_utc(systimestamp), :source, :dest, :active, :throughput, :filesize, :buffer, :nostreams) ",
-                soci::use(source_hostname),
-                soci::use(destination_hostname),
-                soci::use(active),
-                soci::use(throughput),
-                soci::use(successRate),
-                soci::use(buffer),
-                soci::use(bandwidth);
+            if(throughput > 0 && successRate > 0)
+                {
+                    sql.begin();
+                    sql << " INSERT INTO t_optimizer_evolution (datetime, source_se, dest_se, active, throughput, filesize, buffer, nostreams) "
+                        " values(sys_extract_utc(systimestamp), :source, :dest, :active, :throughput, :filesize, :buffer, :nostreams) ",
+                        soci::use(source_hostname),
+                        soci::use(destination_hostname),
+                        soci::use(active),
+                        soci::use(throughput),
+                        soci::use(successRate),
+                        soci::use(buffer),
+                        soci::use(bandwidth);
+                    sql.commit();
+                }
         }
     catch (std::exception& e)
         {
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
 }
@@ -7665,10 +7664,10 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                             result <<   countReason;
                             result <<   " times: ";
                             result <<   reason;
-			    result <<   "\n";
-			    
-			    //get bandwidth restrictions (if any) 
-			    result << getBandwidthLimitInternal(sql, source_se, dest_se); 			    
+                            result <<   "\n";
+
+                            //get bandwidth restrictions (if any)
+                            result << getBandwidthLimitInternal(sql, source_se, dest_se);
 
                             result << "\n\n";
                         }
@@ -7938,7 +7937,7 @@ void OracleAPI::setBandwidthLimit(const std::string & source_hostname, const std
                     if(isNullBandwidthSrc == soci::i_null && bandwidthLimit > 0)
                         {
                             sql.begin();
-                            sql << " insert into t_optimize(1, throughput, source_se) values(:throughput, :source_se) ",
+                            sql << " insert into t_optimize(file_id, throughput, source_se) values(1, :throughput, :source_se) ",
                                 soci::use(bandwidthLimit), soci::use(source_hostname);
                             sql.commit();
                         }
@@ -7969,7 +7968,7 @@ void OracleAPI::setBandwidthLimit(const std::string & source_hostname, const std
                     if(isNullBandwidthDst == soci::i_null && bandwidthLimit > 0)
                         {
                             sql.begin();
-                            sql << " insert into t_optimize(1, throughput, dest_se) values(:throughput, :dest_se) ",
+                            sql << " insert into t_optimize(file_id, throughput, dest_se) values(1, :throughput, :dest_se) ",
                                 soci::use(bandwidthLimit), soci::use(destination_hostname);
                             sql.commit();
                         }

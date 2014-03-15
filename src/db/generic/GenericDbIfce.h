@@ -371,7 +371,7 @@ public:
         *count = 1;
         *start = 0x0000;
         *end   = 0xFFFF;
-	service_name = std::string("");
+        service_name = std::string("");
     }
 
     virtual unsigned int updateFileStatusReuse(TransferFiles* file, const std::string status) = 0;

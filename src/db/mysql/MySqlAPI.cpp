@@ -970,8 +970,6 @@ unsigned int MySqlAPI::updateFileStatus(TransferFiles* file, const std::string s
         {
             int countSame = 0;
 
-            sql.begin();
-
             soci::statement stmt1 = (
                                         sql.prepare << "select count(*) from t_file where file_state in ('READY','ACTIVE') and dest_surl=:destUrl and vo_name=:vo_name and dest_se=:dest_se ",
                                         soci::use(file->DEST_SURL),
@@ -985,6 +983,9 @@ unsigned int MySqlAPI::updateFileStatus(TransferFiles* file, const std::string s
                 {
                     return 0;
                 }
+
+
+            sql.begin();
 
             soci::statement stmt(sql);
 
@@ -1078,7 +1079,8 @@ void MySqlAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::
                     std::list<TransferFiles*>& l = i->second;
                     for (std::list<TransferFiles*>::iterator it = l.begin(); it != l.end(); ++it)
                         {
-                            delete *it;
+                            if(*it)
+                                delete *it;
                         }
                     l.clear();
                 }
@@ -1092,7 +1094,8 @@ void MySqlAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::
                     std::list<TransferFiles*>& l = i->second;
                     for (std::list<TransferFiles*>::iterator it = l.begin(); it != l.end(); ++it)
                         {
-                            delete *it;
+                            if(*it)
+                                delete *it;
                         }
                     l.clear();
                 }
@@ -2290,16 +2293,15 @@ void MySqlAPI::cancelJob(std::vector<std::string>& requestIDs)
 void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
 {
     soci::session sql(*connectionPool);
-    std::string job_id;
     int pid = 0;
 
     try
         {
-            soci::rowset<soci::row> rs = (sql.prepare << " select distinct pid, job_id from t_file where PID IS NOT NULL AND file_state='CANCELED' and job_finished is NULL AND TRANSFERHOST = :transferHost", soci::use(hostname));
+            soci::rowset<soci::row> rs = (sql.prepare << " select pid from t_file where PID IS NOT NULL AND file_state='CANCELED' and job_finished is NULL AND TRANSFERHOST = :transferHost", soci::use(hostname));
 
             soci::statement stmt1 = (sql.prepare << "UPDATE t_file SET  job_finished = UTC_TIMESTAMP() "
-                                     "WHERE job_id = :jobId and pid = :pid ",
-                                     soci::use(job_id, "jobId"), soci::use(pid, "pid"));
+                                     "WHERE pid = :pid ",
+                                     soci::use(pid, "pid"));
 
             // Cancel files
             sql.begin();
@@ -2307,7 +2309,6 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
                 {
                     soci::row const& row = *i2;
                     pid = row.get<int>("pid");
-                    job_id = row.get<std::string>("job_id");
                     requestIDs.push_back(pid);
 
                     stmt1.execute(true);
@@ -3704,7 +3705,22 @@ void MySqlAPI::revertToSubmitted()
 
 
 void MySqlAPI::backup(long* nJobs, long* nFiles)
-{   
+{
+    try
+        {
+            unsigned index=0, count=0, start=0, end=0;
+            std::string service_name = "fts_backup";
+            updateHeartBeat(&index, &count, &start, &end, service_name);
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+
     soci::session sql(*connectionPool);
 
     *nJobs = 0;
@@ -4234,8 +4250,6 @@ bool MySqlAPI::isFileReadyState(int fileID)
 
     try
         {
-            sql.begin();
-
             sql << "SELECT file_state, transferHost FROM t_file WHERE file_id = :fileId",
                 soci::use(fileID), soci::into(state), soci::into(host, isNull);
 
@@ -4244,16 +4258,13 @@ bool MySqlAPI::isFileReadyState(int fileID)
             if (isNull != soci::i_null)
                 isReadyHost = (host == hostname);
 
-            sql.commit();
         }
     catch (std::exception& e)
         {
-            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 
@@ -5354,39 +5365,35 @@ void MySqlAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
 
     try
         {
-            struct message_sanity msg;
-            msg.setToFailOldQueuedJobs = true;
-            CleanUpSanityChecks temp(this, sql, msg);
-            if(!temp.getCleanUpSanityCheck())
-                return;
-
-
-            std::string job_id;
-            soci::rowset<std::string> rs = (sql.prepare << "SELECT job_id FROM t_job WHERE "
-                                            "    submit_time < (UTC_TIMESTAMP() - interval :interval hour) AND "
-                                            "    job_state in ('SUBMITTED', 'READY')",
-                                            soci::use(maxTime));
-
-            soci::statement stmt1 = (sql.prepare << "UPDATE t_file SET  file_state = 'CANCELED', reason = :reason WHERE job_id = :jobId AND file_state IN ('SUBMITTED','READY')",
-                                     soci::use(message), soci::use(job_id));
-
-
-            soci::statement stmt2 = ( sql.prepare << "UPDATE t_job SET job_state = 'CANCELED', reason = :reason WHERE job_id = :jobId AND job_state IN ('SUBMITTED','READY')",
-                                      soci::use(message), soci::use(job_id));
-
-
-
-            sql.begin();
-            for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+            if(hashSegment.start == 0)
                 {
-                    job_id = (*i);
+                    std::string job_id;
+                    soci::rowset<std::string> rs = (sql.prepare << "SELECT job_id FROM t_job WHERE "
+                                                    "    submit_time < (UTC_TIMESTAMP() - interval :interval hour) AND "
+                                                    "    job_state in ('SUBMITTED', 'READY')",
+                                                    soci::use(maxTime));
 
-                    stmt1.execute(true);
-                    stmt2.execute(true);
+                    soci::statement stmt1 = (sql.prepare << "UPDATE t_file SET  file_state = 'CANCELED', reason = :reason WHERE job_id = :jobId AND file_state IN ('SUBMITTED','READY')",
+                                             soci::use(message), soci::use(job_id));
 
-                    jobs.push_back(*i);
+
+                    soci::statement stmt2 = ( sql.prepare << "UPDATE t_job SET job_state = 'CANCELED', reason = :reason WHERE job_id = :jobId AND job_state IN ('SUBMITTED','READY')",
+                                              soci::use(message), soci::use(job_id));
+
+
+
+                    sql.begin();
+                    for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+                        {
+                            job_id = (*i);
+
+                            stmt1.execute(true);
+                            stmt2.execute(true);
+
+                            jobs.push_back(*i);
+                        }
+                    sql.commit();
                 }
-            sql.commit();
         }
     catch (std::exception& e)
         {
@@ -7699,7 +7706,7 @@ void MySqlAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start
             soci::statement stmt2 = (
                                         sql.prepare << "SELECT COUNT(hostname) FROM t_hosts "
                                         "  WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval 2 minute) and service_name = :service_name",
-					soci::use(service_name),
+                                        soci::use(service_name),
                                         soci::into(*count));
             stmt2.execute(true);
 
@@ -7708,9 +7715,9 @@ void MySqlAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start
             soci::rowset<std::string> rsHosts = (sql.prepare <<
                                                  "SELECT hostname FROM t_hosts "
                                                  "WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval 2 minute) and service_name = :service_name "
-                                                 "ORDER BY hostname", 
-						 soci::use(service_name)
-						 );
+                                                 "ORDER BY hostname",
+                                                 soci::use(service_name)
+                                                );
 
             soci::rowset<std::string>::const_iterator i;
             for (*index = 0, i = rsHosts.begin(); i != rsHosts.end(); ++i, ++(*index))
@@ -7756,22 +7763,29 @@ void MySqlAPI::updateOptimizerEvolution(soci::session& sql, const std::string & 
 {
     try
         {
-            sql << " INSERT INTO t_optimizer_evolution (datetime, source_se, dest_se, active, throughput, filesize, buffer, nostreams) "
-                " values(UTC_TIMESTAMP(), :source, :dest, :active, :throughput, :filesize, :buffer, :nostreams) ",
-                soci::use(source_hostname),
-                soci::use(destination_hostname),
-                soci::use(active),
-                soci::use(throughput),
-                soci::use(successRate),
-                soci::use(buffer),
-                soci::use(bandwidth);
+            if(throughput > 0 && successRate > 0)
+                {
+                    sql.begin();
+                    sql << " INSERT INTO t_optimizer_evolution (datetime, source_se, dest_se, active, throughput, filesize, buffer, nostreams) "
+                        " values(UTC_TIMESTAMP(), :source, :dest, :active, :throughput, :filesize, :buffer, :nostreams) ",
+                        soci::use(source_hostname),
+                        soci::use(destination_hostname),
+                        soci::use(active),
+                        soci::use(throughput),
+                        soci::use(successRate),
+                        soci::use(buffer),
+                        soci::use(bandwidth);
+                    sql.commit();
+                }
         }
     catch (std::exception& e)
         {
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
 }
