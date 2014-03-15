@@ -525,14 +525,14 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
         {
             soci::rowset<std::string> rs1 = (
                                                 sql.prepare <<
-                                                " SELECT SQL_NO_CACHE DISTINCT vo_name FROM t_job WHERE job_finished is null ");
+                                                " SELECT DISTINCT vo_name FROM t_job WHERE job_finished is null ");
 
             for (soci::rowset<std::string>::const_iterator i1 = rs1.begin(); i1 != rs1.end(); ++i1)
                 {
                     vo_name = (*i1);
 
                     soci::rowset<soci::row> rs2 = (sql.prepare <<
-                                                   " SELECT SQL_NO_CACHE DISTINCT source_se, dest_se "
+                                                   " SELECT DISTINCT source_se, dest_se "
                                                    " FROM t_file "
                                                    " WHERE "
                                                    "      file_state = 'SUBMITTED' AND "
