@@ -3414,6 +3414,12 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
                     int count = 0;
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                         {
+			    bool drain = getDrainInternal(sql);
+			    if(drain){
+			    	sql.commit();
+				return;
+			    }			
+			
                             count++;
                             soci::row const& r = *i;
                             job_id = r.get<std::string>("JOB_ID");
@@ -7688,10 +7694,26 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
 
 bool OracleAPI::getDrain()
 {
-
     soci::session sql(*connectionPool);
+   
+    try
+        {
+         return getDrainInternal(sql);
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+
+bool OracleAPI::getDrainInternal(soci::session& sql){
 
     int drain = 0;
+
     try
         {
             soci::indicator isNull = soci::i_ok;
@@ -7700,7 +7722,6 @@ bool OracleAPI::getDrain()
 
             if(isNull == soci::i_null || drain == 0)
                 return false;
-
 
             return true;
         }
