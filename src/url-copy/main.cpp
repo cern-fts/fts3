@@ -419,6 +419,8 @@ int statWithRetries(gfal_context_t handle, const std::string& category, const st
                     *size = statBuffer.st_size;
                     return 0;
                 }
+
+            Logger::getInstance().WARNING() << "Stat failed with " << *errMsg << "(" << errorCode << ")" << std::endl;
             Logger::getInstance().WARNING() << "Stat the file will be retried" << std::endl;
             sleep(3); //give it some time to breath
         }
