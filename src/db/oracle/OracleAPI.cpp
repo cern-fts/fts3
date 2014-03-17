@@ -7605,7 +7605,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                             st4.execute(true);
                             result <<   "Avg throughout: ";
                             result <<  std::setprecision(2) << throughput * active;
-                            result <<   " Mbps\n";
+                            result <<   " MB/s\n";
 
                             //success rate the last 15 min
                             soci::rowset<soci::row> rs = (sql.prepare << "SELECT file_state FROM t_file "
@@ -7813,7 +7813,7 @@ bool OracleAPI::bandwidthChecker(soci::session& sql, const std::string & source_
                     if (througputSrc > lowest || througputDst > lowest)
                         {
                             bandwidthIn = lowest;
-                            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Bandwidth limitation of " << lowest  << " Mbps is set for " << source_hostname << " or " <<  destination_hostname << commit;
+                            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Bandwidth limitation of " << lowest  << " MB/s is set for " << source_hostname << " or " <<  destination_hostname << commit;
                             return false;
                         }
                 }
@@ -7821,7 +7821,7 @@ bool OracleAPI::bandwidthChecker(soci::session& sql, const std::string & source_
             if (througputSrc > bandwidthSrc)
                 {
                     bandwidthIn = bandwidthSrc;
-                    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Bandwidth limitation of " << bandwidthSrc  << " Mbps is set for " << source_hostname << commit;
+                    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Bandwidth limitation of " << bandwidthSrc  << " MB/s is set for " << source_hostname << commit;
                     return false;
                 }
 
@@ -7831,7 +7831,7 @@ bool OracleAPI::bandwidthChecker(soci::session& sql, const std::string & source_
             if(througputDst > bandwidthDst)
                 {
                     bandwidthIn = bandwidthDst;
-                    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Bandwidth limitation of " << bandwidthDst  << " Mbps is set for " << destination_hostname << commit;
+                    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Bandwidth limitation of " << bandwidthDst  << " MB/s is set for " << destination_hostname << commit;
                     return false;
                 }
         }
@@ -7886,7 +7886,7 @@ std::string OracleAPI::getBandwidthLimitInternal(soci::session& sql, const std::
                         soci::use(source_hostname), soci::into(bandwidth, isNullBandwidth);
 
                     if(isNullBandwidth != soci::i_null && bandwidth > 0)
-                        result << "Source endpoint: " << source_hostname << "   Bandwidth restriction: " << bandwidth << " Mbps\n";
+                        result << "Source endpoint: " << source_hostname << "   Bandwidth restriction: " << bandwidth << " MB/s\n";
                 }
             else if (!destination_hostname.empty())
                 {
@@ -7896,7 +7896,7 @@ std::string OracleAPI::getBandwidthLimitInternal(soci::session& sql, const std::
                         soci::use(destination_hostname), soci::into(bandwidth, isNullBandwidth);
 
                     if(isNullBandwidth != soci::i_null && bandwidth > 0)
-                        result << "Destination endpoint: " << destination_hostname << "   Bandwidth restriction: " << bandwidth << " Mbps\n";
+                        result << "Destination endpoint: " << destination_hostname << "   Bandwidth restriction: " << bandwidth << " MB/s\n";
                 }
             else
                 {
@@ -7916,11 +7916,11 @@ std::string OracleAPI::getBandwidthLimitInternal(soci::session& sql, const std::
 
                             if(!source_se.length() != 0 && bandwidth > 0)
                                 {
-                                    result << "Source endpoint: " << source_se << "   Bandwidth restriction: " << bandwidth << " Mbps\n";
+                                    result << "Source endpoint: " << source_se << "   Bandwidth restriction: " << bandwidth << " MB/s\n";
                                 }
                             if(!dest_se.length() != 0 && bandwidth > 0)
                                 {
-                                    result << "Destination endpoint: " << dest_se   << "   Bandwidth restriction: " << bandwidth << " Mbps\n";
+                                    result << "Destination endpoint: " << dest_se   << "   Bandwidth restriction: " << bandwidth << " MB/s\n";
                                 }
                         }
                 }
