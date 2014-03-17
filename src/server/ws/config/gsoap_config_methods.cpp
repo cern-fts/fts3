@@ -508,6 +508,8 @@ int fts3::implcfg__setBandwidthLimit(soap* ctx, fts3::config__BandwidthLimit* li
 
                     if (!pair->source.empty() && !pair->dest.empty())
                         throw Err_Custom("Only source OR destination can be specified");
+                    if (pair->source.empty() && pair->dest.empty())
+                        throw Err_Custom("Need to specify source OR destination");
 
                     DBSingleton::instance().getDBObjectInstance()->setBandwidthLimit(
                                         pair->source, pair->dest, pair->limit);
