@@ -2935,16 +2935,16 @@ bool MySqlAPI::bandwidthChecker(soci::session& sql, const std::string & source_h
         }
     else if(bandwidthDst > 0)  //only destination has limit
         {
+   	    bandwidthIn = bandwidthDst;
+	    
             if(througputDst > bandwidthDst)
                 {
-                    bandwidthIn = bandwidthDst;
                     FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Bandwidth limitation of " << bandwidthDst  << " MB/s is set for " << destination_hostname << commit;
                     return false;
                 }
         }
     else
-        {
-
+        {	    
             return true;
         }
 
@@ -3145,9 +3145,13 @@ bool MySqlAPI::updateOptimizer()
                         {
                             if(throughput > 0 && ratioSuccessFailure > 0)
                                 {
-                                    sql.begin();
-                                    updateOptimizerEvolution(sql, source_hostname, destin_hostname, maxActive, throughput, ratioSuccessFailure, 10, bandwidthIn);
-                                    sql.commit();
+                                    sql.begin();                                    
+				    
+                                    active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);                                    
+                                    stmt10.execute(true);				    
+				    updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, 10, bandwidthIn);				    
+                                    
+				    sql.commit();
                                 }
                             continue;
                         }
