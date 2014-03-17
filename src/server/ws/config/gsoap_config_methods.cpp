@@ -519,8 +519,8 @@ int fts3::implcfg__setBandwidthLimit(soap* ctx, fts3::config__BandwidthLimit* li
                             << " had set the maximum bandwidth of "
                             << pair->source << pair->dest
                             << " to "
-                            << pair->limit << "Mbits/sec"
-                            << commit;
+                            << pair->limit << "MB/s"
+                            << commit;			    
                     }
                     else {
                         FTS3_COMMON_LOGGER_NEWLOG (INFO)
@@ -530,6 +530,15 @@ int fts3::implcfg__setBandwidthLimit(soap* ctx, fts3::config__BandwidthLimit* li
                             << pair->source << pair->dest
                             << commit;
                     }
+		// prepare the command for audit
+                stringstream cmd;
+		
+                	    cmd << dn;
+                            cmd << " had set the maximum bandwidth of ";
+                            cmd << pair->source << pair->dest;
+                            cmd << " to ";
+                            cmd << pair->limit << "MB/s";
+		DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd.str(), "max-bandwidth");		    
                 }
         }
     catch(Err& ex)

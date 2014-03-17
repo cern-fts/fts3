@@ -8293,14 +8293,14 @@ void MySqlAPI::setBandwidthLimit(const std::string & source_hostname, const std:
                     sql << "select throughput from t_optimize where dest_se=:dest_se ",
                         soci::use(destination_hostname), soci::into(bandwidthDst, isNullBandwidthDst);
 
-                    if(isNullBandwidthDst == soci::i_null && bandwidthLimit > 0)
+                    if(!sql.got_data() && bandwidthLimit > 0)
                         {
                             sql.begin();
                             sql << " insert into t_optimize(throughput, dest_se) values(:throughput, :dest_se) ",
                                 soci::use(bandwidthLimit), soci::use(destination_hostname);
                             sql.commit();
                         }
-                    else
+                    else if (sql.got_data())
                         {
                             if(bandwidthLimit == -1)
                                 {

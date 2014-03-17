@@ -7936,11 +7936,11 @@ std::string OracleAPI::getBandwidthLimitInternal(soci::session& sql, const std::
                             std::string dest_se = it->get<std::string>("DEST_SE","");
                             double bandwidth = it->get<double>("THROUGHPUT");
 
-                            if(!source_se.length() != 0 && bandwidth > 0)
+                            if(!source_se.empty() != 0 && bandwidth > 0)
                                 {
                                     result << "Source endpoint: " << source_se << "   Bandwidth restriction: " << bandwidth << " MB/s\n";
                                 }
-                            if(!dest_se.length() != 0 && bandwidth > 0)
+                            if(!dest_se.empty() != 0 && bandwidth > 0)
                                 {
                                     result << "Destination endpoint: " << dest_se   << "   Bandwidth restriction: " << bandwidth << " MB/s\n";
                                 }
@@ -7977,14 +7977,14 @@ void OracleAPI::setBandwidthLimit(const std::string & source_hostname, const std
                     sql << "select throughput from t_optimize where source_se=:source_se ",
                         soci::use(source_hostname), soci::into(bandwidthSrc, isNullBandwidthSrc);
 
-                    if(isNullBandwidthSrc == soci::i_null && bandwidthLimit > 0)
+                    if(!sql.got_data() && bandwidthLimit > 0)
                         {
                             sql.begin();
                             sql << " insert into t_optimize(file_id, throughput, source_se) values(1, :throughput, :source_se) ",
                                 soci::use(bandwidthLimit), soci::use(source_hostname);
                             sql.commit();
                         }
-                    else
+                    else if (sql.got_data())
                         {
                             if(bandwidthLimit == -1)
                                 {
@@ -8008,14 +8008,14 @@ void OracleAPI::setBandwidthLimit(const std::string & source_hostname, const std
                     sql << "select throughput from t_optimize where dest_se=:dest_se ",
                         soci::use(destination_hostname), soci::into(bandwidthDst, isNullBandwidthDst);
 
-                    if(isNullBandwidthDst == soci::i_null && bandwidthLimit > 0)
+                    if(!sql.got_data() && bandwidthLimit > 0)
                         {
                             sql.begin();
                             sql << " insert into t_optimize(file_id, throughput, dest_se) values(1, :throughput, :dest_se) ",
                                 soci::use(bandwidthLimit), soci::use(destination_hostname);
                             sql.commit();
                         }
-                    else
+                    else if (sql.got_data())
                         {
                             if(bandwidthLimit == -1)
                                 {
