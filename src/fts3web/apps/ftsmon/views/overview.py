@@ -37,6 +37,15 @@ def _db_to_date():
     else:
         return '%s'
 
+def _get_bandwidth_limit(bw_limits, source, destination):
+    limits = {}
+    for l in bw_limits:
+        if l[0] == source: 
+            limits['source'] = l[2]
+        elif l[1] == destination:
+            limits['destination'] = l[2]
+    return limits
+
 @jsonify_paged
 def overview(httpRequest):
     filterForm = forms.FilterForm(httpRequest.GET)
@@ -71,6 +80,12 @@ def overview(httpRequest):
     cursor = connection.cursor()
     cursor.execute(query, params)
     
+    # Limitations
+    limit_query = "SELECT source_se, dest_se, throughput FROM t_optimize WHERE throughput IS NOT NULL"
+    limit_cursor = connection.cursor()
+    limit_cursor.execute(limit_query)
+    limits = limit_cursor.fetchall()
+    
     # Need to group by pairs :(
     grouped = {}
     for p in cursor.fetchall():
@@ -94,6 +109,8 @@ def overview(httpRequest):
         total = failed + finished
         if total > 0:
             obj['rate'] = (finished * 100.0) / total
+        # Append limit, if any
+        obj['bandwidth_limit'] = _get_bandwidth_limit(limits, triplet[0], triplet[1])
         objs.append(obj)
     
     # Ordering
