@@ -2833,7 +2833,7 @@ bool OracleAPI::updateOptimizer()
                             if(throughput > 0 && ratioSuccessFailure > 0)
                                 {
                                     sql.begin();
-                                    updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, 10, bandwidthIn);
+                                    updateOptimizerEvolution(sql, source_hostname, destin_hostname, maxActive, throughput, ratioSuccessFailure, 10, bandwidthIn);
                                     sql.commit();
                                 }
                             continue;
