@@ -8221,11 +8221,11 @@ std::string MySqlAPI::getBandwidthLimitInternal(soci::session& sql, const std::s
                             std::string dest_se = it->get<std::string>("dest_se","");
                             double bandwidth = it->get<double>("throughput");
 
-                            if(!source_se.length() != 0 && bandwidth > 0)
+                            if(!source_se.empty() && bandwidth > 0)
                                 {
                                     result << "Source endpoint: " << source_se << "   Bandwidth restriction: " << bandwidth << " MB/s\n";
                                 }
-                            if(!dest_se.length() != 0 && bandwidth > 0)
+                            if(!dest_se.empty() && bandwidth > 0)
                                 {
                                     result << "Destination endpoint: " << dest_se   << "   Bandwidth restriction: " << bandwidth << " MB/s\n";
                                 }
@@ -8262,14 +8262,14 @@ void MySqlAPI::setBandwidthLimit(const std::string & source_hostname, const std:
                     sql << "select throughput from t_optimize where source_se=:source_se ",
                         soci::use(source_hostname), soci::into(bandwidthSrc, isNullBandwidthSrc);
 
-                    if(isNullBandwidthSrc == soci::i_null && bandwidthLimit > 0)
+                    if(!sql.got_data() && bandwidthLimit > 0)
                         {
                             sql.begin();
                             sql << " insert into t_optimize(throughput, source_se) values(:throughput, :source_se) ",
                                 soci::use(bandwidthLimit), soci::use(source_hostname);
                             sql.commit();
                         }
-                    else
+                    else if (sql.got_data())
                         {
                             if(bandwidthLimit == -1)
                                 {
