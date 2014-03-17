@@ -96,18 +96,9 @@ int fts3::implcfg__setConfiguration(soap* soap, config__Configuration *_configur
 
 int fts3::implcfg__getConfiguration(soap* soap, string all, string name, string source, string destination, implcfg__getConfigurationResponse & response)
 {
-
-//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getConfiguration' request" << commit;
-
     response.configuration = soap_new_config__Configuration(soap, -1);
     try
         {
-            AuthorizationManager::getInstance().authorize(
-                soap,
-                AuthorizationManager::CONFIG,
-                AuthorizationManager::dummy
-            );
-
             CGsiAdapter cgsi(soap);
             string dn = cgsi.getClientDn();
 
@@ -115,10 +106,6 @@ int fts3::implcfg__getConfiguration(soap* soap, string all, string name, string 
             bool standalone = !source.empty() && destination.empty();
             bool pair = !source.empty() && !destination.empty();
             bool symbolic_name = !name.empty();
-
-//		if (symbolic_name && (standalone || pair) ) {
-//			throw Err_Custom("Either a stand alone configuration or pair configuration or symbolic name may be specified for the query!");
-//		}
 
             ConfigurationHandler handler (dn);
             if (allcfgs)
