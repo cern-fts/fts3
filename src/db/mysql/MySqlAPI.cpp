@@ -2893,10 +2893,20 @@ bool MySqlAPI::bandwidthChecker(soci::session& sql, const std::string & source_h
     //get aggregated thr from source
     sql << "select sum(throughput) from t_file where source_se= :name and file_state='ACTIVE' ",
         soci::use(source_hostname), soci::into(througputSrc, isNullThrougputSrc);
+     
+     if(isNullThrougputSrc == soci::i_null || througputSrc == 0){
+           sql << "select throughput from t_optimizer_evolution where source_se= :name order by datetime DESC LIMIT 1  ",
+	   	soci::use(source_hostname), soci::into(througputSrc, isNullThrougputSrc);
+     }	 	
 
     //get aggregated thr towards dest
     sql << "select sum(throughput) from t_file where dest_se= :name and file_state='ACTIVE' ",
         soci::use(destination_hostname), soci::into(througputDst, isNullThrougputDst);
+	
+    if(isNullThrougputDst == soci::i_null || througputDst == 0){
+           sql << "select throughput from t_optimizer_evolution where dest_se= :name order by datetime DESC LIMIT 1  ",
+	   	soci::use(destination_hostname), soci::into(througputDst, isNullThrougputDst);
+     }		
 
     if(bandwidthSrc > 0 )
         {
