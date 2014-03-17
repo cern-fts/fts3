@@ -134,6 +134,10 @@ td.SUBMITTED, .SUBMITTED {
 	border-left: solid 12px #b94a48;
 }
 
+.optimizer-branch-10 {
+	border-left: solid 12px #f89406;
+}
+
 /* Ordering */
 .orderby {
     cursor: pointer;

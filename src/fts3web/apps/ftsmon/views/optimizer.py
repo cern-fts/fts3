@@ -16,6 +16,7 @@
 # limitations under the License.
 
 from datetime import datetime, timedelta
+from django.db import connection
 from django.db.models import Max, Avg, StdDev, Count, Min
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import Http404
@@ -52,6 +53,48 @@ def optimizer(httpRequest):
     return pairs.distinct()
 
 
+class OptimizerAppendLimits(object):
+    """
+    Query for the limits if the branch is 10 (limited bandwidth)
+    """
+    def __init__(self, source_se, dest_se, evolution):
+        self.source_se = source_se
+        self.dest_se = dest_se
+        self.evolution = evolution
+        
+    def __len__(self):
+        return len(self.evolution)
+    
+    def __getitem__(self, index):
+        entries = self.evolution[index]
+        if isinstance(entries, list):
+            for e in entries:
+                if e['branch'] == 10:
+                    e['bandwidth_limits'] = {
+                         'source': self._getSourceLimit(),
+                         'destination': self._getDestinationLimit()
+                    }
+        return entries
+    
+    def _getSourceLimit(self):
+        cursor = connection.cursor()
+        cursor.execute("SELECT throughput FROM t_optimize WHERE source_se = %s", [self.source_se])
+        result = cursor.fetchall()
+        if len(result) < 1:
+            return None
+        else:
+            return result[0][0]
+        
+    def _getDestinationLimit(self):
+        cursor = connection.cursor()
+        cursor.execute("SELECT throughput FROM t_optimize WHERE dest_se = %s", [self.dest_se])
+        result = cursor.fetchall()
+        if len(result) < 1:
+            return None
+        else:
+            return result[0][0]
+
+
 @jsonify_paged
 def optimizerDetailed(httpRequest):
     source_se = str(httpRequest.GET.get('source', None))
@@ -70,4 +113,4 @@ def optimizerDetailed(httpRequest):
     optimizer = optimizer.filter(datetime__gte = not_before)
     optimizer = optimizer.values('datetime', 'active', 'throughput', 'success', 'branch')
     optimizer = optimizer.order_by('-datetime')
-    return optimizer
+    return OptimizerAppendLimits(source_se, dest_se, optimizer)
