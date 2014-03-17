@@ -8306,7 +8306,7 @@ void MySqlAPI::setBandwidthLimit(const std::string & source_hostname, const std:
                                 {
                                     sql.begin();
                                     sql << "update t_optimize set throughput=NULL where dest_se=:dest_se ",
-                                        soci::use(bandwidthLimit), soci::use(destination_hostname);
+                                        soci::use(destination_hostname);
                                     sql.commit();
                                 }
                             else
