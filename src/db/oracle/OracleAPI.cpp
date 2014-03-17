@@ -2830,9 +2830,12 @@ bool OracleAPI::updateOptimizer()
                     //make sure bandwidth is respected as also active should be no less than the minimum for each link
                     if(!bandwidth && active >= highDefault)
                         {
-                            sql.begin();
-                            updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, 10, bandwidthIn);
-                            sql.commit();
+                            if(throughput > 0 && ratioSuccessFailure > 0)
+                                {
+                                    sql.begin();
+                                    updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, 10, bandwidthIn);
+                                    sql.commit();
+                                }
                             continue;
                         }
 
@@ -3414,12 +3417,13 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
                     int count = 0;
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                         {
-			    bool drain = getDrainInternal(sql);
-			    if(drain){
-			    	sql.commit();
-				return;
-			    }			
-			
+                            bool drain = getDrainInternal(sql);
+                            if(drain)
+                                {
+                                    sql.commit();
+                                    return;
+                                }
+
                             count++;
                             soci::row const& r = *i;
                             job_id = r.get<std::string>("JOB_ID");
@@ -7695,10 +7699,10 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
 bool OracleAPI::getDrain()
 {
     soci::session sql(*connectionPool);
-   
+
     try
         {
-         return getDrainInternal(sql);
+            return getDrainInternal(sql);
         }
     catch (std::exception& e)
         {
@@ -7710,7 +7714,8 @@ bool OracleAPI::getDrain()
         }
 }
 
-bool OracleAPI::getDrainInternal(soci::session& sql){
+bool OracleAPI::getDrainInternal(soci::session& sql)
+{
 
     int drain = 0;
 
@@ -7798,20 +7803,22 @@ bool OracleAPI::bandwidthChecker(soci::session& sql, const std::string & source_
     //get aggregated thr from source
     sql << "select sum(throughput) from t_file where source_se= :name and file_state='ACTIVE' ",
         soci::use(source_hostname), soci::into(througputSrc, isNullThrougputSrc);
-     
-     if(isNullThrougputSrc == soci::i_null || througputSrc == 0){
-           sql << "select throughput from (select throughput from t_optimizer_evolution where source_se= :name order by datetime) where ROWNUM = 1 ",
-	   	soci::use(source_hostname), soci::into(througputSrc, isNullThrougputSrc);
-     }	 	
+
+    if(isNullThrougputSrc == soci::i_null || througputSrc == 0)
+        {
+            sql << "select throughput from (select throughput from t_optimizer_evolution where source_se= :name order by datetime) where ROWNUM = 1 ",
+                soci::use(source_hostname), soci::into(througputSrc, isNullThrougputSrc);
+        }
 
     //get aggregated thr towards dest
     sql << "select sum(throughput) from t_file where dest_se= :name and file_state='ACTIVE' ",
         soci::use(destination_hostname), soci::into(througputDst, isNullThrougputDst);
-	
-    if(isNullThrougputDst == soci::i_null || througputDst == 0){
-           sql << "select throughput from (select throughput from t_optimizer_evolution where dest_se= :name order by datetime) where ROWNUM = 1  ",
-	   	soci::use(destination_hostname), soci::into(througputDst, isNullThrougputDst);
-     }		
+
+    if(isNullThrougputDst == soci::i_null || througputDst == 0)
+        {
+            sql << "select throughput from (select throughput from t_optimizer_evolution where dest_se= :name order by datetime) where ROWNUM = 1  ",
+                soci::use(destination_hostname), soci::into(througputDst, isNullThrougputDst);
+        }
 
 
     if(bandwidthSrc > 0 )

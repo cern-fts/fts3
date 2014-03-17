@@ -353,8 +353,8 @@ private:
     soci::connection_pool* connectionPool;
     std::string           hostname;
     std::string username_;
-    
-    bool getDrainInternal(soci::session& sql);    
+
+    bool getDrainInternal(soci::session& sql);
 
     std::string getBandwidthLimitInternal(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname);
 

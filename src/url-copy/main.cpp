@@ -222,10 +222,10 @@ void taskStatusUpdater(int time)
             Logger::getInstance().INFO() << "Sending back to the server url-copy is still alive : "
                                          <<  currentTransfer.throughput << "  " <<  currentTransfer.transferredBytes
                                          << std::endl;
-					 
-	    if(currentTransfer.fileId > 0)				 
-            	reporter.sendPing(currentTransfer.jobId, currentTransfer.fileId, currentTransfer.throughput, currentTransfer.transferredBytes);
-	    
+
+            if(currentTransfer.fileId > 0)
+                reporter.sendPing(currentTransfer.jobId, currentTransfer.fileId, currentTransfer.throughput, currentTransfer.transferredBytes);
+
             boost::this_thread::sleep(boost::posix_time::seconds(time));
         }
 }

@@ -104,7 +104,7 @@ bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate
                             thrStored = thrLocal;
                             rateStored = rateLocal;
                             activeStored = activeLocal;
-			    
+
                             if(thr < thrLocal)
                                 {
                                     throughputSamplesLocal += 1;
@@ -119,7 +119,7 @@ bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate
                                 }
 
                             if(throughputSamplesLocal == 3)
-                                {				
+                                {
                                     throughputSamplesStored = throughputSamplesLocal;
                                     throughputSamplesLocal = 0;
                                 }
@@ -2893,20 +2893,22 @@ bool MySqlAPI::bandwidthChecker(soci::session& sql, const std::string & source_h
     //get aggregated thr from source
     sql << "select sum(throughput) from t_file where source_se= :name and file_state='ACTIVE' ",
         soci::use(source_hostname), soci::into(througputSrc, isNullThrougputSrc);
-     
-     if(isNullThrougputSrc == soci::i_null || througputSrc == 0){
-           sql << "select throughput from t_optimizer_evolution where source_se= :name order by datetime DESC LIMIT 1  ",
-	   	soci::use(source_hostname), soci::into(througputSrc, isNullThrougputSrc);
-     }	 	
+
+    if(isNullThrougputSrc == soci::i_null || througputSrc == 0)
+        {
+            sql << "select throughput from t_optimizer_evolution where source_se= :name order by datetime DESC LIMIT 1  ",
+                soci::use(source_hostname), soci::into(througputSrc, isNullThrougputSrc);
+        }
 
     //get aggregated thr towards dest
     sql << "select sum(throughput) from t_file where dest_se= :name and file_state='ACTIVE' ",
         soci::use(destination_hostname), soci::into(througputDst, isNullThrougputDst);
-	
-    if(isNullThrougputDst == soci::i_null || througputDst == 0){
-           sql << "select throughput from t_optimizer_evolution where dest_se= :name order by datetime DESC LIMIT 1  ",
-	   	soci::use(destination_hostname), soci::into(througputDst, isNullThrougputDst);
-     }		
+
+    if(isNullThrougputDst == soci::i_null || througputDst == 0)
+        {
+            sql << "select throughput from t_optimizer_evolution where dest_se= :name order by datetime DESC LIMIT 1  ",
+                soci::use(destination_hostname), soci::into(througputDst, isNullThrougputDst);
+        }
 
     if(bandwidthSrc > 0 )
         {
@@ -3141,9 +3143,12 @@ bool MySqlAPI::updateOptimizer()
                     //make sure bandwidth is respected as also active should be no less than the minimum for each link
                     if(!bandwidth && active >= highDefault)
                         {
-                            sql.begin();
-                            updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, 10, bandwidthIn);
-                            sql.commit();
+                            if(throughput > 0 && ratioSuccessFailure > 0)
+                                {
+                                    sql.begin();
+                                    updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, 10, bandwidthIn);
+                                    sql.commit();
+                                }
                             continue;
                         }
 
@@ -3756,12 +3761,13 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                     int count = 0;
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                         {
-			    bool drain = getDrainInternal(sql);
-			    if(drain){
-			    	sql.commit();
-				return;
-			    }
-			    
+                            bool drain = getDrainInternal(sql);
+                            if(drain)
+                                {
+                                    sql.commit();
+                                    return;
+                                }
+
                             count++;
                             soci::row const& r = *i;
                             job_id = r.get<std::string>("job_id");
@@ -8075,10 +8081,10 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
 bool MySqlAPI::getDrain()
 {
     soci::session sql(*connectionPool);
-   
+
     try
         {
-         return getDrainInternal(sql);
+            return getDrainInternal(sql);
         }
     catch (std::exception& e)
         {
@@ -8090,7 +8096,8 @@ bool MySqlAPI::getDrain()
         }
 }
 
-bool MySqlAPI::getDrainInternal(soci::session& sql){
+bool MySqlAPI::getDrainInternal(soci::session& sql)
+{
 
     int drain = 0;
 

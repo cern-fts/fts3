@@ -489,14 +489,14 @@ int DoServer(int argc, char** argv)
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE daemon started..." << commit;
             while (!stopThreads)
                 {
-			 //if we drain a host, no need to check if url_copy are reporting being alive
-                        if (DrainMode::getInstance())
-                            {
-                                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking stage-in files for this instance!" << commit;
-				sleep(5);
-				continue;                                
-                            }		
-		
+                    //if we drain a host, no need to check if url_copy are reporting being alive
+                    if (DrainMode::getInstance())
+                        {
+                            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking stage-in files for this instance!" << commit;
+                            sleep(5);
+                            continue;
+                        }
+
 
                     //select from the database the config for bringonline for each VO / hostname
                     voHostnameConfig = db::DBSingleton::instance().getDBObjectInstance()->getVOBringonlineMax();
