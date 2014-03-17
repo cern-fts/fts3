@@ -143,15 +143,28 @@ public:
      */
     map<string, int> getBringOnline();
 
+    /**
+     * Get the bandwidth limitation
+     *
+     * @return SE name - value mapping
+     */
+    optional<std::tuple<string, string, int> > getBandwidthLimitation();
+
 private:
     /// parses the multiple parameters that were provided by the user and creates a SE name - value mapping
     void parseBringOnline();
+
+    // parses parameters for max bandwidth
+    void parseMaxBandwidth();
 
     /// JSON configurations specified by user
     vector<string> cfgs;
 
     /// SE name and the respective value of maximum concurrent files in staging process
     map<string, int> bring_online;
+
+    // Source, dest, limit
+    optional<std::tuple<string, string, int> > bandwidth_limitation;
 
     CfgParser::CfgType type;
 };

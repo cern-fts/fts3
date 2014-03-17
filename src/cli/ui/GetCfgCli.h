@@ -79,6 +79,11 @@ public:
     bool vo();
 
     /**
+     * true if the user is querying for the limited bandwidth of a given SE
+     */
+    bool getBandwidth();
+
+    /**
      * Validates command line options
      * 1. Checks the endpoint
      * 2. If -h or -V option were used respective informations are printed

@@ -84,6 +84,15 @@ int main(int ac, char* av[])
                     return 0;
                 }
 
+            optional<std::tuple<std::string, std::string, int> > bandwidth_limitation = cli->getBandwidthLimitation();
+            if (bandwidth_limitation)
+                {
+                    ctx.setBandwidthLimit(std::get<0>(*bandwidth_limitation),
+                            std::get<1>(*bandwidth_limitation),
+                            std::get<2>(*bandwidth_limitation));
+                    return 0;
+                }
+
             config__Configuration *config = soap_new_config__Configuration(ctx, -1);
             config->cfg = cli->getConfigurations();
             if (config->cfg.empty()) return 0;

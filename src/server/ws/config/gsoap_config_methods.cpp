@@ -418,7 +418,6 @@ int fts3::implcfg__setBringOnline(soap* ctx, config__BringOnline *bring_online, 
 
     try
         {
-
             // authorize
             AuthorizationManager::getInstance().authorize(
                 ctx,
@@ -480,9 +479,95 @@ int fts3::implcfg__setBringOnline(soap* ctx, config__BringOnline *bring_online, 
         }
     catch (...)
         {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the bring online limit"  << commit;
+            return SOAP_FAULT;
+        }
+
+    return SOAP_OK;
+}
+
+int fts3::implcfg__setBandwidthLimit(soap* ctx, fts3::config__BandwidthLimit* limit, fts3::implcfg__setBandwidthLimitResponse& resp)
+{
+    try
+        {
+            // authorize
+            AuthorizationManager::getInstance().authorize(
+                ctx,
+                AuthorizationManager::CONFIG,
+                AuthorizationManager::dummy
+            );
+
+            CGsiAdapter cgsi(ctx);
+            string vo = cgsi.getClientVo();
+            string dn = cgsi.getClientDn();
+
+            vector<config__BandwidthLimitPair*>::iterator it;
+            for (it = limit->blElem.begin(); it != limit->blElem.end(); ++it)
+                {
+                    config__BandwidthLimitPair* pair = *it;
+
+                    if (!pair->source.empty() && !pair->dest.empty())
+                        throw Err_Custom("Only source OR destination can be specified");
+
+                    DBSingleton::instance().getDBObjectInstance()->setBandwidthLimit(
+                                        pair->source, pair->dest, pair->limit);
+
+                    if (pair->limit >= 0) {
+                        FTS3_COMMON_LOGGER_NEWLOG (INFO)
+                            << "User: "
+                            << dn
+                            << " had set the maximum bandwidth of "
+                            << pair->source << pair->dest
+                            << " to "
+                            << pair->limit << "Mbits/sec"
+                            << commit;
+                    }
+                    else {
+                        FTS3_COMMON_LOGGER_NEWLOG (INFO)
+                            << "User: "
+                            << dn
+                            << " had reset the maximum bandwidth of "
+                            << pair->source << pair->dest
+                            << commit;
+                    }
+                }
+        }
+    catch(Err& ex)
+        {
+
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+            soap_receiver_fault(ctx, ex.what(), "InvalidConfigurationException");
+
+            return SOAP_FAULT;
+        }
+    catch (...)
+        {
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the number of retries cannot be set"  << commit;
             return SOAP_FAULT;
         }
 
     return SOAP_OK;
+}
+
+int fts3::implcfg__getBandwidthLimit(soap* ctx, fts3::implcfg__getBandwidthLimitResponse& resp)
+{
+    try
+       {
+            resp.limit = DBSingleton::instance().getDBObjectInstance()->getBandwidthLimit();
+       }
+   catch(Err& ex)
+       {
+
+           FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+           soap_receiver_fault(ctx, ex.what(), "InvalidConfigurationException");
+
+           return SOAP_FAULT;
+       }
+   catch (...)
+       {
+           FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the number of retries cannot be set"  << commit;
+           return SOAP_FAULT;
+       }
+
+   return SOAP_OK;
 }

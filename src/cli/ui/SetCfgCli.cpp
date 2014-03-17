@@ -44,6 +44,10 @@ SetCfgCli::SetCfgCli(bool spec)
             ("retry", value<int>(), "Sets the number of retries of each individual file transfer (the value should be greater or equal to -1).")
             ("optimizer-mode", value<int>(), "Sets the optimizer mode (allowed values: 1, 2 or 3)")
             ("queue-timeout", value<int>(), "Sets the maximum time (in hours) transfer job is allowed to be in the queue (the value should be greater or equal to 0).")
+
+            ("source", value<string>(), "The source SE")
+            ("destination", value<string>(), "The destination SE")
+            ("max-bandwidth", value<int>(), "The maximum bandwidth that can be used (in Mbit/s)")
             ;
         }
 
@@ -80,6 +84,10 @@ void SetCfgCli::parse(int ac, char* av[])
                 parseBringOnline();
             else
                 cfgs = vm["cfg"].as< vector<string> >();
+        }
+    else if(vm.count("max-bandwidth"))
+        {
+            parseMaxBandwidth();
         }
 
     // check JSON configurations
@@ -143,6 +151,7 @@ bool SetCfgCli::validate()
             && !vm.count("queue-timeout")
             && !vm.count("bring-online")
             && !vm.count("optimizer-mode")
+            && !vm.count("max-bandwidth")
        )
         {
             msgPrinter.error_msg("No parameters have been specified.");
@@ -224,8 +233,27 @@ void SetCfgCli::parseBringOnline()
     while (first != v.end());
 }
 
+void SetCfgCli::parseMaxBandwidth()
+{
+    std::string source_se, dest_se;
+
+    if (!vm["source"].empty())
+        source_se = vm["source"].as<string>();
+    if (!vm["destination"].empty())
+        dest_se = vm["destination"].as<string>();
+
+    int limit = vm["max-bandwidth"].as<int>();
+
+    bandwidth_limitation = make_optional(std::tuple<string, string, int>(source_se, dest_se, limit));
+}
+
 map<string, int> SetCfgCli::getBringOnline()
 {
-
     return bring_online;
 }
+
+optional<std::tuple<string, string, int> > SetCfgCli::getBandwidthLimitation()
+{
+    return bandwidth_limitation;
+}
+

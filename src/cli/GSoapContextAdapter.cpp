@@ -507,6 +507,26 @@ void GSoapContextAdapter::setBringOnline(map<string, int>& pairs)
         handleSoapFault("Failed to set bring-online limit: setBringOnline.");
 }
 
+void GSoapContextAdapter::setBandwidthLimit(const std::string& source_se, const std::string& dest_se, int limit)
+{
+    config__BandwidthLimit bandwidth_limit;
+    config__BandwidthLimitPair* pair = soap_new_config__BandwidthLimitPair(ctx, -1);
+    pair->source = source_se;
+    pair->dest   = dest_se;
+    pair->limit  = limit;
+    bandwidth_limit.blElem.push_back(pair);
+
+    implcfg__setBandwidthLimitResponse resp;
+    if (soap_call_implcfg__setBandwidthLimit(ctx, endpoint.c_str(), 0, &bandwidth_limit, resp))
+        handleSoapFault("Failed to set bandwidth limit: setBandwidthLimit.");
+}
+
+void GSoapContextAdapter::getBandwidthLimit(implcfg__getBandwidthLimitResponse& resp)
+{
+    if (soap_call_implcfg__getBandwidthLimit(ctx, endpoint.c_str(), 0, resp))
+        handleSoapFault("Failed to set bandwidth limit: getBandwidthLimit.");
+}
+
 void GSoapContextAdapter::debugSet(string source, string destination, bool debug)
 {
     impltns__debugSetResponse resp;

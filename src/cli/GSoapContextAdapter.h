@@ -239,6 +239,16 @@ public:
     void setBringOnline(map<string, int>& pairs);
 
     /**
+     * Remote call to setBandwidthLimit
+     */
+    void setBandwidthLimit(const std::string& source_se, const std::string& dest_se, int limit);
+
+    /**
+     * Remote call to getBandwidthLimit
+     */
+    void getBandwidthLimit(implcfg__getBandwidthLimitResponse& resp);
+
+    /**
      * Splits the given string, and sets:
      * 		- major number
      * 		- minor number
