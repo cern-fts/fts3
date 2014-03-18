@@ -1304,7 +1304,7 @@ int fts3::impltns__getSnapshot(soap* ctx, string vo, string src, string dst, imp
 {
     try
         {
-            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::CONFIG, AuthorizationManager::dummy);
+            //AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::CONFIG, AuthorizationManager::dummy);
 
             std::string endpoint = theServerConfig().get<std::string > ("Alias");
             std::stringstream result;
