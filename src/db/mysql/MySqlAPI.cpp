@@ -7905,7 +7905,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                                 ));
 
             soci::statement st5((sql.prepare << "select reason, count(reason) as c from t_file where "
-                                 " (job_finished > (UTC_TIMESTAMP() - interval '15' minute)) "
+                                 " (job_finished > (UTC_TIMESTAMP() - interval '60' minute)) "
                                  " AND file_state='FAILED' and "
                                  " source_se=:source_se and dest_se=:dest_se and vo_name =:vo_name_local   "
                                  " group by reason order by c desc limit 1",
