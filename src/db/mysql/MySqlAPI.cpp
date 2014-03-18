@@ -3752,7 +3752,7 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                 {
                     soci::rowset<soci::row> rs = (
                                                      sql.prepare <<
-                                                     "  select  job_id from t_job where job_finished < (UTC_TIMESTAMP() - interval '4' DAY ) "
+                                                     "  select  job_id from t_job where job_finished < (UTC_TIMESTAMP() - interval '7' DAY ) "
                                                  );
 
                     std::string job_id;
@@ -3795,14 +3795,14 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                     sql.commit();
 
 
-                    //delete from t_optimizer_evolution > 5 days old records
+                    //delete from t_optimizer_evolution > 7 days old records
                     sql.begin();
-                    sql << "delete from t_optimizer_evolution where datetime < (UTC_TIMESTAMP() - interval '5' DAY )";
+                    sql << "delete from t_optimizer_evolution where datetime < (UTC_TIMESTAMP() - interval '7' DAY )";
                     sql.commit();
 
-                    //delete from t_file_retry_errors > 3 days old records
+                    //delete from t_file_retry_errors > 7 days old records
                     sql.begin();
-                    sql << "delete from t_file_retry_errors where datetime < (UTC_TIMESTAMP() - interval '3' DAY )";
+                    sql << "delete from t_file_retry_errors where datetime < (UTC_TIMESTAMP() - interval '7' DAY )";
                     sql.commit();
                 }
         }

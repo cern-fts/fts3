@@ -3407,7 +3407,7 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
                                                      " SELECT job_id "
                                                      " FROM  t_job "
                                                      " WHERE "
-                                                     " job_finished < (systimestamp - interval '4' DAY ) "
+                                                     " job_finished < (systimestamp - interval '7' DAY ) "
                                                  );
 
                     std::string job_id;
@@ -3449,14 +3449,14 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
                         }
                     sql.commit();
 
-                    //delete from t_optimizer_evolution > 5 days old records
+                    //delete from t_optimizer_evolution > 7 days old records
                     sql.begin();
-                    sql << "delete from t_optimizer_evolution where datetime < (systimestamp - interval '5' DAY )";
+                    sql << "delete from t_optimizer_evolution where datetime < (systimestamp - interval '7' DAY )";
                     sql.commit();
 
-                    //delete from t_file_retry_errors > 3 days old records
+                    //delete from t_file_retry_errors > 7 days old records
                     sql.begin();
-                    sql << "delete from t_file_retry_errors where datetime < (systimestamp - interval '3' DAY )";
+                    sql << "delete from t_file_retry_errors where datetime < (systimestamp - interval '7' DAY )";
                     sql.commit();
                 }
         }
