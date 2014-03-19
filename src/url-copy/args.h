@@ -23,6 +23,7 @@ public:
     bool logToStderr;
     bool reuse;
     bool multihop;
+    bool enable_udt;
 
     enum CompareChecksum
     {

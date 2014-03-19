@@ -580,6 +580,11 @@ int main(int argc, char **argv)
             gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "SESSION_REUSE", TRUE, NULL);
         }
 
+    // Enable UDT
+    if (opts.enable_udt)
+        {
+            gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "ENABLE_UDT", TRUE, NULL);
+        }
 
     if (!handle)
         {
@@ -676,6 +681,7 @@ int main(int argc, char **argv)
                 logger.INFO() << "Job metadata:" << replaceMetadataString(opts.jobMetadata) << std::endl;
                 logger.INFO() << "Bringonline token:" << currentTransfer.tokenBringOnline << std::endl;
                 logger.INFO() << "Multihop: " << opts.multihop << std::endl;
+                logger.INFO() << "UDT: " << opts.enable_udt << std::endl;
 
                 //set to active only for reuse
                 if (opts.areTransfersOnFile())
