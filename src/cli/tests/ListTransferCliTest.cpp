@@ -22,7 +22,7 @@
  *      Author: Michal Simon
  */
 
-//#ifdef FTS3_COMPILE_WITH_UNITTEST
+#ifdef FTS3_COMPILE_WITH_UNITTEST
 #include "ui/ListTransferCli.h"
 #include "unittest/testsuite.h"
 
@@ -110,4 +110,4 @@ BOOST_AUTO_TEST_CASE (ListTransferCli_Status_Test)
     BOOST_CHECK(statuses[4] == "status5");
     BOOST_CHECK(statuses[5] == "status6");
 }
-
+#endif // FTS3_COMPILE_WITH_UNITTESTS

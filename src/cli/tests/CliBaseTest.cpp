@@ -23,7 +23,7 @@
  */
 
 
-//#ifdef FTS3_COMPILE_WITH_UNITTEST
+#ifdef FTS3_COMPILE_WITH_UNITTEST
 #include "ui/CliBase.h"
 #include "unittest/testsuite.h"
 
@@ -117,4 +117,4 @@ BOOST_AUTO_TEST_CASE (CliBase_Test2)
 }
 
 
-//#endif // FTS3_COMPILE_WITH_UNITTESTS
+#endif // FTS3_COMPILE_WITH_UNITTESTS

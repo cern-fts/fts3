@@ -23,7 +23,7 @@
  */
 
 
-//#ifdef FTS3_COMPILE_WITH_UNITTEST
+#ifdef FTS3_COMPILE_WITH_UNITTEST
 #include "ui/JobIdCli.h"
 #include "unittest/testsuite.h"
 
@@ -64,3 +64,4 @@ BOOST_AUTO_TEST_CASE (JobIDCli_Test1)
     BOOST_CHECK(ids[1] == "ID2");
     BOOST_CHECK(ids[2] == "ID3");
 }
+#endif // FTS3_COMPILE_WITH_UNITTESTS

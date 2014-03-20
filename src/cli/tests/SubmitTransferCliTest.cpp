@@ -22,7 +22,7 @@
  *      Author: Michal Simon
  */
 
-//#ifdef FTS3_COMPILE_WITH_UNITTEST
+#ifdef FTS3_COMPILE_WITH_UNITTEST
 
 #include "ui/SubmitTransferCli.h"
 #include "unittest/testsuite.h"
@@ -248,3 +248,4 @@ BOOST_FIXTURE_TEST_CASE (SubmitTransferCli_Parameters_Test, SubmitTransferCli)
     cli->unmute();
 }
 
+#endif // FTS3_COMPILE_WITH_UNITTESTS

@@ -23,7 +23,7 @@
  */
 
 
-//#ifdef FTS3_COMPILE_WITH_UNITTEST
+#ifdef FTS3_COMPILE_WITH_UNITTEST
 #include "ui/TransferStatusCli.h"
 #include "unittest/testsuite.h"
 
@@ -47,4 +47,4 @@ BOOST_AUTO_TEST_CASE (TransferStatusCli_Test)
 
     BOOST_CHECK(cli->list());
 }
-
+#endif // FTS3_COMPILE_WITH_UNITTESTS

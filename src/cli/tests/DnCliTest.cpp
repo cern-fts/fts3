@@ -23,7 +23,7 @@
  */
 
 
-//#ifdef FTS3_COMPILE_WITH_UNITTEST
+#ifdef FTS3_COMPILE_WITH_UNITTEST
 #include "ui/DnCli.h"
 #include "unittest/testsuite.h"
 
@@ -78,3 +78,4 @@ BOOST_AUTO_TEST_CASE (DnCli_Test2)
     // the endpoint shouldn't be empty since it's starting with http
     BOOST_CHECK(cli->getUserDn().compare("userdn") == 0);
 }
+#endif // FTS3_COMPILE_WITH_UNITTESTS
