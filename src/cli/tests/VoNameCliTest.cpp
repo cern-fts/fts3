@@ -23,7 +23,7 @@
  */
 
 
-//#ifdef FTS3_COMPILE_WITH_UNITTEST
+#ifdef FTS3_COMPILE_WITH_UNITTEST
 #include "ui/VoNameCli.h"
 #include "unittest/testsuite.h"
 
@@ -50,4 +50,4 @@ BOOST_AUTO_TEST_CASE (VONameCli_Test)
 
     BOOST_CHECK(cli->getVoName() == "voname");
 }
-
+#endif // FTS3_COMPILE_WITH_UNITTESTS
