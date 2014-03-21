@@ -22,30 +22,27 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import Http404
 from ftsweb.models import OptimizerEvolution
 from ftsweb.models import File, Job
-from ftsmon import forms
 from jsonify import jsonify, jsonify_paged
 from util import getOrderBy, orderedField
         
 
 @jsonify_paged
 def optimizer(httpRequest):
-    # Initialize forms
-    filter_form = forms.FilterForm(httpRequest.GET)
     time_window = timedelta(minutes = 30)
     
     # Query
     pairs = OptimizerEvolution.objects.filter(throughput__isnull = False)\
                         .values('source_se', 'dest_se')
-    if filter_form.is_valid():
-        if filter_form['source_se'].value():
-            pairs = pairs.filter(source_se = filter_form['source_se'].value())
-        if filter_form['dest_se'].value():
-            pairs = pairs.filter(dest_se = filter_form['dest_se'].value())
-        if filter_form['time_window'].value():
-            try:
-                time_window = timedelta(hours = int(filter_form['time_window'].value()))
-            except:
-                pass
+
+    if httpRequest.GET.get('source_se', None):
+        pairs = pairs.filter(source_se = httpRequest.GET['source_se'])
+    if httpRequest.GET.get('dest_se', None):
+        pairs = pairs.filter(dest_se = httpRequest.GET['dest_se'])
+    if httpRequest.GET.get('time_window', None):
+        try:
+            time_window = timedelta(hours = int(httpRequest.GET['time_window']))
+        except:
+            pass
 
     not_before = datetime.utcnow() - time_window
     pairs = pairs.filter(datetime__gte = not_before)
