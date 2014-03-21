@@ -2124,7 +2124,7 @@ bool OracleAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn
                 soci::use(dlg_id), soci::use(dn), soci::use(cert_request), soci::use(priv_key), soci::use(voms_attrs);
             sql.commit();
         }
-    catch (soci::oracle_soci_error const &ex)
+    catch (soci::oracle_soci_error const &e)
     	{
 			sql.rollback();
 			unsigned int err_code = e.err_num_;
