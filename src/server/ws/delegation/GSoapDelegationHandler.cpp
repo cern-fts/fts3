@@ -175,13 +175,30 @@ string GSoapDelegationHandler::getProxyReq(string delegationId)
 
     try
         {
-            DBSingleton::instance().getDBObjectInstance()->insertGrDPStorageCacheElement(
+            bool inserted = DBSingleton::instance().getDBObjectInstance()->insertGrDPStorageCacheElement(
                 delegationId,
                 dn,
                 req,
                 keytxt,
                 fqansToString(attrs)
             );
+
+            if (!inserted)
+				{
+					// double check if the public - private key pair has been already generated and is in the DB cache
+					cache.reset(
+						DBSingleton::instance().getDBObjectInstance()->findGrDPStorageCacheElement(delegationId, dn)
+					);
+
+					if (cache.get())
+						{
+							if (reqtxt) free(reqtxt);
+							if (keytxt) free(keytxt);
+							return cache->certificateRequest;
+						}
+
+					throw Err_Custom("Failed to insert the 'public-private' key into t_credential_cache!");
+				}
         }
     catch(Err& ex)
         {

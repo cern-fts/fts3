@@ -2110,7 +2110,7 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs)
 
 
 /*t_credential API*/
-void OracleAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs)
+bool OracleAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs)
 {
     soci::session sql(*connectionPool);
 
@@ -2124,6 +2124,17 @@ void OracleAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn
                 soci::use(dlg_id), soci::use(dn), soci::use(cert_request), soci::use(priv_key), soci::use(voms_attrs);
             sql.commit();
         }
+    catch (soci::oracle_soci_error const &ex)
+    	{
+			sql.rollback();
+			unsigned int err_code = e.err_num_;
+
+			// the magic '1062' is the error code of
+			// Duplicate entry 'XXX' for key 'PRIMARY'
+			if (err_code == 1062) return false;
+
+			throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
+    	}
     catch (std::exception& e)
         {
             sql.rollback();
@@ -2134,6 +2145,8 @@ void OracleAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
+
+    return true;
 }
 
 

@@ -48,7 +48,12 @@ static unsigned getHashedId(void)
         {
             generator = new std::mt19937(clock());
         }
+#if __cplusplus <= 199711L
     std::uniform_int<unsigned> distribution(0, UINT16_MAX);
+#else
+    std::uniform_int_distribution<unsigned> distribution(0, UINT16_MAX);
+#endif
+
     return distribution(*generator);
 }
 
@@ -2332,7 +2337,7 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
 
 
 /*t_credential API*/
-void MySqlAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs)
+bool MySqlAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs)
 {
     soci::session sql(*connectionPool);
 
@@ -2346,6 +2351,17 @@ void MySqlAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn,
                 soci::use(dlg_id), soci::use(dn), soci::use(cert_request), soci::use(priv_key), soci::use(voms_attrs);
             sql.commit();
         }
+    catch (soci::mysql_soci_error const &e)
+    	{
+    		sql.rollback();
+    		unsigned int err_code = e.err_num_;
+
+    		// the magic '1062' is the error code of
+    		// Duplicate entry 'XXX' for key 'PRIMARY'
+    		if (err_code == 1062) return false;
+
+    		throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
+    	}
     catch (std::exception& e)
         {
             sql.rollback();
@@ -2356,6 +2372,8 @@ void MySqlAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn,
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
+
+    return true;
 }
 
 
