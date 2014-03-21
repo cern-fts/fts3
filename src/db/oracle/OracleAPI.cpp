@@ -2129,9 +2129,9 @@ bool OracleAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn
 			sql.rollback();
 			unsigned int err_code = e.err_num_;
 
-			// the magic '1062' is the error code of
-			// Duplicate entry 'XXX' for key 'PRIMARY'
-			if (err_code == 1062) return false;
+			// the magic '1' is the error code of
+			// ORA-00001: unique constraint (XXX) violated
+			if (err_code == 1) return false;
 
 			throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
     	}
