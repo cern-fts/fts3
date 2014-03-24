@@ -1,6 +1,6 @@
 <h2>
     Errors for {{source_se}} → {{dest_se}}
-    <button class="btn btn-mini btn-info" type="button" ng-click="filtersModal = true">Filter</button>
+    <button class="btn btn-mini btn-info" type="button" ng-click="showFilterDialog()">Filter</button>
 </h2>
 <h3>For the last hour</h3>
 
@@ -34,8 +34,8 @@
     on-select-page="pageChanged(page)"></pagination>
 
  <!-- Modals -->
-<div modal="filtersModal" close="filtersModal = false" options="opts">
-    <form ng-submit="filterReason(filter.contains)" autocomplete="off">
+<div id="filterDialog" class="modal" role="dialog" style="display: none">
+    <form ng-submit="applyFilters()" autocomplete="off">
         <div class="modal-header">
             <h3>Reason contains</h3>
         </div>
@@ -44,8 +44,8 @@
             <input type="text" placeholder="Error reason" id="reason" ng-model="filter.reason"/>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-success" ng-click="filterReason(filter)">Apply</button>
-            <button class="btn btn-danger" ng-click="filtersModal = false">Cancel</button>
+            <button class="btn btn-success" ng-click="applyFilters()">Apply</button>
+            <button class="btn btn-danger" ng-click="cancelFilters()">Cancel</button>
         </div>
     </form>
 </div>

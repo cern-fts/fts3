@@ -1,7 +1,8 @@
+<global-filter></global-filter>
+
 <h2>Overview</h2>
 <h3>
     Showing {{overview.startIndex}} to {{overview.endIndex}} out of {{overview.count}} from the last hour
-    <button class="btn btn-mini btn-info" type="button" ng-click="filtersModal = true">Filter</button>
 </h3>
 
 <pagination rotate="false" num-pages="overview.pageCount" current-page="overview.page"
@@ -126,31 +127,3 @@
         No active, no submitted, success rate between 80% and 90%.
     </p>
 </div>
-
-<!-- Modals -->
-<div modal="filtersModal" close="filtersModal = false" options="opts">
-    <form ng-submit="filterBy(filter)" autocomplete="off">
-        <div class="modal-header">
-            <h3>Filters</h3>
-        </div>
-        <div class="modal-body">
-            <label for="source_se">Source storage element:</label>
-            <input type="text" placeholder="source storage element" id="source_se" ng-model="filter.source_se"
-                   typeahead="source for source in unique.sources | safeFilter:$viewValue"/>
-            
-            <label for="dest_se">Destination storage element:</label>
-            <input type="text" placeholder="destination storage element" name="dest_se" ng-model="filter.dest_se"
-                   typeahead="dest for dest in unique.destinations | safeFilter:$viewValue"/>
-               
-            <label for="vo">VO:</label>
-            <select id="vo" ng-model="filter.vo" ng-options="vo for vo in unique.vos">
-              <option value="">-- All VOs --</option>
-            </select>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-success" ng-click="filterBy(filter); filtersModal = false">Apply</button>
-            <button class="btn btn-danger" ng-click="filtersModal = false">Cancel</button>
-        </div>
-    </form>
-</div>
-

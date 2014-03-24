@@ -1,17 +1,8 @@
 
-function TransfersCtrl($location, $scope, transfers, Transfers, Unique)
+function TransfersCtrl($location, $scope, transfers, Transfers)
 {
 	// Queue entries
 	$scope.transfers = transfers;
-	
-	// Unique values
-	$scope.unique = {
-		sources: Unique('sources'),
-		destinations: Unique('destinations'),
-		vos: Unique('vos'),
-		activities: Unique('activities'),
-		hostnames: Unique('hostnames')
-	}
 
 	// On page change, reload
 	$scope.pageChanged = function(newPage) {
@@ -41,12 +32,17 @@ function TransfersCtrl($location, $scope, transfers, Transfers, Unique)
 		hostname:    validString($location.search().hostname),
 	}
 	
+    $scope.showFilterDialog = function() {
+    	document.getElementById('filterDialog').style.display = 'block';
+    }
+    
+    $scope.cancelFilters = function() {
+    	document.getElementById('filterDialog').style.display = 'none';
+    }
+	
 	$scope.applyFilters = function() {
 		$location.search({
 			page:         1,
-			vo:           validString($scope.filter.vo),
-			source_se:    $scope.filter.source_se,
-			dest_se:      $scope.filter.dest_se,
 			source_surl:  $scope.filter.source_surl,
 			dest_surl:    $scope.filter.dest_surl,
 			time_window:  $scope.filter.time_window,
@@ -54,7 +50,7 @@ function TransfersCtrl($location, $scope, transfers, Transfers, Unique)
 			activity:     validString($scope.filter.activity),
 			hostname:     validString($scope.filter.hostname),
 		});
-		$scope.filtersModal = false;
+		document.getElementById('filterDialog').style.display = 'none';
 	}	
 }
 

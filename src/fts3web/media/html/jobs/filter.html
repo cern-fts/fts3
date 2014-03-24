@@ -1,0 +1,29 @@
+<div id="filterDialog" class="modal" role="dialog" style="display: none">
+    <form autocomplete="off">
+        <div class="modal-header">
+            <h3>Filters</h3>
+        </div>
+        <div class="modal-body">
+            <label for="state">State:</label>
+            <p class="btn-group">
+                <button type="button" class="btn btn-info btn-small" ng-model="filter.state.submitted" btn-checkbox>SUBMITTED</button>
+                <button type="button" class="btn btn-info btn-small" ng-model="filter.state.ready" btn-checkbox>READY</button>
+                <button type="button" class="btn btn-primary btn-small" ng-model="filter.state.staging" btn-checkbox>STAGING</button>
+                <button type="button" class="btn btn-primary btn-small" ng-model="filter.state.active" btn-checkbox>ACTIVE</button>
+                
+                <br/>
+                <button type="button" class="btn btn-danger  btn-small" ng-model="filter.state.canceled" btn-checkbox>CANCELED</button>
+                <button type="button" class="btn btn-danger btn-small" ng-model="filter.state.failed" btn-checkbox>FAILED</button>
+                <button type="button" class="btn btn-success btn-small" ng-model="filter.state.finished" btn-checkbox>FINISHED</button>
+                <button type="button" class="btn btn-warning btn-small" ng-model="filter.state.finisheddirty" btn-checkbox>FINISHED DIRTY</button>
+            </p>
+            
+            <label for="timewindow">Time window:</label>
+            <input type="number" placeholder="time window in hours" id="timewindow" ng-model="filter.time_window"/>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-success" ng-click="applyFilters()">Apply</button>
+            <button class="btn btn-danger" ng-click="filtersModal = false">Cancel</button>
+        </div>
+    </form>
+</div>
