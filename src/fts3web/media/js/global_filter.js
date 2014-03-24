@@ -59,7 +59,8 @@ angular.module('ftsmon.global_filter', [])
 .run(function($location, $rootScope) {
 	var wrapped = $location.search.bind($location);
 	$location.search = function(search, paramValue) {
-		mergeFilters(search, $rootScope.globalFilter);
+		if (typeof(search) != 'string')
+			mergeFilters(search, $rootScope.globalFilter);
 		return wrapped(search, paramValue);
 	}
 });
