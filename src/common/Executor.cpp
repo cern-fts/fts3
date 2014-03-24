@@ -12,7 +12,7 @@ BOOST_AUTO_TEST_SUITE(ExecutorTest)
 
 struct ExecTask
 {
-	int execute()
+	virtual int execute()
 	{
 		return 1;
 	}
