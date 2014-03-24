@@ -19,7 +19,7 @@ limitations under the License. */
 
 #include "monitorobject.h"
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST
+#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 
 #include "unittest/testsuite.h"
 
@@ -29,8 +29,8 @@ using namespace FTS3_COMMON_NAMESPACE;
 struct MonitorObject_Test : public MonitorObject {};
 
 /* -------------------------------------------------------------------------- */
-
-BOOST_FIXTURE_TEST_SUITE (MonitorObject_TestSuite, MonitorObject_Test)
+BOOST_AUTO_TEST_SUITE( common )
+BOOST_FIXTURE_TEST_SUITE (MonitorObjectTest, MonitorObject_Test)
 
 BOOST_AUTO_TEST_CASE (test)
 {
@@ -44,6 +44,7 @@ BOOST_AUTO_TEST_CASE (test)
     BOOST_TEST_MESSAGE ("Static critical section finished.");
 }
 
+BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 
 #endif // FTS3_COMPILE_WITH_UNITTESTS
