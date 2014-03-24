@@ -425,6 +425,24 @@ optional<std::string> CfgParser::get_opt(std::string path)
     return v;
 }
 
+#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
+BOOST_AUTO_TEST_SUITE( common )
+BOOST_AUTO_TEST_SUITE(CfgParserTest)
+
+BOOST_AUTO_TEST_CASE (CfgParser_get_opt)
+{
+	CfgParser parser(standalone_se_cfg_str);
+	optional<std::string> val = parser.get_opt("se");
+
+	BOOST_CHECK(val.is_initialized());
+	BOOST_CHECK_EQUAL(*val, "srm://se.cernc.h");
+	BOOST_CHECK(!parser.get_opt("nanana").is_initialized());
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()
+#endif // FTS3_COMPILE_WITH_UNITTESTS
+
 bool CfgParser::isAuto(std::string path)
 {
 
