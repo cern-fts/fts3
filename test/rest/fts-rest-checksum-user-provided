@@ -52,7 +52,6 @@ class TestUserChecksum(base.TestBase):
         """
         Same as before, but -K is not passed. The transfer must fail!
         """
-        config.Timeout = 20
         for (src, dst) in self.transfers:
             logging.info("Transfer with wrong user checksum and no flag %s => %s" % (src, dst))
             srcChecksum = self.surl.create(src)

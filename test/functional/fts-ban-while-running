@@ -38,7 +38,6 @@ class BanWhileRunning(base.TestBase):
         Submitting the transfer while it stays in the queue
         Than we will try to ban it with the status WAIT
         """
-        config.Timeout = 20
         for (src, dst) in self.transfers[:1]:
             self.surl.create(src)
             jobId = self.client.submit([{'sources': [src], 'destinations': [dst]}], extraArgs = ['--retry', '1', '--retry-delay', '10'])

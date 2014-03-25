@@ -47,8 +47,7 @@ class Cli:
                     '-s', config.Fts3Endpoint,
                     '--job-metadata', label,
                      '-f', submission.name] + extraArgs
-        jobId = self._spawn(cmdArray)
-        jobId = jobId.split("\n")[1].strip()
+        jobId = json.loads(self._spawn(cmdArray))
         os.unlink(submission.name)
         return jobId
 
@@ -64,10 +63,8 @@ class Cli:
     def poll(self, jobId):
         state = self.getJobState(jobId)
         remaining = config.Timeout
-        print "REMAINING"
-        print remaining
         while state not in fts3.JobTerminalStates:
-            logging.debug("%s %s" % (jobId, state))
+            logging.debug("[%d] %s %s" % (remaining, jobId, state))
             time.sleep(config.PollInterval)
             remaining -= config.PollInterval
             state = self.getJobState(jobId)
