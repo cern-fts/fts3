@@ -31,8 +31,9 @@
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 #include "unittest/testsuite.h"
-extern bool stopThreads;
 #endif
+
+extern bool stopThreads;
 
 namespace fts3
 {

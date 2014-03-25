@@ -135,7 +135,7 @@ void ProfiledDB::cancelJob(std::vector<std::string>& requestIDs)
 
 bool ProfiledDB::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs)
 {
-    PROFILE_PREFIXED("DB::", db->insertGrDPStorageCacheElement(dlg_id, dn, cert_request, priv_key, voms_attrs));
+    PROFILE_PREFIXED("DB::", return db->insertGrDPStorageCacheElement(dlg_id, dn, cert_request, priv_key, voms_attrs));
 }
 
 
