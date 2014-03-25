@@ -30,6 +30,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <iostream>
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -79,7 +80,7 @@ public:
     void job_summary(JobSummary js);
     void file_list(vector<string> values, vector<string> retries);
 
-    MsgPrinter();
+    MsgPrinter(ostream& out = std::cout);
     virtual ~MsgPrinter();
 
     void setVerbose(bool verbose)
@@ -112,6 +113,8 @@ private:
     ///
     ptree json_out;
 
+    /// the output stream
+    ostream& out;
 };
 
 } /* namespace server */

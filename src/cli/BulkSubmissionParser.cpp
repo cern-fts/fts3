@@ -46,7 +46,7 @@ const set<string> BulkSubmissionParser::file_tokens =
     ("metadata")
     ;
 
-BulkSubmissionParser::BulkSubmissionParser(ifstream& ifs)
+BulkSubmissionParser::BulkSubmissionParser(istream& ifs)
 {
 
     try
