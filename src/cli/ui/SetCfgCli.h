@@ -28,6 +28,7 @@
 #include "CliBase.h"
 
 #include <vector>
+#include <tuple>
 #include <boost/optional.hpp>
 
 #include "common/CfgParser.h"
@@ -149,6 +150,13 @@ public:
      * @return SE name - value mapping
      */
     optional<std::tuple<string, string, int> > getBandwidthLimitation();
+
+    /**
+     * Get the udt protocol settings
+     *
+     * @return udl protocol setting for given SE
+     */
+    optional< std::tuple<string, string, string> > getProtocol();
 
 private:
     /// parses the multiple parameters that were provided by the user and creates a SE name - value mapping

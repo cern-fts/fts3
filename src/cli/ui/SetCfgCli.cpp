@@ -44,10 +44,10 @@ SetCfgCli::SetCfgCli(bool spec)
             ("retry", value<int>(), "Sets the number of retries of each individual file transfer (the value should be greater or equal to -1).")
             ("optimizer-mode", value<int>(), "Sets the optimizer mode (allowed values: 1, 2 or 3)")
             ("queue-timeout", value<int>(), "Sets the maximum time (in hours) transfer job is allowed to be in the queue (the value should be greater or equal to 0).")
-
             ("source", value<string>(), "The source SE")
             ("destination", value<string>(), "The destination SE")
             ("max-bandwidth", value<int>(), "The maximum bandwidth that can be used (in Mbit/s)")
+            ("protocol", value< vector<string> >()->multitoken(), "Set protocol (UDT) for given SE")
             ;
         }
 
@@ -211,6 +211,17 @@ optional<unsigned> SetCfgCli::queueTimeout()
         }
 
     return optional<unsigned>();
+}
+
+optional< std::tuple<string, string, string> > SetCfgCli::getProtocol()
+{
+	// check if the option was used
+    if (!vm.count("protocol")) return optional< std::tuple<string, string, string> >();
+	// make sure it was used corretly
+	const vector<string>& v = vm["protocol"].as< vector<string> >();
+	if (v.size() != 3) throw string("'--protocol' takes following parameters: udt SE on/off");
+
+	return std::make_tuple(v[0], v[1], v[2]);
 }
 
 void SetCfgCli::parseBringOnline()
