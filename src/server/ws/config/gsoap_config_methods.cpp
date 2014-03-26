@@ -577,6 +577,8 @@ int fts3::implcfg__setSeProtocol(soap* ctx, string protocol, string se, string s
 
     try
         {
+    		if (state != "on" && state != "off") throw Err_Custom("the protocol may be either set to 'on' or 'off'");
+
     		// Authorise operation
             AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::CONFIG, AuthorizationManager::dummy);
 
@@ -593,7 +595,7 @@ int fts3::implcfg__setSeProtocol(soap* ctx, string protocol, string se, string s
     catch(Err& ex)
         {
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
-            soap_receiver_fault(ctx, ex.what(), "TransferException");
+            soap_receiver_fault(ctx, ex.what(), "InvalidConfigurationnException");
             return SOAP_FAULT;
         }
     catch (...)
