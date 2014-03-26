@@ -124,7 +124,6 @@ public:
                                     {
                                         DBSingleton::instance().getDBObjectInstance()
                                         ->setRetryTransfer(job, msg.file_id, retryTimes+1, msg.transfer_message);
-                                        SingleTrStateInstance::instance().sendStateMessage(job, msg.file_id);
                                         return true;
                                     }
                                 else
@@ -133,7 +132,6 @@ public:
                                             {
                                                 DBSingleton::instance().getDBObjectInstance()
                                                 ->setRetryTransfer(job, msg.file_id, retryTimes+1, msg.transfer_message);
-                                                SingleTrStateInstance::instance().sendStateMessage(job, msg.file_id);
                                                 return true;
                                             }
                                     }

@@ -130,7 +130,7 @@ int FileTransferExecutor::execute()
                 {
                     scheduled = 1;
 
-                    //SingleTrStateInstance::instance().sendStateMessage(tf->JOB_ID, tf->FILE_ID);
+                    SingleTrStateInstance::instance().sendStateMessage(tf->JOB_ID, tf->FILE_ID);
                     bool isAutoTuned = false;
 
                     if (optimize && cfgs.empty())
