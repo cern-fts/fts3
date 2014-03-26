@@ -5240,7 +5240,7 @@ void MySqlAPI::setSeProtocol(std::string protocol, std::string se, std::string s
 
             sql <<
                 " SELECT count(auto_number) "
-                " FROM t_optimizer "
+                " FROM t_optimize "
                 " WHERE source_se = :se",
                 soci::use(se), soci::into(count)
                 ;
