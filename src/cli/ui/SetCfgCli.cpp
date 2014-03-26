@@ -152,6 +152,7 @@ bool SetCfgCli::validate()
             && !vm.count("bring-online")
             && !vm.count("optimizer-mode")
             && !vm.count("max-bandwidth")
+            && !vm.count("protocol")
        )
         {
             msgPrinter.error_msg("No parameters have been specified.");
