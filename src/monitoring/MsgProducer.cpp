@@ -269,8 +269,10 @@ void MsgProducer::run()
             catch (CMSException& e)
                 {
                     connectionIsOK = false;
-                    if(msgBk.length() > 5) //random number,just to make it's not empty
+                    if(msgBk.length() > 5){ //random number,just to make it's not empty
                         concurrent_queue::getInstance()->push(msgBk);
+			send_message(msgBk);
+		    }
                     errorMessage = e.getStackTraceString();
                     logger::writeLog(errorMessage, true);
                     cleanup();
@@ -279,8 +281,10 @@ void MsgProducer::run()
             catch (...)
                 {
                     connectionIsOK = false;
-                    if(msgBk.length() > 5) //random number,just to make it's not empty
+                    if(msgBk.length() > 5){ //random number,just to make it's not empty
                         concurrent_queue::getInstance()->push(msgBk);
+			send_message(msgBk);
+		    }
                     logger::writeLog("Unhandled exception occured", true);
                     cleanup();
                     sleep(10);
