@@ -24,7 +24,7 @@
 
 #include <error.h>
 #include <logger.h>
-#include <oracle/soci-oracle.h>
+#include <soci/oracle/soci-oracle.h>
 #include <signal.h>
 #include <sys/param.h>
 #include <unistd.h>
@@ -4886,7 +4886,54 @@ void OracleAPI::setPriority(std::string job_id, int priority)
 
 void OracleAPI::setSeProtocol(std::string protocol, std::string se, std::string state)
 {
+    soci::session sql(*connectionPool);
 
+    try
+        {
+            sql.begin();
+
+            int count = 0;
+
+            sql <<
+            	" SELECT count(auto_number) "
+            	" FROM t_optimizer "
+            	" WHERE source_se = :se",
+            	soci::use(se), soci::into(count)
+            ;
+
+            if (count)
+				{
+					sql <<
+						" UPDATE t_optimize "
+						" SET udt = :udt "
+						" WHERE source_se = :se",
+						soci::use(state),
+						soci::use(se)
+					;
+				}
+            else
+				{
+					sql <<
+						" INSERT INTO t_optimize (source_se, udt) "
+						" VALUES (:se, :udt)",
+						soci::use(se),
+						soci::use(state)
+					;
+
+				}
+
+            sql.commit();
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
 }
 
 

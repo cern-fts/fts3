@@ -75,6 +75,9 @@ CREATE TABLE t_optimize (
 --
 -- timestamp
   datetime     TIMESTAMP NULL DEFAULT NULL,
+--
+-- udt
+  udt          VARCHAR(3) CHECK (udt in ('on', 'off')),
   
   CONSTRAINT t_optimize_pk PRIMARY KEY (auto_number)
 );

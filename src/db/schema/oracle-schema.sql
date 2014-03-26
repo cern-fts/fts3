@@ -74,7 +74,10 @@ CREATE TABLE t_optimize (
   filesize         	NUMBER default NULL,
 --
 -- timestamp
-   datetime			TIMESTAMP WITH TIME ZONE
+   datetime			TIMESTAMP WITH TIME ZONE,
+--
+-- udt
+   udt VARCHAR2(3) CHECK (udt in ('on', 'off'))
 );
 
 --
@@ -209,7 +212,7 @@ CREATE TABLE t_se (
   ,se_transfer_type VARCHAR2(30)
   ,se_transfer_protocol VARCHAR2(30)
   ,se_control_protocol VARCHAR2(30)
-  ,bandwidth             INTEGER,
+  ,bandwidth             INTEGER
   ,CONSTRAINT se_info_pk PRIMARY KEY (name)
 );
 
