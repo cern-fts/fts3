@@ -204,7 +204,6 @@ optional<int> SetCfgCli::optimizer_mode()
 
 optional<unsigned> SetCfgCli::queueTimeout()
 {
-
     if (vm.count("queue-timeout"))
         {
             return vm["queue-timeout"].as<int>();

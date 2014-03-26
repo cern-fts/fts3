@@ -311,6 +311,15 @@ public:
     void prioritySet(string jobId, int priority);
 
     /**
+     * Sets the protocol (UDT) for given SE
+     *
+     * @param protocol - for now only 'udt' is supported
+     * @param se - the name of the SE in question
+     * @param state - either 'on' or 'off'
+     */
+    void setSeProtocol(string protocol, string se, string state);
+
+    /**
      * Remote call to retrySet
      *
      * @param retry - number of retries to be set

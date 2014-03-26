@@ -1234,6 +1234,8 @@ int fts3::impltns__blacklistDn(soap* ctx, string subject, bool blk, string statu
 
 int fts3::impltns__setSeProtocol(soap* ctx, string protocol, string se, string state, impltns__setSeProtocolResponse &resp)
 {
+
+
 	return SOAP_OK;
 }
 
