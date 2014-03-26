@@ -218,6 +218,8 @@ public:
 
     void setPriority(std::string jobId, int priority);
 
+    void setSeProtocol(std::string protocol, std::string se, std::string state);
+
     void setRetry(int retry);
 
     int getRetry(const std::string & jobId);

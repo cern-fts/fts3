@@ -281,6 +281,8 @@ public:
 
     virtual void setPriority(std::string jobId, int priority) = 0;
 
+    virtual void setSeProtocol(std::string protocol, std::string se, std::string state) = 0;
+
     virtual void setRetry(int retry) = 0;
 
     virtual int getRetry(const std::string & jobId) = 0;

@@ -18,7 +18,7 @@
 #pragma once
 
 #include <common_dev.h>
-#include <soci.h>
+#include <soci/soci.h>
 #include "GenericDbIfce.h"
 
 using namespace FTS3_COMMON_NAMESPACE;
@@ -244,6 +244,8 @@ public:
     virtual int sumUpVoShares (std::string source, std::string destination, std::set<std::string> vos);
 
     virtual void setPriority(std::string jobId, int priority);
+
+    virtual void setSeProtocol(std::string protocol, std::string se, std::string state);
 
     virtual void setRetry(int retry);
 

@@ -5228,6 +5228,11 @@ void MySqlAPI::setPriority(std::string job_id, int priority)
         }
 }
 
+void MySqlAPI::setSeProtocol(std::string protocol, std::string se, std::string state)
+{
+
+}
+
 
 void MySqlAPI::setRetry(int retry)
 {

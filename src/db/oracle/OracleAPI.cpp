@@ -4884,6 +4884,11 @@ void OracleAPI::setPriority(std::string job_id, int priority)
         }
 }
 
+void OracleAPI::setSeProtocol(std::string protocol, std::string se, std::string state)
+{
+
+}
+
 
 void OracleAPI::setRetry(int retry)
 {
