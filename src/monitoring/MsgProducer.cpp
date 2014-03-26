@@ -105,7 +105,7 @@ bool MsgProducer::sendMessage(std::string &temp)
             find_and_replace(temp, "\"endpnt\":\"\"", tempFTS); //add FTS endpoint
             temp += 4;
             TextMessage* message = session->createTextMessage(temp);
-            producer_transfer_started->send(message);
+            producer_transfer_started->send(message);	    
             delete message;
         }
     else if (temp.compare(0, 2, "CO") == 0)
@@ -119,7 +119,7 @@ bool MsgProducer::sendMessage(std::string &temp)
             find_and_replace(temp, "\"endpnt\":\"\"", tempFTS); //add FTS endpoint
             temp += 4;
             TextMessage* message = session->createTextMessage(temp);
-            producer_transfer_completed->send(message);
+            producer_transfer_completed->send(message);	  	    
             delete message;
         }
     else if (temp.compare(0, 2, "SS") == 0)
@@ -134,10 +134,10 @@ bool MsgProducer::sendMessage(std::string &temp)
             TextMessage* message = session->createTextMessage(temp);
             message->setStringProperty("vo",vo);
             producer_transfer_state->send(message);
+	    logger::writeLog(temp);
             delete message;
         }
 
-    //logger::writeLog(temp);
     return true;
 }
 
