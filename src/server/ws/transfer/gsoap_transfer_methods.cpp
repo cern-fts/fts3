@@ -1232,38 +1232,6 @@ int fts3::impltns__blacklistDn(soap* ctx, string subject, bool blk, string statu
     return SOAP_OK;
 }
 
-int fts3::impltns__setSeProtocol(soap* ctx, string protocol, string se, string state, impltns__setSeProtocolResponse &resp)
-{
-
-    try
-        {
-            // Authorise operation
-            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::CONFIG, AuthorizationManager::dummy);
-
-            DBSingleton::instance().getDBObjectInstance()->setSeProtocol(protocol, se, state);
-
-            // get user DN
-            CGsiAdapter cgsi(ctx);
-            string dn = cgsi.getClientDn();
-
-            // audit the operation
-            string cmd = "fts3-config-set --protocol " + protocol + " " + se + " " + state;
-            DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd, "protocol");
-        }
-    catch(Err& ex)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
-            soap_receiver_fault(ctx, ex.what(), "TransferException");
-            return SOAP_FAULT;
-        }
-    catch (...)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown"  << commit;
-            return SOAP_FAULT;
-        }
-
-    return SOAP_OK;
-}
 
 int fts3::impltns__prioritySet(soap* ctx, string job_id, int priority, impltns__prioritySetResponse &resp)
 {
