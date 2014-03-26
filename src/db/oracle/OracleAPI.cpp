@@ -7446,8 +7446,10 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
     std::string dest_se;
     std::string source_se;
     std::string reason;
+    std::string reasonRetry;
     std::string queryVo;
     long long countReason = 0;
+    long long countReasonRetry = 0;
     long long active = 0;
     long long maxActive = 0;
     long long submitted = 0;
@@ -7465,6 +7467,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
     soci::indicator isNull3 = soci::i_ok;
     soci::indicator isNull4 = soci::i_ok;
     soci::indicator isNull5 = soci::i_ok;
+    soci::indicator isNull8 = soci::i_ok;
 
     if(!vo_name.empty())
         {
@@ -7537,6 +7540,19 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                                  soci::into(reason, isNull3),
                                  soci::into(countReason)
                                 ));
+				
+            soci::statement st8((sql.prepare << " select t_file_retry_errors.reason, count(t_file_retry_errors.reason) as c from t_file_retry_errors, t_file "
+	    				        " where t_file_retry_errors.file_id =  t_file.file_id AND  (datetime > (sys_extract_utc(systimestamp) - interval '60' minute)) "
+						" AND t_file_retry_errors.reason is not NULL and "
+						" source_se=:source_se and dest_se=:dest_se and "
+						" vo_name =:vo_name_local "
+						" group by t_file_retry_errors.reason order by c desc ",
+                                 soci::use(source_se),
+                                 soci::use(dest_se),
+                                 soci::use(vo_name_local),
+                                 soci::into(reasonRetry, isNull8),
+                                 soci::into(countReasonRetry)
+                                ));				
 
 
             soci::statement st6((sql.prepare << " select avg(tx_duration) from t_file where file_state='FINISHED'  "
@@ -7682,10 +7698,21 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                             result <<   " secs\n";
 
 
-                            //most frequent error and number the last 30min
+                            //most frequent error and number the last hour
                             reason = "";
                             countReason = 0;
                             st5.execute(true);
+			    
+                            reasonRetry = "";
+                            countReasonRetry = 0;
+                            st8.execute(true);
+			    
+			    //check if retry table has stored more failures than the primary table - transfers to be retried
+			    if(countReasonRetry > countReason){
+			    	countReason = countReasonRetry;
+				reason = reasonRetry;
+			    }
+			    			    
                             result <<   "Most frequent error: ";
                             result <<   countReason;
                             result <<   " times: ";
