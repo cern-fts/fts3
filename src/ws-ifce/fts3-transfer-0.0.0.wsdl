@@ -354,16 +354,6 @@
    
    <message name="prioritySetResponse"/>
 
-   <message name="setSeProtocolRequest">
-   
-      <part name="protocol" type="xsd:string"/>
-      <part name="se" type="xsd:string"/>
-      <part name="state" type="xsd:string"/>
-   
-   </message>
-   
-   <message name="setSeProtocolResponse"/>
-
    <message name="debugSetRequest">
    
       <part name="source" type="xsd:string"/>
@@ -785,22 +775,6 @@
          <input message="impl:prioritySetRequest" name="prioritySetRequest"/>
 
          <output message="impl:prioritySetResponse" name="prioritySetResponse"/>
-      
-         <fault message="impl:AuthorizationException" name="AuthorizationException"/>
-
-         <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
-
-         <fault message="impl:InvalidArgumentException" name="InvalidArgumentException"/>
-
-         <fault message="impl:InternalException" name="InternalException"/>
-         
-      </operation>
-      
-      <operation name="setSeProtocol" parameterOrder="protocol">
-      
-         <input message="impl:setSeProtocolRequest" name="setSeProtocolRequest"/>
-
-         <output message="impl:setSeProtocolResponse" name="setSeProtocolResponse"/>
       
          <fault message="impl:AuthorizationException" name="AuthorizationException"/>
 
@@ -1419,48 +1393,6 @@
 
       </operation>
       
-      <operation name="setSeProtocol">
-
-         <wsdlsoap:operation soapAction=""/>
-
-         <input name="setSeProtocolRequest">
-
-            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
-
-         </input>
-
-         <output name="setSeProtocolResponse">
-
-            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
-
-         </output>
-
-         <fault name="AuthorizationException">
-
-            <wsdlsoap:fault name="AuthorizationException" use="literal"/>
-
-         </fault>
-
-         <fault name="ServiceBusyException">
-
-            <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
-
-         </fault>
-
-         <fault name="InvalidArgumentException">
-
-            <wsdlsoap:fault name="InvalidArgumentException" use="literal"/>
-
-         </fault>
-
-         <fault name="InternalException">
-
-            <wsdlsoap:fault name="InternalException" use="literal"/>
-
-         </fault>
-
-      </operation>
-
  	  <operation name="debugSet">
 
          <wsdlsoap:operation soapAction=""/>
