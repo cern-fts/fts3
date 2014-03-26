@@ -1237,7 +1237,7 @@ int fts3::impltns__setSeProtocol(soap* ctx, string protocol, string se, string s
 
     try
         {
-    		// Authorise operation
+            // Authorise operation
             AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::CONFIG, AuthorizationManager::dummy);
 
             DBSingleton::instance().getDBObjectInstance()->setSeProtocol(protocol, se, state);
@@ -1262,7 +1262,7 @@ int fts3::impltns__setSeProtocol(soap* ctx, string protocol, string se, string s
             return SOAP_FAULT;
         }
 
-	return SOAP_OK;
+    return SOAP_OK;
 }
 
 int fts3::impltns__prioritySet(soap* ctx, string job_id, int priority, impltns__prioritySetResponse &resp)

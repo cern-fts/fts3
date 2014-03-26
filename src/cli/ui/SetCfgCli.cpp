@@ -214,13 +214,13 @@ optional<unsigned> SetCfgCli::queueTimeout()
 
 optional< std::tuple<string, string, string> > SetCfgCli::getProtocol()
 {
-	// check if the option was used
+    // check if the option was used
     if (!vm.count("protocol")) return optional< std::tuple<string, string, string> >();
-	// make sure it was used corretly
-	const vector<string>& v = vm["protocol"].as< vector<string> >();
-	if (v.size() != 3) throw string("'--protocol' takes following parameters: udt SE on/off");
+    // make sure it was used corretly
+    const vector<string>& v = vm["protocol"].as< vector<string> >();
+    if (v.size() != 3) throw string("'--protocol' takes following parameters: udt SE on/off");
 
-	return std::make_tuple(v[0], v[1], v[2]);
+    return std::make_tuple(v[0], v[1], v[2]);
 }
 
 void SetCfgCli::parseBringOnline()

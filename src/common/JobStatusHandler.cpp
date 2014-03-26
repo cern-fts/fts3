@@ -86,19 +86,19 @@ BOOST_FIXTURE_TEST_SUITE(JobStatusHandlerTest, JobStatusHandler)
 
 BOOST_FIXTURE_TEST_CASE(JobStatusHandler_isTransferFinished, JobStatusHandler)
 {
-	// stated indicating that the transfer has been finished:
-	BOOST_CHECK(isTransferFinished(FTS3_STATUS_FINISHEDDIRTY));
-	BOOST_CHECK(isTransferFinished(FTS3_STATUS_CANCELED));
-	BOOST_CHECK(isTransferFinished(FTS3_STATUS_UNKNOWN));
-	BOOST_CHECK(isTransferFinished(FTS3_STATUS_FAILED));
-	BOOST_CHECK(isTransferFinished(FTS3_STATUS_FINISHED));
+    // stated indicating that the transfer has been finished:
+    BOOST_CHECK(isTransferFinished(FTS3_STATUS_FINISHEDDIRTY));
+    BOOST_CHECK(isTransferFinished(FTS3_STATUS_CANCELED));
+    BOOST_CHECK(isTransferFinished(FTS3_STATUS_UNKNOWN));
+    BOOST_CHECK(isTransferFinished(FTS3_STATUS_FAILED));
+    BOOST_CHECK(isTransferFinished(FTS3_STATUS_FINISHED));
 
-	// states indicating that the transfer is still being carried out
-	BOOST_CHECK(!isTransferFinished(FTS3_STATUS_SUBMITTED));
-	BOOST_CHECK(!isTransferFinished(FTS3_STATUS_READY));
-	BOOST_CHECK(!isTransferFinished(FTS3_STATUS_ACTIVE));
-	BOOST_CHECK(!isTransferFinished(FTS3_STATUS_STAGING));
-	BOOST_CHECK(!isTransferFinished(FTS3_STATUS_NOT_USED));
+    // states indicating that the transfer is still being carried out
+    BOOST_CHECK(!isTransferFinished(FTS3_STATUS_SUBMITTED));
+    BOOST_CHECK(!isTransferFinished(FTS3_STATUS_READY));
+    BOOST_CHECK(!isTransferFinished(FTS3_STATUS_ACTIVE));
+    BOOST_CHECK(!isTransferFinished(FTS3_STATUS_STAGING));
+    BOOST_CHECK(!isTransferFinished(FTS3_STATUS_NOT_USED));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -118,19 +118,19 @@ BOOST_FIXTURE_TEST_SUITE(JobStatusHandlerTest, JobStatusHandler)
 
 BOOST_FIXTURE_TEST_CASE(JobStatusHandler_isStatusValid, JobStatusHandler)
 {
-	BOOST_CHECK(isStatusValid(FTS3_STATUS_FINISHEDDIRTY));
-	BOOST_CHECK(isStatusValid(FTS3_STATUS_CANCELED));
-	BOOST_CHECK(isStatusValid(FTS3_STATUS_UNKNOWN));
-	BOOST_CHECK(isStatusValid(FTS3_STATUS_FAILED));
-	BOOST_CHECK(isStatusValid(FTS3_STATUS_FINISHED));
-	BOOST_CHECK(isStatusValid(FTS3_STATUS_SUBMITTED));
-	BOOST_CHECK(isStatusValid(FTS3_STATUS_READY));
-	BOOST_CHECK(isStatusValid(FTS3_STATUS_ACTIVE));
-	BOOST_CHECK(isStatusValid(FTS3_STATUS_STAGING));
-	BOOST_CHECK(isStatusValid(FTS3_STATUS_NOT_USED));
+    BOOST_CHECK(isStatusValid(FTS3_STATUS_FINISHEDDIRTY));
+    BOOST_CHECK(isStatusValid(FTS3_STATUS_CANCELED));
+    BOOST_CHECK(isStatusValid(FTS3_STATUS_UNKNOWN));
+    BOOST_CHECK(isStatusValid(FTS3_STATUS_FAILED));
+    BOOST_CHECK(isStatusValid(FTS3_STATUS_FINISHED));
+    BOOST_CHECK(isStatusValid(FTS3_STATUS_SUBMITTED));
+    BOOST_CHECK(isStatusValid(FTS3_STATUS_READY));
+    BOOST_CHECK(isStatusValid(FTS3_STATUS_ACTIVE));
+    BOOST_CHECK(isStatusValid(FTS3_STATUS_STAGING));
+    BOOST_CHECK(isStatusValid(FTS3_STATUS_NOT_USED));
 
-	// some random string
-	BOOST_CHECK(!isStatusValid("ahjcakjgkas"));
+    // some random string
+    BOOST_CHECK(!isStatusValid("ahjcakjgkas"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -160,35 +160,35 @@ BOOST_FIXTURE_TEST_SUITE(JobStatusHandlerTest, JobStatusHandler)
 
 BOOST_FIXTURE_TEST_CASE(JobStatusHandler_countInState, JobStatusHandler)
 {
-	boost::scoped_array<JobStatus> arr(new JobStatus[7]);
+    boost::scoped_array<JobStatus> arr(new JobStatus[7]);
 
-	arr[0].fileStatus = FTS3_STATUS_ACTIVE;
-	arr[0].fileIndex  = 0;
-	arr[1].fileStatus = FTS3_STATUS_ACTIVE;
-	arr[1].fileIndex  = 0;
-	arr[2].fileStatus = FTS3_STATUS_ACTIVE;
-	arr[2].fileIndex  = 1;
-	arr[3].fileStatus = FTS3_STATUS_ACTIVE;
-	arr[3].fileIndex  = 1;
-	arr[4].fileStatus = FTS3_STATUS_ACTIVE;
-	arr[4].fileIndex  = 2;
-	arr[5].fileStatus = FTS3_STATUS_CANCELED;
-	arr[5].fileIndex  = 3;
-	arr[6].fileStatus = FTS3_STATUS_CANCELED;
-	arr[6].fileIndex  = 3;
+    arr[0].fileStatus = FTS3_STATUS_ACTIVE;
+    arr[0].fileIndex  = 0;
+    arr[1].fileStatus = FTS3_STATUS_ACTIVE;
+    arr[1].fileIndex  = 0;
+    arr[2].fileStatus = FTS3_STATUS_ACTIVE;
+    arr[2].fileIndex  = 1;
+    arr[3].fileStatus = FTS3_STATUS_ACTIVE;
+    arr[3].fileIndex  = 1;
+    arr[4].fileStatus = FTS3_STATUS_ACTIVE;
+    arr[4].fileIndex  = 2;
+    arr[5].fileStatus = FTS3_STATUS_CANCELED;
+    arr[5].fileIndex  = 3;
+    arr[6].fileStatus = FTS3_STATUS_CANCELED;
+    arr[6].fileIndex  = 3;
 
-	std::vector<JobStatus*> statuses;
-	statuses.push_back(&arr[0]);
-	statuses.push_back(&arr[1]);
-	statuses.push_back(&arr[2]);
-	statuses.push_back(&arr[3]);
-	statuses.push_back(&arr[4]);
-	statuses.push_back(&arr[5]);
-	statuses.push_back(&arr[6]);
+    std::vector<JobStatus*> statuses;
+    statuses.push_back(&arr[0]);
+    statuses.push_back(&arr[1]);
+    statuses.push_back(&arr[2]);
+    statuses.push_back(&arr[3]);
+    statuses.push_back(&arr[4]);
+    statuses.push_back(&arr[5]);
+    statuses.push_back(&arr[6]);
 
-	BOOST_CHECK_EQUAL(countInState(FTS3_STATUS_ACTIVE, statuses), 3);
-	BOOST_CHECK_EQUAL(countInState(FTS3_STATUS_CANCELED, statuses), 1);
-	BOOST_CHECK_EQUAL(countInState(FTS3_STATUS_FAILED, statuses), 0);
+    BOOST_CHECK_EQUAL(countInState(FTS3_STATUS_ACTIVE, statuses), 3);
+    BOOST_CHECK_EQUAL(countInState(FTS3_STATUS_CANCELED, statuses), 1);
+    BOOST_CHECK_EQUAL(countInState(FTS3_STATUS_FAILED, statuses), 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

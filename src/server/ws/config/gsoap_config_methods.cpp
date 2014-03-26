@@ -499,35 +499,37 @@ int fts3::implcfg__setBandwidthLimit(soap* ctx, fts3::config__BandwidthLimit* li
                         throw Err_Custom("Need to specify source OR destination");
 
                     DBSingleton::instance().getDBObjectInstance()->setBandwidthLimit(
-                                        pair->source, pair->dest, pair->limit);
+                        pair->source, pair->dest, pair->limit);
 
-                    if (pair->limit >= 0) {
-                        FTS3_COMMON_LOGGER_NEWLOG (INFO)
-                            << "User: "
-                            << dn
-                            << " had set the maximum bandwidth of "
-                            << pair->source << pair->dest
-                            << " to "
-                            << pair->limit << "MB/s"
-                            << commit;			    
-                    }
-                    else {
-                        FTS3_COMMON_LOGGER_NEWLOG (INFO)
-                            << "User: "
-                            << dn
-                            << " had reset the maximum bandwidth of "
-                            << pair->source << pair->dest
-                            << commit;
-                    }
-		// prepare the command for audit
-                stringstream cmd;
-		
-                	    cmd << dn;
-                            cmd << " had set the maximum bandwidth of ";
-                            cmd << pair->source << pair->dest;
-                            cmd << " to ";
-                            cmd << pair->limit << "MB/s";
-		DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd.str(), "max-bandwidth");		    
+                    if (pair->limit >= 0)
+                        {
+                            FTS3_COMMON_LOGGER_NEWLOG (INFO)
+                                    << "User: "
+                                    << dn
+                                    << " had set the maximum bandwidth of "
+                                    << pair->source << pair->dest
+                                    << " to "
+                                    << pair->limit << "MB/s"
+                                    << commit;
+                        }
+                    else
+                        {
+                            FTS3_COMMON_LOGGER_NEWLOG (INFO)
+                                    << "User: "
+                                    << dn
+                                    << " had reset the maximum bandwidth of "
+                                    << pair->source << pair->dest
+                                    << commit;
+                        }
+                    // prepare the command for audit
+                    stringstream cmd;
+
+                    cmd << dn;
+                    cmd << " had set the maximum bandwidth of ";
+                    cmd << pair->source << pair->dest;
+                    cmd << " to ";
+                    cmd << pair->limit << "MB/s";
+                    DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd.str(), "max-bandwidth");
                 }
         }
     catch(Err& ex)
@@ -550,22 +552,22 @@ int fts3::implcfg__setBandwidthLimit(soap* ctx, fts3::config__BandwidthLimit* li
 int fts3::implcfg__getBandwidthLimit(soap* ctx, fts3::implcfg__getBandwidthLimitResponse& resp)
 {
     try
-       {
+        {
             resp.limit = DBSingleton::instance().getDBObjectInstance()->getBandwidthLimit();
-       }
-   catch(Err& ex)
-       {
+        }
+    catch(Err& ex)
+        {
 
-           FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
-           soap_receiver_fault(ctx, ex.what(), "InvalidConfigurationException");
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+            soap_receiver_fault(ctx, ex.what(), "InvalidConfigurationException");
 
-           return SOAP_FAULT;
-       }
-   catch (...)
-       {
-           FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the number of retries cannot be set"  << commit;
-           return SOAP_FAULT;
-       }
+            return SOAP_FAULT;
+        }
+    catch (...)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the number of retries cannot be set"  << commit;
+            return SOAP_FAULT;
+        }
 
-   return SOAP_OK;
+    return SOAP_OK;
 }

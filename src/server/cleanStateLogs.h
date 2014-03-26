@@ -72,8 +72,8 @@ private:
                                             }
                                     }
                             }
-			    
-                       for ( boost::filesystem::recursive_directory_iterator end, dir("/var/lib/fts3/stalled/");
+
+                        for ( boost::filesystem::recursive_directory_iterator end, dir("/var/lib/fts3/stalled/");
                                 dir != end; ++dir )
                             {
                                 if(!boost::filesystem::is_directory(*dir))
@@ -88,9 +88,9 @@ private:
                                                 boost::filesystem::remove(*dir);
                                             }
                                     }
-                            }		
-			    
-                      for ( boost::filesystem::recursive_directory_iterator end, dir("/var/lib/fts3/status/");
+                            }
+
+                        for ( boost::filesystem::recursive_directory_iterator end, dir("/var/lib/fts3/status/");
                                 dir != end; ++dir )
                             {
                                 if(!boost::filesystem::is_directory(*dir))
@@ -105,9 +105,9 @@ private:
                                                 boost::filesystem::remove(*dir);
                                             }
                                     }
-                            }	
-			    
-                      for ( boost::filesystem::recursive_directory_iterator end, dir("/var/lib/fts3/logs/");
+                            }
+
+                        for ( boost::filesystem::recursive_directory_iterator end, dir("/var/lib/fts3/logs/");
                                 dir != end; ++dir )
                             {
                                 if(!boost::filesystem::is_directory(*dir))
@@ -122,7 +122,7 @@ private:
                                                 boost::filesystem::remove(*dir);
                                             }
                                     }
-                            }				    				    	    
+                            }
 
                         sleep(86400); //once a day
                     }

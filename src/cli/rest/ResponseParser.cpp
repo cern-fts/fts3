@@ -45,13 +45,13 @@ BOOST_AUTO_TEST_SUITE(ResponseParserTest)
 
 BOOST_AUTO_TEST_CASE (ResponseParser_get)
 {
-	stringstream resp;
+    stringstream resp;
 
-	resp << "{\"job_state\": \"FAILED\"}";
+    resp << "{\"job_state\": \"FAILED\"}";
 
-	ResponseParser parser (resp);
-	BOOST_CHECK_EQUAL(parser.get("job_state"), "FAILED");
-	BOOST_CHECK_THROW(parser.get("job_stateeee"), std::runtime_error);
+    ResponseParser parser (resp);
+    BOOST_CHECK_EQUAL(parser.get("job_state"), "FAILED");
+    BOOST_CHECK_THROW(parser.get("job_stateeee"), std::runtime_error);
 
 }
 

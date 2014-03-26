@@ -390,6 +390,8 @@ public:
 
     virtual std::string getBandwidthLimit() = 0;
 
+    virtual bool isProtocolUDT(const std::string & source_hostname, const std::string & destination_hostname) = 0;
+
 
 
 };

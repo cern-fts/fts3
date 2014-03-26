@@ -311,6 +311,8 @@ public:
     void setBandwidthLimit(const std::string & source_hostname, const std::string & destination_hostname, int bandwidthLimit);
 
     std::string getBandwidthLimit();
+
+    bool isProtocolUDT(const std::string & source_hostname, const std::string & destination_hostname);
 };
 
 

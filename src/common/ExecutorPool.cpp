@@ -12,32 +12,32 @@ BOOST_AUTO_TEST_SUITE(ExecutorPoolTest)
 
 struct ExecTask
 {
-	virtual int execute()
-	{
-		return 1;
-	}
+    virtual int execute()
+    {
+        return 1;
+    }
 };
 
 struct ExecFailed : public ExecTask
 {
-	int execute()
-	{
-		return 0;
-	}
+    int execute()
+    {
+        return 0;
+    }
 };
 
 BOOST_AUTO_TEST_CASE (ExecutorPool_test)
 {
-	ExecutorPool<ExecTask> pool(1);
-	pool.add(new ExecTask);
-	pool.add(new ExecTask);
-	pool.add(new ExecTask);
-	pool.add(new ExecFailed);
-	pool.add(new ExecFailed);
+    ExecutorPool<ExecTask> pool(1);
+    pool.add(new ExecTask);
+    pool.add(new ExecTask);
+    pool.add(new ExecTask);
+    pool.add(new ExecFailed);
+    pool.add(new ExecFailed);
 
-	pool.join();
+    pool.join();
 
-	BOOST_CHECK_EQUAL(pool.executed(), 3);
+    BOOST_CHECK_EQUAL(pool.executed(), 3);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

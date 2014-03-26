@@ -54,10 +54,10 @@ int main(int ac, char* av[])
 
             optional<std::tuple<string, string, string>> protocol = cli->getProtocol();
             if (protocol.is_initialized())
-				{
+                {
 
-					return 0;
-				}
+                    return 0;
+                }
 
             optional<bool> drain = cli->drain();
             if (drain.is_initialized())
@@ -95,8 +95,8 @@ int main(int ac, char* av[])
             if (bandwidth_limitation)
                 {
                     ctx.setBandwidthLimit(std::get<0>(*bandwidth_limitation),
-                            std::get<1>(*bandwidth_limitation),
-                            std::get<2>(*bandwidth_limitation));
+                                          std::get<1>(*bandwidth_limitation),
+                                          std::get<2>(*bandwidth_limitation));
                     return 0;
                 }
 

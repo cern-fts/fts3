@@ -2125,16 +2125,16 @@ bool OracleAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn
             sql.commit();
         }
     catch (soci::oracle_soci_error const &e)
-    	{
-			sql.rollback();
-			unsigned int err_code = e.err_num_;
+        {
+            sql.rollback();
+            unsigned int err_code = e.err_num_;
 
-			// the magic '1' is the error code of
-			// ORA-00001: unique constraint (XXX) violated
-			if (err_code == 1) return false;
+            // the magic '1' is the error code of
+            // ORA-00001: unique constraint (XXX) violated
+            if (err_code == 1) return false;
 
-			throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
-    	}
+            throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
+        }
     catch (std::exception& e)
         {
             sql.rollback();
@@ -2845,13 +2845,13 @@ bool OracleAPI::updateOptimizer()
                         {
                             if(throughput > 0 && ratioSuccessFailure > 0)
                                 {
-                                    sql.begin();                                    
-				    
-                                    active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);                                    
-                                    stmt10.execute(true);				    
-				    updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, 10, bandwidthIn);				    
-                                    
-				    sql.commit();
+                                    sql.begin();
+
+                                    active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
+                                    stmt10.execute(true);
+                                    updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, 10, bandwidthIn);
+
+                                    sql.commit();
                                 }
                             continue;
                         }
@@ -4895,32 +4895,32 @@ void OracleAPI::setSeProtocol(std::string protocol, std::string se, std::string 
             int count = 0;
 
             sql <<
-            	" SELECT count(auto_number) "
-            	" FROM t_optimizer "
-            	" WHERE source_se = :se",
-            	soci::use(se), soci::into(count)
-            ;
+                " SELECT count(auto_number) "
+                " FROM t_optimizer "
+                " WHERE source_se = :se",
+                soci::use(se), soci::into(count)
+                ;
 
             if (count)
-				{
-					sql <<
-						" UPDATE t_optimize "
-						" SET udt = :udt "
-						" WHERE source_se = :se",
-						soci::use(state),
-						soci::use(se)
-					;
-				}
+                {
+                    sql <<
+                        " UPDATE t_optimize "
+                        " SET udt = :udt "
+                        " WHERE source_se = :se",
+                        soci::use(state),
+                        soci::use(se)
+                        ;
+                }
             else
-				{
-					sql <<
-						" INSERT INTO t_optimize (source_se, udt) "
-						" VALUES (:se, :udt)",
-						soci::use(se),
-						soci::use(state)
-					;
+                {
+                    sql <<
+                        " INSERT INTO t_optimize (source_se, udt) "
+                        " VALUES (:se, :udt)",
+                        soci::use(se),
+                        soci::use(state)
+                        ;
 
-				}
+                }
 
             sql.commit();
         }
@@ -7592,19 +7592,19 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                                  soci::into(reason, isNull3),
                                  soci::into(countReason)
                                 ));
-				
+
             soci::statement st8((sql.prepare << " select t_file_retry_errors.reason, count(t_file_retry_errors.reason) as c from t_file_retry_errors, t_file "
-	    				        " where t_file_retry_errors.file_id =  t_file.file_id AND  (datetime > (sys_extract_utc(systimestamp) - interval '60' minute)) "
-						" AND t_file_retry_errors.reason is not NULL and "
-						" source_se=:source_se and dest_se=:dest_se and "
-						" vo_name =:vo_name_local "
-						" group by t_file_retry_errors.reason order by c desc ",
+                                 " where t_file_retry_errors.file_id =  t_file.file_id AND  (datetime > (sys_extract_utc(systimestamp) - interval '60' minute)) "
+                                 " AND t_file_retry_errors.reason is not NULL and "
+                                 " source_se=:source_se and dest_se=:dest_se and "
+                                 " vo_name =:vo_name_local "
+                                 " group by t_file_retry_errors.reason order by c desc ",
                                  soci::use(source_se),
                                  soci::use(dest_se),
                                  soci::use(vo_name_local),
                                  soci::into(reasonRetry, isNull8),
                                  soci::into(countReasonRetry)
-                                ));				
+                                ));
 
 
             soci::statement st6((sql.prepare << " select avg(tx_duration) from t_file where file_state='FINISHED'  "
@@ -7754,17 +7754,18 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                             reason = "";
                             countReason = 0;
                             st5.execute(true);
-			    
+
                             reasonRetry = "";
                             countReasonRetry = 0;
                             st8.execute(true);
-			    
-			    //check if retry table has stored more failures than the primary table - transfers to be retried
-			    if(countReasonRetry > countReason){
-			    	countReason = countReasonRetry;
-				reason = reasonRetry;
-			    }
-			    			    
+
+                            //check if retry table has stored more failures than the primary table - transfers to be retried
+                            if(countReasonRetry > countReason)
+                                {
+                                    countReason = countReasonRetry;
+                                    reason = reasonRetry;
+                                }
+
                             result <<   "Most frequent error: ";
                             result <<   countReason;
                             result <<   " times: ";
@@ -7941,10 +7942,10 @@ bool OracleAPI::bandwidthChecker(soci::session& sql, const std::string & source_
         }
     else if(bandwidthDst > 0)  //only destination has limit
         {
-	    bandwidthIn = bandwidthDst;
-	    
+            bandwidthIn = bandwidthDst;
+
             if(througputDst > bandwidthDst)
-                {                    
+                {
                     FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Bandwidth limitation of " << bandwidthDst  << " MB/s is set for " << destination_hostname << commit;
                     return false;
                 }
@@ -8138,6 +8139,36 @@ void OracleAPI::setBandwidthLimit(const std::string & source_hostname, const std
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
 }
+
+
+bool OracleAPI::isProtocolUDT(const std::string & source_hostname, const std::string & destination_hostname)
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            soci::indicator isNullUDT = soci::i_ok;
+            std::string udt;
+
+            sql << " select udt from t_optimize where (source_se = :source_se OR source_se = :dest_se) ",
+                soci::use(source_hostname), soci::use(destination_hostname), soci::into(udt, isNullUDT);
+
+            if(sql.got_data() && udt == "on")
+                return true;
+
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }
+
+    return false;
+}
+
 
 // the class factories
 

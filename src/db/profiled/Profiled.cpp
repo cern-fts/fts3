@@ -580,7 +580,7 @@ void ProfiledDB::setPriority(std::string jobId, int priority)
 
 void ProfiledDB::setSeProtocol(std::string protocol, std::string se, std::string state)
 {
-	PROFILE_PREFIXED("DB::", db->setSeProtocol(protocol, se, state));
+    PROFILE_PREFIXED("DB::", db->setSeProtocol(protocol, se, state));
 }
 
 void ProfiledDB::setRetry(int retry)
@@ -838,9 +838,13 @@ void ProfiledDB::setBandwidthLimit(const std::string & source_hostname, const st
     PROFILE_PREFIXED("DB::", db->setBandwidthLimit(source_hostname, destination_hostname, bandwidthLimit));
 }
 
-
 std::string ProfiledDB::getBandwidthLimit()
 {
     PROFILE_PREFIXED("DB::", return db->getBandwidthLimit());
+}
+
+bool ProfiledDB::isProtocolUDT(const std::string & source_hostname, const std::string & destination_hostname)
+{
+    PROFILE_PREFIXED("DB::", return db->isProtocolUDT(source_hostname, destination_hostname));
 }
 

@@ -108,7 +108,7 @@ int FileTransferExecutor::execute()
                         {
                             BufSize = DEFAULT_BUFFSIZE;
                             StreamsperFile = DEFAULT_NOSTREAMS;
-                            Timeout = DEFAULT_TIMEOUT;                          
+                            Timeout = DEFAULT_TIMEOUT;
                         }
                 }
 
@@ -130,7 +130,7 @@ int FileTransferExecutor::execute()
                     bool isAutoTuned = false;
 
                     if (optimize && cfgs.empty())
-                        {                            
+                        {
                             if (manualProtocol == true)
                                 {
                                     internalParams << "nostreams:" << StreamsperFile << ",timeout:" << Timeout << ",buffersize:" << BufSize;
@@ -171,7 +171,7 @@ int FileTransferExecutor::execute()
 
                             if (resolver.isAuto())
                                 {
-                                    isAutoTuned = true;                                    
+                                    isAutoTuned = true;
                                 }
                             else
                                 {
@@ -369,6 +369,14 @@ int FileTransferExecutor::execute()
                         {
                             params.append(" -M ");
                             params.append(infosys);
+                        }
+
+
+                    bool udt = 	db->isProtocolUDT(source_hostname, destin_hostname);
+
+                    if(udt)
+                        {
+                            params.append(" -U ");
                         }
 
                     bool ready = db->isFileReadyState(tf->FILE_ID);
