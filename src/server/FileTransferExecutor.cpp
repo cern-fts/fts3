@@ -106,13 +106,9 @@ int FileTransferExecutor::execute()
                         }
                     else
                         {
-                            OptimizerSample* opt_config = new OptimizerSample();
-                            db->fetchOptimizationConfig2(opt_config, source_hostname, destin_hostname);
-                            BufSize = opt_config->getBufSize();
-                            StreamsperFile = opt_config->getStreamsperFile();
-                            Timeout = opt_config->getTimeout();
-                            delete opt_config;
-                            opt_config = NULL;
+                            BufSize = DEFAULT_BUFFSIZE;
+                            StreamsperFile = DEFAULT_NOSTREAMS;
+                            Timeout = DEFAULT_TIMEOUT;                          
                         }
                 }
 
