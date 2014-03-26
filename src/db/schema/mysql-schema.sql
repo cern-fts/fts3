@@ -576,7 +576,7 @@ CREATE TABLE t_file (
   
 --
 -- File metadata
-  file_metadata   VARCHAR(255),
+  file_metadata   VARCHAR(1024),
   
 --
 -- activity name
@@ -749,7 +749,7 @@ CREATE TABLE t_dm (
   user_filesize  DOUBLE,    
 --
 -- File metadata
-  file_metadata   VARCHAR(255),  
+  file_metadata   VARCHAR(1024),  
 --
 -- activity name
   activity   VARCHAR(255) DEFAULT "default",  

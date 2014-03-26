@@ -597,7 +597,7 @@ CREATE TABLE t_file (
   ,user_filesize         	INTEGER
 --
 -- user provided metadata
-  ,file_metadata    VARCHAR2(255)
+  ,file_metadata    VARCHAR2(1024)
 --
 -- activity name
   ,activity   VARCHAR(255) DEFAULT 'default'
