@@ -24,7 +24,6 @@ class TestMultipleReuse(base.TestBase):
         """
         Transfer multiple files with reuse
         """
-    #    config.Timeout=40
         for t in self.transfers:
             logging.info("Transfer multiple files with reuse")
             files = []
