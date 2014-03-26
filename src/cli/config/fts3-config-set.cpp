@@ -56,8 +56,8 @@ int main(int ac, char* av[])
             if (protocol.is_initialized())
                 {
             		string udt = std::get<0>(*protocol);
-            		string se = std::get<0>(*protocol);
-            		string state = std::get<0>(*protocol);
+            		string se = std::get<1>(*protocol);
+            		string state = std::get<2>(*protocol);
             		ctx.setSeProtocol(udt, se, state);
                     return 0;
                 }
