@@ -210,7 +210,7 @@ CREATE TABLE t_se (
   se_transfer_type     VARCHAR(30),
   se_transfer_protocol VARCHAR(30),
   se_control_protocol  VARCHAR(30),
-  bandwidth             INTEGER,
+  gocdb_id             VARCHAR(100),
   KEY (se_id_info),
   CONSTRAINT se_info_pk PRIMARY KEY (name)
 );

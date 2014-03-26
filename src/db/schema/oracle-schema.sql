@@ -212,7 +212,7 @@ CREATE TABLE t_se (
   ,se_transfer_type VARCHAR2(30)
   ,se_transfer_protocol VARCHAR2(30)
   ,se_control_protocol VARCHAR2(30)
-  ,bandwidth             INTEGER
+  ,gocdb_id             VARCHAR2(100)
   ,CONSTRAINT se_info_pk PRIMARY KEY (name)
 );
 
