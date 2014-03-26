@@ -137,7 +137,7 @@ bool MsgProducer::sendMessage(std::string &temp)
             delete message;
         }
 
-    logger::writeLog(temp);
+    //logger::writeLog(temp);
     return true;
 }
 
