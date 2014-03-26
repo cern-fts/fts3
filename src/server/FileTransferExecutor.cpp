@@ -130,10 +130,7 @@ int FileTransferExecutor::execute()
                     bool isAutoTuned = false;
 
                     if (optimize && cfgs.empty())
-                        {
-                            /* Not used for now, please do not remove
-                                        db->setAllowed(tf->JOB_ID, tf->FILE_ID, source_hostname, destin_hostname, StreamsperFile, Timeout, BufSize);
-                            */
+                        {                            
                             if (manualProtocol == true)
                                 {
                                     internalParams << "nostreams:" << StreamsperFile << ",timeout:" << Timeout << ",buffersize:" << BufSize;
@@ -174,18 +171,7 @@ int FileTransferExecutor::execute()
 
                             if (resolver.isAuto())
                                 {
-                                    isAutoTuned = true;
-                                    /* Not used for now, please do not remove
-                                                    db->setAllowed(
-                                                        tf->JOB_ID,
-                                                        tf->FILE_ID,
-                                                        source_hostname,
-                                                        destin_hostname,
-                                                        resolver.getNoStreams(),
-                                                        resolver.getNoTxActiveTo(),
-                                                        resolver.getTcpBufferSize()
-                                                    );
-                                    */
+                                    isAutoTuned = true;                                    
                                 }
                             else
                                 {
