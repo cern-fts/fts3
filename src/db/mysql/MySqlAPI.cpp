@@ -5258,8 +5258,8 @@ void MySqlAPI::setSeProtocol(std::string protocol, std::string se, std::string s
             else
                 {
                     sql <<
-                        " INSERT INTO t_optimize (source_se, udt) "
-                        " VALUES (:se, :udt)",
+                        " INSERT INTO t_optimize (source_se, udt, file_id) "
+                        " VALUES (:se, :udt, 0)",
                         soci::use(se),
                         soci::use(state)
                         ;
