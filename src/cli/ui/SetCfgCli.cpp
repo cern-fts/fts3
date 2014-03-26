@@ -219,6 +219,7 @@ optional< std::tuple<string, string, string> > SetCfgCli::getProtocol()
     // make sure it was used corretly
     const vector<string>& v = vm["protocol"].as< vector<string> >();
     if (v.size() != 3) throw string("'--protocol' takes following parameters: udt SE on/off");
+    if (v[2] != "on" && v[2] != "off") throw string("'--protocol' can only be switched 'on' or 'off'");
 
     return std::make_tuple(v[0], v[1], v[2]);
 }
