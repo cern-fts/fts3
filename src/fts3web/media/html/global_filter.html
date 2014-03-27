@@ -7,17 +7,31 @@
                 <option value="">- All -</option>
              </select>
             </div>
-            <div class="span4">
+            <div class="span3">
              <label for="global-source">Source SE:</label>
              <input id="global-source" type="text" ng-model="globalFilter.source_se" placeholder="Source storage"
                     typeahead="source for source in unique.sources | safeFilter:$viewValue"
                     typeahead-on-select="applyGlobalFilter()"/>
             </div>
-            <div class="span4">
+            <div class="span3">
              <label for="global-destination">Source SE:</label>
              <input id="global-destination"  type="text" ng-model="globalFilter.dest_se" placeholder="Destination storage"
                     typeahead="dest for dest in unique.destinations | safeFilter:$viewValue"
                     typeahead-on-select="applyGlobalFilter()"/>
+            </div>
+            <div class="span2">
+              <label for="global-timewindow">Time window:</label>
+              <select id="global-timewindow" ng-model="globalFilter.time_window" ng-change="applyGlobalFilter()">
+                <option value="1">1 hour</option>
+                <option value="12">12 hours</option>
+                <option value="24">1 day</option>
+                <option value="48">2 days</option>
+                <option value="72">3 days</option>
+                <option value="96">4 days</option>
+                <option value="120">5 days</option>
+                <option value="144">6 days</option>
+                <option value="168">7 days</option>
+              </select> 
             </div>
             <div class="span2">
               <button class="btn btn-small btn-info" ng-click="applyGlobalFilter()">Apply</button>

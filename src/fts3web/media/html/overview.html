@@ -2,7 +2,9 @@
 
 <h2>Overview</h2>
 <h3>
-    Showing {{overview.startIndex}} to {{overview.endIndex}} out of {{overview.count}} from the last hour
+    Showing {{overview.startIndex}} to {{overview.endIndex}} out of {{overview.count}} from the last {{globalFilter.time_window }}
+    <span ng-show="globalFilter.time_window == 1">hour</span>
+    <span ng-show="globalFilter.time_window > 1">hours</span>
 </h3>
 
 <pagination rotate="false" num-pages="overview.pageCount" current-page="overview.page"
