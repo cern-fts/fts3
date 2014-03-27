@@ -10,7 +10,8 @@ angular.module('ftsmon.global_filter', [])
 	        	$rootScope.globalFilter = {
 	        		vo: '',
 	        		source_se: '',
-	        		dest_se: ''
+	        		dest_se: '',
+	        		time_window: 1
 	        	};
         	}
         	scope.globalFilter = $rootScope.globalFilter;
@@ -27,11 +28,17 @@ angular.module('ftsmon.global_filter', [])
         		vo:        validString($location.search().vo),
         		source_se: validString($location.search().source_se),
         		dest_se:   validString($location.search().dest_se),
+        		time_window: undefinedAsZero($location.search().time_window)
         	}
         	
         	$scope.applyGlobalFilter = function() {
-        		$rootScope.globalFilter = $scope.globalFilter;
-        		$location.search($scope.globalFilter);
+        		$rootScope.globalFilter = {
+        			vo: validString($scope.globalFilter.vo),
+        			source_se: validString($scope.globalFilter.source_se),
+        			dest_se: validString($scope.globalFilter.dest_se),
+        			time_window: undefinedAsZero($scope.globalFilter.time_window)
+        		};
+        		$location.search($rootScope.globalFilter);
         	}
         	
         	$scope.unique = {
@@ -71,8 +78,10 @@ function mergeFilters(search, globals)
 	if (typeof(search) == 'undefined')
 		return globals;
 	for (key in globals) {
-		if (!key in search)
+		if (!key in search || search[key] == null)
 			search[key] = globals[key];
+		else if (key in globals)
+			globals[key] = search[key];
 	}
 }
 
@@ -85,7 +94,7 @@ function hrefWithFilter(href, filter)
 	var query = '?';
 	for (key in filter) {
 		var value = filter[key];
-		if (typeof(value) == 'null' || typeof(value) == 'undefined')
+		if (value == null)
 			value = '';
 		else
 			value = encodeURIComponent(value);

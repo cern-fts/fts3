@@ -5,32 +5,30 @@
     <thead>
         <tr>
             <th>Server</th>
-            <th>Allocated hash segment</th>
+            <th>Running services</th>
             <th>Submissions received</th>
             <th>Transfers picked</th>
             <th>Transfers running</th>
             <th>Logs</th>
         </tr>
     </thead>
-    <tbody ng-repeat="(k, s) in servers" ng-class-odd="'odd'">
-        <tr>
+    <tbody>
+        <tr ng-repeat="(k, s) in servers" ng-class-odd="'odd'">
             <td>
-                <i class="icon-plus" ng-click="s.show = !s.show"></i>
                 <a href="#/statistics/overview?hostname={{k}}">{{k}}</a>
             </td>
-            <td>[{{s.segment.start}}, {{s.segment.end}}]</td>
+            <td>
+                <span ng-repeat="(service, segment) in s.services" title="[{{segment.start}}, {{segment.end}}]">
+                    {{service}}
+                    <br/>
+                </span>
+            </td>
             <td>{{s.submissions}}</td>
             <td>{{s.transfers}}</td>
             <td>{{s.active}}</td>
             <td>
                 <a log="'/var/log/fts3/fts3server.log'" host="k">FTS3</a>
                 <a log="'/var/log/fts3/fts3bringonline.log'" host="k">Bringonline</a>
-            </td>
-        </tr>
-        <tr ng-show="s.show">
-            <td colspan="6" style="background: #CCC">
-                <b>Services alive</b>: 
-                <span ng-repeat="s in s.services">{{s}} </span>
             </td>
         </tr>
     </tbody>

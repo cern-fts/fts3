@@ -50,7 +50,10 @@ def _get_bandwidth_limit(bw_limits, source, destination):
 def overview(httpRequest):
     filterForm = forms.FilterForm(httpRequest.GET)
     filters    = setupFilters(filterForm)
-    notBefore  = datetime.utcnow() - timedelta(hours = 1)
+    if filters['time_window']:
+        notBefore  = datetime.utcnow() - timedelta(hours = filters['time_window'])
+    else:
+        notBefore  = datetime.utcnow() - timedelta(hours = 1)
     throughputWindow = datetime.utcnow() - timedelta(seconds = 5)
 
     query = """
