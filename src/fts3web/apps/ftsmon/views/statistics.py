@@ -60,12 +60,10 @@ def _getTransferAndSubmissionPerHost(timewindow):
         submissions = Job.objects.filter(submit_time__gte = notBefore, submit_host = host).count()
         transfers = File.objects.filter(job__submit_time__gte = notBefore, transferHost = host).count()
         actives = File.objects.filter(file_state = 'ACTIVE', transferHost = host).count()
-        services = Host.objects.filter(hostname = host, beat__gte = notBefore).values('service_name').all()
         servers[host] = {
              'submissions': submissions,
              'transfers': transfers,
-             'active': actives,
-             'services': map(lambda s: s['service_name'], services)
+             'active': actives
         }
 
     return servers
@@ -103,47 +101,52 @@ def overview(httpRequest):
     }
 
 
-def _getHostHeartBeatAndSegment():
-    allHosts = Host.objects.order_by('hostname').filter(beat__gte = datetime.utcnow() - timedelta(minutes = 2))
-    hostCount = len(allHosts)
+def _getHostServiceAndSegment():
+    service_names = map(lambda s: s['service_name'], Host.objects.values('service_name').distinct().all())
     
-    if hostCount == 0:
-        return {}
-    
-    segmentSize = 0xFFFF / hostCount
-    segmentMod  = 0xFFFF % hostCount
-    
-    hosts = {}
-    index = 0
-    for h in allHosts:
-        hosts[h.hostname] = {
-            'beat'    : h.beat,
-            'index'   : index,
-            'segment' : {
-                'start': "%04X" % (segmentSize * index),
-                'end'  : "%04X" % (segmentSize * (index + 1) - 1),
-            }
-        }
+    host_map = dict()
+    for service in service_names:
+        running_hosts = Host.objects.filter(service_name = service, beat__gte = datetime.utcnow() - timedelta(minutes = 2))\
+            .values('hostname').order_by('hostname').all()
         
-        if index == hostCount - 1:
-            hosts[h.hostname]['segment']['end'] = "%04X" % (segmentSize * (index + 1) + segmentMod)
+        running_count = len(running_hosts)
+        segment_size = 0xFFFF / running_count
+        segment_remaining = 0xFFFF % running_count
         
-        index += 1       
-    
-    return hosts
+        segments = dict()
+        index = 0
+        for host in [h['hostname'] for h in running_hosts]:
+            if host not in host_map:
+                host_map[host] = dict()
+            
+            host_map[host][service] = {
+                'start': "%04X" % (segment_size * index),
+                'end' : "%04X" % (segment_size * (index + 1) - 1),
+            }            
+            index += 1
+            if index == running_count:
+                host_map[host][service]['end'] = "%04X" % (segment_size * index + segment_remaining)
+        
+    return host_map
+
 
 @jsonify
 def servers(httpRequest):
-    beats     = _getHostHeartBeatAndSegment()
+    segments  = _getHostServiceAndSegment()
     transfers = _getTransferAndSubmissionPerHost(timedelta(hours = 12))
     
-    servers = beats
-    for k in servers:
-        if k in transfers:
-            servers[k].update(transfers.get(k))
+    hosts = segments.keys()
+
+    servers = dict()
+    for host in hosts:
+        servers[host] = dict()
+        if host in transfers:
+            servers[host].update(transfers.get(host))
         else:
-            servers[k].update({'transfers': 0, 'active': 0, 'submissions': 0})
-    
+            servers[host].update({'transfers': 0, 'active': 0, 'submissions': 0})
+            
+        servers[host]['services'] = segments[host]
+                
     return servers
 
 
