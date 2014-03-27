@@ -30,8 +30,12 @@ angular.module('ftsmon.global_filter', [])
         	}
         	
         	$scope.applyGlobalFilter = function() {
-        		$rootScope.globalFilter = $scope.globalFilter;
-        		$location.search($scope.globalFilter);
+        		$rootScope.globalFilter = {
+        			vo: validString($scope.globalFilter.vo),
+        			source_se: validString($scope.globalFilter.source_se),
+        			dest_se: validString($scope.globalFilter.dest_se)
+        		};
+        		$location.search($rootScope.globalFilter);
         	}
         	
         	$scope.unique = {
