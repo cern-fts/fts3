@@ -2,25 +2,22 @@
     <div class="navbar-inner">
         <form class="row-fluid" ng-submit="applyGlobalFilter()" autocomplete="off">
             <div class="span2">
-             <label for="global-vo">VO:</label>
+             <label for="global-vo"><i class="icon-group" title="VO"></i></label>
              <select id="global-vo" ng-model="globalFilter.vo" ng-options="vo for vo in unique.vos" ng-change="applyGlobalFilter()">
                 <option value="">- All -</option>
              </select>
             </div>
-            <div class="span3">
-             <label for="global-source">Source SE:</label>
+            <div class="span6">
              <input id="global-source" type="text" ng-model="globalFilter.source_se" placeholder="Source storage"
                     typeahead="source for source in unique.sources | safeFilter:$viewValue"
                     typeahead-on-select="applyGlobalFilter()"/>
-            </div>
-            <div class="span3">
-             <label for="global-destination">Source SE:</label>
+             <i class="icon-arrow-right"></i>
              <input id="global-destination"  type="text" ng-model="globalFilter.dest_se" placeholder="Destination storage"
                     typeahead="dest for dest in unique.destinations | safeFilter:$viewValue"
                     typeahead-on-select="applyGlobalFilter()"/>
             </div>
             <div class="span2">
-              <label for="global-timewindow">Time window:</label>
+              <label for="global-timewindow"><i class="icon-time" title="Time window"></i></label>
               <select id="global-timewindow" ng-model="globalFilter.time_window" ng-change="applyGlobalFilter()">
                 <option value="1">1 hour</option>
                 <option value="12">12 hours</option>

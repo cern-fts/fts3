@@ -23,27 +23,42 @@ pre {
 .navbar-fixed-top {
     height: 44px;
 }
+
 .sub-navbar {
     position: absolute;
     left: 0;
     right: 0;
     top: 44px;
-    height: 50px;
 }
 
-.sub-navbar form {
-    padding: 0.8em 0 0.8em 0;
-    margin: 0;
+.sub-navbar>.navbar-inner {
+	position: relative;
+	height: 44px;
+}
+
+.sub-navbar>.navbar-inner>form {
+	position: absolute;
+	top: 50%;
+	height: 44px;
+    margin-top: -14px;
 }
 
 .sub-navbar>div>form>div {
     vertical-align: middle;
+    margin: 0;
+    padding: 0;
 }
 
-.sub-navbar select, .sub-navbar input {
+.sub-navbar select {
     display: inline;
     width: 80%;
     height: 2em;
+    margin: 0;
+}
+
+.sub-navbar input {
+	width: 45%;
+	margin: 0;
 }
 
 .sub-navbar label {
@@ -52,4 +67,10 @@ pre {
 
 .navbar-spacer {
     height: 50px;
+}
+
+.icon-group {
+	background: url("../img/group.png");
+	width: 20px;
+	height: 14px;
 }
