@@ -74,7 +74,10 @@ CREATE TABLE t_optimize (
   filesize         	NUMBER default NULL,
 --
 -- timestamp
-   datetime			TIMESTAMP WITH TIME ZONE
+   datetime			TIMESTAMP WITH TIME ZONE,
+--
+-- udt
+   udt VARCHAR2(3) CHECK (udt in ('on', 'off'))
 );
 
 --
@@ -209,7 +212,7 @@ CREATE TABLE t_se (
   ,se_transfer_type VARCHAR2(30)
   ,se_transfer_protocol VARCHAR2(30)
   ,se_control_protocol VARCHAR2(30)
-  ,gocdb_id VARCHAR2(100)
+  ,gocdb_id             VARCHAR2(100)
   ,CONSTRAINT se_info_pk PRIMARY KEY (name)
 );
 
@@ -597,7 +600,7 @@ CREATE TABLE t_file (
   ,user_filesize         	INTEGER
 --
 -- user provided metadata
-  ,file_metadata    VARCHAR2(255)
+  ,file_metadata    VARCHAR2(1024)
 --
 -- activity name
   ,activity   VARCHAR(255) DEFAULT 'default'
@@ -706,16 +709,18 @@ CREATE TABLE t_stage_req (
 -- Host hearbeats
 --
 CREATE TABLE t_hosts (
-    hostname    VARCHAR2(64) PRIMARY KEY NOT NULL,
+    hostname    VARCHAR2(64) NOT NULL,
+    service_name    VARCHAR2(64) NOT NULL,    
     beat        TIMESTAMP WITH TIME ZONE DEFAULT NULL,
-    drain 	INTEGER DEFAULT 0
+    drain 	INTEGER DEFAULT 0,
+    CONSTRAINT t_hosts_pk PRIMARY KEY (hostname, service_name)
 );
 
 
 CREATE TABLE t_optimize_active (
   source_se    VARCHAR2(255) NOT NULL,
   dest_se      VARCHAR2(255) NOT NULL,
-  active       INTEGER DEFAULT 5,
+  active       INTEGER DEFAULT 2,
   message      VARCHAR2(512),
   datetime  TIMESTAMP WITH TIME ZONE,
   CONSTRAINT t_optimize_active_pk PRIMARY KEY (source_se, dest_se)

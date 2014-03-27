@@ -46,6 +46,15 @@
                 <span ng-switch-when="7">Bad link efficiency but improving, actives remain steady until the next sample to check</span>
                 <span ng-switch-when="8">Bad link efficiency</span>
                 <span ng-switch-when="9">Link efficiency ~99%</span>
+                <span ng-switch-when="10">
+                    Bandwidth restriction are set to
+                    <span ng-show="o.bandwidth_limits.source">
+                        {{ o.bandwidth_limits.source|number:2 }} Mbits/sec on the source
+                    </span>
+                    <span ng-show="o.bandwidth_limits.destination">
+                        {{ o.bandwidth_limits.destination|number:2 }} Mbits/sec on the destination
+                    </span>
+                </span>
             </td>
         </tr>
     </tbody>
@@ -55,7 +64,8 @@
     <p>
         <span class="label label-success">Increase number of active</span><br/>
         <span class="label label-info">Keep number of active</span><br/>
-        <span class="label label-important">Decrease number of active</span>
+        <span class="label label-important">Decrease number of active</span><br/>
+        <span class="label label-warning">Limited bandwidth</span>
     </p>
 </div>
 

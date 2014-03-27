@@ -69,7 +69,7 @@ public:
         TRAITS::ActiveObjectType("ProcessQueueHandler", desc)
     {
         enableOptimization = theServerConfig().get<std::string > ("Optimizer");
-        messages.reserve(3000);
+        messages.reserve(1000);
     }
 
     /* ---------------------------------------------------------------------- */
@@ -124,7 +124,6 @@ public:
                                     {
                                         DBSingleton::instance().getDBObjectInstance()
                                         ->setRetryTransfer(job, msg.file_id, retryTimes+1, msg.transfer_message);
-                                        SingleTrStateInstance::instance().sendStateMessage(job, msg.file_id);
                                         return true;
                                     }
                                 else
@@ -133,7 +132,6 @@ public:
                                             {
                                                 DBSingleton::instance().getDBObjectInstance()
                                                 ->setRetryTransfer(job, msg.file_id, retryTimes+1, msg.transfer_message);
-                                                SingleTrStateInstance::instance().sendStateMessage(job, msg.file_id);
                                                 return true;
                                             }
                                     }
@@ -177,14 +175,14 @@ public:
         catch (std::exception& e)
             {
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception " << e.what() << commit;
-		struct message msgTemp = msg; 
-                runProducerStatus( msgTemp); 
+                struct message msgTemp = msg;
+                runProducerStatus( msgTemp);
             }
         catch (...)
             {
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception" << commit;
-		struct message msgTemp = msg; 
-                runProducerStatus( msgTemp);		
+                struct message msgTemp = msg;
+                runProducerStatus( msgTemp);
             }
         return updated;
     }
@@ -324,18 +322,18 @@ protected:
                             {
                                 break;
                             }
-			    
-			//if conn to the db is lost, do not retrieve state, save it for later
-			//use one fast query
-			try    
-			    {
-				DBSingleton::instance().getDBObjectInstance()->getDrain();
-			    }   
-			catch(...)
-			    {
-			    	sleep(1);
-				continue;			    
-			    }  
+
+                        //if conn to the db is lost, do not retrieve state, save it for later
+                        //use one fast query
+                        try
+                            {
+                                DBSingleton::instance().getDBObjectInstance()->getDrain();
+                            }
+                        catch(...)
+                            {
+                                sleep(1);
+                                continue;
+                            }
 
                         if(!fs::is_empty(fs::path(STATUS_DIR)))
                             {
@@ -399,7 +397,7 @@ protected:
                                 messages.clear();
                             }
 
-                        usleep(300000);
+                        sleep(1);
                     }
                 catch (const fs::filesystem_error& ex)
                     {

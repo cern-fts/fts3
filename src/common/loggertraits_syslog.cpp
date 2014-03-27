@@ -20,7 +20,7 @@ limitations under the License. */
 #include <string.h>
 #include <boost/preprocessor/stringize.hpp>
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST
+#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 #include "unittest/testsuite.h"
 #include <errno.h>
 #endif // FTS3_COMPILE_WITH_UNITTESTS
@@ -74,7 +74,10 @@ const std::string LoggerTraits_Syslog::initialLogLine()
 
 /* ========================================================================== */
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST
+#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
+
+BOOST_AUTO_TEST_SUITE( common )
+BOOST_AUTO_TEST_SUITE(SyslogTest)
 
 BOOST_FIXTURE_TEST_CASE (Common__LoggerTraits_SysLog, LoggerTraits_Syslog)
 {
@@ -90,6 +93,9 @@ BOOST_FIXTURE_TEST_CASE (Common__LoggerTraits_SysLog, LoggerTraits_Syslog)
     BOOST_CHECK_EQUAL (errmsg, "Permission denied");
     BOOST_TEST_MESSAGE ("\n**** End of manual test.");
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()
 
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 

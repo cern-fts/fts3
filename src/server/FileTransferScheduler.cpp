@@ -44,19 +44,20 @@ using namespace fts3::ws;
 
 FileTransferScheduler::FileTransferScheduler(
     TransferFiles* file,
-    vector< boost::shared_ptr<ShareConfig> >& cfgs,
+    vector< boost::shared_ptr<ShareConfig> > cfgs,
     set<string> inses,
     set<string> outses,
     set<string> invos,
     set<string> outvos
 ) :
     file (file),
-    cfgs (cfgs),
     db (DBSingleton::instance().getDBObjectInstance())
 {
 
     srcSeName = file->SOURCE_SE;
     destSeName = file->DEST_SE;
+
+    vector< boost::shared_ptr<ShareConfig> > no_auto_share;
 
     vector< boost::shared_ptr<ShareConfig> >::iterator it;
     for (it = cfgs.begin(); it != cfgs.end(); it++)
@@ -100,7 +101,11 @@ FileTransferScheduler::FileTransferScheduler(
                     cfg->active_transfers = static_cast<int>(tmp + 0.5);
                     cfg->share_only = false; // now the value has been set
                 }
+
+            if (cfg->active_transfers != Configuration::automatic) no_auto_share.push_back(cfg);
         }
+
+    this->cfgs = no_auto_share;
 }
 
 FileTransferScheduler::~FileTransferScheduler()
@@ -108,7 +113,7 @@ FileTransferScheduler::~FileTransferScheduler()
 
 }
 
-bool FileTransferScheduler::schedule(bool optimize)
+bool FileTransferScheduler::schedule()
 {
 
     vector<int> notUsed;
@@ -116,7 +121,7 @@ bool FileTransferScheduler::schedule(bool optimize)
     try
         {
 
-            if(optimize && cfgs.empty())
+            if(cfgs.empty())
                 {
                     bool allowed = db->isTrAllowed(srcSeName, destSeName);
                     // update file state to READY
@@ -128,13 +133,11 @@ bool FileTransferScheduler::schedule(bool optimize)
                             db->setFilesToNotUsed(file->JOB_ID, file->FILE_INDEX, notUsed);
                             if(!notUsed.empty())
                                 {
-                                    /*disabled for now but pls do not remove
-                                                    std::vector<int>::const_iterator iter;
-                                                    for (iter = notUsed.begin(); iter != notUsed.end(); ++iter)
-                                                        {
-                                                            SingleTrStateInstance::instance().sendStateMessage(file->JOB_ID, (*iter));
-                                                        }
-                                    */
+                                    std::vector<int>::const_iterator iter;
+                                    for (iter = notUsed.begin(); iter != notUsed.end(); ++iter)
+                                        {
+                                            SingleTrStateInstance::instance().sendStateMessage(file->JOB_ID, (*iter));
+                                        }
                                     notUsed.clear();
                                 }
                             return true;
@@ -212,13 +215,11 @@ bool FileTransferScheduler::schedule(bool optimize)
             db->setFilesToNotUsed(file->JOB_ID, file->FILE_INDEX, notUsed);
             if(!notUsed.empty())
                 {
-                    /*disabled for now but pls do not remove
-                            std::vector<int>::const_iterator iter;
-                            for (iter = notUsed.begin(); iter != notUsed.end(); ++iter)
-                                {
-                                    SingleTrStateInstance::instance().sendStateMessage(file->JOB_ID, (*iter));
-                                }
-                    */
+                    std::vector<int>::const_iterator iter;
+                    for (iter = notUsed.begin(); iter != notUsed.end(); ++iter)
+                        {
+                            SingleTrStateInstance::instance().sendStateMessage(file->JOB_ID, (*iter));
+                        }
                     notUsed.clear();
                 }
 

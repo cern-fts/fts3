@@ -17,7 +17,7 @@ limitations under the License. */
 
 #include "error.h"
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST
+#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 #include "unittest/testsuite.h"
 #include <boost/algorithm/string/find.hpp>
 #endif // FTS3_COMPILE_WITH_UNITTESTS
@@ -64,7 +64,7 @@ std::string Err_Custom::_description() const
 
 /* ========================================================================== */
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST
+#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 
 bool Common__Error_Macros_chekMessage (const Err_Custom&)
 {
@@ -73,15 +73,21 @@ bool Common__Error_Macros_chekMessage (const Err_Custom&)
 
 /* -------------------------------------------------------------------------- */
 
+BOOST_AUTO_TEST_SUITE( common )
+BOOST_AUTO_TEST_SUITE(ErrorTest)
+
 BOOST_AUTO_TEST_CASE (Common__Error_Macros)
 {
     BOOST_CHECK_EXCEPTION
     (
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Error message")),
+        throw(Err_Custom("Error message")),
         Err_Custom,
         Common__Error_Macros_chekMessage
     );
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()
 
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 

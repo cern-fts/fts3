@@ -56,21 +56,31 @@ int main(int ac, char* av[])
             string source = cli->getSource();
             string destination =  cli->getDestination();
 
-            string all;
-            if (cli->all())
+            if (cli->getBandwidth())
                 {
-                    if (!source.empty() && !destination.empty()) throw string("'--all' may only be used if querying for a single SE");
-                    all = "all";
+                    implcfg__getBandwidthLimitResponse resp;
+                    ctx.getBandwidthLimit(resp);
+
+                    cout << resp.limit << std::endl;
                 }
+            else
+                {
+                    string all;
+                    if (cli->all())
+                        {
+                            if (!source.empty() && !destination.empty()) throw string("'--all' may only be used if querying for a single SE");
+                            all = "all";
+                        }
 
-            if (cli->vo()) all = "vo";
+                    if (cli->vo()) all = "vo";
 
-            implcfg__getConfigurationResponse resp;
-            ctx.getConfiguration(source, destination, all, cli->getName(), resp);
+                    implcfg__getConfigurationResponse resp;
+                    ctx.getConfiguration(source, destination, all, cli->getName(), resp);
 
-            vector<string> &cfgs = resp.configuration->cfg;
-            ostream_iterator<string> it(cout, "\n");
-            copy(cfgs.begin(), cfgs.end(), it);
+                    vector<string> &cfgs = resp.configuration->cfg;
+                    ostream_iterator<string> it(cout, "\n");
+                    copy(cfgs.begin(), cfgs.end(), it);
+                }
         }
     catch(std::exception& e)
         {

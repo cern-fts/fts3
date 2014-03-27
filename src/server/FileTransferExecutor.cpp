@@ -37,10 +37,9 @@ namespace server
 const string FileTransferExecutor::cmd = "fts_url_copy";
 
 
-FileTransferExecutor::FileTransferExecutor(TransferFiles* tf, TransferFileHandler& tfh, bool optimize, bool monitoringMsg, string infosys, string ftsHostName) :
+FileTransferExecutor::FileTransferExecutor(TransferFiles* tf, TransferFileHandler& tfh, bool monitoringMsg, string infosys, string ftsHostName) :
     tf(tf),
     tfh(tfh),
-    optimize(optimize),
     monitoringMsg(monitoringMsg),
     infosys(infosys),
     ftsHostName(ftsHostName),
@@ -89,31 +88,22 @@ int FileTransferExecutor::execute()
             int Timeout = 0;
             bool manualProtocol = false;
 
-            std::stringstream internalParams;
-
             bool manualConfigExists = false;
 
-            if (optimize)
-                {
-                    optional<ProtocolResolver::protocol> p = ProtocolResolver::getUserDefinedProtocol(tf.get());
+            optional<ProtocolResolver::protocol> p = ProtocolResolver::getUserDefinedProtocol(tf.get());
 
-                    if (p.is_initialized())
-                        {
-                            BufSize = (*p).tcp_buffer_size;
-                            StreamsperFile = (*p).nostreams;
-                            Timeout = (*p).urlcopy_tx_to;
-                            manualProtocol = true;
-                        }
-                    else
-                        {
-                            OptimizerSample* opt_config = new OptimizerSample();
-                            db->fetchOptimizationConfig2(opt_config, source_hostname, destin_hostname);
-                            BufSize = opt_config->getBufSize();
-                            StreamsperFile = opt_config->getStreamsperFile();
-                            Timeout = opt_config->getTimeout();
-                            delete opt_config;
-                            opt_config = NULL;
-                        }
+            if (p.is_initialized())
+                {
+                    BufSize = (*p).tcp_buffer_size;
+                    StreamsperFile = (*p).nostreams;
+                    Timeout = (*p).urlcopy_tx_to;
+                    manualProtocol = true;
+                }
+            else
+                {
+                    BufSize = DEFAULT_BUFFSIZE;
+                    StreamsperFile = DEFAULT_NOSTREAMS;
+                    Timeout = DEFAULT_TIMEOUT;
                 }
 
             FileTransferScheduler scheduler(
@@ -126,78 +116,30 @@ int FileTransferExecutor::execute()
 
             );
 
-            if (scheduler.schedule(optimize))   /*SET TO READY STATE WHEN TRUE*/
+            if (scheduler.schedule())   /*SET TO READY STATE WHEN TRUE*/
                 {
                     scheduled = 1;
 
-                    //SingleTrStateInstance::instance().sendStateMessage(tf->JOB_ID, tf->FILE_ID);
+                    SingleTrStateInstance::instance().sendStateMessage(tf->JOB_ID, tf->FILE_ID);
                     bool isAutoTuned = false;
 
-                    if (optimize && cfgs.empty())
-                        {
-                            /* Not used for now, please do not remove
-                                        db->setAllowed(tf->JOB_ID, tf->FILE_ID, source_hostname, destin_hostname, StreamsperFile, Timeout, BufSize);
-                            */
-                            if (manualProtocol == true)
-                                {
-                                    internalParams << "nostreams:" << StreamsperFile << ",timeout:" << Timeout << ",buffersize:" << BufSize;
-                                }
-                            else
-                                {
-                                    internalParams << "nostreams:" << DEFAULT_NOSTREAMS << ",timeout:" << DEFAULT_TIMEOUT << ",buffersize:" << DEFAULT_BUFFSIZE;
-                                }
-                        }
-                    else
+                    if (!cfgs.empty())
                         {
                             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Check link config for: " << source_hostname << " -> " << destin_hostname << commit;
                             ProtocolResolver resolver(tf.get(), cfgs);
                             bool protocolExists = resolver.resolve();
-                            if (protocolExists == true)
+                            if (protocolExists)
                                 {
                                     manualConfigExists = true;
                                     protocol.NOSTREAMS = resolver.getNoStreams();
                                     protocol.NO_TX_ACTIVITY_TO = resolver.getNoTxActiveTo();
                                     protocol.TCP_BUFFER_SIZE = resolver.getTcpBufferSize();
                                     protocol.URLCOPY_TX_TO = resolver.getUrlCopyTxTo();
-
-                                    if (protocol.NOSTREAMS >= 0)
-                                        internalParams << "nostreams:" << protocol.NOSTREAMS;
-                                    if (protocol.URLCOPY_TX_TO >= 0)
-                                        internalParams << ",timeout:" << protocol.URLCOPY_TX_TO;
-                                    if (protocol.TCP_BUFFER_SIZE >= 0)
-                                        internalParams << ",buffersize:" << protocol.TCP_BUFFER_SIZE;
-                                }
-                            else if (manualProtocol == true)
-                                {
-                                    internalParams << "nostreams:" << StreamsperFile << ",timeout:" << Timeout << ",buffersize:" << BufSize;
-                                }
-                            else
-                                {
-                                    internalParams << "nostreams:" << DEFAULT_NOSTREAMS << ",timeout:" << DEFAULT_TIMEOUT << ",buffersize:" << DEFAULT_BUFFSIZE;
                                 }
 
                             if (resolver.isAuto())
                                 {
                                     isAutoTuned = true;
-                                    /* Not used for now, please do not remove
-                                                    db->setAllowed(
-                                                        tf->JOB_ID,
-                                                        tf->FILE_ID,
-                                                        source_hostname,
-                                                        destin_hostname,
-                                                        resolver.getNoStreams(),
-                                                        resolver.getNoTxActiveTo(),
-                                                        resolver.getTcpBufferSize()
-                                                    );
-                                    */
-                                }
-                            else
-                                {
-                                    db->setAllowedNoOptimize(
-                                        tf->JOB_ID,
-                                        tf->FILE_ID,
-                                        internalParams.str()
-                                    );
                                 }
                         }
 
@@ -280,7 +222,7 @@ int FileTransferExecutor::execute()
                         {
                             params.append(" -d ");
                         }
-                    if (optimize && manualConfigExists == false)
+                    if (!manualConfigExists)
                         {
                             params.append(" -e ");
                             params.append(lexical_cast<string >(StreamsperFile));
@@ -299,7 +241,7 @@ int FileTransferExecutor::execute()
                                 }
                         }
 
-                    if (optimize && manualConfigExists == false)
+                    if (!manualConfigExists)
                         {
                             params.append(" -f ");
                             params.append(lexical_cast<string >(BufSize));
@@ -318,7 +260,7 @@ int FileTransferExecutor::execute()
                                 }
                         }
 
-                    if (optimize && manualConfigExists == false)
+                    if (!manualConfigExists)
                         {
                             params.append(" -h ");
                             params.append(lexical_cast<string >(Timeout));
@@ -389,35 +331,40 @@ int FileTransferExecutor::execute()
                             params.append(infosys);
                         }
 
+                    bool udt = db->isProtocolUDT(source_hostname, destin_hostname);
+
+                    if(udt)
+                        {
+                            params.append(" -U ");
+                        }
+
                     bool ready = db->isFileReadyState(tf->FILE_ID);
 
                     if (ready)
                         {
                             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd << " " << params << commit;
-                            ExecuteProcess *pr = new ExecuteProcess(cmd, params);
-                            if (pr)
+                            ExecuteProcess pr(cmd, params);
+
+                            /*check if fork/execvp failed, */
+                            if (-1 == pr.executeProcessShell())
                                 {
-                                    /*check if fork/execvp failed, */
-                                    if (-1 == pr->executeProcessShell())
-                                        {
-                                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to spawn " <<  tf->JOB_ID << "  " << tf->FILE_ID << commit;
-                                            db->forkFailedRevertState(tf->JOB_ID, tf->FILE_ID);
-                                        }
-                                    else
-                                        {
-                                            db->updateFileTransferStatus(0.0, tf->JOB_ID, tf->FILE_ID, "ACTIVE", "",(int) pr->getPid(), 0, 0, false);
-                                            db->updateJobTransferStatus(tf->JOB_ID, "ACTIVE");
-                                            SingleTrStateInstance::instance().sendStateMessage(tf->JOB_ID, tf->FILE_ID);
-                                            struct message_updater msg;
-                                            strncpy(msg.job_id, std::string(tf->JOB_ID).c_str(), sizeof(msg.job_id));
-                                            msg.job_id[sizeof(msg.job_id) - 1] = '\0';
-                                            msg.file_id = tf->FILE_ID;
-                                            msg.process_id = (int) pr->getPid();
-                                            msg.timestamp = milliseconds_since_epoch();
-                                            ThreadSafeList::get_instance().push_back(msg);
-                                        }
-                                    delete pr;
+                                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to spawn " <<  tf->JOB_ID << "  " << tf->FILE_ID << commit;
+                                    db->forkFailedRevertState(tf->JOB_ID, tf->FILE_ID);
                                 }
+                            else
+                                {
+                                    db->updateFileTransferStatus(0.0, tf->JOB_ID, tf->FILE_ID, "ACTIVE", "",(int) pr.getPid(), 0, 0, false);
+                                    db->updateJobTransferStatus(tf->JOB_ID, "ACTIVE");
+                                    SingleTrStateInstance::instance().sendStateMessage(tf->JOB_ID, tf->FILE_ID);
+                                    struct message_updater msg;
+                                    strncpy(msg.job_id, std::string(tf->JOB_ID).c_str(), sizeof(msg.job_id));
+                                    msg.job_id[sizeof(msg.job_id) - 1] = '\0';
+                                    msg.file_id = tf->FILE_ID;
+                                    msg.process_id = (int) pr.getPid();
+                                    msg.timestamp = milliseconds_since_epoch();
+                                    ThreadSafeList::get_instance().push_back(msg);
+                                }
+
                         }
                     params.clear();
                 }

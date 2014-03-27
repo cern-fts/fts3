@@ -77,7 +77,7 @@ public:
 
     void cancelJob(std::vector<std::string>& requestIDs);
 
-    void insertGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs);
+    bool insertGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs);
 
     void updateGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs);
 
@@ -218,6 +218,8 @@ public:
 
     void setPriority(std::string jobId, int priority);
 
+    void setSeProtocol(std::string protocol, std::string se, std::string state);
+
     void setRetry(int retry);
 
     int getRetry(const std::string & jobId);
@@ -294,7 +296,7 @@ public:
 
     void getTransferRetries(int fileId, std::vector<FileRetry*>& retries);
 
-    void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end);
+    void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end, std::string service_name);
 
     unsigned int updateFileStatusReuse(TransferFiles* file, const std::string status);
 
@@ -305,6 +307,12 @@ public:
     bool getDrain();
 
     void setDrain(bool drain);
+
+    void setBandwidthLimit(const std::string & source_hostname, const std::string & destination_hostname, int bandwidthLimit);
+
+    std::string getBandwidthLimit();
+
+    bool isProtocolUDT(const std::string & source_hostname, const std::string & destination_hostname);
 };
 
 

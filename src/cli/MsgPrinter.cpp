@@ -34,7 +34,6 @@
 
 #include <utility>
 #include <sstream>
-#include <iostream>
 #include <algorithm>
 
 namespace fts3
@@ -526,7 +525,7 @@ void MsgPrinter::file_list(vector<string> values, vector<string> retries)
     addToArray(it->second, "files", file);
 }
 
-MsgPrinter::MsgPrinter(): verbose(false), json(false)
+MsgPrinter::MsgPrinter(ostream& out): verbose(false), json(false), out(out)
 {
 
 }
@@ -534,7 +533,7 @@ MsgPrinter::MsgPrinter(): verbose(false), json(false)
 MsgPrinter::~MsgPrinter()
 {
     if (json)
-        write_json(cout, json_out);
+        write_json(out, json_out);
 }
 
 ptree MsgPrinter::getItem(map<string, string> values)

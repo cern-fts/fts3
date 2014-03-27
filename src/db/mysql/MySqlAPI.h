@@ -18,7 +18,7 @@
 #pragma once
 
 #include <common_dev.h>
-#include <soci.h>
+#include <soci/soci.h>
 #include "GenericDbIfce.h"
 
 using namespace FTS3_COMMON_NAMESPACE;
@@ -103,7 +103,7 @@ public:
 
 
     /*t_credential API*/
-    virtual void insertGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs);
+    virtual bool insertGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs);
 
     virtual void updateGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs);
 
@@ -244,6 +244,8 @@ public:
 
     virtual void setPriority(std::string jobId, int priority);
 
+    virtual void setSeProtocol(std::string protocol, std::string se, std::string state);
+
     virtual void setRetry(int retry);
 
     virtual int getRetry(const std::string & jobId);
@@ -320,7 +322,7 @@ public:
 
     void resetSanityRuns(soci::session& sql, struct message_sanity &msg);
 
-    void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end);
+    void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end, std::string service_name);
 
     std::map<std::string, double> getActivityShareConf(soci::session& sql, std::string vo);
 
@@ -344,13 +346,23 @@ public:
 
     virtual void setDrain(bool drain);
 
+    virtual void setBandwidthLimit(const std::string & source_hostname, const std::string & destination_hostname, int bandwidthLimit);
 
+    virtual std::string getBandwidthLimit();
+
+    virtual bool isProtocolUDT(const std::string & source_hostname, const std::string & destination_hostname);
 
 private:
     size_t                poolSize;
     soci::connection_pool* connectionPool;
     std::string           hostname;
     std::string username_;
+
+    bool getDrainInternal(soci::session& sql);
+
+    std::string getBandwidthLimitInternal(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname);
+
+    bool bandwidthChecker(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname, int& bandwidth);
 
     int getCredits(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname);
 
@@ -380,6 +392,5 @@ private:
     void bringOnlineReportStatusInternal(soci::session& sql, const std::string & state, const std::string & message,
                                          const struct message_bringonline& msg);
 
-    void updateOptimizerEvolution(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname, int active, double throughput, double successRate, int buffer);
-
+    void updateOptimizerEvolution(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname, int active, double throughput, double successRate, int buffer, int bandwidth);
 };

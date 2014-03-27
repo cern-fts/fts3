@@ -39,15 +39,16 @@ const option UrlCopyOpts::long_options[] =
     {"file-id",           required_argument, 0, 'B'},
     {"proxy",             required_argument, 0, '5'},
     {"stderr",            no_argument,       0, '1'},
+    {"udt",               no_argument,       0, 'U'},
     {0, 0, 0, 0}
 };
 
-const char UrlCopyOpts::short_options[] = "PONM:L:K:J:I:H:GRFD:E:C:z:A:t:a:b:c:de:f:h:ij:k:B:5:";
+const char UrlCopyOpts::short_options[] = "PONM:L:K:J:I:H:GRFD:E:C:z:A:t:a:b:c:de:f:h:ij:k:B:5:U";
 
 
 UrlCopyOpts::UrlCopyOpts(): monitoringMessages(false), autoTunned(false),
     manualConfig(false), debug(false), overwrite(false), daemonize(false),
-    logToStderr(false), reuse(false), multihop(false), compareChecksum(CHECKSUM_DONT_CHECK),
+    logToStderr(false), reuse(false), multihop(false), enable_udt(false), compareChecksum(CHECKSUM_DONT_CHECK),
     fileId(0), userFileSize(0), bringOnline(-1), copyPinLifetime(-1),
     nStreams(DEFAULT_NOSTREAMS), tcpBuffersize(DEFAULT_BUFFSIZE),
     blockSize(0), timeout(DEFAULT_TIMEOUT)
@@ -141,6 +142,9 @@ int UrlCopyOpts::parse(int argc, char * const argv[])
                             break;
                         case 'C':
                             vo = optarg;
+                            break;
+                        case 'U':
+                            enable_udt = true;
                             break;
                         case 'z':
                             checksumValue = optarg;

@@ -41,16 +41,9 @@ function mergeAttrs(a, b)
 	return a;
 }
 
-function OverviewCtrl($location, $scope, overview, Overview, Unique)
+function OverviewCtrl($location, $scope, overview, Overview)
 {
 	$scope.overview = overview;
-	
-	// Unique pairs and vos
-	$scope.unique = {
-		sources: Unique('sources'),
-		destinations: Unique('destinations'),
-		vos: Unique('vos')
-	}
 
 	// On page change, reload
 	$scope.pageChanged = function(newPage) {
@@ -69,17 +62,6 @@ function OverviewCtrl($location, $scope, overview, Overview, Unique)
 	$scope.$on('$destroy', function() {
 		clearInterval($scope.autoRefresh);
 	});
-	
-	// Set up filters
-	$scope.filterBy = function(filter) {
-		$location.search(mergeAttrs($location.search(), filter));
-	}
-	
-	$scope.filter = {
-		vo:        validString($location.search().vo),
-		source_se: validString($location.search().source_se),
-		dest_se:   validString($location.search().dest_se)
-	}
 }
 
 

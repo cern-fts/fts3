@@ -107,7 +107,7 @@ public:
      *
      * @return true if the the state is valid
      */
-    bool isStatusValid(std::string& status);
+    bool isStatusValid(std::string status);
 
     /**
      * Counts how many states in the given vector are equal to given state
@@ -117,7 +117,7 @@ public:
      *
      * @return
      */
-    size_t countInState(std::string status, std::vector<JobStatus*>& statuses);
+    size_t countInState(const std::string status, const std::vector<JobStatus*>& statuses);
 
 protected:
 

@@ -239,6 +239,16 @@ public:
     void setBringOnline(map<string, int>& pairs);
 
     /**
+     * Remote call to setBandwidthLimit
+     */
+    void setBandwidthLimit(const std::string& source_se, const std::string& dest_se, int limit);
+
+    /**
+     * Remote call to getBandwidthLimit
+     */
+    void getBandwidthLimit(implcfg__getBandwidthLimitResponse& resp);
+
+    /**
      * Splits the given string, and sets:
      * 		- major number
      * 		- minor number
@@ -299,6 +309,15 @@ public:
      * @param priority - the priority to be set
      */
     void prioritySet(string jobId, int priority);
+
+    /**
+     * Sets the protocol (UDT) for given SE
+     *
+     * @param protocol - for now only 'udt' is supported
+     * @param se - the name of the SE in question
+     * @param state - either 'on' or 'off'
+     */
+    void setSeProtocol(string protocol, string se, string state);
 
     /**
      * Remote call to retrySet

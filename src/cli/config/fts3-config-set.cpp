@@ -52,6 +52,16 @@ int main(int ac, char* av[])
             // validate command line options, and return respective gsoap context
             GSoapContextAdapter& ctx = cli->getGSoapContext();
 
+            optional<std::tuple<string, string, string>> protocol = cli->getProtocol();
+            if (protocol.is_initialized())
+                {
+                    string udt = std::get<0>(*protocol);
+                    string se = std::get<1>(*protocol);
+                    string state = std::get<2>(*protocol);
+                    ctx.setSeProtocol(udt, se, state);
+                    return 0;
+                }
+
             optional<bool> drain = cli->drain();
             if (drain.is_initialized())
                 {
@@ -81,6 +91,15 @@ int main(int ac, char* av[])
                 {
                     ctx.setBringOnline(bring_online);
                     // if bring online was used normal config was not!
+                    return 0;
+                }
+
+            optional<std::tuple<std::string, std::string, int> > bandwidth_limitation = cli->getBandwidthLimitation();
+            if (bandwidth_limitation)
+                {
+                    ctx.setBandwidthLimit(std::get<0>(*bandwidth_limitation),
+                                          std::get<1>(*bandwidth_limitation),
+                                          std::get<2>(*bandwidth_limitation));
                     return 0;
                 }
 

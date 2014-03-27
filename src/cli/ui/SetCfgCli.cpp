@@ -44,6 +44,10 @@ SetCfgCli::SetCfgCli(bool spec)
             ("retry", value<int>(), "Sets the number of retries of each individual file transfer (the value should be greater or equal to -1).")
             ("optimizer-mode", value<int>(), "Sets the optimizer mode (allowed values: 1, 2 or 3)")
             ("queue-timeout", value<int>(), "Sets the maximum time (in hours) transfer job is allowed to be in the queue (the value should be greater or equal to 0).")
+            ("source", value<string>(), "The source SE")
+            ("destination", value<string>(), "The destination SE")
+            ("max-bandwidth", value<int>(), "The maximum bandwidth that can be used (in Mbit/s)")
+            ("protocol", value< vector<string> >()->multitoken(), "Set protocol (UDT) for given SE")
             ;
         }
 
@@ -80,6 +84,10 @@ void SetCfgCli::parse(int ac, char* av[])
                 parseBringOnline();
             else
                 cfgs = vm["cfg"].as< vector<string> >();
+        }
+    else if(vm.count("max-bandwidth"))
+        {
+            parseMaxBandwidth();
         }
 
     // check JSON configurations
@@ -143,6 +151,8 @@ bool SetCfgCli::validate()
             && !vm.count("queue-timeout")
             && !vm.count("bring-online")
             && !vm.count("optimizer-mode")
+            && !vm.count("max-bandwidth")
+            && !vm.count("protocol")
        )
         {
             msgPrinter.error_msg("No parameters have been specified.");
@@ -195,13 +205,24 @@ optional<int> SetCfgCli::optimizer_mode()
 
 optional<unsigned> SetCfgCli::queueTimeout()
 {
-
     if (vm.count("queue-timeout"))
         {
             return vm["queue-timeout"].as<int>();
         }
 
     return optional<unsigned>();
+}
+
+optional< std::tuple<string, string, string> > SetCfgCli::getProtocol()
+{
+    // check if the option was used
+    if (!vm.count("protocol")) return optional< std::tuple<string, string, string> >();
+    // make sure it was used corretly
+    const vector<string>& v = vm["protocol"].as< vector<string> >();
+    if (v.size() != 3) throw string("'--protocol' takes following parameters: udt SE on/off");
+    if (v[2] != "on" && v[2] != "off") throw string("'--protocol' can only be switched 'on' or 'off'");
+
+    return std::make_tuple(v[0], v[1], v[2]);
 }
 
 void SetCfgCli::parseBringOnline()
@@ -224,8 +245,27 @@ void SetCfgCli::parseBringOnline()
     while (first != v.end());
 }
 
+void SetCfgCli::parseMaxBandwidth()
+{
+    std::string source_se, dest_se;
+
+    if (!vm["source"].empty())
+        source_se = vm["source"].as<string>();
+    if (!vm["destination"].empty())
+        dest_se = vm["destination"].as<string>();
+
+    int limit = vm["max-bandwidth"].as<int>();
+
+    bandwidth_limitation = make_optional(std::tuple<string, string, int>(source_se, dest_se, limit));
+}
+
 map<string, int> SetCfgCli::getBringOnline()
 {
-
     return bring_online;
 }
+
+optional<std::tuple<string, string, int> > SetCfgCli::getBandwidthLimitation()
+{
+    return bandwidth_limitation;
+}
+

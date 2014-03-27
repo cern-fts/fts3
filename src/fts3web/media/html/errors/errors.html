@@ -1,6 +1,7 @@
+<global-filter on-more="showFilterDialog()"></global-filter>
+
 <h2>
     Number of errors for each pair
-    <button class="btn btn-mini btn-info" type="button" ng-click="filtersModal = true">Filter</button>
 </h2>
 <h3>For the last hour</h3>
 
@@ -36,24 +37,18 @@
     on-select-page="pageChanged(page)"></pagination>
 
 <!-- Modals -->
-<div modal="filtersModal" close="filtersModal = false" options="opts">
-    <form ng-submit="applyFilter(filter.contains)" autocomplete="off">
+<div id="filterDialog" class="modal" role="dialog" style="display: none">
+    <form ng-submit="applyFilters()" autocomplete="off">
         <div class="modal-header">
             <h3>Search in the reason</h3>
         </div>
         <div class="modal-body">
-            <label for="source_se">Source:</label>
-            <input type="text" placeholder="source se" id="source_se" ng-model="filter.source_se"
-                   typeahead="dest for dest in unique.sources | safeFilter:$viewValue"/>
-            <label for="dest_se">Destination:</label>
-            <input type="text" placeholder="destination se" id="dest_se" ng-model="filter.dest_se"
-                   typeahead="dest for dest in unique.destinations | safeFilter:$viewValue"/>
             <label for="reason">Reason:</label>
             <input type="text" placeholder="reason" id="reason" ng-model="filter.reason"/>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-success" ng-click="applyFilter(filter)">Apply</button>
-            <button class="btn btn-danger" ng-click="filtersModal = false">Cancel</button>
+            <button class="btn btn-success" ng-click="applyFilters()">Apply</button>
+            <button class="btn btn-danger" ng-click="cancelFilters()">Cancel</button>
         </div>
     </form>
 </div>

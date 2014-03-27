@@ -24,7 +24,7 @@
 
 #include <error.h>
 #include <logger.h>
-#include <oracle/soci-oracle.h>
+#include <soci/oracle/soci-oracle.h>
 #include <signal.h>
 #include <sys/param.h>
 #include <unistd.h>
@@ -94,7 +94,7 @@ bool OracleAPI::getChangedFile (std::string source, std::string dest, double rat
                                 {
                                     throughputSamplesLocal += 1;
                                 }
-                            else if(thr > thrLocal && throughputSamplesLocal > 0)
+                            else if(thr >= thrLocal && throughputSamplesLocal > 0)
                                 {
                                     throughputSamplesLocal -= 1;
                                 }
@@ -547,7 +547,9 @@ void OracleAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& f
                                 {
                                     filesNum = (maxActive - limit);
                                     if(filesNum <=0 )
-                                        continue;
+                                        {
+                                            continue;
+                                        }
                                 }
                         }
                     else
@@ -664,7 +666,8 @@ void OracleAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& f
                     std::list<TransferFiles*>& l = i->second;
                     for (std::list<TransferFiles*>::iterator it = l.begin(); it != l.end(); ++it)
                         {
-                            delete *it;
+                            if(*it)
+                                delete *it;
                         }
                     l.clear();
                 }
@@ -1822,7 +1825,7 @@ bool OracleAPI::updateJobTransferStatusInternal(soci::session& sql, std::string 
 
             int numberOfFilesNotCanceled = 0;
             int numberOfFilesNotCanceledNorFailed = 0;
-	    soci::indicator isNull = soci::i_ok;
+            soci::indicator isNull = soci::i_ok;
 
             std::string currentState("");
             std::string reuseFlag;
@@ -1987,7 +1990,7 @@ void OracleAPI::updateFileTransferProgressVector(std::vector<struct message_upda
                 {
                     if (iter->msg_errno == 0)
                         {
-                            if((*iter).throughput != 0)
+                            if((*iter).throughput > 0)
                                 {
                                     throughput = convertKbToMb((*iter).throughput);
                                     file_id = (*iter).file_id;
@@ -2070,16 +2073,15 @@ void OracleAPI::cancelJob(std::vector<std::string>& requestIDs)
 void OracleAPI::getCancelJob(std::vector<int>& requestIDs)
 {
     soci::session sql(*connectionPool);
-    std::string job_id;
     int pid = 0;
 
     try
         {
-            soci::rowset<soci::row> rs = (sql.prepare << " select distinct pid, job_id from t_file where PID IS NOT NULL AND file_state='CANCELED' and job_finished is NULL AND TRANSFERHOST = :transferHost", soci::use(hostname));
+            soci::rowset<soci::row> rs = (sql.prepare << " select pid from t_file where PID IS NOT NULL AND file_state='CANCELED' and job_finished is NULL AND TRANSFERHOST = :transferHost", soci::use(hostname));
 
             soci::statement stmt1 = (sql.prepare << "UPDATE t_file SET  job_finished = sys_extract_utc(systimestamp) "
-                                     "WHERE job_id = :jobId and pid = :pid ",
-                                     soci::use(job_id, "jobId"), soci::use(pid, "pid"));
+                                     "WHERE pid = :pid ",
+                                     soci::use(pid, "pid"));
 
             // Cancel files
             sql.begin();
@@ -2087,7 +2089,6 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs)
                 {
                     soci::row const& row = *i2;
                     pid = row.get<int>("PID");
-                    job_id = row.get<std::string>("JOB_ID");
                     requestIDs.push_back(pid);
 
                     stmt1.execute(true);
@@ -2108,21 +2109,8 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs)
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 /*t_credential API*/
-void OracleAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs)
+bool OracleAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs)
 {
     soci::session sql(*connectionPool);
 
@@ -2136,6 +2124,17 @@ void OracleAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn
                 soci::use(dlg_id), soci::use(dn), soci::use(cert_request), soci::use(priv_key), soci::use(voms_attrs);
             sql.commit();
         }
+    catch (soci::oracle_soci_error const &e)
+        {
+            sql.rollback();
+            unsigned int err_code = e.err_num_;
+
+            // the magic '1' is the error code of
+            // ORA-00001: unique constraint (XXX) violated
+            if (err_code == 1) return false;
+
+            throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
+        }
     catch (std::exception& e)
         {
             sql.rollback();
@@ -2146,6 +2145,8 @@ void OracleAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
+
+    return true;
 }
 
 
@@ -2813,6 +2814,9 @@ bool OracleAPI::updateOptimizer()
                     // Active transfers
                     stmt7.execute(true);
 
+                    //get aggregated throughut
+                    throughput *= active;
+
                     // Max active transfers
                     stmt8.execute(true);
 
@@ -2831,6 +2835,26 @@ bool OracleAPI::updateOptimizer()
                     bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, rateStored, throughput, thrStored, retry, retryStored, active, activeStored, throughputSamples, thrSamplesStored);
                     if(!changed && retry > 0)
                         changed = true;
+
+                    //check if bandwidth limitation exists, if exists and throughput exceeds the limit then do not proccess with auto-tuning
+                    int bandwidthIn = 0;
+                    bool bandwidth = bandwidthChecker(sql, source_hostname, destin_hostname, bandwidthIn);
+
+                    //make sure bandwidth is respected as also active should be no less than the minimum for each link
+                    if(!bandwidth && active >= highDefault)
+                        {
+                            if(throughput > 0 && ratioSuccessFailure > 0)
+                                {
+                                    sql.begin();
+
+                                    active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
+                                    stmt10.execute(true);
+                                    updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, 10, bandwidthIn);
+
+                                    sql.commit();
+                                }
+                            continue;
+                        }
 
                     //ratioSuccessFailure, rateStored, throughput, thrStored MUST never be zero
                     if(changed)
@@ -2902,7 +2926,7 @@ bool OracleAPI::updateOptimizer()
                                     stmt10.execute(true);
                                 }
 
-                            updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, pathFollowed);
+                            updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, pathFollowed, bandwidthIn);
 
                             sql.commit();
                         }
@@ -3133,7 +3157,7 @@ void OracleAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                                             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Killing pid:" << pid << ", jobid:" << jobId << ", fileid:" << fileId << " because it was stalled" << commit;
                                             kill(pid, SIGUSR1);
                                         }
-                                    collectJobs.insert(std::make_pair<int, std::string > (fileId, jobId));
+                                    collectJobs.insert(std::make_pair(fileId, jobId));
                                     updateFileTransferStatusInternal(sql, 0.0, jobId, fileId,
                                                                      "FAILED", "Transfer has been forced-killed because it was stalled",
                                                                      pid, 0, 0, false);
@@ -3366,10 +3390,12 @@ void OracleAPI::revertToSubmitted()
 
 void OracleAPI::backup(long* nJobs, long* nFiles)
 {
+
     try
         {
             unsigned index=0, count=0, start=0, end=0;
-            updateHeartBeat(&index, &count, &start, &end);
+            std::string service_name = "fts_backup";
+            updateHeartBeat(&index, &count, &start, &end, service_name);
         }
     catch (std::exception& e)
         {
@@ -3394,7 +3420,7 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
                                                      " SELECT job_id "
                                                      " FROM  t_job "
                                                      " WHERE "
-                                                     " job_finished < (systimestamp - interval '4' DAY ) "
+                                                     " job_finished < (systimestamp - interval '7' DAY ) "
                                                  );
 
                     std::string job_id;
@@ -3407,6 +3433,13 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
                     int count = 0;
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                         {
+                            bool drain = getDrainInternal(sql);
+                            if(drain)
+                                {
+                                    sql.commit();
+                                    return;
+                                }
+
                             count++;
                             soci::row const& r = *i;
                             job_id = r.get<std::string>("JOB_ID");
@@ -3429,19 +3462,14 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
                         }
                     sql.commit();
 
-                    //delete from t_optimizer_evolution > 10 days old records
+                    //delete from t_optimizer_evolution > 7 days old records
                     sql.begin();
-                    sql << "delete from t_optimizer_evolution where datetime < (systimestamp - interval '3' DAY )";
+                    sql << "delete from t_optimizer_evolution where datetime < (systimestamp - interval '7' DAY )";
                     sql.commit();
 
-                    //delete from t_optimizer_evolution > 10 days old records
+                    //delete from t_file_retry_errors > 7 days old records
                     sql.begin();
-                    sql << "delete from t_optimize where datetime < (systimestamp - interval '1' DAY )";
-                    sql.commit();
-
-                    //delete from t_file_retry_errors > 3 days old records
-                    sql.begin();
-                    sql << "delete from t_file_retry_errors where datetime < (systimestamp - interval '3' DAY )";
+                    sql << "delete from t_file_retry_errors where datetime < (systimestamp - interval '7' DAY )";
                     sql.commit();
                 }
         }
@@ -3919,8 +3947,6 @@ bool OracleAPI::isFileReadyState(int fileID)
 
     try
         {
-            sql.begin();
-
             sql << "SELECT file_state, transferHost FROM t_file WHERE file_id = :fileId",
                 soci::use(fileID), soci::into(state), soci::into(host, isNull);
 
@@ -3929,16 +3955,13 @@ bool OracleAPI::isFileReadyState(int fileID)
             if (isNull != soci::i_null)
                 isReadyHost = (host == hostname);
 
-            sql.commit();
         }
     catch (std::exception& e)
         {
-            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 
@@ -4861,6 +4884,58 @@ void OracleAPI::setPriority(std::string job_id, int priority)
         }
 }
 
+void OracleAPI::setSeProtocol(std::string protocol, std::string se, std::string state)
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            sql.begin();
+
+            int count = 0;
+
+            sql <<
+                " SELECT count(auto_number) "
+                " FROM t_optimize "
+                " WHERE source_se = :se",
+                soci::use(se), soci::into(count)
+                ;
+
+            if (count)
+                {
+                    sql <<
+                        " UPDATE t_optimize "
+                        " SET udt = :udt "
+                        " WHERE source_se = :se",
+                        soci::use(state),
+                        soci::use(se)
+                        ;
+                }
+            else
+                {
+                    sql <<
+                        " INSERT INTO t_optimize (source_se, udt, file_id) "
+                        " VALUES (:se, :udt, 0)",
+                        soci::use(se),
+                        soci::use(state)
+                        ;
+
+                }
+
+            sql.commit();
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+
 
 void OracleAPI::setRetry(int retry)
 {
@@ -5043,36 +5118,32 @@ void OracleAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
 
     try
         {
-            struct message_sanity msg;
-            msg.setToFailOldQueuedJobs = true;
-            CleanUpSanityChecks temp(this, sql, msg);
-            if(!temp.getCleanUpSanityCheck())
-                return;
-
-            sql.begin();
-            soci::rowset<std::string> rs = (sql.prepare << "SELECT job_id FROM t_job WHERE "
-                                            "    submit_time < (sys_extract_utc(systimestamp) - numtodsinterval(:interval, 'hour')) AND "
-                                            "    job_state in ('SUBMITTED', 'READY')",
-                                            soci::use(maxTime));
-
-
-            for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+            if(hashSegment.start == 0)
                 {
+                    soci::rowset<std::string> rs = (sql.prepare << "SELECT job_id FROM t_job WHERE "
+                                                    "    submit_time < (sys_extract_utc(systimestamp) - numtodsinterval(:interval, 'hour')) AND "
+                                                    "    job_state in ('SUBMITTED', 'READY')",
+                                                    soci::use(maxTime));
 
-                    sql << "UPDATE t_file SET "
-                        "    file_state = 'CANCELED', reason = :reason "
-                        "WHERE job_id = :jobId AND "
-                        "      file_state IN ('SUBMITTED','READY')",
-                        soci::use(message), soci::use(*i);
+                    sql.begin();
+                    for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+                        {
 
-                    sql << "UPDATE t_job SET "
-                        "    job_state = 'CANCELED', reason = :reason "
-                        "WHERE job_id = :jobId AND job_state IN ('SUBMITTED','READY')",
-                        soci::use(message), soci::use(*i);
+                            sql << "UPDATE t_file SET "
+                                "    file_state = 'CANCELED', reason = :reason "
+                                "WHERE job_id = :jobId AND "
+                                "      file_state IN ('SUBMITTED','READY')",
+                                soci::use(message), soci::use(*i);
 
-                    jobs.push_back(*i);
+                            sql << "UPDATE t_job SET "
+                                "    job_state = 'CANCELED', reason = :reason "
+                                "WHERE job_id = :jobId AND job_state IN ('SUBMITTED','READY')",
+                                soci::use(message), soci::use(*i);
+
+                            jobs.push_back(*i);
+                        }
+                    sql.commit();
                 }
-            sql.commit();
         }
     catch (std::exception& e)
         {
@@ -6960,7 +7031,7 @@ int OracleAPI::getOptimizerDefaultMode(soci::session& sql)
 
 int OracleAPI::getOptimizerMode(soci::session& sql)
 {
-    int modeDefault = 4;
+    int modeDefault = 2;
     int mode = 0;
     soci::indicator ind = soci::i_ok;
 
@@ -7319,7 +7390,7 @@ void OracleAPI::resetSanityRuns(soci::session& sql, struct message_sanity &msg)
 
 
 
-void OracleAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end)
+void OracleAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end, std::string service_name)
 {
     soci::session sql(*connectionPool);
 
@@ -7329,21 +7400,23 @@ void OracleAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* star
 
             // Update beat
             sql << "MERGE INTO t_hosts USING "
-                " (SELECT :hostname AS hostname FROM dual) Hostname ON (t_hosts.hostname = Hostname.hostname) "
+                " (SELECT :hostname AS hostname, :service_name AS service_name FROM dual) Hostname ON "
+                " (t_hosts.hostname = Hostname.hostname AND t_hosts.service_name = Hostname.service_name ) "
                 " WHEN     MATCHED THEN UPDATE SET t_hosts.beat = sys_extract_utc(systimestamp)"
-                " WHEN NOT MATCHED THEN INSERT (hostname, beat) VALUES (Hostname.hostname, sys_extract_utc(systimestamp))",
-                soci::use(hostname);
+                " WHEN NOT MATCHED THEN INSERT (hostname, beat, service_name) VALUES (Hostname.hostname, sys_extract_utc(systimestamp), Hostname.service_name)",
+                soci::use(hostname),soci::use(service_name);
 
             // Total number of working instances
             sql << "SELECT COUNT(hostname) FROM t_hosts "
-                "  WHERE beat >= (sys_extract_utc(systimestamp) - interval '2' minute)",
+                "  WHERE beat >= (sys_extract_utc(systimestamp) - interval '2' minute) and service_name = :service_name",
+                soci::use(service_name),
                 soci::into(*count);
 
             // This instance index
             soci::rowset<std::string> rsHosts = (sql.prepare <<
                                                  "SELECT hostname FROM t_hosts "
-                                                 "WHERE beat >= (sys_extract_utc(systimestamp) - interval '2' minute)"
-                                                 "ORDER BY hostname");
+                                                 "WHERE beat >= (sys_extract_utc(systimestamp) - interval '2' minute)  and service_name = :service_name "
+                                                 "ORDER BY hostname ", soci::use(service_name) );
 
             soci::rowset<std::string>::const_iterator i;
             for (*index = 0, i = rsHosts.begin(); i != rsHosts.end(); ++i, ++(*index))
@@ -7385,30 +7458,33 @@ void OracleAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* star
 }
 
 
-
-void OracleAPI::updateOptimizerEvolution(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname, int active, double throughput, double successRate, int buffer)
+void OracleAPI::updateOptimizerEvolution(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname, int active, double throughput, double successRate, int buffer, int bandwidth)
 {
     try
         {
-            sql << " INSERT INTO t_optimizer_evolution (datetime, source_se, dest_se, active, throughput, filesize, buffer) "
-                " SELECT sys_extract_utc(systimestamp), :source, :dest, :active, :throughput, :filesize, :buffer FROM dual "
-                " WHERE not exists (SELECT * FROM t_optimizer_evolution "
-                " WHERE source_se=:source and dest_se=:dest and datetime >= (sys_extract_utc(systimestamp) - INTERVAL '50' second) )",
-                soci::use(source_hostname),
-                soci::use(destination_hostname),
-                soci::use(active),
-                soci::use(throughput),
-                soci::use(successRate),
-                soci::use(buffer),
-                soci::use(source_hostname),
-                soci::use(destination_hostname);
+            if(throughput > 0 && successRate > 0)
+                {
+                    sql.begin();
+                    sql << " INSERT INTO t_optimizer_evolution (datetime, source_se, dest_se, active, throughput, filesize, buffer, nostreams) "
+                        " values(sys_extract_utc(systimestamp), :source, :dest, :active, :throughput, :filesize, :buffer, :nostreams) ",
+                        soci::use(source_hostname),
+                        soci::use(destination_hostname),
+                        soci::use(active),
+                        soci::use(throughput),
+                        soci::use(successRate),
+                        soci::use(buffer),
+                        soci::use(bandwidth);
+                    sql.commit();
+                }
         }
     catch (std::exception& e)
         {
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
 }
@@ -7422,8 +7498,10 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
     std::string dest_se;
     std::string source_se;
     std::string reason;
+    std::string reasonRetry;
     std::string queryVo;
     long long countReason = 0;
+    long long countReasonRetry = 0;
     long long active = 0;
     long long maxActive = 0;
     long long submitted = 0;
@@ -7441,6 +7519,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
     soci::indicator isNull3 = soci::i_ok;
     soci::indicator isNull4 = soci::i_ok;
     soci::indicator isNull5 = soci::i_ok;
+    soci::indicator isNull8 = soci::i_ok;
 
     if(!vo_name.empty())
         {
@@ -7495,16 +7574,15 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                                  soci::into(submitted)
                                 ));
 
-            soci::statement st4((sql.prepare << "select throughput from (select throughput from t_optimizer_evolution where  "
-                                 " source_se=:source_se and dest_se=:dest_se"
-                                 " order by datetime DESC) WHERE ROWNUM = 1",
+            soci::statement st4((sql.prepare << "select sum(throughput) from t_file where  "
+                                 " source_se=:source_se and dest_se=:dest_se and file_state='ACTIVE' ",
                                  soci::use(source_se),
                                  soci::use(dest_se),
                                  soci::into(throughput, isNull2)
                                 ));
 
             soci::statement st5((sql.prepare << "select reason, count(reason) AS c from t_file where "
-                                 " (job_finished >= (sys_extract_utc(systimestamp) - interval '15' minute)) "
+                                 " (job_finished >= (sys_extract_utc(systimestamp) - interval '60' minute)) "
                                  " AND file_state='FAILED' and "
                                  " source_se=:source_se and dest_se=:dest_se and vo_name =:vo_name_local   "
                                  " group by reason  order by c desc ",
@@ -7513,6 +7591,19 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                                  soci::use(vo_name_local),
                                  soci::into(reason, isNull3),
                                  soci::into(countReason)
+                                ));
+
+            soci::statement st8((sql.prepare << " select t_file_retry_errors.reason, count(t_file_retry_errors.reason) as c from t_file_retry_errors, t_file "
+                                 " where t_file_retry_errors.file_id =  t_file.file_id AND  (datetime > (sys_extract_utc(systimestamp) - interval '60' minute)) "
+                                 " AND t_file_retry_errors.reason is not NULL and "
+                                 " source_se=:source_se and dest_se=:dest_se and "
+                                 " vo_name =:vo_name_local "
+                                 " group by t_file_retry_errors.reason order by c desc ",
+                                 soci::use(source_se),
+                                 soci::use(dest_se),
+                                 soci::use(vo_name_local),
+                                 soci::into(reasonRetry, isNull8),
+                                 soci::into(countReasonRetry)
                                 ));
 
 
@@ -7659,15 +7750,30 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                             result <<   " secs\n";
 
 
-                            //most frequent error and number the last 30min
+                            //most frequent error and number the last hour
                             reason = "";
                             countReason = 0;
                             st5.execute(true);
+
+                            reasonRetry = "";
+                            countReasonRetry = 0;
+                            st8.execute(true);
+
+                            //check if retry table has stored more failures than the primary table - transfers to be retried
+                            if(countReasonRetry > countReason)
+                                {
+                                    countReason = countReasonRetry;
+                                    reason = reasonRetry;
+                                }
+
                             result <<   "Most frequent error: ";
                             result <<   countReason;
                             result <<   " times: ";
                             result <<   reason;
+                            result <<   "\n";
 
+                            //get bandwidth restrictions (if any)
+                            result << getBandwidthLimitInternal(sql, source_se, dest_se);
 
                             result << "\n\n";
                         }
@@ -7688,10 +7794,27 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
 
 bool OracleAPI::getDrain()
 {
-
     soci::session sql(*connectionPool);
 
+    try
+        {
+            return getDrainInternal(sql);
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+
+bool OracleAPI::getDrainInternal(soci::session& sql)
+{
+
     int drain = 0;
+
     try
         {
             soci::indicator isNull = soci::i_ok;
@@ -7700,7 +7823,6 @@ bool OracleAPI::getDrain()
 
             if(isNull == soci::i_null || drain == 0)
                 return false;
-
 
             return true;
         }
@@ -7742,28 +7864,332 @@ void OracleAPI::setDrain(bool drain)
         }
 }
 
+bool OracleAPI::bandwidthChecker(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname, int& bandwidthIn)
+{
+    long long int bandwidthSrc = 0;
+    long long int bandwidthDst = 0;
+    double througputSrc = 0.0;
+    double througputDst = 0.0;
+
+    soci::indicator isNullBandwidthSrc = soci::i_ok;
+    soci::indicator isNullBandwidthDst = soci::i_ok;
+    soci::indicator isNullThrougputSrc = soci::i_ok;
+    soci::indicator isNullThrougputDst = soci::i_ok;
+
+    //get limit for source
+    sql << "select throughput from t_optimize where source_se= :name ",
+        soci::use(source_hostname), soci::into(bandwidthSrc, isNullBandwidthSrc);
+
+    //get limit for dest
+    sql << "select throughput from t_optimize where dest_se= :name ",
+        soci::use(destination_hostname), soci::into(bandwidthDst, isNullBandwidthDst);
+
+    if(isNullBandwidthSrc == soci::i_null || bandwidthSrc == -1)
+        bandwidthSrc = -1;
+
+    if(isNullBandwidthDst == soci::i_null || bandwidthDst == -1)
+        bandwidthDst = -1;
+
+    //no limits are applied either for source or dest, stop here before executing more expensive queries
+    if(bandwidthDst == -1 && bandwidthSrc == -1)
+        {
+            return true;
+        }
+
+    //get aggregated thr from source
+    sql << "select sum(throughput) from t_file where source_se= :name and file_state='ACTIVE' ",
+        soci::use(source_hostname), soci::into(througputSrc, isNullThrougputSrc);
+
+    if(isNullThrougputSrc == soci::i_null || througputSrc == 0)
+        {
+            sql << "select throughput from (select throughput from t_optimizer_evolution where source_se= :name order by datetime) where ROWNUM = 1 ",
+                soci::use(source_hostname), soci::into(througputSrc, isNullThrougputSrc);
+        }
+
+    //get aggregated thr towards dest
+    sql << "select sum(throughput) from t_file where dest_se= :name and file_state='ACTIVE' ",
+        soci::use(destination_hostname), soci::into(througputDst, isNullThrougputDst);
+
+    if(isNullThrougputDst == soci::i_null || througputDst == 0)
+        {
+            sql << "select throughput from (select throughput from t_optimizer_evolution where dest_se= :name order by datetime) where ROWNUM = 1  ",
+                soci::use(destination_hostname), soci::into(througputDst, isNullThrougputDst);
+        }
+
+
+    if(bandwidthSrc > 0 )
+        {
+            if(bandwidthDst > 0) //both source and dest have limits, take the lowest
+                {
+                    //get the lowest limit to be respected
+                    double lowest = (bandwidthSrc < bandwidthDst) ? bandwidthSrc : bandwidthDst;
+
+                    if (througputSrc > lowest || througputDst > lowest)
+                        {
+                            bandwidthIn = lowest;
+                            FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Bandwidth limitation of " << lowest  << " MB/s is set for " << source_hostname << " or " <<  destination_hostname << commit;
+                            return false;
+                        }
+                }
+            //only source limit is set
+            if (througputSrc > bandwidthSrc)
+                {
+                    bandwidthIn = bandwidthSrc;
+                    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Bandwidth limitation of " << bandwidthSrc  << " MB/s is set for " << source_hostname << commit;
+                    return false;
+                }
+
+        }
+    else if(bandwidthDst > 0)  //only destination has limit
+        {
+            bandwidthIn = bandwidthDst;
+
+            if(througputDst > bandwidthDst)
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Bandwidth limitation of " << bandwidthDst  << " MB/s is set for " << destination_hostname << commit;
+                    return false;
+                }
+        }
+    else
+        {
+
+            return true;
+        }
+
+    return true;
+}
+
+
+
+
+std::string OracleAPI::getBandwidthLimit()
+{
+    soci::session sql(*connectionPool);
+
+    std::string result;
+
+    try
+        {
+            std::string source_hostname;
+            std::string destination_hostname;
+            result = getBandwidthLimitInternal(sql, source_hostname, destination_hostname);
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }
+
+    return result;
+}
+
+std::string OracleAPI::getBandwidthLimitInternal(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname)
+{
+
+    std::ostringstream result;
+
+    try
+        {
+            if(!source_hostname.empty())
+                {
+                    double bandwidth = 0;
+                    soci::indicator isNullBandwidth = soci::i_ok;
+                    sql << " select throughput from t_optimize where source_se = :source_se and throughput is not NULL ",
+                        soci::use(source_hostname), soci::into(bandwidth, isNullBandwidth);
+
+                    if(isNullBandwidth != soci::i_null && bandwidth > 0)
+                        result << "Source endpoint: " << source_hostname << "   Bandwidth restriction: " << bandwidth << " MB/s\n";
+                }
+            else if (!destination_hostname.empty())
+                {
+                    double bandwidth = 0;
+                    soci::indicator isNullBandwidth = soci::i_ok;
+                    sql << " select throughput from t_optimize where dest_se = :dest_se  and throughput is not NULL ",
+                        soci::use(destination_hostname), soci::into(bandwidth, isNullBandwidth);
+
+                    if(isNullBandwidth != soci::i_null && bandwidth > 0)
+                        result << "Destination endpoint: " << destination_hostname << "   Bandwidth restriction: " << bandwidth << " MB/s\n";
+                }
+            else
+                {
+                    soci::rowset<soci::row> rs = (
+                                                     sql.prepare <<
+                                                     " SELECT source_se, dest_se, throughput from t_optimize "
+                                                     " WHERE  "
+                                                     " throughput is not NULL "
+                                                 );
+
+                    soci::rowset<soci::row>::const_iterator it;
+                    for (it = rs.begin(); it != rs.end(); ++it)
+                        {
+                            std::string source_se = it->get<std::string>("SOURCE_SE","");
+                            std::string dest_se = it->get<std::string>("DEST_SE","");
+                            double bandwidth = it->get<double>("THROUGHPUT");
+
+                            if(!source_se.empty() != 0 && bandwidth > 0)
+                                {
+                                    result << "Source endpoint: " << source_se << "   Bandwidth restriction: " << bandwidth << " MB/s\n";
+                                }
+                            if(!dest_se.empty() != 0 && bandwidth > 0)
+                                {
+                                    result << "Destination endpoint: " << dest_se   << "   Bandwidth restriction: " << bandwidth << " MB/s\n";
+                                }
+                        }
+                }
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }
+
+    return result.str();
+}
+
+void OracleAPI::setBandwidthLimit(const std::string & source_hostname, const std::string & destination_hostname, int bandwidthLimit)
+{
+
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            long long int bandwidthSrc = 0;
+            long long int bandwidthDst = 0;
+
+            soci::indicator isNullBandwidthSrc = soci::i_ok;
+            soci::indicator isNullBandwidthDst = soci::i_ok;
+
+            if(!source_hostname.empty())
+                {
+                    sql << "select throughput from t_optimize where source_se=:source_se ",
+                        soci::use(source_hostname), soci::into(bandwidthSrc, isNullBandwidthSrc);
+
+                    if(!sql.got_data() && bandwidthLimit > 0)
+                        {
+                            sql.begin();
+                            sql << " insert into t_optimize(file_id, throughput, source_se) values(1, :throughput, :source_se) ",
+                                soci::use(bandwidthLimit), soci::use(source_hostname);
+                            sql.commit();
+                        }
+                    else if (sql.got_data())
+                        {
+                            if(bandwidthLimit == -1)
+                                {
+                                    sql.begin();
+                                    sql << "update t_optimize set throughput=NULL where source_se=:source_se ",
+                                        soci::use(source_hostname);
+                                    sql.commit();
+                                }
+                            else
+                                {
+                                    sql.begin();
+                                    sql << "update t_optimize set throughput=:throughput where source_se=:source_se ",
+                                        soci::use(bandwidthLimit), soci::use(source_hostname);
+                                    sql.commit();
+                                }
+                        }
+                }
+
+            if(!destination_hostname.empty())
+                {
+                    sql << "select throughput from t_optimize where dest_se=:dest_se ",
+                        soci::use(destination_hostname), soci::into(bandwidthDst, isNullBandwidthDst);
+
+                    if(!sql.got_data() && bandwidthLimit > 0)
+                        {
+                            sql.begin();
+                            sql << " insert into t_optimize(file_id, throughput, dest_se) values(1, :throughput, :dest_se) ",
+                                soci::use(bandwidthLimit), soci::use(destination_hostname);
+                            sql.commit();
+                        }
+                    else if (sql.got_data())
+                        {
+                            if(bandwidthLimit == -1)
+                                {
+                                    sql.begin();
+                                    sql << "update t_optimize set throughput=NULL where dest_se=:dest_se ",
+                                        soci::use(destination_hostname);
+                                    sql.commit();
+                                }
+                            else
+                                {
+                                    sql.begin();
+                                    sql << "update t_optimize set throughput=:throughput where dest_se=:dest_se ",
+                                        soci::use(bandwidthLimit), soci::use(destination_hostname);
+                                    sql.commit();
+                                }
+
+                        }
+                }
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }
+}
+
+
+bool OracleAPI::isProtocolUDT(const std::string & source_hostname, const std::string & destination_hostname)
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            soci::indicator isNullUDT = soci::i_ok;
+            std::string udt;
+
+            sql << " select udt from t_optimize where (source_se = :source_se OR source_se = :dest_se) ",
+                soci::use(source_hostname), soci::use(destination_hostname), soci::into(udt, isNullUDT);
+
+            if(sql.got_data() && udt == "on")
+                return true;
+
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }
+
+    return false;
+}
 
 
 // the class factories
 
-    extern "C" GenericDbIfce* create()
-    {
-        return new OracleAPI;
-    }
+extern "C" GenericDbIfce* create()
+{
+    return new OracleAPI;
+}
 
-    extern "C" void destroy(GenericDbIfce* p)
-    {
-        if (p)
-            delete p;
-    }
+extern "C" void destroy(GenericDbIfce* p)
+{
+    if (p)
+        delete p;
+}
 
-    extern "C" MonitoringDbIfce* create_monitoring()
-    {
-        return new OracleMonitoring;
-    }
+extern "C" MonitoringDbIfce* create_monitoring()
+{
+    return new OracleMonitoring;
+}
 
-    extern "C" void destroy_monitoring(MonitoringDbIfce* p)
-    {
-        if (p)
-            delete p;
-    }
+extern "C" void destroy_monitoring(MonitoringDbIfce* p)
+{
+    if (p)
+        delete p;
+}

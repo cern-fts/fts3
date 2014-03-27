@@ -75,6 +75,9 @@ CREATE TABLE t_optimize (
 --
 -- timestamp
   datetime     TIMESTAMP NULL DEFAULT NULL,
+--
+-- udt
+  udt          VARCHAR(3) CHECK (udt in ('on', 'off')),
   
   CONSTRAINT t_optimize_pk PRIMARY KEY (auto_number)
 );
@@ -576,7 +579,7 @@ CREATE TABLE t_file (
   
 --
 -- File metadata
-  file_metadata   VARCHAR(255),
+  file_metadata   VARCHAR(1024),
   
 --
 -- activity name
@@ -663,16 +666,18 @@ CREATE TABLE t_stage_req (
 -- Host hearbeats
 --
 CREATE TABLE t_hosts (
-    hostname    VARCHAR(64) PRIMARY KEY NOT NULL,
+    hostname    VARCHAR(64) NOT NULL,
+    service_name    VARCHAR(64) NOT NULL,
     beat        TIMESTAMP NULL DEFAULT NULL,
-    drain 	INTEGER DEFAULT 0
+    drain 	INTEGER DEFAULT 0,
+    CONSTRAINT t_hosts_pk PRIMARY KEY (hostname, service_name)
 );
 
 
 CREATE TABLE t_optimize_active (
   source_se    VARCHAR(150) NOT NULL,
   dest_se      VARCHAR(150) NOT NULL,
-  active INTEGER UNSIGNED DEFAULT 4,
+  active INTEGER UNSIGNED DEFAULT 2,
   message      VARCHAR(512),
   datetime     TIMESTAMP  NULL DEFAULT NULL,
   CONSTRAINT t_optimize_active_pk PRIMARY KEY (source_se, dest_se)
@@ -747,7 +752,7 @@ CREATE TABLE t_dm (
   user_filesize  DOUBLE,    
 --
 -- File metadata
-  file_metadata   VARCHAR(255),  
+  file_metadata   VARCHAR(1024),  
 --
 -- activity name
   activity   VARCHAR(255) DEFAULT "default",  

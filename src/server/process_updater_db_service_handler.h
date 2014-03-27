@@ -137,13 +137,15 @@ protected:
                             }
 
                         ThreadSafeList::get_instance().checkExpiredMsg(messages);
-			
+
                         //if we drain a host, no need to check if url_copy are reporting being alive
                         if (DrainMode::getInstance())
-                        {
-                        	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking url_copy for this instance!" << commit;
-				messages.clear();                       	       
-                        }			
+                            {
+                                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking url_copy for this instance!" << commit;
+                                messages.clear();
+                                sleep(5);
+                                continue;
+                            }
 
                         if (!messages.empty())
                             {

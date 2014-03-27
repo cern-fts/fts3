@@ -49,7 +49,13 @@ function StatsServersCtrl($location, $scope, servers, Servers)
 	// Set timer to trigger autorefresh
 	$scope.autoRefresh = setInterval(function() {
 		var filter = $location.search();
-    	$scope.servers = Servers.query(filter);
+    	Servers.query(filter, function (updatedServers) {
+            for(var server in updatedServers) {
+            	if (server.toString().substring(0, 1) != '$')
+            		updatedServers[server].show = $scope.servers[server].show;
+            }
+            $scope.servers = updatedServers;
+        });
 	}, REFRESH_INTERVAL);
 	$scope.$on('$destroy', function() {
 		clearInterval($scope.autoRefresh);

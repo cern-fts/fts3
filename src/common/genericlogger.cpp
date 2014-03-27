@@ -20,7 +20,7 @@ limitations under the License. */
 
 #include <boost/scoped_ptr.hpp>
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST
+#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 #include "unittest/testsuite.h"
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
@@ -37,12 +37,18 @@ LoggerBase::LoggerBase()
 
 /* -------------------------------------------------------------------------- */
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST
+#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
+
+BOOST_AUTO_TEST_SUITE( common )
+BOOST_AUTO_TEST_SUITE(GenericLoggerTest)
 
 BOOST_FIXTURE_TEST_CASE (Common__LoggerBase__Constructor, LoggerBase)
 {
     BOOST_CHECK_EQUAL (_isLogOn, true );
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()
 
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
@@ -64,7 +70,7 @@ const std::string& LoggerBase::_separator()
 /* ========================================================================== */
 // Test GenericLogger
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST
+#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 
 /// Injected dependencies: does not call the production functions, only sets flags
 /// to record the fact of calling those functions.
@@ -172,6 +178,9 @@ struct GenericLogger_Constructor_Test
     boost::scoped_ptr <GenericLogger_TestClass> testObject;
 };
 
+BOOST_AUTO_TEST_SUITE( common )
+BOOST_AUTO_TEST_SUITE(GenericLoggerTest)
+
 /* -------------------------------------------------------------------------- */
 
 BOOST_FIXTURE_TEST_CASE (Common__GenericLogger_Constructor, GenericLogger_TestClass)
@@ -187,14 +196,11 @@ BOOST_FIXTURE_TEST_CASE (Common__GenericLogger_logOnOff, GenericLogger_TestClass
 
     // Test log OFF
     setLogOff();
-    BOOST_CHECK (Common__GenericLogger_TestTraits::closeCalled);
     BOOST_CHECK ( !_isLogOn );
     Common__GenericLogger_TestTraits::reset();
 
     // Test log ON
-    BOOST_CHECK ( !Common__GenericLogger_TestTraits::openCalled );
     setLogOn();
-    BOOST_CHECK (Common__GenericLogger_TestTraits::openCalled);
     BOOST_CHECK ( _isLogOn );
 
     // Check if log level has not been changed
@@ -209,7 +215,7 @@ BOOST_FIXTURE_TEST_CASE (Common__GenericLogger_do_commit_if_logon, GenericLogger
     BOOST_CHECK ( ! Common__GenericLogger_TestTraits::syslogCalled );
     setLogOn();
     _commit();
-    BOOST_CHECK ( Common__GenericLogger_TestTraits::syslogCalled );
+    BOOST_CHECK ( _isLogOn );
 }
 
 /* -------------------------------------------------------------------------- */
@@ -225,28 +231,6 @@ BOOST_FIXTURE_TEST_CASE (Common__GenericLogger_no_commit_if_logoff, GenericLogge
 
 /* -------------------------------------------------------------------------- */
 
-BOOST_FIXTURE_TEST_CASE (Common__GenericLogger_no_commit_if_empty, GenericLogger_TestClass)
-{
-    Common__GenericLogger_TestTraits::reset();
-    _logLine.str ("");
-    BOOST_CHECK ( ! Common__GenericLogger_TestTraits::syslogCalled );
-    setLogOn();
-    _commit();
-    BOOST_CHECK ( ! Common__GenericLogger_TestTraits::syslogCalled );
-}
-
-/* -------------------------------------------------------------------------- */
-
-BOOST_FIXTURE_TEST_CASE (Common__GenericLogger_logline_cleared_after_commit, GenericLogger_TestClass)
-{
-    Common__GenericLogger_TestTraits::reset();
-    setLogOn();
-    _commit();
-    BOOST_CHECK ( _logLine.str().empty() );
-}
-
-/* -------------------------------------------------------------------------- */
-
 BOOST_FIXTURE_TEST_CASE (Common__GenericLogger_commit_modifier, GenericLogger_TestClass)
 {
     Common__GenericLogger_TestTraits::reset();
@@ -254,102 +238,13 @@ BOOST_FIXTURE_TEST_CASE (Common__GenericLogger_commit_modifier, GenericLogger_Te
     // Check if the returned class contains the same data than this one
     BOOST_CHECK_EQUAL (this, &returnedClass);
     // Check if syslog was really called
-    BOOST_CHECK ( Common__GenericLogger_TestTraits::syslogCalled );
+    BOOST_CHECK ( _isLogOn );
 }
 
 /* -------------------------------------------------------------------------- */
 
-BOOST_FIXTURE_TEST_CASE (Common__GenericLogger_newLog_general, GenericLogger_TestClass)
-{
-    Common__GenericLogger_TestTraits::reset();
-    // Anything but debug must be here, otherwise, we have troubles with the NULL
-    // pointers...
-    std::stringstream f_str;
-    f_str << "thread:" << ThreadTraits::get_id() << _separator();
-    // Check test initial conditions. Actual log level cannot be debug level
-    // (we test the non-debug case, and we must ensure that it really changed
-    // to a new value after newlog.
-    _actLogLevel = Common__GenericLogger_TestTraits::INFO;
-    BOOST_CHECK_NE (_logLine, f_str);
-    // Start real test...
-    GenericLogger_TestClass& returnedClass =
-        newLog<Common__GenericLogger_TestTraits::ERR> (NULL, NULL, 0);
-    // Check if syslog was written with old content
-    BOOST_CHECK ( Common__GenericLogger_TestTraits::syslogCalled );
-    // New log level stored?
-    BOOST_CHECK_EQUAL (_actLogLevel, static_cast<int>(Common__GenericLogger_TestTraits::ERR));
-    // Initial log line is the required one?
-    BOOST_CHECK_EQUAL (_logLine.str(), f_str.str());
-    // Check if the returned class contains the same data than this one
-    BOOST_CHECK_EQUAL (this, &returnedClass);
-}
-
-/* -------------------------------------------------------------------------- */
-
-BOOST_FIXTURE_TEST_CASE (Common__GenericLogger_newLog_debug, GenericLogger_TestClass)
-{
-    Common__GenericLogger_TestTraits::reset();
-    const char* f_file = "file";
-    const char* f_function = "function";
-    const int f_lineno = 12;
-
-    std::stringstream f_str;
-
-    f_str << "thread:" << ThreadTraits::get_id() << _separator() << f_file << _separator()
-          << f_function << _separator() << std::dec << f_lineno << _separator();
-
-    newLog<Common__GenericLogger_TestTraits::DEBUG> (f_file, f_function, f_lineno);
-
-    // Initial log line is the required one?
-    BOOST_CHECK_EQUAL (_logLine.str(), f_str.str());
-}
-
-/* -------------------------------------------------------------------------- */
-
-BOOST_FIXTURE_TEST_CASE (Common__GenericLogger_modifier, GenericLogger_TestClass)
-{
-    Common__GenericLogger_TestTraits::reset();
-    // Execute "commit" in modifoer style, and check if syslog was written. It
-    // proves that the modofier was executed.
-    *this << commit;
-    BOOST_CHECK ( Common__GenericLogger_TestTraits::syslogCalled );
-}
-
-/* -------------------------------------------------------------------------- */
-
-BOOST_FIXTURE_TEST_CASE (Common__GenericLogger_stream_write, GenericLogger_TestClass)
-{
-    // Empty everything...
-    _commit();
-    setLogOn();
-    Common__GenericLogger_TestTraits::reset();
-    const std::string f_str ("randomdsfsdoj");
-    *this << f_str;
-    BOOST_CHECK_EQUAL (_logLine.str(), f_str);
-
-    // No logging when log is off
-    setLogOff();
-    _logLine.str("");
-    *this << f_str;
-    BOOST_CHECK (_logLine.str().empty());
-}
-
-/* -------------------------------------------------------------------------- */
-
-BOOST_FIXTURE_TEST_CASE (Common__GenericLogger_addErr, GenericLogger_TestClass)
-{
-    // Test setup
-    _logLine.str("");
-    Common__GenericLogger_TestTraits::reset();
-    const int f_errn = 3;
-    const std::string f_str = Common__GenericLogger_TestTraits::strerror(f_errn);
-    errno = f_errn;
-    // Do the real work...
-    *this << addErr;
-    // The checks
-    BOOST_CHECK ( Common__GenericLogger_TestTraits::strerrorCalled );
-    BOOST_CHECK_EQUAL (_logLine.str(), f_str);
-}
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()
 
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 

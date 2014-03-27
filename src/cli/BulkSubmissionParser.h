@@ -54,7 +54,7 @@ class BulkSubmissionParser
 
 public:
 
-    BulkSubmissionParser(ifstream& ifs);
+    BulkSubmissionParser(istream& ifs);
     virtual ~BulkSubmissionParser();
 
     /**

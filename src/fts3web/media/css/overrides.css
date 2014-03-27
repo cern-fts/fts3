@@ -19,3 +19,37 @@ pre {
 	border: none;
 	font-size: 110%;
 }
+
+.navbar-fixed-top {
+    height: 44px;
+}
+.sub-navbar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 44px;
+    height: 50px;
+}
+
+.sub-navbar form {
+    padding: 0.8em 0 0.8em 0;
+    margin: 0;
+}
+
+.sub-navbar>div>form>div {
+    vertical-align: middle;
+}
+
+.sub-navbar select, .sub-navbar input {
+    display: inline;
+    width: 80%;
+    height: 2em;
+}
+
+.sub-navbar label {
+    display: inline;
+}
+
+.navbar-spacer {
+    height: 50px;
+}

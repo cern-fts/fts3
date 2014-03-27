@@ -1232,6 +1232,7 @@ int fts3::impltns__blacklistDn(soap* ctx, string subject, bool blk, string statu
     return SOAP_OK;
 }
 
+
 int fts3::impltns__prioritySet(soap* ctx, string job_id, int priority, impltns__prioritySetResponse &resp)
 {
 
@@ -1304,7 +1305,7 @@ int fts3::impltns__getSnapshot(soap* ctx, string vo, string src, string dst, imp
 {
     try
         {
-            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::CONFIG, AuthorizationManager::dummy);
+            //AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::CONFIG, AuthorizationManager::dummy);
 
             std::string endpoint = theServerConfig().get<std::string > ("Alias");
             std::stringstream result;

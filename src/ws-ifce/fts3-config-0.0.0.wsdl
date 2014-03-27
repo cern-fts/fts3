@@ -27,10 +27,24 @@
             	</sequence>
             </complexType>
             
+            <complexType name="BandwidthLimitPair">
+                <sequence>
+                    <element minOccurs="1" maxOccurs="1" name="source" type="xsd:string"/>
+                    <element minOccurs="1" maxOccurs="1" name="dest" type="xsd:string"/>
+                    <element minOccurs="1" maxOccurs="1" name="limit" type="xsd:int"/>
+                </sequence>
+            </complexType>
+            
             <complexType name="BringOnline">
             	<sequence>
             		<element maxOccurs="unbounded" name="boElem" type="config:BringOnlinePair"/>
             	</sequence>
+            </complexType>
+            
+            <complexType name="BandwidthLimit">
+                <sequence>
+                    <element maxOccurs="unbounded" name="blElem" type="config:BandwidthLimitPair"/>
+                </sequence>
             </complexType>
 
             <complexType name="ConfigurationException">
@@ -133,6 +147,28 @@
     </message>
 
 	<message name="SetBringOnlineResponse"/>
+	
+	<message name="SetBandwidthLimitRequest">
+	   <part name="bandwidth" type="config:BandwidthLimit"/>
+	</message>
+	
+	<message name="SetBandwidthLimitResponse"/>
+	
+	<message name="GetBandwidthLimitRequest"/>
+    
+    <message name="GetBandwidthLimitResponse">
+        <part name="limit" type="xsd:string"/>
+    </message>
+    
+    <message name="setSeProtocolRequest">
+   
+      <part name="protocol" type="xsd:string"/>
+      <part name="se" type="xsd:string"/>
+      <part name="state" type="xsd:string"/>
+   
+    </message>
+   
+    <message name="setSeProtocolResponse"/>
 
     <message name="AuthorizationException">
         <part name="fault" element="config:AuthorizationExceptionElement"/>
@@ -149,7 +185,7 @@
     <message name="InvalidConfigurationException">
         <part name="fault" element="config:InvalidConfigurationExceptionElement"/>
     </message>
-
+    
     <portType name="Config">
         <operation name="setConfiguration" parameterOrder="configuration">
             <input message="impl:SetConfigurationRequest" name="SetConfigurationRequest"/>
@@ -217,6 +253,30 @@
             <fault message="impl:InternalException" name="InternalException"/>
         </operation>
         
+        <operation name="setBandwidthLimit">
+            <input message="impl:SetBandwidthLimitRequest" name="SetBandwidthLimitRequest"/>
+            <output message="impl:SetBandwidthLimitResponse" name="SetBandwidthLimitResponse"/>
+            <fault message="impl:AuthorizationException" name="AuthorizationException"/>
+            <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
+            <fault message="impl:InternalException" name="InternalException"/>
+        </operation>
+        
+        <operation name="getBandwidthLimit">
+            <input message="impl:GetBandwidthLimitRequest" name="GetBandwidthLimitRequest"/>
+            <output message="impl:GetBandwidthLimitResponse" name="GetBandwidthLimitResponse"/>
+            <fault message="impl:AuthorizationException" name="AuthorizationException"/>
+            <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
+            <fault message="impl:InternalException" name="InternalException"/>
+        </operation>
+        
+        <operation name="setSeProtocol" parameterOrder="protocol">
+            <input message="impl:setSeProtocolRequest" name="setSeProtocolRequest"/>
+            <output message="impl:setSeProtocolResponse" name="setSeProtocolResponse"/>
+            <fault message="impl:AuthorizationException" name="AuthorizationException"/>
+            <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
+            <fault message="impl:InvalidArgumentException" name="InvalidArgumentException"/>
+            <fault message="impl:InternalException" name="InternalException"/>
+        </operation>        
     </portType>
 
     <binding name="SoapBinding" type="impl:Config">
@@ -423,6 +483,82 @@
                 <wsdlsoap:fault name="InternalException" use="literal"/>
             </fault>
         </operation>
+        
+        <operation name="setBandwidthLimit">
+            <wsdlsoap:operation soapAction=""/>
+            
+            <input name="SetBandwidthLimitRequest">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </input>
+            
+            <output name="SetBandwidthLimitResponse">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </output>
+            
+            <fault name="AuthorizationException">
+                <wsdlsoap:fault name="AuthorizationException" use="literal"/>
+            </fault>
+
+            <fault name="ServiceBusyException">
+                <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
+            </fault>
+
+            <fault name="InternalException">
+                <wsdlsoap:fault name="InternalException" use="literal"/>
+            </fault>
+        </operation>
+        
+        <operation name="getBandwidthLimit">
+            <wsdlsoap:operation soapAction=""/>
+            
+            <input name="GetBandwidthLimitRequest">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </input>
+            
+            <output name="GetBandwidthLimitResponse">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </output>
+            
+            <fault name="AuthorizationException">
+                <wsdlsoap:fault name="AuthorizationException" use="literal"/>
+            </fault>
+
+            <fault name="ServiceBusyException">
+                <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
+            </fault>
+
+            <fault name="InternalException">
+                <wsdlsoap:fault name="InternalException" use="literal"/>
+            </fault>
+        </operation>
+        
+        <operation name="setSeProtocol">
+            <wsdlsoap:operation soapAction=""/>
+            
+            <input name="setSeProtocolRequest">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </input>
+            
+            <output name="setSeProtocolResponse">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </output>
+            
+            <fault name="AuthorizationException">
+                <wsdlsoap:fault name="AuthorizationException" use="literal"/>
+            </fault>
+            
+            <fault name="ServiceBusyException">
+                <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
+            </fault>
+            
+            <fault name="InvalidArgumentException">
+                <wsdlsoap:fault name="InvalidArgumentException" use="literal"/>
+            </fault>
+            
+            <fault name="InternalException">
+                <wsdlsoap:fault name="InternalException" use="literal"/>
+            </fault>
+        </operation>        
         
     </binding>
 

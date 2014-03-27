@@ -138,7 +138,7 @@ public:
 
 
     /*t_credential API*/
-    virtual void insertGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs) = 0;
+    virtual bool insertGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs) = 0;
 
     virtual void updateGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs) = 0;
 
@@ -281,6 +281,8 @@ public:
 
     virtual void setPriority(std::string jobId, int priority) = 0;
 
+    virtual void setSeProtocol(std::string protocol, std::string se, std::string state) = 0;
+
     virtual void setRetry(int retry) = 0;
 
     virtual int getRetry(const std::string & jobId) = 0;
@@ -365,12 +367,13 @@ public:
      * so it is not mandatory.
      * start and end are set to the interval of hash values this host will process
      */
-    virtual void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end)
+    virtual void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end, std::string service_name)
     {
         *index = 0;
         *count = 1;
         *start = 0x0000;
         *end   = 0xFFFF;
+        service_name = std::string("");
     }
 
     virtual unsigned int updateFileStatusReuse(TransferFiles* file, const std::string status) = 0;
@@ -382,6 +385,12 @@ public:
     virtual bool getDrain() = 0;
 
     virtual void setDrain(bool drain) = 0;
+
+    virtual void setBandwidthLimit(const std::string & source_hostname, const std::string & destination_hostname, int bandwidthLimit) = 0;
+
+    virtual std::string getBandwidthLimit() = 0;
+
+    virtual bool isProtocolUDT(const std::string & source_hostname, const std::string & destination_hostname) = 0;
 
 
 

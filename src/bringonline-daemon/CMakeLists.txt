@@ -42,6 +42,9 @@ target_link_libraries(fts_bringonline fts_db_generic)
 target_link_libraries(fts_bringonline fts_config)
 target_link_libraries(fts_bringonline fts_common)
 target_link_libraries(fts_bringonline fts_proxy)
+if(FTS3_COMPILE_WITH_UNITTEST_NEW)
+	target_link_libraries(fts_bringonline -lboost_unit_test_framework)
+endif()
 target_link_libraries(fts_bringonline  -luuid -lssl -lgfal_transfer -lgfal2
                                        -lglib-2.0 ${fts_libs}
                                        ${Boost_LIBRARIES})

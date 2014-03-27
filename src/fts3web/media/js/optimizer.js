@@ -1,24 +1,26 @@
 
-function OptimizerCtrl($location, $scope, optimizer, Optimizer, Unique)
+function OptimizerCtrl($location, $scope, optimizer, Optimizer)
 {
 	$scope.optimizer = optimizer;
 
-	// Unique values
-	$scope.unique = {
-		sources: Unique('sources'),
-		destinations: Unique('destinations')
-	}
-
-	// Filter
-	$scope.filterReason = function(filter) {
-		$location.search(filter);
-		$scope.filtersModal = false;
-	}
+	// Filter	
+    $scope.showFilterDialog = function() {
+    	document.getElementById('filterDialog').style.display = 'block';
+    }
+    
+    $scope.cancelFilters = function() {
+    	document.getElementById('filterDialog').style.display = 'none';
+    }
 
 	$scope.filter = {
 		source_se:   validString($location.search().source_se),
 		dest_se:     validString($location.search().dest_se),
 		time_window: parseInt($location.search().time_window)
+	}
+	
+	$scope.applyFilters = function() {
+		$location.search($scope.filter);
+		document.getElementById('filterDialog').style.display = 'none';
 	}
 
 	// On page change, reload

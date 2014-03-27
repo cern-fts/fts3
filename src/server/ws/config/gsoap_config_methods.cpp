@@ -96,18 +96,9 @@ int fts3::implcfg__setConfiguration(soap* soap, config__Configuration *_configur
 
 int fts3::implcfg__getConfiguration(soap* soap, string all, string name, string source, string destination, implcfg__getConfigurationResponse & response)
 {
-
-//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getConfiguration' request" << commit;
-
     response.configuration = soap_new_config__Configuration(soap, -1);
     try
         {
-            AuthorizationManager::getInstance().authorize(
-                soap,
-                AuthorizationManager::CONFIG,
-                AuthorizationManager::dummy
-            );
-
             CGsiAdapter cgsi(soap);
             string dn = cgsi.getClientDn();
 
@@ -115,10 +106,6 @@ int fts3::implcfg__getConfiguration(soap* soap, string all, string name, string 
             bool standalone = !source.empty() && destination.empty();
             bool pair = !source.empty() && !destination.empty();
             bool symbolic_name = !name.empty();
-
-//		if (symbolic_name && (standalone || pair) ) {
-//			throw Err_Custom("Either a stand alone configuration or pair configuration or symbolic name may be specified for the query!");
-//		}
 
             ConfigurationHandler handler (dn);
             if (allcfgs)
@@ -418,7 +405,6 @@ int fts3::implcfg__setBringOnline(soap* ctx, config__BringOnline *bring_online, 
 
     try
         {
-
             // authorize
             AuthorizationManager::getInstance().authorize(
                 ctx,
@@ -480,7 +466,141 @@ int fts3::implcfg__setBringOnline(soap* ctx, config__BringOnline *bring_online, 
         }
     catch (...)
         {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the bring online limit"  << commit;
+            return SOAP_FAULT;
+        }
+
+    return SOAP_OK;
+}
+
+int fts3::implcfg__setBandwidthLimit(soap* ctx, fts3::config__BandwidthLimit* limit, fts3::implcfg__setBandwidthLimitResponse& resp)
+{
+    try
+        {
+            // authorize
+            AuthorizationManager::getInstance().authorize(
+                ctx,
+                AuthorizationManager::CONFIG,
+                AuthorizationManager::dummy
+            );
+
+            CGsiAdapter cgsi(ctx);
+            string vo = cgsi.getClientVo();
+            string dn = cgsi.getClientDn();
+
+            vector<config__BandwidthLimitPair*>::iterator it;
+            for (it = limit->blElem.begin(); it != limit->blElem.end(); ++it)
+                {
+                    config__BandwidthLimitPair* pair = *it;
+
+                    if (!pair->source.empty() && !pair->dest.empty())
+                        throw Err_Custom("Only source OR destination can be specified");
+                    if (pair->source.empty() && pair->dest.empty())
+                        throw Err_Custom("Need to specify source OR destination");
+
+                    DBSingleton::instance().getDBObjectInstance()->setBandwidthLimit(
+                        pair->source, pair->dest, pair->limit);
+
+                    if (pair->limit >= 0)
+                        {
+                            FTS3_COMMON_LOGGER_NEWLOG (INFO)
+                                    << "User: "
+                                    << dn
+                                    << " had set the maximum bandwidth of "
+                                    << pair->source << pair->dest
+                                    << " to "
+                                    << pair->limit << "MB/s"
+                                    << commit;
+                        }
+                    else
+                        {
+                            FTS3_COMMON_LOGGER_NEWLOG (INFO)
+                                    << "User: "
+                                    << dn
+                                    << " had reset the maximum bandwidth of "
+                                    << pair->source << pair->dest
+                                    << commit;
+                        }
+                    // prepare the command for audit
+                    stringstream cmd;
+
+                    cmd << dn;
+                    cmd << " had set the maximum bandwidth of ";
+                    cmd << pair->source << pair->dest;
+                    cmd << " to ";
+                    cmd << pair->limit << "MB/s";
+                    DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd.str(), "max-bandwidth");
+                }
+        }
+    catch(Err& ex)
+        {
+
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+            soap_receiver_fault(ctx, ex.what(), "InvalidConfigurationException");
+
+            return SOAP_FAULT;
+        }
+    catch (...)
+        {
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the number of retries cannot be set"  << commit;
+            return SOAP_FAULT;
+        }
+
+    return SOAP_OK;
+}
+
+int fts3::implcfg__getBandwidthLimit(soap* ctx, fts3::implcfg__getBandwidthLimitResponse& resp)
+{
+    try
+        {
+            resp.limit = DBSingleton::instance().getDBObjectInstance()->getBandwidthLimit();
+        }
+    catch(Err& ex)
+        {
+
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+            soap_receiver_fault(ctx, ex.what(), "InvalidConfigurationException");
+
+            return SOAP_FAULT;
+        }
+    catch (...)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the number of retries cannot be set"  << commit;
+            return SOAP_FAULT;
+        }
+
+    return SOAP_OK;
+}
+
+int fts3::implcfg__setSeProtocol(soap* ctx, string protocol, string se, string state, implcfg__setSeProtocolResponse &resp)
+{
+
+    try
+        {
+            if (state != "on" && state != "off") throw Err_Custom("the protocol may be either set to 'on' or 'off'");
+
+            // Authorise operation
+            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::CONFIG, AuthorizationManager::dummy);
+
+            DBSingleton::instance().getDBObjectInstance()->setSeProtocol(protocol, se, state);
+
+            // get user DN
+            CGsiAdapter cgsi(ctx);
+            string dn = cgsi.getClientDn();
+
+            // audit the operation
+            string cmd = "fts3-config-set --protocol " + protocol + " " + se + " " + state;
+            DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd, "debug");
+        }
+    catch(Err& ex)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+            soap_receiver_fault(ctx, ex.what(), "InvalidConfigurationnException");
+            return SOAP_FAULT;
+        }
+    catch (...)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown"  << commit;
             return SOAP_FAULT;
         }
 

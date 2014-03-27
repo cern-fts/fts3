@@ -222,8 +222,10 @@ void taskStatusUpdater(int time)
             Logger::getInstance().INFO() << "Sending back to the server url-copy is still alive : "
                                          <<  currentTransfer.throughput << "  " <<  currentTransfer.transferredBytes
                                          << std::endl;
-            reporter.sendPing(currentTransfer.jobId, currentTransfer.fileId,
-                              currentTransfer.throughput, currentTransfer.transferredBytes);
+
+            if(currentTransfer.fileId > 0)
+                reporter.sendPing(currentTransfer.jobId, currentTransfer.fileId, currentTransfer.throughput, currentTransfer.transferredBytes);
+
             boost::this_thread::sleep(boost::posix_time::seconds(time));
         }
 }
@@ -417,6 +419,8 @@ int statWithRetries(gfal_context_t handle, const std::string& category, const st
                     *size = statBuffer.st_size;
                     return 0;
                 }
+
+            Logger::getInstance().WARNING() << "Stat failed with " << *errMsg << "(" << errorCode << ")" << std::endl;
             Logger::getInstance().WARNING() << "Stat the file will be retried" << std::endl;
             sleep(3); //give it some time to breath
         }
@@ -576,6 +580,11 @@ int main(int argc, char **argv)
             gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "SESSION_REUSE", TRUE, NULL);
         }
 
+    // Enable UDT
+    if (opts.enable_udt)
+        {
+            gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "ENABLE_UDT", TRUE, NULL);
+        }
 
     if (!handle)
         {
@@ -671,6 +680,8 @@ int main(int argc, char **argv)
                 logger.INFO() << "File metadata:" << replaceMetadataString(currentTransfer.fileMetadata) << std::endl;
                 logger.INFO() << "Job metadata:" << replaceMetadataString(opts.jobMetadata) << std::endl;
                 logger.INFO() << "Bringonline token:" << currentTransfer.tokenBringOnline << std::endl;
+                logger.INFO() << "Multihop: " << opts.multihop << std::endl;
+                logger.INFO() << "UDT: " << opts.enable_udt << std::endl;
 
                 //set to active only for reuse
                 if (opts.areTransfersOnFile())

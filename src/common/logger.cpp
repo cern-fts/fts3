@@ -17,7 +17,7 @@ limitations under the License. */
 
 #include "logger.h"
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST
+#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 #include "unittest/testsuite.h"
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
@@ -25,28 +25,10 @@ limitations under the License. */
 
 FTS3_COMMON_NAMESPACE_START
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST
+#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 
-BOOST_FIXTURE_TEST_CASE (Common__Logger_Newlog_Macros, Logger)
-{
-    std::stringstream f_str;
-    f_str << "thread:" << ThreadTraits::get_id() << _separator();
-    // Non-debug level logging
-    FTS3_COMMON_LOGGER_NEWLOG(INFO);
-    BOOST_CHECK_EQUAL (f_str.str(), theLogger()._logLine.str());
-    // Non-debug level logging
-    // They MUST be in one source code line!
-    FTS3_COMMON_LOGGER_NEWLOG(DEBUG);
-    const int f_lineno = __LINE__;
-    const char* f_file = __FILE__;
-    const char* f_function = __FUNCTION__;
-    f_str.str("");
-
-    f_str << "thread:" << ThreadTraits::get_id() << _separator() << f_file << _separator()
-          << f_function << _separator() << std::dec << f_lineno << _separator();
-
-    BOOST_CHECK_EQUAL (f_str.str(), theLogger()._logLine.str());
-}
+BOOST_AUTO_TEST_SUITE( common )
+BOOST_AUTO_TEST_SUITE(LoggerTest)
 
 // Check FTS3_COMMON_LOGGER_LOG macro
 BOOST_FIXTURE_TEST_CASE (Common__Logger_Log_Macros, Logger)
@@ -58,6 +40,9 @@ BOOST_FIXTURE_TEST_CASE (Common__Logger_Log_Macros, Logger)
     FTS3_COMMON_LOGGER_LOG(INFO, f_message);
     BOOST_TEST_MESSAGE ("\n**** End of manual test.");
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()
 
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 

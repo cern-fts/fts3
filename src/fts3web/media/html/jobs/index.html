@@ -1,6 +1,7 @@
+<global-filter on-more="showFilterDialog()"></global-filter>
+
 <h3>
     Showing {{jobs.startIndex}} to {{jobs.endIndex}} out of {{jobs.count}}
-    <button class="btn btn-mini btn-info" type="button" ng-click="filtersModal = true">Filter</button>
 </h3>
 
 <pagination rotate="false" num-pages="jobs.pageCount" current-page="jobs.page"
@@ -40,20 +41,12 @@
     on-select-page="pageChanged(page)"></pagination>
 
 <!-- Modals -->
-<div modal="filtersModal" close="filtersModal = false" options="opts">
+<div id="filterDialog" class="modal" role="dialog" style="display: none">
     <form ng-submit="applyFilters()" autocomplete="off">
 	    <div class="modal-header">
 	        <h3>Filters</h3>
 	    </div>
 	    <div class="modal-body">
-			<label for="source_se">Source storage element:</label>
-			<input type="text" placeholder="source storage element" id="source_se" ng-model="filter.source_se"
-			       typeahead="source for source in unique.sources | safeFilter:$viewValue"/>
-			
-			<label for="dest_se">Destination storage element:</label>
-			<input type="text" placeholder="destination storage element" name="dest_se" ng-model="filter.dest_se"
-			       typeahead="dest for dest in unique.destinations | safeFilter:$viewValue"/>
-	
 	        <label for="state">State:</label>
 		    <p class="btn-group">
 		        <button type="button" class="btn btn-info btn-small" ng-model="filter.state.submitted" btn-checkbox>SUBMITTED</button>
@@ -67,18 +60,14 @@
 		        <button type="button" class="btn btn-success btn-small" ng-model="filter.state.finished" btn-checkbox>FINISHED</button>
 		        <button type="button" class="btn btn-warning btn-small" ng-model="filter.state.finisheddirty" btn-checkbox>FINISHED DIRTY</button>
 		    </p>
-	        
-			<label for="vo">VO:</label>
-			<select id="vo" ng-model="filter.vo" ng-options="vo for vo in unique.vos">
-			  <option value="">-- All VOs --</option>
-		    </select>
 			
 			<label for="timewindow">Time window:</label>
 			<input type="number" placeholder="time window in hours" id="timewindow" ng-model="filter.time_window"/>
 	    </div>
 	    <div class="modal-footer">
 	        <button class="btn btn-success" ng-click="applyFilters()">Apply</button>
-	        <button class="btn btn-danger" ng-click="filtersModal = false">Cancel</button>
+	        <button class="btn btn-danger" ng-click="cancelFilters()">Cancel</button>
 	    </div>
     </form>
+    
 </div>

@@ -85,6 +85,6 @@ add_subdirectory(delegation-cli)
 add_subdirectory(ws-ifce)
 ENDIF()
 
-if(FTS3_COMPILE_WITH_UNITTEST)
+if(FTS3_COMPILE_WITH_UNITTEST_NEW)
 	add_subdirectory(unittest)
 endif()

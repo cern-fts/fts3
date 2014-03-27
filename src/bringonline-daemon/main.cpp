@@ -47,14 +47,13 @@ limitations under the License. */
 #include "name_to_uid.h"
 #include "cred-utility.h"
 #include "name_to_uid.h"
+#include "DrainMode.h"
 
 using namespace FTS3_SERVER_NAMESPACE;
 using namespace FTS3_COMMON_NAMESPACE;
 
 extern std::string stackTrace;
 bool stopThreads = false;
-const char * const PROXY_NAME_PREFIX = "x509up_h";
-const std::string repository = "/tmp/";
 const char *hostcert = "/etc/grid-security/fts3hostcert.pem";
 const char *hostkey = "/etc/grid-security/fts3hostkey.pem";
 const char *configfile = "/etc/fts3/fts3config";
@@ -331,13 +330,14 @@ void heartbeat(void)
 {
     unsigned myIndex=0, count=0;
     unsigned hashStart=0, hashEnd=0;
+    std::string service_name = "fts_bringonline";
 
     while (!stopThreads)
         {
             try
                 {
                     db::DBSingleton::instance().getDBObjectInstance()->updateHeartBeat(
-                        &myIndex, &count, &hashStart, &hashEnd);
+                        &myIndex, &count, &hashStart, &hashEnd, service_name);
 
                     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Systole: host " << myIndex << " out of " << count
                                                     << " [" << std::hex << hashStart << ':' << std::hex << hashEnd << ']'
@@ -489,6 +489,14 @@ int DoServer(int argc, char** argv)
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE daemon started..." << commit;
             while (!stopThreads)
                 {
+                    //if we drain a host, no need to check if url_copy are reporting being alive
+                    if (DrainMode::getInstance())
+                        {
+                            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking stage-in files for this instance!" << commit;
+                            sleep(5);
+                            continue;
+                        }
+
 
                     //select from the database the config for bringonline for each VO / hostname
                     voHostnameConfig = db::DBSingleton::instance().getDBObjectInstance()->getVOBringonlineMax();

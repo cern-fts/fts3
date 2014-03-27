@@ -1,18 +1,23 @@
 
 
-function ErrorsCtrl($location, $scope, pairs, Errors, Unique)
+function ErrorsCtrl($location, $scope, pairs, Errors)
 {
 	// Errors
 	$scope.pairs = pairs;
-	
-	// Unique values
-	$scope.unique = {
-		sources: Unique('sources'),
-		destinations: Unique('destinations')
-	}
-	
+		
 	// Filter
-	$scope.applyFilter = function(filter) {
+    $scope.showFilterDialog = function() {
+    	document.getElementById('filterDialog').style.display = 'block';
+    }
+    
+    $scope.cancelFilters = function() {
+    	document.getElementById('filterDialog').style.display = 'none';
+    }
+
+	$scope.applyFilter = function() {
+		var filter = $scope.filter;
+		filter['source_se'] = $location.search().source_se;
+		filter['dest_se'] = $location.search().dest_se;
 		$location.search(filter);
 		$scope.filtersModal = false;
 	}
@@ -68,11 +73,19 @@ function ErrorsForPairCtrl($location, $scope, errors, ErrorsForPair)
 	$scope.dest_se   = $location.search().dest_se;
 	
 	// Filter
-	$scope.filterReason = function(filter) {
-		$location.search(filter);
+    $scope.showFilterDialog = function() {
+    	document.getElementById('filterDialog').style.display = 'block';
+    }
+    
+    $scope.cancelFilters = function() {
+    	document.getElementById('filterDialog').style.display = 'none';
+    }
+
+	$scope.applyFilters = function() {
+		$location.search($scope.filter);
 		$scope.filtersModal = false;
 	}
-	
+
 	$scope.filter = {
 		source_se: validString($location.search().source_se),
 		dest_se:   validString($location.search().dest_se),

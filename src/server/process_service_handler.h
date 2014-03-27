@@ -251,16 +251,20 @@ protected:
                                                 return;
                                             }
 
-                                        FileTransferExecutor* exec = new FileTransferExecutor(
-                                            tfh.get(*it_vo),
-                                            tfh,
-                                            enableOptimization.compare("true") == 0,
-                                            monitoringMessages,
-                                            infosys,
-                                            ftsHostName
-                                        );
+                                        TransferFiles* tf = tfh.get(*it_vo);
 
-                                        execPool.add(exec);
+                                        if (tf)
+                                            {
+                                                FileTransferExecutor* exec = new FileTransferExecutor(
+                                                    tf,
+                                                    tfh,
+                                                    monitoringMessages,
+                                                    infosys,
+                                                    ftsHostName
+                                                );
+
+                                                execPool.add(exec);
+                                            }
                                     }
                             }
 
@@ -437,7 +441,7 @@ protected:
                                     }
 
                                 FileTransferScheduler scheduler(tempUrl, cfgs);
-                                if (scheduler.schedule(optimize))   /*SET TO READY STATE WHEN TRUE*/
+                                if (scheduler.schedule())   /*SET TO READY STATE WHEN TRUE*/
                                     {
                                         bool isAutoTuned = false;
                                         std::stringstream internalParams;

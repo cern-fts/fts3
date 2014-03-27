@@ -1,16 +1,9 @@
 
 
-function JobListCtrl($location, $scope, jobs, Job, Unique)
+function JobListCtrl($location, $scope, jobs, Job)
 {
     // Jobs
     $scope.jobs = jobs;
-    
-    // Unique values
-    $scope.unique = {
-        sources: Unique('sources'),
-        destinations: Unique('destinations'),
-        vos: Unique('vos')
-    }
 
     // On page change, reload
     $scope.pageChanged = function(newPage) {
@@ -36,16 +29,21 @@ function JobListCtrl($location, $scope, jobs, Job, Unique)
         state:       statesFromString($location.search().state)
     }
     
+    $scope.showFilterDialog = function() {
+    	document.getElementById('filterDialog').style.display = 'block';
+    }
+    
+    $scope.cancelFilters = function() {
+    	document.getElementById('filterDialog').style.display = 'none';
+    }
+    
     $scope.applyFilters = function() {
+    	document.getElementById('filterDialog').style.display = 'none';
         $location.search({
             page:        1,
-            vo:          validString($scope.filter.vo),
-            source_se:   $scope.filter.source_se,
-            dest_se:     $scope.filter.dest_se,
             time_window: $scope.filter.time_window,
             state:       joinStates($scope.filter.state)
         });
-        $scope.filtersModal = false;
     }
     
     // Method to set class depending on the metadata value

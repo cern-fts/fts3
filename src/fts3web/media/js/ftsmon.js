@@ -1,4 +1,4 @@
-angular.module('ftsmon', ['ftsmon.resources', 'ftsmon.plots', 'ui.bootstrap']).
+angular.module('ftsmon', ['ftsmon.resources', 'ftsmon.plots', 'ftsmon.global_filter', 'ui.bootstrap']).
 config(function($routeProvider) {
     $routeProvider.
         when('/',                     {templateUrl: STATIC_ROOT + 'html/overview.html',

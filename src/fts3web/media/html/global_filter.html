@@ -1,0 +1,30 @@
+<div class="navbar sub-navbar">
+    <div class="navbar-inner">
+        <form class="row-fluid" ng-submit="applyGlobalFilter()" autocomplete="off">
+            <div class="span2">
+             <label for="global-vo">VO:</label>
+             <select id="global-vo" ng-model="globalFilter.vo" ng-options="vo for vo in unique.vos" ng-change="applyGlobalFilter()">
+                <option value="">- All -</option>
+             </select>
+            </div>
+            <div class="span4">
+             <label for="global-source">Source SE:</label>
+             <input id="global-source" type="text" ng-model="globalFilter.source_se" placeholder="Source storage"
+                    typeahead="source for source in unique.sources | safeFilter:$viewValue"
+                    typeahead-on-select="applyGlobalFilter()"/>
+            </div>
+            <div class="span4">
+             <label for="global-destination">Source SE:</label>
+             <input id="global-destination"  type="text" ng-model="globalFilter.dest_se" placeholder="Destination storage"
+                    typeahead="dest for dest in unique.destinations | safeFilter:$viewValue"
+                    typeahead-on-select="applyGlobalFilter()"/>
+            </div>
+            <div class="span2">
+              <button class="btn btn-small btn-info" ng-click="applyGlobalFilter()">Apply</button>
+              <button ng-show="isThereMoreFilters" class="btn btn-small" ng-click="moreFilters()">More filters</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="navbar-spacer"/>

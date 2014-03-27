@@ -33,6 +33,7 @@ GetCfgCli::GetCfgCli() : SrcDestCli(true)
     ("name,n", value<string>(), "Restrict to specific symbolic (configuration) name.")
     ("all", "Get all the configurations (standalone and pairs) for the given SE.")
     ("vo", "Get activity share configuration for the given VO.")
+    ("max-bandwidth", "Get bandwidth limitation for a given SE")
     ;
 }
 
@@ -66,3 +67,7 @@ bool GetCfgCli::vo()
     return vm.count("vo");
 }
 
+bool GetCfgCli::getBandwidth()
+{
+    return vm.count("max-bandwidth");
+}

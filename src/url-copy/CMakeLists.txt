@@ -51,6 +51,9 @@ set(fts_url_copy_SOURCES args.cpp
                          ${PROJECT_SOURCE_DIR}/src/common/parse_url.cpp)
 add_executable (fts_url_copy ${fts_url_copy_SOURCES})
 add_dependencies(fts_url_copy fts_msg_ifce)
+if(FTS3_COMPILE_WITH_UNITTEST_NEW)
+	target_link_libraries(fts_url_copy -lboost_unit_test_framework)
+endif()
 target_link_libraries(fts_url_copy  -luuid -lssl -lcrypto -lgfal_transfer -lgfal2 -lglib-2.0 fts_msg_ifce ${Boost_LIBRARIES})
 
 

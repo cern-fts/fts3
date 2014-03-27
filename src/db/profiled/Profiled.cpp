@@ -4,7 +4,6 @@
 #include "profiler/Macros.h"
 
 
-
 void destroy_profiled_db(void *db)
 {
     ProfiledDB* profiled = static_cast<ProfiledDB*>(db);
@@ -30,7 +29,7 @@ void ProfiledDB::submitPhysical(const std::string & jobId, std::list<job_element
                                 const std::string & DN, const std::string & cred,
                                 const std::string & voName, const std::string & myProxyServer, const std::string & delegationID,
                                 const std::string & sourceSe, const std::string & destinationSe,
-                                const JobParameterHandler & params)
+                                const fts3::common::JobParameterHandler & params)
 {
     PROFILE_PREFIXED("DB::", db->submitPhysical(
                          jobId, src_dest_pair,
@@ -133,9 +132,9 @@ void ProfiledDB::cancelJob(std::vector<std::string>& requestIDs)
 }
 
 
-void ProfiledDB::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs)
+bool ProfiledDB::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs)
 {
-    PROFILE_PREFIXED("DB::", db->insertGrDPStorageCacheElement(dlg_id, dn, cert_request, priv_key, voms_attrs));
+    PROFILE_PREFIXED("DB::", return db->insertGrDPStorageCacheElement(dlg_id, dn, cert_request, priv_key, voms_attrs));
 }
 
 
@@ -579,6 +578,10 @@ void ProfiledDB::setPriority(std::string jobId, int priority)
     PROFILE_PREFIXED("DB::", db->setPriority(jobId, priority));
 }
 
+void ProfiledDB::setSeProtocol(std::string protocol, std::string se, std::string state)
+{
+    PROFILE_PREFIXED("DB::", db->setSeProtocol(protocol, se, state));
+}
 
 void ProfiledDB::setRetry(int retry)
 {
@@ -800,9 +803,9 @@ void ProfiledDB::getTransferRetries(int fileId, std::vector<FileRetry*>& retries
     PROFILE_PREFIXED("DB::", db->getTransferRetries(fileId, retries));
 }
 
-void ProfiledDB::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end)
+void ProfiledDB::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end, std::string service_name)
 {
-    PROFILE_PREFIXED("DB::", db->updateHeartBeat(index, count, start, end));
+    PROFILE_PREFIXED("DB::", db->updateHeartBeat(index, count, start, end, service_name));
 }
 
 unsigned int ProfiledDB::updateFileStatusReuse(TransferFiles* file, const std::string status)
@@ -828,5 +831,20 @@ bool ProfiledDB::getDrain()
 void ProfiledDB::setDrain(bool drain)
 {
     PROFILE_PREFIXED("DB::", db->setDrain(drain));
+}
+
+void ProfiledDB::setBandwidthLimit(const std::string & source_hostname, const std::string & destination_hostname, int bandwidthLimit)
+{
+    PROFILE_PREFIXED("DB::", db->setBandwidthLimit(source_hostname, destination_hostname, bandwidthLimit));
+}
+
+std::string ProfiledDB::getBandwidthLimit()
+{
+    PROFILE_PREFIXED("DB::", return db->getBandwidthLimit());
+}
+
+bool ProfiledDB::isProtocolUDT(const std::string & source_hostname, const std::string & destination_hostname)
+{
+    PROFILE_PREFIXED("DB::", return db->isProtocolUDT(source_hostname, destination_hostname));
 }
 

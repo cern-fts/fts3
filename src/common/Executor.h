@@ -29,6 +29,12 @@
 
 #include <boost/thread.hpp>
 
+#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
+#include "unittest/testsuite.h"
+#endif
+
+extern bool stopThreads;
+
 namespace fts3
 {
 
@@ -90,7 +96,7 @@ public:
     }
 
     /**
-     * @return true if the worker loop is active, fale otherwise
+     * @return true if the worker loop is active, false otherwise
      */
     bool isActive() const
     {
@@ -114,6 +120,8 @@ private:
     /// this is not synchronized so it can be only read when all elements were processed and the thread terminated
     int noexec;
 };
+
+
 
 } /* namespace common */
 } /* namespace fts3 */

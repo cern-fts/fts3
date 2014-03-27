@@ -65,7 +65,7 @@ public:
      */
     FileTransferScheduler(
         TransferFiles* file,
-        vector< boost::shared_ptr<ShareConfig> >& cfgs,
+        vector< boost::shared_ptr<ShareConfig> > cfgs,
         set<string> inses = set<string>(),
         set<string> outses = set<string>(),
         set<string> invos = set<string>(),
@@ -84,7 +84,7 @@ public:
      *
      * @return returns true if file status has been changed to Ready, false otherwise
      */
-    bool schedule(bool optimize);
+    bool schedule();
 
 private:
 
@@ -95,7 +95,7 @@ private:
     /// name of the destination SE
     string destSeName;
 
-    vector< boost::shared_ptr<ShareConfig> >& cfgs;
+    vector< boost::shared_ptr<ShareConfig> > cfgs;
 
     /// DB singleton instance
     GenericDbIfce* db;
