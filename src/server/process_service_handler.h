@@ -258,7 +258,6 @@ protected:
                                                 FileTransferExecutor* exec = new FileTransferExecutor(
                                                     tf,
                                                     tfh,
-                                                    true,
                                                     monitoringMessages,
                                                     infosys,
                                                     ftsHostName
@@ -442,7 +441,7 @@ protected:
                                     }
 
                                 FileTransferScheduler scheduler(tempUrl, cfgs);
-                                if (scheduler.schedule(optimize))   /*SET TO READY STATE WHEN TRUE*/
+                                if (scheduler.schedule())   /*SET TO READY STATE WHEN TRUE*/
                                     {
                                         bool isAutoTuned = false;
                                         std::stringstream internalParams;

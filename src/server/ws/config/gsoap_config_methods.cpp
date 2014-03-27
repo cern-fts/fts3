@@ -577,9 +577,9 @@ int fts3::implcfg__setSeProtocol(soap* ctx, string protocol, string se, string s
 
     try
         {
-    		if (state != "on" && state != "off") throw Err_Custom("the protocol may be either set to 'on' or 'off'");
+            if (state != "on" && state != "off") throw Err_Custom("the protocol may be either set to 'on' or 'off'");
 
-    		// Authorise operation
+            // Authorise operation
             AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::CONFIG, AuthorizationManager::dummy);
 
             DBSingleton::instance().getDBObjectInstance()->setSeProtocol(protocol, se, state);
@@ -604,5 +604,5 @@ int fts3::implcfg__setSeProtocol(soap* ctx, string protocol, string se, string s
             return SOAP_FAULT;
         }
 
-	return SOAP_OK;
+    return SOAP_OK;
 }

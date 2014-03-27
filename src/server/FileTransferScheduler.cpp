@@ -108,7 +108,7 @@ FileTransferScheduler::~FileTransferScheduler()
 
 }
 
-bool FileTransferScheduler::schedule(bool optimize)
+bool FileTransferScheduler::schedule()
 {
 
     vector<int> notUsed;
@@ -116,7 +116,7 @@ bool FileTransferScheduler::schedule(bool optimize)
     try
         {
 
-            if(optimize && cfgs.empty())
+            if(cfgs.empty())
                 {
                     bool allowed = db->isTrAllowed(srcSeName, destSeName);
                     // update file state to READY

@@ -577,11 +577,11 @@ void GSoapContextAdapter::prioritySet(string jobId, int priority)
 
 void GSoapContextAdapter::setSeProtocol(string protocol, string se, string state)
 {
-	implcfg__setSeProtocolResponse resp;
-	if (soap_call_implcfg__setSeProtocol(ctx, endpoint.c_str(), 0, protocol, se, state, resp))
-		{
-			handleSoapFault("Operation setSeProtocol failed.");
-		}
+    implcfg__setSeProtocolResponse resp;
+    if (soap_call_implcfg__setSeProtocol(ctx, endpoint.c_str(), 0, protocol, se, state, resp))
+        {
+            handleSoapFault("Operation setSeProtocol failed.");
+        }
 }
 
 void GSoapContextAdapter::retrySet(int retry)
