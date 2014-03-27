@@ -57,7 +57,7 @@ ProtocolResolver::ProtocolResolver(TransferFiles* file, vector< boost::shared_pt
             string source = (*it)->source;
             string destination = (*it)->destination;
             // create source-destination pair
-            pair<string, string> entry = pair<string, string>(source, destination);
+            pair<string, string> entry = make_pair(source, destination);
 
             // check if it is default configuration for destination SE
             if (destination == Configuration::wildcard && source == Configuration::any)

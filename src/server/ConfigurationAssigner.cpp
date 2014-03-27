@@ -122,8 +122,6 @@ void ConfigurationAssigner::assignShareCfg(list<cfg_type> arg, vector< boost::sh
 
             if (ptr.get())
                 {
-                    // if it is a auto-share don't assign a configuration
-                    if (ptr->active_transfers == auto_share) continue;
                     // set the share only status
                     ptr->share_only = link->auto_tuning == Configuration::share_only;
                     // add to out
@@ -162,8 +160,6 @@ void ConfigurationAssigner::assignShareCfg(list<cfg_type> arg, vector< boost::sh
                     db->addShareConfig(ptr.get());
                 }
 
-            // if it is a auto-share don't assign a configuration
-            if (ptr->active_transfers == auto_share) continue;
             // set the share only status
             ptr->share_only = link->auto_tuning == Configuration::share_only;
             // add to out

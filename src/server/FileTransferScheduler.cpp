@@ -44,19 +44,20 @@ using namespace fts3::ws;
 
 FileTransferScheduler::FileTransferScheduler(
     TransferFiles* file,
-    vector< boost::shared_ptr<ShareConfig> >& cfgs,
+    vector< boost::shared_ptr<ShareConfig> > cfgs,
     set<string> inses,
     set<string> outses,
     set<string> invos,
     set<string> outvos
 ) :
     file (file),
-    cfgs (cfgs),
     db (DBSingleton::instance().getDBObjectInstance())
 {
 
     srcSeName = file->SOURCE_SE;
     destSeName = file->DEST_SE;
+
+    vector< boost::shared_ptr<ShareConfig> > no_auto_share;
 
     vector< boost::shared_ptr<ShareConfig> >::iterator it;
     for (it = cfgs.begin(); it != cfgs.end(); it++)
@@ -100,7 +101,11 @@ FileTransferScheduler::FileTransferScheduler(
                     cfg->active_transfers = static_cast<int>(tmp + 0.5);
                     cfg->share_only = false; // now the value has been set
                 }
+
+            if (cfg->active_transfers != Configuration::automatic) no_auto_share.push_back(cfg);
         }
+
+    this->cfgs = no_auto_share;
 }
 
 FileTransferScheduler::~FileTransferScheduler()
