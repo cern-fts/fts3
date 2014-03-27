@@ -75,8 +75,10 @@ function mergeFilters(search, globals)
 	if (typeof(search) == 'undefined')
 		return globals;
 	for (key in globals) {
-		if (!key in search)
+		if (!key in search || search[key] == null)
 			search[key] = globals[key];
+		else if (key in globals)
+			globals[key] = search[key];
 	}
 }
 
@@ -89,7 +91,7 @@ function hrefWithFilter(href, filter)
 	var query = '?';
 	for (key in filter) {
 		var value = filter[key];
-		if (typeof(value) == 'null' || typeof(value) == 'undefined')
+		if (value == null)
 			value = '';
 		else
 			value = encodeURIComponent(value);

@@ -52,6 +52,11 @@ function OverviewCtrl($location, $scope, overview, Overview)
 	
 	// Method to choose a style for a pair
 	$scope.pairState = pairState;
+	
+	// Filter
+	$scope.filterBy = function(filter) {
+		$location.search(filter);
+	}
 
 	// Set timer to trigger autorefresh
 	$scope.autoRefresh = setInterval(function() {
