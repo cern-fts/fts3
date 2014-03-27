@@ -590,7 +590,7 @@ int fts3::implcfg__setSeProtocol(soap* ctx, string protocol, string se, string s
 
             // audit the operation
             string cmd = "fts3-config-set --protocol " + protocol + " " + se + " " + state;
-            DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd, "debug");
+            DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd, "protocol");
         }
     catch(Err& ex)
         {
