@@ -5469,11 +5469,11 @@ void MySqlAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
                                                     "    job_state in ('SUBMITTED', 'READY')",
                                                     soci::use(maxTime));
 
-                    soci::statement stmt1 = (sql.prepare << "UPDATE t_file SET  file_state = 'CANCELED', reason = :reason WHERE job_id = :jobId AND file_state IN ('SUBMITTED','READY')",
+                    soci::statement stmt1 = (sql.prepare << "UPDATE t_file SET job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(),  file_state = 'CANCELED', reason = :reason WHERE job_id = :jobId AND file_state IN ('SUBMITTED','READY')",
                                              soci::use(message), soci::use(job_id));
 
 
-                    soci::statement stmt2 = ( sql.prepare << "UPDATE t_job SET job_state = 'CANCELED', reason = :reason WHERE job_id = :jobId AND job_state IN ('SUBMITTED','READY')",
+                    soci::statement stmt2 = ( sql.prepare << "UPDATE t_job SET job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), job_state = 'CANCELED', reason = :reason WHERE job_id = :jobId AND job_state IN ('SUBMITTED','READY')",
                                               soci::use(message), soci::use(job_id));
 
 

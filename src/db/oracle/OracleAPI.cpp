@@ -5129,13 +5129,13 @@ void OracleAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
                     for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                         {
 
-                            sql << "UPDATE t_file SET "
+                            sql << "UPDATE t_file SET job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), "
                                 "    file_state = 'CANCELED', reason = :reason "
                                 "WHERE job_id = :jobId AND "
                                 "      file_state IN ('SUBMITTED','READY')",
                                 soci::use(message), soci::use(*i);
 
-                            sql << "UPDATE t_job SET "
+                            sql << "UPDATE t_job SET job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), "
                                 "    job_state = 'CANCELED', reason = :reason "
                                 "WHERE job_id = :jobId AND job_state IN ('SUBMITTED','READY')",
                                 soci::use(message), soci::use(*i);
