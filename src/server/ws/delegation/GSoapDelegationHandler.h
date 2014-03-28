@@ -222,8 +222,6 @@ private:
 
     /// client VOMS attributes (FQAN)
     vector<string> attrs;
-
-//    DelegationRequestCache& rqstCache;
 };
 
 }
