@@ -14,12 +14,12 @@ function ErrorsCtrl($location, $scope, pairs, Errors)
     	document.getElementById('filterDialog').style.display = 'none';
     }
 
-	$scope.applyFilter = function() {
+	$scope.applyFilters = function() {
 		var filter = $scope.filter;
 		filter['source_se'] = $location.search().source_se;
 		filter['dest_se'] = $location.search().dest_se;
 		$location.search(filter);
-		$scope.filtersModal = false;
+		document.getElementById('filterDialog').style.display = 'none';
 	}
 	
 	$scope.filter = {
