@@ -6,7 +6,7 @@ import logging
 from lib import base, storage, config
 
 
-class TestMultipleReuse(base.TestBase):
+class TestMultipleReuse(base.TestRepeatEach):
 
     def setUp(self):
         # Need to create three sources and three destinations
@@ -19,67 +19,67 @@ class TestMultipleReuse(base.TestBase):
                 pairs.append((s, d))
             self.transfers.append(pairs)
 
+    def iterations(self):
+        for t in self.transfers:
+            t_repr = "%s => %s" % (t[0][0].split(':')[0], t[0][1].split(':')[0])
+            yield (t_repr, t)
 
-    def test_multipleWithReuse(self):
+    def test_multipleWithReuse(self, transfer):
         """
         Transfer multiple files with reuse
         """
-        for t in self.transfers:
-            logging.info("Transfer multiple files with reuse")
-            files = []
-            for (src, dst) in t:
-                logging.info("%s => %s" % (src, dst))
-                self.surl.create(src)
-                files.append({'sources': [src], 'destinations': [dst]})
+        logging.info("Transfer multiple files with reuse")
+        files = []
+        for (src, dst) in transfer:
+            logging.info("%s => %s" % (src, dst))
+            self.surl.create(src)
+            files.append({'sources': [src], 'destinations': [dst]})
 
-            jobId = self.client.submit(files, ['-r', '--reuse'])
-            logging.info("Got job id %s" % jobId)
-            state = self.client.poll(jobId)
-            logging.info("Job %s finished with %s" % (jobId, state))
-            self.assertEqual('FINISHED', state, 'job.state')
+        jobId = self.client.submit(files, ['-r', '--reuse'])
+        logging.info("Got job id %s" % jobId)
+        state = self.client.poll(jobId)
+        logging.info("Job %s finished with %s" % (jobId, state))
+        self.assertEqual('FINISHED', state, 'job.state')
 
-            files = self.client.getFileInfo(jobId)
-            i = 0
-            for pair in files.keys():
-                label = 'job.files[' + str(i) + '].state'
-                self.assertEqual('FINISHED', files[pair]['file_state'], label)
-                i += 1
+        files = self.client.getFileInfo(jobId)
+        i = 0
+        for pair in files.keys():
+            label = 'job.files[' + str(i) + '].state'
+            self.assertEqual('FINISHED', files[pair]['file_state'], label)
+            i += 1
 
-
-    def test_multipleWithReuseDirty(self):
+    def test_multipleWithReuseDirty(self, transfer):
         """
         Transfer multiple files with reuse, one does not exist
         """
-        for t in self.transfers:
-            logging.info("Transfer multiple files with reuse, one does not exist")
-            files = []
-            created = []
-            nCreated = len(t) - 1
-            for (src, dst) in t:
-                logging.info("%s => %s" % (src, dst))
-                if nCreated > 0:
-                    self.surl.create(src)
-                    created.append(src)
-                    nCreated -= 1
-                files.append({'sources': [src], 'destinations': [dst]})
+        logging.info("Transfer multiple files with reuse, one does not exist")
+        files = []
+        created = []
+        nCreated = len(transfer) - 1
+        for (src, dst) in transfer:
+            logging.info("%s => %s" % (src, dst))
+            if nCreated > 0:
+                self.surl.create(src)
+                created.append(src)
+                nCreated -= 1
+            files.append({'sources': [src], 'destinations': [dst]})
 
-            jobId = self.client.submit(files, ['-r'])
-            logging.info("Got job id %s" % jobId)
-            state = self.client.poll(jobId)
-            logging.info("Job %s finished with %s" % (jobId, state))
-            self.assertEqual('FINISHEDDIRTY', state, 'job.state')
+        jobId = self.client.submit(files, ['-r'])
+        logging.info("Got job id %s" % jobId)
+        state = self.client.poll(jobId)
+        logging.info("Job %s finished with %s" % (jobId, state))
+        self.assertEqual('FINISHEDDIRTY', state, 'job.state')
 
-            files = self.client.getFileInfo(jobId)
-            i = 0
-            for (src, dst) in files.keys():
-                label = 'job.files[' + str(i) + '].state'
-                if src in created:
-                    self.assertEqual('FINISHED', files[(src, dst)]['file_state'], label)
-                else:
-                    self.assertEqual('FAILED', files[(src, dst)]['file_state'], label)
-                i += 1
+        files = self.client.getFileInfo(jobId)
+        i = 0
+        for (src, dst) in files.keys():
+            label = 'job.files[' + str(i) + '].state'
+            if src in created:
+                self.assertEqual('FINISHED', files[(src, dst)]['file_state'], label)
+            else:
+                self.assertEqual('FAILED', files[(src, dst)]['file_state'], label)
+            i += 1
 
-        
 
 if __name__ == '__main__':
     import sys
