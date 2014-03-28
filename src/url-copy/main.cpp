@@ -420,8 +420,8 @@ int statWithRetries(gfal_context_t handle, const std::string& category, const st
                     return 0;
                 }
 
-            Logger::getInstance().WARNING() << "Stat failed with " << *errMsg << "(" << errorCode << ")" << std::endl;
-            Logger::getInstance().WARNING() << "Stat the file will be retried" << std::endl;
+            Logger::getInstance().WARNING() << category << " Stat failed with " << *errMsg << "(" << errorCode << ")" << std::endl;
+            Logger::getInstance().WARNING() << category << " Stat the file will be retried" << std::endl;
             sleep(3); //give it some time to breath
         }
 
@@ -765,14 +765,14 @@ int main(int argc, char **argv)
                     }
 
                 /* Stat source file */
-                logger.INFO() << "Stat the source surl start" << std::endl;
+                logger.INFO() << "SOURCE Stat the source surl start" << std::endl;
                 int errorCode = statWithRetries(handle, "SOURCE", currentTransfer.sourceUrl, &currentTransfer.fileSize, &errorMessage);
                 if (errorCode != 0)
                     {
-                        logger.ERROR() << "Failed to get source file size, errno:"
+                        logger.ERROR() << "SOURCE Failed to get source file size, errno:"
                                        << errorCode << ", " << errorMessage << std::endl;
 
-                        errorMessage = "Failed to get source file size: " + errorMessage;
+                        errorMessage = "SOURCE Failed to get source file size: " + errorMessage;
                         errorScope = SOURCE;
                         reasonClass = mapErrnoToString(errorCode);
                         errorPhase = TRANSFER_PREPARATION;
@@ -782,7 +782,7 @@ int main(int argc, char **argv)
 
                 if (currentTransfer.fileSize == 0)
                     {
-                        errorMessage = "Source file size is 0";
+                        errorMessage = "SOURCE file size is 0";
                         logger.ERROR() << errorMessage << std::endl;
                         errorScope = SOURCE;
                         reasonClass = mapErrnoToString(gfal_posix_code_error());
@@ -794,7 +794,7 @@ int main(int argc, char **argv)
                 if (currentTransfer.userFileSize != 0 && currentTransfer.userFileSize != currentTransfer.fileSize)
                     {
                         std::stringstream error_;
-                        error_ << "User specified source file size is " << currentTransfer.userFileSize << " but stat returned " << currentTransfer.fileSize;
+                        error_ << "SOURCE User specified source file size is " << currentTransfer.userFileSize << " but stat returned " << currentTransfer.fileSize;
                         errorMessage = error_.str();
                         logger.ERROR() << errorMessage << std::endl;
                         errorScope = SOURCE;
@@ -890,17 +890,17 @@ int main(int argc, char **argv)
                     {
                         if (tmp_err != NULL && tmp_err->message != NULL)
                             {
-                                logger.ERROR() << "Transfer failed - errno: " << tmp_err->code
+                                logger.ERROR() << "TRANSFER failed - errno: " << tmp_err->code
                                                << " Error message:" << tmp_err->message
                                                << std::endl;
                                 if (tmp_err->code == 110)
                                     {
-                                        errorMessage = std::string(tmp_err->message);
+                                        errorMessage = "TRANSFER" + std::string(tmp_err->message);
                                         errorMessage += ", operation timeout";
                                     }
                                 else
                                     {
-                                        errorMessage = std::string(tmp_err->message);
+                                        errorMessage = "TRANSFER" + std::string(tmp_err->message);
                                     }
                                 errorScope = TRANSFER;
                                 reasonClass = mapErrnoToString(tmp_err->code);
@@ -908,7 +908,7 @@ int main(int argc, char **argv)
                             }
                         else
                             {
-                                logger.ERROR() << "Transfer failed - Error message: Unresolved error" << std::endl;
+                                logger.ERROR() << "TRANSFER failed - Error message: Unresolved error" << std::endl;
                                 errorMessage = std::string("Unresolved error");
                                 errorScope = TRANSFER;
                                 reasonClass = GENERAL_FAILURE;
@@ -933,14 +933,14 @@ int main(int argc, char **argv)
                 currentTransfer.transferredBytes = currentTransfer.fileSize;
                 msg_ifce::getInstance()->set_total_bytes_transfered(&tr_completed, currentTransfer.transferredBytes);
 
-                logger.INFO() << "Stat the dest surl start" << std::endl;
+                logger.INFO() << "DESTINATION Stat the dest surl start" << std::endl;
                 off_t dest_size;
                 errorCode = statWithRetries(handle, "DESTINATION", currentTransfer.destUrl, &dest_size, &errorMessage);
                 if (errorCode != 0)
                     {
-                        logger.ERROR() << "Failed to get dest file size, errno:" << errorCode << ", "
+                        logger.ERROR() << "DESTINATION Failed to get dest file size, errno:" << errorCode << ", "
                                        << errorMessage << std::endl;
-                        errorMessage = "Failed to get dest file size: " + errorMessage;
+                        errorMessage = "DESTINATION Failed to get dest file size: " + errorMessage;
                         errorScope = DESTINATION;
                         reasonClass = mapErrnoToString(errorCode);
                         errorPhase = TRANSFER_FINALIZATION;
@@ -950,7 +950,7 @@ int main(int argc, char **argv)
 
                 if (dest_size <= 0)
                     {
-                        errorMessage = "Destination file size is 0";
+                        errorMessage = "DESTINATION file size is 0";
                         logger.ERROR() << errorMessage << std::endl;
                         errorScope = DESTINATION;
                         reasonClass = mapErrnoToString(gfal_posix_code_error());
@@ -962,7 +962,7 @@ int main(int argc, char **argv)
                 if (currentTransfer.userFileSize != 0 && currentTransfer.userFileSize != dest_size)
                     {
                         std::stringstream error_;
-                        error_ << "User specified destination file size is " << currentTransfer.userFileSize << " but stat returned " << dest_size;
+                        error_ << "DESTINATION User specified destination file size is " << currentTransfer.userFileSize << " but stat returned " << dest_size;
                         errorMessage = error_.str();
                         logger.ERROR() << errorMessage << std::endl;
                         errorScope = DESTINATION;
@@ -972,17 +972,17 @@ int main(int argc, char **argv)
                         goto stop;
                     }
 
-                logger.INFO() << "Destination file size: " << dest_size << std::endl;
+                logger.INFO() << "DESTINATION  file size: " << dest_size << std::endl;
 
                 //check source and dest file sizes
                 if (currentTransfer.fileSize == dest_size)
                     {
-                        logger.INFO() << "Source and destination file size matching" << std::endl;
+                        logger.INFO() << "DESTINATION Source and destination file size matching" << std::endl;
                     }
                 else
                     {
-                        logger.ERROR() << "Source and destination file size are different" << std::endl;
-                        errorMessage = "Source and destination file size mismatch";
+                        logger.ERROR() << "DESTINATION Source and destination file size are different" << std::endl;
+                        errorMessage = "DESTINATION Source and destination file size mismatch";
                         errorScope = DESTINATION;
                         reasonClass = mapErrnoToString(gfal_posix_code_error());
                         errorPhase = TRANSFER_FINALIZATION;
