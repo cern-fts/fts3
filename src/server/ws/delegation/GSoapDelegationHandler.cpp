@@ -471,7 +471,7 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy)
         }
     catch(...)
         {
-            throw Err_Custom("Failed proxy certificate");
+            throw Err_Custom("Failed to put proxy certificate");
         }
 }
 
@@ -541,7 +541,7 @@ string GSoapDelegationHandler::renewProxyReq(string delegationId)
         }
     catch(...)
         {
-            throw Err_Custom("Failed to destroy proxy certificate");
+            throw Err_Custom("Failed to renewProxyReq proxy certificate");
         }
     return req;
 }
@@ -576,7 +576,7 @@ time_t GSoapDelegationHandler::getTerminationTime(string delegationId)
         }
     catch(...)
         {
-            throw Err_Custom("Failed proxy certificate");
+            throw Err_Custom("Failed proxy getTerminationTime certificate");
         }
 }
 
