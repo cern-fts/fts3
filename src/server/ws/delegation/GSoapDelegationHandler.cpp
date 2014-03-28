@@ -78,8 +78,8 @@ GSoapDelegationHandler::~GSoapDelegationHandler()
 string GSoapDelegationHandler::makeDelegationId()
 {
 
-    unsigned char hash_delegation_id[EVP_MAX_MD_SIZE];
-    unsigned int delegation_id_len;
+    unsigned char hash_delegation_id[EVP_MAX_MD_SIZE] = {0};
+    unsigned int delegation_id_len = 0;
     char delegation_id[17] = {0};
 
     const EVP_MD *m = EVP_sha1();

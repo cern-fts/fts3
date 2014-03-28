@@ -20,7 +20,9 @@
 #include "FileTransferScheduler.h"
 #include "ProtocolResolver.h"
 #include "process.h"
-
+#include "UserProxyEnv.h"
+#include "DelegCred.h"
+#include "CredService.h"
 #include "ws/SingleTrStateInstance.h"
 
 #include "cred/cred-utility.h"
@@ -57,6 +59,18 @@ string FileTransferExecutor::prepareMetadataString(std::string text)
     text = boost::replace_all_copy(text, " ", "?");
     text = boost::replace_all_copy(text, "\"", "\\\"");
     return text;
+}
+
+std::string FileTransferExecutor::generateProxy(const std::string& dn, const std::string& dlg_id)
+{
+    boost::scoped_ptr<DelegCred> delegCredPtr(new DelegCred);
+    return delegCredPtr->getFileName(dn, dlg_id);
+}
+
+bool FileTransferExecutor::checkValidProxy(const std::string& filename)
+{
+    boost::scoped_ptr<DelegCred> delegCredPtr(new DelegCred);
+    return delegCredPtr->isValidProxy(filename);
 }
 
 int FileTransferExecutor::execute()
@@ -143,17 +157,22 @@ int FileTransferExecutor::execute()
                                 }
                         }
 
-                    string proxy_file = get_proxy_cert(
-                                            tf->DN, // user_dn
-                                            tf->CRED_ID, // user_cred
-                                            tf->VO_NAME, // vo_name
-                                            "",
-                                            "", // assoc_service
-                                            "", // assoc_service_type
-                                            false,
-                                            ""
-                                        );
+                    //get the proxy
+                    std::string proxy_file = generateProxy(tf->DN, tf->CRED_ID);
 
+                    if(false == checkValidProxy(proxy_file))
+                        {
+                            proxy_file = get_proxy_cert(
+                                             tf->DN, // user_dn
+                                             tf->CRED_ID, // user_cred
+                                             tf->VO_NAME, // vo_name
+                                             "",
+                                             "", // assoc_service
+                                             "", // assoc_service_type
+                                             false,
+                                             ""
+                                         );
+                        }
                     //disable for now, remove later
                     string sourceSiteName = ""; //siteResolver.getSiteName(tf->SOURCE_SURL);
                     string destSiteName = ""; //siteResolver.getSiteName(tf->DEST_SURL);
