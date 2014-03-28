@@ -110,22 +110,23 @@ def _getHostServiceAndSegment():
             .values('hostname').order_by('hostname').all()
         
         running_count = len(running_hosts)
-        segment_size = 0xFFFF / running_count
-        segment_remaining = 0xFFFF % running_count
-        
-        segments = dict()
-        index = 0
-        for host in [h['hostname'] for h in running_hosts]:
-            if host not in host_map:
-                host_map[host] = dict()
+        if running_count > 0:
+            segment_size = 0xFFFF / running_count
+            segment_remaining = 0xFFFF % running_count
             
-            host_map[host][service] = {
-                'start': "%04X" % (segment_size * index),
-                'end' : "%04X" % (segment_size * (index + 1) - 1),
-            }            
-            index += 1
-            if index == running_count:
-                host_map[host][service]['end'] = "%04X" % (segment_size * index + segment_remaining)
+            segments = dict()
+            index = 0
+            for host in [h['hostname'] for h in running_hosts]:
+                if host not in host_map:
+                    host_map[host] = dict()
+                
+                host_map[host][service] = {
+                    'start': "%04X" % (segment_size * index),
+                    'end' : "%04X" % (segment_size * (index + 1) - 1),
+                }            
+                index += 1
+                if index == running_count:
+                    host_map[host][service]['end'] = "%04X" % (segment_size * index + segment_remaining)
         
     return host_map
 
