@@ -22,7 +22,7 @@
 #include "DelegCred.h"
 #include <boost/thread.hpp>
 
-boost::mutex qm;
+static boost::mutex qm;
 
 using namespace FTS3_COMMON_NAMESPACE;
 
