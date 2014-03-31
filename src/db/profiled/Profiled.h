@@ -313,6 +313,8 @@ public:
     std::string getBandwidthLimit();
 
     bool isProtocolUDT(const std::string & source_hostname, const std::string & destination_hostname);
+
+    int getStreamsOptimization(const std::string & source_hostname, const std::string & destination_hostname);
 };
 
 

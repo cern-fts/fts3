@@ -392,6 +392,8 @@ public:
 
     virtual bool isProtocolUDT(const std::string & source_hostname, const std::string & destination_hostname) = 0;
 
+    virtual int getStreamsOptimization(const std::string & source_hostname, const std::string & destination_hostname) = 0;
+
 
 
 };

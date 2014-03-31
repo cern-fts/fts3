@@ -154,7 +154,7 @@ string GSoapDelegationHandler::getProxyReq(string delegationId)
 
     if (cache.get())
         {
-    		FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " public-private key pair has been found in DB and is returned to the user" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " public-private key pair has been found in DB and is returned to the user" << commit;
             return cache->certificateRequest;
         }
 
@@ -411,11 +411,12 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy)
 
             // if the DB cache is empty it means someone else
             // already delegated and cleared the cache
-            if (!cache.get()) {
+            if (!cache.get())
+                {
 
-            	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << "t_credential_cache has been cleared - so there's nothing to do" << commit;
-            	return;
-            }
+                    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << "t_credential_cache has been cleared - so there's nothing to do" << commit;
+                    return;
+                }
 
             proxy = addKeyToProxyCertificate(proxy, cache->privateKey);
 
