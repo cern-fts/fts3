@@ -179,7 +179,7 @@ void abnormalTermination(const std::string& classification, const std::string&, 
 
     if (moveFile.length() != 0)
         {
-            Logger::getInstance().ERROR() << "Failed to archive file: " << moveFile
+            Logger::getInstance().ERROR() << "INIT Failed to archive file: " << moveFile
                                           << std::endl;
         }
     if (UrlCopyOpts::getInstance().areTransfersOnFile() && readFile.length() > 0)
@@ -192,7 +192,7 @@ void abnormalTermination(const std::string& classification, const std::string&, 
 
 void canceler()
 {
-    errorMessage = "Transfer " + currentTransfer.jobId + " was canceled because it was not responding";
+    errorMessage = "INIT Transfer " + currentTransfer.jobId + " was canceled because it was not responding";
 
     Logger::getInstance().WARNING() << errorMessage << std::endl;
 
@@ -498,7 +498,7 @@ int main(int argc, char **argv)
 
     if(argc < 4)
         {
-            errorMessage = "Failed to read url-copy process arguments";
+            errorMessage = "INIT Failed to read url-copy process arguments";
             abnormalTermination("FAILED", errorMessage, "Abort");
         }
 
@@ -510,12 +510,12 @@ int main(int argc, char **argv)
         }
     catch (std::exception& e)
         {
-            globalErrorMessage = e.what();
+            globalErrorMessage = "INIT " +  std::string(e.what());
             throw;
         }
     catch(...)
         {
-            globalErrorMessage = "Failed to create boost thread, boost::thread_resource_error";
+            globalErrorMessage = "INIT Failed to create boost thread, boost::thread_resource_error";
             throw;
         }
 
@@ -554,13 +554,13 @@ int main(int argc, char **argv)
         }
     catch(...)
         {
-            globalErrorMessage = "Failed to create boost thread, boost::thread_resource_error";
+            globalErrorMessage = "INIT Failed to create boost thread, boost::thread_resource_error";
             throw;
         }
 
     if (opts.areTransfersOnFile() && transferList.empty() == true)
         {
-            errorMessage = "Transfer " + currentTransfer.jobId + " contains no urls with session reuse/multihop enabled";
+            errorMessage = "INIT Transfer " + currentTransfer.jobId + " contains no urls with session reuse/multihop enabled";
 
             abnormalTermination("FAILED", errorMessage, "Error");
         }
@@ -591,7 +591,7 @@ int main(int argc, char **argv)
             errorMessage = "Failed to create the gfal2 handle: ";
             if (handleError && handleError->message)
                 {
-                    errorMessage += handleError->message;
+                    errorMessage += "INIT" + std::string(handleError->message);
                     abnormalTermination("FAILED", errorMessage, "Error");
                 }
         }
@@ -649,7 +649,7 @@ int main(int argc, char **argv)
                     if (checkError != 0)
                         {
                             std::string message = mapErrnoToString(checkError);
-                            errorMessage = "Failed to create transfer log file, error was: " + message;
+                            errorMessage = "INIT Failed to create transfer log file, error was: " + message;
                             goto stop;
                         }
                 }
@@ -696,7 +696,7 @@ int main(int argc, char **argv)
 
                 if (access(opts.proxy.c_str(), F_OK) != 0)
                     {
-                        errorMessage = "Proxy doesn't exist, probably expired and not renewed " + opts.proxy;
+                        errorMessage = "INIT Proxy doesn't exist, probably expired and not renewed " + opts.proxy;
                         errorScope = SOURCE;
                         reasonClass = mapErrnoToString(errno);
                         errorPhase = TRANSFER_PREPARATION;
@@ -824,7 +824,7 @@ int main(int argc, char **argv)
                                 double dest_sizeOver = (double) statbufdestOver.st_size;
                                 if(dest_sizeOver > 0)
                                     {
-                                        errorMessage = "Destination file already exists and overwrite is not enabled";
+                                        errorMessage = "DESTINATION file already exists and overwrite is not enabled";
                                         logger.ERROR() << errorMessage << std::endl;
                                         errorScope = DESTINATION;
                                         reasonClass = mapErrnoToString(gfal_posix_code_error());
@@ -876,7 +876,7 @@ int main(int argc, char **argv)
                 //check all params before passed to gfal2
                 if ((currentTransfer.sourceUrl).c_str() == NULL || (currentTransfer.destUrl).c_str() == NULL)
                     {
-                        errorMessage = "Failed to get source or dest surl";
+                        errorMessage = "INIT Failed to get source or dest surl";
                         logger.ERROR() << errorMessage << std::endl;
                         errorScope = TRANSFER;
                         reasonClass = GENERAL_FAILURE;
@@ -1043,7 +1043,7 @@ stop:
                                 {
                                     if (tmp_err && tmp_err->message)
                                         {
-                                            logger.WARNING() << "Failed unpinning the file: " << std::string(tmp_err->message) << std::endl;
+                                            logger.WARNING() << "SOURCE Failed unpinning the file: " << std::string(tmp_err->message) << std::endl;
                                         }
                                 }
                             else
