@@ -1310,7 +1310,7 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
                 {
                     std::vector<std::string>::const_iterator i;
                     i = std::find_if(inGivenStates.begin(), inGivenStates.end(),
-                                     std::bind2nd(std::equal_to<std::string>(), std::string("Canceling")));
+                                     std::bind2nd(std::equal_to<std::string>(), std::string("CANCELED")));
                     searchForCanceling = (i != inGivenStates.end());
 
                     std::string jobStatusesIn = "'" + inGivenStates[0] + "'";
