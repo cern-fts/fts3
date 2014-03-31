@@ -353,6 +353,8 @@ public:
 
     virtual bool isProtocolUDT(const std::string & source_hostname, const std::string & destination_hostname);
 
+    virtual int getStreamsOptimization(const std::string & source_hostname, const std::string & destination_hostname);
+
 private:
     size_t                poolSize;
     soci::connection_pool* connectionPool;

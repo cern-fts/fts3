@@ -848,14 +848,25 @@ int main(int argc, char **argv)
                 globalTimeout = experimentalTimeout + 500;
                 logger.INFO() << "Resetting global timeout thread to " << globalTimeout << " seconds" << std::endl;
 
-                unsigned int experimentalNstreams = adjustStreamsBasedOnSize(currentTransfer.fileSize, opts.nStreams);
-                if(!opts.manualConfig || opts.autoTunned || opts.nStreams==0)
+
+                //pass -1 to flag the need to reduce number of streams due to high latency
+                if(opts.nStreams == -1)
                     {
-                        if(true == lanTransfer(fileManagement.getSourceHostname(), fileManagement.getDestHostname()))
-                            opts.nStreams = (experimentalNstreams * 2) > 16? 16: experimentalNstreams * 2;
-                        else
-                            opts.nStreams = experimentalNstreams;
+                        opts.nStreams = 2;
+                        logger.INFO() << "Reducing tcp streams to 2 since low throughput obsverved due to high latency" << std::endl;
                     }
+                else
+                    {
+                        unsigned int experimentalNstreams = adjustStreamsBasedOnSize(currentTransfer.fileSize, opts.nStreams);
+                        if(!opts.manualConfig || opts.autoTunned || opts.nStreams==0)
+                            {
+                                if(true == lanTransfer(fileManagement.getSourceHostname(), fileManagement.getDestHostname()))
+                                    opts.nStreams = (experimentalNstreams * 2) > 16? 16: experimentalNstreams * 2;
+                                else
+                                    opts.nStreams = experimentalNstreams;
+                            }
+                    }
+
                 gfalt_set_nbstreams(params, opts.nStreams, NULL);
                 msg_ifce::getInstance()->set_number_of_streams(&tr_completed, opts.nStreams);
                 logger.INFO() << "nbstreams:" << opts.nStreams << std::endl;

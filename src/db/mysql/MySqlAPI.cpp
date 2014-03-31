@@ -8469,6 +8469,35 @@ bool MySqlAPI::isProtocolUDT(const std::string & source_hostname, const std::str
     return false;
 }
 
+int MySqlAPI::getStreamsOptimization(const std::string & source_hostname, const std::string & destination_hostname)
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            long long int streamsFound = 0;
+
+            sql << " select count(*) from t_file where file_state='ACTIVE' "
+                " and filesize > 104857600 and throughput <> 0 and throughput < 1 "
+                " and source_se=:source_se and dest_se=:dest_se  LIMIT 1 ",
+                soci::use(source_hostname), soci::use(destination_hostname), soci::into(streamsFound);
+
+            if(streamsFound > 0)
+                return -1;
+
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }
+
+    return 4;
+}
+
 
 // the class factories
 
