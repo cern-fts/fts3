@@ -6,23 +6,22 @@ import logging
 from lib import base 
 
 
-class TestCancelTerminal(base.TestBase):
+class TestCancelTerminal(base.TestRepeatEach):
 
-	def test_cancelTerminal(self):
-		"""
-		Cancelling a file that is in a terminal state must fail
-		"""
-		for (src, dst) in self.transfers:
-			logging.info("Transfer cancelling terminal %s => %s" % (src, dst))
-			self.surl.create(src)
-			jobId = self.client.submit([{'sources': [src], 'destinations': [dst]}])
-			logging.info("Got job id %s" % jobId)
-			state = self.client.poll(jobId)
-			logging.info("Finished with %s" % state)
-			self.assertRaises(Exception, self.client.cancel, jobId)
+    def test_cancelTerminal(self, transfer):
+        """
+        Cancelling a file that is in a terminal state must fail
+        """
+        src, dst = transfer
+        logging.info("Transfer cancelling terminal %s => %s" % (src, dst))
+        self.surl.create(src)
+        jobId = self.client.submit([{'sources': [src], 'destinations': [dst]}])
+        logging.info("Got job id %s" % jobId)
+        state = self.client.poll(jobId)
+        logging.info("Finished with %s" % state)
+        self.assertRaises(Exception, self.client.cancel, jobId)
 
 
 if __name__ == '__main__':
-	import sys
-	sys.exit(TestCancelTerminal().run())
-
+      import sys
+      sys.exit(TestCancelTerminal().run())

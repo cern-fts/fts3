@@ -36,15 +36,6 @@ class TestBase():
         self.client = cli.Cli()
         (self.voName, self.userDn) = _getVoAndDn()
 
-
-    def setUp(self):
-        self.transfers = []
-        for (srcSa, dstSa) in storage.getStoragePairs():
-            srcSurl = self.surl.generate(srcSa)
-            dstSurl = self.surl.generate(dstSa)
-            self.transfers.append((srcSurl, dstSurl))
-
-
     def _flatten(self, l):
         if type(l) is types.StringType:
             yield l
@@ -56,7 +47,6 @@ class TestBase():
                 else:
                     yield i
 
-
     def _removeFiles(self, list):
         allFiles = self._flatten(list)
         for f in allFiles:
@@ -65,11 +55,12 @@ class TestBase():
                 self.surl.unlink(f)
             except Exception, e:
                 logging.warning(e)
-
+                
+    def setUp(self):
+        pass
 
     def tearDown(self):
-        self._removeFiles(self.transfers)
-        
+        pass
 
     def run(self):
         testMethods = [getattr(self, method) for method in dir(self) if method.startswith('test_') and callable(getattr(self, method))]
@@ -93,7 +84,6 @@ class TestBase():
         logging.info("%d test executed, %d failed" % (len(testMethods), nErrors))
         return nErrors
 
-
     def assertEqual(self, expected, value, label = None):
         if expected != value:
             if label:
@@ -105,7 +95,6 @@ class TestBase():
         else:
             logging.info("Assertion '%s' == '%s' OK" % (str(expected), str(value)))
 
-
     def assertRaises(self, excType, method, *args, **kwargs):
         try:
             method(*args, **kwargs)
@@ -114,7 +103,6 @@ class TestBase():
             if not isinstance(e, excType):
                 raise AssertionError("Expected exception '%s', got '%s'" % (excType.__name__, type(e).__name__))
             logging.info("Exception '%s' raised as expected" % excType.__name__)
-
 
     def assertLessEqualThan(self, value, limit, label = None):
         if value > limit:
@@ -127,7 +115,6 @@ class TestBase():
         else:
             logging.info("Assertion %s <= %s OK" % (str(value), str(limit)))
 
-
     def assertIn(self, expected, value, label = None):
         if value not in expected:
             if label:
@@ -138,3 +125,46 @@ class TestBase():
             logging.info("Assertion '%s' in [%s] OK (%s)" % (label, ','.join(expected), str(value)))
         else:
             logging.info("Assertion '%s' in [%s] OK" % (str(value), ','.join(expected)))
+
+
+class TestRepeatEach(TestBase):
+    def setUp(self):
+        self.transfers = []
+        for (srcSa, dstSa) in storage.getStoragePairs():
+            srcSurl = self.surl.generate(srcSa)
+            dstSurl = self.surl.generate(dstSa)
+            self.transfers.append((srcSurl, dstSurl))
+            
+    def tearDown(self):
+        self._removeFiles(self.transfers)
+        
+    def iterations(self):
+        for t in self.transfers:
+            t_repr = "%s => %s" % (t[0].split(':')[0], t[1].split(':')[0])
+            yield (t_repr, t)
+
+    def run(self):
+        testMethods = [getattr(self, method) for method in dir(self) if method.startswith('test_') and callable(getattr(self, method))]
+        nErrors = 0
+        nTests = 0
+        for test in testMethods:
+            self.setUp()
+            logging.info("Running %s" % test.__name__)
+            if test.__doc__:
+                for line in test.__doc__.split('\n'):
+                    logging.info(line)
+            
+            for (iter_repr, iter) in self.iterations():
+                logging.info("%s %s" % (test.__name__, iter_repr))
+                try:
+                    nTests += 1
+                    test(iter)
+                except Exception, e:
+                    exc_type, exc_value, exc_traceback = sys.exc_info()
+                    logging.error(str(e))
+                    nErrors += 1
+                    for tb in traceback.extract_tb(exc_traceback):
+                        logging.debug("%s, line %d, in %s: %s" % tb)
+            self.tearDown()
+        logging.info("%d test executed, %d failed" % (nTests, nErrors))
+        return nErrors

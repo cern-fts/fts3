@@ -62,10 +62,7 @@ void GSoapDelegationHandler::init()
     EVP_CIPHER_do_all(cipherRemove, &minbits);
 }
 
-GSoapDelegationHandler::GSoapDelegationHandler(soap* ctx):
-    ctx(ctx)/*,
-    rqstCache(DelegationRequestCache::getInstance())
-    */
+GSoapDelegationHandler::GSoapDelegationHandler(soap* ctx): ctx(ctx)
 {
 
     CGsiAdapter cgsi(ctx);
@@ -81,8 +78,8 @@ GSoapDelegationHandler::~GSoapDelegationHandler()
 string GSoapDelegationHandler::makeDelegationId()
 {
 
-    unsigned char hash_delegation_id[EVP_MAX_MD_SIZE];
-    unsigned int delegation_id_len;
+    unsigned char hash_delegation_id[EVP_MAX_MD_SIZE] = {0};
+    unsigned int delegation_id_len = 0;
     char delegation_id[17] = {0};
 
     const EVP_MD *m = EVP_sha1();
@@ -134,7 +131,6 @@ string GSoapDelegationHandler::handleDelegationId(string delegationId)
 
     if (delegationId.empty())
         {
-
             return makeDelegationId();
         }
 
@@ -158,6 +154,7 @@ string GSoapDelegationHandler::getProxyReq(string delegationId)
 
     if (cache.get())
         {
+    		FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " public-private key pair has been found in DB and is returned to the user" << commit;
             return cache->certificateRequest;
         }
 
@@ -194,6 +191,7 @@ string GSoapDelegationHandler::getProxyReq(string delegationId)
                         {
                             if (reqtxt) free(reqtxt);
                             if (keytxt) free(keytxt);
+                            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " public-private key pair has been found in DB and is returned to the user" << commit;
                             return cache->certificateRequest;
                         }
 
@@ -213,8 +211,11 @@ string GSoapDelegationHandler::getProxyReq(string delegationId)
             if (keytxt) free(keytxt);
             throw Err_Custom("Problem while renewing proxy");
         }
+
     if (reqtxt) free(reqtxt);
     if (keytxt) free(keytxt);
+
+    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " new public-private key pair has been generated and returned to the user" << commit;
 
     return req;
 }
@@ -410,7 +411,11 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy)
 
             // if the DB cache is empty it means someone else
             // already delegated and cleared the cache
-            if (!cache.get()) return;
+            if (!cache.get()) {
+
+            	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << "t_credential_cache has been cleared - so there's nothing to do" << commit;
+            	return;
+            }
 
             proxy = addKeyToProxyCertificate(proxy, cache->privateKey);
 
@@ -430,7 +435,9 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy)
                                             << "Current proxy termination time: "
                                             << cred->termination_time
                                             << ", new proxy proxy termination time: "
-                                            << incomingExpirationTime << commit;
+                                            << incomingExpirationTime
+                                            << " (the new proxy won't be used)"
+                                            << commit;
                                     return;
                                 }
 
@@ -452,6 +459,7 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy)
                                 incomingExpirationTime
                             );
                         }
+                    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " new proxy is in t_credential" << commit;
                 }
             catch(Err& ex)
                 {
@@ -464,6 +472,7 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy)
 
             // clear the DB cache
             DBSingleton::instance().getDBObjectInstance()->deleteGrDPStorageCacheElement(delegationId, dn);
+            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " t_credential_cache has been cleared" << commit;
         }
     catch(Err& ex)
         {

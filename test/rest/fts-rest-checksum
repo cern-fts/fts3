@@ -6,25 +6,24 @@ import logging
 from lib import base 
 
 
-class TestChecksum(base.TestBase):
+class TestChecksum(base.TestRepeatEach):
 
-    def test_withChecksum(self):
+    def test_withChecksum(self, transfer):
         """
         Just enable the flag needed to check the checksum
         """
-        for (src, dst) in self.transfers:
-            logging.info("Transfer with checksum %s => %s" % (src, dst))
-            srcChecksum = self.surl.create(src)
-            jobId = self.client.submit([{'sources': [src], 'destinations': [dst]}], ['-K', srcChecksum])
-            logging.info("Got job id %s" % jobId)
-            state = self.client.poll(jobId)
-            logging.info("Finished with %s" % state)
-            self.assertEqual('FINISHED', state, 'job.state')
-            dstChecksum = self.surl.checksum(dst)
-            self.assertEqual(srcChecksum, dstChecksum, 'file.checksum')
-
+        src, dst = transfer
+        logging.info("Transfer with checksum %s => %s" % (src, dst))
+        srcChecksum = self.surl.create(src)
+        jobId = self.client.submit([{'sources': [src], 'destinations': [dst]}], ['-K', srcChecksum])
+        logging.info("Got job id %s" % jobId)
+        state = self.client.poll(jobId)
+        logging.info("Finished with %s" % state)
+        self.assertEqual('FINISHED', state, 'job.state')
+        dstChecksum = self.surl.checksum(dst)
+        self.assertEqual(srcChecksum, dstChecksum, 'file.checksum')
 
 
 if __name__ == '__main__':
-	import sys
-	sys.exit(TestChecksum().run())
+      import sys
+      sys.exit(TestChecksum().run())

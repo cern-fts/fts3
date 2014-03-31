@@ -20,6 +20,9 @@
 #include "common/logger.h"
 #include "common/error.h"
 #include "DelegCred.h"
+#include <boost/thread.hpp>
+
+static boost::mutex qm;
 
 using namespace FTS3_COMMON_NAMESPACE;
 
@@ -75,7 +78,6 @@ std::string get_proxy_dn(const std::string& filename) /*throw (CredServiceExcept
                 }
             if(false == filename.empty())
                 {
-                    //_log_trace(CRED_MODULE,"Reading proxy certificate " << filename);
                     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Reading proxy certificate " << filename << commit;
                     // Load Proxy
                     result = globus_gsi_cred_read_proxy(proxy_handle,const_cast<char *>(filename.c_str()));
@@ -87,7 +89,6 @@ std::string get_proxy_dn(const std::string& filename) /*throw (CredServiceExcept
                 }
             else
                 {
-                    //_log_trace(CRED_MODULE,"Reading default certificate");
                     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Reading default certificate" << filename << commit;
                     // Read Default
                     result = globus_gsi_cred_read(proxy_handle,0);
@@ -98,7 +99,6 @@ std::string get_proxy_dn(const std::string& filename) /*throw (CredServiceExcept
 
                         }
                 }
-            //_log_trace(CRED_MODULE,"Get the Subject Name for agent certificate");
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Get the Subject Name for agent certificate" << commit;
             char * subject_name = 0;
             result = globus_gsi_cred_get_subject_name(proxy_handle,&subject_name);
@@ -158,13 +158,15 @@ std::string get_proxy_cert(const std::string& user_dn,
                            bool  disable_delegation,
                            const std::string& ) /*throw (LogicError, CredServiceException)*/
 {
+    //one proxy generation at a time
+    boost::mutex::scoped_lock lock(qm);
+
     std::string proxy_file;
 
     // Check if the job contains information for retrieving delegated credential
     if((disable_delegation == false) &&
             (false == user_dn.empty()) )
         {
-            //_log_trace(CRED_MODULE,"Get the Proxy Certificate for that user");
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Get the Proxy Certificate for that user" << commit;
 
             // Get CertProxy Service
@@ -174,12 +176,9 @@ std::string get_proxy_cert(const std::string& user_dn,
                 {
                     // Get Proxy Certificate
                     cred_service->get(user_dn,user_cred,proxy_file);
-                    //_log_trace(CRED_MODULE,"Proxy Certificate is " << proxy_file);
-                    //FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy Certificate is " << proxy_file << commit;
                 }
             catch(const std::exception& exc)
                 {
-                    //_log_trace(CRED_MODULE,"Cannot Retrieve Proxy Certificate");
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot Retrieve Proxy Certificate" << proxy_file << commit;
                     throw;
                 }
@@ -187,7 +186,6 @@ std::string get_proxy_cert(const std::string& user_dn,
     else
         {
             // Don't Use Delegated Credentials
-            //_log_trace(CRED_MODULE,"Delegated Credentials not used");
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Delegated Credentials not used" << commit;
         }
     return proxy_file;
@@ -207,7 +205,6 @@ time_t get_proxy_lifetime(const std::string& filename) /*throw ()*/
     int result = access(filename.c_str(), R_OK);
     if(0 != result)
         {
-            //_log_trace(CRED_MODULE,"Requested Proxy doesn't exist. A new one should be created. Reason is " << strerror(errno));
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Requested Proxy doesn't exist. A new one should be created. Reason is " << strerror(errno) << commit;
             return lifetime;
         }
@@ -247,7 +244,6 @@ time_t get_proxy_lifetime(const std::string& filename) /*throw ()*/
         }
     catch(const std::exception& exc)
         {
-            //_log_trace(CRED_MODULE,"Cannot Check Proxy Validity. Reason is: " << exc.what());
             FTS3_COMMON_LOGGER_NEWLOG(ERR) <<" Cannot Check Proxy Validity. Reason is: " << exc.what() << commit;
             lifetime = (time_t)-1;
         }

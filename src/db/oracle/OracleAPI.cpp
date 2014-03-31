@@ -2101,6 +2101,12 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs)
 			soci::use(hostname);
 	    sql.commit();	    
 
+            //now set job_finished to all files not having pid set
+            sql.begin();
+            sql << " UPDATE t_file SET  job_finished = sys_extract_utc(systimestamp) WHERE file_state='CANCELED' and PID IS NULL AND TRANSFERHOST = :transferHost",
+                soci::use(hostname);
+            sql.commit();
+
         }
     catch (std::exception& e)
         {
