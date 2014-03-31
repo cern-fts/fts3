@@ -2752,8 +2752,8 @@ bool OracleAPI::updateOptimizer()
                                          soci::use(source_hostname), soci::use(destin_hostname), soci::into(recordFound, isNullRecordsFound));
 
             soci::statement stmt15 = (
-                                         sql.prepare << "insert into t_optimize (source_se, dest_se, nostreams, datetime) "
-                                         " VALUES (:source_se, :dest_se, :nostreams, sys_extract_utc(systimestamp))",
+                                         sql.prepare << "insert into t_optimize (file_id, source_se, dest_se, nostreams, datetime) "
+                                         " VALUES (1, :source_se, :dest_se, :nostreams, sys_extract_utc(systimestamp))",
                                          soci::use(source_hostname),
                                          soci::use(destin_hostname),
                                          soci::use(insertStreams));
