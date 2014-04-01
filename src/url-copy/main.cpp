@@ -506,7 +506,7 @@ int main(int argc, char **argv)
     try
         {
             /*send an update message back to the server to indicate it's alive*/
-            boost::thread btUpdater(taskStatusUpdater, 15);
+            boost::thread btUpdater(taskStatusUpdater, 45);
         }
     catch (std::exception& e)
         {
