@@ -2094,18 +2094,18 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs)
                     stmt1.execute(true);
                 }
             sql.commit();
-	    
-	    //now set job_finished to all files not having pid set
-	    sql.begin();
-	    	sql << " UPDATE t_file SET  job_finished = sys_extract_utc(systimestamp) WHERE file_state='CANCELED' and PID IS NULL AND TRANSFERHOST = :transferHost", 
-			soci::use(hostname);
-	    sql.commit();	    
 
             //now set job_finished to all files not having pid set
-            sql.begin();
-            sql << " UPDATE t_file SET  job_finished = sys_extract_utc(systimestamp) WHERE file_state='CANCELED' and PID IS NULL AND TRANSFERHOST = :transferHost",
-                soci::use(hostname);
-            sql.commit();
+            //prevent more than on server to update the optimizer decisions
+            if(hashSegment.start == 0)
+                {
+                    sql.begin();
+                    sql << " UPDATE t_file SET  job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp) "
+                        " WHERE file_state='CANCELED' and PID IS NULL and (job_finished is NULL or finish_time is NULL) ",
+                        soci::use(hostname);
+                    sql.commit();
+                }
+
 
         }
     catch (std::exception& e)
@@ -2690,7 +2690,7 @@ bool OracleAPI::updateOptimizer()
     soci::indicator isNullStartTime = soci::i_ok;
     soci::indicator isNullRecordsFound = soci::i_ok;
     long long int streamsCurrent = 0;
-    soci::indicator isNullStreamsCurrent = soci::i_ok;    
+    soci::indicator isNullStreamsCurrent = soci::i_ok;
 
     time_t now = getUTC(0);
     struct tm startTimeSt;
@@ -2735,7 +2735,7 @@ bool OracleAPI::updateOptimizer()
                                          sql.prepare << "update t_optimize_active set active=:active where "
                                          " source_se=:source and dest_se=:dest and (datetime is NULL OR datetime >= (sys_extract_utc(systimestamp) - interval '50' second)) ",
                                          soci::use(active), soci::use(source_hostname), soci::use(destin_hostname));
-         
+
             soci::statement stmt12 = (
                                          sql.prepare << " select datetime from t_optimize where  "
                                          " source_se=:source_se and dest_se=:dest_se ",
@@ -2765,11 +2765,11 @@ bool OracleAPI::updateOptimizer()
                                          " source_se=:source and dest_se=:dest ",
                                          soci::use(source_hostname),
                                          soci::use(destin_hostname));
-					 
+
             soci::statement stmt17 = (
                                          sql.prepare << " select nostreams from t_optimize where "
                                          " source_se=:source_se and dest_se=:dest_se",
-                                         soci::use(source_hostname), soci::use(destin_hostname), soci::into(streamsCurrent, isNullStreamsCurrent));					 
+                                         soci::use(source_hostname), soci::use(destin_hostname), soci::into(streamsCurrent, isNullStreamsCurrent));
 
 
 
@@ -2821,7 +2821,7 @@ bool OracleAPI::updateOptimizer()
                     streamsCurrent = 0;
                     isNullStreamsCurrent = soci::i_ok;
                     now = getUTC(0);
-		    
+
                     // Weighted average
                     soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
                             "   SELECT filesize, throughput "
