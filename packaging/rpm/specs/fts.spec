@@ -3,7 +3,7 @@
 %global __provides_exclude_from ^%{python_sitearch}/fts/.*\\.so$
 
 Name: fts
-Version: 3.2.8
+Version: 3.2.9
 Release: 5%{?dist}
 Summary: File Transfer Service V3
 Group: System Environment/Daemons
@@ -12,7 +12,7 @@ URL: https://svnweb.cern.ch/trac/fts3/wiki
 # The source for this package was pulled from upstream's vcs.  Use the
 # following commands to generate the tarball:
 #  svn export https://svn.cern.ch/reps/fts3/trunk fts3
-#  tar -czvf fts-3.2.8-2.tar.gz fts3
+#  tar -czvf fts-3.2.9-2.tar.gz fts3
 Source0: https://grid-deployment.web.cern.ch/grid-deployment/dms/fts3/tar/%{name}-%{version}.tar.gz
 
 %if 0%{?el5}
@@ -379,11 +379,11 @@ exit 0
 
 
 %changelog
-* Tue Feb 04 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.8-4
+* Tue Feb 04 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.9-4
   - introduced dist back in the release
-* Tue Jan 14 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.8-3
+* Tue Jan 14 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.9-3
   - using cmake28
-* Mon Jan 13 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.8-2
+* Mon Jan 13 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.9-2
   - separated rpms for messaging and infosys subsystems
 * Mon Nov 18 2013 Alejandro Alvarez Ayllon <aalvarez@cern.ch> - 3.1.33-2
   - Added missing changelog entry
