@@ -40,7 +40,7 @@ int main(int ac, char* av[])
     try
         {
             // create and initialize the command line utility
-            auto_ptr<DebugSetCli> cli (
+            unique_ptr<DebugSetCli> cli (
                 getCli<DebugSetCli>(ac, av)
             );
             if (!cli->validate()) return 0;

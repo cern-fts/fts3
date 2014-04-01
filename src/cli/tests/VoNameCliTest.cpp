@@ -23,16 +23,20 @@
  */
 
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST
+#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 #include "ui/VoNameCli.h"
 #include "unittest/testsuite.h"
 
 #include <iostream>
+#include <memory>
 
 using namespace fts3::cli;
 using namespace std;
 
-BOOST_AUTO_TEST_CASE (VONameCli_Test)
+BOOST_AUTO_TEST_SUITE( cli )
+BOOST_AUTO_TEST_SUITE(VONameCliTest)
+
+BOOST_AUTO_TEST_CASE (VONameCli_options)
 {
 
     // has to be const otherwise is deprecated
@@ -44,10 +48,14 @@ BOOST_AUTO_TEST_CASE (VONameCli_Test)
 
     int ac = 2;
 
-    auto_ptr<VoNameCli> cli (
+    unique_ptr<VoNameCli> cli (
         getCli<VoNameCli>(ac, av)
     );
 
     BOOST_CHECK(cli->getVoName() == "voname");
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()
+
 #endif // FTS3_COMPILE_WITH_UNITTESTS

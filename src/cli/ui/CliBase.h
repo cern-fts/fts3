@@ -77,7 +77,7 @@ public:
      * Initializes service discovery parameters. Moreover creates the basic
      * command line options, and marks them as visible.
      */
-    CliBase();
+    CliBase(ostream& out = std::cout);
 
     /**
      * Destructor

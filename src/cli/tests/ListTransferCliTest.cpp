@@ -22,14 +22,17 @@
  *      Author: Michal Simon
  */
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST
+#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 #include "ui/ListTransferCli.h"
 #include "unittest/testsuite.h"
 
 using namespace fts3::cli;
 
 
-BOOST_AUTO_TEST_CASE (ListTransferCli_VO_Test1)
+BOOST_AUTO_TEST_SUITE( cli )
+BOOST_AUTO_TEST_SUITE(ListTransferCliTest)
+
+BOOST_AUTO_TEST_CASE (ListTransferCli_vo_short_option)
 {
 
     // has to be const otherwise is deprecated
@@ -45,14 +48,14 @@ BOOST_AUTO_TEST_CASE (ListTransferCli_VO_Test1)
     // argument count
     int ac = 5;
 
-    auto_ptr<ListTransferCli> cli (
+    unique_ptr<ListTransferCli> cli (
         getCli<ListTransferCli>(ac, av)
     );
 
     BOOST_CHECK(cli->getVoName().compare("vo") == 0);
 }
 
-BOOST_AUTO_TEST_CASE (ListTransferCli_VO_Test2)
+BOOST_AUTO_TEST_CASE (ListTransferCli_vo_long_option)
 {
 
     // has to be const otherwise is deprecated
@@ -68,14 +71,14 @@ BOOST_AUTO_TEST_CASE (ListTransferCli_VO_Test2)
     // argument count
     int ac = 5;
 
-    auto_ptr<ListTransferCli> cli (
+    unique_ptr<ListTransferCli> cli (
         getCli<ListTransferCli>(ac, av)
     );
 
     BOOST_CHECK(cli->getVoName() == "vo");
 }
 
-BOOST_AUTO_TEST_CASE (ListTransferCli_Status_Test)
+BOOST_AUTO_TEST_CASE (ListTransferCli_Status)
 {
 
     // has to be const otherwise is deprecated
@@ -95,11 +98,11 @@ BOOST_AUTO_TEST_CASE (ListTransferCli_Status_Test)
     // argument count
     int ac = 9;
 
-    auto_ptr<ListTransferCli> cli (
+    unique_ptr<ListTransferCli> cli (
         getCli<ListTransferCli>(ac, av)
     );
 
-    cli->validate(false);
+    cli->validate();
 
     const vector<string>& statuses = cli->getStatusArray();
     BOOST_CHECK(statuses.size() == 6);
@@ -110,4 +113,8 @@ BOOST_AUTO_TEST_CASE (ListTransferCli_Status_Test)
     BOOST_CHECK(statuses[4] == "status5");
     BOOST_CHECK(statuses[5] == "status6");
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()
+
 #endif // FTS3_COMPILE_WITH_UNITTESTS

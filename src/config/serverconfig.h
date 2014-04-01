@@ -58,7 +58,7 @@ public:
 
     /* ---------------------------------------------------------------------- */
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST
+#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
     /** Read the configurations from config file only */
     void read
     (

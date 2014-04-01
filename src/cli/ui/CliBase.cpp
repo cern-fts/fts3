@@ -38,7 +38,7 @@ const string CliBase::error = "error";
 const string CliBase::result = "result";
 const string CliBase::parameter_error = "parameter_error";
 
-CliBase::CliBase(): visible("Allowed options"), ctx(NULL)
+CliBase::CliBase(ostream& out): visible("Allowed options"), ctx(NULL), msgPrinter(out)
 {
 
     // add basic command line options

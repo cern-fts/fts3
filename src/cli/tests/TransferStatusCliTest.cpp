@@ -23,13 +23,17 @@
  */
 
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST
+#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 #include "ui/TransferStatusCli.h"
 #include "unittest/testsuite.h"
+#include <memory>
 
 using namespace fts3::cli;
 
-BOOST_AUTO_TEST_CASE (TransferStatusCli_Test)
+BOOST_AUTO_TEST_SUITE( cli )
+BOOST_AUTO_TEST_SUITE(TransferStatusCliTest)
+
+BOOST_AUTO_TEST_CASE (TransferStatusCli_options)
 {
 
     // has to be const otherwise is deprecated
@@ -41,10 +45,14 @@ BOOST_AUTO_TEST_CASE (TransferStatusCli_Test)
 
     int ac = 2;
 
-    auto_ptr<TransferStatusCli> cli (
+    unique_ptr<TransferStatusCli> cli (
         getCli<TransferStatusCli>(ac, av)
     );
 
     BOOST_CHECK(cli->list());
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()
+
 #endif // FTS3_COMPILE_WITH_UNITTESTS

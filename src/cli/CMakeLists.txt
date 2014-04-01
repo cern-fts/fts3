@@ -187,14 +187,6 @@ add_executable(fts-set-priority
 target_link_libraries (fts-set-priority fts_cli_common)
 
 # ------------------------------------------------------------------------
-# fts-get-log command
-
-#add_executable(fts-get-log 
-#    set/fts3-get-log.cpp
-#)
-#target_link_libraries (fts-get-log fts_cli_common)
-
-# ------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------
 # python bindings

@@ -23,14 +23,18 @@
  */
 
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST
+#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 #include "ui/DnCli.h"
 #include "unittest/testsuite.h"
 
+#include <memory>
+
 using namespace fts3::cli;
 
+BOOST_AUTO_TEST_SUITE( cli )
+BOOST_AUTO_TEST_SUITE(DnCliTest)
 
-BOOST_AUTO_TEST_CASE (DnCli_Test1)
+BOOST_AUTO_TEST_CASE (DnCli_short_options)
 {
     // has to be const otherwise is deprecated
     char* av[] =
@@ -45,7 +49,7 @@ BOOST_AUTO_TEST_CASE (DnCli_Test1)
     // argument count
     int ac = 5;
 
-    auto_ptr<DnCli> cli (
+    unique_ptr<DnCli> cli (
         getCli<DnCli>(ac, av)
     );
 
@@ -55,7 +59,7 @@ BOOST_AUTO_TEST_CASE (DnCli_Test1)
     BOOST_CHECK(cli->getUserDn().compare("userdn") == 0);
 }
 
-BOOST_AUTO_TEST_CASE (DnCli_Test2)
+BOOST_AUTO_TEST_CASE (DnCli_long_options)
 {
     // has to be const otherwise is deprecated
     char* av[] =
@@ -69,7 +73,7 @@ BOOST_AUTO_TEST_CASE (DnCli_Test2)
 
     int ac = 5;
 
-    auto_ptr<DnCli> cli (
+    unique_ptr<DnCli> cli (
         getCli<DnCli>(ac, av)
     );
 
@@ -78,4 +82,8 @@ BOOST_AUTO_TEST_CASE (DnCli_Test2)
     // the endpoint shouldn't be empty since it's starting with http
     BOOST_CHECK(cli->getUserDn().compare("userdn") == 0);
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()
+
 #endif // FTS3_COMPILE_WITH_UNITTESTS

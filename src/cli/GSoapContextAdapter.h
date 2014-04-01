@@ -340,11 +340,6 @@ public:
 
     std::string getSnapShot(string vo, string src, string dst);
 
-    /**
-     * Remote call to getLog (not used!)
-     */
-    void getLog(string& logname, string jobId);
-
     ///@{
     /**
      * A group of methods returning details about interface version of the FTS3 service

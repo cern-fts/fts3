@@ -45,7 +45,7 @@ int main(int ac, char* av[])
     try
         {
             // create and initialize the command line utility
-            auto_ptr<GetCfgCli> cli (
+            unique_ptr<GetCfgCli> cli (
                 getCli<GetCfgCli>(ac, av)
             );
             if (!cli->validate()) return 0;

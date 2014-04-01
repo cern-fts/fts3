@@ -168,7 +168,7 @@ public:
 
 
                 // Create a ConnectionFactory
-                std::auto_ptr<ConnectionFactory> connectionFactory(
+                std::unique_ptr<ConnectionFactory> connectionFactory(
                     ConnectionFactory::createCMSConnectionFactory(brokerURI));
 
                 // Create a Connection

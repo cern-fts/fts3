@@ -38,7 +38,7 @@ int main(int ac, char* av[])
     try
         {
             // create and initialize the command line utility
-            auto_ptr<BlacklistCli> cli (
+            unique_ptr<BlacklistCli> cli (
                 getCli<BlacklistCli>(ac, av)
             );
             if (!cli->validate()) return 0;
