@@ -105,12 +105,6 @@ void GSoapContextAdapter::init()
         {
             err = soap_cgsi_init(ctx, CGSI_OPT_DISABLE_NAME_CHECK );
         }
-//
-//    soap_set_omode(ctx, SOAP_ENC_MTOM);
-//
-//	ctx->fmimewriteopen = LogFileStreamer::writeOpen;
-//	ctx->fmimewriteclose = LogFileStreamer::writeClose;
-//	ctx->fmimewrite = LogFileStreamer::write;
 
     if (err)
         {
@@ -620,22 +614,6 @@ std::string GSoapContextAdapter::getSnapShot(string vo, string src, string dst)
         }
 
     return resp._result;
-}
-
-void GSoapContextAdapter::getLog(string& logname, string jobId)
-{
-
-    log__GetLogResponse resp;
-    if (soap_call_log__GetLog(ctx, endpoint.c_str(), 0, jobId, resp))
-        {
-            handleSoapFault("Operation getLog failed.");
-            return;
-        }
-
-    fstream file (logname.c_str(), ios::out);
-    file.write((char*) resp.log->xop__Include.__ptr, resp.log->xop__Include.__size);
-    file.flush();
-    file.close();
 }
 
 void GSoapContextAdapter::handleSoapFault(string msg)

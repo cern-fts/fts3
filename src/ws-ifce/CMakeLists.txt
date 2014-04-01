@@ -48,13 +48,11 @@ add_custom_command(
 set(fts_transfer_wsdl "${PROJECT_SOURCE_DIR}/src/ws-ifce/fts3-transfer-0.0.0.wsdl")
 set(fts_config_wsdl "${PROJECT_SOURCE_DIR}/src/ws-ifce/fts3-config-0.0.0.wsdl")
 set(fts_delegation_wsdl "${PROJECT_SOURCE_DIR}/src/ws-ifce/fts3-delegation-0.0.0.wsdl")
-set(fts_log_wsdl "${PROJECT_SOURCE_DIR}/src/ws-ifce/fts3-log-0.0.0.wsdl")
 
 set(wsdl_files 
 	${fts_transfer_wsdl} 
 	${fts_config_wsdl} 
 	${fts_delegation_wsdl}
-	${fts_log_wsdl}
 )
 
 set(gsoap_typemap "${PROJECT_SOURCE_DIR}/src/ws-ifce/gsoap/typemap.dat")
