@@ -37,10 +37,14 @@ def _getCountPerState(age, hostname):
     notBefore = datetime.utcnow() - age
     for state in STATES:
         query = File.objects
-        query = query.filter(Q(job_finished__gte = notBefore) | Q(job_finished__isnull = True))
+        if state in ACTIVE_STATES:
+            query = query.filter(job_finished__isnull = True)
+        else:
+            query = query.filter(job_finished__gte = notBefore)
         if hostname:
             query = query.filter(transferHost = hostname)
         query = query.filter(file_state = state)
+        
         count[state.lower()] = query.count()
 
     # Couple of aggregations
@@ -90,7 +94,7 @@ def _getRetriedStats(timewindow, hostname):
 def overview(httpRequest):
     hostname = httpRequest.GET.get('hostname', None)
     
-    overall = _getCountPerState(timedelta(hours = 24), hostname)
+    overall = _getCountPerState(timedelta(hours = 12), hostname)
     lastHour = _getCountPerState(timedelta(hours = 1), hostname)
     retried = _getRetriedStats(timedelta(hours = 1), hostname)
         
