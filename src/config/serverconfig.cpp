@@ -21,7 +21,7 @@ limitations under the License. */
 #include "serverconfig.h"
 #include "serverconfigreader.h"
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST
+#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 #include "unittest/testsuite.h"
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
@@ -64,7 +64,7 @@ const std::string& ServerConfig::_get_str(const std::string& aVariable)
 
 /* ---------------------------------------------------------------------- */
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST
+#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 
 bool Config_ServerConfig_get_str_CheckMessage (const Err_Custom&)
 {
@@ -144,7 +144,7 @@ void ServerConfig::read
 
 /* ---------------------------------------------------------------------- */
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST
+#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 
 void ServerConfig::read
 (

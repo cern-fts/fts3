@@ -21,7 +21,7 @@ limitations under the License. */
 #include <iostream>
 #include <fstream>
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST
+#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 #include "unittest/testsuite.h"
 #include <boost/algorithm/string/find.hpp>
 #include <cstdio>
@@ -284,7 +284,7 @@ struct ReadConfigFile_SystemTraits
 
 /* ---------------------------------------------------------------------- */
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST
+#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 
 BOOST_FIXTURE_TEST_CASE
 (
@@ -332,7 +332,7 @@ ServerConfigReader::type_return ServerConfigReader::operator() (int argc, char**
 
 /* ------------------------------------------------------------------------- */
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST
+#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 
 /** This test checks if command line options really change default values */
 BOOST_FIXTURE_TEST_CASE (Common__ServerConfigReader_functionOperator_default, ServerConfigReader)
@@ -463,7 +463,7 @@ BOOST_FIXTURE_TEST_CASE (Common__ServerConfigReader_functionOperator_fromfile, S
 
 /* ========================================================================== */
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST
+#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 
 /** Traits to test _readCommandLineOptions */
 struct readCommandLineOptions_TestTraits
@@ -717,7 +717,7 @@ void ServerConfigReader::storeAsString
 
 /* ---------------------------------------------------------------------- */
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST
+#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 
 BOOST_FIXTURE_TEST_CASE
 (
@@ -765,7 +765,7 @@ void ServerConfigReader::validateRequired (std::string key)
 
 /* ========================================================================== */
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST
+#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 
 /** Traits to test _readConfigFile */
 struct ReadConfigFile_TestTraits
