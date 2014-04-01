@@ -2328,8 +2328,7 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
                 {
                     sql.begin();
                     sql << " UPDATE t_file SET  job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP() "
-                        " WHERE file_state='CANCELED' and PID IS NULL and (job_finished is NULL or finish_time is NULL) ",
-                        soci::use(hostname);
+                        " WHERE file_state='CANCELED' and PID IS NULL and (job_finished is NULL or finish_time is NULL) ";
                     sql.commit();
                 }
         }
