@@ -41,7 +41,7 @@ int main(int ac, char* av[])
     try
         {
             // create and initialize the command line utility
-            auto_ptr<DnCli> cli (
+            unique_ptr<DnCli> cli (
                 getCli<DnCli>(ac, av)
             );
             if (!cli->validate()) return 0;

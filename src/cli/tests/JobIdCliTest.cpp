@@ -23,17 +23,21 @@
  */
 
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST
+#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 #include "ui/JobIdCli.h"
 #include "unittest/testsuite.h"
 
+#include <memory>
 #include <string>
 #include <vector>
 
 using namespace std;
 using namespace fts3::cli;
 
-BOOST_AUTO_TEST_CASE (JobIDCli_Test1)
+BOOST_AUTO_TEST_SUITE( cli )
+BOOST_AUTO_TEST_SUITE(JobIDCliTest)
+
+BOOST_AUTO_TEST_CASE (JobIDCli_Test)
 {
 
     // has to be const otherwise is deprecated
@@ -49,13 +53,13 @@ BOOST_AUTO_TEST_CASE (JobIDCli_Test1)
 
     int ac = 6;
 
-    auto_ptr<JobIdCli> cli (
+    unique_ptr<JobIdCli> cli (
         getCli<JobIdCli>(ac, av)
     );
 
-    cli->validate(false);
+    cli->validate();
 
-    const vector<string>& ids = cli->getJobIds();
+    const vector<string> ids = cli->getJobIds();
 
     // the vector should have 3 elements
     BOOST_CHECK(ids.size() == 3);
@@ -64,4 +68,8 @@ BOOST_AUTO_TEST_CASE (JobIDCli_Test1)
     BOOST_CHECK(ids[1] == "ID2");
     BOOST_CHECK(ids[2] == "ID3");
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()
+
 #endif // FTS3_COMPILE_WITH_UNITTESTS

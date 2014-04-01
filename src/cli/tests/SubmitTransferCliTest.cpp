@@ -22,7 +22,7 @@
  *      Author: Michal Simon
  */
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST
+#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 
 #include "ui/SubmitTransferCli.h"
 #include "unittest/testsuite.h"
@@ -39,7 +39,10 @@ using namespace fts3::cli;
 using namespace fts3::common;
 
 
-BOOST_AUTO_TEST_CASE (SubmitTransferCli_Test_File)
+BOOST_AUTO_TEST_SUITE( cli )
+BOOST_AUTO_TEST_SUITE(SubmitTransferCliTest)
+
+BOOST_AUTO_TEST_CASE (SubmitTransferCli_bulk_submission)
 {
 
     // creat a tmeporary file with bulk-job description
@@ -50,8 +53,8 @@ BOOST_AUTO_TEST_CASE (SubmitTransferCli_Test_File)
             return;
         }
 
-    fs << "source1 destination1 Alg:check1" << endl;
-    fs << "source2 destination2" << endl;
+    fs << "srm://source1/file.in srm://destination1/file.out Alg:check1" << endl;
+    fs << "srm://source2/file.in srm://destination2/file.out" << endl;
 
     fs.flush();
     fs.close();
@@ -69,31 +72,29 @@ BOOST_AUTO_TEST_CASE (SubmitTransferCli_Test_File)
     // argument count
     int ac = 5;
 
-    auto_ptr<SubmitTransferCli> cli (
+    unique_ptr<SubmitTransferCli> cli (
         getCli<SubmitTransferCli>(ac, av)
     );
 
-    cli->mute();
-    cli->validate(false);
+
+    cli->validate();
 
     BOOST_CHECK(cli->useCheckSum());
 
-    vector<JobElement> elements = cli->getJobElements();
+    vector<File> files = cli->getFiles();
 
-    BOOST_CHECK(elements.size() == 2);
+    BOOST_CHECK_EQUAL(files.size(), 2);
 
-    BOOST_CHECK(elements[0].get<0>().compare("source1") == 0);
-    BOOST_CHECK(elements[0].get<1>().compare("destination1") == 0);
-    BOOST_CHECK(elements[0].get<2>().get().compare("Alg:check1") == 0);
+    BOOST_CHECK_EQUAL(files[0].sources[0], "srm://source1/file.in");
+    BOOST_CHECK_EQUAL(files[0].destinations[0], "srm://destination1/file.out");
+    BOOST_CHECK_EQUAL(files[0].checksums[0], "Alg:check1");
 
-    BOOST_CHECK(elements[1].get<0>().compare("source2") == 0);
-    BOOST_CHECK(elements[1].get<1>().compare("destination2") == 0);
-    BOOST_CHECK(elements[1].get<2>().is_initialized() == false);
-
-    cli->unmute();
+    BOOST_CHECK_EQUAL(files[1].sources[0], "srm://source2/file.in");
+    BOOST_CHECK_EQUAL(files[1].destinations[0], "srm://destination2/file.out");
+    BOOST_CHECK(files[1].checksums.empty());
 }
 
-BOOST_AUTO_TEST_CASE (SubmitTransferCli_Test_OtherOptions)
+BOOST_AUTO_TEST_CASE (SubmitTransferCli_other_options)
 {
     // has to be const otherwise is deprecated
     char* av[] =
@@ -102,34 +103,24 @@ BOOST_AUTO_TEST_CASE (SubmitTransferCli_Test_OtherOptions)
         "-s",
         "https://fts3-server:8080",
         "-b",
-        "-p",
-        "P@ssw0rd",
-        "-i",
-        "23",
         "-e",
         "1234"
     };
 
     // argument count
-    int ac = 10;
+    int ac = 6;
 
-    auto_ptr<SubmitTransferCli> cli (
+    unique_ptr<SubmitTransferCli> cli (
         getCli<SubmitTransferCli>(ac, av)
     );
 
-    cli->mute();
-    cli->validate(false);
+    cli->validate();
 
     BOOST_CHECK(cli->isBlocking());
-//	BOOST_CHECK(vm["interval"].as<int>() == 23);
     BOOST_CHECK(cli->getExpirationTime() == 1234);
-
-    BOOST_CHECK(cli->getPassword().compare("P@ssw0rd") == 0);
-
-    cli->unmute();
 }
 
-BOOST_AUTO_TEST_CASE (SubmitTransferCli_Test_JobElements)
+BOOST_AUTO_TEST_CASE (SubmitTransferCli_submission_no_checksum)
 {
 
     // has to be const otherwise is deprecated
@@ -138,34 +129,31 @@ BOOST_AUTO_TEST_CASE (SubmitTransferCli_Test_JobElements)
         "prog_name",
         "-s",
         "https://fts3-server:8080",
-        "source",
-        "destination"
+        "srm://source/file.in",
+        "srm://destination/file.out"
     };
 
     // argument count
     int ac = 5;
 
-    auto_ptr<SubmitTransferCli> cli (
+    unique_ptr<SubmitTransferCli> cli (
         getCli<SubmitTransferCli>(ac, av)
     );
 
-    cli->mute();
-    cli->validate(false);
+    cli->validate();
 
-    BOOST_CHECK(cli->getSource().compare("source") == 0);
-    BOOST_CHECK(cli->getDestination().compare("destination") == 0);
+    BOOST_CHECK_EQUAL(cli->getSource(), "srm://source/file.in");
+    BOOST_CHECK_EQUAL(cli->getDestination(), "srm://destination/file.out");
     BOOST_CHECK(!cli->useCheckSum());
 
-    vector<JobElement> elements = cli->getJobElements();
+    vector<File> files = cli->getFiles();
 
-    BOOST_CHECK(elements.size() == 1);
-    BOOST_CHECK(elements[0].get<0>().compare("source") == 0);
-    BOOST_CHECK(elements[0].get<1>().compare("destination") == 0);
-
-    cli->unmute();
+    BOOST_CHECK_EQUAL(files.size(), 1);
+    BOOST_CHECK_EQUAL(files[0].sources[0], "srm://source/file.in");
+    BOOST_CHECK_EQUAL(files[0].destinations[0], "srm://destination/file.out");
 }
 
-BOOST_AUTO_TEST_CASE (SubmitTransferCli_Test_JobElements2)
+BOOST_AUTO_TEST_CASE (SubmitTransferCli_submission_with_checksum)
 {
 
     // has to be const otherwise is deprecated
@@ -174,35 +162,32 @@ BOOST_AUTO_TEST_CASE (SubmitTransferCli_Test_JobElements2)
         "prog_name",
         "-s",
         "https://fts3-server:8080",
-        "source",
-        "destination",
+        "srm://source/file.in",
+        "srm://destination/file.out",
         "ALGORITHM:1234af"
     };
     // argument count
     int ac = 6;
 
-    auto_ptr<SubmitTransferCli> cli (
+    unique_ptr<SubmitTransferCli> cli (
         getCli<SubmitTransferCli>(ac, av)
     );
 
-    cli->mute();
-    cli->validate(false);
+    cli->validate();
 
-    BOOST_CHECK(cli->getSource().compare("source") == 0);
-    BOOST_CHECK(cli->getDestination().compare("destination") == 0);
+    BOOST_CHECK(cli->getSource().compare("srm://source/file.in") == 0);
+    BOOST_CHECK(cli->getDestination().compare("srm://destination/file.out") == 0);
     BOOST_CHECK(cli->useCheckSum());
 
-    vector<JobElement> elements = cli->getJobElements();
+    vector<File> files = cli->getFiles();
 
-    BOOST_CHECK(elements.size() == 1);
-    BOOST_CHECK(elements[0].get<0>().compare("source") == 0);
-    BOOST_CHECK(elements[0].get<1>().compare("destination") == 0);
-    BOOST_CHECK(elements[0].get<2>().get().compare("ALGORITHM:1234af") == 0);
-
-    cli->unmute();
+    BOOST_CHECK_EQUAL(files.size(), 1);
+    BOOST_CHECK_EQUAL(files[0].sources[0], "srm://source/file.in");
+    BOOST_CHECK_EQUAL(files[0].destinations[0], "srm://destination/file.out");
+    BOOST_CHECK_EQUAL(files[0].checksums[0], "ALGORITHM:1234af");
 }
 
-BOOST_FIXTURE_TEST_CASE (SubmitTransferCli_Parameters_Test, SubmitTransferCli)
+BOOST_FIXTURE_TEST_CASE (SubmitTransferCli_parameters, SubmitTransferCli)
 {
 
     // has to be const otherwise is deprecated
@@ -213,39 +198,33 @@ BOOST_FIXTURE_TEST_CASE (SubmitTransferCli_Parameters_Test, SubmitTransferCli)
         "https://fts3-server:8080",
         "-o",
         "-K",
-        "--lan-connection",
-        "--fail-nearline",
         "-g", "gparam",
-        "-m", "myproxysrv",
         "-I", "id",
         "-t", "dest-token",
         "-S", "source-token",
         "--copy-pin-lifetime", "123"
     };
     // argument count
-    int ac = 19;
+    int ac = 15;
 
-    auto_ptr<SubmitTransferCli> cli (
+    unique_ptr<SubmitTransferCli> cli (
         getCli<SubmitTransferCli>(ac, av)
     );
 
-    cli->mute();
-    cli->validate(false);
+    cli->validate();
 
     map<string, string> params = cli->getParams();
 
-    BOOST_CHECK(params.at(JobParameterHandler::FTS3_PARAM_CHECKSUM_METHOD).compare("compare") == 0);
-    BOOST_CHECK(params.at(JobParameterHandler::FTS3_PARAM_OVERWRITEFLAG).compare("Y") == 0);
-    BOOST_CHECK(params.at(JobParameterHandler::FTS3_PARAM_LAN_CONNECTION).compare("Y") == 0);
-    BOOST_CHECK(params.at(JobParameterHandler::FTS3_PARAM_FAIL_NEARLINE).compare("Y") == 0);
-    BOOST_CHECK(params.at(JobParameterHandler::FTS3_PARAM_GRIDFTP).compare("gparam") == 0);
-    BOOST_CHECK(params.at(JobParameterHandler::FTS3_PARAM_MYPROXY).compare("myproxysrv") == 0);
-    BOOST_CHECK(params.at(JobParameterHandler::FTS3_PARAM_DELEGATIONID).compare("id") == 0);
-    BOOST_CHECK(params.at(JobParameterHandler::FTS3_PARAM_SPACETOKEN).compare("dest-token") == 0);
-    BOOST_CHECK(params.at(JobParameterHandler::FTS3_PARAM_SPACETOKEN_SOURCE).compare("source-token") == 0);
-    BOOST_CHECK(params.at(JobParameterHandler::FTS3_PARAM_COPY_PIN_LIFETIME).compare("123"));
-
-    cli->unmute();
+    BOOST_CHECK_EQUAL(params.at(JobParameterHandler::CHECKSUM_METHOD), "compare");
+    BOOST_CHECK_EQUAL(params.at(JobParameterHandler::OVERWRITEFLAG), "Y");
+    BOOST_CHECK_EQUAL(params.at(JobParameterHandler::GRIDFTP), "gparam");
+    BOOST_CHECK_EQUAL(params.at(JobParameterHandler::DELEGATIONID), "id");
+    BOOST_CHECK_EQUAL(params.at(JobParameterHandler::SPACETOKEN), "dest-token");
+    BOOST_CHECK_EQUAL(params.at(JobParameterHandler::SPACETOKEN_SOURCE), "source-token");
+    BOOST_CHECK_EQUAL(params.at(JobParameterHandler::COPY_PIN_LIFETIME), "123");
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()
 
 #endif // FTS3_COMPILE_WITH_UNITTESTS

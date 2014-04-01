@@ -39,7 +39,7 @@ int main(int ac, char* av[])
     try
         {
             // create and initialize the command line utility
-            auto_ptr<VoNameCli> cli (
+            unique_ptr<VoNameCli> cli (
                 getCli<VoNameCli>(ac, av)
             );
             if (!cli->validate()) return 0;

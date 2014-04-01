@@ -23,12 +23,17 @@
  */
 
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST
+#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 #include "ui/CliBase.h"
 #include "unittest/testsuite.h"
 
-using namespace fts3::cli;
+#include <memory>
+#include <sstream>
 
+using namespace fts3::cli;
+using namespace std;
+
+stringstream out; //> use this instead of std::cout
 
 /*
  * Dummy class that inherits after abstract CliBase
@@ -38,6 +43,9 @@ using namespace fts3::cli;
 class CliBaseTester : public CliBase
 {
 
+public:
+	CliBaseTester() : CliBase(out) {}
+
     // implement the pure vitual method
     string getUsageString(string tool)
     {
@@ -45,7 +53,10 @@ class CliBaseTester : public CliBase
     };
 };
 
-BOOST_AUTO_TEST_CASE (CliBase_Test1)
+BOOST_AUTO_TEST_SUITE( cli )
+BOOST_AUTO_TEST_SUITE(CliBaseTest)
+
+BOOST_AUTO_TEST_CASE (CliBase_short_options)
 {
 
     // has to be const otherwise is deprecated
@@ -63,11 +74,11 @@ BOOST_AUTO_TEST_CASE (CliBase_Test1)
     // argument count
     int ac = 7;
 
-    auto_ptr<CliBaseTester> cli (
-        getCli<CliBaseTester>(ac, av)
-    );
+    unique_ptr<CliBaseTester> cli (
+    		getCli<CliBaseTester>(ac, av)
+    	);
 
-    cli->mute();
+//    cli->mute();
 
     // all 5 parameters should be available in vm variable
     BOOST_CHECK(cli->printHelp(string()));
@@ -78,10 +89,10 @@ BOOST_AUTO_TEST_CASE (CliBase_Test1)
     // the endpoint shouldn't be empty since it's starting with http
     BOOST_CHECK(!cli->getService().empty());
 
-    cli->unmute();
+//    cli->unmute();
 }
 
-BOOST_AUTO_TEST_CASE (CliBase_Test2)
+BOOST_AUTO_TEST_CASE (CliBase_long_options)
 {
 
     // has to be const otherwise is deprecated
@@ -99,11 +110,9 @@ BOOST_AUTO_TEST_CASE (CliBase_Test2)
     // argument count
     int ac = 7;
 
-    auto_ptr<CliBaseTester> cli (
+    unique_ptr<CliBaseTester> cli (
         getCli<CliBaseTester>(ac, av)
     );
-
-    cli->mute();
 
     // all 5 parameters should be available in vm variable
     BOOST_CHECK(cli->printHelp(string()));
@@ -112,9 +121,10 @@ BOOST_AUTO_TEST_CASE (CliBase_Test2)
     BOOST_CHECK(cli->printVersion());
     // the endpoint should be empty since it's not starting with http, https, httpd
     BOOST_CHECK(!cli->getService().empty());
-
-    cli->unmute();
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()
 
 
 #endif // FTS3_COMPILE_WITH_UNITTESTS

@@ -44,7 +44,7 @@ int main(int ac, char* av[])
     try
         {
             // create and initialize the command line utility
-            auto_ptr<JobIdCli> cli (
+            unique_ptr<JobIdCli> cli (
                 getCli<JobIdCli>(ac, av)
             );
             if (!cli->validate()) return 0;

@@ -42,7 +42,7 @@ int main(int ac, char* av[])
     try
         {
             // create and initialize the command line utility
-            auto_ptr<DelCfgCli> cli (
+            unique_ptr<DelCfgCli> cli (
                 getCli<DelCfgCli>(ac, av)
             );
             if (!cli->validate()) return 0;
