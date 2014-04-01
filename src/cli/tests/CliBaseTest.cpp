@@ -44,7 +44,7 @@ class CliBaseTester : public CliBase
 {
 
 public:
-	CliBaseTester() : CliBase(out) {}
+    CliBaseTester() : CliBase(out) {}
 
     // implement the pure vitual method
     string getUsageString(string tool)
@@ -75,8 +75,8 @@ BOOST_AUTO_TEST_CASE (CliBase_short_options)
     int ac = 7;
 
     unique_ptr<CliBaseTester> cli (
-    		getCli<CliBaseTester>(ac, av)
-    	);
+        getCli<CliBaseTester>(ac, av)
+    );
 
 //    cli->mute();
 
