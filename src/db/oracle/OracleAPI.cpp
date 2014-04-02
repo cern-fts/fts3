@@ -6133,18 +6133,27 @@ void OracleAPI::transferLogFileVector(std::map<int, struct message_log>& message
                                     soci::use(fileId));
 
             sql.begin();
-
-            std::map<int, struct message_log>::const_iterator iterLog;
-            for (iterLog = messagesLog.begin(); iterLog != messagesLog.end(); ++iterLog)
+	    
+            std::map<int, struct message_log>::iterator iterLog = messagesLog.begin();
+            while (iterLog != messagesLog.end())
                 {
                     filePath = ((*iterLog).second).filePath;
                     fileId = ((*iterLog).second).file_id;
-                    debugFile = ((*iterLog).second).debugFile;
-                    stmt.execute(true);
+                    debugFile = ((*iterLog).second).debugFile;		    		    		    
+		    stmt.execute(true);
+		    
+                    if (stmt.get_affected_rows() > 0)
+                        {
+                            // erase
+                            messagesLog.erase(iterLog++);
+                        }
+                    else
+                        {
+                            ++iterLog;
+                        }
                 }
 
             sql.commit();
-
         }
     catch (std::exception& e)
         {
@@ -6157,7 +6166,6 @@ void OracleAPI::transferLogFileVector(std::map<int, struct message_log>& message
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
 }
-
 
 std::vector<struct message_state> OracleAPI::getStateOfTransfer(const std::string& jobId, int fileId)
 {

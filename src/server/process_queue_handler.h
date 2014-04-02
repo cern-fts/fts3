@@ -358,7 +358,6 @@ protected:
                                 if(!messagesLog.empty())
                                     {
                                         DBSingleton::instance().getDBObjectInstance()->transferLogFileVector(messagesLog);
-					std::cout << "----------------------> " << messagesLog.size() << std::endl;
                                         messagesLog.clear();
                                     }
                             }
@@ -368,7 +367,6 @@ protected:
                                 try
                                     {
                                         DBSingleton::instance().getDBObjectInstance()->transferLogFileVector(messagesLog);
-					std::cout << "----------------------> " << messagesLog.size() << std::endl;
                                         messagesLog.clear();
                                     }
                                 catch(...)
