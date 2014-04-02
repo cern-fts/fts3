@@ -2849,6 +2849,47 @@ bool MySqlAPI::isCredentialExpired(const std::string & dlg_id, const std::string
     return !expired;
 }
 
+bool MySqlAPI::getMaxActive(soci::session& sql, int active, int highDefault, const std::string & source_hostname, const std::string & destin_hostname)
+{
+    bool allowed = false;
+    long long int maxActiveSource = 0;
+    long long int maxActiveDest = 0;
+    soci::indicator isNullmaxActiveSource = soci::i_ok;
+    soci::indicator isNullmaxActiveDest = soci::i_ok;
+
+    try
+        {
+            sql << " select active from t_optimize where source_se = :source_se ",
+                soci::use(source_hostname),
+                soci::into(maxActiveSource, isNullmaxActiveSource);
+
+            sql << " select active from t_optimize where dest_se = :dest_se ",
+                soci::use(destin_hostname),
+                soci::into(maxActiveDest, isNullmaxActiveDest);
+
+            //check limits for source
+            if(isNullmaxActiveSource == soci::i_null)
+                allowed = true;
+            if (isNullmaxActiveSource != soci::i_null && (active < maxActiveSource || active < highDefault))
+                allowed = true;
+            if(isNullmaxActiveDest == soci::i_null)
+                allowed = true;
+            //check limits for dest
+            if (isNullmaxActiveDest != soci::i_null && (active < maxActiveDest || active < highDefault))
+                allowed = true;
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+    return allowed;
+
+}
+
 bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::string & destin_hostname)
 {
     soci::session sql(*connectionPool);
@@ -2883,8 +2924,7 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
             if(active < highDefault)
                 {
                     allowed = true;
-                }
-
+                }            
         }
     catch (std::exception& e)
         {
@@ -3021,7 +3061,6 @@ bool MySqlAPI::updateOptimizer()
     long long int streamsCurrent = 0;
     soci::indicator isNullStreamsCurrent = soci::i_ok;
 
-
     time_t now = getUTC(0);
     struct tm startTimeSt;
 
@@ -3102,6 +3141,7 @@ bool MySqlAPI::updateOptimizer()
                                          " source_se=:source_se and dest_se=:dest_se",
                                          soci::use(source_hostname), soci::use(destin_hostname), soci::into(streamsCurrent, isNullStreamsCurrent));
 
+
             //check if retry is set at global level
             sql <<
                 " SELECT retry "
@@ -3151,6 +3191,9 @@ bool MySqlAPI::updateOptimizer()
                     isNullStreamsCurrent = soci::i_ok;
                     now = getUTC(0);
 
+                    // check current active transfers for a link
+                    stmt7.execute(true);
+
                     // Weighted average
                     soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
                             " SELECT filesize, throughput "
@@ -3176,8 +3219,8 @@ bool MySqlAPI::updateOptimizer()
                     soci::rowset<soci::row> rs = (sql.prepare << "SELECT file_state, retry FROM t_file "
                                                   "WHERE "
                                                   "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                                                  "      (t_file.job_finished > (UTC_TIMESTAMP() - interval '1' minute)) AND "
-                                                  "      file_state IN ('FAILED','FINISHED') ",
+                                                  "      (t_file.job_finished is NULL OR t_file.job_finished > (UTC_TIMESTAMP() - interval '1' minute)) AND "
+                                                  "      file_state IN ('FAILED','FINISHED','SUBMITTED') ",
                                                   soci::use(source_hostname), soci::use(destin_hostname));
 
 
@@ -3188,7 +3231,7 @@ bool MySqlAPI::updateOptimizer()
                             std::string state = i->get<std::string>("file_state", "");
                             int retryNum = i->get<int>("retry", 0);
 
-                            if (state.compare("FAILED") == 0 && retrySet > 0 && retryNum > 0)
+                            if ( (state.compare("FAILED") == 0 ||  state.compare("SUBMITTED") == 0) && retrySet > 0 && retryNum > 0)
                                 {
                                     nFailedLastHour+=1.0;
                                 }
@@ -3207,9 +3250,6 @@ bool MySqlAPI::updateOptimizer()
                         {
                             ratioSuccessFailure = ceil(nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0));
                         }
-
-                    // Active transfers
-                    stmt7.execute(true);
 
                     //optimize number of streams first
                     //check if pair exists first
@@ -3253,7 +3293,7 @@ bool MySqlAPI::updateOptimizer()
 
                             if(throughput < 1.0) //records found, optimize number of streams by reducing them
                                 {
-                                    if(diff > 21600) //if elapsed, fall-back to auto-tune
+                                    if(diff > 3600) //if elapsed, fall-back to auto-tune
                                         {
                                             insertStreams = 4;
                                             sql.begin();
@@ -3271,7 +3311,7 @@ bool MySqlAPI::updateOptimizer()
                                 }
                             else if (throughput >= 1.0 && streamsCurrent == -1)
                                 {
-                                    if(diff > 21600) //if elapsed, fall-back to auto-tune
+                                    if(diff > 3600) //if elapsed, fall-back to auto-tune
                                         {
                                             insertStreams = 4;
                                             sql.begin();
@@ -3355,10 +3395,15 @@ bool MySqlAPI::updateOptimizer()
 
                             if( (ratioSuccessFailure == 100 || ratioSuccessFailure > rateStored) && throughput > thrStored && retry <= retryStored)
                                 {
-                                    active = maxActive + spawnActive;
-                                    pathFollowed = 1;
+                                    //make sure we do not increase beyond limits set
+                                    bool maxActiveLimit = getMaxActive(sql, active, highDefault, source_hostname, destin_hostname);
 
-                                    stmt10.execute(true);
+                                    if(maxActiveLimit)
+                                        {
+                                            active = maxActive + spawnActive;
+                                            pathFollowed = 1;
+                                            stmt10.execute(true);
+                                        }
                                 }
                             else if( (ratioSuccessFailure == 100 || ratioSuccessFailure > rateStored) && throughput == thrStored && retry <= retryStored)
                                 {
@@ -6531,15 +6576,15 @@ void MySqlAPI::transferLogFileVector(std::map<int, struct message_log>& messages
                                     soci::use(fileId));
 
             sql.begin();
-	    
+
             std::map<int, struct message_log>::iterator iterLog = messagesLog.begin();
             while (iterLog != messagesLog.end())
                 {
                     filePath = ((*iterLog).second).filePath;
                     fileId = ((*iterLog).second).file_id;
-                    debugFile = ((*iterLog).second).debugFile;		    		    		    
-		    stmt.execute(true);
-		    
+                    debugFile = ((*iterLog).second).debugFile;
+                    stmt.execute(true);
+
                     if (stmt.get_affected_rows() > 0)
                         {
                             // erase

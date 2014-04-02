@@ -7,6 +7,22 @@ bool retryTransfer(int errorNo, const std::string& category, const std::string& 
 {
     bool retry = true;
 
+    // ETIMEDOUT shortcuts the following
+    if (errorNo == ETIMEDOUT)
+        return true;
+
+    //search for error patterns not reported by SRM or GSIFTP
+    std::size_t found = message.find("performance marker");
+    if (found!=std::string::npos)
+        return true;
+    found = message.find("Connection timed out");
+    if (found!=std::string::npos)
+        return true;
+    found = message.find("end-of-file was reached");
+    if (found!=std::string::npos)
+        return true;
+
+
     if (category == "SOURCE")
         {
             switch (errorNo)
@@ -63,12 +79,7 @@ bool retryTransfer(int errorNo, const std::string& category, const std::string& 
                 }
         }
 
-    // ETIMEDOUT shortcuts the following
-    if (errorNo == ETIMEDOUT)
-        return true;
-
-    //search for error patterns not reported by SRM or GSIFTP
-    std::size_t found = message.find("proxy expired");
+    found = message.find("proxy expired");
     if (found!=std::string::npos)
         retry = false;
     found = message.find("File exists and overwrite");
