@@ -911,7 +911,7 @@ int main(int argc, char **argv)
                                     }
                                 else
                                     {
-                                        errorMessage = "TRANSFER" + std::string(tmp_err->message);
+                                        errorMessage = "TRANSFER " + std::string(tmp_err->message);
                                     }
                                 errorScope = TRANSFER;
                                 reasonClass = mapErrnoToString(tmp_err->code);
