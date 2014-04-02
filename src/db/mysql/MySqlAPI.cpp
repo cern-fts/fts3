@@ -2326,9 +2326,19 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
             //prevent more than on server to update the optimizer decisions
             if(hashSegment.start == 0)
                 {
+                    int file_id = 0;
+
+                    soci::rowset<soci::row> rs2 = (sql.prepare << " select file_id from t_file where file_state='CANCELED' and PID IS NULL and (job_finished is NULL or finish_time is NULL)");
+
+                    soci::statement stmt2 = (sql.prepare << "UPDATE t_file SET job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP()  WHERE file_id=:file_id ", soci::use(file_id, "file_id"));
+
                     sql.begin();
-                    sql << " UPDATE t_file SET  job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP() "
-                        " WHERE file_state='CANCELED' and PID IS NULL and (job_finished is NULL or finish_time is NULL) ";
+                    for (soci::rowset<soci::row>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
+                        {
+                            soci::row const& row = *i2;
+                            file_id = row.get<int>("file_id");
+                            stmt2.execute(true);
+                        }
                     sql.commit();
                 }
         }
@@ -6521,18 +6531,27 @@ void MySqlAPI::transferLogFileVector(std::map<int, struct message_log>& messages
                                     soci::use(fileId));
 
             sql.begin();
-
-            std::map<int, struct message_log>::const_iterator iterLog;
-            for (iterLog = messagesLog.begin(); iterLog != messagesLog.end(); ++iterLog)
+	    
+            std::map<int, struct message_log>::iterator iterLog = messagesLog.begin();
+            while (iterLog != messagesLog.end())
                 {
                     filePath = ((*iterLog).second).filePath;
                     fileId = ((*iterLog).second).file_id;
-                    debugFile = ((*iterLog).second).debugFile;
-                    stmt.execute(true);
+                    debugFile = ((*iterLog).second).debugFile;		    		    		    
+		    stmt.execute(true);
+		    
+                    if (stmt.get_affected_rows() > 0)
+                        {
+                            // erase
+                            messagesLog.erase(iterLog++);
+                        }
+                    else
+                        {
+                            ++iterLog;
+                        }
                 }
 
             sql.commit();
-
         }
     catch (std::exception& e)
         {

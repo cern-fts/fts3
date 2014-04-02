@@ -2099,9 +2099,19 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs)
             //prevent more than on server to update the optimizer decisions
             if(hashSegment.start == 0)
                 {
+                    int file_id = 0;
+
+                    soci::rowset<soci::row> rs2 = (sql.prepare << " select file_id from t_file where file_state='CANCELED' and PID IS NULL and (job_finished is NULL or finish_time is NULL)");
+
+                    soci::statement stmt2 = (sql.prepare << "UPDATE t_file SET job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp)  WHERE file_id=:file_id ", soci::use(file_id, "file_id"));
+
                     sql.begin();
-                    sql << " UPDATE t_file SET  job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp) "
-                        " WHERE file_state='CANCELED' and PID IS NULL and (job_finished is NULL or finish_time is NULL) ";
+                    for (soci::rowset<soci::row>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
+                        {
+                            soci::row const& row = *i2;
+                            file_id = row.get<int>("FILE_ID");
+                            stmt2.execute(true);
+                        }
                     sql.commit();
                 }
 

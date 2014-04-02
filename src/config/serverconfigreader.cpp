@@ -291,7 +291,7 @@ BOOST_AUTO_TEST_SUITE(ServerConfigReaderSuite)
 
 BOOST_FIXTURE_TEST_CASE
 (
-	ServerConfigReader_readConfigFile_SystemTraits,
+    ServerConfigReader_readConfigFile_SystemTraits,
     ReadConfigFile_SystemTraits
 )
 {
@@ -770,10 +770,12 @@ BOOST_FIXTURE_TEST_CASE
     BOOST_CHECK_EQUAL (_vars["intpar"], std::string ("10"));
 }
 
-#endif // FTS3_COMPILE_WITH_UNITTESTS
+
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
+
+#endif // FTS3_COMPILE_WITH_UNITTESTS
 
 /* ---------------------------------------------------------------------- */
 
