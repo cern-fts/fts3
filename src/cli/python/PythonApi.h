@@ -50,6 +50,7 @@ public:
     void cancel(py::str id);
     void cancelAll(py::list ids);
     py::str getStatus(py::str id, bool archive);
+    void setPriority(py::str id, int priority);
 
     py::str getVersion(void);
 

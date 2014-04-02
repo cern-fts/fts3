@@ -26,26 +26,34 @@
 #include "python/PythonApi.h"
 #include "python/Job.h"
 #include "python/PyFile.h"
+#include "python/PythonProxyDelegator.h"
+
+#include "common/error.h"
 
 #include <boost/optional/optional.hpp>
 #include <boost/python.hpp>
 
 using namespace boost;
-//namespace py = boost::python;
+using namespace fts3::common;
 
 
-void exTranslator(string const& ex)
+void strExTranslator(string const& ex)
 {
     PyErr_SetString(PyExc_UserWarning, ex.c_str());
 }
 
+void errExTranslator(Err_Custom const& ex)
+{
+    PyErr_SetString(PyExc_UserWarning, ex.what());
+}
 
 BOOST_PYTHON_MODULE(libftspython)
 {
 
     using namespace fts3::cli;
 
-    py::register_exception_translator<string>(exTranslator);
+    py::register_exception_translator<string>(strExTranslator);
+    py::register_exception_translator<Err_Custom>(errExTranslator);
 
     py::class_<PythonApi>("Fts", py::init<py::str>())
     .def("submit", &PythonApi::submit)
@@ -53,6 +61,7 @@ BOOST_PYTHON_MODULE(libftspython)
     .def("cancel", &PythonApi::cancelAll)
     .def("status", &PythonApi::getStatus)
     .def("getVersion", &PythonApi::getVersion)
+    .def("setPriority", &PythonApi::setPriority)
     ;
 
     py::class_<fts3::cli::PyFile>("File")
@@ -77,5 +86,10 @@ BOOST_PYTHON_MODULE(libftspython)
     .add_property("lanConnection", &Job::lanConnection, &Job::setLanConnection)
     .add_property("failNearline", &Job::failNearline, &Job::setFailNearline)
     .add_property("sessionReuse", &Job::sessionReuse, &Job::setSessionReuse)
+    ;
+
+    py::class_<fts3::cli::PythonProxyDelegator, boost::noncopyable>("Delegator", py::init<py::str, py::str, long>())
+    .def("delegate", &PythonProxyDelegator::delegate)
+    .def("isCertValid", &PythonProxyDelegator::isCertValid)
     ;
 }

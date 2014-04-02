@@ -70,6 +70,7 @@ endif ()
 # Common CLI library
 
 file(GLOB fts_cli_common_sources "*.cpp" "ui/*.cpp" "rest/*.cpp")
+file(GLOB fts_cli_python_sources "python/*.cpp")
 
 add_library(fts_cli_common SHARED ${fts_cli_common_sources})
 target_link_libraries(fts_cli_common ${fts_cli_libs})
@@ -192,7 +193,7 @@ target_link_libraries (fts-set-priority fts_cli_common)
 # python bindings
 find_package(PythonEasy REQUIRED)
 
-add_library(ftspython SHARED python/PythonBindings.cpp python/PythonApi.cpp python/Job.cpp python/PyFile.cpp)
+add_library(ftspython SHARED ${fts_cli_python_sources})
 target_link_libraries(ftspython fts_cli_common ${Boost_PYTHON_LIBRARIES} ${PYTHON_LIBRARIES})
 #add_dependencies(ftspython fts_cli_common)
 

@@ -87,6 +87,13 @@ py::str PythonApi::getVersion()
     return ctx.getVersion().c_str();
 }
 
+void PythonApi::setPriority(py::str id, int priority)
+{
+	if (priority < 1 || priority > 5) throw std::string("The priority has to take a value in range of 1 to 5");
+
+	ctx.prioritySet(py::extract<string>(id), priority);
+}
+
 }
 }
 
