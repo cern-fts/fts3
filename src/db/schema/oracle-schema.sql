@@ -201,7 +201,7 @@ CREATE INDEX credential_term_time ON t_credential(termination_time);
 CREATE TABLE t_se (
 -- The internal id
    se_id_info INTEGER
-  ,name VARCHAR2(255) not null
+  ,name VARCHAR2(255) NOT NULL
   ,endpoint VARCHAR2(1024)
   ,se_type VARCHAR2(30)
   ,site VARCHAR2(100)
