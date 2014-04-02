@@ -93,4 +93,10 @@ class Cli:
         return pairDict
 
 
-
+    def redelegate(self, force = False):
+        cmdArray = ['fts-rest-delegate', '-v', '-s', config.Fts3Endpoint]
+        if force:
+            cmdArray.append('--force')
+        out = self._spawn(cmdArray)
+        for line in out.split('\n'):
+            logging.debug(line)  

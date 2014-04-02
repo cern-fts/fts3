@@ -117,7 +117,7 @@ static void call_perf(gfalt_transfer_status_t h, const char*, const char*, gpoin
                                          << ", inst KB/sec:" << inst
                                          << ", elapsed:" << elapsed
                                          << std::endl;
-            currentTransfer.throughput       = (double) avg;
+            currentTransfer.throughput       = (double) inst;
             currentTransfer.transferredBytes = trans;
         }
 
@@ -911,7 +911,7 @@ int main(int argc, char **argv)
                                     }
                                 else
                                     {
-                                        errorMessage = "TRANSFER" + std::string(tmp_err->message);
+                                        errorMessage = "TRANSFER " + std::string(tmp_err->message);
                                     }
                                 errorScope = TRANSFER;
                                 reasonClass = mapErrnoToString(tmp_err->code);

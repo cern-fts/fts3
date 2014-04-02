@@ -310,7 +310,6 @@ protected:
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a()
     {
-        int logInterval = 0;
 
         while (1)   /*need to receive more than one messages at a time*/
             {
@@ -354,12 +353,52 @@ protected:
                                     }
                             }
 
-                        if(!messagesLog.empty())
+                        try
                             {
-                                DBSingleton::instance().getDBObjectInstance()->transferLogFileVector(messagesLog);
-                                messagesLog.clear();
+                                if(!messagesLog.empty())
+                                    {
+                                        DBSingleton::instance().getDBObjectInstance()->transferLogFileVector(messagesLog);
+                                        messagesLog.clear();
+                                    }
                             }
-
+                        catch (std::exception& e)
+                            {
+                                //try again
+                                try
+                                    {
+                                        DBSingleton::instance().getDBObjectInstance()->transferLogFileVector(messagesLog);
+                                        messagesLog.clear();
+                                    }
+                                catch(...)
+                                    {
+                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "transferLogFileVector throw exception "  << commit;
+                                        std::map<int, struct message_log>::const_iterator iterLogBreak;
+                                        for (iterLogBreak = messagesLog.begin(); iterLogBreak != messagesLog.end(); ++iterLogBreak)
+                                            {
+                                                struct message_log msgLogBreak = (*iterLogBreak).second;
+                                                runProducerLog( msgLogBreak );
+                                            }
+                                    }
+                            }
+                        catch (...)
+                            {
+                                //try again
+                                try
+                                    {
+                                        DBSingleton::instance().getDBObjectInstance()->transferLogFileVector(messagesLog);
+                                        messagesLog.clear();
+                                    }
+                                catch(...)
+                                    {
+                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "transferLogFileVector throw exception " << commit;
+                                        std::map<int, struct message_log>::const_iterator iterLogBreak;
+                                        for (iterLogBreak = messagesLog.begin(); iterLogBreak != messagesLog.end(); ++iterLogBreak)
+                                            {
+                                                struct message_log msgLogBreak = (*iterLogBreak).second;
+                                                runProducerLog( msgLogBreak );
+                                            }
+                                    }
+                            }
 
                         if(!messages.empty())
                             {
@@ -419,7 +458,6 @@ protected:
 
 
                         sleep(1);
-                        logInterval = 0;
                     }
                 catch (std::exception& ex2)
                     {
@@ -441,7 +479,6 @@ protected:
 
 
                         sleep(1);
-                        logInterval = 0;
                     }
                 catch (...)
                     {
@@ -463,7 +500,6 @@ protected:
 
 
                         sleep(1);
-                        logInterval = 0;
                     }
             }
     }

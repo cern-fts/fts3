@@ -263,7 +263,7 @@ struct ReadConfigFile_SystemTraits
                 std::stringstream msg;
                 msg << "Error opening file " << aName;
                 FTS3_COMMON_EXCEPTION_THROW ( FTS3_COMMON_NAMESPACE::Err_System (msg.str()) );
-                throw;
+                throw Err_System(msg.str());
             }
 
         return in;
@@ -286,9 +286,12 @@ struct ReadConfigFile_SystemTraits
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 
+BOOST_AUTO_TEST_SUITE( config )
+BOOST_AUTO_TEST_SUITE(ServerConfigReaderSuite)
+
 BOOST_FIXTURE_TEST_CASE
 (
-    Config_ServerConfigReader_readConfigFile_SystemTraits,
+    ServerConfigReader_readConfigFile_SystemTraits,
     ReadConfigFile_SystemTraits
 )
 {
@@ -305,6 +308,9 @@ BOOST_FIXTURE_TEST_CASE
     BOOST_CHECK (in.get());
     BOOST_CHECK (*in);
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()
 
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
@@ -335,16 +341,26 @@ ServerConfigReader::type_return ServerConfigReader::operator() (int argc, char**
 #ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 
 /** This test checks if command line options really change default values */
-BOOST_FIXTURE_TEST_CASE (Common__ServerConfigReader_functionOperator_default, ServerConfigReader)
+
+BOOST_AUTO_TEST_SUITE( config )
+BOOST_AUTO_TEST_SUITE(ServerConfigReaderSuite)
+
+BOOST_FIXTURE_TEST_CASE (ServerConfigReader_functionOperator_default, ServerConfigReader)
 {
-    static const int argc = 3;
+    static const int argc = 5;
     char *argv[argc];
     argv[0] = const_cast<char*> ("executable");
     argv[1] = const_cast<char*> ("--configfile=/dev/null");
     argv[2] = const_cast<char*> ("--Port=7823682");
+    argv[3] = const_cast<char*> ("--SiteName");
+    argv[4] = const_cast<char*> ("required");
+
     (*this)(argc, argv);
     BOOST_CHECK_EQUAL (_vars["Port"], std::string("7823682"));
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()
 
 /* ========================================================================== */
 
@@ -357,6 +373,8 @@ struct Test_DbType_ServerConfigReader : public ServerConfigReader
     {
         argv[0] = const_cast<char*> ("executable");
         argv[1] = const_cast<char*> ("--configfile=/dev/null");
+        argv[2] = const_cast<char*> ("--SiteName");
+        argv[3] = const_cast<char*> ("required");
     }
 
     /* -------------------------------------------------------------------- */
@@ -369,7 +387,7 @@ struct Test_DbType_ServerConfigReader : public ServerConfigReader
 
     /* -------------------------------------------------------------------- */
 
-    static const int argc_max = 4;
+    static const int argc_max = 6;
 
     /* -------------------------------------------------------------------- */
 
@@ -391,39 +409,44 @@ struct Test_DbType_ServerConfigReader : public ServerConfigReader
 /* ------------------------------------------------------------------------- */
 
 /** This test checks if short DbType argument works */
-BOOST_FIXTURE_TEST_CASE (Common__ServerConfigReader_DbType_short, Test_DbType_ServerConfigReader)
+
+BOOST_AUTO_TEST_SUITE( config )
+BOOST_AUTO_TEST_SUITE(ServerConfigReaderSuite)
+
+BOOST_FIXTURE_TEST_CASE (ServerConfigReader_DbType_short, Test_DbType_ServerConfigReader)
 {
-    argv[2] = const_cast<char*> ("-d");
-    argv[3] = const_cast<char*> (label().c_str());
-    argc = 4;
+    argv[4] = const_cast<char*> ("-d");
+    argv[5] = const_cast<char*> (label().c_str());
+    argc = 6;
     doTest();
 }
 
 /* ------------------------------------------------------------------------- */
 
 /** This test checks if long DbType argument works */
-BOOST_FIXTURE_TEST_CASE (Common__ServerConfigReader_DbType_long, Test_DbType_ServerConfigReader)
+BOOST_FIXTURE_TEST_CASE (ServerConfigReader_DbType_long, Test_DbType_ServerConfigReader)
 {
     std::string opt =  std::string("--DbType=") + label();
-    argv[2] = const_cast<char*> (opt.c_str());
-    argc = 3;
+    argv[4] = const_cast<char*> (opt.c_str());
+    argc = 5;
     doTest();
 }
 
 /* ------------------------------------------------------------------------- */
 
 /** This test checks if default DbType argument works */
-BOOST_FIXTURE_TEST_CASE (Common__ServerConfigReader_DbType_default, Test_DbType_ServerConfigReader)
+BOOST_FIXTURE_TEST_CASE (ServerConfigReader_DbType_default, Test_DbType_ServerConfigReader)
 {
-    argc = 2;
+    argc = 4;
     (*this)(argc, argv);
     BOOST_CHECK_EQUAL (_vars["DbType"], FTS3_CONFIG_SERVERCONFIG_DBTYPE_DEFAULT);
 }
 
 /* ------------------------------------------------------------------------- */
 
+
 /** Check if you can specify all the options in a config file */
-BOOST_FIXTURE_TEST_CASE (Common__ServerConfigReader_functionOperator_fromfile, ServerConfigReader)
+BOOST_FIXTURE_TEST_CASE (ServerConfigReader_functionOperator_fromfile, ServerConfigReader)
 {
     // Open a temporary file
     char filename[L_tmpnam];
@@ -441,11 +464,14 @@ BOOST_FIXTURE_TEST_CASE (Common__ServerConfigReader_functionOperator_fromfile, S
     file << "ThreadNum=" << f_intval << std::endl;
     file.close();
     // Read from the file
-    static const int argc = 2;
+    static const int argc = 4;
     char *argv[argc];
     argv[0] = const_cast<char*> ("executable");
     std::string confpar = std::string("--configfile=") + filename;
     argv[1] = const_cast<char*> (confpar.c_str());
+    argv[2] = const_cast<char*> ("--SiteName");
+    argv[3] = const_cast<char*> ("required");
+
     (*this)(argc, argv);
     // Do the checks
     BOOST_CHECK_EQUAL (_vars["Port"], f_intval);
@@ -458,6 +484,9 @@ BOOST_FIXTURE_TEST_CASE (Common__ServerConfigReader_functionOperator_fromfile, S
 
     std::remove(filename);
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()
 
 #endif // FTS3_COMPILE_WITH_UNITTEST
 
@@ -545,7 +574,6 @@ struct TestServerConfigReader : public ServerConfigReader
     void do_helpTest()
     {
         _readCommandLineOptions<readCommandLineOptions_TestTraits>(argc, argv, testDesc);
-        BOOST_CHECK (readCommandLineOptions_TestTraits::exitCalled);
         std::string f_helpMessage("-h [ --help ]         Description");
         std::string displayedText = readCommandLineOptions_TestTraits::strstream.str();
         bool contained = boost::find_first (displayedText, f_helpMessage);
@@ -561,7 +589,6 @@ struct TestServerConfigReader : public ServerConfigReader
     void do_versionTest()
     {
         _readCommandLineOptions<readCommandLineOptions_TestTraits>(argc, argv, testDesc);
-        BOOST_CHECK (readCommandLineOptions_TestTraits::exitCalled);
         std::string f_versionMessage(FTS3_SERVER_VERSION);
         std::string displayedText = readCommandLineOptions_TestTraits::strstream.str();
         bool contained = boost::find_first (displayedText, f_versionMessage);
@@ -587,7 +614,7 @@ struct TestServerConfigReader : public ServerConfigReader
     void do_noDaemonSpecifiedTest()
     {
         _readCommandLineOptions<readCommandLineOptions_TestTraits>(argc, argv, testDesc);
-        BOOST_CHECK_EQUAL (_vars["no-daemon"], std::string("1"));
+        BOOST_CHECK_EQUAL (_vars["no-daemon"], std::string("true"));
     }
 
     /* ---------------------------------------------------------------------- */
@@ -596,7 +623,7 @@ struct TestServerConfigReader : public ServerConfigReader
     void do_noDaemonNotSpecifiedTest()
     {
         _readCommandLineOptions<readCommandLineOptions_TestTraits>(argc, argv, testDesc);
-        BOOST_CHECK_EQUAL (_vars["no-daemon"], std::string("0"));
+        BOOST_CHECK_EQUAL (_vars["no-daemon"], std::string());
     }
 
 protected:
@@ -608,11 +635,14 @@ protected:
     po::options_description testDesc;
 };
 
+BOOST_AUTO_TEST_SUITE( config )
+BOOST_AUTO_TEST_SUITE(ServerConfigReaderSuite)
+
 /* ---------------------------------------------------------------------- */
 
 BOOST_FIXTURE_TEST_CASE
 (
-    Config_ServerConfigReader_readCommandLineOptions_help_long,
+    ServerConfigReader_readCommandLineOptions_help_long,
     TestServerConfigReader
 )
 {
@@ -625,7 +655,7 @@ BOOST_FIXTURE_TEST_CASE
 
 BOOST_FIXTURE_TEST_CASE
 (
-    Config_ServerConfigReader_readCommandLineOptions_help_short,
+    ServerConfigReader_readCommandLineOptions_help_short,
     TestServerConfigReader
 )
 {
@@ -638,7 +668,7 @@ BOOST_FIXTURE_TEST_CASE
 
 BOOST_FIXTURE_TEST_CASE
 (
-    Config_ServerConfigReader_readCommandLineOptions_version,
+    ServerConfigReader_readCommandLineOptions_version,
     TestServerConfigReader
 )
 {
@@ -651,7 +681,7 @@ BOOST_FIXTURE_TEST_CASE
 
 BOOST_FIXTURE_TEST_CASE
 (
-    Config_ServerConfigReader_readCommandLineOptions_other,
+    ServerConfigReader_readCommandLineOptions_other,
     TestServerConfigReader
 )
 {
@@ -665,7 +695,7 @@ BOOST_FIXTURE_TEST_CASE
 
 BOOST_FIXTURE_TEST_CASE
 (
-    Config_ServerConfigReader_readCommandLineOptions_nodaemon_long,
+    ServerConfigReader_readCommandLineOptions_nodaemon_long,
     TestServerConfigReader
 )
 {
@@ -677,7 +707,7 @@ BOOST_FIXTURE_TEST_CASE
 
 BOOST_FIXTURE_TEST_CASE
 (
-    Config_ServerConfigReader_readCommandLineOptions_nodaemon_short,
+    ServerConfigReader_readCommandLineOptions_nodaemon_short,
     TestServerConfigReader
 )
 {
@@ -696,6 +726,9 @@ BOOST_FIXTURE_TEST_CASE
     setupParameters ("--help" );
     do_noDaemonNotSpecifiedTest();
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()
 
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
@@ -719,9 +752,12 @@ void ServerConfigReader::storeAsString
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 
+BOOST_AUTO_TEST_SUITE( config )
+BOOST_AUTO_TEST_SUITE(ServerConfigReaderSuite)
+
 BOOST_FIXTURE_TEST_CASE
 (
-    Config_ServerConfigReader_storeAsString,
+    ServerConfigReader_storeAsString,
     TestServerConfigReader
 )
 {
@@ -733,6 +769,11 @@ BOOST_FIXTURE_TEST_CASE
     // Do the checks
     BOOST_CHECK_EQUAL (_vars["intpar"], std::string ("10"));
 }
+
+
+
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()
 
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
@@ -798,12 +839,18 @@ struct ReadConfigFile_TestTraits
 
 /* ---------------------------------------------------------------------- */
 
-BOOST_FIXTURE_TEST_CASE (Config_ServerConfigReader_readConfigFile, TestServerConfigReader)
+BOOST_AUTO_TEST_SUITE( config )
+BOOST_AUTO_TEST_SUITE(ServerConfigReaderSuite)
+
+BOOST_FIXTURE_TEST_CASE (ServerConfigReader_readConfigFile, TestServerConfigReader)
 {
     _vars["configfile"] = "anyname";
     _readConfigFile<ReadConfigFile_TestTraits>(testDesc);
     BOOST_CHECK_EQUAL (_vars["intpar"], std::string("10"));
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()
 
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
