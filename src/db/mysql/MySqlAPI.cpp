@@ -3426,7 +3426,7 @@ bool MySqlAPI::updateOptimizer()
                                         }
                                     else
                                         {					
-                                            if(maxActive > activeStored)
+                                            if(maxActive >= activeStored)
                                                 {
                                                     active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
                                                     pathFollowed = 5;
