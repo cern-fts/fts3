@@ -3293,7 +3293,7 @@ bool MySqlAPI::updateOptimizer()
 
                             if(throughput != 0.0 && throughput < 1.0) //records found, optimize number of streams by reducing them
                                 {
-                                    if(diff > 3600) //if elapsed, fall-back to auto-tune
+                                    if(diff > 10000) //if elapsed, fall-back to auto-tune
                                         {
                                             insertStreams = 4;
                                             sql.begin();
@@ -3311,7 +3311,7 @@ bool MySqlAPI::updateOptimizer()
                                 }
                             else if (throughput != 0.0 && throughput >= 1.0 && streamsCurrent == -1)
                                 {
-                                    if(diff > 3600) //if elapsed, fall-back to auto-tune
+                                    if(diff > 10000) //if elapsed, fall-back to auto-tune
                                         {
                                             insertStreams = 4;
                                             sql.begin();
