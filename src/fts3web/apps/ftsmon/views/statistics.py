@@ -124,22 +124,29 @@ def _getHostServiceAndSegment():
             
             segments = dict()
             index = 0
-            for host in running:
+            for host in hosts:
                 hostname = host['hostname']
 
                 if hostname not in host_map:
                     host_map[host] = dict()
-                
-                host_map[hostname][service] = {
-                    'status': 'running',
-                    'start': "%04X" % (segment_size * index),
-                    'end' : "%04X" % (segment_size * (index + 1) - 1),
-                    'drain': host['drain'],
-                    'beat': host['beat']
-                }            
-                index += 1
-                if index == running_count:
-                    host_map[hostname][service]['end'] = "%04X" % (segment_size * index + segment_remaining)
+
+                if hostname in [h['hostname'] for h in running]:
+                    host_map[hostname][service] = {
+                        'status': 'running',
+                        'start': "%04X" % (segment_size * index),
+                        'end' : "%04X" % (segment_size * (index + 1) - 1),
+                        'drain': host['drain'],
+                        'beat': host['beat']
+                    }
+                    index += 1
+                    if index == running_count:
+                        host_map[hostname][service]['end'] = "%04X" % (segment_size * index + segment_remaining)
+                else:
+                    host_map[hostname][service] = {
+                        'drain': host['drain'],
+                        'beat': host['beat'],
+                        'status': 'down'
+                    }
         else:
             for host in hosts:
                 hostname = host['hostname']
