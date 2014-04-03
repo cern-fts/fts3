@@ -2924,7 +2924,7 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
             if(active < highDefault)
                 {
                     allowed = true;
-                }            
+                }
         }
     catch (std::exception& e)
         {
