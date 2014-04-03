@@ -901,17 +901,15 @@ int main(int argc, char **argv)
                     {
                         if (tmp_err != NULL && tmp_err->message != NULL)
                             {
-                                logger.ERROR() << "TRANSFER failed - errno: " << tmp_err->code
-                                               << " Error message:" << tmp_err->message
-                                               << std::endl;
+                                logger.ERROR() <<  std::string(tmp_err->message) << std::endl;
                                 if (tmp_err->code == 110)
                                     {
-                                        errorMessage = "TRANSFER" + std::string(tmp_err->message);
+                                        errorMessage = std::string(tmp_err->message);
                                         errorMessage += ", operation timeout";
                                     }
                                 else
                                     {
-                                        errorMessage = "TRANSFER " + std::string(tmp_err->message);
+                                        errorMessage = std::string(tmp_err->message);
                                     }
                                 errorScope = TRANSFER;
                                 reasonClass = mapErrnoToString(tmp_err->code);
