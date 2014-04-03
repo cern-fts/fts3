@@ -84,7 +84,7 @@ else:
 DEBUG = FTS3WEB_CONFIG.getboolean('server', 'debug')
 TEMPLATE_DEBUG = DEBUG
 
-TIME_ZONE = 'Europe/Zurich'
+TIME_ZONE = None
 LANGUAGE_CODE = 'en-gb'
 
 # Project root
