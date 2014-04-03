@@ -3075,7 +3075,7 @@ bool OracleAPI::updateOptimizer()
                                     streamsCurrent = -1;
                                 }
 
-                            if(throughput < 1.0) //records found, optimize number of streams by reducing them
+                            if(throughput != 0.0 && throughput < 1.0) //records found, optimize number of streams by reducing them
                                 {
                                     if(diff > 3600) //if elapsed, fall-back to auto-tune
                                         {
@@ -3093,7 +3093,7 @@ bool OracleAPI::updateOptimizer()
                                             sql.commit();
                                         }
                                 }
-                            else if (throughput >= 1.0 && streamsCurrent == -1)
+                            else if (throughput != 0.0 && throughput >= 1.0 && streamsCurrent == -1)
                                 {
                                     if(diff > 3600) //if elapsed, fall-back to auto-tune
                                         {
@@ -3111,7 +3111,7 @@ bool OracleAPI::updateOptimizer()
                                             sql.commit();
                                         }
                                 }
-                            else if (throughput >= 1.0 && streamsCurrent != -1) //auto-tune working fine
+                            else if (throughput != 0.0 && throughput >= 1.0 && streamsCurrent != -1) //auto-tune working fine
                                 {
                                     insertStreams = 4;
                                     sql.begin();
@@ -3145,7 +3145,7 @@ bool OracleAPI::updateOptimizer()
                         maxActive = highDefault;
 
                     //only apply the logic below if any of these values changes
-                    bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, rateStored, throughput, thrStored, retry, retryStored, active, activeStored, throughputSamples, thrSamplesStored);
+                    bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, rateStored, throughput, thrStored, retry, retryStored, maxActive, activeStored, throughputSamples, thrSamplesStored);
                     if(!changed && retry > 0)
                         changed = true;
 
@@ -3209,7 +3209,7 @@ bool OracleAPI::updateOptimizer()
                                         }
                                     else
                                         {
-                                            if(active > activeStored)
+                                            if(maxActive > activeStored)
                                                 {
                                                     active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
                                                     pathFollowed = 5;
