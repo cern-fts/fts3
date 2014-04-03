@@ -108,29 +108,48 @@ def overview(httpRequest):
 def _getHostServiceAndSegment():
     service_names = map(lambda s: s['service_name'], Host.objects.values('service_name').distinct().all())
     
+    last_expected_beat = datetime.utcnow() - timedelta(minutes = 2)
+
     host_map = dict()
     for service in service_names:
-        running_hosts = Host.objects.filter(service_name = service, beat__gte = datetime.utcnow() - timedelta(minutes = 2))\
-            .values('hostname').order_by('hostname').all()
+        hosts = Host.objects.filter(service_name = service).values('hostname', 'beat', 'drain').order_by('hostname').all()
+        running = filter(lambda h: h['beat'] >= last_expected_beat, hosts)
         
-        running_count = len(running_hosts)
+        host_count = len(hosts)
+        running_count = len(running)
+        
         if running_count > 0:
             segment_size = 0xFFFF / running_count
             segment_remaining = 0xFFFF % running_count
             
             segments = dict()
             index = 0
-            for host in [h['hostname'] for h in running_hosts]:
-                if host not in host_map:
+            for host in running:
+                hostname = host['hostname']
+
+                if hostname not in host_map:
                     host_map[host] = dict()
                 
-                host_map[host][service] = {
+                host_map[hostname][service] = {
+                    'status': 'running',
                     'start': "%04X" % (segment_size * index),
                     'end' : "%04X" % (segment_size * (index + 1) - 1),
+                    'drain': host['drain'],
+                    'beat': host['beat']
                 }            
                 index += 1
                 if index == running_count:
-                    host_map[host][service]['end'] = "%04X" % (segment_size * index + segment_remaining)
+                    host_map[hostname][service]['end'] = "%04X" % (segment_size * index + segment_remaining)
+        else:
+            for host in hosts:
+                hostname = host['hostname']
+                if hostname not in host_map:
+                    host_map[hostname] = dict()
+                host_map[hostname][service] = {
+                    'status': 'down',
+                    'beat': host['beat'],
+                    'drain': host['drain']
+                }
         
     return host_map
 

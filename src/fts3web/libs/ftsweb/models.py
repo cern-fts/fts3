@@ -268,6 +268,7 @@ class Host(models.Model):
     hostname = models.CharField(primary_key = True, max_length = 64)
     beat     = models.DateTimeField()
     service_name = models.CharField()
+    drain    = models.IntegerField()
     
     class Meta:
         db_table = 't_hosts'
