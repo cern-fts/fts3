@@ -25,16 +25,16 @@ class PythonProxyDelegator
 {
 
 public:
-	PythonProxyDelegator(py::str endpoint, py::str delegationId, long expTime);
-	virtual ~PythonProxyDelegator();
+    PythonProxyDelegator(py::str endpoint, py::str delegationId, long expTime);
+    virtual ~PythonProxyDelegator();
 
-	void delegate();
-	long isCertValid(py::str filename);
+    void delegate();
+    long isCertValid(py::str filename);
 
 private:
-	stringstream out;
-	MsgPrinter printer;
-	ProxyCertificateDelegator delegator;
+    stringstream out;
+    MsgPrinter printer;
+    ProxyCertificateDelegator delegator;
 };
 
 }

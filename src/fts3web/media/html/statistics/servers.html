@@ -1,5 +1,5 @@
 <h2>Statistics - Servers</h2>
-<h3>For the last 24 hours</h3>
+<h3>For the last 6 hours</h3>
 
 <table class="table">
     <thead>
@@ -20,6 +20,10 @@
             <td>
                 <span ng-repeat="(service, segment) in s.services" title="[{{segment.start}}, {{segment.end}}]">
                     {{service}}
+                    
+                    <i class="icon-ok-sign" title="Running ({{segment.beat}})" ng-show="segment.status == 'running'"></i>
+                    <i class=" icon-warning-sign" title="Not running ({{segment.beat}})" ng-show="segment.status == 'down'"></i>
+                    <i class="icon-wrench" title="Draining" ng-show="segment.drain"></i>
                     <br/>
                 </span>
             </td>
