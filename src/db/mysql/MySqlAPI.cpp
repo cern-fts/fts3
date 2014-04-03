@@ -3343,10 +3343,6 @@ bool MySqlAPI::updateOptimizer()
                                 }
                         }
 
-
-                    //get aggregated throughut
-                    throughput *= active;
-
                     // Max active transfers
                     stmt8.execute(true);
 

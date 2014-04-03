@@ -35,7 +35,7 @@
             <td>{{ o.datetime }}</td>
             <td>{{ o.active }}</td>
             <td>{{ o.success|number:2 }}%</td>
-            <td>{{ o.throughput|number:3 }}</td>
+            <td>{{ o.throughput|number:3 }} MB/s</td>
             <td ng-switch on="o.branch">
                 <span ng-switch-when="1">Good link efficiency, current average throughput is larger than the preceding average throughput and retrials steady or decreasing</span>
                 <span ng-switch-when="2">Good link efficiency, throughput steady, retrials steady or decreasing</span>
@@ -49,10 +49,10 @@
                 <span ng-switch-when="10">
                     Bandwidth restriction are set to
                     <span ng-show="o.bandwidth_limits.source">
-                        {{ o.bandwidth_limits.source|number:2 }} Mbits/sec on the source
+                        {{ o.bandwidth_limits.source|number:2 }} MB/s on the source
                     </span>
                     <span ng-show="o.bandwidth_limits.destination">
-                        {{ o.bandwidth_limits.destination|number:2 }} Mbits/sec on the destination
+                        {{ o.bandwidth_limits.destination|number:2 }} MB/s on the destination
                     </span>
                 </span>
             </td>

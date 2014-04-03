@@ -3125,10 +3125,7 @@ bool OracleAPI::updateOptimizer()
                                     stmt13.execute(true);
                                     sql.commit();
                                 }
-                        }
-
-                    //get aggregated throughut
-                    throughput *= active;
+                        }                   
 
                     // Max active transfers
                     stmt8.execute(true);
