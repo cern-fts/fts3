@@ -62,7 +62,7 @@ def _getTransferAndSubmissionPerHost(timewindow):
 
     for host in map(lambda h: h['hostname'], hosts):
         submissions = Job.objects.filter(submit_time__gte = notBefore, submit_host = host).count()
-        transfers = File.objects.filter(job__submit_time__gte = notBefore, transferHost = host).count()
+        transfers = File.objects.filter(job_finished__gte = notBefore, transferHost = host).count()
         actives = File.objects.filter(file_state = 'ACTIVE', transferHost = host).count()
         servers[host] = {
              'submissions': submissions,
@@ -138,7 +138,7 @@ def _getHostServiceAndSegment():
 @jsonify
 def servers(httpRequest):
     segments  = _getHostServiceAndSegment()
-    transfers = _getTransferAndSubmissionPerHost(timedelta(hours = 12))
+    transfers = _getTransferAndSubmissionPerHost(timedelta(hours = 6))
     
     hosts = segments.keys()
 
