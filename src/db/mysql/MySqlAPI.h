@@ -354,6 +354,18 @@ public:
 
     virtual int getStreamsOptimization(const std::string & source_hostname, const std::string & destination_hostname);
 
+    virtual int getGlobalTimeout();
+
+    virtual void setGlobalTimeout(int timeout);
+
+    virtual int getSecPerMb();
+
+    virtual void setSecPerMb(int seconds);
+
+    virtual void setSourceMaxActive(const std::string & source_hostname, int maxActive);
+
+    virtual void setDestMaxActive(const std::string & destination_hostname, int maxActive);
+
 private:
     size_t                poolSize;
     soci::connection_pool* connectionPool;

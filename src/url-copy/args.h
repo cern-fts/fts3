@@ -24,6 +24,7 @@ public:
     bool reuse;
     bool multihop;
     bool enable_udt;
+    bool global_timeout;
 
     enum CompareChecksum
     {
@@ -55,6 +56,7 @@ public:
     unsigned    tcpBuffersize;
     unsigned    blockSize;
     unsigned    timeout;
+    int    	secPerMb;
 
     bool areTransfersOnFile() const
     {

@@ -162,22 +162,27 @@ static unsigned adjustTimeout(off_t sizeInBytes)
 
 
 
-unsigned adjustTimeoutBasedOnSize(off_t sizeInBytes,
-                                  unsigned timeout)
+unsigned adjustTimeoutBasedOnSize(off_t sizeInBytes, unsigned timeout, unsigned timeoutPerMB, bool global_timeout)
 {
     static const unsigned long MB = 1 << 20;
 
     // Reasonable time to wait per MB transferred
     // If input timeout is 0, give it a little more room
-    long double timeoutPerMB = 2;
-    if (timeout == 0)
-        timeoutPerMB = 5;
+    long double timeoutPerMBLocal = 0;
+    if(timeoutPerMB > 0 )
+        timeoutPerMBLocal = timeoutPerMB;
+    else
+        timeoutPerMBLocal = 2;
 
     // Reasonable time to wait for the transfer itself
-    unsigned transferTimeout = adjustTimeout(sizeInBytes);
+    unsigned transferTimeout = 0;
+    if(global_timeout)
+        transferTimeout = timeout;
+    else
+        transferTimeout = adjustTimeout(sizeInBytes);
 
     // Final timeout adjusted considering transfer timeout
-    long double totalTimeout = transferTimeout + ceil(timeoutPerMB * sizeInBytes / MB);
+    long double totalTimeout = transferTimeout + ceil(timeoutPerMBLocal * sizeInBytes / MB);
 
     // Truncate to an unsigned
     if (totalTimeout >= INT_MAX)

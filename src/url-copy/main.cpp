@@ -839,12 +839,22 @@ int main(int argc, char **argv)
                             }
                     }
 
-                unsigned int experimentalTimeout = adjustTimeoutBasedOnSize(currentTransfer.fileSize, opts.timeout);
-                if(!opts.manualConfig || opts.autoTunned || opts.timeout==0)
+                unsigned int experimentalTimeout = adjustTimeoutBasedOnSize(currentTransfer.fileSize, opts.timeout, opts.secPerMb, opts.global_timeout);
+                if( !opts.manualConfig || opts.autoTunned || opts.timeout==0)
                     opts.timeout = experimentalTimeout;
+
+                if (opts.global_timeout)
+                    {
+                        logger.INFO() << "Transfer timeout is set globally:" << opts.timeout << std::endl;
+                    }
+                else
+                    {
+                        logger.INFO() << "Transfer timeout:" << opts.timeout << std::endl;
+                    }
+                logger.INFO() << "Add " << opts.secPerMb << " seconds per MB transfer timeout "  << std::endl;
+
                 gfalt_set_timeout(params, opts.timeout, NULL);
                 msg_ifce::getInstance()->set_transfer_timeout(&tr_completed, opts.timeout);
-                logger.INFO() << "Timeout:" << opts.timeout << std::endl;
                 globalTimeout = experimentalTimeout + 500;
                 logger.INFO() << "Resetting global timeout thread to " << globalTimeout << " seconds" << std::endl;
 

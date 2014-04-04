@@ -853,3 +853,32 @@ int ProfiledDB::getStreamsOptimization(const std::string & source_hostname, cons
     PROFILE_PREFIXED("DB::", return db->getStreamsOptimization(source_hostname, destination_hostname));
 }
 
+int ProfiledDB::getGlobalTimeout()
+{
+    PROFILE_PREFIXED("DB::", return db->getGlobalTimeout());
+}
+
+void ProfiledDB::setGlobalTimeout(int timeout)
+{
+    PROFILE_PREFIXED("DB::", db->setGlobalTimeout(timeout));
+}
+
+int ProfiledDB::getSecPerMb()
+{
+    PROFILE_PREFIXED("DB::", return db->getSecPerMb());
+}
+
+void ProfiledDB::setSecPerMb(int seconds)
+{
+    PROFILE_PREFIXED("DB::", db->setSecPerMb(seconds));
+}
+
+void ProfiledDB::setSourceMaxActive(const std::string & source_hostname, int maxActive)
+{
+    PROFILE_PREFIXED("DB::", db->setSourceMaxActive( source_hostname, maxActive));
+}
+
+void ProfiledDB::setDestMaxActive(const std::string & destination_hostname, int maxActive)
+{
+    PROFILE_PREFIXED("DB::", db->setDestMaxActive(destination_hostname,  maxActive));
+}

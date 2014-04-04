@@ -27,9 +27,10 @@ INSERT INTO t_server_sanity (revertToSubmitted, cancelWaitingFiles, revertNotUse
 CREATE TABLE t_server_config (
   retry       INTEGER default 0,
   max_time_queue INTEGER default 0,
-  global_timeout INTEGER default 0
+  global_timeout INTEGER default 0,
+  sec_per_mb INTEGER default 0
 );
-insert into t_server_config(retry,max_time_queue,global_timeout) values(0,0,0);
+insert into t_server_config(retry,max_time_queue,global_timeout,sec_per_mb) values(0,0,0,0);
 
 --
 -- Holds the optimizer mode

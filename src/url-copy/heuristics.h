@@ -16,5 +16,5 @@ unsigned adjustStreamsBasedOnSize(off_t sizeInBytes, unsigned int currentStreams
 /**
  * Return a reasonable timeout for the given filesize
  */
-unsigned adjustTimeoutBasedOnSize(off_t sizeInBytes, unsigned int timeout);
+unsigned adjustTimeoutBasedOnSize(off_t sizeInBytes, unsigned int timeout, unsigned timeoutPerMB, bool global_timeout);
 

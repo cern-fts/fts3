@@ -315,6 +315,18 @@ public:
     bool isProtocolUDT(const std::string & source_hostname, const std::string & destination_hostname);
 
     int getStreamsOptimization(const std::string & source_hostname, const std::string & destination_hostname);
+
+    int getGlobalTimeout();
+
+    void setGlobalTimeout(int timeout);
+
+    int getSecPerMb();
+
+    void setSecPerMb(int seconds);
+
+    void setSourceMaxActive(const std::string & source_hostname, int maxActive);
+
+    void setDestMaxActive(const std::string & destination_hostname, int maxActive);
 };
 
 

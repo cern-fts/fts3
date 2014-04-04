@@ -84,6 +84,7 @@ int FileTransferExecutor::execute()
         {
             string source_hostname = tf->SOURCE_SE;
             string destin_hostname = tf->DEST_SE;
+            string params;
 
             // if the pair was already checked and not scheduled skip it
             if (notScheduled.count(make_pair(source_hostname, destin_hostname))) return scheduled;
@@ -117,7 +118,18 @@ int FileTransferExecutor::execute()
                 {
                     BufSize = DEFAULT_BUFFSIZE;
                     StreamsperFile = db->getStreamsOptimization(source_hostname, destin_hostname);
-                    Timeout = DEFAULT_TIMEOUT;
+                    Timeout = db->getGlobalTimeout();
+                    if(Timeout == 0)
+                        Timeout = DEFAULT_TIMEOUT;
+                    else
+                        params.append(" -Z ");
+
+                    int secPerMB = db->getSecPerMb();
+                    if(secPerMB > 0)
+                        {
+                            params.append(" -V ");
+                            params.append(lexical_cast<string >(secPerMB));
+                        }
                 }
 
             FileTransferScheduler scheduler(
@@ -178,8 +190,6 @@ int FileTransferExecutor::execute()
                     string destSiteName = ""; //siteResolver.getSiteName(tf->DEST_SURL);
 
                     bool debug = db->getDebugMode(source_hostname, destin_hostname);
-
-                    string params;
 
                     if (debug == true)
                         {

@@ -3421,7 +3421,7 @@ bool MySqlAPI::updateOptimizer()
                                             pathFollowed = 4;
                                         }
                                     else
-                                        {					
+                                        {
                                             if(maxActive >= activeStored)
                                                 {
                                                     active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
@@ -8708,6 +8708,232 @@ int MySqlAPI::getStreamsOptimization(const std::string & source_hostname, const 
 
     return 4;
 }
+
+int MySqlAPI::getGlobalTimeout()
+{
+    soci::session sql(*connectionPool);
+    int timeout = 0;
+
+    try
+        {
+            soci::indicator isNullTimeout = soci::i_ok;
+
+            sql << " select global_timeout from t_server_config ", soci::into(timeout, isNullTimeout);
+
+            if(sql.got_data() && timeout > 0)
+                {
+                    return timeout;
+                }
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }
+
+    return timeout;
+
+}
+
+void MySqlAPI::setGlobalTimeout(int timeout)
+{
+    soci::session sql(*connectionPool);
+    int timeoutLocal = 0;
+    soci::indicator isNullTimeout = soci::i_ok;
+
+    try
+        {
+            sql << "select global_timeout from t_server_config", soci::into(timeoutLocal, isNullTimeout);
+            if (!sql.got_data())
+                {
+                    sql.begin();
+
+                    sql << "INSERT INTO t_server_config (global_timeout) VALUES (:timeout) ",
+                        soci::use(timeout);
+
+                    sql.commit();
+
+                }
+            else
+                {
+                    sql.begin();
+
+                    sql << "update t_server_config set global_timeout = :timeout",
+                        soci::use(timeout);
+
+                    sql.commit();
+                }
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+
+}
+
+int MySqlAPI::getSecPerMb()
+{
+    soci::session sql(*connectionPool);
+    int seconds = 0;
+
+    try
+        {
+            soci::indicator isNullSeconds = soci::i_ok;
+
+            sql << " select sec_per_mb from t_server_config ", soci::into(seconds, isNullSeconds);
+
+            if(sql.got_data() && seconds > 0)
+                {
+                    return seconds;
+                }
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }
+
+    return seconds;
+
+}
+
+void MySqlAPI::setSecPerMb(int seconds)
+{
+    soci::session sql(*connectionPool);
+    int secondsLocal = 0;
+    soci::indicator isNullSeconds = soci::i_ok;
+
+    try
+        {
+            sql << "select sec_per_mb from t_server_config", soci::into(secondsLocal, isNullSeconds);
+            if (!sql.got_data())
+                {
+                    sql.begin();
+
+                    sql << "INSERT INTO t_server_config (sec_per_mb) VALUES (:seconds) ",
+                        soci::use(seconds);
+
+                    sql.commit();
+
+                }
+            else
+                {
+                    sql.begin();
+
+                    sql << "update t_server_config set sec_per_mb = :seconds",
+                        soci::use(seconds);
+
+                    sql.commit();
+                }
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+
+}
+
+void MySqlAPI::setSourceMaxActive(const std::string & source_hostname, int maxActive)
+{
+    soci::session sql(*connectionPool);
+    std::string source_se;
+    soci::indicator isNullSourceSe = soci::i_ok;
+
+    try
+        {
+            sql << "select source_se from t_optimize where source_se = :source_se ", soci::use(source_hostname), soci::into(source_se, isNullSourceSe);
+
+            if (!sql.got_data())
+                {
+                    sql.begin();
+
+                    sql << "INSERT INTO t_optimize (source_se, active) VALUES (:source_se, :active)  ",
+                        soci::use(source_hostname), soci::use(maxActive);
+
+                    sql.commit();
+                }
+            else
+                {
+                    sql.begin();
+
+                    sql << "update t_optimize set active = :active where source_se = :source_se ",
+                         soci::use(maxActive), soci::use(source_hostname);
+
+                    sql.commit();
+                }
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+
+}
+
+void MySqlAPI::setDestMaxActive(const std::string & destination_hostname, int maxActive)
+{
+   soci::session sql(*connectionPool);
+    std::string dest_se;
+    soci::indicator isNullDestSe = soci::i_ok;
+
+    try
+        {
+            sql << "select dest_se from t_optimize where dest_se = :dest_se ", soci::use(destination_hostname), soci::into(dest_se, isNullDestSe);
+
+            if (!sql.got_data())
+                {
+                    sql.begin();
+
+                    sql << "INSERT INTO t_optimize (dest_se, active) VALUES (:dest_se, :active)  ",
+                        soci::use(destination_hostname), soci::use(maxActive);
+
+                    sql.commit();
+                }
+            else
+                {
+                    sql.begin();
+
+                    sql << "update t_optimize set active = :active where dest_se = :dest_se ",
+                         soci::use(maxActive), soci::use(destination_hostname);
+
+                    sql.commit();
+                }
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+
 
 
 // the class factories
