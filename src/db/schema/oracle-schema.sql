@@ -272,7 +272,7 @@ CREATE TABLE t_share_config (
    ,vo VARCHAR2(100) NOT NULL
    ,active INTEGER NOT NULL
    ,CONSTRAINT t_share_config_pk PRIMARY KEY (source, destination, vo)
-   ,CONSTRAINT t_share_config_fk FOREIGN KEY (source, destination) REFERENCES t_link_config (source, destination)
+   ,CONSTRAINT t_share_config_fk FOREIGN KEY (source, destination) REFERENCES t_link_config (source, destination) ON DELETE CASCADE
 );
 
 CREATE TABLE t_activity_share_config (
