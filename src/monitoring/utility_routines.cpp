@@ -875,7 +875,7 @@ bool caseInsCompare(const string& s1, const string& s2)
 
 bool send_message(std::string & text)
 {
-    if(text.length() < 3000)
+    if(text.length() < 4000)
         {
             struct message_monitoring message;
             strncpy(message.msg, text.c_str(), sizeof(message.msg));

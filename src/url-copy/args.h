@@ -57,6 +57,7 @@ public:
     unsigned    blockSize;
     unsigned    timeout;
     int    	secPerMb;
+    std::string user_dn;
 
     bool areTransfersOnFile() const
     {

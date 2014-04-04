@@ -42,10 +42,11 @@ const option UrlCopyOpts::long_options[] =
     {"udt",               no_argument,       0, 'U'},
     {"global-timeout",    no_argument,       0, 'Z'},
     {"sec-per-mb",    	  required_argument, 0, 'V'},
+    {"user-dn",    	  required_argument, 0, 'Y'},
     {0, 0, 0, 0}
 };
 
-const char UrlCopyOpts::short_options[] = "PONM:L:K:J:I:H:GRFD:E:C:z:A:t:a:b:c:de:f:h:ij:k:B:5:U:ZV:";
+const char UrlCopyOpts::short_options[] = "PONM:L:K:J:I:H:GRFD:E:C:z:A:t:a:b:c:de:f:h:ij:k:B:5:U:ZV:Y:";
 
 
 UrlCopyOpts::UrlCopyOpts(): monitoringMessages(false), autoTunned(false),
@@ -54,7 +55,7 @@ UrlCopyOpts::UrlCopyOpts(): monitoringMessages(false), autoTunned(false),
     compareChecksum(CHECKSUM_DONT_CHECK),
     fileId(0), userFileSize(0), bringOnline(-1), copyPinLifetime(-1),
     nStreams(DEFAULT_NOSTREAMS), tcpBuffersize(DEFAULT_BUFFSIZE),
-    blockSize(0), secPerMb(0), timeout(DEFAULT_TIMEOUT)
+    blockSize(0), timeout(DEFAULT_TIMEOUT), secPerMb(0)
 {
 }
 
@@ -197,6 +198,9 @@ int UrlCopyOpts::parse(int argc, char * const argv[])
                         case 'j':
                             destTokenDescription = optarg;
                             break;
+                       case 'Y':
+                            user_dn = optarg;
+                            break;			    
                         case 'k':
                             sourceTokenDescription = optarg;
                             break;
