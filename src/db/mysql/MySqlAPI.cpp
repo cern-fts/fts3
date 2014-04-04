@@ -172,11 +172,41 @@ MySqlAPI::~MySqlAPI()
 }
 
 
+static void getHostAndPort(const std::string& conn, std::string* host, int* port)
+{
+    host->clear();
+    *port = 0;
+
+    std::string remaining;
+
+    size_t close;
+    if (conn.size() > 0 && conn[0] == '[' && (close = conn.find(']')) != std::string::npos) {
+        host->assign(conn.substr(1, close - 1));
+        remaining = conn.substr(close + 1);
+    }
+    else {
+        size_t colon = conn.find(':');
+        if (colon == std::string::npos) {
+            host->assign(conn);
+        }
+        else {
+            host->assign(conn.substr(0, colon));
+            remaining = conn.substr(colon);
+        }
+    }
+
+    if (remaining[0] == ':') {
+        *port = atoi(remaining.c_str() + 1);
+    }
+}
+
+
 
 void MySqlAPI::init(std::string username, std::string password, std::string connectString, int pooledConn)
 {
     std::ostringstream connParams;
-    std::string host, db, port;
+    std::string host, db;
+    int port;
 
     try
         {
@@ -186,20 +216,13 @@ void MySqlAPI::init(std::string username, std::string password, std::string conn
             size_t slash = connectString.find('/');
             if (slash != std::string::npos)
                 {
-                    host = connectString.substr(0, slash);
+                    getHostAndPort(connectString.substr(0, slash), &host, &port);
                     db   = connectString.substr(slash + 1, std::string::npos);
-
-                    size_t colon = host.find(':');
-                    if (colon != std::string::npos)
-                        {
-                            port = host.substr(colon + 1, std::string::npos);
-                            host = host.substr(0, colon);
-                        }
 
                     connParams << "host='" << host << "' "
                                << "db='" << db << "' ";
 
-                    if (!port.empty())
+                    if (port != 0)
                         connParams << "port=" << port << " ";
                 }
             else
