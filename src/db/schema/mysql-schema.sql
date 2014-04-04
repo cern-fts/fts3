@@ -29,9 +29,10 @@ VALUES (0, 0, 0, 0, 0, 0, 0, 0,
 --
 CREATE TABLE t_server_config (
   retry          INTEGER DEFAULT 0,
-  max_time_queue INTEGER DEFAULT 0
+  max_time_queue INTEGER DEFAULT 0,
+  global_timeout INTEGER DEFAULT 0
 );
-INSERT INTO t_server_config (retry,max_time_queue) values(0,0);
+INSERT INTO t_server_config (retry,max_time_queue,global_timeout) values(0,0,0);
 
 --
 -- Holds the optimizer mode
