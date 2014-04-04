@@ -4622,7 +4622,7 @@ void OracleAPI::addShareConfig(ShareConfig* cfg)
         {
             sql.begin();
 
-            sql << "INSERT INTO t_share_config (source, destination, vo, active) "
+            sql << "INSERT /*+ IGNORE_ROW_ON_DUPKEY_INDEX (t_link_config, T_LINK_CONFIG_PK) */ INTO t_share_config (source, destination, vo, active) "
                 "                    VALUES (:source, :destination, :vo, :active)",
                 soci::use(cfg->source), soci::use(cfg->destination), soci::use(cfg->vo),
                 soci::use(cfg->active_transfers);
@@ -7458,7 +7458,7 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
                 }
 
             // Keep log
-            sql << "INSERT INTO t_file_retry_errors "
+            sql << "INSERT /*+ IGNORE_ROW_ON_DUPKEY_INDEX (t_file_retry_errors, t_file_retry_errors_pk) */  INTO t_file_retry_errors "
                 "    (file_id, attempt, datetime, reason) "
                 "VALUES (:fileId, :attempt, sys_extract_utc(systimestamp), :reason)",
                 soci::use(fileId), soci::use(retry), soci::use(reason);
