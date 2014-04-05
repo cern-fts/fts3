@@ -99,7 +99,7 @@ void GSoapContextAdapter::init()
     // initialize cgsi plugin
     if (endpoint.find("https") == 0)
         {
-            err = soap_cgsi_init(ctx, CGSI_OPT_DISABLE_NAME_CHECK | CGSI_OPT_SSL_COMPATIBLE);
+            err = soap_cgsi_init(ctx, CGSI_OPT_KEEP_ALIVE | CGSI_OPT_DISABLE_NAME_CHECK | CGSI_OPT_SSL_COMPATIBLE);
         }
     else if (endpoint.find("httpg") == 0)
         {
