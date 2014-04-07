@@ -46,7 +46,7 @@ const option UrlCopyOpts::long_options[] =
     {0, 0, 0, 0}
 };
 
-const char UrlCopyOpts::short_options[] = "PONM:L:K:J:I:H:GRFD:E:C:z:A:t:a:b:c:de:f:h:ij:k:B:5:U:ZV:Y:";
+const char UrlCopyOpts::short_options[] = "PONM:L:K:J:I:H:GRFD:E:C:z:A:t:a:b:c:de:f:h:ij:k:B:5:UZV:Y:";
 
 
 UrlCopyOpts::UrlCopyOpts(): monitoringMessages(false), autoTunned(false),
