@@ -62,7 +62,12 @@ function OverviewCtrl($location, $scope, overview, Overview)
 	$scope.autoRefresh = setInterval(function() {
 		var filter = $location.search();
 		filter.page = $scope.overview.page;
-    	$scope.overview = Overview.query(filter);
+        Overview.query(filter, function(updatedOverview) {
+            for(var i = 0; i < updatedOverview.items.length; i++) {
+                updatedOverview.items[i].show = $scope.overview.items[i].show;
+            }
+            scope.overview = updatedOverview;
+        });
 	}, REFRESH_INTERVAL);
 	$scope.$on('$destroy', function() {
 		clearInterval($scope.autoRefresh);

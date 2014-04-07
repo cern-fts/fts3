@@ -51,28 +51,30 @@
             <th style="width: 2%"></th>
         </tr>
     </thead>
-    <tbody>
-        <tr ng-repeat="o in overview.items"
-            ng-class-odd="'odd'"
-            class="overview"
-            ng-class="pairState(o)">
+    <tbody ng-repeat="o in overview.items" ng-class-odd="'odd'" class="overview" ng-class="pairState(o)">
+        <tr>
 			<td>
-                <i class="icon-filter" ng-click="filterBy({source_se: o.source_se})"></i>
-                {{ o.source_se }}
+                <i class="icon-plus" ng-click="o.show = !o.show"></i>
+                <span class="filter-on-click" ng-click="filterBy({source_se: o.source_se})" title="Filter source SE">
+                    {{ o.source_se }}
+                </span>
                 <span ng-show="o.bandwidth_limit.source">
                     <i class="icon-upload" title="Limited at {{o.bandwidth_limit.source}} MB/s"></i>
                 </span>
             </td>
 			<td>
-			    <i class="icon-filter" ng-click="filterBy({dest_se: o.dest_se})"></i>
-			    {{ o.dest_se }}
+			    <span class="filter-on-click" ng-click="filterBy({dest_se: o.dest_se})" title="Filter destination SE">
+                    {{ o.dest_se }}
+			    </span>
                 <span ng-show="o.bandwidth_limit.destination">
                     <i class="icon-download" title="Limited at {{o.bandwidth_limit.destination}} MB/s"></i>
                 </span>
 			</td>
 			<td>
-			    <i class="icon-filter" ng-click="filterBy({vo: o.vo_name})"></i>
-                {{ o.vo_name }}</td>
+                <span class="filter-on-click" ng-click="filterBy({vo: o.vo_name})" title="Filter VO">
+                    {{ o.vo_name }}
+                </span>
+            </td>
 			<td>
                 <a href="#/transfers?source_se={{o.source_se}}&dest_se={{o.dest_se}}&vo={{o.vo_name}}&state=SUBMITTED">
                     <span optional-number="o.submitted"></span>
@@ -108,6 +110,18 @@
                 <a href="#/optimizer/detailed?source={{o.source_se}}&destination={{o.dest_se}}">
                     <i class="icon-signal"></i>
                 </a>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="11" style="background: #CCC" ng-show="o.show">
+                <dl>
+                    <dt>Average duration</dt>
+                    <dd><span optional-number="o.avg_duration" suffix="seconds" decimals="2"></span></dd>
+                    <dt>Average waiting time</dt>
+                    <dd><span optional-number="o.avg_queued" suffix="seconds" decimals="2"></span></dd>
+                    <dt>Most frequent error</dt>
+                    <dd>{{o.most_frequent_error}}</dd>
+                </dl>
             </td>
         </tr>
     </tbody>

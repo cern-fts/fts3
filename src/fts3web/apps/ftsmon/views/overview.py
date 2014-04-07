@@ -17,7 +17,7 @@
 
 from datetime import datetime, timedelta
 from django.db import connection
-from django.db.models import Count, Sum, Q
+from django.db.models import Count, Sum, Q, Avg
 from django.core.paginator import Paginator
 from django.shortcuts import render
 from ftsmon import forms
@@ -26,6 +26,7 @@ from jobs import setupFilters
 from jsonify import jsonify_paged, jsonify
 from urllib import urlencode
 from util import getOrderBy
+import types
 
 import settings
 
@@ -45,6 +46,74 @@ def _get_bandwidth_limit(bw_limits, source, destination):
         elif l[1] == destination:
             limits['destination'] = l[2]
     return limits
+
+
+class OverviewExtended(object):
+    """
+    Wraps the return of overview, so when iterating, we can retrieve
+    additional information.
+    This way we avoid doing it for all items. Only those displayed will be queried
+    (i.e. paging)
+    """
+    def __init__(self, not_before, objects):
+        self.objects = objects
+        self.not_before = not_before
+
+    def __len__(self):
+        return len(self.objects)
+
+    def _get_avg_duration(self, source, destination, vo):
+        avg_duration = File.objects.filter(source_se = source, dest_se = destination, vo_name = vo)\
+            .filter(job_finished__gte = self.not_before, file_state ='FINISHED')\
+            .aggregate(Avg('tx_duration'))
+        return avg_duration['tx_duration__avg']
+
+    def _get_avg_queued(self, source, destination, vo):
+        if settings.DATABASES['default']['ENGINE'] == 'django.db.backends.oracle':
+            avg_queued_query = """SELECT AVG(EXTRACT(HOUR FROM time_diff) * 3600 + EXTRACT(MINUTE FROM time_diff) * 60 + EXTRACT(SECOND FROM time_diff))
+                                  FROM (SELECT (t_file.start_time - t_job.submit_time) AS time_diff
+                                      FROM t_file, t_job
+                                      WHERE t_job.job_id = t_file.job_id AND
+                                            t_file.source_se = %s AND t_file.dest_se = %s AND t_job.vo_name = %s AND
+                                            t_job.job_finished IS NULL AND t_file.job_finished IS NULL AND
+                                            t_file.start_time IS NOT NULL
+                                   )"""
+        else:
+            avg_queued_query = """SELECT AVG(TIMESTAMPDIFF(SECOND, t_job.submit_time, t_file.start_time)) FROM t_file, t_job
+                                  WHERE t_job.job_id = t_file.job_id AND
+                                        t_file.source_se = %s AND t_file.dest_se = %s AND t_job.vo_name = %s AND
+                                        t_job.job_finished IS NULL AND t_file.job_finished IS NULL AND
+                                        t_file.start_time IS NOT NULL
+                                  ORDER BY t_file.start_time DESC LIMIT 5"""
+
+        cursor = connection.cursor()
+        cursor.execute(avg_queued_query, (source, destination, vo))
+        avg = cursor.fetchall()
+        if len(avg) > 0 and avg[0][0] is not None:
+            return int(avg[0][0])
+        else:
+            return None
+
+    def _get_frequent_error(self, source, destination, vo):
+        reason = File.objects.filter(source_se = source, dest_se = destination, vo_name = vo)\
+            .filter(job_finished__gte = self.not_before, file_state ='FAILED')\
+            .values('reason').annotate(count = Count('reason')).values('reason', 'count').order_by('-count')
+        if len(reason) > 0:
+            return "[%(count)d] %(reason)s" % reason[0]
+        else:
+            return None
+
+    def __getitem__(self, indexes):
+        if isinstance(indexes, types.SliceType):
+            return_list = self.objects[indexes]
+            for item in return_list:
+                item['avg_duration'] = self._get_avg_duration(item['source_se'], item['dest_se'], item['vo_name'])
+                item['avg_queued'] = self._get_avg_queued(item['source_se'], item['dest_se'], item['vo_name'])
+                item['most_frequent_error'] = self._get_frequent_error(item['source_se'], item['dest_se'], item['vo_name'])
+            return return_list
+        else:
+            return self.objects[indexes]
+
 
 @jsonify_paged
 def overview(httpRequest):
@@ -134,4 +203,4 @@ def overview(httpRequest):
     else:
         sortingMethod = lambda o: (o.get('submitted', 0), o.get('active', 0))
 
-    return sorted(objs, key = sortingMethod, reverse = orderDesc)
+    return OverviewExtended(notBefore, sorted(objs, key = sortingMethod, reverse = orderDesc))
