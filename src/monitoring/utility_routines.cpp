@@ -28,7 +28,6 @@
 #include "Logger.h"
 #include <sys/stat.h>
 #include <algorithm>
-#include "half_duplex.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
