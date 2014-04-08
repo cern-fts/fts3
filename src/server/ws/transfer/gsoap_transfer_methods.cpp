@@ -34,8 +34,6 @@
 //#include "ws/InternalLogRetriever.h"
 
 #include "common/JobStatusHandler.h"
-#include "common/TarArchiver.h"
-#include "common/ZipCompressor.h"
 
 #include "common/logger.h"
 #include "common/error.h"
