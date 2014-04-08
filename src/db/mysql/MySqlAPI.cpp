@@ -3664,24 +3664,23 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
             std::string jobId, params, tHost,reuse;
             int fileId=0, pid=0, timeout=0;
             struct tm startTimeSt;
-            time_t now2 = getUTC(0);
             time_t startTime;
             double diff = 0.0;
             soci::indicator isNull = soci::i_ok;
-            soci::indicator isNullParams = soci::i_ok;
+            soci::indicator isNullParams = soci::i_ok;	    
+	    soci::indicator isNullPid = soci::i_ok;
             int count = 0;
 
             soci::statement stmt = (
                                        sql.prepare <<
                                        " SELECT f.job_id, f.file_id, f.start_time, f.pid, f.internal_file_params, "
-                                       " f.transferHost, j.reuse_job "
+                                       " j.reuse_job "
                                        " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                        " WHERE f.file_state='ACTIVE' AND f.pid IS NOT NULL and f.job_finished is NULL "
-                                       " and f.transferHost is not null"
                                        " AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) ",
                                        soci::use(hashSegment.start), soci::use(hashSegment.end),
                                        soci::into(jobId), soci::into(fileId), soci::into(startTimeSt),
-                                       soci::into(pid), soci::into(params, isNullParams), soci::into(tHost), soci::into(reuse, isNull)
+                                       soci::into(pid, isNullPid), soci::into(params, isNullParams), soci::into(reuse, isNull)
                                    );
 
             soci::statement stmt1 = (
@@ -3696,6 +3695,7 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                     do
                         {
                             startTime = timegm(&startTimeSt); //from db
+			    time_t now2 = getUTC(0);
 
                             if (isNullParams != soci::i_null)
                                 {
@@ -3723,7 +3723,7 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                             diff = difftime(now2, startTime);
                             if (diff > terminateTime)
                                 {
-                                    if(tHost == hostname)
+                                    if(isNullPid != soci::i_null && pid > 0)
                                         {
                                             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Killing pid:" << pid << ", jobid:" << jobId << ", fileid:" << fileId << " because it was stalled" << commit;
                                             kill(pid, SIGUSR1);
@@ -3805,7 +3805,7 @@ bool MySqlAPI::terminateReuseProcess(const std::string & jobId)
                 soci::use(jobId), soci::into(reuse);
 
             sql.begin();
-            if (sql.got_data())
+            if (sql.got_data() && reuse == "Y")
                 {
                     sql << "UPDATE t_file SET file_state = 'FAILED' WHERE job_id = :jobId AND file_state != 'FINISHED'",
                         soci::use(jobId);

@@ -273,12 +273,11 @@ void signalHandler(int signum)
         {
             propagated = true;
 
-            logger.ERROR() << "Transfer process died " << currentTransfer.jobId << std::endl;
-            logger.ERROR() << "Received signal " << signum << std::endl;
-            logger.ERROR() << stackTrace << std::endl;
+            logger.ERROR() << "Transfer process died: " << currentTransfer.jobId << std::endl;
+            logger.ERROR() << "Received signal: " << signum << std::endl;
+            logger.ERROR() << "Stacktrace: " << stackTrace << std::endl;
 
-            errorMessage = "Transfer process died " + currentTransfer.jobId;
-            errorMessage += stackTrace;
+            errorMessage = "Transfer process died with: " + stackTrace;
             abnormalTermination("FAILED", errorMessage, "Error");
         }
     else if (signum == SIGINT || signum == SIGTERM)
