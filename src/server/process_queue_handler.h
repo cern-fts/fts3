@@ -102,7 +102,7 @@ public:
                                 static_cast<int> (msg.timeout),
                                 static_cast<int> (msg.buffersize),
                                 msg.filesize);
-                        return true;
+                        return;
                     }
 
                 if (std::string(msg.transfer_status).compare("FINISHED") == 0 ||
@@ -123,7 +123,7 @@ public:
                                     {
                                         DBSingleton::instance().getDBObjectInstance()
                                         ->setRetryTransfer(job, msg.file_id, retryTimes+1, msg.transfer_message);
-                                        return true;
+                                        return;
                                     }
                                 else
                                     {
@@ -131,7 +131,7 @@ public:
                                             {
                                                 DBSingleton::instance().getDBObjectInstance()
                                                 ->setRetryTransfer(job, msg.file_id, retryTimes+1, msg.transfer_message);
-                                                return true;
+                                                return;
                                             }
                                     }
                             }
@@ -145,7 +145,7 @@ public:
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception when set retry " << commit;
                     }
 
-                /*session reuse process died or terminated unexpected, must terminate all file of a given job*/
+                /*session reuse process died or terminated unexpected, must terminate all files of a given job*/
                 if ( (std::string(msg.transfer_message).find("Transfer terminate handler called") != string::npos ||
                         std::string(msg.transfer_message).find("Transfer terminate handler called") != string::npos ||
                         std::string(msg.transfer_message).find("Transfer process died") != string::npos ||
@@ -161,17 +161,18 @@ public:
                                 DBSingleton::instance().getDBObjectInstance()->terminateReuseProcess(std::string(msg.job_id).substr(0, 36),static_cast<int> (msg.process_id), std::string(msg.transfer_message));
                             }
                     }
-		    
-		//update file state    
+
+                //update file state
                 DBSingleton::instance().
-                                  getDBObjectInstance()->
-                                  updateFileTransferStatus(msg.throughput, job, msg.file_id, std::string(msg.transfer_status),
-                                                           std::string(msg.transfer_message), static_cast<int> (msg.process_id),
-                                                           msg.filesize, msg.timeInSecs, msg.retry);
-		//update job_state
+                getDBObjectInstance()->
+                updateFileTransferStatus(msg.throughput, job, msg.file_id, std::string(msg.transfer_status),
+                                         std::string(msg.transfer_message), static_cast<int> (msg.process_id),
+                                         msg.filesize, msg.timeInSecs, msg.retry);
+
+                //update job_state
                 DBSingleton::instance().
-                                  getDBObjectInstance()->
-                                  updateJobTransferStatus(job, std::string(msg.transfer_status));                
+                getDBObjectInstance()->
+                updateJobTransferStatus(job, std::string(msg.transfer_status), static_cast<int> (msg.process_id));
 
                 SingleTrStateInstance::instance().sendStateMessage(job, msg.file_id);
             }

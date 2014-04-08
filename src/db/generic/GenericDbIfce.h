@@ -131,7 +131,7 @@ public:
     virtual bool updateFileTransferStatus(double throughput, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
                                           int process_id, double filesize, double duration, bool retry) = 0;
 
-    virtual bool updateJobTransferStatus(std::string job_id, const std::string status) = 0;
+    virtual bool updateJobTransferStatus(std::string job_id, const std::string status, int pid) = 0;
 
     virtual void cancelJob(std::vector<std::string>& requestIDs) = 0;
 

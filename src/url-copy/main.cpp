@@ -482,11 +482,11 @@ int main(int argc, char **argv)
     signal(SIGILL, signalHandler);
     signal(SIGBUS, signalHandler);
     signal(SIGTRAP, signalHandler);
-    signal(SIGSYS, signalHandler);
+    signal(SIGSYS, signalHandler);    
 
     //set_terminate(myterminate);
     //set_unexpected(myunexpected);
-
+    
     UrlCopyOpts &opts = UrlCopyOpts::getInstance();
     if (opts.parse(argc, argv) < 0)
         {
@@ -513,7 +513,7 @@ int main(int argc, char **argv)
     try
         {
             /*send an update message back to the server to indicate it's alive*/
-            boost::thread btUpdater(taskStatusUpdater, 45);	    
+            boost::thread btUpdater(taskStatusUpdater, 45);
         }
     catch (std::exception& e)
         {
@@ -618,7 +618,7 @@ int main(int argc, char **argv)
             fileManagement.setSourceUrl(currentTransfer.sourceUrl);
             fileManagement.setDestUrl(currentTransfer.destUrl);
             fileManagement.setFileId(currentTransfer.fileId);
-            fileManagement.setJobId(currentTransfer.jobId);
+            fileManagement.setJobId(currentTransfer.jobId);	    
 
             reporter.timeout = opts.timeout;
             reporter.nostreams = opts.nStreams;

@@ -96,7 +96,7 @@ public:
     virtual bool updateFileTransferStatus(double throughput, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
                                           int process_id, double filesize, double duration, bool retry);
 
-    virtual bool updateJobTransferStatus(std::string job_id, const std::string status);
+    virtual bool updateJobTransferStatus(std::string job_id, const std::string status, int pid);
 
     virtual void cancelJob(std::vector<std::string>& requestIDs);
 
@@ -401,7 +401,7 @@ private:
     bool updateFileTransferStatusInternal(soci::session& sql, double throughput, std::string job_id, int file_id, std::string transfer_status,
                                           std::string transfer_message, int process_id, double filesize, double duration, bool retry);
 
-    bool updateJobTransferStatusInternal(soci::session& sql, std::string job_id, const std::string status);
+    bool updateJobTransferStatusInternal(soci::session& sql, std::string job_id, const std::string status, int pid);
 
     void useFileReplica(soci::session& sql, std::string jobId, int fileId);
 

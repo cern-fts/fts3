@@ -71,7 +71,7 @@ public:
     bool updateFileTransferStatus(double throughput, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
                                   int process_id, double filesize, double duration, bool retry);
 
-    bool updateJobTransferStatus(std::string job_id, const std::string status);
+    bool updateJobTransferStatus(std::string job_id, const std::string status, int pid);
 
     void updateFileTransferProgressVector(std::vector<struct message_updater>& messages);
 

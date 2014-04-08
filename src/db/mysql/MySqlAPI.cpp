@@ -1880,6 +1880,13 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
             struct tm tTime;
             gmtime_r(&now, &tTime);
 
+
+            if(file_id == 0 && transfer_status == "FAILED")
+                sql <<  "select file_id from t_file where pid=:pid and job_finished is NULL",soci::use(process_id), soci::into(file_id);
+
+            if(job_id.empty() && transfer_status == "FAILED")
+                sql <<  "select job_id from t_file where pid=:pid and job_finished is NULL",soci::use(process_id), soci::into(job_id);
+
             // query for the file state in DB
             soci::rowset<soci::row> rs = (
                                              sql.prepare << "SELECT file_state FROM t_file WHERE file_id=:fileId and job_id=:jobId",
@@ -1966,7 +1973,7 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
                 }
 
             query << "   , pid = :pid, filesize = :filesize, tx_duration = :duration, throughput = :throughput, current_failures = :current_failures "
-                  "WHERE (file_id = :fileId || pid = :pid) AND file_state NOT IN ('FAILED', 'FINISHED', 'CANCELED')";
+                  "WHERE file_id = :fileId AND file_state NOT IN ('FAILED', 'FINISHED', 'CANCELED')";
             stmt.exchange(soci::use(process_id, "pid"));
             stmt.exchange(soci::use(filesize, "filesize"));
             stmt.exchange(soci::use(duration, "duration"));
@@ -1998,14 +2005,14 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
 }
 
 
-bool MySqlAPI::updateJobTransferStatus(std::string job_id, const std::string status)
+bool MySqlAPI::updateJobTransferStatus(std::string job_id, const std::string status, int pid)
 {
 
     soci::session sql(*connectionPool);
 
     try
         {
-            updateJobTransferStatusInternal(sql, job_id, status);
+            updateJobTransferStatusInternal(sql, job_id, status, pid);
         }
     catch (std::exception& e)
         {
@@ -2020,7 +2027,7 @@ bool MySqlAPI::updateJobTransferStatus(std::string job_id, const std::string sta
 
 
 
-bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string job_id, const std::string status)
+bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string job_id, const std::string status, int pid)
 {
     bool ok = true;
 
@@ -2037,6 +2044,9 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
             std::string currentState("");
             std::string reuseFlag;
             soci::indicator isNull = soci::i_ok;
+
+            if(job_id.empty())
+                sql << " SELECT job_id from t_file where pid=:pid and job_finished is NOT NULL",soci::use(pid), soci::into(job_id);
 
             soci::statement stmt1 = (
                                         sql.prepare << " SELECT job_state, reuse_job from t_job  "
@@ -3737,7 +3747,7 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                                     updateFileTransferStatusInternal(sql, 0.0, jobId, fileId,
                                                                      "FAILED", "Transfer has been forced-killed because it was stalled",
                                                                      pid, 0, 0, false);
-                                    updateJobTransferStatusInternal(sql, jobId, "FAILED");
+                                    updateJobTransferStatusInternal(sql, jobId, "FAILED",0);
                                 }
 
                         }
@@ -3807,10 +3817,10 @@ bool MySqlAPI::terminateReuseProcess(const std::string & jobId, int pid, const s
 
     try
         {
-            if(jobId.empty())
+            if(jobId.length() == 0)
                 {
-                    sql << " SELECT job_id from t_file where pid=:pid and job_finished is NULL",
-                        soci::use(job_id);
+                    sql << " SELECT job_id from t_file where pid=:pid and job_finished is NULL LIMIT 1",
+                        soci::use(pid), soci::into(job_id);
 
                     sql << " SELECT reuse_job FROM t_job WHERE job_id = :jobId AND reuse_job IS NOT NULL",
                         soci::use(job_id), soci::into(reuse);
@@ -3820,16 +3830,19 @@ bool MySqlAPI::terminateReuseProcess(const std::string & jobId, int pid, const s
                     sql << " SELECT reuse_job FROM t_job WHERE job_id = :jobId AND reuse_job IS NOT NULL",
                         soci::use(jobId), soci::into(reuse);
                 }
+            
+	    if(job_id.empty() || job_id.length()==0 )
+	    	job_id = jobId;
 
             if (sql.got_data() && reuse == "Y")
                 {
-	            sql.begin();
+                    sql.begin();
                     sql << " UPDATE t_file SET file_state = 'FAILED', job_finished=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), "
                         " reason=:message WHERE (job_id = :jobId OR pid=:pid) AND file_state not in ('FINISHED','FAILED','CANCELED') ",
                         soci::use(message),
-                        soci::use(jobId),
+                        soci::use(job_id),
                         soci::use(pid);
-	            sql.commit();			
+                    sql.commit();
                 }
         }
     catch (std::exception& e)
@@ -4192,7 +4205,7 @@ bool MySqlAPI::retryFromDead(std::vector<struct message_updater>& messages, bool
                     if (rs.begin() != rs.end())
                         {
                             updateFileTransferStatusInternal(sql, 0.0, (*iter).job_id, (*iter).file_id, transfer_status, transfer_message, (*iter).process_id, 0, 0,false);
-                            updateJobTransferStatusInternal(sql, (*iter).job_id, status);
+                            updateJobTransferStatusInternal(sql, (*iter).job_id, status,0);
                         }
                 }
         }
@@ -6150,17 +6163,17 @@ void MySqlAPI::bringOnlineReportStatusInternal(soci::session& sql,
                                 {
                                     if(stage_in_only == 0)
                                         {
-                                            updateJobTransferStatusInternal(sql, msg.job_id, "SUBMITTED");
+                                            updateJobTransferStatusInternal(sql, msg.job_id, "SUBMITTED",0);
                                         }
                                     else
                                         {
-                                            updateJobTransferStatusInternal(sql, msg.job_id, dbState);
+                                            updateJobTransferStatusInternal(sql, msg.job_id, dbState,0);
                                         }
                                 }
                         }
                     else
                         {
-                            updateJobTransferStatusInternal(sql, msg.job_id, dbState);
+                            updateJobTransferStatusInternal(sql, msg.job_id, dbState,0);
                         }
                 }
         }
@@ -6541,7 +6554,7 @@ void MySqlAPI::cancelFilesInTheQueue(const std::string& se, const std::string& v
             std::set<std::string>::iterator job_it;
             for (job_it = jobs.begin(); job_it != jobs.end(); ++job_it)
                 {
-                    updateJobTransferStatusInternal(sql, *job_it, std::string());
+                    updateJobTransferStatusInternal(sql, *job_it, std::string(),0);
                 }
 
         }
@@ -6932,7 +6945,7 @@ void MySqlAPI::cancelWaitingFiles(std::set<std::string>& jobs)
             std::set<std::string>::iterator job_it;
             for (job_it = jobs.begin(); job_it != jobs.end(); ++job_it)
                 {
-                    updateJobTransferStatusInternal(sql, *job_it, std::string());
+                    updateJobTransferStatusInternal(sql, *job_it, std::string(),0);
                 }
         }
     catch (std::exception& e)
