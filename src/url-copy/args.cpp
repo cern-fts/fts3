@@ -187,7 +187,7 @@ int UrlCopyOpts::parse(int argc, char * const argv[])
                             blockSize = boost::lexical_cast<unsigned>(optarg);
                             break;
                         case 'V':
-                            secPerMb = boost::lexical_cast<int>(optarg);			    
+                            secPerMb = boost::lexical_cast<int>(optarg);
                             break;
                         case 'h':
                             timeout = boost::lexical_cast<unsigned>(optarg);
@@ -198,9 +198,9 @@ int UrlCopyOpts::parse(int argc, char * const argv[])
                         case 'j':
                             destTokenDescription = optarg;
                             break;
-                       case 'Y':
+                        case 'Y':
                             user_dn = optarg;
-                            break;			    
+                            break;
                         case 'k':
                             sourceTokenDescription = optarg;
                             break;

@@ -59,9 +59,10 @@ Transfer currentTransfer;
 
 gfal_context_t handle = NULL;
 
-static std::string replace_dn(std::string& user_dn) {
-  boost::replace_all(user_dn, "?", " "); 
-  return user_dn;
+static std::string replace_dn(std::string& user_dn)
+{
+    boost::replace_all(user_dn, "?", " ");
+    return user_dn;
 }
 
 static std::string replaceMetadataString(std::string text)
@@ -490,6 +491,8 @@ int main(int argc, char **argv)
     if (opts.parse(argc, argv) < 0)
         {
             std::cerr << opts.getErrorMessage() << std::endl;
+            errorMessage = "Transfer process died with: " + opts.getErrorMessage();
+            abnormalTermination("FAILED", errorMessage, "Error");
             return 1;
         }
 
@@ -510,7 +513,7 @@ int main(int argc, char **argv)
     try
         {
             /*send an update message back to the server to indicate it's alive*/
-            boost::thread btUpdater(taskStatusUpdater, 45);
+            boost::thread btUpdater(taskStatusUpdater, 45);	    
         }
     catch (std::exception& e)
         {
@@ -622,7 +625,7 @@ int main(int argc, char **argv)
             reporter.buffersize = opts.tcpBuffersize;
             reporter.source_se = fileManagement.getSourceHostname();
             reporter.dest_se = fileManagement.getDestHostname();
-            fileManagement.generateLogFile();
+            fileManagement.generateLogFile();	    
 
             msg_ifce::getInstance()->set_tr_timestamp_start(&tr_completed, msg_ifce::getInstance()->getTimestamp());
             msg_ifce::getInstance()->set_agent_fqdn(&tr_completed, hostname);
@@ -643,7 +646,7 @@ int main(int argc, char **argv)
             msg_ifce::getInstance()->set_block_size(&tr_completed, opts.blockSize);
             msg_ifce::getInstance()->set_srm_space_token_dest(&tr_completed, opts.destTokenDescription);
             msg_ifce::getInstance()->set_srm_space_token_source(&tr_completed, opts.sourceTokenDescription);
-	    msg_ifce::getInstance()->set_user_dn(&tr_completed, replace_dn(opts.user_dn));
+            msg_ifce::getInstance()->set_user_dn(&tr_completed, replace_dn(opts.user_dn));
 
             if(opts.monitoringMessages)
                 msg_ifce::getInstance()->SendTransferStartMessage(&tr_completed);
@@ -668,7 +671,7 @@ int main(int argc, char **argv)
 
                 logger.INFO() << "Transfer accepted" << std::endl;
                 logger.INFO() << "Proxy:" << opts.proxy << std::endl;
-		logger.INFO() << "User DN:" << replace_dn(opts.user_dn) << std::endl;
+                logger.INFO() << "User DN:" << replace_dn(opts.user_dn) << std::endl;
                 logger.INFO() << "VO:" << opts.vo << std::endl; //a
                 logger.INFO() << "Job id:" << opts.jobId << std::endl;
                 logger.INFO() << "File id:" << currentTransfer.fileId << std::endl;

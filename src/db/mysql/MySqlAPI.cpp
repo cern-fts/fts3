@@ -180,24 +180,29 @@ static void getHostAndPort(const std::string& conn, std::string* host, int* port
     std::string remaining;
 
     size_t close;
-    if (conn.size() > 0 && conn[0] == '[' && (close = conn.find(']')) != std::string::npos) {
-        host->assign(conn.substr(1, close - 1));
-        remaining = conn.substr(close + 1);
-    }
-    else {
-        size_t colon = conn.find(':');
-        if (colon == std::string::npos) {
-            host->assign(conn);
+    if (conn.size() > 0 && conn[0] == '[' && (close = conn.find(']')) != std::string::npos)
+        {
+            host->assign(conn.substr(1, close - 1));
+            remaining = conn.substr(close + 1);
         }
-        else {
-            host->assign(conn.substr(0, colon));
-            remaining = conn.substr(colon);
+    else
+        {
+            size_t colon = conn.find(':');
+            if (colon == std::string::npos)
+                {
+                    host->assign(conn);
+                }
+            else
+                {
+                    host->assign(conn.substr(0, colon));
+                    remaining = conn.substr(colon);
+                }
         }
-    }
 
-    if (remaining[0] == ':') {
-        *port = atoi(remaining.c_str() + 1);
-    }
+    if (remaining[0] == ':')
+        {
+            *port = atoi(remaining.c_str() + 1);
+        }
 }
 
 
@@ -1961,7 +1966,7 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
                 }
 
             query << "   , pid = :pid, filesize = :filesize, tx_duration = :duration, throughput = :throughput, current_failures = :current_failures "
-                  "WHERE file_id = :fileId AND file_state NOT IN ('FAILED', 'FINISHED', 'CANCELED')";
+                  "WHERE (file_id = :fileId || pid = :pid) AND file_state NOT IN ('FAILED', 'FINISHED', 'CANCELED')";
             stmt.exchange(soci::use(process_id, "pid"));
             stmt.exchange(soci::use(filesize, "filesize"));
             stmt.exchange(soci::use(duration, "duration"));
@@ -3667,8 +3672,8 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
             time_t startTime;
             double diff = 0.0;
             soci::indicator isNull = soci::i_ok;
-            soci::indicator isNullParams = soci::i_ok;	    
-	    soci::indicator isNullPid = soci::i_ok;
+            soci::indicator isNullParams = soci::i_ok;
+            soci::indicator isNullPid = soci::i_ok;
             int count = 0;
 
             soci::statement stmt = (
@@ -3695,7 +3700,7 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                     do
                         {
                             startTime = timegm(&startTimeSt); //from db
-			    time_t now2 = getUTC(0);
+                            time_t now2 = getUTC(0);
 
                             if (isNullParams != soci::i_null)
                                 {
@@ -3793,36 +3798,49 @@ void MySqlAPI::setAllowed(const std::string & job_id, int file_id, const std::st
 
 
 
-bool MySqlAPI::terminateReuseProcess(const std::string & jobId)
+bool MySqlAPI::terminateReuseProcess(const std::string & jobId, int pid, const std::string & message)
 {
     bool ok = true;
     soci::session sql(*connectionPool);
+    std::string job_id;
+    std::string reuse;
 
     try
         {
-            std::string reuse;
-            sql << "SELECT reuse_job FROM t_job WHERE job_id = :jobId AND reuse_job IS NOT NULL",
-                soci::use(jobId), soci::into(reuse);
-
-            sql.begin();
-            if (sql.got_data() && reuse == "Y")
+            if(jobId.empty())
                 {
-                    sql << "UPDATE t_file SET file_state = 'FAILED' WHERE job_id = :jobId AND file_state != 'FINISHED'",
-                        soci::use(jobId);
+                    sql << " SELECT job_id from t_file where pid=:pid and job_finished is NULL",
+                        soci::use(job_id);
+
+                    sql << " SELECT reuse_job FROM t_job WHERE job_id = :jobId AND reuse_job IS NOT NULL",
+                        soci::use(job_id), soci::into(reuse);
+                }
+            else
+                {
+                    sql << " SELECT reuse_job FROM t_job WHERE job_id = :jobId AND reuse_job IS NOT NULL",
+                        soci::use(jobId), soci::into(reuse);
                 }
 
-            sql.commit();
+            if (sql.got_data() && reuse == "Y")
+                {
+	            sql.begin();
+                    sql << " UPDATE t_file SET file_state = 'FAILED', job_finished=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), "
+                        " reason=:message WHERE (job_id = :jobId OR pid=:pid) AND file_state not in ('FINISHED','FAILED','CANCELED') ",
+                        soci::use(message),
+                        soci::use(jobId),
+                        soci::use(pid);
+	            sql.commit();			
+                }
         }
     catch (std::exception& e)
         {
-            ok = false;
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            return ok;
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            return ok;
         }
     return ok;
 }
@@ -8140,7 +8158,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
     std::string source_se;
     std::string reason;
     std::string queryVo;
-    long long countReason = 0;   
+    long long countReason = 0;
     long long active = 0;
     long long maxActive = 0;
     long long submitted = 0;
@@ -8157,7 +8175,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
     soci::indicator isNull2 = soci::i_ok;
     soci::indicator isNull3 = soci::i_ok;
     soci::indicator isNull4 = soci::i_ok;
-    soci::indicator isNull5 = soci::i_ok;   
+    soci::indicator isNull5 = soci::i_ok;
 
     if(!vo_name.empty())
         {
@@ -8372,7 +8390,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                             reason = "";
                             countReason = 0;
                             st5.execute(true);
-                           
+
                             result <<   "Most frequent error: ";
                             result <<   countReason;
                             result <<   " times: ";
@@ -8871,7 +8889,7 @@ void MySqlAPI::setSourceMaxActive(const std::string & source_hostname, int maxAc
                     sql.begin();
 
                     sql << "update t_optimize set active = :active where source_se = :source_se ",
-                         soci::use(maxActive), soci::use(source_hostname);
+                        soci::use(maxActive), soci::use(source_hostname);
 
                     sql.commit();
                 }
@@ -8891,7 +8909,7 @@ void MySqlAPI::setSourceMaxActive(const std::string & source_hostname, int maxAc
 
 void MySqlAPI::setDestMaxActive(const std::string & destination_hostname, int maxActive)
 {
-   soci::session sql(*connectionPool);
+    soci::session sql(*connectionPool);
     std::string dest_se;
     soci::indicator isNullDestSe = soci::i_ok;
 
@@ -8913,7 +8931,7 @@ void MySqlAPI::setDestMaxActive(const std::string & destination_hostname, int ma
                     sql.begin();
 
                     sql << "update t_optimize set active = :active where dest_se = :dest_se ",
-                         soci::use(maxActive), soci::use(destination_hostname);
+                        soci::use(maxActive), soci::use(destination_hostname);
 
                     sql.commit();
                 }

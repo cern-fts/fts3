@@ -89,9 +89,8 @@ public:
         this->_enqueue(op);
     }
 
-    bool updateDatabase(const struct message& msg)
+    void updateDatabase(const struct message& msg)
     {
-        bool updated = true;
         try
             {
                 std::string job = std::string(msg.job_id).substr(0, 36);
@@ -146,29 +145,33 @@ public:
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception when set retry " << commit;
                     }
 
-                /*session reuse process died or terminated unexpected*/
-                if ( (updated == true) && (std::string(msg.transfer_message).find("Transfer terminate handler called") != string::npos ||
-                                           std::string(msg.transfer_message).find("Transfer terminate handler called") != string::npos ||
-                                           std::string(msg.transfer_message).find("Transfer process died") != string::npos ||
-                                           std::string(msg.transfer_message).find("because it was stalled") != string::npos ||
-                                           std::string(msg.transfer_message).find("canceled because it was not responding") != string::npos ))
+                /*session reuse process died or terminated unexpected, must terminate all file of a given job*/
+                if ( (std::string(msg.transfer_message).find("Transfer terminate handler called") != string::npos ||
+                        std::string(msg.transfer_message).find("Transfer terminate handler called") != string::npos ||
+                        std::string(msg.transfer_message).find("Transfer process died") != string::npos ||
+                        std::string(msg.transfer_message).find("because it was stalled") != string::npos ||
+                        std::string(msg.transfer_message).find("canceled because it was not responding") != string::npos ))
                     {
-                        updated = DBSingleton::instance().getDBObjectInstance()->terminateReuseProcess(std::string(msg.job_id).substr(0, 36));
+                        if(std::string(msg.job_id).length() == 0)
+                            {
+                                DBSingleton::instance().getDBObjectInstance()->terminateReuseProcess(std::string(), static_cast<int> (msg.process_id),std::string(msg.transfer_message));
+                            }
+                        else
+                            {
+                                DBSingleton::instance().getDBObjectInstance()->terminateReuseProcess(std::string(msg.job_id).substr(0, 36),static_cast<int> (msg.process_id), std::string(msg.transfer_message));
+                            }
                     }
-                if(updated == true)
-                    {
-                        updated = DBSingleton::instance().
+		    
+		//update file state    
+                DBSingleton::instance().
                                   getDBObjectInstance()->
                                   updateFileTransferStatus(msg.throughput, job, msg.file_id, std::string(msg.transfer_status),
                                                            std::string(msg.transfer_message), static_cast<int> (msg.process_id),
                                                            msg.filesize, msg.timeInSecs, msg.retry);
-                    }
-                if(updated == true)
-                    {
-                        updated = DBSingleton::instance().
+		//update job_state
+                DBSingleton::instance().
                                   getDBObjectInstance()->
-                                  updateJobTransferStatus(job, std::string(msg.transfer_status));
-                    }
+                                  updateJobTransferStatus(job, std::string(msg.transfer_status));                
 
                 SingleTrStateInstance::instance().sendStateMessage(job, msg.file_id);
             }
@@ -184,7 +187,6 @@ public:
                 struct message msgTemp = msg;
                 runProducerStatus( msgTemp);
             }
-        return updated;
     }
 
 protected:

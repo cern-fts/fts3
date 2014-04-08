@@ -1862,7 +1862,7 @@ bool OracleAPI::updateFileTransferStatusInternal(soci::session& sql, double thro
                 }
 
             query << "   , pid = :pid, filesize = :filesize, tx_duration = :duration, throughput = :throughput, current_failures = :current_failures "
-                  "WHERE file_id = :fileId AND file_state NOT IN ('FAILED', 'FINISHED', 'CANCELED')";
+                  "WHERE (file_id = :fileId || pid = :pid) AND file_state NOT IN ('FAILED', 'FINISHED', 'CANCELED')";
             stmt.exchange(soci::use(process_id, "pid"));
             stmt.exchange(soci::use(filesize, "filesize"));
             stmt.exchange(soci::use(duration, "duration"));
@@ -3427,8 +3427,8 @@ void OracleAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
             time_t startTime;
             double diff = 0.0;
             soci::indicator isNull = soci::i_ok;
-            soci::indicator isNullParams = soci::i_ok;	    
-	    soci::indicator isNullPid = soci::i_ok;
+            soci::indicator isNullParams = soci::i_ok;
+            soci::indicator isNullPid = soci::i_ok;
             int count = 0;
 
             soci::statement stmt = (
@@ -3455,7 +3455,7 @@ void OracleAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                     do
                         {
                             startTime = timegm(&startTimeSt); //from db
-			    time_t now2 = getUTC(0);
+                            time_t now2 = getUTC(0);
 
                             if (isNullParams != soci::i_null)
                                 {
@@ -3552,36 +3552,49 @@ void OracleAPI::setAllowed(const std::string & job_id, int file_id, const std::s
 
 
 
-bool OracleAPI::terminateReuseProcess(const std::string & jobId)
+bool OracleAPI::terminateReuseProcess(const std::string & jobId, int pid, const std::string & message)
 {
     bool ok = true;
     soci::session sql(*connectionPool);
+    std::string job_id;
+    std::string reuse;
 
     try
         {
-            std::string reuse;
-            sql << "SELECT reuse_job FROM t_job WHERE job_id = :jobId AND reuse_job IS NOT NULL",
-                soci::use(jobId), soci::into(reuse);
-
-            sql.begin();
-            if (sql.got_data() && reuse == "Y")
+            if(jobId.empty())
                 {
-                    sql << "UPDATE t_file SET file_state = 'FAILED' WHERE job_id = :jobId AND file_state != 'FINISHED'",
-                        soci::use(jobId);
+                    sql << " SELECT job_id from t_file where pid=:pid and job_finished is NULL",
+                        soci::use(job_id);
+
+                    sql << " SELECT reuse_job FROM t_job WHERE job_id = :jobId AND reuse_job IS NOT NULL",
+                        soci::use(job_id), soci::into(reuse);
+                }
+            else
+                {
+                    sql << " SELECT reuse_job FROM t_job WHERE job_id = :jobId AND reuse_job IS NOT NULL",
+                        soci::use(jobId), soci::into(reuse);
                 }
 
-            sql.commit();
+            if (sql.got_data() && reuse == "Y")
+                {
+	            sql.begin();
+                    sql << " UPDATE t_file SET file_state = 'FAILED', job_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), "
+                        " reason=:message WHERE (job_id = :jobId OR pid=:pid) AND file_state not in ('FINISHED','FAILED','CANCELED') ",
+                        soci::use(message),
+                        soci::use(jobId),
+                        soci::use(pid);
+	            sql.commit();			
+                }
         }
     catch (std::exception& e)
         {
-            ok = false;
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            return ok;
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            return ok;
         }
     return ok;
 }
@@ -7836,9 +7849,9 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
     std::string vo_name_local;
     std::string dest_se;
     std::string source_se;
-    std::string reason;   
+    std::string reason;
     std::string queryVo;
-    long long countReason = 0;   
+    long long countReason = 0;
     long long active = 0;
     long long maxActive = 0;
     long long submitted = 0;
@@ -7855,7 +7868,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
     soci::indicator isNull2 = soci::i_ok;
     soci::indicator isNull3 = soci::i_ok;
     soci::indicator isNull4 = soci::i_ok;
-    soci::indicator isNull5 = soci::i_ok;   
+    soci::indicator isNull5 = soci::i_ok;
 
     if(!vo_name.empty())
         {
@@ -7927,7 +7940,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                                  soci::use(vo_name_local),
                                  soci::into(reason, isNull3),
                                  soci::into(countReason)
-                                ));            
+                                ));
 
             soci::statement st6((sql.prepare << " select avg(tx_duration) from t_file where file_state='FINISHED'  "
                                  " AND source_se=:source_se and dest_se=:dest_se and vo_name =:vo_name_local ",
@@ -8075,7 +8088,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                             //most frequent error and number the last hour
                             reason = "";
                             countReason = 0;
-                            st5.execute(true);                           
+                            st5.execute(true);
 
                             result <<   "Most frequent error: ";
                             result <<   countReason;
@@ -8677,7 +8690,7 @@ void OracleAPI::setSourceMaxActive(const std::string & source_hostname, int maxA
                     sql.begin();
 
                     sql << "update t_optimize set active = :active where source_se = :source_se ",
-                         soci::use(maxActive), soci::use(source_hostname);
+                        soci::use(maxActive), soci::use(source_hostname);
 
                     sql.commit();
                 }
@@ -8697,7 +8710,7 @@ void OracleAPI::setSourceMaxActive(const std::string & source_hostname, int maxA
 
 void OracleAPI::setDestMaxActive(const std::string & destination_hostname, int maxActive)
 {
-   soci::session sql(*connectionPool);
+    soci::session sql(*connectionPool);
     std::string dest_se;
     soci::indicator isNullDestSe = soci::i_ok;
 
@@ -8719,7 +8732,7 @@ void OracleAPI::setDestMaxActive(const std::string & destination_hostname, int m
                     sql.begin();
 
                     sql << "update t_optimize set active = :active where dest_se = :dest_se ",
-                         soci::use(maxActive), soci::use(destination_hostname);
+                        soci::use(maxActive), soci::use(destination_hostname);
 
                     sql.commit();
                 }

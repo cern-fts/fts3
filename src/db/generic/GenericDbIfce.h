@@ -178,7 +178,7 @@ public:
 
     virtual void setAllowedNoOptimize(const std::string & job_id, int file_id, const std::string & params) = 0;
 
-    virtual bool terminateReuseProcess(const std::string & jobId) = 0;
+    virtual bool terminateReuseProcess(const std::string & jobId, int pid, const std::string & message) = 0;
 
     virtual void forceFailTransfers(std::map<int, std::string>& collectJobs) = 0;
 

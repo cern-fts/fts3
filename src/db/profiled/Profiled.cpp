@@ -252,9 +252,9 @@ void ProfiledDB::setAllowedNoOptimize(const std::string & job_id, int file_id, c
 }
 
 
-bool ProfiledDB::terminateReuseProcess(const std::string & jobId)
+bool ProfiledDB::terminateReuseProcess(const std::string & jobId, int pid, const std::string & message)
 {
-    PROFILE_PREFIXED("DB::", return db->terminateReuseProcess(jobId));
+    PROFILE_PREFIXED("DB::", return db->terminateReuseProcess(jobId, pid, message));
 }
 
 

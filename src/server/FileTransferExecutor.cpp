@@ -185,10 +185,10 @@ int FileTransferExecutor::execute()
                                              ""
                                          );
                         }
-		     
-		    
-		    params.append(" -Y ");
-		    params.append(prepareMetadataString(tf->DN));
+
+
+                    params.append(" -Y ");
+                    params.append(prepareMetadataString(tf->DN));
 
                     //disable for now, remove later
                     string sourceSiteName = ""; //siteResolver.getSiteName(tf->SOURCE_SURL);
