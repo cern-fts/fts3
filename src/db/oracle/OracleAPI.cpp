@@ -3566,7 +3566,7 @@ bool OracleAPI::terminateReuseProcess(const std::string & jobId, int pid, const 
         {
             if(jobId.length() == 0)
                 {
-                    sql << " SELECT job_id from t_file where pid=:pid and job_finished is NULL LIMIT 1",
+                    sql << " SELECT job_id from t_file where pid=:pid and job_finished is NULL ",
                         soci::use(pid), soci::into(job_id);
 
                     sql << " SELECT reuse_job FROM t_job WHERE job_id = :jobId AND reuse_job IS NOT NULL",
@@ -3584,7 +3584,7 @@ bool OracleAPI::terminateReuseProcess(const std::string & jobId, int pid, const 
             if (sql.got_data() && reuse == "Y")
                 {
                     sql.begin();
-                    sql << " UPDATE t_file SET file_state = 'FAILED', job_finished=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), "
+                    sql << " UPDATE t_file SET file_state = 'FAILED', job_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), "
                         " reason=:message WHERE (job_id = :jobId OR pid=:pid) AND file_state not in ('FINISHED','FAILED','CANCELED') ",
                         soci::use(message),
                         soci::use(job_id),
