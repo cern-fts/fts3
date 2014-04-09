@@ -2039,11 +2039,6 @@ bool OracleAPI::updateJobTransferStatusInternal(soci::session& sql, std::string 
                         "      job_state NOT IN ('FINISHEDDIRTY','CANCELED','FINISHED','FAILED')",
                         soci::use(state, "state"), soci::use(reason, "reason"),
                         soci::use(job_id, "jobId");
-
-                    // And file finish timestamp
-                    sql << "UPDATE t_file SET job_finished = sys_extract_utc(systimestamp) WHERE job_id = :jobId ",
-                        soci::use(job_id, "jobId");
-
                 }
             // Job not finished yet
             else
@@ -3568,42 +3563,51 @@ void OracleAPI::setAllowed(const std::string & job_id, int file_id, const std::s
 }
 
 
-
 bool OracleAPI::terminateReuseProcess(const std::string & jobId, int pid, const std::string & message)
 {
     bool ok = true;
     soci::session sql(*connectionPool);
     std::string job_id;
     std::string reuse;
+    soci::indicator reuseInd = soci::i_ok;
 
     try
         {
             if(jobId.length() == 0)
                 {
-                    sql << " SELECT job_id from t_file where pid=:pid and job_finished is NULL ",
+                    sql << " SELECT job_id from t_file where pid=:pid and job_finished is NULL LIMIT 1",
                         soci::use(pid), soci::into(job_id);
 
                     sql << " SELECT reuse_job FROM t_job WHERE job_id = :jobId AND reuse_job IS NOT NULL",
-                        soci::use(job_id), soci::into(reuse);
+                        soci::use(job_id), soci::into(reuse, reuseInd);
+
+                    if (reuseInd == soci::i_ok && reuse == "Y")
+                        {
+                            sql.begin();
+                            sql << " UPDATE t_file SET file_state = 'FAILED', job_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), "
+                                " reason=:message WHERE (job_id = :jobId OR pid=:pid) AND file_state not in ('FINISHED','FAILED','CANCELED') ",
+                                soci::use(message),
+                                soci::use(job_id),
+                                soci::use(pid);
+                            sql.commit();
+                        }
+
                 }
             else
                 {
                     sql << " SELECT reuse_job FROM t_job WHERE job_id = :jobId AND reuse_job IS NOT NULL",
-                        soci::use(jobId), soci::into(reuse);
-                }
+                        soci::use(jobId), soci::into(reuse, reuseInd);
 
-            if(job_id.empty() || job_id.length()==0 )
-                job_id = jobId;
-
-            if (sql.got_data() && reuse == "Y")
-                {
-                    sql.begin();
-                    sql << " UPDATE t_file SET file_state = 'FAILED', job_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), "
-                        " reason=:message WHERE (job_id = :jobId OR pid=:pid) AND file_state not in ('FINISHED','FAILED','CANCELED') ",
-                        soci::use(message),
-                        soci::use(job_id),
-                        soci::use(pid);
-                    sql.commit();
+                    if (reuseInd == soci::i_ok && reuse == "Y")
+                        {
+                            sql.begin();
+                            sql << " UPDATE t_file SET file_state = 'FAILED', job_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), "
+                                " reason=:message WHERE (job_id = :jobId OR pid=:pid) AND file_state not in ('FINISHED','FAILED','CANCELED') ",
+                                soci::use(message),
+                                soci::use(job_id),
+                                soci::use(pid);
+                            sql.commit();
+                        }
                 }
         }
     catch (std::exception& e)

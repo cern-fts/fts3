@@ -2156,10 +2156,6 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
                                                 soci::use(state, "state"), soci::use(reason, "reason"),
                                                 soci::use(job_id, "jobId"));
                     stmt6.execute(true);
-
-                    // And file finish timestamp
-                    sql << "UPDATE t_file SET job_finished = UTC_TIMESTAMP() WHERE job_id = :jobId ",
-                        soci::use(job_id, "jobId");
                 }
             // Job not finished yet
             else
@@ -3828,6 +3824,7 @@ bool MySqlAPI::terminateReuseProcess(const std::string & jobId, int pid, const s
     soci::session sql(*connectionPool);
     std::string job_id;
     std::string reuse;
+    soci::indicator reuseInd = soci::i_ok;
 
     try
         {
@@ -3837,26 +3834,35 @@ bool MySqlAPI::terminateReuseProcess(const std::string & jobId, int pid, const s
                         soci::use(pid), soci::into(job_id);
 
                     sql << " SELECT reuse_job FROM t_job WHERE job_id = :jobId AND reuse_job IS NOT NULL",
-                        soci::use(job_id), soci::into(reuse);
+                        soci::use(job_id), soci::into(reuse, reuseInd);
+
+                    if (reuseInd == soci::i_ok && reuse == "Y")
+                        {
+                            sql.begin();
+                            sql << " UPDATE t_file SET file_state = 'FAILED', job_finished=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), "
+                                " reason=:message WHERE (job_id = :jobId OR pid=:pid) AND file_state not in ('FINISHED','FAILED','CANCELED') ",
+                                soci::use(message),
+                                soci::use(job_id),
+                                soci::use(pid);
+                            sql.commit();
+                        }
+
                 }
             else
                 {
                     sql << " SELECT reuse_job FROM t_job WHERE job_id = :jobId AND reuse_job IS NOT NULL",
-                        soci::use(jobId), soci::into(reuse);
-                }
+                        soci::use(jobId), soci::into(reuse, reuseInd);
 
-            if(job_id.empty() || job_id.length()==0 )
-                job_id = jobId;
-
-            if (sql.got_data() && reuse == "Y")
-                {
-                    sql.begin();
-                    sql << " UPDATE t_file SET file_state = 'FAILED', job_finished=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), "
-                        " reason=:message WHERE (job_id = :jobId OR pid=:pid) AND file_state not in ('FINISHED','FAILED','CANCELED') ",
-                        soci::use(message),
-                        soci::use(job_id),
-                        soci::use(pid);
-                    sql.commit();
+                    if (reuseInd == soci::i_ok && reuse == "Y")
+                        {
+                            sql.begin();
+                            sql << " UPDATE t_file SET file_state = 'FAILED', job_finished=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), "
+                                " reason=:message WHERE (job_id = :jobId OR pid=:pid) AND file_state not in ('FINISHED','FAILED','CANCELED') ",
+                                soci::use(message),
+                                soci::use(job_id),
+                                soci::use(pid);
+                            sql.commit();
+                        }
                 }
         }
     catch (std::exception& e)
