@@ -482,11 +482,11 @@ int main(int argc, char **argv)
     signal(SIGILL, signalHandler);
     signal(SIGBUS, signalHandler);
     signal(SIGTRAP, signalHandler);
-    signal(SIGSYS, signalHandler);    
+    signal(SIGSYS, signalHandler);
 
     //set_terminate(myterminate);
     //set_unexpected(myunexpected);
-    
+
     UrlCopyOpts &opts = UrlCopyOpts::getInstance();
     if (opts.parse(argc, argv) < 0)
         {
@@ -618,14 +618,14 @@ int main(int argc, char **argv)
             fileManagement.setSourceUrl(currentTransfer.sourceUrl);
             fileManagement.setDestUrl(currentTransfer.destUrl);
             fileManagement.setFileId(currentTransfer.fileId);
-            fileManagement.setJobId(currentTransfer.jobId);	    
+            fileManagement.setJobId(currentTransfer.jobId);
 
             reporter.timeout = opts.timeout;
             reporter.nostreams = opts.nStreams;
             reporter.buffersize = opts.tcpBuffersize;
             reporter.source_se = fileManagement.getSourceHostname();
             reporter.dest_se = fileManagement.getDestHostname();
-            fileManagement.generateLogFile();	    
+            fileManagement.generateLogFile();
 
             msg_ifce::getInstance()->set_tr_timestamp_start(&tr_completed, msg_ifce::getInstance()->getTimestamp());
             msg_ifce::getInstance()->set_agent_fqdn(&tr_completed, hostname);

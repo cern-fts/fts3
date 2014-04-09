@@ -67,6 +67,7 @@ limitations under the License. */
 #include "profiler/Profiler.h"
 #include "profiler/Macros.h"
 #include <boost/thread.hpp>
+#include <boost/scoped_ptr.hpp>
 
 extern bool stopThreads;
 extern time_t retrieveRecords;
@@ -97,7 +98,6 @@ class ProcessServiceHandler : public TRAITS::ActiveObjectType
 protected:
 
     using TRAITS::ActiveObjectType::_enqueue;
-    std::string enableOptimization;
 
 public:
 
@@ -119,7 +119,6 @@ public:
 
         execPoolSize = theServerConfig().get<int> ("InternalThreadPool");
 
-        enableOptimization = theServerConfig().get<std::string > ("Optimizer");
         char hostname[MAXHOSTNAMELEN];
         gethostname(hostname, MAXHOSTNAMELEN);
         ftsHostName = std::string(hostname);
@@ -206,7 +205,6 @@ protected:
         try
             {
                 std::string params = std::string("");
-                ExecuteProcess *pr = NULL;
                 std::string sourceSiteName("");
                 std::string destSiteName("");
                 std::string source_hostname("");
@@ -411,7 +409,7 @@ protected:
 
                                 bool optimize = false;
 
-                                if (enableOptimization.compare("true") == 0 && cfgs.empty())
+                                if (cfgs.empty())
                                     {
                                         optional<ProtocolResolver::protocol> p =
                                             ProtocolResolver::getUserDefinedProtocol(tempUrl);
@@ -664,43 +662,43 @@ protected:
                                         params.append(" -M ");
                                         params.append(infosys);
 
+                                        params.append(" -Y ");
+                                        params.append(prepareMetadataString(dn));
+
+
                                         bool ready = DBSingleton::instance().getDBObjectInstance()->isFileReadyStateV(fileIds);
 
                                         if (ready)
                                             {
                                                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd << " " << params << commit;
-                                                pr = new ExecuteProcess(cmd, params);
-                                                if (pr)
+                                                ExecuteProcess pr(cmd, params);
+                                                /*check if fork failed , check if execvp failed, */
+                                                if (-1 == pr.executeProcessShell())
                                                     {
-                                                        /*check if fork failed , check if execvp failed, */
-                                                        if (-1 == pr->executeProcessShell())
+                                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to spawn " << commit;
+                                                        DBSingleton::instance().getDBObjectInstance()->forkFailedRevertStateV(fileIds);
+                                                    }
+                                                else
+                                                    {
+                                                        DBSingleton::instance().getDBObjectInstance()->setPidV(pr.getPid(), fileIds);
+                                                        std::map<int, std::string>::const_iterator iterFileIds;
+                                                        for (iterFileIds = fileIds.begin(); iterFileIds != fileIds.end(); ++iterFileIds)
                                                             {
-                                                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to spawn " << commit;
-                                                                DBSingleton::instance().getDBObjectInstance()->forkFailedRevertStateV(fileIds);
-                                                            }
-                                                        else
-                                                            {
-                                                                DBSingleton::instance().getDBObjectInstance()->setPidV(pr->getPid(), fileIds);
-                                                                std::map<int, std::string>::const_iterator iterFileIds;
-                                                                for (iterFileIds = fileIds.begin(); iterFileIds != fileIds.end(); ++iterFileIds)
+                                                                struct message_updater msg2;
+                                                                if(std::string(job_id).length() <= 37)
                                                                     {
-                                                                        struct message_updater msg2;
-                                                                        if(std::string(job_id).length() <= 37)
-                                                                            {
-                                                                                strncpy(msg2.job_id, std::string(job_id).c_str(), sizeof(msg2.job_id));
-                                                                                msg2.job_id[sizeof(msg2.job_id) - 1] = '\0';
-                                                                                msg2.file_id = iterFileIds->first;
-                                                                                msg2.process_id = (int) pr->getPid();
-                                                                                msg2.timestamp = milliseconds_since_epoch();
-                                                                                ThreadSafeList::get_instance().push_back(msg2);
-                                                                            }
-                                                                        else
-                                                                            {
-                                                                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message length overun" << std::string(job_id).length() << commit;
-                                                                            }
+                                                                        strncpy(msg2.job_id, std::string(job_id).c_str(), sizeof(msg2.job_id));
+                                                                        msg2.job_id[sizeof(msg2.job_id) - 1] = '\0';
+                                                                        msg2.file_id = iterFileIds->first;
+                                                                        msg2.process_id = (int) pr.getPid();
+                                                                        msg2.timestamp = milliseconds_since_epoch();
+                                                                        ThreadSafeList::get_instance().push_back(msg2);
+                                                                    }
+                                                                else
+                                                                    {
+                                                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message length overun" << std::string(job_id).length() << commit;
                                                                     }
                                                             }
-                                                        delete pr;
                                                     }
                                             }
                                         params.clear();
@@ -792,6 +790,7 @@ protected:
                     }
                 catch (std::exception& e)
                     {
+		        reuseExec = 0;
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler " << e.what() << commit;
                         if (!jobsReuse.empty())
                             {
@@ -807,6 +806,7 @@ protected:
                     }
                 catch (...)
                     {
+		        reuseExec = 0;
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler!" << commit;
                         if (!jobsReuse.empty())
                             {

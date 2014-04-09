@@ -2651,10 +2651,24 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const st
         }
     catch (std::exception& e)
         {
+            std::vector<TransferJobs*>::iterator iter2;
+            for (iter2 = jobs.begin(); iter2 != jobs.end(); ++iter2)
+                {
+                    if(*iter2)
+                        delete *iter2;
+                }
+            jobs.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
+            std::vector<TransferJobs*>::iterator iter2;
+            for (iter2 = jobs.begin(); iter2 != jobs.end(); ++iter2)
+                {
+                    if(*iter2)
+                        delete *iter2;
+                }
+            jobs.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }
@@ -3577,9 +3591,9 @@ bool OracleAPI::terminateReuseProcess(const std::string & jobId, int pid, const 
                     sql << " SELECT reuse_job FROM t_job WHERE job_id = :jobId AND reuse_job IS NOT NULL",
                         soci::use(jobId), soci::into(reuse);
                 }
-            
-	    if(job_id.empty() || job_id.length()==0 )
-	    	job_id = jobId;
+
+            if(job_id.empty() || job_id.length()==0 )
+                job_id = jobId;
 
             if (sql.got_data() && reuse == "Y")
                 {
