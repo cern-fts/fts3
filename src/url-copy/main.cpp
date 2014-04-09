@@ -864,7 +864,7 @@ int main(int argc, char **argv)
 
                 gfalt_set_timeout(params, opts.timeout, NULL);
                 msg_ifce::getInstance()->set_transfer_timeout(&tr_completed, opts.timeout);
-                globalTimeout = experimentalTimeout + 500;
+                globalTimeout = experimentalTimeout + 3600;
                 logger.INFO() << "Resetting global timeout thread to " << globalTimeout << " seconds" << std::endl;
 
 
