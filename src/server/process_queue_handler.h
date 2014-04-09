@@ -116,7 +116,7 @@ public:
                 try
                     {
                         int retry = DBSingleton::instance().getDBObjectInstance()->getRetry(job);
-                        if(msg.retry==true && retry > 0 && std::string(msg.transfer_status).compare("FAILED") == 0)
+                        if(msg.retry==true && retry > 0 && std::string(msg.transfer_status).compare("FAILED") == 0 && msg.file_id > 0 && !job.empty())
                             {
                                 int retryTimes = DBSingleton::instance().getDBObjectInstance()->getRetryTimes(job, msg.file_id);
                                 if(retry == -1)  //unlimited times
