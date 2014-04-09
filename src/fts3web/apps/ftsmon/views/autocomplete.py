@@ -50,5 +50,5 @@ def vos(httpRequest):
 @jsonify
 def hostnames(httpRequest):
     notBefore = datetime.utcnow() - timedelta(hours = 12)
-    hosts = Host.objects.values('hostname').filter(beat__gte = notBefore)
+    hosts = Host.objects.values('hostname').filter(beat__gte = notBefore).distinct()
     return [h['hostname'] for h in hosts]
