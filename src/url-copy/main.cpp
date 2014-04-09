@@ -199,7 +199,7 @@ void abnormalTermination(const std::string& classification, const std::string&, 
 void canceler()
 {
     errorMessage = "INIT Transfer " + currentTransfer.jobId + " was canceled because it was not responding";
-    
+
     abnormalTermination("FAILED", errorMessage, "Abort");
 }
 
@@ -270,14 +270,16 @@ void signalHandler(int signum)
     std::string stackTrace = log_stack(signum);
     if (stackTrace.length() > 0)
         {
-            propagated = true;
+            if (propagated == false)
+                {
+                    propagated = true;
+                    logger.ERROR() << "Transfer process died: " << currentTransfer.jobId << std::endl;
+                    logger.ERROR() << "Received signal: " << signum << std::endl;
+                    logger.ERROR() << "Stacktrace: " << stackTrace << std::endl;
 
-            logger.ERROR() << "Transfer process died: " << currentTransfer.jobId << std::endl;
-            logger.ERROR() << "Received signal: " << signum << std::endl;
-            logger.ERROR() << "Stacktrace: " << stackTrace << std::endl;
-
-            errorMessage = "Transfer process died with: " + stackTrace;
-            abnormalTermination("FAILED", errorMessage, "Error");
+                    errorMessage = "Transfer process died with: " + stackTrace;
+                    abnormalTermination("FAILED", errorMessage, "Error");
+                }
         }
     else if (signum == SIGINT || signum == SIGTERM)
         {

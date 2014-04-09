@@ -790,7 +790,7 @@ protected:
                     }
                 catch (std::exception& e)
                     {
-		        reuseExec = 0;
+                        reuseExec = 0;
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler " << e.what() << commit;
                         if (!jobsReuse.empty())
                             {
@@ -806,7 +806,7 @@ protected:
                     }
                 catch (...)
                     {
-		        reuseExec = 0;
+                        reuseExec = 0;
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler!" << commit;
                         if (!jobsReuse.empty())
                             {
