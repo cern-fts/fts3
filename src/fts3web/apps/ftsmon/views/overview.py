@@ -20,7 +20,6 @@ from django.db import connection
 from django.db.models import Count, Sum, Q, Avg
 from django.core.paginator import Paginator
 from django.shortcuts import render
-from ftsmon import forms
 from ftsweb.models import File
 from jobs import setupFilters
 from jsonify import jsonify_paged, jsonify
@@ -117,8 +116,7 @@ class OverviewExtended(object):
 
 @jsonify_paged
 def overview(httpRequest):
-    filterForm = forms.FilterForm(httpRequest.GET)
-    filters    = setupFilters(filterForm)
+    filters    = setupFilters(httpRequest)
     if filters['time_window']:
         notBefore  = datetime.utcnow() - timedelta(hours = filters['time_window'])
     else:

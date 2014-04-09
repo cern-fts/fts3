@@ -19,7 +19,6 @@ from django.db.models import Q, Count, Avg
 from django.http import Http404
 from django.shortcuts import render, redirect
 from jsonify import jsonify, jsonify_paged
-from ftsmon import forms
 from ftsweb.models import Job, File, JobArchive, FileArchive, RetryError
 from util import getOrderBy, orderedField
 import datetime
@@ -57,7 +56,7 @@ class MetadataFilter:
     
 
 
-def setupFilters(filterForm):
+def setupFilters(httpRequest):
     # Default values
     filters = {'state': None,
                'time_window': None,
@@ -74,10 +73,18 @@ def setupFilters(filterForm):
                'reason': None
               }
     
-    # Process filter form
-    if filterForm.is_valid():
-        for key in filters.keys():
-            filters[key] = filterForm.cleaned_data[key]
+    for key in filters.keys():
+        try:
+            value = httpRequest.GET.get(key, None)
+            if value:
+                if key == 'time_window':
+                    filters[key] = int(httpRequest.GET[key])
+                elif key == 'state':
+                    filters[key] = httpRequest.GET[key].split(',')
+                else:
+                    filters[key] = httpRequest.GET[key]
+        except:
+            pass
                 
     # If enddate < startdate, swap
     if filters['startdate'] and filters['enddate'] and filters['startdate'] > filters['enddate']:
@@ -87,7 +94,8 @@ def setupFilters(filterForm):
 
 
 
-def jobListing(httpRequest, jobModel = Job, filters = None):
+def jobListing(httpRequest, jobModel = Job):
+    filters = setupFilters(httpRequest)
     # Initial query
     jobs = jobModel.objects
     
@@ -152,31 +160,14 @@ def jobListing(httpRequest, jobModel = Job, filters = None):
 
 
 @jsonify_paged
-def jobIndex(httpRequest):
-    states = ['FAILED', 'FINISHEDDIRTY', 'FINISHED', 'CANCELED', 'ACTIVE', 'STAGING']
-    
-    filterForm = forms.FilterForm(httpRequest.GET)
-    filters = setupFilters(filterForm)
-    
-    # Set some defaults for filters if they are empty
-    if not filters['time_window']:
-        filters['time_window'] = 12;
-    if not filters['state']:
-        filters['state'] = states
-    
-    msg, jobs = jobListing(httpRequest, filters = filters)
-
+def jobIndex(httpRequest):  
+    msg, jobs = jobListing(httpRequest)
     return jobs
 
 
 @jsonify_paged
 def archiveJobIndex(httpRequest):
-    filterForm = forms.FilterForm(httpRequest.GET)
-    filters = setupFilters(filterForm)
-    filters['time_window'] = None
-    
     msg, jobs = jobListing(httpRequest, jobModel = JobArchive, filters = filters)
-
     return jobs
 
 
@@ -282,8 +273,7 @@ def jobFiles(httpRequest, jobId):
 
 @jsonify_paged
 def transferList(httpRequest):
-    filterForm = forms.FilterForm(httpRequest.GET)
-    filters    = setupFilters(filterForm)
+    filters    = setupFilters(httpRequest)
     
     # Force a time window
     if not filters['time_window']:
