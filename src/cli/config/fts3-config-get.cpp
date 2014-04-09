@@ -45,7 +45,7 @@ int main(int ac, char* av[])
     try
         {
             // create and initialize the command line utility
-            unique_ptr<GetCfgCli> cli (
+            std::unique_ptr<GetCfgCli> cli (
                 getCli<GetCfgCli>(ac, av)
             );
             if (!cli->validate()) return 0;
