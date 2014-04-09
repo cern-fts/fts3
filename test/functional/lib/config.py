@@ -35,7 +35,7 @@ StorageParametrization = {
 StorageAreaPairs = [
     (
         'gsiftp://hepgrid11.ph.liv.ac.uk/dpm/ph.liv.ac.uk/home/%(vo)s/',
-        'gsiftp://lpsc-se-dpm-server.in2p3.fr/dpm/in2p3.fr/home/%(vo)s/'
+        'gsiftp://marsedpm.in2p3.fr/dpm/in2p3.fr/home/%(vo)s/'
     ),
     (
         'srm://hepgrid11.ph.liv.ac.uk:8446/srm/managerv2?SFN=/dpm/ph.liv.ac.uk/home/%(vo)s/',
