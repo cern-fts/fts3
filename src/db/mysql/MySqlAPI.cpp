@@ -2341,7 +2341,7 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
 
     try
         {
-            soci::rowset<soci::row> rs = (sql.prepare << " select pid from t_file where PID IS NOT NULL AND file_state='CANCELED' and job_finished is NULL AND TRANSFERHOST = :transferHost", soci::use(hostname));
+            soci::rowset<soci::row> rs = (sql.prepare << " select distinct pid from t_file where PID IS NOT NULL AND file_state='CANCELED' and job_finished is NULL AND TRANSFERHOST = :transferHost", soci::use(hostname));
 
             soci::statement stmt1 = (sql.prepare << "UPDATE t_file SET  job_finished = UTC_TIMESTAMP() "
                                      "WHERE pid = :pid ",
@@ -2366,7 +2366,7 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
                 {
                     int file_id = 0;
 
-                    soci::rowset<soci::row> rs2 = (sql.prepare << " select file_id from t_file where file_state='CANCELED' and PID IS NULL and (job_finished is NULL or finish_time is NULL)");
+                    soci::rowset<soci::row> rs2 = (sql.prepare << " select distinct file_id from t_file where file_state='CANCELED' and PID IS NULL and (job_finished is NULL or finish_time is NULL)");
 
                     soci::statement stmt2 = (sql.prepare << "UPDATE t_file SET job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP()  WHERE file_id=:file_id ", soci::use(file_id, "file_id"));
 
