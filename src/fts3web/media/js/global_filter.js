@@ -28,7 +28,7 @@ angular.module('ftsmon.global_filter', [])
                 vo:        validString($location.search().vo),
                 source_se: validString($location.search().source_se),
                 dest_se:   validString($location.search().dest_se),
-                time_window: undefinedAsZero($location.search().time_window)
+                time_window: $location.search().time_window
             }
 
             $rootScope.globalFilter = $scope.globalFilter;
@@ -38,7 +38,7 @@ angular.module('ftsmon.global_filter', [])
                 $rootScope.globalFilter.vo = validString($scope.globalFilter.vo);
                 $rootScope.globalFilter.source_se = validString($scope.globalFilter.source_se);
                 $rootScope.globalFilter.dest_se = validString($scope.globalFilter.dest_se);
-                $rootScope.globalFilter.time_window = undefinedAsZero($scope.globalFilter.time_window);
+                $rootScope.globalFilter.time_window = $scope.globalFilter.time_window;
                 $location.search($rootScope.globalFilter);
             }
 
