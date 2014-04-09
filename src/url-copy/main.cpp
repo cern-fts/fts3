@@ -199,9 +199,7 @@ void abnormalTermination(const std::string& classification, const std::string&, 
 void canceler()
 {
     errorMessage = "INIT Transfer " + currentTransfer.jobId + " was canceled because it was not responding";
-
-    Logger::getInstance().WARNING() << errorMessage << std::endl;
-
+    
     abnormalTermination("FAILED", errorMessage, "Abort");
 }
 
