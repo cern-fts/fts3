@@ -49,7 +49,7 @@ BuildRequires:  openldap-devel
 BuildRequires:  pugixml-devel
 BuildRequires:  python2-devel
 BuildRequires:  voms-devel
-BuildRequires:  checkpolicy, selinux-policy-devel, /usr/share/selinux/devel/policyhelp
+BuildRequires:  checkpolicy, selinux-policy-devel, selinux-policy-doc 
 
 Requires(pre):  shadow-utils
 
