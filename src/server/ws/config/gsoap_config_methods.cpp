@@ -623,6 +623,16 @@ int fts3::implcfg__maxSrcSeActive(soap* ctx, string se, int active, implcfg__max
             string dn = cgsi.getClientDn();
 
             DBSingleton::instance().getDBObjectInstance()->setSourceMaxActive(se, active);
+
+            // prepare the command for audit
+            stringstream cmd;
+            cmd << dn;
+            cmd << " had set the maximum number of active for source SE: ";
+            cmd << se;
+            cmd << " to ";
+            cmd << active;
+            DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd.str(), "max-se-source-active");
+
         }
     catch(Err& ex)
         {
@@ -657,6 +667,15 @@ int fts3::implcfg__maxDstSeActive(soap* ctx, string se, int active, implcfg__max
             string dn = cgsi.getClientDn();
 
             DBSingleton::instance().getDBObjectInstance()->setDestMaxActive(se, active);
+
+            // prepare the command for audit
+            stringstream cmd;
+            cmd << dn;
+            cmd << " had set the maximum number of active for destination SE: ";
+            cmd << se;
+            cmd << " to ";
+            cmd << active;
+            DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd.str(), "max-se-dest-active");
         }
     catch(Err& ex)
         {
@@ -691,6 +710,12 @@ int fts3::implcfg__setSecPerMb(soap* ctx, int secPerMb, implcfg__setSecPerMbResp
             string dn = cgsi.getClientDn();
 
             DBSingleton::instance().getDBObjectInstance()->setSecPerMb(secPerMb);
+
+            // prepare the command for audit
+            stringstream cmd;
+            cmd << dn;
+            cmd << " had set the seconds per MB to " << secPerMb;
+            DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd.str(), "sec-per-mb");
         }
     catch(Err& ex)
         {
@@ -725,6 +750,12 @@ int fts3::implcfg__setGlobalTimeout(soap* ctx, int timeout, implcfg__setGlobalTi
             string dn = cgsi.getClientDn();
 
             DBSingleton::instance().getDBObjectInstance()->setGlobalTimeout(timeout);
+
+            // prepare the command for audit
+            stringstream cmd;
+            cmd << dn;
+            cmd << " had set the global timeout to " << timeout;
+            DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd.str(), "global-timeout");
         }
     catch(Err& ex)
         {
