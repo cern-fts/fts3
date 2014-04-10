@@ -1,0 +1,15 @@
+
+policy_module(fts,1.0.0)
+
+type fts_log_t;
+logging_log_file(fts_log_t)
+
+require {
+  type httpd_t;
+  type logrotate_t;
+}
+
+allow httpd_t fts_log_t:file     { read getattr open } ; 
+allow httpd_t fts_log_t:dir      { read getattr search open } ; 
+allow httpd_t fts_log_t:lnk_file { read getattr } ; 
+

@@ -25,6 +25,7 @@ prepare: dist
 	@mkdir -p  $(rpmbuild)/SOURCES/
 	@mkdir -p  $(rpmbuild)/BUILD/
 	mv ${name}-${version}.tar.gz $(rpmbuild)/SOURCES 
+	cp ./specs/*.* $(rpmbuild)/SOURCES 
 
 srpm: prepare $(spec)
 	rpmbuild --nodeps -bs $(rpmdefines) $(spec)
