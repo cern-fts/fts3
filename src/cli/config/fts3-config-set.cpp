@@ -62,6 +62,20 @@ int main(int ac, char* av[])
                     return 0;
                 }
 
+            optional< pair<string, int> > maxActivePerSe = cli->getMaxSrcSeActive();
+            if (maxActivePerSe.is_initialized())
+            	{
+            		// TODO
+            		// ctx. ...
+            	}
+
+            maxActivePerSe = cli->getMaxDstSeActive();
+            if (maxActivePerSe.is_initialized())
+            	{
+            		// TODO
+            		// ctx. ...
+            	}
+
             optional<bool> drain = cli->drain();
             if (drain.is_initialized())
                 {
@@ -79,6 +93,20 @@ int main(int ac, char* av[])
                 {
                     ctx.optimizerModeSet(*mode);
                 }
+
+            optional<int> secPerMb = cli->getSecPerMb();
+            if (secPerMb.is_initialized())
+				{
+            		// TODO
+            		// ctx. ...
+				}
+
+            optional<int> globalTimeout = cli->getGlobalTimeout();
+            if (globalTimeout.is_initialized())
+				{
+            		// TODO
+            		// ctx. ...
+				}
 
             optional<unsigned> queueTimeout = cli->queueTimeout();
             if (queueTimeout.is_initialized())

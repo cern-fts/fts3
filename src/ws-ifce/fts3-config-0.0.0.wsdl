@@ -169,6 +169,32 @@
     </message>
    
     <message name="setSeProtocolResponse"/>
+    
+    <message name="maxSrcSeActiveRequest">
+        <part name="se" type="xsd:string"/>
+        <part name="active" type="xsd:int"/>
+    </message>
+    
+    <message name="maxSrcSeActiveResponse"/>
+    
+    <message name="maxDstSeActiveRequest">
+        <part name="se" type="xsd:string"/>
+        <part name="active" type="xsd:int"/>
+    </message>
+    
+    <message name="maxDstSeActiveResponse"/>
+    
+    <message name="setGlobalTimeoutRequest">
+        <part name="timeout" type="xsd:int"/>   
+    </message>
+    
+    <message name="setGlobalTimeoutResponse"/>
+    
+    <message name="setSecPerMbRequest">
+        <part name="secPerMb" type="xsd:int"/>
+    </message>
+    
+    <message name="setSecPerMbResponse"/>
 
     <message name="AuthorizationException">
         <part name="fault" element="config:AuthorizationExceptionElement"/>
@@ -276,7 +302,43 @@
             <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
             <fault message="impl:InvalidArgumentException" name="InvalidArgumentException"/>
             <fault message="impl:InternalException" name="InternalException"/>
-        </operation>        
+        </operation>
+        
+        <operation name="maxSrcSeActive" parameterOrder="maxSrcSeActive">
+            <input message="impl:maxSrcSeActiveRequest" name="maxSrcSeActiveRequest"/>
+            <output message="impl:maxSrcSeActiveResponse" name="maxSrcSeActiveResponse"/>
+            <fault message="impl:AuthorizationException" name="AuthorizationException"/>
+            <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
+            <fault message="impl:InvalidArgumentException" name="InvalidArgumentException"/>
+            <fault message="impl:InternalException" name="InternalException"/>
+        </operation>
+        
+        <operation name="maxDstSeActive" parameterOrder="maxDstSeActive">
+            <input message="impl:maxDstSeActiveRequest" name="maxDstSeActiveRequest"/>
+            <output message="impl:maxDstSeActiveResponse" name="maxDstSeActiveResponse"/>
+            <fault message="impl:AuthorizationException" name="AuthorizationException"/>
+            <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
+            <fault message="impl:InvalidArgumentException" name="InvalidArgumentException"/>
+            <fault message="impl:InternalException" name="InternalException"/>
+        </operation>
+        
+        <operation name="setGlobalTimeout" parameterOrder="timeout">
+            <input message="impl:setGlobalTimeoutRequest" name="setGlobalTimeoutRequest"/>
+            <output message="impl:setGlobalTimeoutResponse" name="setGlobalTimeoutResponse"/>
+            <fault message="impl:AuthorizationException" name="AuthorizationException"/>
+            <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
+            <fault message="impl:InvalidArgumentException" name="InvalidArgumentException"/>
+            <fault message="impl:InternalException" name="InternalException"/>
+        </operation>
+        
+        <operation name="setSecPerMb" parameterOrder="secPerMb">
+            <input message="impl:setSecPerMbRequest" name="setSecPerMbRequest"/>
+            <output message="impl:setSecPerMbResponse" name="setSecPerMbResponse"/>
+            <fault message="impl:AuthorizationException" name="AuthorizationException"/>
+            <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
+            <fault message="impl:InvalidArgumentException" name="InvalidArgumentException"/>
+            <fault message="impl:InternalException" name="InternalException"/>
+        </operation>                                 
     </portType>
 
     <binding name="SoapBinding" type="impl:Config">
@@ -558,7 +620,119 @@
             <fault name="InternalException">
                 <wsdlsoap:fault name="InternalException" use="literal"/>
             </fault>
-        </operation>        
+        </operation>   
+        
+        <operation name="maxSrcSeActive">
+            <wsdlsoap:operation soapAction=""/>
+            
+            <input name="maxSrcSeActiveRequest">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </input>
+            
+            <output name="maxSrcSeActiveResponse">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </output>
+            
+            <fault name="AuthorizationException">
+                <wsdlsoap:fault name="AuthorizationException" use="literal"/>
+            </fault>
+            
+            <fault name="ServiceBusyException">
+                <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
+            </fault>
+            
+            <fault name="InvalidArgumentException">
+                <wsdlsoap:fault name="InvalidArgumentException" use="literal"/>
+            </fault>
+            
+            <fault name="InternalException">
+                <wsdlsoap:fault name="InternalException" use="literal"/>
+            </fault>
+        </operation>     
+        
+        <operation name="maxDstSeActive">
+            <wsdlsoap:operation soapAction=""/>
+            
+            <input name="maxDstSeActiveRequest">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </input>
+            
+            <output name="maxDstSeActiveResponse">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </output>
+            
+            <fault name="AuthorizationException">
+                <wsdlsoap:fault name="AuthorizationException" use="literal"/>
+            </fault>
+            
+            <fault name="ServiceBusyException">
+                <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
+            </fault>
+            
+            <fault name="InvalidArgumentException">
+                <wsdlsoap:fault name="InvalidArgumentException" use="literal"/>
+            </fault>
+            
+            <fault name="InternalException">
+                <wsdlsoap:fault name="InternalException" use="literal"/>
+            </fault>
+        </operation>  
+        
+        <operation name="setGlobalTimeout">
+            <wsdlsoap:operation soapAction=""/>
+            
+            <input name="setGlobalTimeoutRequest">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </input>
+            
+            <output name="setGlobalTimeoutResponse">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </output>
+            
+            <fault name="AuthorizationException">
+                <wsdlsoap:fault name="AuthorizationException" use="literal"/>
+            </fault>
+            
+            <fault name="ServiceBusyException">
+                <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
+            </fault>
+            
+            <fault name="InvalidArgumentException">
+                <wsdlsoap:fault name="InvalidArgumentException" use="literal"/>
+            </fault>
+            
+            <fault name="InternalException">
+                <wsdlsoap:fault name="InternalException" use="literal"/>
+            </fault>
+        </operation>          
+        
+        <operation name="setSecPerMb">
+            <wsdlsoap:operation soapAction=""/>
+            
+            <input name="setSecPerMbRequest">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </input>
+            
+            <output name="setSecPerMbResponse">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </output>
+            
+            <fault name="AuthorizationException">
+                <wsdlsoap:fault name="AuthorizationException" use="literal"/>
+            </fault>
+            
+            <fault name="ServiceBusyException">
+                <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
+            </fault>
+            
+            <fault name="InvalidArgumentException">
+                <wsdlsoap:fault name="InvalidArgumentException" use="literal"/>
+            </fault>
+            
+            <fault name="InternalException">
+                <wsdlsoap:fault name="InternalException" use="literal"/>
+            </fault>
+        </operation>            
         
     </binding>
 

@@ -48,6 +48,10 @@ SetCfgCli::SetCfgCli(bool spec)
             ("destination", value<string>(), "The destination SE")
             ("max-bandwidth", value<int>(), "The maximum bandwidth that can be used (in Mbit/s)")
             ("protocol", value< vector<string> >()->multitoken(), "Set protocol (UDT) for given SE")
+            ("max-se-source-active", value< vector<string> >()->multitoken(), "Maximum number of active transfers for given source SE")
+            ("max-se-dest-active", value< vector<string> >()->multitoken(), "Maximum number of active transfers for given destination SE")
+            ("global-timeout", value<int>(), "Global transfer timeout")
+            ("sec-per-mb", value<int>(), "number of seconds per MB")
             ;
         }
 
@@ -153,6 +157,10 @@ bool SetCfgCli::validate()
             && !vm.count("optimizer-mode")
             && !vm.count("max-bandwidth")
             && !vm.count("protocol")
+            && !vm.count("max-se-source-active")
+            && !vm.count("max-se-dest-active")
+            && !vm.count("global-timeout")
+            && !vm.count("sec-per-mb")
        )
         {
             msgPrinter.error_msg("No parameters have been specified.");
@@ -267,5 +275,47 @@ map<string, int> SetCfgCli::getBringOnline()
 optional<std::tuple<string, string, int> > SetCfgCli::getBandwidthLimitation()
 {
     return bandwidth_limitation;
+}
+
+optional< pair<string, int> > SetCfgCli::getMaxSeActive(string option)
+{
+	if (!vm.count(option))
+		{
+			return optional< pair<string, int> >();
+		}
+
+    // make sure it was used corretly
+    const vector<string>& v = vm[option].as< vector<string> >();
+
+    if (v.size() != 2) throw string("'--" + option + "' takes following parameters: SE number_of_active");
+
+	string se = v[0];
+	int active = lexical_cast<int>(v[1]);
+
+	return make_pair(se, active);
+}
+
+optional< pair<string, int> > SetCfgCli::getMaxSrcSeActive()
+{
+	return getMaxSeActive("max-se-source-active");
+}
+
+optional< pair<string, int> > SetCfgCli::getMaxDstSeActive()
+{
+	return getMaxSeActive("max-se-dest-active");
+}
+
+optional<int> SetCfgCli::getGlobalTimeout()
+{
+	if (!vm.count("global-timeout")) return optional<int>();
+
+	return vm["global-timeout"].as<int>();
+}
+
+optional<int> SetCfgCli::getSecPerMb()
+{
+	if (!vm.count("sec-per-mb")) return optional<int>();
+
+	return vm["sec-per-mb"].as<int>();
 }
 

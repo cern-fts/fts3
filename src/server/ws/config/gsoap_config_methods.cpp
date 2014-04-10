@@ -606,3 +606,24 @@ int fts3::implcfg__setSeProtocol(soap* ctx, string protocol, string se, string s
 
     return SOAP_OK;
 }
+
+int fts3::implcfg__maxSrcSeActive(soap* ctx, string se, int activem, implcfg__maxSrcSeActiveResponse& resp)
+{
+	return SOAP_OK;
+}
+
+int fts3::implcfg__maxDstSeActive(soap* ctx, string se, int activem, implcfg__maxDstSeActiveResponse& resp)
+{
+	return SOAP_OK;
+}
+
+int fts3::implcfg__setSecPerMb(soap* ctx, int secPerMb, implcfg__setSecPerMbResponse& resp)
+{
+	return SOAP_OK;
+}
+
+int fts3::implcfg__setGlobalTimeout(soap* ctx, int timeout, implcfg__setGlobalTimeoutResponse& resp)
+{
+	return SOAP_OK;
+}
+
