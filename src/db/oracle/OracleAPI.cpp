@@ -8704,18 +8704,32 @@ void OracleAPI::setSourceMaxActive(const std::string & source_hostname, int maxA
                 {
                     sql.begin();
 
-                    sql << "INSERT INTO t_optimize (file_id, source_se, active) VALUES (1, :source_se, :active)  ",
-                        soci::use(source_hostname), soci::use(maxActive);
-
+                    if (maxActive == -1)
+						{
+							sql << "INSERT INTO t_optimize (file_id, source_se, active) VALUES (1, :source_se, NULL)  ",
+									soci::use(source_hostname);
+						}
+                    else
+						{
+                    		sql << "INSERT INTO t_optimize (file_id, source_se, active) VALUES (1, :source_se, :active)  ",
+                    				soci::use(source_hostname), soci::use(maxActive);
+						}
                     sql.commit();
                 }
             else
                 {
                     sql.begin();
 
-                    sql << "update t_optimize set active = :active where source_se = :source_se ",
-                        soci::use(maxActive), soci::use(source_hostname);
-
+                    if (maxActive == -1)
+						{
+							sql << "update t_optimize set active = NULL where source_se = :source_se ",
+								soci::use(source_hostname);
+						}
+                    else
+						{
+							sql << "update t_optimize set active = :active where source_se = :source_se ",
+								soci::use(maxActive), soci::use(source_hostname);
+						}
                     sql.commit();
                 }
         }
@@ -8746,18 +8760,32 @@ void OracleAPI::setDestMaxActive(const std::string & destination_hostname, int m
                 {
                     sql.begin();
 
-                    sql << "INSERT INTO t_optimize (file_id, dest_se, active) VALUES (1, :dest_se, :active)  ",
-                        soci::use(destination_hostname), soci::use(maxActive);
-
+                    if (maxActive == -1)
+						{
+							sql << "INSERT INTO t_optimize (file_id, dest_se, active) VALUES (1, :dest_se, NULL)  ",
+								soci::use(destination_hostname);
+						}
+                    else
+						{
+							sql << "INSERT INTO t_optimize (file_id, dest_se, active) VALUES (1, :dest_se, :active)  ",
+								soci::use(destination_hostname), soci::use(maxActive);
+						}
                     sql.commit();
                 }
             else
                 {
                     sql.begin();
 
-                    sql << "update t_optimize set active = :active where dest_se = :dest_se ",
-                        soci::use(maxActive), soci::use(destination_hostname);
-
+                    if (maxActive == -1)
+						{
+							sql << "update t_optimize set active = NULL where dest_se = :dest_se ",
+								soci::use(destination_hostname);
+						}
+                    else
+						{
+							sql << "update t_optimize set active = :active where dest_se = :dest_se ",
+								soci::use(maxActive), soci::use(destination_hostname);
+						}
                     sql.commit();
                 }
         }

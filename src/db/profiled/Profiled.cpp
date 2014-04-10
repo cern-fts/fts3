@@ -2,6 +2,7 @@
 #include "Profiled.h"
 #include "profiler/Profiler.h"
 #include "profiler/Macros.h"
+#include <boost/tuple/tuple.hpp>
 
 
 void destroy_profiled_db(void *db)
