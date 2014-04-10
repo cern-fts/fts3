@@ -292,6 +292,8 @@ optional< pair<string, int> > SetCfgCli::getMaxSeActive(string option)
 	string se = v[0];
 	int active = lexical_cast<int>(v[1]);
 
+	if (active < -1) throw string("values lower than -1 are not valid");
+
 	return make_pair(se, active);
 }
 
@@ -309,13 +311,25 @@ optional<int> SetCfgCli::getGlobalTimeout()
 {
 	if (!vm.count("global-timeout")) return optional<int>();
 
-	return vm["global-timeout"].as<int>();
+	int timeout = vm["global-timeout"].as<int>();
+
+	if (timeout < -1) throw string("values lower than -1 are not valid");
+
+	if (timeout == -1) timeout = 0;
+
+	return timeout;
 }
 
 optional<int> SetCfgCli::getSecPerMb()
 {
 	if (!vm.count("sec-per-mb")) return optional<int>();
 
-	return vm["sec-per-mb"].as<int>();
+	int sec = vm["sec-per-mb"].as<int>();
+
+	if (sec < -1) throw string("values lower than -1 are not valid");
+
+	if (sec == -1) sec = 0;
+
+	return sec;
 }
 
