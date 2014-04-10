@@ -607,23 +607,139 @@ int fts3::implcfg__setSeProtocol(soap* ctx, string protocol, string se, string s
     return SOAP_OK;
 }
 
-int fts3::implcfg__maxSrcSeActive(soap* ctx, string se, int activem, implcfg__maxSrcSeActiveResponse& resp)
+int fts3::implcfg__maxSrcSeActive(soap* ctx, string se, int active, implcfg__maxSrcSeActiveResponse& resp)
 {
-	return SOAP_OK;
+    try
+        {
+            // Authorise
+            AuthorizationManager::getInstance().authorize(
+                ctx,
+                AuthorizationManager::CONFIG,
+                AuthorizationManager::dummy
+            );
+
+            CGsiAdapter cgsi(ctx);
+            string vo = cgsi.getClientVo();
+            string dn = cgsi.getClientDn();
+
+            DBSingleton::instance().getDBObjectInstance()->setSourceMaxActive(se, active);
+        }
+    catch(Err& ex)
+        {
+
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+            soap_receiver_fault(ctx, ex.what(), "InvalidConfigurationException");
+
+            return SOAP_FAULT;
+        }
+    catch (...)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the maxSrcSeActive failed"  << commit;
+            return SOAP_FAULT;
+        }
+
+    return SOAP_OK;
 }
 
-int fts3::implcfg__maxDstSeActive(soap* ctx, string se, int activem, implcfg__maxDstSeActiveResponse& resp)
+int fts3::implcfg__maxDstSeActive(soap* ctx, string se, int active, implcfg__maxDstSeActiveResponse& resp)
 {
-	return SOAP_OK;
+    try
+        {
+            // Authorise
+            AuthorizationManager::getInstance().authorize(
+                ctx,
+                AuthorizationManager::CONFIG,
+                AuthorizationManager::dummy
+            );
+
+            CGsiAdapter cgsi(ctx);
+            string vo = cgsi.getClientVo();
+            string dn = cgsi.getClientDn();
+
+            DBSingleton::instance().getDBObjectInstance()->setDestMaxActive(se, active);
+        }
+    catch(Err& ex)
+        {
+
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+            soap_receiver_fault(ctx, ex.what(), "InvalidConfigurationException");
+
+            return SOAP_FAULT;
+        }
+    catch (...)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the maxDstSeActive failed"  << commit;
+            return SOAP_FAULT;
+        }
+
+    return SOAP_OK;
 }
 
 int fts3::implcfg__setSecPerMb(soap* ctx, int secPerMb, implcfg__setSecPerMbResponse& resp)
 {
-	return SOAP_OK;
+    try
+        {
+            // Authorise
+            AuthorizationManager::getInstance().authorize(
+                ctx,
+                AuthorizationManager::CONFIG,
+                AuthorizationManager::dummy
+            );
+
+            CGsiAdapter cgsi(ctx);
+            string vo = cgsi.getClientVo();
+            string dn = cgsi.getClientDn();
+
+            DBSingleton::instance().getDBObjectInstance()->setSecPerMb(secPerMb);
+        }
+    catch(Err& ex)
+        {
+
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+            soap_receiver_fault(ctx, ex.what(), "InvalidConfigurationException");
+
+            return SOAP_FAULT;
+        }
+    catch (...)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the setSecPerMb failed"  << commit;
+            return SOAP_FAULT;
+        }
+
+    return SOAP_OK;
 }
 
 int fts3::implcfg__setGlobalTimeout(soap* ctx, int timeout, implcfg__setGlobalTimeoutResponse& resp)
 {
-	return SOAP_OK;
+    try
+        {
+            // Authorise
+            AuthorizationManager::getInstance().authorize(
+                ctx,
+                AuthorizationManager::CONFIG,
+                AuthorizationManager::dummy
+            );
+
+            CGsiAdapter cgsi(ctx);
+            string vo = cgsi.getClientVo();
+            string dn = cgsi.getClientDn();
+
+            DBSingleton::instance().getDBObjectInstance()->setGlobalTimeout(timeout);
+        }
+    catch(Err& ex)
+        {
+
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+            soap_receiver_fault(ctx, ex.what(), "InvalidConfigurationException");
+
+            return SOAP_FAULT;
+        }
+    catch (...)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the setGlobalTimeout failed"  << commit;
+            return SOAP_FAULT;
+        }
+
+    return SOAP_OK;
 }
 
