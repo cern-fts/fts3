@@ -2099,11 +2099,6 @@ void OracleAPI::updateFileTransferProgressVector(std::vector<struct message_upda
                                     stmt.execute(true);
                                 }
                         }
-                    else
-                        {
-                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to read a stall message: "
-                                                           << iter->msg_error_reason << commit;
-                        }
                 }
 
             sql.commit();
