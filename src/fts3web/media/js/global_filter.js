@@ -41,6 +41,17 @@ angular.module('ftsmon.global_filter', [])
                 $rootScope.globalFilter.time_window = $scope.globalFilter.time_window;
                 $location.search($rootScope.globalFilter);
             }
+            
+            $scope.resetGlobalFilter = function() {
+            	$rootScope.globalFilter = {
+                        vo: '',
+                        source_se: '',
+                        dest_se: '',
+                        time_window: 1
+                };
+            	$scope.globalFilter = $rootScope.globalFilter;
+            	$location.search($rootScope.globalFilter);
+            }
 
             $scope.unique = {
                 vos:          Unique('vos'),
