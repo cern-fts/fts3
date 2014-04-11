@@ -51,7 +51,7 @@ function JobListCtrl($location, $scope, jobs, Job)
         var metadata = job.job_metadata;
         if (metadata) {
             metadata = eval('(' + metadata + ')');
-            if ('label' in metadata)
+            if (metadata && typeof(metadata) == 'object' && 'label' in metadata)
                 return 'label-' + metadata.label;
         }
         return '';
@@ -113,6 +113,24 @@ function JobViewCtrl($location, $scope, job, files, Job, Files)
     
     $scope.job = job;
     $scope.files = files;
+    
+    // Calculate remaining time
+    $scope.getRemainingTime = function(file) {
+    	if (file.file_state == 'ACTIVE') {
+    		if (file.throughput && file.filesize) {
+    			var bytes_per_sec = file.throughput * (1024 * 1024);
+    			var remaining_bytes = file.filesize - file.transferred;
+    			var remaining_time = remaining_bytes / bytes_per_sec;
+    			return (Math.round(remaining_time*100)/100).toString() + ' s';
+    		}
+    		else {
+    			return '?';
+    		}
+    	}
+    	else {
+    		return '-';
+    	}
+    }
     
     // On page change
     $scope.pageChanged = function(newPage) {

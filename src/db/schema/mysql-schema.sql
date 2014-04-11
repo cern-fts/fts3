@@ -571,6 +571,9 @@ CREATE TABLE t_file (
 -- Average throughput
   throughput            FLOAT,
 --
+-- Transferred bytes
+  transferred           DOUBLE DEFAULT 0,
+--
 -- How many times should the transfer be retried 
   retry                 INTEGER DEFAULT 0,
   

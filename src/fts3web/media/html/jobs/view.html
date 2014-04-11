@@ -55,7 +55,6 @@
 	        <th style="width: 8%">
 	           <span order-by="id">File ID</span>
             </th>
-	        <th style="width: 8%">Transfer Host</th>
 	        <th>SOURCE URL</th>
 	        <th>DEST URL</th>
 	        <th style="width: 8%">File State</th>
@@ -65,6 +64,7 @@
 	        <th style="width: 8%">
 	           <span order-by="throughput">Throughput</span>
             </th>
+            <th style="width: 8%">Remaining time</th>
 	        <th style="width: 10%">
 	           <span order-by="start_time">Start Time</span>
             </th>
@@ -80,7 +80,6 @@
                 {{file.file_id}}
                 <i class="icon-refresh" ng-show="file.retry"></i>
             </td>
-            <td>{{file.transferHost}}</td>
             <td title="{{file.source_surl}}" class="hscroll">
                 {{file.source_surl}}
             </td>
@@ -92,12 +91,14 @@
             </td>
             <td>{{file.filesize|filesize}}</td>
             <td>{{file.throughput|number:2}} MB/s</td>
+            <td>{{getRemainingTime(file)}}</td>
             <td>{{file.start_time}}</td>
             <td>{{file.finish_time}}</td>
         </tr>
         <tr style="background: #CCC" ng-show="file.show">
             <td colspan="9">
                 <ul>
+                    <li>Transfer host: {{file.transferHost}}</li>
                     <li>PID: {{file.pid}}</li>
                     <li>Hash: {{file.hashed_id|hex}}</li>
                     <li>Activity: {{file.activity}}</li>
