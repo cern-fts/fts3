@@ -171,11 +171,6 @@ protected:
                                                                                 << commit;
                                                 ThreadSafeList::get_instance().updateMsg(*iter);
                                             }
-                                        else
-                                            {
-                                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to read a stall message: "
-                                                                               << iter->msg_error_reason << commit;
-                                            }
                                     }
 
                                 //now update the progress markers in a "bulk fashion"
