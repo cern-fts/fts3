@@ -103,6 +103,14 @@ td.SUBMITTED, .SUBMITTED {
 	border-left: solid 4px gray;
 }
 
+.filter-on-click {
+	cursor: pointer;
+}
+
+.filter-on-click:hover {
+    color: #005580;
+}
+
 .overview.active {
 	background: #d9edf7;
 }

@@ -1,9 +1,6 @@
 <global-filter on-more="showFilterDialog()"></global-filter>
 
-<h2>
-    Number of errors for each pair
-</h2>
-<h3>For the last hour</h3>
+<h2>Number of errors for each pair</h2>
 
 <h4>{{pairs.startIndex}} to {{pairs.endIndex}} out of {{pairs.count}}</h4>
 
@@ -24,7 +21,7 @@
             <td>{{pair.source_se}}</td>
             <td>{{pair.dest_se}}</td>
             <td>
-                <a href="#/errors/list?source_se={{pair.source_se | escape}}&dest_se={{pair.dest_se | escape}}&reason={{filter.reason | escape}}">
+                <a href="#/errors/list?source_se={{pair.source_se | escape}}&dest_se={{pair.dest_se | escape}}&reason={{filter.reason | escape}}&time_window={{globalFilter.time_window}}">
                     {{pair.count}}
                 </a>
             </td>

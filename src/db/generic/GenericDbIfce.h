@@ -131,7 +131,7 @@ public:
     virtual bool updateFileTransferStatus(double throughput, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
                                           int process_id, double filesize, double duration, bool retry) = 0;
 
-    virtual bool updateJobTransferStatus(std::string job_id, const std::string status) = 0;
+    virtual bool updateJobTransferStatus(std::string job_id, const std::string status, int pid) = 0;
 
     virtual void cancelJob(std::vector<std::string>& requestIDs) = 0;
 
@@ -178,7 +178,7 @@ public:
 
     virtual void setAllowedNoOptimize(const std::string & job_id, int file_id, const std::string & params) = 0;
 
-    virtual bool terminateReuseProcess(const std::string & jobId) = 0;
+    virtual bool terminateReuseProcess(const std::string & jobId, int pid, const std::string & message) = 0;
 
     virtual void forceFailTransfers(std::map<int, std::string>& collectJobs) = 0;
 
@@ -393,6 +393,18 @@ public:
     virtual bool isProtocolUDT(const std::string & source_hostname, const std::string & destination_hostname) = 0;
 
     virtual int getStreamsOptimization(const std::string & source_hostname, const std::string & destination_hostname) = 0;
+
+    virtual int getGlobalTimeout() = 0;
+
+    virtual void setGlobalTimeout(int timeout) = 0;
+
+    virtual int getSecPerMb() = 0;
+
+    virtual void setSecPerMb(int seconds) = 0;
+
+    virtual void setSourceMaxActive(const std::string & source_hostname, int maxActive) = 0;
+
+    virtual void setDestMaxActive(const std::string & destination_hostname, int maxActive) = 0;
 
 
 

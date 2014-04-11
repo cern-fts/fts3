@@ -89,9 +89,8 @@ public:
         this->_enqueue(op);
     }
 
-    bool updateDatabase(const struct message& msg)
+    void updateDatabase(const struct message& msg)
     {
-        bool updated = true;
         try
             {
                 std::string job = std::string(msg.job_id).substr(0, 36);
@@ -103,7 +102,7 @@ public:
                                 static_cast<int> (msg.timeout),
                                 static_cast<int> (msg.buffersize),
                                 msg.filesize);
-                        return true;
+                        return;
                     }
 
                 if (std::string(msg.transfer_status).compare("FINISHED") == 0 ||
@@ -117,14 +116,14 @@ public:
                 try
                     {
                         int retry = DBSingleton::instance().getDBObjectInstance()->getRetry(job);
-                        if(msg.retry==true && retry > 0 && std::string(msg.transfer_status).compare("FAILED") == 0)
+                        if(msg.retry==true && retry > 0 && std::string(msg.transfer_status).compare("FAILED") == 0 && msg.file_id > 0 && !job.empty())
                             {
                                 int retryTimes = DBSingleton::instance().getDBObjectInstance()->getRetryTimes(job, msg.file_id);
                                 if(retry == -1)  //unlimited times
                                     {
                                         DBSingleton::instance().getDBObjectInstance()
                                         ->setRetryTransfer(job, msg.file_id, retryTimes+1, msg.transfer_message);
-                                        return true;
+                                        return;
                                     }
                                 else
                                     {
@@ -132,7 +131,7 @@ public:
                                             {
                                                 DBSingleton::instance().getDBObjectInstance()
                                                 ->setRetryTransfer(job, msg.file_id, retryTimes+1, msg.transfer_message);
-                                                return true;
+                                                return;
                                             }
                                     }
                             }
@@ -146,29 +145,34 @@ public:
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception when set retry " << commit;
                     }
 
-                /*session reuse process died or terminated unexpected*/
-                if ( (updated == true) && (std::string(msg.transfer_message).find("Transfer terminate handler called") != string::npos ||
-                                           std::string(msg.transfer_message).find("Transfer terminate handler called") != string::npos ||
-                                           std::string(msg.transfer_message).find("Transfer process died") != string::npos ||
-                                           std::string(msg.transfer_message).find("because it was stalled") != string::npos ||
-                                           std::string(msg.transfer_message).find("canceled because it was not responding") != string::npos ))
+                /*session reuse process died or terminated unexpected, must terminate all files of a given job*/
+                if ( (std::string(msg.transfer_message).find("Transfer terminate handler called") != string::npos ||
+                        std::string(msg.transfer_message).find("Transfer terminate handler called") != string::npos ||
+                        std::string(msg.transfer_message).find("Transfer process died") != string::npos ||
+                        std::string(msg.transfer_message).find("because it was stalled") != string::npos ||
+                        std::string(msg.transfer_message).find("canceled because it was not responding") != string::npos ))
                     {
-                        updated = DBSingleton::instance().getDBObjectInstance()->terminateReuseProcess(std::string(msg.job_id).substr(0, 36));
+                        if(std::string(msg.job_id).length() == 0)
+                            {
+                                DBSingleton::instance().getDBObjectInstance()->terminateReuseProcess(std::string(), static_cast<int> (msg.process_id),std::string(msg.transfer_message));
+                            }
+                        else
+                            {
+                                DBSingleton::instance().getDBObjectInstance()->terminateReuseProcess(std::string(msg.job_id).substr(0, 36),static_cast<int> (msg.process_id), std::string(msg.transfer_message));
+                            }
                     }
-                if(updated == true)
-                    {
-                        updated = DBSingleton::instance().
-                                  getDBObjectInstance()->
-                                  updateFileTransferStatus(msg.throughput, job, msg.file_id, std::string(msg.transfer_status),
-                                                           std::string(msg.transfer_message), static_cast<int> (msg.process_id),
-                                                           msg.filesize, msg.timeInSecs, msg.retry);
-                    }
-                if(updated == true)
-                    {
-                        updated = DBSingleton::instance().
-                                  getDBObjectInstance()->
-                                  updateJobTransferStatus(job, std::string(msg.transfer_status));
-                    }
+
+                //update file state
+                DBSingleton::instance().
+                getDBObjectInstance()->
+                updateFileTransferStatus(msg.throughput, job, msg.file_id, std::string(msg.transfer_status),
+                                         std::string(msg.transfer_message), static_cast<int> (msg.process_id),
+                                         msg.filesize, msg.timeInSecs, msg.retry);
+
+                //update job_state
+                DBSingleton::instance().
+                getDBObjectInstance()->
+                updateJobTransferStatus(job, std::string(msg.transfer_status), static_cast<int> (msg.process_id));
 
                 SingleTrStateInstance::instance().sendStateMessage(job, msg.file_id);
             }
@@ -184,7 +188,6 @@ public:
                 struct message msgTemp = msg;
                 runProducerStatus( msgTemp);
             }
-        return updated;
     }
 
 protected:

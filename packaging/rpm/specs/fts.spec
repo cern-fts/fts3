@@ -1,9 +1,10 @@
 %global _hardened_build 1
-
 %global __provides_exclude_from ^%{python_sitearch}/fts/.*\\.so$
+%global selinux_policyver %(sed -e 's,.*selinux-policy-\\([^/]*\\)/.*,\\1,' /usr/share/selinux/devel/policyhelp || echo 0.0.0)
+%global selinux_variants mls targeted
 
 Name: fts
-Version: 3.2.12
+Version: 3.2.13
 Release: 5%{?dist}
 Summary: File Transfer Service V3
 Group: System Environment/Daemons
@@ -12,8 +13,10 @@ URL: https://svnweb.cern.ch/trac/fts3/wiki
 # The source for this package was pulled from upstream's vcs.  Use the
 # following commands to generate the tarball:
 #  svn export https://svn.cern.ch/reps/fts3/trunk fts3
-#  tar -czvf fts-3.2.12-2.tar.gz fts3
+#  tar -czvf fts-3.2.13-2.tar.gz fts3
 Source0: https://grid-deployment.web.cern.ch/grid-deployment/dms/fts3/tar/%{name}-%{version}.tar.gz
+Source1: fts.te
+Source2: fts.fc
 
 %if 0%{?el5}
 BuildRequires:  activemq-cpp-library
@@ -46,6 +49,8 @@ BuildRequires:  openldap-devel
 BuildRequires:  pugixml-devel
 BuildRequires:  python2-devel
 BuildRequires:  voms-devel
+BuildRequires:  checkpolicy, selinux-policy-devel, selinux-policy-doc 
+
 Requires(pre):  shadow-utils
 
 %description
@@ -144,10 +149,24 @@ and canceling transfer-jobs to the FTS service. Additionally,
 there is a CLI that can be used for configuration and
 administering purposes.
 
+%package server-selinux
+Summary:    SELinux support for fts-server
+Group:      Applications/Internet
+%if "%{_selinux_policy_version}" != ""
+Requires:   selinux-policy >= %{_selinux_policy_version}
+%else
+Requires:   selinux-policy >= %{selinux_policyver}
+%endif
+Requires(post):   /usr/sbin/semodule, /sbin/restorecon, fts-server
+Requires(postun): /usr/sbin/semodule, /sbin/restorecon, fts-server
+
+%description server-selinux
+This package setup the SELinux policies for the FTS3 server.
 
 %prep
 %setup -qc
-
+mkdir SELinux
+cp -p %{SOURCE1} %{SOURCE2} SELinux
 
 %build
 # Make sure the version in the spec file and the version used
@@ -170,6 +189,16 @@ cd build
 
 make %{?_smp_mflags}
 
+cd -
+
+# SELinux
+cd SELinux
+for selinuxvariant in %{selinux_variants}; do
+  make NAME=${selinuxvariant} -f /usr/share/selinux/devel/Makefile
+  mv fts.pp fts.pp.${selinuxvariant}
+  make NAME=${selinuxvariant} -f /usr/share/selinux/devel/Makefile clean
+done
+cd -
 
 %install
 cd build
@@ -182,6 +211,14 @@ mkdir -p %{buildroot}%{_var}/log/fts3
 mkdir -p %{buildroot}%{_sysconfdir}/fts3
 make install DESTDIR=%{buildroot}
 mkdir -p %{buildroot}%{python_sitearch}/fts
+
+cd -
+
+# SELinux
+for selinuxvariant in %{selinux_variants}; do
+  install -d %{buildroot}%{_datadir}/selinux/${selinuxvariant}
+  install -p -m 644 SELinux/fts.pp.${selinuxvariant} %{buildroot}%{_datadir}/selinux/${selinuxvariant}/fts.pp
+done
 
 # Server scriptlets
 %pre server
@@ -269,6 +306,27 @@ exit 0
 
 %postun libs -p /sbin/ldconfig
 
+#SELinux scriptlets
+%post server-selinux
+
+# Reset the context set by fts-monitoring-selinux
+if [ $1 -eq 1 ]; then
+    semanage fcontext -d -t httpd_sys_content_t "/var/log/fts3(/.*)?" &> /dev/null
+fi
+
+for selinuxvariant in %{selinux_variants}; do
+  /usr/sbin/semodule -s ${selinuxvariant} -i %{_datadir}/selinux/${selinuxvariant}/fts.pp &> /dev/null || :
+done
+/sbin/restorecon -R %{_var}/log/fts3 || :
+
+%postun server-selinux
+if [ $1 -eq 0 ] ; then
+  for selinuxvariant in %{selinux_variants}
+  do
+    /usr/sbin/semodule -s ${selinuxvariant} -r fts &> /dev/null || :
+  done
+  [ -d %{_var}/log/fts3 ]  && /sbin/restorecon -R %{_var}/log/fts3 &> /dev/null || :
+fi
 
 %files server
 %dir %attr(0755,fts3,root) %{_var}/lib/fts3
@@ -377,13 +435,17 @@ exit 0
 %{_libdir}/libfts_delegation_api_cpp.so
 %{_mandir}/man1/fts*
 
+%files server-selinux
+%defattr(-,root,root,0755)
+%doc SELinux/*
+%{_datadir}/selinux/*/fts.pp
 
 %changelog
-* Tue Feb 04 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.12-4
+* Tue Feb 04 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.13-4
   - introduced dist back in the release
-* Tue Jan 14 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.12-3
+* Tue Jan 14 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.13-3
   - using cmake28
-* Mon Jan 13 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.12-2
+* Mon Jan 13 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.13-2
   - separated rpms for messaging and infosys subsystems
 * Mon Nov 18 2013 Alejandro Alvarez Ayllon <aalvarez@cern.ch> - 3.1.33-2
   - Added missing changelog entry

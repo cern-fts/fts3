@@ -336,6 +336,14 @@ void heartbeat(void)
         {
             try
                 {
+                    //check if draining is on
+                    if (DrainMode::getInstance())
+                        {
+                            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking stage-in files for this instance!" << commit;
+                            sleep(5);
+                            continue;
+                        }
+
                     db::DBSingleton::instance().getDBObjectInstance()->updateHeartBeat(
                         &myIndex, &count, &hashStart, &hashEnd, service_name);
 

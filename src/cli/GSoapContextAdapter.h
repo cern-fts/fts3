@@ -338,6 +338,26 @@ public:
      */
     void queueTimeoutSet(unsigned timeout);
 
+    /**
+     * Remote call to setGlobalTimeout
+     */
+    void setGlobalTimeout(int timeout);
+
+    /**
+     * Remote call to setSecPerMb
+     */
+    void setSecPerMb(int secPerMb);
+
+    /**
+     * Remote call to setMaxDstSeActive
+     */
+    void setMaxDstSeActive(string se, int active);
+
+    /**
+     * Remote call to setMaxSrcSeActive
+     */
+    void setMaxSrcSeActive(string se, int active);
+
     std::string getSnapShot(string vo, string src, string dst);
 
     ///@{

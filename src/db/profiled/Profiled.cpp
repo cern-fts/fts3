@@ -2,6 +2,7 @@
 #include "Profiled.h"
 #include "profiler/Profiler.h"
 #include "profiler/Macros.h"
+#include <boost/tuple/tuple.hpp>
 
 
 void destroy_profiled_db(void *db)
@@ -114,9 +115,9 @@ bool ProfiledDB::updateFileTransferStatus(double throughput, std::string job_id,
 }
 
 
-bool ProfiledDB::updateJobTransferStatus(std::string job_id, const std::string status)
+bool ProfiledDB::updateJobTransferStatus(std::string job_id, const std::string status, int pid)
 {
-    PROFILE_PREFIXED("DB::", return db->updateJobTransferStatus(job_id, status));
+    PROFILE_PREFIXED("DB::", return db->updateJobTransferStatus(job_id, status, pid));
 }
 
 
@@ -252,9 +253,9 @@ void ProfiledDB::setAllowedNoOptimize(const std::string & job_id, int file_id, c
 }
 
 
-bool ProfiledDB::terminateReuseProcess(const std::string & jobId)
+bool ProfiledDB::terminateReuseProcess(const std::string & jobId, int pid, const std::string & message)
 {
-    PROFILE_PREFIXED("DB::", return db->terminateReuseProcess(jobId));
+    PROFILE_PREFIXED("DB::", return db->terminateReuseProcess(jobId, pid, message));
 }
 
 
@@ -853,3 +854,32 @@ int ProfiledDB::getStreamsOptimization(const std::string & source_hostname, cons
     PROFILE_PREFIXED("DB::", return db->getStreamsOptimization(source_hostname, destination_hostname));
 }
 
+int ProfiledDB::getGlobalTimeout()
+{
+    PROFILE_PREFIXED("DB::", return db->getGlobalTimeout());
+}
+
+void ProfiledDB::setGlobalTimeout(int timeout)
+{
+    PROFILE_PREFIXED("DB::", db->setGlobalTimeout(timeout));
+}
+
+int ProfiledDB::getSecPerMb()
+{
+    PROFILE_PREFIXED("DB::", return db->getSecPerMb());
+}
+
+void ProfiledDB::setSecPerMb(int seconds)
+{
+    PROFILE_PREFIXED("DB::", db->setSecPerMb(seconds));
+}
+
+void ProfiledDB::setSourceMaxActive(const std::string & source_hostname, int maxActive)
+{
+    PROFILE_PREFIXED("DB::", db->setSourceMaxActive( source_hostname, maxActive));
+}
+
+void ProfiledDB::setDestMaxActive(const std::string & destination_hostname, int maxActive)
+{
+    PROFILE_PREFIXED("DB::", db->setDestMaxActive(destination_hostname,  maxActive));
+}

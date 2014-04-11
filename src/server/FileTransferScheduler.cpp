@@ -178,7 +178,7 @@ bool FileTransferScheduler::schedule()
                             // set job states if necessary
                             db->updateJobTransferStatus(
                                 file->JOB_ID,
-                                JobStatusHandler::FTS3_STATUS_FAILED
+                                JobStatusHandler::FTS3_STATUS_FAILED,0
                             );
                             // log it
                             FTS3_COMMON_LOGGER_NEWLOG (ERR) << msg << commit;

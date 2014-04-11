@@ -174,6 +174,8 @@ class ServerConfig(models.Model):
     # Same thing: composite primary keys not supported
     retry          = models.IntegerField(primary_key = True)
     max_time_queue = models.IntegerField()
+    global_timeout = models.IntegerField()
+    sec_per_mb     = models.IntegerField()
     
     class Meta:
         db_table = 't_server_config'

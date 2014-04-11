@@ -101,8 +101,8 @@ def optimizerDetailed(httpRequest):
         raise Http404
 
     try:
-        time_window = httpRequest.GET['time_window']
-        not_before = datetime.utcnow() - timedelta(hours = int(time_window))
+        time_window = timedelta(hours = int(httpRequest.GET['time_window']))
+        not_before = datetime.utcnow() - time_window
     except:
         not_before = datetime.utcnow() - timedelta(minutes = 30)
 

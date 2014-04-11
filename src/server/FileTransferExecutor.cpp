@@ -84,6 +84,7 @@ int FileTransferExecutor::execute()
         {
             string source_hostname = tf->SOURCE_SE;
             string destin_hostname = tf->DEST_SE;
+            string params;
 
             // if the pair was already checked and not scheduled skip it
             if (notScheduled.count(make_pair(source_hostname, destin_hostname))) return scheduled;
@@ -117,7 +118,18 @@ int FileTransferExecutor::execute()
                 {
                     BufSize = DEFAULT_BUFFSIZE;
                     StreamsperFile = db->getStreamsOptimization(source_hostname, destin_hostname);
-                    Timeout = DEFAULT_TIMEOUT;
+                    Timeout = db->getGlobalTimeout();
+                    if(Timeout == 0)
+                        Timeout = DEFAULT_TIMEOUT;
+                    else
+                        params.append(" -Z ");
+
+                    int secPerMB = db->getSecPerMb();
+                    if(secPerMB > 0)
+                        {
+                            params.append(" -V ");
+                            params.append(lexical_cast<string >(secPerMB));
+                        }
                 }
 
             FileTransferScheduler scheduler(
@@ -173,13 +185,16 @@ int FileTransferExecutor::execute()
                                              ""
                                          );
                         }
+
+
+                    params.append(" -Y ");
+                    params.append(prepareMetadataString(tf->DN));
+
                     //disable for now, remove later
                     string sourceSiteName = ""; //siteResolver.getSiteName(tf->SOURCE_SURL);
                     string destSiteName = ""; //siteResolver.getSiteName(tf->DEST_SURL);
 
                     bool debug = db->getDebugMode(source_hostname, destin_hostname);
-
-                    string params;
 
                     if (debug == true)
                         {
@@ -373,7 +388,7 @@ int FileTransferExecutor::execute()
                             else
                                 {
                                     db->updateFileTransferStatus(0.0, tf->JOB_ID, tf->FILE_ID, "ACTIVE", "",(int) pr.getPid(), 0, 0, false);
-                                    db->updateJobTransferStatus(tf->JOB_ID, "ACTIVE");
+                                    db->updateJobTransferStatus(tf->JOB_ID, "ACTIVE",0);
                                     SingleTrStateInstance::instance().sendStateMessage(tf->JOB_ID, tf->FILE_ID);
                                     struct message_updater msg;
                                     strncpy(msg.job_id, std::string(tf->JOB_ID).c_str(), sizeof(msg.job_id));

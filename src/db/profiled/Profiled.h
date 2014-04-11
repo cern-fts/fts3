@@ -71,7 +71,7 @@ public:
     bool updateFileTransferStatus(double throughput, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
                                   int process_id, double filesize, double duration, bool retry);
 
-    bool updateJobTransferStatus(std::string job_id, const std::string status);
+    bool updateJobTransferStatus(std::string job_id, const std::string status, int pid);
 
     void updateFileTransferProgressVector(std::vector<struct message_updater>& messages);
 
@@ -117,7 +117,7 @@ public:
 
     void setAllowedNoOptimize(const std::string & job_id, int file_id, const std::string & params);
 
-    bool terminateReuseProcess(const std::string & jobId);
+    bool terminateReuseProcess(const std::string & jobId, int pid, const std::string & message);
 
     void forceFailTransfers(std::map<int, std::string>& collectJobs);
 
@@ -315,6 +315,18 @@ public:
     bool isProtocolUDT(const std::string & source_hostname, const std::string & destination_hostname);
 
     int getStreamsOptimization(const std::string & source_hostname, const std::string & destination_hostname);
+
+    int getGlobalTimeout();
+
+    void setGlobalTimeout(int timeout);
+
+    int getSecPerMb();
+
+    void setSecPerMb(int seconds);
+
+    void setSourceMaxActive(const std::string & source_hostname, int maxActive);
+
+    void setDestMaxActive(const std::string & destination_hostname, int maxActive);
 };
 
 

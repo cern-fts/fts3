@@ -96,7 +96,7 @@ public:
     virtual bool updateFileTransferStatus(double throughput, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
                                           int process_id, double filesize, double duration, bool retry);
 
-    virtual bool updateJobTransferStatus(std::string job_id, const std::string status);
+    virtual bool updateJobTransferStatus(std::string job_id, const std::string status, int pid);
 
     virtual void cancelJob(std::vector<std::string>& requestIDs);
 
@@ -142,7 +142,7 @@ public:
 
     virtual void setAllowedNoOptimize(const std::string & job_id, int file_id, const std::string & params);
 
-    virtual bool terminateReuseProcess(const std::string & jobId);
+    virtual bool terminateReuseProcess(const std::string & jobId, int pid, const std::string & message);
 
     virtual void forceFailTransfers(std::map<int, std::string>& collectJobs);
 
@@ -355,6 +355,18 @@ public:
 
     virtual int getStreamsOptimization(const std::string & source_hostname, const std::string & destination_hostname);
 
+    virtual int getGlobalTimeout();
+
+    virtual void setGlobalTimeout(int timeout);
+
+    virtual int getSecPerMb();
+
+    virtual void setSecPerMb(int seconds);
+
+    virtual void setSourceMaxActive(const std::string & source_hostname, int maxActive);
+
+    virtual void setDestMaxActive(const std::string & destination_hostname, int maxActive);
+
 private:
     size_t                poolSize;
     soci::connection_pool* connectionPool;
@@ -389,7 +401,7 @@ private:
     bool updateFileTransferStatusInternal(soci::session& sql, double throughput, std::string job_id, int file_id, std::string transfer_status,
                                           std::string transfer_message, int process_id, double filesize, double duration, bool retry);
 
-    bool updateJobTransferStatusInternal(soci::session& sql, std::string job_id, const std::string status);
+    bool updateJobTransferStatusInternal(soci::session& sql, std::string job_id, const std::string status, int pid);
 
     void useFileReplica(soci::session& sql, std::string jobId, int fileId);
 

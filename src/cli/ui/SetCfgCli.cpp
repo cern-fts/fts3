@@ -39,15 +39,69 @@ SetCfgCli::SetCfgCli(bool spec)
         {
             // add commandline options specific for fts3-transfer-submit
             specific.add_options()
-            ("bring-online", "If this switch is used the user should provide SE_NAME VALUE pairs in order to set the maximum number of files that are staged concurrently for a given SE.")
-            ("drain", value<string>(), "If set to 'on' drains the given endpoint.")
-            ("retry", value<int>(), "Sets the number of retries of each individual file transfer (the value should be greater or equal to -1).")
-            ("optimizer-mode", value<int>(), "Sets the optimizer mode (allowed values: 1, 2 or 3)")
-            ("queue-timeout", value<int>(), "Sets the maximum time (in hours) transfer job is allowed to be in the queue (the value should be greater or equal to 0).")
-            ("source", value<string>(), "The source SE")
-            ("destination", value<string>(), "The destination SE")
-            ("max-bandwidth", value<int>(), "The maximum bandwidth that can be used (in Mbit/s)")
-            ("protocol", value< vector<string> >()->multitoken(), "Set protocol (UDT) for given SE")
+            (
+            	"bring-online",
+            	"If this switch is used the user should provide SE_NAME VALUE pairs in order to set the maximum number of files that are staged concurrently for a given SE."
+            	"\n(Example: --bring-online $SE_NAME $VALUE ...)"
+            )
+            (
+            	"drain", value<string>(),
+            	"If set to 'on' drains the given endpoint."
+            	"\n(Example: --drain on|off)"
+            )
+            (
+            	"retry", value<int>(),
+            	"Sets the number of retries of each individual file transfer (the value should be greater or equal to -1)."
+            	"\n(Example: --retry $NB_RETRY)"
+            )
+            (
+            	"optimizer-mode", value<int>(),
+            	"Sets the optimizer mode (allowed values: 1, 2 or 3)"
+            	"\n(Example: --optimizer-mode 1|2|3)"
+            )
+            (
+            	"queue-timeout", value<int>(),
+            	"Sets the maximum time (in hours) transfer job is allowed to be in the queue (the value should be greater or equal to 0)."
+            	"\n(Example: --queue-timeout $TIMEOUT)"
+            )
+            (	"source", value<string>(),
+            	"The source SE"
+            	"\n(Example: --source $SE_NAME)"
+            )
+            (
+            	"destination", value<string>(),
+            	"The destination SE"
+            	"\n(Example: --destination $SE_NAME)"
+            )
+            (
+            	"max-bandwidth", value<int>(),
+            	"The maximum bandwidth that can be used (in Mbit/s) for the given source or destination (see --source & --destination)"
+            	"\n(Example: --max-bandwidth $LIMIT)"
+            )
+            (	"protocol", value< vector<string> >()->multitoken(),
+            	"Set protocol (UDT) for given SE"
+            	"\n(Example: --protocol udt $SE_NAME on|off)"
+            )
+            (
+            	"max-se-source-active", value< vector<string> >()->multitoken(),
+            	"Maximum number of active transfers for given source SE (-1 means no limit)"
+            	"\n(Example: --max-se-source-active $NB_ACT $SE_NAME)"
+            )
+            (
+            	"max-se-dest-active", value< vector<string> >()->multitoken(),
+            	"Maximum number of active transfers for given destination SE (-1 means no limit)"
+            	"\n(Example: --max-se-dest-active $NB_ACT $SE_NAME)"
+            )
+            (
+            	"global-timeout", value<int>(),
+            	"Global transfer timeout"
+            	"\n(Example: --global-timeout $TIMEOUT)"
+            )
+            (
+            	"sec-per-mb", value<int>(),
+            	"number of seconds per MB"
+            	"\n(Example: --sec-per-mb $SEC_PER_MB)"
+            )
             ;
         }
 
@@ -153,6 +207,10 @@ bool SetCfgCli::validate()
             && !vm.count("optimizer-mode")
             && !vm.count("max-bandwidth")
             && !vm.count("protocol")
+            && !vm.count("max-se-source-active")
+            && !vm.count("max-se-dest-active")
+            && !vm.count("global-timeout")
+            && !vm.count("sec-per-mb")
        )
         {
             msgPrinter.error_msg("No parameters have been specified.");
@@ -267,5 +325,61 @@ map<string, int> SetCfgCli::getBringOnline()
 optional<std::tuple<string, string, int> > SetCfgCli::getBandwidthLimitation()
 {
     return bandwidth_limitation;
+}
+
+optional< pair<string, int> > SetCfgCli::getMaxSeActive(string option)
+{
+	if (!vm.count(option))
+		{
+			return optional< pair<string, int> >();
+		}
+
+    // make sure it was used corretly
+    const vector<string>& v = vm[option].as< vector<string> >();
+
+    if (v.size() != 2) throw string("'--" + option + "' takes following parameters: SE number_of_active");
+
+    string se = v[1];
+	int active = lexical_cast<int>(v[0]);
+
+	if (active < -1) throw string("values lower than -1 are not valid");
+
+	return make_pair(se, active);
+}
+
+optional< pair<string, int> > SetCfgCli::getMaxSrcSeActive()
+{
+	return getMaxSeActive("max-se-source-active");
+}
+
+optional< pair<string, int> > SetCfgCli::getMaxDstSeActive()
+{
+	return getMaxSeActive("max-se-dest-active");
+}
+
+optional<int> SetCfgCli::getGlobalTimeout()
+{
+	if (!vm.count("global-timeout")) return optional<int>();
+
+	int timeout = vm["global-timeout"].as<int>();
+
+	if (timeout < -1) throw string("values lower than -1 are not valid");
+
+	if (timeout == -1) timeout = 0;
+
+	return timeout;
+}
+
+optional<int> SetCfgCli::getSecPerMb()
+{
+	if (!vm.count("sec-per-mb")) return optional<int>();
+
+	int sec = vm["sec-per-mb"].as<int>();
+
+	if (sec < -1) throw string("values lower than -1 are not valid");
+
+	if (sec == -1) sec = 0;
+
+	return sec;
 }
 

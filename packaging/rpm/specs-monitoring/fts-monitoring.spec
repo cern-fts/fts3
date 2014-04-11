@@ -1,6 +1,6 @@
 Summary: FTS3 Web Application for monitoring
 Name: fts-monitoring
-Version: 3.2.12
+Version: 3.2.13
 Release: 5%{?dist}
 URL: https://svnweb.cern.ch/trac/fts3
 License: ASL 2.0
@@ -30,20 +30,16 @@ service httpd condrestart
 %package selinux
 Summary:		SELinux support for fts-monitoring
 Group:			Applications/Internet
-Requires:       fts-monitoring = %{version}-%{release}
+Requires:   fts-monitoring = %{version}-%{release}
 
 %description selinux
 This package labels port 8449, used by fts-monitoring, as http_port_t,
 so Apache can bind to it.
-It also labels /var/log/fts3/ with httpd_sys_content_t, so the log files
-can be served.
 
 %post selinux
 if [ $1 -gt 0 ] ; then # First install
     semanage port -a -t http_port_t -p tcp 8449
     setsebool -P httpd_can_network_connect=1 
-    semanage fcontext -a -t httpd_sys_content_t "/var/log/fts3(/.*)?"
-    restorecon -R /var/log/fts3/
     libnzz="/usr/lib64/oracle/11.2.0.3.0/client/lib64/libnnz11.so"
     if [ -f "$libnzz" ]; then
         execstack -c "$libnzz"
@@ -54,8 +50,6 @@ fi
 if [ $1 -eq 0 ] ; then # Final removal
     semanage port -d -t http_port_t -p tcp 8449
     setsebool -P httpd_can_network_connect=0
-    semanage fcontext -d -t httpd_sys_content_t "/var/log/fts3(/.*)?"
-    restorecon -R /var/log/fts3
     libnzz="/usr/lib64/oracle/11.2.0.3.0/client/lib64/libnnz11.so"
     if [ -f "$libnzz" ]; then
         execstack -s "$libnzz"

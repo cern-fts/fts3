@@ -26,9 +26,11 @@ INSERT INTO t_server_sanity (revertToSubmitted, cancelWaitingFiles, revertNotUse
 --
 CREATE TABLE t_server_config (
   retry       INTEGER default 0,
-  max_time_queue INTEGER default 0
+  max_time_queue INTEGER default 0,
+  global_timeout INTEGER default 0,
+  sec_per_mb INTEGER default 0
 );
-insert into t_server_config(retry,max_time_queue) values(0,0);
+insert into t_server_config(retry,max_time_queue,global_timeout,sec_per_mb) values(0,0,0,0);
 
 --
 -- Holds the optimizer mode
@@ -272,7 +274,7 @@ CREATE TABLE t_share_config (
    ,vo VARCHAR2(100) NOT NULL
    ,active INTEGER NOT NULL
    ,CONSTRAINT t_share_config_pk PRIMARY KEY (source, destination, vo)
-   ,CONSTRAINT t_share_config_fk FOREIGN KEY (source, destination) REFERENCES t_link_config (source, destination)
+   ,CONSTRAINT t_share_config_fk FOREIGN KEY (source, destination) REFERENCES t_link_config (source, destination) ON DELETE CASCADE
 );
 
 CREATE TABLE t_activity_share_config (

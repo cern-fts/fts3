@@ -20,7 +20,7 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
 
 set(VERSION_MAJOR 3)
 set(VERSION_MINOR 2)
-set(VERSION_PATCH 12)
+set(VERSION_PATCH 13)
 set(VERSION_STRING ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 
 FILE(WRITE ${PROJECT_SOURCE_DIR}/src/common/version.h
@@ -88,7 +88,12 @@ set(Boost_ADDITIONAL_VERSIONS
 set(Boost_USE_MULTITHREADED ON)
 set (Boost_NO_BOOST_CMAKE ON)
 
-find_package(Boost)
+# Hack for SL5 with EPEL5 enabled
+set(BOOST_INCLUDEDIR "/usr/include/boost141") # EPEL5
+set (BOOST_LIBRARYDIR "/usr/lib${LIB_SUFFIX}/boost141/") # EPEL5
+set (Boost_ADDITIONAL_VERSIONS "1.41" "1.41.0")
+
+find_package(Boost 1.41 REQUIRED)
 
 link_directories (${Boost_LIBRARY_DIRS})
 include_directories (${Boost_INCLUDE_DIR})

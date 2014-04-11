@@ -44,8 +44,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <boost/scoped_ptr.hpp>
-#include "common/logger.h"
-#include "common/error.h"
+#include "logger.h"
+#include "error.h"
 #include "producer_consumer_common.h"
 
 using namespace activemq;

@@ -158,7 +158,39 @@ public:
      */
     optional< std::tuple<string, string, string> > getProtocol();
 
+    /**
+     * Gets the max number of active for given source SE
+     *
+     * @return SE name - max active pair if set by user, or not initialised optional otherwise
+     */
+    optional< pair<string, int> > getMaxSrcSeActive();
+
+    /**
+     * Gets the max number of active for given destination SE
+     *
+     * @return SE name - max active pair if set by user, or not initialised optional otherwise
+     */
+    optional< pair<string, int> > getMaxDstSeActive();
+
+    /**
+     * Gets the global timeout settings
+     *
+     * @return global timeout, or an uninitialised optional
+     */
+    optional<int> getGlobalTimeout();
+
+    /**
+     * Gets seconds per MB
+     *
+     * @return seconds per MB, or an uninitialised optional
+     */
+    optional<int> getSecPerMb();
+
+
 private:
+    /// helper function for handling max source and destination active
+    optional< pair<string, int> > getMaxSeActive(string option);
+
     /// parses the multiple parameters that were provided by the user and creates a SE name - value mapping
     void parseBringOnline();
 

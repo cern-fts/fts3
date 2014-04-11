@@ -1,0 +1,2 @@
+/var/log/fts3(/.*)?		  	gen_context(system_u:object_r:fts_log_t,s0)
+

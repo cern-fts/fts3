@@ -23,11 +23,16 @@ from django.shortcuts import render, redirect
 from ftsweb.models import File
 from jsonify import jsonify_paged
 
-_TIMEDELTA = timedelta(hours = 1)
-
 @jsonify_paged
 def showErrors(httpRequest):
-    notBefore = datetime.utcnow() - _TIMEDELTA
+    time_window = timedelta(hours = 1)
+    if httpRequest.GET.get('time_window', None):
+        try:
+            time_window = timedelta(hours = int(httpRequest.GET['time_window']))
+        except:
+            pass
+    
+    notBefore = datetime.utcnow() - time_window
     errors = File.objects.filter(file_state = 'FAILED', job_finished__gte = notBefore)
 
     if httpRequest.GET.get('source_se', None):
@@ -54,8 +59,15 @@ def errorsForPair(httpRequest):
     
     if not source_se or not dest_se:
         raise Http404
+    
+    time_window = timedelta(hours = 1)
+    if httpRequest.GET.get('time_window', None):
+        try:
+            time_window = timedelta(hours = int(httpRequest.GET['time_window']))
+        except:
+            pass
 
-    notBefore = datetime.utcnow() - _TIMEDELTA
+    notBefore = datetime.utcnow() - time_window
     transfers = File.objects.filter(file_state = 'FAILED',
                                     job_finished__gte = notBefore,
                                     source_se = source_se, dest_se = dest_se)

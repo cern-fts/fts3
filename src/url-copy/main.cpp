@@ -59,6 +59,12 @@ Transfer currentTransfer;
 
 gfal_context_t handle = NULL;
 
+static std::string replace_dn(std::string& user_dn)
+{
+    boost::replace_all(user_dn, "?", " ");
+    return user_dn;
+}
+
 static std::string replaceMetadataString(std::string text)
 {
     text = boost::replace_all_copy(text, "?"," ");
@@ -194,8 +200,6 @@ void canceler()
 {
     errorMessage = "INIT Transfer " + currentTransfer.jobId + " was canceled because it was not responding";
 
-    Logger::getInstance().WARNING() << errorMessage << std::endl;
-
     abnormalTermination("FAILED", errorMessage, "Abort");
 }
 
@@ -266,15 +270,16 @@ void signalHandler(int signum)
     std::string stackTrace = log_stack(signum);
     if (stackTrace.length() > 0)
         {
-            propagated = true;
+            if (propagated == false)
+                {
+                    propagated = true;
+                    logger.ERROR() << "Transfer process died: " << currentTransfer.jobId << std::endl;
+                    logger.ERROR() << "Received signal: " << signum << std::endl;
+                    logger.ERROR() << "Stacktrace: " << stackTrace << std::endl;
 
-            logger.ERROR() << "Transfer process died " << currentTransfer.jobId << std::endl;
-            logger.ERROR() << "Received signal " << signum << std::endl;
-            logger.ERROR() << stackTrace << std::endl;
-
-            errorMessage = "Transfer process died " + currentTransfer.jobId;
-            errorMessage += stackTrace;
-            abnormalTermination("FAILED", errorMessage, "Error");
+                    errorMessage = "Transfer process died with: " + stackTrace;
+                    abnormalTermination("FAILED", errorMessage, "Error");
+                }
         }
     else if (signum == SIGINT || signum == SIGTERM)
         {
@@ -486,6 +491,8 @@ int main(int argc, char **argv)
     if (opts.parse(argc, argv) < 0)
         {
             std::cerr << opts.getErrorMessage() << std::endl;
+            errorMessage = "Transfer process died with: " + opts.getErrorMessage();
+            abnormalTermination("FAILED", errorMessage, "Error");
             return 1;
         }
 
@@ -639,6 +646,7 @@ int main(int argc, char **argv)
             msg_ifce::getInstance()->set_block_size(&tr_completed, opts.blockSize);
             msg_ifce::getInstance()->set_srm_space_token_dest(&tr_completed, opts.destTokenDescription);
             msg_ifce::getInstance()->set_srm_space_token_source(&tr_completed, opts.sourceTokenDescription);
+            msg_ifce::getInstance()->set_user_dn(&tr_completed, replace_dn(opts.user_dn));
 
             if(opts.monitoringMessages)
                 msg_ifce::getInstance()->SendTransferStartMessage(&tr_completed);
@@ -663,6 +671,7 @@ int main(int argc, char **argv)
 
                 logger.INFO() << "Transfer accepted" << std::endl;
                 logger.INFO() << "Proxy:" << opts.proxy << std::endl;
+                logger.INFO() << "User DN:" << replace_dn(opts.user_dn) << std::endl;
                 logger.INFO() << "VO:" << opts.vo << std::endl; //a
                 logger.INFO() << "Job id:" << opts.jobId << std::endl;
                 logger.INFO() << "File id:" << currentTransfer.fileId << std::endl;
@@ -839,13 +848,23 @@ int main(int argc, char **argv)
                             }
                     }
 
-                unsigned int experimentalTimeout = adjustTimeoutBasedOnSize(currentTransfer.fileSize, opts.timeout);
-                if(!opts.manualConfig || opts.autoTunned || opts.timeout==0)
+                unsigned int experimentalTimeout = adjustTimeoutBasedOnSize(currentTransfer.fileSize, opts.timeout, opts.secPerMb, opts.global_timeout);
+                if( !opts.manualConfig || opts.autoTunned || opts.timeout==0)
                     opts.timeout = experimentalTimeout;
+
+                if (opts.global_timeout)
+                    {
+                        logger.INFO() << "Transfer timeout is set globally:" << opts.timeout << std::endl;
+                    }
+                else
+                    {
+                        logger.INFO() << "Transfer timeout:" << opts.timeout << std::endl;
+                    }
+                logger.INFO() << "Add " << opts.secPerMb << " seconds per MB transfer timeout "  << std::endl;
+
                 gfalt_set_timeout(params, opts.timeout, NULL);
                 msg_ifce::getInstance()->set_transfer_timeout(&tr_completed, opts.timeout);
-                logger.INFO() << "Timeout:" << opts.timeout << std::endl;
-                globalTimeout = experimentalTimeout + 500;
+                globalTimeout = experimentalTimeout + 3600;
                 logger.INFO() << "Resetting global timeout thread to " << globalTimeout << " seconds" << std::endl;
 
 

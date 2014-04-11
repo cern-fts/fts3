@@ -1,4 +1,4 @@
-<global-filter on-more="showFilterDialog()"></global-filter>
+<global-filter></global-filter>
 
 <h3>
     Showing {{optimizer.startIndex}} to {{optimizer.endIndex}} out of {{optimizer.count}}
@@ -31,20 +31,3 @@
 <pagination rotate="false" num-pages="optimizer.pageCount" current-page="optimizer.page"
     max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>
-
-<!-- Modals -->
-<div id="filterDialog" class="modal" role="dialog" style="display: none">
-    <form ng-submit="applyFilters()" autocomplete="off">
-        <div class="modal-header">
-            <h3>Filter</h3>
-        </div>
-        <div class="modal-body" style="height: 20em">
-            <label for="timewindow">Time window:</label>
-            <input type="number" placeholder="time window in hours" id="timewindow" ng-model="filter.time_window"/>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-success" ng-click="applyFilters()">Apply</button>
-            <button class="btn btn-danger" ng-click="cancelFilters()">Cancel</button>
-        </div>
-    </form>
-</div>

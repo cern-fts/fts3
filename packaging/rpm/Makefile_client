@@ -1,5 +1,5 @@
-name=fts
-spec=./specs/fts.spec
+name=fts-client
+spec=./specs-client/fts-client.spec
 version=${shell grep '^Version:' $(spec) | awk '{print $$2}' }
 rpmbuild=${shell pwd}/rpmbuild
 MOCKENV=epel-6-cernonly-x86_64
@@ -25,7 +25,6 @@ prepare: dist
 	@mkdir -p  $(rpmbuild)/SOURCES/
 	@mkdir -p  $(rpmbuild)/BUILD/
 	mv ${name}-${version}.tar.gz $(rpmbuild)/SOURCES 
-	cp ./specs/*.* $(rpmbuild)/SOURCES 
 
 srpm: prepare $(spec)
 	rpmbuild --nodeps -bs $(rpmdefines) $(spec)

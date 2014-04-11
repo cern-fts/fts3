@@ -143,6 +143,20 @@ bool BlacklistCli::printHelp(string tool)
                     cout << command_specific << endl;
                 }
 
+            cout << "Examples: " << endl;
+            cout << "\t- To blacklist a SE:" << endl;
+            cout << "\t  fts-set-blacklist -s $FTSENDPOINT se $SE on" << endl;
+            cout << "\t- To blacklist a SE for given VO:" << endl;
+            cout << "\t  fts-set-blacklist -s $FTSENDPOINT se $SE on --vo $VO" << endl;
+            cout << "\t- To blacklist a SE but still accept transfer-jobs:" << endl;
+            cout << "\t  fts-set-blacklist -s $FTSENDPOINT se $SE on --allow-submit" << endl;
+            cout << "\t- To remove a SE from blacklist:" << endl;
+            cout << "\t  fts-set-blacklist -s $FTSENDPOINT se $SE off" << endl;
+            cout << "\t- To blacklist a DN:" << endl;
+            cout << "\t  fts-set-blacklist -s $FTSENDPOINT dn $DN on" << endl;
+            cout << "\t- To remove a DN from blacklist:" << endl;
+            cout << "\t  fts-set-blacklist -s $FTSENDPOINT dn $DN off" << endl;
+
             return true;
         }
 
