@@ -26,6 +26,14 @@ h2 div {
 	display: inline;
 }
 
+td.numeric {
+	text-align: right;
+}
+
+th.numeric {
+	text-align: right;
+}
+
 /* This trick avoids flapping layout */
 plot {
     display: block;
