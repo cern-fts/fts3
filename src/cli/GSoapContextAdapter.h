@@ -117,7 +117,7 @@ public:
      *
      * @return the job ID
      */
-    string transferSubmit (vector<File> files, map<string, string> parameters);
+    string transferSubmit (vector<File> const & files, map<string, string> const & parameters);
 
     /**
      * Remote call to transferSubmit

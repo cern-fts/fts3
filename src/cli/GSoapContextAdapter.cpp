@@ -165,7 +165,7 @@ void GSoapContextAdapter::init()
         }
 }
 
-string GSoapContextAdapter::transferSubmit (vector<File> files, map<string, string> parameters)
+string GSoapContextAdapter::transferSubmit (vector<File> const & files, map<string, string> const & parameters)
 {
 
     if (files.empty())
@@ -180,7 +180,7 @@ string GSoapContextAdapter::transferSubmit (vector<File> files, map<string, stri
     tns3__TransferJobElement3* element;
 
     // iterate over the internal vector containing job elements
-    vector<File>::iterator f_it;
+    vector<File>::const_iterator f_it;
     for (f_it = files.begin(); f_it < files.end(); f_it++)
         {
 
@@ -234,7 +234,7 @@ string GSoapContextAdapter::transferSubmit (vector<File> files, map<string, stri
 
 
     job.jobParams = soap_new_tns3__TransferParams(ctx, -1);
-    map<string, string>::iterator p_it;
+    map<string, string>::const_iterator p_it;
 
     for (p_it = parameters.begin(); p_it != parameters.end(); p_it++)
         {
