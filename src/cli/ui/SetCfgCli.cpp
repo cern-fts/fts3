@@ -295,10 +295,17 @@ void SetCfgCli::parseBringOnline()
     do
         {
             second = first + 1;
-            bring_online.insert(
-                make_pair(*first, lexical_cast<int>(*second))
-            );
-            first += 2;
+            try
+				{
+					bring_online.insert(
+					make_pair(*first, lexical_cast<int>(*second))
+					);
+					first += 2;
+				}
+            catch(boost::bad_lexical_cast const & ex)
+				{
+					throw std::string("The bring-online value: " + *second + " is not correct integer (int) value!");
+				}
         }
     while (first != v.end());
 }
