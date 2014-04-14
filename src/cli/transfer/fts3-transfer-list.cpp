@@ -26,6 +26,7 @@
 #include "GSoapContextAdapter.h"
 #include "ui/ListTransferCli.h"
 #include "rest/HttpRequest.h"
+#include "rest/ResponseParser.h"
 
 #include "common/JobStatusHandler.h"
 
@@ -35,6 +36,7 @@
 #include <boost/lambda/bind.hpp>
 
 #include <algorithm>
+#include <sstream>
 
 using namespace std;
 using namespace boost;
@@ -95,8 +97,15 @@ int main(int ac, char* av[])
                     string capath = cli->capath();
                     string proxy = cli->proxy();
 
-                    HttpRequest http (url, capath, proxy, cout);
+                    stringstream ss;
+
+                    HttpRequest http (url, capath, proxy, ss);
                     http.get();
+
+                    ResponseParser parser(ss);
+
+
+
                     return 0;
                 }
 
@@ -108,6 +117,7 @@ int main(int ac, char* av[])
             statuses = ctx.listRequests(array, cli->getUserDn(), cli->getVoName());
 
             for_each(statuses.begin(), statuses.end(), lambda::bind(&MsgPrinter::job_status, &cli->printer(), lambda::_1));
+//            for_each(statuses.begin(), statuses.end(), [&cli](fts3::cli::JobStatus status){cli->printer().job_status(status);});
         }
     catch(std::exception& ex)
         {

@@ -275,6 +275,10 @@ bool SubmitTransferCli::createJobElements()
 
 vector<File> SubmitTransferCli::getFiles()
 {
+    if (files.empty())
+        {
+            throw string ("No transfer job has been specified.");
+        }
 
     return files;
 }
