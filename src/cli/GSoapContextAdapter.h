@@ -120,17 +120,6 @@ public:
     string transferSubmit (vector<File> const & files, map<string, string> const & parameters);
 
     /**
-     * Remote call to transferSubmit
-     *
-     * @param elements - job elements to be executed
-     * @param parameters - parameters for the job that is being submitted
-     * @param password - user credential that is being used instead of certificate delegation
-     *
-     * @return the job ID
-     */
-    string transferSubmit (vector<JobElement> elements, map<string, string> parameters, string password);
-
-    /**
      * Remote call to getTransferJobStatus
      *
      * @param jobId   the job id

@@ -167,12 +167,6 @@ void GSoapContextAdapter::init()
 
 string GSoapContextAdapter::transferSubmit (vector<File> const & files, map<string, string> const & parameters)
 {
-
-    if (files.empty())
-        {
-            throw string ("No transfer job has been specified.");
-        }
-
     // the transfer job
     tns3__TransferJob3 job;
 
@@ -247,56 +241,6 @@ string GSoapContextAdapter::transferSubmit (vector<File> const & files, map<stri
         handleSoapFault("Failed to submit transfer: transferSubmit3.");
 
     return resp._transferSubmit4Return;
-}
-
-string GSoapContextAdapter::transferSubmit (vector<JobElement> elements, map<string, string> parameters, string password)
-{
-
-    if (elements.empty())
-        {
-            throw string ("No transfer job has been specified.");
-        }
-
-    // the transfer job
-    tns3__TransferJob job;
-
-    // set the credential
-    job.credential = soap_new_std__string(ctx, -1);
-    *job.credential = password;
-
-    tns3__TransferJobElement* element;
-    vector<JobElement>::iterator it_e;
-
-    // iterate over the internal vector containing Task (job elements)
-    for (it_e = elements.begin(); it_e < elements.end(); it_e++)
-        {
-
-            // create the job element, and set the source, destination and checksum values
-            element = soap_new_tns3__TransferJobElement(ctx, -1);
-            element->source = soap_new_std__string(ctx, -1);
-            element->dest = soap_new_std__string(ctx, -1);
-
-            *element->source = boost::get<SOURCE>(*it_e);
-            *element->dest = boost::get<DESTINATION>(*it_e);
-
-            // push the element into the result vector
-            job.transferJobElements.push_back(element);
-        }
-
-    job.jobParams = soap_new_tns3__TransferParams(ctx, -1);
-    map<string, string>::iterator it_p;
-
-    for (it_p = parameters.begin(); it_p != parameters.end(); it_p++)
-        {
-            job.jobParams->keys.push_back(it_p->first);
-            job.jobParams->values.push_back(it_p->second);
-        }
-
-    impltns__transferSubmitResponse resp;
-    if (soap_call_impltns__transferSubmit(ctx, endpoint.c_str(), 0, &job, resp))
-        handleSoapFault("Failed to submit transfer: transferSubmit.");
-
-    return resp._transferSubmitReturn;
 }
 
 JobStatus GSoapContextAdapter::getTransferJobStatus (string jobId, bool archive)

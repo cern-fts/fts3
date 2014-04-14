@@ -68,6 +68,11 @@ int main(int ac, char* av[])
 //		if (cli->useDelegation()) {
 
             vector<File> files = cli->getFiles();
+            if (files.empty())
+                {
+                    throw string ("No transfer job has been specified.");
+                }
+
             map<string, string> params = cli->getParams();
 
             // delegate Proxy Certificate
