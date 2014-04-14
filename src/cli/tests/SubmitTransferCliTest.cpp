@@ -120,6 +120,29 @@ BOOST_AUTO_TEST_CASE (SubmitTransferCli_other_options)
     BOOST_CHECK(cli->getExpirationTime() == 1234);
 }
 
+BOOST_AUTO_TEST_CASE (SubmitTransferCli_submission_no_job)
+{
+
+    // has to be const otherwise is deprecated
+    char* av[] =
+    {
+        "prog_name",
+        "-s",
+        "https://fts3-server:8080",
+    };
+
+    // argument count
+    int ac = 3;
+
+    unique_ptr<SubmitTransferCli> cli (
+        getCli<SubmitTransferCli>(ac, av)
+    );
+
+    cli->validate();
+
+    BOOST_CHECK_THROW(cli->getFiles(), std::string);
+}
+
 BOOST_AUTO_TEST_CASE (SubmitTransferCli_submission_no_checksum)
 {
 
