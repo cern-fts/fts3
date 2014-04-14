@@ -324,7 +324,7 @@ void MsgPrinter::error_msg(string msg)
 
     if (!json)
         {
-            cout << "error: " << msg << endl;
+            cout << msg << endl;
             return;
         }
 
@@ -353,7 +353,7 @@ void MsgPrinter::gsoap_error_msg(string msg)
 
     if (!json)
         {
-            cout << msg << endl;
+    		cout << "error: " << msg << endl;
             return;
         }
 
