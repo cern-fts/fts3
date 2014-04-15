@@ -104,6 +104,7 @@ class FileBase(models.Model):
     pid          = models.IntegerField()
     tx_duration  = models.FloatField()
     throughput   = models.FloatField()
+    transferred  = models.FloatField()
     retry        = models.IntegerField()
     file_metadata     = models.CharField(max_length = 255)
     user_filesize     = models.FloatField()

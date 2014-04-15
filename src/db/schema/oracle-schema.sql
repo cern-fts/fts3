@@ -593,6 +593,9 @@ CREATE TABLE t_file (
 -- Average throughput
   ,throughput           NUMBER
 --
+-- Transferred bytes
+  ,transferred          NUMBER DEFAULT 0
+--
 -- How many times should the transfer be retried
   ,retry           NUMBER DEFAULT 0
   ,staging_start          TIMESTAMP WITH TIME ZONE DEFAULT NULL

@@ -28,6 +28,10 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 
+#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
+#include "unittest/testsuite.h"
+#endif
+
 using namespace boost::algorithm;
 using namespace fts3::cli;
 
@@ -295,13 +299,60 @@ void SetCfgCli::parseBringOnline()
     do
         {
             second = first + 1;
-            bring_online.insert(
-                make_pair(*first, lexical_cast<int>(*second))
-            );
-            first += 2;
+            try
+				{
+					bring_online.insert(
+					make_pair(*first, lexical_cast<int>(*second))
+					);
+					first += 2;
+				}
+            catch(boost::bad_lexical_cast const & ex)
+				{
+					throw std::string("The bring-online value: " + *second + " is not a correct integer (int) value!");
+				}
         }
     while (first != v.end());
 }
+
+#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
+BOOST_AUTO_TEST_SUITE( cli )
+BOOST_AUTO_TEST_SUITE(SetCfgCliTest)
+
+BOOST_AUTO_TEST_CASE (SetCfgCli_bad_lixical_cast)
+{
+    // test for integer overflow
+    char* av[] =
+    {
+        "prog_name",
+        "-s",
+        "https://fts3-server:8080",
+        "--bring-online",
+        "srm://se",
+        "11111111111111111111111111111111111111111111111111111111111111111111111111"
+    };
+
+
+    SetCfgCli* cli = new SetCfgCli();
+    BOOST_CHECK_THROW(cli->parse(6, av), std::string);
+
+    // test for non-numerical characters
+    char* av2[] =
+    {
+        "prog_name",
+        "-s",
+        "https://fts3-server:8080",
+        "--bring-online",
+        "srm://se",
+        "dadadad"
+    };
+
+    cli = new SetCfgCli();
+    BOOST_CHECK_THROW(cli->parse(6, av2), std::string);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()
+#endif // FTS3_COMPILE_WITH_UNITTESTS
 
 void SetCfgCli::parseMaxBandwidth()
 {

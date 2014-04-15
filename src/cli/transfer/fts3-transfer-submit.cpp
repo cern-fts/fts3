@@ -67,6 +67,11 @@ int main(int ac, char* av[])
 
 //		if (cli->useDelegation()) {
 
+            vector<File> files = cli->getFiles();
+
+
+            map<string, string> params = cli->getParams();
+
             // delegate Proxy Certificate
             ProxyCertificateDelegator handler (
                 cli->getService(),
@@ -79,8 +84,8 @@ int main(int ac, char* av[])
 
             // submit the job
             jobId = ctx.transferSubmit (
-                        cli->getFiles(),
-                        cli->getParams()/*,
+                        files,
+                        params/*,
 					cli->useCheckSum()*/
                     );
 //

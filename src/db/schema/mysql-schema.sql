@@ -571,6 +571,9 @@ CREATE TABLE t_file (
 -- Average throughput
   throughput            FLOAT,
 --
+-- Transferred bytes
+  transferred           DOUBLE DEFAULT 0,
+--
 -- How many times should the transfer be retried 
   retry                 INTEGER DEFAULT 0,
   
@@ -813,6 +816,7 @@ CREATE INDEX t_waittimeout ON t_file(wait_timeout);
 CREATE INDEX t_file_select ON t_file(dest_se, source_se, job_finished, file_state );
 CREATE INDEX file_vo_name_state ON t_file(file_state, vo_name, source_se, dest_se);
 CREATE INDEX file_tr_host ON t_file(transferHost, file_state);
+CREATE INDEX t_file_activity ON t_file(activity);
 
 -- 
 --
