@@ -302,9 +302,11 @@ fi
 exit 0
 
 # Libs scriptlets
-%post libs -p /sbin/ldconfig
+%post libs
+/sbin/ldconfig || exit 1
 
-%postun libs -p /sbin/ldconfig
+%postun libs
+/sbin/ldconfig || exit 1
 
 #SELinux scriptlets
 %post server-selinux
