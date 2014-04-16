@@ -344,7 +344,7 @@ int fts3::implcfg__setOptimizerMode(soap* ctx, int optimizer_mode, implcfg__setO
         }
     catch (...)
         {
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the number of retries cannot be set"  << commit;
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, setOptimizerMode cannot be set"  << commit;
             return SOAP_FAULT;
         }
 
@@ -393,7 +393,7 @@ int fts3::implcfg__setQueueTimeout(soap* ctx, unsigned int timeout, implcfg__set
         }
     catch (...)
         {
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the number of retries cannot be set"  << commit;
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, setQueueTimeout cannot be set"  << commit;
             return SOAP_FAULT;
         }
 
@@ -542,7 +542,7 @@ int fts3::implcfg__setBandwidthLimit(soap* ctx, fts3::config__BandwidthLimit* li
         }
     catch (...)
         {
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the number of retries cannot be set"  << commit;
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, setBandwidthLimit cannot be set"  << commit;
             return SOAP_FAULT;
         }
 
@@ -565,7 +565,7 @@ int fts3::implcfg__getBandwidthLimit(soap* ctx, fts3::implcfg__getBandwidthLimit
         }
     catch (...)
         {
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the number of retries cannot be set"  << commit;
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, getBandwidthLimit cannot be set"  << commit;
             return SOAP_FAULT;
         }
 
