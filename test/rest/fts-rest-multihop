@@ -63,8 +63,8 @@ class TestMultihop(base.TestBase):
 
             # Both hops must be failed
             files = self.client.getFileInfo(jobId)
-            self.assertEqual('FAILED', files[(src, hop)]['state'], 'job.file[0].state')
-            self.assertEqual('FAILED', files[(hop, dst)]['state'], 'job.file[1].state')
+            self.assertEqual('FAILED', files[(src, hop)]['file_state'], 'job.file[0].state')
+            self.assertEqual('FAILED', files[(hop, dst)]['file_state'], 'job.file[1].state')
             self.assertEqual('Not executed because a previous hop failed',
                              files[(hop, dst)]['reason'],
                              'job.file[1].reason')
@@ -95,8 +95,8 @@ class TestMultihop(base.TestBase):
 
             # First hop must have passed, second failed
             files = self.client.getFileInfo(jobId)
-            self.assertEqual('FINISHED', files[(src, hop)]['state'], 'job.file[0].state')
-            self.assertEqual('FAILED', files[(hop, dst)]['state'], 'job.file[1].state')
+            self.assertEqual('FINISHED', files[(src, hop)]['file_state'], 'job.file[0].state')
+            self.assertEqual('FAILED', files[(hop, dst)]['file_state'], 'job.file[1].state')
 
 
 if __name__ == '__main__':
