@@ -136,8 +136,6 @@ protected:
                                 break;
                             }
 
-                        ThreadSafeList::get_instance().checkExpiredMsg(messages);
-
                         //if we drain a host, no need to check if url_copy are reporting being alive
                         if (DrainMode::getInstance())
                             {
@@ -146,6 +144,8 @@ protected:
                                 sleep(5);
                                 continue;
                             }
+
+                        ThreadSafeList::get_instance().checkExpiredMsg(messages);
 
                         if (!messages.empty())
                             {
@@ -300,6 +300,7 @@ protected:
                         counter2 = 0;
                         counterTimeoutWaiting = 0;
                         counterCanceled = 0;
+                        messages.clear();
                     }
                 catch (...)
                     {
@@ -311,6 +312,7 @@ protected:
                         counter2 = 0;
                         counterTimeoutWaiting = 0;
                         counterCanceled = 0;
+                        messages.clear();
                     }
                 sleep(1);
             }

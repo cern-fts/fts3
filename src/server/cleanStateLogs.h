@@ -39,7 +39,7 @@ protected:
 public:
 
     CleanLogsHandlerActive(const std::string& desc = ""):
-        TRAITS::ActiveObjectType("CleanLogsHandlerActive", desc) {}
+        TRAITS::ActiveObjectType("CleanLogsHandlerActive", desc), waitTime(0) {}
 
     void beat()
     {
@@ -50,85 +50,110 @@ public:
 
 private:
 
+    int waitTime;
+
     void beat_impl(void)
     {
-        while (!stopThreads)
+        while (1)
             {
                 try
                     {
-                        for ( boost::filesystem::recursive_directory_iterator end, dir("/var/lib/fts3/monitoring/");
-                                dir != end; ++dir )
-                            {
-                                if(!boost::filesystem::is_directory(*dir))
-                                    {
-                                        std::time_t t = boost::filesystem::last_write_time( *dir ) ;
-                                        std::time_t now = time(NULL);
+                        waitTime += 1;
 
-                                        double x =  difftime (now, t);
-                                        if(x > 1296000)  //clean files 15 days old
+                        if(stopThreads)
+                            {
+                                for ( boost::filesystem::recursive_directory_iterator end, dir("/var/lib/fts3/stalled/");
+                                        dir != end; ++dir )
+                                    {
+                                        if(!boost::filesystem::is_directory(*dir))
                                             {
-                                                FTS3_COMMON_LOGGER_NEWLOG(INFO) << " Deleting file " << *dir << " because it was created " << std::ctime( &t ) <<  commit;
+                                                FTS3_COMMON_LOGGER_NEWLOG(INFO) << " Deleting file " << *dir << " because is no longer needed for checking if stall " <<  commit;
                                                 boost::filesystem::remove(*dir);
                                             }
                                     }
+                                break;
                             }
 
-                        for ( boost::filesystem::recursive_directory_iterator end, dir("/var/lib/fts3/stalled/");
-                                dir != end; ++dir )
+                        if(waitTime == 86400)
                             {
-                                if(!boost::filesystem::is_directory(*dir))
-                                    {
-                                        std::time_t t = boost::filesystem::last_write_time( *dir ) ;
-                                        std::time_t now = time(NULL);
 
-                                        double x =  difftime (now, t);
-                                        if(x > 1296000)  //clean files 15 days old
+                                for ( boost::filesystem::recursive_directory_iterator end, dir("/var/lib/fts3/monitoring/");
+                                        dir != end; ++dir )
+                                    {
+                                        if(!boost::filesystem::is_directory(*dir))
                                             {
-                                                FTS3_COMMON_LOGGER_NEWLOG(INFO) << " Deleting file " << *dir << " because it was created " << std::ctime( &t ) <<  commit;
-                                                boost::filesystem::remove(*dir);
+                                                std::time_t t = boost::filesystem::last_write_time( *dir ) ;
+                                                std::time_t now = time(NULL);
+
+                                                double x =  difftime (now, t);
+                                                if(x > 1296000)  //clean files 15 days old
+                                                    {
+                                                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << " Deleting file " << *dir << " because it was created " << std::ctime( &t ) <<  commit;
+                                                        boost::filesystem::remove(*dir);
+                                                    }
+                                            }
+                                    }
+
+                                for ( boost::filesystem::recursive_directory_iterator end, dir("/var/lib/fts3/stalled/");
+                                        dir != end; ++dir )
+                                    {
+                                        if(!boost::filesystem::is_directory(*dir))
+                                            {
+                                                std::time_t t = boost::filesystem::last_write_time( *dir ) ;
+                                                std::time_t now = time(NULL);
+
+                                                double x =  difftime (now, t);
+                                                if(x > 1296000)  //clean files 15 days old
+                                                    {
+                                                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << " Deleting file " << *dir << " because it was created " << std::ctime( &t ) <<  commit;
+                                                        boost::filesystem::remove(*dir);
+                                                    }
+                                            }
+                                    }
+
+                                for ( boost::filesystem::recursive_directory_iterator end, dir("/var/lib/fts3/status/");
+                                        dir != end; ++dir )
+                                    {
+                                        if(!boost::filesystem::is_directory(*dir))
+                                            {
+                                                std::time_t t = boost::filesystem::last_write_time( *dir ) ;
+                                                std::time_t now = time(NULL);
+
+                                                double x =  difftime (now, t);
+                                                if(x > 1296000)  //clean files 15 days old
+                                                    {
+                                                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << " Deleting file " << *dir << " because it was created " << std::ctime( &t ) <<  commit;
+                                                        boost::filesystem::remove(*dir);
+                                                    }
+                                            }
+                                    }
+
+                                for ( boost::filesystem::recursive_directory_iterator end, dir("/var/lib/fts3/logs/");
+                                        dir != end; ++dir )
+                                    {
+                                        if(!boost::filesystem::is_directory(*dir))
+                                            {
+                                                std::time_t t = boost::filesystem::last_write_time( *dir ) ;
+                                                std::time_t now = time(NULL);
+
+                                                double x =  difftime (now, t);
+                                                if(x > 1296000)  //clean files 15 days old
+                                                    {
+                                                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << " Deleting file " << *dir << " because it was created " << std::ctime( &t ) <<  commit;
+                                                        boost::filesystem::remove(*dir);
+                                                    }
                                             }
                                     }
                             }
-
-                        for ( boost::filesystem::recursive_directory_iterator end, dir("/var/lib/fts3/status/");
-                                dir != end; ++dir )
-                            {
-                                if(!boost::filesystem::is_directory(*dir))
-                                    {
-                                        std::time_t t = boost::filesystem::last_write_time( *dir ) ;
-                                        std::time_t now = time(NULL);
-
-                                        double x =  difftime (now, t);
-                                        if(x > 1296000)  //clean files 15 days old
-                                            {
-                                                FTS3_COMMON_LOGGER_NEWLOG(INFO) << " Deleting file " << *dir << " because it was created " << std::ctime( &t ) <<  commit;
-                                                boost::filesystem::remove(*dir);
-                                            }
-                                    }
-                            }
-
-                        for ( boost::filesystem::recursive_directory_iterator end, dir("/var/lib/fts3/logs/");
-                                dir != end; ++dir )
-                            {
-                                if(!boost::filesystem::is_directory(*dir))
-                                    {
-                                        std::time_t t = boost::filesystem::last_write_time( *dir ) ;
-                                        std::time_t now = time(NULL);
-
-                                        double x =  difftime (now, t);
-                                        if(x > 1296000)  //clean files 15 days old
-                                            {
-                                                FTS3_COMMON_LOGGER_NEWLOG(INFO) << " Deleting file " << *dir << " because it was created " << std::ctime( &t ) <<  commit;
-                                                boost::filesystem::remove(*dir);
-                                            }
-                                    }
-                            }
-
-                        sleep(86400); //once a day
+                        sleep(1); //once a day
+                        if(waitTime == 86400) //reset
+                            waitTime = 0;
                     }
                 catch(...)
                     {
-                        sleep(86400); //once a day
+                        sleep(1); //once a day
+                        if(waitTime == 86400) //reset
+                            waitTime = 0;			
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot delete old files" <<  commit;
                     }
             }
