@@ -64,15 +64,15 @@ int main(int ac, char* av[])
 
             optional< pair<string, int> > maxActivePerSe = cli->getMaxSrcSeActive();
             if (maxActivePerSe.is_initialized())
-            	{
-            		ctx.setMaxSrcSeActive(maxActivePerSe.get().first, maxActivePerSe.get().second);
-            	}
+                {
+                    ctx.setMaxSrcSeActive(maxActivePerSe.get().first, maxActivePerSe.get().second);
+                }
 
             maxActivePerSe = cli->getMaxDstSeActive();
             if (maxActivePerSe.is_initialized())
-            	{
-            		ctx.setMaxDstSeActive(maxActivePerSe.get().first, maxActivePerSe.get().second);
-            	}
+                {
+                    ctx.setMaxDstSeActive(maxActivePerSe.get().first, maxActivePerSe.get().second);
+                }
 
             optional<bool> drain = cli->drain();
             if (drain.is_initialized())
@@ -94,15 +94,15 @@ int main(int ac, char* av[])
 
             optional<int> secPerMb = cli->getSecPerMb();
             if (secPerMb.is_initialized())
-				{
-            		ctx.setSecPerMb(*secPerMb);
-				}
+                {
+                    ctx.setSecPerMb(*secPerMb);
+                }
 
             optional<int> globalTimeout = cli->getGlobalTimeout();
             if (globalTimeout.is_initialized())
-				{
-            		 ctx.setGlobalTimeout(*globalTimeout);
-				}
+                {
+                    ctx.setGlobalTimeout(*globalTimeout);
+                }
 
             optional<unsigned> queueTimeout = cli->queueTimeout();
             if (queueTimeout.is_initialized())

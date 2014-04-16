@@ -552,38 +552,38 @@ void GSoapContextAdapter::queueTimeoutSet(unsigned timeout)
 
 void GSoapContextAdapter::setGlobalTimeout(int timeout)
 {
-	implcfg__setGlobalTimeoutResponse resp;
-	if (soap_call_implcfg__setGlobalTimeout(ctx, endpoint.c_str(), 0, timeout, resp))
-		{
-			handleSoapFault("Operation setGlobalTimeout failed.");
-		}
+    implcfg__setGlobalTimeoutResponse resp;
+    if (soap_call_implcfg__setGlobalTimeout(ctx, endpoint.c_str(), 0, timeout, resp))
+        {
+            handleSoapFault("Operation setGlobalTimeout failed.");
+        }
 }
 
 void GSoapContextAdapter::setSecPerMb(int secPerMb)
 {
-	implcfg__setSecPerMbResponse resp;
-	if (soap_call_implcfg__setSecPerMb(ctx, endpoint.c_str(), 0, secPerMb, resp))
-		{
-			handleSoapFault("Operation setSecPerMb failed.");
-		}
+    implcfg__setSecPerMbResponse resp;
+    if (soap_call_implcfg__setSecPerMb(ctx, endpoint.c_str(), 0, secPerMb, resp))
+        {
+            handleSoapFault("Operation setSecPerMb failed.");
+        }
 }
 
 void GSoapContextAdapter::setMaxDstSeActive(string se, int active)
 {
-	implcfg__maxDstSeActiveResponse resp;
-	if (soap_call_implcfg__maxDstSeActive(ctx, endpoint.c_str(), 0, se, active, resp))
-		{
-			handleSoapFault("Operation maxDstSeActive failed.");
-		}
+    implcfg__maxDstSeActiveResponse resp;
+    if (soap_call_implcfg__maxDstSeActive(ctx, endpoint.c_str(), 0, se, active, resp))
+        {
+            handleSoapFault("Operation maxDstSeActive failed.");
+        }
 }
 
 void GSoapContextAdapter::setMaxSrcSeActive(string se, int active)
 {
-	implcfg__maxSrcSeActiveResponse resp;
-	if (soap_call_implcfg__maxSrcSeActive(ctx, endpoint.c_str(), 0, se, active, resp))
-		{
-			handleSoapFault("Operation maxSrcSeActive failed.");
-		}
+    implcfg__maxSrcSeActiveResponse resp;
+    if (soap_call_implcfg__maxSrcSeActive(ctx, endpoint.c_str(), 0, se, active, resp))
+        {
+            handleSoapFault("Operation maxSrcSeActive failed.");
+        }
 }
 
 std::string GSoapContextAdapter::getSnapShot(string vo, string src, string dst)

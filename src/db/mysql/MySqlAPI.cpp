@@ -2332,7 +2332,7 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
     try
         {
             soci::rowset<soci::row> rs = (sql.prepare << " select distinct pid from t_file where PID IS NOT NULL AND file_state='CANCELED' and job_finished is NULL AND (hashed_id >= :hStart AND hashed_id <= :hEnd) ",
-                                       soci::use(hashSegment.start), soci::use(hashSegment.end));
+                                          soci::use(hashSegment.start), soci::use(hashSegment.end));
 
             soci::statement stmt1 = (sql.prepare << "UPDATE t_file SET  job_finished = UTC_TIMESTAMP() "
                                      "WHERE pid = :pid ",
@@ -4191,7 +4191,7 @@ bool MySqlAPI::retryFromDead(std::vector<struct message_updater>& messages, bool
 {
     soci::session sql(*connectionPool);
 
-    bool ok = true;
+    bool ok = false;
     std::vector<struct message_updater>::const_iterator iter;
     const std::string transfer_status = "FAILED";
     std::string transfer_message;
@@ -4201,7 +4201,7 @@ bool MySqlAPI::retryFromDead(std::vector<struct message_updater>& messages, bool
         }
     else
         {
-            transfer_message = "no FTS server had updated the transfer status the last 300 seconds, probably stalled in " + hostname;
+            transfer_message = "no FTS server had updated the transfer status the last 600 seconds, probably stalled in " + hostname;
         }
 
     const std::string status = "FAILED";
@@ -4214,11 +4214,16 @@ bool MySqlAPI::retryFromDead(std::vector<struct message_updater>& messages, bool
                     soci::rowset<int> rs = (
                                                sql.prepare <<
                                                " SELECT file_id FROM t_file "
-                                               " WHERE file_id = :fileId AND job_id = :jobId AND file_state='ACTIVE' and transferhost=:hostname ",
-                                               soci::use(iter->file_id), soci::use(std::string(iter->job_id)), soci::use(hostname)
-                                           );
+                                               " WHERE file_id = :fileId AND job_id = :jobId AND file_state='ACTIVE' AND"
+                                               " (hashed_id >= :hStart AND hashed_id <= :hEnd) ",
+                                               soci::use(iter->file_id),
+                                               soci::use(std::string(iter->job_id)),
+                                               soci::use(hashSegment.start),
+                                               soci::use(hashSegment.end));
+
                     if (rs.begin() != rs.end())
                         {
+                            ok = true;
                             updateFileTransferStatusInternal(sql, 0.0, (*iter).job_id, (*iter).file_id, transfer_status, transfer_message, (*iter).process_id, 0, 0,false);
                             updateJobTransferStatusInternal(sql, (*iter).job_id, status,0);
                         }
@@ -4226,7 +4231,6 @@ bool MySqlAPI::retryFromDead(std::vector<struct message_updater>& messages, bool
         }
     catch (std::exception& e)
         {
-            ok = false;
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
@@ -8908,15 +8912,15 @@ void MySqlAPI::setSourceMaxActive(const std::string & source_hostname, int maxAc
                     sql.begin();
 
                     if (maxActive == -1)
-						{
-							sql << "INSERT INTO t_optimize (source_se, active) VALUES (:source_se, NULL)  ",
-								soci::use(source_hostname);
-						}
+                        {
+                            sql << "INSERT INTO t_optimize (source_se, active) VALUES (:source_se, NULL)  ",
+                                soci::use(source_hostname);
+                        }
                     else
-						{
-							sql << "INSERT INTO t_optimize (source_se, active) VALUES (:source_se, :active)  ",
-								soci::use(source_hostname), soci::use(maxActive);
-						}
+                        {
+                            sql << "INSERT INTO t_optimize (source_se, active) VALUES (:source_se, :active)  ",
+                                soci::use(source_hostname), soci::use(maxActive);
+                        }
 
                     sql.commit();
                 }
@@ -8925,15 +8929,15 @@ void MySqlAPI::setSourceMaxActive(const std::string & source_hostname, int maxAc
                     sql.begin();
 
                     if (maxActive == -1)
-						{
-							sql << "update t_optimize set active = NULL where source_se = :source_se ",
-								soci::use(source_hostname);
-						}
+                        {
+                            sql << "update t_optimize set active = NULL where source_se = :source_se ",
+                                soci::use(source_hostname);
+                        }
                     else
-						{
-							sql << "update t_optimize set active = :active where source_se = :source_se ",
-								soci::use(maxActive), soci::use(source_hostname);
-						}
+                        {
+                            sql << "update t_optimize set active = :active where source_se = :source_se ",
+                                soci::use(maxActive), soci::use(source_hostname);
+                        }
                     sql.commit();
                 }
         }
@@ -8965,15 +8969,15 @@ void MySqlAPI::setDestMaxActive(const std::string & destination_hostname, int ma
                     sql.begin();
 
                     if (maxActive == -1)
-						{
-							sql << "INSERT INTO t_optimize (dest_se, active) VALUES (:dest_se, NULL)  ",
-								soci::use(destination_hostname);
-						}
+                        {
+                            sql << "INSERT INTO t_optimize (dest_se, active) VALUES (:dest_se, NULL)  ",
+                                soci::use(destination_hostname);
+                        }
                     else
-						{
-							sql << "INSERT INTO t_optimize (dest_se, active) VALUES (:dest_se, :active)  ",
-								soci::use(destination_hostname), soci::use(maxActive);
-						}
+                        {
+                            sql << "INSERT INTO t_optimize (dest_se, active) VALUES (:dest_se, :active)  ",
+                                soci::use(destination_hostname), soci::use(maxActive);
+                        }
                     sql.commit();
                 }
             else
@@ -8981,15 +8985,15 @@ void MySqlAPI::setDestMaxActive(const std::string & destination_hostname, int ma
                     sql.begin();
 
                     if (maxActive == -1)
-						{
-							sql << "update t_optimize set active = NULL where dest_se = :dest_se ",
-								soci::use(destination_hostname);
-						}
+                        {
+                            sql << "update t_optimize set active = NULL where dest_se = :dest_se ",
+                                soci::use(destination_hostname);
+                        }
                     else
-						{
-							sql << "update t_optimize set active = :active where dest_se = :dest_se ",
-								soci::use(maxActive), soci::use(destination_hostname);
-						}
+                        {
+                            sql << "update t_optimize set active = :active where dest_se = :dest_se ",
+                                soci::use(maxActive), soci::use(destination_hostname);
+                        }
                     sql.commit();
                 }
         }
