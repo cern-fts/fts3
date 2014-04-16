@@ -58,7 +58,7 @@ CGsiAdapter::CGsiAdapter(soap* ctx) : ctx(ctx)
 
     // get client DN
     const int len = 200;
-    char buff[len];
+    char buff[len] = {0};
     if (get_client_dn(ctx, buff, len)) throw Err_Custom("'get_client_dn' failed!");
     dn = buff;
 
@@ -70,7 +70,7 @@ CGsiAdapter::CGsiAdapter(soap* ctx) : ctx(ctx)
         {
             // if the host certificate was used to submit the request we will not find any fqans
             if (hostDn.empty() || dn != hostDn)
-                throw Err_Custom("Failed to extract VOMS attributes from Proxy Certificate or can't read the host DN");
+                throw Err_Custom("Failed to extract VOMS attributes from Proxy Certificate or can't read the host DN " + dn);
         }
 
     for (int i = 0; i < nbfqans; i++)
