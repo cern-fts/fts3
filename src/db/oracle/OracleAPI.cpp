@@ -4311,17 +4311,36 @@ bool OracleAPI::isFileReadyState(int fileID)
     std::string host;
     std::string state;
     soci::indicator isNull = soci::i_ok;
+    std::string vo_name;
+    std::string dest_se;    
+    std::string dest_surl; 
+    long long countSame = 0;           
 
     try
         {
-            sql << "SELECT file_state, transferHost FROM t_file WHERE file_id = :fileId",
-                soci::use(fileID), soci::into(state), soci::into(host, isNull);
+            sql << "SELECT file_state, transferHost, dest_surl, vo_name, dest_se FROM t_file WHERE file_id = :fileId",
+                soci::use(fileID), 
+		soci::into(state), 
+		soci::into(host, isNull),
+                soci::into(dest_surl), 
+		soci::into(vo_name), 
+		soci::into(dest_se);		
 
             isReadyState = (state == "READY");
 
             if (isNull != soci::i_null)
                 isReadyHost = (host == hostname);
-
+		
+            sql << "select count(*) from t_file where file_state in ('READY','ACTIVE') and dest_surl=:dest_surl and vo_name=:vo_name and dest_se=:dest_se ",
+                                        soci::use(dest_surl),
+                                        soci::use(vo_name),
+                                        soci::use(dest_se),
+                                        soci::into(countSame);
+           
+            if(countSame > 1)
+                {
+                    return false;
+                }
         }
     catch (std::exception& e)
         {
