@@ -84,8 +84,7 @@ public:
             (goes to log) */
     ) :
         TRAITS::ActiveObjectType("ProcessUpdaterServiceHandler", desc)
-    {
-        messages.reserve(1000);
+    {        
     }
 
     /* ---------------------------------------------------------------------- */
@@ -128,7 +127,7 @@ protected:
 
                         if(fs::is_empty(fs::path(STALLED_DIR)))
                             {
-                                sleep(15);
+                                sleep(5);
                                 continue;
                             }
 
@@ -139,6 +138,8 @@ protected:
                                     {
                                         ThreadSafeList::get_instance().updateMsg(*iter_restore);
                                     }
+			       //restore when exception is thrown
+                                DBSingleton::instance().getDBObjectInstance()->updateFileTransferProgressVector(queueMsgRecovery);
                                 queueMsgRecovery.clear();
                             }
 
@@ -151,7 +152,7 @@ protected:
 
                         if(messages.empty())
                             {
-                                sleep(15);
+                                sleep(5);
                                 continue;
                             }
                         else
@@ -176,31 +177,30 @@ protected:
                                 //now update the progress markers in a "bulk fashion"
                                 DBSingleton::instance().getDBObjectInstance()->updateFileTransferProgressVector(messages);
 
-
                                 messages.clear();
                             }
-                        sleep(15);
+                        sleep(5);
                     }
                 catch (const fs::filesystem_error& ex)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
                         for (iter_restore = messages.begin(); iter_restore != messages.end(); ++iter_restore)
                             queueMsgRecovery.push_back(*iter_restore);
-                        sleep(15);
+                        sleep(5);
                     }
                 catch (Err& e)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
                         for (iter_restore = messages.begin(); iter_restore != messages.end(); ++iter_restore)
                             queueMsgRecovery.push_back(*iter_restore);
-                        sleep(15);
+                        sleep(5);
                     }
                 catch (...)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
                         for (iter_restore = messages.begin(); iter_restore != messages.end(); ++iter_restore)
                             queueMsgRecovery.push_back(*iter_restore);
-                        sleep(15);
+                        sleep(5);
                     }
             }
     }
