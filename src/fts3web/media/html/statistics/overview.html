@@ -77,33 +77,4 @@
 			<p><b>Note: </b>Canceled transfers are not shown on the plot</p>
 		</div>
 	</div>
-	
-	<div class="row-fluid">
-		<div class="span6">
-	            <h4>For the last 12 hours</h4>
-	            <table class="table">
-	                <thead>
-	                    <tr>
-	                        <th>Succeeded</th>
-	                        <th>Failed</th>
-	                        <th>Canceled</th>
-	                    </tr>
-	                </thead>
-	                <tbody>
-                    <tr>
-                        <td>
-                            <a href="#/transfers?time_window=24&hostname={{host}}&state=FINISHED">{{stats.lastday.finished}}</a>
-                        </td>
-                        <td>
-                            <a href="#/transfers?time_window=24&hostname={{host}}&state=FAILED">{{stats.lastday.failed}}</a>
-                        </td>
-                        <td>
-                            <a href="#/transfers?time_window=24&hostname={{host}}&state=CANCELED">{{stats.lastday.canceled}}</a>
-                        </td>
-                    </tr>
-	                </tbody>
-	            </table>
-	            <plot-pie title="24h" list="stats.lastday" labels="finished,failed,canceled" colors="5bb75b,bd362f,8a2822"/>
-		</div>
-	</div>
 </div>
