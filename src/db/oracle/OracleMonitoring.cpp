@@ -494,9 +494,9 @@ bool OracleMonitoring::assignSanityRuns(soci::session& sql, struct message_sanit
             if(msg.msgCron)
                 {
                     sql.begin();
-                    soci::statement st((sql.prepare << "update t_server_sanity set msgcron=1, t_msgcron = UTC_TIMESTAMP() "
+                    soci::statement st((sql.prepare << "update t_server_sanity set msgcron=1, t_msgcron = sys_extract_utc(systimestamp) "
                                         " where msgcron=0"
-                                        " AND (t_msgcron < (UTC_TIMESTAMP() - INTERVAL '1' day)) "
+                                        " AND (t_msgcron < (sys_extract_utc(systimestamp) - INTERVAL '1' day)) "
                                        ));
                     st.execute(true);
                     rows = st.get_affected_rows();
