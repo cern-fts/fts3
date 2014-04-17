@@ -5223,12 +5223,13 @@ bool MySqlAPI::isActivityConfigActive(std::string vo)
     soci::session sql(*connectionPool);
 
     std::string active;
+    soci::indicator isNull = soci::i_ok;
 
     try
         {
             sql << "SELECT active FROM t_activity_share_config WHERE vo = :vo ",
                 soci::use(vo),
-                soci::into(active)
+                soci::into(active, isNull)
                 ;
         }
     catch (std::exception& e)
