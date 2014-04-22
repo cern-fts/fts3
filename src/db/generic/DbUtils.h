@@ -22,10 +22,13 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <time.h>
+#include "producer_consumer_common.h"
+#include "config/serverconfig.h"
+
+using namespace FTS3_CONFIG_NAMESPACE;
 
 namespace db
 {
-
 /**
  * Returns the current time, plus the difference specified
  * in advance, in UTC time
@@ -122,6 +125,50 @@ inline int extractStreams(std::string & str)
                 }
         }
     return 0;
+}
+
+
+static inline void constructJSONMsg(struct message_state* state)
+{
+    bool monitoringMessages = true;
+    std::string monitoringMessagesStr = theServerConfig().get<std::string > ("MonitoringMessaging");
+    if(monitoringMessagesStr == "false")
+        monitoringMessages = false;
+
+    if(!monitoringMessages)
+        return;
+
+    std::ostringstream json_message;
+    json_message << "SS {";
+    json_message << "\"vo_name\":" << "\"" << state->vo_name << "\",";
+    json_message << "\"source_se\":" << "\"" << state->source_se << "\",";
+    json_message << "\"dest_se\":" << "\"" << state->dest_se << "\",";
+    json_message << "\"job_id\":" << "\"" << state->job_id << "\",";
+    json_message << "\"file_id\":" << "\"" << state->file_id << "\",";
+    json_message << "\"job_state\":" << "\"" << state->job_state << "\",";
+    json_message << "\"file_state\":" << "\"" << state->file_state << "\",";
+    json_message << "\"retry_counter\":" << "\"" << state->retry_counter << "\",";
+    json_message << "\"retry_max\":" << "\"" << state->retry_max << "\",";
+    if(state->job_metadata.length() > 0 )
+        json_message << "\"job_metadata\":" << state->job_metadata << ",";
+    else
+        json_message << "\"job_metadata\":\"\",";
+    if(state->file_metadata.length() > 0 )
+        json_message << "\"file_metadata\":" << state->file_metadata << ",";
+    else
+        json_message << "\"file_metadata\":\"\",";
+    json_message << "\"timestamp\":" << "\"" << getStrUTCTimestamp() << "\"";
+    json_message << "}";
+
+    struct message_monitoring message;
+
+    if(json_message.str().length() < 3000)
+        {
+            strncpy(message.msg, std::string(json_message.str()).c_str(), sizeof(message.msg));
+            message.msg[sizeof(message.msg) - 1] = '\0';
+            message.timestamp = milliseconds_since_epoch();
+            runProducerMonitoring( message );
+        }
 }
 
 

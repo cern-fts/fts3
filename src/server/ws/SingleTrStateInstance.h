@@ -62,7 +62,7 @@ public:
                             job_state, const std::string&  file_state, int retry_counter, int retry_max, const std::string&  job_metadata, const std::string&  file_metadata);
 
 
-
+    void constructJSONMsg(struct message_state* state);
 
 private:
     SingleTrStateInstance(); // Private so that it can  not be called
@@ -74,8 +74,6 @@ private:
     SingleTrStateInstance & operator=(SingleTrStateInstance const&);
     // assignment operator is private
     static boost::scoped_ptr<SingleTrStateInstance> i;
-
-    void constructJSONMsg(struct message_state* state);
 
     bool monitoringMessages;
 };

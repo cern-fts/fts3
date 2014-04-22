@@ -84,7 +84,7 @@ public:
             (goes to log) */
     ) :
         TRAITS::ActiveObjectType("ProcessUpdaterServiceHandler", desc)
-    {        
+    {
     }
 
     /* ---------------------------------------------------------------------- */
@@ -138,7 +138,7 @@ protected:
                                     {
                                         ThreadSafeList::get_instance().updateMsg(*iter_restore);
                                     }
-			       //restore when exception is thrown
+                                //restore when exception is thrown
                                 DBSingleton::instance().getDBObjectInstance()->updateFileTransferProgressVector(queueMsgRecovery);
                                 queueMsgRecovery.clear();
                             }
