@@ -4312,31 +4312,31 @@ bool OracleAPI::isFileReadyState(int fileID)
     std::string state;
     soci::indicator isNull = soci::i_ok;
     std::string vo_name;
-    std::string dest_se;    
-    std::string dest_surl; 
-    long long countSame = 0;           
+    std::string dest_se;
+    std::string dest_surl;
+    long long countSame = 0;
 
     try
         {
             sql << "SELECT file_state, transferHost, dest_surl, vo_name, dest_se FROM t_file WHERE file_id = :fileId",
-                soci::use(fileID), 
-		soci::into(state), 
-		soci::into(host, isNull),
-                soci::into(dest_surl), 
-		soci::into(vo_name), 
-		soci::into(dest_se);		
+                soci::use(fileID),
+                soci::into(state),
+                soci::into(host, isNull),
+                soci::into(dest_surl),
+                soci::into(vo_name),
+                soci::into(dest_se);
 
             isReadyState = (state == "READY");
 
             if (isNull != soci::i_null)
                 isReadyHost = (host == hostname);
-		
+
             sql << "select count(*) from t_file where file_state in ('READY','ACTIVE') and dest_surl=:dest_surl and vo_name=:vo_name and dest_se=:dest_se ",
-                                        soci::use(dest_surl),
-                                        soci::use(vo_name),
-                                        soci::use(dest_se),
-                                        soci::into(countSame);
-           
+                soci::use(dest_surl),
+                soci::use(vo_name),
+                soci::use(dest_se),
+                soci::into(countSame);
+
             if(countSame > 1)
                 {
                     return false;
@@ -5687,8 +5687,8 @@ std::vector< boost::tuple<std::string, std::string, int> >  OracleAPI::getVOBrin
                     soci::row const& row = *i;
 
                     boost::tuple<std::string, std::string, int> item (
-                        row.get<std::string>("VO_NAME"),
-                        row.get<std::string>("HOST"),
+                        row.get<std::string>("VO_NAME",""),
+                        row.get<std::string>("HOST",""),
                         row.get<int>("CONCURRENT_OPS",0)
                     );
 
@@ -5781,11 +5781,11 @@ std::vector<message_bringonline> OracleAPI::getBringOnlineFiles(std::string voNa
                                     msg.url = row2.get<std::string>("SOURCE_SURL");
                                     msg.job_id = row2.get<std::string>("JOB_ID");
                                     msg.file_id = static_cast<int>(row2.get<long long>("FILE_ID"));
-                                    msg.pinlifetime = static_cast<int>(row2.get<double>("COPY_PIN_LIFETIME"));
-                                    msg.bringonlineTimeout = static_cast<int>(row2.get<double>("BRING_ONLINE"));
+                                    msg.pinlifetime = static_cast<int>(row2.get<double>("COPY_PIN_LIFETIME",0));
+                                    msg.bringonlineTimeout = static_cast<int>(row2.get<double>("BRING_ONLINE",0));
 
                                     ret.push_back(msg);
-                                    bringOnlineReportStatus("STARTED", "", msg);
+                                    bringOnlineReportStatusInternal(sql, "STARTED", "", msg);
                                 }
                         }
                 }
@@ -5835,11 +5835,11 @@ std::vector<message_bringonline> OracleAPI::getBringOnlineFiles(std::string voNa
                             msg.url = row.get<std::string>("SOURCE_SURL");
                             msg.job_id = row.get<std::string>("JOB_ID");
                             msg.file_id = static_cast<int>(row.get<long long>("FILE_ID"));
-                            msg.pinlifetime = static_cast<int>(row.get<double>("COPY_PIN_LIFETIME"));
-                            msg.bringonlineTimeout = static_cast<int>(row.get<double>("BRING_ONLINE"));
+                            msg.pinlifetime = static_cast<int>(row.get<double>("COPY_PIN_LIFETIME",0));
+                            msg.bringonlineTimeout = static_cast<int>(row.get<double>("BRING_ONLINE",0));
 
                             ret.push_back(msg);
-                            bringOnlineReportStatus("STARTED", "", msg);
+                            bringOnlineReportStatusInternal(sql, "STARTED", "", msg);
                         }
                 }
 
@@ -5856,17 +5856,16 @@ std::vector<message_bringonline> OracleAPI::getBringOnlineFiles(std::string voNa
     return ret;
 }
 
-void OracleAPI::bringOnlineReportStatus(const std::string & state, const std::string & message, const struct message_bringonline& msg)
+void OracleAPI::bringOnlineReportStatusInternal(soci::session& sql,
+        const std::string & state, const std::string & message,
+        const struct message_bringonline& msg)
 {
-
     if (state != "STARTED" && state != "FINISHED" && state != "FAILED") return;
 
-    soci::session sql(*connectionPool);
+    std::vector<struct message_state> files;
 
     try
         {
-
-
             if (state == "STARTED")
                 {
                     sql.begin();
@@ -5910,7 +5909,10 @@ void OracleAPI::bringOnlineReportStatus(const std::string & state, const std::st
                     sql.begin();
                     sql <<
                         " UPDATE t_file "
-                        " SET staging_finished = sys_extract_utc(systimestamp), reason = :reason, file_state = :fileState "
+                        " SET staging_finished = sys_extract_utc(systimestamp), "
+                        " job_finished=sys_extract_utc(systimestamp) , "
+                        " finish_time=sys_extract_utc(systimestamp), "
+                        " reason = :reason, file_state = :fileState "
                         " WHERE job_id = :jobId "
                         "	AND file_id = :fileId "
                         "	AND file_state = 'STAGING'",
@@ -5946,6 +5948,20 @@ void OracleAPI::bringOnlineReportStatus(const std::string & state, const std::st
                             updateJobTransferStatusInternal(sql, msg.job_id, dbState,0);
                         }
                 }
+
+            //send state message
+            files = getStateOfTransferInternal(sql, msg.job_id, msg.file_id);
+            if(!files.empty())
+                {
+                    std::vector<struct message_state>::iterator it;
+                    for (it = files.begin(); it != files.end(); ++it)
+                        {
+                            struct message_state tmp = (*it);
+                            constructJSONMsg(&tmp);
+                        }
+                }
+            files.clear();
+
         }
     catch (std::exception& e)
         {
@@ -5957,6 +5973,24 @@ void OracleAPI::bringOnlineReportStatus(const std::string & state, const std::st
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
+}
+
+void OracleAPI::bringOnlineReportStatus(const std::string & state, const std::string & message, const struct message_bringonline& msg)
+{
+    soci::session sql(*connectionPool);
+    try
+        {
+            bringOnlineReportStatusInternal(sql, state, message, msg);
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+
 }
 
 void OracleAPI::addToken(const std::string & job_id, int file_id, const std::string & token)
@@ -6384,10 +6418,8 @@ void OracleAPI::transferLogFileVector(std::map<int, struct message_log>& message
         }
 }
 
-std::vector<struct message_state> OracleAPI::getStateOfTransfer(const std::string& jobId, int fileId)
+std::vector<struct message_state> OracleAPI::getStateOfTransferInternal(soci::session& sql, const std::string& jobId, int fileId)
 {
-    soci::session sql(*connectionPool);
-
     message_state ret;
     soci::indicator ind = soci::i_ok;
     std::vector<struct message_state> temp;
@@ -6467,6 +6499,29 @@ std::vector<struct message_state> OracleAPI::getStateOfTransfer(const std::strin
         }
 
     return temp;
+}
+
+std::vector<struct message_state> OracleAPI::getStateOfTransfer(const std::string& jobId, int fileId)
+{
+    soci::session sql(*connectionPool);
+    std::vector<struct message_state> temp;
+
+    try
+        {
+            temp = getStateOfTransferInternal(sql, jobId, fileId);
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+
+    return temp;
+
+
 }
 
 void OracleAPI::getFilesForJob(const std::string& jobId, std::vector<int>& files)

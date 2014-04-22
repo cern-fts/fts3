@@ -400,11 +400,11 @@ int FileTransferExecutor::execute()
                                 }
 
                         }
-			else
-			{
-				FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer already in active or ready state for this dest_url? " <<  tf->JOB_ID << "  " << tf->FILE_ID << commit;
-				db->forkFailedRevertState(tf->JOB_ID, tf->FILE_ID);
-			}
+                    else
+                        {
+                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer already in active or ready state for this dest_url? " <<  tf->JOB_ID << "  " << tf->FILE_ID << commit;
+                            db->forkFailedRevertState(tf->JOB_ID, tf->FILE_ID);
+                        }
                     params.clear();
                 }
             else

@@ -153,7 +153,7 @@ private:
                     {
                         sleep(1); //once a day
                         if(waitTime == 86400) //reset
-                            waitTime = 0;			
+                            waitTime = 0;
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot delete old files" <<  commit;
                     }
             }

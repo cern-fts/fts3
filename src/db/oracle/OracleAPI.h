@@ -409,4 +409,9 @@ private:
 
     bool getMaxActive(soci::session& sql, int active, int highDefault, const std::string & source_hostname, const std::string & destination_hostname);
 
+    std::vector<struct message_state> getStateOfTransferInternal(soci::session& sql, const std::string& jobId, int fileId);
+
+    void bringOnlineReportStatusInternal(soci::session& sql, const std::string & state, const std::string & message,
+                                         const struct message_bringonline& msg);
+
 };

@@ -134,6 +134,9 @@ void SingleTrStateInstance::sendStateMessage(  const std::string&  vo_name, cons
 void SingleTrStateInstance::constructJSONMsg(struct message_state* state)
 {
 
+    if(!monitoringMessages)
+        return;
+
     std::ostringstream json_message;
     json_message << "SS {";
     json_message << "\"vo_name\":" << "\"" << state->vo_name << "\",";
