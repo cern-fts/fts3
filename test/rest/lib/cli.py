@@ -36,6 +36,10 @@ class Cli:
         submission.write(json.dumps({'Files': transfers}))
         submission.close()
 
+        # If retry is not explicit, set it to 0
+        if '--retry' not in extraArgs:
+            extraArgs += ['--retry', '-1']
+
         # Label the job
         caller = inspect.stack()[1][3]
         labeldict = {'label': config.TestLabel, 'test': caller}
