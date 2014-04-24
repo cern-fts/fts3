@@ -2,12 +2,13 @@
 
 <h2>Overview</h2>
 <h3>
-    Showing {{overview.startIndex}} to {{overview.endIndex}} out of {{overview.count}} from the last {{globalFilter.time_window }}
-    <span ng-show="globalFilter.time_window == 1">hour</span>
+    Showing {{overview.overview.startIndex}} to {{overview.overview.endIndex}}
+    out of {{overview.overview.count}} from the last {{globalFilter.time_window || '1' }}
+    <span ng-show="globalFilter.time_window == 1 || !globalFilter.time_window">hour</span>
     <span ng-show="globalFilter.time_window > 1">hours</span>
 </h3>
 
-<pagination rotate="false" num-pages="overview.pageCount" current-page="overview.page"
+<pagination rotate="false" num-pages="overview.overview.pageCount" current-page="overview.overview.page"
     max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>
 
@@ -51,7 +52,7 @@
             <th style="width: 2%"></th>
         </tr>
     </thead>
-    <tbody ng-repeat="o in overview.items" ng-class-odd="'odd'" class="overview" ng-class="pairState(o)">
+    <tbody ng-repeat="o in overview.overview.items" ng-class-odd="'odd'" class="overview" ng-class="pairState(o)">
         <tr>
 			<td>
                 <i class="icon-plus" ng-click="o.show = !o.show"></i>
@@ -125,9 +126,28 @@
             </td>
         </tr>
     </tbody>
+    <tfoot>
+        <tr>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td class="numeric">{{overview.summary.submitted}}</td>
+            <td class="numeric">{{overview.summary.active}}</td>
+            <td class="numeric">{{overview.summary.finished}}</td>
+            <td class="numeric">{{overview.summary.failed}}</td>
+            <td class="numeric">{{overview.summary.canceled}}</td>
+            <td class="numeric">
+                <span optional-number="overview.summary.rate" suffix="%" decimals="2"></span>
+            </td>
+            <td class="numeric">
+                <span optional-number="overview.summary.current" suffix="MB/s" decimals="2"></span>
+            </td>
+            <td>&nbsp;</td>
+        </tr>
+    </tfoot>
 </table>
 
-<pagination rotate="false" num-pages="overview.pageCount" current-page="overview.page"
+<pagination rotate="false" num-pages="overview.overview.pageCount" current-page="overview.overview.page"
     max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>
 
