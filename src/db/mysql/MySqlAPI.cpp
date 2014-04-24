@@ -2913,14 +2913,14 @@ bool MySqlAPI::getMaxActive(soci::session& sql, int active, int highDefault, con
                 soci::into(maxActiveDest, isNullmaxActiveDest);
 
             //check limits for source
-            if(isNullmaxActiveSource == soci::i_null)
+            if(!sql.got_data())
                 allowed = true;
-            if (isNullmaxActiveSource != soci::i_null && (active < maxActiveSource || active < highDefault))
+            if (sql.got_data() && (active < maxActiveSource || active < highDefault))
                 allowed = true;
-            if(isNullmaxActiveDest == soci::i_null)
+            if(!sql.got_data())
                 allowed = true;
             //check limits for dest
-            if (isNullmaxActiveDest != soci::i_null && (active < maxActiveDest || active < highDefault))
+            if (sql.got_data() && (active < maxActiveDest || active < highDefault))
                 allowed = true;
         }
     catch (std::exception& e)
@@ -3002,10 +3002,10 @@ bool MySqlAPI::bandwidthChecker(soci::session& sql, const std::string & source_h
     sql << "select throughput from t_optimize where dest_se= :name  and throughput is not NULL",
         soci::use(destination_hostname), soci::into(bandwidthDst, isNullBandwidthDst);
 
-    if(isNullBandwidthSrc == soci::i_null || bandwidthSrc == -1)
+    if(!sql.got_data() || bandwidthSrc == -1)
         bandwidthSrc = -1;
 
-    if(isNullBandwidthDst == soci::i_null || bandwidthDst == -1)
+    if(!sql.got_data() || bandwidthDst == -1)
         bandwidthDst = -1;
 
     //no limits are applied either for source or dest, stop here before executing more expensive queries
@@ -3018,7 +3018,7 @@ bool MySqlAPI::bandwidthChecker(soci::session& sql, const std::string & source_h
     sql << "select sum(throughput) from t_file where source_se= :name and file_state='ACTIVE' and throughput is not NULL ",
         soci::use(source_hostname), soci::into(througputSrc, isNullThrougputSrc);
 
-    if(isNullThrougputSrc == soci::i_null || througputSrc == 0)
+    if(!sql.got_data() || througputSrc == 0)
         {
             sql << "select throughput from t_optimizer_evolution where source_se= :name and throughput is not NULL  order by datetime DESC LIMIT 1  ",
                 soci::use(source_hostname), soci::into(througputSrc, isNullThrougputSrc);
@@ -3028,7 +3028,7 @@ bool MySqlAPI::bandwidthChecker(soci::session& sql, const std::string & source_h
     sql << "select sum(throughput) from t_file where dest_se= :name and file_state='ACTIVE' and throughput is not NULL",
         soci::use(destination_hostname), soci::into(througputDst, isNullThrougputDst);
 
-    if(isNullThrougputDst == soci::i_null || througputDst == 0)
+    if(!sql.got_data() || througputDst == 0)
         {
             sql << "select throughput from t_optimizer_evolution where dest_se= :name  and throughput is not NULL order by datetime DESC LIMIT 1  ",
                 soci::use(destination_hostname), soci::into(througputDst, isNullThrougputDst);
