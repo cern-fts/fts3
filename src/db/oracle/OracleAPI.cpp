@@ -3181,7 +3181,7 @@ bool OracleAPI::updateOptimizer()
                             if( (ratioSuccessFailure == 100 || ratioSuccessFailure > rateStored) && throughput > thrStored && retry <= retryStored)
                                 {
                                     //make sure we do not increase beyond limits set
-                                    bool maxActiveLimit = getMaxActive(sql, active, highDefault, source_hostname, destin_hostname);
+                                    bool maxActiveLimit = getMaxActive(sql, maxActive, highDefault, source_hostname, destin_hostname);
 
                                     if(maxActiveLimit)
                                         {
@@ -8501,14 +8501,14 @@ void OracleAPI::setBandwidthLimit(const std::string & source_hostname, const std
                             if(bandwidthLimit == -1)
                                 {
                                     sql.begin();
-                                    sql << "update t_optimize set throughput=NULL where source_se=:source_se ",
+                                    sql << "update t_optimize set throughput=NULL where source_se=:source_se and throughput is not NULL",
                                         soci::use(source_hostname);
                                     sql.commit();
                                 }
                             else
                                 {
                                     sql.begin();
-                                    sql << "update t_optimize set throughput=:throughput where source_se=:source_se AND ROWNUM = 1 ",
+                                    sql << "update t_optimize set throughput=:throughput where source_se=:source_se and throughput is not NULL ",
                                         soci::use(bandwidthLimit), soci::use(source_hostname);
                                     sql.commit();
                                 }
@@ -8532,14 +8532,14 @@ void OracleAPI::setBandwidthLimit(const std::string & source_hostname, const std
                             if(bandwidthLimit == -1)
                                 {
                                     sql.begin();
-                                    sql << "update t_optimize set throughput=NULL where dest_se=:dest_se ",
+                                    sql << "update t_optimize set throughput=NULL where dest_se=:dest_se and throughput is not NULL",
                                         soci::use(destination_hostname);
                                     sql.commit();
                                 }
                             else
                                 {
                                     sql.begin();
-                                    sql << "update t_optimize set throughput=:throughput where dest_se=:dest_se AND ROWNUM = 1 ",
+                                    sql << "update t_optimize set throughput=:throughput where dest_se=:dest_se and throughput is not NULL ",
                                         soci::use(bandwidthLimit), soci::use(destination_hostname);
                                     sql.commit();
                                 }
