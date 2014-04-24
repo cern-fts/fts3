@@ -79,7 +79,7 @@ SetCfgCli::SetCfgCli(bool spec)
             )
             (
                 "max-bandwidth", value<int>(),
-                "The maximum bandwidth that can be used (in Mbit/s) for the given source or destination (see --source & --destination)"
+                "The maximum bandwidth that can be used (in MB/s) for the given source or destination (see --source & --destination)"
                 "\n(Example: --max-bandwidth $LIMIT)"
             )
             (	"protocol", value< vector<string> >()->multitoken(),
