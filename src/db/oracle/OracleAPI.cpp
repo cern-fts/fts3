@@ -3158,10 +3158,8 @@ bool OracleAPI::updateOptimizer()
                     bool bandwidth = bandwidthChecker(sql, source_hostname, destin_hostname, bandwidthIn);
 
                     //make sure bandwidth is respected as also active should be no less than the minimum for each link
-                    if(!bandwidth && active >= highDefault)
+                    if(!bandwidth)
                         {
-                            if(throughput > 0 && ratioSuccessFailure > 0)
-                                {
                                     sql.begin();
 
                                     active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
@@ -3169,7 +3167,7 @@ bool OracleAPI::updateOptimizer()
                                     updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, 10, bandwidthIn);
 
                                     sql.commit();
-                                }
+
                             continue;
                         }
 

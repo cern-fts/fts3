@@ -3412,10 +3412,8 @@ bool MySqlAPI::updateOptimizer()
                     bool bandwidth = bandwidthChecker(sql, source_hostname, destin_hostname, bandwidthIn);
 
                     //make sure bandwidth is respected as also active should be no less than the minimum for each link
-                    if(!bandwidth && active >= highDefault)
-                        {
-                            if(throughput > 0 && ratioSuccessFailure > 0)
-                                {
+                    if(!bandwidth)
+                        {                            
                                     sql.begin();
 
                                     active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
@@ -3423,7 +3421,7 @@ bool MySqlAPI::updateOptimizer()
                                     updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, 10, bandwidthIn);
 
                                     sql.commit();
-                                }
+                         
                             continue;
                         }
 
