@@ -8418,7 +8418,7 @@ std::string OracleAPI::getBandwidthLimitInternal(soci::session& sql, const std::
                     sql << " select throughput from t_optimize where source_se = :source_se and throughput is not NULL ",
                         soci::use(source_hostname), soci::into(bandwidth, isNullBandwidth);
 
-                    if(isNullBandwidth != soci::i_null && bandwidth > 0)
+                    if(sql.got_data() && bandwidth > 0)
                         result << "Source endpoint: " << source_hostname << "   Bandwidth restriction: " << bandwidth << " MB/s\n";
                 }
             else if (!destination_hostname.empty())
@@ -8428,7 +8428,7 @@ std::string OracleAPI::getBandwidthLimitInternal(soci::session& sql, const std::
                     sql << " select throughput from t_optimize where dest_se = :dest_se  and throughput is not NULL ",
                         soci::use(destination_hostname), soci::into(bandwidth, isNullBandwidth);
 
-                    if(isNullBandwidth != soci::i_null && bandwidth > 0)
+                    if(sql.got_data() && bandwidth > 0)
                         result << "Destination endpoint: " << destination_hostname << "   Bandwidth restriction: " << bandwidth << " MB/s\n";
                 }
             else
