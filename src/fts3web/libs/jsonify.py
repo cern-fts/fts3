@@ -2,11 +2,11 @@ import json
 import sys
 from datetime import datetime, time
 from decorator import decorator
-from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.db.models import Model
 from django.db.models.query import ValuesQuerySet
 from django.core import serializers
 from django.http import HttpResponse
+from util import paged
 
 
 class ClassEncoder(json.JSONEncoder):
@@ -38,7 +38,6 @@ class ClassEncoder(json.JSONEncoder):
             return obj
 
 
-
 @decorator
 def jsonify(f, *args, **kwargs):
     d = f(*args, **kwargs)
@@ -46,42 +45,8 @@ def jsonify(f, *args, **kwargs):
     return HttpResponse(j, mimetype='application/json')
 
 
-
-def getPage(paginator, request):
-    try:
-        if 'page' in request.GET: 
-            page = paginator.page(request.GET.get('page'))
-        else:
-            page = paginator.page(1)
-    except PageNotAnInteger:
-        page = paginator.page(1)
-    except EmptyPage:
-        page = paginator.page(paginator.num_pages)
-    return page
-
-
-
 @decorator
 def jsonify_paged(f, *args, **kwargs):
-    pageSize = 50
-    
     d = f(*args, **kwargs)
-    
-    if args[0].GET.get('page', 0) == 'all':
-        pageSize = sys.maxint
-    
-    paginator = Paginator(d, pageSize)
-    page = getPage(paginator, args[0])
-    
-    paged = {
-        'count':      paginator.count,
-        'endIndex':   page.end_index(),
-        'startIndex': page.start_index(),
-        'page':       page.number,
-        'pageCount':  paginator.num_pages,
-        'pageSize':   pageSize,
-        'items':      page.object_list
-    }
-    
-    j = json.dumps(paged, cls = ClassEncoder, indent = 2, sort_keys = False)
+    j = json.dumps(paged(d, args[0]), cls = ClassEncoder, indent = 2, sort_keys = False)
     return HttpResponse(j, mimetype='application/json')

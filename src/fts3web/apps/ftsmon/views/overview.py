@@ -22,9 +22,9 @@ from django.core.paginator import Paginator
 from django.shortcuts import render
 from ftsweb.models import File
 from jobs import setupFilters
-from jsonify import jsonify_paged, jsonify
+from jsonify import jsonify
 from urllib import urlencode
-from util import getOrderBy
+from util import getOrderBy, paged
 import types
 
 import settings
@@ -114,7 +114,7 @@ class OverviewExtended(object):
             return self.objects[indexes]
 
 
-@jsonify_paged
+@jsonify
 def overview(httpRequest):
     filters    = setupFilters(httpRequest)
     if filters['time_window']:
@@ -200,5 +200,21 @@ def overview(httpRequest):
         sortingMethod = lambda o: (o.get('rate', 0), o.get('finished', 0))
     else:
         sortingMethod = lambda o: (o.get('submitted', 0), o.get('active', 0))
+        
+    # Generate summary
+    summary = {
+        'submitted': reduce(lambda a, b: a + b, map(lambda o: o.get('submitted', 0), objs)),
+        'active': reduce(lambda a, b: a + b, map(lambda o: o.get('active', 0), objs)),
+        'finished': reduce(lambda a, b: a + b, map(lambda o: o.get('finished', 0), objs)),
+        'failed': reduce(lambda a, b: a + b, map(lambda o: o.get('failed', 0), objs)),
+        'canceled': reduce(lambda a, b: a + b, map(lambda o: o.get('canceled', 0), objs)),
+        'current': reduce(lambda a, b: a + b, map(lambda o: o.get('current', 0), objs)),
+    }
+    if summary['finished'] > 0 or summary['failed'] > 0:
+        summary['rate'] = (float(summary['finished']) / (summary['finished'] + summary['failed'])) * 100
 
-    return OverviewExtended(notBefore, sorted(objs, key = sortingMethod, reverse = orderDesc))
+    # Return
+    return {
+        'overview': paged(OverviewExtended(notBefore, sorted(objs, key = sortingMethod, reverse = orderDesc)), httpRequest),
+        'summary': summary
+    }

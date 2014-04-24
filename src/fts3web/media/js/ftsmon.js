@@ -38,6 +38,12 @@ config(function($routeProvider) {
         when('/config/status',        {templateUrl: STATIC_ROOT + 'html/config/status.html',
                                        controller:  ConfigStatusCtrl,
                                        resolve:     ConfigStatusCtrl.resolve}).
+        when('/config/links',         {templateUrl: STATIC_ROOT + 'html/config/links.html',
+                                       controller:  ConfigLinksCtrl,
+                                       resolve:     ConfigLinksCtrl.resolve}).
+        when('/config/limits',        {templateUrl: STATIC_ROOT + 'html/config/limits.html',
+                                       controller:  ConfigLimitsCtrl,
+                                       resolve:     ConfigLimitsCtrl.resolve}).
                               
         when('/statistics/overview',  {templateUrl: STATIC_ROOT + 'html/statistics/overview.html',
                                        controller:  StatsOverviewCtrl,
