@@ -14,11 +14,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from django.db.models import Q
 from ftsweb.models import ConfigAudit
 from ftsweb.models import ProfilingSnapshot, ServerConfig
 from ftsweb.models import LinkConfig, ShareConfig
-from ftsweb.models import DebugConfig
+from ftsweb.models import DebugConfig, Optimize
 from jsonify import jsonify, jsonify_paged
+from util import getOrderBy, orderedField
 
 @jsonify_paged
 def audit(httpRequest):
@@ -70,4 +72,22 @@ def links(httpRequest):
 @jsonify
 def debug(httpRequest):
     return DebugConfig.objects.all()
+
+@jsonify_paged
+def limits(httpRequest):
+    max_cfg = Optimize.objects.filter(Q(active__isnull = False) | Q(bandwidth__isnull = False))
     
+    (orderBy, orderDesc) = getOrderBy(httpRequest)
+    if orderBy == 'bandwidth':
+        max_cfg = max_cfg.order_by(orderedField('bandwidth', orderDesc))
+    elif orderBy == 'active':
+        max_cfg = max_cfg.order_by(orderedField('active', orderDesc))
+    elif orderBy == 'source_se':
+        max_cfg = max_cfg.order_by(orderedField('source_se', orderDesc))
+    elif orderBy == 'dest_se':
+        max_cfg = max_cfg.order_by(orderedField('dest_se', orderDesc))
+    else:
+        max_cfg = max_cfg.order_by('-active')
+    
+    return max_cfg
+

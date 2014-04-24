@@ -30,6 +30,7 @@ urlpatterns = patterns('ftsmon.views',
     url(r'^config/links$', 'config.links'),
     url(r'^config/server$', 'config.server'),
     url(r'^config/debug$', 'config.debug'),
+    url(r'^config/limits', 'config.limits'),
     
     url(r'^stats$', 'statistics.overview'),
     url(r'^stats/servers$', 'statistics.servers'),

@@ -1,4 +1,4 @@
-
+/// Config audit
 function ConfigAuditCtrl($location, $scope, config, ConfigAudit)
 {
 	$scope.config = config;
@@ -49,11 +49,10 @@ ConfigAuditCtrl.resolve = {
 	}
 }
 
-
-function ConfigStatusCtrl($location, $scope, server, links, debug)
+/// Config status
+function ConfigStatusCtrl($location, $scope, server, debug)
 {
 	$scope.server = server;
-	$scope.links = links;
 	$scope.debug = debug;
 	
 	// On page change, reload
@@ -75,6 +74,30 @@ ConfigStatusCtrl.resolve = {
 		return deferred.promise;
 	},
 	
+	debug: function($rootScope, $location, $route, $q, ConfigDebug) {
+		loading($rootScope);
+		
+		var deferred = $q.defer();
+		
+		ConfigDebug.query(
+  			  genericSuccessMethod(deferred, $rootScope),
+			  genericFailureMethod(deferred, $rootScope, $location));
+		
+		return deferred.promise;
+	}
+}
+
+/// Config links
+function ConfigLinksCtrl($location, $scope, links) {
+	$scope.links = links;
+
+	// On page change, reload
+	$scope.pageChanged = function(newPage) {
+		$location.search('page', newPage);
+	};
+}
+
+ConfigLinksCtrl.resolve = {
 	links: function($rootScope, $location, $route, $q, ConfigLinks) {
 		loading($rootScope);
 		
@@ -86,13 +109,25 @@ ConfigStatusCtrl.resolve = {
 		
 		return deferred.promise;
 	},
-	
-	debug: function($rootScope, $location, $route, $q, ConfigDebug) {
+}
+
+/// Config limits
+function ConfigLimitsCtrl($location, $scope, limits) {
+	$scope.limits = limits;
+
+	// On page change, reload
+	$scope.pageChanged = function(newPage) {
+		$location.search('page', newPage);
+	};
+}
+
+ConfigLimitsCtrl.resolve = {
+	limits: function($rootScope, $location, $route, $q, ConfigLimits) {
 		loading($rootScope);
 		
 		var deferred = $q.defer();
 		
-		ConfigDebug.query(
+		ConfigLimits.query($location.search(),
   			  genericSuccessMethod(deferred, $rootScope),
 			  genericFailureMethod(deferred, $rootScope, $location));
 		

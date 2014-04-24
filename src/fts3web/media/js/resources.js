@@ -105,5 +105,9 @@ angular.module('ftsmon.resources', ['ngResource'])
 		query: {method: 'GET', isArray: true}
 	})
 })
-
+.factory('ConfigLimits', function($resource) {
+	return $resource('config/limits', {}, {
+		query: {method: 'GET', isArray: false}
+	})
+})
 ;

@@ -217,6 +217,24 @@ class ShareConfig(models.Model):
         db_table = 't_share_config'
 
 
+class Optimize(models.Model):
+    source_se = models.CharField(max_length = 255, primary_key = True)
+    dest_se   = models.CharField(max_length = 255, primary_key = True)
+    active    = models.IntegerField()
+    bandwidth = models.FloatField(db_column = 'throughput')
+    
+    def __eq__(self, other):
+        if type(self) != type(other):
+            return False
+        
+        return self.source_se == other.source_se and \
+               self.dest_se == other.dest_se and \
+               self.active == other.active
+    
+    class Meta:
+        db_table = 't_optimize'
+
+
 class OptimizeActive(models.Model):
     source_se  = models.CharField(max_length = 255)
     dest_se    = models.CharField(max_length = 255)
