@@ -5547,7 +5547,7 @@ void MySqlAPI::setSeProtocol(std::string protocol, std::string se, std::string s
             sql <<
                 " SELECT count(auto_number) "
                 " FROM t_optimize "
-                " WHERE source_se = :se",
+                " WHERE source_se = :se and udt is not NULL ",
                 soci::use(se), soci::into(count)
                 ;
 
@@ -5556,7 +5556,7 @@ void MySqlAPI::setSeProtocol(std::string protocol, std::string se, std::string s
                     sql <<
                         " UPDATE t_optimize "
                         " SET udt = :udt "
-                        " WHERE source_se = :se",
+                        " WHERE source_se = :se and udt is not NULL ",
                         soci::use(state),
                         soci::use(se)
                         ;
@@ -8761,7 +8761,7 @@ bool MySqlAPI::isProtocolUDT(const std::string & source_hostname, const std::str
             soci::indicator isNullUDT = soci::i_ok;
             std::string udt;
 
-            sql << " select udt from t_optimize where (source_se = :source_se OR source_se = :dest_se) ",
+            sql << " select udt from t_optimize where (source_se = :source_se OR source_se = :dest_se) and udt is not NULL ",
                 soci::use(source_hostname), soci::use(destination_hostname), soci::into(udt, isNullUDT);
 
             if(sql.got_data() && udt == "on")
