@@ -94,12 +94,10 @@ def _getRetriedStats(timewindow, hostname):
 def overview(httpRequest):
     hostname = httpRequest.GET.get('hostname', None)
     
-    overall = _getCountPerState(timedelta(hours = 12), hostname)
     lastHour = _getCountPerState(timedelta(hours = 1), hostname)
     retried = _getRetriedStats(timedelta(hours = 1), hostname)
         
     return {
-       'lastday': overall,
        'lasthour': lastHour,
        'retried': retried
     }
