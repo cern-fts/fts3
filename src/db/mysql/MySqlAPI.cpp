@@ -5547,7 +5547,7 @@ void MySqlAPI::setSeProtocol(std::string protocol, std::string se, std::string s
             sql <<
                 " SELECT count(auto_number) "
                 " FROM t_optimize "
-                " WHERE source_se = :se and udt is not NULL ",
+                " WHERE source_se = :se ",
                 soci::use(se), soci::into(count)
                 ;
 
@@ -5556,7 +5556,7 @@ void MySqlAPI::setSeProtocol(std::string protocol, std::string se, std::string s
                     sql <<
                         " UPDATE t_optimize "
                         " SET udt = :udt "
-                        " WHERE source_se = :se and udt is not NULL ",
+                        " WHERE source_se = :se ",
                         soci::use(state),
                         soci::use(se)
                         ;
@@ -8671,37 +8671,44 @@ void MySqlAPI::setBandwidthLimit(const std::string & source_hostname, const std:
 
     try
         {
-            long long int bandwidthSrc = 0;
-            long long int bandwidthDst = 0;
-
-            soci::indicator isNullBandwidthSrc = soci::i_ok;
-            soci::indicator isNullBandwidthDst = soci::i_ok;
+            long long int countSource = 0;	    
+            long long int countDest = 0;	    	    
 
             if(!source_hostname.empty())
                 {
-                    sql << "select throughput from t_optimize where source_se=:source_se and throughput is not NULL  ",
-                        soci::use(source_hostname), soci::into(bandwidthSrc, isNullBandwidthSrc);
+                    sql << "select count(*) from t_optimize where source_se=:source_se  ",
+                        soci::use(source_hostname), soci::into(countSource);
 
-                    if(!sql.got_data() && bandwidthLimit > 0)
+                    if(countSource == 0 && bandwidthLimit > 0)
                         {
                             sql.begin();
+			    
+			    sql << " delete from t_optimize where "
+			    	   " source_se=:source_se "
+				   " and dest_se is NULL "
+				   " and throughput is NULL "
+				   " and active is NULL "
+				   " and udt is NULL "
+				   " and nostreams is NULL ", soci::use(source_hostname);			    
+			    
                             sql << " insert into t_optimize(throughput, source_se) values(:throughput, :source_se) ",
                                 soci::use(bandwidthLimit), soci::use(source_hostname);
+				
                             sql.commit();
                         }
-                    else if (sql.got_data())
+                    else if (countSource > 0)
                         {
                             if(bandwidthLimit == -1)
                                 {
                                     sql.begin();
-                                    sql << "update t_optimize set throughput=NULL where source_se=:source_se and throughput is not NULL",
+                                    sql << "update t_optimize set throughput=NULL where source_se=:source_se ",
                                         soci::use(source_hostname);
                                     sql.commit();
                                 }
                             else
                                 {
                                     sql.begin();
-                                    sql << "update t_optimize set throughput=:throughput where source_se=:source_se and throughput is not NULL ",
+                                    sql << "update t_optimize set throughput=:throughput where source_se=:source_se ",
                                         soci::use(bandwidthLimit), soci::use(source_hostname);
                                     sql.commit();
                                 }
@@ -8710,29 +8717,39 @@ void MySqlAPI::setBandwidthLimit(const std::string & source_hostname, const std:
 
             if(!destination_hostname.empty())
                 {
-                    sql << "select throughput from t_optimize where dest_se=:dest_se  and throughput is not NULL ",
-                        soci::use(destination_hostname), soci::into(bandwidthDst, isNullBandwidthDst);
+                    sql << "select count(*) from t_optimize where dest_se=:dest_se ",
+                        soci::use(destination_hostname), soci::into(countDest);
 
-                    if(!sql.got_data() && bandwidthLimit > 0)
+                    if(countDest == 0 && bandwidthLimit > 0)
                         {
                             sql.begin();
+			    
+			    sql << " delete from t_optimize where "
+			    	   " dest_se=:dest_se "
+				   " and source_se is NULL "
+				   " and throughput is NULL "
+				   " and active is NULL "				   
+				   " and udt is NULL "
+				   " and nostreams is NULL ", soci::use(destination_hostname);
+				   
                             sql << " insert into t_optimize(throughput, dest_se) values(:throughput, :dest_se) ",
                                 soci::use(bandwidthLimit), soci::use(destination_hostname);
+				
                             sql.commit();
                         }
-                    else if (sql.got_data())
+                    else if (countDest > 0)
                         {
                             if(bandwidthLimit == -1)
                                 {
                                     sql.begin();
-                                    sql << "update t_optimize set throughput=NULL where dest_se=:dest_se and throughput is not NULL",
+                                    sql << "update t_optimize set throughput=NULL where dest_se=:dest_se ",
                                         soci::use(destination_hostname);
                                     sql.commit();
                                 }
                             else
                                 {
                                     sql.begin();
-                                    sql << "update t_optimize set throughput=:throughput where dest_se=:dest_se and throughput is not NULL ",
+                                    sql << "update t_optimize set throughput=:throughput where dest_se=:dest_se ",
                                         soci::use(bandwidthLimit), soci::use(destination_hostname);
                                     sql.commit();
                                 }
