@@ -3161,7 +3161,7 @@ bool OracleAPI::updateOptimizer()
                         {
                                     sql.begin();
 
-                                    active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
+                                    active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
                                     stmt10.execute(true);
                                     updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, 10, bandwidthIn);
 
