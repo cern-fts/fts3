@@ -3831,7 +3831,7 @@ bool MySqlAPI::terminateReuseProcess(const std::string & jobId, int pid, const s
                     sql << " SELECT reuse_job FROM t_job WHERE job_id = :jobId AND reuse_job IS NOT NULL",
                         soci::use(job_id), soci::into(reuse, reuseInd);
 
-                    if (reuseInd == soci::i_ok && reuse == "Y")
+                    if (sql.got_data() && reuse == "Y")
                         {
                             sql.begin();
                             sql << " UPDATE t_file SET file_state = 'FAILED', job_finished=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), "
@@ -3848,7 +3848,7 @@ bool MySqlAPI::terminateReuseProcess(const std::string & jobId, int pid, const s
                     sql << " SELECT reuse_job FROM t_job WHERE job_id = :jobId AND reuse_job IS NOT NULL",
                         soci::use(jobId), soci::into(reuse, reuseInd);
 
-                    if (reuseInd == soci::i_ok && reuse == "Y")
+                    if (sql.got_data() && reuse == "Y")
                         {
                             sql.begin();
                             sql << " UPDATE t_file SET file_state = 'FAILED', job_finished=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), "
