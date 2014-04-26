@@ -277,7 +277,7 @@ def transferList(httpRequest):
     
     # Force a time window
     if not filters['time_window']:
-        filters['time_window'] = 12
+        filters['time_window'] = 1
     
     transfers = File.objects
     if filters['state']:
