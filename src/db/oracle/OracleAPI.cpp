@@ -3159,13 +3159,13 @@ bool OracleAPI::updateOptimizer()
                     //make sure bandwidth is respected as also active should be no less than the minimum for each link
                     if(!bandwidth)
                         {
-                                    sql.begin();
+                            sql.begin();
 
-                                    active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
-                                    stmt10.execute(true);
-                                    updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, 10, bandwidthIn);
+                            active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
+                            stmt10.execute(true);
+                            updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, 10, bandwidthIn);
 
-                                    sql.commit();
+                            sql.commit();
 
                             continue;
                         }
@@ -8477,8 +8477,8 @@ void OracleAPI::setBandwidthLimit(const std::string & source_hostname, const std
 
     try
         {
-            long long int countSource = 0;	    
-            long long int countDest = 0;	    	    
+            long long int countSource = 0;
+            long long int countDest = 0;
 
             if(!source_hostname.empty())
                 {
@@ -8488,18 +8488,18 @@ void OracleAPI::setBandwidthLimit(const std::string & source_hostname, const std
                     if(countSource == 0 && bandwidthLimit > 0)
                         {
                             sql.begin();
-			    
-			    sql << " delete from t_optimize where "
-			    	   " source_se=:source_se "
-				   " and dest_se is NULL "
-				   " and throughput is NULL "
-				   " and active is NULL "
-				   " and udt is NULL "
-				   " and nostreams is NULL ", soci::use(source_hostname);			    
-			    
+
+                            sql << " delete from t_optimize where "
+                                " source_se=:source_se "
+                                " and dest_se is NULL "
+                                " and throughput is NULL "
+                                " and active is NULL "
+                                " and udt is NULL "
+                                " and nostreams is NULL ", soci::use(source_hostname);
+
                             sql << " insert into t_optimize(throughput, source_se) values(:throughput, :source_se) ",
                                 soci::use(bandwidthLimit), soci::use(source_hostname);
-				
+
                             sql.commit();
                         }
                     else if (countSource > 0)
@@ -8529,18 +8529,18 @@ void OracleAPI::setBandwidthLimit(const std::string & source_hostname, const std
                     if(countDest == 0 && bandwidthLimit > 0)
                         {
                             sql.begin();
-			    
-			    sql << " delete from t_optimize where "
-			    	   " dest_se=:dest_se "
-				   " and source_se is NULL "
-				   " and throughput is NULL "
-				   " and active is NULL "				   
-				   " and udt is NULL "
-				   " and nostreams is NULL ", soci::use(destination_hostname);
-				   
+
+                            sql << " delete from t_optimize where "
+                                " dest_se=:dest_se "
+                                " and source_se is NULL "
+                                " and throughput is NULL "
+                                " and active is NULL "
+                                " and udt is NULL "
+                                " and nostreams is NULL ", soci::use(destination_hostname);
+
                             sql << " insert into t_optimize(throughput, dest_se) values(:throughput, :dest_se) ",
                                 soci::use(bandwidthLimit), soci::use(destination_hostname);
-				
+
                             sql.commit();
                         }
                     else if (countDest > 0)
