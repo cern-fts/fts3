@@ -51,7 +51,7 @@ class JobBase(models.Model):
     fail_nearline   = models.CharField(max_length = 1)
     checksum_method = models.CharField(max_length = 1)
     bring_online    = models.IntegerField()
-    job_metadata    = models.CharField(max_length = 255)
+    job_metadata    = models.CharField(max_length = 1024)
     retry           = models.IntegerField()
     retry_delay     = models.IntegerField()
     
@@ -106,7 +106,7 @@ class FileBase(models.Model):
     throughput   = models.FloatField()
     transferred  = models.FloatField()
     retry        = models.IntegerField()
-    file_metadata     = models.CharField(max_length = 255)
+    file_metadata     = models.CharField(max_length = 1024)
     user_filesize     = models.FloatField()
     staging_start     = models.DateTimeField()
     staging_finished  = models.DateTimeField()
