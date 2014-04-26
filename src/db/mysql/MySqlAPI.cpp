@@ -3017,22 +3017,11 @@ bool MySqlAPI::bandwidthChecker(soci::session& sql, const std::string & source_h
     //get aggregated thr from source
     sql << "select sum(throughput) from t_file where source_se= :name and file_state='ACTIVE' and throughput is not NULL ",
         soci::use(source_hostname), soci::into(througputSrc, isNullThrougputSrc);
-
-    if(!sql.got_data() || througputSrc == 0)
-        {
-            sql << "select throughput from t_optimizer_evolution where source_se= :name and throughput is not NULL  order by datetime DESC LIMIT 1  ",
-                soci::use(source_hostname), soci::into(througputSrc, isNullThrougputSrc);
-        }
-
+   
     //get aggregated thr towards dest
     sql << "select sum(throughput) from t_file where dest_se= :name and file_state='ACTIVE' and throughput is not NULL",
         soci::use(destination_hostname), soci::into(througputDst, isNullThrougputDst);
 
-    if(!sql.got_data() || througputDst == 0)
-        {
-            sql << "select throughput from t_optimizer_evolution where dest_se= :name  and throughput is not NULL order by datetime DESC LIMIT 1  ",
-                soci::use(destination_hostname), soci::into(througputDst, isNullThrougputDst);
-        }
 
     if(bandwidthSrc > 0 )
         {
@@ -8676,21 +8665,13 @@ void MySqlAPI::setBandwidthLimit(const std::string & source_hostname, const std:
 
             if(!source_hostname.empty())
                 {
-                    sql << "select count(*) from t_optimize where source_se=:source_se  ",
+                    sql << "select count(*) from t_optimize where source_se=:source_se  and throughput is not NULL ",
                         soci::use(source_hostname), soci::into(countSource);
 
                     if(countSource == 0 && bandwidthLimit > 0)
                         {
                             sql.begin();
-
-                            sql << " delete from t_optimize where "
-                                " source_se=:source_se "
-                                " and dest_se is NULL "
-                                " and throughput is NULL "
-                                " and active is NULL "
-                                " and udt is NULL "
-                                " and nostreams is NULL ", soci::use(source_hostname);
-
+                           
                             sql << " insert into t_optimize(throughput, source_se) values(:throughput, :source_se) ",
                                 soci::use(bandwidthLimit), soci::use(source_hostname);
 
@@ -8708,7 +8689,7 @@ void MySqlAPI::setBandwidthLimit(const std::string & source_hostname, const std:
                             else
                                 {
                                     sql.begin();
-                                    sql << "update t_optimize set throughput=:throughput where source_se=:source_se ",
+                                    sql << "update t_optimize set throughput=:throughput where source_se=:source_se and throughput is not NULL ",
                                         soci::use(bandwidthLimit), soci::use(source_hostname);
                                     sql.commit();
                                 }
@@ -8717,21 +8698,13 @@ void MySqlAPI::setBandwidthLimit(const std::string & source_hostname, const std:
 
             if(!destination_hostname.empty())
                 {
-                    sql << "select count(*) from t_optimize where dest_se=:dest_se ",
+                    sql << "select count(*) from t_optimize where dest_se=:dest_se and throughput is not NULL ",
                         soci::use(destination_hostname), soci::into(countDest);
 
                     if(countDest == 0 && bandwidthLimit > 0)
                         {
                             sql.begin();
-
-                            sql << " delete from t_optimize where "
-                                " dest_se=:dest_se "
-                                " and source_se is NULL "
-                                " and throughput is NULL "
-                                " and active is NULL "
-                                " and udt is NULL "
-                                " and nostreams is NULL ", soci::use(destination_hostname);
-
+                           
                             sql << " insert into t_optimize(throughput, dest_se) values(:throughput, :dest_se) ",
                                 soci::use(bandwidthLimit), soci::use(destination_hostname);
 
@@ -8749,7 +8722,7 @@ void MySqlAPI::setBandwidthLimit(const std::string & source_hostname, const std:
                             else
                                 {
                                     sql.begin();
-                                    sql << "update t_optimize set throughput=:throughput where dest_se=:dest_se ",
+                                    sql << "update t_optimize set throughput=:throughput where dest_se=:dest_se  and throughput is not NULL ",
                                         soci::use(bandwidthLimit), soci::use(destination_hostname);
                                     sql.commit();
                                 }
@@ -8977,24 +8950,19 @@ void MySqlAPI::setSourceMaxActive(const std::string & source_hostname, int maxAc
 
     try
         {
-            sql << "select source_se from t_optimize where source_se = :source_se ", soci::use(source_hostname), soci::into(source_se, isNullSourceSe);
+            sql << "select source_se from t_optimize where source_se = :source_se and active is not NULL", soci::use(source_hostname), soci::into(source_se, isNullSourceSe);
 
             if (!sql.got_data())
-                {
-                    sql.begin();
-
-                    if (maxActive == -1)
+                {                   
+                    if (maxActive > 0)                       
                         {
-                            sql << "INSERT INTO t_optimize (source_se, active) VALUES (:source_se, NULL)  ",
-                                soci::use(source_hostname);
-                        }
-                    else
-                        {
-                            sql << "INSERT INTO t_optimize (source_se, active) VALUES (:source_se, :active)  ",
+			    sql.begin();
+                            
+			    sql << "INSERT INTO t_optimize (source_se, active) VALUES (:source_se, :active)  ",
                                 soci::use(source_hostname), soci::use(maxActive);
+				
+                    	    sql.commit();				
                         }
-
-                    sql.commit();
                 }
             else
                 {
@@ -9007,7 +8975,7 @@ void MySqlAPI::setSourceMaxActive(const std::string & source_hostname, int maxAc
                         }
                     else
                         {
-                            sql << "update t_optimize set active = :active where source_se = :source_se LIMIT 1 ",
+                            sql << "update t_optimize set active = :active where source_se = :source_se and active is not NULL ",
                                 soci::use(maxActive), soci::use(source_hostname);
                         }
                     sql.commit();
@@ -9034,23 +9002,19 @@ void MySqlAPI::setDestMaxActive(const std::string & destination_hostname, int ma
 
     try
         {
-            sql << "select dest_se from t_optimize where dest_se = :dest_se ", soci::use(destination_hostname), soci::into(dest_se, isNullDestSe);
+            sql << "select dest_se from t_optimize where dest_se = :dest_se and active is not NULL", soci::use(destination_hostname), soci::into(dest_se, isNullDestSe);
 
             if (!sql.got_data())
                 {
-                    sql.begin();
-
-                    if (maxActive == -1)
+                    if (maxActive > 0)                    
                         {
-                            sql << "INSERT INTO t_optimize (dest_se, active) VALUES (:dest_se, NULL)  ",
-                                soci::use(destination_hostname);
-                        }
-                    else
-                        {
+                    	    sql.begin();
+			    
                             sql << "INSERT INTO t_optimize (dest_se, active) VALUES (:dest_se, :active)  ",
                                 soci::use(destination_hostname), soci::use(maxActive);
+                            
+			    sql.commit();
                         }
-                    sql.commit();
                 }
             else
                 {
@@ -9063,7 +9027,7 @@ void MySqlAPI::setDestMaxActive(const std::string & destination_hostname, int ma
                         }
                     else
                         {
-                            sql << "update t_optimize set active = :active where dest_se = :dest_se  LIMIT 1 ",
+                            sql << "update t_optimize set active = :active where dest_se = :dest_se  and active is not NULL ",
                                 soci::use(maxActive), soci::use(destination_hostname);
                         }
                     sql.commit();
