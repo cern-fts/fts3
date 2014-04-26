@@ -1046,6 +1046,17 @@ stop:
                         {
                             logger.ERROR() << "Setting to fail the remaining transfers" << std::endl;
                             setRemainingTransfersToFailed(transferList, ii);
+                            logger.INFO() << "Send monitoring complete message" << std::endl;
+                            msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
+
+                            if(opts.monitoringMessages)
+                                msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
+
+                            std::string archiveErr = fileManagement.archive();
+                            if (!archiveErr.empty())
+                                logger.ERROR() << "Could not archive: " << archiveErr << std::endl;
+                            reporter.sendLog(opts.jobId, currentTransfer.fileId, fileManagement._getLogArchivedFileFullPath(),
+                                             opts.debug);
                             break; // exit the loop
                         }
                 }
