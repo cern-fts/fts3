@@ -198,6 +198,9 @@ protected:
     std::string enableOptimization;
     std::map<int, struct message_log> messagesLog;
 
+    std::vector<struct message_updater> messagesUpdater;
+    std::vector<struct message_updater>::iterator iterUpdater;
+
 
     void executeUpdate(std::vector<struct message>& messages, std::map<int, struct message_log>& messagesLog)
     {
@@ -367,8 +370,8 @@ protected:
                             }
                         catch (std::exception& e)
                             {
-			       FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
-			       
+                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
+
                                 //try again
                                 try
                                     {
@@ -388,7 +391,7 @@ protected:
                             }
                         catch (...)
                             {
-			        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "transferLogFileVector throw exception 2"  << commit;
+                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "transferLogFileVector throw exception 2"  << commit;
                                 //try again
                                 try
                                     {
@@ -406,6 +409,52 @@ protected:
                                             }
                                     }
                             }
+
+
+                        try
+                            {
+                                if (runConsumerStall(messagesUpdater) != 0)
+                                    {
+                                        char buffer[128]= {0};
+                                        throw Err_System(std::string("Could not get the status messages: ") +
+                                                         strerror_r(errno, buffer, sizeof(buffer)));
+                                    }
+
+                                for (iterUpdater = messagesUpdater.begin(); iterUpdater != messagesUpdater.end(); ++iterUpdater)
+                                    {
+                                        if (iterUpdater->msg_errno == 0)
+                                            {
+                                                std::string job = std::string((*iterUpdater).job_id).substr(0, 36);
+                                                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Process Updater Monitor "
+                                                                                << "\nJob id: " << job
+                                                                                << "\nFile id: " << (*iterUpdater).file_id
+                                                                                << "\nPid: " << (*iterUpdater).process_id
+                                                                                << "\nTimestamp: " << (*iterUpdater).timestamp
+                                                                                << "\nThroughput: " << (*iterUpdater).throughput
+                                                                                << "\nTransferred: " << (*iterUpdater).transferred
+                                                                                << commit;
+                                                ThreadSafeList::get_instance().updateMsg(*iterUpdater);
+                                            }
+                                    }
+
+                                //now update the progress markers in a "bulk fashion"
+                                DBSingleton::instance().getDBObjectInstance()->updateFileTransferProgressVector(messagesUpdater);
+
+                                messagesUpdater.clear();
+                            }
+                        catch (const fs::filesystem_error& ex)
+                            {
+                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
+                            }
+                        catch (Err& e)
+                            {
+                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
+                            }
+                        catch (...)
+                            {
+                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
+                            }
+
 
                         if(!messages.empty())
                             {
