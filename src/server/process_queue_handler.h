@@ -419,8 +419,7 @@ protected:
                                         if (runConsumerStall(messagesUpdater) != 0)
                                             {
                                                 char buffer[128]= {0};
-                                                throw Err_System(std::string("Could not get the status messages: ") +
-                                                                 strerror_r(errno, buffer, sizeof(buffer)));
+						FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the updater messages:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
                                             }
                                     }
 
