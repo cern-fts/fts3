@@ -367,6 +367,8 @@ protected:
                             }
                         catch (std::exception& e)
                             {
+			       FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
+			       
                                 //try again
                                 try
                                     {
@@ -375,7 +377,7 @@ protected:
                                     }
                                 catch(...)
                                     {
-                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "transferLogFileVector throw exception "  << commit;
+                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "transferLogFileVector throw exception 1"  << commit;
                                         std::map<int, struct message_log>::const_iterator iterLogBreak;
                                         for (iterLogBreak = messagesLog.begin(); iterLogBreak != messagesLog.end(); ++iterLogBreak)
                                             {
@@ -386,6 +388,7 @@ protected:
                             }
                         catch (...)
                             {
+			        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "transferLogFileVector throw exception 2"  << commit;
                                 //try again
                                 try
                                     {
@@ -394,7 +397,7 @@ protected:
                                     }
                                 catch(...)
                                     {
-                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "transferLogFileVector throw exception " << commit;
+                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "transferLogFileVector throw exception 3" << commit;
                                         std::map<int, struct message_log>::const_iterator iterLogBreak;
                                         for (iterLogBreak = messagesLog.begin(); iterLogBreak != messagesLog.end(); ++iterLogBreak)
                                             {
