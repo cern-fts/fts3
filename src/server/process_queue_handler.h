@@ -351,6 +351,7 @@ protected:
                             }
 
 
+                        //update log file path
                         if (!fs::is_empty(fs::path(LOG_DIR)))
                             {
                                 if(runConsumerLog(messagesLog) != 0)
@@ -410,36 +411,41 @@ protected:
                                     }
                             }
 
-
+                        //update heartbeat and progress vector
                         try
                             {
-                                if (runConsumerStall(messagesUpdater) != 0)
+                                if (!fs::is_empty(fs::path(STALLED_DIR)))
                                     {
-                                        char buffer[128]= {0};
-                                        throw Err_System(std::string("Could not get the status messages: ") +
-                                                         strerror_r(errno, buffer, sizeof(buffer)));
-                                    }
-
-                                for (iterUpdater = messagesUpdater.begin(); iterUpdater != messagesUpdater.end(); ++iterUpdater)
-                                    {
-                                        if (iterUpdater->msg_errno == 0)
+                                        if (runConsumerStall(messagesUpdater) != 0)
                                             {
-                                                std::string job = std::string((*iterUpdater).job_id).substr(0, 36);
-                                                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Process Updater Monitor "
-                                                                                << "\nJob id: " << job
-                                                                                << "\nFile id: " << (*iterUpdater).file_id
-                                                                                << "\nPid: " << (*iterUpdater).process_id
-                                                                                << "\nTimestamp: " << (*iterUpdater).timestamp
-                                                                                << "\nThroughput: " << (*iterUpdater).throughput
-                                                                                << "\nTransferred: " << (*iterUpdater).transferred
-                                                                                << commit;
-                                                ThreadSafeList::get_instance().updateMsg(*iterUpdater);
+                                                char buffer[128]= {0};
+                                                throw Err_System(std::string("Could not get the status messages: ") +
+                                                                 strerror_r(errno, buffer, sizeof(buffer)));
                                             }
                                     }
 
-                                //now update the progress markers in a "bulk fashion"
-                                DBSingleton::instance().getDBObjectInstance()->updateFileTransferProgressVector(messagesUpdater);
+                                if(!messagesUpdater.empty())
+                                    {
+                                        for (iterUpdater = messagesUpdater.begin(); iterUpdater != messagesUpdater.end(); ++iterUpdater)
+                                            {
+                                                if (iterUpdater->msg_errno == 0)
+                                                    {
+                                                        std::string job = std::string((*iterUpdater).job_id).substr(0, 36);
+                                                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Process Updater Monitor "
+                                                                                        << "\nJob id: " << job
+                                                                                        << "\nFile id: " << (*iterUpdater).file_id
+                                                                                        << "\nPid: " << (*iterUpdater).process_id
+                                                                                        << "\nTimestamp: " << (*iterUpdater).timestamp
+                                                                                        << "\nThroughput: " << (*iterUpdater).throughput
+                                                                                        << "\nTransferred: " << (*iterUpdater).transferred
+                                                                                        << commit;
+                                                        ThreadSafeList::get_instance().updateMsg(*iterUpdater);
+                                                    }
+                                            }
 
+                                        //now update the progress markers in a "bulk fashion"
+                                        DBSingleton::instance().getDBObjectInstance()->updateFileTransferProgressVector(messagesUpdater);
+                                    }
                                 messagesUpdater.clear();
                             }
                         catch (const fs::filesystem_error& ex)

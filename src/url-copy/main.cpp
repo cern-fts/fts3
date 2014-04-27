@@ -221,6 +221,9 @@ void taskTimer(time_t* timeout)
 
 void taskStatusUpdater(int time)
 {
+    //do not send url_copy heartbeat right after thread creation, wait a bit
+    sleep(time);
+
     while (time)
         {
             Logger::getInstance().INFO() << "Sending back to the server url-copy is still alive : "
@@ -513,7 +516,7 @@ int main(int argc, char **argv)
     try
         {
             /*send an update message back to the server to indicate it's alive*/
-            boost::thread btUpdater(taskStatusUpdater, 45);
+            boost::thread btUpdater(taskStatusUpdater, 20);
         }
     catch (std::exception& e)
         {
