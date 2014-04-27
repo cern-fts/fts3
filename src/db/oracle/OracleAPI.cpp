@@ -8317,12 +8317,12 @@ bool OracleAPI::bandwidthChecker(soci::session& sql, const std::string & source_
     //get aggregated thr from source
     sql << "select sum(throughput) from t_file where source_se= :name and file_state='ACTIVE'  and throughput is not NULL ",
         soci::use(source_hostname), soci::into(througputSrc, isNullThrougputSrc);
- 
+
 
     //get aggregated thr towards dest
     sql << "select sum(throughput) from t_file where dest_se= :name and file_state='ACTIVE' and throughput is not NULL ",
         soci::use(destination_hostname), soci::into(througputDst, isNullThrougputDst);
-   
+
     if(bandwidthSrc > 0 )
         {
             if(bandwidthDst > 0) //both source and dest have limits, take the lowest
@@ -8476,7 +8476,7 @@ void OracleAPI::setBandwidthLimit(const std::string & source_hostname, const std
                     if(countSource == 0 && bandwidthLimit > 0)
                         {
                             sql.begin();
-                           
+
                             sql << " insert into t_optimize(throughput, source_se) values(:throughput, :source_se) ",
                                 soci::use(bandwidthLimit), soci::use(source_hostname);
 
@@ -8509,7 +8509,7 @@ void OracleAPI::setBandwidthLimit(const std::string & source_hostname, const std
                     if(countDest == 0 && bandwidthLimit > 0)
                         {
                             sql.begin();
-                           
+
                             sql << " insert into t_optimize(throughput, dest_se) values(:throughput, :dest_se) ",
                                 soci::use(bandwidthLimit), soci::use(destination_hostname);
 
@@ -8819,7 +8819,7 @@ void OracleAPI::setDestMaxActive(const std::string & destination_hostname, int m
                 {
                     sql.begin();
 
-                    if (maxActive > 0)                       
+                    if (maxActive > 0)
                         {
                             sql << "INSERT INTO t_optimize (file_id, dest_se, active) VALUES (1, :dest_se, :active)  ",
                                 soci::use(destination_hostname), soci::use(maxActive);
