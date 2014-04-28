@@ -37,7 +37,11 @@ def audit(httpRequest):
 
 @jsonify
 def server(httpRequest):
-    return ServerConfig.objects.all()[0]
+    server_config = ServerConfig.objects.all()
+    if len(server_config) > 0:
+        return server_config[0]
+    else:
+        return {}
 
 
 # Wrap a list of link config, and push the

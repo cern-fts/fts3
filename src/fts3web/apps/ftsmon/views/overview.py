@@ -203,12 +203,12 @@ def overview(httpRequest):
         
     # Generate summary
     summary = {
-        'submitted': reduce(lambda a, b: a + b, map(lambda o: o.get('submitted', 0), objs)),
-        'active': reduce(lambda a, b: a + b, map(lambda o: o.get('active', 0), objs)),
-        'finished': reduce(lambda a, b: a + b, map(lambda o: o.get('finished', 0), objs)),
-        'failed': reduce(lambda a, b: a + b, map(lambda o: o.get('failed', 0), objs)),
-        'canceled': reduce(lambda a, b: a + b, map(lambda o: o.get('canceled', 0), objs)),
-        'current': reduce(lambda a, b: a + b, map(lambda o: o.get('current', 0), objs)),
+        'submitted': reduce(lambda a, b: a + b, map(lambda o: o.get('submitted', 0), objs), 0),
+        'active': reduce(lambda a, b: a + b, map(lambda o: o.get('active', 0), objs), 0),
+        'finished': reduce(lambda a, b: a + b, map(lambda o: o.get('finished', 0), objs), 0),
+        'failed': reduce(lambda a, b: a + b, map(lambda o: o.get('failed', 0), objs), 0),
+        'canceled': reduce(lambda a, b: a + b, map(lambda o: o.get('canceled', 0), objs), 0),
+        'current': reduce(lambda a, b: a + b, map(lambda o: o.get('current', 0), objs), 0),
     }
     if summary['finished'] > 0 or summary['failed'] > 0:
         summary['rate'] = (float(summary['finished']) / (summary['finished'] + summary['failed'])) * 100
