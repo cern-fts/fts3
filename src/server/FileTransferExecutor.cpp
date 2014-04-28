@@ -379,9 +379,6 @@ int FileTransferExecutor::execute()
                             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd << " " << params << commit;
                             ExecuteProcess pr(cmd, params);
 
-                            db->updateFileTransferStatus(0.0, tf->JOB_ID, tf->FILE_ID, "ACTIVE", "",(int) pr.getPid(), 0, 0, false);
-                            db->updateJobTransferStatus(tf->JOB_ID, "ACTIVE",0);
-
                             /*check if fork/execvp failed, */
                             if (-1 == pr.executeProcessShell())
                                 {
@@ -390,6 +387,8 @@ int FileTransferExecutor::execute()
                                 }
                             else
                                 {
+                                    db->updateFileTransferStatus(0.0, tf->JOB_ID, tf->FILE_ID, "ACTIVE", "",(int) pr.getPid(), 0, 0, false);
+                                    db->updateJobTransferStatus(tf->JOB_ID, "ACTIVE",0);				
                                     SingleTrStateInstance::instance().sendStateMessage(tf->JOB_ID, tf->FILE_ID);
                                     struct message_updater msg;
                                     strncpy(msg.job_id, std::string(tf->JOB_ID).c_str(), sizeof(msg.job_id));
