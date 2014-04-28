@@ -2185,7 +2185,7 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs)
             for (soci::rowset<soci::row>::const_iterator i2 = rs.begin(); i2 != rs.end(); ++i2)
                 {
                     soci::row const& row = *i2;
-                    pid = row.get<int>("PID");
+                    pid = row.get<long long>("PID");
                     requestIDs.push_back(pid);
 
                     stmt1.execute(true);
@@ -2206,7 +2206,7 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs)
                     for (soci::rowset<soci::row>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
                         {
                             soci::row const& row = *i2;
-                            file_id = row.get<int>("FILE_ID");
+                            file_id = row.get<long long>("FILE_ID");
                             stmt2.execute(true);
                         }
                     sql.commit();
