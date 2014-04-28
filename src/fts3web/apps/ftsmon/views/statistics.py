@@ -126,7 +126,7 @@ def _getHostServiceAndSegment():
                 hostname = host['hostname']
 
                 if hostname not in host_map:
-                    host_map[host] = dict()
+                    host_map[hostname] = dict()
 
                 if hostname in [h['hostname'] for h in running]:
                     host_map[hostname][service] = {
