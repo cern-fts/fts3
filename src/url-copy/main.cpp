@@ -667,9 +667,6 @@ int main(int argc, char **argv)
 
             // Scope
             {
-                reporter.sendLog(opts.jobId, currentTransfer.fileId, fileManagement.getLogFilePath(),
-                                 opts.debug);
-
                 gfalt_set_user_data(params, NULL, NULL);
 
                 logger.INFO() << "Transfer accepted" << std::endl;
@@ -919,6 +916,8 @@ int main(int argc, char **argv)
 
 
                 logger.INFO() << "Transfer Starting" << std::endl;
+		reporter.sendLog(opts.jobId, currentTransfer.fileId, fileManagement.getLogFilePath(), opts.debug);
+
                 if (gfalt_copy_file(handle, params, (currentTransfer.sourceUrl).c_str(), (currentTransfer.destUrl).c_str(), &tmp_err) != 0)
                     {
                         if (tmp_err != NULL && tmp_err->message != NULL)
