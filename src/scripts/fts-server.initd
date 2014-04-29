@@ -42,7 +42,23 @@ start() {
         daemon $prog -t 25
         retval=$?
         echo
-         [ $retval -eq 0 ] && touch $lockfile
+        [ $retval -eq 0 ] && touch $lockfile
+
+        # Wait for a while to check if it did start
+        # See https://svnweb.cern.ch/trac/fts3/ticket/969
+        echo "Wait for 23 seconds..."
+        sleep 23
+        pgrep $prog &> /dev/null
+        retval=$?
+        if [ $retval -ne 0 ]; then
+            failure
+            echo "The process died unexpectedly!"
+            rm $lockfile
+        else
+            echo
+            success
+        fi
+
         return $retval
     else
         pgrep $prog
