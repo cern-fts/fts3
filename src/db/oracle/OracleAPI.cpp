@@ -3698,11 +3698,11 @@ void OracleAPI::revertToSubmitted()
                             time_t startTimestamp = timegm(&startTime);
                             double diff = difftime(now2, startTimestamp);
 
-                            if (diff > 1500 && reuseJob != "Y")
+                            if (diff > 500 && reuseJob != "Y")
                                 {
                                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "The transfer with file id " << fileId << " seems to be stalled, restart it" << commit;
 
-                                    sql << "UPDATE t_file SET file_state = 'SUBMITTED', reason='', transferhost='',finish_time=NULL, job_finished=NULL "
+                                    sql << "UPDATE t_file SET start_time=NULL, file_state = 'SUBMITTED', reason='', transferhost='',finish_time=NULL, job_finished=NULL "
                                         "WHERE file_id = :fileId AND job_id= :jobId AND file_state = 'READY' ",
                                         soci::use(fileId),soci::use(jobId);
                                 }
@@ -3723,7 +3723,7 @@ void OracleAPI::revertToSubmitted()
 
                                                     sql << "UPDATE t_job SET job_state = 'SUBMITTED' where job_id = :jobId ", soci::use(jobId);
 
-                                                    sql << "UPDATE t_file SET file_state = 'SUBMITTED', reason='', transferhost='' "
+                                                    sql << "UPDATE t_file SET start_time=NULL, file_state = 'SUBMITTED', reason='', transferhost='',finish_time=NULL, job_finished=NULL "
                                                         "WHERE file_state = 'READY' AND "
                                                         "      job_finished IS NULL AND file_id = :fileId",
                                                         soci::use(fileId);
@@ -5505,7 +5505,7 @@ void OracleAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
                 {
                     soci::rowset<std::string> rs = (sql.prepare << "SELECT job_id FROM t_job WHERE "
                                                     "    submit_time < (sys_extract_utc(systimestamp) - numtodsinterval(:interval, 'hour')) AND "
-                                                    "    job_state in ('SUBMITTED', 'READY')",
+                                                    "    job_state in ('SUBMITTED', 'READY') and job_finished is NULL ",
                                                     soci::use(maxTime));
 
                     sql.begin();
@@ -6706,7 +6706,7 @@ void OracleAPI::cancelWaitingFiles(std::set<std::string>& jobs)
 
                     sql <<
                         " UPDATE t_file "
-                        " SET file_state = 'CANCELED' "
+                        " SET file_state = 'CANCELED' , finish_time = sys_extract_utc(systimestamp) "
                         " WHERE file_id = :fileId AND file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED')",
                         soci::use(static_cast<int>(it->get<long long>("FILE_ID")))
                         ;

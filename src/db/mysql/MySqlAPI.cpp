@@ -3942,7 +3942,7 @@ void MySqlAPI::revertToSubmitted()
                                          soci::into(jobId),
                                          soci::into(reuseJob, reuseInd));
 
-            soci::statement readyStmt1 = (sql.prepare << "UPDATE t_file SET file_state = 'SUBMITTED', reason='', transferhost='',finish_time=NULL, job_finished=NULL "
+            soci::statement readyStmt1 = (sql.prepare << "UPDATE t_file SET start_time=NULL, file_state = 'SUBMITTED', reason='', transferhost='',finish_time=NULL, job_finished=NULL "
                                           "WHERE file_id = :fileId AND job_id= :jobId AND file_state = 'READY' ",
                                           soci::use(fileId),soci::use(jobId));
 
@@ -3950,7 +3950,7 @@ void MySqlAPI::revertToSubmitted()
 
             soci::statement readyStmt3 = (sql.prepare << "UPDATE t_job SET job_state = 'SUBMITTED' where job_id = :jobId ", soci::use(jobId));
 
-            soci::statement readyStmt4 = (sql.prepare << "UPDATE t_file SET file_state = 'SUBMITTED', reason='', transferhost='' "
+            soci::statement readyStmt4 = (sql.prepare << "UPDATE t_file SET start_time=NULL, file_state = 'SUBMITTED', reason='', transferhost='',finish_time=NULL, job_finished=NULL "
                                           "WHERE file_state = 'READY' AND "
                                           "      job_finished IS NULL AND file_id = :fileId",
                                           soci::use(fileId));
@@ -3964,7 +3964,7 @@ void MySqlAPI::revertToSubmitted()
                             time_t startTimestamp = timegm(&startTime);
                             double diff = difftime(now2, startTimestamp);
 
-                            if (diff > 1500 && reuseJob != "Y")
+                            if (diff > 500 && reuseJob != "Y")
                                 {
                                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "The transfer with file id " << fileId << " seems to be stalled, restart it" << commit;
 
@@ -5761,7 +5761,7 @@ void MySqlAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
                     std::string job_id;
                     soci::rowset<std::string> rs = (sql.prepare << "SELECT job_id FROM t_job WHERE "
                                                     "    submit_time < (UTC_TIMESTAMP() - interval :interval hour) AND "
-                                                    "    job_state in ('SUBMITTED', 'READY')",
+                                                    "    job_state in ('SUBMITTED', 'READY') and job_finished is NULL ",
                                                     soci::use(maxTime));
 
                     soci::statement stmt1 = (sql.prepare << "UPDATE t_file SET job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(),  file_state = 'CANCELED', reason = :reason WHERE job_id = :jobId AND file_state IN ('SUBMITTED','READY')",
@@ -6997,7 +6997,7 @@ void MySqlAPI::cancelWaitingFiles(std::set<std::string>& jobs)
 
                     sql <<
                         " UPDATE t_file "
-                        " SET file_state = 'CANCELED' "
+                        " SET file_state = 'CANCELED', finish_time = UTC_TIMESTAMP() "
                         " WHERE file_id = :fileId AND file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED')",
                         soci::use(it->get<int>("file_id"))
                         ;
