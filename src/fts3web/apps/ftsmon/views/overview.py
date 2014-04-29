@@ -128,6 +128,7 @@ def overview(httpRequest):
            SUM(CASE WHEN job_finished >= %s OR job_finished IS NULL THEN throughput ELSE 0 END)
     FROM t_file
     WHERE (job_finished IS NULL OR job_finished >= %s)
+        AND file_state IN ('SUBMITTED', 'ACTIVE','FINISHED','FAILED','CANCELED')
     """ % (_db_to_date(), _db_to_date())
     
     params = [throughputWindow.strftime('%Y-%m-%d %H:%M:%S'),
