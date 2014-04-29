@@ -286,6 +286,13 @@ function undefinedAsZero(v)
         return 0;
 }
 
+function withDefault(v, def)
+{
+    if (typeof(v) != 'undefined')
+        return v;
+    else
+        return def;
+}
 
 /** Generic callbacks */
 function genericSuccessMethod(deferred, $rootScope) {

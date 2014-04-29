@@ -25,7 +25,7 @@ function JobListCtrl($location, $scope, jobs, Job)
         vo:          validString($location.search().vo),
         source_se:   validString($location.search().source_se),
         dest_se:     validString($location.search().dest_se),
-        time_window: validString($location.search().time_window),
+        time_window: withDefault($location.search().time_window, 1),
         state:       statesFromString($location.search().state)
     }
     
