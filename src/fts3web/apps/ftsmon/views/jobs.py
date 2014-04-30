@@ -14,7 +14,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from django.db import connection
 from django.db.models import Q, Count, Avg
 from django.http import Http404
 from django.shortcuts import render, redirect
@@ -63,6 +63,40 @@ def setupFilters(httpRequest):
     
     return filters
 
+
+class JobListDecorator(object):
+    """
+    Wraps the list of jobs and appends additional information, as
+    file count per state
+    This way we only do it for the number that is being actually sent
+    """
+    def __init__(self, jobs):
+        self.jobs = jobs
+    
+    def __len__(self):
+        return len(self.jobs)
+    
+    def _decorated(self, index):
+        cursor = connection.cursor()
+        for job in self.jobs[index]:
+            cursor.execute("SELECT file_state, COUNT(file_state) FROM t_file WHERE job_id = %s GROUP BY file_state", [job['job_id']])
+            result = cursor.fetchall()
+            count = dict()
+            for r in result:
+                count[r[0]] = r[1]
+            job['files'] = count
+            yield job
+    
+    def __getitem__(self, index):
+        if not isinstance(index, slice):
+            index = slice(index, index, 1)
+        
+        step = index.step if index.step else 1
+        nelems = (index.stop - index.start) / step
+        if nelems > 100:
+            return self.jobs[index]
+        else:
+            return self._decorated(index)
 
 @jsonify_paged
 def jobIndex(httpRequest):
@@ -115,7 +149,8 @@ def jobIndex(httpRequest):
     else:    
         jobs = jobs.order_by('-submit_time')
 
-    return jobs
+    return JobListDecorator(jobs)
+
 
 @jsonify
 def jobDetails(httpRequest, jobId):

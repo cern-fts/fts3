@@ -39,6 +39,10 @@ tfoot {
 	color: white;
 }
 
+span.active {
+    cursor: pointer;
+}
+
 /* This trick avoids flapping layout */
 plot {
     display: block;

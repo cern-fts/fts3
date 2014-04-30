@@ -1,4 +1,12 @@
 
+function searchJob(jobList, jobId)
+{
+    for (j in jobList) {
+        if (jobList[j].job_id == jobId)
+            return jobList[j];
+    }
+    return {show: false};
+}
 
 function JobListCtrl($location, $scope, jobs, Job)
 {
@@ -14,7 +22,13 @@ function JobListCtrl($location, $scope, jobs, Job)
     $scope.autoRefresh = setInterval(function() {
         var filter = $location.search();
         filter.page = $scope.jobs.page;
-        $scope.jobs = Job.query(filter);
+        Job.query(filter, function(updatedJobs) {
+            for (j in updatedJobs.items) {
+                var job = updatedJobs.items[j];
+                job.show = searchJob($scope.jobs.items, job.job_id).show;
+            }
+            $scope.jobs = updatedJobs;
+        });
     }, REFRESH_INTERVAL);
     $scope.$on('$destroy', function() {
         clearInterval($scope.autoRefresh);
