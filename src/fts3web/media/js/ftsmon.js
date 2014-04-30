@@ -13,10 +13,6 @@ config(function($routeProvider) {
         when('/archive',              {templateUrl: STATIC_ROOT + 'html/jobs/index.html',
                                        controller:  ArchiveCtrl,
                                        resolve:     ArchiveCtrl.resolve}).
-
-        when('/transfers',            {templateUrl: STATIC_ROOT + 'html/transfers.html',
-                                       controller:  TransfersCtrl,
-                                       resolve:     TransfersCtrl.resolve}).
                            
         when('/optimizer/',           {templateUrl: STATIC_ROOT + 'html/optimizer/optimizer.html',
                                        controller:  OptimizerCtrl,
