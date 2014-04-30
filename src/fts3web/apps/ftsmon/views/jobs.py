@@ -79,7 +79,7 @@ class JobListDecorator(object):
     def _decorated(self, index):
         cursor = connection.cursor()
         for job in self.jobs[index]:
-            cursor.execute("SELECT file_state, COUNT(file_state) FROM t_file WHERE job_id = %s GROUP BY file_state", [job['job_id']])
+            cursor.execute("SELECT file_state, COUNT(file_state) FROM t_file WHERE job_id = %s GROUP BY file_state ORDER BY NULL", [job['job_id']])
             result = cursor.fetchall()
             count = dict()
             for r in result:
