@@ -24,35 +24,6 @@ from util import getOrderBy, orderedField
 import datetime
 import json
 import time
-
-
-
-class MetadataFilter:
-    def __init__(self, filter):
-        self.filter = filter
-        
-    def _compare(self, filter, meta):
-        if isinstance(filter, dict) and isinstance(meta, dict):
-            for (key, value) in filter.iteritems():
-                if key not in meta or not self._compare(value, meta[key]):
-                    return False
-            return True
-        elif filter == u'*':
-            return True
-        else:
-            return filter == meta
-        
-    def __call__(self, item):
-        try:
-            value = item['job_metadata']
-            if value:
-                try:
-                    return self._compare(self.filter, json.loads(value))
-                except:
-                    return self._compare(self.filter, value)
-        except:
-            raise
-        return False
     
 
 
@@ -93,8 +64,8 @@ def setupFilters(httpRequest):
     return filters
 
 
-
-def jobListing(httpRequest):
+@jsonify_paged
+def jobIndex(httpRequest):
     filters = setupFilters(httpRequest)
     # Initial query
     jobs = Job.objects
@@ -143,27 +114,8 @@ def jobListing(httpRequest):
         jobs = jobs.order_by('submit_time')
     else:    
         jobs = jobs.order_by('-submit_time')
-    
-    # Wrap with a metadata filterer
-    msg = None
-    
-    META_LIMIT = 2000
-    if filters['metadata']:
-        if jobs.count() < META_LIMIT:
-            metadataFilter = MetadataFilter(filters['metadata'])
-            jobs = filter(metadataFilter, jobs)
-        else:
-            msg = 'Can not filter by metadata with more than %d results' % META_LIMIT
 
-    # Return list
-    return (msg, jobs)
-
-
-@jsonify_paged
-def jobIndex(httpRequest):  
-    msg, jobs = jobListing(httpRequest)
     return jobs
-
 
 @jsonify
 def jobDetails(httpRequest, jobId):
