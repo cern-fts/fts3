@@ -916,7 +916,7 @@ int main(int argc, char **argv)
 
 
                 logger.INFO() << "Transfer Starting" << std::endl;
-		reporter.sendLog(opts.jobId, currentTransfer.fileId, fileManagement.getLogFilePath(), opts.debug);
+                reporter.sendLog(opts.jobId, currentTransfer.fileId, fileManagement.getLogFilePath(), opts.debug);
 
                 if (gfalt_copy_file(handle, params, (currentTransfer.sourceUrl).c_str(), (currentTransfer.destUrl).c_str(), &tmp_err) != 0)
                     {
@@ -1013,9 +1013,9 @@ int main(int argc, char **argv)
                     {
                         logger.ERROR() << "DESTINATION Source and destination file size are different" << std::endl;
                         errorMessage = "DESTINATION Source and destination file size mismatch ";
-			errorMessage += boost::lexical_cast<std::string>(currentTransfer.fileSize);
-			errorMessage += " <> ";
-			errorMessage += boost::lexical_cast<std::string>(dest_size);
+                        errorMessage += boost::lexical_cast<std::string>(currentTransfer.fileSize);
+                        errorMessage += " <> ";
+                        errorMessage += boost::lexical_cast<std::string>(dest_size);
                         errorScope = DESTINATION;
                         reasonClass = mapErrnoToString(gfal_posix_code_error());
                         errorPhase = TRANSFER_FINALIZATION;

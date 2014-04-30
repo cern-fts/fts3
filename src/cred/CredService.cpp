@@ -70,96 +70,105 @@ void CredService::get(
     const std::string&  id,
     std::string&        filename)
 {
-
-    // Check Preconditions
-    if(userDn.empty())
-        {
-            //m_log_error("Invalid User DN specified");
-            //throw InvalidArgumentException("Invalid User DN specified");
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Invalid User DN specified" << commit;
-        }
-    if(id.empty())
-        {
-            //m_log_error("Invalid credential id specified");
-            //throw InvalidArgumentException("Invalid credential id specified");
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Invalid credential id specified" << commit;
-        }
-
-    // Get the filename to be for the given DN
-    std::string fname = getFileName(userDn,id);
-    //m_log_debug("Get the filename to be for the given DN: " << fname);
-    //FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Get the filename for the given DN: " << fname << commit;
-    // Post-Condition Check: filename length should be max (FILENAME_MAX - 7)
-    if(fname.length() > (FILENAME_MAX - 7))
-        {
-            //m_log_error("Invalid credential file name generated: length exceeded");
-            //throw LogicError("Invalid credential file name generated");
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Invalid credential file name generated" << commit;
-        }
-
-    // Check if the Proxy Certificate is already there and it's valid
-    if(true == isValidProxy(fname))
-        {
-            filename = fname;
-            //FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy Certificate is already on file " << filename << commit;
-            return;
-        }
-
-    // Check if the database contains a valid proxy for this dlg id and DN
-    if(false == DBSingleton::instance().getDBObjectInstance()->isCredentialExpired(id, userDn) )
-        {
-            filename = fname;
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Proxy for dlg id "<< id << " and DN " << userDn << " has expired in DB, needs renewal!" << commit;
-            return;
-        }
-
-
-
-    // Create a Temporary File
-    Handle h;
-    std::string tmp_proxy_fname;
     try
         {
-            tmp_proxy_fname = TempFile::generate("cred",TMP_DIRECTORY,h.get());
-            if(tmp_proxy_fname.length()==0)
+
+            // Check Preconditions
+            if(userDn.empty())
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Invalid User DN specified" << commit;
+                }
+            if(id.empty())
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Invalid credential id specified" << commit;
+                }
+
+            // Get the filename to be for the given DN
+            std::string fname = getFileName(userDn,id);
+
+            // Post-Condition Check: filename length should be max (FILENAME_MAX - 7)
+            if(fname.length() > (FILENAME_MAX - 7))
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Invalid credential file name generated" << commit;
+                }
+
+            // Check if the Proxy Certificate is already there and it's valid
+            if(true == isValidProxy(fname))
                 {
                     filename = fname;
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot create file for proxy certificate" << commit;
                     return;
                 }
+
+            // Check if the database contains a valid proxy for this dlg id and DN
+            if(false == DBSingleton::instance().getDBObjectInstance()->isCredentialExpired(id, userDn) )
+                {
+                    filename = fname;
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Proxy for dlg id "<< id << " and DN " << userDn << " has expired in DB, needs renewal!" << commit;
+                    return;
+                }
+
+
+
+            // Create a Temporary File
+            Handle h;
+            std::string tmp_proxy_fname;
+            try
+                {
+                    tmp_proxy_fname = TempFile::generate("cred",TMP_DIRECTORY,h.get());
+                    if(tmp_proxy_fname.length()==0)
+                        {
+                            filename = fname;
+                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot create file for proxy certificate" << commit;
+                            return;
+                        }
+                }
+            catch(const std::exception& exc)
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot create file for proxy certificate" << exc.what() << commit;
+                }
+            catch(...)
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot create file for proxy certificate" << commit;
+                }
+
+            // RAII
+            TempFile tmp_proxy(tmp_proxy_fname);
+
+            // Get certificate
+            try
+                {
+                    getNewCertificate(userDn,id,tmp_proxy.name());
+                }
+            catch(...)
+                {
+                    throw;
+                }
+
+            // Rename the Temporary File
+            try
+                {
+                    tmp_proxy.rename(fname);
+                }
+            catch(const std::exception& exc)
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot rename temporary file <" << tmp_proxy.name() << ">: " << exc.what() << commit;
+                }
+            catch(...)
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot rename temporary file <" << tmp_proxy.name() << commit;
+                }
+            // Return the proxy certificate File name
+            filename = fname;
         }
     catch(const std::exception& exc)
         {
-            //m_log_error("Cannot create temporary file: " << exc.what());
-            // throw CredServiceException("Cannot create file for proxy certificate");
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot create file for proxy certificate" << exc.what() << commit;
-        }
-    // RAII
-    TempFile tmp_proxy(tmp_proxy_fname);
-
-    // Get certificate
-    try
-        {
-            getNewCertificate(userDn,id,tmp_proxy.name());
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Can't get The proxy Certificate for the requested user" << exc.what() << commit;
         }
     catch(...)
         {
-            throw;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Can't get The proxy Certificate for the requested user" << commit;
         }
 
-    // Rename the Temporary File
-    try
-        {
-            tmp_proxy.rename(fname);
-        }
-    catch(const std::exception& exc)
-        {
-            //m_log_error("Cannot rename temporary file <" << tmp_proxy.name() << ">: " << exc.what());
-            //throw CredServiceException("Cannot create file for proxy certificate");
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot rename temporary file <" << tmp_proxy.name() << ">: " << exc.what() << commit;
-        }
-    // Return the proxy certificate File name
-    filename = fname;
 }
 
 /*
@@ -178,9 +187,9 @@ bool CredService::isValidProxy(const std::string& filename)
             return false;
         }
 
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy filename :" << filename << commit;
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Lifetime       : " << lifetime << commit;
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Min Valid  time: " << this->minValidityTime() << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy filename :" << filename
+                                    << "\nLifetime       : " << lifetime
+                                    << "\nMin Valid  time: " << this->minValidityTime() << commit;
 
     // casting to unsigned long is safe, condition lifetime < 0 already checked
     if(this->minValidityTime() >= (unsigned long)lifetime)
@@ -188,7 +197,6 @@ bool CredService::isValidProxy(const std::string& filename)
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy Certificate should be renewed" << commit;
             return false;
         }
-    //FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy Certificate is still valid" << commit;
 
     return true;
 }
