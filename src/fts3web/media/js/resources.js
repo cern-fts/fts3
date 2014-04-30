@@ -11,12 +11,6 @@ angular.module('ftsmon.resources', ['ngResource'])
 			    isArray: false},
 	})
 })
-.factory('ArchivedJobs', function($resource) {
-	return $resource('archive', {}, {
-		query: {method: 'GET',
-			    isArray: false},
-	})
-})
 .factory('Overview', function($resource) {
 	return $resource('overview', {}, {
 		query: {method: 'GET', isArray: false}

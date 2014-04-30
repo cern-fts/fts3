@@ -19,7 +19,7 @@ from django.db.models import Q, Count, Avg
 from django.http import Http404
 from django.shortcuts import render, redirect
 from jsonify import jsonify, jsonify_paged
-from ftsweb.models import Job, File, JobArchive, FileArchive, RetryError
+from ftsweb.models import Job, File, RetryError
 from util import getOrderBy, orderedField
 import datetime
 import json
@@ -94,10 +94,10 @@ def setupFilters(httpRequest):
 
 
 
-def jobListing(httpRequest, jobModel = Job):
+def jobListing(httpRequest):
     filters = setupFilters(httpRequest)
     # Initial query
-    jobs = jobModel.objects
+    jobs = Job.objects
     
     # Convert startdate and enddate to datetime
     startdate = enddate = None
@@ -165,12 +165,6 @@ def jobIndex(httpRequest):
     return jobs
 
 
-@jsonify_paged
-def archiveJobIndex(httpRequest):
-    msg, jobs = jobListing(httpRequest, jobModel = JobArchive, filters = filters)
-    return jobs
-
-
 @jsonify
 def jobDetails(httpRequest, jobId):
     reason  = httpRequest.GET.get('reason', None)
@@ -180,24 +174,12 @@ def jobDetails(httpRequest, jobId):
             file_id = int(file_id)
     except:
         file_id = None
-        
-    try:
-        archived = int(httpRequest.GET.get('archive', 0))
-    except:
-        archived = 0
 
     try:
         job = Job.objects.get(job_id = jobId)
         count = File.objects.filter(job = jobId)
     except Job.DoesNotExist:
-        if archived:
-            try:
-                job = JobArchive.objects.get(job_id = jobId)
-                count = FileArchive.objects.filter(job = jobId)
-            except JobArchive.DoesNotExist:
-                raise Http404
-        else:
-            raise Http404
+        raise Http404
         
     if reason:
         count = count.filter(reason = reason)
@@ -238,13 +220,7 @@ class RetriesFetcher(object):
 @jsonify_paged
 def jobFiles(httpRequest, jobId):
     files = File.objects.filter(job = jobId)
-    try:
-        archived = int(httpRequest.GET.get('archive', 0))
-    except:
-        archived = 0
 
-    if not files and archived:
-        files = FileArchive.objects.filter(job = jobId)
     if not files:
         raise Http404
     

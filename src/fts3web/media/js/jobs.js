@@ -77,30 +77,6 @@ JobListCtrl.resolve = {
     }
 }
 
-/** Archive */
-function ArchiveCtrl($location, $scope, jobs, ArchivedJobs, Unique)
-{
-    JobListCtrl($location, $scope, jobs, ArchivedJobs, Unique);
-}
-
-ArchiveCtrl.resolve = {
-    jobs: function($rootScope, $location, $q, ArchivedJobs) {
-        loading($rootScope);
-        
-        var deferred = $q.defer();
-
-        var page = $location.search().page;
-        if (!page || page < 1)
-            page = 1;
-        
-        ArchivedJobs.query($location.search(),
-              genericSuccessMethod(deferred, $rootScope),
-              genericFailureMethod(deferred, $rootScope, $location));
-        
-        return deferred.promise;
-    }
-}
-
 /** Job view
  */
 function JobViewCtrl($location, $scope, job, files, Job, Files)
@@ -180,8 +156,7 @@ JobViewCtrl.resolve = {
         var deferred = $q.defer();
         
         var filter = {
-            jobId: $route.current.params.jobId,
-            archive: validString($route.current.params.archive)
+            jobId: $route.current.params.jobId
         };
         if ($route.current.params.file)
             filter.file = $route.current.params.file;

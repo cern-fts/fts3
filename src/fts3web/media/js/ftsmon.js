@@ -10,9 +10,6 @@ config(function($routeProvider) {
         when('/job/:jobId',           {templateUrl: STATIC_ROOT + 'html/jobs/view.html',
                                        controller:  JobViewCtrl,
                                        resolve:     JobViewCtrl.resolve}).
-        when('/archive',              {templateUrl: STATIC_ROOT + 'html/jobs/index.html',
-                                       controller:  ArchiveCtrl,
-                                       resolve:     ArchiveCtrl.resolve}).
                            
         when('/optimizer/',           {templateUrl: STATIC_ROOT + 'html/optimizer/optimizer.html',
                                        controller:  OptimizerCtrl,
@@ -151,10 +148,7 @@ config(function($routeProvider) {
 }])
 .run(function($rootScope, $location) {
     $rootScope.searchJob = function() {
-        var inArchive = 0;
-        if ($rootScope.inArchive)
-            inArchive = 1;
-        $location.path('/job/' + $rootScope.jobId).search({'archive': inArchive});
+        $location.path('/job/' + $rootScope.jobId).search();
     }
 })
 .filter('safeFilter', function($filter) {
