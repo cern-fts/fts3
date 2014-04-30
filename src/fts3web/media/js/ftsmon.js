@@ -111,7 +111,10 @@ config(function($routeProvider) {
             var orderedBy = $location.search().orderby;
             if (!orderedBy)
                 orderedBy = '';
-            
+
+            if (!title)
+                title = 'Order by ' + content;
+
             // Differentiate between field and ordering (asc/desc)
             var orderedDesc = false;
             if (orderedBy && orderedBy[0] == '-') {
