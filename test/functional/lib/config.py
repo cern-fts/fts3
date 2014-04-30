@@ -40,6 +40,10 @@ StorageAreaPairs = [
     (
         'srm://hepgrid11.ph.liv.ac.uk:8446/srm/managerv2?SFN=/dpm/ph.liv.ac.uk/home/%(vo)s/',
         'srm://storage01.lcg.cscs.ch:8443/srm/managerv2?SFN=/pnfs/lcg.cscs.ch/%(vo)s/'
+    ),
+    (
+        'davs://lxfsra04a04.cern.ch/dpm/cern.ch/home/%(vo)s/',
+        'davs://lxfsra10a01.cern.ch/dpm/cern.ch/home/%(vo)s/'
     )
 ]
 
