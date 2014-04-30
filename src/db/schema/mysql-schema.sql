@@ -805,6 +805,8 @@ CREATE INDEX dm_job_id     ON t_dm(job_id);
 --
 CREATE INDEX job_vo_name ON t_job(vo_name);
 CREATE INDEX job_jobfinished_id ON t_job(job_finished);
+CREATE INDEX t_job_source_se ON t_job(source_se);
+CREATE INDEX t_job_dest_se ON t_job(dest_se);
 
 
 -- t_file indexes:
