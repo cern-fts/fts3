@@ -3421,7 +3421,7 @@ bool MySqlAPI::updateOptimizer()
 
                             int pathFollowed = 0;
 
-                            if( (ratioSuccessFailure == 100 || ratioSuccessFailure > rateStored) && throughput > thrStored && retry <= retryStored)
+                            if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 98)) && throughput > thrStored && retry <= retryStored)
                                 {
                                     //make sure we do not increase beyond limits set
                                     bool maxActiveLimit = getMaxActive(sql, maxActive, highDefault, source_hostname, destin_hostname);

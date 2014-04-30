@@ -2169,7 +2169,7 @@ void OracleAPI::cancelJob(std::vector<std::string>& requestIDs)
 void OracleAPI::getCancelJob(std::vector<int>& requestIDs)
 {
     soci::session sql(*connectionPool);
-    int pid = 0;
+    long long pid = 0;
 
     try
         {
@@ -2196,7 +2196,7 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs)
             //prevent more than on server to update the optimizer decisions
             if(hashSegment.start == 0)
                 {
-                    int file_id = 0;
+                    long long file_id = 0;
 
                     soci::rowset<soci::row> rs2 = (sql.prepare << " select distinct file_id from t_file where file_state='CANCELED' and PID IS NULL and (job_finished is NULL or finish_time is NULL)");
 
@@ -3177,7 +3177,7 @@ bool OracleAPI::updateOptimizer()
 
                             int pathFollowed = 0;
 
-                            if( (ratioSuccessFailure == 100 || ratioSuccessFailure > rateStored) && throughput > thrStored && retry <= retryStored)
+                            if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 98)) && throughput > thrStored && retry <= retryStored)
                                 {
                                     //make sure we do not increase beyond limits set
                                     bool maxActiveLimit = getMaxActive(sql, maxActive, highDefault, source_hostname, destin_hostname);
@@ -5267,7 +5267,7 @@ void OracleAPI::setPriority(std::string job_id, int priority)
         }
 }
 
-void OracleAPI::setSeProtocol(std::string protocol, std::string se, std::string state)
+void OracleAPI::setSeProtocol(std::string /*protocol*/, std::string se, std::string state)
 {
     soci::session sql(*connectionPool);
 
