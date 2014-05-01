@@ -162,7 +162,7 @@ def _getHostServiceAndSegment():
 @jsonify
 def servers(httpRequest):
     segments  = _getHostServiceAndSegment()
-    transfers = _getTransferAndSubmissionPerHost(timedelta(hours = 6))
+    transfers = _getTransferAndSubmissionPerHost(timedelta(hours = 1))
     
     hosts = segments.keys()
 
