@@ -320,10 +320,10 @@ static std::string generateProxy(const std::string& dn, const std::string& dlg_i
 }
 
 
-static bool checkValidProxy(const std::string& filename)
+static bool checkValidProxy(const std::string& filename, std::string& message)
 {
     boost::scoped_ptr<DelegCred> delegCredPtr(new DelegCred);
-    return delegCredPtr->isValidProxy(filename);
+    return delegCredPtr->isValidProxy(filename, message);
 }
 
 void heartbeat(void)
@@ -541,7 +541,8 @@ int DoServer(int argc, char** argv)
                                             proxy_file = generateProxy(dn, dlg_id);
                                             (*itUrls).proxy = proxy_file;
 
-                                            if(false == checkValidProxy(proxy_file))
+				            std::string message;
+                                            if(false == checkValidProxy(proxy_file, message))
                                                 {
                                                     proxy_file = get_proxy_cert(
                                                                      dn, // user_dn
