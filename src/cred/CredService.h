@@ -95,7 +95,7 @@ public:
      * @param filename [IN] trhe name of the file containing the proxy certificate
      * @return true if the certificate in the given file name is still valid
      */
-    bool isValidProxy(const std::string& filename) /*throw()*/;
+    bool isValidProxy(const std::string& filename, std::string& message) /*throw()*/;
 
 
 };

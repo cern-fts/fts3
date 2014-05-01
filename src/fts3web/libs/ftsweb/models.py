@@ -70,11 +70,6 @@ class Job(JobBase):
         db_table = 't_job'
 
 
-class JobArchive(JobBase):
-    class Meta:
-        db_table = 't_job_backup'
-
-
 class FileBase(models.Model):
     file_id      = models.IntegerField(primary_key = True)
     hashed_id    = models.IntegerField()
@@ -126,12 +121,6 @@ class File(FileBase):
     job = models.ForeignKey('Job', db_column = 'job_id', related_name = '+', null = True)
     class Meta:
         db_table = 't_file' 
-
-
-class FileArchive(FileBase):
-    job = models.ForeignKey('JobArchive', db_column = 'job_id', related_name = '+')        
-    class Meta:
-        db_table = 't_file_backup'
 
 
 class RetryError(models.Model):

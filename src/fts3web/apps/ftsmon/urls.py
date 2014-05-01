@@ -24,7 +24,6 @@ urlpatterns = patterns('ftsmon.views',
     url(r'^jobs/?$', 'jobs.jobIndex'),
     url(r'^jobs/(?P<jobId>[a-fA-F0-9\-]+)$', 'jobs.jobDetails'),
     url(r'^jobs/(?P<jobId>[a-fA-F0-9\-]+)/files$', 'jobs.jobFiles'),
-    url(r'^transfers$', 'jobs.transferList'),
     
     url(r'^config/audit$', 'config.audit'),
     url(r'^config/links$', 'config.links'),
@@ -46,8 +45,6 @@ urlpatterns = patterns('ftsmon.views',
     
     url(r'^errors/$', 'errors.showErrors'),
     url(r'^errors/list$', 'errors.errorsForPair'),
-    
-    url(r'^archive/$', 'jobs.archiveJobIndex'),
     
     url(r'^unique/activities', 'autocomplete.activities'),
     url(r'^unique/destinations', 'autocomplete.destinations'),

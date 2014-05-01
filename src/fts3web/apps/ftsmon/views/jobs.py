@@ -14,45 +14,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from django.db import connection
 from django.db.models import Q, Count, Avg
 from django.http import Http404
 from django.shortcuts import render, redirect
 from jsonify import jsonify, jsonify_paged
-from ftsweb.models import Job, File, JobArchive, FileArchive, RetryError
+from ftsweb.models import Job, File, RetryError
 from util import getOrderBy, orderedField
 import datetime
 import json
 import time
-
-
-
-class MetadataFilter:
-    def __init__(self, filter):
-        self.filter = filter
-        
-    def _compare(self, filter, meta):
-        if isinstance(filter, dict) and isinstance(meta, dict):
-            for (key, value) in filter.iteritems():
-                if key not in meta or not self._compare(value, meta[key]):
-                    return False
-            return True
-        elif filter == u'*':
-            return True
-        else:
-            return filter == meta
-        
-    def __call__(self, item):
-        try:
-            value = item['job_metadata']
-            if value:
-                try:
-                    return self._compare(self.filter, json.loads(value))
-                except:
-                    return self._compare(self.filter, value)
-        except:
-            raise
-        return False
     
 
 
@@ -93,11 +64,45 @@ def setupFilters(httpRequest):
     return filters
 
 
+class JobListDecorator(object):
+    """
+    Wraps the list of jobs and appends additional information, as
+    file count per state
+    This way we only do it for the number that is being actually sent
+    """
+    def __init__(self, jobs):
+        self.jobs = jobs
+    
+    def __len__(self):
+        return len(self.jobs)
+    
+    def _decorated(self, index):
+        cursor = connection.cursor()
+        for job in self.jobs[index]:
+            cursor.execute("SELECT file_state, COUNT(file_state) FROM t_file WHERE job_id = %s GROUP BY file_state ORDER BY NULL", [job['job_id']])
+            result = cursor.fetchall()
+            count = dict()
+            for r in result:
+                count[r[0]] = r[1]
+            job['files'] = count
+            yield job
+    
+    def __getitem__(self, index):
+        if not isinstance(index, slice):
+            index = slice(index, index, 1)
+        
+        step = index.step if index.step else 1
+        nelems = (index.stop - index.start) / step
+        if nelems > 100:
+            return self.jobs[index]
+        else:
+            return self._decorated(index)
 
-def jobListing(httpRequest, jobModel = Job):
+@jsonify_paged
+def jobIndex(httpRequest):
     filters = setupFilters(httpRequest)
     # Initial query
-    jobs = jobModel.objects
+    jobs = Job.objects
     
     # Convert startdate and enddate to datetime
     startdate = enddate = None
@@ -143,32 +148,8 @@ def jobListing(httpRequest, jobModel = Job):
         jobs = jobs.order_by('submit_time')
     else:    
         jobs = jobs.order_by('-submit_time')
-    
-    # Wrap with a metadata filterer
-    msg = None
-    
-    META_LIMIT = 2000
-    if filters['metadata']:
-        if jobs.count() < META_LIMIT:
-            metadataFilter = MetadataFilter(filters['metadata'])
-            jobs = filter(metadataFilter, jobs)
-        else:
-            msg = 'Can not filter by metadata with more than %d results' % META_LIMIT
 
-    # Return list
-    return (msg, jobs)
-
-
-@jsonify_paged
-def jobIndex(httpRequest):  
-    msg, jobs = jobListing(httpRequest)
-    return jobs
-
-
-@jsonify_paged
-def archiveJobIndex(httpRequest):
-    msg, jobs = jobListing(httpRequest, jobModel = JobArchive, filters = filters)
-    return jobs
+    return JobListDecorator(jobs)
 
 
 @jsonify
@@ -180,24 +161,12 @@ def jobDetails(httpRequest, jobId):
             file_id = int(file_id)
     except:
         file_id = None
-        
-    try:
-        archived = int(httpRequest.GET.get('archive', 0))
-    except:
-        archived = 0
 
     try:
         job = Job.objects.get(job_id = jobId)
         count = File.objects.filter(job = jobId)
     except Job.DoesNotExist:
-        if archived:
-            try:
-                job = JobArchive.objects.get(job_id = jobId)
-                count = FileArchive.objects.filter(job = jobId)
-            except JobArchive.DoesNotExist:
-                raise Http404
-        else:
-            raise Http404
+        raise Http404
         
     if reason:
         count = count.filter(reason = reason)
@@ -238,13 +207,7 @@ class RetriesFetcher(object):
 @jsonify_paged
 def jobFiles(httpRequest, jobId):
     files = File.objects.filter(job = jobId)
-    try:
-        archived = int(httpRequest.GET.get('archive', 0))
-    except:
-        archived = 0
 
-    if not files and archived:
-        files = FileArchive.objects.filter(job = jobId)
     if not files:
         raise Http404
     
@@ -269,58 +232,3 @@ def jobFiles(httpRequest, jobId):
         files = files.order_by(orderedField('end_time', orderDesc))
         
     return RetriesFetcher(files)
-
-
-@jsonify_paged
-def transferList(httpRequest):
-    filters    = setupFilters(httpRequest)
-    
-    # Force a time window
-    if not filters['time_window']:
-        filters['time_window'] = 1
-    
-    transfers = File.objects
-    if filters['state']:
-        transfers = transfers.filter(file_state__in = filters['state'])
-    else:
-        transfers = transfers.exclude(file_state = 'NOT_USED')
-    if filters['source_se']:
-        transfers = transfers.filter(source_se = filters['source_se'])
-    if filters['dest_se']:
-        transfers = transfers.filter(dest_se = filters['dest_se'])
-    if filters['source_surl']:
-        transfers = transfers.filter(source_surl = filters['source_surl'])
-    if filters['dest_surl']:
-        transfers = transfers.filter(dest_surl = filters['dest_surl'])
-    if filters['vo']:
-        transfers = transfers.filter(vo_name = filters['vo'])
-    if filters['time_window']:
-        notBefore =  datetime.datetime.utcnow() - datetime.timedelta(hours = filters['time_window'])
-        transfers = transfers.filter(Q(job_finished__isnull = True) | (Q(job_finished__gte = notBefore)))
-    if filters['activity']:
-        transfers = transfers.filter(activity = filters['activity'])
-    if filters['hostname']:
-        transfers = transfers.filter(transferHost = filters['hostname'])
-    if filters['reason']:
-        transfers = transfers.filter(reason = filters['reason'])
-   
-    transfers = transfers.values('file_id', 'file_state', 'job_id',
-                                 'source_se', 'dest_se', 'start_time', 'job_finished',
-                                 'job__submit_time', 'job__priority')
-
-    # Ordering
-    (orderBy, orderDesc) = getOrderBy(httpRequest)
-    if orderBy == 'id':
-        transfers = transfers.order_by(orderedField('file_id', orderDesc))
-    elif orderBy == 'priority':
-        transfers = transfers.order_by(orderedField('job__priority', orderDesc))
-    elif orderBy == 'submit_time':
-        transfers = transfers.order_by(orderedField('job__submit_time', orderDesc))
-    elif orderBy == 'start_time':
-        transfers = transfers.order_by(orderedField('start_time', orderDesc))
-    elif orderBy == 'finish_time':
-        transfers = transfers.order_by(orderedField('job_finished', orderDesc))
-    else:
-        transfers = transfers.order_by('-file_id')
-
-    return transfers

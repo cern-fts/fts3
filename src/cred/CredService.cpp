@@ -42,6 +42,7 @@ extern "C" {
 #include <string.h>
 #include <errno.h>
 #include <boost/scoped_ptr.hpp>
+#include <boost/lexical_cast.hpp>
 
 using boost::scoped_ptr;
 using namespace db;
@@ -93,7 +94,8 @@ void CredService::get(
                 }
 
             // Check if the Proxy Certificate is already there and it's valid
-            if(true == isValidProxy(fname))
+	    std::string message;
+            if(true == isValidProxy(fname, message))
                 {
                     filename = fname;
                     return;
@@ -103,11 +105,9 @@ void CredService::get(
             if(false == DBSingleton::instance().getDBObjectInstance()->isCredentialExpired(id, userDn) )
                 {
                     filename = fname;
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Proxy for dlg id "<< id << " and DN " << userDn << " has expired in DB, needs renewal!" << commit;
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Proxy for dlg id "<< id << " and DN " << userDn << " has expired in the DB, needs renewal!" << commit;
                     return;
                 }
-
-
 
             // Create a Temporary File
             Handle h;
@@ -176,14 +176,26 @@ void CredService::get(
  *
  * Check if the Proxy Already Exists and is Valid.
  */
-bool CredService::isValidProxy(const std::string& filename)
+bool CredService::isValidProxy(const std::string& filename, std::string& message)
 {
 
     // Check if it's valid
     time_t lifetime = get_proxy_lifetime(filename);
+    
+    std::string time1 = boost::lexical_cast<std::string>(lifetime);
+    std::string time2 = boost::lexical_cast<std::string>(this->minValidityTime());    
+    
     if(lifetime < 0)
         {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Proxy Certificate expired" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Proxy Certificate expired" << commit;	    
+	    message = " Proxy Certificate ";
+	    message += filename;
+	    message += " expired, lifetime is ";
+	    message += time1;
+	    message +=  " secs, while min validity time is ";
+	    message += time2;
+	    message += " secs";	    
+	    
             return false;
         }
 
@@ -194,7 +206,14 @@ bool CredService::isValidProxy(const std::string& filename)
     // casting to unsigned long is safe, condition lifetime < 0 already checked
     if(this->minValidityTime() >= (unsigned long)lifetime)
         {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy Certificate should be renewed" << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Proxy Certificate should be renewed" << commit;
+	    message = " Proxy Certificate ";
+	    message += filename;
+	    message += " should be renewed, lifetime is ";
+	    message += time1;
+	    message +=  " secs, while min validity time is ";
+	    message += time2;
+	    message += " secs";		    
             return false;
         }
 

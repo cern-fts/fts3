@@ -10,13 +10,6 @@ config(function($routeProvider) {
         when('/job/:jobId',           {templateUrl: STATIC_ROOT + 'html/jobs/view.html',
                                        controller:  JobViewCtrl,
                                        resolve:     JobViewCtrl.resolve}).
-        when('/archive',              {templateUrl: STATIC_ROOT + 'html/jobs/index.html',
-                                       controller:  ArchiveCtrl,
-                                       resolve:     ArchiveCtrl.resolve}).
-
-        when('/transfers',            {templateUrl: STATIC_ROOT + 'html/transfers.html',
-                                       controller:  TransfersCtrl,
-                                       resolve:     TransfersCtrl.resolve}).
                            
         when('/optimizer/',           {templateUrl: STATIC_ROOT + 'html/optimizer/optimizer.html',
                                        controller:  OptimizerCtrl,
@@ -118,7 +111,10 @@ config(function($routeProvider) {
             var orderedBy = $location.search().orderby;
             if (!orderedBy)
                 orderedBy = '';
-            
+
+            if (!title)
+                title = 'Order by ' + content;
+
             // Differentiate between field and ordering (asc/desc)
             var orderedDesc = false;
             if (orderedBy && orderedBy[0] == '-') {
@@ -155,10 +151,7 @@ config(function($routeProvider) {
 }])
 .run(function($rootScope, $location) {
     $rootScope.searchJob = function() {
-        var inArchive = 0;
-        if ($rootScope.inArchive)
-            inArchive = 1;
-        $location.path('/job/' + $rootScope.jobId).search({'archive': inArchive});
+        $location.path('/job/' + $rootScope.jobId).search();
     }
 })
 .filter('safeFilter', function($filter) {

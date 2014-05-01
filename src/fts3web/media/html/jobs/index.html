@@ -11,27 +11,43 @@
 <table class="table">
     <thead>
         <tr>
-            <th style="width: 14%">JOB ID</th>
+            <th style="width: 12%">Job id</th>
             <th style="width: 12%">
-                <span order-by="submit_time">SUBMIT TIME</span>
+                <span order-by="submit_time">Submit time</span>
             </th>
-            <th style="width: 8%">JOB STATE</th>
-            <th style="width: 8%">VO</th>
-            <th style="width: 22%">SOURCE SE</th>
-            <th style="width: 22%">DEST SE</th>
-            <th style="width: 14%">DEST SPACE TOKEN</th>
+            <th style="width: 8%">Job state</th>
+            <th style="width: 4%">VO</th>
+            <th style="width: 22%">Source SE</th>
+            <th style="width: 22%">Destination SE</th>
+            <th style="width: 6%">Priority</th>
+            <th style="width: 14%">Destination space token</th>
         </tr>
     </thead>
-    <tbody>
-        <tr ng-repeat="job in jobs.items" ng-class-odd="'odd'" ng-class="classFromMetadata(job)">
+    <tbody ng-repeat="job in jobs.items" ng-class-odd="'odd'" ng-class="classFromMetadata(job)">
+        <tr>
             <td>
                 <a href=#/job/{{job.job_id}}>{{job.job_id}}</a></td>
             <td>{{job.submit_time}}</td>
-            <td class="status {{job.job_state}}">{{job.job_state}}</td>
+            <td class="status {{job.job_state}}">
+                <span class="active" ng-click="job.show=!job.show" title="Details">{{job.job_state}}</span>
+            </td>
             <td>{{job.vo_name}}</td>
             <td class="hscroll">{{job.source_se}}</td>
             <td class="hscroll">{{job.dest_se}}</td>
+            <td>{{job.priority}}</td>
             <td>{{job.space_token}}</td>
+        </tr>
+        <tr style="background: #CCC" ng-show="job.show">
+            <td colspan="8">
+                <dl>
+                    <dt>File count</dt>
+                    <dd>
+                        <span ng-repeat="(state, count) in job.files">{{count}} {{state}} </span>
+                    </dd>
+                    <dt>Job finished time<dt>
+                    <dd>{{job.job_finished}}</dd>
+                </dl>
+            </td>
         </tr>
     </tbody>
 </table>

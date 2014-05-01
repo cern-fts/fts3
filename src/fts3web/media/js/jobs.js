@@ -1,4 +1,12 @@
 
+function searchJob(jobList, jobId)
+{
+    for (j in jobList) {
+        if (jobList[j].job_id == jobId)
+            return jobList[j];
+    }
+    return {show: false};
+}
 
 function JobListCtrl($location, $scope, jobs, Job)
 {
@@ -14,7 +22,13 @@ function JobListCtrl($location, $scope, jobs, Job)
     $scope.autoRefresh = setInterval(function() {
         var filter = $location.search();
         filter.page = $scope.jobs.page;
-        $scope.jobs = Job.query(filter);
+        Job.query(filter, function(updatedJobs) {
+            for (j in updatedJobs.items) {
+                var job = updatedJobs.items[j];
+                job.show = searchJob($scope.jobs.items, job.job_id).show;
+            }
+            $scope.jobs = updatedJobs;
+        });
     }, REFRESH_INTERVAL);
     $scope.$on('$destroy', function() {
         clearInterval($scope.autoRefresh);
@@ -70,30 +84,6 @@ JobListCtrl.resolve = {
             page = 1;
         
         Job.query($location.search(),
-              genericSuccessMethod(deferred, $rootScope),
-              genericFailureMethod(deferred, $rootScope, $location));
-        
-        return deferred.promise;
-    }
-}
-
-/** Archive */
-function ArchiveCtrl($location, $scope, jobs, ArchivedJobs, Unique)
-{
-    JobListCtrl($location, $scope, jobs, ArchivedJobs, Unique);
-}
-
-ArchiveCtrl.resolve = {
-    jobs: function($rootScope, $location, $q, ArchivedJobs) {
-        loading($rootScope);
-        
-        var deferred = $q.defer();
-
-        var page = $location.search().page;
-        if (!page || page < 1)
-            page = 1;
-        
-        ArchivedJobs.query($location.search(),
               genericSuccessMethod(deferred, $rootScope),
               genericFailureMethod(deferred, $rootScope, $location));
         
@@ -180,8 +170,7 @@ JobViewCtrl.resolve = {
         var deferred = $q.defer();
         
         var filter = {
-            jobId: $route.current.params.jobId,
-            archive: validString($route.current.params.archive)
+            jobId: $route.current.params.jobId
         };
         if ($route.current.params.file)
             filter.file = $route.current.params.file;

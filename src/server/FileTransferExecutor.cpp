@@ -67,10 +67,10 @@ std::string FileTransferExecutor::generateProxy(const std::string& dn, const std
     return delegCredPtr->getFileName(dn, dlg_id);
 }
 
-bool FileTransferExecutor::checkValidProxy(const std::string& filename)
+bool FileTransferExecutor::checkValidProxy(const std::string& filename, std::string& message)
 {
     boost::scoped_ptr<DelegCred> delegCredPtr(new DelegCred);
-    return delegCredPtr->isValidProxy(filename);
+    return delegCredPtr->isValidProxy(filename, message);
 }
 
 int FileTransferExecutor::execute()
@@ -171,8 +171,8 @@ int FileTransferExecutor::execute()
 
                     //get the proxy
                     std::string proxy_file = generateProxy(tf->DN, tf->CRED_ID);
-
-                    if(false == checkValidProxy(proxy_file))
+		    std::string message;
+                    if(false == checkValidProxy(proxy_file, message))
                         {
                             proxy_file = get_proxy_cert(
                                              tf->DN, // user_dn
@@ -387,8 +387,8 @@ int FileTransferExecutor::execute()
                                 }
                             else
                                 {
-                            	    db->updateFileTransferStatus(0.0, tf->JOB_ID, tf->FILE_ID, "ACTIVE", "",(int) pr.getPid(), 0, 0, false);
-                                    db->updateJobTransferStatus(tf->JOB_ID, "ACTIVE",0);				
+                                    db->updateFileTransferStatus(0.0, tf->JOB_ID, tf->FILE_ID, "ACTIVE", "",(int) pr.getPid(), 0, 0, false);
+                                    db->updateJobTransferStatus(tf->JOB_ID, "ACTIVE",0);
                                     SingleTrStateInstance::instance().sendStateMessage(tf->JOB_ID, tf->FILE_ID);
                                     struct message_updater msg;
                                     strncpy(msg.job_id, std::string(tf->JOB_ID).c_str(), sizeof(msg.job_id));
