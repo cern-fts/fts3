@@ -23,9 +23,11 @@ link_directories (/usr/lib64/gfal2-plugins)
 
 include_directories (${PROJECT_SOURCE_DIR}/src/common/)
 include_directories (${PROJECT_SOURCE_DIR}/src/monitoring/)
+include_directories (${PROJECT_SOURCE_DIR}/src/cred/)
 
 include_directories (${PROJECT_BINARY_DIR}/src/common/)
 include_directories (${PROJECT_BINARY_DIR}/src/monitoring/)
+include_directories (${PROJECT_BINARY_DIR}/src/cred/)
 
 include_directories (${fts_include_dir})
 include_directories (/usr/include/gfal2)
@@ -54,7 +56,7 @@ add_dependencies(fts_url_copy fts_msg_ifce)
 if(FTS3_COMPILE_WITH_UNITTEST_NEW)
 	target_link_libraries(fts_url_copy -lboost_unit_test_framework)
 endif()
-target_link_libraries(fts_url_copy  -luuid -lssl -lcrypto -lgfal_transfer -lgfal2 -lglib-2.0 fts_msg_ifce ${Boost_LIBRARIES})
+target_link_libraries(fts_url_copy  -luuid -lssl -lcrypto -lgfal_transfer -lgfal2 -lglib-2.0 fts_msg_ifce fts_proxy ${Boost_LIBRARIES})
 
 
 install(TARGETS         fts_url_copy 

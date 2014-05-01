@@ -74,7 +74,7 @@ private:
 
     std::string generateProxy(const std::string& dn, const std::string& dlg_id);
 
-    bool checkValidProxy(const std::string& filename);
+    bool checkValidProxy(const std::string& filename, std::string& message);
 
     /**
      * @return the metadata string

@@ -34,6 +34,8 @@ limitations under the License. */
 #include "StaticSslLocking.h"
 #include "transfer.h"
 #include "UserProxyEnv.h"
+#include "DelegCred.h"
+#include "CredService.h"
 
 
 using namespace std;
@@ -463,6 +465,14 @@ void setRemainingTransfersToFailed(std::vector<Transfer>& transferList, unsigned
 }
 
 
+
+bool checkValidProxy(const std::string& filename, std::string& message)
+{
+    boost::scoped_ptr<DelegCred> delegCredPtr(new DelegCred);
+    return delegCredPtr->isValidProxy(filename, message);
+}
+
+
 __attribute__((constructor)) void begin(void)
 {
     //switch to non-priviledged user to avoid reading the hostcert
@@ -743,9 +753,9 @@ int main(int argc, char **argv)
 
                 gfalt_set_create_parent_dir(params, TRUE, NULL);
 
-                //get checksum timeout from gfal2
-                logger.INFO() << "Get checksum timeout" << std::endl;
+                //get checksum timeout from gfal2                
                 int checksumTimeout = gfal2_get_opt_integer(handle, "GRIDFTP PLUGIN", "CHECKSUM_CALC_TIMEOUT", NULL);
+		logger.INFO() << "Checksum timeout " << checksumTimeout << std::endl;		
                 msg_ifce::getInstance()->set_checksum_timeout(&tr_completed, checksumTimeout);
 
                 /*Checksuming*/
@@ -772,6 +782,20 @@ int main(int argc, char **argv)
                                 logger.INFO() << "Calculate checksum auto" << std::endl;
                             }
                     }
+		    
+		    
+                 //before any operation, check if the proxy is valid		 	   
+		std::string message;
+	    	bool isValid = checkValidProxy(opts.proxy, message);
+	    	if(!isValid){
+	    	        errorMessage = "INIT" + message;
+                        logger.ERROR() << errorMessage << std::endl;
+                        errorScope = SOURCE;
+                        reasonClass = mapErrnoToString(gfal_posix_code_error());
+                        errorPhase = TRANSFER_PREPARATION;
+                        retry = true;
+                        goto stop;
+	   	 }		    
 
                 /* Stat source file */
                 logger.INFO() << "SOURCE Stat the source surl start" << std::endl;
