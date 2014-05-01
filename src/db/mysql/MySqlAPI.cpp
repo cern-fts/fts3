@@ -674,6 +674,12 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                         {
                                             continue;
                                         }
+                                   else
+                                        {
+                                            filesNum /= int(hostCount);
+                                            if(filesNum < 2)
+                                                filesNum = 2;
+                                        }					
                                 }
                         }
                     else
