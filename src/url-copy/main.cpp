@@ -1034,12 +1034,12 @@ int main(int argc, char **argv)
                         logger.INFO() << "DESTINATION Source and destination file size matching" << std::endl;
                     }
                 else
-                    {
-                        logger.ERROR() << "DESTINATION Source and destination file size are different" << std::endl;
+                    {                        
                         errorMessage = "DESTINATION Source and destination file size mismatch ";
                         errorMessage += boost::lexical_cast<std::string>(currentTransfer.fileSize);
                         errorMessage += " <> ";
                         errorMessage += boost::lexical_cast<std::string>(dest_size);
+			logger.ERROR() << errorMessage << std::endl;
                         errorScope = DESTINATION;
                         reasonClass = mapErrnoToString(gfal_posix_code_error());
                         errorPhase = TRANSFER_FINALIZATION;
