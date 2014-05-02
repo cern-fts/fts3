@@ -112,6 +112,15 @@ bool retryTransfer(int errorNo, const std::string& category, const std::string& 
     found = message.find("digest too big for rsa key");
     if (found!=std::string::npos)
         retry = false;
+    found = message.find("Can not determine address of local host");
+    if (found!=std::string::npos)
+        retry = false;	
+    found = message.find("Permission denied");
+    if (found!=std::string::npos)
+        retry = false;		
+    found = message.find("System error in write into HDFS");
+    if (found!=std::string::npos)
+        retry = false;			
 
     return retry;
 }
