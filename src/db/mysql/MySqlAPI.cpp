@@ -3439,14 +3439,14 @@ bool MySqlAPI::updateOptimizer()
                                             stmt10.execute(true);
                                         }
                                 }
-                            else if( (ratioSuccessFailure == 100 || ratioSuccessFailure > rateStored) && throughput == thrStored && retry <= retryStored)
+                            else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 98)) && throughput == thrStored && retry <= retryStored)
                                 {
                                     active = maxActive;
                                     pathFollowed = 2;
 
                                     stmt10.execute(true);
                                 }
-                            else if( (ratioSuccessFailure == 100 || ratioSuccessFailure > rateStored) && throughput < thrStored)
+                            else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 95)) && throughput < thrStored)
                                 {
                                     if(retry > retryStored)
                                         {
@@ -3473,9 +3473,9 @@ bool MySqlAPI::updateOptimizer()
                                         }
                                     stmt10.execute(true);
                                 }
-                            else if ( ratioSuccessFailure < 99 || retry > retryStored)
+                            else if ( ratioSuccessFailure < 99)
                                 {
-                                    if(ratioSuccessFailure > rateStored && retry < retryStored)
+                                    if(ratioSuccessFailure > rateStored && ratioSuccessFailure > 90 && retry <= retryStored)
                                         {
                                             active = maxActive;
                                             pathFollowed = 7;
