@@ -58,7 +58,7 @@ SubmitTransferCli::SubmitTransferCli()
     // add commandline options specific for fts3-transfer-submit
     specific.add_options()
     ("blocking,b", "Blocking mode, wait until the operation completes.")
-    ("file,f", value<string>(&bulk_file), "Name of a configuration file.")
+    ("file,f", value<string>(&bulk_file), "Name of a the bulk submission file.")
     ("gparam,g", value<string>(), "Gridftp parameters.")
     ("interval,i", value<int>(), "Interval between two poll operations in blocking mode.")
 //			("myproxysrv,m", value<string>(), "MyProxy server to use.")
@@ -74,7 +74,7 @@ SubmitTransferCli::SubmitTransferCli()
     ("job-metadata", value<string>(), "transfer-job metadata")
     ("file-metadata", value<string>(), "file metadata")
     ("file-size", value<double>(), "file size (in Bytes)")
-    ("new-bulk-format", "New JSON format for bulk submission will be used")
+    ("json-submission", "The bulk submission file will be expected in JSON format")
     ("retry", value<int>(), "Number of retries. If 0, the server default will be used. If negative, there will be no retries.")
     ("retry-delay", value<int>()->default_value(0), "Retry delay in seconds")
     ("nostreams", value<int>(), "number of streams that will be used for the given transfer-job")
@@ -158,7 +158,7 @@ bool SubmitTransferCli::createJobElements()
     if (ifs)
         {
 
-            if (vm.count("new-bulk-format"))
+            if (vm.count("json-submission"))
                 {
 
                     BulkSubmissionParser bulk(ifs);
