@@ -65,7 +65,6 @@ add_executable (fts_msg_cron ${fts_msg_cron_SOURCES})
 if(FTS3_COMPILE_WITH_UNITTEST_NEW)
 	target_link_libraries(fts_msg_cron -lboost_unit_test_framework)
 endif()
-target_link_libraries(fts_msg_cron  ${ACTIVEMQCPP_LIBRARIES})
 add_dependencies(fts_msg_cron fts_common fts_db_generic fts_config)
 target_link_libraries(fts_msg_cron ${CMAKE_THREAD_LIBS_INIT} fts_db_generic fts_common fts_config -lrt ${Boost_LIBRARIES})
 

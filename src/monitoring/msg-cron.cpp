@@ -20,21 +20,6 @@
  * It is executed hourly
  */
 
-#include <decaf/lang/Thread.h>
-#include <decaf/lang/Runnable.h>
-#include <decaf/util/concurrent/CountDownLatch.h>
-#include <decaf/lang/Long.h>
-#include <decaf/util/Date.h>
-#include <activemq/core/ActiveMQConnectionFactory.h>
-#include <activemq/util/Config.h>
-#include <activemq/library/ActiveMQCPP.h>
-#include <cms/Connection.h>
-#include <cms/Session.h>
-#include <cms/TextMessage.h>
-#include <cms/BytesMessage.h>
-#include <cms/MapMessage.h>
-#include <cms/ExceptionListener.h>
-#include <cms/MessageListener.h>
 #include <string>
 #include <sstream>
 #include <iomanip>
@@ -58,68 +43,35 @@
 #include "common/logger.h"
 #include "common/error.h"
 
-using namespace activemq;
-using namespace activemq::core;
-using namespace decaf;
-using namespace decaf::lang;
-using namespace decaf::util;
-using namespace decaf::util::concurrent;
-using namespace cms;
 using namespace std;
 using namespace FTS3_COMMON_NAMESPACE;
 using namespace FTS3_CONFIG_NAMESPACE;
 
 
-class MsgProducer :  public Runnable
+class MsgProducer
 {
 private:
     vector <std::string> credentials;
     string sql;
     string sql2;
     MonitoringDbIfce* monitoringDb;
-
-    Connection* connection;
-    Session* session;
-    Destination* destination;
-    MessageProducer* producer;
-
-    std::string brokerURI;
-
-    std::string broker;
-    std::string queueName;
-    std::string errorMessage;
-
     double active;
     double max;
     double ratio;
-
-    bool connectionIsOK;
-
 
 public:
 
     MsgProducer()
     {
-
-        activemq::library::ActiveMQCPP::initializeLibrary();
-
         this->monitoringDb = NULL;
-        this->connection = NULL;
-        this->session = NULL;
-        this->destination = NULL;
-        this->producer = NULL;
-
         this->active = 0.0;
         this->max = 0.0;
         this->ratio = 0.0;
-
-        this->connectionIsOK = false;
     }
 
     virtual ~MsgProducer()
     {
         cleanup();
-        activemq::library::ActiveMQCPP::shutdownLibrary();
     }
 
     virtual void run()
@@ -153,50 +105,6 @@ public:
                         logger::writeLog(std::string("Cannot connect to the database server: ") + exc.what());
                         exit(1);
                     }
-
-                try
-                    {
-                        this->broker = getBROKER();
-                        this->queueName = getCRON();
-                        this->brokerURI = "tcp://" + broker + "?wireFormat=stomp&timeout=5000&maxReconnectAttempts=5&startupMaxReconnectAttempts=5";
-                    }
-                catch (...)
-                    {
-                        logger::writeLog("Cannot read msg broker config file", true);
-                        exit(0);
-                    }
-
-
-                // Create a ConnectionFactory
-                std::unique_ptr<ConnectionFactory> connectionFactory(
-                    ConnectionFactory::createCMSConnectionFactory(brokerURI));
-
-                // Create a Connection
-                if (true == getUSE_BROKER_CREDENTIALS())
-                    connection = connectionFactory->createConnection(getUSERNAME(), getPASSWORD());
-                else
-                    connection = connectionFactory->createConnection();
-
-                connection->start();
-
-                session = connection->createSession(Session::AUTO_ACKNOWLEDGE);
-
-
-                // Create the destination (Topic or Queue)
-                if (getTOPIC())
-                    {
-                        destination = session->createTopic(queueName);
-                    }
-                else
-                    {
-                        destination = session->createQueue(queueName);
-                    }
-
-                // Create a MessageProducer from the Session to the Topic or Queue
-                producer = session->createProducer(destination);
-                int ttl = GetIntVal(getTTL());
-                producer->setDeliveryMode( DeliveryMode::PERSISTENT );
-                producer->setTimeToLive(ttl);
 
                 // Create a message
                 string text = "{";
@@ -278,21 +186,11 @@ public:
                 text += "]}";
                 text += 4; /*add EOT ctrl character*/
 
-
-                TextMessage* message = session->createTextMessage(text);
-                producer->send(message);
-
-                logger::writeLog("PE " + text);
-                delete message;
-            }
-        catch( const cms::CMSException& e)
-            {
-                std::string errorMessage = "Periodic msg producer cannot connect to broker " + broker + " : " + e.getMessage();
-                logger::writeLog(errorMessage, true);
+                //logger::writeLog("PE " + text);
             }
         catch (const std::exception& e)
             {
-                errorMessage = "Unrecovereable error occured: " + std::string(e.what());
+                std::string errorMessage = "Unrecovereable error occured: " + std::string(e.what());
                 logger::writeLog(errorMessage, true);
             }
         catch (...)
@@ -316,59 +214,10 @@ private:
             {
                 logger::writeLog(e.what(), true);
             }
-
-        // Destroy resources.
-        try
+       catch (...)
             {
-                if (destination != NULL) delete destination;
-            }
-        catch (CMSException& e)
-            {
-                e.printStackTrace();
-            }
-        destination = NULL;
-
-        try
-            {
-                if (producer != NULL) delete producer;
-            }
-        catch (CMSException& e)
-            {
-                e.printStackTrace();
-            }
-        producer = NULL;
-
-        // Close open resources.
-        try
-            {
-                if (session != NULL) session->close();
-                if (connection != NULL) connection->close();
-            }
-        catch (CMSException& e)
-            {
-                e.printStackTrace();
-            }
-
-        try
-            {
-                if (session != NULL) delete session;
-            }
-        catch (CMSException& e)
-            {
-                e.printStackTrace();
-            }
-        session = NULL;
-
-        try
-            {
-                if (connection != NULL) delete connection;
-            }
-        catch (CMSException& e)
-            {
-                e.printStackTrace();
-            }
-        connection = NULL;
-
+                logger::writeLog("Unknown error occured", true);
+            }	    
     }
 };
 
@@ -379,13 +228,7 @@ int main(int argc, char** argv)
         {
             FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv);
             MsgProducer producer;
-
-            // Start the producer thread.
-            Thread producerThread(&producer);
-            producerThread.start();
-
-            // Wait for the threads to complete.
-            producerThread.join();
+	    producer.run();
         }
     catch (const std::exception& e)
         {
