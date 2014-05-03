@@ -227,8 +227,8 @@ int main(int argc, char** argv)
     try
         {
             FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv);
-            MsgProducer producer;
-	    producer.run();
+            //MsgProducer producer;
+	    //producer.run();
         }
     catch (const std::exception& e)
         {
