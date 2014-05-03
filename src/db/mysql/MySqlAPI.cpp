@@ -4081,7 +4081,7 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                             *nJobs += delJobsStmt.get_affected_rows();
 
                             //commit every 10 records
-                            if(count==10)
+                            if(count==1000)
                                 {
                                     count = 0;
                                     sql.commit();
