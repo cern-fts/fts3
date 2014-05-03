@@ -753,9 +753,9 @@ int main(int argc, char **argv)
 
                 gfalt_set_create_parent_dir(params, TRUE, NULL);
 
-                //get checksum timeout from gfal2                
+                //get checksum timeout from gfal2
                 int checksumTimeout = gfal2_get_opt_integer(handle, "GRIDFTP PLUGIN", "CHECKSUM_CALC_TIMEOUT", NULL);
-		logger.INFO() << "Checksum timeout " << checksumTimeout << std::endl;		
+                logger.INFO() << "Checksum timeout " << checksumTimeout << std::endl;
                 msg_ifce::getInstance()->set_checksum_timeout(&tr_completed, checksumTimeout);
 
                 /*Checksuming*/
@@ -782,20 +782,21 @@ int main(int argc, char **argv)
                                 logger.INFO() << "Calculate checksum auto" << std::endl;
                             }
                     }
-		    
-		    
-                 //before any operation, check if the proxy is valid		 	   
-		std::string message;
-	    	bool isValid = checkValidProxy(opts.proxy, message);
-	    	if(!isValid){
-	    	        errorMessage = "INIT" + message;
+
+
+                //before any operation, check if the proxy is valid
+                std::string message;
+                bool isValid = checkValidProxy(opts.proxy, message);
+                if(!isValid)
+                    {
+                        errorMessage = "INIT" + message;
                         logger.ERROR() << errorMessage << std::endl;
                         errorScope = SOURCE;
                         reasonClass = mapErrnoToString(gfal_posix_code_error());
                         errorPhase = TRANSFER_PREPARATION;
                         retry = true;
                         goto stop;
-	   	 }		    
+                    }
 
                 /* Stat source file */
                 logger.INFO() << "SOURCE Stat the source surl start" << std::endl;
@@ -1034,12 +1035,12 @@ int main(int argc, char **argv)
                         logger.INFO() << "DESTINATION Source and destination file size matching" << std::endl;
                     }
                 else
-                    {                        
+                    {
                         errorMessage = "DESTINATION Source and destination file size mismatch ";
                         errorMessage += boost::lexical_cast<std::string>(currentTransfer.fileSize);
                         errorMessage += " <> ";
                         errorMessage += boost::lexical_cast<std::string>(dest_size);
-			logger.ERROR() << errorMessage << std::endl;
+                        logger.ERROR() << errorMessage << std::endl;
                         errorScope = DESTINATION;
                         reasonClass = mapErrnoToString(gfal_posix_code_error());
                         errorPhase = TRANSFER_FINALIZATION;

@@ -541,7 +541,7 @@ int DoServer(int argc, char** argv)
                                             proxy_file = generateProxy(dn, dlg_id);
                                             (*itUrls).proxy = proxy_file;
 
-				            std::string message;
+                                            std::string message;
                                             if(false == checkValidProxy(proxy_file, message))
                                                 {
                                                     proxy_file = get_proxy_cert(

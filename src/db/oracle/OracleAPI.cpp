@@ -573,7 +573,7 @@ void OracleAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& f
                                             filesNum /= int(hostCount);
                                             if(filesNum < 2)
                                                 filesNum = 2;
-                                        }					
+                                        }
                                 }
                         }
                     else

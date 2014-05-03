@@ -674,12 +674,12 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                         {
                                             continue;
                                         }
-                                   else
+                                    else
                                         {
                                             filesNum /= int(hostCount);
                                             if(filesNum < 2)
                                                 filesNum = 2;
-                                        }					
+                                        }
                                 }
                         }
                     else
@@ -4039,6 +4039,9 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
 
     *nJobs = 0;
     *nFiles = 0;
+    std::ostringstream jobIdStmt;
+    std::string job_id;
+    std::string stmt;
 
     try
         {
@@ -4050,17 +4053,12 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                                                      "  select  job_id from t_job where job_finished < (UTC_TIMESTAMP() - interval '7' DAY ) "
                                                  );
 
-                    std::string job_id;
-                    soci::statement delFilesStmt = (sql.prepare << "DELETE FROM t_file WHERE job_id = :job_id", soci::use(job_id));
-                    soci::statement delJobsStmt = (sql.prepare << "DELETE FROM t_job WHERE job_id = :job_id", soci::use(job_id));
-
-                    soci::statement insertJobsStmt = (sql.prepare << "INSERT INTO t_job_backup SELECT * FROM t_job WHERE job_id = :job_id", soci::use(job_id));
-                    soci::statement insertFileStmt = (sql.prepare << "INSERT INTO t_file_backup SELECT * FROM t_file WHERE job_id = :job_id", soci::use(job_id));
-
                     int count = 0;
+                    bool drain = false;
+
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                         {
-                            bool drain = getDrainInternal(sql);
+                            drain = getDrainInternal(sql);
                             if(drain)
                                 {
                                     sql.commit();
@@ -4070,25 +4068,32 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                             count++;
                             soci::row const& r = *i;
                             job_id = r.get<std::string>("job_id");
+                            jobIdStmt << "'";
+                            jobIdStmt << job_id;
+                            jobIdStmt << "',";
 
-                            insertJobsStmt.execute(true);
-                            insertFileStmt.execute(true);
-
-                            delFilesStmt.execute(true);
-                            *nFiles += delFilesStmt.get_affected_rows();
-
-                            delJobsStmt.execute(true);
-                            *nJobs += delJobsStmt.get_affected_rows();
-
-                            //commit every 10 records
-                            if(count==1000)
+                            if(count == 500)
                                 {
+                                    std::string queryStr = jobIdStmt.str();
+                                    job_id = queryStr.substr(0, queryStr.length() - 1);
+
+                                    sql.begin();
+                                    stmt = "DELETE FROM t_file WHERE job_id in (" +job_id+ ")";
+                                    sql << stmt;
+                                    stmt = "DELETE FROM t_job WHERE job_id in (" +job_id+ ")";
+                                    sql << stmt;
+
+                                    stmt = "INSERT INTO t_job_backup SELECT * FROM t_job WHERE job_id  in (" +job_id+ ")";
+                                    sql << stmt;
+                                    stmt = "INSERT INTO t_file_backup SELECT * FROM t_file WHERE  job_id  in (" +job_id+ ")";
+                                    sql << stmt;
+
                                     count = 0;
+                                    jobIdStmt.str(std::string());
+                                    jobIdStmt.clear();
                                     sql.commit();
                                 }
                         }
-                    sql.commit();
-
 
                     //delete from t_optimizer_evolution > 7 days old records
                     sql.begin();
@@ -4100,14 +4105,21 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                     sql << "delete from t_file_retry_errors where datetime < (UTC_TIMESTAMP() - interval '7' DAY )";
                     sql.commit();
                 }
+
+            jobIdStmt.str(std::string());
+            jobIdStmt.clear();
         }
     catch (std::exception& e)
         {
+            jobIdStmt.str(std::string());
+            jobIdStmt.clear();
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
+            jobIdStmt.str(std::string());
+            jobIdStmt.clear();
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
