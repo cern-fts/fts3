@@ -29,16 +29,12 @@ def activities(httpRequest):
 
 @jsonify
 def sources(httpRequest):
-    notBefore = datetime.utcnow() - timedelta(hours = 12)
-    sources = Job.objects.filter(Q(job_finished__isnull = True) | Q(job_finished__gte = notBefore))\
-                 .values('source_se').distinct()
+    sources = Job.objects.values('source_se').distinct()
     return [row['source_se'] for row in sources]
 
 @jsonify
 def destinations(httpRequest):
-    notBefore = datetime.utcnow() - timedelta(hours = 12)
-    sources = Job.objects.filter(Q(job_finished__isnull = True) | Q(job_finished__gte = notBefore))\
-                 .values('dest_se').distinct()
+    sources = Job.objects.values('dest_se').distinct()
     return [row['dest_se'] for row in sources]
 
 @jsonify
@@ -49,6 +45,6 @@ def vos(httpRequest):
 
 @jsonify
 def hostnames(httpRequest):
-    notBefore = datetime.utcnow() - timedelta(hours = 12)
+    notBefore = datetime.utcnow() - timedelta(hours = 1)
     hosts = Host.objects.values('hostname').filter(beat__gte = notBefore).distinct()
     return [h['hostname'] for h in hosts]
