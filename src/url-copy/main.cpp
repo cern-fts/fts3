@@ -526,21 +526,7 @@ int main(int argc, char **argv)
             std::cerr << opts.getErrorMessage() << std::endl;
             errorMessage = "Transfer process died with: " + opts.getErrorMessage();
             abnormalTermination("FAILED", errorMessage, "Error");
-            return 1;
-            try
-                {
-                    boost::thread bt(taskTimer, &globalTimeout);
-                }
-            catch (std::exception& e)
-                {
-                    globalErrorMessage = e.what();
-                    throw;
-                }
-            catch(...)
-                {
-                    globalErrorMessage = "INIT Failed to create boost thread, boost::thread_resource_error";
-                    throw;
-                }
+            return 1;            
         }
 
     currentTransfer.jobId = opts.jobId;
