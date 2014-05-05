@@ -232,3 +232,53 @@ def jobFiles(httpRequest, jobId):
         files = files.order_by(orderedField('end_time', orderDesc))
         
     return RetriesFetcher(files)
+
+
+@jsonify_paged
+def transferList(httpRequest):
+    filters    = setupFilters(httpRequest)
+    
+    # Force a time window
+    if not filters['time_window']:
+        filters['time_window'] = 1
+    
+    transfers = File.objects
+    if filters['state']:
+        transfers = transfers.filter(file_state__in = filters['state'])
+    else:
+        transfers = transfers.exclude(file_state = 'NOT_USED')
+    if filters['source_se']:
+        transfers = transfers.filter(source_se = filters['source_se'])
+    if filters['dest_se']:
+        transfers = transfers.filter(dest_se = filters['dest_se'])
+    if filters['source_surl']:
+        transfers = transfers.filter(source_surl = filters['source_surl'])
+    if filters['dest_surl']:
+        transfers = transfers.filter(dest_surl = filters['dest_surl'])
+    if filters['vo']:
+        transfers = transfers.filter(vo_name = filters['vo'])
+    if filters['time_window']:
+        notBefore =  datetime.datetime.utcnow() - datetime.timedelta(hours = filters['time_window'])
+        transfers = transfers.filter(Q(job_finished__isnull = True) | (Q(job_finished__gte = notBefore)))
+    if filters['activity']:
+        transfers = transfers.filter(activity = filters['activity'])
+    if filters['hostname']:
+        transfers = transfers.filter(transferHost = filters['hostname'])
+    if filters['reason']:
+        transfers = transfers.filter(reason = filters['reason'])
+   
+    transfers = transfers.values('file_id', 'file_state', 'job_id',
+                                 'source_se', 'dest_se', 'start_time', 'finish_time')
+
+    # Ordering
+    (orderBy, orderDesc) = getOrderBy(httpRequest)
+    if orderBy == 'id':
+        transfers = transfers.order_by(orderedField('file_id', orderDesc))
+    elif orderBy == 'start_time':
+        transfers = transfers.order_by(orderedField('start_time', orderDesc))
+    elif orderBy == 'finish_time':
+        transfers = transfers.order_by(orderedField('finish_time', orderDesc))
+    else:
+        transfers = transfers.order_by('-file_id')
+
+    return transfers

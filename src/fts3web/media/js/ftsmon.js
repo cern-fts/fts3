@@ -10,6 +10,10 @@ config(function($routeProvider) {
         when('/job/:jobId',           {templateUrl: STATIC_ROOT + 'html/jobs/view.html',
                                        controller:  JobViewCtrl,
                                        resolve:     JobViewCtrl.resolve}).
+
+        when('/transfers',            {templateUrl: STATIC_ROOT + 'html/transfers.html',
+                                       controller:  TransfersCtrl,
+                                       resolve:     TransfersCtrl.resolve}).
                            
         when('/optimizer/',           {templateUrl: STATIC_ROOT + 'html/optimizer/optimizer.html',
                                        controller:  OptimizerCtrl,
