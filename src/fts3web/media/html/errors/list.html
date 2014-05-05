@@ -3,7 +3,11 @@
     <button class="btn btn-mini btn-info" type="button" ng-click="showFilterDialog()">Filter</button>
 </h2>
 
-<pagination rotate="false" num-pages="errors.pageCount" current-page="errors.page"
+<div style="text-align: center">
+    <plot-pie title="Error phase" list="errors.classification" legend-count="legend-count"></plot-pie>
+</div>
+
+<pagination rotate="false" num-pages="errors.errors.pageCount" current-page="errors.errors.page"
     max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>
     
@@ -16,7 +20,7 @@
         </tr>
     </thead>
     <tbody>
-        <tr ng-repeat="e in errors.items" ng-class-odd="'odd'">
+        <tr ng-repeat="e in errors.errors.items" ng-class-odd="'odd'">
             <td>{{e.vo_name}}</td>
             <td>{{e.count}}</td>
             <td>
@@ -28,7 +32,7 @@
     </tbody>
 </table>
 
-<pagination rotate="false" num-pages="errors.pageCount" current-page="errors.page"
+<pagination rotate="false" num-pages="errors.errors.pageCount" current-page="errors.errors.page"
     max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>
 
