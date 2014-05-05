@@ -78,6 +78,10 @@ td.status {
 	vertical-align: middle;
 }
 
+.inconsistency.odd {
+    background: #f2dede;
+}
+
 .ACTIVE {
     background: #006dcc;
 }

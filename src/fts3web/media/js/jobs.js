@@ -40,7 +40,8 @@ function JobListCtrl($location, $scope, jobs, Job)
         source_se:   validString($location.search().source_se),
         dest_se:     validString($location.search().dest_se),
         time_window: withDefault($location.search().time_window, 1),
-        state:       statesFromString($location.search().state)
+        state:       statesFromString($location.search().state),
+        diagnosis:   withDefault($location.search().diagnosis, 0),
     }
     
     $scope.showFilterDialog = function() {
@@ -56,12 +57,16 @@ function JobListCtrl($location, $scope, jobs, Job)
         $location.search({
             page:        1,
             time_window: $scope.filter.time_window,
-            state:       joinStates($scope.filter.state)
+            state:       joinStates($scope.filter.state),
+            diagnosis:   $scope.filter.diagnosis
         });
     }
     
     // Method to set class depending on the metadata value
     $scope.classFromMetadata = function(job) {
+        if (job.diagnosis) {
+            return 'inconsistency';
+        }
         var metadata = job.job_metadata;
         if (metadata) {
             metadata = eval('(' + metadata + ')');

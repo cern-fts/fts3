@@ -21,14 +21,10 @@ from django.db.models import Q, Count, Avg
 from django.db.utils import DatabaseError
 from ftsweb.models import Job, File, Host
 from ftsweb.models import ProfilingSnapshot, ProfilingInfo
+from ftsweb.models import ACTIVE_STATES, FILE_TERMINAL_STATES, STATES
 from jsonify import jsonify, jsonify_paged
 from util import getOrderBy, orderedField
 import settings
-
-
-STATES               = ['SUBMITTED', 'READY', 'ACTIVE', 'FAILED', 'FINISHED', 'CANCELED', 'STAGING', 'NOT_USED']
-ACTIVE_STATES        = ['SUBMITTED', 'READY', 'ACTIVE', 'STAGING']
-FILE_TERMINAL_STATES = ['FINISHED', 'FAILED', 'CANCELED']
 
 
 def _getCountPerState(age, hostname):

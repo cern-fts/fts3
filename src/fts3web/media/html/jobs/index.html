@@ -24,6 +24,7 @@
     <tbody ng-repeat="job in jobs.items" ng-class-odd="'odd'" ng-class="classFromMetadata(job)">
         <tr>
             <td>
+                <i class="icon-warning-sign" ng-show="job.diagnosis" tooltip="{{job.diagnosis}}"></i>
                 <a href=#/job/{{job.job_id}}>{{job.job_id}}</a></td>
             <td>{{job.submit_time}}</td>
             <td class="status {{job.job_state}}">
@@ -77,6 +78,9 @@
 			
 			<label for="timewindow">Time window:</label>
 			<input type="number" placeholder="time window in hours" id="timewindow" ng-model="filter.time_window"/>
+			
+			<label for="diagnosis">Enable diagnosis mode</label>
+			<input type="checkbox" id="diagnosis" ng-model="filter.diagnosis"/>
 	    </div>
 	    <div class="modal-footer">
 	        <button class="btn btn-success" ng-click="applyFilters()">Apply</button>
