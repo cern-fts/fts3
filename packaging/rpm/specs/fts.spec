@@ -152,6 +152,7 @@ administering purposes.
 %package server-selinux
 Summary:    SELinux support for fts-server
 Group:      Applications/Internet
+Requires: fts-server%{?_isa} = %{version}-%{release}
 %if "%{_selinux_policy_version}" != ""
 Requires:   selinux-policy >= %{_selinux_policy_version}
 %else
