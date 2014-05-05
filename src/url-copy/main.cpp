@@ -146,6 +146,13 @@ std::string getDefaultErrorPhase()
     return errorPhase.length() == 0 ? GENERAL_FAILURE : errorPhase;
 }
 
+
+void taskTimerCanceler()
+{
+    boost::this_thread::sleep(boost::posix_time::seconds(600));
+    exit(1);
+}
+
 void abnormalTermination(const std::string& classification, const std::string&, const std::string& finalState)
 {
     terminalState = true;
@@ -192,6 +199,19 @@ void abnormalTermination(const std::string& classification, const std::string&, 
         }
     if (UrlCopyOpts::getInstance().areTransfersOnFile() && readFile.length() > 0)
         unlink(readFile.c_str());
+
+    try
+        {
+            boost::thread bt(taskTimerCanceler);
+        }
+    catch (std::exception& e)
+        {
+            globalErrorMessage = e.what();
+        }
+    catch(...)
+        {
+            globalErrorMessage = "INIT Failed to create boost thread, boost::thread_resource_error";
+        }
 
     cancelTransfer();
     sleep(1);
@@ -507,6 +527,20 @@ int main(int argc, char **argv)
             errorMessage = "Transfer process died with: " + opts.getErrorMessage();
             abnormalTermination("FAILED", errorMessage, "Error");
             return 1;
+            try
+                {
+                    boost::thread bt(taskTimer, &globalTimeout);
+                }
+            catch (std::exception& e)
+                {
+                    globalErrorMessage = e.what();
+                    throw;
+                }
+            catch(...)
+                {
+                    globalErrorMessage = "INIT Failed to create boost thread, boost::thread_resource_error";
+                    throw;
+                }
         }
 
     currentTransfer.jobId = opts.jobId;
