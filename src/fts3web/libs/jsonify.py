@@ -35,7 +35,7 @@ class ClassEncoder(json.JSONEncoder):
                     values[k] = self.default(v)
             return values
         else:
-            return obj
+            raise TypeError("Can not serialize object %s of type %s" % (repr(obj), type(obj)))
 
 
 @decorator
