@@ -75,7 +75,7 @@ class OptimizerAppendLimits(object):
     
     def _getSourceLimit(self):
         cursor = connection.cursor()
-        cursor.execute("SELECT throughput FROM t_optimize WHERE source_se = %s", [self.source_se])
+        cursor.execute("SELECT throughput FROM t_optimize WHERE source_se = %s AND throughput IS NOT NULL", [self.source_se])
         result = cursor.fetchall()
         if len(result) < 1:
             return None
@@ -84,7 +84,7 @@ class OptimizerAppendLimits(object):
         
     def _getDestinationLimit(self):
         cursor = connection.cursor()
-        cursor.execute("SELECT throughput FROM t_optimize WHERE dest_se = %s", [self.dest_se])
+        cursor.execute("SELECT throughput FROM t_optimize WHERE dest_se = %s AND throughput IS NOT NULL", [self.dest_se])
         result = cursor.fetchall()
         if len(result) < 1:
             return None
