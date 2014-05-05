@@ -157,11 +157,20 @@ INSTALLED_APPS = (
 # Do not use a DB
 SESSION_ENGINE='django.contrib.sessions.backends.cache'
 
-# A sample logging configuration. The only tangible logging
-# performed by this configuration is to send an email to
-# the site admins on every HTTP 500 error.
-# See http://docs.djangoproject.com/en/dev/topics/logging for
-# more details on how to customize your logging configuration.
+# A sample logging configuration
 LOGGING = {
-    'version': 1
+    'version': 1,
+# Uncomment this to get log the queries
+#    'handlers': {
+#        'console': {
+#            'class': 'logging.StreamHandler',
+#            'level': 'DEBUG'
+#        }
+#    },
+#   'loggers': {
+#        'django.db': {
+#            'handlers': ['console'],
+#            'level': 'DEBUG'
+#        }
+#   }
 }

@@ -47,8 +47,8 @@ def showErrors(httpRequest):
     errors = errors.values('source_se', 'dest_se')\
                          .annotate(count = Count('file_state'))\
                          .order_by('-count')
-
-    return errors
+    # Fetch all first to avoid 'count' query
+    return list(errors.all())
 
 
 @jsonify_paged

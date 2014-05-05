@@ -82,6 +82,10 @@ angular.module('ftsmon.global_filter', [])
             mergeFilters(search, $rootScope.globalFilter);
         return wrapped(search, paramValue);
     }
+
+    $rootScope.clearGlobalFilters = function() {
+        $rootScope.globalFilter = {};
+    }
 });
 
 

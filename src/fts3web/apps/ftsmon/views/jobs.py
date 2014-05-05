@@ -30,18 +30,17 @@ import time
 def setupFilters(httpRequest):
     # Default values
     filters = {'state': None,
-               'time_window': None,
+               'time_window': 1,
                'vo': None,
                'source_se': None,
                'dest_se': None,
                'source_surl': None,
                'dest_surl': None,
                'metadata': None,
-               'startdate': None,
-               'enddate': None,
                'activity': None,
                'hostname': None,
-               'reason': None
+               'reason': None,
+               'with_file': None
               }
     
     for key in filters.keys():
@@ -50,16 +49,12 @@ def setupFilters(httpRequest):
             if value:
                 if key == 'time_window':
                     filters[key] = int(httpRequest.GET[key])
-                elif key == 'state':
+                elif key == 'state' or key == 'with_file':
                     filters[key] = httpRequest.GET[key].split(',')
                 else:
                     filters[key] = httpRequest.GET[key]
         except:
             pass
-                
-    # If enddate < startdate, swap
-    if filters['startdate'] and filters['enddate'] and filters['startdate'] > filters['enddate']:
-        filters['startdate'], filters['enddate'] = filters['enddate'], filters['startdate']
     
     return filters
 
@@ -70,16 +65,28 @@ class JobListDecorator(object):
     file count per state
     This way we only do it for the number that is being actually sent
     """
-    def __init__(self, jobs):
-        self.jobs = jobs
+    def __init__(self, job_ids):
+        self.job_ids = job_ids
     
     def __len__(self):
-        return len(self.jobs)
+        return len(self.job_ids)
     
     def _decorated(self, index):
         cursor = connection.cursor()
-        for job in self.jobs[index]:
-            cursor.execute("SELECT file_state, COUNT(file_state) FROM t_file WHERE job_id = %s GROUP BY file_state ORDER BY NULL", [job['job_id']])
+        for job_id in self.job_ids[index]:
+            job = {'job_id': job_id}
+
+            cursor.execute("SELECT submit_time, job_state, vo_name, source_se, dest_se, priority, space_token FROM t_job WHERE job_id = %s", [job_id])
+            job_desc = cursor.fetchall()[0]
+            job['submit_time'] = job_desc[0]
+            job['job_state'] = job_desc[1]
+            job['vo_name'] = job_desc[2]
+            job['source_se'] = job_desc[3]
+            job['dest_se'] = job_desc[4]
+            job['priority'] = job_desc[5]
+            job['space_token'] = job_desc[6]
+
+            cursor.execute("SELECT file_state, COUNT(file_state) FROM t_file WHERE job_id = %s GROUP BY file_state ORDER BY NULL", [job_id])
             result = cursor.fetchall()
             count = dict()
             for r in result:
@@ -94,62 +101,40 @@ class JobListDecorator(object):
         step = index.step if index.step else 1
         nelems = (index.stop - index.start) / step
         if nelems > 100:
-            return self.jobs[index]
+            return self.job_ids[index]
         else:
             return self._decorated(index)
 
 @jsonify_paged
 def jobIndex(httpRequest):
+    """
+    This view is a little bit trickier than the others.
+    We get the list of job ids from t_job or t_file depending if
+    filtering by state of with_file is used.
+    Luckily, the rest of fields are available in both tables
+    """
     filters = setupFilters(httpRequest)
-    # Initial query
-    jobs = Job.objects
-    
-    # Convert startdate and enddate to datetime
-    startdate = enddate = None
-    if filters['startdate']:
-        startdate = datetime.datetime.combine(filters['startdate'], datetime.time(0, 0, 0))
-    if filters['enddate']:
-        enddate = datetime.datetime.combine(filters['enddate'], datetime.time(23, 59, 59))
-    
-    # Time filter
+
+    if filters['with_file']:
+        job_ids = File.objects.values('job_id').distinct().filter(file_state__in = filters['with_file'])
+    elif filters['state']:
+        job_ids = Job.objects.values('job_id').filter(job_state__in = filters['state']).order_by('-submit_time')
+    else:
+        job_ids = Job.objects.values('job_id').order_by('-submit_time')
+        
     if filters['time_window']:
         notBefore = datetime.datetime.utcnow() -  datetime.timedelta(hours = filters['time_window'])
-        jobs = jobs.filter(Q(job_finished__gte = notBefore) | Q(job_finished = None))
-    elif startdate and enddate:
-        jobs = jobs.filter(job_finished__gte = startdate, job_finished__lte = enddate)
-    elif startdate:
-        jobs = jobs.filter(job_finished__gte = startdate)
-    elif enddate:
-        jobs = jobs.filter(job_finished__lte = enddate)
-    
-    # Filters
+        job_ids = job_ids.filter(Q(job_finished__gte = notBefore) | Q(job_finished = None))
+
     if filters['vo']:
-        jobs = jobs.filter(vo_name = filters['vo'])
-        
+        job_ids = job_ids.filter(vo_name = filters['vo'])
     if filters['source_se']:
-        jobs = jobs.filter(source_se = filters['source_se'])
-
+        job_ids = job_ids.filter(source_se = filters['source_se'])
     if filters['dest_se']:
-        jobs = jobs.filter(dest_se = filters['dest_se'])
+        job_ids = job_ids.filter(dest_se = filters['dest_se'])
 
-    if filters['state']:
-        jobs = jobs.filter(job_state__in = filters['state'])
-    
-    # Push needed fields
-    jobs = jobs.values('job_id', 'submit_host', 'submit_time', 'job_state', 'job_finished',
-                       'vo_name', 'source_space_token', 'space_token',
-                       'priority', 'user_dn', 'reason',
-                       'job_metadata', 'source_se', 'dest_se')
-    
-    # Ordering
-    (orderBy, orderDesc) = getOrderBy(httpRequest)
-
-    if orderBy == 'submit_time' and not orderDesc:
-        jobs = jobs.order_by('submit_time')
-    else:    
-        jobs = jobs.order_by('-submit_time')
-
-    return JobListDecorator(jobs)
+    # Prefetch to avoid count(*) query
+    return JobListDecorator(map(lambda j: j['job_id'], job_ids))
 
 
 @jsonify
@@ -232,3 +217,49 @@ def jobFiles(httpRequest, jobId):
         files = files.order_by(orderedField('end_time', orderDesc))
         
     return RetriesFetcher(files)
+
+
+@jsonify_paged
+def transferList(httpRequest):
+    filters    = setupFilters(httpRequest)
+    
+    transfers = File.objects
+    if filters['state']:
+        transfers = transfers.filter(file_state__in = filters['state'])
+    else:
+        transfers = transfers.exclude(file_state = 'NOT_USED')
+    if filters['source_se']:
+        transfers = transfers.filter(source_se = filters['source_se'])
+    if filters['dest_se']:
+        transfers = transfers.filter(dest_se = filters['dest_se'])
+    if filters['source_surl']:
+        transfers = transfers.filter(source_surl = filters['source_surl'])
+    if filters['dest_surl']:
+        transfers = transfers.filter(dest_surl = filters['dest_surl'])
+    if filters['vo']:
+        transfers = transfers.filter(vo_name = filters['vo'])
+    if filters['time_window']:
+        notBefore =  datetime.datetime.utcnow() - datetime.timedelta(hours = filters['time_window'])
+        transfers = transfers.filter(Q(job_finished__isnull = True) | (Q(job_finished__gte = notBefore)))
+    if filters['activity']:
+        transfers = transfers.filter(activity = filters['activity'])
+    if filters['hostname']:
+        transfers = transfers.filter(transferHost = filters['hostname'])
+    if filters['reason']:
+        transfers = transfers.filter(reason = filters['reason'])
+   
+    transfers = transfers.values('file_id', 'file_state', 'job_id',
+                                 'source_se', 'dest_se', 'start_time', 'finish_time')
+
+    # Ordering
+    (orderBy, orderDesc) = getOrderBy(httpRequest)
+    if orderBy == 'id':
+        transfers = transfers.order_by(orderedField('file_id', orderDesc))
+    elif orderBy == 'start_time':
+        transfers = transfers.order_by(orderedField('start_time', orderDesc))
+    elif orderBy == 'finish_time':
+        transfers = transfers.order_by(orderedField('finish_time', orderDesc))
+    else:
+        transfers = transfers.order_by('-file_id')
+
+    return transfers

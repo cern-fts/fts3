@@ -123,53 +123,54 @@ def overview(httpRequest):
         notBefore  = datetime.utcnow() - timedelta(hours = 1)
     throughputWindow = datetime.utcnow() - timedelta(seconds = 5)
 
-    query = """
-    SELECT source_se, dest_se, vo_name, file_state, count(file_id),
-           SUM(CASE WHEN job_finished >= %s OR job_finished IS NULL THEN throughput ELSE 0 END)
-    FROM t_file
-    WHERE (job_finished IS NULL OR job_finished >= %s)
-        AND file_state IN ('SUBMITTED', 'ACTIVE','FINISHED','FAILED','CANCELED')
-    """ % (_db_to_date(), _db_to_date())
-    
-    params = [throughputWindow.strftime('%Y-%m-%d %H:%M:%S'),
-              notBefore.strftime('%Y-%m-%d %H:%M:%S')]
-    
-    # Filtering
-    if filters['vo']:
-        query += ' AND vo_name = %s '
-        params.append(filters['vo'])
-    if filters['source_se']:
-        query += ' AND source_se = %s '
-        params.append(filters['source_se'])
-    if filters['dest_se']:
-        query += ' AND dest_se = %s '
-        params.append(filters['dest_se'])
-    
-    query += ' GROUP BY source_se, dest_se, vo_name, file_state '
-    query += ' ORDER BY NULL'
-
     cursor = connection.cursor()
-    cursor.execute(query, params)
+
+    # Get all pairs first
+    pairs_query = "SELECT DISTINCT source_se, dest_se FROM t_file WHERE 1=1"
+    pairs_params = []
+    if filters['source_se']:
+        pairs_query += " AND source_se = %s"
+        pairs_params.append(filters['source_se'])
+    if filters['dest_se']:
+        pairs_query += " AND dest_se = %s"
+        pairs_params.append(filters['dest_se']) 
     
+    triplets = {}
+    
+    cursor.execute(pairs_query, pairs_params)
+    for (source, dest) in cursor.fetchall():
+        query = """
+        SELECT file_state, vo_name, count(file_id),
+               SUM(CASE WHEN job_finished >= %s OR job_finished IS NULL THEN throughput ELSE 0 END)
+        FROM t_file
+        WHERE (job_finished IS NULL OR job_finished >= %s)
+              AND source_se = %%s AND dest_se = %%s
+        """ % (_db_to_date(), _db_to_date())
+        params = [throughputWindow.strftime('%Y-%m-%d %H:%M:%S'),
+                  notBefore.strftime('%Y-%m-%d %H:%M:%S'),
+                  source, dest]
+        if filters['vo']:
+            query += " AND vo_name = %s"
+            params.append(filters['vo'])
+        query += " GROUP BY file_state, vo_name ORDER BY NULL"
+
+        cursor.execute(query, params)
+        for row in cursor.fetchall():
+            triplet_key = (source, dest, row[1])
+            triplet = triplets.get(triplet_key, dict())
+            triplet[row[0].lower()] = row[2]
+            if row[3]:
+                triplet['current'] = triplet.get('current', 0) + row[3]
+            triplets[triplet_key] = triplet
+
     # Limitations
     limit_query = "SELECT source_se, dest_se, throughput FROM t_optimize WHERE throughput IS NOT NULL"
-    limit_cursor = connection.cursor()
-    limit_cursor.execute(limit_query)
-    limits = limit_cursor.fetchall()
-    
-    # Need to group by pairs :(
-    grouped = {}
-    for p in cursor.fetchall():
-        triplet = p[0:3]
-        if triplet not in grouped:
-            grouped[triplet] = {}
-        grouped[triplet][p[3].lower()] = p[4]
-        if p[5]:
-            grouped[triplet]['current'] = grouped[triplet].get('current', 0) + p[5]
+    cursor.execute(limit_query)
+    limits = cursor.fetchall()
             
-    # And transform into a list
+    # Transform into a list
     objs = []
-    for (triplet, obj) in grouped.iteritems():
+    for (triplet, obj) in triplets.iteritems():
         obj['source_se'] = triplet[0]
         obj['dest_se']   = triplet[1]
         obj['vo_name']   = triplet[2]
@@ -183,7 +184,7 @@ def overview(httpRequest):
         # Append limit, if any
         obj['bandwidth_limit'] = _get_bandwidth_limit(limits, triplet[0], triplet[1])
         objs.append(obj)
-    
+
     # Ordering
     (orderBy, orderDesc) = getOrderBy(httpRequest)
 
