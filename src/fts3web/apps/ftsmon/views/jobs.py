@@ -30,15 +30,13 @@ import time
 def setupFilters(httpRequest):
     # Default values
     filters = {'state': None,
-               'time_window': None,
+               'time_window': 1,
                'vo': None,
                'source_se': None,
                'dest_se': None,
                'source_surl': None,
                'dest_surl': None,
                'metadata': None,
-               'startdate': None,
-               'enddate': None,
                'activity': None,
                'hostname': None,
                'reason': None
@@ -56,10 +54,6 @@ def setupFilters(httpRequest):
                     filters[key] = httpRequest.GET[key]
         except:
             pass
-                
-    # If enddate < startdate, swap
-    if filters['startdate'] and filters['enddate'] and filters['startdate'] > filters['enddate']:
-        filters['startdate'], filters['enddate'] = filters['enddate'], filters['startdate']
     
     return filters
 
@@ -104,23 +98,10 @@ def jobIndex(httpRequest):
     # Initial query
     jobs = Job.objects
     
-    # Convert startdate and enddate to datetime
-    startdate = enddate = None
-    if filters['startdate']:
-        startdate = datetime.datetime.combine(filters['startdate'], datetime.time(0, 0, 0))
-    if filters['enddate']:
-        enddate = datetime.datetime.combine(filters['enddate'], datetime.time(23, 59, 59))
-    
     # Time filter
     if filters['time_window']:
         notBefore = datetime.datetime.utcnow() -  datetime.timedelta(hours = filters['time_window'])
         jobs = jobs.filter(Q(job_finished__gte = notBefore) | Q(job_finished = None))
-    elif startdate and enddate:
-        jobs = jobs.filter(job_finished__gte = startdate, job_finished__lte = enddate)
-    elif startdate:
-        jobs = jobs.filter(job_finished__gte = startdate)
-    elif enddate:
-        jobs = jobs.filter(job_finished__lte = enddate)
     
     # Filters
     if filters['vo']:
@@ -237,10 +218,6 @@ def jobFiles(httpRequest, jobId):
 @jsonify_paged
 def transferList(httpRequest):
     filters    = setupFilters(httpRequest)
-    
-    # Force a time window
-    if not filters['time_window']:
-        filters['time_window'] = 1
     
     transfers = File.objects
     if filters['state']:
