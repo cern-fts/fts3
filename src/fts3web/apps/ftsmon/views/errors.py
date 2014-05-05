@@ -21,7 +21,9 @@ from django.db.models import Q, Count, Avg
 from django.http import Http404
 from django.shortcuts import render, redirect
 from ftsweb.models import File
-from jsonify import jsonify_paged
+from jsonify import jsonify, jsonify_paged
+from util import paged
+
 
 @jsonify_paged
 def showErrors(httpRequest):
@@ -51,7 +53,7 @@ def showErrors(httpRequest):
     return list(errors.all())
 
 
-@jsonify_paged
+@jsonify
 def errorsForPair(httpRequest):
     source_se = httpRequest.GET.get('source_se', None)
     dest_se   = httpRequest.GET.get('dest_se', None)
@@ -75,7 +77,19 @@ def errorsForPair(httpRequest):
         transfers = transfers.filter(reason__icontains = reason)
     
     transfers = transfers.values('vo_name', 'reason')
-    
     transfers = transfers.annotate(count = Count('reason'))
+    transfers = transfers.order_by('-count')
+    # Trigger query to fetch all
+    transfers = list(transfers)
+    
+    # Count by error type
+    classification = dict()
+    for t in transfers:
+        type = t['reason'].split()[0]
+        if type.isupper():
+            classification[type] = classification.get(type, 0) + t['count']
                             
-    return transfers.order_by('-count')
+    return {
+        'errors': paged(transfers, httpRequest),
+        'classification': classification
+    }

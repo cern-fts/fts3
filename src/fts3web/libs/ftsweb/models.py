@@ -19,6 +19,11 @@ from django.db import models
 from settings.database import DATABASES
 
 
+STATES               = ['SUBMITTED', 'READY', 'ACTIVE', 'FAILED', 'FINISHED', 'CANCELED', 'STAGING', 'NOT_USED']
+ACTIVE_STATES        = ['SUBMITTED', 'READY', 'ACTIVE', 'STAGING']
+FILE_TERMINAL_STATES = ['FINISHED', 'FAILED', 'CANCELED']
+
+
 class JobBase(models.Model):
     job_id          = models.CharField(max_length = 36, primary_key = True)
     job_state       = models.CharField(max_length = 32)

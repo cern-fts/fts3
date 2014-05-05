@@ -3,7 +3,7 @@ angular.module('ftsmon.plots', [])
     return {
         restrict: 'E',
         scope: 'isolate',
-        template: '<img ng-src="plot/pie?t={{title}}&l={{labels}}&v={{values}}&c={{colors}}"></img>',
+        template: '<img ng-src="plot/pie?t={{title}}&l={{labels}}&v={{values}}&c={{colors}}&lc={{legend_count}}"></img>',
         link: function(scope, iterStartElement, attr) {
             var list = scope.$eval(attr.list);
             // If label and value are specified, list is an array of
@@ -18,10 +18,14 @@ angular.module('ftsmon.plots', [])
             // value specify the field to plot for each entry
             else if (attr.value)
                 plotPieDictionary(scope, list, attr.value);
-            // Otherwise, we don't know!
+            // Otherwise, assume a dictionary of key=value
             else
-                throw new Error('Invalid usage of plot!');
+                plotPieKeyValue(scope, list);
 
+            // Show the numbers in the legend?
+            if (attr.legendCount)
+                scope.legend_count = 1;
+            
             // Set title and colors
             scope.title  = attr.title;
             if (attr.colors)
@@ -82,9 +86,9 @@ function plotPieObject(scope, obj, labelsAttr)
 }
 
 function plotPieDictionary(scope, list, value)
-{
+{    
     var labelStr = '', valueStr = '';
-    for (var i  in list) {
+    for (var i in list) {
         if (i[0] != '$') {
             labelStr += i + ',';
             valueStr += undefinedAsZero(list[i][value]) + ',';
@@ -93,4 +97,18 @@ function plotPieDictionary(scope, list, value)
     
     scope.labels = labelStr;
     scope.values = valueStr;    
+}
+
+function plotPieKeyValue(scope, list)
+{
+    var labelStr = '', valueStr = '';
+    for (var key in list) {
+        if (key[0] != '$') {
+            labelStr += key + ',';
+            valueStr += undefinedAsZero(list[key]) + ',';
+        }
+    }
+    
+    scope.labels = labelStr;
+    scope.values = valueStr; 
 }

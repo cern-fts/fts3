@@ -112,6 +112,11 @@ def pie(httpRequest):
 
         n_items = len(labels)
         _adjust(values, n_items)
+        
+        # If lc is specified, put the values into the legend
+        if httpRequest.GET.get('lc', False):
+            for li in range(n_items):
+                labels[li] = "%s (%s)" % (labels[li], values[li])
                 
         # Generate color list if not specified
         if not colors:

@@ -21,6 +21,7 @@ from django.shortcuts import render, redirect
 from jsonify import jsonify, jsonify_paged
 from ftsweb.models import Job, File, RetryError
 from util import getOrderBy, orderedField
+from diagnosis import JobDiagnosis
 import datetime
 import json
 import time
@@ -40,17 +41,20 @@ def setupFilters(httpRequest):
                'activity': None,
                'hostname': None,
                'reason': None,
-               'with_file': None
+               'with_file': None,
+               'diagnosis': False
               }
     
     for key in filters.keys():
         try:
-            value = httpRequest.GET.get(key, None)
-            if value:
+            if key in httpRequest.GET:
                 if key == 'time_window':
                     filters[key] = int(httpRequest.GET[key])
                 elif key == 'state' or key == 'with_file':
-                    filters[key] = httpRequest.GET[key].split(',')
+                    if httpRequest.GET[key]:
+                        filters[key] = httpRequest.GET[key].split(',')
+                elif key == 'diagnosis':
+                    filters[key] = True
                 else:
                     filters[key] = httpRequest.GET[key]
         except:
@@ -67,32 +71,34 @@ class JobListDecorator(object):
     """
     def __init__(self, job_ids):
         self.job_ids = job_ids
+        self.cursor = connection.cursor()
     
     def __len__(self):
         return len(self.job_ids)
     
+    def _get_job(self, job_id):
+        job = {'job_id': job_id}
+        self.cursor.execute("SELECT submit_time, job_state, vo_name, source_se, dest_se, priority, space_token, job_finished FROM t_job WHERE job_id = %s", [job_id])
+        job_desc = self.cursor.fetchall()[0]
+        job['submit_time'] = job_desc[0]
+        job['job_state'] = job_desc[1]
+        job['vo_name'] = job_desc[2]
+        job['source_se'] = job_desc[3]
+        job['dest_se'] = job_desc[4]
+        job['priority'] = job_desc[5]
+        job['space_token'] = job_desc[6]
+        job['job_finished'] = job_desc[7]
+        self.cursor.execute("SELECT file_state, COUNT(file_state) FROM t_file WHERE job_id = %s GROUP BY file_state ORDER BY NULL", [job_id])
+        result = self.cursor.fetchall()
+        count = dict()
+        for r in result:
+            count[r[0]] = r[1]
+        job['files'] = count
+        return job
+    
     def _decorated(self, index):
-        cursor = connection.cursor()
         for job_id in self.job_ids[index]:
-            job = {'job_id': job_id}
-
-            cursor.execute("SELECT submit_time, job_state, vo_name, source_se, dest_se, priority, space_token FROM t_job WHERE job_id = %s", [job_id])
-            job_desc = cursor.fetchall()[0]
-            job['submit_time'] = job_desc[0]
-            job['job_state'] = job_desc[1]
-            job['vo_name'] = job_desc[2]
-            job['source_se'] = job_desc[3]
-            job['dest_se'] = job_desc[4]
-            job['priority'] = job_desc[5]
-            job['space_token'] = job_desc[6]
-
-            cursor.execute("SELECT file_state, COUNT(file_state) FROM t_file WHERE job_id = %s GROUP BY file_state ORDER BY NULL", [job_id])
-            result = cursor.fetchall()
-            count = dict()
-            for r in result:
-                count[r[0]] = r[1]
-            job['files'] = count
-            yield job
+            yield self._get_job(job_id)
     
     def __getitem__(self, index):
         if not isinstance(index, slice):
@@ -104,6 +110,19 @@ class JobListDecorator(object):
             return self.job_ids[index]
         else:
             return self._decorated(index)
+        
+    def __iter__(self):
+        class _Iter(object):
+            def __init__(self, container):
+                self.container = container
+                self.job_id_iter = iter(container.job_ids)
+                
+            def next(self):
+                job_id = self.job_id_iter.next()
+                return self.container._get_job(job_id)
+            
+        return _Iter(self)
+
 
 @jsonify_paged
 def jobIndex(httpRequest):
@@ -133,8 +152,11 @@ def jobIndex(httpRequest):
     if filters['dest_se']:
         job_ids = job_ids.filter(dest_se = filters['dest_se'])
 
-    # Prefetch to avoid count(*) query
-    return JobListDecorator(map(lambda j: j['job_id'], job_ids))
+
+    job_list = JobListDecorator(map(lambda j: j['job_id'], job_ids))
+    if filters['diagnosis']:
+        job_list = JobDiagnosis(job_list)
+    return job_list
 
 
 @jsonify
