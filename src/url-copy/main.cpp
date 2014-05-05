@@ -298,7 +298,7 @@ void signalHandler(int signum)
             if (propagated == false)
                 {
                     propagated = true;
-                    logger.ERROR() << "Transfer process died: " << currentTransfer.jobId << std::endl;
+                    logger.ERROR() << "TRANSFER process died: " << currentTransfer.jobId << std::endl;
                     logger.ERROR() << "Received signal: " << signum << std::endl;
                     logger.ERROR() << "Stacktrace: " << stackTrace << std::endl;
 
@@ -311,7 +311,7 @@ void signalHandler(int signum)
             if (propagated == false)
                 {
                     propagated = true;
-                    errorMessage = "Transfer " + currentTransfer.jobId + " canceled by the user";
+                    errorMessage = "TRANSFER " + currentTransfer.jobId + " canceled by the user";
                     logger.WARNING() << errorMessage << std::endl;
                     abnormalTermination("CANCELED", errorMessage, "Abort");
                 }
@@ -321,7 +321,7 @@ void signalHandler(int signum)
             if (propagated == false)
                 {
                     propagated = true;
-                    errorMessage = "Transfer " + currentTransfer.jobId + " has been forced-canceled because it was stalled";
+                    errorMessage = "TRANSFER " + currentTransfer.jobId + " has been forced-canceled because it was stalled";
                     logger.WARNING() << errorMessage << std::endl;
                     abnormalTermination("FAILED", errorMessage, "Abort");
                 }
@@ -331,7 +331,7 @@ void signalHandler(int signum)
             if (propagated == false)
                 {
                     propagated = true;
-                    errorMessage = "Transfer " + currentTransfer.jobId + " aborted, check log file for details, received signum " + boost::lexical_cast<std::string>(signum);
+                    errorMessage = "TRANSFER " + currentTransfer.jobId + " aborted, check log file for details, received signum " + boost::lexical_cast<std::string>(signum);
                     logger.WARNING() << errorMessage << std::endl;
                     abnormalTermination("FAILED", errorMessage, "Abort");
                 }
@@ -524,7 +524,7 @@ int main(int argc, char **argv)
     if (opts.parse(argc, argv) < 0)
         {
             std::cerr << opts.getErrorMessage() << std::endl;
-            errorMessage = "Transfer process died with: " + opts.getErrorMessage();
+            errorMessage = "TRANSFER process died with: " + opts.getErrorMessage();
             abnormalTermination("FAILED", errorMessage, "Error");
             return 1;            
         }
@@ -956,6 +956,7 @@ int main(int argc, char **argv)
                         errorScope = TRANSFER;
                         reasonClass = GENERAL_FAILURE;
                         errorPhase = TRANSFER;
+			retry = false;			
                         goto stop;
                     }
 
