@@ -15,6 +15,14 @@ fts-transfer-status is a tool for checking transfer-job status. The has to provi
   -V [ --version ]      Print the version number and exit.
   -j [ --json ]         The output should be printed in JSON format
 
+  --rest                Use the RESTful interface.
+  --capath arg          Path to the GRID security certificates (e.g. 
+                        /etc/grid-security/certificates).
+  --proxy arg           Path to the proxy certificate (e.g. /tmp/x509up_u500).
   -l [ --list ]         List status for all files.
+  -a [ --archive ]      Query the archive.
+  -d [ --detailed ]     Retrieve details (i.e. transfer retries)
+  -F [ --dump-failed ]  Dump failed transfers into a file that can be used as 
+                        input for submission
 .SH SEE ALSO
 https://svnweb.cern.ch/trac/fts3/wiki/UserGuide

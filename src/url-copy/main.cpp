@@ -956,7 +956,7 @@ int main(int argc, char **argv)
                         errorScope = TRANSFER;
                         reasonClass = GENERAL_FAILURE;
                         errorPhase = TRANSFER;
-			retry = false;			
+			retry = false;
                         goto stop;
                     }
 

@@ -13,5 +13,18 @@ fts-set-blacklist is a tool for blacklisting SEs and DNs. Accepted values for TY
   -v [ --verbose ]      Be more verbose.
   -s [ --service ] arg  Use the transfer service at the specified URL.
   -V [ --version ]      Print the version number and exit.
+.SH EXAMPLE
+  - To blacklist a SE:
+    fts-set-blacklist -s $FTSENDPOINT se $SE on
+  - To blacklist a SE for given VO:
+    fts-set-blacklist -s $FTSENDPOINT se $SE on --vo $VO
+  - To blacklist a SE but still accept transfer-jobs:
+    fts-set-blacklist -s $FTSENDPOINT se $SE on --allow-submit
+  - To remove a SE from blacklist:
+    fts-set-blacklist -s $FTSENDPOINT se $SE off
+  - To blacklist a DN:
+    fts-set-blacklist -s $FTSENDPOINT dn $DN on
+  - To remove a DN from blacklist:
+    fts-set-blacklist -s $FTSENDPOINT dn $DN off
 .SH SEE ALSO
 https://svnweb.cern.ch/trac/fts3/wiki/UserGuide

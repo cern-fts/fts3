@@ -214,10 +214,10 @@ private:
             {
                 logger::writeLog(e.what(), true);
             }
-       catch (...)
+        catch (...)
             {
                 logger::writeLog("Unknown error occured", true);
-            }	    
+            }
     }
 };
 
@@ -228,7 +228,7 @@ int main(int argc, char** argv)
         {
             FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv);
             //MsgProducer producer;
-	    //producer.run();
+            //producer.run();
         }
     catch (const std::exception& e)
         {

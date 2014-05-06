@@ -171,7 +171,7 @@ int FileTransferExecutor::execute()
 
                     //get the proxy
                     std::string proxy_file = generateProxy(tf->DN, tf->CRED_ID);
-		    std::string message;
+                    std::string message;
                     if(false == checkValidProxy(proxy_file, message))
                         {
                             proxy_file = get_proxy_cert(

@@ -13,5 +13,45 @@ fts-config-set is a tool for configuring SEs (storage elements) and SE groups. E
   -v [ --verbose ]      Be more verbose.
   -s [ --service ] arg  Use the transfer service at the specified URL.
   -V [ --version ]      Print the version number and exit.
+
+  --bring-online             If this switch is used the user should provide 
+                             SE_NAME VALUE pairs in order to set the maximum 
+                             number of files that are staged concurrently for a
+                             given SE.
+                             (Example: --bring-online $SE_NAME $VALUE ...)
+  --drain arg                If set to 'on' drains the given endpoint.
+                             (Example: --drain on|off)
+  --retry arg                Sets the number of retries of each individual file
+                             transfer (the value should be greater or equal to 
+                             -1).
+                             (Example: --retry $NB_RETRY)
+  --optimizer-mode arg       Sets the optimizer mode (allowed values: 1, 2 or 
+                             3)
+                             (Example: --optimizer-mode 1|2|3)
+  --queue-timeout arg        Sets the maximum time (in hours) transfer job is 
+                             allowed to be in the queue (the value should be 
+                             greater or equal to 0).
+                             (Example: --queue-timeout $TIMEOUT)
+  --source arg               The source SE
+                             (Example: --source $SE_NAME)
+  --destination arg          The destination SE
+                             (Example: --destination $SE_NAME)
+  --max-bandwidth arg        The maximum bandwidth that can be used (in MB/s) 
+                             for the given source or destination (see --source 
+                             & --destination)
+                             (Example: --max-bandwidth $LIMIT)
+  --protocol arg             Set protocol (UDT) for given SE
+                             (Example: --protocol udt $SE_NAME on|off)
+  --max-se-source-active arg Maximum number of active transfers for given 
+                             source SE (-1 means no limit)
+                             (Example: --max-se-source-active $NB_ACT $SE_NAME)
+  --max-se-dest-active arg   Maximum number of active transfers for given 
+                             destination SE (-1 means no limit)
+                             (Example: --max-se-dest-active $NB_ACT $SE_NAME)
+  --global-timeout arg       Global transfer timeout
+                             (Example: --global-timeout $TIMEOUT)
+  --sec-per-mb arg           number of seconds per MB
+                             (Example: --sec-per-mb $SEC_PER_MB)
+
 .SH SEE ALSO
 https://svnweb.cern.ch/trac/fts3/wiki/UserGuide

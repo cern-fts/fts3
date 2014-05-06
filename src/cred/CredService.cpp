@@ -94,7 +94,7 @@ void CredService::get(
                 }
 
             // Check if the Proxy Certificate is already there and it's valid
-	    std::string message;
+            std::string message;
             if(true == isValidProxy(fname, message))
                 {
                     filename = fname;
@@ -181,21 +181,21 @@ bool CredService::isValidProxy(const std::string& filename, std::string& message
 
     // Check if it's valid
     time_t lifetime = get_proxy_lifetime(filename);
-    
+
     std::string time1 = boost::lexical_cast<std::string>(lifetime);
-    std::string time2 = boost::lexical_cast<std::string>(this->minValidityTime());    
-    
+    std::string time2 = boost::lexical_cast<std::string>(this->minValidityTime());
+
     if(lifetime < 0)
         {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Proxy Certificate expired" << commit;	    
-	    message = " Proxy Certificate ";
-	    message += filename;
-	    message += " expired, lifetime is ";
-	    message += time1;
-	    message +=  " secs, while min validity time is ";
-	    message += time2;
-	    message += " secs";	    
-	    
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Proxy Certificate expired" << commit;
+            message = " Proxy Certificate ";
+            message += filename;
+            message += " expired, lifetime is ";
+            message += time1;
+            message +=  " secs, while min validity time is ";
+            message += time2;
+            message += " secs";
+
             return false;
         }
 
@@ -207,13 +207,13 @@ bool CredService::isValidProxy(const std::string& filename, std::string& message
     if(this->minValidityTime() >= (unsigned long)lifetime)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Proxy Certificate should be renewed" << commit;
-	    message = " Proxy Certificate ";
-	    message += filename;
-	    message += " should be renewed, lifetime is ";
-	    message += time1;
-	    message +=  " secs, while min validity time is ";
-	    message += time2;
-	    message += " secs";		    
+            message = " Proxy Certificate ";
+            message += filename;
+            message += " should be renewed, lifetime is ";
+            message += time1;
+            message +=  " secs, while min validity time is ";
+            message += time2;
+            message += " secs";
             return false;
         }
 

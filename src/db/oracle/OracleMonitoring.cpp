@@ -23,7 +23,7 @@
 #include "OracleMonitoring.h"
 #include "sociMonitoringConversions.h"
 
-OracleMonitoring::OracleMonitoring(): poolSize(2), connectionPool(poolSize)
+OracleMonitoring::OracleMonitoring(): poolSize(2)
 {
     memset(&notBefore, 0, sizeof(notBefore));
 }
@@ -43,8 +43,13 @@ void OracleMonitoring::init(const std::string& username, const std::string& pass
 
     try
         {
+            connectionPool = new soci::connection_pool(pooledConn);
+
             // Build connection string
-            connParams << "oracle://" << username << "/" << password << "@" << connectString;
+            connParams << "user=" << username << " "
+                       << "password=" << password << " "
+                       << "service=\"" << connectString << '"';
+
             std::string connStr = connParams.str();
 
             // Connect
@@ -52,13 +57,27 @@ void OracleMonitoring::init(const std::string& username, const std::string& pass
 
             for (size_t i = 0; i < poolSize; ++i)
                 {
-                    soci::session& sql = connectionPool.at(i);
+                    soci::session& sql = (*connectionPool).at(i);
                     sql.open(soci::oracle, connStr);
                 }
         }
     catch (std::exception& e)
         {
+            if(connectionPool)
+                {
+                    delete connectionPool;
+                    connectionPool = NULL;
+                }
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            if(connectionPool)
+                {
+                    delete connectionPool;
+                    connectionPool = NULL;
+                }
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }
 
@@ -73,7 +92,7 @@ void OracleMonitoring::setNotBefore(time_t nb)
 
 void OracleMonitoring::getVONames(std::vector<std::string>& vos)
 {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try
         {
@@ -102,7 +121,7 @@ void OracleMonitoring::getVONames(std::vector<std::string>& vos)
 void OracleMonitoring::getSourceAndDestSEForVO(const std::string& vo,
         std::vector<SourceAndDestSE>& pairs)
 {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try
         {
@@ -127,7 +146,7 @@ void OracleMonitoring::getSourceAndDestSEForVO(const std::string& vo,
 unsigned OracleMonitoring::numberOfJobsInState(const SourceAndDestSE& pair,
         const std::string& state)
 {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try
         {
@@ -153,7 +172,7 @@ unsigned OracleMonitoring::numberOfJobsInState(const SourceAndDestSE& pair,
 void OracleMonitoring::getConfigAudit(const std::string& actionLike,
                                       std::vector<ConfigAudit>& audit)
 {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try
         {
@@ -177,7 +196,7 @@ void OracleMonitoring::getConfigAudit(const std::string& actionLike,
 void OracleMonitoring::getTransferFiles(const std::string& jobId,
                                         std::vector<TransferFiles>& files)
 {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try
         {
@@ -203,7 +222,7 @@ void OracleMonitoring::getTransferFiles(const std::string& jobId,
 
 void OracleMonitoring::getJob(const std::string& jobId, TransferJobs& job)
 {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try
         {
@@ -222,7 +241,7 @@ void OracleMonitoring::filterJobs(const std::vector<std::string>& inVos,
                                   const std::vector<std::string>& inStates,
                                   std::vector<TransferJobs>& jobs)
 {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try
         {
@@ -285,7 +304,7 @@ void OracleMonitoring::filterJobs(const std::vector<std::string>& inVos,
 unsigned OracleMonitoring::numberOfTransfersInState(const std::string& vo,
         const std::vector<std::string>& state)
 {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try
         {
@@ -338,7 +357,7 @@ unsigned  OracleMonitoring::numberOfTransfersInState(const std::string& vo,
         const SourceAndDestSE& pair,
         const std::vector<std::string>& state)
 {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try
         {
@@ -388,7 +407,7 @@ unsigned  OracleMonitoring::numberOfTransfersInState(const std::string& vo,
 
 void OracleMonitoring::getUniqueReasons(std::vector<ReasonOccurrences>& reasons)
 {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try
         {
@@ -414,7 +433,7 @@ void OracleMonitoring::getUniqueReasons(std::vector<ReasonOccurrences>& reasons)
 
 unsigned OracleMonitoring::averageDurationPerSePair(const SourceAndDestSE& pair)
 {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try
         {
@@ -439,7 +458,7 @@ unsigned OracleMonitoring::averageDurationPerSePair(const SourceAndDestSE& pair)
 
 void OracleMonitoring::averageThroughputPerSePair(std::vector<SePairThroughput>& avgThroughput)
 {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try
         {
@@ -467,7 +486,7 @@ void OracleMonitoring::averageThroughputPerSePair(std::vector<SePairThroughput>&
 
 void OracleMonitoring::getJobVOAndSites(const std::string& jobId, JobVOAndSites& voAndSites)
 {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try
         {
