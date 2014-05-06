@@ -50,7 +50,7 @@ class Cli:
         cmdArray = ['fts-transfer-submit',
                     '-s', config.Fts3Endpoint,
                     '--job-metadata', label, 
-                    '--new-bulk-format', '-f', submission.name] + extraArgs
+                    '--json-submission', '-f', submission.name] + extraArgs
         jobId = self._spawn(cmdArray)
         os.unlink(submission.name)
         return jobId
