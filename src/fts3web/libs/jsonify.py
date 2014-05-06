@@ -1,6 +1,7 @@
 import json
 import sys
 from datetime import datetime, time
+from decimal import Decimal
 from decorator import decorator
 from django.db.models import Model
 from django.db.models.query import ValuesQuerySet
@@ -33,6 +34,8 @@ class ClassEncoder(json.JSONEncoder):
                 if not k.startswith('_'):
                     values[k] = v
             return values
+        elif isinstance(obj, Decimal):
+            return float(obj)
         else:
             return json.JSONEncoder.default(self, obj)
 
