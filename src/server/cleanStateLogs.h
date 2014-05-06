@@ -58,21 +58,7 @@ private:
             {
                 try
                     {
-                        waitTime += 1;
-
-                        if(stopThreads)
-                            {
-                                for ( boost::filesystem::recursive_directory_iterator end, dir("/var/lib/fts3/stalled/");
-                                        dir != end; ++dir )
-                                    {
-                                        if(!boost::filesystem::is_directory(*dir))
-                                            {
-                                                FTS3_COMMON_LOGGER_NEWLOG(INFO) << " Deleting file " << *dir << " because is no longer needed for checking if stall " <<  commit;
-                                                boost::filesystem::remove(*dir);
-                                            }
-                                    }
-                                break;
-                            }
+                        waitTime += 1;                       
 
                         if(waitTime == 86400)
                             {

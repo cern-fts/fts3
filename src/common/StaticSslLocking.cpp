@@ -98,7 +98,7 @@ void CRYPTO_thread_cleanup()
 
 
 // deal with static variables
-MUTEX_TYPE * StaticSslLocking::poMutexes;
+MUTEX_TYPE * StaticSslLocking::poMutexes = NULL;
 
 
 void StaticSslLocking::SslStaticLockCallback(int inMode, int inMutex, const char * ipsFile, int inLine)
