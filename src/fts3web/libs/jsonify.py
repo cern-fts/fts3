@@ -15,7 +15,6 @@ class ClassEncoder(json.JSONEncoder):
         json.JSONEncoder.__init__(self, *args, **kwargs)
         self.visited = []
 
-
     def default(self, obj):
         if obj in self.visited:
             return
@@ -26,16 +25,16 @@ class ClassEncoder(json.JSONEncoder):
             return obj.strftime('%H:%M:%S')
         elif not isinstance(obj, dict) and hasattr(obj, '__iter__'):
             self.visited.append(obj)
-            return [self.default(o) for o in obj]
+            return list(obj)
         elif isinstance(obj, Model):
             self.visited.append(obj)
             values = {}
             for k, v in obj.__dict__.iteritems():
                 if not k.startswith('_'):
-                    values[k] = self.default(v)
+                    values[k] = v
             return values
         else:
-            raise TypeError("Can not serialize object %s of type %s" % (repr(obj), type(obj)))
+            return json.JSONEncoder.default(self, obj)
 
 
 @decorator
