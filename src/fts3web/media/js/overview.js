@@ -5,16 +5,16 @@ function pairState(pair)
 
 	// No active with submitted is bad, and so it is
 	// less than three active and more than three submitted
-	if ((!pair.active && pair.submitted) || (pair.active < 3 && pair.submitted >= 3))
+	if ((!pair.active && pair.submitted) || (pair.active < 2 && pair.submitted >= 2))
 		klasses = 'bad-state';
 	// Very high rate of failures, that's pretty bad
 	else if ((!pair.finished && pair.failed) || (pair.finished / pair.failed <= 0.8))
 		klasses = 'bad-state';
 	// Less than three actives is so-so
-	else if (pair.active < 3)
+	else if (pair.active < 2)
 		klasses = 'underused';
 	// More than three active, that's good enough
-	else if (pair.active >= 3)
+	else if (pair.active >= 2)
 		klasses = 'good-state';
 	// High rate of success, that's good
 	else if ((pair.finished && !pair.failed) || (pair.finished / pair.failed >= 0.9))
