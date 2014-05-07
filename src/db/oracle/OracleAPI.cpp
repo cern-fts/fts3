@@ -1825,6 +1825,12 @@ bool OracleAPI::updateFileTransferStatusInternal(soci::session& sql, double thro
                     query << ", START_TIME = :time1";
                     stmt.exchange(soci::use(tTime, "time1"));
                 }
+		
+	   if (transfer_status == "ACTIVE" || transfer_status == "READY") 
+	        { 
+	            query << ", transferHost = :hostname"; 
+	            stmt.exchange(soci::use(hostname, "hostname")); 
+	        } 		
 
             if (transfer_status == "STAGING")
                 {
@@ -6969,6 +6975,51 @@ void OracleAPI::checkSanityState()
                         }
 
                     sql.commit();
+		    
+                   //now check if a host has been offline for more than 30 min and set its transfers to failed
+                    soci::rowset<std::string> rsCheckHosts = (
+                                sql.prepare <<
+                                " SELECT hostname "
+                                " FROM t_hosts "
+                                " WHERE beat < (sys_extract_utc(systimestamp) - interval '59' minute) and service_name = 'fts_server' "
+                            );
+
+                    std::vector<struct message_state> files;
+
+                    for (soci::rowset<std::string>::const_iterator irsCheckHosts = rsCheckHosts.begin(); irsCheckHosts != rsCheckHosts.end(); ++irsCheckHosts)
+                        {
+                            std::string deadHost = (*irsCheckHosts);			    
+
+                            //now check and collect if there are any active/ready in these hosts
+                            soci::rowset<soci::row> rsCheckHostsActive = (
+                                        sql.prepare <<
+                                        " SELECT file_id, job_id from t_file where file_state in ('READY','ACTIVE') and transferHost = :transferHost ", soci::use(deadHost)
+                                    );
+                            for (soci::rowset<soci::row>::const_iterator iCheckHostsActive = rsCheckHostsActive.begin(); iCheckHostsActive != rsCheckHostsActive.end(); ++iCheckHostsActive)
+                                {
+                                    int file_id = iCheckHostsActive->get<int>("file_id");
+                                    std::string job_id = iCheckHostsActive->get<std::string>("job_id");
+                                    std::string errorMessage = "Transfer has been forced-canceled because host " + deadHost + " is offline and transfers still assigned to it";
+
+                                    updateFileTransferStatusInternal(sql, 0.0, job_id, file_id, "CANCELED", errorMessage, 0, 0, 0, false);
+                                    updateJobTransferStatusInternal(sql, job_id, "CANCELED",0);
+
+                                    //send state monitoring message for the state transition
+                                    files = getStateOfTransferInternal(sql, job_id, file_id);
+                                    if(!files.empty())
+                                        {
+                                            std::vector<struct message_state>::iterator it;
+                                            for (it = files.begin(); it != files.end(); ++it)
+                                                {
+                                                    struct message_state tmp = (*it);
+                                                    constructJSONMsg(&tmp);
+                                                }
+                                            files.clear();
+                                        }
+                                }
+                        }				    
+		    
+		    
                 }
         }
     catch (std::exception& e)
