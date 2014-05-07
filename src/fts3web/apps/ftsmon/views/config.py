@@ -14,9 +14,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from django.db import connection
 from django.db.models import Q
 from ftsweb.models import ConfigAudit
-from ftsweb.models import ProfilingSnapshot, ServerConfig
+from ftsweb.models import ProfilingSnapshot
 from ftsweb.models import LinkConfig, ShareConfig
 from ftsweb.models import DebugConfig, Optimize
 from jsonify import jsonify, jsonify_paged
@@ -37,11 +38,22 @@ def audit(httpRequest):
 
 @jsonify
 def server(httpRequest):
-    server_config = ServerConfig.objects.all()
+    config = dict()
+    
+    cursor = connection.cursor()
+    cursor.execute("SELECT retry, max_time_queue, global_timeout, sec_per_mb FROM t_server_config")
+    server_config = cursor.fetchall()
     if len(server_config) > 0:
-        return server_config[0]
-    else:
-        return {}
+        config['retry'] = server_config[0][0]
+        config['max_time_queue'] = server_config[0][1]
+        config['global_timeout'] = server_config[0][2]
+        config['sec_per_mb'] = server_config[0][3]
+
+    cursor.execute("SELECT mode_opt FROM t_optimize_mode")
+    modes = cursor.fetchall()
+    if len(modes) > 0:
+        config['optimizer_mode'] = modes[0][0]
+    return config
 
 
 # Wrap a list of link config, and push the
