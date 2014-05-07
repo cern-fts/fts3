@@ -30,6 +30,7 @@
 #include <openssl/pem.h>
 #include <openssl/x509.h>
 
+#include <boost/algorithm/string.hpp>
 #include <boost/regex.hpp>
 
 #include "common/error.h"
@@ -48,20 +49,55 @@ using namespace boost;
 
 const string CGsiAdapter::hostDn = CGsiAdapter::initHostDn();
 
+// Build a 'virtual vo' from the user DN, as follows:
+// Last CN without spaces @ concatenations of DC with dots
+// i.e.
+// Input: /DC=ch/DC=cern/OU=Organic Units/.../CN=jdoe/CN=1234/CN=Jon Doe
+// Output: JonDoe@cern.ch
+static std::string vo_from_user_dn(const std::string& dn)
+{
+    std::string user, domain;
+
+    std::vector<std::string> components;
+    boost::split(components, dn, boost::is_any_of("/"));
+    for (std::vector<std::string>::const_iterator c = components.begin(); c != components.end(); ++c) {
+        if (!c->empty()) {
+            std::vector<std::string> pair;
+            boost::split(pair, *c, boost::is_any_of("="));
+            if (pair.size() == 2) {
+                if (pair[0] == "CN") {
+                    user = pair[1];
+                }
+                else if (pair[0] == "DC") {
+                    if (domain.empty())
+                        domain = pair[1];
+                    else
+                        domain = pair[1] + '.' + domain;
+                }
+            }
+        }
+    }
+
+    boost::erase_all(user, " ");
+    if (user.empty() || domain.empty())
+        return "nil";
+    else
+        return user + '@' + domain;
+}
+
 
 CGsiAdapter::CGsiAdapter(soap* ctx) : ctx(ctx)
 {
-
-    // get client VO
-    char* tmp = get_client_voname(ctx);
-    if(tmp) vo = tmp;
-    else vo = "nil";
-
     // get client DN
     const int len = 200;
     char buff[len] = {0};
     if (get_client_dn(ctx, buff, len)) throw Err_Custom("'get_client_dn' failed!");
     dn = buff;
+
+    // get client VO
+    char* tmp = get_client_voname(ctx);
+    if(tmp) vo = tmp;
+    else vo = vo_from_user_dn(dn);
 
     // retrieve VOMS attributes (fqnas)
     int nbfqans = 0;
