@@ -58,7 +58,7 @@ private:
             {
                 try
                     {
-                        waitTime += 1;                       
+                        waitTime += 1;
 
                         if(waitTime == 86400)
                             {

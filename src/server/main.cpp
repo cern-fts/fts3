@@ -435,9 +435,9 @@ int DoServer(int argc, char** argv)
                 }
 
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Starting server..." << commit;
-	    //setup openssl locks
-            StaticSslLocking::init_locks();	    
-	    //init openssl
+            //setup openssl locks
+            StaticSslLocking::init_locks();
+            //init openssl
             fts3::ws::GSoapDelegationHandler::init();
             fts3_initialize_db_backend(false);
             struct sigaction action;

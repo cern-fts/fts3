@@ -526,7 +526,7 @@ int main(int argc, char **argv)
             std::cerr << opts.getErrorMessage() << std::endl;
             errorMessage = "TRANSFER process died with: " + opts.getErrorMessage();
             abnormalTermination("FAILED", errorMessage, "Error");
-            return 1;            
+            return 1;
         }
 
     currentTransfer.jobId = opts.jobId;
@@ -956,7 +956,7 @@ int main(int argc, char **argv)
                         errorScope = TRANSFER;
                         reasonClass = GENERAL_FAILURE;
                         errorPhase = TRANSFER;
-			retry = false;
+                        retry = false;
                         goto stop;
                     }
 

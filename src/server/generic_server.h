@@ -56,9 +56,6 @@ public:
         typename TRAITS::ProcessUpdaterDBServiceType processUpdaterDBHandler;
         processUpdaterDBHandler.executeTransfer_p();
 
-        //typename TRAITS::ProcessUpdaterServiceType processUpdaterHandler;
-        //processUpdaterHandler.executeTransfer_p();
-
         /*wait for status updates to be processed and then start sanity threads*/
         sleep(12);
 
