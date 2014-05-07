@@ -60,23 +60,28 @@ static std::string vo_from_user_dn(const std::string& dn)
 
     std::vector<std::string> components;
     boost::split(components, dn, boost::is_any_of("/"));
-    for (std::vector<std::string>::const_iterator c = components.begin(); c != components.end(); ++c) {
-        if (!c->empty()) {
-            std::vector<std::string> pair;
-            boost::split(pair, *c, boost::is_any_of("="));
-            if (pair.size() == 2) {
-                if (pair[0] == "CN") {
-                    user = pair[1];
+    for (std::vector<std::string>::const_iterator c = components.begin(); c != components.end(); ++c)
+        {
+            if (!c->empty())
+                {
+                    std::vector<std::string> pair;
+                    boost::split(pair, *c, boost::is_any_of("="));
+                    if (pair.size() == 2)
+                        {
+                            if (pair[0] == "CN")
+                                {
+                                    user = pair[1];
+                                }
+                            else if (pair[0] == "DC")
+                                {
+                                    if (domain.empty())
+                                        domain = pair[1];
+                                    else
+                                        domain = pair[1] + '.' + domain;
+                                }
+                        }
                 }
-                else if (pair[0] == "DC") {
-                    if (domain.empty())
-                        domain = pair[1];
-                    else
-                        domain = pair[1] + '.' + domain;
-                }
-            }
         }
-    }
 
     boost::erase_all(user, " ");
     if (user.empty() || domain.empty())
