@@ -36,6 +36,8 @@ limitations under the License. */
 #include "UserProxyEnv.h"
 #include "DelegCred.h"
 #include "CredService.h"
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/lexical_cast.hpp>
 
 
 using namespace std;
@@ -94,6 +96,24 @@ static std::string srmVersion(const std::string & url)
 
     return std::string("");
 }
+
+
+static bool bothGsiftp(const std::string & source, const std::string & dest)
+{
+
+   if( boost::starts_with(source, "gsiftp://") && boost::starts_with(dest, "gsiftp://"))
+   	return true;
+	
+   return false;	
+
+/*    if (source.compare(0, 9, "gsiftp://") == 0  && dest.compare(0, 9, "gsiftp://") == 0)
+        return true;
+
+    return false;
+*/    
+}
+
+
 
 static void call_perf(gfalt_transfer_status_t h, const char*, const char*, gpointer)
 {
@@ -619,7 +639,7 @@ int main(int argc, char **argv)
         {
             gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "SESSION_REUSE", TRUE, NULL);
         }
-
+	
     // Enable UDT
     if (opts.enable_udt)
         {
@@ -680,7 +700,7 @@ int main(int argc, char **argv)
             msg_ifce::getInstance()->set_srm_space_token_dest(&tr_completed, opts.destTokenDescription);
             msg_ifce::getInstance()->set_srm_space_token_source(&tr_completed, opts.sourceTokenDescription);
             msg_ifce::getInstance()->set_user_dn(&tr_completed, replace_dn(opts.user_dn));
-
+	    
             if(opts.monitoringMessages)
                 msg_ifce::getInstance()->SendTransferStartMessage(&tr_completed);
 
@@ -695,6 +715,13 @@ int main(int argc, char **argv)
                         }
                 }
 
+           //also reuse session when both url's are gsiftp	
+           if(true == bothGsiftp(currentTransfer.sourceUrl, currentTransfer.destUrl))
+            {
+	    	gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "SESSION_REUSE", TRUE, NULL);
+	    	logger.INFO() << "GridFTP session reuse enabled since both uri's are gsiftp" << std::endl;	
+	    }	
+	    
             // Scope
             {
                 gfalt_set_user_data(params, NULL, NULL);
