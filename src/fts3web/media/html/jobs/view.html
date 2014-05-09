@@ -40,7 +40,6 @@
             <th title="Sum of the transferred bytes of all files">Done</th>
             <th title="Counts queue time">Since submission</th>
             <th title="Counts only 'active' time">Since first start</th>
-            <th title="Average throughput for the whole job">Overall throughput</th>
             <th>Average throughput</th>
             <th>Current throughtput</th>
         </tr>
@@ -51,7 +50,6 @@
             <td>{{files.stats.total_done|filesize}}</td>
             <td><span optional-number="job.job.duration" decimals="0" suffix="s"></span></td>
             <td><span optional-number="files.stats.time_transfering" decimals="0" suffix="s"></span></td>
-            <td><span optional-number="files.stats.job_throughput" decimals="2" suffix="MB/s"></span></td>
             <td><span optional-number="files.stats.avg_throughput" decimals="2" suffix="MB/s"></span></td>
             <td><span optional-number="files.stats.current_throughput" decimals="2" suffix="MB/s"></span></td>
         </tr>
