@@ -8398,7 +8398,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                                 ));
 
             soci::statement st6((sql.prepare << " select avg(tx_duration) from t_file where file_state='FINISHED'  "
-                                 " AND source_se=:source_se and dest_se=:dest_se and vo_name =:vo_name_local ",
+                                 " AND source_se=:source_se and dest_se=:dest_se and vo_name =:vo_name_local AND (job_finished > (UTC_TIMESTAMP() - interval '60' minute)) ",
                                  soci::use(source_se),
                                  soci::use(dest_se),
                                  soci::use(vo_name_local),
@@ -8409,7 +8409,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
             soci::statement st7((sql.prepare << "  select avg(TIMESTAMPDIFF(SECOND, t_job.submit_time, t_file.start_time))  from t_file, t_job "
                                  "  where t_job.job_id=t_file.job_id  "
                                  " AND t_file.source_se=:source_se and t_file.dest_se=:dest_se and t_job.vo_name =:vo_name_local "
-                                 " AND t_job.job_finished is NULL and t_file.job_finished is NULL and start_time is not NULL order by start_time DESC LIMIT 5 ",
+                                 " AND t_job.job_finished is NULL and t_file.job_finished is NULL and start_time is not NULL order by start_time DESC ",
                                  soci::use(source_se),
                                  soci::use(dest_se),
                                  soci::use(vo_name_local),
@@ -8479,15 +8479,15 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
 
                             //weighted-average throughput last sample
                             st4.execute(true);
-                            result <<   "Avg throughout: ";
+                            result <<   "Throughout: ";
                             result <<  std::setprecision(2) << throughput;
                             result <<   " MB/s\n";
 
-                            //success rate the last 15 min
+                            //success rate the last 1h
                             soci::rowset<soci::row> rs = (sql.prepare << "SELECT file_state FROM t_file "
                                                           "WHERE "
                                                           "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                                                          "      (t_file.job_finished > (UTC_TIMESTAMP() - interval '15' minute)) AND "
+                                                          "      (t_file.job_finished > (UTC_TIMESTAMP() - interval '60' minute)) AND "
                                                           "      file_state IN ('FAILED','FINISHED') and vo_name = :vo_name_local ",
                                                           soci::use(source_se), soci::use(dest_se),soci::use(vo_name_local));
 
@@ -8516,14 +8516,14 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                                     ratioSuccessFailure = ceil(nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0));
                                 }
 
-                            result <<   "Link efficiency: ";
+                            result <<   "Link efficiency (last hour): ";
                             result <<   long(ratioSuccessFailure);
                             result <<   "%\n";
 
                             //average transfer duration the last 30min
                             tx_duration = 0.0;
                             st6.execute(true);
-                            result <<   "Avg transfer duration: ";
+                            result <<   "Avg transfer duration (last hour): ";
                             result <<   long(tx_duration);
                             result <<   " secs\n";
 
@@ -8539,7 +8539,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                             countReason = 0;
                             st5.execute(true);
 
-                            result <<   "Most frequent error: ";
+                            result <<   "Most frequent error (last hour): ";
                             result <<   countReason;
                             result <<   " times: ";
                             result <<   reason;
