@@ -55,6 +55,11 @@
             <td><span optional-number="files.stats.avg_throughput" decimals="2" suffix="MB/s"></span></td>
             <td><span optional-number="files.stats.current_throughput" decimals="2" suffix="MB/s"></span></td>
         </tr>
+        <tr>
+            <td colspan="7" class="progress">
+                <progressbar max="files.stats.total_size" value="files.stats.total_done"></progressbar>
+            </td>
+        </tr>
     </tbody>
 </table>
 
