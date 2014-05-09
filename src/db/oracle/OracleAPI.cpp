@@ -8080,7 +8080,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                                  soci::into(submitted)
                                 ));
 
-            soci::statement st4((sql.prepare << "select sum(throughput) from t_file where  "
+            soci::statement st4((sql.prepare << "select avg(throughput) from t_file where  "
                                  " source_se=:source_se and dest_se=:dest_se and file_state='ACTIVE' ",
                                  soci::use(source_se),
                                  soci::use(dest_se),
@@ -8183,7 +8183,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
 
                             //weighted-average throughput last sample
                             st4.execute(true);
-                            result <<   "Throughout: ";
+                            result <<   "Avg throughout: ";
                             result <<  std::setprecision(2) << throughput * active;
                             result <<   " MB/s\n";
 
