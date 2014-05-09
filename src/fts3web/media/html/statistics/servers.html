@@ -18,7 +18,7 @@
                 <a href="#/statistics/overview?hostname={{k}}">{{k}}</a>
             </td>
             <td>
-                <span ng-repeat="(service, segment) in s.services" title="[{{segment.start}}, {{segment.end}}]">
+                <span ng-repeat="(service, segment) in s.services" title="[{{segment.start}}, {{segment.end}}]" ng-class="'status-'+segment.status">
                     {{service}}
                     
                     <i class="icon-ok-sign" title="Running ({{segment.beat}})" ng-show="segment.status == 'running'"></i>
