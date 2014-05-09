@@ -36,10 +36,11 @@
 <table class="table">
     <thead>
         <tr>
-            <th title="Sum of the size of all files">Total size</th>
-            <th title="Sum of the transferred bytes of all files">Done</th>
-            <th title="Counts queue time">Since submission</th>
-            <th title="Counts only 'active' time">Since first start</th>
+            <th>Total size</th>
+            <th>Done</th>
+            <th>Submission time</th>
+            <th>Start time</th>
+            <th title="Since start time">Duration</th>
             <th>Average throughput</th>
             <th>Current throughtput</th>
         </tr>
@@ -48,7 +49,8 @@
         <tr>
             <td>{{files.stats.total_size|filesize}}</td>
             <td>{{files.stats.total_done|filesize}}</td>
-            <td><span optional-number="job.job.duration" decimals="0" suffix="s"></span></td>
+            <td>{{job.job.submit_time}}</td>
+            <td>{{files.stats.first_start}} (<span style="color:red">+{{files.stats.queued_first}}s</span>)
             <td><span optional-number="files.stats.time_transfering" decimals="0" suffix="s"></span></td>
             <td><span optional-number="files.stats.avg_throughput" decimals="2" suffix="MB/s"></span></td>
             <td><span optional-number="files.stats.current_throughput" decimals="2" suffix="MB/s"></span></td>

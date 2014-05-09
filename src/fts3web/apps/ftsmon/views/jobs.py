@@ -139,7 +139,7 @@ def jobIndex(httpRequest):
     if filters['with_file']:
         job_ids = File.objects.values('job_id').distinct().filter(file_state__in = filters['with_file'])
     elif filters['state']:
-        job_ids = Job.objects.values('job_id').filter(job_state__in = filters['state'])#.order_by('-submit_time')
+        job_ids = Job.objects.values('job_id').filter(job_state__in = filters['state']).order_by('-submit_time')
     else:
         job_ids = Job.objects.values('job_id').order_by('-submit_time')
         
@@ -249,6 +249,9 @@ def jobFiles(httpRequest, jobId):
     # Pre-fetch
     files = list(files)
     
+    # Job submission time
+    submission_time = Job.objects.get(job_id = jobId).submit_time
+    
     # Build up stats
     now = datetime.datetime.utcnow()
     first_start_time = min(map(lambda f: f.start_time if f.start_time else now, files))
@@ -266,11 +269,16 @@ def jobFiles(httpRequest, jobId):
     stats = {
         'total_size': total_size,
         'total_done': transferred,
+        'first_start': first_start_time
     }
+    
+    if first_start_time:
+        stats['queued_first'] = first_start_time - submission_time
+    else:
+        stats['queued_first'] = now - submission_time
                              
     if running_time:
         stats['time_transfering'] = running_time
-        stats['job_throughput'] = (transferred / running_time) / 1024**2
     if len(actives_throughput):
         stats['current_throughput'] = sum(map(lambda f: f.throughput, actives_throughput)) / len(actives_throughput)
     if len(with_throughputs):
