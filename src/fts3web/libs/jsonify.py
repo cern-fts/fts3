@@ -1,6 +1,6 @@
 import json
 import sys
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 from decimal import Decimal
 from decorator import decorator
 from django.db.models import Model
@@ -36,6 +36,8 @@ class ClassEncoder(json.JSONEncoder):
             return values
         elif isinstance(obj, Decimal):
             return float(obj)
+        elif isinstance(obj, timedelta):
+            return (obj.seconds + obj.days * 24 * 3600)
         else:
             return json.JSONEncoder.default(self, obj)
 
