@@ -2107,7 +2107,7 @@ void OracleAPI::updateFileTransferProgressVector(std::vector<struct message_upda
             double throughput = 0.0;
             double transferred = 0.0;
             int file_id = 0;
-            soci::statement stmt = (sql.prepare << "UPDATE t_file SET throughput = :throughput, transferred = :transferred WHERE file_id = :fileId ",
+            soci::statement stmt = (sql.prepare << "UPDATE t_file SET throughput = :throughput, transferred = :transferred WHERE file_id = :fileId AND file_state not in ('FAILED','CANCELED') ",
                                     soci::use(throughput), soci::use(transferred), soci::use(file_id));
 
             sql.begin();
