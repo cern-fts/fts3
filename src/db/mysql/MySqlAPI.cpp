@@ -1943,6 +1943,19 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
                     stmt.exchange(soci::use(hostname, "hostname"));
                 }
 		
+	   if (transfer_status == "FINISHED") 
+	        { 
+	            query << ", transferred = :filesize"; 
+	            stmt.exchange(soci::use(filesize, "filesize")); 
+	        } 		
+
+	   if (transfer_status == "FAILED" || transfer_status == "CANCELED") 
+	        { 
+	            query << ", transferred = :filesize"; 
+	            stmt.exchange(soci::use(0, "filesize")); 
+	        } 		
+		
+		
             if (transfer_status == "STAGING")
                 {
                     if (staging)
