@@ -36,7 +36,7 @@
 #include <boost/scoped_ptr.hpp>
 
 
-using namespace config;
+using namespace fts3::config;
 using namespace db;
 
 namespace fts3
@@ -289,7 +289,7 @@ AuthorizationManager::Level AuthorizationManager::getGrantedLvl(soap* ctx, Opera
     if (lvl != NONE) return lvl;
     else
         {
-            string msg = "Authorization failed, access was not granted. ";
+            string msg = "Authorisation failed, access was not granted. ";
             msg += "(The user: ";
             msg += cgsi.getClientDn();
             msg += ") has not the right Role to perform '";
@@ -343,12 +343,18 @@ AuthorizationManager::Level AuthorizationManager::authorize(soap* ctx, Operation
 
     if (grantedLvl < requiredLvl)
         {
+    		string msg = "Authorisation failed, access was not granted. ";
 
-            string msg = "The user has been granted access at '";
-            msg += lvlToString(grantedLvl);
-            msg += "' level, but the resource requires access at '";
-            msg += lvlToString(requiredLvl);
-            msg += "' level!";
+    		switch(grantedLvl)
+    		{
+    		case PRV:
+    			msg += "(the user is only authorised to manage his own transfer-jobs)";
+    			break;
+
+    		case VO:
+    			msg += "(the user is authorised to manage resources only within his VO)";
+    			break;
+    		}
 
             throw Err_Custom(msg);
         }
