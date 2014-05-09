@@ -8015,7 +8015,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
     double throughput = 0.0;
     double tx_duration = 0.0;
     double queuingTime = 0.0;
-    std::string querySe = " SELECT DISTINCT source_se, dest_se FROM t_file WHERE file_state in ('ACTIVE','SUBMITTED') ";
+    std::string querySe = " SELECT DISTINCT source_se, dest_se FROM t_job WHERE job_finished is NULL ";
 
     time_t now = time(NULL);
     struct tm tTime;
