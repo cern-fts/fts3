@@ -7,22 +7,63 @@
 </div>
 
 <p>
-	Submitted by <span class="dn">'{{job.job.user_dn}}'</span><br/>
-	Submitted time: {{job.job.submit_time}}<br/>
-	Delegation ID: {{job.job.cred_id}}<br/>
-	VO: <span class="vo">{{job.job.vo_name}}</span><br/>
-	Priority: {{job.job.priority}}<br/>
-	Received by {{job.job.submit_host}}<br/>
-	Overwrite flag: {{job.job.overwrite_flag}}<br/>
-	Reuse sessions: {{job.job.reuse_job}}<br/>
-	Job finished: {{job.job.job_finished}}<br/>
-	Finished time: {{job.job.finish_time}}<br/>
-	Cancel flag: {{job.job.cancel_job}}<br/>
-	Metadata:
-	<pre>{{job.job.job_metadata}}</pre>
+	<i class="icon-user"></i> Submitted by <span class="dn">'{{job.job.user_dn}}'</span><br/>
+	<i class="icon-group"></i> VO: <span class="vo">{{job.job.vo_name}}</span><br/>
+</p>
+<div class="row-fluid">
+    <div class="span6">
+        <p>
+			<i class="icon-user"></i> Delegation ID: {{job.job.cred_id}}<br/>
+			<i class="icon-time"></i> Submitted time: {{job.job.submit_time}}<br/>
+			<i class="icon-time"></i> Job finished: {{job.job.job_finished}}<br/>
+			<i class="icon-star"></i> Priority: {{job.job.priority}}<br/>
+        </p>
+    </div>
+    <div class="span6">
+        <p>
+            <i class="icon-hdd"></i> Received by {{job.job.submit_host}}<br/>
+            <i class="icon-remove"></i> Overwrite flag: {{job.job.overwrite_flag}}<br/>
+            <i class="icon-refresh"></i> Reuse sessions: {{job.job.reuse_job}}<br/>
+            <i class="icon-ban-circle"></i> Cancel flag: {{job.job.cancel_job}}<br/>
+        </p>
+    </div>
+</div>
+<p>
+   <i class="icon-pencil"></i> Metadata:
+   <pre>{{job.job.job_metadata}}</pre>
 </p>
 
-<h4>Showing {{files.startIndex}} to {{files.endIndex}} out of {{files.count}}</h4>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Total size</th>
+            <th>Done</th>
+            <th>Submission time</th>
+            <th>Start time</th>
+            <th title="Since start time">Duration</th>
+            <th>Average throughput</th>
+            <th>Current throughtput</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>{{files.stats.total_size|filesize}}</td>
+            <td>{{files.stats.total_done|filesize}}</td>
+            <td>{{job.job.submit_time}}</td>
+            <td>{{files.stats.first_start}} (<span style="color:red">+{{files.stats.queued_first}}s</span>)
+            <td><span optional-number="files.stats.time_transfering" decimals="0" suffix="s"></span></td>
+            <td><span optional-number="files.stats.avg_throughput" decimals="2" suffix="MB/s"></span></td>
+            <td><span optional-number="files.stats.current_throughput" decimals="2" suffix="MB/s"></span></td>
+        </tr>
+        <tr>
+            <td colspan="7" class="progress">
+                <progressbar max="files.stats.total_size" value="files.stats.total_done"></progressbar>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Showing {{files.files.startIndex}} to {{files.files.endIndex}} out of {{files.files.count}}</h4>
 <p class="btn-group" ng-click="filterByState()">
     <button type="button" class="btn btn-info btn-small"
             ng-model="filter.state.submitted" btn-checkbox
@@ -47,7 +88,7 @@
             ng-disabled="!job.states.NOT_USED">{{job.states.NOT_USED}} NOT_USED</button>
 </p>
 
-<pagination rotate="false" num-pages="files.pageCount" current-page="files.page"
+<pagination rotate="false" num-pages="files.files.pageCount" current-page="files.files.page"
     max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>
 
@@ -75,7 +116,7 @@
             </th>
         </tr>
     </thead>
-    <tbody ng-repeat="file in files.items" ng-class-odd="'odd'">
+    <tbody ng-repeat="file in files.files.items" ng-class-odd="'odd'">
         <tr>
             <td>
                 <i class="icon-plus" ng-click="file.show = !file.show"></i>

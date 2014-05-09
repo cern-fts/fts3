@@ -225,3 +225,8 @@ table.audit tr.max-se-dest-active td:nth-child(1) {
 table.audit tr.max-se-source-active td:nth-child(1) {
     background: #c47404;
 }
+
+/* Statistics */
+.status-down {
+    color: red;
+}

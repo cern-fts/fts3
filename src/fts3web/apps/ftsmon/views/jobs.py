@@ -20,7 +20,7 @@ from django.http import Http404
 from django.shortcuts import render, redirect
 from jsonify import jsonify, jsonify_paged
 from ftsweb.models import Job, File, RetryError
-from util import getOrderBy, orderedField
+from util import getOrderBy, orderedField, paged
 from diagnosis import JobDiagnosis
 import datetime
 import json
@@ -54,7 +54,9 @@ def setupFilters(httpRequest):
                     if httpRequest.GET[key]:
                         filters[key] = httpRequest.GET[key].split(',')
                 elif key == 'diagnosis':
-                    filters[key] = True
+                    print httpRequest.GET[key]
+                    if httpRequest.GET[key] != '0':
+                        filters[key] = True
                 else:
                     filters[key] = httpRequest.GET[key]
         except:
@@ -141,6 +143,7 @@ def jobIndex(httpRequest):
     else:
         job_ids = Job.objects.values('job_id').order_by('-submit_time')
         
+        
     if filters['time_window']:
         notBefore = datetime.datetime.utcnow() -  datetime.timedelta(hours = filters['time_window'])
         job_ids = job_ids.filter(Q(job_finished__gte = notBefore) | Q(job_finished = None))
@@ -151,7 +154,6 @@ def jobIndex(httpRequest):
         job_ids = job_ids.filter(source_se = filters['source_se'])
     if filters['dest_se']:
         job_ids = job_ids.filter(dest_se = filters['dest_se'])
-
 
     job_list = JobListDecorator(map(lambda j: j['job_id'], job_ids))
     if filters['diagnosis']:
@@ -180,6 +182,12 @@ def jobDetails(httpRequest, jobId):
     if file_id:
         count = count.filter(file_id = file_id)
     count = count.values('file_state').annotate(count = Count('file_state'))
+    
+    # Set job duration
+    if job.job_finished:
+        job.__dict__['duration'] = job.job_finished - job.submit_time
+    else:
+        job.__dict__['duration'] = datetime.datetime.utcnow() - job.submit_time
     
     # Count as dictionary
     stateCount = {}
@@ -211,7 +219,7 @@ class RetriesFetcher(object):
             yield f
 
 
-@jsonify_paged
+@jsonify
 def jobFiles(httpRequest, jobId):
     files = File.objects.filter(job = jobId)
 
@@ -237,8 +245,49 @@ def jobFiles(httpRequest, jobId):
         files = files.order_by(orderedField('start_time', orderDesc))
     elif orderBy == 'end_time':
         files = files.order_by(orderedField('end_time', orderDesc))
+    
+    # Pre-fetch
+    files = list(files)
+    
+    # Job submission time
+    submission_time = Job.objects.get(job_id = jobId).submit_time
+    
+    # Build up stats
+    now = datetime.datetime.utcnow()
+    first_start_time = min(map(lambda f: f.start_time if f.start_time else now, files))
+    if files[0].job_finished:
+        running_time = files[0].job_finished - first_start_time
+    else:
+        running_time = now - first_start_time
+    running_time = (running_time.seconds + running_time.days * 24 * 3600)
+
+    total_size = sum(map(lambda f: f.filesize if f.filesize else 0, files))
+    transferred = sum(map(lambda f: f.transferred if f.transferred else 0, files))
+    with_throughputs = filter(lambda f: f.throughput, files)
+    actives_throughput = filter(lambda f: f.file_state == 'ACTIVE', with_throughputs)
+    
+    stats = {
+        'total_size': total_size,
+        'total_done': transferred,
+        'first_start': first_start_time
+    }
+    
+    if first_start_time:
+        stats['queued_first'] = first_start_time - submission_time
+    else:
+        stats['queued_first'] = now - submission_time
+                             
+    if running_time:
+        stats['time_transfering'] = running_time
+    if len(actives_throughput):
+        stats['current_throughput'] = sum(map(lambda f: f.throughput, actives_throughput)) / len(actives_throughput)
+    if len(with_throughputs):
+        stats['avg_throughput'] = sum(map(lambda f: f.throughput, with_throughputs)) / len(with_throughputs)
         
-    return RetriesFetcher(files)
+    return {
+        'files': paged(RetriesFetcher(files), httpRequest),
+        'stats': stats
+    }
 
 
 @jsonify_paged

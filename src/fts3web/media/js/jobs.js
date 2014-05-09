@@ -156,8 +156,8 @@ function JobViewCtrl($location, $scope, job, files, Job, Files)
         })
         // Do this in two steps so we can copy the show attribute
         Files.query(filter, function (updatedFiles) {
-            for(var i = 0; i < updatedFiles.items.length; i++) {
-                updatedFiles.items[i].show = $scope.files.items[i].show;
+            for(var i = 0; i < updatedFiles.files.items.length; i++) {
+                updatedFiles.files.items[i].show = $scope.files.files.items[i].show;
             }
             $scope.files = updatedFiles;
         });
