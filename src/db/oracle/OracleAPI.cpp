@@ -8100,7 +8100,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                                 ));
 
             soci::statement st6((sql.prepare << " select avg(tx_duration) from t_file where file_state='FINISHED'  "
-                                 " AND source_se=:source_se and dest_se=:dest_se and vo_name =:vo_name_local ",
+                                 " AND source_se=:source_se and dest_se=:dest_se and vo_name =:vo_name_local (job_finished >= (sys_extract_utc(systimestamp) - interval '60' minute)) ",
                                  soci::use(source_se),
                                  soci::use(dest_se),
                                  soci::use(vo_name_local),
@@ -8183,7 +8183,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
 
                             //weighted-average throughput last sample
                             st4.execute(true);
-                            result <<   "Avg throughout: ";
+                            result <<   "Throughout: ";
                             result <<  std::setprecision(2) << throughput * active;
                             result <<   " MB/s\n";
 
@@ -8191,7 +8191,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                             soci::rowset<soci::row> rs = (sql.prepare << "SELECT file_state FROM t_file "
                                                           "WHERE "
                                                           "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                                                          "      t_file.job_finished >= (sys_extract_utc(systimestamp) - interval '15' minute) AND "
+                                                          "      t_file.job_finished >= (sys_extract_utc(systimestamp) - interval '60' minute) AND "
                                                           "      file_state IN ('FAILED','FINISHED') and vo_name = :vo_name_local ",
                                                           soci::use(source_se), soci::use(dest_se),soci::use(vo_name_local));
 
@@ -8221,7 +8221,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                                 }
 
 
-                            result <<   "Link efficiency: ";
+                            result <<   "Link efficiency (last hour): ";
                             result <<   long(ratioSuccessFailure);
                             result <<   "%\n";
 
@@ -8229,7 +8229,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                             //average transfer duration the last 30min
                             tx_duration = 0.0;
                             st6.execute(true);
-                            result <<   "Avg transfer duration: ";
+                            result <<   "Avg transfer duration (last hour): ";
                             result <<   long(tx_duration);
                             result <<   " secs\n";
 
@@ -8247,7 +8247,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                             countReason = 0;
                             st5.execute(true);
 
-                            result <<   "Most frequent error: ";
+                            result <<   "Most frequent error (last hour): ";
                             result <<   countReason;
                             result <<   " times: ";
                             result <<   reason;
