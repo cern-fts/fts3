@@ -210,10 +210,8 @@ protected:
                 std::string source_hostname("");
                 std::string destin_hostname("");
                 SeProtocolConfig protocol;
-                bool protocolExists;
                 std::string proxy_file("");
-                bool debug = false;
-                OptimizerSample* opt_config = NULL;
+                bool debug = false;                
 
                 if (reuse == false)
                     {
@@ -296,6 +294,7 @@ protected:
                                 int StreamsperFile = 0;
                                 int Timeout = 0;
                                 double userFilesize = 0;
+                                bool manualProtocol = false;
                                 std::string jobMetadata("");
                                 std::string fileMetadata("");
                                 std::string bringonlineToken("");
@@ -407,35 +406,31 @@ protected:
                                 ConfigurationAssigner cfgAssigner(tempUrl);
                                 cfgAssigner.assign(cfgs);
 
-                                bool optimize = false;
+                                optional<ProtocolResolver::protocol> p = ProtocolResolver::getUserDefinedProtocol(tempUrl);
 
-                                if (cfgs.empty())
+                                if (p.is_initialized())
                                     {
-                                        optional<ProtocolResolver::protocol> p =
-                                            ProtocolResolver::getUserDefinedProtocol(tempUrl);
-
-                                        if (p.is_initialized())
-                                            {
-                                                BufSize = (*p).tcp_buffer_size;
-                                                StreamsperFile = (*p).nostreams;
-                                                Timeout = (*p).urlcopy_tx_to;
-                                                userProtocol = true;
-                                            }
-                                        else
-                                            {
-                                                optimize = true;
-                                                opt_config = new OptimizerSample();
-                                                DBSingleton::instance().getDBObjectInstance()->fetchOptimizationConfig2(opt_config, source_hostname, destin_hostname);
-                                                BufSize = opt_config->getBufSize();
-                                                StreamsperFile = opt_config->getStreamsperFile();
-                                                Timeout = opt_config->getTimeout();
-                                                delete opt_config;
-                                                opt_config = NULL;
-                                            }
+                                        BufSize = (*p).tcp_buffer_size;
+                                        StreamsperFile = (*p).nostreams;
+                                        Timeout = (*p).urlcopy_tx_to;
+                                        manualProtocol = true;
                                     }
                                 else
                                     {
-                                        manualConfigExists = true;
+                                        BufSize = DBSingleton::instance().getDBObjectInstance()->getBufferOptimization();
+                                        StreamsperFile = DBSingleton::instance().getDBObjectInstance()->getStreamsOptimization(source_hostname, destin_hostname);
+                                        Timeout = DBSingleton::instance().getDBObjectInstance()->getGlobalTimeout();
+                                        if(Timeout == 0)
+                                            Timeout = DEFAULT_TIMEOUT;
+                                        else
+                                            params.append(" -Z ");
+
+                                        int secPerMB = DBSingleton::instance().getDBObjectInstance()->getSecPerMb();
+                                        if(secPerMB > 0)
+                                            {
+                                                params.append(" -V ");
+                                                params.append(lexical_cast<string >(secPerMB));
+                                            }
                                     }
 
                                 FileTransferScheduler scheduler(tempUrl, cfgs);
@@ -443,15 +438,12 @@ protected:
                                     {
                                         bool isAutoTuned = false;
                                         std::stringstream internalParams;
-                                        if (optimize && manualConfigExists == false)
+
+                                        if (!cfgs.empty())
                                             {
-                                                DBSingleton::instance().getDBObjectInstance()->setAllowed(job_id, -1, source_hostname, destin_hostname, StreamsperFile, Timeout, BufSize);
-                                            }
-                                        else
-                                            {
-                                                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Check link config for: " << source_hostname << " -> " << destin_hostname << " -> " << vo_name << commit;
+                                                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Check link config for: " << source_hostname << " -> " << destin_hostname << commit;
                                                 ProtocolResolver resolver(tempUrl, cfgs);
-                                                protocolExists = resolver.resolve();
+                                                bool protocolExists = resolver.resolve();
                                                 if (protocolExists)
                                                     {
                                                         manualConfigExists = true;
@@ -459,43 +451,11 @@ protected:
                                                         protocol.NO_TX_ACTIVITY_TO = resolver.getNoTxActiveTo();
                                                         protocol.TCP_BUFFER_SIZE = resolver.getTcpBufferSize();
                                                         protocol.URLCOPY_TX_TO = resolver.getUrlCopyTxTo();
-
-                                                        if (protocol.NOSTREAMS >= 0)
-                                                            internalParams << "nostreams:" << protocol.NOSTREAMS;
-                                                        if (protocol.URLCOPY_TX_TO >= 0)
-                                                            internalParams << ",timeout:" << protocol.URLCOPY_TX_TO;
-                                                        if (protocol.TCP_BUFFER_SIZE >= 0)
-                                                            internalParams << ",buffersize:" << protocol.TCP_BUFFER_SIZE;
-                                                    }
-                                                else if(userProtocol == true)
-                                                    {
-                                                        internalParams << "nostreams:" << StreamsperFile << ",timeout:" << Timeout << ",buffersize:" << BufSize;
-                                                    }
-                                                else
-                                                    {
-                                                        internalParams << "nostreams:" << DEFAULT_NOSTREAMS << ",timeout:" << DEFAULT_TIMEOUT << ",buffersize:" << DEFAULT_BUFFSIZE;
                                                     }
 
                                                 if (resolver.isAuto())
                                                     {
                                                         isAutoTuned = true;
-                                                        DBSingleton::instance().getDBObjectInstance()->setAllowed(
-                                                            job_id,
-                                                            -1,
-                                                            source_hostname,
-                                                            destin_hostname,
-                                                            resolver.getNoStreams(),
-                                                            resolver.getNoTxActiveTo(),
-                                                            resolver.getTcpBufferSize()
-                                                        );
-                                                    }
-                                                else
-                                                    {
-                                                        DBSingleton::instance().getDBObjectInstance()->setAllowedNoOptimize(
-                                                            job_id,
-                                                            0,
-                                                            internalParams.str()
-                                                        );
                                                     }
                                             }
 
@@ -570,60 +530,72 @@ protected:
                                             {
                                                 params.append(" -d ");
                                             }
-                                        if (optimize && manualConfigExists == false)
+
+
+
+
+
+                                        if (!manualConfigExists)
                                             {
                                                 params.append(" -e ");
-                                                params.append(boost::lexical_cast<std::string > (StreamsperFile));
+                                                params.append(lexical_cast<string >(StreamsperFile));
                                             }
                                         else
                                             {
                                                 if (protocol.NOSTREAMS >= 0)
                                                     {
                                                         params.append(" -e ");
-                                                        params.append(boost::lexical_cast<std::string > (protocol.NOSTREAMS));
+                                                        params.append(lexical_cast<string >(protocol.NOSTREAMS));
                                                     }
                                                 else
                                                     {
                                                         params.append(" -e ");
-                                                        params.append(boost::lexical_cast<std::string > (DEFAULT_NOSTREAMS));
+                                                        params.append(lexical_cast<string >(DEFAULT_NOSTREAMS));
                                                     }
                                             }
-                                        if (optimize && manualConfigExists == false)
+
+                                        if (!manualConfigExists)
                                             {
                                                 params.append(" -f ");
-                                                params.append(boost::lexical_cast<std::string > (BufSize));
+                                                params.append(lexical_cast<string >(BufSize));
                                             }
                                         else
                                             {
                                                 if (protocol.TCP_BUFFER_SIZE >= 0)
                                                     {
                                                         params.append(" -f ");
-                                                        params.append(boost::lexical_cast<std::string > (protocol.TCP_BUFFER_SIZE));
+                                                        params.append(lexical_cast<string >(protocol.TCP_BUFFER_SIZE));
                                                     }
                                                 else
                                                     {
                                                         params.append(" -f ");
-                                                        params.append(boost::lexical_cast<std::string > (DEFAULT_BUFFSIZE));
+                                                        params.append(lexical_cast<string >(DEFAULT_BUFFSIZE));
                                                     }
                                             }
-                                        if (optimize && manualConfigExists == false)
+
+                                        if (!manualConfigExists)
                                             {
                                                 params.append(" -h ");
-                                                params.append(boost::lexical_cast<std::string > (Timeout));
+                                                params.append(lexical_cast<string >(Timeout));
                                             }
                                         else
                                             {
                                                 if (protocol.URLCOPY_TX_TO >= 0)
                                                     {
                                                         params.append(" -h ");
-                                                        params.append(boost::lexical_cast<std::string > (protocol.URLCOPY_TX_TO));
+                                                        params.append(lexical_cast<string >(protocol.URLCOPY_TX_TO));
                                                     }
                                                 else
                                                     {
                                                         params.append(" -h ");
-                                                        params.append(boost::lexical_cast<std::string > (DEFAULT_TIMEOUT));
+                                                        params.append(lexical_cast<string >(DEFAULT_TIMEOUT));
                                                     }
                                             }
+
+
+
+
+
                                         if (std::string(source_space_token).length() > 0)
                                             {
                                                 params.append(" -k ");
