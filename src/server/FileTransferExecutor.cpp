@@ -116,7 +116,7 @@ int FileTransferExecutor::execute()
                 }
             else
                 {
-                    BufSize = DEFAULT_BUFFSIZE;
+                    BufSize = db->getBufferOptimization();
                     StreamsperFile = db->getStreamsOptimization(source_hostname, destin_hostname);
                     Timeout = db->getGlobalTimeout();
                     if(Timeout == 0)

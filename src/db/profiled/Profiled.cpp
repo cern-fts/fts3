@@ -883,3 +883,8 @@ void ProfiledDB::setDestMaxActive(const std::string & destination_hostname, int 
 {
     PROFILE_PREFIXED("DB::", db->setDestMaxActive(destination_hostname,  maxActive));
 }
+
+int ProfiledDB::getBufferOptimization()
+{
+    PROFILE_PREFIXED("DB::", return db->getBufferOptimization());
+}
