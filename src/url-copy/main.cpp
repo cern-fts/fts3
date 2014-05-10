@@ -687,8 +687,6 @@ int main(int argc, char **argv)
             msg_ifce::getInstance()->set_vo(&tr_completed, opts.vo);
             msg_ifce::getInstance()->set_source_site_name(&tr_completed, opts.sourceSiteName);
             msg_ifce::getInstance()->set_dest_site_name(&tr_completed, opts.destSiteName);
-            msg_ifce::getInstance()->set_number_of_streams(&tr_completed, opts.nStreams);
-            msg_ifce::getInstance()->set_tcp_buffer_size(&tr_completed, opts.tcpBuffersize);
             msg_ifce::getInstance()->set_block_size(&tr_completed, opts.blockSize);
             msg_ifce::getInstance()->set_srm_space_token_dest(&tr_completed, opts.destTokenDescription);
             msg_ifce::getInstance()->set_srm_space_token_source(&tr_completed, opts.sourceTokenDescription);
@@ -931,55 +929,46 @@ int main(int argc, char **argv)
                 globalTimeout = experimentalTimeout + 3600;
                 logger.INFO() << "Resetting global timeout thread to " << globalTimeout << " seconds" << std::endl;
 
-
-                //pass -1 to flag the need to reduce number of streams due to high latency
-                if(opts.nStreams == -1)
+                if(!opts.manualConfig || opts.autoTunned)
                     {
-                        opts.nStreams = 2;
-                        logger.INFO() << "Reducing tcp streams to 2 since low throughput obsverved due to high latency" << std::endl;
+                        int tcp_buffer_size = 33554432; //32MB
+                        int tcp_streams_max = 12;
+
+                        if( currentTransfer.fileSize <= tcp_buffer_size)
+                            {
+                                opts.nStreams = 1;
+                                opts.tcpBuffersize = currentTransfer.fileSize;
+                                gfalt_set_nbstreams(params, opts.nStreams, NULL);
+                                gfalt_set_tcp_buffer_size(params, opts.tcpBuffersize, NULL);
+
+                            }
+                        else //filesize > 33554432 //32MB
+                            {
+                                if ( (currentTransfer.fileSize / tcp_buffer_size) > tcp_streams_max )
+                                    {
+                                        opts.nStreams = tcp_streams_max;
+                                        opts.tcpBuffersize = tcp_buffer_size;
+                                        gfalt_set_nbstreams(params, opts.nStreams, NULL);
+                                        gfalt_set_tcp_buffer_size(params, opts.tcpBuffersize, NULL);
+                                    }
+                                else
+                                    {
+                                        opts.nStreams = static_cast<int>( (ceil((currentTransfer.fileSize / tcp_buffer_size))) + 1);
+                                        opts.tcpBuffersize  = tcp_buffer_size;
+                                        gfalt_set_nbstreams(params, opts.nStreams, NULL);
+                                        gfalt_set_tcp_buffer_size(params, opts.tcpBuffersize, NULL);
+                                    }
+                            }
                     }
                 else
                     {
-                        unsigned int experimentalNstreams = adjustStreamsBasedOnSize(currentTransfer.fileSize, opts.nStreams);
-                        if(!opts.manualConfig || opts.autoTunned || opts.nStreams==0)
-                            {
-                                if(true == lanTransfer(fileManagement.getSourceHostname(), fileManagement.getDestHostname()))
-                                    opts.nStreams = (experimentalNstreams * 2) > 16? 16: experimentalNstreams * 2;
-                                else
-                                    opts.nStreams = experimentalNstreams;
-                            }
-                    }
-
-                int tcp_buffer_size = 33554432; //32MB
-                int tcp_streams_max = 12;
-
-                if( currentTransfer.fileSize <= tcp_buffer_size)
-                    {                       
-                        opts.nStreams = 1;
-                        opts.tcpBuffersize = currentTransfer.fileSize;
                         gfalt_set_nbstreams(params, opts.nStreams, NULL);
                         gfalt_set_tcp_buffer_size(params, opts.tcpBuffersize, NULL);
 
                     }
-                else //filesize > 33554432 //32MB
-                    {
-                        if ( (currentTransfer.fileSize / tcp_buffer_size) > tcp_streams_max )
-                            {
-                                opts.nStreams = tcp_streams_max;
-                                opts.tcpBuffersize = tcp_buffer_size;
-                                gfalt_set_nbstreams(params, opts.nStreams, NULL);
-                                gfalt_set_tcp_buffer_size(params, opts.tcpBuffersize, NULL);
-                            }
-                        else
-                            {
-                                opts.nStreams = static_cast<int>( (ceil((currentTransfer.fileSize / tcp_buffer_size))) + 1);
-                                opts.tcpBuffersize  = tcp_buffer_size;
-                                gfalt_set_nbstreams(params, opts.nStreams, NULL);
-                                gfalt_set_tcp_buffer_size(params, opts.tcpBuffersize, NULL);
-                            }
-                    }
-                
+
                 msg_ifce::getInstance()->set_number_of_streams(&tr_completed, opts.nStreams);
+                msg_ifce::getInstance()->set_tcp_buffer_size(&tr_completed, opts.tcpBuffersize);
                 logger.INFO() << "TCP streams: " << opts.nStreams << std::endl;
                 logger.INFO() << "TCP buffer size: " << opts.tcpBuffersize << std::endl;
 
