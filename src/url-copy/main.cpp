@@ -940,7 +940,6 @@ int main(int argc, char **argv)
                                 opts.tcpBuffersize = currentTransfer.fileSize;
                                 gfalt_set_nbstreams(params, opts.nStreams, NULL);
                                 gfalt_set_tcp_buffer_size(params, opts.tcpBuffersize, NULL);
-
                             }
                         else
                             {
