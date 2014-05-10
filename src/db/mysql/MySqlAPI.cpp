@@ -3451,6 +3451,11 @@ bool MySqlAPI::updateOptimizer()
                                             pathFollowed = 1;
                                             stmt10.execute(true);
                                         }
+				    else
+					{
+					    pathFollowed = 11;
+                                            stmt10.execute(true);
+					}
                                 }
                             else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 98)) && throughput == thrStored && retry <= retryStored)
                                 {
