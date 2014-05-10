@@ -100,17 +100,10 @@ static std::string srmVersion(const std::string & url)
 
 static bool bothGsiftp(const std::string & source, const std::string & dest)
 {
-
-   if( boost::starts_with(source, "gsiftp://") && boost::starts_with(dest, "gsiftp://"))
-   	return true;
-	
-   return false;	
-
-/*    if (source.compare(0, 9, "gsiftp://") == 0  && dest.compare(0, 9, "gsiftp://") == 0)
+    if( boost::starts_with(source, "gsiftp://") && boost::starts_with(dest, "gsiftp://"))
         return true;
 
     return false;
-*/    
 }
 
 
@@ -639,7 +632,7 @@ int main(int argc, char **argv)
         {
             gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "SESSION_REUSE", TRUE, NULL);
         }
-	
+
     // Enable UDT
     if (opts.enable_udt)
         {
@@ -700,7 +693,7 @@ int main(int argc, char **argv)
             msg_ifce::getInstance()->set_srm_space_token_dest(&tr_completed, opts.destTokenDescription);
             msg_ifce::getInstance()->set_srm_space_token_source(&tr_completed, opts.sourceTokenDescription);
             msg_ifce::getInstance()->set_user_dn(&tr_completed, replace_dn(opts.user_dn));
-	    
+
             if(opts.monitoringMessages)
                 msg_ifce::getInstance()->SendTransferStartMessage(&tr_completed);
 
@@ -715,13 +708,13 @@ int main(int argc, char **argv)
                         }
                 }
 
-           //also reuse session when both url's are gsiftp	
-           if(true == bothGsiftp(currentTransfer.sourceUrl, currentTransfer.destUrl))
-            {
-	    	gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "SESSION_REUSE", TRUE, NULL);
-	    	logger.INFO() << "GridFTP session reuse enabled since both uri's are gsiftp" << std::endl;	
-	    }	
-	    
+            //also reuse session when both url's are gsiftp
+            if(true == bothGsiftp(currentTransfer.sourceUrl, currentTransfer.destUrl))
+                {
+                    gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "SESSION_REUSE", TRUE, NULL);
+                    logger.INFO() << "GridFTP session reuse enabled since both uri's are gsiftp" << std::endl;
+                }
+
             // Scope
             {
                 gfalt_set_user_data(params, NULL, NULL);
@@ -735,7 +728,6 @@ int main(int argc, char **argv)
                 logger.INFO() << "Source url:" << currentTransfer.sourceUrl << std::endl;
                 logger.INFO() << "Dest url:" << currentTransfer.destUrl << std::endl;
                 logger.INFO() << "Overwrite enabled:" << opts.overwrite << std::endl;
-                logger.INFO() << "Tcp buffer size:" << opts.tcpBuffersize << std::endl;
                 logger.INFO() << "Dest space token:" << opts.destTokenDescription << std::endl;
                 logger.INFO() << "Source space token:" << opts.sourceTokenDescription << std::endl;
                 logger.INFO() << "Pin lifetime:" << opts.copyPinLifetime << std::endl;
@@ -958,9 +950,38 @@ int main(int argc, char **argv)
                             }
                     }
 
-                gfalt_set_nbstreams(params, opts.nStreams, NULL);
+                int tcp_buffer_size = 33554432; //32MB
+                int tcp_streams_max = 12;
+
+                if( currentTransfer.fileSize <= tcp_buffer_size)
+                    {                       
+                        opts.nStreams = 1;
+                        opts.tcpBuffersize = currentTransfer.fileSize;
+                        gfalt_set_nbstreams(params, opts.nStreams, NULL);
+                        gfalt_set_tcp_buffer_size(params, opts.tcpBuffersize, NULL);
+
+                    }
+                else //filesize > 33554432 //32MB
+                    {
+                        if ( (currentTransfer.fileSize / tcp_buffer_size) > tcp_streams_max )
+                            {
+                                opts.nStreams = tcp_streams_max;
+                                opts.tcpBuffersize = tcp_buffer_size;
+                                gfalt_set_nbstreams(params, opts.nStreams, NULL);
+                                gfalt_set_tcp_buffer_size(params, opts.tcpBuffersize, NULL);
+                            }
+                        else
+                            {
+                                opts.nStreams = static_cast<int>( (ceil((currentTransfer.fileSize / tcp_buffer_size))) + 1);
+                                opts.tcpBuffersize  = tcp_buffer_size;
+                                gfalt_set_nbstreams(params, opts.nStreams, NULL);
+                                gfalt_set_tcp_buffer_size(params, opts.tcpBuffersize, NULL);
+                            }
+                    }
+                
                 msg_ifce::getInstance()->set_number_of_streams(&tr_completed, opts.nStreams);
-                logger.INFO() << "nbstreams:" << opts.nStreams << std::endl;
+                logger.INFO() << "TCP streams: " << opts.nStreams << std::endl;
+                logger.INFO() << "TCP buffer size: " << opts.tcpBuffersize << std::endl;
 
                 //update protocol stuff
                 logger.INFO() << "Update protocol stuff, report back to the server" << std::endl;
@@ -972,7 +993,6 @@ int main(int argc, char **argv)
                                      "UPDATE", "",
                                      0, currentTransfer.fileSize);
 
-                gfalt_set_tcp_buffer_size(params, opts.tcpBuffersize, NULL);
                 gfalt_set_monitor_callback(params, &call_perf, NULL);
 
                 //check all params before passed to gfal2
