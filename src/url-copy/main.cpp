@@ -978,11 +978,7 @@ int main(int argc, char **argv)
                                 gfalt_set_tcp_buffer_size(params, opts.tcpBuffersize, NULL);
                             }
                     }
-
-                gfalt_set_nbstreams(params, opts.nStreams, NULL);
-                gfalt_set_tcp_buffer_size(params, opts.tcpBuffersize, NULL);
-
-
+                
                 msg_ifce::getInstance()->set_number_of_streams(&tr_completed, opts.nStreams);
                 logger.INFO() << "TCP streams: " << opts.nStreams << std::endl;
                 logger.INFO() << "TCP buffer size: " << opts.tcpBuffersize << std::endl;
