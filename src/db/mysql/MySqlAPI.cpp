@@ -2921,7 +2921,6 @@ bool MySqlAPI::isCredentialExpired(const std::string & dlg_id, const std::string
 
 bool MySqlAPI::getMaxActive(soci::session& sql, int active, int highDefault, const std::string & source_hostname, const std::string & destin_hostname)
 {
-    bool allowed = false;
     long long int maxActiveSource = 0;
     long long int maxActiveDest = 0;
     soci::indicator isNullmaxActiveSource = soci::i_ok;
@@ -2933,20 +2932,16 @@ bool MySqlAPI::getMaxActive(soci::session& sql, int active, int highDefault, con
                 soci::use(source_hostname),
                 soci::into(maxActiveSource, isNullmaxActiveSource);
 
+            if (sql.got_data() && active > maxActiveSource)
+                return false;
+
             sql << " select active from t_optimize where dest_se = :dest_se and active is not NULL ",
                 soci::use(destin_hostname),
                 soci::into(maxActiveDest, isNullmaxActiveDest);
 
-            //check limits for source
-            if(!sql.got_data())
-                allowed = true;
-            if (sql.got_data() && (active < maxActiveSource || active < highDefault))
-                allowed = true;
-            if(!sql.got_data())
-                allowed = true;
             //check limits for dest
-            if (sql.got_data() && (active < maxActiveDest || active < highDefault))
-                allowed = true;
+            if (sql.got_data() && active > maxActiveDest)
+                return false;
         }
     catch (std::exception& e)
         {
@@ -2956,8 +2951,7 @@ bool MySqlAPI::getMaxActive(soci::session& sql, int active, int highDefault, con
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
-    return allowed;
-
+    return true;
 }
 
 bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::string & destin_hostname)
