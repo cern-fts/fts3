@@ -57,6 +57,7 @@
                         {{ o.bandwidth_limits.destination|number:2 }} MB/s on the destination
                     </span>
                 </span>
+		<span ng-switch-when="11">Either source or destination reached max limit of active transfers configured</span>
             </td>
         </tr>
     </tbody>
