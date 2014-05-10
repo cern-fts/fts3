@@ -343,18 +343,18 @@ AuthorizationManager::Level AuthorizationManager::authorize(soap* ctx, Operation
 
     if (grantedLvl < requiredLvl)
         {
-    		string msg = "Authorisation failed, access was not granted. ";
+            string msg = "Authorisation failed, access was not granted. ";
 
-    		switch(grantedLvl)
-    		{
-    		case PRV:
-    			msg += "(the user is only authorised to manage his own transfer-jobs)";
-    			break;
+            switch(grantedLvl)
+                {
+                case PRV:
+                    msg += "(the user is only authorised to manage his own transfer-jobs)";
+                    break;
 
-    		case VO:
-    			msg += "(the user is authorised to manage resources only within his VO)";
-    			break;
-    		}
+                case VO:
+                    msg += "(the user is authorised to manage resources only within his VO)";
+                    break;
+                }
 
             throw Err_Custom(msg);
         }

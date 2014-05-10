@@ -366,6 +366,8 @@ public:
 
     virtual void setDestMaxActive(const std::string & destination_hostname, int maxActive);
 
+    virtual int getBufferOptimization();
+
 private:
     size_t                poolSize;
     soci::connection_pool* connectionPool;

@@ -1936,26 +1936,26 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
                     query << ", START_TIME = :time1";
                     stmt.exchange(soci::use(tTime, "time1"));
                 }
-		
+
             if (transfer_status == "ACTIVE" || transfer_status == "READY")
                 {
                     query << ", transferHost = :hostname";
                     stmt.exchange(soci::use(hostname, "hostname"));
                 }
-		
-	   if (transfer_status == "FINISHED") 
-	        { 
-	            query << ", transferred = :filesize"; 
-	            stmt.exchange(soci::use(filesize, "filesize")); 
-	        } 		
 
-	   if (transfer_status == "FAILED" || transfer_status == "CANCELED") 
-	        { 
-	            query << ", transferred = :filesize"; 
-	            stmt.exchange(soci::use(0, "filesize")); 
-	        } 		
-		
-		
+            if (transfer_status == "FINISHED")
+                {
+                    query << ", transferred = :filesize";
+                    stmt.exchange(soci::use(filesize, "filesize"));
+                }
+
+            if (transfer_status == "FAILED" || transfer_status == "CANCELED")
+                {
+                    query << ", transferred = :filesize";
+                    stmt.exchange(soci::use(0, "filesize"));
+                }
+
+
             if (transfer_status == "STAGING")
                 {
                     if (staging)
@@ -7344,7 +7344,7 @@ void MySqlAPI::checkSanityState()
                                 }
                         }
                     sql.commit();
-		    
+
                     //now check if a host has been offline for more than 30 min and set its transfers to failed
                     soci::rowset<std::string> rsCheckHosts = (
                                 sql.prepare <<
@@ -7357,7 +7357,7 @@ void MySqlAPI::checkSanityState()
 
                     for (soci::rowset<std::string>::const_iterator irsCheckHosts = rsCheckHosts.begin(); irsCheckHosts != rsCheckHosts.end(); ++irsCheckHosts)
                         {
-                            std::string deadHost = (*irsCheckHosts);			    
+                            std::string deadHost = (*irsCheckHosts);
 
                             //now check and collect if there are any active/ready in these hosts
                             soci::rowset<soci::row> rsCheckHostsActive = (
@@ -7386,7 +7386,7 @@ void MySqlAPI::checkSanityState()
                                             files.clear();
                                         }
                                 }
-                        }		    
+                        }
                 }
         }
     catch (std::exception& e)
@@ -9126,6 +9126,30 @@ void MySqlAPI::setDestMaxActive(const std::string & destination_hostname, int ma
     catch (...)
         {
             sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+
+int MySqlAPI::getBufferOptimization()
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            sql << "SELECT name FROM t_se WHERE name = 'buffer'";
+
+            if (sql.got_data())
+                {
+                    return 1; //buffer optimization
+                }
+            return 	0; //default
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
+        }
+    catch (...)
+        {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }

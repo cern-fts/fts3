@@ -405,4 +405,6 @@ public:
     virtual void setSourceMaxActive(const std::string & source_hostname, int maxActive) = 0;
 
     virtual void setDestMaxActive(const std::string & destination_hostname, int maxActive) = 0;
+
+    virtual int getBufferOptimization() = 0;
 };

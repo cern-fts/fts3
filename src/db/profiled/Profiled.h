@@ -327,6 +327,8 @@ public:
     void setSourceMaxActive(const std::string & source_hostname, int maxActive);
 
     void setDestMaxActive(const std::string & destination_hostname, int maxActive);
+
+    int getBufferOptimization();
 };
 
 
