@@ -931,8 +931,8 @@ int main(int argc, char **argv)
 
                 if( (!opts.manualConfig || opts.autoTunned) && opts.tcpBuffersize == 1)
                     {
-                        int tcp_buffer_size = 33554432; //32MB
-                        int tcp_streams_max = 12;
+                        int tcp_buffer_size = 16777216; //16MB
+                        int tcp_streams_max = 8;
 
                         if( currentTransfer.fileSize <= tcp_buffer_size)
                             {
@@ -942,7 +942,7 @@ int main(int argc, char **argv)
                                 gfalt_set_tcp_buffer_size(params, opts.tcpBuffersize, NULL);
 
                             }
-                        else //filesize > 33554432 //32MB
+                        else
                             {
                                 if ( (currentTransfer.fileSize / tcp_buffer_size) > tcp_streams_max )
                                     {
