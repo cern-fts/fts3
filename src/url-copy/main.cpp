@@ -946,7 +946,7 @@ int main(int argc, char **argv)
                             {
                                 if ( (currentTransfer.fileSize / tcp_buffer_size) > tcp_streams_max )
                                     {
-                                        opts.nStreams = tcp_streams_max;
+                                        opts.nStreams = adjustStreamsBasedOnSize(currentTransfer.fileSize, opts.nStreams);
                                         opts.tcpBuffersize = tcp_buffer_size;
                                         gfalt_set_nbstreams(params, opts.nStreams, NULL);
                                         gfalt_set_tcp_buffer_size(params, opts.tcpBuffersize, NULL);
