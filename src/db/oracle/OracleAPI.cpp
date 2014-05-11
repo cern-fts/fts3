@@ -1840,8 +1840,8 @@ bool OracleAPI::updateFileTransferStatusInternal(soci::session& sql, double thro
 
             if (transfer_status == "FAILED" || transfer_status == "CANCELED")
                 {
-                    query << ", transferred = :filesize";
-                    stmt.exchange(soci::use(0, "filesize"));
+                    query << ", transferred = :transferred";
+                    stmt.exchange(soci::use(0, "transferred"));
                 }
 
 
