@@ -588,8 +588,16 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                             dest_se,
                                             vo_name
                                         )
-
                                     );
+
+                                    long long int linkExists = 0;
+                                    sql << "select count(*) from t_optimize_active where source_se=:source_se and dest_se=:dest_se",
+                                        soci::use(source_se),
+                                        soci::use(dest_se),
+                                        soci::into(linkExists);
+                                    if(linkExists == 0) //for some reason does not exist, add it
+                                        sql << "INSERT INTO t_optimize_active (source_se, dest_se) VALUES (:source_se, :dest_se) ON DUPLICATE KEY UPDATE source_se=:source_se, dest_se=:dest_se",
+                                            soci::use(source_se), soci::use(dest_se),soci::use(source_se), soci::use(dest_se);
                                 }
                         }
                 }
@@ -2942,6 +2950,11 @@ bool MySqlAPI::getMaxActive(soci::session& sql, int active, int highDefault, con
             //check limits for dest
             if (sql.got_data() && active > maxActiveDest)
                 return false;
+
+            if(active >= MAX_ACTIVE_PER_LINK)
+                {
+                    return false;
+                }
         }
     catch (std::exception& e)
         {
@@ -3451,11 +3464,11 @@ bool MySqlAPI::updateOptimizer()
                                             pathFollowed = 1;
                                             stmt10.execute(true);
                                         }
-				    else
-					{
-					    pathFollowed = 11;
+                                    else
+                                        {
+                                            pathFollowed = 11;
                                             stmt10.execute(true);
-					}
+                                        }
                                 }
                             else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 98)) && throughput == thrStored && retry <= retryStored)
                                 {
@@ -8491,7 +8504,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
 
                             //weighted-average throughput last sample
                             st4.execute(true);
-                            result <<   "Avg throughout: ";
+                            result <<   "Avg throughput: ";
                             result <<  std::setprecision(2) << throughput;
                             result <<   " MB/s\n";
 

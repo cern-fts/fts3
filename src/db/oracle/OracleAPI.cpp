@@ -496,6 +496,9 @@ void OracleAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& f
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
                     soci::row const& r = *i;
+                    std::string source_se = r.get<std::string>("SOURCE_SE","");
+                    std::string dest_se = r.get<std::string>("DEST_SE","");
+
                     distinct.push_back(
                         boost::tuple< std::string, std::string, std::string>(
                             r.get<std::string>("SOURCE_SE",""),
@@ -504,6 +507,20 @@ void OracleAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& f
                         )
 
                     );
+
+                    long long int linkExists = 0;
+                    sql << "select count(*) from t_optimize_active where source_se=:source_se and dest_se=:dest_se",
+                        soci::use(source_se),
+                        soci::use(dest_se),
+                        soci::into(linkExists);
+                    if(linkExists == 0) //for some reason does not exist, add it
+                        {
+                            sql << " MERGE INTO t_optimize_active USING "
+                                "    (SELECT :source_se as source, :dest_se as dest FROM dual) Pair "
+                                " ON (t_optimize_active.source_se = Pair.source AND t_optimize_active.dest_se = Pair.dest) "
+                                " WHEN NOT MATCHED THEN INSERT (source_se, dest_se) VALUES (Pair.source, Pair.dest)",
+                                soci::use(source_se), soci::use(dest_se);
+                        }
                 }
 
             if(distinct.empty())
@@ -2828,6 +2845,9 @@ bool OracleAPI::getMaxActive(soci::session& sql, int active, int highDefault, co
             //check limits for dest
             if (sql.got_data() && active > maxActiveDest)
                 return false;
+
+            if(active >= MAX_ACTIVE_PER_LINK)
+                return false;
         }
     catch (std::exception& e)
         {
@@ -3208,11 +3228,11 @@ bool OracleAPI::updateOptimizer()
                                             pathFollowed = 1;
                                             stmt10.execute(true);
                                         }
-				    else
-					{
-					    pathFollowed = 11;
+                                    else
+                                        {
+                                            pathFollowed = 11;
                                             stmt10.execute(true);
-					}					
+                                        }
                                 }
                             else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 98)) && throughput == thrStored && retry <= retryStored)
                                 {
@@ -8196,7 +8216,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
 
                             //weighted-average throughput last sample
                             st4.execute(true);
-                            result <<   "Avg throughout: ";
+                            result <<   "Avg throughput: ";
                             result <<  std::setprecision(2) << throughput * active;
                             result <<   " MB/s\n";
 

@@ -211,7 +211,7 @@ protected:
                 std::string destin_hostname("");
                 SeProtocolConfig protocol;
                 std::string proxy_file("");
-                bool debug = false;                
+                bool debug = false;
 
                 if (reuse == false)
                     {
