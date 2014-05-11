@@ -29,6 +29,10 @@ using namespace FTS3_CONFIG_NAMESPACE;
 
 namespace db
 {
+
+const int MAX_ACTIVE_PER_LINK = 50;
+
+
 /**
  * Returns the current time, plus the difference specified
  * in advance, in UTC time
