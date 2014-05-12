@@ -1,6 +1,6 @@
 <h2>
     Configuration audit
-    <button class="btn btn-mini btn-info" type="button" ng-click="filtersModal = true">Filter</button>
+    <button class="btn btn-mini btn-info" type="button" ng-click="showFilterDialog()">Filter</button>
 </h2>
 
 <pagination rotate="false"
@@ -33,7 +33,7 @@
     on-select-page="pageChanged(page)"></pagination>
 
 <!-- Modals -->
-<div modal="filtersModal" close="filtersModal = false" options="opts">
+<div id="filterDialog" class="modal" role="dialog" style="display: none">
     <form ng-submit="applyFilters(filter)" autocomplete="off">
         <div class="modal-header">
             <h3>Filters</h3>

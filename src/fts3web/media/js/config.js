@@ -9,7 +9,7 @@ function ConfigAuditCtrl($location, $scope, config, ConfigAudit)
 		user:     validString($location.search().user),
 		contains: validString($location.search().contains)
 	};
-	
+
 	$scope.applyFilters = function() {
 		$location.search({
 			page:        1,
@@ -18,7 +18,7 @@ function ConfigAuditCtrl($location, $scope, config, ConfigAudit)
 			contains: $scope.filter.contains
 		});
 	}
-	
+
 	// On page change, reload
 	$scope.pageChanged = function(newPage) {
 		$location.search('page', newPage);
@@ -33,18 +33,22 @@ function ConfigAuditCtrl($location, $scope, config, ConfigAudit)
 	$scope.$on('$destroy', function() {
 		clearInterval($scope.autoRefresh);
 	});
+
+    $scope.showFilterDialog = function() {
+    	document.getElementById('filterDialog').style.display = 'block';
+    }
 }
 
 ConfigAuditCtrl.resolve = {
 	config: function ($rootScope, $location, $route, $q, ConfigAudit) {
     	loading($rootScope);
-    	
+
     	var deferred = $q.defer();
 
     	ConfigAudit.query($location.search(),
   			  genericSuccessMethod(deferred, $rootScope),
 			  genericFailureMethod(deferred, $rootScope, $location));
-    	
+
     	return deferred.promise;
 	}
 }
@@ -54,7 +58,7 @@ function ConfigStatusCtrl($location, $scope, server, debug)
 {
 	$scope.server = server;
 	$scope.debug = debug;
-	
+
 	// On page change, reload
 	$scope.pageChanged = function(newPage) {
 		$location.search('page', newPage);
@@ -64,25 +68,25 @@ function ConfigStatusCtrl($location, $scope, server, debug)
 ConfigStatusCtrl.resolve = {
 	server: function ($rootScope, $location, $route, $q, ConfigServer) {
 		loading($rootScope);
-		
+
 		var deferred = $q.defer();
-		
+
 		ConfigServer.all(
   			  genericSuccessMethod(deferred, $rootScope),
 			  genericFailureMethod(deferred, $rootScope, $location));
 
 		return deferred.promise;
 	},
-	
+
 	debug: function($rootScope, $location, $route, $q, ConfigDebug) {
 		loading($rootScope);
-		
+
 		var deferred = $q.defer();
-		
+
 		ConfigDebug.query(
   			  genericSuccessMethod(deferred, $rootScope),
 			  genericFailureMethod(deferred, $rootScope, $location));
-		
+
 		return deferred.promise;
 	}
 }
@@ -100,13 +104,13 @@ function ConfigLinksCtrl($location, $scope, links) {
 ConfigLinksCtrl.resolve = {
 	links: function($rootScope, $location, $route, $q, ConfigLinks) {
 		loading($rootScope);
-		
+
 		var deferred = $q.defer();
-		
+
 		ConfigLinks.query($location.search(),
   			  genericSuccessMethod(deferred, $rootScope),
 			  genericFailureMethod(deferred, $rootScope, $location));
-		
+
 		return deferred.promise;
 	},
 }
@@ -124,13 +128,13 @@ function ConfigLimitsCtrl($location, $scope, limits) {
 ConfigLimitsCtrl.resolve = {
 	limits: function($rootScope, $location, $route, $q, ConfigLimits) {
 		loading($rootScope);
-		
+
 		var deferred = $q.defer();
-		
+
 		ConfigLimits.query($location.search(),
   			  genericSuccessMethod(deferred, $rootScope),
 			  genericFailureMethod(deferred, $rootScope, $location));
-		
+
 		return deferred.promise;
 	}
 }
