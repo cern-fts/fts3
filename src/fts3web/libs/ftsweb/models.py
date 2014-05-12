@@ -282,6 +282,10 @@ class DebugConfig(models.Model):
     source_se = models.CharField(primary_key = True)
     dest_se   = models.CharField()
     debug     = models.CharField()
+    
+    def __eq__(self, other):
+        # Consider all entries different
+        return False
 
     class Meta:
         db_table = 't_debug'

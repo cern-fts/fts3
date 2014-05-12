@@ -87,7 +87,7 @@ def links(httpRequest):
 
 @jsonify
 def debug(httpRequest):
-    return DebugConfig.objects.all()
+    return DebugConfig.objects.order_by('source_se', 'dest_se').all()
 
 @jsonify_paged
 def limits(httpRequest):
