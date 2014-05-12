@@ -23,8 +23,12 @@
 
 #include "rest/ResponseParser.h"
 #include "rest/HttpRequest.h"
+#include "exception/bad_option.h"
 
 #include "common/JobStatusHandler.h"
+
+#include "exception/cli_exception.h"
+#include "JsonOutput.h"
 
 #include <algorithm>
 #include <vector>
@@ -54,6 +58,7 @@ int main(int ac, char* av[])
 {
     static const int DEFAULT_LIMIT = 100;
 
+	JsonOutput::create();
     scoped_ptr<TransferStatusCli> cli;
 
     try
@@ -104,7 +109,7 @@ int main(int ac, char* av[])
                         {
                             failedFiles.open(jobId.c_str(), ios_base::out);
                             if (failedFiles.fail())
-                                throw std::string(strerror(errno));
+                                throw bad_option("dump-failed", strerror(errno));
                         }
 
                     if (cli->isVerbose())
@@ -190,21 +195,18 @@ int main(int ac, char* av[])
                 }
 
         }
+    catch(cli_exception const & ex)
+        {
+    		if (cli->isJson()) JsonOutput::print(ex);
+			else std::cout << ex.what() << std::endl;
+    		return 1;
+        }
     catch(std::exception& ex)
         {
             if (cli.get())
-                cli->printer().error_msg(ex.what());
+                cli->printer().gsoap_error_msg(ex.what());
             else
                 std::cerr << ex.what() << std::endl;
-            return 1;
-        }
-    catch(string& ex)
-        {
-            if (cli.get())
-                cli->printer().gsoap_error_msg(ex);
-            else
-                std::cerr << ex << std::endl;
-
             return 1;
         }
     catch(...)

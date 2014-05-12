@@ -7,6 +7,8 @@
 
 #include "HttpRequest.h"
 
+#include "exception/cli_exception.h"
+
 #include <sys/stat.h>
 
 using namespace fts3::cli;
@@ -19,7 +21,7 @@ HttpRequest::HttpRequest(string url, string capath, string proxy, ostream& strea
     fd(0)
 
 {
-    if (!curl) throw string("failed to initialize curl context (curl_easy_init)");
+    if (!curl) throw cli_exception("failed to initialise curl context (curl_easy_init)");
 
     // the url we are going to contact
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
@@ -76,7 +78,7 @@ void HttpRequest::request()
     /* Perform the request, res will get the return code */
     CURLcode res = curl_easy_perform(curl);
     /* Check for errors */
-    if(res != CURLE_OK) throw string(curl_easy_strerror(res));
+    if(res != CURLE_OK) throw cli_exception(curl_easy_strerror(res));
 }
 
 void HttpRequest::get()
@@ -101,11 +103,11 @@ void HttpRequest::put(string path)
     // open new one
     fd = fopen(path.c_str(), "rb");
     // check if we were able to do fopen
-    if(!fd) throw "cannot open the file: " + path;
+    if(!fd) throw cli_exception("cannot open the file: " + path);
 
     /* to get the file size */
     struct stat file_info;
-    if(fstat(fileno(fd), &file_info) != 0) throw "cannot determine the size of the file: " + path;
+    if(fstat(fileno(fd), &file_info) != 0) throw cli_exception("cannot determine the size of the file: " + path);
 
     /* tell it to "upload" to the URL */
     curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);

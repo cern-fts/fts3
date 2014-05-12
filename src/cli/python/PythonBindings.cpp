@@ -33,14 +33,16 @@
 #include <boost/optional/optional.hpp>
 #include <boost/python.hpp>
 
+#include <exception>
+
 using namespace boost;
 using namespace fts3::common;
 
-
-void strExTranslator(string const& ex)
+void exceptTranslator(std::exception const& ex)
 {
-    PyErr_SetString(PyExc_UserWarning, ex.c_str());
+    PyErr_SetString(PyExc_UserWarning, ex.what());
 }
+
 
 void errExTranslator(Err_Custom const& ex)
 {
@@ -52,7 +54,7 @@ BOOST_PYTHON_MODULE(libftspython)
 
     using namespace fts3::cli;
 
-    py::register_exception_translator<string>(strExTranslator);
+    py::register_exception_translator<std::exception>(exceptTranslator);
     py::register_exception_translator<Err_Custom>(errExTranslator);
 
     py::class_<PythonApi>("Fts", py::init<py::str>())

@@ -24,6 +24,10 @@
 
 #include "GSoapContextAdapter.h"
 
+#include "exception/cli_exception.h"
+#include "exception/gsoap_error.h"
+
+
 #include "ws-ifce/gsoap/fts3.nsmap"
 
 #include <boost/tokenizer.hpp>
@@ -255,7 +259,7 @@ JobStatus GSoapContextAdapter::getTransferJobStatus (string jobId, bool archive)
         handleSoapFault("Failed to get job status: getTransferJobStatus.");
 
     if (!resp.getTransferJobStatusReturn)
-        throw string("The response from the server is empty!");
+        throw cli_exception("The response from the server is empty!");
 
     return JobStatus(
                *resp.getTransferJobStatusReturn->jobID,
@@ -321,7 +325,7 @@ vector<JobStatus> GSoapContextAdapter::listRequests (vector<string> statuses, st
         handleSoapFault("Failed to list requests: listRequests2.");
 
     if (!resp._listRequests2Return)
-        throw string("The response from the server is empty!");
+        throw cli_exception("The response from the server is empty!");
 
     vector<JobStatus> ret;
     vector<tns3__JobStatus*>::iterator it;
@@ -364,7 +368,7 @@ JobSummary GSoapContextAdapter::getTransferJobSummary (string jobId, bool archiv
         handleSoapFault("Failed to get job status: getTransferJobSummary2.");
 
     if (!resp.getTransferJobSummary2Return)
-        throw string("The response from the server is empty!");
+        throw cli_exception("The response from the server is empty!");
 
     JobStatus status = JobStatus(
                            *resp.getTransferJobSummary2Return->jobStatus->jobID,
@@ -599,20 +603,7 @@ std::string GSoapContextAdapter::getSnapShot(string vo, string src, string dst)
 
 void GSoapContextAdapter::handleSoapFault(string msg)
 {
-
-    stringstream ss;
-    soap_stream_fault(ctx, ss);
-
-    // replace the standard gSOAP error message before printing
-    msg = ss.str();
-    string::size_type pos = msg.find("CGSI-gSOAP running on .+ reports Error reading token data header: Connection closed", 0);
-
-    if (pos != string::npos)
-        {
-            msg += " It might be the FTS server's CRL has expired!";
-        }
-
-    throw string(msg);
+    throw gsoap_error(ctx);
 }
 
 void GSoapContextAdapter::setInterfaceVersion(string interface)

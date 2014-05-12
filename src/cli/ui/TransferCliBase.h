@@ -37,6 +37,8 @@ class TransferCliBase : public RestCli
 public:
     TransferCliBase();
     virtual ~TransferCliBase();
+
+    bool isJson() const;
 };
 
 } /* namespace cli */

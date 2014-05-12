@@ -29,7 +29,9 @@
 
 #include "common/JobStatusHandler.h"
 
-#include <exception>
+#include "exception/cli_exception.h"
+#include "JsonOutput.h"
+
 #include <iostream>
 #include <vector>
 #include <string>
@@ -50,8 +52,8 @@ using namespace fts3::common;
  */
 int main(int ac, char* av[])
 {
-
-    scoped_ptr<CancelCli> cli;
+	JsonOutput::create();
+	scoped_ptr<CancelCli> cli;
 
     try
         {
@@ -90,20 +92,18 @@ int main(int ac, char* av[])
 
             for_each(ret.begin(), ret.end(), lambda::bind(&MsgPrinter::cancelled_job, &(cli->printer()), lambda::_1));
         }
+    catch(cli_exception const & ex)
+        {
+			if (cli->isJson()) JsonOutput::print(ex);
+			else std::cout << ex.what() << std::endl;
+			return 1;
+        }
     catch(std::exception& ex)
         {
             if (cli.get())
-                cli->printer().error_msg(ex.what());
+                cli->printer().gsoap_error_msg(ex.what());
             else
                 std::cerr << ex.what() << std::endl;
-            return 1;
-        }
-    catch(string& ex)
-        {
-            if (cli.get())
-                cli->printer().gsoap_error_msg(ex);
-            else
-                std::cerr << ex << std::endl;
             return 1;
         }
     catch(...)

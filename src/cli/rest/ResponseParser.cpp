@@ -7,6 +7,8 @@
 
 #include "ResponseParser.h"
 
+#include "exception/cli_exception.h"
+
 #include <boost/property_tree/json_parser.hpp>
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
@@ -25,7 +27,7 @@ ResponseParser::ResponseParser(istream& stream)
         }
     catch(json_parser_error& ex)
         {
-            throw ex.message();
+            throw cli_exception(ex.message());
         }
 }
 

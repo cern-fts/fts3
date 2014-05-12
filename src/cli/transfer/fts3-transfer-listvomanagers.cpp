@@ -22,10 +22,13 @@
 #include "GSoapContextAdapter.h"
 #include "ui/VoNameCli.h"
 
-#include <exception>
+#include "exception/cli_exception.h"
+#include "JsonOutput.h"
+
 #include <string>
 #include <iostream>
 #include <memory>
+#include <boost/scoped_ptr.hpp>
 
 using namespace std;
 using namespace fts3::cli;
@@ -35,11 +38,12 @@ using namespace fts3::cli;
  */
 int main(int ac, char* av[])
 {
+	scoped_ptr<VoNameCli> cli;
 
     try
         {
             // create and initialize the command line utility
-            unique_ptr<VoNameCli> cli (
+            cli.reset(
                 getCli<VoNameCli>(ac, av)
             );
             if (!cli->validate()) return 0;
@@ -59,14 +63,17 @@ int main(int ac, char* av[])
                 }
 
         }
-    catch(std::exception& e)
+    catch(cli_exception& ex)
         {
-            cerr << "error: " << e.what() << "\n";
+    		JsonOutput::print(ex);
             return 1;
         }
-    catch(string& ex)
+    catch(std::exception& ex)
         {
-            cout << ex << endl;
+            if (cli.get())
+                cli->printer().gsoap_error_msg(ex.what());
+            else
+                std::cerr << ex.what() << std::endl;
             return 1;
         }
     catch(...)

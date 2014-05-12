@@ -42,5 +42,10 @@ TransferCliBase::~TransferCliBase()
 
 }
 
+bool TransferCliBase::isJson() const
+{
+    return vm.count("json");
+}
+
 } /* namespace cli */
 } /* namespace fts3 */

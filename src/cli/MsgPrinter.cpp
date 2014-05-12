@@ -26,6 +26,8 @@
 
 #include "common/JobStatusHandler.h"
 
+#include "JsonOutput.h"
+
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/optional.hpp>
 #include <boost/assign.hpp>
@@ -56,7 +58,7 @@ void MsgPrinter::delegation_request_duration(long int h, long int m)
             return;
         }
 
-    json_out.put("delegation.request.duration", lexical_cast<string>(h) + ":" + lexical_cast<string>(m));
+    JsonOutput::print("delegation.request.duration", lexical_cast<string>(h) + ":" + lexical_cast<string>(m));
 }
 
 void MsgPrinter::delegation_request_retry()
@@ -70,7 +72,7 @@ void MsgPrinter::delegation_request_retry()
             return;
         }
 
-    json_out.put("delegation.request.retry", true);
+    JsonOutput::print("delegation.request.retry", "true");
 }
 
 void MsgPrinter::delegation_request_error(string error)
@@ -84,7 +86,7 @@ void MsgPrinter::delegation_request_error(string error)
             return;
         }
 
-    json_out.put("delegation.request.error", error);
+    JsonOutput::print("delegation.request.error", error);
 }
 
 void MsgPrinter::delegation_request_success(bool b)
@@ -98,7 +100,10 @@ void MsgPrinter::delegation_request_success(bool b)
             return;
         }
 
-    json_out.put("delegation.request.delegated_successfully", b);
+    stringstream ss;
+    ss << std::boolalpha << b;
+
+    JsonOutput::print("delegation.request.delegated_successfully", ss.str());
 }
 
 void MsgPrinter::delegation_local_expiration(long int h, long int m)
@@ -112,7 +117,7 @@ void MsgPrinter::delegation_local_expiration(long int h, long int m)
             return;
         }
 
-    json_out.put("delegation.expiration_time.local", lexical_cast<string>(h) + ":" + lexical_cast<string>(m));
+    JsonOutput::print("delegation.expiration_time.local", lexical_cast<string>(h) + ":" + lexical_cast<string>(m));
 }
 
 void MsgPrinter::delegation_service_proxy(long int h, long int m)
@@ -126,7 +131,7 @@ void MsgPrinter::delegation_service_proxy(long int h, long int m)
             return;
         }
 
-    json_out.put("delegation.expiration_time.service", lexical_cast<string>(h) + ":" + lexical_cast<string>(m));
+    JsonOutput::print("delegation.expiration_time.service", lexical_cast<string>(h) + ":" + lexical_cast<string>(m));
 }
 
 void MsgPrinter::delegation_msg(string msg)
@@ -140,7 +145,7 @@ void MsgPrinter::delegation_msg(string msg)
             return;
         }
 
-    json_out.put("delegation.message", msg);
+    JsonOutput::print("delegation.message", msg);
 }
 
 void MsgPrinter::endpoint(string endpoint)
@@ -152,7 +157,7 @@ void MsgPrinter::endpoint(string endpoint)
             return;
         }
 
-    json_out.put("endpoint", endpoint);
+    JsonOutput::print("endpoint", endpoint);
 }
 
 void MsgPrinter::service_version(string version)
@@ -164,7 +169,7 @@ void MsgPrinter::service_version(string version)
             return;
         }
 
-    json_out.put("service_version", version);
+    JsonOutput::print("service_version", version);
 }
 
 void MsgPrinter::service_interface(string interface)
@@ -176,7 +181,7 @@ void MsgPrinter::service_interface(string interface)
             return;
         }
 
-    json_out.put("service_interface", interface);
+    JsonOutput::print("service_interface", interface);
 }
 
 void MsgPrinter::service_schema(string schema)
@@ -188,7 +193,7 @@ void MsgPrinter::service_schema(string schema)
             return;
         }
 
-    json_out.put("service_schema", schema);
+    JsonOutput::print("service_schema", schema);
 }
 
 void MsgPrinter::service_metadata(string metadata)
@@ -200,7 +205,7 @@ void MsgPrinter::service_metadata(string metadata)
             return;
         }
 
-    json_out.put("service_metadata", metadata);
+    JsonOutput::print("service_metadata", metadata);
 }
 
 void MsgPrinter::client_version(string version)
@@ -212,7 +217,7 @@ void MsgPrinter::client_version(string version)
             return;
         }
 
-    json_out.put("client_version", version);
+    JsonOutput::print("client_version", version);
 }
 
 void MsgPrinter::client_interface(string interface)
@@ -224,7 +229,7 @@ void MsgPrinter::client_interface(string interface)
             return;
         }
 
-    json_out.put("client_interface", interface);
+    JsonOutput::print("client_interface", interface);
 }
 
 void MsgPrinter::cancelled_job( pair<string, string> id_status)
@@ -238,11 +243,7 @@ void MsgPrinter::cancelled_job( pair<string, string> id_status)
 
     map<string, string> object = map_list_of ("job_id", id_status.first) ("status", id_status.second);
 
-    addToArray(
-        json_out,
-        "job",
-        object
-    );
+    JsonOutput::printArray("job", object);
 }
 
 void MsgPrinter::missing_parameter(string name)
@@ -254,7 +255,7 @@ void MsgPrinter::missing_parameter(string name)
             return;
         }
 
-    json_out.put("error.missing_parameter", name);
+    JsonOutput::print("error.missing_parameter", name);
 }
 
 void MsgPrinter::bulk_submission_error(int line, string msg)
@@ -266,8 +267,8 @@ void MsgPrinter::bulk_submission_error(int line, string msg)
             return;
         }
 
-    json_out.put("error.line", line);
-    json_out.put("error.message", msg);
+    JsonOutput::print("error.line", lexical_cast<string>(line));
+    JsonOutput::print("error.message", msg);
 }
 
 void MsgPrinter::wrong_endpoint_format(string endpoint)
@@ -279,7 +280,7 @@ void MsgPrinter::wrong_endpoint_format(string endpoint)
             return;
         }
 
-    json_out.put("wrong_format.endpoint", endpoint);
+    JsonOutput::print("wrong_format.endpoint", endpoint);
 }
 
 void MsgPrinter::version(string version)
@@ -291,7 +292,7 @@ void MsgPrinter::version(string version)
             return;
         }
 
-    json_out.put("client_version", version);
+    JsonOutput::print("client_version", version);
 }
 
 void MsgPrinter::job_id(string job_id)
@@ -303,7 +304,7 @@ void MsgPrinter::job_id(string job_id)
             return;
         }
 
-    json_out.put("job.job_id", job_id);
+    JsonOutput::print("job.job_id", job_id);
 }
 
 void MsgPrinter::status(JobStatus js)
@@ -316,7 +317,7 @@ void MsgPrinter::status(JobStatus js)
         }
 
     map<string, string> object = map_list_of ("job_id", js.jobId) ("status", js.jobStatus);
-    addToArray(json_out, "job", object);
+    JsonOutput::printArray("job", object);
 }
 
 void MsgPrinter::error_msg(string msg)
@@ -328,7 +329,7 @@ void MsgPrinter::error_msg(string msg)
             return;
         }
 
-    json_out.put("error.message", msg);
+    JsonOutput::print("error.message", msg);
 }
 
 void MsgPrinter::gsoap_error_msg(string msg)
@@ -369,8 +370,8 @@ void MsgPrinter::gsoap_error_msg(string msg)
     size = err_msg.size();
     if (err_msg[size - 1] == '\n') err_msg = err_msg.substr(0, size - 1);
 
-    json_out.put("error.message", err_msg);
-    json_out.put("error.detail", detail);
+    JsonOutput::print("error.message", err_msg);
+    JsonOutput::print("error.detail", detail);
 }
 
 void MsgPrinter::job_status(JobStatus js)
@@ -422,7 +423,7 @@ void MsgPrinter::job_status(JobStatus js)
             object = aux;
         }
 
-    addToArray(json_out, "job", object);
+    JsonOutput::printArray("job", object);
 }
 
 void MsgPrinter::job_summary(JobSummary js)
@@ -464,7 +465,7 @@ void MsgPrinter::job_summary(JobSummary js)
                                  ("summary.failed", lexical_cast<string>(js.numFailed))
                                  ;
 
-    addToArray(json_out, "job", object);
+    JsonOutput::printArray("job", object);
 }
 
 void MsgPrinter::file_list(vector<string> values, vector<string> retries)
@@ -520,20 +521,21 @@ void MsgPrinter::file_list(vector<string> values, vector<string> retries)
             file.put("retries", values[RETRIES]);
         }
 
-    ptree& job = json_out.get_child("job");
-    ptree::iterator it = job.begin();
-    addToArray(it->second, "files", file);
+//    ptree& job = json_out.get_child("job");
+//    ptree::iterator it = job.begin();
+//    addToArray(it->second, "files", file);
+    // TODO test
+    JsonOutput::printArray("job.files", file);
 }
 
-MsgPrinter::MsgPrinter(ostream& out): verbose(false), json(false), out(out)
+MsgPrinter::MsgPrinter(ostream& out): verbose(false), json(false)
 {
 
 }
 
 MsgPrinter::~MsgPrinter()
 {
-    if (json)
-        write_json(out, json_out);
+
 }
 
 ptree MsgPrinter::getItem(map<string, string> values)

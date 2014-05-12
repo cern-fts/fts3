@@ -25,6 +25,8 @@
 
 #include "GSoapContextAdapter.h"
 #include "ui/GetCfgCli.h"
+#include "exception/cli_exception.h"
+#include "exception/bad_option.h"
 
 #include <string>
 #include <vector>
@@ -68,7 +70,7 @@ int main(int ac, char* av[])
                     string all;
                     if (cli->all())
                         {
-                            if (!source.empty() && !destination.empty()) throw string("'--all' may only be used if querying for a single SE");
+                            if (!source.empty() && !destination.empty()) throw bad_option("all", "'--all' may only be used if querying for a single SE");
                             all = "all";
                         }
 
@@ -82,14 +84,14 @@ int main(int ac, char* av[])
                     copy(cfgs.begin(), cfgs.end(), it);
                 }
         }
+    catch(cli_exception const & ex)
+        {
+            cout << ex.what() << endl;
+            return 1;
+        }
     catch(std::exception& e)
         {
             cerr << "error: " << e.what() << "\n";
-            return 1;
-        }
-    catch(string& ex)
-        {
-            cout << ex << endl;
             return 1;
         }
     catch(...)

@@ -69,7 +69,7 @@ endif ()
 # ------------------------------------------------------------------------
 # Common CLI library
 
-file(GLOB fts_cli_common_sources "*.cpp" "ui/*.cpp" "rest/*.cpp")
+file(GLOB fts_cli_common_sources "*.cpp" "ui/*.cpp" "rest/*.cpp" "exception/*.cpp")
 file(GLOB fts_cli_python_sources "python/*.cpp")
 
 add_library(fts_cli_common SHARED ${fts_cli_common_sources})

@@ -28,7 +28,9 @@
 
 #include "common/JobStatusHandler.h"
 
-#include <exception>
+#include "exception/cli_exception.h"
+#include "JsonOutput.h"
+
 #include <iostream>
 #include <string>
 
@@ -48,7 +50,7 @@ using namespace fts3::common;
 int main(int ac, char* av[])
 {
 
-
+	JsonOutput::create();
     scoped_ptr<SnapshotCli> cli;
 
     try
@@ -70,20 +72,17 @@ int main(int ac, char* av[])
             std::cout << resp << std::endl;
 
         }
+    catch(cli_exception const & ex)
+        {
+			std::cout << ex.what() << std::endl;
+			return 1;
+        }
     catch(std::exception& ex)
         {
             if (cli.get())
-                cli->printer().error_msg(ex.what());
+                cli->printer().gsoap_error_msg(ex.what());
             else
                 std::cerr << ex.what() << std::endl;
-            return 1;
-        }
-    catch(string& ex)
-        {
-            if (cli.get())
-                cli->printer().gsoap_error_msg(ex);
-            else
-                std::cerr << ex << std::endl;
             return 1;
         }
     catch(...)

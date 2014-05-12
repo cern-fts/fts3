@@ -58,7 +58,7 @@ BulkSubmissionParser::BulkSubmissionParser(istream& ifs)
     catch(json_parser_error& ex)
         {
             // handle errors in JSON format
-            throw string(ex.message());
+            throw cli_exception(ex.message());
         }
 
     parse();
@@ -72,14 +72,14 @@ BulkSubmissionParser::~BulkSubmissionParser()
 void BulkSubmissionParser::parse()
 {
     // check if the job is empty
-    if (pt.empty()) throw Err_Custom("The 'Files' elements of the transfer job are missing!");
+    if (pt.empty()) throw cli_exception("The 'Files' elements of the transfer job are missing!");
     // check if there is more than one job in a single file
-    if (pt.size() > 1) throw Err_Custom("Too many elements in the bulk submission file!");
+    if (pt.size() > 1) throw cli_exception("Too many elements in the bulk submission file!");
     // check if the 'Files' have been defined
     optional<ptree&> v = pt.get_child_optional("Files");
-    if (!v.is_initialized()) throw Err_Custom("The array of files does not exist!");
+    if (!v.is_initialized()) throw cli_exception("The array of files does not exist!");
     // check if it's an array
-    if (!isArray(pt, "Files")) throw Err_Custom("The 'Files' element is not an array");
+    if (!isArray(pt, "Files")) throw cli_exception("The 'Files' element is not an array");
     ptree& root = v.get();
     // iterate over all the file in the job and check their format
     ptree::iterator it;
@@ -108,7 +108,7 @@ void BulkSubmissionParser::parse_item(ptree& item)
             // check if 'sources' exists
             v_vec = get< vector<string> >(item, "sources");
             // if no throw an exception (it is an mandatory field
-            if (!v_vec.is_initialized()) throw Err_Custom("A file item without 'sources'!");
+            if (!v_vec.is_initialized()) throw cli_exception("A file item without 'sources'!");
             file.sources = v_vec.get();
 
         }
@@ -117,7 +117,7 @@ void BulkSubmissionParser::parse_item(ptree& item)
             // check if 'sources' exists
             v_str = get<string>(item, "sources");
             // if no throw an exception (it is an mandatory field
-            if (!v_str.is_initialized()) throw Err_Custom("A file item without 'sources'!");
+            if (!v_str.is_initialized()) throw cli_exception("A file item without 'sources'!");
             file.sources.push_back(v_str.get());
         }
 
@@ -128,7 +128,7 @@ void BulkSubmissionParser::parse_item(ptree& item)
             // check if 'destinations' exists
             v_vec = get< vector<string> >(item, "destinations");
             // if no throw an exception (it is an mandatory field
-            if (!v_vec.is_initialized()) throw Err_Custom("A file item without 'destinations'!");
+            if (!v_vec.is_initialized()) throw cli_exception("A file item without 'destinations'!");
             file.destinations = v_vec.get();
 
         }
@@ -137,7 +137,7 @@ void BulkSubmissionParser::parse_item(ptree& item)
             // check if 'destinations' exists
             v_str = get<string>(item, "destinations");
             // if no throw an exception (it is an mandatory field
-            if (!v_str.is_initialized()) throw Err_Custom("A file item without 'destinations'!");
+            if (!v_str.is_initialized()) throw cli_exception("A file item without 'destinations'!");
             file.destinations.push_back(v_str.get());
         }
 
@@ -151,7 +151,7 @@ void BulkSubmissionParser::parse_item(ptree& item)
 
             if (selectionStrategy != "auto" && selectionStrategy != "orderly")
                 {
-                    throw Err_Custom("'" + selectionStrategy + "' is not a valid selection strategy!");
+                    throw cli_exception("'" + selectionStrategy + "' is not a valid selection strategy!");
                 }
         }
 
@@ -199,7 +199,7 @@ void BulkSubmissionParser::validate(ptree& item)
         {
             // iterate over the nodes and check if there are in the expexted tokens set
             pair<string, ptree> p = *it;
-            if (!file_tokens.count(p.first)) throw Err_Custom("unexpected identifier: " + p.first);
+            if (!file_tokens.count(p.first)) throw cli_exception("unexpected identifier: " + p.first);
         }
 }
 

@@ -100,7 +100,7 @@ public:
     void init();
 
     /**
-     * Handles soap fault. Calls soap_stream_fault, then throws a string exception with given message
+     * Handles soap fault. Calls soap_stream_fault, then throws a gsoap_error exception with given message
      *
      * @param msg exception message
      */

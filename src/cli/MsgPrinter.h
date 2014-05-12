@@ -110,11 +110,6 @@ private:
     bool verbose;
     ///
     bool json;
-    ///
-    ptree json_out;
-
-    /// the output stream
-    ostream& out;
 };
 
 } /* namespace server */
