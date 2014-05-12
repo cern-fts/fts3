@@ -8114,7 +8114,9 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                                 ));
 
             soci::statement st4((sql.prepare << "select avg(throughput) from t_file where  "
-                                 " source_se=:source_se and dest_se=:dest_se and file_state='ACTIVE' ",
+                                 " source_se=:source_se and dest_se=:dest_se "
+				 " AND file_state='ACTIVE' OR (file_state='FINISHED' and  job_finished >= (sys_extract_utc(systimestamp) - interval '60' minute)) "
+				 " AND throughput <> 0 ",
                                  soci::use(source_se),
                                  soci::use(dest_se),
                                  soci::into(throughput, isNull2)
