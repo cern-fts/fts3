@@ -97,7 +97,8 @@ def pie(httpRequest):
         values = []
         colors = None
         title  = None
-        
+        suffix = ''
+
         for (arg, argv) in httpRequest.GET.iteritems():
             if arg == 't':
                 title = argv
@@ -109,15 +110,12 @@ def pie(httpRequest):
                 cx = _strToArray(argv)
                 if len(cx):
                     colors = cx
+            elif arg == 'suffix':
+                suffix = ' ' + argv
 
         n_items = len(labels)
         _adjust(values, n_items)
-        
-        # If lc is specified, put the values into the legend
-        if httpRequest.GET.get('lc', False):
-            for li in range(n_items):
-                labels[li] = "%s (%s)" % (labels[li], values[li])
-                
+
         # Generate color list if not specified
         if not colors:
             colors = _generateColors(n_items)
@@ -128,24 +126,31 @@ def pie(httpRequest):
         for c in range(n_items):
             if len(colors[c]) > 1:
                 colors[c] = '#' + colors[c]
-                
+
         if not values:
             return _error(httpRequest, 'No values')
-        
-        if sum(map(int, values)) == 0:
+
+        values = map(float, values)
+
+        if sum(values) == 0:
             return _error(httpRequest, 'Total is 0')
-                
+
+        # If lc is specified, put the values into the legend
+        if httpRequest.GET.get('lc', False):
+            for li in range(n_items):
+                labels[li] = "%s (%.2f%s)" % (labels[li], values[li], suffix)
+
         fig = Figure(figsize = (6,3))
         canvas = FigureCanvas(fig)
-        
+
         ax = fig.add_subplot(1,2,1)
         (patches, texts, auto) = ax.pie(values, labels=None, colors=colors, autopct='%1.1f%%')
         if title:
             ax.set_title(title)
-            
+
         for p in patches:
             p.set_edgecolor('white')
-        
+
         ax2 = fig.add_subplot(1,2,2)
         fontP = FontProperties()
         fontP.set_size('small')
@@ -154,7 +159,7 @@ def pie(httpRequest):
 
         response = HttpResponse(content_type = 'image/png')
         fig.savefig(response, format='png', bbox_inches = 'tight', transparent = True)
-                
+
         return response
     except Exception, e:
         return _error(httpRequest, str(e))

@@ -17,13 +17,13 @@
 
 from datetime import datetime, timedelta
 from django.db import connection
-from django.db.models import Max, Avg, StdDev, Count, Min
+from django.db.models import Max, Avg, StdDev, Count, Min, Sum
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import Http404
 from ftsweb.models import OptimizerEvolution
 from ftsweb.models import File, Job
 from jsonify import jsonify, jsonify_paged
-from util import getOrderBy, orderedField
+from util import getOrderBy, orderedField, paged
         
 
 @jsonify_paged
@@ -92,7 +92,7 @@ class OptimizerAppendLimits(object):
             return result[0][0]
 
 
-@jsonify_paged
+@jsonify
 def optimizerDetailed(httpRequest):
     source_se = str(httpRequest.GET.get('source', None))
     dest_se   = str(httpRequest.GET.get('destination', None))
@@ -110,4 +110,16 @@ def optimizerDetailed(httpRequest):
     optimizer = optimizer.filter(datetime__gte = not_before)
     optimizer = optimizer.values('datetime', 'active', 'throughput', 'success', 'branch')
     optimizer = optimizer.order_by('-datetime')
-    return OptimizerAppendLimits(source_se, dest_se, optimizer)
+
+    vo_throughput = {}
+    vos = Job.objects.values('vo_name').distinct()
+    for vo in [vo['vo_name'] for vo in vos]:
+        throughput = File.objects.filter(source_se = source_se, dest_se = dest_se, vo_name = vo, file_state = 'ACTIVE')\
+                         .aggregate(thr = Sum('throughput'))['thr']
+        if throughput:
+            vo_throughput[vo] = throughput
+
+    return {
+        'evolution': paged(OptimizerAppendLimits(source_se, dest_se, optimizer), httpRequest),
+        'throughput': vo_throughput
+    }

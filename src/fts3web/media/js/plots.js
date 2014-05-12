@@ -3,7 +3,7 @@ angular.module('ftsmon.plots', [])
     return {
         restrict: 'E',
         scope: 'isolate',
-        template: '<img ng-src="plot/pie?t={{title}}&l={{labels}}&v={{values}}&c={{colors}}&lc={{legend_count}}"></img>',
+        template: '<img ng-src="plot/pie?t={{title}}&l={{labels}}&v={{values}}&c={{colors}}&lc={{legend_count}}&suffix={{suffix}}"></img>',
         link: function(scope, iterStartElement, attr) {
             var list = scope.$eval(attr.list);
             // If label and value are specified, list is an array of
@@ -25,6 +25,8 @@ angular.module('ftsmon.plots', [])
             // Show the numbers in the legend?
             if (attr.legendCount)
                 scope.legend_count = 1;
+            if (attr.suffix)
+                scope.suffix = attr.suffix;
             
             // Set title and colors
             scope.title  = attr.title;
