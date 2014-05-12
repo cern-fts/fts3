@@ -26,7 +26,7 @@
             <td>{{ limit.source_se }}</td>
             <td>{{ limit.dest_se }}</td>
             <td>{{ limit.active }}</td>
-            <td>{{ limit.bandwidth|number:2 }} MB/s</td>
+            <td><span optional-number="limit.bandwidth" digits="2" suffix="MB/s"></span></td>
         </tr>
     </tbody>
 </table>
