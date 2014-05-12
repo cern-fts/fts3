@@ -1,28 +1,29 @@
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+import sys
 
 
-def getOrderBy(request):
-    orderBy = request.GET.get('orderby', None)
-    orderDesc = False
-    
-    if not orderBy:
-        orderDesc = True
-    elif orderBy[0] == '-':
-        orderDesc = True
-        orderBy = orderBy[1:]
-    
-    return (orderBy, orderDesc)
+def get_order_by(request):
+    order_by = request.GET.get('orderby', None)
+    order_desc = False
+
+    if not order_by:
+        order_desc = True
+    elif order_by[0] == '-':
+        order_desc = True
+        order_by = order_by[1:]
+
+    return order_by, order_desc
 
 
-def orderedField(field, desc):
+def ordered_field(field, desc):
     if desc:
         return '-' + field
     return field
 
 
-def getPage(paginator, request):
+def get_page(paginator, request):
     try:
-        if 'page' in request.GET: 
+        if 'page' in request.GET:
             page = paginator.page(request.GET.get('page'))
         else:
             page = paginator.page(1)
@@ -33,21 +34,19 @@ def getPage(paginator, request):
     return page
 
 
-def paged(elements, httpRequest, pageSize=50):    
-    if httpRequest.GET.get('page', 0) == 'all':
-        pageSize = sys.maxint
-    
-    paginator = Paginator(elements, pageSize)
-    page = getPage(paginator, httpRequest)
-    
-    paged = {
+def paged(elements, http_request, page_size=50):
+    if http_request.GET.get('page', 0) == 'all':
+        page_size = sys.maxint
+
+    paginator = Paginator(elements, page_size)
+    page = get_page(paginator, http_request)
+
+    return {
         'count':      paginator.count,
         'endIndex':   page.end_index(),
         'startIndex': page.start_index(),
         'page':       page.number,
         'pageCount':  paginator.num_pages,
-        'pageSize':   pageSize,
+        'pageSize':   page_size,
         'items':      page.object_list
     }
-    
-    return paged
