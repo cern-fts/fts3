@@ -8957,7 +8957,10 @@ int OracleAPI::getBufferOptimization()
 
     try
         {
-            sql << "SELECT name FROM t_se WHERE name = 'buffer'";
+            std::string name;
+            soci::indicator isNullName = soci::i_ok;
+
+            sql << "SELECT name FROM t_se WHERE name = 'buffer'", soci::into(name, isNullName);
 
             if (sql.got_data())
                 {
