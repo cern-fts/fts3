@@ -17,29 +17,29 @@
 from django.db import connection
 from django.db.models import Q
 from ftsweb.models import ConfigAudit
-from ftsweb.models import ProfilingSnapshot
 from ftsweb.models import LinkConfig, ShareConfig
 from ftsweb.models import DebugConfig, Optimize
 from jsonify import jsonify, jsonify_paged
-from util import getOrderBy, orderedField
+from util import get_order_by, ordered_field
+
 
 @jsonify_paged
-def audit(httpRequest):
+def get_audit(http_request):
     ca = ConfigAudit.objects
-    
-    if httpRequest.GET.get('action', None):
-        ca = ca.filter(action = httpRequest.GET['action'])
-    if httpRequest.GET.get('user', None):
-        ca = ca.filter(dn = httpRequest.GET['user'])
-    if httpRequest.GET.get('contains', None):
-        ca = ca.filter(config__icontains = httpRequest.GET['contains'])
-    
+
+    if http_request.GET.get('action', None):
+        ca = ca.filter(action=http_request.GET['action'])
+    if http_request.GET.get('user', None):
+        ca = ca.filter(dn=http_request.GET['user'])
+    if http_request.GET.get('contains', None):
+        ca = ca.filter(config__icontains=http_request.GET['contains'])
+
     return ca.order_by('-datetime')
 
+
 @jsonify
-def server(httpRequest):
+def get_server_config(http_request):
     config = dict()
-    
     cursor = connection.cursor()
     cursor.execute("SELECT retry, max_time_queue, global_timeout, sec_per_mb FROM t_server_config")
     server_config = cursor.fetchall()
@@ -59,51 +59,53 @@ def server(httpRequest):
 # Wrap a list of link config, and push the
 # vo shares on demand (lazy!)
 class AppendShares:
-    
-    def __init__(self, resultSet):
-        self.rs = resultSet
-        
+
+    def __init__(self, result_set):
+        self.rs = result_set
+
     def __len__(self):
         return len(self.rs)
-    
+
     def __getitem__(self, i):
         for link in self.rs[i]:
-            shares = ShareConfig.objects.filter(source = link.source, destination = link.destination).all()
+            shares = ShareConfig.objects.filter(source=link.source, destination=link.destination).all()
             link.shares = {}
             for share in shares:
                 link.shares[share.vo] = share.active
             yield link
 
+
 @jsonify_paged
-def links(httpRequest):
+def get_link_config(http_request):
     links = LinkConfig.objects
-    
-    if httpRequest.GET.get('source_se'):
-        links = links.filter(source = httpRequest.GET['source_se'])
-    if httpRequest.GET.get('dest_se'):
-        links = links.filter(destination = httpRequest.GET['dest_se'])
-    
+
+    if http_request.GET.get('source_se'):
+        links = links.filter(source=http_request.GET['source_se'])
+    if http_request.GET.get('dest_se'):
+        links = links.filter(destination=http_request.GET['dest_se'])
+
     return AppendShares(links.all())
 
+
 @jsonify
-def debug(httpRequest):
-    return DebugConfig.objects.all()
+def get_debug_config(http_request):
+    return DebugConfig.objects.order_by('source_se', 'dest_se').all()
+
 
 @jsonify_paged
-def limits(httpRequest):
-    max_cfg = Optimize.objects.filter(Q(active__isnull = False) | Q(bandwidth__isnull = False))
-    
-    (orderBy, orderDesc) = getOrderBy(httpRequest)
-    if orderBy == 'bandwidth':
-        max_cfg = max_cfg.order_by(orderedField('bandwidth', orderDesc))
-    elif orderBy == 'active':
-        max_cfg = max_cfg.order_by(orderedField('active', orderDesc))
-    elif orderBy == 'source_se':
-        max_cfg = max_cfg.order_by(orderedField('source_se', orderDesc))
-    elif orderBy == 'dest_se':
-        max_cfg = max_cfg.order_by(orderedField('dest_se', orderDesc))
+def get_limit_config(http_request):
+    max_cfg = Optimize.objects.filter(Q(active__isnull=False) | Q(bandwidth__isnull=False))
+
+    (order_by, order_desc) = get_order_by(http_request)
+    if order_by == 'bandwidth':
+        max_cfg = max_cfg.order_by(ordered_field('bandwidth', order_desc))
+    elif order_by == 'active':
+        max_cfg = max_cfg.order_by(ordered_field('active', order_desc))
+    elif order_by == 'source_se':
+        max_cfg = max_cfg.order_by(ordered_field('source_se', order_desc))
+    elif order_by == 'dest_se':
+        max_cfg = max_cfg.order_by(ordered_field('dest_se', order_desc))
     else:
         max_cfg = max_cfg.order_by('-active')
-    
-    return max_cfg
 
+    return max_cfg

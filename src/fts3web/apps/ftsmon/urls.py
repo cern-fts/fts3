@@ -19,37 +19,40 @@ from django.conf.urls.defaults import patterns, url
 
 urlpatterns = patterns('ftsmon.views',
     url(r'^$', 'index.index'),
-    
-    url(r'^overview', 'overview.overview'),
-    url(r'^jobs/?$', 'jobs.jobIndex'),
-    url(r'^jobs/(?P<jobId>[a-fA-F0-9\-]+)$', 'jobs.jobDetails'),
-    url(r'^jobs/(?P<jobId>[a-fA-F0-9\-]+)/files$', 'jobs.jobFiles'),
-    url(r'^transfers$', 'jobs.transferList'),
-    
-    url(r'^config/audit$', 'config.audit'),
-    url(r'^config/links$', 'config.links'),
-    url(r'^config/server$', 'config.server'),
-    url(r'^config/debug$', 'config.debug'),
-    url(r'^config/limits', 'config.limits'),
-    
+
+    url(r'^overview', 'overview.get_overview'),
+
+    url(r'^jobs/?$',                               'jobs.get_job_list'),
+    url(r'^jobs/(?P<job_id>[a-fA-F0-9\-]+)$',       'jobs.get_job_details'),
+    url(r'^jobs/(?P<job_id>[a-fA-F0-9\-]+)/files$', 'jobs.get_job_transfers'),
+
+    url(r'^transfers$', 'jobs.get_transfer_list'),
+
+    url(r'^config/audit$',  'config.get_audit'),
+    url(r'^config/links$',  'config.get_link_config'),
+    url(r'^config/server$', 'config.get_server_config'),
+    url(r'^config/debug$',  'config.get_debug_config'),
+    url(r'^config/limits',  'config.get_limit_config'),
+
     url(r'^stats$', 'statistics.overview'),
     url(r'^stats/servers$', 'statistics.servers'),
     url(r'^stats/vo$', 'statistics.pervo'),
+    url(r'^stats/volume$', 'statistics.transferVolume'),
     url(r'^stats/profiling$', 'statistics.profiling'),
     url(r'^stats/slowqueries', 'statistics.slowQueries'),
-    
-    url(r'^plot/pie', 'plots.pie'),
-    url(r'^plot/lines', 'plots.lines'),
-    
-    url(r'^optimizer/$', 'optimizer.optimizer'),
-    url(r'^optimizer/detailed$', 'optimizer.optimizerDetailed'),
-    
-    url(r'^errors/$', 'errors.showErrors'),
-    url(r'^errors/list$', 'errors.errorsForPair'),
-    
-    url(r'^unique/activities', 'autocomplete.activities'),
-    url(r'^unique/destinations', 'autocomplete.destinations'),
-    url(r'^unique/sources', 'autocomplete.sources'),
-    url(r'^unique/vos', 'autocomplete.vos'),
-    url(r'^unique/hostnames', 'autocomplete.hostnames')
+
+    url(r'^plot/pie',   'plots.draw_pie'),
+    url(r'^plot/lines', 'plots.draw_lines'),
+
+    url(r'^optimizer/$',         'optimizer.get_optimizer_pairs'),
+    url(r'^optimizer/detailed$', 'optimizer.get_optimizer_details'),
+
+    url(r'^errors/$',     'errors.get_errors'),
+    url(r'^errors/list$', 'errors.get_errors_for_pair'),
+
+    url(r'^unique/activities',   'autocomplete.get_unique_activities'),
+    url(r'^unique/destinations', 'autocomplete.get_unique_destinations'),
+    url(r'^unique/sources',      'autocomplete.get_unique_sources'),
+    url(r'^unique/vos',          'autocomplete.get_unique_vos'),
+    url(r'^unique/hostnames',    'autocomplete.get_unique_hostnames')
 )

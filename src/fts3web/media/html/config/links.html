@@ -1,6 +1,7 @@
 <h2>Link configuration</h2>
 
-<pagination rotate="false" num-pages="links.pageCount" current-page="links.page"
+<pagination rotate="false"
+    page="links.page" total-items="links.count" items-per-page="links.pageSize"
     max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>
 
@@ -44,6 +45,7 @@
     </tbody>
 </table>
 
-<pagination rotate="false" num-pages="links.pageCount" current-page="links.page"
+<pagination rotate="false"
+    page="links.page" total-items="links.count" items-per-page="links.pageSize"
     max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>

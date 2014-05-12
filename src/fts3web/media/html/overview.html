@@ -8,7 +8,8 @@
     <span ng-show="globalFilter.time_window > 1">hours</span>
 </h3>
 
-<pagination rotate="false" num-pages="overview.overview.pageCount" current-page="overview.overview.page"
+<pagination rotate="false"
+    page="overview.overview.page" total-items="overview.overview.count" items-per-page="overview.overview.pageSize"
     max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>
 
@@ -147,7 +148,8 @@
     </tfoot>
 </table>
 
-<pagination rotate="false" num-pages="overview.overview.pageCount" current-page="overview.overview.page"
+<pagination rotate="false"
+    page="overview.overview.page" total-items="overview.overview.count" items-per-page="overview.overview.pageSize"
     max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>
 

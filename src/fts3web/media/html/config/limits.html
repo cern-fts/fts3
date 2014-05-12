@@ -1,6 +1,7 @@
 <h2>Limit configuration</h2>
 
-<pagination rotate="false" num-pages="limits.pageCount" current-page="limits.page"
+<pagination rotate="false"
+    page="limits.page" total-items="limits.count" items-per-page="limits.pageSize"
     max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>
 
@@ -26,11 +27,12 @@
             <td>{{ limit.source_se }}</td>
             <td>{{ limit.dest_se }}</td>
             <td>{{ limit.active }}</td>
-            <td>{{ limit.bandwidth|number:2 }} MB/s</td>
+            <td><span optional-number="limit.bandwidth" digits="2" suffix="MB/s"></span></td>
         </tr>
     </tbody>
 </table>
 
-<pagination rotate="false" num-pages="limits.pageCount" current-page="limits.page"
+<pagination rotate="false"
+    page="limits.page" total-items="limits.count" items-per-page="limits.pageSize"
     max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>

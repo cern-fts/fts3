@@ -40,7 +40,7 @@
             <th>Done</th>
             <th>Submission time</th>
             <th>Start time</th>
-            <th title="Since start time">Duration</th>
+            <th title="Since start time">Running time</th>
             <th>Average throughput</th>
             <th>Current throughtput</th>
         </tr>
@@ -88,7 +88,8 @@
             ng-disabled="!job.states.NOT_USED">{{job.states.NOT_USED}} NOT_USED</button>
 </p>
 
-<pagination rotate="false" num-pages="files.files.pageCount" current-page="files.files.page"
+<pagination rotate="false"
+    page="files.files.page" total-items="files.files.count" items-per-page="files.files.pageSize"
     max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>
 
@@ -181,6 +182,7 @@
     </tbody>
 </table>
 
-<pagination rotate="false" num-pages="files.pageCount" current-page="files.page"
+<pagination rotate="false"
+    page="files.files.page" total-items="files.files.count" items-per-page="files.files.pageSize"
     max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>

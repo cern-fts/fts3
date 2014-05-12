@@ -14,37 +14,37 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-import simplejson
 from datetime import datetime, timedelta
-from django.db.models import Q
-from django.http import HttpResponse
 from ftsweb.models import Job, File, Host
 from jsonify import jsonify
 
+
 @jsonify
-def activities(httpRequest):
+def get_unique_activities(http_request):
     activities = File.objects.values('activity').distinct()
     return [row['activity'] for row in activities]
 
+
 @jsonify
-def sources(httpRequest):
+def get_unique_sources(http_request):
     sources = Job.objects.values('source_se').distinct()
     return [row['source_se'] for row in sources]
 
+
 @jsonify
-def destinations(httpRequest):
+def get_unique_destinations(http_request):
     sources = Job.objects.values('dest_se').distinct()
     return [row['dest_se'] for row in sources]
 
+
 @jsonify
-def vos(httpRequest):
+def get_unique_vos(http_request):
     vos = Job.objects.values('vo_name').distinct()
     return [row['vo_name'] for row in vos]
 
 
 @jsonify
-def hostnames(httpRequest):
-    notBefore = datetime.utcnow() - timedelta(hours = 1)
-    hosts = Host.objects.values('hostname').filter(beat__gte = notBefore).distinct()
+def get_unique_hostnames(http_request):
+    not_before = datetime.utcnow() - timedelta(hours=1)
+    hosts = Host.objects.values('hostname').filter(beat__gte=not_before).distinct()
     return [h['hostname'] for h in hosts]

@@ -51,6 +51,9 @@ config(function($routeProvider) {
         when('/statistics/vos',       {templateUrl: STATIC_ROOT + 'html/statistics/vos.html',
                                        controller:  StatsVosCtrl,
                                        resolve:     StatsVosCtrl.resolve}).
+       when('/statistics/volume',     {templateUrl: STATIC_ROOT + 'html/statistics/volume.html',
+                                       controller:  TransferVolumeCtrl,
+                                       resolve:     TransferVolumeCtrl.resolve}).
 
         when('/statistics/profiling', {templateUrl: STATIC_ROOT + 'html/statistics/profiling.html',
                                        controller:  StatsProfilingCtrl,

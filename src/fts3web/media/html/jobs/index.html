@@ -4,9 +4,10 @@
     Showing {{jobs.startIndex}} to {{jobs.endIndex}} out of {{jobs.count}}
 </h3>
 
-<pagination rotate="false" num-pages="jobs.pageCount" current-page="jobs.page"
-	max-size="15" class="pagination" boundary-links="true"
-	on-select-page="pageChanged(page)"></pagination>
+<pagination rotate="false"
+    page="jobs.page" total-items="jobs.count" items-per-page="jobs.pageSize"
+    max-size="15" class="pagination" boundary-links="true"
+    on-select-page="pageChanged(page)"></pagination>
 
 <table class="table">
     <thead>
@@ -51,7 +52,8 @@
     </tbody>
 </table>
 
-<pagination rotate="false" num-pages="jobs.pageCount" current-page="jobs.page"
+<pagination rotate="false"
+    page="jobs.page" total-items="jobs.count" items-per-page="jobs.pageSize"
     max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>
 
@@ -68,17 +70,17 @@
 		        <button type="button" class="btn btn-info btn-small" ng-model="filter.state.ready" btn-checkbox>READY</button>
 		        <button type="button" class="btn btn-primary btn-small" ng-model="filter.state.staging" btn-checkbox>STAGING</button>
 		        <button type="button" class="btn btn-primary btn-small" ng-model="filter.state.active" btn-checkbox>ACTIVE</button>
-		        
+
 	            <br/>
 		        <button type="button" class="btn btn-danger  btn-small" ng-model="filter.state.canceled" btn-checkbox>CANCELED</button>
 		        <button type="button" class="btn btn-danger btn-small" ng-model="filter.state.failed" btn-checkbox>FAILED</button>
 		        <button type="button" class="btn btn-success btn-small" ng-model="filter.state.finished" btn-checkbox>FINISHED</button>
 		        <button type="button" class="btn btn-warning btn-small" ng-model="filter.state.finisheddirty" btn-checkbox>FINISHED DIRTY</button>
 		    </p>
-			
+
 			<label for="timewindow">Time window:</label>
 			<input type="number" placeholder="time window in hours" id="timewindow" ng-model="filter.time_window"/>
-			
+
 			<label for="diagnosis">Enable diagnosis mode</label>
 			<input type="checkbox" id="diagnosis" ng-model="filter.diagnosis"/>
 	    </div>
@@ -87,5 +89,5 @@
 	        <button class="btn btn-danger" ng-click="cancelFilters()">Cancel</button>
 	    </div>
     </form>
-    
+
 </div>

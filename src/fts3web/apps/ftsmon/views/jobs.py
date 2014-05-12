@@ -15,53 +15,51 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from django.db import connection
-from django.db.models import Q, Count, Avg
+from django.db.models import Q, Count
 from django.http import Http404
-from django.shortcuts import render, redirect
+from datetime import datetime, timedelta
+
 from jsonify import jsonify, jsonify_paged
 from ftsweb.models import Job, File, RetryError
-from util import getOrderBy, orderedField, paged
+from util import get_order_by, ordered_field, paged
 from diagnosis import JobDiagnosis
-import datetime
-import json
-import time
-    
 
 
-def setupFilters(httpRequest):
+def setup_filters(http_request):
     # Default values
-    filters = {'state': None,
-               'time_window': 1,
-               'vo': None,
-               'source_se': None,
-               'dest_se': None,
-               'source_surl': None,
-               'dest_surl': None,
-               'metadata': None,
-               'activity': None,
-               'hostname': None,
-               'reason': None,
-               'with_file': None,
-               'diagnosis': False
-              }
-    
+    filters = {
+        'state': None,
+        'time_window': 1,
+        'vo': None,
+        'source_se': None,
+        'dest_se': None,
+        'source_surl': None,
+        'dest_surl': None,
+        'metadata': None,
+        'activity': None,
+        'hostname': None,
+        'reason': None,
+        'with_file': None,
+        'diagnosis': False
+    }
+
     for key in filters.keys():
         try:
-            if key in httpRequest.GET:
+            if key in http_request.GET:
                 if key == 'time_window':
-                    filters[key] = int(httpRequest.GET[key])
+                    filters[key] = int(http_request.GET[key])
                 elif key == 'state' or key == 'with_file':
-                    if httpRequest.GET[key]:
-                        filters[key] = httpRequest.GET[key].split(',')
+                    if http_request.GET[key]:
+                        filters[key] = http_request.GET[key].split(',')
                 elif key == 'diagnosis':
-                    print httpRequest.GET[key]
-                    if httpRequest.GET[key] != '0':
+                    print http_request.GET[key]
+                    if http_request.GET[key] != '0':
                         filters[key] = True
                 else:
-                    filters[key] = httpRequest.GET[key]
+                    filters[key] = http_request.GET[key]
         except:
             pass
-    
+
     return filters
 
 
@@ -71,16 +69,19 @@ class JobListDecorator(object):
     file count per state
     This way we only do it for the number that is being actually sent
     """
+
     def __init__(self, job_ids):
         self.job_ids = job_ids
         self.cursor = connection.cursor()
-    
+
     def __len__(self):
         return len(self.job_ids)
-    
-    def _get_job(self, job_id):
+
+    def get_job(self, job_id):
         job = {'job_id': job_id}
-        self.cursor.execute("SELECT submit_time, job_state, vo_name, source_se, dest_se, priority, space_token, job_finished FROM t_job WHERE job_id = %s", [job_id])
+        self.cursor.execute(
+            "SELECT submit_time, job_state, vo_name, source_se, dest_se, priority, space_token, job_finished "
+            "FROM t_job WHERE job_id = %s", [job_id])
         job_desc = self.cursor.fetchall()[0]
         job['submit_time'] = job_desc[0]
         job['job_state'] = job_desc[1]
@@ -90,70 +91,71 @@ class JobListDecorator(object):
         job['priority'] = job_desc[5]
         job['space_token'] = job_desc[6]
         job['job_finished'] = job_desc[7]
-        self.cursor.execute("SELECT file_state, COUNT(file_state) FROM t_file WHERE job_id = %s GROUP BY file_state ORDER BY NULL", [job_id])
+        self.cursor.execute(
+            "SELECT file_state, COUNT(file_state) FROM t_file WHERE job_id = %s GROUP BY file_state ORDER BY NULL",
+            [job_id])
         result = self.cursor.fetchall()
         count = dict()
         for r in result:
             count[r[0]] = r[1]
         job['files'] = count
         return job
-    
+
     def _decorated(self, index):
         for job_id in self.job_ids[index]:
-            yield self._get_job(job_id)
-    
+            yield self.get_job(job_id)
+
     def __getitem__(self, index):
         if not isinstance(index, slice):
             index = slice(index, index, 1)
-        
+
         step = index.step if index.step else 1
         nelems = (index.stop - index.start) / step
         if nelems > 100:
             return self.job_ids[index]
         else:
             return self._decorated(index)
-        
+
     def __iter__(self):
         class _Iter(object):
             def __init__(self, container):
                 self.container = container
                 self.job_id_iter = iter(container.job_ids)
-                
+
             def next(self):
                 job_id = self.job_id_iter.next()
-                return self.container._get_job(job_id)
-            
+                return self.container.get_job(job_id)
+
         return _Iter(self)
 
 
 @jsonify_paged
-def jobIndex(httpRequest):
+def get_job_list(http_request):
     """
     This view is a little bit trickier than the others.
     We get the list of job ids from t_job or t_file depending if
     filtering by state of with_file is used.
     Luckily, the rest of fields are available in both tables
     """
-    filters = setupFilters(httpRequest)
+    filters = setup_filters(http_request)
 
     if filters['with_file']:
-        job_ids = File.objects.values('job_id').distinct().filter(file_state__in = filters['with_file'])
+        job_ids = File.objects.values('job_id').distinct().filter(file_state__in=filters['with_file'])
     elif filters['state']:
-        job_ids = Job.objects.values('job_id').filter(job_state__in = filters['state']).order_by('-submit_time')
+        job_ids = Job.objects.values('job_id').filter(job_state__in=filters['state']).order_by('-submit_time')
     else:
         job_ids = Job.objects.values('job_id').order_by('-submit_time')
-        
-        
+
     if filters['time_window']:
-        notBefore = datetime.datetime.utcnow() -  datetime.timedelta(hours = filters['time_window'])
-        job_ids = job_ids.filter(Q(job_finished__gte = notBefore) | Q(job_finished = None))
+        not_before = datetime.utcnow() - timedelta(hours=filters['time_window'])
+        job_ids = job_ids.filter(Q(job_finished__gte=not_before) | Q(job_finished=None))
 
     if filters['vo']:
-        job_ids = job_ids.filter(vo_name = filters['vo'])
+        job_ids = job_ids.filter(vo_name=filters['vo'])
     if filters['source_se']:
-        job_ids = job_ids.filter(source_se = filters['source_se'])
+        job_ids = job_ids.filter(source_se=filters['source_se'])
     if filters['dest_se']:
-        job_ids = job_ids.filter(dest_se = filters['dest_se'])
+        job_ids = job_ids.filter(dest_se=filters['dest_se'])
 
     job_list = JobListDecorator(map(lambda j: j['job_id'], job_ids))
     if filters['diagnosis']:
@@ -162,98 +164,91 @@ def jobIndex(httpRequest):
 
 
 @jsonify
-def jobDetails(httpRequest, jobId):
-    reason  = httpRequest.GET.get('reason', None)
+def get_job_details(http_request, job_id):
+    reason = http_request.GET.get('reason', None)
     try:
-        file_id = httpRequest.GET.get('file', None)
+        file_id = http_request.GET.get('file', None)
         if file_id is not None:
             file_id = int(file_id)
     except:
         file_id = None
 
     try:
-        job = Job.objects.get(job_id = jobId)
-        count = File.objects.filter(job = jobId)
+        job = Job.objects.get(job_id=job_id)
+        count = File.objects.filter(job=job_id)
     except Job.DoesNotExist:
         raise Http404
-        
+
     if reason:
-        count = count.filter(reason = reason)
+        count = count.filter(reason=reason)
     if file_id:
-        count = count.filter(file_id = file_id)
-    count = count.values('file_state').annotate(count = Count('file_state'))
-    
+        count = count.filter(file_id=file_id)
+    count = count.values('file_state').annotate(count=Count('file_state'))
+
     # Set job duration
     if job.job_finished:
         job.__dict__['duration'] = job.job_finished - job.submit_time
     else:
-        job.__dict__['duration'] = datetime.datetime.utcnow() - job.submit_time
-    
+        job.__dict__['duration'] = datetime.utcnow() - job.submit_time
+
     # Count as dictionary
-    stateCount = {}
+    state_count = {}
     for st in count:
-        stateCount[st['file_state']] = st['count']
-        
-    return {'job': job, 'states': stateCount}
+        state_count[st['file_state']] = st['count']
+
+    return {'job': job, 'states': state_count}
 
 
 class RetriesFetcher(object):
     """
     Fetches, on demand and if necessary, the retry error messages
     """
-    
+
     def __init__(self, files):
         self.files = files
-        
+
     def __len__(self):
         return len(self.files)
-    
+
     def __getitem__(self, i):
         for f in self.files[i]:
-            retries = RetryError.objects.filter(file_id = f.file_id)
+            retries = RetryError.objects.filter(file_id=f.file_id)
             f.retries = map(lambda r: {
-                   'reason': r.reason,
-                   'datetime': r.datetime,
-                   'attempt': r.attempt
+                'reason': r.reason,
+                'datetime': r.datetime,
+                'attempt': r.attempt
             }, retries.all())
             yield f
 
 
 @jsonify
-def jobFiles(httpRequest, jobId):
-    files = File.objects.filter(job = jobId)
+def get_job_transfers(http_request, job_id):
+    files = File.objects.filter(job=job_id)
 
     if not files:
         raise Http404
-    
-    if httpRequest.GET.get('state', None):
-        files = files.filter(file_state__in = httpRequest.GET['state'].split(','))
-    if httpRequest.GET.get('reason', None):
-        files = files.filter(reason = httpRequest.GET['reason'])
-    if httpRequest.GET.get('file', None):
-        files = files.filter(file_id = httpRequest.GET['file'])
-        
+
     # Ordering
-    (orderBy, orderDesc) = getOrderBy(httpRequest)
-    if orderBy == 'id':
-        files = files.order_by(orderedField('file_id', orderDesc))
-    elif orderBy == 'size':
-        files = files.order_by(orderedField('filesize', orderDesc))
-    elif orderBy == 'throughput':
-        files = files.order_by(orderedField('throughput', orderDesc))
-    elif orderBy == 'start_time':
-        files = files.order_by(orderedField('start_time', orderDesc))
-    elif orderBy == 'end_time':
-        files = files.order_by(orderedField('end_time', orderDesc))
-    
+    (order_by, order_desc) = get_order_by(http_request)
+    if order_by == 'id':
+        files = files.order_by(ordered_field('file_id', order_desc))
+    elif order_by == 'size':
+        files = files.order_by(ordered_field('filesize', order_desc))
+    elif order_by == 'throughput':
+        files = files.order_by(ordered_field('throughput', order_desc))
+    elif order_by == 'start_time':
+        files = files.order_by(ordered_field('start_time', order_desc))
+    elif order_by == 'end_time':
+        files = files.order_by(ordered_field('end_time', order_desc))
+
     # Pre-fetch
     files = list(files)
-    
+
     # Job submission time
-    submission_time = Job.objects.get(job_id = jobId).submit_time
-    
+    submission_time = Job.objects.get(job_id=job_id).submit_time
+
     # Build up stats
-    now = datetime.datetime.utcnow()
+    now = datetime.utcnow()
     first_start_time = min(map(lambda f: f.start_time if f.start_time else now, files))
     if files[0].job_finished:
         running_time = files[0].job_finished - first_start_time
@@ -265,71 +260,83 @@ def jobFiles(httpRequest, jobId):
     transferred = sum(map(lambda f: f.transferred if f.transferred else 0, files))
     with_throughputs = filter(lambda f: f.throughput, files)
     actives_throughput = filter(lambda f: f.file_state == 'ACTIVE', with_throughputs)
-    
+
     stats = {
         'total_size': total_size,
         'total_done': transferred,
         'first_start': first_start_time
     }
-    
+
     if first_start_time:
         stats['queued_first'] = first_start_time - submission_time
     else:
         stats['queued_first'] = now - submission_time
-                             
+
     if running_time:
         stats['time_transfering'] = running_time
     if len(actives_throughput):
         stats['current_throughput'] = sum(map(lambda f: f.throughput, actives_throughput)) / len(actives_throughput)
     if len(with_throughputs):
         stats['avg_throughput'] = sum(map(lambda f: f.throughput, with_throughputs)) / len(with_throughputs)
-        
+
+    # Now we got the stats, apply filters
+    if http_request.GET.get('state', None):
+        files = filter(lambda f: f.file_state in http_request.GET['state'].split(','), files)
+    if http_request.GET.get('reason', None):
+        files = filter(lambda f: f.reason == http_request.GET['reason'], files)
+    if http_request.GET.get('file', None):
+        try:
+            file_id = int(http_request.GET['file'])
+            files = filter(lambda f: f.file_id == file_id, files)
+        except:
+            pass
+
     return {
-        'files': paged(RetriesFetcher(files), httpRequest),
+        'files': paged(RetriesFetcher(files), http_request),
         'stats': stats
     }
 
 
 @jsonify_paged
-def transferList(httpRequest):
-    filters    = setupFilters(httpRequest)
-    
+def get_transfer_list(http_request):
+    filters = setup_filters(http_request)
+
     transfers = File.objects
     if filters['state']:
-        transfers = transfers.filter(file_state__in = filters['state'])
+        transfers = transfers.filter(file_state__in=filters['state'])
     else:
-        transfers = transfers.exclude(file_state = 'NOT_USED')
+        transfers = transfers.exclude(file_state='NOT_USED')
     if filters['source_se']:
-        transfers = transfers.filter(source_se = filters['source_se'])
+        transfers = transfers.filter(source_se=filters['source_se'])
     if filters['dest_se']:
-        transfers = transfers.filter(dest_se = filters['dest_se'])
+        transfers = transfers.filter(dest_se=filters['dest_se'])
     if filters['source_surl']:
-        transfers = transfers.filter(source_surl = filters['source_surl'])
+        transfers = transfers.filter(source_surl=filters['source_surl'])
     if filters['dest_surl']:
-        transfers = transfers.filter(dest_surl = filters['dest_surl'])
+        transfers = transfers.filter(dest_surl=filters['dest_surl'])
     if filters['vo']:
-        transfers = transfers.filter(vo_name = filters['vo'])
+        transfers = transfers.filter(vo_name=filters['vo'])
     if filters['time_window']:
-        notBefore =  datetime.datetime.utcnow() - datetime.timedelta(hours = filters['time_window'])
-        transfers = transfers.filter(Q(job_finished__isnull = True) | (Q(job_finished__gte = notBefore)))
+        not_before = datetime.utcnow() - timedelta(hours=filters['time_window'])
+        transfers = transfers.filter(Q(job_finished__isnull=True) | (Q(job_finished__gte=not_before)))
     if filters['activity']:
-        transfers = transfers.filter(activity = filters['activity'])
+        transfers = transfers.filter(activity=filters['activity'])
     if filters['hostname']:
-        transfers = transfers.filter(transferHost = filters['hostname'])
+        transfers = transfers.filter(transferHost=filters['hostname'])
     if filters['reason']:
-        transfers = transfers.filter(reason = filters['reason'])
-   
+        transfers = transfers.filter(reason=filters['reason'])
+
     transfers = transfers.values('file_id', 'file_state', 'job_id',
                                  'source_se', 'dest_se', 'start_time', 'finish_time')
 
     # Ordering
-    (orderBy, orderDesc) = getOrderBy(httpRequest)
-    if orderBy == 'id':
-        transfers = transfers.order_by(orderedField('file_id', orderDesc))
-    elif orderBy == 'start_time':
-        transfers = transfers.order_by(orderedField('start_time', orderDesc))
-    elif orderBy == 'finish_time':
-        transfers = transfers.order_by(orderedField('finish_time', orderDesc))
+    (order_by, order_desc) = get_order_by(http_request)
+    if order_by == 'id':
+        transfers = transfers.order_by(ordered_field('file_id', order_desc))
+    elif order_by == 'start_time':
+        transfers = transfers.order_by(ordered_field('start_time', order_desc))
+    elif order_by == 'finish_time':
+        transfers = transfers.order_by(ordered_field('finish_time', order_desc))
     else:
         transfers = transfers.order_by('-file_id')
 
