@@ -931,7 +931,7 @@ int main(int argc, char **argv)
 
                 if( (!opts.manualConfig || opts.autoTunned) && opts.tcpBuffersize == 1)
                     {
-                        int tcp_buffer_size = 8388608; //8MB
+                        int tcp_buffer_size = 4194304; //4MB
                         int tcp_streams_max = 10;
 
                         if( currentTransfer.fileSize <= tcp_buffer_size)
