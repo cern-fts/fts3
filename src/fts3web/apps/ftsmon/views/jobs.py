@@ -228,13 +228,6 @@ def get_job_transfers(http_request, job_id):
     if not files:
         raise Http404
 
-    if http_request.GET.get('state', None):
-        files = files.filter(file_state__in=http_request.GET['state'].split(','))
-    if http_request.GET.get('reason', None):
-        files = files.filter(reason=http_request.GET['reason'])
-    if http_request.GET.get('file', None):
-        files = files.filter(file_id=http_request.GET['file'])
-
     # Ordering
     (order_by, order_desc) = get_order_by(http_request)
     if order_by == 'id':
@@ -285,6 +278,18 @@ def get_job_transfers(http_request, job_id):
         stats['current_throughput'] = sum(map(lambda f: f.throughput, actives_throughput)) / len(actives_throughput)
     if len(with_throughputs):
         stats['avg_throughput'] = sum(map(lambda f: f.throughput, with_throughputs)) / len(with_throughputs)
+
+    # Now we got the stats, apply filters
+    if http_request.GET.get('state', None):
+        files = filter(lambda f: f.file_state in http_request.GET['state'].split(','), files)
+    if http_request.GET.get('reason', None):
+        files = filter(lambda f: f.reason == http_request.GET['reason'], files)
+    if http_request.GET.get('file', None):
+        try:
+            file_id = int(http_request.GET['file'])
+            files = filter(lambda f: f.file_id == file_id, files)
+        except:
+            pass
 
     return {
         'files': paged(RetriesFetcher(files), http_request),
