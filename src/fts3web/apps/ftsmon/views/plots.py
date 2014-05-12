@@ -133,13 +133,19 @@ def draw_pie(http_request):
 
         values = map(float, values)
 
-        if sum(values) == 0:
+        total = sum(values)
+        if total == 0:
             return _render_error('Total is 0')
 
         # If lc is specified, put the values into the legend
         if http_request.GET.get('lc', False):
             for li in range(n_items):
                 labels[li] = "%s (%.2f%s)" % (labels[li], values[li], suffix)
+
+        # Matplotlib assumes than if sum <= 1, then values are the percentages, so
+        # this trick is here to avoid that
+        if total <= 1:
+            values = map(lambda v: v*1000, values)
 
         fig = Figure(figsize=(6, 3))
         FigureCanvas(fig)
@@ -163,6 +169,7 @@ def draw_pie(http_request):
 
         return response
     except Exception, e:
+        raise
         return _render_error(str(e))
 
 
