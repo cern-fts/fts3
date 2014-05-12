@@ -17,10 +17,10 @@
 
 from datetime import datetime, timedelta
 from django.db import connection
-from django.db.models import Q, Count, Avg
+from django.db.models import Q, Count, Avg, Sum
 from django.db.utils import DatabaseError
 from ftsweb.models import Job, File, Host
-from ftsweb.models import ProfilingSnapshot, ProfilingInfo
+from ftsweb.models import ProfilingSnapshot, ProfilingInfo, OptimizeActive
 from ftsweb.models import ACTIVE_STATES, FILE_TERMINAL_STATES, STATES
 from jsonify import jsonify, jsonify_paged
 from util import getOrderBy, orderedField
@@ -198,6 +198,63 @@ def pervo(httpRequest):
         perVo[vo][voJob['file_state']] = voJob['count']
 
     return perVo
+
+
+class CalculateVolume(object):
+    def __init__(self, triplets, notBefore):
+        self.triplets = triplets
+        self.notBefore = notBefore
+
+    def __len__(self):
+        return len(self.triplets)
+
+    def __getitem__(self, indexes):
+        if not isinstance(indexes, slice):
+            indexes = [indexes]
+        for triplet in self.triplets[indexes]:
+            pairVolume = File.objects.filter(
+                 source_se = triplet['source_se'],
+                 dest_se = triplet['dest_se'],
+                 vo_name = triplet['vo'],
+                 file_state = 'FINISHED',
+                 job_finished__lt = self.notBefore
+            ).aggregate(vol = Sum('filesize'))
+            triplet['volume'] = pairVolume['vol']
+            yield triplet
+
+@jsonify_paged
+def transferVolume(httpRequest):
+    try:
+        timeWindow = timedelta(hours = int(httpRequest.GET['time_window']))
+    except:
+        timeWindow = timedelta(hours = 1)
+    notBefore = datetime.utcnow() - timeWindow
+    
+    if httpRequest.GET.get('vo', None):
+        vos= [httpRequest.GET['vo']]
+    else:
+        vos = [vo['vo_name'] for vo in Job.objects.values('vo_name').distinct().all()]
+
+    triplets = []
+    for vo in vos:       
+        pairs = File.objects.values('source_se', 'dest_se').distinct()
+        if httpRequest.GET.get('source_se', None):
+            pairs = pairs.filter(source_se = httpRequest.GET['source_se'])
+        if httpRequest.GET.get('dest_se', None):
+            pairs = pairs.filter(dest_se = httpRequest.GET['dest_se'])
+        pairs = pairs.filter(vo_name = vo, file_state = 'FINISHED', job_finished__lt = notBefore)
+
+        for pair in pairs:
+            source = pair['source_se']
+            dest = pair['dest_se']
+            triplets.append({
+                'source_se': source,
+                'dest_se': dest,
+                'vo': vo
+            })
+    
+    # Trick to calculate the sum only for those that are visible
+    return CalculateVolume(triplets, notBefore)
 
 
 @jsonify

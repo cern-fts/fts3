@@ -1,4 +1,6 @@
 
+// Overview
+
 function StatsOverviewCtrl($routeParams, $location, $scope, stats, Statistics, Unique)
 {
 	$scope.stats = stats;
@@ -41,6 +43,7 @@ StatsOverviewCtrl.resolve = {
 	}
 }
 
+// Per server
 
 function StatsServersCtrl($location, $scope, servers, Servers)
 {
@@ -81,6 +84,7 @@ StatsServersCtrl.resolve = {
 	}
 }
 
+// Per VO
 
 function StatsVosCtrl($location, $scope, vos, StatsVO, Unique)
 {
@@ -130,6 +134,36 @@ StatsVosCtrl.resolve = {
 	}
 }
 
+// Transfer volume
+function TransferVolumeCtrl($location, $scope, volumes)
+{
+    $scope.volumes = volumes;
+    
+    // On page change, reload
+    $scope.pageChanged = function(newPage) {
+        $location.search('page', newPage);
+    };
+}
+
+TransferVolumeCtrl.resolve = {
+    volumes: function($rootScope, $location, $q, TransferVolume) {
+        loading($rootScope);
+        
+        var deferred = $q.defer();
+        
+        var page = $location.search().page;
+        if (!page || page < 1)
+            page = 1;
+        
+        TransferVolume.query($location.search(),
+                genericSuccessMethod(deferred, $rootScope),
+                genericFailureMethod(deferred, $rootScope, $location));
+        
+        return deferred.promise;
+    }
+}
+
+// Profiling
 
 function StatsProfilingCtrl($location, $scope, profile, Profile)
 {
