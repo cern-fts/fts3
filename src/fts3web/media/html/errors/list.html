@@ -7,10 +7,11 @@
     <plot-pie title="Error phase" list="errors.classification" legend-count="legend-count"></plot-pie>
 </div>
 
-<pagination rotate="false" num-pages="errors.errors.pageCount" current-page="errors.errors.page"
+<pagination rotate="false"
+    page="errors.errors.page" total-items="errors.errors.count" items-per-page="errors.errors.pageSize"
     max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>
-    
+
 <table class="table">
     <thead>
         <tr>
@@ -32,7 +33,8 @@
     </tbody>
 </table>
 
-<pagination rotate="false" num-pages="errors.errors.pageCount" current-page="errors.errors.page"
+<pagination rotate="false"
+    page="errors.errors.page" total-items="errors.errors.count" items-per-page="errors.errors.pageSize"
     max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>
 
@@ -52,4 +54,4 @@
         </div>
     </form>
 </div>
-    
+

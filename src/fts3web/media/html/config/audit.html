@@ -3,7 +3,8 @@
     <button class="btn btn-mini btn-info" type="button" ng-click="filtersModal = true">Filter</button>
 </h2>
 
-<pagination rotate="false" num-pages="config.pageCount" current-page="config.page"
+<pagination rotate="false"
+    page="config.page" total-items="config.count" items-per-page="config.pageSize"
     max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>
 
@@ -26,7 +27,8 @@
     </tbody>
 </table>
 
-<pagination rotate="false" num-pages="config.pageCount" current-page="config.page"
+<pagination rotate="false"
+    page="config.page" total-items="config.count" items-per-page="config.pageSize"
     max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>
 
@@ -50,10 +52,10 @@
                 <option>optimizer mode</option>
                 <option>queue-timeout</option>
             </select>
-            
+
             <label for="user">User:</label>
             <input type="text" id="user" ng-model="filter.user"/>
-               
+
             <label for="contains">Contains:</label>
             <input type="text" id="contains" ng-model="filter.contains"/>
         </div>

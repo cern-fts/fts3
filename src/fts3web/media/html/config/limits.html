@@ -1,6 +1,7 @@
 <h2>Limit configuration</h2>
 
-<pagination rotate="false" num-pages="limits.pageCount" current-page="limits.page"
+<pagination rotate="false"
+    page="limits.page" total-items="limits.count" items-per-page="limits.pageSize"
     max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>
 
@@ -31,6 +32,7 @@
     </tbody>
 </table>
 
-<pagination rotate="false" num-pages="limits.pageCount" current-page="limits.page"
+<pagination rotate="false"
+    page="limits.page" total-items="limits.count" items-per-page="limits.pageSize"
     max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>

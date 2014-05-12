@@ -4,7 +4,8 @@
 
 <h4>{{pairs.startIndex}} to {{pairs.endIndex}} out of {{pairs.count}}</h4>
 
-<pagination rotate="false" num-pages="pairs.pageCount" current-page="pairs.page"
+<pagination rotate="false"
+    page="pairs.page" total-items="pairs.count" items-per-page="pairs.pageSize"
     max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>
 
@@ -29,7 +30,8 @@
     </tbody>
 </table>
 
-<pagination rotate="false" num-pages="pairs.pageCount" current-page="pairs.page"
+<pagination rotate="false"
+    page="pairs.page" total-items="pairs.count" items-per-page="pairs.pageSize"
     max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>
 
