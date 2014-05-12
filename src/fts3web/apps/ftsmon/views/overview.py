@@ -126,7 +126,7 @@ def get_overview(http_request):
         not_before = datetime.utcnow() - timedelta(hours=filters['time_window'])
     else:
         not_before = datetime.utcnow() - timedelta(hours=1)
-    throughput_window = datetime.utcnow() - timedelta(seconds=5)
+    throughput_window = datetime.utcnow() - timedelta(seconds=2)
 
     cursor = connection.cursor()
 
