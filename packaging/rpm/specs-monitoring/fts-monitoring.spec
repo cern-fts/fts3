@@ -7,6 +7,8 @@ License: ASL 2.0
 Group: Applications/Internet
 BuildArch: noarch
 
+BuildRequires:  python2-devel
+
 #Requires: cx_Oracle
 Requires: MySQL-python
 Requires: Django >= 1.3.7
