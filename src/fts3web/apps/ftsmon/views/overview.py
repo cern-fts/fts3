@@ -18,6 +18,7 @@ from datetime import datetime, timedelta
 from django.db import connection
 from django.db.models import Count, Avg
 import types
+import sys
 
 from ftsweb.models import File
 from jobs import setup_filters
@@ -202,7 +203,12 @@ def get_overview(http_request):
     elif order_by == 'canceled':
         sorting_method = lambda o: (o.get('canceled', 0), o.get('finished', 0))
     elif order_by == 'throughput':
-        sorting_method = lambda o: (o.get('current', 0), o.get('active', 0))
+        if order_desc:
+            # NULL current first (so when reversing, they are last)
+            sorting_method = lambda o: (o.get('current', None), o.get('active', 0))
+        else:
+             # NULL current last
+            sorting_method = lambda o: (o.get('current', sys.maxint), o.get('active', 0))
     elif order_by == 'rate':
         sorting_method = lambda o: (o.get('rate', 0), o.get('finished', 0))
     else:
