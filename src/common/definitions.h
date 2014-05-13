@@ -244,6 +244,26 @@ public:
 };
 
 
+struct message_turl: public message_base
+{
+public:
+
+    message_turl():throughput(0.0)
+    {
+    }
+
+    ~message_turl()
+    {
+    }
+    std::string source_surl_host;
+    std::string dest_surl_host;    
+    std::string source_turl_host;
+    std::string dest_turl_host;
+    double throughput;
+
+};
+
+
 
 
 #define DEFAULT_TIMEOUT 4000
