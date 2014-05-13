@@ -138,6 +138,10 @@ boost::shared_ptr<GSoapRequestHandler> GSoapAcceptor::accept()
             handler.reset (
                 new GSoapRequestHandler(*this)
             );
+	    
+    		char ipbuffer [512] = {0};	    	    
+		sprintf(ipbuffer, "accepted connection from host=%s, socket=%d", ctx->host, sock); 
+    		FTS3_COMMON_LOGGER_NEWLOG (INFO) << ipbuffer << commit;
         }
     else
         {
@@ -176,11 +180,12 @@ void GSoapAcceptor::recycleSoapContext(soap* ctx)
     if(stopThreads)
         return;
 
+    ThreadTraits::LOCK_R lock(_mutex);
+
     if(ctx)
         {
             soap_destroy(ctx);
             soap_end(ctx);
-            ThreadTraits::LOCK_R lock(_mutex);
 
             ctx->bind_flags |= SO_REUSEADDR;
             ctx->accept_timeout = 180;
