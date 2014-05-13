@@ -98,7 +98,13 @@ void GSoapRequestHandler::handle()
                 }
             else
                 {
-                    fts3_serve(ctx);
+		    if (fts3_serve(ctx) != SOAP_OK){
+		        char buf[2048] = {0};
+			size_t len=2048;
+			
+			soap_sprint_fault(ctx, buf, len);
+		    	FTS3_COMMON_LOGGER_NEWLOG (ERR) << buf << commit;
+		    }
                 }
         }
 }
