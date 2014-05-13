@@ -750,9 +750,10 @@ int main(int argc, char **argv)
                                              currentTransfer.fileSize);
                     }
 
-                if (access(opts.proxy.c_str(), F_OK) != 0)
+                if ( (access(opts.proxy.c_str(), F_OK) != 0) || (access(opts.proxy.c_str(), R_OK) != 0))
                     {
-                        errorMessage = "INIT Proxy doesn't exist, probably expired and not renewed " + opts.proxy;
+                        errorMessage = "INIT Proxy error, check if user fts3 can read " + opts.proxy;
+                        errorMessage += " (" +  mapErrnoToString(errno) + ")";			
                         errorScope = SOURCE;
                         reasonClass = mapErrnoToString(errno);
                         errorPhase = TRANSFER_PREPARATION;
