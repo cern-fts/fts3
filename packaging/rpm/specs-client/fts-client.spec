@@ -5,8 +5,8 @@
 %global __provides_exclude_from ^%{python_sitearch}/fts/.*\\.so$
 
 Name: fts-client
-Version: 3.2.24
-Release: 5%{?dist}
+Version: 3.2.25
+Release: 1%{?dist}
 Summary: File Transfer Service V3
 Group: Applications/Internet
 License: ASL 2.0
@@ -136,6 +136,8 @@ make install DESTDIR=%{buildroot}
 %{python_sitearch}/fts
 
 %changelog
+* Mon May 12 2014 Michal Simon <michal.simon@cern.ch> - 3.2.25-1
+  - Update for new upstream release
 * Tue Apr 08 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.24-5
   - Forked client-only spec file for SL5
 

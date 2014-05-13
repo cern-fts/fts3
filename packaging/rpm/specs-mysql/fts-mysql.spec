@@ -1,6 +1,6 @@
 Name: fts-mysql
-Version: 3.2.24
-Release: 5%{?dist}
+Version: 3.2.25
+Release: 1%{?dist}
 Summary: File Transfer Service V3 mysql plug-in
 Group: Applications/Internet
 License: ASL 2.0
@@ -64,6 +64,8 @@ make install DESTDIR=%{buildroot}
 %doc LICENSE
 
 %changelog
+* Mon May 12 2014 Michal Simon <michal.simon@cern.ch> - 3.2.25-1
+  - Update for new upstream release
 * Wed Aug 07 2013 Michal Simon <michal.simon@cern.ch> - 3.1.1-2
   - no longer linking explicitly to boost libraries with '-mt' sufix 
   - sql scripts have been moved to datadir
