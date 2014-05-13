@@ -7,6 +7,8 @@ License: ASL 2.0
 Group: Applications/Internet
 BuildArch: noarch
 
+BuildRequires:  python2-devel
+
 #Requires: cx_Oracle
 Requires: MySQL-python
 Requires: Django >= 1.3.7
@@ -81,15 +83,17 @@ install -m 644 httpd.conf.d/ftsmon.conf           %{buildroot}%{_sysconfdir}/htt
 %files selinux
 
 %changelog
- * Tue Oct 08 2013 Alejandro Alvarez <aalvarez@cern.ch> - 3.1.27-1
+* Mon May 12 2014 Michal Simon <michal.simon@cern.ch> - 3.2.25-1
+  - Update for new upstream release
+* Tue Oct 08 2013 Alejandro Alvarez <aalvarez@cern.ch> - 3.1.27-1
   - Added selinux rpm
- * Mon Sep 02 2013 Michal Simon <michal.simon@cern.ch> - 3.1.1-2
+* Mon Sep 02 2013 Michal Simon <michal.simon@cern.ch> - 3.1.1-2
   - since it is a noarch package removing '%{?_isa}' sufix
- * Wed Aug 28 2013 Michal Simon <michal.simon@cern.ch> - 3.1.1-1
+* Wed Aug 28 2013 Michal Simon <michal.simon@cern.ch> - 3.1.1-1
   - replacing '--no-preserve=ownership'
   - python macros have been removed
   - comments regarding svn have been removed
   - '%{_builddir}/%{name}-%{version}/' prefix is not used anymore
   - more detailed description
- * Tue Apr 30 2013 Michal Simon <michal.simon@cern.ch> - 3.1.0-1
+* Tue Apr 30 2013 Michal Simon <michal.simon@cern.ch> - 3.1.0-1
   - First EPEL release
