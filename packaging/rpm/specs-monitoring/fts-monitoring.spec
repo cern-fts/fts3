@@ -14,7 +14,6 @@ Requires: httpd
 Requires: mod_wsgi
 Requires: python
 Requires: python-decorator
-Requires: python-matplotlib
 
 Source0: https://grid-deployment.web.cern.ch/grid-deployment/dms/fts3/tar/%{name}-%{version}.tar.gz
 
@@ -29,9 +28,9 @@ as some statistics (e.g. success rate)
 service httpd condrestart
 
 %package selinux
-Summary:		SELinux support for fts-monitoring
-Group:			Applications/Internet
-Requires:   fts-monitoring = %{version}-%{release}
+Summary:        SELinux support for fts-monitoring
+Group:          Applications/Internet
+Requires:       fts-monitoring = %{version}-%{release}
 
 %description selinux
 This package labels port 8449, used by fts-monitoring, as http_port_t,
