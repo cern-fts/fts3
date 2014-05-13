@@ -243,7 +243,7 @@ def get_transfer_volume(http_request):
             pairs = pairs.filter(source_se=http_request.GET['source_se'])
         if http_request.GET.get('dest_se', None):
             pairs = pairs.filter(dest_se=http_request.GET['dest_se'])
-        pairs = pairs.filter(vo_name=vo, file_state='FINISHED', job_finished__lt=not_before)
+        pairs = pairs.filter(vo_name=vo, file_state='FINISHED', job_finished__gte=not_before)
 
         for pair in pairs:
             source = pair['source_se']
