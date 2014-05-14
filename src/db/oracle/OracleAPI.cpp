@@ -6091,7 +6091,7 @@ void OracleAPI::addToken(const std::string & job_id, int file_id, const std::str
                 " SET bringonline_token = :token "
                 " WHERE job_id = :jobId "
                 "   AND file_id = :fileId "
-                "   AND file_state = 'STAGING' ",
+                "   AND file_state = 'STARTED' ",
                 soci::use(token),
                 soci::use(job_id),
                 soci::use(file_id);
