@@ -2890,6 +2890,8 @@ bool OracleAPI::updateOptimizer()
     soci::indicator isNullRecordsFound = soci::i_ok;
     long long int streamsCurrent = 0;
     soci::indicator isNullStreamsCurrent = soci::i_ok;
+    long long singleDest = 0;
+    bool lanTransferBool = false;
 
     time_t now = getUTC(0);
     struct tm startTimeSt;
@@ -2970,6 +2972,14 @@ bool OracleAPI::updateOptimizer()
                                          " source_se=:source_se and dest_se=:dest_se",
                                          soci::use(source_hostname), soci::use(destin_hostname), soci::into(streamsCurrent, isNullStreamsCurrent));
 
+					 
+            soci::statement stmt18 = (
+                                         sql.prepare << " select count(distinct source_se) from t_file where "
+					 		" file_state in ('ACTIVE','READY','SUBMITTED') and "
+							" dest_se=:dest and "
+							" job_finished is null",
+                                         soci::use(destin_hostname), soci::into(singleDest));					 
+ 
 
 
             //check if retry is set at global level
@@ -2987,11 +2997,6 @@ bool OracleAPI::updateOptimizer()
                 {
                     source_hostname = i->get<std::string>("SOURCE_SE");
                     destin_hostname = i->get<std::string>("DEST_SE");
-
-                    if(true == lanTransfer(source_hostname, destin_hostname))
-                        highDefault = (highDefault * 3);
-                    else //default
-                        highDefault = tempDefault;
 
                     double nFailedLastHour=0.0, nFinishedLastHour=0.0;
                     double throughput=0.0;
@@ -3019,7 +3024,20 @@ bool OracleAPI::updateOptimizer()
                     isNullRecordsFound = soci::i_ok;
                     streamsCurrent = 0;
                     isNullStreamsCurrent = soci::i_ok;
+		    singleDest = 0;
+		    lanTransferBool = false;
+		    
                     now = getUTC(0);
+		    
+                    if(true == lanTransfer(source_hostname, destin_hostname))
+		    {
+                        highDefault = (highDefault * 3);
+			lanTransferBool = true;
+                    }
+		    else
+		    { //default
+                        highDefault = tempDefault;		    
+		    }
 
                     // Weighted average
                     soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
@@ -3043,7 +3061,7 @@ bool OracleAPI::updateOptimizer()
 
 
                     // Ratio of success
-                    soci::rowset<soci::row> rs = (sql.prepare << "SELECT file_state, retry FROM t_file "
+                    soci::rowset<soci::row> rs = (sql.prepare << "SELECT file_state, current_failures retry FROM t_file "
                                                   "WHERE "
                                                   "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
                                                   "      (t_file.job_finished is NULL OR t_file.job_finished > (sys_extract_utc(systimestamp) - interval '1' minute)) AND "
@@ -3057,8 +3075,13 @@ bool OracleAPI::updateOptimizer()
                         {
                             std::string state = i->get<std::string>("FILE_STATE", "");
                             int retryNum = static_cast<int>(i->get<double>("RETRY", 0));
-
-                            if ( (state.compare("FAILED") == 0 || state.compare("SUBMITTED") == 0) && retrySet > 0 && retryNum > 0)
+			    int current_failures = i->get<int>("CURRENT_FAILURES", 0);
+			    
+			    if(state.compare("FAILED") == 0 && current_failures == 1)
+			        {
+			         //do nothing, it's a non recoverable error so do not consider it
+			        }
+                            else if ( (state.compare("FAILED") == 0 || state.compare("SUBMITTED") == 0) && retrySet > 0 && retryNum > 0)
                                 {
                                     nFailedLastHour+=1.0;
                                 }
@@ -3080,6 +3103,10 @@ bool OracleAPI::updateOptimizer()
 
                     // Active transfers
                     stmt7.execute(true);
+		    
+		    //check if there is any other source for a given dest
+		    stmt18.execute(true);
+		    
 
                     //optimize number of streams first
                     //check if pair exists first
@@ -3223,8 +3250,20 @@ bool OracleAPI::updateOptimizer()
                                     bool maxActiveLimit = getMaxActive(sql, maxActive, highDefault, source_hostname, destin_hostname);
 
                                     if(maxActiveLimit)
-                                        {
-                                            active = maxActive + spawnActive;
+                                        {					
+					    if(singleDest == 1)
+					    {
+					        active = maxActive + spawnActive + 2;
+					    }
+					    else if (lanTransferBool)
+					    {
+    					        active = maxActive + spawnActive + 2;
+					    }
+					    else
+					    {
+                                            	active = maxActive + spawnActive;
+					    }	
+					    
                                             pathFollowed = 1;
                                             stmt10.execute(true);
                                         }
