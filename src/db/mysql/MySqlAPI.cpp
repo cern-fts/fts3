@@ -3486,11 +3486,11 @@ bool MySqlAPI::updateOptimizer()
                                         {					
 					    if(singleDest == 1)
 					    {
-					        active = maxActive + spawnActive + 2;
+					        active = maxActive + spawnActive + 1;
 					    }
 					    else if (lanTransferBool)
 					    {
-    					        active = maxActive + spawnActive + 2;
+    					        active = maxActive + spawnActive + 1;
 					    }
 					    else
 					    {
