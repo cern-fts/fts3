@@ -3269,6 +3269,7 @@ bool OracleAPI::updateOptimizer()
                                         }
                                     else
                                         {
+					    active = maxActive;
                                             pathFollowed = 11;
                                             stmt10.execute(true);
                                         }

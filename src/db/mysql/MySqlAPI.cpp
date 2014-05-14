@@ -3273,7 +3273,7 @@ bool MySqlAPI::updateOptimizer()
                         highDefault = tempDefault;
 		    }		    
 
-                    // check current active transfers for a link
+                    // check current active transfers for a linkmaxActive
                     stmt7.execute(true);
 		    
 		    //check if there is any other source for a given dest
@@ -3482,7 +3482,7 @@ bool MySqlAPI::updateOptimizer()
                                     //make sure we do not increase beyond limits set
                                     bool maxActiveLimit = getMaxActive(sql, maxActive, highDefault, source_hostname, destin_hostname);
 
-                                    if(maxActiveLimit)
+                                    if(maxActiveLimit) // no limit
                                         {					
 					    if(singleDest == 1)
 					    {
@@ -3502,6 +3502,7 @@ bool MySqlAPI::updateOptimizer()
                                         }
                                     else
                                         {
+					    active = maxActive;
                                             pathFollowed = 11;
                                             stmt10.execute(true);
                                         }
