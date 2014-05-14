@@ -3126,6 +3126,8 @@ bool MySqlAPI::updateOptimizer()
     soci::indicator isNullRecordsFound = soci::i_ok;
     long long int streamsCurrent = 0;
     soci::indicator isNullStreamsCurrent = soci::i_ok;
+    long long singleDest = 0;
+    bool lanTransferBool = false;
 
     time_t now = getUTC(0);
     struct tm startTimeSt;
@@ -3206,6 +3208,13 @@ bool MySqlAPI::updateOptimizer()
                                          sql.prepare << " select nostreams from t_optimize where "
                                          " source_se=:source_se and dest_se=:dest_se",
                                          soci::use(source_hostname), soci::use(destin_hostname), soci::into(streamsCurrent, isNullStreamsCurrent));
+					 
+            soci::statement stmt18 = (
+                                         sql.prepare << " select count(distinct source_se) from t_file where "
+					 		" file_state in ('ACTIVE','READY','SUBMITTED') and "
+							" dest_se=:dest and "
+							" job_finished is null",
+                                         soci::use(destin_hostname), soci::into(singleDest));					 
 
 
             //check if retry is set at global level
@@ -3223,11 +3232,6 @@ bool MySqlAPI::updateOptimizer()
                 {
                     source_hostname = i->get<std::string>("source_se");
                     destin_hostname = i->get<std::string>("dest_se");
-
-                    if(true == lanTransfer(source_hostname, destin_hostname))
-                        highDefault = (highDefault * 3);
-                    else //default
-                        highDefault = tempDefault;
 
                     double nFailedLastHour=0.0, nFinishedLastHour=0.0;
                     double throughput=0.0;
@@ -3255,10 +3259,25 @@ bool MySqlAPI::updateOptimizer()
                     isNullRecordsFound = soci::i_ok;
                     streamsCurrent = 0;
                     isNullStreamsCurrent = soci::i_ok;
+		    singleDest = 0;
+		    lanTransferBool = false;
                     now = getUTC(0);
+		    
+                  if(true == lanTransfer(source_hostname, destin_hostname))
+		    {
+                        highDefault = (highDefault * 3);
+			lanTransferBool = true;
+		    }
+                    else //default
+		    {
+                        highDefault = tempDefault;
+		    }		    
 
                     // check current active transfers for a link
                     stmt7.execute(true);
+		    
+		    //check if there is any other source for a given dest
+		    stmt18.execute(true);
 
                     // Weighted average
                     soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
@@ -3282,7 +3301,7 @@ bool MySqlAPI::updateOptimizer()
                         }
 
                     // Ratio of success
-                    soci::rowset<soci::row> rs = (sql.prepare << "SELECT file_state, retry FROM t_file "
+                    soci::rowset<soci::row> rs = (sql.prepare << "SELECT file_state, retry, current_failures FROM t_file "
                                                   "WHERE "
                                                   "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
                                                   "      (t_file.job_finished is NULL OR t_file.job_finished > (UTC_TIMESTAMP() - interval '1' minute)) AND "
@@ -3296,8 +3315,13 @@ bool MySqlAPI::updateOptimizer()
                         {
                             std::string state = i->get<std::string>("file_state", "");
                             int retryNum = i->get<int>("retry", 0);
+			    int current_failures = i->get<int>("current_failures", 0);
 
-                            if ( (state.compare("FAILED") == 0 ||  state.compare("SUBMITTED") == 0) && retrySet > 0 && retryNum > 0)
+			    if(state.compare("FAILED") == 0 && current_failures == 0)
+			        {
+			         //do nothing, it's a non recoverable error so do not consider it
+			        }
+                            else if ( (state.compare("FAILED") == 0 ||  state.compare("SUBMITTED") == 0) && retrySet > 0 && retryNum > 0)
                                 {
                                     nFailedLastHour+=1.0;
                                 }
@@ -3459,8 +3483,20 @@ bool MySqlAPI::updateOptimizer()
                                     bool maxActiveLimit = getMaxActive(sql, maxActive, highDefault, source_hostname, destin_hostname);
 
                                     if(maxActiveLimit)
-                                        {
-                                            active = maxActive + spawnActive;
+                                        {					
+					    if(singleDest == 1)
+					    {
+					        active = maxActive + spawnActive + 2;
+					    }
+					    else if (lanTransferBool)
+					    {
+    					        active = maxActive + spawnActive + 2;
+					    }
+					    else
+					    {
+                                            	active = maxActive + spawnActive;
+					    }	
+					    
                                             pathFollowed = 1;
                                             stmt10.execute(true);
                                         }
@@ -5572,7 +5608,7 @@ void MySqlAPI::setPriority(std::string job_id, int priority)
         }
 }
 
-void MySqlAPI::setSeProtocol(std::string protocol, std::string se, std::string state)
+void MySqlAPI::setSeProtocol(std::string /*protocol*/, std::string se, std::string state)
 {
     soci::session sql(*connectionPool);
 
