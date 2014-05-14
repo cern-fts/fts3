@@ -30,7 +30,7 @@ using namespace FTS3_CONFIG_NAMESPACE;
 namespace db
 {
 
-const int MAX_ACTIVE_PER_LINK = 50;
+const int MAX_ACTIVE_PER_LINK = 70;
 
 
 /**
