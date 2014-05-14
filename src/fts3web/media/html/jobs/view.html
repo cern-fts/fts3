@@ -74,6 +74,9 @@
     <button type="button" class="btn btn-primary btn-small"
             ng-model="filter.state.active" btn-checkbox
             ng-disabled="!job.states.ACTIVE">{{job.states.ACTIVE}} ACTIVE</button>
+    <button type="button" class="btn btn-staging btn-small"
+            ng-model="filter.state.staging" btn-checkbox
+            ng-disabled="!job.states.STAGING">{{job.states.STAGING}} STAGING</button>
     <button type="button" class="btn btn-danger  btn-small"
             ng-model="filter.state.canceled" btn-checkbox
             ng-disabled="!job.states.CANCELED">{{job.states.CANCELED}} CANCELED</button>

@@ -119,6 +119,34 @@ td.SUBMITTED, .SUBMITTED {
 	background: #AAA;
 }
 
+/* Staging button */
+.btn-staging {
+    color: #ffffff;
+    background-color: #990099;
+    background-image: linear-gradient(to bottom, #993D99, #990099);
+    border-color: #993D7A;
+}
+
+.btn-staging:hover {
+    color: #ffffff;
+    background-color: #991F99;
+    background-image: none;
+    border-color: #993D7A;
+}
+
+.btn-staging.active {
+    color: #ffffff;
+    background-color: #660066;
+    background-image: none;
+    border-color: #993D7A;
+}
+
+.btn-staging[disabled] {
+    color: white;
+    background-color: #990099;
+    border-color: #993D7A;
+}
+
 /* Overview */
 .overview {
 	border-left: solid 4px gray;
