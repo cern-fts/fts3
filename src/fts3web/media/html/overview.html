@@ -60,16 +60,16 @@
                 <span class="filter-on-click" ng-click="filterBy({source_se: o.source_se})" title="Filter source SE">
                     {{ o.source_se }}
                 </span>
-                <span ng-show="o.bandwidth_limit.source">
-                    <i class="icon-upload" title="Limited at {{o.bandwidth_limit.source}} MB/s"></i>
+                <span ng-show="o.limits.source">
+                    <i class="icon-upload" title="{{getLimitDescription(o.limits.source)}}"></i>
                 </span>
             </td>
 			<td>
 			    <span class="filter-on-click" ng-click="filterBy({dest_se: o.dest_se})" title="Filter destination SE">
                     {{ o.dest_se }}
 			    </span>
-                <span ng-show="o.bandwidth_limit.destination">
-                    <i class="icon-download" title="Limited at {{o.bandwidth_limit.destination}} MB/s"></i>
+                <span ng-show="o.limits.destination">
+                    <i class="icon-download" title="{{getLimitDescription(o.limits.destination)}}"></i>
                 </span>
 			</td>
 			<td>
