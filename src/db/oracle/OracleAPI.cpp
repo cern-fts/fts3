@@ -5956,7 +5956,7 @@ void OracleAPI::bringOnlineReportStatusInternal(soci::session& sql,
                     sql.begin();
                     sql <<
                         " UPDATE t_file "
-                        " SET staging_start = sys_extract_utc(systimestamp), transferhost=:thost "
+                        " SET staging_start = sys_extract_utc(systimestamp), transferhost=:thost, file_state='STARTED' "
                         " WHERE job_id = :jobId "
                         "   AND file_id= :fileId "
                         "   AND file_state='STAGING'",
