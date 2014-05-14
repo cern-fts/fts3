@@ -96,7 +96,8 @@ CREATE TABLE t_optimizer_evolution (
     active       INTEGER DEFAULT NULL,
     throughput   FLOAT DEFAULT NULL,
     buffer       INTEGER DEFAULT NULL,
-    filesize     DOUBLE DEFAULT NULL
+    filesize     DOUBLE DEFAULT NULL,
+    agrthroughput   FLOAT DEFAULT NULL
 );
 CREATE INDEX t_optimizer_source_and_dest ON t_optimizer_evolution(source_se, dest_se);
 
