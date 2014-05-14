@@ -8049,17 +8049,26 @@ void OracleAPI::updateOptimizerEvolution(soci::session& sql, const std::string &
         {
             if(throughput > 0 && successRate > 0)
                 {
+		    double agrthroughput = 0.0;
+		    soci::indicator ind = soci::i_ok;
+		    sql << " select sum(throughput) from t_file where file_state='ACTIVE' and source_se=:source_se and dest_se=:dest_se and throughput > 0 ",
+		    soci::use(source_hostname), soci::use(destination_hostname), soci::into(agrthroughput, ind);
+		    
+		    if(ind == soci::i_ok && agrthroughput > 0)
+		    {
                     sql.begin();
-                    sql << " INSERT INTO t_optimizer_evolution (datetime, source_se, dest_se, active, throughput, filesize, buffer, nostreams) "
-                        " values(sys_extract_utc(systimestamp), :source, :dest, :active, :throughput, :filesize, :buffer, :nostreams) ",
+                    sql << " INSERT INTO t_optimizer_evolution (datetime, source_se, dest_se, active, throughput, filesize, buffer, nostreams, agrthroughput) "
+                        " values(sys_extract_utc(systimestamp), :source, :dest, :active, :throughput, :filesize, :buffer, :nostreams, :agrthroughput) ",
                         soci::use(source_hostname),
                         soci::use(destination_hostname),
                         soci::use(active),
                         soci::use(throughput),
                         soci::use(successRate),
                         soci::use(buffer),
-                        soci::use(bandwidth);
+                        soci::use(bandwidth),
+			soci::use(agrthroughput);
                     sql.commit();
+		    }
                 }
         }
     catch (std::exception& e)
