@@ -5835,7 +5835,9 @@ std::vector<message_bringonline> OracleAPI::getBringOnlineFiles(std::string voNa
                                 soci::into(currentStagingFilesNoConfig)
                                 ;
 
-                            unsigned int maxNoConfig = currentStagingFilesNoConfig > 0 ? maxValue - currentStagingFilesNoConfig : maxValue;
+                            int maxNoConfig = currentStagingFilesNoConfig > 0 ? maxValue - currentStagingFilesNoConfig : maxValue;
+			    if(maxNoConfig > 500 || maxNoConfig < 0)
+			    	maxNoConfig = 500;
 
                             soci::rowset<soci::row> rs2 = (
                                                               sql.prepare <<
@@ -5888,7 +5890,9 @@ std::vector<message_bringonline> OracleAPI::getBringOnlineFiles(std::string voNa
                         soci::into(currentStagingFilesConfig)
                         ;
 
-                    unsigned int maxConfig = currentStagingFilesConfig > 0 ? maxValue - currentStagingFilesConfig : maxValue;
+                    int maxConfig = currentStagingFilesConfig > 0 ? maxValue - currentStagingFilesConfig : maxValue;
+		    if(maxConfig > 500 || maxConfig < 0)
+			maxConfig = 500;		    
 
                     soci::rowset<soci::row> rs = (
                                                      sql.prepare <<
