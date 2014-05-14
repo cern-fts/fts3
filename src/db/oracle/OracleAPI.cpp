@@ -5945,8 +5945,7 @@ std::vector<message_bringonline> OracleAPI::getBringOnlineFiles(std::string voNa
 void OracleAPI::bringOnlineReportStatusInternal(soci::session& sql,
         const std::string & state, const std::string & message,
         const struct message_bringonline& msg)
-{
-    if (state != "STARTED" && state != "FINISHED" && state != "FAILED") return;
+{   
 
     std::vector<struct message_state> files;
 
