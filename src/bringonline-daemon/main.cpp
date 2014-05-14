@@ -219,8 +219,7 @@ void issueBringOnLineStatus(gfal2_context_t handle, std::string infosys)
                                             bringonlineTimeout = (*i).bringonlineTimeout;
                                         }
 
-                                    statusA = gfal2_bring_online(handle, ((*i).url).c_str(), pinlifetime, bringonlineTimeout, token, sizeof (token), 1, &error);
-                                    db::DBSingleton::instance().getDBObjectInstance()->bringOnlineReportStatus("STARTED", "", (*i));
+                                    statusA = gfal2_bring_online(handle, ((*i).url).c_str(), pinlifetime, bringonlineTimeout, token, sizeof (token), 1, &error);                                    
 
                                     if (statusA < 0)
                                         {
@@ -265,6 +264,7 @@ void issueBringOnLineStatus(gfal2_context_t handle, std::string infosys)
                                                 {
                                                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE will be retried" << commit;
                                                     (*i).retries +=1;
+						    (*i).started = false;
                                                 }
                                             else
                                                 {
