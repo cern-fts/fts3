@@ -3077,7 +3077,7 @@ bool OracleAPI::updateOptimizer()
                             int retryNum = static_cast<int>(i->get<double>("RETRY", 0));
 			    int current_failures = i->get<int>("CURRENT_FAILURES", 0);
 			    
-			    if(state.compare("FAILED") == 0 && current_failures == 1)
+			    if(state.compare("FAILED") == 0 && current_failures == 0)
 			        {
 			         //do nothing, it's a non recoverable error so do not consider it
 			        }

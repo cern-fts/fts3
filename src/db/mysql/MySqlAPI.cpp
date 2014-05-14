@@ -3317,7 +3317,7 @@ bool MySqlAPI::updateOptimizer()
                             int retryNum = i->get<int>("retry", 0);
 			    int current_failures = i->get<int>("current_failures", 0);
 
-			    if(state.compare("FAILED") == 0 && current_failures == 1)
+			    if(state.compare("FAILED") == 0 && current_failures == 0)
 			        {
 			         //do nothing, it's a non recoverable error so do not consider it
 			        }
