@@ -41,6 +41,21 @@ function mergeAttrs(a, b)
 	return a;
 }
 
+function getLimitDescription(limit)
+{
+    if (!limit)
+        return '';
+
+    var descr = 'Limited at ';
+    if (limit.bandwidth)
+        descr += limit.bandwidth + 'MB/s';
+    if (limit.bandwidth && limit.active)
+        descr += ' and ';
+    if (limit.active)
+        descr += limit.active + ' actives';
+    return descr;
+}
+
 function OverviewCtrl($location, $scope, overview, Overview)
 {
 	$scope.overview = overview;
@@ -52,6 +67,9 @@ function OverviewCtrl($location, $scope, overview, Overview)
 
 	// Method to choose a style for a pair
 	$scope.pairState = pairState;
+
+	// Render a human-readable representation of the limits
+	$scope.getLimitDescription = getLimitDescription;
 
 	// Filter
 	$scope.filterBy = function(filter) {

@@ -36,14 +36,24 @@ def _db_to_date():
         return '%s'
 
 
-def _get_bandwidth_limit(bw_limits, source, destination):
-    limits = {}
-    for l in bw_limits:
+def _get_pair_limits(limits, source, destination):
+    pair_limits = {'source': dict(), 'destination': dict()}
+    for l in limits:
         if l[0] == source:
-            limits['source'] = l[2]
+            if l[2]:
+                pair_limits['source']['bandwidth'] = l[2]
+            elif l[3]:
+                pair_limits['source']['active'] = l[3]
         elif l[1] == destination:
-            limits['destination'] = l[2]
-    return limits
+            if l[2]:
+                pair_limits['destination']['bandwidth'] = l[2]
+            elif l[3]:
+                pair_limits['destination']['active'] = l[3]
+    if len(pair_limits['source']) == 0:
+        del pair_limits['source']
+    if len(pair_limits['destination']) == 0:
+        del pair_limits['destination']
+    return pair_limits
 
 
 class OverviewExtended(object):
@@ -170,7 +180,7 @@ def get_overview(http_request):
             triplets[triplet_key] = triplet
 
     # Limitations
-    limit_query = "SELECT source_se, dest_se, throughput FROM t_optimize WHERE throughput IS NOT NULL"
+    limit_query = "SELECT source_se, dest_se, throughput, active FROM t_optimize WHERE throughput IS NOT NULL or active IS NOT NULL"
     cursor.execute(limit_query)
     limits = cursor.fetchall()
 
@@ -188,7 +198,7 @@ def get_overview(http_request):
         if total > 0:
             obj['rate'] = (finished * 100.0) / total
         # Append limit, if any
-        obj['bandwidth_limit'] = _get_bandwidth_limit(limits, triplet[0], triplet[1])
+        obj['limits'] =_get_pair_limits(limits, triplet[0], triplet[1])
         objs.append(obj)
 
     # Ordering
