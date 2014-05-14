@@ -6261,7 +6261,7 @@ void MySqlAPI::bringOnlineReportStatusInternal(soci::session& sql,
                         " SET staging_finished = UTC_TIMESTAMP(), job_finished=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), reason = :reason, file_state = :fileState "
                         " WHERE job_id = :jobId "
                         "	AND file_id = :fileId "
-                        "	AND file_state = 'STAGING'",
+                        "	AND file_state in ('STAGING','STARTED')",
                         soci::use(dbReason),
                         soci::use(dbState),
                         soci::use(msg.job_id),
@@ -6276,7 +6276,7 @@ void MySqlAPI::bringOnlineReportStatusInternal(soci::session& sql,
                     if (isNull != soci::i_null && reuse == "Y")
                         {
                             int countTr = 0;
-                            sql << " select count(*) from t_file where job_id=:jobId and file_state='STAGING' ", soci::use(msg.job_id), soci::into(countTr);
+                            sql << " select count(*) from t_file where job_id=:jobId and file_state in ('STAGING','STARTED') ", soci::use(msg.job_id), soci::into(countTr);
                             if(countTr == 0)
                                 {
                                     if(stage_in_only == 0)
