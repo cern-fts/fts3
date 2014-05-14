@@ -22,11 +22,11 @@ function pairState(pair)
 	// Meh
 	else
 		klasses = '';
-	
+
 	// If any active, always give that
 	if (pair.active)
-		klasses += ' active';	
-	
+		klasses += ' active';
+
 	return klasses;
 }
 
@@ -49,10 +49,10 @@ function OverviewCtrl($location, $scope, overview, Overview)
 	$scope.pageChanged = function(newPage) {
 		$location.search('page', newPage);
 	};
-	
+
 	// Method to choose a style for a pair
 	$scope.pairState = pairState;
-	
+
 	// Filter
 	$scope.filterBy = function(filter) {
 		$location.search(filter);
@@ -63,10 +63,10 @@ function OverviewCtrl($location, $scope, overview, Overview)
 		var filter = $location.search();
 		filter.page = $scope.overview.page;
         Overview.query(filter, function(updatedOverview) {
-            for(var i = 0; i < updatedOverview.items.length; i++) {
-                updatedOverview.items[i].show = $scope.overview.items[i].show;
+            for(var i = 0; i < updatedOverview.overview.items.length; i++) {
+                updatedOverview.overview.items[i].show = $scope.overview.overview.items[i].show;
             }
-            scope.overview = updatedOverview;
+            $scope.overview = updatedOverview;
         });
 	}, REFRESH_INTERVAL);
 	$scope.$on('$destroy', function() {
@@ -78,17 +78,17 @@ function OverviewCtrl($location, $scope, overview, Overview)
 OverviewCtrl.resolve = {
 	overview: function($rootScope, $location, $q, Overview) {
 		loading($rootScope);
-		
+
 		var deferred = $q.defer();
-	
+
 		var page = $location.search().page;
 		if (!page || page < 1)
 			page = 1;
-		
+
 		Overview.query($location.search(),
   			  genericSuccessMethod(deferred, $rootScope),
 			  genericFailureMethod(deferred, $rootScope, $location));
-		
+
 		return deferred.promise;
 	}
 }
