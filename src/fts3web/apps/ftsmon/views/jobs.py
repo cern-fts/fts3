@@ -249,7 +249,7 @@ def get_job_transfers(http_request, job_id):
 
     # Build up stats
     now = datetime.utcnow()
-    first_start_time = min(map(lambda f: f.start_time if f.start_time else now, files))
+    first_start_time = min(map(lambda f: f.get_start_time() if f.get_start_time() else now, files))
     if files[0].job_finished:
         running_time = files[0].job_finished - first_start_time
     else:

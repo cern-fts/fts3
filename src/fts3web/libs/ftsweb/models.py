@@ -115,6 +115,17 @@ class FileBase(models.Model):
     log_debug       = models.IntegerField(db_column = 't_log_file_debug')
     activity        = models.CharField(max_length = 255)
 
+    def get_start_time(self):
+        """
+        Return staging_start, or start_time or None in that order
+        """
+        if self.staging_start:
+            return self.staging_start
+        elif self.start_time:
+            return self.start_time
+        else:
+            return None
+
     def __str__(self):
         return str(self.file_id)
 
