@@ -110,6 +110,10 @@ td.status {
      background: #990099;
 }
 
+.STARTED {
+    background: #BA56B0;
+}
+
 td.SUBMITTED, .SUBMITTED {
     color: black;
     background: #FFFF88;
