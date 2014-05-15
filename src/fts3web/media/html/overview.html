@@ -29,28 +29,28 @@
                 VO
             </th>
             <th style="width: 5%" class="numeric">
-                <span order-by="submitted">Submitted</span>
+                <span order-by="submitted">Queued</span>
             </th>
             <th style="width: 5%" class="numeric">
                 <span order-by="active">Active</span>
             </th>
             <th style="width: 5%" class="numeric">
-                <span order-by="finished">Succeeded</span>
+                <span order-by="finished">Finished</span>
             </th>
             <th style="width: 5%" class="numeric">
                 <span order-by="failed">Failed</span>
             </th>
             <th style="width: 5%" class="numeric">
-                <span order-by="canceled">Canceled</span>
+                <span order-by="canceled">Cancel</span>
             </th>
 
-            <th style="width: 5%" class="numeric">
+            <th style="width: 8%" class="numeric">
                 <span order-by="rate">Rate</span>
             </th>
-            <th style="width: 7%" class="numeric">
+            <th style="width: 8%" class="numeric">
                 <span title="VO Throughput" order-by="throughput">VO Thr.</span>
             </th>
-            <th style="width: 7%" class="numeric">
+            <th style="width: 8%" class="numeric">
                 <span title="Last known aggregated throughput" order-by="aggregated">Aggr. Thr.</span>
             </th>
             <th style="width: 2%"></th>
@@ -148,6 +148,9 @@
             </td>
             <td class="numeric">
                 <span optional-number="overview.summary.current" suffix="MB/s" decimals="2"></span>
+            </td>
+            <td class="numeric">
+                <span optional-number="overview.summary.aggregated" suffix="MB/s" decimals="2"></span>
             </td>
             <td>&nbsp;</td>
         </tr>

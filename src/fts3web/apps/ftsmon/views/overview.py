@@ -35,6 +35,13 @@ def _db_to_date():
     else:
         return '%s'
 
+def _db_limit(sql, limit):
+    if settings.DATABASES['default']['ENGINE'] == 'django.db.backends.oracle':
+        return "SELECT * FROM (%s) WHERE rownum <= %d" % (sql, limit)
+    elif settings.DATABASES['default']['ENGINE'] == 'django.db.backends.mysql':
+        return sql + " LIMIT %d" % limit
+    else:
+        return sql
 
 def _get_pair_limits(limits, source, destination):
     pair_limits = {'source': dict(), 'destination': dict()}
@@ -161,6 +168,7 @@ def get_overview(http_request):
         FROM t_file
         WHERE (job_finished IS NULL OR job_finished >= %s)
               AND source_se = %%s AND dest_se = %%s
+              AND file_state != 'NOT_USED'
         """ % (_db_to_date(), _db_to_date())
         params = [throughput_window.strftime('%Y-%m-%d %H:%M:%S'),
                   not_before.strftime('%Y-%m-%d %H:%M:%S'),
@@ -183,14 +191,15 @@ def get_overview(http_request):
 
         # Snapshot for the pair
         # Can not get it per VO :(
-        query = """
+        query = _db_limit("""
         SELECT agrthroughput
         FROM t_optimizer_evolution
-        WHERE source_se = %s AND dest_se = %s
+        WHERE source_se = %%s AND dest_se = %%s
+            AND datetime >= %s
         ORDER BY datetime DESC
-        LIMIT 1
-        """
-        params = [source, dest]
+        """ % _db_to_date(), 1)
+
+        params = [source, dest, not_before]
         cursor.execute(query, params)
         aggregated_total = cursor.fetchall()
         if len(aggregated_total):
@@ -255,12 +264,13 @@ def get_overview(http_request):
 
     # Generate summary
     summary = {
-        'submitted': reduce(lambda a, b: a + b, map(lambda o: o.get('submitted', 0), objs), 0),
-        'active': reduce(lambda a, b: a + b, map(lambda o: o.get('active', 0), objs), 0),
-        'finished': reduce(lambda a, b: a + b, map(lambda o: o.get('finished', 0), objs), 0),
-        'failed': reduce(lambda a, b: a + b, map(lambda o: o.get('failed', 0), objs), 0),
-        'canceled': reduce(lambda a, b: a + b, map(lambda o: o.get('canceled', 0), objs), 0),
-        'current': reduce(lambda a, b: a + b, map(lambda o: o.get('current', 0), objs), 0),
+        'submitted': sum(map(lambda o: o.get('submitted', 0), objs), 0),
+        'active': sum(map(lambda o: o.get('active', 0), objs), 0),
+        'finished': sum(map(lambda o: o.get('finished', 0), objs), 0),
+        'failed': sum(map(lambda o: o.get('failed', 0), objs), 0),
+        'canceled': sum(map(lambda o: o.get('canceled', 0), objs), 0),
+        'current': sum(map(lambda o: o.get('current', 0), objs), 0),
+        'aggregated': sum(map(lambda o: o.get('aggregated', 0), objs), 0),
     }
     if summary['finished'] > 0 or summary['failed'] > 0:
         summary['rate'] = (float(summary['finished']) / (summary['finished'] + summary['failed'])) * 100
