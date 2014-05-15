@@ -13,42 +13,45 @@
     max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>
 
-<table class="table">
+<table class="table table-small">
     <thead>
         <tr>
-            <th style="width: 24%">
+            <th>
                 <i class="icon-th-list" ng-click="filterBy({source_se: ''})"></i>
                 Source
             </th>
-            <th style="width: 24%">
+            <th>
                 <i class="icon-th-list" ng-click="filterBy({dest_se: ''})"></i>
                 Destination
             </th>
-            <th style="width: 6%">
+            <th style="width: 5%">
                 <i class="icon-th-list" ng-click="filterBy({vo: ''})"></i>
                 VO
             </th>
-            <th style="width: 6%" class="numeric">
+            <th style="width: 5%" class="numeric">
                 <span order-by="submitted">Submitted</span>
             </th>
-            <th style="width: 6%" class="numeric">
+            <th style="width: 5%" class="numeric">
                 <span order-by="active">Active</span>
             </th>
-            <th style="width: 6%" class="numeric">
+            <th style="width: 5%" class="numeric">
                 <span order-by="finished">Succeeded</span>
             </th>
-            <th style="width: 6%" class="numeric">
+            <th style="width: 5%" class="numeric">
                 <span order-by="failed">Failed</span>
             </th>
-            <th style="width: 6%" class="numeric">
+            <th style="width: 5%" class="numeric">
                 <span order-by="canceled">Canceled</span>
             </th>
 
-            <th style="width: 6%" class="numeric">
+            <th style="width: 5%" class="numeric">
                 <span order-by="rate">Rate</span>
             </th>
-            <th style="width: 8%" class="numeric">
-                <span order-by="throughput">Current throughput</span>
+            <th style="width: 7%" class="numeric">
+                <span title="VO Throughput" order-by="throughput">VO Thr.</span>
+            </th>
+            <th style="width: 7%" class="numeric">
+                <span title="Last known aggregated throughput" order-by="aggregated">Aggr. Thr.</span>
             </th>
             <th style="width: 2%"></th>
         </tr>
@@ -107,6 +110,9 @@
             </td>
             <td class="numeric">
                 <span optional-number="o.current" suffix="MB/s" decimals="2"></span>
+            </td>
+            <td class="numeric">
+                <span optional-number="o.aggregated" suffix="MB/s" decimals="2"></span>
             </td>
             <td>
                 <a href="#/optimizer/detailed?source={{o.source_se}}&destination={{o.dest_se}}&time_window={{globalFilter.time_window}}">

@@ -55,6 +55,10 @@ table.table {
 	table-layout: fixed;
 }
 
+table.table-small {
+    font-size: 90%;
+}
+
 table.table th {
 	overflow: hidden;
 }
@@ -108,6 +112,10 @@ td.status {
 
 .STAGING {
      background: #990099;
+}
+
+.STARTED {
+    background: #BA56B0;
 }
 
 td.SUBMITTED, .SUBMITTED {

@@ -14,21 +14,21 @@ config(function($routeProvider) {
         when('/transfers',            {templateUrl: STATIC_ROOT + 'html/transfers.html',
                                        controller:  TransfersCtrl,
                                        resolve:     TransfersCtrl.resolve}).
-                           
+
         when('/optimizer/',           {templateUrl: STATIC_ROOT + 'html/optimizer/optimizer.html',
                                        controller:  OptimizerCtrl,
                                        resolve:     OptimizerCtrl.resolve}).
         when('/optimizer/detailed',   {templateUrl: STATIC_ROOT + 'html/optimizer/detailed.html',
                                        controller:  OptimizerDetailedCtrl,
                                        resolve:     OptimizerDetailedCtrl.resolve}).
-                                       
+
         when('/errors/',              {templateUrl: STATIC_ROOT + 'html/errors/errors.html',
                                        controller:  ErrorsCtrl,
                                        resolve:     ErrorsCtrl.resolve}).
         when('/errors/list',          {templateUrl: STATIC_ROOT + 'html/errors/list.html',
                                        controller:  ErrorsForPairCtrl,
                                        resolve:     ErrorsForPairCtrl.resolve}).
-                              
+
         when('/config/audit',         {templateUrl: STATIC_ROOT + 'html/config/audit.html',
                                        controller:  ConfigAuditCtrl,
                                        resolve:     ConfigAuditCtrl.resolve}).
@@ -41,7 +41,7 @@ config(function($routeProvider) {
         when('/config/limits',        {templateUrl: STATIC_ROOT + 'html/config/limits.html',
                                        controller:  ConfigLimitsCtrl,
                                        resolve:     ConfigLimitsCtrl.resolve}).
-                              
+
         when('/statistics/overview',  {templateUrl: STATIC_ROOT + 'html/statistics/overview.html',
                                        controller:  StatsOverviewCtrl,
                                        resolve:     StatsOverviewCtrl.resolve}).
@@ -63,7 +63,7 @@ config(function($routeProvider) {
                                          resolve:     SlowQueriesCtrl.resolve}).
 
         when('/500',                    {templateUrl: STATIC_ROOT + 'html/500.html'}).
-                                     
+
         otherwise({templateUrl: STATIC_ROOT + 'html/404.html'});
 })
 .filter('escape', function() {
@@ -128,7 +128,7 @@ config(function($routeProvider) {
                 orderedDesc = true;
                 orderedBy = orderedBy.slice(1);
             }
-            
+
             // Now, add the icon if this is the field used for the ordering
             var icon = '';
             if (orderedBy == field) {
@@ -137,11 +137,11 @@ config(function($routeProvider) {
                 else
                     icon = '<i class="icon-arrow-up"></i>';
             }
-            
+
             // HTML
             var html = '<span class="orderby" title="' + title + '">' + icon + content + '</span>';
             var replacement = angular.element(html);
-            
+
             // Bind the method
             replacement.bind('click', function() {
                 if (orderedDesc && field == orderedBy)
@@ -150,7 +150,7 @@ config(function($routeProvider) {
                     $location.search('orderby', '-' + field);
                 scope.$apply();
             });
-            
+
             // Replace
             element.replaceWith(replacement);
         }
@@ -200,7 +200,7 @@ function loading($rootScope)
 {
     nLoading += 1;
     if (nLoading)
-        $rootScope.loading = true;  
+        $rootScope.loading = true;
 }
 
 function stopLoading($rootScope)
@@ -233,6 +233,8 @@ function joinStates(states)
         str += 'FINISHEDDIRTY,';
     if (states.not_used)
         str += 'NOT_USED,';
+    if (states.started)
+        str += 'STARTED,';
     if (str.length > 0)
         str = str.slice(0, -1);
     return str;
@@ -241,10 +243,10 @@ function joinStates(states)
 function statesFromString(str)
 {
     var st = {ready: false, active: false, canceled: false, failed: false, finished: false, finisheddirty: false};
-    
+
     if (typeof(str) != "undefined") {
         var states = str.split(',');
-        
+
         for (var i in states) {
             if (states[i] == 'SUBMITTED')
                 st.submitted= true;
@@ -264,9 +266,11 @@ function statesFromString(str)
                 st.finisheddirty = true;
             if (states[i] == 'NOT_USED')
                 st.not_used = true;
+            if (states[i] == 'STARTED')
+                st.started = true;
         }
     }
-    
+
     return st;
 }
 

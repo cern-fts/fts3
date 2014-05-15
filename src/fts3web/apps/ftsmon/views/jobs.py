@@ -238,8 +238,12 @@ def get_job_transfers(http_request, job_id):
         files = files.order_by(ordered_field('throughput', order_desc))
     elif order_by == 'start_time':
         files = files.order_by(ordered_field('start_time', order_desc))
-    elif order_by == 'end_time':
-        files = files.order_by(ordered_field('end_time', order_desc))
+    elif order_by == 'finish_time':
+        files = files.order_by(ordered_field('finish_time', order_desc))
+    elif order_by == 'staging_start':
+        files = files.order_by(ordered_field('staging_start', order_desc))
+    elif order_by == 'staging_finished':
+        files = files.order_by(ordered_field('staging_finished', order_desc))
 
     # Pre-fetch
     files = list(files)
@@ -249,7 +253,7 @@ def get_job_transfers(http_request, job_id):
 
     # Build up stats
     now = datetime.utcnow()
-    first_start_time = min(map(lambda f: f.start_time if f.start_time else now, files))
+    first_start_time = min(map(lambda f: f.get_start_time() if f.get_start_time() else now, files))
     if files[0].job_finished:
         running_time = files[0].job_finished - first_start_time
     else:
