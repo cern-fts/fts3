@@ -238,8 +238,8 @@ def get_job_transfers(http_request, job_id):
         files = files.order_by(ordered_field('throughput', order_desc))
     elif order_by == 'start_time':
         files = files.order_by(ordered_field('start_time', order_desc))
-    elif order_by == 'end_time':
-        files = files.order_by(ordered_field('end_time', order_desc))
+    elif order_by == 'finish_time':
+        files = files.order_by(ordered_field('finish_time', order_desc))
 
     # Pre-fetch
     files = list(files)
