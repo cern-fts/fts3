@@ -51,7 +51,7 @@ class JobBase(models.Model):
     overwrite_flag  = models.CharField(max_length = 1)
     job_finished    = models.DateTimeField()
     source_space_token = models.CharField(max_length = 255)
-    source_token_description = models.CharField(max_length = 255) 
+    source_token_description = models.CharField(max_length = 255)
     copy_pin_lifetime = models.IntegerField()
     fail_nearline   = models.CharField(max_length = 1)
     checksum_method = models.CharField(max_length = 1)
@@ -59,13 +59,13 @@ class JobBase(models.Model):
     job_metadata    = models.CharField(max_length = 1024)
     retry           = models.IntegerField()
     retry_delay     = models.IntegerField()
-    
+
     class Meta:
         abstract = True
-        
+
     def isFinished(self):
         return self.job_state not in ['SUBMITTED', 'READY', 'ACTIVE', 'STAGING']
-    
+
     def __str__(self):
         return self.job_id
 
@@ -114,10 +114,10 @@ class FileBase(models.Model):
     log_file        = models.CharField(max_length = 2048, db_column = 't_log_file')
     log_debug       = models.IntegerField(db_column = 't_log_file_debug')
     activity        = models.CharField(max_length = 255)
-    
+
     def __str__(self):
         return str(self.file_id)
-    
+
     class Meta:
         abstract = True
 
@@ -125,19 +125,19 @@ class FileBase(models.Model):
 class File(FileBase):
     job = models.ForeignKey('Job', db_column = 'job_id', related_name = '+', null = True)
     class Meta:
-        db_table = 't_file' 
+        db_table = 't_file'
 
 
 class RetryError(models.Model):
     attempt  = models.IntegerField()
     datetime = models.DateTimeField()
     reason   = models.CharField(max_length = 2048)
-    
+
     file_id = models.ForeignKey('File', db_column = 'file_id', related_name = '+', primary_key = True)
-    
+
     class Meta:
         db_table = 't_file_retry_errors'
-    
+
     def __eq__(self, b):
         return isinstance(b, self.__class__) and \
             self.file_id == b.file_id and \
@@ -152,13 +152,13 @@ class  ConfigAudit(models.Model):
     dn       = models.CharField(max_length = 1024)
     config   = models.CharField(max_length = 4000)
     action   = models.CharField(max_length = 100)
-    
+
     class Meta:
         db_table = 't_config_audit'
 
     def simple_action(self):
         return self.action.split(' ')[0]
-    
+
     def __eq__(self, b):
         return isinstance(b, self.__class__) and \
                self.datetime == b.datetime and self.dn == b.dn and \
@@ -174,12 +174,12 @@ class LinkConfig(models.Model):
     tcp_buffer_size   = models.IntegerField()
     urlcopy_tx_to     = models.IntegerField()
     auto_tuning       = models.CharField(max_length = 3)
-    
+
     def __eq__(self, b):
         return isinstance(b, self.__class__) and \
                self.source == b.source and \
                self.destination == b.destination
-    
+
     class Meta:
         db_table = 't_link_config'
 
@@ -189,13 +189,13 @@ class ShareConfig(models.Model):
     destination = models.CharField(max_length = 255)
     vo          = models.CharField(max_length = 100)
     active      = models.IntegerField()
-    
+
     def __eq__(self, b):
         return isinstance(b, self.__class__) and \
                self.source == b.source and \
                self.destination == b.destination and \
                self.vo == b.vo
-    
+
     class Meta:
         db_table = 't_share_config'
 
@@ -205,15 +205,15 @@ class Optimize(models.Model):
     dest_se   = models.CharField(max_length = 255, primary_key = True)
     active    = models.IntegerField()
     bandwidth = models.FloatField(db_column = 'throughput')
-    
+
     def __eq__(self, other):
         if type(self) != type(other):
             return False
-        
+
         return self.source_se == other.source_se and \
                self.dest_se == other.dest_se and \
                self.active == other.active
-    
+
     class Meta:
         db_table = 't_optimize'
 
@@ -222,20 +222,20 @@ class OptimizeActive(models.Model):
     source_se  = models.CharField(max_length = 255)
     dest_se    = models.CharField(max_length = 255)
     active     = models.IntegerField(primary_key = True)
-    
+
     def __eq__(self, other):
         if type(self) != type(other):
             return False
-        
+
         return self.source_se == other.source_se and \
                self.dest_se   == other.dest_se
-    
+
     class Meta:
         db_table = 't_optimize_active'
 
 
 class OptimizerEvolution(models.Model):
-    datetime     = models.DateTimeField(primary_key = True) 
+    datetime     = models.DateTimeField(primary_key = True)
     source_se    = models.CharField(max_length = 255)
     dest_se      = models.CharField(max_length = 255)
     nostreams    = models.IntegerField()
@@ -244,7 +244,8 @@ class OptimizerEvolution(models.Model):
     throughput   = models.FloatField()
     branch       = models.IntegerField(db_column = 'buffer')
     success      = models.FloatField(db_column = 'filesize')
-    
+    agrthroughput = models.FloatField(db_column = 'filesize')
+
     class Meta:
         db_table = 't_optimizer_evolution'
 
@@ -255,7 +256,7 @@ class ProfilingSnapshot(models.Model):
     exceptions = models.IntegerField()
     total      = models.FloatField()
     average    = models.FloatField()
-    
+
     class Meta:
         db_table = 't_profiling_snapshot'
 
@@ -263,7 +264,7 @@ class ProfilingSnapshot(models.Model):
 class ProfilingInfo(models.Model):
     updated = models.DateTimeField(primary_key = True)
     period  = models.IntegerField()
-    
+
     class Meta:
         db_table = 't_profiling_info'
 
@@ -273,7 +274,7 @@ class Host(models.Model):
     beat     = models.DateTimeField()
     service_name = models.CharField()
     drain    = models.IntegerField()
-    
+
     class Meta:
         db_table = 't_hosts'
 
@@ -282,7 +283,7 @@ class DebugConfig(models.Model):
     source_se = models.CharField(primary_key = True)
     dest_se   = models.CharField()
     debug     = models.CharField()
-    
+
     def __eq__(self, other):
         # Consider all entries different
         return False
@@ -290,4 +291,4 @@ class DebugConfig(models.Model):
     class Meta:
         db_table = 't_debug'
 
-    
+
