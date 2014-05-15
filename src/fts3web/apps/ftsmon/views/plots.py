@@ -35,7 +35,7 @@ def _str_to_array(string):
     return a
 
 
-def _render_error(msg='Error on plotting. Probably wrong query format.'):
+def _render_error(msg='Error on plotting. Probably wrong query format.', title=None):
     fig = Figure(figsize=(3, 3))
     FigureCanvas(fig)
 
@@ -45,6 +45,9 @@ def _render_error(msg='Error on plotting. Probably wrong query format.'):
             verticalalignment='center',
             transform=ax.transAxes)
     ax.set_axis_off()
+
+    if title:
+        ax.set_title(title)
 
     response = HttpResponse(content_type='image/png')
     fig.savefig(response, format='png')
@@ -135,7 +138,7 @@ def draw_pie(http_request):
 
         total = sum(values)
         if total == 0:
-            return _render_error('Total is 0')
+            return _render_error('Total is 0', title=title)
 
         # If lc is specified, put the values into the legend
         if http_request.GET.get('lc', False):

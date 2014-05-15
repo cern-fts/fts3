@@ -1,14 +1,16 @@
 <h2>Statistics - Servers</h2>
-<h3>For the last 6 hours</h3>
+<h3>For the last hour</h3>
 
 <table class="table">
     <thead>
         <tr>
-            <th>Server</th>
-            <th>Running services</th>
-            <th>Submissions received</th>
-            <th>Transfers picked</th>
-            <th>Transfers running</th>
+            <th style="width: 10%">Server</th>
+            <th style="width: 10%">Services</th>
+            <th class="numeric" style="width: 12%">Submissions</th>
+            <th class="numeric" style="width: 12%">Executed</th>
+            <th class="numeric" style="width: 12%">Active</th>
+            <th class="numeric" style="width: 12%">Staging queued</th>
+            <th class="numeric" style="width: 12%">Staging started</th>
             <th>Logs</th>
         </tr>
     </thead>
@@ -20,18 +22,20 @@
             <td>
                 <span ng-repeat="(service, segment) in s.services" title="[{{segment.start}}, {{segment.end}}]" ng-class="'status-'+segment.status">
                     {{service}}
-                    
+
                     <i class="icon-ok-sign" title="Running ({{segment.beat}})" ng-show="segment.status == 'running'"></i>
                     <i class=" icon-warning-sign" title="Not running ({{segment.beat}})" ng-show="segment.status == 'down'"></i>
                     <i class="icon-wrench" title="Draining" ng-show="segment.drain"></i>
                     <br/>
                 </span>
             </td>
-            <td>{{s.submissions}}</td>
-            <td>{{s.transfers}}</td>
-            <td>{{s.active}}</td>
+            <td class="numeric">{{s.submissions}}</td>
+            <td class="numeric">{{s.transfers}}</td>
+            <td class="numeric">{{s.active}}</td>
+            <td class="numeric">{{s.staging}}</td>
+            <td class="numeric">{{s.started}}</td>
             <td>
-                <a log="'/var/log/fts3/fts3server.log'" host="k">FTS3</a>
+                <a log="'/var/log/fts3/fts3server.log'" host="k">FTS3</a><br/>
                 <a log="'/var/log/fts3/fts3bringonline.log'" host="k">Bringonline</a>
             </td>
         </tr>
@@ -39,13 +43,21 @@
 </table>
 
 <div class="row-fluid">
-    <div class="span4">
+    <div class="span4" style="text-align: center">
         <plot-pie title="Submissions" list="servers" value="submissions"/>
     </div>
-    <div class="span4">
+    <div class="span4" style="text-align: center">
         <plot-pie title="Executed" list="servers" value="transfers"/>
     </div>
-    <div class="span4">
+    <div class="span4" style="text-align: center">
         <plot-pie title="Active" list="servers" value="active"/>
+    </div>
+</div>
+<div class="row-fluid">
+    <div class="span6" style="text-align: center">
+        <plot-pie title="Staging" list="servers" value="staging"/>
+    </div>
+    <div class="span6" style="text-align: center">
+        <plot-pie title="Staging started" list="servers" value="started"/>
     </div>
 </div>
