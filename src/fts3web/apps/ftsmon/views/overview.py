@@ -170,14 +170,36 @@ def get_overview(http_request):
             params.append(filters['vo'])
         query += " GROUP BY file_state, vo_name ORDER BY NULL"
 
+        all_vos = []
         cursor.execute(query, params)
         for row in cursor.fetchall():
+            all_vos.append(row[1])
             triplet_key = (source, dest, row[1])
             triplet = triplets.get(triplet_key, dict())
             triplet[row[0].lower()] = row[2]
             if row[3]:
                 triplet['current'] = triplet.get('current', 0) + row[3]
             triplets[triplet_key] = triplet
+
+        # Snapshot for the pair
+        # Can not get it per VO :(
+        query = """
+        SELECT agrthroughput
+        FROM t_optimizer_evolution
+        WHERE source_se = %s AND dest_se = %s
+        ORDER BY datetime DESC
+        LIMIT 1
+        """
+        params = [source, dest]
+        cursor.execute(query, params)
+        aggregated_total = cursor.fetchall()
+        if len(aggregated_total):
+            aggregated_total = aggregated_total[0][0]
+            if aggregated_total:
+                for vo in all_vos:
+                    triplet_key = (source, dest, vo)
+                    triplets[triplet_key]['aggregated'] = aggregated_total
+
 
     # Limitations
     limit_query = "SELECT source_se, dest_se, throughput, active FROM t_optimize WHERE throughput IS NOT NULL or active IS NOT NULL"
@@ -219,6 +241,13 @@ def get_overview(http_request):
         else:
              # NULL current last
             sorting_method = lambda o: (o.get('current', sys.maxint), o.get('active', 0))
+    elif order_by == 'aggregated':
+        if order_desc:
+            # NULL current first (so when reversing, they are last)
+            sorting_method = lambda o: (o.get('aggregated', None), o.get('active', 0))
+        else:
+             # NULL current last
+            sorting_method = lambda o: (o.get('aggregated', sys.maxint), o.get('active', 0))
     elif order_by == 'rate':
         sorting_method = lambda o: (o.get('rate', 0), o.get('finished', 0))
     else:
