@@ -240,6 +240,10 @@ def get_job_transfers(http_request, job_id):
         files = files.order_by(ordered_field('start_time', order_desc))
     elif order_by == 'finish_time':
         files = files.order_by(ordered_field('finish_time', order_desc))
+    elif order_by == 'staging_start':
+        files = files.order_by(ordered_field('staging_start', order_desc))
+    elif order_by == 'staging_finished':
+        files = files.order_by(ordered_field('staging_finished', order_desc))
 
     # Pre-fetch
     files = list(files)

@@ -55,6 +55,10 @@ table.table {
 	table-layout: fixed;
 }
 
+table.table-small {
+    font-size: 90%;
+}
+
 table.table th {
 	overflow: hidden;
 }
