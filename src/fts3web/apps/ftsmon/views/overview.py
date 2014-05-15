@@ -35,6 +35,13 @@ def _db_to_date():
     else:
         return '%s'
 
+def _db_limit(sql, limit):
+    if settings.DATABASES['default']['ENGINE'] == 'django.db.backends.oracle':
+        return "SELECT * FROM (%s) WHERE rownum <= %d" % (sql, limit)
+    elif settings.DATABASES['default']['ENGINE'] == 'django.db.backends.mysql':
+        return sql + " LIMIT %d" % limit
+    else:
+        return sql
 
 def _get_pair_limits(limits, source, destination):
     pair_limits = {'source': dict(), 'destination': dict()}
@@ -183,13 +190,13 @@ def get_overview(http_request):
 
         # Snapshot for the pair
         # Can not get it per VO :(
-        query = """
+        query = _db_limit("""
         SELECT agrthroughput
         FROM t_optimizer_evolution
         WHERE source_se = %s AND dest_se = %s
         ORDER BY datetime DESC
-        LIMIT 1
-        """
+        """, 1)
+
         params = [source, dest]
         cursor.execute(query, params)
         aggregated_total = cursor.fetchall()
