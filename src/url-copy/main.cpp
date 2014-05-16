@@ -71,6 +71,14 @@ Transfer currentTransfer;
 
 gfal_context_t handle = NULL;
 
+/**
+ * Return MegaBytes per second from the given transferred bytes and duration
+ */
+inline double convertBtoM( double byte,  double duration)
+{
+    return ((((byte / duration) / 1024) / 1024) * 100) / 100;
+}
+
 static std::string replace_dn(std::string& user_dn)
 {
     boost::replace_all(user_dn, "?", " ");
@@ -230,32 +238,6 @@ static void call_perf(gfalt_transfer_status_t h, const char*, const char*, gpoin
             currentTransfer.throughput       = (double) avg;
             currentTransfer.transferredBytes = trans;
         }
-
-    if(currentTransfer.fileId > 0)
-        {
-            if(turlVector.size() == 2 && currentTransfer.throughput > 0.0) //make sure it has values
-                {
-                    reporter.sendPing(currentTransfer.jobId,
-                                      currentTransfer.fileId,
-                                      currentTransfer.throughput,
-                                      currentTransfer.transferredBytes,
-                                      reporter.source_se,
-                                      reporter.dest_se,
-                                      turlVector[0],
-                                      turlVector[1]);				      				     
-                }
-            else
-                {
-                    reporter.sendPing(currentTransfer.jobId,
-                                      currentTransfer.fileId,
-                                      currentTransfer.throughput,
-                                      currentTransfer.transferredBytes,
-                                      reporter.source_se,
-                                      reporter.dest_se,
-                                      "gsiftp:://fake",
-                                      "gsiftp:://fake");
-                }
-        }
 }
 
 std::string getDefaultScope()
@@ -392,17 +374,28 @@ void taskStatusUpdater(int time)
                                          <<  currentTransfer.throughput << "  " <<  currentTransfer.transferredBytes
                                          << std::endl;
 
-            if(currentTransfer.fileId > 0){
-                reporter.sendPing(currentTransfer.jobId,
+            if(turlVector.size() == 2 && currentTransfer.fileId > 0) //make sure it has values
+                {
+                    reporter.sendPing(currentTransfer.jobId,
                                       currentTransfer.fileId,
-                                      0.0,
-                                      0.0,
-                                      "gsiftp:://fake",
-                                      "gsiftp:://fake",
+                                      currentTransfer.throughput,
+                                      currentTransfer.transferredBytes,
+                                      reporter.source_se,
+                                      reporter.dest_se,
+                                      turlVector[0],
+                                      turlVector[1]);				      				     
+                }
+            else
+                {
+                    reporter.sendPing(currentTransfer.jobId,
+                                      currentTransfer.fileId,
+                                      currentTransfer.throughput,
+                                      currentTransfer.transferredBytes,
+                                      reporter.source_se,
+                                      reporter.dest_se,
                                       "gsiftp:://fake",
                                       "gsiftp:://fake");
-	    }
-
+                }	    
             boost::this_thread::sleep(boost::posix_time::seconds(time));
         }
 }
@@ -703,7 +696,7 @@ int main(int argc, char **argv)
    try
         {
             /*send an update message back to the server to indicate it's alive*/
-            boost::thread btUpdater(taskStatusUpdater, 60);
+            boost::thread btUpdater(taskStatusUpdater, 15);
         }
     catch (std::exception& e)
         {
@@ -1344,15 +1337,15 @@ stop:
 		
 	    //send a ping here in order to flag this transfer's state as terminal to store into t_turl	
  	    if(turlVector.size() == 2) //make sure it has values
-                {
-                    reporter.sendPing(currentTransfer.jobId,
+                {		   
+		                      reporter.sendPing(currentTransfer.jobId,
                                       currentTransfer.fileId,
                                       currentTransfer.throughput,
                                       currentTransfer.transferredBytes,
                                       reporter.source_se,
                                       reporter.dest_se,
                                       turlVector[0],
-                                      turlVector[1]);
+                                      turlVector[1]);		    
                 }		
             turlVector.clear();
 	    

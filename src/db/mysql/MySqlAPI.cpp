@@ -2331,7 +2331,7 @@ void MySqlAPI::updateFileTransferProgressVector(std::vector<struct message_updat
                             if((*iter).throughput > 0.0)
                                 {
                                     throughput = convertKbToMb((*iter).throughput);
-                                }
+                                }			    
 
                             file_id = (*iter).file_id;
 
