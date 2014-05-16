@@ -27,6 +27,8 @@
 #include "SubmitTransferCli.h"
 #include "BulkSubmissionParser.h"
 
+#include "exception/bad_option.h"
+
 #include "common/JobParameterHandler.h"
 #include "common/parse_url.h"
 
@@ -277,7 +279,7 @@ vector<File> SubmitTransferCli::getFiles()
 {
     if (files.empty())
         {
-            throw string ("No transfer job has been specified.");
+            throw bad_option ("missing parameter", "No transfer job has been specified.");
         }
 
     return files;
@@ -388,14 +390,14 @@ map<string, string> SubmitTransferCli::getParams()
     if (vm.count("copy-pin-lifetime"))
         {
             int val = vm["copy-pin-lifetime"].as<int>();
-            if (val < -1) throw string("The 'copy-pin-lifetime' value has to be positive!");
+            if (val < -1) throw bad_option("copy-pin-lifetime", "The 'copy-pin-lifetime' value has to be positive!");
             parameters[JobParameterHandler::COPY_PIN_LIFETIME] = lexical_cast<string>(val);
         }
 
     if (vm.count("bring-online"))
         {
             int val = vm["bring-online"].as<int>();
-            if (val < -1) throw string("The 'bring-online' value has to be positive!");
+            if (val < -1) throw bad_option("bring-online", "The 'bring-online' value has to be positive!");
             parameters[JobParameterHandler::BRING_ONLINE] = lexical_cast<string>(val);
         }
 
@@ -423,25 +425,25 @@ map<string, string> SubmitTransferCli::getParams()
     if (vm.count("retry-delay"))
         {
             int val = vm["retry-delay"].as<int>();
-            if (val < 0) throw string("The 'retry-delay' value has to be positive!");
+            if (val < 0) throw bad_option("retry-delay", "The 'retry-delay' value has to be positive!");
             parameters[JobParameterHandler::RETRY_DELAY] = lexical_cast<string>(val);
         }
     if (vm.count("buff-size"))
         {
             int val = vm["buff-size"].as<int>();
-            if (val <= 0) throw string("The buffer size has to greater than 0!");
+            if (val <= 0) throw bad_option("buff-size", "The buffer size has to greater than 0!");
             parameters[JobParameterHandler::BUFFER_SIZE] = lexical_cast<string>(val);
         }
     if (vm.count("nostreams"))
         {
             int val = vm["nostreams"].as<int>();
-            if (val <= 0) throw string("The number of streams has to be greater than 0!");
+            if (val <= 0) throw bad_option("nostreams", "The number of streams has to be greater than 0!");
             parameters[JobParameterHandler::NOSTREAMS] = lexical_cast<string>(val);
         }
     if (vm.count("timeout"))
         {
             int val = vm["timeout"].as<int>();
-            if (val <= 0) throw string("The timeout has to be greater than 0!");
+            if (val <= 0) throw bad_option("timeout", "The timeout has to be greater than 0!");
             parameters[JobParameterHandler::TIMEOUT] = lexical_cast<string>(val);
         }
 

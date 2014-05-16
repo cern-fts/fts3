@@ -7,6 +7,8 @@
 
 #include "RestCli.h"
 
+#include "exception/bad_option.h"
+
 using namespace fts3::cli;
 
 RestCli::RestCli()
@@ -37,7 +39,7 @@ string RestCli::capath()
             return vm["capath"].as<string>();
         }
 
-    throw string("The CA certificates path has to be specified!");
+    throw bad_option("capath", "The CA certificates path has to be specified!");
 }
 
 string RestCli::proxy()
@@ -47,5 +49,5 @@ string RestCli::proxy()
             return vm["proxy"].as<string>();
         }
 
-    throw string("The path to the proxy certificate has to be specified!");
+    throw bad_option("proxy", "The path to the proxy certificate has to be specified!");
 }

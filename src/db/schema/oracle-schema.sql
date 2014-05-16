@@ -660,6 +660,21 @@ CREATE TABLE t_file_share_config (
    ,CONSTRAINT t_share_config_fk2 FOREIGN KEY (file_id) REFERENCES t_file (file_id) ON DELETE CASCADE
 );
 
+-- 
+-- t_turl store the turls used for a given surl
+--
+CREATE TABLE t_turl (
+  source_surl     VARCHAR2(150)   NOT NULL,
+  destin_surl     VARCHAR2(150)   NOT NULL,
+  source_turl     VARCHAR2(150)   NOT NULL,
+  destin_turl     VARCHAR2(150)   NOT NULL,
+  datetime        TIMESTAMP WITH TIME ZONE,
+  throughput      NUMBER DEFAULT NULL,
+  finish          NUMBER DEFAULT 0,
+  fail     	  NUMBER DEFAULT 0,
+  CONSTRAINT t_turl_pk PRIMARY KEY (source_surl, destin_surl, source_turl, destin_turl)
+);
+
 
 --
 -- autoinc sequence on file_id
@@ -762,6 +777,10 @@ CREATE INDEX file_tr_host  ON t_file(TRANSFERHOST);
 CREATE INDEX t_file_activity ON t_file(activity);
 
 CREATE INDEX optimize_source_a         ON t_optimize(source_se,dest_se);
+
+CREATE INDEX t_url_datetime ON t_turl(datetime);
+CREATE INDEX t_url_finish ON t_turl(finish);
+CREATE INDEX t_url_fail ON t_turl(fail);
 
 --
 --

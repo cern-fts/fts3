@@ -7,6 +7,8 @@
 
 #include "CancelCli.h"
 
+#include "exception/bad_option.h"
+
 #include <boost/regex.hpp>
 
 namespace fts3
@@ -69,7 +71,7 @@ void CancelCli::prepareJobIds()
                     // job ID example: 11d24106-a24b-4d9f-9360-7c36c5176327
                     static const regex re("^\\w+-\\w+-\\w+-\\w+-\\w+$");
                     smatch what;
-                    if (!regex_match(line, what, re, match_extra)) throw string("Wrong job ID format: " + line);
+                    if (!regex_match(line, what, re, match_extra)) throw bad_option("jobid", "Wrong job ID format: " + line);
 
                     jobIds.push_back(line);
 

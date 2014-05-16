@@ -27,6 +27,8 @@
 #include "ui/SetCfgCli.h"
 #include "common/error.h"
 
+#include "exception/cli_exception.h"
+
 #include <string>
 #include <vector>
 #include <memory>
@@ -135,9 +137,9 @@ int main(int ac, char* av[])
             ctx.setConfiguration(config, resp);
 
         }
-    catch(string& ex)
+    catch(cli_exception const & ex)
         {
-            cout << ex << endl;
+            cout << ex.what() << endl;
             return 1;
         }
     catch(Err& ex)

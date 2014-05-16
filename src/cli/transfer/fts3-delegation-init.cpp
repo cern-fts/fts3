@@ -22,7 +22,8 @@
 
 #include "ui/DelegationCli.h"
 
-#include <exception>
+#include "JsonOutput.h"
+#include "exception/cli_exception.h"
 
 #include <boost/scoped_ptr.hpp>
 
@@ -60,20 +61,18 @@ int main(int ac, char* av[])
             handler.delegate();
 
         }
+    catch(cli_exception const & ex)
+        {
+            if (cli->isJson()) JsonOutput::print(ex);
+            else std::cout << ex.what() << std::endl;
+            return 1;
+        }
     catch(std::exception& ex)
         {
             if (cli.get())
-                cli->printer().error_msg(ex.what());
+                cli->printer().gsoap_error_msg(ex.what());
             else
                 std::cerr << ex.what() << std::endl;
-            return 1;
-        }
-    catch(string& ex)
-        {
-            if (cli.get())
-                cli->printer().gsoap_error_msg(ex);
-            else
-                std::cerr << ex << std::endl;
             return 1;
         }
     catch(...)

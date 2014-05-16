@@ -107,9 +107,13 @@ public:
 struct message_updater: public message_base
 {
 public:
-    message_updater():file_id(0),process_id(0),timestamp(0), throughput(0), transferred(0)
+    message_updater():file_id(0),process_id(0),timestamp(0), throughput(0.0), transferred(0.0)
     {
         memset(job_id, 0, sizeof (job_id));
+        memset(source_surl, 0, sizeof (source_surl));
+        memset(dest_surl, 0, sizeof (dest_surl));
+        memset(source_turl, 0, sizeof (source_turl));
+        memset(dest_turl, 0, sizeof (dest_turl));
     }
 
     ~message_updater()
@@ -121,6 +125,10 @@ public:
     boost::posix_time::time_duration::tick_type timestamp;
     double throughput;
     double transferred;
+    char source_surl[150];
+    char dest_surl[150];
+    char source_turl[150];
+    char dest_turl[150];
 };
 
 struct message_log: public message_base

@@ -25,6 +25,8 @@
 #ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 
 #include "ui/SubmitTransferCli.h"
+#include "exception/bad_option.h"
+
 #include "unittest/testsuite.h"
 
 #include "common/JobParameterHandler.h"
@@ -140,7 +142,7 @@ BOOST_AUTO_TEST_CASE (SubmitTransferCli_submission_no_job)
 
     cli->validate();
 
-    BOOST_CHECK_THROW(cli->getFiles(), std::string);
+    BOOST_CHECK_THROW(cli->getFiles(), bad_option);
 }
 
 BOOST_AUTO_TEST_CASE (SubmitTransferCli_submission_no_checksum)

@@ -24,6 +24,8 @@
 
 #include "ProxyCertificateDelegator.h"
 
+#include "exception/cli_exception.h"
+
 #include <openssl/x509_vfy.h>
 #include <openssl/err.h>
 #include <openssl/pem.h>
@@ -49,7 +51,7 @@ ProxyCertificateDelegator::ProxyCertificateDelegator(string endpoint, string del
     dctx = glite_delegation_new(endpoint.c_str());
     if (dctx == NULL)
         {
-            throw string("delegation: could not initialize a delegation context");
+            throw cli_exception("delegation: could not initialise a delegation context");
         }
 
 }
@@ -174,7 +176,7 @@ void ProxyCertificateDelegator::delegate()
                     if (requestProxyDelegationTime <= 0)
                         {
                             // using a proxy with less than 1 minute to go
-                            throw string ("Your local proxy has less than 1 minute to run, Please renew it before submitting a job.");
+                            throw cli_exception ("Your local proxy has less than 1 minute to run, Please renew it before submitting a job.");
                         }
                 }
             else
@@ -205,7 +207,7 @@ void ProxyCertificateDelegator::delegate()
                             printer.delegation_request_retry();
                             return delegate();
                         }
-                    throw string(errMsg);
+                    throw cli_exception(errMsg);
                 }
 
             printer.delegation_request_success(true);

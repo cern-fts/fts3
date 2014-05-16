@@ -22,6 +22,7 @@ DELETE FROM t_optimizer_evolution;
 DELETE FROM t_optimize_mode;
 DELETE FROM t_server_config;
 DELETE FROM T_FILE_SHARE_CONFIG;
+DELETE FROM t_turl;
 INSERT INTO t_server_config (retry,max_time_queue) values(0,0);
 INSERT INTO t_server_sanity
     (revertToSubmitted, cancelWaitingFiles, revertNotUsedFiles, forceFailTransfers, setToFailOldQueuedJobs, checkSanityState, cleanUpRecords, msgcron,

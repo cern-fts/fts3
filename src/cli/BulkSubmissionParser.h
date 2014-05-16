@@ -27,6 +27,8 @@
 
 #include "TransferTypes.h"
 
+#include "exception/cli_exception.h"
+
 #include "common/error.h"
 
 #include <vector>
@@ -129,12 +131,12 @@ optional<T> BulkSubmissionParser::get(ptree& item, string path)
     catch (ptree_bad_path& ex)
         {
             // if the value does not exist throw an exception
-            throw Err_Custom("The " + path + " has to be specified!");
+            throw cli_exception("The " + path + " has to be specified!");
         }
     catch (ptree_bad_data& ex)
         {
             // if the type of the value is wrong throw an exception
-            throw Err_Custom("Wrong value type of " + path);
+            throw cli_exception("Wrong value type of " + path);
         }
 }
 
@@ -154,7 +156,7 @@ inline optional< vector<string> > BulkSubmissionParser::get< vector<string> >(pt
     string wrong = array.get_value<string>();
     if (!wrong.empty())
         {
-            throw Err_Custom("Wrong value: '" + wrong + "'");
+            throw cli_exception("Wrong value: '" + wrong + "'");
         }
     // iterate over the nodes
     vector<string> ret;
@@ -167,12 +169,12 @@ inline optional< vector<string> > BulkSubmissionParser::get< vector<string> >(pt
             // members of the array (our case)
             if (!v.first.empty())
                 {
-                    throw Err_Custom("An array was expected, instead an object was found (at '" + path + "', name: '" + v.first + "')");
+                    throw cli_exception("An array was expected, instead an object was found (at '" + path + "', name: '" + v.first + "')");
                 }
             // check if the node has children, it should only have a value!
             if (!v.second.empty())
                 {
-                    throw Err_Custom("Unexpected object in array '" + path + "' (only a list of values was expected)");
+                    throw cli_exception("Unexpected object in array '" + path + "' (only a list of values was expected)");
                 }
             // put the value into the vector
             ret.push_back(v.second.get_value<string>());

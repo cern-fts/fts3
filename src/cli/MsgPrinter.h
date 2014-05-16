@@ -72,7 +72,8 @@ public:
     void error_msg(string msg); //
     void gsoap_error_msg(string msg); //
 
-    void cancelled_job( pair<string, string> id_status);
+    void cancelled_jobs(std::vector<std::string> const & id);
+    void cancelled_jobs(std::vector< std::pair<std::string, std::string> > const & id_status);
 
     void job_id(string job_id); //
     void status(JobStatus js);
@@ -96,25 +97,13 @@ public:
 
 private:
 
-    ptree getItem (map<string, string> values);
-
-    void put (ptree&root, string name, map<string, string>& object);
-
-    void addToArray(ptree& root, string name, map<string, string>& object);
-
-    void addToArray(ptree& root, string name, string value);
-
-    void addToArray(ptree& root, string name, const ptree& node);
+    static void print_cout(std::pair<std::string, std::string> const & id_status);
+    static void print_json(std::pair<std::string, std::string> const & id_status);
 
     ///
     bool verbose;
     ///
     bool json;
-    ///
-    ptree json_out;
-
-    /// the output stream
-    ostream& out;
 };
 
 } /* namespace server */

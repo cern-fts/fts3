@@ -24,6 +24,8 @@
 
 #include "SetCfgCli.h"
 
+#include "exception/bad_option.h"
+
 #include <stdexcept>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
@@ -132,7 +134,7 @@ void SetCfgCli::parse(int ac, char* av[])
         {
             if (vm["drain"].as<string>() != "on" && vm["drain"].as<string>() != "off")
                 {
-                    throw string("drain may only take on/off values!");
+                    throw bad_option("drain", "drain may only take on/off values!");
                 }
         }
 
@@ -157,14 +159,14 @@ void SetCfgCli::parse(int ac, char* av[])
             if (*it->begin() != '{' || *(it->end() - 1) != '}')
                 {
                     // most likely the user didn't used single quotation marks and bash did some pre-parsing
-                    throw string("Configuration error: most likely you didn't use single quotation marks (') around a configuration!");
+                    throw bad_option("cfg", "Configuration error: most likely you didn't use single quotation marks (') around a configuration!");
                 }
 
             // parse the configuration, check if its valid JSON format, and valid configuration
             CfgParser c(*it);
 
             type = c.getCfgType();
-            if (type == CfgParser::NOT_A_CFG) throw string("The specified configuration doesn't follow any of the valid formats!");
+            if (type == CfgParser::NOT_A_CFG) throw bad_option("cfg", "The specified configuration doesn't follow any of the valid formats!");
         }
 }
 
@@ -281,8 +283,8 @@ optional< std::tuple<string, string, string> > SetCfgCli::getProtocol()
     if (!vm.count("protocol")) return optional< std::tuple<string, string, string> >();
     // make sure it was used corretly
     const vector<string>& v = vm["protocol"].as< vector<string> >();
-    if (v.size() != 3) throw string("'--protocol' takes following parameters: udt SE on/off");
-    if (v[2] != "on" && v[2] != "off") throw string("'--protocol' can only be switched 'on' or 'off'");
+    if (v.size() != 3) throw bad_option("protocol", "'--protocol' takes following parameters: udt SE on/off");
+    if (v[2] != "on" && v[2] != "off") throw bad_option("protocol", "'--protocol' can only be switched 'on' or 'off'");
 
     return std::make_tuple(v[0], v[1], v[2]);
 }
@@ -292,7 +294,7 @@ void SetCfgCli::parseBringOnline()
 
     vector<string> v = vm["cfg"].as< vector<string> >();
     // check if the number of parameters is even
-    if (v.size() % 2) throw string("After specifying '--bring-online' SE_NAME - VALUE pairs have to be given!");
+    if (v.size() % 2) throw bad_option("bring-online", "After specifying '--bring-online' SE_NAME - VALUE pairs have to be given!");
 
     vector<string>::iterator first = v.begin(), second;
 
@@ -308,7 +310,7 @@ void SetCfgCli::parseBringOnline()
                 }
             catch(boost::bad_lexical_cast const & ex)
                 {
-                    throw std::string("The bring-online value: " + *second + " is not a correct integer (int) value!");
+                    throw bad_option("bring-online", "The bring-online value: " + *second + " is not a correct integer (int) value!");
                 }
         }
     while (first != v.end());
@@ -333,7 +335,7 @@ BOOST_AUTO_TEST_CASE (SetCfgCli_bad_lixical_cast)
 
 
     SetCfgCli* cli = new SetCfgCli();
-    BOOST_CHECK_THROW(cli->parse(6, av), std::string);
+    BOOST_CHECK_THROW(cli->parse(6, av), bad_option);
 
     // test for non-numerical characters
     char* av2[] =
@@ -347,7 +349,7 @@ BOOST_AUTO_TEST_CASE (SetCfgCli_bad_lixical_cast)
     };
 
     cli = new SetCfgCli();
-    BOOST_CHECK_THROW(cli->parse(6, av2), std::string);
+    BOOST_CHECK_THROW(cli->parse(6, av2), bad_option);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -388,12 +390,12 @@ optional< pair<string, int> > SetCfgCli::getMaxSeActive(string option)
     // make sure it was used corretly
     const vector<string>& v = vm[option].as< vector<string> >();
 
-    if (v.size() != 2) throw string("'--" + option + "' takes following parameters: SE number_of_active");
+    if (v.size() != 2) throw bad_option(option, "'--" + option + "' takes following parameters: SE number_of_active");
 
     string se = v[1];
     int active = lexical_cast<int>(v[0]);
 
-    if (active < -1) throw string("values lower than -1 are not valid");
+    if (active < -1) throw bad_option("option", "values lower than -1 are not valid");
 
     return make_pair(se, active);
 }
@@ -414,7 +416,7 @@ optional<int> SetCfgCli::getGlobalTimeout()
 
     int timeout = vm["global-timeout"].as<int>();
 
-    if (timeout < -1) throw string("values lower than -1 are not valid");
+    if (timeout < -1) throw bad_option("global-timeout", "values lower than -1 are not valid");
 
     if (timeout == -1) timeout = 0;
 
@@ -427,7 +429,7 @@ optional<int> SetCfgCli::getSecPerMb()
 
     int sec = vm["sec-per-mb"].as<int>();
 
-    if (sec < -1) throw string("values lower than -1 are not valid");
+    if (sec < -1) throw bad_option("sec-per-mb", "values lower than -1 are not valid");
 
     if (sec == -1) sec = 0;
 

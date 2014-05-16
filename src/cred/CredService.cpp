@@ -199,10 +199,6 @@ bool CredService::isValidProxy(const std::string& filename, std::string& message
             return false;
         }
 
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy filename :" << filename
-                                    << "\nLifetime       : " << lifetime
-                                    << "\nMin Valid  time: " << this->minValidityTime() << commit;
-
     // casting to unsigned long is safe, condition lifetime < 0 already checked
     if(this->minValidityTime() >= (unsigned long)lifetime)
         {

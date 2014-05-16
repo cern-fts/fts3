@@ -25,6 +25,8 @@
 
 #include "GSoapContextAdapter.h"
 #include "ui/BlacklistCli.h"
+#include "exception/cli_exception.h"
+
 #include <memory>
 
 using namespace std;
@@ -72,14 +74,14 @@ int main(int ac, char* av[])
                 }
 
         }
+    catch(cli_exception const & ex)
+        {
+            cout << ex.what() << endl;
+            return 1;
+        }
     catch(std::exception& e)
         {
             cerr << "error: " << e.what() << "\n";
-            return 1;
-        }
-    catch(string& ex)
-        {
-            cout << ex << endl;
             return 1;
         }
     catch(...)

@@ -39,7 +39,7 @@ FTS3_CONFIG_NAMESPACE_START
 #define FTS3_CONFIG_SERVERCONFIG_CONFIGFILE_DEFAULT "/etc/fts3/fts3config"
 #define FTS3_CONFIG_SERVERCONFIG_DBTYPE_DEFAULT "oracle"
 #define FTS3_CONFIG_SERVERCONFIG_DBTHREADS_DEFAULT "4"
-#define FTS3_CONFIG_SERVERCONFIG_MAXPROCESSES_DEFAULT "-1"
+#define FTS3_CONFIG_SERVERCONFIG_MAXPROCESSES_DEFAULT "12500"
 
 /* ---------------------------------------------------------------------- */
 
@@ -148,7 +148,7 @@ po::options_description ServerConfigReader::_defineConfigOptions()
     )
     (
         "CleanRecordsHost,C",
-        po::value<std::string>( &(_vars["CleanRecordsHost"]) )->default_value("false"),
+        po::value<std::string>( &(_vars["CleanRecordsHost"]) )->default_value("true"),
         "Set to true when this host will be cleaning old records from the database"
     )
     (

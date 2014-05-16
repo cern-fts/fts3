@@ -31,3 +31,4 @@ DROP TABLE IF EXISTS t_profiling_snapshot;
 DROP TABLE IF EXISTS t_server_sanity;
 DROP TABLE IF EXISTS t_hosts;
 DROP TABLE IF EXISTS t_optimize_active;
+DROP TABLE IF EXISTS t_turl;

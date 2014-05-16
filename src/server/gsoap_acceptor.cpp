@@ -138,10 +138,10 @@ boost::shared_ptr<GSoapRequestHandler> GSoapAcceptor::accept()
             handler.reset (
                 new GSoapRequestHandler(*this)
             );
-	    
-    		char ipbuffer [512] = {0};	    	    
-		sprintf(ipbuffer, "accepted connection from host=%s, socket=%d", ctx->host, sock); 
-    		FTS3_COMMON_LOGGER_NEWLOG (INFO) << ipbuffer << commit;
+
+            char ipbuffer [512] = {0};
+            sprintf(ipbuffer, "accepted connection from host=%s, socket=%d", ctx->host, sock);
+            FTS3_COMMON_LOGGER_NEWLOG (INFO) << ipbuffer << commit;
         }
     else
         {

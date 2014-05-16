@@ -25,6 +25,8 @@
 #include "PythonApi.h"
 #include "TransferTypes.h"
 
+#include "exception/bad_option.h"
+
 #include <boost/optional/optional.hpp>
 
 #include <string>
@@ -89,7 +91,7 @@ py::str PythonApi::getVersion()
 
 void PythonApi::setPriority(py::str id, int priority)
 {
-    if (priority < 1 || priority > 5) throw std::string("The priority has to take a value in range of 1 to 5");
+    if (priority < 1 || priority > 5) throw bad_option("priority", "The priority has to take a value in range of 1 to 5");
 
     ctx.prioritySet(py::extract<string>(id), priority);
 }

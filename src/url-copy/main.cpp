@@ -38,10 +38,17 @@ limitations under the License. */
 #include "CredService.h"
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/lexical_cast.hpp>
-
+#include <iostream>
+#include <string>
+#include <sstream>
+#include <algorithm>
+#include <iterator>
+#include <vector>
+#include <boost/algorithm/string.hpp>
 
 using namespace std;
 using boost::thread;
+using namespace boost::algorithm;
 
 static FileManagement fileManagement;
 static Reporter reporter;
@@ -56,12 +63,21 @@ static char hostname[1024] = {0};
 static volatile bool propagated = false;
 static volatile bool terminalState = false;
 static std::string globalErrorMessage("");
+static std::vector<std::string> turlVector;
 
 time_t globalTimeout;
 
 Transfer currentTransfer;
 
 gfal_context_t handle = NULL;
+
+/**
+ * Return MegaBytes per second from the given transferred bytes and duration
+ */
+inline double convertBtoM( double byte,  double duration)
+{
+    return ((((byte / duration) / 1024) / 1024) * 100) / 100;
+}
 
 static std::string replace_dn(std::string& user_dn)
 {
@@ -77,6 +93,87 @@ static std::string replaceMetadataString(std::string text)
 }
 
 
+static std::vector<std::string> turlList(std::string str)
+{
+    char *base_scheme = NULL;
+    char *base_host = NULL;
+    char *base_path = NULL;
+    int base_port = 0;
+    std::string source_turl;
+    std::string destination_turl;
+    std::vector<std::string> turl;
+    std::string delimiter = "=>";
+    std::string shost;
+    size_t pos = 0;
+    std::string token;
+
+    std::size_t begin = str.find_first_of("(");
+    std::size_t end = str.find_first_of(")");
+    if (std::string::npos!=begin && std::string::npos!=end && begin <= end)
+        str.erase(begin, end-begin+1);
+
+    std::size_t begin2 = str.find_first_of("(");
+    std::size_t end2 = str.find_first_of(")");
+    if (std::string::npos!=begin2 && std::string::npos!=end2 && begin2 <= end2)
+        str.erase(begin2, end2-begin2+1);
+
+    while ((pos = str.find(delimiter)) != std::string::npos)
+        {
+            token = str.substr(0, pos);
+            source_turl = token;
+            str.erase(0, pos + delimiter.length());
+            destination_turl = str;
+        }
+
+    //source
+    if(!source_turl.empty() && source_turl.length() > 4)
+        {
+            parse_url(source_turl.c_str(), &base_scheme, &base_host, &base_port, &base_path);
+            if(base_scheme && base_host)
+                {
+                    shost = std::string(base_scheme) + "://" + std::string(base_host);
+                    trim(shost);
+                    turl.push_back(shost);
+                }
+
+            if (base_scheme)
+                {
+                    free(base_scheme);
+                    base_scheme = NULL;
+                }
+            if (base_host)
+                {
+                    free(base_host);
+                    base_host = NULL;
+                }
+            if (base_path)
+                {
+                    free(base_path);
+                    base_path = NULL;
+                }
+        }
+
+    //destination
+    if(!destination_turl.empty() && destination_turl.length() > 4)
+        {
+            parse_url(destination_turl.c_str(), &base_scheme, &base_host, &base_port, &base_path);
+            if(base_scheme && base_host)
+                {
+                    shost = std::string(base_scheme) + "://" + std::string(base_host);
+                    trim(shost);
+                    turl.push_back(shost);
+                }
+
+            if (base_scheme)
+                free(base_scheme);
+            if (base_host)
+                free(base_host);
+            if (base_path)
+                free(base_path);
+        }
+
+    return turl;
+}
 
 static void cancelTransfer()
 {
@@ -141,7 +238,6 @@ static void call_perf(gfalt_transfer_status_t h, const char*, const char*, gpoin
             currentTransfer.throughput       = (double) avg;
             currentTransfer.transferredBytes = trans;
         }
-
 }
 
 std::string getDefaultScope()
@@ -225,6 +321,19 @@ void abnormalTermination(const std::string& classification, const std::string&, 
         {
             globalErrorMessage = "INIT Failed to create boost thread, boost::thread_resource_error";
         }
+	
+         //send a ping here in order to flag this transfer's state as terminal to store into t_turl	
+ 	    if(turlVector.size() == 2) //make sure it has values
+                {
+                    reporter.sendPing(currentTransfer.jobId,
+                                      currentTransfer.fileId,
+                                      currentTransfer.throughput,
+                                      currentTransfer.transferredBytes,
+                                      reporter.source_se,
+                                      reporter.dest_se,
+                                      turlVector[0],
+                                      turlVector[1]);
+                }		         
 
     cancelTransfer();
     sleep(1);
@@ -265,12 +374,32 @@ void taskStatusUpdater(int time)
                                          <<  currentTransfer.throughput << "  " <<  currentTransfer.transferredBytes
                                          << std::endl;
 
-            if(currentTransfer.fileId > 0)
-                reporter.sendPing(currentTransfer.jobId, currentTransfer.fileId, currentTransfer.throughput, currentTransfer.transferredBytes);
-
+            if(turlVector.size() == 2 && currentTransfer.fileId > 0) //make sure it has values
+                {
+                    reporter.sendPing(currentTransfer.jobId,
+                                      currentTransfer.fileId,
+                                      currentTransfer.throughput,
+                                      currentTransfer.transferredBytes,
+                                      reporter.source_se,
+                                      reporter.dest_se,
+                                      turlVector[0],
+                                      turlVector[1]);				      				     
+                }
+            else
+                {
+                    reporter.sendPing(currentTransfer.jobId,
+                                      currentTransfer.fileId,
+                                      currentTransfer.throughput,
+                                      currentTransfer.transferredBytes,
+                                      reporter.source_se,
+                                      reporter.dest_se,
+                                      "gsiftp:://fake",
+                                      "gsiftp:://fake");
+                }	    
             boost::this_thread::sleep(boost::posix_time::seconds(time));
         }
 }
+
 
 
 std::string log_stack(int sig)
@@ -352,7 +481,6 @@ void signalHandler(int signum)
 }
 
 // Callback used to populate the messaging with the different stages
-
 static void event_logger(const gfalt_event_t e, gpointer /*udata*/)
 {
     static const char* sideStr[] = {"SRC", "DST", "BTH"};
@@ -366,6 +494,16 @@ static void event_logger(const gfalt_event_t e, gpointer /*udata*/)
                                  << g_quark_to_string(e->domain) << '\t'
                                  << g_quark_to_string(e->stage) << '\t'
                                  << e->description << std::endl;
+
+    std::string quark = std::string(g_quark_to_string(e->stage));
+    std::string source = currentTransfer.sourceUrl;
+    std::string dest = currentTransfer.destUrl;
+
+    if(quark == "TRANSFER:ENTER" && ((source.compare(0, 6, "srm://") == 0) || (dest.compare(0, 6, "srm://") == 0)))
+        {
+            turlVector =  turlList(std::string(e->description));
+        }
+
 
     if (e->stage == GFAL_EVENT_TRANSFER_ENTER)
         {
@@ -554,12 +692,11 @@ int main(int argc, char **argv)
             errorMessage = "INIT Failed to read url-copy process arguments";
             abnormalTermination("FAILED", errorMessage, "Abort");
         }
-
-
-    try
+	
+   try
         {
             /*send an update message back to the server to indicate it's alive*/
-            boost::thread btUpdater(taskStatusUpdater, 20);
+            boost::thread btUpdater(taskStatusUpdater, 15);
         }
     catch (std::exception& e)
         {
@@ -571,6 +708,8 @@ int main(int argc, char **argv)
             globalErrorMessage = "INIT Failed to create boost thread, boost::thread_resource_error";
             throw;
         }
+	
+
 
     if (opts.proxy.length() > 0)
         {
@@ -753,7 +892,7 @@ int main(int argc, char **argv)
                 if ( (access(opts.proxy.c_str(), F_OK) != 0) || (access(opts.proxy.c_str(), R_OK) != 0))
                     {
                         errorMessage = "INIT Proxy error, check if user fts3 can read " + opts.proxy;
-                        errorMessage += " (" +  mapErrnoToString(errno) + ")";			
+                        errorMessage += " (" +  mapErrnoToString(errno) + ")";
                         errorScope = SOURCE;
                         reasonClass = mapErrnoToString(errno);
                         errorPhase = TRANSFER_PREPARATION;
@@ -1195,6 +1334,21 @@ stop:
                                 }
                         }
                 }
+		
+	    //send a ping here in order to flag this transfer's state as terminal to store into t_turl	
+ 	    if(turlVector.size() == 2) //make sure it has values
+                {		   
+		                      reporter.sendPing(currentTransfer.jobId,
+                                      currentTransfer.fileId,
+                                      currentTransfer.throughput,
+                                      currentTransfer.transferredBytes,
+                                      reporter.source_se,
+                                      reporter.dest_se,
+                                      turlVector[0],
+                                      turlVector[1]);		    
+                }		
+            turlVector.clear();
+	    
             logger.INFO() << "Send monitoring complete message" << std::endl;
             msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 

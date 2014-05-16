@@ -2118,20 +2118,33 @@ bool OracleAPI::updateJobTransferStatusInternal(soci::session& sql, std::string 
 void OracleAPI::updateFileTransferProgressVector(std::vector<struct message_updater>& messages)
 {
     soci::session sql(*connectionPool);
+    std::vector<struct message_updater> temp;
 
     try
         {
             double throughput = 0.0;
             double transferred = 0.0;
             int file_id = 0;
-            soci::statement stmt = (sql.prepare << "UPDATE t_file SET throughput = :throughput, transferred = :transferred WHERE file_id = :fileId AND file_state not in ('FAILED','CANCELED') ",
-                                    soci::use(throughput), soci::use(transferred), soci::use(file_id));
+            std::string source_surl;
+            std::string dest_surl;
+            std::string source_turl;
+            std::string dest_turl;
+            std::string file_state;
+
+            soci::statement stmt = (sql.prepare << "UPDATE t_file SET throughput = :throughput, transferred = :transferred WHERE file_id = :fileId  AND file_state not in ('FINISHED','FAILED','CANCELED') ",
+                                    soci::use(throughput), soci::use(transferred), soci::use(file_id));	    			      
+						
+            soci::statement stmtFileid = (sql.prepare << "select file_state from t_file where file_id=:file_id", soci::use(file_id), soci::into(file_state));
 
             sql.begin();
 
             std::vector<struct message_updater>::iterator iter;
             for (iter = messages.begin(); iter != messages.end(); ++iter)
                 {
+                    throughput = 0.0;
+                    transferred = 0.0;
+                    file_id = 0;
+
                     if (iter->msg_errno == 0)
                         {
                             if((*iter).throughput > 0.0)
@@ -2141,19 +2154,105 @@ void OracleAPI::updateFileTransferProgressVector(std::vector<struct message_upda
                                     file_id = (*iter).file_id;
                                     stmt.execute(true);
                                 }
+                            temp.push_back((*iter));
                         }
                 }
 
             sql.commit();
 
+            //now update t_turl table by checking file state
+            sql.begin();
+
+            for (iter = temp.begin(); iter != temp.end(); ++iter)
+                {
+                    file_state = ""; //reset all
+                    source_surl = "";
+                    dest_surl = "";
+                    source_turl = "";
+                    dest_turl = "";
+                    throughput = 0.0;
+
+                    if (iter->msg_errno == 0)
+                        {	
+                            source_surl = (*iter).source_surl;
+                            dest_surl = (*iter).dest_surl;
+                            source_turl = (*iter).source_turl;
+                            dest_turl = (*iter).dest_turl;			
+			
+			    if(source_turl == "gsiftp:://fake" && dest_turl == "gsiftp:://fake")
+                                continue;
+				
+                            if((*iter).throughput > 0.0)
+                                {
+                                    throughput = convertKbToMb((*iter).throughput);
+                                }
+
+                            file_id = (*iter).file_id;
+
+                            //check file state for tis file_id
+                            stmtFileid.execute(true);
+
+                            if(file_state == "FINISHED")
+                                {
+	    			    sql <<  " MERGE INTO t_turl "
+					    " USING (SELECT :source_surl as source_surl, :destin_surl as destin_surl, :source_turl as source_turl, :destin_turl as destin_turl FROM dual)" 
+					    " Pair ON (t_turl.source_surl = Pair.source_surl AND t_turl.destin_surl = Pair.destin_surl AND t_turl.source_turl = Pair.source_turl AND t_turl.destin_turl = Pair.destin_turl)" 
+					    " WHEN MATCHED THEN UPDATE SET datetime = sys_extract_utc(systimestamp), throughput = :throughput, finish = finish + 1 "
+					    " WHEN NOT MATCHED THEN INSERT (source_surl, destin_surl, source_turl, destin_turl, datetime, throughput, finish) "
+					    " VALUES (Pair.source_surl, Pair.destin_surl, Pair.source_turl, Pair.destin_turl, sys_extract_utc(systimestamp), :throughput, 1)",
+						soci::use(source_surl),
+						soci::use(dest_surl),
+						soci::use(source_turl),
+						soci::use(dest_turl),
+						soci::use(throughput),
+						soci::use(throughput);
+
+                                }
+                            else if (file_state == "FAILED")
+                                {
+	    			    sql <<  " MERGE INTO t_turl "
+					    " USING (SELECT :source_surl as source_surl, :destin_surl as destin_surl, :source_turl as source_turl, :destin_turl as destin_turl FROM dual)" 
+					    " Pair ON (t_turl.source_surl = Pair.source_surl AND t_turl.destin_surl = Pair.destin_surl AND t_turl.source_turl = Pair.source_turl AND t_turl.destin_turl = Pair.destin_turl)" 
+					    " WHEN MATCHED THEN UPDATE SET datetime = sys_extract_utc(systimestamp), throughput = :throughput, fail = fail + 1 "
+					    " WHEN NOT MATCHED THEN INSERT (source_surl, destin_surl, source_turl, destin_turl, datetime, throughput, fail) "
+					    " VALUES (Pair.source_surl, Pair.destin_surl, Pair.source_turl, Pair.destin_turl, sys_extract_utc(systimestamp), :throughput, 1)",
+						soci::use(source_surl),
+						soci::use(dest_surl),
+						soci::use(source_turl),
+						soci::use(dest_turl),
+						soci::use(throughput),
+						soci::use(throughput);								           
+                                }
+                            else
+                                {
+	    			       sql <<  " MERGE INTO t_turl "
+					    " USING (SELECT :source_surl as source_surl, :destin_surl as destin_surl, :source_turl as source_turl, :destin_turl as destin_turl FROM dual)" 
+					    " Pair ON (t_turl.source_surl = Pair.source_surl AND t_turl.destin_surl = Pair.destin_surl AND t_turl.source_turl = Pair.source_turl AND t_turl.destin_turl = Pair.destin_turl)" 
+					    " WHEN MATCHED THEN UPDATE SET datetime = sys_extract_utc(systimestamp), throughput = :throughput "
+					    " WHEN NOT MATCHED THEN INSERT (source_surl, destin_surl, source_turl, destin_turl, datetime, throughput,0) "
+					    " VALUES (Pair.source_surl, Pair.destin_surl, Pair.source_turl, Pair.destin_turl, sys_extract_utc(systimestamp), :throughput, 0)",
+						soci::use(source_surl),
+						soci::use(dest_surl),
+						soci::use(source_turl),
+						soci::use(dest_turl),
+						soci::use(throughput),
+						soci::use(throughput);                                    
+                                }
+                        }
+                }
+		
+            sql.commit();
+            temp.clear();
         }
     catch (std::exception& e)
         {
+            temp.clear();
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
+            temp.clear();
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
@@ -2972,14 +3071,14 @@ bool OracleAPI::updateOptimizer()
                                          " source_se=:source_se and dest_se=:dest_se",
                                          soci::use(source_hostname), soci::use(destin_hostname), soci::into(streamsCurrent, isNullStreamsCurrent));
 
-					 
+
             soci::statement stmt18 = (
                                          sql.prepare << " select count(distinct source_se) from t_file where "
-					 		" file_state in ('ACTIVE','READY','SUBMITTED') and "
-							" dest_se=:dest and "
-							" job_finished is null",
-                                         soci::use(destin_hostname), soci::into(singleDest));					 
- 
+                                         " file_state in ('ACTIVE','READY','SUBMITTED') and "
+                                         " dest_se=:dest and "
+                                         " job_finished is null",
+                                         soci::use(destin_hostname), soci::into(singleDest));
+
 
 
             //check if retry is set at global level
@@ -3024,20 +3123,21 @@ bool OracleAPI::updateOptimizer()
                     isNullRecordsFound = soci::i_ok;
                     streamsCurrent = 0;
                     isNullStreamsCurrent = soci::i_ok;
-		    singleDest = 0;
-		    lanTransferBool = false;
-		    
+                    singleDest = 0;
+                    lanTransferBool = false;
+
                     now = getUTC(0);
-		    
+
                     if(true == lanTransfer(source_hostname, destin_hostname))
-		    {
-                        highDefault = (highDefault * 3);
-			lanTransferBool = true;
-                    }
-		    else
-		    { //default
-                        highDefault = tempDefault;		    
-		    }
+                        {
+                            highDefault = (highDefault * 3);
+                            lanTransferBool = true;
+                        }
+                    else
+                        {
+                            //default
+                            highDefault = tempDefault;
+                        }
 
                     // Weighted average
                     soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
@@ -3061,7 +3161,7 @@ bool OracleAPI::updateOptimizer()
 
 
                     // Ratio of success
-                    soci::rowset<soci::row> rs = (sql.prepare << "SELECT file_state, current_failures retry FROM t_file "
+                    soci::rowset<soci::row> rs = (sql.prepare << "SELECT file_state, retry, current_failures FROM t_file "
                                                   "WHERE "
                                                   "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
                                                   "      (t_file.job_finished is NULL OR t_file.job_finished > (sys_extract_utc(systimestamp) - interval '1' minute)) AND "
@@ -3075,12 +3175,12 @@ bool OracleAPI::updateOptimizer()
                         {
                             std::string state = i->get<std::string>("FILE_STATE", "");
                             int retryNum = static_cast<int>(i->get<double>("RETRY", 0));
-			    int current_failures = i->get<int>("CURRENT_FAILURES", 0);
-			    
-			    if(state.compare("FAILED") == 0 && current_failures == 0)
-			        {
-			         //do nothing, it's a non recoverable error so do not consider it
-			        }
+                            int current_failures = i->get<int>("CURRENT_FAILURES", 0);
+
+                            if(state.compare("FAILED") == 0 && current_failures == 0)
+                                {
+                                    //do nothing, it's a non recoverable error so do not consider it
+                                }
                             else if ( (state.compare("FAILED") == 0 || state.compare("SUBMITTED") == 0) && retrySet > 0 && retryNum > 0)
                                 {
                                     nFailedLastHour+=1.0;
@@ -3103,10 +3203,10 @@ bool OracleAPI::updateOptimizer()
 
                     // Active transfers
                     stmt7.execute(true);
-		    
-		    //check if there is any other source for a given dest
-		    stmt18.execute(true);
-		    
+
+                    //check if there is any other source for a given dest
+                    stmt18.execute(true);
+
 
                     //optimize number of streams first
                     //check if pair exists first
@@ -3246,30 +3346,37 @@ bool OracleAPI::updateOptimizer()
 
                             if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 98)) && throughput > thrStored && retry <= retryStored)
                                 {
+				    int tempActive = active; //temp store current active
+				
                                     //make sure we do not increase beyond limits set
                                     bool maxActiveLimit = getMaxActive(sql, maxActive, highDefault, source_hostname, destin_hostname);
 
                                     if(maxActiveLimit)
-                                        {					
-					    if(singleDest == 1)
-					    {
-					        active = maxActive + spawnActive + 1;
-					    }
-					    else if (lanTransferBool)
-					    {
-    					        active = maxActive + spawnActive + 1;
-					    }
-					    else
-					    {
-                                            	active = maxActive + spawnActive;
-					    }	
-					    
+                                        {
+                                            if(singleDest == 1)
+                                                {
+                                                    active = maxActive + spawnActive + 1;
+                                                }
+                                            else if (lanTransferBool)
+                                                {
+                                                    active = maxActive + spawnActive + 1;
+                                                }
+                                            else
+                                                {
+                                                    active = maxActive + spawnActive;
+                                                }
+						
+				           if(active > (tempActive + 10))
+					        {
+						    active = maxActive;
+						}						
+
                                             pathFollowed = 1;
                                             stmt10.execute(true);
                                         }
                                     else
                                         {
-					    active = maxActive;
+                                            active = maxActive;
                                             pathFollowed = 11;
                                             stmt10.execute(true);
                                         }
@@ -3916,6 +4023,18 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
                     sql.begin();
                     sql << "delete from t_file_retry_errors where datetime < (systimestamp - interval '7' DAY )";
                     sql.commit();
+		    
+                   //delete from t_turl > 7 days old records
+                    sql.begin();
+                    sql << "delete from t_turl where datetime < (systimestamp - interval '7' DAY )";
+		    sql.commit();
+		    
+		    sql.begin();
+		    sql << "update t_turl set finish=0 where finish > 100000000000";
+		    sql << "update t_turl set fail=0 where fail > 100000000000";
+                    sql.commit();				    
+		    
+		    
                 }
         }
     catch (std::exception& e)
@@ -5837,8 +5956,8 @@ std::vector<message_bringonline> OracleAPI::getBringOnlineFiles(std::string voNa
                                 ;
 
                             int maxNoConfig = currentStagingFilesNoConfig > 0 ? maxValue - currentStagingFilesNoConfig : maxValue;
-			    if(maxNoConfig > 500 || maxNoConfig < 0)
-			    	maxNoConfig = 500;
+                            if(maxNoConfig > 500 || maxNoConfig < 0)
+                                maxNoConfig = 500;
 
                             soci::rowset<soci::row> rs2 = (
                                                               sql.prepare <<
@@ -5892,8 +6011,8 @@ std::vector<message_bringonline> OracleAPI::getBringOnlineFiles(std::string voNa
                         ;
 
                     int maxConfig = currentStagingFilesConfig > 0 ? maxValue - currentStagingFilesConfig : maxValue;
-		    if(maxConfig > 500 || maxConfig < 0)
-			maxConfig = 500;		    
+                    if(maxConfig > 500 || maxConfig < 0)
+                        maxConfig = 500;
 
                     soci::rowset<soci::row> rs = (
                                                      sql.prepare <<
@@ -5945,7 +6064,7 @@ std::vector<message_bringonline> OracleAPI::getBringOnlineFiles(std::string voNa
 void OracleAPI::bringOnlineReportStatusInternal(soci::session& sql,
         const std::string & state, const std::string & message,
         const struct message_bringonline& msg)
-{   
+{
 
     std::vector<struct message_state> files;
 
@@ -8049,26 +8168,26 @@ void OracleAPI::updateOptimizerEvolution(soci::session& sql, const std::string &
         {
             if(throughput > 0 && successRate > 0)
                 {
-		    double agrthroughput = 0.0;
-		    soci::indicator ind = soci::i_ok;
-		    sql << " select sum(throughput) from t_file where file_state='ACTIVE' and source_se=:source_se and dest_se=:dest_se and throughput > 0 ",
-		    soci::use(source_hostname), soci::use(destination_hostname), soci::into(agrthroughput, ind);
-		    
-		    if(ind == soci::i_ok && agrthroughput > 0)
-		    {
-                    sql.begin();
-                    sql << " INSERT INTO t_optimizer_evolution (datetime, source_se, dest_se, active, throughput, filesize, buffer, nostreams, agrthroughput) "
-                        " values(sys_extract_utc(systimestamp), :source, :dest, :active, :throughput, :filesize, :buffer, :nostreams, :agrthroughput) ",
-                        soci::use(source_hostname),
-                        soci::use(destination_hostname),
-                        soci::use(active),
-                        soci::use(throughput),
-                        soci::use(successRate),
-                        soci::use(buffer),
-                        soci::use(bandwidth),
-			soci::use(agrthroughput);
-                    sql.commit();
-		    }
+                    double agrthroughput = 0.0;
+                    soci::indicator ind = soci::i_ok;
+                    sql << " select sum(throughput) from t_file where file_state='ACTIVE' and source_se=:source_se and dest_se=:dest_se and throughput > 0 ",
+                        soci::use(source_hostname), soci::use(destination_hostname), soci::into(agrthroughput, ind);
+
+                    if(ind == soci::i_ok && agrthroughput > 0)
+                        {
+                            sql.begin();
+                            sql << " INSERT INTO t_optimizer_evolution (datetime, source_se, dest_se, active, throughput, filesize, buffer, nostreams, agrthroughput) "
+                                " values(sys_extract_utc(systimestamp), :source, :dest, :active, :throughput, :filesize, :buffer, :nostreams, :agrthroughput) ",
+                                soci::use(source_hostname),
+                                soci::use(destination_hostname),
+                                soci::use(active),
+                                soci::use(throughput),
+                                soci::use(successRate),
+                                soci::use(buffer),
+                                soci::use(bandwidth),
+                                soci::use(agrthroughput);
+                            sql.commit();
+                        }
                 }
         }
     catch (std::exception& e)
@@ -8092,7 +8211,6 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
     std::string dest_se;
     std::string source_se;
     std::string reason;
-    std::string queryVo;
     long long countReason = 0;
     long long active = 0;
     long long maxActive = 0;
@@ -8112,32 +8230,39 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
     soci::indicator isNull4 = soci::i_ok;
     soci::indicator isNull5 = soci::i_ok;
 
+    soci::statement voStmt(sql);
     if(!vo_name.empty())
         {
-            vo_name_local = vo_name;
-            queryVo = "select distinct vo_name from t_job where job_finished is null AND vo_name = ";
-            queryVo += "'";
-            queryVo += vo_name;
-            queryVo += "'";
+            voStmt = (sql.prepare << "select distinct vo_name from t_job where job_finished is null AND vo_name = :vo_name",
+                        soci::use(vo_name), soci::into(vo_name_local));
         }
     else
         {
-            queryVo = "select distinct vo_name from t_job WHERE job_finished is null ";
+            voStmt = (sql.prepare << "select distinct vo_name from t_job where job_finished is null",
+                        soci::into(vo_name_local));
         }
 
+    soci::statement pairsStmt(sql);
+    pairsStmt.exchange(soci::into(source_se));
+    pairsStmt.exchange(soci::into(dest_se));
     if(!source_se_p.empty())
         {
             source_se = source_se_p;
-            querySe += " AND source_se = '" + source_se;
-            querySe += "' ";
+            pairsStmt.exchange(soci::use(source_se));
+            querySe += " AND source_se = :source_se ";
         }
 
     if(!dest_se_p.empty())
         {
             dest_se = dest_se_p;
-            querySe += " AND dest_se = '" + dest_se;
-            querySe += "' ";
+            pairsStmt.exchange(soci::use(dest_se));
+            querySe += " AND dest_se = :dest_se ";
         }
+    querySe += " AND vo_name= :vo_name";
+    pairsStmt.exchange(soci::use(vo_name_local));
+    pairsStmt.alloc();
+    pairsStmt.prepare(querySe);
+    pairsStmt.define_and_bind();
 
     try
         {
@@ -8167,8 +8292,8 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
 
             soci::statement st4((sql.prepare << "select avg(throughput) from t_file where  "
                                  " source_se=:source_se and dest_se=:dest_se "
-				 " AND file_state='ACTIVE' OR (file_state='FINISHED' and  job_finished >= (sys_extract_utc(systimestamp) - interval '60' minute)) "
-				 " AND throughput <> 0 ",
+                                " AND file_state='ACTIVE' OR (file_state='FINISHED' and  job_finished >= (sys_extract_utc(systimestamp) - interval '60' minute)) "
+                                " AND throughput <> 0 ",
                                  soci::use(source_se),
                                  soci::use(dest_se),
                                  soci::into(throughput, isNull2)
@@ -8206,42 +8331,25 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                                  soci::into(queuingTime, isNull5)
                                 ));
 
-            soci::rowset<std::string> rs = (sql.prepare << queryVo);
-
-
-
-            for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+            voStmt.execute();
+            while (voStmt.fetch());
                 {
-                    vo_name_local = *i;
-
                     if(source_se_p.empty())
                         source_se = "";
                     if(dest_se_p.empty())
                         dest_se = "";
 
-                    std::string tempSeQuery = querySe;
-
-                    tempSeQuery += " AND vo_name= '";
-                    tempSeQuery += vo_name_local;
-                    tempSeQuery += "' ";
-
-
-                    soci::rowset<soci::row> rs2 = (sql.prepare << tempSeQuery);
-
-                    for (soci::rowset<soci::row>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
+                    pairsStmt.execute();
+                    while (pairsStmt.fetch())
                         {
                             active = 0;
                             maxActive = 0;
                             submitted = 0;
                             throughput = 0.0;
 
-                            result << std::fixed <<  "VO: ";
+                            result << std::fixed << "VO: ";
                             result <<   vo_name_local;
                             result <<   "\n";
-
-                            soci::row const& r2 = *i2;
-                            source_se = r2.get<std::string>("SOURCE_SE","");
-                            dest_se = r2.get<std::string>("DEST_SE","");
 
                             result <<   "Source endpoint: ";
                             result <<   source_se;
@@ -8271,10 +8379,10 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                             //weighted-average throughput last sample
                             st4.execute(true);
                             result <<   "Avg throughput: ";
-                            result <<  std::setprecision(2) << throughput * active;
+                            result <<  std::setprecision(2) << throughput;
                             result <<   " MB/s\n";
 
-                            //success rate the last 15 min
+                            //success rate the last 1h
                             soci::rowset<soci::row> rs = (sql.prepare << "SELECT file_state FROM t_file "
                                                           "WHERE "
                                                           "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
@@ -8307,11 +8415,9 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                                     ratioSuccessFailure = ceil(nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0));
                                 }
 
-
                             result <<   "Link efficiency (last hour): ";
                             result <<   long(ratioSuccessFailure);
                             result <<   "%\n";
-
 
                             //average transfer duration the last 30min
                             tx_duration = 0.0;
@@ -8320,7 +8426,6 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                             result <<   long(tx_duration);
                             result <<   " secs\n";
 
-
                             //average queuing time expressed in secs
                             queuingTime = 0;
                             st7.execute(true);
@@ -8328,8 +8433,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                             result <<   long(queuingTime);
                             result <<   " secs\n";
 
-
-                            //most frequent error and number the last hour
+                            //most frequent error and number the last 30min
                             reason = "";
                             countReason = 0;
                             st5.execute(true);

@@ -325,7 +325,7 @@ protected:
                                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the status messages:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
                                     }
                             }
-			    
+
                         if(!messages.empty())
                             {
                                 if(messages.size() >= 8 )
@@ -343,11 +343,11 @@ protected:
                                         std::vector<struct message> split_22(split_2.begin() + half_size3, split_2.end());
 
                                         boost::thread *t1 = new boost::thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_11)));
-					boost::thread *t2 = new boost::thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_21)));
-					boost::thread *t3 = new boost::thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_12)));
-					boost::thread *t4 = new boost::thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_22)));
-                                        
-					g.add_thread(t1);
+                                        boost::thread *t2 = new boost::thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_21)));
+                                        boost::thread *t3 = new boost::thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_12)));
+                                        boost::thread *t4 = new boost::thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_22)));
+
+                                        g.add_thread(t1);
                                         g.add_thread(t2);
                                         g.add_thread(t3);
                                         g.add_thread(t4);
@@ -360,7 +360,7 @@ protected:
                                         executeUpdate(messages);
                                     }
                                 messages.clear();
-                            }			    
+                            }
 
                         //update log file path
                         if (!fs::is_empty(fs::path(LOG_DIR)))

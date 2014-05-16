@@ -30,6 +30,9 @@
 
 #include "common/JobStatusHandler.h"
 
+#include "exception/cli_exception.h"
+#include "JsonOutput.h"
+
 #include <boost/scoped_ptr.hpp>
 
 #include <boost/lambda/lambda.hpp>
@@ -49,7 +52,7 @@ using namespace fts3::common;
  */
 int main(int ac, char* av[])
 {
-
+    JsonOutput::create();
     scoped_ptr<ListTransferCli> cli;
 
     try
@@ -58,7 +61,7 @@ int main(int ac, char* av[])
             cli.reset(
                 getCli<ListTransferCli>(ac, av)
             );
-            if (!cli->validate()) return 0;
+            if (!cli->validate()) return 1;
 
             if (cli->rest())
                 {
@@ -119,20 +122,18 @@ int main(int ac, char* av[])
             for_each(statuses.begin(), statuses.end(), lambda::bind(&MsgPrinter::job_status, &cli->printer(), lambda::_1));
 //            for_each(statuses.begin(), statuses.end(), [&cli](fts3::cli::JobStatus status){cli->printer().job_status(status);});
         }
+    catch(cli_exception const & ex)
+        {
+            if (cli->isJson()) JsonOutput::print(ex);
+            else std::cout << ex.what() << std::endl;
+            return 1;
+        }
     catch(std::exception& ex)
         {
             if (cli.get())
-                cli->printer().error_msg(ex.what());
+                cli->printer().gsoap_error_msg(ex.what());
             else
                 std::cerr << ex.what() << std::endl;
-            return 1;
-        }
-    catch(string& ex)
-        {
-            if (cli.get())
-                cli->printer().gsoap_error_msg(ex);
-            else
-                std::cerr << ex << std::endl;
             return 1;
         }
     catch(...)

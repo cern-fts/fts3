@@ -29,7 +29,9 @@
 
 #include "common/JobStatusHandler.h"
 
-#include <exception>
+#include "exception/cli_exception.h"
+#include "JsonOutput.h"
+
 #include <iostream>
 #include <vector>
 #include <string>
@@ -50,7 +52,7 @@ using namespace fts3::common;
  */
 int main(int ac, char* av[])
 {
-
+    JsonOutput::create();
     scoped_ptr<CancelCli> cli;
 
     try
@@ -72,6 +74,7 @@ int main(int ac, char* av[])
                             HttpRequest http (url, cli->capath(), cli->proxy(), cout);
                             http.del();
                         }
+                    cli->printer().cancelled_jobs(jobIds);
                     return 0;
                 }
 
@@ -87,23 +90,20 @@ int main(int ac, char* av[])
                 }
 
             vector< pair<string, string> > ret = ctx.cancel(jobs);
-
-            for_each(ret.begin(), ret.end(), lambda::bind(&MsgPrinter::cancelled_job, &(cli->printer()), lambda::_1));
+            cli->printer().cancelled_jobs(ret);
+        }
+    catch(cli_exception const & ex)
+        {
+            if (cli->isJson()) JsonOutput::print(ex);
+            else std::cout << ex.what() << std::endl;
+            return 1;
         }
     catch(std::exception& ex)
         {
             if (cli.get())
-                cli->printer().error_msg(ex.what());
+                cli->printer().gsoap_error_msg(ex.what());
             else
                 std::cerr << ex.what() << std::endl;
-            return 1;
-        }
-    catch(string& ex)
-        {
-            if (cli.get())
-                cli->printer().gsoap_error_msg(ex);
-            else
-                std::cerr << ex << std::endl;
             return 1;
         }
     catch(...)
