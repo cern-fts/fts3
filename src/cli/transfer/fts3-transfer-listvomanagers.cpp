@@ -17,54 +17,55 @@
  *	limitations under the License.
  */
 
+
+
 #include "GSoapContextAdapter.h"
-#include "ProxyCertificateDelegator.h"
+#include "ui/VoNameCli.h"
 
-#include "ui/DelegationCli.h"
-
-#include "JsonOutput.h"
 #include "exception/cli_exception.h"
+#include "JsonOutput.h"
 
+#include <string>
+#include <iostream>
+#include <memory>
 #include <boost/scoped_ptr.hpp>
 
 using namespace std;
-using namespace boost;
 using namespace fts3::cli;
 
 /**
- * This is the entry point for the fts3-transfer-submit command line tool.
+ * This is the entry point for the fts3-transfer-cancel command line tool.
  */
 int main(int ac, char* av[])
 {
-
-    scoped_ptr<DelegationCli> cli;
+    scoped_ptr<VoNameCli> cli;
 
     try
         {
             // create and initialize the command line utility
-            cli.reset (
-                getCli<DelegationCli>(ac, av)
+            cli.reset(
+                getCli<VoNameCli>(ac, av)
             );
             if (!cli->validate()) return 0;
 
-            // validate command line options, and return respective gSOAP context
-            cli->getGSoapContext();
+            // validate command line options, and return respective gsoap context
+            GSoapContextAdapter& ctx = cli->getGSoapContext();
 
-            // delegate Proxy Certificate
-            ProxyCertificateDelegator handler (
-                cli->getService(),
-                cli->getDelegationId(),
-                cli->getExpirationTime(),
-                cli->printer()
-            );
+            impltns__listVOManagersResponse resp;
+            ctx.listVoManagers(cli->getVoName(), resp);
 
-            handler.delegate();
+            vector<string> &vec = resp._listVOManagersReturn->item;
+            vector<string>::iterator it;
+
+            for (it = vec.begin(); it < vec.end(); it++)
+                {
+                    cout << *it << endl;
+                }
 
         }
-    catch(cli_exception const & ex)
+    catch(cli_exception& ex)
         {
-            if (cli->isJson()) JsonOutput::print(ex);
-            else std::cout << ex.what() << std::endl;
+            JsonOutput::print(ex);
             return 1;
         }
     catch(std::exception& ex)
@@ -77,12 +78,8 @@ int main(int ac, char* av[])
         }
     catch(...)
         {
-            if (cli.get())
-                cli->printer().error_msg("Exception of unknown type!");
-            else
-                std::cerr << "Exception of unknown type!" << std::endl;
+            cerr << "Exception of unknown type!\n";
             return 1;
         }
-
     return 0;
 }

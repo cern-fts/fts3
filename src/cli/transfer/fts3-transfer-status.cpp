@@ -58,7 +58,7 @@ int main(int ac, char* av[])
 {
     static const int DEFAULT_LIMIT = 100;
 
-	JsonOutput::create();
+    JsonOutput::create();
     scoped_ptr<TransferStatusCli> cli;
 
     try
@@ -197,9 +197,9 @@ int main(int ac, char* av[])
         }
     catch(cli_exception const & ex)
         {
-    		if (cli->isJson()) JsonOutput::print(ex);
-			else std::cout << ex.what() << std::endl;
-    		return 1;
+            if (cli->isJson()) JsonOutput::print(ex);
+            else std::cout << ex.what() << std::endl;
+            return 1;
         }
     catch(std::exception& ex)
         {

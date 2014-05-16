@@ -26,36 +26,36 @@ class bad_option : public cli_exception
 {
 
 public:
-	/**
-	 * Constructor
-	 */
-	bad_option(std::string const & opt, std::string const & msg) : cli_exception(msg), opt(opt) {}
+    /**
+     * Constructor
+     */
+    bad_option(std::string const & opt, std::string const & msg) : cli_exception(msg), opt(opt) {}
 
-	/**
-	 * returns the error message
-	 */
-	virtual char const * what() const
+    /**
+     * returns the error message
+     */
+    virtual char const * what() const
 #if __cplusplus >= 199711L
-		noexcept (true)
+    noexcept (true)
 #endif
-	{
-		return (opt + ": " + msg).c_str();
-	}
+    {
+        return (opt + ": " + msg).c_str();
+    }
 
-	/**
-	 * returns the error message that should be included in the JSON output
-	 */
-	virtual pt::ptree const json_obj() const
-	{
-		pt::ptree obj;
-		obj.put(opt, msg);
+    /**
+     * returns the error message that should be included in the JSON output
+     */
+    virtual pt::ptree const json_obj() const
+    {
+        pt::ptree obj;
+        obj.put(opt, msg);
 
-		return obj;
-	}
+        return obj;
+    }
 
 private:
-	/// program option name
-	std::string opt;
+    /// program option name
+    std::string opt;
 };
 
 }

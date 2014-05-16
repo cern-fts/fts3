@@ -52,8 +52,8 @@ using namespace fts3::common;
  */
 int main(int ac, char* av[])
 {
-	JsonOutput::create();
-	scoped_ptr<CancelCli> cli;
+    JsonOutput::create();
+    scoped_ptr<CancelCli> cli;
 
     try
         {
@@ -94,9 +94,9 @@ int main(int ac, char* av[])
         }
     catch(cli_exception const & ex)
         {
-			if (cli->isJson()) JsonOutput::print(ex);
-			else std::cout << ex.what() << std::endl;
-			return 1;
+            if (cli->isJson()) JsonOutput::print(ex);
+            else std::cout << ex.what() << std::endl;
+            return 1;
         }
     catch(std::exception& ex)
         {

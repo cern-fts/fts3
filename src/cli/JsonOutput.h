@@ -37,46 +37,46 @@ class JsonOutput
 
 public:
 
-	/**
-	 * Creates a single instance of JsonOutput
-	 */
-	static void create(std::ostream& out = std::cout);
+    /**
+     * Creates a single instance of JsonOutput
+     */
+    static void create(std::ostream& out = std::cout);
 
-	/**
-	 * Puts given message in the given node of JSON output
-	 */
-	static void print(std::string const path, std::string const msg);
+    /**
+     * Puts given message in the given node of JSON output
+     */
+    static void print(std::string const path, std::string const msg);
 
-	/**
-	 * Puts the CLI exception into respective node of JSON output
-	 */
-	static void print(cli_exception const & ex);
+    /**
+     * Puts the CLI exception into respective node of JSON output
+     */
+    static void print(cli_exception const & ex);
 
-	/**
-	 * Puts the map object into given node as a array of key-value pairs
-	 */
-	static void printArray(std::string const path, std::map<std::string, std::string> const & object);
+    /**
+     * Puts the map object into given node as a array of key-value pairs
+     */
+    static void printArray(std::string const path, std::map<std::string, std::string> const & object);
 
-	/**
-	 * Puts the value into given node as a array member
-	 */
-	static void printArray(std::string const path, std::string const value);
+    /**
+     * Puts the value into given node as a array member
+     */
+    static void printArray(std::string const path, std::string const value);
 
-	/**
-	 * Puts the value into given node as a array member
-	 */
-	static void printArray(std::string const path, pt::ptree const & obj);
+    /**
+     * Puts the value into given node as a array member
+     */
+    static void printArray(std::string const path, pt::ptree const & obj);
 
-	/**
-	 * Prints the JSON message to the given output stream
-	 */
-	virtual ~JsonOutput();
+    /**
+     * Prints the JSON message to the given output stream
+     */
+    virtual ~JsonOutput();
 
 private:
 
-	/// Private constructor
-	JsonOutput(std::ostream& out) : out (out) {};
-	/// Copy constructor (not implemented)
+    /// Private constructor
+    JsonOutput(std::ostream& out) : out (out) {};
+    /// Copy constructor (not implemented)
     JsonOutput(JsonOutput const&);
     /// Assignment operator (not implemented)
     void operator=(JsonOutput const&);

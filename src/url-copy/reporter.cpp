@@ -143,17 +143,31 @@ void Reporter::sendTerminal(double throughput, bool retry,
 }
 
 void Reporter::sendPing(const std::string& job_id, unsigned file_id,
-                        double throughput, off_t transferred)
+                        double throughput, off_t transferred,
+                        std::string source_surl, std::string dest_surl,std::string source_turl, std::string dest_turl)
 {
     boost::recursive_mutex::scoped_lock lock(mutex);
 
     strncpy(msg_updater->job_id, job_id.c_str(), sizeof(msg_updater->job_id));
-    msg_updater->file_id = file_id;
     msg_updater->job_id[sizeof(msg_updater->job_id) -1] = '\0';
+    msg_updater->file_id = file_id;
     msg_updater->process_id = (int) getpid();
     msg_updater->timestamp = milliseconds_since_epoch();
     msg_updater->throughput = throughput;
     msg_updater->transferred = (double)transferred;
+
+    strncpy(msg_updater->source_surl, source_surl.c_str(), sizeof(msg_updater->source_surl));
+    msg_updater->source_surl[sizeof(msg_updater->source_surl) -1] = '\0';
+
+    strncpy(msg_updater->dest_surl, dest_surl.c_str(), sizeof(msg_updater->dest_surl));
+    msg_updater->dest_surl[sizeof(msg_updater->dest_surl) -1] = '\0';
+
+    strncpy(msg_updater->source_turl, source_turl.c_str(), sizeof(msg_updater->source_turl));
+    msg_updater->source_turl[sizeof(msg_updater->source_turl) -1] = '\0';
+
+    strncpy(msg_updater->dest_turl, dest_turl.c_str(), sizeof(msg_updater->dest_turl));
+    msg_updater->dest_turl[sizeof(msg_updater->dest_turl) -1] = '\0';
+
     // Try twice
     if (runProducerStall(*msg_updater) != 0)
         runProducerStall(*msg_updater);

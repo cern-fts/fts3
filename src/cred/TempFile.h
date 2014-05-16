@@ -81,7 +81,7 @@ public:
                 std::string reason = (std::string)"Cannot rename temporary file. Error is: " +
                                      strerror(errno);
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << reason << commit;
-		::unlink(m_filename.c_str());
+                ::unlink(m_filename.c_str());
             }
         // Release Ownership
         this->release();

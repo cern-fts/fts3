@@ -50,7 +50,7 @@ using namespace fts3::common;
 int main(int ac, char* av[])
 {
 
-	JsonOutput::create();
+    JsonOutput::create();
     scoped_ptr<SnapshotCli> cli;
 
     try
@@ -74,8 +74,8 @@ int main(int ac, char* av[])
         }
     catch(cli_exception const & ex)
         {
-			std::cout << ex.what() << std::endl;
-			return 1;
+            std::cout << ex.what() << std::endl;
+            return 1;
         }
     catch(std::exception& ex)
         {

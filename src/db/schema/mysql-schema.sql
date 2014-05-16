@@ -690,6 +690,21 @@ CREATE TABLE t_optimize_active (
 );
 
 
+-- 
+-- t_turl store the turls used for a given surl
+--
+CREATE TABLE t_turl (
+  source_surl     VARCHAR(150)   NOT NULL,
+  destin_surl     VARCHAR(150)   NOT NULL,
+  source_turl     VARCHAR(150)   NOT NULL,
+  destin_turl     VARCHAR(150)   NOT NULL,
+  datetime        TIMESTAMP      NULL DEFAULT NULL,
+  throughput      FLOAT DEFAULT NULL,
+  finish          DOUBLE DEFAULT 0,
+  fail     	  DOUBLE DEFAULT 0,
+  CONSTRAINT t_turl_pk PRIMARY KEY (source_surl, destin_surl, source_turl, destin_turl)
+);
+
 --
 -- t_file stores files for data management operations
 --
@@ -820,6 +835,12 @@ CREATE INDEX t_file_select ON t_file(dest_se, source_se, job_finished, file_stat
 CREATE INDEX file_vo_name_state ON t_file(file_state, vo_name, source_se, dest_se);
 CREATE INDEX file_tr_host ON t_file(transferHost, file_state);
 CREATE INDEX t_file_activity ON t_file(activity);
+
+
+
+CREATE INDEX t_url_datetime ON t_turl(datetime);
+CREATE INDEX t_url_finish ON t_turl(finish);
+CREATE INDEX t_url_fail ON t_turl(fail);
 
 -- 
 --

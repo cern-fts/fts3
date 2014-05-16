@@ -2228,20 +2228,69 @@ void MySqlAPI::updateFileTransferProgressVector(std::vector<struct message_updat
 {
 
     soci::session sql(*connectionPool);
+    std::vector<struct message_updater> temp;
 
     try
         {
             double throughput = 0.0;
             double transferred = 0.0;
             int file_id = 0;
-            soci::statement stmt = (sql.prepare << "UPDATE t_file SET throughput = :throughput, transferred = :transferred WHERE file_id = :fileId  AND file_state not in ('FAILED','CANCELED') ",
+            std::string source_surl;
+            std::string dest_surl;
+            std::string source_turl;
+            std::string dest_turl;
+            std::string file_state;
+
+            soci::statement stmt = (sql.prepare << "UPDATE t_file SET throughput = :throughput, transferred = :transferred WHERE file_id = :fileId  AND file_state not in ('FINISHED','FAILED','CANCELED') ",
                                     soci::use(throughput), soci::use(transferred), soci::use(file_id));
+
+            soci::statement stmtTurl = (sql.prepare << " INSERT INTO t_turl (source_surl, destin_surl, source_turl, destin_turl, datetime, throughput) "
+                                        " VALUES (:source_surl, :destin_surl, :source_turl, :destin_turl, UTC_TIMESTAMP(), :throughput) "
+                                        " ON DUPLICATE KEY UPDATE "
+                                        " datetime = UTC_TIMESTAMP(), throughput = :throughput",
+                                        soci::use(source_surl),
+                                        soci::use(dest_surl),
+                                        soci::use(source_turl),
+                                        soci::use(dest_turl),
+                                        soci::use(throughput),
+                                        soci::use(throughput)
+                                       );
+
+            soci::statement stmtFinish = (sql.prepare << " INSERT INTO t_turl (source_surl, destin_surl, source_turl, destin_turl, datetime, throughput, finish) "
+                                          " VALUES (:source_surl, :destin_surl, :source_turl, :destin_turl, UTC_TIMESTAMP(), :throughput, 1) "
+                                          " ON DUPLICATE KEY UPDATE "
+                                          " datetime = UTC_TIMESTAMP(), throughput = :throughput, finish = finish + 1",
+                                          soci::use(source_surl),
+                                          soci::use(dest_surl),
+                                          soci::use(source_turl),
+                                          soci::use(dest_turl),
+                                          soci::use(throughput),
+                                          soci::use(throughput)
+                                         );
+
+            soci::statement stmtFail = (sql.prepare << " INSERT INTO t_turl (source_surl, destin_surl, source_turl, destin_turl, datetime, throughput, fail) "
+                                        " VALUES (:source_surl, :destin_surl, :source_turl, :destin_turl, UTC_TIMESTAMP(), :throughput, 1) "
+                                        " ON DUPLICATE KEY UPDATE "
+                                        " datetime = UTC_TIMESTAMP(), throughput = :throughput, fail = fail + 1",
+                                        soci::use(source_surl),
+                                        soci::use(dest_surl),
+                                        soci::use(source_turl),
+                                        soci::use(dest_turl),
+                                        soci::use(throughput),
+                                        soci::use(throughput)
+                                       );
+
+            soci::statement stmtFileid = (sql.prepare << "select file_state from t_file where file_id=:file_id", soci::use(file_id), soci::into(file_state));
 
             sql.begin();
 
             std::vector<struct message_updater>::iterator iter;
             for (iter = messages.begin(); iter != messages.end(); ++iter)
                 {
+                    throughput = 0.0;
+                    transferred = 0.0;
+                    file_id = 0;
+
                     if (iter->msg_errno == 0)
                         {
                             if((*iter).throughput > 0.0)
@@ -2251,19 +2300,71 @@ void MySqlAPI::updateFileTransferProgressVector(std::vector<struct message_updat
                                     file_id = (*iter).file_id;
                                     stmt.execute(true);
                                 }
+                            temp.push_back((*iter));
                         }
                 }
 
             sql.commit();
 
+            //now update t_turl table by checking file state
+            sql.begin();
+
+            for (iter = temp.begin(); iter != temp.end(); ++iter)
+                {
+                    file_state = ""; //reset all
+                    source_surl = "";
+                    dest_surl = "";
+                    source_turl = "";
+                    dest_turl = "";
+                    throughput = 0.0;
+
+                    if (iter->msg_errno == 0)
+                        {	
+                            source_surl = (*iter).source_surl;
+                            dest_surl = (*iter).dest_surl;
+                            source_turl = (*iter).source_turl;
+                            dest_turl = (*iter).dest_turl;			
+			
+			    if(source_turl == "gsiftp:://fake" && dest_turl == "gsiftp:://fake")
+                                continue;
+				
+                            if((*iter).throughput > 0.0)
+                                {
+                                    throughput = convertKbToMb((*iter).throughput);
+                                }
+
+                            file_id = (*iter).file_id;
+
+                            //check file state for tis file_id
+                            stmtFileid.execute(true);
+
+                            if(file_state == "FINISHED")
+                                {
+                                    stmtFinish.execute(true);
+                                }
+                            else if (file_state == "FAILED")
+                                {
+                                    stmtFail.execute(true);
+                                }
+                            else
+                                {
+                                    stmtTurl.execute(true);
+                                }
+                        }
+                }
+		
+            sql.commit();
+            temp.clear();
         }
     catch (std::exception& e)
         {
+            temp.clear();
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
+            temp.clear();
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
@@ -3208,13 +3309,13 @@ bool MySqlAPI::updateOptimizer()
                                          sql.prepare << " select nostreams from t_optimize where "
                                          " source_se=:source_se and dest_se=:dest_se",
                                          soci::use(source_hostname), soci::use(destin_hostname), soci::into(streamsCurrent, isNullStreamsCurrent));
-					 
+
             soci::statement stmt18 = (
                                          sql.prepare << " select count(distinct source_se) from t_file where "
-					 		" file_state in ('ACTIVE','READY','SUBMITTED') and "
-							" dest_se=:dest and "
-							" job_finished is null",
-                                         soci::use(destin_hostname), soci::into(singleDest));					 
+                                         " file_state in ('ACTIVE','READY','SUBMITTED') and "
+                                         " dest_se=:dest and "
+                                         " job_finished is null",
+                                         soci::use(destin_hostname), soci::into(singleDest));
 
 
             //check if retry is set at global level
@@ -3259,25 +3360,25 @@ bool MySqlAPI::updateOptimizer()
                     isNullRecordsFound = soci::i_ok;
                     streamsCurrent = 0;
                     isNullStreamsCurrent = soci::i_ok;
-		    singleDest = 0;
-		    lanTransferBool = false;
+                    singleDest = 0;
+                    lanTransferBool = false;
                     now = getUTC(0);
-		    
-                  if(true == lanTransfer(source_hostname, destin_hostname))
-		    {
-                        highDefault = (highDefault * 3);
-			lanTransferBool = true;
-		    }
+
+                    if(true == lanTransfer(source_hostname, destin_hostname))
+                        {
+                            highDefault = (highDefault * 3);
+                            lanTransferBool = true;
+                        }
                     else //default
-		    {
-                        highDefault = tempDefault;
-		    }		    
+                        {
+                            highDefault = tempDefault;
+                        }
 
                     // check current active transfers for a linkmaxActive
                     stmt7.execute(true);
-		    
-		    //check if there is any other source for a given dest
-		    stmt18.execute(true);
+
+                    //check if there is any other source for a given dest
+                    stmt18.execute(true);
 
                     // Weighted average
                     soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
@@ -3315,12 +3416,12 @@ bool MySqlAPI::updateOptimizer()
                         {
                             std::string state = i->get<std::string>("file_state", "");
                             int retryNum = i->get<int>("retry", 0);
-			    int current_failures = i->get<int>("current_failures", 0);
+                            int current_failures = i->get<int>("current_failures", 0);
 
-			    if(state.compare("FAILED") == 0 && current_failures == 0)
-			        {
-			         //do nothing, it's a non recoverable error so do not consider it
-			        }
+                            if(state.compare("FAILED") == 0 && current_failures == 0)
+                                {
+                                    //do nothing, it's a non recoverable error so do not consider it
+                                }
                             else if ( (state.compare("FAILED") == 0 ||  state.compare("SUBMITTED") == 0) && retrySet > 0 && retryNum > 0)
                                 {
                                     nFailedLastHour+=1.0;
@@ -3479,30 +3580,37 @@ bool MySqlAPI::updateOptimizer()
 
                             if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 98)) && throughput > thrStored && retry <= retryStored)
                                 {
+				    int tempActive = active; //temp store current active
+				    
                                     //make sure we do not increase beyond limits set
                                     bool maxActiveLimit = getMaxActive(sql, maxActive, highDefault, source_hostname, destin_hostname);
 
                                     if(maxActiveLimit) // no limit
-                                        {					
-					    if(singleDest == 1)
-					    {
-					        active = maxActive + spawnActive + 1;
-					    }
-					    else if (lanTransferBool)
-					    {
-    					        active = maxActive + spawnActive + 1;
-					    }
-					    else
-					    {
-                                            	active = maxActive + spawnActive;
-					    }	
-					    
+                                        {
+                                            if(singleDest == 1)
+                                                {
+                                                    active = maxActive + spawnActive + 1;
+                                                }
+                                            else if (lanTransferBool)
+                                                {
+                                                    active = maxActive + spawnActive + 1;
+                                                }
+                                            else
+                                                {
+                                                    active = maxActive + spawnActive;
+                                                }
+						
+				           if(active > (tempActive + 10))
+					        {
+						    active = maxActive;						    
+						}
+
                                             pathFollowed = 1;
                                             stmt10.execute(true);
                                         }
-                                    else
+                                    else //no change, max limit reached
                                         {
-					    active = maxActive;
+                                            active = maxActive;
                                             pathFollowed = 11;
                                             stmt10.execute(true);
                                         }
@@ -4172,6 +4280,16 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                     sql.begin();
                     sql << "delete from t_file_retry_errors where datetime < (UTC_TIMESTAMP() - interval '7' DAY )";
                     sql.commit();
+		    
+                    //delete from t_turl > 7 days old records
+                    sql.begin();
+                    sql << "delete from t_turl where datetime < (UTC_TIMESTAMP() - interval '7' DAY )";
+		    sql.commit();
+		    
+		    sql.begin();
+		    sql << "update t_turl set finish=0 where finish > 100000000000";
+		    sql << "update t_turl set fail=0 where fail > 100000000000";
+                    sql.commit();		    
                 }
 
             jobIdStmt.str(std::string());
@@ -6102,8 +6220,8 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
                             stmt1.execute(true);
 
                             int maxNoConfig = currentStagingFilesNoConfig > 0 ? maxValue - currentStagingFilesNoConfig : maxValue;
-			    if(maxNoConfig > 500 || maxNoConfig < 0)
-			    	maxNoConfig = 500;
+                            if(maxNoConfig > 500 || maxNoConfig < 0)
+                                maxNoConfig = 500;
 
                             soci::rowset<soci::row> rs2 = (
                                                               sql.prepare <<
@@ -6158,8 +6276,8 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
                         ;
 
                     int maxConfig = currentStagingFilesConfig > 0 ? maxValue - currentStagingFilesConfig : maxValue;
-		    if(maxConfig > 500 || maxConfig < 0)
-			maxConfig = 500;		    
+                    if(maxConfig > 500 || maxConfig < 0)
+                        maxConfig = 500;
 
                     soci::rowset<soci::row> rs = (
                                                      sql.prepare <<
@@ -8335,26 +8453,26 @@ void MySqlAPI::updateOptimizerEvolution(soci::session& sql, const std::string & 
         {
             if(throughput > 0 && successRate > 0)
                 {
-		    double agrthroughput = 0.0;
-		    soci::indicator ind = soci::i_ok;
-		    sql << " select sum(throughput) from t_file where file_state='ACTIVE' and source_se=:source_se and dest_se=:dest_se and throughput > 0 ",
-		    soci::use(source_hostname), soci::use(destination_hostname), soci::into(agrthroughput, ind);
-		    
-		    if(ind == soci::i_ok && agrthroughput > 0)
-		    {
-                    sql.begin();
-                    sql << " INSERT INTO t_optimizer_evolution (datetime, source_se, dest_se, active, throughput, filesize, buffer, nostreams, agrthroughput) "
-                        " values(UTC_TIMESTAMP(), :source, :dest, :active, :throughput, :filesize, :buffer, :nostreams, :agrthroughput) ",
-                        soci::use(source_hostname),
-                        soci::use(destination_hostname),
-                        soci::use(active),
-                        soci::use(throughput),
-                        soci::use(successRate),
-                        soci::use(buffer),
-                        soci::use(bandwidth),
-			soci::use(agrthroughput);
-                    sql.commit();
-		    }
+                    double agrthroughput = 0.0;
+                    soci::indicator ind = soci::i_ok;
+                    sql << " select sum(throughput) from t_file where file_state='ACTIVE' and source_se=:source_se and dest_se=:dest_se and throughput > 0 ",
+                        soci::use(source_hostname), soci::use(destination_hostname), soci::into(agrthroughput, ind);
+
+                    if(ind == soci::i_ok && agrthroughput > 0)
+                        {
+                            sql.begin();
+                            sql << " INSERT INTO t_optimizer_evolution (datetime, source_se, dest_se, active, throughput, filesize, buffer, nostreams, agrthroughput) "
+                                " values(UTC_TIMESTAMP(), :source, :dest, :active, :throughput, :filesize, :buffer, :nostreams, :agrthroughput) ",
+                                soci::use(source_hostname),
+                                soci::use(destination_hostname),
+                                soci::use(active),
+                                soci::use(throughput),
+                                soci::use(successRate),
+                                soci::use(buffer),
+                                soci::use(bandwidth),
+                                soci::use(agrthroughput);
+                            sql.commit();
+                        }
                 }
         }
     catch (std::exception& e)
@@ -8458,8 +8576,8 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
 
             soci::statement st4((sql.prepare << "select avg(throughput) from t_file where  "
                                  " source_se=:source_se and dest_se=:dest_se "
-				 " AND file_state='ACTIVE' OR (file_state='FINISHED' and  job_finished >= (UTC_TIMESTAMP() - interval '60' minute)) "
-				 " AND throughput <> 0 ",
+                                 " AND file_state='ACTIVE' OR (file_state='FINISHED' and  job_finished >= (UTC_TIMESTAMP() - interval '60' minute)) "
+                                 " AND throughput <> 0 ",
                                  soci::use(source_se),
                                  soci::use(dest_se),
                                  soci::into(throughput, isNull2)

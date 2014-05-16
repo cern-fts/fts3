@@ -106,7 +106,7 @@ bool retryTransfer(int errorNo, const std::string& category, const std::string& 
                     break;
                 }
         }
-    
+
     found = message.find("proxy expired");
     if (found!=std::string::npos)
         retry = false;
@@ -223,6 +223,19 @@ void fts3_initialize_db_backend()
         }
 }
 
+static std::string generateProxy(const std::string& dn, const std::string& dlg_id)
+{
+    boost::scoped_ptr<DelegCred> delegCredPtr(new DelegCred);
+    return delegCredPtr->getFileName(dn, dlg_id);
+}
+
+
+static bool checkValidProxy(const std::string& filename, std::string& message)
+{
+    boost::scoped_ptr<DelegCred> delegCredPtr(new DelegCred);
+    return delegCredPtr->isValidProxy(filename, message);
+}
+
 void issueBringOnLineStatus(gfal2_context_t handle, std::string infosys)
 {
     char token[512] = {0};
@@ -261,9 +274,20 @@ void issueBringOnLineStatus(gfal2_context_t handle, std::string infosys)
                             cert = new UserProxyEnv((*i).proxy);
                             bool deleteIt = false;
                             time_t now = time(NULL);
+
+
+                            //before any operation, check if the proxy is valid
+                            std::string message;
+                            bool isValid = checkValidProxy((*i).proxy, message);
+                            if(!isValid)
+                                {
+                                    db::DBSingleton::instance().getDBObjectInstance()->bringOnlineReportStatus("FAILED", message, (*i));
+                                    ThreadSafeBringOnlineList::get_instance().m_list.erase(i++);
+                                    continue;
+                                }
+
                             if ((*i).started == false)   //issue bringonline
                                 {
-
                                     if((*i).pinlifetime > pinlifetime)
                                         {
                                             pinlifetime = (*i).pinlifetime;
@@ -274,7 +298,7 @@ void issueBringOnLineStatus(gfal2_context_t handle, std::string infosys)
                                             bringonlineTimeout = (*i).bringonlineTimeout;
                                         }
 
-                                    statusA = gfal2_bring_online(handle, ((*i).url).c_str(), pinlifetime, bringonlineTimeout, token, sizeof (token), 1, &error);                                    
+                                    statusA = gfal2_bring_online(handle, ((*i).url).c_str(), pinlifetime, bringonlineTimeout, token, sizeof (token), 1, &error);
 
                                     if (statusA < 0)
                                         {
@@ -319,7 +343,7 @@ void issueBringOnLineStatus(gfal2_context_t handle, std::string infosys)
                                                 {
                                                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE will be retried" << commit;
                                                     (*i).retries +=1;
-						    (*i).started = false;
+                                                    (*i).started = false;
                                                 }
                                             else
                                                 {
@@ -368,18 +392,7 @@ void issueBringOnLineStatus(gfal2_context_t handle, std::string infosys)
         }
 }
 
-static std::string generateProxy(const std::string& dn, const std::string& dlg_id)
-{
-    boost::scoped_ptr<DelegCred> delegCredPtr(new DelegCred);
-    return delegCredPtr->getFileName(dn, dlg_id);
-}
 
-
-static bool checkValidProxy(const std::string& filename, std::string& message)
-{
-    boost::scoped_ptr<DelegCred> delegCredPtr(new DelegCred);
-    return delegCredPtr->isValidProxy(filename, message);
-}
 
 void heartbeat(void)
 {
