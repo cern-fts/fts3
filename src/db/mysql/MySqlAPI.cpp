@@ -8377,7 +8377,6 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
     std::string dest_se;
     std::string source_se;
     std::string reason;
-    std::string queryVo;
     long long countReason = 0;
     long long active = 0;
     long long maxActive = 0;
@@ -8397,32 +8396,39 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
     soci::indicator isNull4 = soci::i_ok;
     soci::indicator isNull5 = soci::i_ok;
 
+    soci::statement voStmt(sql);
     if(!vo_name.empty())
         {
-            vo_name_local = vo_name;
-            queryVo = "select distinct vo_name from t_job where job_finished is null AND vo_name = ";
-            queryVo += "'";
-            queryVo += vo_name;
-            queryVo += "'";
+            voStmt = (sql.prepare << "select distinct vo_name from t_job where job_finished is null AND vo_name = :vo_name",
+                        soci::use(vo_name), soci::into(vo_name_local));
         }
     else
         {
-            queryVo = "select distinct vo_name from t_job WHERE job_finished is null ";
+            voStmt = (sql.prepare << "select distinct vo_name from t_job where job_finished is null",
+                        soci::into(vo_name_local));
         }
 
+    soci::statement pairsStmt(sql);
+    pairsStmt.exchange(soci::into(source_se));
+    pairsStmt.exchange(soci::into(dest_se));
     if(!source_se_p.empty())
         {
             source_se = source_se_p;
-            querySe += " AND source_se = '" + source_se;
-            querySe += "' ";
+            pairsStmt.exchange(soci::use(source_se));
+            querySe += " AND source_se = :source_se ";
         }
 
     if(!dest_se_p.empty())
         {
             dest_se = dest_se_p;
-            querySe += " AND dest_se = '" + dest_se;
-            querySe += "' ";
+            pairsStmt.exchange(soci::use(dest_se));
+            querySe += " AND dest_se = :dest_se ";
         }
+    querySe += " AND vo_name= :vo_name";
+    pairsStmt.exchange(soci::use(vo_name_local));
+    pairsStmt.alloc();
+    pairsStmt.prepare(querySe);
+    pairsStmt.define_and_bind();
 
     try
         {
@@ -8490,28 +8496,16 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                                  soci::into(queuingTime, isNull5)
                                 ));
 
-
-            soci::rowset<std::string> rs = (sql.prepare << queryVo);
-
-
-            for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+            voStmt.execute();
+            while (voStmt.fetch());
                 {
-                    vo_name_local = *i;
-
                     if(source_se_p.empty())
                         source_se = "";
                     if(dest_se_p.empty())
                         dest_se = "";
 
-                    std::string tempSeQuery = querySe;
-
-                    tempSeQuery += " AND vo_name= '";
-                    tempSeQuery += vo_name_local;
-                    tempSeQuery += "' ";
-
-                    soci::rowset<soci::row> rs2 = (sql.prepare << tempSeQuery);
-
-                    for (soci::rowset<soci::row>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
+                    pairsStmt.execute();
+                    while (pairsStmt.fetch())
                         {
                             active = 0;
                             maxActive = 0;
@@ -8521,10 +8515,6 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                             result << std::fixed << "VO: ";
                             result <<   vo_name_local;
                             result <<   "\n";
-
-                            soci::row const& r2 = *i2;
-                            source_se = r2.get<std::string>("source_se","");
-                            dest_se = r2.get<std::string>("dest_se","");
 
                             result <<   "Source endpoint: ";
                             result <<   source_se;

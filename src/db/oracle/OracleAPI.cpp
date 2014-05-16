@@ -8092,7 +8092,6 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
     std::string dest_se;
     std::string source_se;
     std::string reason;
-    std::string queryVo;
     long long countReason = 0;
     long long active = 0;
     long long maxActive = 0;
@@ -8112,32 +8111,39 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
     soci::indicator isNull4 = soci::i_ok;
     soci::indicator isNull5 = soci::i_ok;
 
+    soci::statement voStmt(sql);
     if(!vo_name.empty())
         {
-            vo_name_local = vo_name;
-            queryVo = "select distinct vo_name from t_job where job_finished is null AND vo_name = ";
-            queryVo += "'";
-            queryVo += vo_name;
-            queryVo += "'";
+            voStmt = (sql.prepare << "select distinct vo_name from t_job where job_finished is null AND vo_name = :vo_name",
+                        soci::use(vo_name), soci::into(vo_name_local));
         }
     else
         {
-            queryVo = "select distinct vo_name from t_job WHERE job_finished is null ";
+            voStmt = (sql.prepare << "select distinct vo_name from t_job where job_finished is null",
+                        soci::into(vo_name_local));
         }
 
+    soci::statement pairsStmt(sql);
+    pairsStmt.exchange(soci::into(source_se));
+    pairsStmt.exchange(soci::into(dest_se));
     if(!source_se_p.empty())
         {
             source_se = source_se_p;
-            querySe += " AND source_se = '" + source_se;
-            querySe += "' ";
+            pairsStmt.exchange(soci::use(source_se));
+            querySe += " AND source_se = :source_se ";
         }
 
     if(!dest_se_p.empty())
         {
             dest_se = dest_se_p;
-            querySe += " AND dest_se = '" + dest_se;
-            querySe += "' ";
+            pairsStmt.exchange(soci::use(dest_se));
+            querySe += " AND dest_se = :dest_se ";
         }
+    querySe += " AND vo_name= :vo_name";
+    pairsStmt.exchange(soci::use(vo_name_local));
+    pairsStmt.alloc();
+    pairsStmt.prepare(querySe);
+    pairsStmt.define_and_bind();
 
     try
         {
@@ -8167,8 +8173,8 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
 
             soci::statement st4((sql.prepare << "select avg(throughput) from t_file where  "
                                  " source_se=:source_se and dest_se=:dest_se "
-				 " AND file_state='ACTIVE' OR (file_state='FINISHED' and  job_finished >= (sys_extract_utc(systimestamp) - interval '60' minute)) "
-				 " AND throughput <> 0 ",
+                                " AND file_state='ACTIVE' OR (file_state='FINISHED' and  job_finished >= (sys_extract_utc(systimestamp) - interval '60' minute)) "
+                                " AND throughput <> 0 ",
                                  soci::use(source_se),
                                  soci::use(dest_se),
                                  soci::into(throughput, isNull2)
@@ -8206,42 +8212,25 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                                  soci::into(queuingTime, isNull5)
                                 ));
 
-            soci::rowset<std::string> rs = (sql.prepare << queryVo);
-
-
-
-            for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+            voStmt.execute();
+            while (voStmt.fetch());
                 {
-                    vo_name_local = *i;
-
                     if(source_se_p.empty())
                         source_se = "";
                     if(dest_se_p.empty())
                         dest_se = "";
 
-                    std::string tempSeQuery = querySe;
-
-                    tempSeQuery += " AND vo_name= '";
-                    tempSeQuery += vo_name_local;
-                    tempSeQuery += "' ";
-
-
-                    soci::rowset<soci::row> rs2 = (sql.prepare << tempSeQuery);
-
-                    for (soci::rowset<soci::row>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
+                    pairsStmt.execute();
+                    while (pairsStmt.fetch())
                         {
                             active = 0;
                             maxActive = 0;
                             submitted = 0;
                             throughput = 0.0;
 
-                            result << std::fixed <<  "VO: ";
+                            result << std::fixed << "VO: ";
                             result <<   vo_name_local;
                             result <<   "\n";
-
-                            soci::row const& r2 = *i2;
-                            source_se = r2.get<std::string>("SOURCE_SE","");
-                            dest_se = r2.get<std::string>("DEST_SE","");
 
                             result <<   "Source endpoint: ";
                             result <<   source_se;
@@ -8271,10 +8260,10 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                             //weighted-average throughput last sample
                             st4.execute(true);
                             result <<   "Avg throughput: ";
-                            result <<  std::setprecision(2) << throughput * active;
+                            result <<  std::setprecision(2) << throughput;
                             result <<   " MB/s\n";
 
-                            //success rate the last 15 min
+                            //success rate the last 1h
                             soci::rowset<soci::row> rs = (sql.prepare << "SELECT file_state FROM t_file "
                                                           "WHERE "
                                                           "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
@@ -8307,11 +8296,9 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                                     ratioSuccessFailure = ceil(nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0));
                                 }
 
-
                             result <<   "Link efficiency (last hour): ";
                             result <<   long(ratioSuccessFailure);
                             result <<   "%\n";
-
 
                             //average transfer duration the last 30min
                             tx_duration = 0.0;
@@ -8320,7 +8307,6 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                             result <<   long(tx_duration);
                             result <<   " secs\n";
 
-
                             //average queuing time expressed in secs
                             queuingTime = 0;
                             st7.execute(true);
@@ -8328,8 +8314,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                             result <<   long(queuingTime);
                             result <<   " secs\n";
 
-
-                            //most frequent error and number the last hour
+                            //most frequent error and number the last 30min
                             reason = "";
                             countReason = 0;
                             st5.execute(true);
