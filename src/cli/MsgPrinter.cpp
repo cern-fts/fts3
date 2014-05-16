@@ -245,13 +245,13 @@ void MsgPrinter::print_json(std::pair<std::string, std::string> const & id_statu
 
 void MsgPrinter::cancelled_jobs(std::vector< std::pair< std::string, std::string> > const & id_status)
 {
-	void (*print)(std::pair<std::string, std::string> const &) = json ? print_cout : print_json;
+	void (*print)(std::pair<std::string, std::string> const &) = json ? print_json : print_cout;
 	std::for_each(id_status.begin(), id_status.end(), print);
 }
 
 void MsgPrinter::cancelled_jobs(std::vector<std::string> const & id)
 {
-	void (*print)(std::pair<std::string, std::string> const &) = json ? print_cout : print_json;
+	void (*print)(std::pair<std::string, std::string> const &) = json ? print_json : print_cout;
 
 	std::vector<std::string>::const_iterator it;
 	for (it = id.begin(); it != id.end(); ++it)
