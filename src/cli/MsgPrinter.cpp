@@ -232,18 +232,32 @@ void MsgPrinter::client_interface(string interface)
     JsonOutput::print("client_interface", interface);
 }
 
-void MsgPrinter::cancelled_job( pair<string, string> id_status)
+void MsgPrinter::print_cout(std::pair<std::string, std::string> const & id_status)
 {
+	std::cout << "job " << id_status.first << ": " << id_status.second << endl;
+}
 
-    if (!json)
-        {
-            cout << "job " << id_status.first << ": " << id_status.second << endl;
-            return;
-        }
+void MsgPrinter::print_json(std::pair<std::string, std::string> const & id_status)
+{
+	std::map<std::string, std::string> m = boost::assign::map_list_of ("job_id", id_status.first) ("status", id_status.second);
+	JsonOutput::printArray("job", m);
+}
 
-    map<string, string> object = map_list_of ("job_id", id_status.first) ("status", id_status.second);
+void MsgPrinter::cancelled_jobs(std::vector< std::pair< std::string, std::string> > const & id_status)
+{
+	void (*print)(std::pair<std::string, std::string> const &) = json ? print_cout : print_json;
+	std::for_each(id_status.begin(), id_status.end(), print);
+}
 
-    JsonOutput::printArray("job", object);
+void MsgPrinter::cancelled_jobs(std::vector<std::string> const & id)
+{
+	void (*print)(std::pair<std::string, std::string> const &) = json ? print_cout : print_json;
+
+	std::vector<std::string>::const_iterator it;
+	for (it = id.begin(); it != id.end(); ++it)
+		{
+			print(std::make_pair(*it, "CANCELED"));
+		}
 }
 
 void MsgPrinter::missing_parameter(string name)
@@ -521,10 +535,6 @@ void MsgPrinter::file_list(vector<string> values, vector<string> retries)
             file.put("retries", values[RETRIES]);
         }
 
-//    ptree& job = json_out.get_child("job");
-//    ptree::iterator it = job.begin();
-//    addToArray(it->second, "files", file);
-    // TODO test
     JsonOutput::printArray("job.files", file);
 }
 
@@ -536,79 +546,6 @@ MsgPrinter::MsgPrinter(ostream& out): verbose(false), json(false)
 MsgPrinter::~MsgPrinter()
 {
 
-}
-
-ptree MsgPrinter::getItem(map<string, string> values)
-{
-
-    ptree item;
-
-    map<string, string>::iterator it;
-    for (it = values.begin(); it != values.end(); it++)
-        {
-            item.put(it->first, it->second);
-        }
-
-    return item;
-}
-
-void MsgPrinter::put (ptree& root, string name, map<string, string>& object)
-{
-    map<string, string>::iterator it;
-    for (it = object.begin(); it != object.end(); it++)
-        {
-            root.put(name + it->first, it->second);
-        }
-}
-
-void MsgPrinter::addToArray(ptree& root, string name, map<string, string>& object)
-{
-    static const string array_sufix = "..";
-
-    optional<ptree&> child = root.get_child_optional(name);
-    if (child.is_initialized())
-        {
-            child.get().push_front(
-                make_pair("", getItem(object))
-            );
-        }
-    else
-        {
-            put(root, name + array_sufix, object);
-        }
-}
-
-void MsgPrinter::addToArray(ptree& root, string name, string value)
-{
-    optional<ptree&> child = root.get_child_optional(name);
-    if (child.is_initialized())
-        {
-            ptree item;
-            item.put("", value);
-            child.get().push_front(make_pair("", item));
-        }
-    else
-        {
-            ptree child, item;
-            item.put("", value);
-            child.push_front(make_pair("", item));
-            root.put_child(name, child);
-        }
-}
-
-void MsgPrinter::addToArray(ptree& root, string name, const ptree& node)
-{
-    optional<ptree&> child = root.get_child_optional(name);
-    if (child.is_initialized())
-        {
-            child.get().push_back(make_pair("", node));
-        }
-    else
-        {
-            ptree files;
-            files.push_back(std::make_pair("", node));
-            root.put_child(name, files);
-        }
 }
 
 } /* namespace server */

@@ -74,6 +74,7 @@ int main(int ac, char* av[])
                             HttpRequest http (url, cli->capath(), cli->proxy(), cout);
                             http.del();
                         }
+                    cli->printer().cancelled_jobs(jobIds);
                     return 0;
                 }
 
@@ -89,8 +90,7 @@ int main(int ac, char* av[])
                 }
 
             vector< pair<string, string> > ret = ctx.cancel(jobs);
-
-            for_each(ret.begin(), ret.end(), lambda::bind(&MsgPrinter::cancelled_job, &(cli->printer()), lambda::_1));
+            cli->printer().cancelled_jobs(ret);
         }
     catch(cli_exception const & ex)
         {
