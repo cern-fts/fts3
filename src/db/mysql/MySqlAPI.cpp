@@ -8576,7 +8576,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
 
             soci::statement st4((sql.prepare << "select avg(throughput) from t_file where  "
                                  " source_se=:source_se and dest_se=:dest_se "
-                                 " AND file_state='ACTIVE' OR (file_state='FINISHED' and  job_finished >= (UTC_TIMESTAMP() - interval '60' minute)) "
+                                 " AND  (file_state='FINISHED' and  job_finished >= (UTC_TIMESTAMP() - interval '60' minute)) "
                                  " AND throughput <> 0 ",
                                  soci::use(source_se),
                                  soci::use(dest_se),
@@ -8596,7 +8596,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                                 ));
 
             soci::statement st6((sql.prepare << " select avg(tx_duration) from t_file where file_state='FINISHED'  "
-                                 " AND source_se=:source_se and dest_se=:dest_se and vo_name =:vo_name_local AND (job_finished > (UTC_TIMESTAMP() - interval '60' minute)) ",
+                                 " AND source_se=:source_se and dest_se=:dest_se and vo_name =:vo_name_local AND (job_finished >= (UTC_TIMESTAMP() - interval '60' minute)) ",
                                  soci::use(source_se),
                                  soci::use(dest_se),
                                  soci::use(vo_name_local),
