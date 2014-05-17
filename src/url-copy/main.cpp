@@ -332,7 +332,8 @@ void abnormalTermination(const std::string& classification, const std::string&, 
                                       reporter.source_se,
                                       reporter.dest_se,
                                       turlVector[0],
-                                      turlVector[1]);
+                                      turlVector[1],
+				      "FAILED");
                 }		         
 
     cancelTransfer();
@@ -383,7 +384,8 @@ void taskStatusUpdater(int time)
                                       reporter.source_se,
                                       reporter.dest_se,
                                       turlVector[0],
-                                      turlVector[1]);				      				     
+                                      turlVector[1],
+				      "ACTIVE");				      				     
                 }
             else
                 {
@@ -394,7 +396,8 @@ void taskStatusUpdater(int time)
                                       reporter.source_se,
                                       reporter.dest_se,
                                       "gsiftp:://fake",
-                                      "gsiftp:://fake");
+                                      "gsiftp:://fake",
+				      "ACTIVE");
                 }	    
             boost::this_thread::sleep(boost::posix_time::seconds(time));
         }
@@ -1281,6 +1284,23 @@ stop:
                                                   "FAILED", errorMessage,
                                                   currentTransfer.getTransferDurationInSeconds(),
                                                   currentTransfer.fileSize);
+						  
+ 		//send a ping here in order to flag this transfer's state as terminal to store into t_turl	
+ 	    	if(turlVector.size() == 2) //make sure it has values
+                {		   
+		                      reporter.sendPing(currentTransfer.jobId,
+                                      currentTransfer.fileId,
+                                      currentTransfer.throughput,
+                                      currentTransfer.transferredBytes,
+                                      reporter.source_se,
+                                      reporter.dest_se,
+                                      turlVector[0],
+                                      turlVector[1],
+				      "FAILED");		    
+                }		
+            turlVector.clear();		    
+						  
+						  
                         }
 
                     // In case of failure, if this is a multihop transfer, set to fail
@@ -1317,6 +1337,21 @@ stop:
                                           currentTransfer.fileSize);
                     /*unpin the file here and report the result in the log file...*/
                     g_clear_error(&tmp_err);
+		    
+ 		//send a ping here in order to flag this transfer's state as terminal to store into t_turl	
+ 	    	if(turlVector.size() == 2) //make sure it has values
+                {		   
+		                      reporter.sendPing(currentTransfer.jobId,
+                                      currentTransfer.fileId,
+                                      currentTransfer.throughput,
+                                      currentTransfer.transferredBytes,
+                                      reporter.source_se,
+                                      reporter.dest_se,
+                                      turlVector[0],
+                                      turlVector[1],
+				      "FINISHED");		    
+                }		
+            turlVector.clear();		    
 
                     if (opts.bringOnline > 0)
                         {
@@ -1335,19 +1370,7 @@ stop:
                         }
                 }
 		
-	    //send a ping here in order to flag this transfer's state as terminal to store into t_turl	
- 	    if(turlVector.size() == 2) //make sure it has values
-                {		   
-		                      reporter.sendPing(currentTransfer.jobId,
-                                      currentTransfer.fileId,
-                                      currentTransfer.throughput,
-                                      currentTransfer.transferredBytes,
-                                      reporter.source_se,
-                                      reporter.dest_se,
-                                      turlVector[0],
-                                      turlVector[1]);		    
-                }		
-            turlVector.clear();
+	   
 	    
             logger.INFO() << "Send monitoring complete message" << std::endl;
             msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());

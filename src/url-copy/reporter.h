@@ -56,7 +56,7 @@ public:
     // Let the server know that we are alive, and how are we doing
     void sendPing(const std::string& job_id, unsigned file_id,
                   double throughput, off_t transferred,
-                  std::string source_surl, std::string dest_surl,std::string source_turl, std::string dest_turl);
+                  std::string source_surl, std::string dest_surl,std::string source_turl, std::string dest_turl, const std::string& transfer_status);
 
     // Send to the server the log file
     void sendLog(const std::string& job_id, unsigned file_id,
