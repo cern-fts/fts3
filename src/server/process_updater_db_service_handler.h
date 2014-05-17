@@ -161,7 +161,10 @@ protected:
                                                 std::vector<struct message_updater>::const_iterator iter;
                                                 for (iter = messages.begin(); iter != messages.end(); ++iter)
                                                     {
-                                                        SingleTrStateInstance::instance().sendStateMessage((*iter).job_id, (*iter).file_id);
+						       if (iter->msg_errno == 0 && (*iter).file_id > 0 && std::string((*iter).job_id).length() > 0)
+						        {
+                                                        	SingleTrStateInstance::instance().sendStateMessage((*iter).job_id, (*iter).file_id);
+							}
                                                     }
                                             }
                                     }
@@ -174,7 +177,10 @@ protected:
                                                 std::vector<struct message_updater>::const_iterator iter;
                                                 for (iter = messages.begin(); iter != messages.end(); ++iter)
                                                     {
-                                                        SingleTrStateInstance::instance().sendStateMessage((*iter).job_id, (*iter).file_id);
+						        if (iter->msg_errno == 0 && (*iter).file_id > 0 && std::string((*iter).job_id).length() > 0)
+						        {
+                                                        	SingleTrStateInstance::instance().sendStateMessage((*iter).job_id, (*iter).file_id);
+							}
                                                     }
                                             }
                                     }
