@@ -2278,9 +2278,7 @@ void MySqlAPI::updateFileTransferProgressVector(std::vector<struct message_updat
                                         soci::use(dest_turl),
                                         soci::use(throughput),
                                         soci::use(throughput)
-                                       );
-
-            soci::statement stmtFileid = (sql.prepare << "select file_state from t_file where file_id=:file_id", soci::use(file_id), soci::into(file_state));
+                                       );           
 
             sql.begin();
 
@@ -2293,7 +2291,7 @@ void MySqlAPI::updateFileTransferProgressVector(std::vector<struct message_updat
 
                     if (iter->msg_errno == 0)
                         {
-                            if((*iter).throughput > 0.0)
+                            if((*iter).throughput > 0.0 && (*iter).transfer_status == "ACTIVE")
                                 {
                                     throughput = convertKbToMb((*iter).throughput);
                                     transferred = (*iter).transferred;
@@ -2335,8 +2333,7 @@ void MySqlAPI::updateFileTransferProgressVector(std::vector<struct message_updat
 
                             file_id = (*iter).file_id;
 
-                            //check file state for tis file_id
-                            stmtFileid.execute(true);
+                            file_state = std::string((*iter).transfer_status);
 
                             if(file_state == "FINISHED")
                                 {

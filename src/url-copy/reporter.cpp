@@ -144,10 +144,9 @@ void Reporter::sendTerminal(double throughput, bool retry,
 
 void Reporter::sendPing(const std::string& job_id, unsigned file_id,
                         double throughput, off_t transferred,
-                        std::string source_surl, std::string dest_surl,std::string source_turl, std::string dest_turl)
+                        std::string source_surl, std::string dest_surl,std::string source_turl, std::string dest_turl, const std::string& transfer_status)
 {
     boost::recursive_mutex::scoped_lock lock(mutex);
-
     strncpy(msg_updater->job_id, job_id.c_str(), sizeof(msg_updater->job_id));
     msg_updater->job_id[sizeof(msg_updater->job_id) -1] = '\0';
     msg_updater->file_id = file_id;
@@ -167,6 +166,9 @@ void Reporter::sendPing(const std::string& job_id, unsigned file_id,
 
     strncpy(msg_updater->dest_turl, dest_turl.c_str(), sizeof(msg_updater->dest_turl));
     msg_updater->dest_turl[sizeof(msg_updater->dest_turl) -1] = '\0';
+    
+    strncpy(msg_updater->transfer_status, transfer_status.c_str(), sizeof(msg_updater->transfer_status));
+    msg_updater->transfer_status[sizeof(msg_updater->transfer_status) -1] = '\0';    
 
     // Try twice
     if (runProducerStall(*msg_updater) != 0)

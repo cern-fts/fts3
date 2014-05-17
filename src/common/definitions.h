@@ -114,6 +114,7 @@ public:
         memset(dest_surl, 0, sizeof (dest_surl));
         memset(source_turl, 0, sizeof (source_turl));
         memset(dest_turl, 0, sizeof (dest_turl));
+	memset(transfer_status, 0, sizeof (transfer_status));
     }
 
     ~message_updater()
@@ -129,6 +130,7 @@ public:
     char dest_surl[150];
     char source_turl[150];
     char dest_turl[150];
+    char transfer_status[TRANFER_STATUS_LEN];
 };
 
 struct message_log: public message_base
@@ -249,26 +251,6 @@ public:
     bool checkSanityState;
     bool cleanUpRecords;
     bool msgCron;
-};
-
-
-struct message_turl: public message_base
-{
-public:
-
-    message_turl():throughput(0.0)
-    {
-    }
-
-    ~message_turl()
-    {
-    }
-    std::string source_surl_host;
-    std::string dest_surl_host;    
-    std::string source_turl_host;
-    std::string dest_turl_host;
-    double throughput;
-
 };
 
 
