@@ -166,9 +166,9 @@ void Reporter::sendPing(const std::string& job_id, unsigned file_id,
 
     strncpy(msg_updater->dest_turl, dest_turl.c_str(), sizeof(msg_updater->dest_turl));
     msg_updater->dest_turl[sizeof(msg_updater->dest_turl) -1] = '\0';
-    
+
     strncpy(msg_updater->transfer_status, transfer_status.c_str(), sizeof(msg_updater->transfer_status));
-    msg_updater->transfer_status[sizeof(msg_updater->transfer_status) -1] = '\0';    
+    msg_updater->transfer_status[sizeof(msg_updater->transfer_status) -1] = '\0';
 
     // Try twice
     if (runProducerStall(*msg_updater) != 0)

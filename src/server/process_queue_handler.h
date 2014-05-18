@@ -175,7 +175,8 @@ public:
                 getDBObjectInstance()->
                 updateJobTransferStatus(job, std::string(msg.transfer_status), static_cast<int> (msg.process_id));
 
-                SingleTrStateInstance::instance().sendStateMessage(job, msg.file_id);
+                if(std::string(msg.job_id).length() > 0 && msg.file_id > 0)
+                    SingleTrStateInstance::instance().sendStateMessage(job, msg.file_id);
             }
         catch (std::exception& e)
             {
