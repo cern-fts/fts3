@@ -3094,6 +3094,7 @@ bool OracleAPI::updateOptimizer()
                     isNullStreamsCurrent = soci::i_ok;
                     singleDest = 0;
                     lanTransferBool = false;
+		    
 
                     now = getUTC(0);
 
@@ -3107,6 +3108,7 @@ bool OracleAPI::updateOptimizer()
                             //default
                             highDefault = tempDefault;
                         }
+
 
                     // Weighted average
                     soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
@@ -3128,7 +3130,6 @@ bool OracleAPI::updateOptimizer()
                     if (totalSize > 0)
                         throughput /= totalSize;
 
-
                     // Ratio of success
                     soci::rowset<soci::row> rs = (sql.prepare << "SELECT file_state, retry, current_failures FROM t_file "
                                                   "WHERE "
@@ -3142,9 +3143,9 @@ bool OracleAPI::updateOptimizer()
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin();
                             i != rs.end(); ++i)
                         {
-                            std::string state = i->get<std::string>("FILE_STATE", "");
-                            int retryNum = static_cast<int>(i->get<double>("RETRY", 0));
-                            int current_failures = i->get<int>("CURRENT_FAILURES", 0);
+                             std::string state = i->get<std::string>("FILE_STATE", "");
+                             int retryNum = static_cast<int>(i->get<double>("RETRY", 0.0));
+			     int current_failures = static_cast<int>(i->get<long long>("CURRENT_FAILURES", 0.0));			   
 
                             if(state.compare("FAILED") == 0 && current_failures == 0)
                                 {
@@ -3161,7 +3162,7 @@ bool OracleAPI::updateOptimizer()
                             else if (state.compare("FINISHED") == 0)
                                 {
                                     nFinishedLastHour+=1.0;
-                                }
+                                }				
                         }
 
                     //round up efficiency
@@ -3175,7 +3176,6 @@ bool OracleAPI::updateOptimizer()
 
                     //check if there is any other source for a given dest
                     stmt18.execute(true);
-
 
                     //optimize number of streams first
                     //check if pair exists first
