@@ -2948,7 +2948,7 @@ bool OracleAPI::updateOptimizer()
     soci::indicator isNullRate = soci::i_ok;
     double retry = 0.0;   //latest from db
     double lastSuccessRate = 0.0;
-    int retrySet = 0;
+    long long retrySet = 0;
     soci::indicator isRetry = soci::i_ok;
     soci::indicator isNullStreamsFound = soci::i_ok;
     long long streamsFound = 0;
@@ -3587,7 +3587,8 @@ void OracleAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
     try
         {
             std::string jobId, params, tHost,reuse;
-            int fileId=0, pid=0, timeout=0;
+            int fileId=0, timeout=0;
+	    long long pid = 0;
             struct tm startTimeSt;
             time_t startTime;
             double diff = 0.0;
@@ -5593,7 +5594,7 @@ int OracleAPI::getMaxTimeInQueue()
 {
     soci::session sql(*connectionPool);
 
-    int maxTime = 0;
+    long long maxTime = 0;
     try
         {
             soci::indicator isNull = soci::i_ok;
@@ -7663,7 +7664,7 @@ void OracleAPI::setOptimizerMode(int mode)
 int OracleAPI::getOptimizerDefaultMode(soci::session& sql)
 {
     int modeDefault = 1;
-    int mode = 0;
+    long long int mode = 0;
     soci::indicator ind = soci::i_ok;
 
     try
@@ -7751,7 +7752,7 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
 
     //expressed in secs, default delay
     const int default_retry_delay = 120;
-    int retry_delay = 0;
+    long long retry_delay = 0;
     std::string reuse_job;
     soci::indicator ind = soci::i_ok;
 
@@ -8834,7 +8835,7 @@ int OracleAPI::getStreamsOptimization(const std::string & source_hostname, const
 int OracleAPI::getGlobalTimeout()
 {
     soci::session sql(*connectionPool);
-    int timeout = 0;
+    long long timeout = 0;
 
     try
         {
@@ -8863,7 +8864,7 @@ int OracleAPI::getGlobalTimeout()
 void OracleAPI::setGlobalTimeout(int timeout)
 {
     soci::session sql(*connectionPool);
-    int timeoutLocal = 0;
+    long long timeoutLocal = 0;
     soci::indicator isNullTimeout = soci::i_ok;
 
     try
@@ -8905,7 +8906,7 @@ void OracleAPI::setGlobalTimeout(int timeout)
 int OracleAPI::getSecPerMb()
 {
     soci::session sql(*connectionPool);
-    int seconds = 0;
+    long long seconds = 0;
 
     try
         {
@@ -8934,7 +8935,7 @@ int OracleAPI::getSecPerMb()
 void OracleAPI::setSecPerMb(int seconds)
 {
     soci::session sql(*connectionPool);
-    int secondsLocal = 0;
+    long long secondsLocal = 0;
     soci::indicator isNullSeconds = soci::i_ok;
 
     try
