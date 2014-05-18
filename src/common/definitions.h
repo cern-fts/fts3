@@ -114,7 +114,7 @@ public:
         memset(dest_surl, 0, sizeof (dest_surl));
         memset(source_turl, 0, sizeof (source_turl));
         memset(dest_turl, 0, sizeof (dest_turl));
-	memset(transfer_status, 0, sizeof (transfer_status));
+        memset(transfer_status, 0, sizeof (transfer_status));
     }
 
     ~message_updater()
