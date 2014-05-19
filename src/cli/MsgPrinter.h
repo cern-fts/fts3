@@ -73,10 +73,10 @@ public:
     void gsoap_error_msg(string msg); //
 
     void cancelled_jobs(std::vector< std::pair<std::string, std::string> > const & id_status);
+    void job_status_(std::vector<JobStatus> const & js);
 
     void job_id(string job_id); //
     void status(JobStatus js);
-    void job_status(JobStatus js);
     void job_summary(JobSummary js);
     void file_list(vector<string> values, vector<string> retries);
 
@@ -96,11 +96,17 @@ public:
 
 private:
 
+    typedef void (*print_cancel)(std::pair<std::string, std::string> const &) ;
+    typedef void (*print_job_status)(JobStatus const & j);
+
     static void print_cout(std::pair<std::string, std::string> const & id_status);
     static void print_json(std::pair<std::string, std::string> const & id_status);
 
+    static void print_cout(JobStatus const & j);
+    static void print_json(JobStatus const & j);
+
     ///
-    bool verbose;
+    static bool verbose;
     ///
     bool json;
 };

@@ -35,9 +35,6 @@
 
 #include <boost/scoped_ptr.hpp>
 
-#include <boost/lambda/lambda.hpp>
-#include <boost/lambda/bind.hpp>
-
 #include <algorithm>
 #include <sstream>
 
@@ -102,13 +99,15 @@ int main(int ac, char* av[])
 
                     stringstream ss;
 
+                    ss << "{\"jobs\":";
                     HttpRequest http (url, capath, proxy, ss);
                     http.get();
+                    ss << '}';
 
                     ResponseParser parser(ss);
+                    vector<fts3::cli::JobStatus> stats = parser.getJobs("jobs");
 
-
-
+                    cli->printer().job_status_(stats);
                     return 0;
                 }
 
@@ -116,10 +115,9 @@ int main(int ac, char* av[])
             GSoapContextAdapter& ctx = cli->getGSoapContext();
 
             vector<string> array = cli->getStatusArray();
-            vector<fts3::cli::JobStatus> statuses;
-            statuses = ctx.listRequests(array, cli->getUserDn(), cli->getVoName());
+            vector<fts3::cli::JobStatus> statuses = ctx.listRequests(array, cli->getUserDn(), cli->getVoName());
 
-            for_each(statuses.begin(), statuses.end(), lambda::bind(&MsgPrinter::job_status, &cli->printer(), lambda::_1));
+            cli->printer().job_status_(statuses);
         }
     catch(cli_exception const & ex)
         {
