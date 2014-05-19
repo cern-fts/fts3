@@ -8,7 +8,7 @@
     page="turls.page" total-items="turls.count" items-per-page="turls.pageSize"
     max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>
-
+><span order-by="fail">Failed</span></th>
 <table class="table">
     <thead>
         <tr>
@@ -22,7 +22,9 @@
             </th>
             <th>Source TURL</th>
             <th>Destination TURL</th>
-            <th><span order-by="throughput">Throughput</span></th>
+            <th class="numeric" style="width: 7%"><span order-by="throughput">Throughput</span></th>
+            <th class="numeric" style="width: 5%"><span order-by="finish">Finish</span></th>
+            <th class="numeric" style="width: 5%"><span order-by="fail">Fail</span></th>
         </tr>
     </thead>
     <tbody ng-repeat="t in turls.items" ng-class-odd="'odd'">
@@ -39,7 +41,9 @@
             </td>
             <td>{{t.source_turl}}</td>
             <td>{{t.destin_turl}}</td>
-            <td>{{t.throughput|number:2}} MB/s</td>
+            <td class="numeric" >{{t.throughput|number:2}} MB/s</td>
+            <td class="numeric" >{{t.finish}}</td>
+            <td class="numeric" >{{t.fail}}</td>
         </tr>
     </tbody>
 </table>
