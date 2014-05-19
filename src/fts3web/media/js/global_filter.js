@@ -22,6 +22,9 @@ angular.module('ftsmon.global_filter', [])
                 }
                 scope.isThereMoreFilters = true;
             }
+            if (attrs['disableVo']) {
+                scope.disable_vo = true;
+            }
         },
         controller: function($scope, $location, Unique) {
             $scope.globalFilter = {
@@ -41,7 +44,7 @@ angular.module('ftsmon.global_filter', [])
                 $rootScope.globalFilter.time_window = withDefault($scope.globalFilter.time_window, 1);
                 $location.search($rootScope.globalFilter);
             }
-            
+
             $scope.resetGlobalFilter = function() {
             	$rootScope.globalFilter = {
                         vo: '',
@@ -106,7 +109,7 @@ function hrefWithFilter(href, filter)
 {
     if (typeof(filter) == 'undefined')
         return href;
-    
+
     var query = '?';
     for (key in filter) {
         var value = filter[key];
@@ -116,7 +119,7 @@ function hrefWithFilter(href, filter)
             value = encodeURIComponent(value);
         query += key + '=' + value + '&';
     }
-    
+
     return href + query;
 }
 
