@@ -199,7 +199,8 @@ def get_overview(http_request):
         ORDER BY datetime DESC
         """ % _db_to_date(), 1)
 
-        params = [source, dest, not_before]
+        params = [source, dest, not_before.strftime('%Y-%m-%d %H:%M:%S')]
+
         cursor.execute(query, params)
         aggregated_total = cursor.fetchall()
         if len(aggregated_total):
