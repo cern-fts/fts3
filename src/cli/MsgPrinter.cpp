@@ -239,7 +239,7 @@ void MsgPrinter::print_cout(std::pair<std::string, std::string> const & id_statu
 
 void MsgPrinter::print_json(std::pair<std::string, std::string> const & id_status)
 {
-    std::map<std::string, std::string> m = boost::assign::map_list_of ("job_id", id_status.first) ("status", id_status.second);
+    std::map<std::string, std::string> m = boost::assign::map_list_of ("job_id", id_status.first) ("job_state", id_status.second);
     JsonOutput::printArray("job", m);
 }
 
@@ -247,17 +247,6 @@ void MsgPrinter::cancelled_jobs(std::vector< std::pair< std::string, std::string
 {
     void (*print)(std::pair<std::string, std::string> const &) = json ? print_json : print_cout;
     std::for_each(id_status.begin(), id_status.end(), print);
-}
-
-void MsgPrinter::cancelled_jobs(std::vector<std::string> const & id)
-{
-    void (*print)(std::pair<std::string, std::string> const &) = json ? print_json : print_cout;
-
-    std::vector<std::string>::const_iterator it;
-    for (it = id.begin(); it != id.end(); ++it)
-        {
-            print(std::make_pair(*it, "CANCELED"));
-        }
 }
 
 void MsgPrinter::missing_parameter(string name)

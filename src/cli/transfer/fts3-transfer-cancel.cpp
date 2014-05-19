@@ -26,6 +26,7 @@
 #include "MsgPrinter.h"
 #include "ui/CancelCli.h"
 #include "rest/HttpRequest.h"
+#include "rest/ResponseParser.h"
 
 #include "common/JobStatusHandler.h"
 
@@ -36,6 +37,7 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <sstream>
 
 #include <boost/scoped_ptr.hpp>
 
@@ -68,13 +70,21 @@ int main(int ac, char* av[])
                     vector<string> jobIds = cli->getJobIds();
                     vector<string>::iterator itr;
 
+                    std::vector< std::pair< std::string, std::string> > ret;
+
                     for (itr = jobIds.begin(); itr != jobIds.end(); ++itr)
                         {
+                    		std::stringstream ss;
                             string url = cli->getService() + "/jobs/" + *itr;
-                            HttpRequest http (url, cli->capath(), cli->proxy(), cout);
+                            HttpRequest http (url, cli->capath(), cli->proxy(), ss);
                             http.del();
+
+                            ResponseParser p(ss);
+                            ret.push_back(std::make_pair(p.get("job_id"), p.get("job_state")));
                         }
-                    cli->printer().cancelled_jobs(jobIds);
+
+                    cli->printer().cancelled_jobs(ret);
+
                     return 0;
                 }
 

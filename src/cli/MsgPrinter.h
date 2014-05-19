@@ -72,7 +72,6 @@ public:
     void error_msg(string msg); //
     void gsoap_error_msg(string msg); //
 
-    void cancelled_jobs(std::vector<std::string> const & id);
     void cancelled_jobs(std::vector< std::pair<std::string, std::string> > const & id_status);
 
     void job_id(string job_id); //
