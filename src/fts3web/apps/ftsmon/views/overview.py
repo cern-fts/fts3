@@ -35,6 +35,7 @@ def _db_to_date():
     else:
         return '%s'
 
+
 def _db_limit(sql, limit):
     if settings.DATABASES['default']['ENGINE'] == 'django.db.backends.oracle':
         return "SELECT * FROM (%s) WHERE rownum <= %d" % (sql, limit)
@@ -42,6 +43,7 @@ def _db_limit(sql, limit):
         return sql + " LIMIT %d" % limit
     else:
         return sql
+
 
 def _get_pair_limits(limits, source, destination):
     pair_limits = {'source': dict(), 'destination': dict()}
@@ -144,7 +146,6 @@ def get_overview(http_request):
         not_before = datetime.utcnow() - timedelta(hours=filters['time_window'])
     else:
         not_before = datetime.utcnow() - timedelta(hours=1)
-    throughput_window = datetime.utcnow() - timedelta(seconds=2)
 
     cursor = connection.cursor()
 
@@ -164,14 +165,13 @@ def get_overview(http_request):
     for (source, dest) in cursor.fetchall():
         query = """
         SELECT file_state, vo_name, count(file_id),
-               SUM(CASE WHEN job_finished >= %s OR job_finished IS NULL THEN throughput ELSE 0 END)
+               SUM(CASE WHEN file_state = 'ACTIVE' THEN throughput ELSE 0 END)
         FROM t_file
         WHERE (job_finished IS NULL OR job_finished >= %s)
               AND source_se = %%s AND dest_se = %%s
               AND file_state != 'NOT_USED'
-        """ % (_db_to_date(), _db_to_date())
-        params = [throughput_window.strftime('%Y-%m-%d %H:%M:%S'),
-                  not_before.strftime('%Y-%m-%d %H:%M:%S'),
+        """ % _db_to_date()
+        params = [not_before.strftime('%Y-%m-%d %H:%M:%S'),
                   source, dest]
         if filters['vo']:
             query += " AND vo_name = %s"
