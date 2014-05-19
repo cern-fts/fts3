@@ -230,10 +230,17 @@ static void call_perf(gfalt_transfer_status_t h, const char*, const char*, gpoin
                                          << std::endl;
             currentTransfer.throughput       = (double) avg;
             currentTransfer.transferredBytes = trans;
+	    
+	   double throughputTurl = 0.0;
+	    
+           if (currentTransfer.throughput > 0.0)
+                {                    
+			throughputTurl = convertKbToMb(currentTransfer.throughput);
+                }           	    
 
             reporter.sendPing(currentTransfer.jobId,
                               currentTransfer.fileId,
-                              currentTransfer.throughput,
+                              throughputTurl,
                               currentTransfer.transferredBytes,
                               reporter.source_se,
                               reporter.dest_se,
@@ -326,11 +333,21 @@ void abnormalTermination(const std::string& classification, const std::string&, 
         }
 
     //send a ping here in order to flag this transfer's state as terminal to store into t_turl
+    
+    
+    
     if(turlVector.size() == 2) //make sure it has values
         {
+	   double throughputTurl = 0.0;
+	   
+           if (currentTransfer.throughput > 0.0)
+                {                    
+			throughputTurl = convertKbToMb(currentTransfer.throughput);
+                }   	
+	
             reporter.sendPing(currentTransfer.jobId,
                               currentTransfer.fileId,
-                              currentTransfer.throughput,
+                              throughputTurl,
                               currentTransfer.transferredBytes,
                               reporter.source_se,
                               reporter.dest_se,
@@ -378,9 +395,16 @@ void taskStatusUpdater(int time)
                                          <<  currentTransfer.throughput << "  " <<  currentTransfer.transferredBytes
                                          << std::endl;
 
+	   double throughputTurl = 0.0;
+	    
+           if (currentTransfer.throughput > 0.0)
+                {                    
+			throughputTurl = convertKbToMb(currentTransfer.throughput);
+                }         
+
             reporter.sendPing(currentTransfer.jobId,
                               currentTransfer.fileId,
-                              currentTransfer.throughput,
+                              throughputTurl,
                               currentTransfer.transferredBytes,
                               reporter.source_se,
                               reporter.dest_se,
