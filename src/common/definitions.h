@@ -34,6 +34,33 @@ limitations under the License. */
 #define SOURCE_SE_ 100
 #define DEST_SE_ 100
 
+
+/**
+ * Return MegaBytes per second from the given transferred bytes and duration
+ */
+inline double convertBtoM( double byte,  double duration)
+{
+    return ((((byte / duration) / 1024) / 1024) * 100) / 100;
+}
+
+
+/**
+ * Round a double with a given number of digits
+ */
+inline double pround(double x, unsigned int digits)
+{
+    double shift = pow(10, digits);
+    return rint(x * shift) / shift;
+}
+
+/**
+ * Return MegaBytes per second given throughput in KiloBytes per second
+ */
+inline double convertKbToMb(double throughput)
+{
+    return throughput != 0.0? pround((throughput / 1024), 2): 0.0;
+}
+
 struct message_base
 {
 public:

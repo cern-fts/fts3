@@ -71,13 +71,6 @@ Transfer currentTransfer;
 
 gfal_context_t handle = NULL;
 
-/**
- * Return MegaBytes per second from the given transferred bytes and duration
- */
-inline double convertBtoM( double byte,  double duration)
-{
-    return ((((byte / duration) / 1024) / 1024) * 100) / 100;
-}
 
 static std::string replace_dn(std::string& user_dn)
 {
@@ -1266,6 +1259,18 @@ stop:
             msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
             msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
             msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
+	    
+	   double throughputTurl = 0.0;
+	    
+           if (currentTransfer.throughput > 0.0)
+                {                    
+			throughputTurl = convertKbToMb(currentTransfer.throughput);
+                }
+            else 
+	        {
+			throughputTurl = convertBtoM(currentTransfer.fileSize, 1);                  
+                }
+	    
             if (errorMessage.length() > 0)
                 {
                     msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Error");
@@ -1286,7 +1291,7 @@ stop:
                                 {
                                     reporter.sendPing(currentTransfer.jobId,
                                                       currentTransfer.fileId,
-                                                      currentTransfer.throughput,
+                                                      throughputTurl,
                                                       currentTransfer.transferredBytes,
                                                       reporter.source_se,
                                                       reporter.dest_se,
@@ -1339,7 +1344,7 @@ stop:
                         {
                             reporter.sendPing(currentTransfer.jobId,
                                               currentTransfer.fileId,
-                                              currentTransfer.throughput,
+                                              throughputTurl,
                                               currentTransfer.transferredBytes,
                                               reporter.source_se,
                                               reporter.dest_se,
