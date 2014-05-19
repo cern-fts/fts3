@@ -120,7 +120,6 @@ int main(int ac, char* av[])
             statuses = ctx.listRequests(array, cli->getUserDn(), cli->getVoName());
 
             for_each(statuses.begin(), statuses.end(), lambda::bind(&MsgPrinter::job_status, &cli->printer(), lambda::_1));
-//            for_each(statuses.begin(), statuses.end(), [&cli](fts3::cli::JobStatus status){cli->printer().job_status(status);});
         }
     catch(cli_exception const & ex)
         {
