@@ -279,6 +279,10 @@ def get_turls(http_request):
     (order_by, order_desc) = get_order_by(http_request)
     if order_by == 'throughput':
         turls = turls.order_by(ordered_field('throughput', order_desc))
+    elif order_by == 'finish':
+        turls = turls.order_by(ordered_field('finish', order_desc))
+    elif order_by == 'fail':
+        turls = turls.order_by(ordered_field('fail', order_desc))
     else:
         turls = turls.order_by('throughput')
 
