@@ -65,6 +65,17 @@ def _get_pair_limits(limits, source, destination):
     return pair_limits
 
 
+def _get_pair_udt(udt_pairs, source, destination):
+    for u in udt_pairs:
+        if udt_pairs[0] == source and udt_pairs[1] == destination:
+            return True
+        elif udt_pairs[0] == source and not udt_pairs[1]:
+            return True
+        elif not udt_pairs[0] and udt_pairs[1] == destination:
+            return True
+    return False
+
+
 class OverviewExtended(object):
     """
     Wraps the return of overview, so when iterating, we can retrieve
@@ -216,6 +227,11 @@ def get_overview(http_request):
     cursor.execute(limit_query)
     limits = cursor.fetchall()
 
+    # UDT
+    udt_query = "SELECT source_se, dest_se FROM t_optimize WHERE udt = 'on'"
+    cursor.execute(udt_query)
+    udt_pairs = cursor.fetchall()
+
     # Transform into a list
     objs = []
     for (triplet, obj) in triplets.iteritems():
@@ -231,6 +247,9 @@ def get_overview(http_request):
             obj['rate'] = (finished * 100.0) / total
         # Append limit, if any
         obj['limits'] =_get_pair_limits(limits, triplet[0], triplet[1])
+        # Mark UDT-enabled
+        obj['udt'] = _get_pair_udt(udt_pairs, triplet[0], triplet[1])
+
         objs.append(obj)
 
     # Ordering

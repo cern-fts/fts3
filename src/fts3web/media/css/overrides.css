@@ -74,3 +74,9 @@ pre {
 	width: 20px;
 	height: 14px;
 }
+
+.icon-udt {
+    width: 14px;
+    height: 14px;
+    background: url("../img/udt.png");
+}
