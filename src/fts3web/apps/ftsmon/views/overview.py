@@ -35,6 +35,7 @@ def _db_to_date():
     else:
         return '%s'
 
+
 def _db_limit(sql, limit):
     if settings.DATABASES['default']['ENGINE'] == 'django.db.backends.oracle':
         return "SELECT * FROM (%s) WHERE rownum <= %d" % (sql, limit)
@@ -42,6 +43,7 @@ def _db_limit(sql, limit):
         return sql + " LIMIT %d" % limit
     else:
         return sql
+
 
 def _get_pair_limits(limits, source, destination):
     pair_limits = {'source': dict(), 'destination': dict()}
@@ -61,6 +63,17 @@ def _get_pair_limits(limits, source, destination):
     if len(pair_limits['destination']) == 0:
         del pair_limits['destination']
     return pair_limits
+
+
+def _get_pair_udt(udt_pairs, source, destination):
+    for u in udt_pairs:
+        if udt_pairs[0] == source and udt_pairs[1] == destination:
+            return True
+        elif udt_pairs[0] == source and not udt_pairs[1]:
+            return True
+        elif not udt_pairs[0] and udt_pairs[1] == destination:
+            return True
+    return False
 
 
 class OverviewExtended(object):
@@ -144,7 +157,6 @@ def get_overview(http_request):
         not_before = datetime.utcnow() - timedelta(hours=filters['time_window'])
     else:
         not_before = datetime.utcnow() - timedelta(hours=1)
-    throughput_window = datetime.utcnow() - timedelta(seconds=2)
 
     cursor = connection.cursor()
 
@@ -164,14 +176,13 @@ def get_overview(http_request):
     for (source, dest) in cursor.fetchall():
         query = """
         SELECT file_state, vo_name, count(file_id),
-               SUM(CASE WHEN job_finished >= %s OR job_finished IS NULL THEN throughput ELSE 0 END)
+               SUM(CASE WHEN file_state = 'ACTIVE' THEN throughput ELSE 0 END)
         FROM t_file
         WHERE (job_finished IS NULL OR job_finished >= %s)
               AND source_se = %%s AND dest_se = %%s
               AND file_state != 'NOT_USED'
-        """ % (_db_to_date(), _db_to_date())
-        params = [throughput_window.strftime('%Y-%m-%d %H:%M:%S'),
-                  not_before.strftime('%Y-%m-%d %H:%M:%S'),
+        """ % _db_to_date()
+        params = [not_before.strftime('%Y-%m-%d %H:%M:%S'),
                   source, dest]
         if filters['vo']:
             query += " AND vo_name = %s"
@@ -199,7 +210,8 @@ def get_overview(http_request):
         ORDER BY datetime DESC
         """ % _db_to_date(), 1)
 
-        params = [source, dest, not_before]
+        params = [source, dest, not_before.strftime('%Y-%m-%d %H:%M:%S')]
+
         cursor.execute(query, params)
         aggregated_total = cursor.fetchall()
         if len(aggregated_total):
@@ -214,6 +226,11 @@ def get_overview(http_request):
     limit_query = "SELECT source_se, dest_se, throughput, active FROM t_optimize WHERE throughput IS NOT NULL or active IS NOT NULL"
     cursor.execute(limit_query)
     limits = cursor.fetchall()
+
+    # UDT
+    udt_query = "SELECT source_se, dest_se FROM t_optimize WHERE udt = 'on'"
+    cursor.execute(udt_query)
+    udt_pairs = cursor.fetchall()
 
     # Transform into a list
     objs = []
@@ -230,6 +247,9 @@ def get_overview(http_request):
             obj['rate'] = (finished * 100.0) / total
         # Append limit, if any
         obj['limits'] =_get_pair_limits(limits, triplet[0], triplet[1])
+        # Mark UDT-enabled
+        obj['udt'] = _get_pair_udt(udt_pairs, triplet[0], triplet[1])
+
         objs.append(obj)
 
     # Ordering

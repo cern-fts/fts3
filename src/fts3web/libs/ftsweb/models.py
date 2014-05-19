@@ -16,7 +16,6 @@
 # limitations under the License.
 
 from django.db import models
-from settings.database import DATABASES
 
 
 STATES               = ['SUBMITTED', 'READY', 'ACTIVE', 'FAILED', 'FINISHED', 'CANCELED', 'STAGING', 'NOT_USED']
@@ -303,3 +302,23 @@ class DebugConfig(models.Model):
         db_table = 't_debug'
 
 
+class Turl(models.Model):
+    source_surl = models.CharField(primary_key=True)
+    destin_surl = models.CharField()
+    source_turl = models.CharField()
+    destin_turl = models.CharField()
+    datetime    = models.DateField()
+    throughput  = models.FloatField()
+    finish      = models.FloatField()
+    fail        = models.FloatField()
+
+    def __eq__(self, other):
+        if type(other) != type(self):
+            return False
+        return self.source_surl == other.source_surl and \
+            self.destin_surl == other.destin_surl and \
+            self.source_turl == other.source_turl and \
+            self.destin_turl == other.destin_turl
+
+    class Meta:
+        db_table = 't_turl'

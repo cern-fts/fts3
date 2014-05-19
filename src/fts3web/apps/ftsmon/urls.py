@@ -38,6 +38,7 @@ urlpatterns = patterns('ftsmon.views',
     url(r'^stats/servers$',    'statistics.get_servers'),
     url(r'^stats/vo$',         'statistics.get_pervo'),
     url(r'^stats/volume$',     'statistics.get_transfer_volume'),
+    url(r'^stats/turls',       'statistics.get_turls'),
     url(r'^stats/profiling$',  'statistics.get_profiling'),
     url(r'^stats/slowqueries', 'statistics.get_slow_queries'),
 

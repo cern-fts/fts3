@@ -1,7 +1,7 @@
 <div class="navbar sub-navbar">
     <div class="navbar-inner">
         <form class="row-fluid" ng-submit="applyGlobalFilter()" autocomplete="off">
-            <div class="span2">
+            <div class="span2" ng-show="!disable_vo">
              <label for="global-vo"><i class="icon-group" title="VO"></i></label>
              <select id="global-vo" ng-model="globalFilter.vo" ng-options="vo for vo in unique.vos" ng-change="applyGlobalFilter()">
                 <option value="">- All -</option>
@@ -28,7 +28,7 @@
                 <option value="120">5 days</option>
                 <option value="144">6 days</option>
                 <option value="168">7 days</option>
-              </select> 
+              </select>
             </div>
             <div class="span2">
               <button class="btn btn-small btn-info" ng-click="applyGlobalFilter()">Apply</button>

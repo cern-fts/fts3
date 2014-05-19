@@ -5,9 +5,9 @@ function StatsOverviewCtrl($routeParams, $location, $scope, stats, Statistics, U
 {
 	$scope.stats = stats;
 	$scope.host = $location.search().hostname;
-	
+
 	$scope.hostnames = Unique('hostnames')
-	
+
 	$scope.filterHost = function(host) {
 		var filter = $location.search();
 		if (host)
@@ -17,7 +17,7 @@ function StatsOverviewCtrl($routeParams, $location, $scope, stats, Statistics, U
 		$location.search(filter);
 		$scope.host = host;
 	}
-	
+
 	// Set timer to trigger autorefresh
 	$scope.autoRefresh = setInterval(function() {
 		var filter = $location.search();
@@ -32,13 +32,13 @@ function StatsOverviewCtrl($routeParams, $location, $scope, stats, Statistics, U
 StatsOverviewCtrl.resolve = {
 	stats: function($route, $rootScope, $location, $q, Statistics) {
     	loading($rootScope);
-    	
+
     	var deferred = $q.defer();
 
     	Statistics.query($location.search(),
   			  genericSuccessMethod(deferred, $rootScope),
 			  genericFailureMethod(deferred, $rootScope, $location));
-    	
+
     	return deferred.promise;
 	}
 }
@@ -48,7 +48,7 @@ StatsOverviewCtrl.resolve = {
 function StatsServersCtrl($location, $scope, servers, Servers)
 {
 	$scope.servers = servers;
-	
+
 	// Set timer to trigger autorefresh
 	$scope.autoRefresh = setInterval(function() {
 		var filter = $location.search();
@@ -69,17 +69,13 @@ function StatsServersCtrl($location, $scope, servers, Servers)
 StatsServersCtrl.resolve = {
 	servers: function($rootScope, $location, $q, Servers) {
     	loading($rootScope);
-    	
+
     	var deferred = $q.defer();
 
-    	var page = $location.search().page;
-    	if (!page || page < 1)
-    		page = 1;
-    	
     	Servers.query($location.search(),
   			  genericSuccessMethod(deferred, $rootScope),
 			  genericFailureMethod(deferred, $rootScope, $location));
-    	
+
     	return deferred.promise;
 	}
 }
@@ -89,18 +85,18 @@ StatsServersCtrl.resolve = {
 function StatsVosCtrl($location, $scope, vos, StatsVO, Unique)
 {
 	$scope.vos = vos;
-	
+
 	// Filter
 	$scope.unique = {
 		sources: Unique('sources'),
 		destinations: Unique('destinations')
 	}
-	
+
 	$scope.filter = {
 		'source_se': validString($location.search().source_se),
 		'dest_se':   validString($location.search().dest_se),
 	}
-	
+
 	$scope.applyFilters = function() {
 		$location.search($scope.filter);
 	}
@@ -119,17 +115,13 @@ function StatsVosCtrl($location, $scope, vos, StatsVO, Unique)
 StatsVosCtrl.resolve = {
 	vos: function($rootScope, $location, $q, StatsVO) {
     	loading($rootScope);
-    	
+
     	var deferred = $q.defer();
 
-    	var page = $location.search().page;
-    	if (!page || page < 1)
-    		page = 1;
-    	
     	StatsVO.query($location.search(),
   			  genericSuccessMethod(deferred, $rootScope),
 			  genericFailureMethod(deferred, $rootScope, $location));
-    	
+
     	return deferred.promise;
 	}
 }
@@ -138,7 +130,7 @@ StatsVosCtrl.resolve = {
 function TransferVolumeCtrl($location, $scope, volumes)
 {
     $scope.volumes = volumes;
-    
+
     // On page change, reload
     $scope.pageChanged = function(newPage) {
         $location.search('page', newPage);
@@ -148,17 +140,13 @@ function TransferVolumeCtrl($location, $scope, volumes)
 TransferVolumeCtrl.resolve = {
     volumes: function($rootScope, $location, $q, TransferVolume) {
         loading($rootScope);
-        
+
         var deferred = $q.defer();
-        
-        var page = $location.search().page;
-        if (!page || page < 1)
-            page = 1;
-        
+
         TransferVolume.query($location.search(),
                 genericSuccessMethod(deferred, $rootScope),
                 genericFailureMethod(deferred, $rootScope, $location));
-        
+
         return deferred.promise;
     }
 }
@@ -183,17 +171,13 @@ function StatsProfilingCtrl($location, $scope, profile, Profile)
 StatsProfilingCtrl.resolve = {
 	profile: function($rootScope, $location, $q, Profile) {
     	loading($rootScope);
-    	
+
     	var deferred = $q.defer();
 
-    	var page = $location.search().page;
-    	if (!page || page < 1)
-    		page = 1;
-    	
     	Profile.query($location.search(),
   			  genericSuccessMethod(deferred, $rootScope),
 			  genericFailureMethod(deferred, $rootScope, $location));
-    	
+
     	return deferred.promise;
 	}
 }
@@ -207,17 +191,42 @@ function SlowQueriesCtrl($location, $scope, slowQueries)
 SlowQueriesCtrl.resolve = {
 	slowQueries: function($rootScope, $location, $q, SlowQueries) {
     	loading($rootScope);
-    	
+
     	var deferred = $q.defer();
 
-    	var page = $location.search().page;
-    	if (!page || page < 1)
-    		page = 1;
-    	
     	SlowQueries.query($location.search(),
   			  genericSuccessMethod(deferred, $rootScope),
 			  genericFailureMethod(deferred, $rootScope, $location));
-    	
+
     	return deferred.promise;
 	}
+}
+
+// TURLS
+function TurlsCtrl($location, $scope, turls)
+{
+    $scope.turls = turls;
+
+    // On page change, reload
+    $scope.pageChanged = function(newPage) {
+        $location.search('page', newPage);
+    };
+
+	$scope.filterBy = function(filter) {
+		$location.search(filter);
+	}
+}
+
+TurlsCtrl.resolve = {
+    turls: function($rootScope, $location, $q, Turls) {
+        loading($rootScope);
+
+        var deferred = $q.defer();
+
+        Turls.query($location.search(),
+            genericSuccessMethod(deferred, $rootScope),
+            genericFailureMethod(deferred, $rootScope, $location));
+
+        return deferred.promise;
+    }
 }
