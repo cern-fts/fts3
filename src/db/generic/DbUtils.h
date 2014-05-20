@@ -32,6 +32,14 @@ namespace db
 
 const int MAX_ACTIVE_PER_LINK = 70;
 
+/*borrowed from http://oroboro.com/irregular-ema/*/
+inline double exponentialMovingAverage( double sample, double alpha, double cur )
+{
+   cur = ( sample * alpha ) + (( 1-alpha) * cur );
+   return cur;
+}
+
+
 
 /**
  * Returns the current time, plus the difference specified
