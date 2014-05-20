@@ -231,14 +231,12 @@ static void call_perf(gfalt_transfer_status_t h, const char*, const char*, gpoin
             currentTransfer.throughput       = (double) avg;
             currentTransfer.transferredBytes = trans;
 	    
-	   double throughputTurl = 0.0;
+	    double throughputTurl = 0.0;
 	    
            if (currentTransfer.throughput > 0.0)
                 {                    
-			throughputTurl = convertKbToMb(currentTransfer.throughput);
-                }           	    
-
-            reporter.sendPing(currentTransfer.jobId,
+			throughputTurl = convertKbToMb(currentTransfer.throughput);                          	    
+                        reporter.sendPing(currentTransfer.jobId,
                               currentTransfer.fileId,
                               throughputTurl,
                               currentTransfer.transferredBytes,
@@ -247,6 +245,7 @@ static void call_perf(gfalt_transfer_status_t h, const char*, const char*, gpoin
                               "gsiftp:://fake",
                               "gsiftp:://fake",
                               "ACTIVE");
+	       }
         }
 }
 

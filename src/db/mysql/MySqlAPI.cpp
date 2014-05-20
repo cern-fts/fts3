@@ -40,6 +40,12 @@
 using namespace FTS3_COMMON_NAMESPACE;
 using namespace db;
 
+double exponentialMovingAverage( double sample, double alpha, double cur )
+{
+   cur = ( sample * alpha ) + (( 1-alpha) * cur );
+   return cur;
+}
+
 
 static unsigned getHashedId(void)
 {
@@ -3208,6 +3214,7 @@ bool MySqlAPI::updateOptimizer()
     soci::indicator isNullStreamsCurrent = soci::i_ok;
     long long singleDest = 0;
     bool lanTransferBool = false;
+    double ema = 0.0;
 
     time_t now = getUTC(0);
     struct tm startTimeSt;
@@ -3238,9 +3245,9 @@ bool MySqlAPI::updateOptimizer()
 
             //max number of active allowed per link
             soci::statement stmt8 = (
-                                        sql.prepare << "SELECT active FROM t_optimize_active "
+                                        sql.prepare << "SELECT active, ema FROM t_optimize_active "
                                         "WHERE source_se = :source AND dest_se = :dest_se LIMIT 1",
-                                        soci::use(source_hostname),soci::use(destin_hostname), soci::into(maxActive, isNullMaxActive));
+                                        soci::use(source_hostname),soci::use(destin_hostname), soci::into(maxActive, isNullMaxActive), soci::into(ema));
 
             //sum of retried transfers per link
             soci::statement stmt9 = (
@@ -3249,9 +3256,9 @@ bool MySqlAPI::updateOptimizer()
                                         soci::use(source_hostname),soci::use(destin_hostname), soci::into(retry, isNullRetry));
 
             soci::statement stmt10 = (
-                                         sql.prepare << "update t_optimize_active set active=:active where "
-                                         " source_se=:source and dest_se=:dest and (datetime is NULL OR datetime >= (UTC_TIMESTAMP() - INTERVAL '50' second)) ",
-                                         soci::use(active), soci::use(source_hostname), soci::use(destin_hostname));
+                                         sql.prepare << "update t_optimize_active set active=:active, ema=:ema where "
+                                         " source_se=:source and dest_se=:dest ",
+                                         soci::use(active), soci::use(ema), soci::use(source_hostname), soci::use(destin_hostname));
 
 
             soci::statement stmt12 = (
@@ -3341,6 +3348,7 @@ bool MySqlAPI::updateOptimizer()
                     isNullStreamsCurrent = soci::i_ok;
                     singleDest = 0;
                     lanTransferBool = false;
+		    ema = 0.0;
                     now = getUTC(0);
 
                     if(true == lanTransfer(source_hostname, destin_hostname))
@@ -3526,9 +3534,13 @@ bool MySqlAPI::updateOptimizer()
 
                     if (isNullMaxActive == soci::i_null)
                         maxActive = highDefault;
+			
+                    double throughputEMA = floor(exponentialMovingAverage( throughput, 0.5, ema)+ 0.5f);
+		    std::cout << "-------------------------------------------------> EMA OLD = " << ema << std::endl;					    
+		    std::cout << "-------------------------------------------------> EMA NEW = " << throughputEMA << std::endl;			
 
                     //only apply the logic below if any of these values changes
-                    bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, rateStored, throughput, thrStored, retry, retryStored, maxActive, activeStored, throughputSamples, thrSamplesStored);
+                    bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, rateStored, throughputEMA, thrStored, retry, retryStored, maxActive, activeStored, throughputSamples, thrSamplesStored);
                     if(!changed && retry > 0)
                         changed = true;
 
@@ -3541,7 +3553,8 @@ bool MySqlAPI::updateOptimizer()
                         {
                             sql.begin();
 
-                            active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
+                            active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);			    
+			    ema = throughputEMA;
                             stmt10.execute(true);
                             updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, 10, bandwidthIn);
 
@@ -3585,18 +3598,21 @@ bool MySqlAPI::updateOptimizer()
                                                 }
 
                                             pathFollowed = 1;
+ 		    			    ema = throughputEMA;
                                             stmt10.execute(true);
                                         }
                                     else //no change, max limit reached
                                         {
                                             active = maxActive;
                                             pathFollowed = 11;
+					    ema = throughputEMA;
                                             stmt10.execute(true);
                                         }
                                 }
                             else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 98)) && throughput == thrStored && retry <= retryStored)
                                 {
                                     active = maxActive;
+				    ema = throughputEMA;
                                     pathFollowed = 2;
 
                                     stmt10.execute(true);
@@ -3626,6 +3642,7 @@ bool MySqlAPI::updateOptimizer()
                                                     pathFollowed = 6;
                                                 }
                                         }
+				    ema = throughputEMA;
                                     stmt10.execute(true);
                                 }
                             else if ( ratioSuccessFailure < 99)
@@ -3640,13 +3657,14 @@ bool MySqlAPI::updateOptimizer()
                                             active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
                                             pathFollowed = 8;
                                         }
+				    ema = throughputEMA;					
                                     stmt10.execute(true);
                                 }
                             else
                                 {
                                     active = maxActive;
                                     pathFollowed = 9;
-
+				    ema = throughputEMA;
                                     stmt10.execute(true);
                                 }
 
