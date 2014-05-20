@@ -7161,11 +7161,10 @@ void OracleAPI::checkSanityState()
                             sql << "SELECT COUNT(*) FROM t_file where job_id=:jobId AND file_state in ('ACTIVE','READY','SUBMITTED','STAGING') ", soci::use(*i2), soci::into(numberOfFilesRevert);
                             if(numberOfFilesRevert > 0)
                                 {
-
-                                    sql << "UPDATE t_job SET "
-                                        "    job_state = 'SUBMITTED', job_finished = NULL, finish_time = NULL, "
-                                        "    reason = NULL "
-                                        "    WHERE job_id = :jobId", soci::use(*i2);
+                                    sql << "UPDATE t_file SET "
+                                             "    file_state = 'FAILED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), "
+                                             "    reason = 'Force failure due to file state inconsistency' "
+                                             "    WHERE file_state in ('ACTIVE','READY','SUBMITTED','STAGING') and job_id = :jobId", soci::use(*i2);
 
                                 }
                             //reset

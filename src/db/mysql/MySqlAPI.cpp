@@ -7412,10 +7412,10 @@ void MySqlAPI::checkSanityState()
 
                     soci::statement stmt6 = (sql.prepare << "SELECT COUNT(*) FROM t_file where job_id=:jobId AND file_state in ('ACTIVE','READY','SUBMITTED','STAGING') ", soci::use(job_id), soci::into(numberOfFilesRevert));
 
-                    soci::statement stmt7 = (sql.prepare << "UPDATE t_job SET "
-                                             "    job_state = 'SUBMITTED', job_finished = NULL, finish_time = NULL, "
-                                             "    reason = NULL "
-                                             "    WHERE job_id = :jobId", soci::use(job_id));
+                    soci::statement stmt7 = (sql.prepare << "UPDATE t_file SET "
+                                             "    file_state = 'FAILED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+                                             "    reason = 'Force failure due to file state inconsistency' "
+                                             "    WHERE file_state in ('ACTIVE','READY','SUBMITTED','STAGING') and job_id = :jobId", soci::use(job_id));
 
                     soci::statement stmt8 = (sql.prepare << " select count(*)  "
                                              " from t_file "
