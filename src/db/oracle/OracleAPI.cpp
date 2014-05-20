@@ -4141,7 +4141,7 @@ bool OracleAPI::retryFromDead(std::vector<struct message_updater>& messages, boo
             for (iter = messages.begin(); iter != messages.end(); ++iter)
                 {
 
-                    soci::rowset<int> rs = (
+                    soci::rowset<long long> rs = (
                                                sql.prepare <<
                                                " SELECT file_id FROM t_file "
                                                " WHERE file_id = :fileId AND job_id = :jobId AND file_state='ACTIVE' AND"
@@ -4469,7 +4469,7 @@ void OracleAPI::getTimeoutForSe(std::string ses, std::map<std::string, int>& ret
 
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
-                    ret[i->get<std::string>("se")] =  i->get<int>("wait_timeout");
+                    ret[i->get<std::string>("SE")] =  i->get<int>("WAIT_TIMEOUT");
                 }
 
         }
@@ -5893,7 +5893,7 @@ std::vector< boost::tuple<std::string, std::string, int> >  OracleAPI::getVOBrin
                     boost::tuple<std::string, std::string, int> item (
                         row.get<std::string>("VO_NAME",""),
                         row.get<std::string>("HOST",""),
-                        row.get<int>("CONCURRENT_OPS",0)
+                        static_cast<int>(row.get<long long>("CONCURRENT_OPS",0))
                     );
 
                     ret.push_back(item);
@@ -7195,8 +7195,8 @@ void OracleAPI::checkSanityState()
                                     );
                             for (soci::rowset<soci::row>::const_iterator iCheckHostsActive = rsCheckHostsActive.begin(); iCheckHostsActive != rsCheckHostsActive.end(); ++iCheckHostsActive)
                                 {
-                                    int file_id = iCheckHostsActive->get<int>("file_id");
-                                    std::string job_id = iCheckHostsActive->get<std::string>("job_id");
+                                    int file_id = static_cast<int>(iCheckHostsActive->get<long long>("FILE_ID"));
+                                    std::string job_id = iCheckHostsActive->get<std::string>("JOB_ID");
                                     std::string errorMessage = "Transfer has been forced-canceled because host " + deadHost + " is offline and transfers still assigned to it";
 
                                     updateFileTransferStatusInternal(sql, 0.0, job_id, file_id, "CANCELED", errorMessage, 0, 0, 0, false);
@@ -7298,7 +7298,7 @@ void OracleAPI::getFilesForNewSeCfg(std::string source, std::string destination,
 
     try
         {
-            soci::rowset<int> rs = (
+            soci::rowset<long long> rs = (
                                        sql.prepare <<
                                        " select f.file_id "
                                        " from t_file f  "
@@ -7311,9 +7311,9 @@ void OracleAPI::getFilesForNewSeCfg(std::string source, std::string destination,
                                        soci::use(vo)
                                    );
 
-            for (soci::rowset<int>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+            for (soci::rowset<long long>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
-                    out.push_back(*i);
+                    out.push_back(static_cast<int>(*i));
                 }
         }
     catch (std::exception& e)
