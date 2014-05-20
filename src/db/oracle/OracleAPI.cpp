@@ -56,7 +56,7 @@ static unsigned getHashedId(void)
 
 
 
-bool OracleAPI::getChangedFile (std::string source, std::string dest, double rate, double& rateStored, double thr, double& thrStored, double retry, double& retryStored, int active, int& activeStored, int throughputSamples, int& throughputSamplesStored)
+bool OracleAPI::getChangedFile (std::string source, std::string dest, double rate, double& rateStored, double thr, double& thrStored, double retry, double& retryStored, int active, int& activeStored, int& throughputSamplesEqual, int& throughputSamplesStored)
 {
     bool returnValue = false;
 
@@ -65,16 +65,17 @@ bool OracleAPI::getChangedFile (std::string source, std::string dest, double rat
 
     if(filesMemStore.empty())
         {
-            boost::tuple<std::string, std::string, double, double, double, int, int> record(source, dest, rate, thr, retry, active, throughputSamples);
+            boost::tuple<std::string, std::string, double, double, double, int, int, int> record(source, dest, rate, thr, retry, active, 0, 0);
             filesMemStore.push_back(record);
+	    return returnValue;
         }
     else
         {
             bool found = false;
-            std::vector< boost::tuple<std::string, std::string, double, double, double, int, int> >::iterator itFind;
+            std::vector< boost::tuple<std::string, std::string, double, double, double, int, int, int> >::iterator itFind;
             for (itFind = filesMemStore.begin(); itFind < filesMemStore.end(); ++itFind)
                 {
-                    boost::tuple<std::string, std::string, double, double, double, int, int>& tupleRecord = *itFind;
+                    boost::tuple<std::string, std::string, double, double, double, int, int, int>& tupleRecord = *itFind;
                     std::string sourceLocal = boost::get<0>(tupleRecord);
                     std::string destLocal = boost::get<1>(tupleRecord);
                     if(sourceLocal == source && destLocal == dest)
@@ -85,14 +86,15 @@ bool OracleAPI::getChangedFile (std::string source, std::string dest, double rat
                 }
             if (!found)
                 {
-                    boost::tuple<std::string, std::string, double, double, double, int, int> record(source, dest, rate, thr, retry, active, throughputSamples);
+                    boost::tuple<std::string, std::string, double, double, double, int, int, int> record(source, dest, rate, thr, retry, active, 0, 0);
                     filesMemStore.push_back(record);
+		    return found;
                 }
 
-            std::vector< boost::tuple<std::string, std::string, double, double, double, int, int> >::iterator it =  filesMemStore.begin();
+            std::vector< boost::tuple<std::string, std::string, double, double, double, int, int, int> >::iterator it =  filesMemStore.begin();
             while (it != filesMemStore.end())
                 {
-                    boost::tuple<std::string, std::string, double, double, double, int, int>& tupleRecord = *it;
+                    boost::tuple<std::string, std::string, double, double, double, int, int, int>& tupleRecord = *it;
                     std::string sourceLocal = boost::get<0>(tupleRecord);
                     std::string destLocal = boost::get<1>(tupleRecord);
                     double rateLocal = boost::get<2>(tupleRecord);
@@ -100,6 +102,7 @@ bool OracleAPI::getChangedFile (std::string source, std::string dest, double rat
                     double retryThr = boost::get<4>(tupleRecord);
                     int activeLocal = boost::get<5>(tupleRecord);
                     int throughputSamplesLocal = boost::get<6>(tupleRecord);
+		    int throughputSamplesEqualLocal = boost::get<7>(tupleRecord);
 
                     if(sourceLocal == source && destLocal == dest)
                         {
@@ -107,6 +110,20 @@ bool OracleAPI::getChangedFile (std::string source, std::string dest, double rat
                             thrStored = thrLocal;
                             rateStored = rateLocal;
                             activeStored = activeLocal;
+			    
+			    //if EMA is the same for 10min, spawn one more transfer to see how it goes!
+			    if(thr == thrLocal)
+			    {
+			    	throughputSamplesEqualLocal += 1;
+				throughputSamplesEqual = throughputSamplesEqualLocal;
+				if(throughputSamplesEqualLocal == 11)
+					throughputSamplesEqualLocal = 0;					 
+			    }
+			    else
+			    {
+			    	throughputSamplesEqualLocal = 0;
+				throughputSamplesEqual = 0;
+			    }
 
                             if(thr < thrLocal)
                                 {
@@ -128,10 +145,10 @@ bool OracleAPI::getChangedFile (std::string source, std::string dest, double rat
                                 }
 
 
-                            if(rateLocal != rate || thrLocal != thr || retry != retryThr)
+                            if(rateLocal != rate || thrLocal != thr || retry != retryThr || throughputSamplesEqualLocal >= 0)
                                 {
                                     it = filesMemStore.erase(it);
-                                    boost::tuple<std::string, std::string, double, double, double, int, int> record(source, dest, rate, thr, retry, active, throughputSamplesLocal);
+                                    boost::tuple<std::string, std::string, double, double, double, int, int, int> record(source, dest, rate, thr, retry, active, throughputSamplesLocal, throughputSamplesEqualLocal);
                                     filesMemStore.push_back(record);
                                     returnValue = true;
                                     break;
@@ -3317,7 +3334,7 @@ bool OracleAPI::updateOptimizer()
 
                             int pathFollowed = 0;
 
-                            if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 98)) && throughput > thrStored && retry <= retryStored)
+                            if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 98)) && throughputEMA > thrStored && retry <= retryStored)
                                 {
                                     int tempActive = active; //temp store current active
 
@@ -3356,14 +3373,22 @@ bool OracleAPI::updateOptimizer()
                                             stmt10.execute(true);
                                         }
                                 }
-                            else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 98)) && throughput == thrStored && retry <= retryStored)
+                            else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 98)) && throughputEMA == thrStored && retry <= retryStored)
                                 {
-                                    active = maxActive;
-                                    pathFollowed = 2;
-				    ema = throughputEMA;
-                                    stmt10.execute(true);
+   				    if(throughputSamples == 10) // spawn one every 10min
+				    {
+                                    	active = maxActive + 1;
+				    	ema = throughputEMA;
+                                    	pathFollowed = 2;				    
+				    }
+				    else
+				    {
+                                    	active = maxActive;
+				    	ema = throughputEMA;
+                                    	pathFollowed = 2;
+				    }
                                 }
-                            else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 95)) && throughput < thrStored)
+                            else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 95)) && throughputEMA < thrStored)
                                 {
                                     if(retry > retryStored)
                                         {
