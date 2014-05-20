@@ -744,6 +744,7 @@ CREATE TABLE t_optimize_active (
   active       INTEGER DEFAULT 2,
   message      VARCHAR2(512),
   datetime  TIMESTAMP WITH TIME ZONE,
+  ema     	  NUMBER DEFAULT 0,
   CONSTRAINT t_optimize_active_pk PRIMARY KEY (source_se, dest_se)
 );
 
