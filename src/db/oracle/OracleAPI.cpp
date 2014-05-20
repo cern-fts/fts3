@@ -4061,7 +4061,7 @@ void OracleAPI::forkFailedRevertState(const std::string & jobId, int fileId)
             sql.begin();
             sql << "UPDATE t_file SET file_state = 'SUBMITTED', transferhost='', start_time=NULL "
                 "WHERE file_id = :fileId AND job_id = :jobId AND  transferhost= :hostname AND "
-                "      file_state NOT IN ('FINISHED','FAILED','CANCELED')",
+                "      file_state NOT IN ('FINISHED','FAILED','CANCELED','NOT_USED')",
                 soci::use(fileId), soci::use(jobId), soci::use(hostname);
             sql.commit();
         }
