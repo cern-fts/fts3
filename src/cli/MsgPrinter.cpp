@@ -245,16 +245,6 @@ void MsgPrinter::print_json(std::pair<std::string, std::string> const & id_statu
     JsonOutput::printArray("job", m);
 }
 
-void MsgPrinter::cancelled_jobs(std::vector< std::pair< std::string, std::string> > const & id_status)
-{
-    print_cancel print;
-
-    if (json) print = print_json;
-    else print = print_cout;
-
-    std::for_each(id_status.begin(), id_status.end(), print);
-}
-
 void MsgPrinter::missing_parameter(string name)
 {
 
@@ -385,12 +375,6 @@ void MsgPrinter::gsoap_error_msg(string msg)
 
 void MsgPrinter::print_cout(JobStatus const & j)
 {
-    // change the precision from msec to sec
-	long submitTime = j.submitTime / 1000;
-
-    char time_buff[20];
-    strftime(time_buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&submitTime));
-
     cout << "Request ID: " << j.jobId << endl;
     cout << "Status: " << j.jobStatus << endl;
 
@@ -399,7 +383,7 @@ void MsgPrinter::print_cout(JobStatus const & j)
 
     cout << "Client DN: " << j.clientDn << endl;
     cout << "Reason: " << (j.reason.empty() ? "<None>": j.reason) << endl;
-    cout << "Submission time: " << time_buff << endl;
+    cout << "Submission time: " << j.submitTime << endl;
     cout << "Files: " << (j.numFiles == -1 ? "n/a" : boost::lexical_cast<std::string>(j.numFiles)) << endl;
     cout << "Priority: " << j.priority << endl;
     cout << "VOName: " << j.voName << endl;
@@ -408,12 +392,6 @@ void MsgPrinter::print_cout(JobStatus const & j)
 
 void MsgPrinter::print_json(JobStatus const & j)
 {
-    // change the precision from msec to sec
-    long submitTime = j.submitTime / 1000;
-
-    char time_buff[20];
-    strftime(time_buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&submitTime));
-
     map<string, string> object;
 
     if (verbose)
@@ -423,8 +401,8 @@ void MsgPrinter::print_json(JobStatus const & j)
                                       ("status", j.jobStatus)
                                       ("dn", j.clientDn)
                                       ("reason", j.reason.empty() ? "<None>": j.reason)
-                                      ("submision_time", time_buff)
-                                      ("file_count", lexical_cast<string>(j.numFiles))
+                                      ("submision_time", j.submitTime)
+                                      ("file_count", (j.numFiles == -1 ? "n/a" : boost::lexical_cast<std::string>(j.numFiles)))
                                       ("priority", lexical_cast<string>(j.priority))
                                       ("vo", j.voName)
                                       ;
@@ -437,16 +415,6 @@ void MsgPrinter::print_json(JobStatus const & j)
         }
 
     JsonOutput::printArray("job", object);
-}
-
-void MsgPrinter::job_status_(std::vector<JobStatus> const & js)
-{
-    print_job_status print;
-
-    if (json) print = print_json;
-    else print = print_cout;
-
-    std::for_each(js.begin(), js.end(), print);
 }
 
 void MsgPrinter::job_summary(JobSummary js)
@@ -464,18 +432,12 @@ void MsgPrinter::job_summary(JobSummary js)
             return;
         }
 
-    // change the precision from msec to sec
-    js.status.submitTime /= 1000;
-
-    char time_buff[20];
-    strftime(time_buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&js.status.submitTime));
-
     map<string, string> object = map_list_of
                                  ("job_id", js.status.jobId)
                                  ("status", js.status.jobStatus)
                                  ("dn", js.status.clientDn)
                                  ("reason", js.status.reason.empty() ? "<None>": js.status.reason)
-                                 ("submision_time", time_buff)
+                                 ("submision_time", js.status.submitTime)
                                  ("file_count", lexical_cast<string>(js.status.numFiles))
                                  ("priority", lexical_cast<string>(js.status.priority))
                                  ("vo", js.status.voName)

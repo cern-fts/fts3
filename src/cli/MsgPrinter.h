@@ -72,8 +72,9 @@ public:
     void error_msg(string msg); //
     void gsoap_error_msg(string msg); //
 
-    void cancelled_jobs(std::vector< std::pair<std::string, std::string> > const & id_status);
-    void job_status_(std::vector<JobStatus> const & js);
+    template<typename T>
+    void print(std::vector<T> const & v);
+
 
     void job_id(string job_id); //
     void status(JobStatus js);
@@ -96,9 +97,6 @@ public:
 
 private:
 
-    typedef void (*print_cancel)(std::pair<std::string, std::string> const &) ;
-    typedef void (*print_job_status)(JobStatus const & j);
-
     static void print_cout(std::pair<std::string, std::string> const & id_status);
     static void print_json(std::pair<std::string, std::string> const & id_status);
 
@@ -110,6 +108,17 @@ private:
     ///
     bool json;
 };
+
+template<typename T>
+void MsgPrinter::print(std::vector<T> const & v)
+{
+	void (*print)(T const &);
+
+    if (json) print = print_json;
+    else print = print_cout;
+
+    std::for_each(v.begin(), v.end(), print);
+}
 
 } /* namespace server */
 } /* namespace fts3 */

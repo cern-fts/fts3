@@ -83,7 +83,7 @@ int main(int ac, char* av[])
                             ret.push_back(std::make_pair(p.get("job_id"), p.get("job_state")));
                         }
 
-                    cli->printer().cancelled_jobs(ret);
+                    cli->printer().print(ret);
 
                     return 0;
                 }
@@ -100,7 +100,7 @@ int main(int ac, char* av[])
                 }
 
             vector< pair<string, string> > ret = ctx.cancel(jobs);
-            cli->printer().cancelled_jobs(ret);
+            cli->printer().print(ret);
         }
     catch(cli_exception const & ex)
         {

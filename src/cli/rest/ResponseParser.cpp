@@ -57,7 +57,7 @@ vector<JobStatus> ResponseParser::getJobs(string const & path) const
 		j.numFiles = -1;
 		j.priority = it->second.get<int>("priority");
 		j.reason = it->second.get<string>("reason");
-		j.submitTime = it->second.get<long int>("submit_time");
+		j.submitTime = it->second.get<string>("submit_time");
 		j.voName = it->second.get<string>("vo_name");
 		ret.push_back(j);
 	}

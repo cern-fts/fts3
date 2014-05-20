@@ -261,13 +261,17 @@ JobStatus GSoapContextAdapter::getTransferJobStatus (string jobId, bool archive)
     if (!resp.getTransferJobStatusReturn)
         throw cli_exception("The response from the server is empty!");
 
+    long submitTime = resp.getTransferJobStatusReturn->submitTime / 1000;
+    char time_buff[20];
+    strftime(time_buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&submitTime));
+
     return JobStatus(
                *resp.getTransferJobStatusReturn->jobID,
                *resp.getTransferJobStatusReturn->jobStatus,
                *resp.getTransferJobStatusReturn->clientDN,
                *resp.getTransferJobStatusReturn->reason,
                *resp.getTransferJobStatusReturn->voName,
-               resp.getTransferJobStatusReturn->submitTime,
+               time_buff,
                resp.getTransferJobStatusReturn->numFiles,
                resp.getTransferJobStatusReturn->priority
            );
@@ -334,13 +338,17 @@ vector<JobStatus> GSoapContextAdapter::listRequests (vector<string> statuses, st
         {
             tns3__JobStatus* gstat = *it;
 
+            long submitTime = gstat->submitTime / 1000;
+            char time_buff[20];
+            strftime(time_buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&submitTime));
+
             JobStatus status = JobStatus(
                                    *gstat->jobID,
                                    *gstat->jobStatus,
                                    *gstat->clientDN,
                                    *gstat->reason,
                                    *gstat->voName,
-                                   gstat->submitTime,
+                                   time_buff,
                                    gstat->numFiles,
                                    gstat->priority
                                );
@@ -370,13 +378,17 @@ JobSummary GSoapContextAdapter::getTransferJobSummary (string jobId, bool archiv
     if (!resp.getTransferJobSummary2Return)
         throw cli_exception("The response from the server is empty!");
 
+    long submitTime = resp.getTransferJobSummary2Return->jobStatus->submitTime / 1000;
+    char time_buff[20];
+    strftime(time_buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&submitTime));
+
     JobStatus status = JobStatus(
                            *resp.getTransferJobSummary2Return->jobStatus->jobID,
                            *resp.getTransferJobSummary2Return->jobStatus->jobStatus,
                            *resp.getTransferJobSummary2Return->jobStatus->clientDN,
                            *resp.getTransferJobSummary2Return->jobStatus->reason,
                            *resp.getTransferJobSummary2Return->jobStatus->voName,
-                           resp.getTransferJobSummary2Return->jobStatus->submitTime,
+                           time_buff,
                            resp.getTransferJobSummary2Return->jobStatus->numFiles,
                            resp.getTransferJobSummary2Return->jobStatus->priority
                        );

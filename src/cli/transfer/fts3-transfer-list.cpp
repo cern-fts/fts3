@@ -107,7 +107,7 @@ int main(int ac, char* av[])
                     ResponseParser parser(ss);
                     vector<fts3::cli::JobStatus> stats = parser.getJobs("jobs");
 
-                    cli->printer().job_status_(stats);
+                    cli->printer().print(stats);
                     return 0;
                 }
 
@@ -117,7 +117,7 @@ int main(int ac, char* av[])
             vector<string> array = cli->getStatusArray();
             vector<fts3::cli::JobStatus> statuses = ctx.listRequests(array, cli->getUserDn(), cli->getVoName());
 
-            cli->printer().job_status_(statuses);
+            cli->printer().print(statuses);
         }
     catch(cli_exception const & ex)
         {
