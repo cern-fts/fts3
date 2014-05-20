@@ -2296,7 +2296,7 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs)
                 {
                     soci::row const& row = *i2;
                     pid = row.get<long long>("PID");
-                    requestIDs.push_back(static_cast<int>(pid));
+                    requestIDs.push_back(pid);
 
                     stmt1.execute(true);
                 }
@@ -2890,7 +2890,7 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
     return allowed;
 }
 
-bool OracleAPI::getMaxActive(soci::session& sql, int active, int /*highDefault*/, const std::string & source_hostname, const std::string & destin_hostname)
+bool OracleAPI::getMaxActive(soci::session& sql, int active, int highDefault, const std::string & source_hostname, const std::string & destin_hostname)
 {
     long long int maxActiveSource = 0;
     long long int maxActiveDest = 0;
@@ -3652,12 +3652,12 @@ void OracleAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                                     if(isNullPid != soci::i_null && pid > 0)
                                         {
                                             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Killing pid:" << pid << ", jobid:" << jobId << ", fileid:" << fileId << " because it was stalled" << commit;
-                                            kill(static_cast<__pid_t>(pid), SIGUSR1);
+                                            kill(pid, SIGUSR1);
                                         }
                                     collectJobs.insert(std::make_pair(fileId, jobId));
                                     updateFileTransferStatusInternal(sql, 0.0, jobId, fileId,
                                                                      "FAILED", "Transfer has been forced-killed because it was stalled",
-                                                                     static_cast<int>(pid), 0, 0, false);
+                                                                     pid, 0, 0, false);
                                     updateJobTransferStatusInternal(sql, jobId, "FAILED",0);
                                 }
 
@@ -5604,7 +5604,7 @@ int OracleAPI::getMaxTimeInQueue()
 
             //just in case soci it is reseting the value to NULL
             if(isNull != soci::i_null && maxTime > 0)
-                return static_cast<int>(maxTime);
+                return maxTime;
         }
     catch (std::exception& e)
         {
@@ -5614,7 +5614,7 @@ int OracleAPI::getMaxTimeInQueue()
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
-    return static_cast<int>(maxTime);
+    return maxTime;
 }
 
 
@@ -7678,9 +7678,9 @@ int OracleAPI::getOptimizerDefaultMode(soci::session& sql)
             if (ind == soci::i_ok)
                 {
                     if(mode == 0)
-                        return static_cast<int>(mode) + 1;
+                        return mode + 1;
                     else
-                        return static_cast<int>(mode);
+                        return mode;
                 }
             return modeDefault;
         }
@@ -7782,7 +7782,7 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
             if (retry_delay > 0)
                 {
                     // update
-                    time_t now = getUTC(static_cast<int>(retry_delay));
+                    time_t now = getUTC(retry_delay);
                     struct tm tTime;
                     gmtime_r(&now, &tTime);
 
@@ -8845,7 +8845,7 @@ int OracleAPI::getGlobalTimeout()
 
             if(sql.got_data() && timeout > 0)
                 {
-                    return static_cast<int>(timeout);
+                    return timeout;
                 }
         }
     catch (std::exception& e)
@@ -8857,7 +8857,7 @@ int OracleAPI::getGlobalTimeout()
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
 
-    return static_cast<int>(timeout);
+    return timeout;
 
 }
 
@@ -8916,7 +8916,7 @@ int OracleAPI::getSecPerMb()
 
             if(sql.got_data() && seconds > 0)
                 {
-                    return static_cast<int>(seconds);
+                    return seconds;
                 }
         }
     catch (std::exception& e)
@@ -8928,7 +8928,7 @@ int OracleAPI::getSecPerMb()
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
 
-    return static_cast<int>(seconds);
+    return seconds;
 
 }
 
