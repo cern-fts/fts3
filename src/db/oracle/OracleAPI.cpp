@@ -3301,7 +3301,8 @@ bool OracleAPI::updateOptimizer()
                     if (isNullMaxActive == soci::i_null)
                         maxActive = highDefault;
 			
-		    double throughputEMA = ceil(exponentialMovingAverage( throughput, 0.9, ema));			
+		    //The smaller alpha becomes the longer moving average is. ( e.g. it becomes smoother, but less reactive to new samples )				
+		    double throughputEMA = ceil(exponentialMovingAverage( throughput, 0.5, ema));			
 
                     //only apply the logic below if any of these values changes
                     bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, rateStored, throughputEMA, thrStored, retry, retryStored, maxActive, activeStored, throughputSamples, thrSamplesStored);
