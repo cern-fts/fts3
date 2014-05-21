@@ -8339,7 +8339,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                                  " (job_finished >= (sys_extract_utc(systimestamp) - interval '60' minute)) "
                                  " AND file_state='FAILED' and "
                                  " source_se=:source_se and dest_se=:dest_se and vo_name =:vo_name_local   "
-                                 " group by reason order by c desc limit 1",
+                                 " group by reason order by c desc",
                                  soci::use(source_se),
                                  soci::use(dest_se),
                                  soci::use(vo_name_local),
