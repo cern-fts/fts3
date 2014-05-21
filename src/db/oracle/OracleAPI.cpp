@@ -1505,7 +1505,7 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
                         {
                             jobs.push_back(new JobStatus(job));
                         }
-                    while (stmt.fetch());
+                    while (stmt.fetch())
                 }
 
         }
@@ -1582,7 +1582,7 @@ void OracleAPI::getTransferFileStatus(std::string requestID, bool archive,
                         {
                             files.push_back(new FileTransferStatus(transfer));
                         }
-                    while (stmt.fetch());
+                    while (stmt.fetch())
                 }
         }
     catch (std::exception& e)
@@ -3696,7 +3696,7 @@ void OracleAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                                 }
 
                         }
-                    while (stmt.fetch());
+                    while (stmt.fetch())
                 }
         }
     catch (std::exception& e)
@@ -3927,7 +3927,7 @@ void OracleAPI::revertToSubmitted()
                                         }
                                 }
                         }
-                    while (readyStmt.fetch());
+                    while (readyStmt.fetch())
                 }
             sql.commit();
         }
@@ -7371,7 +7371,7 @@ void OracleAPI::getFilesForNewGrCfg(std::string source, std::string destination,
                         {
                             out.push_back(id);
                         }
-                    while (stmt.fetch());
+                    while (stmt.fetch())
                 }
         }
     catch (std::exception& e)
@@ -8385,7 +8385,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
            
 
             voStmt.execute();
-            while (voStmt.fetch());
+            while (voStmt.fetch())
             {
                 if(source_se_p.empty())
                     source_se = "";
