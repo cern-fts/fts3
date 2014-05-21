@@ -937,20 +937,7 @@ unsigned int OracleAPI::updateFileStatus(TransferFiles* file, const std::string 
 
     try
         {
-            sql.begin();
-
-            int countSame = 0;
-
-            sql << "select count(*) from t_file where file_state in ('READY','ACTIVE') and dest_surl=:destUrl and vo_name=:vo_name and dest_se=:dest_se ",
-                soci::use(file->DEST_SURL),
-                soci::use(file->VO_NAME),
-                soci::use(file->DEST_SE),
-                soci::into(countSame);
-
-            if(countSame > 0)
-                {
-                    return 0;
-                }
+            sql.begin();           
 
             soci::statement stmt(sql);
 
