@@ -124,6 +124,7 @@ protected:
         static unsigned int counter2 = 0;
         static unsigned int counterTimeoutWaiting = 0;
         static unsigned int counterCanceled = 0;
+	static bool executeSanityOnce = false;
         std::vector<int> requestIDs;
 
         while (1)   /*need to receive more than one messages at a time*/
@@ -285,6 +286,12 @@ protected:
                         if (stopThreads)
                             return;
 
+		        if(!executeSanityOnce)
+			    {
+			      DBSingleton::instance().getDBObjectInstance()->checkSanityState();
+			      executeSanityOnce = true;
+			    }
+			    
                         counter2++;
                         if (counter2 == 3600)
                             {
