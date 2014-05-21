@@ -8305,7 +8305,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                                  soci::use(dest_se),
                                  soci::into(maxActive, isNull1)
                                 ));
-OracleAPI
+
             soci::statement st3((sql.prepare << "select count(*) from t_file where "
                                  " file_state='SUBMITTED' and vo_name=:vo_name_local and "
                                  " source_se=:source_se and dest_se=:dest_se",
@@ -8449,7 +8449,7 @@ OracleAPI
                         st44.execute(true);
                         result <<   "Avg throughput (last 5min): ";
                         result <<  std::setprecision(2) << throughput5min;
-                      OracleAPI  result <<   " MB/s\n";												                      
+                        result <<   " MB/s\n";												                      
 			    
 			st7.execute(true);
                         result <<   "Number of finished (last hour): ";
