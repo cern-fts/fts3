@@ -1505,7 +1505,7 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
                         {
                             jobs.push_back(new JobStatus(job));
                         }
-                    while (stmt.fetch())
+                    while (stmt.fetch());
                 }
 
         }
@@ -1582,7 +1582,7 @@ void OracleAPI::getTransferFileStatus(std::string requestID, bool archive,
                         {
                             files.push_back(new FileTransferStatus(transfer));
                         }
-                    while (stmt.fetch())
+                    while (stmt.fetch());
                 }
         }
     catch (std::exception& e)
@@ -3696,7 +3696,7 @@ void OracleAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                                 }
 
                         }
-                    while (stmt.fetch())
+                    while (stmt.fetch());
                 }
         }
     catch (std::exception& e)
@@ -3927,7 +3927,7 @@ void OracleAPI::revertToSubmitted()
                                         }
                                 }
                         }
-                    while (readyStmt.fetch())
+                    while (readyStmt.fetch());
                 }
             sql.commit();
         }
@@ -7371,7 +7371,7 @@ void OracleAPI::getFilesForNewGrCfg(std::string source, std::string destination,
                         {
                             out.push_back(id);
                         }
-                    while (stmt.fetch())
+                    while (stmt.fetch());
                 }
         }
     catch (std::exception& e)
@@ -8407,65 +8407,68 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
 			ratioSuccessFailure = 0.0;     			
 												
 
-                        result << std::fixed << "VO: ";
+ 			result << "{\n";
+			
+                        result << std::fixed << "\"VO\":\"";
                         result <<   vo_name_local;
-                        result <<   "\n";
+                        result <<   "\",\n";
 
-                        result <<   "Source endpoint: ";
+                        result <<   "\"Source endpoint\":\"";
                         result <<   source_se;
-                        result <<   "\n";
-                        result <<   "Destination endpoint: ";
+                        result <<   "\",\n";
+			
+                        result <<   "\"Destination endpoint\":\"";
                         result <<   dest_se;
-                        result <<   "\n";
+                        result <<   "\",\n";
 
                         //get active for this pair and vo
                         st1.execute(true);
-                        result <<   "Current active transfers: ";
+                        result <<   "\"Current active transfers\":\"";
                         result <<   active;
-                        result <<   "\n";
+                        result <<   "\",\n";
 
                         //get max active for this pair no matter the vo
                         st2.execute(true);
-                        result <<   "Max active transfers: ";
+                        result <<   "\"Max active transfers\":\"";
                         result <<   maxActive;
-                        result <<   "\n";
+                        result <<   "\",\n";
                       
                         //average throughput block
                         st41.execute(true);
-                        result <<   "Avg throughput (last 60min): ";
+                        result <<   "\"Avg throughput (last 60min)\":\"";
                         result <<  std::setprecision(2) << throughput1h;
-                        result <<   " MB/s\n";
+                        result <<   " MB/s\",\n";
 			
                         st42.execute(true);
-                        result <<   "Avg throughput (last 30min): ";
+                        result <<   "\"Avg throughput (last 30min)\":\"";
                         result <<  std::setprecision(2) << throughput30min;
-                        result <<   " MB/s\n";			
+                        result <<   " MB/s\",\n";			
 			
                         st43.execute(true);
-                        result <<   "Avg throughput (last 15min): ";
+                        result <<   "\"Avg throughput (last 15min)\":\"";
                         result <<  std::setprecision(2) << throughput15min;
-                        result <<   " MB/s\n";						
+                        result <<   " MB/s\",\n";						
 			
                         st44.execute(true);
-                        result <<   "Avg throughput (last 5min): ";
+                        result <<   "\"Avg throughput (last 5min)\":\"";
                         result <<  std::setprecision(2) << throughput5min;
-                        result <<   " MB/s\n";												                      
+                        result <<   " MB/s\",\n";												                      
 			    
 			st7.execute(true);
-                        result <<   "Number of finished (last hour): ";
+                        result <<   "\"Number of finished (last hour)\":\"";
                         result <<   long(nFinishedLastHour);
-                        result <<   "\n";			
+                        result <<   "\",\n";			
 			
 			st6.execute(true);
-                        result <<   "Number of failed (last hour): ";
+                        result <<   "\"Number of failed (last hour)\":\"";
                         result <<   long(nFailedLastHour);
-                        result <<   "\n";	
+                        result <<   "\",\n";	
 			
 			//get submitted for this pair and vo
                         st3.execute(true);
-                        result <<   "Number of queued: ";
+                        result <<   "\"Number of queued\":\"";
                         result <<   submitted;
-                        result <<   "\n";								                                               					    			
+                        result <<   "\",\n";								                                               					    			
 
                         //round up efficiency
                         if(nFinishedLastHour > 0)
@@ -8473,24 +8476,22 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                                 ratioSuccessFailure = ceil((double)nFinishedLastHour/((double)nFinishedLastHour + (double)nFailedLastHour) * (100.0));
                             }
 
-                        result <<   "Link efficiency (last hour): ";
+                        result <<   "\"Link efficiency (last hour)\":\"";
                         result <<   ratioSuccessFailure;
-                        result <<   "%\n";							
+                        result <<   "%\",\n";							
 						
                         //most frequent error and number the last 30min
                         reason = "";
                         countReason = 0;
                         st5.execute(true);
 
-                        result <<   "Most frequent error (last hour): ";
+                        result <<   "\"Most frequent error (last hour)\":\"";
                         result <<   countReason;
                         result <<   " times: ";
                         result <<   reason;
-                        result <<   "\n";
-
-                        //get bandwidth restrictions (if any)
-                        result << getBandwidthLimitInternal(sql, source_se, dest_se);
-
+                        result <<   "\"\n";                       
+			
+			result << "}\n";
                         result << "\n\n";
                     }
             }
