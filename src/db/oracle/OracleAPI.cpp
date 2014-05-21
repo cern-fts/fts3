@@ -8207,6 +8207,7 @@ void OracleAPI::updateOptimizerEvolution(soci::session& sql, const std::string &
 }
 
 
+
 void OracleAPI::snapshot(const std::string & vo_name, const std::string & source_se_p, const std::string & dest_se_p, const std::string &, std::stringstream & result)
 {
     soci::session sql(*connectionPool);
@@ -8219,9 +8220,13 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
     long long active = 0;
     long long maxActive = 0;
     long long submitted = 0;
-    double throughput = 0.0;
-    double tx_duration = 0.0;
-    double queuingTime = 0.0;
+    double throughput1h = 0.0;
+    double throughput30min = 0.0;			
+    double throughput15min = 0.0;						
+    double throughput5min = 0.0;   
+    long long nFailedLastHour = 0;
+    long long  nFinishedLastHour = 0;
+    long long  ratioSuccessFailure = 0;     
     std::string querySe = " SELECT DISTINCT source_se, dest_se FROM t_job WHERE job_finished is NULL ";
 
     time_t now = time(NULL);
@@ -8230,9 +8235,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
 
     soci::indicator isNull1 = soci::i_ok;
     soci::indicator isNull2 = soci::i_ok;
-    soci::indicator isNull3 = soci::i_ok;
-    soci::indicator isNull4 = soci::i_ok;
-    soci::indicator isNull5 = soci::i_ok;
+    soci::indicator isNull3 = soci::i_ok;   
 
     soci::statement voStmt(sql);
     if(!vo_name.empty())
@@ -8293,47 +8296,75 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                                  soci::use(dest_se),
                                  soci::into(submitted)
                                 ));
+				
 
-            soci::statement st4((sql.prepare << "select avg(throughput) from t_file where  "
+            soci::statement st41((sql.prepare << "select avg(throughput) from t_file where  "
                                  " source_se=:source_se and dest_se=:dest_se "
-                                 " AND (file_state='FINISHED' and  job_finished >= (sys_extract_utc(systimestamp) - interval '60' minute)) "
+                                 " AND  file_state='ACTIVE' OR (file_state='FINISHED' and  job_finished >= (sys_extract_utc(systimestamp) - interval '60' minute)) "
                                  " AND throughput <> 0 ",
                                  soci::use(source_se),
                                  soci::use(dest_se),
-                                 soci::into(throughput, isNull2)
+                                 soci::into(throughput1h, isNull2)
                                 ));
+				
+            soci::statement st42((sql.prepare << "select avg(throughput) from t_file where  "
+                                 " source_se=:source_se and dest_se=:dest_se "
+                                 " AND file_state='ACTIVE' OR (file_state='FINISHED' and  job_finished >= (sys_extract_utc(systimestamp) - interval '30' minute)) "
+                                 " AND throughput <> 0 ",
+                                 soci::use(source_se),
+                                 soci::use(dest_se),
+                                 soci::into(throughput30min, isNull2)
+                                ));				
+				
+            soci::statement st43((sql.prepare << "select avg(throughput) from t_file where  "
+                                 " source_se=:source_se and dest_se=:dest_se "
+                                 " AND  file_state='ACTIVE' OR (file_state='FINISHED' and  job_finished >= (sys_extract_utc(systimestamp) - interval '15' minute)) "
+                                 " AND throughput <> 0 ",
+                                 soci::use(source_se),
+                                 soci::use(dest_se),
+                                 soci::into(throughput15min, isNull2)
+                                ));								
+			
+            soci::statement st44((sql.prepare << "select avg(throughput) from t_file where  "
+                                 " source_se=:source_se and dest_se=:dest_se "
+                                 " AND  file_state='ACTIVE' OR (file_state='FINISHED' and  job_finished >= (sys_extract_utc(systimestamp) - interval '5' minute)) "
+                                 " AND throughput <> 0 ",
+                                 soci::use(source_se),
+                                 soci::use(dest_se),
+                                 soci::into(throughput5min, isNull2)
+                                ));											
+				
 
-            soci::statement st5((sql.prepare << "select reason, count(reason) AS c from t_file where "
+            soci::statement st5((sql.prepare << "select reason, count(reason) as c from t_file where "
                                  " (job_finished >= (sys_extract_utc(systimestamp) - interval '60' minute)) "
                                  " AND file_state='FAILED' and "
                                  " source_se=:source_se and dest_se=:dest_se and vo_name =:vo_name_local   "
-                                 " group by reason  order by c desc ",
+                                 " group by reason order by c desc",
                                  soci::use(source_se),
                                  soci::use(dest_se),
                                  soci::use(vo_name_local),
                                  soci::into(reason, isNull3),
                                  soci::into(countReason)
                                 ));
-
-            soci::statement st6((sql.prepare << " select avg(tx_duration) from t_file where file_state='FINISHED'  "
-                                 " AND source_se=:source_se and dest_se=:dest_se and vo_name =:vo_name_local (job_finished >= (sys_extract_utc(systimestamp) - interval '60' minute)) ",
+				
+           soci::statement st6((sql.prepare << "select count(*) from t_file where "
+                                 " file_state='FAILED' and vo_name=:vo_name_local and "
+                                 " source_se=:source_se and dest_se=:dest_se AND job_finished >= (sys_extract_utc(systimestamp) - interval '60' minute)",
+                                 soci::use(vo_name_local),
                                  soci::use(source_se),
                                  soci::use(dest_se),
+                                 soci::into(nFailedLastHour)
+                                ));				
+				
+           soci::statement st7((sql.prepare << "select count(*) from t_file where "
+                                 " file_state='FINISHED' and vo_name=:vo_name_local and "
+                                 " source_se=:source_se and dest_se=:dest_se AND job_finished >= (sys_extract_utc(systimestamp) - interval '60' minute)",
                                  soci::use(vo_name_local),
-                                 soci::into(tx_duration, isNull4)
-                                ));
-
-
-            soci::statement st7((sql.prepare << "  select avg(EXTRACT(SECOND from (start_time - submit_time))) "
-                                 " FROM t_file, t_job "
-                                 " WHERE t_job.job_id=t_file.job_id  "
-                                 " AND t_file.source_se=:source_se and t_file.dest_se=:dest_se and t_job.vo_name =:vo_name_local "
-                                 " AND t_job.job_finished is NULL and t_file.job_finished is NULL and start_time is not NULL order by start_time DESC ",
                                  soci::use(source_se),
                                  soci::use(dest_se),
-                                 soci::use(vo_name_local),
-                                 soci::into(queuingTime, isNull5)
-                                ));
+                                 soci::into(nFailedLastHour)
+                                ));								
+           
 
             voStmt.execute();
             while (voStmt.fetch());
@@ -8349,7 +8380,14 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                         active = 0;
                         maxActive = 0;
                         submitted = 0;
-                        throughput = 0.0;
+                        throughput1h = 0.0;
+                        throughput30min = 0.0;			
+                        throughput15min = 0.0;						
+                        throughput5min = 0.0;
+			nFailedLastHour = 0;
+			nFinishedLastHour = 0;
+			ratioSuccessFailure = 0;     			
+												
 
                         result << std::fixed << "VO: ";
                         result <<   vo_name_local;
@@ -8373,69 +8411,53 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                         result <<   "Max active transfers: ";
                         result <<   maxActive;
                         result <<   "\n";
-
-                        //get submitted for this pair and vo
-                        st3.execute(true);
-                        result <<   "Queued files: ";
-                        result <<   submitted;
-                        result <<   "\n";
-
-                        //weighted-average throughput last sample
-                        st4.execute(true);
-                        result <<   "Avg throughput: ";
-                        result <<  std::setprecision(2) << throughput;
+                      
+                        //average throughput block
+                        st41.execute(true);
+                        result <<   "Avg throughput (last 60min): ";
+                        result <<  std::setprecision(2) << throughput1h;
                         result <<   " MB/s\n";
-
-                        //success rate the last 1h
-                        soci::rowset<soci::row> rs = (sql.prepare << "SELECT file_state FROM t_file "
-                                                      "WHERE "
-                                                      "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                                                      "      t_file.job_finished >= (sys_extract_utc(systimestamp) - interval '60' minute) AND "
-                                                      "      file_state IN ('FAILED','FINISHED') and vo_name = :vo_name_local ",
-                                                      soci::use(source_se), soci::use(dest_se),soci::use(vo_name_local));
-
-
-                        double nFailedLastHour = 0.0;
-                        double nFinishedLastHour = 0.0;
-                        double ratioSuccessFailure = 0.0;
-                        for (soci::rowset<soci::row>::const_iterator i = rs.begin();
-                                i != rs.end(); ++i)
-                            {
-                                std::string state = i->get<std::string>("FILE_STATE", "");
-
-                                if (state.compare("FAILED") == 0)
-                                    {
-                                        nFailedLastHour+=1.0;
-                                    }
-                                else if (state.compare("FINISHED") == 0)
-                                    {
-                                        nFinishedLastHour+=1.0;
-                                    }
-                            }
+			
+                        st42.execute(true);
+                        result <<   "Avg throughput (last 30min): ";
+                        result <<  std::setprecision(2) << throughput30min;
+                        result <<   " MB/s\n";			
+			
+                        st43.execute(true);
+                        result <<   "Avg throughput (last 15min): ";
+                        result <<  std::setprecision(2) << throughput15min;
+                        result <<   " MB/s\n";						
+			
+                        st44.execute(true);
+                        result <<   "Avg throughput (last 5min): ";
+                        result <<  std::setprecision(2) << throughput5min;
+                        result <<   " MB/s\n";												                      
+			    
+			st7.execute(true);
+                        result <<   "Number of finished (last hour): ";
+                        result <<   long(nFinishedLastHour);
+                        result <<   "\n";			
+			
+			st6.execute(true);
+                        result <<   "Number of failed (last hour): ";
+                        result <<   long(nFailedLastHour);
+                        result <<   "\n";			    
 
                         //round up efficiency
-                        if(nFinishedLastHour > 0.0)
+                        if(nFinishedLastHour > 0)
                             {
-                                ratioSuccessFailure = ceil(nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0));
+                                ratioSuccessFailure = ceil(nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100/1));
                             }
 
                         result <<   "Link efficiency (last hour): ";
                         result <<   long(ratioSuccessFailure);
-                        result <<   "%\n";
-
-                        //average transfer duration the last 30min
-                        tx_duration = 0.0;
-                        st6.execute(true);
-                        result <<   "Avg transfer duration (last hour): ";
-                        result <<   long(tx_duration);
-                        result <<   " secs\n";
-
-                        //average queuing time expressed in secs
-                        queuingTime = 0;
-                        st7.execute(true);
-                        result <<   "Avg queuing time: ";
-                        result <<   long(queuingTime);
-                        result <<   " secs\n";
+                        result <<   "%\n";							
+			
+			//get submitted for this pair and vo
+                        st3.execute(true);
+                        result <<   "Number of queued: ";
+                        result <<   submitted;
+                        result <<   "\n";								                                               
 
                         //most frequent error and number the last 30min
                         reason = "";
@@ -8464,6 +8486,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
 }
+
 
 
 
