@@ -1033,23 +1033,6 @@ unsigned int MySqlAPI::updateFileStatus(TransferFiles* file, const std::string s
 
     try
         {
-            int countSame = 0;
-
-            soci::statement stmt1 = (
-                                        sql.prepare << "select count(*) from t_file where file_state in ('READY','ACTIVE') and dest_surl=:destUrl and vo_name=:vo_name and dest_se=:dest_se ",
-                                        soci::use(file->DEST_SURL),
-                                        soci::use(file->VO_NAME),
-                                        soci::use(file->DEST_SE),
-                                        soci::into(countSame));
-            stmt1.execute(true);
-
-
-            if(countSame > 0)
-                {
-                    return 0;
-                }
-
-
             sql.begin();
 
             soci::statement stmt(sql);
@@ -8613,7 +8596,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
 
             soci::statement st41((sql.prepare << "select avg(throughput) from t_file where  "
                                  " source_se=:source_se and dest_se=:dest_se "
-                                 " AND  file_state='ACTIVE' OR (file_state='FINISHED' and  job_finished >= (UTC_TIMESTAMP() - interval '60' minute)) "
+                                 " AND  file_state in ('ACTIVE','FINISHED') and (job_finished is NULL OR  job_finished >= (UTC_TIMESTAMP() - interval '60' minute)) "
                                  " AND throughput <> 0 ",
                                  soci::use(source_se),
                                  soci::use(dest_se),
@@ -8622,7 +8605,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
 				
             soci::statement st42((sql.prepare << "select avg(throughput) from t_file where  "
                                  " source_se=:source_se and dest_se=:dest_se "
-                                 " AND file_state='ACTIVE' OR (file_state='FINISHED' and  job_finished >= (UTC_TIMESTAMP() - interval '30' minute)) "
+                                 " AND  file_state in ('ACTIVE','FINISHED') and (job_finished is NULL OR  job_finished >= (UTC_TIMESTAMP() - interval '30' minute)) "
                                  " AND throughput <> 0 ",
                                  soci::use(source_se),
                                  soci::use(dest_se),
@@ -8631,7 +8614,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
 				
             soci::statement st43((sql.prepare << "select avg(throughput) from t_file where  "
                                  " source_se=:source_se and dest_se=:dest_se "
-                                 " AND  file_state='ACTIVE' OR (file_state='FINISHED' and  job_finished >= (UTC_TIMESTAMP() - interval '15' minute)) "
+                                 " AND  file_state in ('ACTIVE','FINISHED') and (job_finished is NULL OR  job_finished >= (UTC_TIMESTAMP() - interval '15' minute)) "
                                  " AND throughput <> 0 ",
                                  soci::use(source_se),
                                  soci::use(dest_se),
@@ -8640,7 +8623,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
 			
             soci::statement st44((sql.prepare << "select avg(throughput) from t_file where  "
                                  " source_se=:source_se and dest_se=:dest_se "
-                                 " AND  file_state='ACTIVE' OR (file_state='FINISHED' and  job_finished >= (UTC_TIMESTAMP() - interval '5' minute)) "
+                                 " AND  file_state in ('ACTIVE','FINISHED') and (job_finished is NULL OR  job_finished >= (UTC_TIMESTAMP() - interval '5' minute)) "
                                  " AND throughput <> 0 ",
                                  soci::use(source_se),
                                  soci::use(dest_se),
