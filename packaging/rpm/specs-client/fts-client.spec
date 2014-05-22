@@ -123,6 +123,7 @@ make install DESTDIR=%{buildroot}
 
 %files -n fts-libs
 %defattr(-,root,root,-)
+%{_libdir}/libfts_common.so*
 %{_libdir}/libfts_cli_common.so*
 %{_libdir}/libfts_ws_ifce_client.so*
 %{_libdir}/libfts_ws_ifce_server.so*
