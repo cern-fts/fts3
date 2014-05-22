@@ -858,6 +858,8 @@ void MySqlAPI::setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<i
             // first really check if it is a multi-source/destination submission
             // count the alternative replicas, if there is more than one it makes sense to set the NOT_USED state
 
+            sql.begin();
+
             int count = 0;
 
             soci::statement stmt1 = (
@@ -871,7 +873,6 @@ void MySqlAPI::setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<i
 
             if (count < 2) return;
 
-            sql.begin();
             soci::statement stmt(sql);
 
             stmt.exchange(soci::use(jobId, "jobId"));
@@ -4314,14 +4315,33 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
 void MySqlAPI::forkFailedRevertState(const std::string & jobId, int fileId)
 {
     soci::session sql(*connectionPool);
+    long long distinctFileIndex = 0;
 
     try
         {
             sql.begin();
-            sql << "UPDATE t_file SET file_state = 'SUBMITTED', transferhost='', start_time=NULL "
+	    
+	    //here we have already checked, there is another active with the same dest_surl
+	    //now check if it's a multiple replica job
+	    sql << "select count(distinct file_index) from t_file where job_id=:job_id ", soci::use(jobId), soci::into(distinctFileIndex);
+	    
+	    if(distinctFileIndex == 1) // it is indeed multiple replica job
+	    {
+	      //make sure you won't force-cancel the one and only ready
+	    
+  		sql << "UPDATE t_file SET file_state = 'NOT_USED', transferhost='', start_time=NULL "
+                "WHERE file_id = :fileId AND job_id = :jobId AND  transferhost= :hostname AND "
+                "      file_state= 'READY' ",
+                soci::use(fileId), soci::use(jobId), soci::use(hostname);	    	    
+	    }
+	    else
+	    {	    
+	      sql << "UPDATE t_file SET file_state = 'SUBMITTED', transferhost='', start_time=NULL "
                 "WHERE file_id = :fileId AND job_id = :jobId AND  transferhost= :hostname AND "
                 "      file_state NOT IN ('FINISHED','FAILED','CANCELED','NOT_USED')",
                 soci::use(fileId), soci::use(jobId), soci::use(hostname);
+	    }
+	    
             sql.commit();
         }
     catch (std::exception& e)
