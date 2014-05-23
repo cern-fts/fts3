@@ -48,9 +48,22 @@ inline bool is_mreplica_or_mhop(std::list<job_element_tupple>& src_dest_pair)
                 }
         }
 
-    //TODO: multi-hop check
+    // if it is multi-replica return true
+    if (is_m) return true;
+    // if it has less than 2 pairs it wont be a multi-hop
+    if (src_dest_pair.size() < 2) return false;
 
-    return is_m;
+    // use two iterators to traverse the list
+    iter = src_dest_pair.begin();
+    std::list<job_element_tupple>::const_iterator iter2 = src_dest_pair.begin();
+    std::advance(iter2, 1);
+
+    for (; iter2 != src_dest_pair.end(); ++iter, ++iter2)
+		{
+    		if (iter->destination != iter2->source) return false;
+		}
+
+    return true;
 }
 
 
