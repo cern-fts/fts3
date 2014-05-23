@@ -70,7 +70,7 @@ bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate
         {
             boost::tuple<std::string, std::string, double, double, double, int, int, int> record(source, dest, rate, thr, retry, active, 0, 0);
             filesMemStore.push_back(record);
-	    return returnValue;
+            return returnValue;
         }
     else
         {
@@ -91,7 +91,7 @@ bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate
                 {
                     boost::tuple<std::string, std::string, double, double, double, int, int, int> record(source, dest, rate, thr, retry, active, 0, 0);
                     filesMemStore.push_back(record);
-		    return found;
+                    return found;
                 }
 
             std::vector< boost::tuple<std::string, std::string, double, double, double, int, int, int> >::iterator it =  filesMemStore.begin();
@@ -105,7 +105,7 @@ bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate
                     double retryThr = boost::get<4>(tupleRecord);
                     int activeLocal = boost::get<5>(tupleRecord);
                     int throughputSamplesLocal = boost::get<6>(tupleRecord);
-		    int throughputSamplesEqualLocal = boost::get<7>(tupleRecord);
+                    int throughputSamplesEqualLocal = boost::get<7>(tupleRecord);
 
                     if(sourceLocal == source && destLocal == dest)
                         {
@@ -113,20 +113,20 @@ bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate
                             thrStored = thrLocal;
                             rateStored = rateLocal;
                             activeStored = activeLocal;
-			    
-			    //if EMA is the same for 10min, spawn one more transfer to see how it goes!
-			    if(thr == thrLocal)
-			    {
-			    	throughputSamplesEqualLocal += 1;
-				throughputSamplesEqual = throughputSamplesEqualLocal;
-				if(throughputSamplesEqualLocal == 11)
-					throughputSamplesEqualLocal = 0;					 
-			    }
-			    else
-			    {
-			    	throughputSamplesEqualLocal = 0;
-				throughputSamplesEqual = 0;
-			    }
+
+                            //if EMA is the same for 10min, spawn one more transfer to see how it goes!
+                            if(thr == thrLocal)
+                                {
+                                    throughputSamplesEqualLocal += 1;
+                                    throughputSamplesEqual = throughputSamplesEqualLocal;
+                                    if(throughputSamplesEqualLocal == 11)
+                                        throughputSamplesEqualLocal = 0;
+                                }
+                            else
+                                {
+                                    throughputSamplesEqualLocal = 0;
+                                    throughputSamplesEqual = 0;
+                                }
 
                             if(thr < thrLocal)
                                 {
@@ -859,6 +859,15 @@ void MySqlAPI::setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<i
             // count the alternative replicas, if there is more than one it makes sense to set the NOT_USED state
 
             sql.begin();
+	    
+	    std::string flag;
+	    soci::indicator ind = soci::i_ok;
+	    
+	    sql << " select reuse_job from t_job where job_id = :job_id ", soci::use(jobId), soci::into(flag, ind);
+	    
+	    if (ind == soci::i_ok && flag == "M") //don't set to NOT_USED state for multi-hop - ONLY for multiple repicas
+	    	return;
+	    
 
             int count = 0;
 
@@ -1178,11 +1187,23 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
     const std::string buffSize		   = params.get(JobParameterHandler::BUFFER_SIZE);
     const std::string timeout		   = params.get(JobParameterHandler::TIMEOUT);
 
-    std::string reuseFlag = "N";
+    std::string reuseFlag = "N"; //default
     if (reuse == "Y")
-        reuseFlag = "Y";
+        reuseFlag = "Y"; //session reuse
     else if (hop == "Y")
-        reuseFlag = "H";
+        reuseFlag = "H"; //multi-hop
+	
+    //check if it's multiple-replica or multi-hop and set hashedId and file_index accordingly
+    bool mreplica = is_mreplica(src_dest_pair);
+    bool mhop     = is_mhop(src_dest_pair);  
+	    
+    if( reuseFlag != "N" && (mreplica || mhop))
+	{	
+		throw Err_Custom("Session reuse (-r) can't be used with multiple replicas or multi-hop jobs!");		
+        }			
+
+    if(mhop) //since H is not passed when plain text submission (e.g. glite client) we need to set into DB
+    	  reuseFlag = "H";
 
     const std::string initialState = bringOnline > 0 || copyPinLifeTime > 0 ? "STAGING" : "SUBMITTED";
     const int priority = 3;
@@ -1217,14 +1238,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
 
     try
         {
-	    //check if it's multiple-replica or multi-hop and set hashedId and file_index accordingly
-	    bool is_m = is_mreplica_or_mhop(src_dest_pair);
-	
-	
             sql.begin();
-            soci::indicator reuseFlagIndicator = soci::i_ok;
-            if (reuseFlag.empty())
-                reuseFlagIndicator = soci::i_null;
             // Insert job
             soci::statement insertJob = ( sql.prepare << "INSERT INTO t_job (job_id, job_state, job_params, user_dn, user_cred, priority,       "
                                           "                   vo_name, submit_time, internal_job_params, submit_host, cred_id,   "
@@ -1242,7 +1256,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
                                           soci::use(voName), soci::use(jobParams), soci::use(hostname), soci::use(delegationID),
                                           soci::use(myProxyServer), soci::use(spaceToken), soci::use(overwrite), soci::use(sourceSpaceToken),
                                           soci::use(copyPinLifeTime), soci::use(failNearLine), soci::use(checksumMethod),
-                                          soci::use(reuseFlag, reuseFlagIndicator), soci::use(bringOnline),
+                                          soci::use(reuseFlag), soci::use(bringOnline),
                                           soci::use(retry), soci::use(retryDelay), soci::use(metadata),
                                           soci::use(sourceSe), soci::use(destinationSe));
 
@@ -1263,9 +1277,8 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
 
             // When reuse is enabled, we use the same random number for the whole job
             // This guarantees that the whole set belong to the same machine, but keeping
-            // the load balance between hosts
-            if (reuseFlag != "N" || is_m)
-                hashedId = getHashedId();
+            // the load balance between hosts    
+	    hashedId = getHashedId();		           
 
             std::list<job_element_tupple>::const_iterator iter;
             for (iter = src_dest_pair.begin(); iter != src_dest_pair.end(); ++iter)
@@ -1281,9 +1294,23 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
                     destSe = iter->dest_se;
                     activity = iter->activity;
 
-                    // No reuse, one random per file
-                    if (reuseFlag == "N" || !is_m)
-                        hashedId = getHashedId();
+                    /*
+                    	N = no reuse
+                    	Y = reuse
+                    	H = multi-hop
+                    */
+                    if (reuseFlag == "N" && mreplica) 
+                        {                                                        
+                            fileIndex = 0;                               
+                        }
+		    if (reuseFlag == "N" && mhop) 
+                        {                                                        
+                            hashedId = hashedId;   //for conviniency                            
+                        }			                    			
+                    else if (reuseFlag == "N" && !mreplica && !mhop)
+                        {
+			     hashedId = getHashedId();
+                        }                      			                                   	
 
                     //get distinct source_se / dest_se
                     Key p1 (sourceSe, destSe);
@@ -1318,11 +1345,8 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
                             pairStmtSeBlaklisted << "',";
                             pairStmtSeBlaklisted << "'";
                             pairStmtSeBlaklisted << selectionStrategy;
-                            pairStmtSeBlaklisted << "',";			    
-			    if(is_m)
-			    	pairStmtSeBlaklisted << 0;
-			    else
-                                pairStmtSeBlaklisted << fileIndex;
+                            pairStmtSeBlaklisted << "',";
+                            pairStmtSeBlaklisted << fileIndex;
                             pairStmtSeBlaklisted << ",";
                             pairStmtSeBlaklisted << "'";
                             pairStmtSeBlaklisted << sourceSe;
@@ -1370,10 +1394,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
                             pairStmt << "'";
                             pairStmt << selectionStrategy;
                             pairStmt << "',";
-			    if(is_m)
-			    	pairStmt << 0;
-			    else
-                                pairStmt << fileIndex;
+                            pairStmt << fileIndex;
                             pairStmt << ",";
                             pairStmt << "'";
                             pairStmt << sourceSe;
@@ -2887,33 +2908,35 @@ void MySqlAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std
     try
         {
             soci::rowset<TransferJobs> rs = (sql.prepare << "SELECT "
-                                             "   job_id, "
-                                             "   job_state, "
-                                             "   vo_name,  "
-                                             "   priority,  "
-                                             "   source_se, "
-                                             "   dest_se,  "
-                                             "   agent_dn, "
-                                             "   submit_host, "
-                                             "   user_dn, "
-                                             "   user_cred, "
-                                             "   cred_id,  "
-                                             "   space_token, "
-                                             "   storage_class,  "
-                                             "   job_params, "
-                                             "   overwrite_flag, "
-                                             "   source_space_token, "
-                                             "   source_token_description,"
-                                             "   copy_pin_lifetime, "
-                                             "   checksum_method, "
-                                             "   bring_online, "
-                                             "   submit_time, "
-                                             "   reuse_job "
-                                             "   FROM t_job WHERE "
-                                             "   job_state = 'SUBMITTED' AND job_finished IS NULL AND "
-                                             "   cancel_job IS NULL AND "
-                                             "   (reuse_job IS NOT NULL AND reuse_job != 'N') "
-                                             " ORDER BY priority DESC, submit_time LIMIT 1 ");
+                                             "   j.job_id, "
+                                             "   j.job_state, "
+                                             "   j.vo_name,  "
+                                             "   j.priority,  "
+                                             "   j.source_se, "
+                                             "   j.dest_se,  "
+                                             "   j.agent_dn, "
+                                             "   j.submit_host, "
+                                             "   j.user_dn, "
+                                             "   j.user_cred, "
+                                             "   j.cred_id,  "
+                                             "   j.space_token, "
+                                             "   j.storage_class,  "
+                                             "   j.job_params, "
+                                             "   j.overwrite_flag, "
+                                             "   j.source_space_token, "
+                                             "   j.source_token_description,"
+                                             "   j.copy_pin_lifetime, "
+                                             "   j.checksum_method, "
+                                             "   j.bring_online, "
+                                             "   j.submit_time, "
+                                             "   j.reuse_job "
+                                             "   FROM t_job j LEFT JOIN t_file f ON (j.job_id = f.job_id) WHERE "
+                                             "   j.job_state = 'SUBMITTED' AND j.job_finished IS NULL AND "
+                                             "   j.cancel_job IS NULL AND "
+                                             "   (j.reuse_job IS NOT NULL AND j.reuse_job != 'N') AND " //Y or H
+					     "   (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) "                                                   				     
+                                             "   ORDER BY j.priority DESC, j.submit_time LIMIT 1 ",
+					     soci::use(hashSegment.start), soci::use(hashSegment.end));
 
             for (soci::rowset<TransferJobs>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
@@ -3352,7 +3375,7 @@ bool MySqlAPI::updateOptimizer()
                     isNullStreamsCurrent = soci::i_ok;
                     singleDest = 0;
                     lanTransferBool = false;
-		    ema = 0.0;
+                    ema = 0.0;
                     now = getUTC(0);
 
                     if(true == lanTransfer(source_hostname, destin_hostname))
@@ -3538,14 +3561,14 @@ bool MySqlAPI::updateOptimizer()
 
                     if (isNullMaxActive == soci::i_null)
                         maxActive = highDefault;
-			
-		    //The smaller alpha becomes the longer moving average is. ( e.g. it becomes smoother, but less reactive to new samples )	
-                    double throughputEMA = ceil(exponentialMovingAverage( throughput, 0.5, ema));		    
-		    
+
+                    //The smaller alpha becomes the longer moving average is. ( e.g. it becomes smoother, but less reactive to new samples )
+                    double throughputEMA = ceil(exponentialMovingAverage( throughput, 0.5, ema));
+
                     //only apply the logic below if any of these values changes
-                    bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, rateStored, throughputEMA, thrStored, retry, retryStored, maxActive, activeStored, throughputSamples, thrSamplesStored);		    
+                    bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, rateStored, throughputEMA, thrStored, retry, retryStored, maxActive, activeStored, throughputSamples, thrSamplesStored);
                     if(!changed && retry > 0)
-                        changed = true;			
+                        changed = true;
 
                     //check if bandwidth limitation exists, if exists and throughput exceeds the limit then do not proccess with auto-tuning
                     int bandwidthIn = 0;
@@ -3556,8 +3579,8 @@ bool MySqlAPI::updateOptimizer()
                         {
                             sql.begin();
 
-                            active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);			    
-			    ema = throughputEMA;
+                            active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
+                            ema = throughputEMA;
                             stmt10.execute(true);
                             updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, 10, bandwidthIn);
 
@@ -3601,31 +3624,31 @@ bool MySqlAPI::updateOptimizer()
                                                 }
 
                                             pathFollowed = 1;
- 		    			    ema = throughputEMA;
+                                            ema = throughputEMA;
                                             stmt10.execute(true);
                                         }
                                     else //no change, max limit reached
                                         {
                                             active = maxActive;
                                             pathFollowed = 11;
-					    ema = throughputEMA;
+                                            ema = throughputEMA;
                                             stmt10.execute(true);
                                         }
                                 }
                             else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 98)) && throughputEMA == thrStored && retry <= retryStored)
                                 {
-				    if(throughputSamples == 10) // spawn one every 10min
-				    {
-                                    	active = maxActive + 1;
-				    	ema = throughputEMA;
-                                    	pathFollowed = 2;				    
-				    }
-				    else
-				    {
-                                    	active = maxActive;
-				    	ema = throughputEMA;
-                                    	pathFollowed = 2;
-				    }
+                                    if(throughputSamples == 10) // spawn one every 10min
+                                        {
+                                            active = maxActive + 1;
+                                            ema = throughputEMA;
+                                            pathFollowed = 2;
+                                        }
+                                    else
+                                        {
+                                            active = maxActive;
+                                            ema = throughputEMA;
+                                            pathFollowed = 2;
+                                        }
                                 }
                             else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 95)) && throughputEMA < thrStored)
                                 {
@@ -3652,7 +3675,7 @@ bool MySqlAPI::updateOptimizer()
                                                     pathFollowed = 6;
                                                 }
                                         }
-				    ema = throughputEMA;
+                                    ema = throughputEMA;
                                     stmt10.execute(true);
                                 }
                             else if ( ratioSuccessFailure < 99)
@@ -3667,14 +3690,14 @@ bool MySqlAPI::updateOptimizer()
                                             active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
                                             pathFollowed = 8;
                                         }
-				    ema = throughputEMA;					
+                                    ema = throughputEMA;
                                     stmt10.execute(true);
                                 }
                             else
                                 {
                                     active = maxActive;
                                     pathFollowed = 9;
-				    ema = throughputEMA;
+                                    ema = throughputEMA;
                                     stmt10.execute(true);
                                 }
 
@@ -4324,16 +4347,16 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
 void MySqlAPI::forkFailedRevertState(const std::string & jobId, int fileId)
 {
     soci::session sql(*connectionPool);
-    
+
     try
         {
             sql.begin();
-	    	 
-	      sql << "UPDATE t_file SET file_state = 'SUBMITTED', transferhost='', start_time=NULL "
+
+            sql << "UPDATE t_file SET file_state = 'SUBMITTED', transferhost='', start_time=NULL "
                 "WHERE file_id = :fileId AND job_id = :jobId AND  transferhost= :hostname AND "
                 "      file_state NOT IN ('FINISHED','FAILED','CANCELED','NOT_USED')",
                 soci::use(fileId), soci::use(jobId), soci::use(hostname);
-	    
+
             sql.commit();
         }
     catch (std::exception& e)
@@ -8512,12 +8535,12 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
     long long maxActive = 0;
     long long submitted = 0;
     double throughput1h = 0.0;
-    double throughput30min = 0.0;			
-    double throughput15min = 0.0;						
-    double throughput5min = 0.0;   
+    double throughput30min = 0.0;
+    double throughput15min = 0.0;
+    double throughput5min = 0.0;
     long long nFailedLastHour = 0;
     long long  nFinishedLastHour = 0;
-    double  ratioSuccessFailure = 0;     
+    double  ratioSuccessFailure = 0;
     std::string querySe = " SELECT DISTINCT source_se, dest_se FROM t_file ";
 
     time_t now = time(NULL);
@@ -8526,7 +8549,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
 
     soci::indicator isNull1 = soci::i_ok;
     soci::indicator isNull2 = soci::i_ok;
-    soci::indicator isNull3 = soci::i_ok;   
+    soci::indicator isNull3 = soci::i_ok;
 
     soci::statement voStmt(sql);
     if(!vo_name.empty())
@@ -8543,37 +8566,38 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
     soci::statement pairsStmt(sql);
     pairsStmt.exchange(soci::into(source_se));
     pairsStmt.exchange(soci::into(dest_se));
-    
+
     bool sourceEmpty = true;
     bool destinEmpty = true;
-        
+
     if(!source_se_p.empty())
         {
             source_se = source_se_p;
             pairsStmt.exchange(soci::use(source_se));
             querySe += " where source_se = :source_se ";
-	    sourceEmpty = false;
+            sourceEmpty = false;
         }
 
     if(!dest_se_p.empty())
         {
-  	    destinEmpty = false;
-	    if(sourceEmpty){
-            	dest_se = dest_se_p;
-            	pairsStmt.exchange(soci::use(dest_se));
-            	querySe += " where dest_se = :dest_se ";
-	    }
-	    else
-	    {
-            	dest_se = dest_se_p;
-            	pairsStmt.exchange(soci::use(dest_se));
-            	querySe += " AND dest_se = :dest_se ";	    
-	    }
+            destinEmpty = false;
+            if(sourceEmpty)
+                {
+                    dest_se = dest_se_p;
+                    pairsStmt.exchange(soci::use(dest_se));
+                    querySe += " where dest_se = :dest_se ";
+                }
+            else
+                {
+                    dest_se = dest_se_p;
+                    pairsStmt.exchange(soci::use(dest_se));
+                    querySe += " AND dest_se = :dest_se ";
+                }
         }
-    if(!destinEmpty || !sourceEmpty)	
-    	querySe += " AND vo_name= :vo_name";
+    if(!destinEmpty || !sourceEmpty)
+        querySe += " AND vo_name= :vo_name";
     else
-	querySe += " WHERE vo_name= :vo_name";    
+        querySe += " WHERE vo_name= :vo_name";
     pairsStmt.exchange(soci::use(vo_name_local));
     pairsStmt.alloc();
     pairsStmt.prepare(querySe);
@@ -8604,44 +8628,44 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                                  soci::use(dest_se),
                                  soci::into(submitted)
                                 ));
-				
+
 
             soci::statement st41((sql.prepare << "select avg(throughput) from t_file where  "
-                                 " source_se=:source_se and dest_se=:dest_se "
-                                 " AND  file_state in ('ACTIVE','FINISHED') and (job_finished is NULL OR  job_finished >= (UTC_TIMESTAMP() - interval '60' minute)) "
-                                 " AND throughput <> 0 ",
-                                 soci::use(source_se),
-                                 soci::use(dest_se),
-                                 soci::into(throughput1h, isNull2)
-                                ));
-				
+                                  " source_se=:source_se and dest_se=:dest_se "
+                                  " AND  file_state in ('ACTIVE','FINISHED') and (job_finished is NULL OR  job_finished >= (UTC_TIMESTAMP() - interval '60' minute)) "
+                                  " AND throughput <> 0 ",
+                                  soci::use(source_se),
+                                  soci::use(dest_se),
+                                  soci::into(throughput1h, isNull2)
+                                 ));
+
             soci::statement st42((sql.prepare << "select avg(throughput) from t_file where  "
-                                 " source_se=:source_se and dest_se=:dest_se "
-                                 " AND  file_state in ('ACTIVE','FINISHED') and (job_finished is NULL OR  job_finished >= (UTC_TIMESTAMP() - interval '30' minute)) "
-                                 " AND throughput <> 0 ",
-                                 soci::use(source_se),
-                                 soci::use(dest_se),
-                                 soci::into(throughput30min, isNull2)
-                                ));				
-				
+                                  " source_se=:source_se and dest_se=:dest_se "
+                                  " AND  file_state in ('ACTIVE','FINISHED') and (job_finished is NULL OR  job_finished >= (UTC_TIMESTAMP() - interval '30' minute)) "
+                                  " AND throughput <> 0 ",
+                                  soci::use(source_se),
+                                  soci::use(dest_se),
+                                  soci::into(throughput30min, isNull2)
+                                 ));
+
             soci::statement st43((sql.prepare << "select avg(throughput) from t_file where  "
-                                 " source_se=:source_se and dest_se=:dest_se "
-                                 " AND  file_state in ('ACTIVE','FINISHED') and (job_finished is NULL OR  job_finished >= (UTC_TIMESTAMP() - interval '15' minute)) "
-                                 " AND throughput <> 0 ",
-                                 soci::use(source_se),
-                                 soci::use(dest_se),
-                                 soci::into(throughput15min, isNull2)
-                                ));								
-			
+                                  " source_se=:source_se and dest_se=:dest_se "
+                                  " AND  file_state in ('ACTIVE','FINISHED') and (job_finished is NULL OR  job_finished >= (UTC_TIMESTAMP() - interval '15' minute)) "
+                                  " AND throughput <> 0 ",
+                                  soci::use(source_se),
+                                  soci::use(dest_se),
+                                  soci::into(throughput15min, isNull2)
+                                 ));
+
             soci::statement st44((sql.prepare << "select avg(throughput) from t_file where  "
-                                 " source_se=:source_se and dest_se=:dest_se "
-                                 " AND  file_state in ('ACTIVE','FINISHED') and (job_finished is NULL OR  job_finished >= (UTC_TIMESTAMP() - interval '5' minute)) "
-                                 " AND throughput <> 0 ",
-                                 soci::use(source_se),
-                                 soci::use(dest_se),
-                                 soci::into(throughput5min, isNull2)
-                                ));											
-				
+                                  " source_se=:source_se and dest_se=:dest_se "
+                                  " AND  file_state in ('ACTIVE','FINISHED') and (job_finished is NULL OR  job_finished >= (UTC_TIMESTAMP() - interval '5' minute)) "
+                                  " AND throughput <> 0 ",
+                                  soci::use(source_se),
+                                  soci::use(dest_se),
+                                  soci::into(throughput5min, isNull2)
+                                 ));
+
 
             soci::statement st5((sql.prepare << "select reason, count(reason) as c from t_file where "
                                  " (job_finished >= (UTC_TIMESTAMP() - interval '60' minute)) "
@@ -8654,136 +8678,136 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                                  soci::into(reason, isNull3),
                                  soci::into(countReason)
                                 ));
-				
-           soci::statement st6((sql.prepare << "select count(*) from t_file where "
+
+            soci::statement st6((sql.prepare << "select count(*) from t_file where "
                                  " file_state='FAILED' and vo_name=:vo_name_local and "
                                  " source_se=:source_se and dest_se=:dest_se AND job_finished >= (UTC_TIMESTAMP() - interval '60' minute)",
                                  soci::use(vo_name_local),
                                  soci::use(source_se),
                                  soci::use(dest_se),
                                  soci::into(nFailedLastHour)
-                                ));				
-				
-           soci::statement st7((sql.prepare << "select count(*) from t_file where "
+                                ));
+
+            soci::statement st7((sql.prepare << "select count(*) from t_file where "
                                  " file_state='FINISHED' and vo_name=:vo_name_local and "
                                  " source_se=:source_se and dest_se=:dest_se AND job_finished >= (UTC_TIMESTAMP() - interval '60' minute)",
                                  soci::use(vo_name_local),
                                  soci::use(source_se),
                                  soci::use(dest_se),
                                  soci::into(nFinishedLastHour)
-                                ));								
-           
+                                ));
+
 
             voStmt.execute();
             while (voStmt.fetch())
-            {
-                if(source_se_p.empty())
-                    source_se = "";
-                if(dest_se_p.empty())
-                    dest_se = "";
+                {
+                    if(source_se_p.empty())
+                        source_se = "";
+                    if(dest_se_p.empty())
+                        dest_se = "";
 
-                pairsStmt.execute();
-                while (pairsStmt.fetch())
-                    {
-                        active = 0;
-                        maxActive = 0;
-                        submitted = 0;
-                        throughput1h = 0.0;
-                        throughput30min = 0.0;			
-                        throughput15min = 0.0;						
-                        throughput5min = 0.0;
-			nFailedLastHour = 0;
-			nFinishedLastHour = 0;
-			ratioSuccessFailure = 0.0;     			
-												
-			result << "{\n";
-			
-                        result << std::fixed << "\"VO\":\"";
-                        result <<   vo_name_local;
-                        result <<   "\",\n";
+                    pairsStmt.execute();
+                    while (pairsStmt.fetch())
+                        {
+                            active = 0;
+                            maxActive = 0;
+                            submitted = 0;
+                            throughput1h = 0.0;
+                            throughput30min = 0.0;
+                            throughput15min = 0.0;
+                            throughput5min = 0.0;
+                            nFailedLastHour = 0;
+                            nFinishedLastHour = 0;
+                            ratioSuccessFailure = 0.0;
 
-                        result <<   "\"Source endpoint\":\"";
-                        result <<   source_se;
-                        result <<   "\",\n";
-			
-                        result <<   "\"Destination endpoint\":\"";
-                        result <<   dest_se;
-                        result <<   "\",\n";
+                            result << "{\n";
 
-                        //get active for this pair and vo
-                        st1.execute(true);
-                        result <<   "\"Current active transfers\":\"";
-                        result <<   active;
-                        result <<   "\",\n";
+                            result << std::fixed << "\"VO\":\"";
+                            result <<   vo_name_local;
+                            result <<   "\",\n";
 
-                        //get max active for this pair no matter the vo
-                        st2.execute(true);
-                        result <<   "\"Max active transfers\":\"";
-                        result <<   maxActive;
-                        result <<   "\",\n";
-                      
-                        //average throughput block
-                        st41.execute(true);
-                        result <<   "\"Avg throughput (last 60min)\":\"";
-                        result <<  std::setprecision(2) << throughput1h;
-                        result <<   " MB/s\",\n";
-			
-                        st42.execute(true);
-                        result <<   "\"Avg throughput (last 30min)\":\"";
-                        result <<  std::setprecision(2) << throughput30min;
-                        result <<   " MB/s\",\n";			
-			
-                        st43.execute(true);
-                        result <<   "\"Avg throughput (last 15min)\":\"";
-                        result <<  std::setprecision(2) << throughput15min;
-                        result <<   " MB/s\",\n";						
-			
-                        st44.execute(true);
-                        result <<   "\"Avg throughput (last 5min)\":\"";
-                        result <<  std::setprecision(2) << throughput5min;
-                        result <<   " MB/s\",\n";												                      
-			    
-			st7.execute(true);
-                        result <<   "\"Number of finished (last hour)\":\"";
-                        result <<   long(nFinishedLastHour);
-                        result <<   "\",\n";			
-			
-			st6.execute(true);
-                        result <<   "\"Number of failed (last hour)\":\"";
-                        result <<   long(nFailedLastHour);
-                        result <<   "\",\n";	
-			
-			//get submitted for this pair and vo
-                        st3.execute(true);
-                        result <<   "\"Number of queued\":\"";
-                        result <<   submitted;
-                        result <<   "\",\n";								                                               					    			
+                            result <<   "\"Source endpoint\":\"";
+                            result <<   source_se;
+                            result <<   "\",\n";
 
-                        //round up efficiency
-                        if(nFinishedLastHour > 0)
-                            {
-                                ratioSuccessFailure = ceil((double)nFinishedLastHour/((double)nFinishedLastHour + (double)nFailedLastHour) * (100.0));
-                            }
+                            result <<   "\"Destination endpoint\":\"";
+                            result <<   dest_se;
+                            result <<   "\",\n";
 
-                        result <<   "\"Link efficiency (last hour)\":\"";
-                        result <<   ratioSuccessFailure;
-                        result <<   "%\",\n";							
-						
-                        //most frequent error and number the last 30min
-                        reason = "";
-                        countReason = 0;
-                        st5.execute(true);
+                            //get active for this pair and vo
+                            st1.execute(true);
+                            result <<   "\"Current active transfers\":\"";
+                            result <<   active;
+                            result <<   "\",\n";
 
-                        result <<   "\"Most frequent error (last hour)\":\"";
-                        result <<   countReason;
-                        result <<   " times: ";
-                        result <<   reason;
-                        result <<   "\"\n";                       
-			
-			result << "}\n";
-                        result << "\n\n";
-                    }
-            }
+                            //get max active for this pair no matter the vo
+                            st2.execute(true);
+                            result <<   "\"Max active transfers\":\"";
+                            result <<   maxActive;
+                            result <<   "\",\n";
+
+                            //average throughput block
+                            st41.execute(true);
+                            result <<   "\"Avg throughput (last 60min)\":\"";
+                            result <<  std::setprecision(2) << throughput1h;
+                            result <<   " MB/s\",\n";
+
+                            st42.execute(true);
+                            result <<   "\"Avg throughput (last 30min)\":\"";
+                            result <<  std::setprecision(2) << throughput30min;
+                            result <<   " MB/s\",\n";
+
+                            st43.execute(true);
+                            result <<   "\"Avg throughput (last 15min)\":\"";
+                            result <<  std::setprecision(2) << throughput15min;
+                            result <<   " MB/s\",\n";
+
+                            st44.execute(true);
+                            result <<   "\"Avg throughput (last 5min)\":\"";
+                            result <<  std::setprecision(2) << throughput5min;
+                            result <<   " MB/s\",\n";
+
+                            st7.execute(true);
+                            result <<   "\"Number of finished (last hour)\":\"";
+                            result <<   long(nFinishedLastHour);
+                            result <<   "\",\n";
+
+                            st6.execute(true);
+                            result <<   "\"Number of failed (last hour)\":\"";
+                            result <<   long(nFailedLastHour);
+                            result <<   "\",\n";
+
+                            //get submitted for this pair and vo
+                            st3.execute(true);
+                            result <<   "\"Number of queued\":\"";
+                            result <<   submitted;
+                            result <<   "\",\n";
+
+                            //round up efficiency
+                            if(nFinishedLastHour > 0)
+                                {
+                                    ratioSuccessFailure = ceil((double)nFinishedLastHour/((double)nFinishedLastHour + (double)nFailedLastHour) * (100.0));
+                                }
+
+                            result <<   "\"Link efficiency (last hour)\":\"";
+                            result <<   ratioSuccessFailure;
+                            result <<   "%\",\n";
+
+                            //most frequent error and number the last 30min
+                            reason = "";
+                            countReason = 0;
+                            st5.execute(true);
+
+                            result <<   "\"Most frequent error (last hour)\":\"";
+                            result <<   countReason;
+                            result <<   " times: ";
+                            result <<   reason;
+                            result <<   "\"\n";
+
+                            result << "}\n";
+                            result << "\n\n";
+                        }
+                }
         }
     catch (std::exception& e)
         {
