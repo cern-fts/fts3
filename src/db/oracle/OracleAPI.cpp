@@ -67,7 +67,7 @@ bool OracleAPI::getChangedFile (std::string source, std::string dest, double rat
         {
             boost::tuple<std::string, std::string, double, double, double, int, int, int> record(source, dest, rate, thr, retry, active, 0, 0);
             filesMemStore.push_back(record);
-	    return returnValue;
+            return returnValue;
         }
     else
         {
@@ -88,7 +88,7 @@ bool OracleAPI::getChangedFile (std::string source, std::string dest, double rat
                 {
                     boost::tuple<std::string, std::string, double, double, double, int, int, int> record(source, dest, rate, thr, retry, active, 0, 0);
                     filesMemStore.push_back(record);
-		    return found;
+                    return found;
                 }
 
             std::vector< boost::tuple<std::string, std::string, double, double, double, int, int, int> >::iterator it =  filesMemStore.begin();
@@ -102,7 +102,7 @@ bool OracleAPI::getChangedFile (std::string source, std::string dest, double rat
                     double retryThr = boost::get<4>(tupleRecord);
                     int activeLocal = boost::get<5>(tupleRecord);
                     int throughputSamplesLocal = boost::get<6>(tupleRecord);
-		    int throughputSamplesEqualLocal = boost::get<7>(tupleRecord);
+                    int throughputSamplesEqualLocal = boost::get<7>(tupleRecord);
 
                     if(sourceLocal == source && destLocal == dest)
                         {
@@ -110,20 +110,20 @@ bool OracleAPI::getChangedFile (std::string source, std::string dest, double rat
                             thrStored = thrLocal;
                             rateStored = rateLocal;
                             activeStored = activeLocal;
-			    
-			    //if EMA is the same for 10min, spawn one more transfer to see how it goes!
-			    if(thr == thrLocal)
-			    {
-			    	throughputSamplesEqualLocal += 1;
-				throughputSamplesEqual = throughputSamplesEqualLocal;
-				if(throughputSamplesEqualLocal == 11)
-					throughputSamplesEqualLocal = 0;					 
-			    }
-			    else
-			    {
-			    	throughputSamplesEqualLocal = 0;
-				throughputSamplesEqual = 0;
-			    }
+
+                            //if EMA is the same for 10min, spawn one more transfer to see how it goes!
+                            if(thr == thrLocal)
+                                {
+                                    throughputSamplesEqualLocal += 1;
+                                    throughputSamplesEqual = throughputSamplesEqualLocal;
+                                    if(throughputSamplesEqualLocal == 11)
+                                        throughputSamplesEqualLocal = 0;
+                                }
+                            else
+                                {
+                                    throughputSamplesEqualLocal = 0;
+                                    throughputSamplesEqual = 0;
+                                }
 
                             if(thr < thrLocal)
                                 {
@@ -936,7 +936,7 @@ unsigned int OracleAPI::updateFileStatus(TransferFiles* file, const std::string 
 
     try
         {
-            sql.begin();           
+            sql.begin();
 
             soci::statement stmt(sql);
 
@@ -1116,10 +1116,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
     soci::session sql(*connectionPool);
 
     try
-        {
-	    //check if it's multiple-replica or multi-hop and set hashedId and file_index accordingly
-	    bool is_m = is_mreplica_or_mhop(src_dest_pair);	
-	
+        {            
             sql.begin();
             soci::indicator reuseFlagIndicator = soci::i_ok;
             if (reuseFlag.empty())
@@ -1165,7 +1162,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
             // When reuse is enabled, we use the same random number for the whole job
             // This guarantees that the whole set belong to the same machine, but keeping
             // the load balance between hosts
-            if (reuseFlag != "N" || is_m)
+            if (reuseFlag != "N")
                 hashedId = getHashedId();
 
             std::list<job_element_tupple>::const_iterator iter;
@@ -1183,7 +1180,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
                     activity = iter->activity;
 
                     // No reuse, one random per file
-                    if (reuseFlag == "N" || !is_m)
+                    if (reuseFlag == "N")
                         hashedId = getHashedId();
 
                     //get distinct source_se / dest_se
@@ -1222,10 +1219,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
                             pairStmtSeBlaklisted << "'";
                             pairStmtSeBlaklisted << selectionStrategy;
                             pairStmtSeBlaklisted << "',";
-			    if(is_m)
-			    	pairStmtSeBlaklisted << 0;
-			    else
-                                pairStmtSeBlaklisted << fileIndex;
+                            pairStmtSeBlaklisted << fileIndex;
                             pairStmtSeBlaklisted << ",";
                             pairStmtSeBlaklisted << "'";
                             pairStmtSeBlaklisted << sourceSe;
@@ -1274,10 +1268,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
                             pairStmt << "'";
                             pairStmt << selectionStrategy;
                             pairStmt << "',";
-			    if(is_m)
-			    	pairStmt << 0;
-			    else
-                                pairStmt << fileIndex;
+                            pairStmt << fileIndex;
                             pairStmt << ",";
                             pairStmt << "'";
                             pairStmt << sourceSe;
@@ -2144,7 +2135,7 @@ void OracleAPI::updateFileTransferProgressVector(std::vector<struct message_upda
 
             soci::statement stmt = (sql.prepare << "UPDATE t_file SET throughput = :throughput, transferred = :transferred WHERE file_id = :fileId  AND file_state not in ('FINISHED','FAILED','CANCELED') ",
                                     soci::use(throughput), soci::use(transferred), soci::use(file_id));
-            
+
 
             sql.begin();
 
@@ -2193,33 +2184,33 @@ void OracleAPI::updateFileTransferProgressVector(std::vector<struct message_upda
 
                                     if(file_state == "FINISHED")
                                         {
-                                        sql <<  " MERGE INTO t_turl "
-                                        " USING (SELECT :source_surl as source_surl, :destin_surl as destin_surl, :source_turl as source_turl, :destin_turl as destin_turl FROM dual)"
-                                        " Pair ON (t_turl.source_surl = Pair.source_surl AND t_turl.destin_surl = Pair.destin_surl AND t_turl.source_turl = Pair.source_turl AND t_turl.destin_turl = Pair.destin_turl)"
-                                        " WHEN MATCHED THEN UPDATE SET datetime = sys_extract_utc(systimestamp), throughput = :throughput, finish = finish + 1 "
-                                        " WHEN NOT MATCHED THEN INSERT (source_surl, destin_surl, source_turl, destin_turl, datetime, throughput, finish) "
-                                        " VALUES (Pair.source_surl, Pair.destin_surl, Pair.source_turl, Pair.destin_turl, sys_extract_utc(systimestamp), :throughput, 1)",
-                                        soci::use(source_surl),
-                                        soci::use(dest_surl),
-                                        soci::use(source_turl),
-                                        soci::use(dest_turl),
-                                        soci::use(throughput),
-                                        soci::use(throughput);
+                                            sql <<  " MERGE INTO t_turl "
+                                                " USING (SELECT :source_surl as source_surl, :destin_surl as destin_surl, :source_turl as source_turl, :destin_turl as destin_turl FROM dual)"
+                                                " Pair ON (t_turl.source_surl = Pair.source_surl AND t_turl.destin_surl = Pair.destin_surl AND t_turl.source_turl = Pair.source_turl AND t_turl.destin_turl = Pair.destin_turl)"
+                                                " WHEN MATCHED THEN UPDATE SET datetime = sys_extract_utc(systimestamp), throughput = :throughput, finish = finish + 1 "
+                                                " WHEN NOT MATCHED THEN INSERT (source_surl, destin_surl, source_turl, destin_turl, datetime, throughput, finish) "
+                                                " VALUES (Pair.source_surl, Pair.destin_surl, Pair.source_turl, Pair.destin_turl, sys_extract_utc(systimestamp), :throughput, 1)",
+                                                soci::use(source_surl),
+                                                soci::use(dest_surl),
+                                                soci::use(source_turl),
+                                                soci::use(dest_turl),
+                                                soci::use(throughput),
+                                                soci::use(throughput);
                                         }
                                     else if (file_state == "FAILED")
                                         {
-                                        sql <<  " MERGE INTO t_turl "
-                                        " USING (SELECT :source_surl as source_surl, :destin_surl as destin_surl, :source_turl as source_turl, :destin_turl as destin_turl FROM dual)"
-                                        " Pair ON (t_turl.source_surl = Pair.source_surl AND t_turl.destin_surl = Pair.destin_surl AND t_turl.source_turl = Pair.source_turl AND t_turl.destin_turl = Pair.destin_turl)"
-                                        " WHEN MATCHED THEN UPDATE SET datetime = sys_extract_utc(systimestamp), throughput = :throughput, fail = fail + 1 "
-                                        " WHEN NOT MATCHED THEN INSERT (source_surl, destin_surl, source_turl, destin_turl, datetime, throughput, fail) "
-                                        " VALUES (Pair.source_surl, Pair.destin_surl, Pair.source_turl, Pair.destin_turl, sys_extract_utc(systimestamp), :throughput, 1)",
-                                        soci::use(source_surl),
-                                        soci::use(dest_surl),
-                                        soci::use(source_turl),
-                                        soci::use(dest_turl),
-                                        soci::use(throughput),
-                                        soci::use(throughput);
+                                            sql <<  " MERGE INTO t_turl "
+                                                " USING (SELECT :source_surl as source_surl, :destin_surl as destin_surl, :source_turl as source_turl, :destin_turl as destin_turl FROM dual)"
+                                                " Pair ON (t_turl.source_surl = Pair.source_surl AND t_turl.destin_surl = Pair.destin_surl AND t_turl.source_turl = Pair.source_turl AND t_turl.destin_turl = Pair.destin_turl)"
+                                                " WHEN MATCHED THEN UPDATE SET datetime = sys_extract_utc(systimestamp), throughput = :throughput, fail = fail + 1 "
+                                                " WHEN NOT MATCHED THEN INSERT (source_surl, destin_surl, source_turl, destin_turl, datetime, throughput, fail) "
+                                                " VALUES (Pair.source_surl, Pair.destin_surl, Pair.source_turl, Pair.destin_turl, sys_extract_utc(systimestamp), :throughput, 1)",
+                                                soci::use(source_surl),
+                                                soci::use(dest_surl),
+                                                soci::use(source_turl),
+                                                soci::use(dest_turl),
+                                                soci::use(throughput),
+                                                soci::use(throughput);
                                         }
                                 }
                         }
@@ -3107,8 +3098,8 @@ bool OracleAPI::updateOptimizer()
                     isNullStreamsCurrent = soci::i_ok;
                     singleDest = 0;
                     lanTransferBool = false;
-		    ema = 0.0;
-		    
+                    ema = 0.0;
+
                     now = getUTC(0);
 
                     if(true == lanTransfer(source_hostname, destin_hostname))
@@ -3156,9 +3147,9 @@ bool OracleAPI::updateOptimizer()
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin();
                             i != rs.end(); ++i)
                         {
-                             std::string state = i->get<std::string>("FILE_STATE", "");
-                             int retryNum = static_cast<int>(i->get<double>("RETRY", 0.0));
-			     int current_failures = static_cast<int>(i->get<long long>("CURRENT_FAILURES", 0.0));			   
+                            std::string state = i->get<std::string>("FILE_STATE", "");
+                            int retryNum = static_cast<int>(i->get<double>("RETRY", 0.0));
+                            int current_failures = static_cast<int>(i->get<long long>("CURRENT_FAILURES", 0.0));
 
                             if(state.compare("FAILED") == 0 && current_failures == 0)
                                 {
@@ -3175,7 +3166,7 @@ bool OracleAPI::updateOptimizer()
                             else if (state.compare("FINISHED") == 0)
                                 {
                                     nFinishedLastHour+=1.0;
-                                }				
+                                }
                         }
 
                     //round up efficiency
@@ -3295,9 +3286,9 @@ bool OracleAPI::updateOptimizer()
 
                     if (isNullMaxActive == soci::i_null)
                         maxActive = highDefault;
-			
-		    //The smaller alpha becomes the longer moving average is. ( e.g. it becomes smoother, but less reactive to new samples )				
-		    double throughputEMA = ceil(exponentialMovingAverage( throughput, 0.5, ema));			
+
+                    //The smaller alpha becomes the longer moving average is. ( e.g. it becomes smoother, but less reactive to new samples )
+                    double throughputEMA = ceil(exponentialMovingAverage( throughput, 0.5, ema));
 
                     //only apply the logic below if any of these values changes
                     bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, rateStored, throughputEMA, thrStored, retry, retryStored, maxActive, activeStored, throughputSamples, thrSamplesStored);
@@ -3314,7 +3305,7 @@ bool OracleAPI::updateOptimizer()
                             sql.begin();
 
                             active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
-			    ema = throughputEMA;
+                            ema = throughputEMA;
                             stmt10.execute(true);
                             updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, 10, bandwidthIn);
 
@@ -3358,31 +3349,31 @@ bool OracleAPI::updateOptimizer()
                                                 }
 
                                             pathFollowed = 1;
-					    ema = throughputEMA;
+                                            ema = throughputEMA;
                                             stmt10.execute(true);
                                         }
                                     else
                                         {
                                             active = maxActive;
                                             pathFollowed = 11;
-					    ema = throughputEMA;
+                                            ema = throughputEMA;
                                             stmt10.execute(true);
                                         }
                                 }
                             else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 98)) && throughputEMA == thrStored && retry <= retryStored)
                                 {
-   				    if(throughputSamples == 10) // spawn one every 10min
-				    {
-                                    	active = maxActive + 1;
-				    	ema = throughputEMA;
-                                    	pathFollowed = 2;				    
-				    }
-				    else
-				    {
-                                    	active = maxActive;
-				    	ema = throughputEMA;
-                                    	pathFollowed = 2;
-				    }
+                                    if(throughputSamples == 10) // spawn one every 10min
+                                        {
+                                            active = maxActive + 1;
+                                            ema = throughputEMA;
+                                            pathFollowed = 2;
+                                        }
+                                    else
+                                        {
+                                            active = maxActive;
+                                            ema = throughputEMA;
+                                            pathFollowed = 2;
+                                        }
                                 }
                             else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 95)) && throughputEMA < thrStored)
                                 {
@@ -3409,7 +3400,7 @@ bool OracleAPI::updateOptimizer()
                                                     pathFollowed = 6;
                                                 }
                                         }
-				    ema = throughputEMA;
+                                    ema = throughputEMA;
                                     stmt10.execute(true);
                                 }
                             else if ( ratioSuccessFailure < 99)
@@ -3424,14 +3415,14 @@ bool OracleAPI::updateOptimizer()
                                             active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
                                             pathFollowed = 8;
                                         }
-				    ema = throughputEMA;	
+                                    ema = throughputEMA;
                                     stmt10.execute(true);
                                 }
                             else
                                 {
                                     active = maxActive;
                                     pathFollowed = 9;
-				    ema = throughputEMA;
+                                    ema = throughputEMA;
                                     stmt10.execute(true);
                                 }
 
@@ -3617,7 +3608,7 @@ void OracleAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
         {
             std::string jobId, params, tHost,reuse;
             int fileId=0, timeout=0;
-	    long long pid = 0;
+            long long pid = 0;
             struct tm startTimeSt;
             time_t startTime;
             double diff = 0.0;
@@ -4056,12 +4047,12 @@ void OracleAPI::forkFailedRevertState(const std::string & jobId, int fileId)
     try
         {
             sql.begin();
-	    	   
-	      sql << "UPDATE t_file SET file_state = 'SUBMITTED', transferhost='', start_time=NULL "
+
+            sql << "UPDATE t_file SET file_state = 'SUBMITTED', transferhost='', start_time=NULL "
                 "WHERE file_id = :fileId AND job_id = :jobId AND  transferhost= :hostname AND "
                 "      file_state NOT IN ('FINISHED','FAILED','CANCELED','NOT_USED')",
                 soci::use(fileId), soci::use(jobId), soci::use(hostname);
-	    
+
             sql.commit();
         }
     catch (std::exception& e)
@@ -4141,14 +4132,14 @@ bool OracleAPI::retryFromDead(std::vector<struct message_updater>& messages, boo
                 {
 
                     soci::rowset<long long> rs = (
-                                               sql.prepare <<
-                                               " SELECT file_id FROM t_file "
-                                               " WHERE file_id = :fileId AND job_id = :jobId AND file_state='ACTIVE' AND"
-                                               " (hashed_id >= :hStart AND hashed_id <= :hEnd) ",
-                                               soci::use(iter->file_id),
-                                               soci::use(std::string(iter->job_id)),
-                                               soci::use(hashSegment.start),
-                                               soci::use(hashSegment.end));
+                                                     sql.prepare <<
+                                                     " SELECT file_id FROM t_file "
+                                                     " WHERE file_id = :fileId AND job_id = :jobId AND file_state='ACTIVE' AND"
+                                                     " (hashed_id >= :hStart AND hashed_id <= :hEnd) ",
+                                                     soci::use(iter->file_id),
+                                                     soci::use(std::string(iter->job_id)),
+                                                     soci::use(hashSegment.start),
+                                                     soci::use(hashSegment.end));
 
                     if (rs.begin() != rs.end())
                         {
@@ -7161,9 +7152,9 @@ void OracleAPI::checkSanityState()
                             if(numberOfFilesRevert > 0)
                                 {
                                     sql << "UPDATE t_file SET "
-                                             "    file_state = 'FAILED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), "
-                                             "    reason = 'Force failure due to file state inconsistency' "
-                                             "    WHERE file_state in ('ACTIVE','READY','SUBMITTED','STAGING') and job_id = :jobId", soci::use(*i2);
+                                        "    file_state = 'FAILED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), "
+                                        "    reason = 'Force failure due to file state inconsistency' "
+                                        "    WHERE file_state in ('ACTIVE','READY','SUBMITTED','STAGING') and job_id = :jobId", soci::use(*i2);
 
                                 }
                             //reset
@@ -7297,17 +7288,17 @@ void OracleAPI::getFilesForNewSeCfg(std::string source, std::string destination,
     try
         {
             soci::rowset<long long> rs = (
-                                       sql.prepare <<
-                                       " select f.file_id "
-                                       " from t_file f  "
-                                       " where f.source_se like :source "
-                                       "    and f.dest_se like :destination "
-                                       "    and f.vo_name = :vo "
-                                       "    and f.file_state in ('READY', 'ACTIVE') ",
-                                       soci::use(source == "*" ? "%" : source),
-                                       soci::use(destination == "*" ? "%" : destination),
-                                       soci::use(vo)
-                                   );
+                                             sql.prepare <<
+                                             " select f.file_id "
+                                             " from t_file f  "
+                                             " where f.source_se like :source "
+                                             "    and f.dest_se like :destination "
+                                             "    and f.vo_name = :vo "
+                                             "    and f.file_state in ('READY', 'ACTIVE') ",
+                                             soci::use(source == "*" ? "%" : source),
+                                             soci::use(destination == "*" ? "%" : destination),
+                                             soci::use(vo)
+                                         );
 
             for (soci::rowset<long long>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
@@ -8220,12 +8211,12 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
     long long maxActive = 0;
     long long submitted = 0;
     double throughput1h = 0.0;
-    double throughput30min = 0.0;			
-    double throughput15min = 0.0;						
-    double throughput5min = 0.0;   
+    double throughput30min = 0.0;
+    double throughput15min = 0.0;
+    double throughput5min = 0.0;
     long long nFailedLastHour = 0;
     long long  nFinishedLastHour = 0;
-    double  ratioSuccessFailure = 0;     
+    double  ratioSuccessFailure = 0;
     std::string querySe = " SELECT DISTINCT source_se, dest_se FROM t_file ";
 
     time_t now = time(NULL);
@@ -8234,7 +8225,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
 
     soci::indicator isNull1 = soci::i_ok;
     soci::indicator isNull2 = soci::i_ok;
-    soci::indicator isNull3 = soci::i_ok;   
+    soci::indicator isNull3 = soci::i_ok;
 
     soci::statement voStmt(sql);
     if(!vo_name.empty())
@@ -8251,37 +8242,38 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
     soci::statement pairsStmt(sql);
     pairsStmt.exchange(soci::into(source_se));
     pairsStmt.exchange(soci::into(dest_se));
-    
+
     bool sourceEmpty = true;
     bool destinEmpty = true;
-        
+
     if(!source_se_p.empty())
         {
             source_se = source_se_p;
             pairsStmt.exchange(soci::use(source_se));
             querySe += " where source_se = :source_se ";
-	    sourceEmpty = false;
+            sourceEmpty = false;
         }
 
     if(!dest_se_p.empty())
         {
-  	    destinEmpty = false;
-	    if(sourceEmpty){
-            	dest_se = dest_se_p;
-            	pairsStmt.exchange(soci::use(dest_se));
-            	querySe += " where dest_se = :dest_se ";
-	    }
-	    else
-	    {
-            	dest_se = dest_se_p;
-            	pairsStmt.exchange(soci::use(dest_se));
-            	querySe += " AND dest_se = :dest_se ";	    
-	    }
+            destinEmpty = false;
+            if(sourceEmpty)
+                {
+                    dest_se = dest_se_p;
+                    pairsStmt.exchange(soci::use(dest_se));
+                    querySe += " where dest_se = :dest_se ";
+                }
+            else
+                {
+                    dest_se = dest_se_p;
+                    pairsStmt.exchange(soci::use(dest_se));
+                    querySe += " AND dest_se = :dest_se ";
+                }
         }
-    if(!destinEmpty || !sourceEmpty)	
-    	querySe += " AND vo_name= :vo_name";
+    if(!destinEmpty || !sourceEmpty)
+        querySe += " AND vo_name= :vo_name";
     else
-	querySe += " WHERE vo_name= :vo_name";    
+        querySe += " WHERE vo_name= :vo_name";
     pairsStmt.exchange(soci::use(vo_name_local));
     pairsStmt.alloc();
     pairsStmt.prepare(querySe);
@@ -8312,44 +8304,44 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                                  soci::use(dest_se),
                                  soci::into(submitted)
                                 ));
-				
+
 
             soci::statement st41((sql.prepare << "select avg(throughput) from t_file where  "
-                                 " source_se=:source_se and dest_se=:dest_se "
-                                 " AND  file_state in ('ACTIVE','FINISHED') and (job_finished is NULL OR  job_finished >= (sys_extract_utc(systimestamp) - interval '60' minute)) "
-                                 " AND throughput <> 0 ",
-                                 soci::use(source_se),
-                                 soci::use(dest_se),
-                                 soci::into(throughput1h, isNull2)
-                                ));
-				
+                                  " source_se=:source_se and dest_se=:dest_se "
+                                  " AND  file_state in ('ACTIVE','FINISHED') and (job_finished is NULL OR  job_finished >= (sys_extract_utc(systimestamp) - interval '60' minute)) "
+                                  " AND throughput <> 0 ",
+                                  soci::use(source_se),
+                                  soci::use(dest_se),
+                                  soci::into(throughput1h, isNull2)
+                                 ));
+
             soci::statement st42((sql.prepare << "select avg(throughput) from t_file where  "
-                                 " source_se=:source_se and dest_se=:dest_se "
-                                 " AND  file_state in ('ACTIVE','FINISHED') and (job_finished is NULL OR  job_finished >= (sys_extract_utc(systimestamp) - interval '30' minute)) "
-                                 " AND throughput <> 0 ",
-                                 soci::use(source_se),
-                                 soci::use(dest_se),
-                                 soci::into(throughput30min, isNull2)
-                                ));				
-				
+                                  " source_se=:source_se and dest_se=:dest_se "
+                                  " AND  file_state in ('ACTIVE','FINISHED') and (job_finished is NULL OR  job_finished >= (sys_extract_utc(systimestamp) - interval '30' minute)) "
+                                  " AND throughput <> 0 ",
+                                  soci::use(source_se),
+                                  soci::use(dest_se),
+                                  soci::into(throughput30min, isNull2)
+                                 ));
+
             soci::statement st43((sql.prepare << "select avg(throughput) from t_file where  "
-                                 " source_se=:source_se and dest_se=:dest_se "
-                                 " AND  file_state in ('ACTIVE','FINISHED') and (job_finished is NULL OR  job_finished >= (sys_extract_utc(systimestamp) - interval '15' minute)) "
-                                 " AND throughput <> 0 ",
-                                 soci::use(source_se),
-                                 soci::use(dest_se),
-                                 soci::into(throughput15min, isNull2)
-                                ));								
-			
+                                  " source_se=:source_se and dest_se=:dest_se "
+                                  " AND  file_state in ('ACTIVE','FINISHED') and (job_finished is NULL OR  job_finished >= (sys_extract_utc(systimestamp) - interval '15' minute)) "
+                                  " AND throughput <> 0 ",
+                                  soci::use(source_se),
+                                  soci::use(dest_se),
+                                  soci::into(throughput15min, isNull2)
+                                 ));
+
             soci::statement st44((sql.prepare << "select avg(throughput) from t_file where  "
-                                 " source_se=:source_se and dest_se=:dest_se "
-                                 " AND  file_state in ('ACTIVE','FINISHED') and (job_finished is NULL OR  job_finished >= (sys_extract_utc(systimestamp) - interval '5' minute)) "
-                                 " AND throughput <> 0 ",
-                                 soci::use(source_se),
-                                 soci::use(dest_se),
-                                 soci::into(throughput5min, isNull2)
-                                ));											
-				
+                                  " source_se=:source_se and dest_se=:dest_se "
+                                  " AND  file_state in ('ACTIVE','FINISHED') and (job_finished is NULL OR  job_finished >= (sys_extract_utc(systimestamp) - interval '5' minute)) "
+                                  " AND throughput <> 0 ",
+                                  soci::use(source_se),
+                                  soci::use(dest_se),
+                                  soci::into(throughput5min, isNull2)
+                                 ));
+
 
             soci::statement st5((sql.prepare << "select reason, count(reason) as c from t_file where "
                                  " (job_finished >= (sys_extract_utc(systimestamp) - interval '60' minute)) "
@@ -8362,137 +8354,137 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                                  soci::into(reason, isNull3),
                                  soci::into(countReason)
                                 ));
-				
-           soci::statement st6((sql.prepare << "select count(*) from t_file where "
+
+            soci::statement st6((sql.prepare << "select count(*) from t_file where "
                                  " file_state='FAILED' and vo_name=:vo_name_local and "
                                  " source_se=:source_se and dest_se=:dest_se AND job_finished >= (sys_extract_utc(systimestamp) - interval '60' minute)",
                                  soci::use(vo_name_local),
                                  soci::use(source_se),
                                  soci::use(dest_se),
                                  soci::into(nFailedLastHour)
-                                ));				
-				
-           soci::statement st7((sql.prepare << "select count(*) from t_file where "
+                                ));
+
+            soci::statement st7((sql.prepare << "select count(*) from t_file where "
                                  " file_state='FINISHED' and vo_name=:vo_name_local and "
                                  " source_se=:source_se and dest_se=:dest_se AND job_finished >= (sys_extract_utc(systimestamp) - interval '60' minute)",
                                  soci::use(vo_name_local),
                                  soci::use(source_se),
                                  soci::use(dest_se),
                                  soci::into(nFinishedLastHour)
-                                ));								
-           
+                                ));
+
 
             voStmt.execute();
             while (voStmt.fetch())
-            {
-                if(source_se_p.empty())
-                    source_se = "";
-                if(dest_se_p.empty())
-                    dest_se = "";
+                {
+                    if(source_se_p.empty())
+                        source_se = "";
+                    if(dest_se_p.empty())
+                        dest_se = "";
 
-                pairsStmt.execute();
-                while (pairsStmt.fetch())
-                    {
-                        active = 0;
-                        maxActive = 0;
-                        submitted = 0;
-                        throughput1h = 0.0;
-                        throughput30min = 0.0;			
-                        throughput15min = 0.0;						
-                        throughput5min = 0.0;
-			nFailedLastHour = 0;
-			nFinishedLastHour = 0;
-			ratioSuccessFailure = 0.0;     			
-												
+                    pairsStmt.execute();
+                    while (pairsStmt.fetch())
+                        {
+                            active = 0;
+                            maxActive = 0;
+                            submitted = 0;
+                            throughput1h = 0.0;
+                            throughput30min = 0.0;
+                            throughput15min = 0.0;
+                            throughput5min = 0.0;
+                            nFailedLastHour = 0;
+                            nFinishedLastHour = 0;
+                            ratioSuccessFailure = 0.0;
 
- 			result << "{\n";
-			
-                        result << std::fixed << "\"VO\":\"";
-                        result <<   vo_name_local;
-                        result <<   "\",\n";
 
-                        result <<   "\"Source endpoint\":\"";
-                        result <<   source_se;
-                        result <<   "\",\n";
-			
-                        result <<   "\"Destination endpoint\":\"";
-                        result <<   dest_se;
-                        result <<   "\",\n";
+                            result << "{\n";
 
-                        //get active for this pair and vo
-                        st1.execute(true);
-                        result <<   "\"Current active transfers\":\"";
-                        result <<   active;
-                        result <<   "\",\n";
+                            result << std::fixed << "\"VO\":\"";
+                            result <<   vo_name_local;
+                            result <<   "\",\n";
 
-                        //get max active for this pair no matter the vo
-                        st2.execute(true);
-                        result <<   "\"Max active transfers\":\"";
-                        result <<   maxActive;
-                        result <<   "\",\n";
-                      
-                        //average throughput block
-                        st41.execute(true);
-                        result <<   "\"Avg throughput (last 60min)\":\"";
-                        result <<  std::setprecision(2) << throughput1h;
-                        result <<   " MB/s\",\n";
-			
-                        st42.execute(true);
-                        result <<   "\"Avg throughput (last 30min)\":\"";
-                        result <<  std::setprecision(2) << throughput30min;
-                        result <<   " MB/s\",\n";			
-			
-                        st43.execute(true);
-                        result <<   "\"Avg throughput (last 15min)\":\"";
-                        result <<  std::setprecision(2) << throughput15min;
-                        result <<   " MB/s\",\n";						
-			
-                        st44.execute(true);
-                        result <<   "\"Avg throughput (last 5min)\":\"";
-                        result <<  std::setprecision(2) << throughput5min;
-                        result <<   " MB/s\",\n";												                      
-			    
-			st7.execute(true);
-                        result <<   "\"Number of finished (last hour)\":\"";
-                        result <<   long(nFinishedLastHour);
-                        result <<   "\",\n";			
-			
-			st6.execute(true);
-                        result <<   "\"Number of failed (last hour)\":\"";
-                        result <<   long(nFailedLastHour);
-                        result <<   "\",\n";	
-			
-			//get submitted for this pair and vo
-                        st3.execute(true);
-                        result <<   "\"Number of queued\":\"";
-                        result <<   submitted;
-                        result <<   "\",\n";								                                               					    			
+                            result <<   "\"Source endpoint\":\"";
+                            result <<   source_se;
+                            result <<   "\",\n";
 
-                        //round up efficiency
-                        if(nFinishedLastHour > 0)
-                            {
-                                ratioSuccessFailure = ceil((double)nFinishedLastHour/((double)nFinishedLastHour + (double)nFailedLastHour) * (100.0));
-                            }
+                            result <<   "\"Destination endpoint\":\"";
+                            result <<   dest_se;
+                            result <<   "\",\n";
 
-                        result <<   "\"Link efficiency (last hour)\":\"";
-                        result <<   ratioSuccessFailure;
-                        result <<   "%\",\n";							
-						
-                        //most frequent error and number the last 30min
-                        reason = "";
-                        countReason = 0;
-                        st5.execute(true);
+                            //get active for this pair and vo
+                            st1.execute(true);
+                            result <<   "\"Current active transfers\":\"";
+                            result <<   active;
+                            result <<   "\",\n";
 
-                        result <<   "\"Most frequent error (last hour)\":\"";
-                        result <<   countReason;
-                        result <<   " times: ";
-                        result <<   reason;
-                        result <<   "\"\n";                       
-			
-			result << "}\n";
-                        result << "\n\n";
-                    }
-            }
+                            //get max active for this pair no matter the vo
+                            st2.execute(true);
+                            result <<   "\"Max active transfers\":\"";
+                            result <<   maxActive;
+                            result <<   "\",\n";
+
+                            //average throughput block
+                            st41.execute(true);
+                            result <<   "\"Avg throughput (last 60min)\":\"";
+                            result <<  std::setprecision(2) << throughput1h;
+                            result <<   " MB/s\",\n";
+
+                            st42.execute(true);
+                            result <<   "\"Avg throughput (last 30min)\":\"";
+                            result <<  std::setprecision(2) << throughput30min;
+                            result <<   " MB/s\",\n";
+
+                            st43.execute(true);
+                            result <<   "\"Avg throughput (last 15min)\":\"";
+                            result <<  std::setprecision(2) << throughput15min;
+                            result <<   " MB/s\",\n";
+
+                            st44.execute(true);
+                            result <<   "\"Avg throughput (last 5min)\":\"";
+                            result <<  std::setprecision(2) << throughput5min;
+                            result <<   " MB/s\",\n";
+
+                            st7.execute(true);
+                            result <<   "\"Number of finished (last hour)\":\"";
+                            result <<   long(nFinishedLastHour);
+                            result <<   "\",\n";
+
+                            st6.execute(true);
+                            result <<   "\"Number of failed (last hour)\":\"";
+                            result <<   long(nFailedLastHour);
+                            result <<   "\",\n";
+
+                            //get submitted for this pair and vo
+                            st3.execute(true);
+                            result <<   "\"Number of queued\":\"";
+                            result <<   submitted;
+                            result <<   "\",\n";
+
+                            //round up efficiency
+                            if(nFinishedLastHour > 0)
+                                {
+                                    ratioSuccessFailure = ceil((double)nFinishedLastHour/((double)nFinishedLastHour + (double)nFailedLastHour) * (100.0));
+                                }
+
+                            result <<   "\"Link efficiency (last hour)\":\"";
+                            result <<   ratioSuccessFailure;
+                            result <<   "%\",\n";
+
+                            //most frequent error and number the last 30min
+                            reason = "";
+                            countReason = 0;
+                            st5.execute(true);
+
+                            result <<   "\"Most frequent error (last hour)\":\"";
+                            result <<   countReason;
+                            result <<   " times: ";
+                            result <<   reason;
+                            result <<   "\"\n";
+
+                            result << "}\n";
+                            result << "\n\n";
+                        }
+                }
         }
     catch (std::exception& e)
         {

@@ -422,7 +422,7 @@ void MsgPrinter::job_summary(JobSummary js)
 
     if (!json)
         {
-    		print_cout(js.status);
+            print_cout(js.status);
             cout << "\tActive: " << js.numActive << endl;
             cout << "\tReady: " << js.numReady << endl;
             cout << "\tCanceled: " << js.numCanceled << endl;

@@ -43,26 +43,26 @@ string ResponseParser::get(string const & path) const
 
 vector<JobStatus> ResponseParser::getJobs(string const & path) const
 {
-	ptree const & jobs = response.get_child(path);
+    ptree const & jobs = response.get_child(path);
 
-	vector<JobStatus> ret;
-	ptree::const_iterator it;
+    vector<JobStatus> ret;
+    ptree::const_iterator it;
 
-	for (it = jobs.begin(); it != jobs.end(); ++it)
-	{
-		JobStatus j;
-		j.clientDn = it->second.get<string>("user_dn");
-		j.jobId = it->second.get<string>("job_id");
-		j.jobStatus = it->second.get<string>("job_state");
-		j.numFiles = -1;
-		j.priority = it->second.get<int>("priority");
-		j.reason = it->second.get<string>("reason");
-		j.submitTime = it->second.get<string>("submit_time");
-		j.voName = it->second.get<string>("vo_name");
-		ret.push_back(j);
-	}
+    for (it = jobs.begin(); it != jobs.end(); ++it)
+        {
+            JobStatus j;
+            j.clientDn = it->second.get<string>("user_dn");
+            j.jobId = it->second.get<string>("job_id");
+            j.jobStatus = it->second.get<string>("job_state");
+            j.numFiles = -1;
+            j.priority = it->second.get<int>("priority");
+            j.reason = it->second.get<string>("reason");
+            j.submitTime = it->second.get<string>("submit_time");
+            j.voName = it->second.get<string>("vo_name");
+            ret.push_back(j);
+        }
 
-	return ret;
+    return ret;
 }
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST_NEW

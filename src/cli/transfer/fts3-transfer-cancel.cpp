@@ -74,7 +74,7 @@ int main(int ac, char* av[])
 
                     for (itr = jobIds.begin(); itr != jobIds.end(); ++itr)
                         {
-                    		std::stringstream ss;
+                            std::stringstream ss;
                             string url = cli->getService() + "/jobs/" + *itr;
                             HttpRequest http (url, cli->capath(), cli->proxy(), ss);
                             http.del();

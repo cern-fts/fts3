@@ -34,9 +34,11 @@ namespace db
 
 const int MAX_ACTIVE_PER_LINK = 70;
 
-inline bool is_mreplica_or_mhop(std::list<job_element_tupple>& src_dest_pair)
+inline bool is_mreplica(std::list<job_element_tupple>& src_dest_pair)
 {
-    bool is_m = true;
+    // if it has less than 2 pairs it wont be a m-replica
+    if (src_dest_pair.size() < 2) return false;
+
     std::string destSurl = src_dest_pair.begin()->destination;
 
     std::list<job_element_tupple>::const_iterator iter;
@@ -44,17 +46,20 @@ inline bool is_mreplica_or_mhop(std::list<job_element_tupple>& src_dest_pair)
         {
             if(destSurl != iter->destination)
                 {
-                    is_m = false;
+                    return false;
                 }
         }
 
-    // if it is multi-replica return true
-    if (is_m) return true;
+    return true;   
+}
+
+
+inline bool is_mhop(std::list<job_element_tupple>& src_dest_pair)
+{
     // if it has less than 2 pairs it wont be a multi-hop
     if (src_dest_pair.size() < 2) return false;
 
-    // use two iterators to traverse the list
-    iter = src_dest_pair.begin();
+    std::list<job_element_tupple>::const_iterator iter = src_dest_pair.begin();
     std::list<job_element_tupple>::const_iterator iter2 = src_dest_pair.begin();
     std::advance(iter2, 1);
 
@@ -65,6 +70,8 @@ inline bool is_mreplica_or_mhop(std::list<job_element_tupple>& src_dest_pair)
 
     return true;
 }
+
+
 
 
 /*borrowed from http://oroboro.com/irregular-ema/*/

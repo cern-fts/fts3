@@ -112,7 +112,7 @@ private:
 template<typename T>
 void MsgPrinter::print(std::vector<T> const & v)
 {
-	void (*print)(T const &);
+    void (*print)(T const &);
 
     if (json) print = print_json;
     else print = print_cout;
