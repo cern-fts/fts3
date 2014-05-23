@@ -37,26 +37,19 @@ const int MAX_ACTIVE_PER_LINK = 70;
 inline bool is_mreplica_or_mhop(std::list<job_element_tupple>& src_dest_pair)
 {
     bool is_m = true;
-    std::string destSurl;
-    int counter = 0;
+    std::string destSurl = src_dest_pair.begin()->destination;
 
     std::list<job_element_tupple>::const_iterator iter;
     for (iter = src_dest_pair.begin(); iter != src_dest_pair.end(); ++iter)
         {
-            if(counter == 0)
-                {
-                    destSurl = iter->destination;
-                }
-
             if(destSurl != iter->destination)
                 {
-                    return false;
+                    is_m = false;
                 }
-            counter++;
         }
-	
-    //TODO: multi-hop check	
-	
+
+    //TODO: multi-hop check
+
     return is_m;
 }
 
