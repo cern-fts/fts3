@@ -758,10 +758,20 @@ void OracleAPI::setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<
 
     try
         {
+           // first check if it is a multi-source/destination submission
+           // count the alternative replicas, if there is more than one it makes sense to set the NOT_USED state
 
-            // first really check if it is a multi-source/destination submission
-            // count the alternative replicas, if there is more than one it makes sense to set the NOT_USED state
             sql.begin();
+	    
+	    std::string flag;
+	    soci::indicator ind = soci::i_ok;
+	    
+	    sql << " select reuse_job from t_job where job_id = :job_id ", soci::use(jobId), soci::into(flag, ind);
+	    
+	    if (ind == soci::i_ok && flag == "M") //don't set to NOT_USED state for multi-hop - ONLY for multiple repicas
+	    	return;
+	    
+
 
             int count = 0;
 
@@ -1084,6 +1094,19 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
         reuseFlag = "Y";
     else if (hop == "Y")
         reuseFlag = "H";
+	
+    //check if it's multiple-replica or multi-hop and set hashedId and file_index accordingly
+    bool mreplica = is_mreplica(src_dest_pair);
+    bool mhop     = is_mhop(src_dest_pair);  
+	    
+    if( reuseFlag != "N" && (mreplica || mhop))
+	{	
+		throw Err_Custom("Session reuse (-r) can't be used with multiple replicas or multi-hop jobs!");		
+        }			
+
+    if(mhop) //since H is not passed when plain text submission (e.g. glite client) we need to set into DB
+    	  reuseFlag = "H";
+	
 
     const std::string initialState = bringOnline > 0 || copyPinLifeTime > 0 ? "STAGING" : "SUBMITTED";
     const int priority = 3;
@@ -1117,10 +1140,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
 
     try
         {            
-            sql.begin();
-            soci::indicator reuseFlagIndicator = soci::i_ok;
-            if (reuseFlag.empty())
-                reuseFlagIndicator = soci::i_null;
+            sql.begin();            
             // Insert job
             soci::statement insertJob = (
                                             sql.prepare << "INSERT INTO t_job (job_id, job_state, job_params, user_dn, user_cred, priority,       "
@@ -1139,7 +1159,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
                                             soci::use(voName), soci::use(jobParams), soci::use(hostname), soci::use(delegationID),
                                             soci::use(myProxyServer), soci::use(spaceToken), soci::use(overwrite), soci::use(sourceSpaceToken),
                                             soci::use(copyPinLifeTime), soci::use(failNearLine), soci::use(checksumMethod),
-                                            soci::use(reuseFlag, reuseFlagIndicator), soci::use(bringOnline),
+                                            soci::use(reuseFlag), soci::use(bringOnline),
                                             soci::use(retry), soci::use(retryDelay), soci::use(metadata),
                                             soci::use(sourceSe), soci::use(destinationSe));
 
@@ -1162,8 +1182,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
             // When reuse is enabled, we use the same random number for the whole job
             // This guarantees that the whole set belong to the same machine, but keeping
             // the load balance between hosts
-            if (reuseFlag != "N")
-                hashedId = getHashedId();
+            hashedId = getHashedId();
 
             std::list<job_element_tupple>::const_iterator iter;
             for (iter = src_dest_pair.begin(); iter != src_dest_pair.end(); ++iter)
@@ -1179,9 +1198,23 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
                     destSe = iter->dest_se;
                     activity = iter->activity;
 
-                    // No reuse, one random per file
-                    if (reuseFlag == "N")
-                        hashedId = getHashedId();
+                   /*
+                    	N = no reuse
+                    	Y = reuse
+                    	H = multi-hop
+                    */
+                    if (reuseFlag == "N" && mreplica) 
+                        {                                                        
+                            fileIndex = 0;                               
+                        }
+		    if (reuseFlag == "N" && mhop) 
+                        {                                                        
+                            hashedId = hashedId;   //for conviniency                            
+                        }			                    			
+                    else if (reuseFlag == "N" && !mreplica && !mhop)
+                        {
+			     hashedId = getHashedId();
+                        }         
 
                     //get distinct source_se / dest_se
                     Key p1 (sourceSe, destSe);
@@ -2717,34 +2750,36 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const st
     try
         {
             soci::rowset<TransferJobs> rs = (sql.prepare << " SELECT * FROM (SELECT "
-                                             "   job_id, "
-                                             "   job_state, "
-                                             "   vo_name,  "
-                                             "   priority,  "
-                                             "   source_se, "
-                                             "   dest_se,  "
-                                             "   agent_dn, "
-                                             "   submit_host, "
-                                             "   user_dn, "
-                                             "   user_cred, "
-                                             "   cred_id,  "
-                                             "   space_token, "
-                                             "   storage_class,  "
-                                             "   job_params, "
-                                             "   overwrite_flag, "
-                                             "   source_space_token, "
-                                             "   source_token_description,"
-                                             "   copy_pin_lifetime, "
-                                             "   checksum_method, "
-                                             "   bring_online, "
-                                             "   reuse_job, "
-                                             "   submit_time "
-                                             "FROM t_job WHERE "
-                                             "    job_state = 'SUBMITTED' AND job_finished IS NULL AND "
-                                             "    cancel_job IS NULL AND "
-                                             "    (reuse_job IS NOT NULL AND reuse_job != 'N') "
-                                             " ORDER BY priority DESC, SYS_EXTRACT_UTC(submit_time) "
-                                             ") WHERE ROWNUM <= 1");
+                                             "   j.job_id, "
+                                             "   j.job_state, "
+                                             "   j.vo_name,  "
+                                             "   j.priority,  "
+                                             "   j.source_se, "
+                                             "   j.dest_se,  "
+                                             "   j.agent_dn, "
+                                             "   j.submit_host, "
+                                             "   j.user_dn, "
+                                             "   j.user_cred, "
+                                             "   j.cred_id,  "
+                                             "   j.space_token, "
+                                             "   j.storage_class,  "
+                                             "   j.job_params, "
+                                             "   j.overwrite_flag, "
+                                             "   j.source_space_token, "
+                                             "   j.source_token_description,"
+                                             "   j.copy_pin_lifetime, "
+                                             "   j.checksum_method, "
+                                             "   j.bring_online, "
+                                             "   j.reuse_job, "
+                                             "   j.submit_time "
+                                             "   FROM t_job j LEFT JOIN t_file f ON (j.job_id = f.job_id) WHERE "
+                                             "    j.job_state = 'SUBMITTED' AND j.job_finished IS NULL AND "
+                                             "    j.cancel_job IS NULL AND "
+                                             "    (j.reuse_job IS NOT NULL AND j.reuse_job != 'N') AND "
+					     "   (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) " 					     
+                                             " ORDER BY j.priority DESC, SYS_EXTRACT_UTC(j.submit_time) "
+                                             ") WHERE ROWNUM <= 1",
+					     soci::use(hashSegment.start), soci::use(hashSegment.end)); 
 
             for (soci::rowset<TransferJobs>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
