@@ -934,7 +934,6 @@ unsigned int OracleAPI::updateFileStatus(TransferFiles* file, const std::string 
 
     unsigned int updated = 0;
 
-
     try
         {
             sql.begin();           
@@ -1118,6 +1117,9 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
 
     try
         {
+	    //check if it's multiple-replica or multi-hop and set hashedId and file_index accordingly
+	    bool is_m = is_mreplica_or_mhop(src_dest_pair);	
+	
             sql.begin();
             soci::indicator reuseFlagIndicator = soci::i_ok;
             if (reuseFlag.empty())
@@ -1163,7 +1165,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
             // When reuse is enabled, we use the same random number for the whole job
             // This guarantees that the whole set belong to the same machine, but keeping
             // the load balance between hosts
-            if (reuseFlag != "N")
+            if (reuseFlag != "N" || is_m)
                 hashedId = getHashedId();
 
             std::list<job_element_tupple>::const_iterator iter;
@@ -1181,7 +1183,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
                     activity = iter->activity;
 
                     // No reuse, one random per file
-                    if (reuseFlag == "N")
+                    if (reuseFlag == "N" || !is_m)
                         hashedId = getHashedId();
 
                     //get distinct source_se / dest_se
@@ -1220,7 +1222,10 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
                             pairStmtSeBlaklisted << "'";
                             pairStmtSeBlaklisted << selectionStrategy;
                             pairStmtSeBlaklisted << "',";
-                            pairStmtSeBlaklisted << fileIndex;
+			    if(is_m)
+			    	pairStmtSeBlaklisted << 0;
+			    else
+                                pairStmtSeBlaklisted << fileIndex;
                             pairStmtSeBlaklisted << ",";
                             pairStmtSeBlaklisted << "'";
                             pairStmtSeBlaklisted << sourceSe;
@@ -1269,7 +1274,10 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
                             pairStmt << "'";
                             pairStmt << selectionStrategy;
                             pairStmt << "',";
-                            pairStmt << fileIndex;
+			    if(is_m)
+			    	pairStmt << 0;
+			    else
+                                pairStmt << fileIndex;
                             pairStmt << ",";
                             pairStmt << "'";
                             pairStmt << sourceSe;
@@ -4048,27 +4056,11 @@ void OracleAPI::forkFailedRevertState(const std::string & jobId, int fileId)
     try
         {
             sql.begin();
-	    
-	    //here we have already checked, there is another active with the same dest_surl
-	    //now check if it's a multiple replica job
-	    sql << "select count(distinct file_index) from t_file where job_id=:job_id ", soci::use(jobId), soci::into(distinctFileIndex);
-	    
-	    if(distinctFileIndex == 1) // it is indeed multiple replica job
-	    {
-	      //make sure you won't force-cancel the one and only ready
-	    
-  		sql << "UPDATE t_file SET file_state = 'NOT_USED', transferhost='', start_time=NULL "
-                "WHERE file_id = :fileId AND job_id = :jobId AND  transferhost= :hostname AND "
-                "      file_state= 'READY' ",
-                soci::use(fileId), soci::use(jobId), soci::use(hostname);	    	    
-	    }
-	    else
-	    {	    
+	    	   
 	      sql << "UPDATE t_file SET file_state = 'SUBMITTED', transferhost='', start_time=NULL "
                 "WHERE file_id = :fileId AND job_id = :jobId AND  transferhost= :hostname AND "
                 "      file_state NOT IN ('FINISHED','FAILED','CANCELED','NOT_USED')",
                 soci::use(fileId), soci::use(jobId), soci::use(hostname);
-	    }
 	    
             sql.commit();
         }
