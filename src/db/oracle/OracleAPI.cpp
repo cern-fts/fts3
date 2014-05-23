@@ -642,8 +642,8 @@ void OracleAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& f
                                                                  "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
                                                                  "    j.job_state in ('ACTIVE','READY','SUBMITTED') AND "
                                                                  "    (j.reuse_job = 'N' OR j.reuse_job IS NULL) AND j.vo_name=:vo_name "
-                                                                 "     ORDER BY j.priority DESC, j.submit_time) "
-                                                                 " WHERE rn < :filesNum ",
+                                                                 "     ORDER BY j.priority DESC, j.submit_time, f.file_id asc) "
+                                                                 " WHERE rn <= :filesNum ",
                                                                  soci::use(boost::get<0>(triplet)),
                                                                  soci::use(boost::get<1>(triplet)),
                                                                  soci::use(boost::get<2>(triplet)),
