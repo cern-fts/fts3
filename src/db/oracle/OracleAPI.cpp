@@ -8456,8 +8456,28 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                             st2.execute(true);
                             result <<   "\"Max active transfers\":\"";
                             result <<   maxActive;
+                            result <<   "\",\n"; 
+
+                            st7.execute(true);
+                            result <<   "\"Number of finished (last hour)\":\"";
+                            result <<   long(nFinishedLastHour);
                             result <<   "\",\n";
 
+                            st6.execute(true);
+                            result <<   "\"Number of failed (last hour)\":\"";
+                            result <<   long(nFailedLastHour);
+                            result <<   "\",\n";
+
+                            //get submitted for this pair and vo
+                            st3.execute(true);
+                            result <<   "\"Number of queued\":\"";
+                            result <<   submitted;
+                            result <<   "\",\n";
+			    
+			    //if all of the above return 0 then continue
+			    if(active == 0 && nFinishedLastHour == 0 &&  nFailedLastHour == 0 && submitted == 0 && source_se_p.empty() && dest_se_p.empty())
+			    	continue;		
+				
                             //average throughput block
                             st41.execute(true);
                             result <<   "\"Avg throughput (last 60min)\":\"";
@@ -8477,23 +8497,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                             st44.execute(true);
                             result <<   "\"Avg throughput (last 5min)\":\"";
                             result <<  std::setprecision(2) << throughput5min;
-                            result <<   " MB/s\",\n";
-
-                            st7.execute(true);
-                            result <<   "\"Number of finished (last hour)\":\"";
-                            result <<   long(nFinishedLastHour);
-                            result <<   "\",\n";
-
-                            st6.execute(true);
-                            result <<   "\"Number of failed (last hour)\":\"";
-                            result <<   long(nFailedLastHour);
-                            result <<   "\",\n";
-
-                            //get submitted for this pair and vo
-                            st3.execute(true);
-                            result <<   "\"Number of queued\":\"";
-                            result <<   submitted;
-                            result <<   "\",\n";
+                            result <<   " MB/s\",\n";					    
 
                             //round up efficiency
                             if(nFinishedLastHour > 0)
