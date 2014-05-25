@@ -399,11 +399,13 @@ int FileTransferExecutor::execute()
                                     ThreadSafeList::get_instance().push_back(msg);
                                 }
                         }
-                    else
+                    /* Disabled for now but pls do not remove
+		    else
                         {
                             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer already in active or ready state for this dest_url? " <<  tf->JOB_ID << "  " << tf->FILE_ID << commit;
                             db->forkFailedRevertState(tf->JOB_ID, tf->FILE_ID);
                         }
+		    */
                     params.clear();
                 }
             else

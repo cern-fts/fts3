@@ -8432,6 +8432,17 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                             ratioSuccessFailure = 0.0;
 
 
+ 			    st1.execute(true);
+			    st2.execute(true);
+			    st7.execute(true);
+			    st6.execute(true);
+     		            st3.execute(true);
+			    
+			    
+			    //if all of the above return 0 then continue
+			    if(active == 0 && nFinishedLastHour == 0 &&  nFailedLastHour == 0 && submitted == 0 && source_se_p.empty() && dest_se_p.empty())
+			    	continue;			    
+
                             result << "{\n";
 
                             result << std::fixed << "\"VO\":\"";
@@ -8446,39 +8457,31 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                             result <<   dest_se;
                             result <<   "\",\n";
 
-                            //get active for this pair and vo
-                            st1.execute(true);
+                            //get active for this pair and vo                            
                             result <<   "\"Current active transfers\":\"";
                             result <<   active;
                             result <<   "\",\n";
 
-                            //get max active for this pair no matter the vo
-                            st2.execute(true);
+                            //get max active for this pair no matter the vo                            
                             result <<   "\"Max active transfers\":\"";
                             result <<   maxActive;
-                            result <<   "\",\n"; 
-
-                            st7.execute(true);
+                            result <<   "\",\n";
+                                                      
                             result <<   "\"Number of finished (last hour)\":\"";
                             result <<   long(nFinishedLastHour);
                             result <<   "\",\n";
-
-                            st6.execute(true);
+                            
                             result <<   "\"Number of failed (last hour)\":\"";
                             result <<   long(nFailedLastHour);
                             result <<   "\",\n";
 
-                            //get submitted for this pair and vo
-                            st3.execute(true);
+                            //get submitted for this pair and vo                           
                             result <<   "\"Number of queued\":\"";
                             result <<   submitted;
                             result <<   "\",\n";
 			    
-			    //if all of the above return 0 then continue
-			    if(active == 0 && nFinishedLastHour == 0 &&  nFailedLastHour == 0 && submitted == 0 && source_se_p.empty() && dest_se_p.empty())
-			    	continue;		
-				
-                            //average throughput block
+			    
+  			    //average throughput block
                             st41.execute(true);
                             result <<   "\"Avg throughput (last 60min)\":\"";
                             result <<  std::setprecision(2) << throughput1h;
@@ -8497,7 +8500,8 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                             st44.execute(true);
                             result <<   "\"Avg throughput (last 5min)\":\"";
                             result <<  std::setprecision(2) << throughput5min;
-                            result <<   " MB/s\",\n";					    
+                            result <<   " MB/s\",\n";
+			    				    
 
                             //round up efficiency
                             if(nFinishedLastHour > 0)
