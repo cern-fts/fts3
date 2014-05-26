@@ -843,32 +843,75 @@ void OracleAPI::setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<
 
 void OracleAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId)
 {
+    //auto-pick and manuall replica logic must be added here
+
     try
         {
             soci::indicator ind = soci::i_ok;
-            int fileIndex=0;
+            std::string selection_strategy;
+            std::string vo_name;
 
-            sql <<
-                " SELECT file_index "
-                " FROM t_file "
-                " WHERE file_id = :fileId AND file_state = 'NOT_USED' ",
-                soci::use(fileId),
-                soci::into(fileIndex, ind)
-                ;
+            //check if the file belongs to a multiple replica job
+            long long replicaJob = 0;
+            long long replicaJobCountAll = 0;
+            sql << "select count(*), count(distinct file_index) from t_file where job_id=:job_id",
+                soci::use(jobId), soci::into(replicaJobCountAll), soci::into(replicaJob);
 
-            // make sure it's not NULL
-            if (ind == soci::i_ok)
+            //this is a m-replica job
+            if(replicaJobCountAll > 1 && replicaJob == 1)
                 {
-                    sql.begin();
-                    sql <<
-                        " UPDATE t_file "
-                        " SET file_state = 'SUBMITTED' "
-                        " WHERE job_id = :jobId "
-                        "   AND file_index = :fileIndex "
-                        "   AND file_state = 'NOT_USED'",
-                        soci::use(jobId),
-                        soci::use(fileIndex);
-                    sql.commit();
+                    //check if it's auto or manual
+                    sql << " select selection_strategy, vo_name from t_file where file_id = :file_id",
+                        soci::use(fileId), soci::into(selection_strategy, ind), soci::into(vo_name);
+
+                    if (ind == soci::i_ok)
+                        {
+                            if(selection_strategy == "auto") //pick the "best-next replica to process"
+                                {
+                                    int bestFileId = getBestNextReplica(sql, jobId, vo_name);
+                                    sql.begin();
+                                    sql <<
+                                        " UPDATE t_file "
+                                        " SET file_state = 'SUBMITTED' "
+                                        " WHERE job_id = :jobId AND file_id = :file_id  "
+                                        " AND file_state = 'NOT_USED' ",
+                                        soci::use(jobId), soci::use(bestFileId);
+                                    sql.commit();
+
+                                }
+                            else if (selection_strategy == "orderly")
+                                {
+                                    sql.begin();
+                                    sql <<
+                                        " UPDATE t_file "
+                                        " SET file_state = 'SUBMITTED' "
+                                        " WHERE job_id = :jobId "
+                                        " AND file_state = 'NOT_USED' AND ROWNUM=1",
+                                        soci::use(jobId);
+                                    sql.commit();
+                                }
+                            else{
+                                    sql.begin();
+                                    sql <<
+                                        " UPDATE t_file "
+                                        " SET file_state = 'SUBMITTED' "
+                                        " WHERE job_id = :jobId "
+                                        " AND file_state = 'NOT_USED' AND ROWNUM=1 ",
+                                        soci::use(jobId);
+                                    sql.commit();			    
+			    	}				
+                        }
+                    else //it's NULL, default is orderly
+                        {
+                            sql.begin();
+                            sql <<
+                                " UPDATE t_file "
+                                " SET file_state = 'SUBMITTED' "
+                                " WHERE job_id = :jobId "
+                                " AND file_state = 'NOT_USED' AND ROWNUM=1 ",
+                                soci::use(jobId);
+                            sql.commit();
+                        }
                 }
         }
     catch (std::exception& e)
@@ -881,7 +924,91 @@ void OracleAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
+
 }
+
+
+bool pairCompare( std::pair<std::pair<std::string, std::string>, int> i, pair<std::pair<std::string, std::string>, int> j)
+{
+	return i.second < j.second;
+}
+
+int OracleAPI::getBestNextReplica(soci::session& sql, const std::string & job_id, const std::string & vo_name)
+{
+    //for now consider only the less queued transfers, later add throughput and success rate
+    int bestFileId = 0;  
+    std::string bestSource;
+    std::string bestDestination;    
+    std::map<std::pair<std::string, std::string>, int> pair;
+    soci::indicator ind = soci::i_ok;
+          
+    try
+        {
+            //get available pairs
+            soci::rowset<soci::row> rs = (
+                                             sql.prepare <<
+                                             "select distinct source_se, dest_se from t_file where job_id=:job_id and file_state='NOT_USED'",
+                                             soci::use(job_id)
+                                         );
+
+            soci::rowset<soci::row>::const_iterator it;
+            for (it = rs.begin(); it != rs.end(); ++it)
+                {
+                    std::string source_se = it->get<std::string>("source_se","");
+                    std::string dest_se = it->get<std::string>("dest_se","");
+                    int queued = 0;		    
+
+                    //get queued for this link and vo
+                    sql << " select count(*) from t_file where file_state='SUBMITTED' and "
+                        " source_se=:source_se and dest_se=:dest_se and "
+                        " vo_name=:vo_name ",
+                        soci::use(source_se), soci::use(dest_se),soci::use(vo_name), soci::into(queued);
+			
+  			//get distinct source_se / dest_se
+ 			 std::pair<std::string, std::string> key(source_se, dest_se);
+ 			 pair.insert(std::make_pair(key, queued));	
+			 
+			if(queued == 0) //pick the first one if the link is free
+				break;			 
+			 
+                    //get success rate & throughput for this link, it is mapped to "filesize" column in t_optimizer_evolution table :)
+                    /*
+		    sql << " select filesize, throughput from t_optimizer_evolution where "
+                        " source_se=:source_se and dest_se=:dest_se and filesize is not NULL and agrthroughput is not NULL "
+                        " order by datetime desc limit 1 ",
+                        soci::use(source_se), soci::use(dest_se),soci::into(successRate),soci::into(throughput);
+		    */		                        
+		    
+                }
+	
+           //not waste queries
+	   if(pair.size() > 0)
+	   {
+	        //get min queue length	
+	   	std::pair<std::pair<std::string, std::string>, int> minValue = *min_element(pair.begin(), pair.end(), pairCompare );
+	   	bestSource =      (minValue.first).first;
+           	bestDestination = (minValue.first).second;	   
+	   	     	     	   
+            	//finally get the next-best file_id to be processed
+            	sql << "select file_id from t_file where file_state='NOT_USED' and source_se=:source_se and dest_se=:dest_se and job_id=:job_id",
+                	soci::use(bestSource), soci::use(bestDestination), soci::use(job_id), soci::into(bestFileId, ind);
+		
+            	if (ind != soci::i_ok)		
+	    		bestFileId = 0;
+	    }
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+
+    return bestFileId;
+}
+
 
 unsigned int OracleAPI::updateFileStatusReuse(TransferFiles* file, const std::string status)
 {
@@ -1104,11 +1231,16 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
             throw Err_Custom("Session reuse (-r) can't be used with multiple replicas or multi-hop jobs!");
         }
 
+    if( (bringOnline > 0 || copyPinLifeTime > 0) && (mreplica || mhop))
+        {
+            throw Err_Custom("bringOnline or copyPinLifeTime can't be used with multiple replicas or multi-hop jobs!");
+        }
+
     if(mhop) //since H is not passed when plain text submission (e.g. glite client) we need to set into DB
         reuseFlag = "H";
 
 
-    const std::string initialState = bringOnline > 0 || copyPinLifeTime > 0 ? "STAGING" : "SUBMITTED";
+    std::string initialState = bringOnline > 0 || copyPinLifeTime > 0 ? "STAGING" : "SUBMITTED";
     const int priority = 3;
     std::string jobParams;
 
@@ -1185,6 +1317,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
             hashedId = getHashedId();
 
             std::list<job_element_tupple>::const_iterator iter;
+	    int index = 0; 
             for (iter = src_dest_pair.begin(); iter != src_dest_pair.end(); ++iter)
                 {
                     sourceSurl = iter->source;
@@ -1206,6 +1339,12 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
                     if (reuseFlag == "N" && mreplica)
                         {
                             fileIndex = 0;
+  			    if(index == 0) //only the first file
+			    	initialState = "SUBMITTED";
+			    else
+			        initialState = "NOT_USED";					
+							    
+			    index++;					    
                         }
                     if (reuseFlag == "N" && mhop)
                         {

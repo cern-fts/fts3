@@ -42,7 +42,7 @@ public:
         typename TRAITS::ProcessQueueType queueHandler;
         queueHandler.executeTransfer_p();
 
-        //sleep(8);
+        sleep(8);
 
         typename TRAITS::HeartBeatType heartBeatHandler;
         heartBeatHandler.beat();
@@ -57,7 +57,7 @@ public:
         processUpdaterDBHandler.executeTransfer_p();
 
         /*wait for status updates to be processed and then start sanity threads*/
-        //sleep(12);
+        sleep(12);
 
         typename TRAITS::ProcessServiceType processHandler;
         processHandler.executeTransfer_p();

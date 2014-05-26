@@ -1326,6 +1326,11 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
         {
             throw Err_Custom("Session reuse (-r) can't be used with multiple replicas or multi-hop jobs!");
         }
+	
+    if( (bringOnline > 0 || copyPinLifeTime > 0) && (mreplica || mhop))
+        {
+            throw Err_Custom("bringOnline or copyPinLifeTime can't be used with multiple replicas or multi-hop jobs!");
+        }	
 
     if(mhop) //since H is not passed when plain text submission (e.g. glite client) we need to set into DB
         reuseFlag = "H";
