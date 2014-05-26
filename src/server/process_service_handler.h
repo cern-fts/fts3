@@ -218,6 +218,7 @@ protected:
                         std::map< std::string, std::list<TransferFiles*> > voQueues;
 
                         DBSingleton::instance().getDBObjectInstance()->getByJobId(voQueues);
+						
 
                         if(voQueues.empty())
                             return;
