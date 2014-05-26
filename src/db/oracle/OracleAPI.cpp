@@ -768,7 +768,7 @@ void OracleAPI::setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<
 	    
 	    sql << " select reuse_job from t_job where job_id = :job_id ", soci::use(jobId), soci::into(flag, ind);
 	    
-	    if (ind == soci::i_ok && flag == "M") //don't set to NOT_USED state for multi-hop - ONLY for multiple repicas
+	    if (ind == soci::i_ok && flag == "H") //don't set to NOT_USED state for multi-hop - ONLY for multiple repicas
 	    	return;
 	    
 
