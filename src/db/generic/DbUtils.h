@@ -50,7 +50,7 @@ inline bool is_mreplica(std::list<job_element_tupple>& src_dest_pair)
                 }
         }
 
-    return true;   
+    return true;
 }
 
 
@@ -64,9 +64,9 @@ inline bool is_mhop(std::list<job_element_tupple>& src_dest_pair)
     std::advance(iter2, 1);
 
     for (; iter2 != src_dest_pair.end(); ++iter, ++iter2)
-		{
-    		if (iter->destination != iter2->source) return false;
-		}
+        {
+            if (iter->destination != iter2->source) return false;
+        }
 
     return true;
 }

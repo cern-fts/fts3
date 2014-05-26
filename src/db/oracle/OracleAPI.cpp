@@ -758,19 +758,19 @@ void OracleAPI::setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<
 
     try
         {
-           // first check if it is a multi-source/destination submission
-           // count the alternative replicas, if there is more than one it makes sense to set the NOT_USED state
+            // first check if it is a multi-source/destination submission
+            // count the alternative replicas, if there is more than one it makes sense to set the NOT_USED state
 
             sql.begin();
-	    
-	    std::string flag;
-	    soci::indicator ind = soci::i_ok;
-	    
-	    sql << " select reuse_job from t_job where job_id = :job_id ", soci::use(jobId), soci::into(flag, ind);
-	    
-	    if (ind == soci::i_ok && flag == "H") //don't set to NOT_USED state for multi-hop - ONLY for multiple repicas
-	    	return;
-	    
+
+            std::string flag;
+            soci::indicator ind = soci::i_ok;
+
+            sql << " select reuse_job from t_job where job_id = :job_id ", soci::use(jobId), soci::into(flag, ind);
+
+            if (ind == soci::i_ok && flag == "H") //don't set to NOT_USED state for multi-hop - ONLY for multiple repicas
+                return;
+
 
 
             int count = 0;
@@ -1094,19 +1094,19 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
         reuseFlag = "Y";
     else if (hop == "Y")
         reuseFlag = "H";
-	
+
     //check if it's multiple-replica or multi-hop and set hashedId and file_index accordingly
     bool mreplica = is_mreplica(src_dest_pair);
-    bool mhop     = is_mhop(src_dest_pair);  
-	    
+    bool mhop     = is_mhop(src_dest_pair);
+
     if( reuseFlag != "N" && (mreplica || mhop))
-	{	
-		throw Err_Custom("Session reuse (-r) can't be used with multiple replicas or multi-hop jobs!");		
-        }			
+        {
+            throw Err_Custom("Session reuse (-r) can't be used with multiple replicas or multi-hop jobs!");
+        }
 
     if(mhop) //since H is not passed when plain text submission (e.g. glite client) we need to set into DB
-    	  reuseFlag = "H";
-	
+        reuseFlag = "H";
+
 
     const std::string initialState = bringOnline > 0 || copyPinLifeTime > 0 ? "STAGING" : "SUBMITTED";
     const int priority = 3;
@@ -1139,8 +1139,8 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
     soci::session sql(*connectionPool);
 
     try
-        {            
-            sql.begin();            
+        {
+            sql.begin();
             // Insert job
             soci::statement insertJob = (
                                             sql.prepare << "INSERT INTO t_job (job_id, job_state, job_params, user_dn, user_cred, priority,       "
@@ -1198,23 +1198,23 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
                     destSe = iter->dest_se;
                     activity = iter->activity;
 
-                   /*
-                    	N = no reuse
-                    	Y = reuse
-                    	H = multi-hop
-                    */
-                    if (reuseFlag == "N" && mreplica) 
-                        {                                                        
-                            fileIndex = 0;                               
+                    /*
+                     	N = no reuse
+                     	Y = reuse
+                     	H = multi-hop
+                     */
+                    if (reuseFlag == "N" && mreplica)
+                        {
+                            fileIndex = 0;
                         }
-		    if (reuseFlag == "N" && mhop) 
-                        {                                                        
-                            hashedId = hashedId;   //for conviniency                            
-                        }			                    			
+                    if (reuseFlag == "N" && mhop)
+                        {
+                            hashedId = hashedId;   //for conviniency
+                        }
                     else if (reuseFlag == "N" && !mreplica && !mhop)
                         {
-			     hashedId = getHashedId();
-                        }         
+                            hashedId = getHashedId();
+                        }
 
                     //get distinct source_se / dest_se
                     Key p1 (sourceSe, destSe);
@@ -2776,10 +2776,10 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const st
                                              "    j.job_state = 'SUBMITTED' AND j.job_finished IS NULL AND "
                                              "    j.cancel_job IS NULL AND "
                                              "    (j.reuse_job IS NOT NULL AND j.reuse_job != 'N') AND "
-					     "   (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) " 					     
+                                             "   (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) "
                                              " ORDER BY j.priority DESC, SYS_EXTRACT_UTC(j.submit_time) "
                                              ") WHERE ROWNUM <= 1",
-					     soci::use(hashSegment.start), soci::use(hashSegment.end)); 
+                                             soci::use(hashSegment.start), soci::use(hashSegment.end));
 
             for (soci::rowset<TransferJobs>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
@@ -5609,16 +5609,16 @@ int OracleAPI::getRetry(const std::string & jobId)
                 {
                     nRetries = 0;
                 }
-		
-	  if(nRetries > 0)
-	  {		
-	  	//do not retry multiple replica jobs
-	  	long long mreplica = 0;
-	  	long long mreplicaCount = 0;
-	  	sql << "select count(*), count(distinct file_index) from t_file where job_id=:job_id", soci::use(jobId), soci::into(mreplicaCount), soci::into(mreplica);
-	  	if(mreplicaCount > 1 && mreplica == 1) 
-	  		nRetries = 0;
-          }			
+
+            if(nRetries > 0)
+                {
+                    //do not retry multiple replica jobs
+                    long long mreplica = 0;
+                    long long mreplicaCount = 0;
+                    sql << "select count(*), count(distinct file_index) from t_file where job_id=:job_id", soci::use(jobId), soci::into(mreplicaCount), soci::into(mreplica);
+                    if(mreplicaCount > 1 && mreplica == 1)
+                        nRetries = 0;
+                }
         }
     catch (std::exception& e)
         {
@@ -8442,16 +8442,16 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                             ratioSuccessFailure = 0.0;
 
 
- 			    st1.execute(true);
-			    st2.execute(true);
-			    st7.execute(true);
-			    st6.execute(true);
-     		            st3.execute(true);
-			    
-			    
-			    //if all of the above return 0 then continue
-			    if(active == 0 && nFinishedLastHour == 0 &&  nFailedLastHour == 0 && submitted == 0 && source_se_p.empty() && dest_se_p.empty())
-			    	continue;			    
+                            st1.execute(true);
+                            st2.execute(true);
+                            st7.execute(true);
+                            st6.execute(true);
+                            st3.execute(true);
+
+
+                            //if all of the above return 0 then continue
+                            if(active == 0 && nFinishedLastHour == 0 &&  nFailedLastHour == 0 && submitted == 0 && source_se_p.empty() && dest_se_p.empty())
+                                continue;
 
                             result << "{\n";
 
@@ -8467,31 +8467,31 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                             result <<   dest_se;
                             result <<   "\",\n";
 
-                            //get active for this pair and vo                            
+                            //get active for this pair and vo
                             result <<   "\"Current active transfers\":\"";
                             result <<   active;
                             result <<   "\",\n";
 
-                            //get max active for this pair no matter the vo                            
+                            //get max active for this pair no matter the vo
                             result <<   "\"Max active transfers\":\"";
                             result <<   maxActive;
                             result <<   "\",\n";
-                                                      
+
                             result <<   "\"Number of finished (last hour)\":\"";
                             result <<   long(nFinishedLastHour);
                             result <<   "\",\n";
-                            
+
                             result <<   "\"Number of failed (last hour)\":\"";
                             result <<   long(nFailedLastHour);
                             result <<   "\",\n";
 
-                            //get submitted for this pair and vo                           
+                            //get submitted for this pair and vo
                             result <<   "\"Number of queued\":\"";
                             result <<   submitted;
                             result <<   "\",\n";
-			    
-			    
-  			    //average throughput block
+
+
+                            //average throughput block
                             st41.execute(true);
                             result <<   "\"Avg throughput (last 60min)\":\"";
                             result <<  std::setprecision(2) << throughput1h;
@@ -8511,7 +8511,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                             result <<   "\"Avg throughput (last 5min)\":\"";
                             result <<  std::setprecision(2) << throughput5min;
                             result <<   " MB/s\",\n";
-			    				    
+
 
                             //round up efficiency
                             if(nFinishedLastHour > 0)
