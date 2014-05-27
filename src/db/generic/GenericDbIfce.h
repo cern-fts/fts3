@@ -80,6 +80,7 @@ struct job_element_tupple
     int fileIndex;
     boost::optional<int> wait_timeout;
     std::string activity;
+    std::string state;
 };
 
 class GenericDbIfce
