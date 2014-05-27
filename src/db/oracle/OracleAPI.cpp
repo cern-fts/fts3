@@ -7291,6 +7291,14 @@ void OracleAPI::checkSanityState()
                     for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                         {
 			    job_id = (*i);
+			    numberOfFiles = 0;
+			    terminalState = 0;
+			    allFinished = 0;
+			    allFailed = 0;
+			    allCanceled = 0;
+			    numberOfFilesRevert = 0;    
+			    countMreplica = 0;
+			    countMindex = 0; 			    
 			
                             sql << "SELECT COUNT(DISTINCT file_index) FROM t_file where job_id=:jobId ", soci::use(*i), soci::into(numberOfFiles);
 
@@ -7393,7 +7401,7 @@ void OracleAPI::checkSanityState()
                                                     );
 
                     for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
-                        {
+                        {			    
                             sql << "SELECT COUNT(*) FROM t_file where job_id=:jobId AND file_state in ('ACTIVE','READY','SUBMITTED','STAGING') ", soci::use(*i2), soci::into(numberOfFilesRevert);
                             if(numberOfFilesRevert > 0)
                                 {
