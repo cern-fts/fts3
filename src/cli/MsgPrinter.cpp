@@ -47,6 +47,8 @@ using namespace boost;
 using namespace boost::assign;
 using namespace fts3::common;
 
+bool MsgPrinter::verbose = false;
+
 void MsgPrinter::delegation_request_duration(long int h, long int m)
 {
 
@@ -239,25 +241,8 @@ void MsgPrinter::print_cout(std::pair<std::string, std::string> const & id_statu
 
 void MsgPrinter::print_json(std::pair<std::string, std::string> const & id_status)
 {
-    std::map<std::string, std::string> m = boost::assign::map_list_of ("job_id", id_status.first) ("status", id_status.second);
+    std::map<std::string, std::string> m = boost::assign::map_list_of ("job_id", id_status.first) ("job_state", id_status.second);
     JsonOutput::printArray("job", m);
-}
-
-void MsgPrinter::cancelled_jobs(std::vector< std::pair< std::string, std::string> > const & id_status)
-{
-    void (*print)(std::pair<std::string, std::string> const &) = json ? print_json : print_cout;
-    std::for_each(id_status.begin(), id_status.end(), print);
-}
-
-void MsgPrinter::cancelled_jobs(std::vector<std::string> const & id)
-{
-    void (*print)(std::pair<std::string, std::string> const &) = json ? print_json : print_cout;
-
-    std::vector<std::string>::const_iterator it;
-    for (it = id.begin(); it != id.end(); ++it)
-        {
-            print(std::make_pair(*it, "CANCELED"));
-        }
 }
 
 void MsgPrinter::missing_parameter(string name)
@@ -388,52 +373,44 @@ void MsgPrinter::gsoap_error_msg(string msg)
     JsonOutput::print("error.detail", detail);
 }
 
-void MsgPrinter::job_status(JobStatus js)
+void MsgPrinter::print_cout(JobStatus const & j)
 {
-    // change the precision from msec to sec
-    js.submitTime /= 1000;
+    cout << "Request ID: " << j.jobId << endl;
+    cout << "Status: " << j.jobStatus << endl;
 
-    char time_buff[20];
-    strftime(time_buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&js.submitTime));
+    // if not verbose return
+    if (!verbose) return;
 
-    if (!json)
-        {
-            cout << "Request ID: " << js.jobId << endl;
-            cout << "Status: " << js.jobStatus << endl;
+    cout << "Client DN: " << j.clientDn << endl;
+    cout << "Reason: " << (j.reason.empty() ? "<None>": j.reason) << endl;
+    cout << "Submission time: " << j.submitTime << endl;
+    cout << "Files: " << (j.numFiles == -1 ? "n/a" : boost::lexical_cast<std::string>(j.numFiles)) << endl;
+    cout << "Priority: " << j.priority << endl;
+    cout << "VOName: " << j.voName << endl;
+    cout << endl;
+}
 
-            // if not verbose return
-            if (!verbose) return;
-
-            cout << "Client DN: " << js.clientDn << endl;
-            cout << "Reason: " << (js.reason.empty() ? "<None>": js.reason) << endl;
-            cout << "Submission time: " << time_buff << endl;
-            cout << "Files: " << js.numFiles << endl;
-            cout << "Priority: " << js.priority << endl;
-            cout << "VOName: " << js.voName << endl;
-            cout << endl;
-
-            return;
-        }
-
+void MsgPrinter::print_json(JobStatus const & j)
+{
     map<string, string> object;
 
     if (verbose)
         {
             map<string, string> aux = map_list_of
-                                      ("job_id", js.jobId)
-                                      ("status", js.jobStatus)
-                                      ("dn", js.clientDn)
-                                      ("reason", js.reason.empty() ? "<None>": js.reason)
-                                      ("submision_time", time_buff)
-                                      ("file_count", lexical_cast<string>(js.numFiles))
-                                      ("priority", lexical_cast<string>(js.priority))
-                                      ("vo", js.voName)
+                                      ("job_id", j.jobId)
+                                      ("status", j.jobStatus)
+                                      ("dn", j.clientDn)
+                                      ("reason", j.reason.empty() ? "<None>": j.reason)
+                                      ("submision_time", j.submitTime)
+                                      ("file_count", (j.numFiles == -1 ? "n/a" : boost::lexical_cast<std::string>(j.numFiles)))
+                                      ("priority", lexical_cast<string>(j.priority))
+                                      ("vo", j.voName)
                                       ;
             object = aux;
         }
     else
         {
-            map<string, string> aux = map_list_of ("job_id", js.jobId) ("status", js.jobStatus);
+            map<string, string> aux = map_list_of ("job_id", j.jobId) ("status", j.jobStatus);
             object = aux;
         }
 
@@ -445,7 +422,7 @@ void MsgPrinter::job_summary(JobSummary js)
 
     if (!json)
         {
-            job_status(js.status);
+            print_cout(js.status);
             cout << "\tActive: " << js.numActive << endl;
             cout << "\tReady: " << js.numReady << endl;
             cout << "\tCanceled: " << js.numCanceled << endl;
@@ -455,18 +432,12 @@ void MsgPrinter::job_summary(JobSummary js)
             return;
         }
 
-    // change the precision from msec to sec
-    js.status.submitTime /= 1000;
-
-    char time_buff[20];
-    strftime(time_buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&js.status.submitTime));
-
     map<string, string> object = map_list_of
                                  ("job_id", js.status.jobId)
                                  ("status", js.status.jobStatus)
                                  ("dn", js.status.clientDn)
                                  ("reason", js.status.reason.empty() ? "<None>": js.status.reason)
-                                 ("submision_time", time_buff)
+                                 ("submision_time", js.status.submitTime)
                                  ("file_count", lexical_cast<string>(js.status.numFiles))
                                  ("priority", lexical_cast<string>(js.status.priority))
                                  ("vo", js.status.voName)
@@ -538,7 +509,7 @@ void MsgPrinter::file_list(vector<string> values, vector<string> retries)
     JsonOutput::printArray("job.files", file);
 }
 
-MsgPrinter::MsgPrinter(ostream& out): verbose(false), json(false)
+MsgPrinter::MsgPrinter(ostream& out): json(false)
 {
 
 }

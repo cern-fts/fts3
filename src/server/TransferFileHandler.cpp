@@ -160,7 +160,7 @@ optional<FileIndex> TransferFileHandler::getIndex(string vo)
 
 TransferFiles* TransferFileHandler::getFile(FileIndex index)
 {
-    static const string automatic = "auto";
+
 
     // if there's no mapping for this index ..
     if (fileIndexToFiles.find(index) == fileIndexToFiles.end()) return 0;
@@ -170,52 +170,10 @@ TransferFiles* TransferFileHandler::getFile(FileIndex index)
 
     if (!fileIndexToFiles[index].empty())
         {
-            list<TransferFiles*>& alternatives = fileIndexToFiles[index];
-
-            if (alternatives.front()->SELECTION_STRATEGY == automatic)
-                {
-                    // the maximum success rate (we are treating as equal everything that's equal or greater than 99%)
-                    double maxSuccessRate = -1;
-                    // the maximum average throughput for pairs with maximum success rate (and the corresponding file)
-                    std::pair<double, TransferFiles*> maxAvgThr(-1, static_cast<TransferFiles*>(NULL));
-
-                    list<TransferFiles*>::iterator it;
-
-                    for (it = alternatives.begin(); it != alternatives.end(); it++)
-                        {
-                            double tmpRate = db->getSuccessRate((*it)->SOURCE_SE, (*it)->DEST_SE);
-                            double tmpAvgThr = db->getAvgThroughput((*it)->SOURCE_SE, (*it)->DEST_SE);
-
-                            // we are interested in all pairs that have success rate equal or greater to 99%
-                            if (tmpRate >= 99) tmpRate = 99;
-
-                            if (tmpRate > maxSuccessRate)
-                                {
-                                    maxSuccessRate = tmpRate;
-                                    maxAvgThr.first = tmpAvgThr;
-                                    maxAvgThr.second = *it;
-                                }
-                            else if (tmpRate == maxSuccessRate)
-                                {
-                                    if (tmpAvgThr > maxAvgThr.first)
-                                        {
-                                            maxAvgThr.first = tmpAvgThr;
-                                            maxAvgThr.second = *it;
-                                        }
-                                }
-                        }
-                    // the chosen file
-                    ret = maxAvgThr.second;
-                    // remove it from the list
-                    fileIndexToFiles[index].remove(ret);
-                }
-            else
-                {
-                    // get the first in the list
-                    ret = fileIndexToFiles[index].front();
-                    // remove it from the list
-                    fileIndexToFiles[index].pop_front();
-                }
+            // get the first in the list
+            ret = fileIndexToFiles[index].front();
+            // remove it from the list
+            fileIndexToFiles[index].pop_front();
         }
 
     return ret;

@@ -34,6 +34,28 @@ namespace db
 
 const int MAX_ACTIVE_PER_LINK = 70;
 
+/*check if it's single source  / multiple destination replication job*/
+inline bool is_n_replication(std::list<job_element_tupple>& src_dest_pair)
+{
+    // if it has less than 2 pairs it wont be a n-replication job
+    if (src_dest_pair.size() < 2) return false;
+
+    std::string sourceSurl = src_dest_pair.begin()->source;
+
+    std::list<job_element_tupple>::const_iterator iter;
+    for (iter = src_dest_pair.begin(); iter != src_dest_pair.end(); ++iter)
+        {
+            if(sourceSurl != iter->source)
+                {
+                    return false;
+                }
+        }
+
+    return true;
+}
+
+
+/*check if it's a multiple replicas job*/
 inline bool is_mreplica(std::list<job_element_tupple>& src_dest_pair)
 {
     // if it has less than 2 pairs it wont be a m-replica
@@ -50,10 +72,10 @@ inline bool is_mreplica(std::list<job_element_tupple>& src_dest_pair)
                 }
         }
 
-    return true;   
+    return true;
 }
 
-
+/*check if it's a m-hop job*/
 inline bool is_mhop(std::list<job_element_tupple>& src_dest_pair)
 {
     // if it has less than 2 pairs it wont be a multi-hop
@@ -64,9 +86,9 @@ inline bool is_mhop(std::list<job_element_tupple>& src_dest_pair)
     std::advance(iter2, 1);
 
     for (; iter2 != src_dest_pair.end(); ++iter, ++iter2)
-		{
-    		if (iter->destination != iter2->source) return false;
-		}
+        {
+            if (iter->destination != iter2->source) return false;
+        }
 
     return true;
 }

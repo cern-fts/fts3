@@ -219,6 +219,7 @@ protected:
 
                         DBSingleton::instance().getDBObjectInstance()->getByJobId(voQueues);
 
+
                         if(voQueues.empty())
                             return;
 

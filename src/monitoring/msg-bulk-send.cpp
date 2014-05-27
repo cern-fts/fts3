@@ -132,6 +132,7 @@ int main()
 
             if (!WIFSTOPPED(status))
                 {
+		    sleep(60);
                     result = fork();
                     if (result == 0)
                         {
@@ -142,7 +143,7 @@ int main()
                             exit(1);
                         }
                 }
-            sleep(10);
+            sleep(60);
         }
 
     return 0;

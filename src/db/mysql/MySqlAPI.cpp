@@ -859,15 +859,15 @@ void MySqlAPI::setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<i
             // count the alternative replicas, if there is more than one it makes sense to set the NOT_USED state
 
             sql.begin();
-	    
-	    std::string flag;
-	    soci::indicator ind = soci::i_ok;
-	    
-	    sql << " select reuse_job from t_job where job_id = :job_id ", soci::use(jobId), soci::into(flag, ind);
-	    
-	    if (ind == soci::i_ok && flag == "H") //don't set to NOT_USED state for multi-hop - ONLY for multiple repicas
-	    	return;
-	    
+
+            std::string flag;
+            soci::indicator ind = soci::i_ok;
+
+            sql << " select reuse_job from t_job where job_id = :job_id ", soci::use(jobId), soci::into(flag, ind);
+
+            if (ind == soci::i_ok && flag == "H") //don't set to NOT_USED state for multi-hop - ONLY for multiple repicas
+                return;
+
 
             int count = 0;
 
@@ -939,32 +939,88 @@ void MySqlAPI::setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<i
 
 void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId)
 {
+    //auto-pick and manuall replica logic must be added here
+
     try
         {
             soci::indicator ind = soci::i_ok;
-            int fileIndex=0;
+            std::string selection_strategy;
+            std::string vo_name;
 
-            sql <<
-                " SELECT file_index "
-                " FROM t_file "
-                " WHERE file_id = :fileId AND file_state = 'NOT_USED' ",
-                soci::use(fileId),
-                soci::into(fileIndex, ind)
-                ;
+            //check if the file belongs to a multiple replica job
+            long long replicaJob = 0;
+            long long replicaJobCountAll = 0;
+            sql << "select count(*), count(distinct file_index) from t_file where job_id=:job_id",
+                soci::use(jobId), soci::into(replicaJobCountAll), soci::into(replicaJob);
 
-            // make sure it's not NULL
-            if (ind == soci::i_ok)
+            //this is a m-replica job
+            if(replicaJobCountAll > 1 && replicaJob == 1)
                 {
-                    sql.begin();
-                    sql <<
-                        " UPDATE t_file "
-                        " SET file_state = 'SUBMITTED' "
-                        " WHERE job_id = :jobId "
-                        "	AND file_index = :fileIndex "
-                        "	AND file_state = 'NOT_USED'",
-                        soci::use(jobId),
-                        soci::use(fileIndex);
-                    sql.commit();
+                    //check if it's auto or manual
+                    sql << " select selection_strategy, vo_name from t_file where file_id = :file_id",
+                        soci::use(fileId), soci::into(selection_strategy, ind), soci::into(vo_name);
+
+                    if (ind == soci::i_ok)
+                        {
+                            if(selection_strategy == "auto") //pick the "best-next replica to process"
+                                {
+                                    int bestFileId = getBestNextReplica(sql, jobId, vo_name);
+				    if(bestFileId > 0) //use the one recommended
+				    { 
+                                    	sql.begin();
+                                    	sql <<
+                                        " UPDATE t_file "
+                                        " SET file_state = 'SUBMITTED' "
+                                        " WHERE job_id = :jobId AND file_id = :file_id  "
+                                        " AND file_state = 'NOT_USED' ",
+                                        soci::use(jobId), soci::use(bestFileId);
+                                    	sql.commit();
+				    }
+				    else //something went wrong, use orderly fashion
+				    {
+                                    	sql.begin();
+                                    	sql <<
+                                        " UPDATE t_file "
+                                        " SET file_state = 'SUBMITTED' "
+                                        " WHERE job_id = :jobId "
+                                        " AND file_state = 'NOT_USED' ORDER BY file_id LIMIT 1 ",
+                                        soci::use(jobId);
+                                    	sql.commit();				    
+				    }
+                                }
+                            else if (selection_strategy == "orderly")
+                                {
+                                    sql.begin();
+                                    sql <<
+                                        " UPDATE t_file "
+                                        " SET file_state = 'SUBMITTED' "
+                                        " WHERE job_id = :jobId "
+                                        " AND file_state = 'NOT_USED' ORDER BY file_id LIMIT 1 ",
+                                        soci::use(jobId);
+                                    sql.commit();
+                                }
+                            else{
+                                    sql.begin();
+                                    sql <<
+                                        " UPDATE t_file "
+                                        " SET file_state = 'SUBMITTED' "
+                                        " WHERE job_id = :jobId "
+                                        " AND file_state = 'NOT_USED' ORDER BY file_id LIMIT 1 ",
+                                        soci::use(jobId);
+                                    sql.commit();			    
+			    	}				
+                        }
+                    else //it's NULL, default is orderly
+                        {
+                            sql.begin();
+                            sql <<
+                                " UPDATE t_file "
+                                " SET file_state = 'SUBMITTED' "
+                                " WHERE job_id = :jobId "
+                                " AND file_state = 'NOT_USED' ORDER BY file_id LIMIT 1 ",
+                                soci::use(jobId);
+                            sql.commit();
+                        }
                 }
         }
     catch (std::exception& e)
@@ -978,6 +1034,88 @@ void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId)
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 
+}
+
+
+bool pairCompare( std::pair<std::pair<std::string, std::string>, int> i, pair<std::pair<std::string, std::string>, int> j)
+{
+	return i.second < j.second;
+}
+
+int MySqlAPI::getBestNextReplica(soci::session& sql, const std::string & job_id, const std::string & vo_name)
+{
+    //for now consider only the less queued transfers, later add throughput and success rate
+    int bestFileId = 0;  
+    std::string bestSource;
+    std::string bestDestination;    
+    std::map<std::pair<std::string, std::string>, int> pair;
+    soci::indicator ind = soci::i_ok;
+          
+    try
+        {
+            //get available pairs
+            soci::rowset<soci::row> rs = (
+                                             sql.prepare <<
+                                             "select distinct source_se, dest_se from t_file where job_id=:job_id and file_state='NOT_USED'",
+                                             soci::use(job_id)
+                                         );
+
+            soci::rowset<soci::row>::const_iterator it;
+            for (it = rs.begin(); it != rs.end(); ++it)
+                {
+                    std::string source_se = it->get<std::string>("source_se","");
+                    std::string dest_se = it->get<std::string>("dest_se","");
+                    int queued = 0;		    
+
+                    //get queued for this link and vo
+                    sql << " select count(*) from t_file where file_state='SUBMITTED' and "
+                        " source_se=:source_se and dest_se=:dest_se and "
+                        " vo_name=:vo_name ",
+                        soci::use(source_se), soci::use(dest_se),soci::use(vo_name), soci::into(queued);
+			
+  			//get distinct source_se / dest_se
+ 			 std::pair<std::string, std::string> key(source_se, dest_se);
+ 			 pair.insert(std::make_pair(key, queued));	
+			 
+			if(queued == 0) //pick the first one if the link is free
+				break;			 
+			 
+                    //get success rate & throughput for this link, it is mapped to "filesize" column in t_optimizer_evolution table :)
+                    /*
+		    sql << " select filesize, throughput from t_optimizer_evolution where "
+                        " source_se=:source_se and dest_se=:dest_se and filesize is not NULL and agrthroughput is not NULL "
+                        " order by datetime desc limit 1 ",
+                        soci::use(source_se), soci::use(dest_se),soci::into(successRate),soci::into(throughput);
+		    */		                        
+		    
+                }
+	
+           //not waste queries
+	   if(pair.size() > 0)
+	   {
+	        //get min queue length	
+	   	std::pair<std::pair<std::string, std::string>, int> minValue = *min_element(pair.begin(), pair.end(), pairCompare );
+	   	bestSource =      (minValue.first).first;
+           	bestDestination = (minValue.first).second;	   
+	   	     	     	   
+            	//finally get the next-best file_id to be processed
+            	sql << "select file_id from t_file where file_state='NOT_USED' and source_se=:source_se and dest_se=:dest_se and job_id=:job_id",
+                	soci::use(bestSource), soci::use(bestDestination), soci::use(job_id), soci::into(bestFileId, ind);
+		
+            	if (ind != soci::i_ok)		
+	    		bestFileId = 0;
+	    }
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+
+    return bestFileId;
 }
 
 unsigned int MySqlAPI::updateFileStatusReuse(TransferFiles* file, const std::string status)
@@ -1192,20 +1330,25 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
         reuseFlag = "Y"; //session reuse
     else if (hop == "Y")
         reuseFlag = "H"; //multi-hop
-	
+
     //check if it's multiple-replica or multi-hop and set hashedId and file_index accordingly
     bool mreplica = is_mreplica(src_dest_pair);
-    bool mhop     = is_mhop(src_dest_pair);  
-	    
+    bool mhop     = is_mhop(src_dest_pair);
+
     if( reuseFlag != "N" && (mreplica || mhop))
-	{	
-		throw Err_Custom("Session reuse (-r) can't be used with multiple replicas or multi-hop jobs!");		
-        }			
+        {
+            throw Err_Custom("Session reuse (-r) can't be used with multiple replicas or multi-hop jobs!");
+        }
+	
+    if( (bringOnline > 0 || copyPinLifeTime > 0) && (mreplica || mhop))
+        {
+            throw Err_Custom("bringOnline or copyPinLifeTime can't be used with multiple replicas or multi-hop jobs!");
+        }	
 
     if(mhop) //since H is not passed when plain text submission (e.g. glite client) we need to set into DB
-    	  reuseFlag = "H";
+        reuseFlag = "H";
 
-    const std::string initialState = bringOnline > 0 || copyPinLifeTime > 0 ? "STAGING" : "SUBMITTED";
+    std::string initialState = bringOnline > 0 || copyPinLifeTime > 0 ? "STAGING" : "SUBMITTED";
     const int priority = 3;
     std::string jobParams;
 
@@ -1277,10 +1420,12 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
 
             // When reuse is enabled, we use the same random number for the whole job
             // This guarantees that the whole set belong to the same machine, but keeping
-            // the load balance between hosts    
-	    hashedId = getHashedId();		           
+            // the load balance between hosts
+            hashedId = getHashedId();
 
             std::list<job_element_tupple>::const_iterator iter;
+	    int index = 0;
+	    
             for (iter = src_dest_pair.begin(); iter != src_dest_pair.end(); ++iter)
                 {
                     sourceSurl = iter->source;
@@ -1299,18 +1444,24 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
                     	Y = reuse
                     	H = multi-hop
                     */
-                    if (reuseFlag == "N" && mreplica) 
-                        {                                                        
-                            fileIndex = 0;                               
+                    if (reuseFlag == "N" && mreplica)
+                        {
+                            fileIndex = 0;
+			    if(index == 0) //only the first file
+			    	initialState = "SUBMITTED";
+			    else
+			        initialState = "NOT_USED";					
+							    
+			    index++;			    	
                         }
-		    if (reuseFlag == "N" && mhop) 
-                        {                                                        
-                            hashedId = hashedId;   //for conviniency                            
-                        }			                    			
+                    if (reuseFlag == "N" && mhop)
+                        {
+                            hashedId = hashedId;   //for conviniency
+                        }
                     else if (reuseFlag == "N" && !mreplica && !mhop)
                         {
-			     hashedId = getHashedId();
-                        }                      			                                   	
+                            hashedId = getHashedId();
+                        }
 
                     //get distinct source_se / dest_se
                     Key p1 (sourceSe, destSe);
@@ -2934,9 +3085,9 @@ void MySqlAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std
                                              "   j.job_state = 'SUBMITTED' AND j.job_finished IS NULL AND "
                                              "   j.cancel_job IS NULL AND "
                                              "   (j.reuse_job IS NOT NULL AND j.reuse_job != 'N') AND " //Y or H
-					     "   (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) "                                                   				     
+                                             "   (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) "
                                              "   ORDER BY j.priority DESC, j.submit_time LIMIT 1 ",
-					     soci::use(hashSegment.start), soci::use(hashSegment.end));
+                                             soci::use(hashSegment.start), soci::use(hashSegment.end));
 
             for (soci::rowset<TransferJobs>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
@@ -5869,17 +6020,17 @@ int MySqlAPI::getRetry(const std::string & jobId)
                 {
                     nRetries = 0;
                 }
-		
-		
-	  //do not retry multiple replica jobs
-	  if(nRetries > 0)
-	  {
-	  	long long mreplica = 0;
-	  	long long mreplicaCount = 0;
-	  	sql << "select count(*), count(distinct file_index) from t_file where job_id=:job_id", soci::use(jobId), soci::into(mreplicaCount), soci::into(mreplica);
-	  	if(mreplicaCount > 1 && mreplica == 1) 
-	  		nRetries = 0;
-         }			
+
+
+            //do not retry multiple replica jobs
+            if(nRetries > 0)
+                {
+                    long long mreplica = 0;
+                    long long mreplicaCount = 0;
+                    sql << "select count(*), count(distinct file_index) from t_file where job_id=:job_id", soci::use(jobId), soci::into(mreplicaCount), soci::into(mreplica);
+                    if(mreplicaCount > 1 && mreplica == 1)
+                        nRetries = 0;
+                }
         }
     catch (std::exception& e)
         {
@@ -7405,6 +7556,10 @@ void MySqlAPI::checkSanityState()
     unsigned int allFailed = 0;
     unsigned int allCanceled = 0;
     unsigned int numberOfFilesRevert = 0;
+    
+    long long  countMreplica = 0;
+    long long  countMindex = 0;    
+
     std::string canceledMessage = "Transfer canceled by the user";
     std::string failed = "One or more files failed. Please have a look at the details for more information";
     std::string job_id;
@@ -7483,6 +7638,12 @@ void MySqlAPI::checkSanityState()
                                               soci::use(job_id),
                                               soci::use(job_id),
                                               soci::into(allFailed));
+					      
+					      
+                   soci::statement stmt_m_replica = (sql.prepare << " select COUNT(*), COUNT(distinct file_index) from t_file where job_id=:job_id  ",
+                                             soci::use(job_id),
+                                             soci::into(countMreplica),
+					     soci::into(countMindex));						                       					     		    			     					     				      
 
                     sql.begin();
                     for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
@@ -7493,6 +7654,8 @@ void MySqlAPI::checkSanityState()
                             allCanceled = 0;
                             allFailed = 0;
                             terminalState = 0;
+			    countMreplica = 0;
+			    countMindex = 0;  			    
 
                             stmt1.execute(true);
 
@@ -7530,6 +7693,32 @@ void MySqlAPI::checkSanityState()
                                                 }
                                         }
                                 }
+								
+				//check for m-replicas sanity
+				stmt_m_replica.execute(true);
+				//this is a m-replica job
+		                if(countMreplica > 1 && countMindex == 1)
+				{					
+    					soci::rowset<soci::row> rsReplica = (
+                                                       sql.prepare <<
+                                                       " select file_state, COUNT(file_state) from t_file where job_id=:job_id group by file_state order by null ",
+						       	soci::use(job_id)
+                                                   );					     
+					     	
+					soci::rowset<soci::row>::const_iterator iRep;				     				                          
+                    			for (iRep = rsReplica.begin(); iRep != rsReplica.end(); ++iRep)	
+		    			{
+						 std::string file_state = iRep->get<std::string>("file_state");
+                                    		 long long countStates = iRep->get<long long>("COUNT(file_state)",0);
+						 
+						 //state incosistency, fix it by force failing
+						 if( (file_state == "ACTIVE" || file_state=="READY" || file_state == "SUBMITTED") && countStates > 1)
+						 {
+						 	stmt7.execute(true);
+							stmt4.execute(true);							
+						 }
+		    			}									
+				}
                         }
                     sql.commit();
 
@@ -8730,18 +8919,18 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                             nFailedLastHour = 0;
                             nFinishedLastHour = 0;
                             ratioSuccessFailure = 0.0;
-			    
-			    
-			    st1.execute(true);
-			    st2.execute(true);
-			    st7.execute(true);
-			    st6.execute(true);
-     		            st3.execute(true);
-			    
-			    
-			    //if all of the above return 0 then continue
-			    if(active == 0 && nFinishedLastHour == 0 &&  nFailedLastHour == 0 && submitted == 0 && source_se_p.empty() && dest_se_p.empty())
-			    	continue;			    
+
+
+                            st1.execute(true);
+                            st2.execute(true);
+                            st7.execute(true);
+                            st6.execute(true);
+                            st3.execute(true);
+
+
+                            //if all of the above return 0 then continue
+                            if(active == 0 && nFinishedLastHour == 0 &&  nFailedLastHour == 0 && submitted == 0 && source_se_p.empty() && dest_se_p.empty())
+                                continue;
 
                             result << "{\n";
 
@@ -8757,31 +8946,31 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                             result <<   dest_se;
                             result <<   "\",\n";
 
-                            //get active for this pair and vo                            
+                            //get active for this pair and vo
                             result <<   "\"Current active transfers\":\"";
                             result <<   active;
                             result <<   "\",\n";
 
-                            //get max active for this pair no matter the vo                            
+                            //get max active for this pair no matter the vo
                             result <<   "\"Max active transfers\":\"";
                             result <<   maxActive;
                             result <<   "\",\n";
-                                                      
+
                             result <<   "\"Number of finished (last hour)\":\"";
                             result <<   long(nFinishedLastHour);
                             result <<   "\",\n";
-                            
+
                             result <<   "\"Number of failed (last hour)\":\"";
                             result <<   long(nFailedLastHour);
                             result <<   "\",\n";
 
-                            //get submitted for this pair and vo                           
+                            //get submitted for this pair and vo
                             result <<   "\"Number of queued\":\"";
                             result <<   submitted;
                             result <<   "\",\n";
-			    
-			    
-  			    //average throughput block
+
+
+                            //average throughput block
                             st41.execute(true);
                             result <<   "\"Avg throughput (last 60min)\":\"";
                             result <<  std::setprecision(2) << throughput1h;
@@ -8801,7 +8990,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                             result <<   "\"Avg throughput (last 5min)\":\"";
                             result <<  std::setprecision(2) << throughput5min;
                             result <<   " MB/s\",\n";
-			    
+
 
                             //round up efficiency
                             if(nFinishedLastHour > 0)

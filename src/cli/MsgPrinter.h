@@ -72,12 +72,12 @@ public:
     void error_msg(string msg); //
     void gsoap_error_msg(string msg); //
 
-    void cancelled_jobs(std::vector<std::string> const & id);
-    void cancelled_jobs(std::vector< std::pair<std::string, std::string> > const & id_status);
+    template<typename T>
+    void print(std::vector<T> const & v);
+
 
     void job_id(string job_id); //
     void status(JobStatus js);
-    void job_status(JobStatus js);
     void job_summary(JobSummary js);
     void file_list(vector<string> values, vector<string> retries);
 
@@ -100,11 +100,25 @@ private:
     static void print_cout(std::pair<std::string, std::string> const & id_status);
     static void print_json(std::pair<std::string, std::string> const & id_status);
 
+    static void print_cout(JobStatus const & j);
+    static void print_json(JobStatus const & j);
+
     ///
-    bool verbose;
+    static bool verbose;
     ///
     bool json;
 };
+
+template<typename T>
+void MsgPrinter::print(std::vector<T> const & v)
+{
+    void (*print)(T const &);
+
+    if (json) print = print_json;
+    else print = print_cout;
+
+    std::for_each(v.begin(), v.end(), print);
+}
 
 } /* namespace server */
 } /* namespace fts3 */

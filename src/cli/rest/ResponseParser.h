@@ -8,6 +8,8 @@
 #ifndef RESPONSEPARSER_H_
 #define RESPONSEPARSER_H_
 
+#include "TransferTypes.h"
+
 #include <istream>
 #include <string>
 
@@ -31,7 +33,9 @@ public:
 
     virtual ~ResponseParser();
 
-    string get(string path);
+    string get(string const & path) const;
+
+    vector<JobStatus> getJobs(string const & path) const;
 
 private:
     /// The object that contains the response

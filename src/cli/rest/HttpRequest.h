@@ -46,7 +46,7 @@ class HttpRequest
 
 public:
 
-    HttpRequest(string url, string capath, string proxy, ostream& stream);
+    HttpRequest(string const & url, string const & capath, string const & proxy, ostream& stream);
     virtual ~HttpRequest();
 
     void get();

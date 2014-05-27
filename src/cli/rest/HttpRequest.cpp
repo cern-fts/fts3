@@ -15,7 +15,7 @@ using namespace fts3::cli;
 
 const string HttpRequest::PORT = "8446";
 
-HttpRequest::HttpRequest(string url, string capath, string proxy, ostream& stream) :
+HttpRequest::HttpRequest(string const & url, string const & capath, string const & proxy, ostream& stream) :
     stream(stream),
     curl(curl_easy_init()),
     fd(0)

@@ -89,9 +89,9 @@ struct File
 struct JobStatus
 {
 
-    JobStatus(): submitTime(0), numFiles(0), priority(0) {};
+    JobStatus(): numFiles(0), priority(0) {};
 
-    JobStatus(std::string jobId, std::string jobStatus, std::string clientDn, std::string reason, std::string voName, long submitTime, int numFiles, int priority) :
+    JobStatus(std::string jobId, std::string jobStatus, std::string clientDn, std::string reason, std::string voName, std::string submitTime, int numFiles, int priority) :
         jobId(jobId),
         jobStatus(jobStatus),
         clientDn(clientDn),
@@ -122,7 +122,7 @@ struct JobStatus
     std::string clientDn;
     std::string reason;
     std::string voName;
-    long submitTime;
+    std::string submitTime;
     int numFiles;
     int priority;
 };

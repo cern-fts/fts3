@@ -230,22 +230,22 @@ static void call_perf(gfalt_transfer_status_t h, const char*, const char*, gpoin
                                          << std::endl;
             currentTransfer.throughput       = (double) avg;
             currentTransfer.transferredBytes = trans;
-	    
-	    double throughputTurl = 0.0;
-	    
-           if (currentTransfer.throughput > 0.0)
-                {                    
-			throughputTurl = convertKbToMb(currentTransfer.throughput);                          	    
-                        reporter.sendPing(currentTransfer.jobId,
-                              currentTransfer.fileId,
-                              throughputTurl,
-                              currentTransfer.transferredBytes,
-                              reporter.source_se,
-                              reporter.dest_se,
-                              "gsiftp:://fake",
-                              "gsiftp:://fake",
-                              "ACTIVE");
-	       }
+
+            double throughputTurl = 0.0;
+
+            if (currentTransfer.throughput > 0.0)
+                {
+                    throughputTurl = convertKbToMb(currentTransfer.throughput);
+                    reporter.sendPing(currentTransfer.jobId,
+                                      currentTransfer.fileId,
+                                      throughputTurl,
+                                      currentTransfer.transferredBytes,
+                                      reporter.source_se,
+                                      reporter.dest_se,
+                                      "gsiftp:://fake",
+                                      "gsiftp:://fake",
+                                      "ACTIVE");
+                }
         }
 }
 
@@ -332,18 +332,18 @@ void abnormalTermination(const std::string& classification, const std::string&, 
         }
 
     //send a ping here in order to flag this transfer's state as terminal to store into t_turl
-    
-    
-    
+
+
+
     if(turlVector.size() == 2) //make sure it has values
         {
-	   double throughputTurl = 0.0;
-	   
-           if (currentTransfer.throughput > 0.0)
-                {                    
-			throughputTurl = convertKbToMb(currentTransfer.throughput);
-                }   	
-	
+            double throughputTurl = 0.0;
+
+            if (currentTransfer.throughput > 0.0)
+                {
+                    throughputTurl = convertKbToMb(currentTransfer.throughput);
+                }
+
             reporter.sendPing(currentTransfer.jobId,
                               currentTransfer.fileId,
                               throughputTurl,
@@ -394,12 +394,12 @@ void taskStatusUpdater(int time)
                                          <<  currentTransfer.throughput << "  " <<  currentTransfer.transferredBytes
                                          << std::endl;
 
-	   double throughputTurl = 0.0;
-	    
-           if (currentTransfer.throughput > 0.0)
-                {                    
-			throughputTurl = convertKbToMb(currentTransfer.throughput);
-                }         
+            double throughputTurl = 0.0;
+
+            if (currentTransfer.throughput > 0.0)
+                {
+                    throughputTurl = convertKbToMb(currentTransfer.throughput);
+                }
 
             reporter.sendPing(currentTransfer.jobId,
                               currentTransfer.fileId,
@@ -470,7 +470,7 @@ void signalHandler(int signum)
                     propagated = true;
                     errorMessage = "TRANSFER " + currentTransfer.jobId + " canceled by the user";
                     logger.WARNING() << errorMessage << std::endl;
-                    abnormalTermination("CANCELED", errorMessage, "Abort");
+                    abnormalTermination("FAILED", errorMessage, "Abort");
                 }
         }
     else if (signum == SIGUSR1)
@@ -1282,18 +1282,18 @@ stop:
             msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
             msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
             msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
-	    
-	   double throughputTurl = 0.0;
-	    
-           if (currentTransfer.throughput > 0.0)
-                {                    
-			throughputTurl = convertKbToMb(currentTransfer.throughput);
+
+            double throughputTurl = 0.0;
+
+            if (currentTransfer.throughput > 0.0)
+                {
+                    throughputTurl = convertKbToMb(currentTransfer.throughput);
                 }
-            else 
-	        {
-			throughputTurl = convertBtoM(currentTransfer.fileSize, 1);                  
+            else
+                {
+                    throughputTurl = convertBtoM(currentTransfer.fileSize, 1);
                 }
-	    
+
             if (errorMessage.length() > 0)
                 {
                     msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Error");

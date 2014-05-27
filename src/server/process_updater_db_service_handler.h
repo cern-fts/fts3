@@ -124,7 +124,7 @@ protected:
         static unsigned int counter2 = 0;
         static unsigned int counterTimeoutWaiting = 0;
         static unsigned int counterCanceled = 0;
-	static bool executeSanityOnce = false;
+        static bool executeSanityOnce = false;
         std::vector<int> requestIDs;
 
         while (1)   /*need to receive more than one messages at a time*/
@@ -286,12 +286,12 @@ protected:
                         if (stopThreads)
                             return;
 
-		        if(!executeSanityOnce)
-			    {
-			      DBSingleton::instance().getDBObjectInstance()->checkSanityState();
-			      executeSanityOnce = true;
-			    }
-			    
+                        if(!executeSanityOnce)
+                            {
+                                DBSingleton::instance().getDBObjectInstance()->checkSanityState();
+                                executeSanityOnce = true;
+                            }
+
                         counter2++;
                         if (counter2 == 3600)
                             {
@@ -306,7 +306,7 @@ protected:
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown exception "
                                                        << e.what()
                                                        << commit;
-                        sleep(1);
+                        sleep(100);
                         counter1 = 0;
                         counterFailAll = 0;
                         countReverted = 0;
@@ -318,7 +318,7 @@ protected:
                 catch (...)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
-                        sleep(1);
+                        sleep(100);
                         counter1 = 0;
                         counterFailAll = 0;
                         countReverted = 0;

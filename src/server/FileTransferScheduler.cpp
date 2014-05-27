@@ -115,12 +115,8 @@ FileTransferScheduler::~FileTransferScheduler()
 
 bool FileTransferScheduler::schedule()
 {
-
-    vector<int> notUsed;
-
     try
         {
-
             if(cfgs.empty())
                 {
                     bool allowed = db->isTrAllowed(srcSeName, destSeName);
@@ -128,19 +124,10 @@ bool FileTransferScheduler::schedule()
                     if(allowed)
                         {
                             unsigned updated = db->updateFileStatus(file, JobStatusHandler::FTS3_STATUS_READY);
-                            if(updated == 0) return false;
-                            // set all other files that were generated due to a multi-source/destination submission to NOT_USED
-                            db->setFilesToNotUsed(file->JOB_ID, file->FILE_INDEX, notUsed);
-                            if(!notUsed.empty())
-                                {
-                                    std::vector<int>::const_iterator iter;
-                                    for (iter = notUsed.begin(); iter != notUsed.end(); ++iter)
-                                        {
-                                            SingleTrStateInstance::instance().sendStateMessage(file->JOB_ID, (*iter));
-                                        }
-                                    notUsed.clear();
-                                }
-                            return true;
+                            if(updated == 0)
+                                return false;
+                            else
+                                return true;
                         }
                     return false;
                 }
@@ -211,18 +198,8 @@ bool FileTransferScheduler::schedule()
             unsigned updated = db->updateFileStatus(file, JobStatusHandler::FTS3_STATUS_READY);
             if(updated == 0)
                 return false;
-            // set all other files that were generated due to a multi-source/destination submission to NOT_USED
-            db->setFilesToNotUsed(file->JOB_ID, file->FILE_INDEX, notUsed);
-            if(!notUsed.empty())
-                {
-                    std::vector<int>::const_iterator iter;
-                    for (iter = notUsed.begin(); iter != notUsed.end(); ++iter)
-                        {
-                            SingleTrStateInstance::instance().sendStateMessage(file->JOB_ID, (*iter));
-                        }
-                    notUsed.clear();
-                }
-
+            else
+                return true;
         }
     catch(std::exception& e)
         {
