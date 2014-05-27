@@ -7262,6 +7262,12 @@ void OracleAPI::checkSanityState()
     unsigned int allFailed = 0;
     unsigned int allCanceled = 0;
     unsigned int numberOfFilesRevert = 0;
+    
+    long long  countMreplica = 0;
+    long long  countMindex = 0; 
+    
+    std::string job_id;       
+    
     std::string canceledMessage = "Transfer canceled by the user";
     std::string failed = "One or more files failed. Please have a look at the details for more information";
 
@@ -7274,10 +7280,18 @@ void OracleAPI::checkSanityState()
                                                        sql.prepare <<
                                                        " select job_id from t_job  where job_finished is null "
                                                    );
+						   
+                   soci::statement stmt_m_replica = (sql.prepare << " select COUNT(*), COUNT(distinct file_index) from t_file where job_id=:job_id  ",
+                                             soci::use(job_id),
+                                             soci::into(countMreplica),
+					     soci::into(countMindex));						                       					     		    			     					     				      
+						   
 
                     sql.begin();
                     for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                         {
+			    job_id = (*i);
+			
                             sql << "SELECT COUNT(DISTINCT file_index) FROM t_file where job_id=:jobId ", soci::use(*i), soci::into(numberOfFiles);
 
                             if(numberOfFiles > 0)
@@ -7330,6 +7344,41 @@ void OracleAPI::checkSanityState()
                                                 }
                                         }
                                 }
+				
+				//check for m-replicas sanity
+				stmt_m_replica.execute(true);
+				//this is a m-replica job
+		                if(countMreplica > 1 && countMindex == 1)
+				{					
+    					soci::rowset<soci::row> rsReplica = (
+                                                       sql.prepare <<
+                                                       " select file_state, COUNT(FILE_STATE) from t_file where job_id=:job_id group by file_state order by null ",
+						       	soci::use(job_id)
+                                                   );					     
+					     	
+					soci::rowset<soci::row>::const_iterator iRep;				     				                          
+                    			for (iRep = rsReplica.begin(); iRep != rsReplica.end(); ++iRep)	
+		    			{
+						 std::string file_state = iRep->get<std::string>("FILE_STATE");
+                                    		 int countStates = iRep->get<int>("COUNT(FILE_STATE)");
+						 
+						 //state incosistency, fix it by force failing
+						 if( (file_state == "ACTIVE" || file_state=="READY" || file_state == "SUBMITTED") && countStates > 1)
+						 {
+ 							  sql << "UPDATE t_file SET "
+                                        			"    file_state = 'FAILED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), "
+                                        			"    reason = 'Force failure due to file state inconsistency' "
+                                        			"    WHERE file_state in ('ACTIVE','READY','SUBMITTED','STAGING') and job_id = :jobId", soci::use(*i);						 
+						 	
+							  sql << "UPDATE t_job SET "
+                                                                        "    job_state = 'FAILED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), "
+                                                                        "    reason = :failed "
+                                                                        "    WHERE job_id = :jobId", soci::use(failed), soci::use(*i);					
+						 }
+		    			}									
+				}				
+				
+				
                             //reset
                             numberOfFiles = 0;
                         }

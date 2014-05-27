@@ -7556,6 +7556,10 @@ void MySqlAPI::checkSanityState()
     unsigned int allFailed = 0;
     unsigned int allCanceled = 0;
     unsigned int numberOfFilesRevert = 0;
+    
+    long long  countMreplica = 0;
+    long long  countMindex = 0;    
+
     std::string canceledMessage = "Transfer canceled by the user";
     std::string failed = "One or more files failed. Please have a look at the details for more information";
     std::string job_id;
@@ -7634,6 +7638,12 @@ void MySqlAPI::checkSanityState()
                                               soci::use(job_id),
                                               soci::use(job_id),
                                               soci::into(allFailed));
+					      
+					      
+                   soci::statement stmt_m_replica = (sql.prepare << " select COUNT(*), COUNT(distinct file_index) from t_file where job_id=:job_id  ",
+                                             soci::use(job_id),
+                                             soci::into(countMreplica),
+					     soci::into(countMindex));						                       					     		    			     					     				      
 
                     sql.begin();
                     for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
@@ -7644,6 +7654,8 @@ void MySqlAPI::checkSanityState()
                             allCanceled = 0;
                             allFailed = 0;
                             terminalState = 0;
+			    countMreplica = 0;
+			    countMindex = 0;  			    
 
                             stmt1.execute(true);
 
@@ -7681,6 +7693,32 @@ void MySqlAPI::checkSanityState()
                                                 }
                                         }
                                 }
+								
+				//check for m-replicas sanity
+				stmt_m_replica.execute(true);
+				//this is a m-replica job
+		                if(countMreplica > 1 && countMindex == 1)
+				{					
+    					soci::rowset<soci::row> rsReplica = (
+                                                       sql.prepare <<
+                                                       " select file_state, COUNT(file_state) from t_file where job_id=:job_id group by file_state order by null ",
+						       	soci::use(job_id)
+                                                   );					     
+					     	
+					soci::rowset<soci::row>::const_iterator iRep;				     				                          
+                    			for (iRep = rsReplica.begin(); iRep != rsReplica.end(); ++iRep)	
+		    			{
+						 std::string file_state = iRep->get<std::string>("file_state");
+                                    		 long long countStates = iRep->get<long long>("COUNT(file_state)",0);
+						 
+						 //state incosistency, fix it by force failing
+						 if( (file_state == "ACTIVE" || file_state=="READY" || file_state == "SUBMITTED") && countStates > 1)
+						 {
+						 	stmt7.execute(true);
+							stmt4.execute(true);							
+						 }
+		    			}									
+				}
                         }
                     sql.commit();
 

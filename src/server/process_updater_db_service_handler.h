@@ -306,7 +306,7 @@ protected:
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown exception "
                                                        << e.what()
                                                        << commit;
-                        sleep(1);
+                        sleep(100);
                         counter1 = 0;
                         counterFailAll = 0;
                         countReverted = 0;
@@ -318,7 +318,7 @@ protected:
                 catch (...)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
-                        sleep(1);
+                        sleep(100);
                         counter1 = 0;
                         counterFailAll = 0;
                         countReverted = 0;
