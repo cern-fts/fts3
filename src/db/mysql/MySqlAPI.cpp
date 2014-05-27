@@ -965,15 +965,28 @@ void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId)
                             if(selection_strategy == "auto") //pick the "best-next replica to process"
                                 {
                                     int bestFileId = getBestNextReplica(sql, jobId, vo_name);
-                                    sql.begin();
-                                    sql <<
+				    if(bestFileId > 0) //use the one recommended
+				    { 
+                                    	sql.begin();
+                                    	sql <<
                                         " UPDATE t_file "
                                         " SET file_state = 'SUBMITTED' "
                                         " WHERE job_id = :jobId AND file_id = :file_id  "
                                         " AND file_state = 'NOT_USED' ",
                                         soci::use(jobId), soci::use(bestFileId);
-                                    sql.commit();
-
+                                    	sql.commit();
+				    }
+				    else //something went wrong, use orderly fashion
+				    {
+                                    	sql.begin();
+                                    	sql <<
+                                        " UPDATE t_file "
+                                        " SET file_state = 'SUBMITTED' "
+                                        " WHERE job_id = :jobId "
+                                        " AND file_state = 'NOT_USED' ORDER BY file_id LIMIT 1 ",
+                                        soci::use(jobId);
+                                    	sql.commit();				    
+				    }
                                 }
                             else if (selection_strategy == "orderly")
                                 {

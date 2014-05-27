@@ -869,6 +869,8 @@ void OracleAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId
                             if(selection_strategy == "auto") //pick the "best-next replica to process"
                                 {
                                     int bestFileId = getBestNextReplica(sql, jobId, vo_name);
+				    if(bestFileId > 0)
+				    {
                                     sql.begin();
                                     sql <<
                                         " UPDATE t_file "
@@ -877,7 +879,18 @@ void OracleAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId
                                         " AND file_state = 'NOT_USED' ",
                                         soci::use(jobId), soci::use(bestFileId);
                                     sql.commit();
-
+				    }
+				    else
+				    {
+                                    sql.begin();
+                                    sql <<
+                                        " UPDATE t_file "
+                                        " SET file_state = 'SUBMITTED' "
+                                        " WHERE job_id = :jobId "
+                                        " AND file_state = 'NOT_USED' AND ROWNUM=1",
+                                        soci::use(jobId);
+                                    sql.commit();				    
+				    }
                                 }
                             else if (selection_strategy == "orderly")
                                 {
