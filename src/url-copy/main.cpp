@@ -470,7 +470,7 @@ void signalHandler(int signum)
                     propagated = true;
                     errorMessage = "TRANSFER " + currentTransfer.jobId + " canceled by the user";
                     logger.WARNING() << errorMessage << std::endl;
-                    abnormalTermination("CANCELED", errorMessage, "Abort");
+                    abnormalTermination("FAILED", errorMessage, "Abort");
                 }
         }
     else if (signum == SIGUSR1)
