@@ -64,9 +64,9 @@ ExecuteProcess::ExecuteProcess(const string& app, const string& arguments)
 {
 }
 
-int ExecuteProcess::executeProcessShell()
+int ExecuteProcess::executeProcessShell(std::string& forkMessage)
 {
-    return execProcessShell();
+    return execProcessShell(forkMessage);
 }
 
 // argsHolder is used to keep the argument pointers alive
@@ -104,13 +104,14 @@ static void closeAllFilesExcept(int exception)
         }
 }
 
-int ExecuteProcess::execProcessShell()
+int ExecuteProcess::execProcessShell(std::string& forkMessage)
 {
     // Open pipe
     int pipefds[2] = {0, 0};
     if (pipe(pipefds))
         {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to create pipe between parent/child processes"  << commit;
+	    forkMessage = "Failed to create pipe between parent/child processes";    
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << forkMessage  << commit;
             return -1;
         }
     if (fcntl(pipefds[1], F_SETFD, fcntl(pipefds[1], F_GETFD) | FD_CLOEXEC))
@@ -118,7 +119,8 @@ int ExecuteProcess::execProcessShell()
             close(pipefds[0]);
             close(pipefds[1]);
 
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to set fd FD_CLOEXEC"  << commit;
+	    forkMessage = "Failed to set fd FD_CLOEXEC";
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << forkMessage  << commit;
             return -1;
         }
 
@@ -133,7 +135,8 @@ int ExecuteProcess::execProcessShell()
             close(pipefds[0]);
             close(pipefds[1]);
 
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to fork " << strerror(errno)  << commit;
+ 	    forkMessage = "Failed to fork " + std::string(strerror(errno));
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << forkMessage  << commit;
             return -1;
         }
     // Child
@@ -179,7 +182,8 @@ int ExecuteProcess::execProcessShell()
         }
     if (count)
         {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Child's execvp error: " << strerror(err)  << commit;
+ 	    forkMessage = "Child process failure " + std::string(strerror(errno));
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << forkMessage  << commit;            
             return -1;
         }
 
@@ -187,10 +191,11 @@ int ExecuteProcess::execProcessShell()
     close(pipefds[0]);
 
     // Sleep for awhile but do not block waiting for child - 100ms
-    usleep(50000);
+    usleep(300000);
     if(waitpid(pid, NULL, WNOHANG) != 0)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "waitpid error: " << strerror(errno)  << commit;
+        {            
+	    forkMessage = "Waiting for child process failure " + std::string(strerror(errno));
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << forkMessage  << commit; 	    
             return -1;
         }
 

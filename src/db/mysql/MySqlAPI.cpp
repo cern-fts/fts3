@@ -983,7 +983,7 @@ void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId)
                                         " UPDATE t_file "
                                         " SET file_state = 'SUBMITTED' "
                                         " WHERE job_id = :jobId "
-                                        " AND file_state = 'NOT_USED' ORDER BY file_id LIMIT 1 ",
+                                        " AND file_state = 'NOT_USED' LIMIT 1 ",
                                         soci::use(jobId);
                                     	sql.commit();				    
 				    }
@@ -995,7 +995,7 @@ void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId)
                                         " UPDATE t_file "
                                         " SET file_state = 'SUBMITTED' "
                                         " WHERE job_id = :jobId "
-                                        " AND file_state = 'NOT_USED' ORDER BY file_id LIMIT 1 ",
+                                        " AND file_state = 'NOT_USED' LIMIT 1 ",
                                         soci::use(jobId);
                                     sql.commit();
                                 }
@@ -1005,7 +1005,7 @@ void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId)
                                         " UPDATE t_file "
                                         " SET file_state = 'SUBMITTED' "
                                         " WHERE job_id = :jobId "
-                                        " AND file_state = 'NOT_USED' ORDER BY file_id LIMIT 1 ",
+                                        " AND file_state = 'NOT_USED' LIMIT 1 ",
                                         soci::use(jobId);
                                     sql.commit();			    
 			    	}				
@@ -1017,7 +1017,7 @@ void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId)
                                 " UPDATE t_file "
                                 " SET file_state = 'SUBMITTED' "
                                 " WHERE job_id = :jobId "
-                                " AND file_state = 'NOT_USED' ORDER BY file_id LIMIT 1 ",
+                                " AND file_state = 'NOT_USED' LIMIT 1 ",
                                 soci::use(jobId);
                             sql.commit();
                         }
@@ -4534,10 +4534,11 @@ void MySqlAPI::forkFailedRevertStateV(std::map<int, std::string>& pids)
             std::string jobId;
 
 
-            soci::statement stmt = (sql.prepare << "UPDATE t_file SET file_state = 'SUBMITTED', transferhost='', start_time=NULL "
-                                    "WHERE file_id = :fileId AND job_id = :jobId AND "
-                                    "      file_state NOT IN ('FINISHED','FAILED','CANCELED')",
-                                    soci::use(fileId), soci::use(jobId));
+            soci::statement stmt = (sql.prepare << " UPDATE t_file SET file_state = 'FAILED', transferhost=:hostname, "
+	    					   " job_finished=UTC_TIMESTAMP(), finish_time= UTC_TIMESTAMP(), reason='Transfer failed to fork, check fts3server.log for more details'"
+                                    		   " WHERE file_id = :fileId AND job_id = :jobId AND "
+                                                   "      file_state NOT IN ('FINISHED','FAILED','CANCELED')",
+                                    soci::use(hostname), soci::use(fileId), soci::use(jobId));
 
 
             sql.begin();
@@ -4547,6 +4548,10 @@ void MySqlAPI::forkFailedRevertStateV(std::map<int, std::string>& pids)
                     jobId  = i->second;
                     stmt.execute(true);
                 }
+		
+		sql << "update t_job set job_state='FAILED',job_finished=UTC_TIMESTAMP(), finish_time= UTC_TIMESTAMP(), reason='Transfer failed to fork, check fts3server.log for more details' where job_id=:job_id",
+			soci::use(jobId);
+		
             sql.commit();
         }
     catch (std::exception& e)

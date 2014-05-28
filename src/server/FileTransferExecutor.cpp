@@ -380,10 +380,20 @@ int FileTransferExecutor::execute()
                             ExecuteProcess pr(cmd, params);
 
                             /*check if fork/execvp failed, */
-                            if (-1 == pr.executeProcessShell())
+			    std::string forkMessage;
+                            if (-1 == pr.executeProcessShell(forkMessage))
                                 {
-                                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to spawn " <<  tf->JOB_ID << "  " << tf->FILE_ID << commit;
-                                    db->forkFailedRevertState(tf->JOB_ID, tf->FILE_ID);
+				    if(forkMessage.empty())
+				    {
+                                    	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to fork " <<  tf->JOB_ID << "  " << tf->FILE_ID << commit;
+                                    	db->updateFileTransferStatus(0.0, tf->JOB_ID, tf->FILE_ID, "FAILED", "Transfer failed to fork, check fts3server.log for more details",(int) pr.getPid(), 0, 0, false);
+					db->updateJobTransferStatus(tf->JOB_ID, "FAILED",0);
+				    }else
+				    {
+				    	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to fork " <<  forkMessage << "   " <<  tf->JOB_ID << "  " << tf->FILE_ID << commit;					
+                                    	db->updateFileTransferStatus(0.0, tf->JOB_ID, tf->FILE_ID, "FAILED", "Transfer failed to fork, check fts3server.log for more details",(int) pr.getPid(), 0, 0, false);
+					db->updateJobTransferStatus(tf->JOB_ID, "FAILED",0);
+				    }
                                 }
                             else
                                 {
