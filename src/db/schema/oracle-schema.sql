@@ -98,6 +98,7 @@ CREATE TABLE t_optimizer_evolution (
     agrthroughput   NUMBER DEFAULT NULL
 );
 CREATE INDEX t_optimizer_source_and_dest ON t_optimizer_evolution(source_se, dest_se);
+CREATE INDEX t_optimizer_evolution_datetime ON t_optimizer_evolution(datetime);
 
 --
 -- Holds certificate request information
