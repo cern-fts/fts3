@@ -7754,6 +7754,35 @@ void MySqlAPI::checkSanityState()
                         {
                             job_id = (*i2);
                             numberOfFilesRevert = 0;
+			    
+				//check for m-replicas sanity
+				stmt_m_replica.execute(true);
+				//this is a m-replica job
+		                if(countMreplica > 1 && countMindex == 1)
+				{					
+    					soci::rowset<soci::row> rsReplica = (
+                                                       sql.prepare <<
+                                                       " select file_state, COUNT(file_state) from t_file where job_id=:job_id group by file_state order by null ",
+						       	soci::use(job_id)
+                                                   );					     
+					     	
+					soci::rowset<soci::row>::const_iterator iRep;				     				                          
+                    			for (iRep = rsReplica.begin(); iRep != rsReplica.end(); ++iRep)	
+		    			{
+						 std::string file_state = iRep->get<std::string>("file_state");
+                                    		 long long countStates = iRep->get<long long>("COUNT(file_state)",0);
+						 
+						 if(file_state == "FINISHED")
+						 {
+ 							sql << "UPDATE t_file SET "
+                                        			"    file_state = 'NOT_USED', job_finished = NULL, finish_time = NULL, "
+                                        			"    reason = '' "
+                                        			"    WHERE file_state in ('ACTIVE','READY','SUBMITTED') and job_id = :jobId", soci::use(job_id);	
+							continue;					 						 						 
+						 }
+		    			}
+					continue;									
+				}			
 
                             stmt6.execute(true);
 

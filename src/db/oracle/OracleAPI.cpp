@@ -7414,7 +7414,8 @@ void OracleAPI::checkSanityState()
                                                     );
 
                     for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
-                        {
+                        {			
+			
 				//check for m-replicas sanity
 				stmt_m_replica.execute(true);
 				//this is a m-replica job
@@ -7422,7 +7423,7 @@ void OracleAPI::checkSanityState()
 				{					
     					soci::rowset<soci::row> rsReplica = (
                                                        sql.prepare <<
-                                                       " select file_state, COUNT(file_state) from t_file where job_id=:job_id group by file_state order by null ",
+                                                       " select file_state, COUNT(FILE_STATE) from t_file where job_id=:job_id group by file_state order by null ",
 						       	soci::use(job_id)
                                                    );					     
 					     	
@@ -7437,13 +7438,14 @@ void OracleAPI::checkSanityState()
  							sql << "UPDATE t_file SET "
                                         			"    file_state = 'NOT_USED', job_finished = NULL, finish_time = NULL, "
                                         			"    reason = '' "
-                                        			"    WHERE file_state in ('ACTIVE','READY','SUBMITTED') and job_id = :jobId", soci::use(job_id);						 						 						 
-						 }
+                                        			"    WHERE file_state in ('ACTIVE','READY','SUBMITTED') and job_id = :jobId", soci::use(job_id);	
+							continue;					 						 						 
+						 }						 
 		    			}
 					continue;									
-				}			
-
-						    
+				}				
+							
+			    
                             sql << "SELECT COUNT(*) FROM t_file where job_id=:jobId AND file_state in ('ACTIVE','READY','SUBMITTED','STAGING') ", soci::use(*i2), soci::into(numberOfFilesRevert);
                             if(numberOfFilesRevert > 0)
                                 {
