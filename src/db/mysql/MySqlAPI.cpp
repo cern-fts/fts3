@@ -7729,13 +7729,7 @@ void MySqlAPI::checkSanityState()
 						 std::string file_state = iRep->get<std::string>("file_state");
                                     		 long long countStates = iRep->get<long long>("COUNT(file_state)",0);
 						 
-						 //state incosistency, fix it by force failing
-						 if( (file_state == "ACTIVE" || file_state=="READY" || file_state == "SUBMITTED") && countStates > 1)
-						 {
-						 	stmt7.execute(true);
-							stmt4.execute(true);							
-						 }
-						 else if(file_state == "FINISHED")
+						 if(file_state == "FINISHED")
 						 {
  							sql << "UPDATE t_file SET "
                                         			"    file_state = 'NOT_USED', job_finished = NULL, finish_time = NULL, "
