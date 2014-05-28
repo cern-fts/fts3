@@ -24,7 +24,7 @@ class ExecuteProcess
 {
 public:
     ExecuteProcess( const string& app, const string& arguments);
-    int executeProcessShell();
+    int executeProcessShell(std::string& forkMessage);
 
     inline int getPid()
     {
@@ -32,7 +32,7 @@ public:
     }
 
 protected:
-    int execProcessShell();
+    int execProcessShell(std::string& forkMessage);
     void getArgv(list<string>& argsHolder, size_t* argc, char*** argv);
 
 private:

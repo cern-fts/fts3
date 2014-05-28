@@ -4265,19 +4265,25 @@ void OracleAPI::forkFailedRevertStateV(std::map<int, std::string>& pids)
             int fileId=0;
             std::string jobId;
 
-            sql.begin();
-            soci::statement stmt = (sql.prepare << "UPDATE t_file SET file_state = 'SUBMITTED', transferhost='', start_time=NULL "
-                                    "WHERE file_id = :fileId AND job_id = :jobId AND "
-                                    "      file_state NOT IN ('FINISHED','FAILED','CANCELED')",
-                                    soci::use(fileId), soci::use(jobId));
 
+            soci::statement stmt = (sql.prepare << " UPDATE t_file SET file_state = 'FAILED', transferhost=:hostname, "
+	    					   " job_finished=sys_extract_utc(systimestamp), finish_time= sys_extract_utc(systimestamp), reason='Transfer failed to fork, check fts3server.log for more details'"
+                                    		   " WHERE file_id = :fileId AND job_id = :jobId AND "
+                                                   "      file_state NOT IN ('FINISHED','FAILED','CANCELED')",
+                                    soci::use(hostname), soci::use(fileId), soci::use(jobId));
+
+
+            sql.begin();
             for (std::map<int, std::string>::const_iterator i = pids.begin(); i != pids.end(); ++i)
                 {
                     fileId = i->first;
                     jobId  = i->second;
                     stmt.execute(true);
                 }
-
+		
+		sql << "update t_job set job_state='FAILED',job_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), reason='Transfer failed to fork, check fts3server.log for more details' where job_id=:job_id",
+			soci::use(jobId);
+		
             sql.commit();
         }
     catch (std::exception& e)
