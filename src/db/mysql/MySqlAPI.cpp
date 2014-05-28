@@ -7677,7 +7677,7 @@ void MySqlAPI::checkSanityState()
 
                             stmt1.execute(true);
 
-                            if(numberOfFiles > 0)
+                            if(numberOfFiles > 1)
                                 {
                                     stmt8.execute(true);
                                     stmt9.execute(true);
