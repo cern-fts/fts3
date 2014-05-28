@@ -4058,12 +4058,25 @@ void OracleAPI::revertToSubmitted()
                                          soci::into(fileId),
                                          soci::into(jobId),
                                          soci::into(reuseJob, reuseInd));
+					 
+            //check if the file belongs to a multiple replica job
+            long long replicaJob = 0;
+            long long replicaJobCountAll = 0;					 
 
             sql.begin();
             if (readyStmt.execute(true))
                 {
                     do
                         {
+			     //don't do anything to multiple replica jobs
+          		     sql << "select count(*), count(distinct file_index) from t_file where job_id=:job_id",
+                		soci::use(jobId), soci::into(replicaJobCountAll), soci::into(replicaJob);
+
+            		     //this is a m-replica job
+            		    if(replicaJobCountAll > 1 && replicaJob == 1)
+			    	break;			
+			
+			
                             time_t startTimestamp = timegm(&startTime);
                             double diff = difftime(now2, startTimestamp);
 
