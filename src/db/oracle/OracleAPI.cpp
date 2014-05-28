@@ -7389,20 +7389,7 @@ void OracleAPI::checkSanityState()
 						 std::string file_state = iRep->get<std::string>("FILE_STATE");
                                     		 int countStates = iRep->get<int>("COUNT(FILE_STATE)");
 						 
-						 //state incosistency, fix it by force failing
-						 if( (file_state == "ACTIVE" || file_state=="READY" || file_state == "SUBMITTED") && countStates > 1)
-						 {
- 							  sql << "UPDATE t_file SET "
-                                        			"    file_state = 'FAILED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), "
-                                        			"    reason = 'Force failure due to file state inconsistency' "
-                                        			"    WHERE file_state in ('ACTIVE','READY','SUBMITTED','STAGING') and job_id = :jobId", soci::use(*i);						 
-						 	
-							  sql << "UPDATE t_job SET "
-                                                                        "    job_state = 'FAILED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), "
-                                                                        "    reason = :failed "
-                                                                        "    WHERE job_id = :jobId", soci::use(failed), soci::use(*i);					
-						 }
-						 else if(file_state == "FINISHED")
+						 if(file_state == "FINISHED")
 						 {
  							sql << "UPDATE t_file SET "
                                         			"    file_state = 'NOT_USED', job_finished = NULL, finish_time = NULL, "
