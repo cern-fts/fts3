@@ -233,7 +233,7 @@ static void call_perf(gfalt_transfer_status_t h, const char*, const char*, gpoin
 
             double throughputTurl = 0.0;
 
-            if (currentTransfer.throughput > 0.0)
+            if (avg > 0 && inst > 0)
                 {
                     throughputTurl = convertKbToMb(currentTransfer.throughput);
                     reporter.sendPing(currentTransfer.jobId,
