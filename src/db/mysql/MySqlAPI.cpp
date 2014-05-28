@@ -7722,6 +7722,13 @@ void MySqlAPI::checkSanityState()
 						 	stmt7.execute(true);
 							stmt4.execute(true);							
 						 }
+						 else if(file_state == "FINISHED")
+						 {
+ 							sql << "UPDATE t_file SET "
+                                        			"    file_state = 'NOT_USED', job_finished = NULL, finish_time = NULL, "
+                                        			"    reason = '' "
+                                        			"    WHERE file_state in ('ACTIVE','READY','SUBMITTED') and job_id = :jobId", soci::use(job_id);						 						 						 
+						 }
 		    			}									
 				}
                         }

@@ -7389,6 +7389,13 @@ void OracleAPI::checkSanityState()
                                                                         "    reason = :failed "
                                                                         "    WHERE job_id = :jobId", soci::use(failed), soci::use(*i);					
 						 }
+						 else if(file_state == "FINISHED")
+						 {
+ 							sql << "UPDATE t_file SET "
+                                        			"    file_state = 'NOT_USED', job_finished = NULL, finish_time = NULL, "
+                                        			"    reason = '' "
+                                        			"    WHERE file_state in ('ACTIVE','READY','SUBMITTED') and job_id = :jobId", soci::use(job_id);						 						 						 
+						 }						 
 		    			}									
 				}				
 				
