@@ -7321,7 +7321,7 @@ void OracleAPI::checkSanityState()
 			
                             sql << "SELECT COUNT(DISTINCT file_index) FROM t_file where job_id=:jobId ", soci::use(*i), soci::into(numberOfFiles);
 
-                            if(numberOfFiles > 0)
+                            if(numberOfFiles > 1)
                                 {
                                     countFileInTerminalStates(sql, *i, allFinished, allCanceled, allFailed);
                                     terminalState = allFinished + allCanceled + allFailed;
@@ -7414,7 +7414,38 @@ void OracleAPI::checkSanityState()
                                                     );
 
                     for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
-                        {			    
+                        {			
+			
+				//check for m-replicas sanity
+				stmt_m_replica.execute(true);
+				//this is a m-replica job
+		                if(countMreplica > 1 && countMindex == 1)
+				{					
+    					soci::rowset<soci::row> rsReplica = (
+                                                       sql.prepare <<
+                                                       " select file_state, COUNT(FILE_STATE) from t_file where job_id=:job_id group by file_state order by null ",
+						       	soci::use(job_id)
+                                                   );					     
+					     	
+					soci::rowset<soci::row>::const_iterator iRep;				     				                          
+                    			for (iRep = rsReplica.begin(); iRep != rsReplica.end(); ++iRep)	
+		    			{
+						 std::string file_state = iRep->get<std::string>("FILE_STATE");
+                                    		 int countStates = iRep->get<int>("COUNT(FILE_STATE)");
+						 
+						 if(file_state == "FINISHED")
+						 {
+ 							sql << "UPDATE t_file SET "
+                                        			"    file_state = 'NOT_USED', job_finished = NULL, finish_time = NULL, "
+                                        			"    reason = '' "
+                                        			"    WHERE file_state in ('ACTIVE','READY','SUBMITTED') and job_id = :jobId", soci::use(job_id);	
+							continue;					 						 						 
+						 }						 
+		    			}
+					continue;									
+				}				
+							
+			    
                             sql << "SELECT COUNT(*) FROM t_file where job_id=:jobId AND file_state in ('ACTIVE','READY','SUBMITTED','STAGING') ", soci::use(*i2), soci::into(numberOfFilesRevert);
                             if(numberOfFilesRevert > 0)
                                 {
