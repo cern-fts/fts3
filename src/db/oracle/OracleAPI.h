@@ -415,7 +415,7 @@ private:
 
     void bringOnlineReportStatusInternal(soci::session& sql, const std::string & state, const std::string & message,
                                          const struct message_bringonline& msg);
-					 
-    int getBestNextReplica(soci::session& sql, const std::string & job_id, const std::string & vo_name);					 
+
+    int getBestNextReplica(soci::session& sql, const std::string & job_id, const std::string & vo_name);
 
 };

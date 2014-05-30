@@ -509,7 +509,7 @@ void MsgPrinter::file_list(vector<string> values, vector<string> retries)
     JsonOutput::printArray("job.files", file);
 }
 
-MsgPrinter::MsgPrinter(ostream& out): json(false)
+MsgPrinter::MsgPrinter(ostream& /*out*/): json(false)
 {
 
 }

@@ -658,50 +658,8 @@ __attribute__((constructor)) void begin(void)
     setuid(pw_uid);
     seteuid(pw_uid);
 }
-
-/// Spawn the process that runs the server
-/// Returns the child PID on success, -1 on failure
-/// Does NOT return on the child process
-pid_t SpawnServer(int argc, char** argv)
-{
-    pid_t pid = fork();
-    // child
-    if (pid == 0)
-        {
-            int resultExec = DoServer(argc, argv);
-            if (resultExec < 0)
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Can't start bringonline daemon" << commit;
-                    _exit(1);
-                }
-            _exit(0);
-        }
-    // parent
-    else if (pid > 0)
-        {
-            sleep(2);
-            int err = waitpid(pid, NULL, WNOHANG);
-            if (err != 0)
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE waitpid error: " << strerror(errno) << commit;
-                    return -1;
-                }
-            return pid;
-        }
-    // error
-    else
-        {
-            return -1;
-        }
-}
-
 int main(int argc, char** argv)
 {
-    //switch to non-priviledged user to avoid reading the hostcert
-    uid_t pw_uid = name_to_uid();
-    setuid(pw_uid);
-    seteuid(pw_uid);
-
     if (fexists(hostcert) != 0)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE ERROR check if hostcert/key are installed" << commit;
@@ -720,6 +678,48 @@ int main(int argc, char** argv)
     try
         {
             FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv, true);
+
+            std::string arguments("");
+            int d = 0;
+            if (argc > 1)
+                {
+                    int i;
+                    for (i = 1; i < argc; i++)
+                        {
+                            arguments += argv[i];
+                        }
+                    size_t found = arguments.find("-n");
+                    size_t foundHelp = arguments.find("-h");
+                    if (found != string::npos)
+                        {
+                            {
+                                DoServer(argc, argv);
+                            }
+                            pthread_exit(0);
+                            return EXIT_SUCCESS;
+                        }
+                    else if (foundHelp != string::npos)
+                        {
+                            {
+                                DoServer(argc, argv);
+                            }
+                            pthread_exit(0);
+                            return EXIT_SUCCESS;
+                        }
+                    else
+                        {
+                            d = daemon(0, 0);
+                            if (d < 0)
+                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Can't set daemon, will continue attached to tty" << commit;
+                        }
+                }
+            else
+                {
+                    d = daemon(0, 0);
+                    if (d < 0)
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Can't set daemon, will continue attached to tty" << commit;
+                }
+            DoServer(argc, argv);
         }
     catch (Err& e)
         {
@@ -730,69 +730,6 @@ int main(int argc, char** argv)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Fatal error (unknown origin), exiting..." << commit;
             return EXIT_FAILURE;
-        }
-
-    std::string arguments("");
-    int d = 0;
-    if (argc > 1)
-        {
-            int i;
-            for (i = 1; i < argc; i++)
-                {
-                    arguments += argv[i];
-                }
-            size_t found = arguments.find("-n");
-            size_t foundHelp = arguments.find("-h");
-            if (found != string::npos)
-                {
-                    {
-                        DoServer(argc, argv);
-                    }
-                    pthread_exit(0);
-                    return EXIT_SUCCESS;
-                }
-            else if (foundHelp != string::npos)
-                {
-                    {
-                        DoServer(argc, argv);
-                    }
-                    pthread_exit(0);
-                    return EXIT_SUCCESS;
-                }
-            else
-                {
-                    d = daemon(0, 0);
-                    if (d < 0)
-                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Can't set daemon, will continue attached to tty" << commit;
-                }
-        }
-    else
-        {
-            d = daemon(0, 0);
-            if (d < 0)
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Can't set daemon, will continue attached to tty" << commit;
-        }
-
-
-    pid_t child_pid = SpawnServer(argc, argv);
-
-    // Watchdog
-    for (;;)
-        {
-            if (child_pid < 0)
-                return 1;
-
-            int status = 0;
-            waitpid(-1, &status, 0);
-            if (!WIFSTOPPED(status))
-                {
-                    child_pid = SpawnServer(argc, argv);
-                }
-            else
-                {
-                    break;
-                }
-            sleep(5);
         }
 
     return 0;
