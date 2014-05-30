@@ -1291,7 +1291,7 @@ stop:
                 }
             else
                 {
-                    throughputTurl = convertBtoM(currentTransfer.fileSize, 1);
+                    throughputTurl = convertBtoM(boost::lexical_cast<double>(currentTransfer.fileSize), 1);
                 }
 
             if (errorMessage.length() > 0)

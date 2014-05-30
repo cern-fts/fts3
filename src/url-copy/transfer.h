@@ -89,7 +89,7 @@ public:
         t.sourceUrl = opts.sourceUrl;
         t.destUrl   = opts.destUrl;
         t.setChecksum(opts.checksumValue);
-        t.userFileSize = opts.userFileSize;
+        t.userFileSize = boost::lexical_cast<double>(opts.userFileSize);
         t.fileMetadata = opts.fileMetadata;
         t.tokenBringOnline = opts.tokenBringOnline;
         return t;

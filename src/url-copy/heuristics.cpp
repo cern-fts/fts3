@@ -177,7 +177,7 @@ unsigned adjustTimeoutBasedOnSize(off_t sizeInBytes, unsigned timeout, unsigned 
 
     // Reasonable time to wait per MB transferred
     // If input timeout is 0, give it a little more room
-    long double timeoutPerMBLocal = 0;
+    double timeoutPerMBLocal = 0;
     if(timeoutPerMB > 0 )
         timeoutPerMBLocal = timeoutPerMB;
     else

@@ -613,7 +613,7 @@ std::string GSoapContextAdapter::getSnapShot(string vo, string src, string dst)
     return resp._result;
 }
 
-void GSoapContextAdapter::handleSoapFault(string msg)
+void GSoapContextAdapter::handleSoapFault(string /*msg*/)
 {
     throw gsoap_error(ctx);
 }
