@@ -9658,7 +9658,7 @@ void MySqlAPI::getTransferJobStatusDetailed(std::string job_id, std::vector<boos
 
                             soci::rowset<soci::row> rs = (
                                         sql.prepare <<
-                                        " SELECT job_id, file_state, file_id, source_surl, dest_surl from t_file where job_id=:job_id ", soci::use(job_id)
+                                        " SELECT job_id, file_state, file_id, source_surl, dest_surl from t_file where job_id=:job_id order by file_id asc", soci::use(job_id)
                                     );	
          
 
