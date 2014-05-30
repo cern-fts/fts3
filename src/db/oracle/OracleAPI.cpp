@@ -887,8 +887,8 @@ void OracleAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId
                                                 " UPDATE t_file "
                                                 " SET file_state = 'SUBMITTED' "
                                                 " WHERE job_id = :jobId "
-                                                " AND file_state = 'NOT_USED' AND ROWNUM=1",
-                                                soci::use(jobId);
+                                                " AND file_state = 'NOT_USED' AND file_id = ( select min(file_id) from t_file where file_state = 'NOT_USED' and job_id=:job_id )",
+                                                soci::use(jobId), soci::use(jobId);
                                             sql.commit();
                                         }
                                 }
@@ -899,8 +899,8 @@ void OracleAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId
                                         " UPDATE t_file "
                                         " SET file_state = 'SUBMITTED' "
                                         " WHERE job_id = :jobId "
-                                        " AND file_state = 'NOT_USED' AND ROWNUM=1",
-                                        soci::use(jobId);
+                                        " AND file_state = 'NOT_USED'  AND file_id = ( select min(file_id) from t_file where file_state = 'NOT_USED' and job_id=:job_id )",
+                                        soci::use(jobId), soci::use(jobId);
                                     sql.commit();
                                 }
                             else
@@ -910,8 +910,8 @@ void OracleAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId
                                         " UPDATE t_file "
                                         " SET file_state = 'SUBMITTED' "
                                         " WHERE job_id = :jobId "
-                                        " AND file_state = 'NOT_USED' AND ROWNUM=1 ",
-                                        soci::use(jobId);
+                                        " AND file_state = 'NOT_USED'  AND file_id = ( select min(file_id) from t_file where file_state = 'NOT_USED' and job_id=:job_id ) ",
+                                        soci::use(jobId), soci::use(jobId);
                                     sql.commit();
                                 }
                         }
@@ -922,8 +922,8 @@ void OracleAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId
                                 " UPDATE t_file "
                                 " SET file_state = 'SUBMITTED' "
                                 " WHERE job_id = :jobId "
-                                " AND file_state = 'NOT_USED' AND ROWNUM=1 ",
-                                soci::use(jobId);
+                                " AND file_state = 'NOT_USED'  AND file_id = ( select min(file_id) from t_file where file_state = 'NOT_USED' and job_id=:job_id ) ",
+                                soci::use(jobId), soci::use(jobId);
                             sql.commit();
                         }
                 }
@@ -4714,7 +4714,6 @@ bool OracleAPI::isFileReadyState(int fileID)
     std::string vo_name;
     std::string dest_se;
     std::string dest_surl;
-    long long countSame = 0;
 
     try
         {
@@ -4730,17 +4729,7 @@ bool OracleAPI::isFileReadyState(int fileID)
 
             if (isNull != soci::i_null)
                 isReadyHost = (host == hostname);
-
-            sql << "select count(*) from t_file where file_state in ('READY','ACTIVE') and dest_surl=:dest_surl and vo_name=:vo_name and dest_se=:dest_se ",
-                soci::use(dest_surl),
-                soci::use(vo_name),
-                soci::use(dest_se),
-                soci::into(countSame);
-
-            if(countSame > 1)
-                {
-                    return false;
-                }
+            
         }
     catch (std::exception& e)
         {

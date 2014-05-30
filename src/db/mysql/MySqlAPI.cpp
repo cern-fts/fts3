@@ -4975,7 +4975,6 @@ bool MySqlAPI::isFileReadyState(int fileID)
     std::string vo_name;
     std::string dest_se;
     std::string dest_surl;
-    long long countSame = 0;
 
     try
         {
@@ -4990,18 +4989,7 @@ bool MySqlAPI::isFileReadyState(int fileID)
             isReadyState = (state == "READY");
 
             if (isNull != soci::i_null)
-                isReadyHost = (host == hostname);
-
-            sql << "select count(*) from t_file where file_state in ('READY','ACTIVE') and dest_surl=:dest_surl and vo_name=:vo_name and dest_se=:dest_se ",
-                soci::use(dest_surl),
-                soci::use(vo_name),
-                soci::use(dest_se),
-                soci::into(countSame);
-
-            if(countSame > 1)
-                {
-                    return false;
-                }
+                isReadyHost = (host == hostname);            
         }
     catch (std::exception& e)
         {
