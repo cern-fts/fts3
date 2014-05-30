@@ -110,7 +110,7 @@ int ExecuteProcess::execProcessShell(std::string& forkMessage)
     int pipefds[2] = {0, 0};
     if (pipe(pipefds))
         {
-	    forkMessage = "Failed to create pipe between parent/child processes";    
+            forkMessage = "Failed to create pipe between parent/child processes";
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << forkMessage  << commit;
             return -1;
         }
@@ -119,7 +119,7 @@ int ExecuteProcess::execProcessShell(std::string& forkMessage)
             close(pipefds[0]);
             close(pipefds[1]);
 
-	    forkMessage = "Failed to set fd FD_CLOEXEC";
+            forkMessage = "Failed to set fd FD_CLOEXEC";
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << forkMessage  << commit;
             return -1;
         }
@@ -135,7 +135,7 @@ int ExecuteProcess::execProcessShell(std::string& forkMessage)
             close(pipefds[0]);
             close(pipefds[1]);
 
- 	    forkMessage = "Failed to fork " + std::string(strerror(errno));
+            forkMessage = "Failed to fork " + std::string(strerror(errno));
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << forkMessage  << commit;
             return -1;
         }
@@ -182,8 +182,8 @@ int ExecuteProcess::execProcessShell(std::string& forkMessage)
         }
     if (count)
         {
- 	    forkMessage = "Child process failure " + std::string(strerror(errno));
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << forkMessage  << commit;            
+            forkMessage = "Child process failure " + std::string(strerror(errno));
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << forkMessage  << commit;
             return -1;
         }
 
@@ -193,9 +193,9 @@ int ExecuteProcess::execProcessShell(std::string& forkMessage)
     // Sleep for awhile but do not block waiting for child - 100ms
     usleep(300000);
     if(waitpid(pid, NULL, WNOHANG) != 0)
-        {            
-	    forkMessage = "Waiting for child process failure " + std::string(strerror(errno));
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << forkMessage  << commit; 	    
+        {
+            forkMessage = "Waiting for child process failure " + std::string(strerror(errno));
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << forkMessage  << commit;
             return -1;
         }
 

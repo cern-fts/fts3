@@ -646,19 +646,19 @@ protected:
                                                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd << " " << params << commit;
                                                 ExecuteProcess pr(cmd, params);
                                                 /*check if fork failed , check if execvp failed, */
-						std::string forkMessage;
+                                                std::string forkMessage;
                                                 if (-1 == pr.executeProcessShell(forkMessage))
                                                     {
-						        if(forkMessage.empty())
-							{
-                                                        	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to spawn " << commit;
-                                                        	DBSingleton::instance().getDBObjectInstance()->forkFailedRevertStateV(fileIds);
-							}
-							else
-							{
-                                                        	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to spawn " << forkMessage << commit;
-                                                        	DBSingleton::instance().getDBObjectInstance()->forkFailedRevertStateV(fileIds);							
-							}
+                                                        if(forkMessage.empty())
+                                                            {
+                                                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to spawn " << commit;
+                                                                DBSingleton::instance().getDBObjectInstance()->forkFailedRevertStateV(fileIds);
+                                                            }
+                                                        else
+                                                            {
+                                                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to spawn " << forkMessage << commit;
+                                                                DBSingleton::instance().getDBObjectInstance()->forkFailedRevertStateV(fileIds);
+                                                            }
                                                     }
                                                 else
                                                     {

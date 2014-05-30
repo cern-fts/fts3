@@ -869,28 +869,28 @@ void OracleAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId
                             if(selection_strategy == "auto") //pick the "best-next replica to process"
                                 {
                                     int bestFileId = getBestNextReplica(sql, jobId, vo_name);
-				    if(bestFileId > 0)
-				    {
-                                    sql.begin();
-                                    sql <<
-                                        " UPDATE t_file "
-                                        " SET file_state = 'SUBMITTED' "
-                                        " WHERE job_id = :jobId AND file_id = :file_id  "
-                                        " AND file_state = 'NOT_USED' ",
-                                        soci::use(jobId), soci::use(bestFileId);
-                                    sql.commit();
-				    }
-				    else
-				    {
-                                    sql.begin();
-                                    sql <<
-                                        " UPDATE t_file "
-                                        " SET file_state = 'SUBMITTED' "
-                                        " WHERE job_id = :jobId "
-                                        " AND file_state = 'NOT_USED' AND ROWNUM=1",
-                                        soci::use(jobId);
-                                    sql.commit();				    
-				    }
+                                    if(bestFileId > 0)
+                                        {
+                                            sql.begin();
+                                            sql <<
+                                                " UPDATE t_file "
+                                                " SET file_state = 'SUBMITTED' "
+                                                " WHERE job_id = :jobId AND file_id = :file_id  "
+                                                " AND file_state = 'NOT_USED' ",
+                                                soci::use(jobId), soci::use(bestFileId);
+                                            sql.commit();
+                                        }
+                                    else
+                                        {
+                                            sql.begin();
+                                            sql <<
+                                                " UPDATE t_file "
+                                                " SET file_state = 'SUBMITTED' "
+                                                " WHERE job_id = :jobId "
+                                                " AND file_state = 'NOT_USED' AND ROWNUM=1",
+                                                soci::use(jobId);
+                                            sql.commit();
+                                        }
                                 }
                             else if (selection_strategy == "orderly")
                                 {
@@ -903,7 +903,8 @@ void OracleAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId
                                         soci::use(jobId);
                                     sql.commit();
                                 }
-                            else{
+                            else
+                                {
                                     sql.begin();
                                     sql <<
                                         " UPDATE t_file "
@@ -911,8 +912,8 @@ void OracleAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId
                                         " WHERE job_id = :jobId "
                                         " AND file_state = 'NOT_USED' AND ROWNUM=1 ",
                                         soci::use(jobId);
-                                    sql.commit();			    
-			    	}				
+                                    sql.commit();
+                                }
                         }
                     else //it's NULL, default is orderly
                         {
@@ -943,18 +944,18 @@ void OracleAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId
 
 bool pairCompare( std::pair<std::pair<std::string, std::string>, int> i, pair<std::pair<std::string, std::string>, int> j)
 {
-	return i.second < j.second;
+    return i.second < j.second;
 }
 
 int OracleAPI::getBestNextReplica(soci::session& sql, const std::string & job_id, const std::string & vo_name)
 {
     //for now consider only the less queued transfers, later add throughput and success rate
-    int bestFileId = 0;  
+    int bestFileId = 0;
     std::string bestSource;
-    std::string bestDestination;    
+    std::string bestDestination;
     std::map<std::pair<std::string, std::string>, int> pair;
     soci::indicator ind = soci::i_ok;
-          
+
     try
         {
             //get available pairs
@@ -969,46 +970,46 @@ int OracleAPI::getBestNextReplica(soci::session& sql, const std::string & job_id
                 {
                     std::string source_se = it->get<std::string>("source_se","");
                     std::string dest_se = it->get<std::string>("dest_se","");
-                    int queued = 0;		    
+                    int queued = 0;
 
                     //get queued for this link and vo
                     sql << " select count(*) from t_file where file_state='SUBMITTED' and "
                         " source_se=:source_se and dest_se=:dest_se and "
                         " vo_name=:vo_name ",
                         soci::use(source_se), soci::use(dest_se),soci::use(vo_name), soci::into(queued);
-			
-  			//get distinct source_se / dest_se
- 			 std::pair<std::string, std::string> key(source_se, dest_se);
- 			 pair.insert(std::make_pair(key, queued));	
-			 
-			if(queued == 0) //pick the first one if the link is free
-				break;			 
-			 
+
+                    //get distinct source_se / dest_se
+                    std::pair<std::string, std::string> key(source_se, dest_se);
+                    pair.insert(std::make_pair(key, queued));
+
+                    if(queued == 0) //pick the first one if the link is free
+                        break;
+
                     //get success rate & throughput for this link, it is mapped to "filesize" column in t_optimizer_evolution table :)
                     /*
-		    sql << " select filesize, throughput from t_optimizer_evolution where "
+                    sql << " select filesize, throughput from t_optimizer_evolution where "
                         " source_se=:source_se and dest_se=:dest_se and filesize is not NULL and agrthroughput is not NULL "
                         " order by datetime desc limit 1 ",
                         soci::use(source_se), soci::use(dest_se),soci::into(successRate),soci::into(throughput);
-		    */		                        
-		    
+                    */
+
                 }
-	
-           //not waste queries
-	   if(pair.size() > 0)
-	   {
-	        //get min queue length	
-	   	std::pair<std::pair<std::string, std::string>, int> minValue = *min_element(pair.begin(), pair.end(), pairCompare );
-	   	bestSource =      (minValue.first).first;
-           	bestDestination = (minValue.first).second;	   
-	   	     	     	   
-            	//finally get the next-best file_id to be processed
-            	sql << "select file_id from t_file where file_state='NOT_USED' and source_se=:source_se and dest_se=:dest_se and job_id=:job_id",
-                	soci::use(bestSource), soci::use(bestDestination), soci::use(job_id), soci::into(bestFileId, ind);
-		
-            	if (ind != soci::i_ok)		
-	    		bestFileId = 0;
-	    }
+
+            //not waste queries
+            if(pair.size() > 0)
+                {
+                    //get min queue length
+                    std::pair<std::pair<std::string, std::string>, int> minValue = *min_element(pair.begin(), pair.end(), pairCompare );
+                    bestSource =      (minValue.first).first;
+                    bestDestination = (minValue.first).second;
+
+                    //finally get the next-best file_id to be processed
+                    sql << "select file_id from t_file where file_state='NOT_USED' and source_se=:source_se and dest_se=:dest_se and job_id=:job_id",
+                        soci::use(bestSource), soci::use(bestDestination), soci::use(job_id), soci::into(bestFileId, ind);
+
+                    if (ind != soci::i_ok)
+                        bestFileId = 0;
+                }
         }
     catch (std::exception& e)
         {
@@ -1330,7 +1331,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
             hashedId = getHashedId();
 
             std::list<job_element_tupple>::const_iterator iter;
-	    int index = 0; 
+            int index = 0;
             for (iter = src_dest_pair.begin(); iter != src_dest_pair.end(); ++iter)
                 {
                     sourceSurl = iter->source;
@@ -1352,12 +1353,12 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
                     if (reuseFlag == "N" && mreplica)
                         {
                             fileIndex = 0;
-  			    if(index == 0) //only the first file
-			    	initialState = "SUBMITTED";
-			    else
-			        initialState = "NOT_USED";					
-							    
-			    index++;					    
+                            if(index == 0) //only the first file
+                                initialState = "SUBMITTED";
+                            else
+                                initialState = "NOT_USED";
+
+                            index++;
                         }
                     if (reuseFlag == "N" && mhop)
                         {
@@ -2484,7 +2485,7 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs)
                 {
                     soci::row const& row = *i2;
                     pid = row.get<long long>("PID");
-                    requestIDs.push_back(pid);
+                    requestIDs.push_back(boost::lexical_cast<int>(pid));
 
                     stmt1.execute(true);
                 }
@@ -3080,7 +3081,7 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
     return allowed;
 }
 
-bool OracleAPI::getMaxActive(soci::session& sql, int active, int highDefault, const std::string & source_hostname, const std::string & destin_hostname)
+bool OracleAPI::getMaxActive(soci::session& sql, int active, int /*highDefault*/, const std::string & source_hostname, const std::string & destin_hostname)
 {
     long long int maxActiveSource = 0;
     long long int maxActiveDest = 0;
@@ -3859,12 +3860,12 @@ void OracleAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                                     if(isNullPid != soci::i_null && pid > 0)
                                         {
                                             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Killing pid:" << pid << ", jobid:" << jobId << ", fileid:" << fileId << " because it was stalled" << commit;
-                                            kill(pid, SIGUSR1);
+                                            kill(boost::lexical_cast<__pid_t>(pid), SIGUSR1);
                                         }
                                     collectJobs.insert(std::make_pair(fileId, jobId));
                                     updateFileTransferStatusInternal(sql, 0.0, jobId, fileId,
                                                                      "FAILED", "Transfer has been forced-killed because it was stalled",
-                                                                     pid, 0, 0, false);
+                                                                     boost::lexical_cast<int>(pid), 0, 0, false);
                                     updateJobTransferStatusInternal(sql, jobId, "FAILED",0);
                                 }
 
@@ -4058,25 +4059,25 @@ void OracleAPI::revertToSubmitted()
                                          soci::into(fileId),
                                          soci::into(jobId),
                                          soci::into(reuseJob, reuseInd));
-					 
+
             //check if the file belongs to a multiple replica job
             long long replicaJob = 0;
-            long long replicaJobCountAll = 0;					 
+            long long replicaJobCountAll = 0;
 
             sql.begin();
             if (readyStmt.execute(true))
                 {
                     do
                         {
-			     //don't do anything to multiple replica jobs
-          		     sql << "select count(*), count(distinct file_index) from t_file where job_id=:job_id",
-                		soci::use(jobId), soci::into(replicaJobCountAll), soci::into(replicaJob);
+                            //don't do anything to multiple replica jobs
+                            sql << "select count(*), count(distinct file_index) from t_file where job_id=:job_id",
+                                soci::use(jobId), soci::into(replicaJobCountAll), soci::into(replicaJob);
 
-            		     //this is a m-replica job
-            		    if(replicaJobCountAll > 1 && replicaJob == 1)
-			    	break;			
-			
-			
+                            //this is a m-replica job
+                            if(replicaJobCountAll > 1 && replicaJob == 1)
+                                break;
+
+
                             time_t startTimestamp = timegm(&startTime);
                             double diff = difftime(now2, startTimestamp);
 
@@ -4242,7 +4243,6 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
 void OracleAPI::forkFailedRevertState(const std::string & jobId, int fileId)
 {
     soci::session sql(*connectionPool);
-    long long distinctFileIndex = 0;
 
     try
         {
@@ -4280,9 +4280,9 @@ void OracleAPI::forkFailedRevertStateV(std::map<int, std::string>& pids)
 
 
             soci::statement stmt = (sql.prepare << " UPDATE t_file SET file_state = 'FAILED', transferhost=:hostname, "
-	    					   " job_finished=sys_extract_utc(systimestamp), finish_time= sys_extract_utc(systimestamp), reason='Transfer failed to fork, check fts3server.log for more details'"
-                                    		   " WHERE file_id = :fileId AND job_id = :jobId AND "
-                                                   "      file_state NOT IN ('FINISHED','FAILED','CANCELED')",
+                                    " job_finished=sys_extract_utc(systimestamp), finish_time= sys_extract_utc(systimestamp), reason='Transfer failed to fork, check fts3server.log for more details'"
+                                    " WHERE file_id = :fileId AND job_id = :jobId AND "
+                                    "      file_state NOT IN ('FINISHED','FAILED','CANCELED')",
                                     soci::use(hostname), soci::use(fileId), soci::use(jobId));
 
 
@@ -4293,10 +4293,10 @@ void OracleAPI::forkFailedRevertStateV(std::map<int, std::string>& pids)
                     jobId  = i->second;
                     stmt.execute(true);
                 }
-		
-		sql << "update t_job set job_state='FAILED',job_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), reason='Transfer failed to fork, check fts3server.log for more details' where job_id=:job_id",
-			soci::use(jobId);
-		
+
+            sql << "update t_job set job_state='FAILED',job_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), reason='Transfer failed to fork, check fts3server.log for more details' where job_id=:job_id",
+                soci::use(jobId);
+
             sql.commit();
         }
     catch (std::exception& e)
@@ -5843,7 +5843,7 @@ int OracleAPI::getMaxTimeInQueue()
 
             //just in case soci it is reseting the value to NULL
             if(isNull != soci::i_null && maxTime > 0)
-                return maxTime;
+                return boost::lexical_cast<int>(maxTime);
         }
     catch (std::exception& e)
         {
@@ -5853,7 +5853,7 @@ int OracleAPI::getMaxTimeInQueue()
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
-    return maxTime;
+    return boost::lexical_cast<int>(maxTime);
 }
 
 
@@ -7281,12 +7281,12 @@ void OracleAPI::checkSanityState()
     unsigned int allFailed = 0;
     unsigned int allCanceled = 0;
     unsigned int numberOfFilesRevert = 0;
-    
+
     long long  countMreplica = 0;
-    long long  countMindex = 0; 
-    
-    std::string job_id;       
-    
+    long long  countMindex = 0;
+
+    std::string job_id;
+
     std::string canceledMessage = "Transfer canceled by the user";
     std::string failed = "One or more files failed. Please have a look at the details for more information";
 
@@ -7299,26 +7299,26 @@ void OracleAPI::checkSanityState()
                                                        sql.prepare <<
                                                        " select job_id from t_job  where job_finished is null "
                                                    );
-						   
-                   soci::statement stmt_m_replica = (sql.prepare << " select COUNT(*), COUNT(distinct file_index) from t_file where job_id=:job_id  ",
-                                             soci::use(job_id),
-                                             soci::into(countMreplica),
-					     soci::into(countMindex));						                       					     		    			     					     				      
-						   
+
+                    soci::statement stmt_m_replica = (sql.prepare << " select COUNT(*), COUNT(distinct file_index) from t_file where job_id=:job_id  ",
+                                                      soci::use(job_id),
+                                                      soci::into(countMreplica),
+                                                      soci::into(countMindex));
+
 
                     sql.begin();
                     for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                         {
-			    job_id = (*i);
-			    numberOfFiles = 0;
-			    terminalState = 0;
-			    allFinished = 0;
-			    allFailed = 0;
-			    allCanceled = 0;
-			    numberOfFilesRevert = 0;    
-			    countMreplica = 0;
-			    countMindex = 0; 			    
-			
+                            job_id = (*i);
+                            numberOfFiles = 0;
+                            terminalState = 0;
+                            allFinished = 0;
+                            allFailed = 0;
+                            allCanceled = 0;
+                            numberOfFilesRevert = 0;
+                            countMreplica = 0;
+                            countMindex = 0;
+
                             sql << "SELECT COUNT(DISTINCT file_index) FROM t_file where job_id=:jobId ", soci::use(*i), soci::into(numberOfFiles);
 
                             if(numberOfFiles > 1)
@@ -7371,35 +7371,35 @@ void OracleAPI::checkSanityState()
                                                 }
                                         }
                                 }
-				
-				//check for m-replicas sanity
-				stmt_m_replica.execute(true);
-				//this is a m-replica job
-		                if(countMreplica > 1 && countMindex == 1)
-				{					
-    					soci::rowset<soci::row> rsReplica = (
-                                                       sql.prepare <<
-                                                       " select file_state, COUNT(FILE_STATE) from t_file where job_id=:job_id group by file_state order by null ",
-						       	soci::use(job_id)
-                                                   );					     
-					     	
-					soci::rowset<soci::row>::const_iterator iRep;				     				                          
-                    			for (iRep = rsReplica.begin(); iRep != rsReplica.end(); ++iRep)	
-		    			{
-						 std::string file_state = iRep->get<std::string>("FILE_STATE");
-                                    		 int countStates = iRep->get<int>("COUNT(FILE_STATE)");
-						 
-						 if(file_state == "FINISHED")
-						 {
- 							sql << "UPDATE t_file SET "
-                                        			"    file_state = 'NOT_USED', job_finished = NULL, finish_time = NULL, "
-                                        			"    reason = '' "
-                                        			"    WHERE file_state in ('ACTIVE','READY','SUBMITTED') and job_id = :jobId", soci::use(job_id);						 						 						 
-						 }						 
-		    			}									
-				}				
-				
-				
+
+                            //check for m-replicas sanity
+                            stmt_m_replica.execute(true);
+                            //this is a m-replica job
+                            if(countMreplica > 1 && countMindex == 1)
+                                {
+                                    soci::rowset<soci::row> rsReplica = (
+                                                                            sql.prepare <<
+                                                                            " select file_state, COUNT(FILE_STATE) from t_file where job_id=:job_id group by file_state order by null ",
+                                                                            soci::use(job_id)
+                                                                        );
+
+                                    soci::rowset<soci::row>::const_iterator iRep;
+                                    for (iRep = rsReplica.begin(); iRep != rsReplica.end(); ++iRep)
+                                        {
+                                            std::string file_state = iRep->get<std::string>("FILE_STATE");
+                                            //int countStates = iRep->get<int>("COUNT(FILE_STATE)");
+
+                                            if(file_state == "FINISHED")
+                                                {
+                                                    sql << "UPDATE t_file SET "
+                                                        "    file_state = 'NOT_USED', job_finished = NULL, finish_time = NULL, "
+                                                        "    reason = '' "
+                                                        "    WHERE file_state in ('ACTIVE','READY','SUBMITTED') and job_id = :jobId", soci::use(job_id);
+                                                }
+                                        }
+                                }
+
+
                             //reset
                             numberOfFiles = 0;
                         }
@@ -7414,38 +7414,38 @@ void OracleAPI::checkSanityState()
                                                     );
 
                     for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
-                        {			
-			
-				//check for m-replicas sanity
-				stmt_m_replica.execute(true);
-				//this is a m-replica job
-		                if(countMreplica > 1 && countMindex == 1)
-				{					
-    					soci::rowset<soci::row> rsReplica = (
-                                                       sql.prepare <<
-                                                       " select file_state, COUNT(FILE_STATE) from t_file where job_id=:job_id group by file_state order by null ",
-						       	soci::use(job_id)
-                                                   );					     
-					     	
-					soci::rowset<soci::row>::const_iterator iRep;				     				                          
-                    			for (iRep = rsReplica.begin(); iRep != rsReplica.end(); ++iRep)	
-		    			{
-						 std::string file_state = iRep->get<std::string>("FILE_STATE");
-                                    		 int countStates = iRep->get<int>("COUNT(FILE_STATE)");
-						 
-						 if(file_state == "FINISHED")
-						 {
- 							sql << "UPDATE t_file SET "
-                                        			"    file_state = 'NOT_USED', job_finished = NULL, finish_time = NULL, "
-                                        			"    reason = '' "
-                                        			"    WHERE file_state in ('ACTIVE','READY','SUBMITTED') and job_id = :jobId", soci::use(job_id);	
-							continue;					 						 						 
-						 }						 
-		    			}
-					continue;									
-				}				
-							
-			    
+                        {
+
+                            //check for m-replicas sanity
+                            stmt_m_replica.execute(true);
+                            //this is a m-replica job
+                            if(countMreplica > 1 && countMindex == 1)
+                                {
+                                    soci::rowset<soci::row> rsReplica = (
+                                                                            sql.prepare <<
+                                                                            " select file_state, COUNT(FILE_STATE) from t_file where job_id=:job_id group by file_state order by null ",
+                                                                            soci::use(job_id)
+                                                                        );
+
+                                    soci::rowset<soci::row>::const_iterator iRep;
+                                    for (iRep = rsReplica.begin(); iRep != rsReplica.end(); ++iRep)
+                                        {
+                                            std::string file_state = iRep->get<std::string>("FILE_STATE");
+                                            //int countStates = iRep->get<int>("COUNT(FILE_STATE)");
+
+                                            if(file_state == "FINISHED")
+                                                {
+                                                    sql << "UPDATE t_file SET "
+                                                        "    file_state = 'NOT_USED', job_finished = NULL, finish_time = NULL, "
+                                                        "    reason = '' "
+                                                        "    WHERE file_state in ('ACTIVE','READY','SUBMITTED') and job_id = :jobId", soci::use(job_id);
+                                                    continue;
+                                                }
+                                        }
+                                    continue;
+                                }
+
+
                             sql << "SELECT COUNT(*) FROM t_file where job_id=:jobId AND file_state in ('ACTIVE','READY','SUBMITTED','STAGING') ", soci::use(*i2), soci::into(numberOfFilesRevert);
                             if(numberOfFilesRevert > 0)
                                 {
@@ -7998,9 +7998,9 @@ int OracleAPI::getOptimizerDefaultMode(soci::session& sql)
             if (ind == soci::i_ok)
                 {
                     if(mode == 0)
-                        return mode + 1;
+                        return boost::lexical_cast<int>(mode + 1);
                     else
-                        return mode;
+                        return boost::lexical_cast<int>(mode);
                 }
             return modeDefault;
         }
@@ -8102,7 +8102,7 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
             if (retry_delay > 0)
                 {
                     // update
-                    time_t now = getUTC(retry_delay);
+                    time_t now = getUTC(boost::lexical_cast<int>(retry_delay));
                     struct tm tTime;
                     gmtime_r(&now, &tTime);
 
@@ -8926,11 +8926,11 @@ bool OracleAPI::bandwidthChecker(soci::session& sql, const std::string & source_
             if(bandwidthDst > 0) //both source and dest have limits, take the lowest
                 {
                     //get the lowest limit to be respected
-                    double lowest = (bandwidthSrc < bandwidthDst) ? bandwidthSrc : bandwidthDst;
+                    long long int lowest = (bandwidthSrc < bandwidthDst) ? bandwidthSrc : bandwidthDst;
 
                     if (througputSrc > lowest || througputDst > lowest)
                         {
-                            bandwidthIn = lowest;
+                            bandwidthIn = boost::lexical_cast<int>(lowest);
                             FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Bandwidth limitation of " << lowest  << " MB/s is set for " << source_hostname << " or " <<  destination_hostname << commit;
                             return false;
                         }
@@ -8938,7 +8938,7 @@ bool OracleAPI::bandwidthChecker(soci::session& sql, const std::string & source_
             //only source limit is set
             if (througputSrc > bandwidthSrc)
                 {
-                    bandwidthIn = bandwidthSrc;
+                    bandwidthIn = boost::lexical_cast<int>(bandwidthSrc);
                     FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Bandwidth limitation of " << bandwidthSrc  << " MB/s is set for " << source_hostname << commit;
                     return false;
                 }
@@ -8946,7 +8946,7 @@ bool OracleAPI::bandwidthChecker(soci::session& sql, const std::string & source_
         }
     else if(bandwidthDst > 0)  //only destination has limit
         {
-            bandwidthIn = bandwidthDst;
+            bandwidthIn = boost::lexical_cast<int>(bandwidthDst);
 
             if(througputDst > bandwidthDst)
                 {
@@ -9217,7 +9217,7 @@ int OracleAPI::getGlobalTimeout()
 
             if(sql.got_data() && timeout > 0)
                 {
-                    return timeout;
+                    return boost::lexical_cast<int>(timeout);
                 }
         }
     catch (std::exception& e)
@@ -9229,7 +9229,7 @@ int OracleAPI::getGlobalTimeout()
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
 
-    return timeout;
+    return boost::lexical_cast<int>(timeout);
 
 }
 
@@ -9288,7 +9288,7 @@ int OracleAPI::getSecPerMb()
 
             if(sql.got_data() && seconds > 0)
                 {
-                    return seconds;
+                    return boost::lexical_cast<int>(seconds);
                 }
         }
     catch (std::exception& e)
@@ -9300,7 +9300,7 @@ int OracleAPI::getSecPerMb()
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
 
-    return seconds;
+    return boost::lexical_cast<int>(seconds);
 
 }
 

@@ -310,7 +310,7 @@ public:
 
     virtual std::vector< boost::tuple<std::string, std::string, int> >  getVOBringonlineMax() = 0;
 
-    virtual std::vector<struct message_bringonline> getBringOnlineFiles(std::string voName, std::string hostName, int maxValue) = 0;
+    virtual std::vector<message_bringonline> getBringOnlineFiles(std::string voName, std::string hostName, int maxValue) = 0;
 
     virtual void bringOnlineReportStatus(const std::string & state, const std::string & message, const struct message_bringonline& msg) = 0;
 
