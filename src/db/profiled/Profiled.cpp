@@ -888,3 +888,8 @@ int ProfiledDB::getBufferOptimization()
 {
     PROFILE_PREFIXED("DB::", return db->getBufferOptimization());
 }
+
+void ProfiledDB::getTransferJobStatusDetailed(std::string job_id, std::vector<boost::tuple<std::string, std::string, int, std::string, std::string> >& files)
+{
+    PROFILE_PREFIXED("DB::", db->getTransferJobStatusDetailed(job_id, files));
+}
