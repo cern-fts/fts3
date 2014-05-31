@@ -732,7 +732,7 @@ protected:
                                 if (!drainMode)
                                     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more transfers for this instance!" << commit;
                                 drainMode = true;
-                                sleep(3);
+                                sleep(1);
                                 continue;
                             }
                         else
@@ -784,7 +784,7 @@ protected:
                                     }
                                 jobsReuse.clear();
                             }
-                        sleep(3);
+                        sleep(1);
                     }
                 catch (...)
                     {
@@ -800,9 +800,9 @@ protected:
                                     }
                                 jobsReuse.clear();
                             }
-                        sleep(3);
+                        sleep(1);
                     }
-                sleep(3);
+                sleep(1);
             } /*end while*/
     }
 
