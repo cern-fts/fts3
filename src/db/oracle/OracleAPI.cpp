@@ -4075,7 +4075,7 @@ void OracleAPI::revertToSubmitted()
 
                             //this is a m-replica job
                             if(replicaJobCountAll > 1 && replicaJob == 1)
-                                break;
+                                continue;
 
 
                             time_t startTimestamp = timegm(&startTime);
