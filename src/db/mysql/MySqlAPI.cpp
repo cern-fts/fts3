@@ -2475,17 +2475,18 @@ void MySqlAPI::updateFileTransferProgressVector(std::vector<struct message_updat
                     source_turl = "";
                     dest_turl = "";
 
-                    if (iter->msg_errno == 0)
+                    if (iter->msg_errno == 0 && (*iter).file_id > 0)
                         {
                             file_state = std::string((*iter).transfer_status);
 
                             if(file_state == "ACTIVE")
                                 {
-                                    if((*iter).throughput > 0.0)
+				    file_id = (*iter).file_id;
+				    
+                                    if((*iter).throughput > 0.0 && file_id > 0 )
                                         {
                                             throughput = (*iter).throughput;
-                                            transferred = (*iter).transferred;
-                                            file_id = (*iter).file_id;
+                                            transferred = (*iter).transferred;                                            
                                             stmt.execute(true);
                                         }
                                 }
@@ -2495,22 +2496,21 @@ void MySqlAPI::updateFileTransferProgressVector(std::vector<struct message_updat
                                     dest_surl = (*iter).dest_surl;
                                     source_turl = (*iter).source_turl;
                                     dest_turl = (*iter).dest_turl;
+				    file_id = (*iter).file_id;
 
                                     if(source_turl == "gsiftp:://fake" && dest_turl == "gsiftp:://fake")
                                         continue;
 
-                                    if((*iter).throughput > 0.0)
+                                    if((*iter).throughput > 0.0 && file_id > 0)
                                         {
                                             throughput = (*iter).throughput;
-                                        }
+                                        }                                    
 
-                                    file_id = (*iter).file_id;
-
-                                    if(file_state == "FINISHED")
+                                    if(file_state == "FINISHED" && file_id > 0 )
                                         {
                                             stmtFinish.execute(true);
                                         }
-                                    else if (file_state == "FAILED")
+                                    else if (file_state == "FAILED" && file_id > 0 )
                                         {
                                             stmtFail.execute(true);
                                         }
@@ -7080,6 +7080,8 @@ void MySqlAPI::transferLogFileVector(std::map<int, struct message_log>& messages
             std::map<int, struct message_log>::iterator iterLog = messagesLog.begin();
             while (iterLog != messagesLog.end())
                 {
+		  if(((*iterLog).second).msg_errno == 0)
+		  {
                     filePath = ((*iterLog).second).filePath;
                     fileId = ((*iterLog).second).file_id;
                     debugFile = ((*iterLog).second).debugFile;
@@ -7094,6 +7096,7 @@ void MySqlAPI::transferLogFileVector(std::map<int, struct message_log>& messages
                         {
                             ++iterLog;
                         }
+		  }
                 }
 
             sql.commit();
