@@ -199,10 +199,7 @@ protected:
     boost::thread_group g;
     std::string enableOptimization;
     std::map<int, struct message_log> messagesLog;
-
     std::vector<struct message_updater> messagesUpdater;
-    std::vector<struct message_updater>::iterator iterUpdater;
-
 
     void executeUpdate(std::vector<struct message>& messages)
     {
@@ -251,12 +248,7 @@ protected:
                                                                 << "\nDest: " << (*iter).dest_se << commit;
 
                                 updateDatabase((*iter));
-                            }
-                        else
-                            {
-                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to read a status message: "
-                                                               << iter->msg_error_reason << commit;
-                            }
+                            }                        
                     }//end for
             }
         catch (const fs::filesystem_error& e)
@@ -438,6 +430,7 @@ protected:
 
                                 if(!messagesUpdater.empty())
                                     {
+  			                std::vector<struct message_updater>::iterator iterUpdater;
                                         for (iterUpdater = messagesUpdater.begin(); iterUpdater != messagesUpdater.end(); ++iterUpdater)
                                             {
                                                 if (iterUpdater->msg_errno == 0)
