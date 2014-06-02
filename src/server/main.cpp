@@ -255,9 +255,15 @@ static void isPathSane(const std::string& path,
                                     int checkChown = chown(path.c_str(), pw_uid, getgid());
                                     if (checkChown != 0)
                                         {
-                                            msg << "Failed to chmod for " << path;
+                                            msg << "Failed to chown for " << path;
                                             throw Err_System(msg.str());
                                         }
+				    int checkmode = chmod (path.c_str(), 0755);
+                                    if (checkmode != 0)
+                                        {
+                                            msg << "Failed to chmod for " << path;
+                                            throw Err_System(msg.str());
+                                        }					
                                 }
                         }
                     else
@@ -334,6 +340,7 @@ void checkInitDirs()
             isPathSane("/etc/fts3", true, R_OK, false);
             isPathSane(hostcert, false, R_OK);
             isPathSane(hostkey, false, R_OK);
+	    isPathSane(configfile, false, R_OK, true);
             isPathSane("/var/log/fts3");
             isPathSane("/var/lib/fts3");
             isPathSane("/var/lib/fts3/monitoring");

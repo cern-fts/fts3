@@ -348,7 +348,7 @@ fi
 %attr(0755,root,root) %{_initddir}/fts-bringonline
 %attr(0755,root,root) %{_initddir}/fts-records-cleaner
 %attr(0755,root,root) %{_sysconfdir}/cron.daily/fts-records-cleaner
-%config(noreplace) %attr(0640,root,fts3) %{_sysconfdir}/fts3/fts3config
+%config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/fts3/fts3config
 %config(noreplace) %{_sysconfdir}/logrotate.d/fts-server
 %{_mandir}/man8/fts_bringonline.8.gz
 %{_mandir}/man8/fts_db_cleaner.8.gz
@@ -377,7 +377,7 @@ fi
 %attr(0755,root,root) %{_initddir}/fts-msg-bulk
 %attr(0755,root,root) %{_initddir}/fts-msg-cron
 %attr(0755,root,root) %{_sysconfdir}/cron.hourly/fts-msg-cron
-%config(noreplace) %attr(0640,root,fts3) %{_sysconfdir}/fts3/fts-msg-monitoring.conf
+%config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/fts3/fts-msg-monitoring.conf
 %{_mandir}/man8/fts_msg_bulk.8.gz
 %{_mandir}/man8/fts_msg_cron.8.gz
 
