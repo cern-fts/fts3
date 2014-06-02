@@ -12,7 +12,7 @@ public:
     std::string destUrl;
     std::string checksumAlgorithm;
     std::string checksumValue;
-    double      userFileSize;
+    long long      userFileSize;
     std::string fileMetadata;
     std::string tokenBringOnline;
 
@@ -74,7 +74,7 @@ public:
         t.sourceUrl = strArray[1];
         t.destUrl   = strArray[2];
         t.setChecksum(strArray[3]);
-        t.userFileSize = boost::lexical_cast<double>(strArray[4]);
+        t.userFileSize = boost::lexical_cast<long long>(strArray[4]);
         t.fileMetadata = strArray[5];
         t.tokenBringOnline = strArray[6];
         return t;
@@ -89,7 +89,7 @@ public:
         t.sourceUrl = opts.sourceUrl;
         t.destUrl   = opts.destUrl;
         t.setChecksum(opts.checksumValue);
-        t.userFileSize = boost::lexical_cast<double>(opts.userFileSize);
+        t.userFileSize = boost::lexical_cast<long long>(opts.userFileSize);
         t.fileMetadata = opts.fileMetadata;
         t.tokenBringOnline = opts.tokenBringOnline;
         return t;
