@@ -9,7 +9,7 @@
 
 #include <iostream>
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
+#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW_
 
 #include "unittest/testsuite.h"
 
