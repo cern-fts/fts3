@@ -9,42 +9,43 @@
 
 #include <iostream>
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW_
+#ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 
 #include "unittest/testsuite.h"
 
 BOOST_AUTO_TEST_SUITE( common )
 BOOST_AUTO_TEST_SUITE(ThreadPoolTest)
 
+struct EmptyTask { void run() {} };
+
 BOOST_AUTO_TEST_CASE (ThreadPool_size)
 {
 	using namespace fts3::common;
-
-	struct EmptyTask { void run() {} };
 
 	ThreadPool<EmptyTask> tp(10);
 	BOOST_CHECK_EQUAL(tp.size(), 10);
 	tp.join();
 }
 
+struct IdTask
+{
+	IdTask(boost::thread::id & id) : id(id) {}
+
+	void run()
+	{
+//		boost::this_thread::sleep_for(boost::chrono::seconds(1));
+		sleep(1);
+		id = boost::this_thread::get_id();
+	}
+
+	boost::thread::id & id;
+};
+
 BOOST_AUTO_TEST_CASE (ThreadPool_start)
 {
 	using namespace fts3::common;
 
 	boost::thread::id ids[3];
-
-	struct IdTask
-	{
-		IdTask(boost::thread::id & id) : id(id) {}
-
-		void run()
-		{
-			boost::this_thread::sleep_for(boost::chrono::seconds(1));
-			id = boost::this_thread::get_id();
-		}
-
-		boost::thread::id & id;
-	};
 
 	ThreadPool<IdTask> one_thread(1);
 	one_thread.start(new IdTask(ids[0]));
@@ -70,24 +71,25 @@ BOOST_AUTO_TEST_CASE (ThreadPool_start)
 	BOOST_CHECK(ids[2] == ids[0] || ids[2] == ids[1]);
 }
 
+struct SleepyTask
+{
+	SleepyTask(bool & done) : done(done) {}
+
+	void run()
+	{
+//		boost::this_thread::sleep_for(boost::chrono::seconds(1));
+		sleep(1);
+		done = true;
+	}
+
+	bool & done;
+};
+
 BOOST_AUTO_TEST_CASE (ThreadPool_join)
 {
 	using namespace fts3::common;
 
 	bool done = false;
-
-	struct SleepyTask
-	{
-		SleepyTask(bool & done) : done(done) {}
-
-		void run()
-		{
-			boost::this_thread::sleep_for(boost::chrono::seconds(1));
-			done = true;
-		}
-
-		bool & done;
-	};
 
 	ThreadPool<SleepyTask> tp(1);
 	tp.start(new SleepyTask(done));
@@ -95,17 +97,17 @@ BOOST_AUTO_TEST_CASE (ThreadPool_join)
 	BOOST_CHECK(done);
 }
 
+struct InfiniteTask
+{
+	void run()
+	{
+		while(true) boost::this_thread::interruption_point();
+	}
+};
+
 BOOST_AUTO_TEST_CASE (ThreadPool_interrupt)
 {
 	using namespace fts3::common;
-
-	struct InfiniteTask
-	{
-		void run()
-		{
-			while(true) boost::this_thread::interruption_point();
-		}
-	};
 
 	ThreadPool<InfiniteTask> tp(1);
 	tp.start(new InfiniteTask());
