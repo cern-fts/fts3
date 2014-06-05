@@ -40,30 +40,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif ()
 
 # Web service / gsoap part.
-set(fts_server_gsoap_transfer_sources
-#    "${PROJECT_SOURCE_DIR}/src/server/ws/gsoap.cpp"
-    "${PROJECT_SOURCE_DIR}/src/server/ws/CGsiAdapter.cpp"
-    "${PROJECT_SOURCE_DIR}/src/server/ws/SingleTrStateInstance.cpp"
-    "${PROJECT_SOURCE_DIR}/src/server/ws/AuthorizationManager.cpp"
-    "${PROJECT_SOURCE_DIR}/src/server/ws/transfer/gsoap_transfer_methods.cpp"
-    "${PROJECT_SOURCE_DIR}/src/server/ws/transfer/RequestLister.cpp"
-    "${PROJECT_SOURCE_DIR}/src/server/ws/transfer/JobSubmitter.cpp"
-    "${PROJECT_SOURCE_DIR}/src/server/ws/transfer/VersionResolver.cpp"
-    "${PROJECT_SOURCE_DIR}/src/server/ws/transfer/Blacklister.cpp"
-    "${PROJECT_SOURCE_DIR}/src/server/ws/delegation/gsoap_deleg_methods.cpp"
-    "${PROJECT_SOURCE_DIR}/src/server/ws/delegation/GSoapDelegationHandler.cpp"
-    "${PROJECT_SOURCE_DIR}/src/server/ws/config/gsoap_config_methods.cpp"
-    "${PROJECT_SOURCE_DIR}/src/server/ws/config/ConfigurationHandler.cpp"
-    "${PROJECT_SOURCE_DIR}/src/server/ws/config/Configuration.cpp"
-    "${PROJECT_SOURCE_DIR}/src/server/ws/config/StandaloneCfg.cpp"
-    "${PROJECT_SOURCE_DIR}/src/server/ws/config/StandaloneSeCfg.cpp"
-    "${PROJECT_SOURCE_DIR}/src/server/ws/config/StandaloneGrCfg.cpp"
-    "${PROJECT_SOURCE_DIR}/src/server/ws/config/PairCfg.cpp"
-	"${PROJECT_SOURCE_DIR}/src/server/ws/config/SePairCfg.cpp"
-	"${PROJECT_SOURCE_DIR}/src/server/ws/config/GrPairCfg.cpp"
-	"${PROJECT_SOURCE_DIR}/src/server/ws/config/ShareOnlyCfg.cpp"
-	"${PROJECT_SOURCE_DIR}/src/server/ws/config/ActivityCfg.cpp"
-)
+file(GLOB fts_server_gsoap_transfer_sources "ws/*.cpp" "ws/transfer/*.cpp" "ws/delegation/*.cpp" "ws/config/*.cpp")
 
 add_library(fts_server_gsoap_transfer SHARED ${fts_server_gsoap_transfer_sources})
 set_target_properties(fts_server_gsoap_transfer PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -w" )
