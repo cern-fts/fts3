@@ -97,37 +97,6 @@ class OverviewExtended(object):
             .aggregate(Avg('tx_duration'))
         return avg_duration['tx_duration__avg']
 
-    @staticmethod
-    def _get_avg_queued(source, destination, vo):
-        if settings.DATABASES['default']['ENGINE'] == 'django.db.backends.oracle':
-            avg_queued_query = """
-            SELECT AVG(EXTRACT(HOUR FROM time_diff) * 3600 + EXTRACT(MINUTE FROM time_diff) * 60 + EXTRACT(SECOND FROM time_diff))
-            FROM (SELECT (t_file.start_time - t_job.submit_time) AS time_diff
-              FROM t_file, t_job
-              WHERE t_job.job_id = t_file.job_id AND
-                    t_file.source_se = %s AND t_file.dest_se = %s AND t_job.vo_name = %s AND
-                    t_job.job_finished IS NULL AND t_file.job_finished IS NULL AND
-                    t_file.start_time IS NOT NULL
-            )
-            """
-        else:
-            avg_queued_query = """
-            SELECT AVG(TIMESTAMPDIFF(SECOND, t_job.submit_time, t_file.start_time)) FROM t_file, t_job
-            WHERE t_job.job_id = t_file.job_id AND
-                t_file.source_se = %s AND t_file.dest_se = %s AND t_job.vo_name = %s AND
-                t_job.job_finished IS NULL AND t_file.job_finished IS NULL AND
-                t_file.start_time IS NOT NULL
-            ORDER BY t_file.start_time DESC LIMIT 5
-            """
-
-        cursor = connection.cursor()
-        cursor.execute(avg_queued_query, (source, destination, vo))
-        avg = cursor.fetchall()
-        if len(avg) > 0 and avg[0][0] is not None:
-            return int(avg[0][0])
-        else:
-            return None
-
     def _get_frequent_error(self, source, destination, vo):
         reason = File.objects.filter(source_se=source, dest_se=destination, vo_name=vo) \
             .filter(job_finished__gte=self.not_before, file_state='FAILED') \
@@ -142,7 +111,6 @@ class OverviewExtended(object):
             return_list = self.objects[indexes]
             for item in return_list:
                 item['avg_duration'] = self._get_avg_duration(item['source_se'], item['dest_se'], item['vo_name'])
-                item['avg_queued'] = self._get_avg_queued(item['source_se'], item['dest_se'], item['vo_name'])
                 item['most_frequent_error'] = self._get_frequent_error(item['source_se'], item['dest_se'],
                                                                        item['vo_name'])
             return return_list
