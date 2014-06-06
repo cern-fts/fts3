@@ -3943,7 +3943,7 @@ bool OracleAPI::terminateReuseProcess(const std::string & jobId, int pid, const 
                     sql << " SELECT reuse_job FROM t_job WHERE job_id = :jobId AND reuse_job IS NOT NULL",
                         soci::use(job_id), soci::into(reuse, reuseInd);
 
-                    if (sql.got_data() && reuse == "Y")
+                    if (sql.got_data() && (reuse == "Y" || reuse == "H"))
                         {
                             sql.begin();
                             sql << " UPDATE t_file SET file_state = 'FAILED', job_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), "
@@ -3960,7 +3960,7 @@ bool OracleAPI::terminateReuseProcess(const std::string & jobId, int pid, const 
                     sql << " SELECT reuse_job FROM t_job WHERE job_id = :jobId AND reuse_job IS NOT NULL",
                         soci::use(jobId), soci::into(reuse, reuseInd);
 
-                    if (sql.got_data() && reuse == "Y")
+                    if (sql.got_data() && (reuse == "Y" || reuse == "H"))
                         {
                             sql.begin();
                             sql << " UPDATE t_file SET file_state = 'FAILED', job_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), "
