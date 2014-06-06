@@ -40,6 +40,15 @@ using namespace FTS3_CONFIG_NAMESPACE;
 using namespace fts3::common;
 FTS3_SERVER_NAMESPACE_START
 
+static void cipherRemove(const EVP_CIPHER *c, const char *from, const char *to, void *arg)
+{
+    if(c && (c->key_len * 8 < *(int *)arg))
+        {
+            OBJ_NAME_remove(OBJ_nid2sn(c->nid), OBJ_NAME_TYPE_CIPHER_METH);
+            OBJ_NAME_remove(OBJ_nid2ln(c->nid), OBJ_NAME_TYPE_CIPHER_METH);
+        }
+}
+
 GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip)
 {
 
@@ -55,6 +64,12 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip)
 
             soap_cgsi_init(ctx,  CGSI_OPT_KEEP_ALIVE  | CGSI_OPT_SERVER | CGSI_OPT_SSL_COMPATIBLE | CGSI_OPT_DISABLE_MAPPING);// | CGSI_OPT_DISABLE_NAME_CHECK);
             soap_set_namespaces(ctx, fts3_namespaces);
+	    
+	    
+	    //remove weak ciphers
+	    int minbits = 128;
+            EVP_CIPHER_do_all(cipherRemove, &minbits);
+	    
 
 
             SOAP_SOCKET sock = soap_bind(ctx, ip.c_str(), static_cast<int>(port), 300);
@@ -80,6 +95,11 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip)
             ctx->bind_flags |= SO_REUSEADDR;
             soap_cgsi_init(ctx,  CGSI_OPT_SERVER | CGSI_OPT_SSL_COMPATIBLE | CGSI_OPT_DISABLE_MAPPING);// | CGSI_OPT_DISABLE_NAME_CHECK);
             soap_set_namespaces(ctx, fts3_namespaces);
+	    
+	    //remove weak ciphers
+	    int minbits = 128;
+            EVP_CIPHER_do_all(cipherRemove, &minbits);
+	    	    
 
             SOAP_SOCKET sock = soap_bind(ctx, ip.c_str(), static_cast<int>(port), 300);
 
