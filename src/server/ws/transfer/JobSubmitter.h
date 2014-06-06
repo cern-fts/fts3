@@ -29,6 +29,8 @@
 #include "db/generic/GenericDbIfce.h"
 #include "common/JobParameterHandler.h"
 
+#include "BlacklistInspector.h"
+
 #include <string>
 #include <map>
 #include <vector>
@@ -57,49 +59,6 @@ using namespace boost;
 class JobSubmitter
 {
 
-    enum
-    {
-        SHARE,
-        CONTENT
-    };
-
-    enum
-    {
-        SOURCE = 0,
-        DESTINATION,
-        VO
-    };
-
-    struct TimeoutHandler
-    {
-        TimeoutHandler(map<string, int>& timeouts) : timeouts(timeouts) {}
-
-        template<typename T>
-        void operator ()(T& t)
-        {
-            string& src = t.source_se;
-            string& dst = t.dest_se;
-            // if theres's nothing to do continue
-            if (timeouts.find(src) == timeouts.end() && timeouts.find(dst) == timeouts.end()) return;
-            // if src has no timeout use destination and continue
-            if (timeouts.find(src) == timeouts.end())
-                {
-                    t.wait_timeout = timeouts[dst];
-                    return;
-                }
-            // if dst has no time use source
-            if (timeouts.find(dst) == timeouts.end())
-                {
-                    t.wait_timeout = timeouts[src];
-                    return;
-                }
-            // if both dst and src have timeout pick the lower value
-            t.wait_timeout = timeouts[src] < timeouts[dst] ? timeouts[src] : timeouts[dst];
-        }
-
-        map<string, int> timeouts;
-    };
-
 public:
     /**
      * Constructor - creates a submitter object that should be used
@@ -109,7 +68,7 @@ public:
      * @param job - the job that has to be submitted
      * @param delegation - should be true if delegation is being used
      */
-    JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation);
+    JobSubmitter(soap* ctx, tns3__TransferJob *job, bool delegation);
 
     /**
      * Constructor - creates a submitter object that should be used
@@ -118,7 +77,7 @@ public:
      * @param soap - the soap object that is serving the given request
      * @param job - the job that has to be submitted
      */
-    JobSubmitter(soap* soap, tns3__TransferJob2 *job);
+    JobSubmitter(soap* ctx, tns3__TransferJob2 *job);
 
     /**
      * Constructor - creates a submitter object that should be used
@@ -139,17 +98,15 @@ public:
      */
     string submit();
 
+    /**
+     * extracts SE name from URL
+     */
+    static string fileUrlToSeName(string url, bool source = false); // it is not the best place for it!
+
 private:
 
     /// DB instance
     GenericDbIfce* db;
-
-    /**
-     * Default constructor.
-     *
-     * Private, should not be used.
-     */
-    JobSubmitter() {};
 
     /// job ID
     string id;
@@ -174,11 +131,12 @@ private:
     list<job_element_tupple> jobs;
 
     /**
-     * The common initialization for both parameterized constructors
+     * The common initialisation for both parameterised constructors
      *
-     * @param jobParams - job parameters
+     * @param job - the transfer job
      */
-    void init(tns3__TransferParams *jobParams);
+    template <typename JOB>
+    void init(soap* ctx, JOB* job);
 
     /**
      * Extracts the activity name from file metadata
@@ -187,52 +145,27 @@ private:
     string getActivity(string metadata);
 
     /**
-     * Checks:
-     * - if the SE has been blacklisted (if yes an exception is thrown)
-     * - if the SE is in BDII and the state is either 'production' or 'online'
-     *   (if it is in BDII but the state is wrong an exception is thrown)
-     * - if the SE is in BDII and the submitted VO is on the VOsAllowed list
-     *   (if it is in BDII but the VO is not on the list an exception is thrown)
-     * - if the SE is in the OSG and if is's active and not disabled
-     *   (it it is in BDII but the conditions are not met an exception is thrown)
-     */
-    void checkSe(string ses, string vo);
-
-    /**
      * Checks whether the right protocol has been used
      *
      * @file - source or destination file
      * @return true if right protol has been used
      */
-    void checkProtocol(string file, bool source);
+    static void checkProtocol(string file, bool source);
 
-    void pairSourceAndDestination(vector<string>& sources, vector<string>& destinations, string& selectionStrategy, list< pair<string, string> >& ret);
-
-    inline void addSe(string& se);
-
-    inline string getSesStr();
-
-    ///
+    /// the regular expression for parsing URLs
     static const regex fileUrlRegex;
-
-    static const string false_str;
-
-
+    /// srm protocol prefix
     static const string srm_protocol;
-
+    /// true if at least one file was using srm
     bool srm_source;
 
-    /**
-     *
-     */
-    string fileUrlToSeName(string url, bool source = false);
-
+    /// source SE
     string sourceSe;
+    /// destination SE
     string destinationSe;
 
-    set<string> uniqueSes;
-    string uniqueSesStr;
-
+    /// initial state
+    string initialState;
 };
 
 }

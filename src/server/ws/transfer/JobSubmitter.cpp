@@ -23,7 +23,9 @@
  */
 
 #include "JobSubmitter.h"
-#include "ws/config/Configuration.h"
+
+#include "TransferCreator.h"
+#include "PlainOldJob.h"
 
 #include "common/uuid_generator.h"
 #include "db/generic/SingleDbInstance.h"
@@ -35,6 +37,7 @@
 
 #include "ws/CGsiAdapter.h"
 #include "ws/delegation/GSoapDelegationHandler.h"
+#include "ws/config/Configuration.h"
 
 #include "profiler/Macros.h"
 
@@ -48,21 +51,20 @@
 #include <boost/scoped_ptr.hpp>
 #include <boost/assign.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/tuple/tuple.hpp>
 
 #include "parse_url.h"
 
 #include "ws/SingleTrStateInstance.h"
 
 using namespace db;
-using namespace config;
+using namespace fts3::config;
 using namespace fts3::ws;
 using namespace boost;
 using namespace boost::assign;
 
 
 const regex JobSubmitter::fileUrlRegex("([a-zA-Z][a-zA-Z0-9+\.-]*://[a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
-
-const string JobSubmitter::false_str = "false";
 
 const string JobSubmitter::srm_protocol = "srm";
 
@@ -77,34 +79,12 @@ static void checkValidUrl(const std::string &uri)
         }
 }
 
-JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) :
+JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob *job, bool delegation) :
     db (DBSingleton::instance().getDBObjectInstance()),
-    copyPinLifeTime(-1)
+    copyPinLifeTime(-1),
+    srm_source(true)
 {
     PROFILE_SCOPE("JobSubmitter::JobSubmitter(soap*, tns3__TransferJob*, bool)");
-
-    GSoapDelegationHandler handler(soap);
-    delegationId = handler.makeDelegationId();
-
-    CGsiAdapter cgsi(soap);
-    vo = cgsi.getClientVo();
-    dn = cgsi.getClientDn();
-
-    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is submitting a transfer job" << commit;
-
-    if (db->isDnBlacklisted(dn))
-        {
-            throw Err_Custom("The DN: " + dn + " is blacklisted!");
-        }
-
-    // check weather the job is well specified
-    if (job == 0 || job->transferJobElements.empty())
-        {
-            throw Err_Custom("The job was not defined");
-        }
-
-    // do the common initialization
-    init(job->jobParams);
 
     // check the delegation and MyProxy password settings
     if (delegation)
@@ -129,94 +109,24 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
             cred = *job->credential;
         }
 
-    // if at least one source uses different protocol than SRM it will be 'false'
-    srm_source = true;
-
-    // index of the file
-    int fileIndex = 0;
-
-    // extract the job elements from tns3__TransferJob object and put them into a vector
-    vector<tns3__TransferJobElement * >::iterator it;
-    for (it = job->transferJobElements.begin(); it < job->transferJobElements.end(); ++it, ++fileIndex)
-        {
-            string src = *(*it)->source, dest = *(*it)->dest;
-
-            string sourceSe = fileUrlToSeName(src, true);
-            string destinationSe = fileUrlToSeName(dest);
-
-            addSe(sourceSe);
-            addSe(destinationSe);
-
-            // set the source SE for the transfer job,
-            // in case of this submission type multiple
-            // source/destination submission is not possible
-            // so we can just pick the first one
-            if (this->sourceSe.empty())
-                {
-                    this->sourceSe = sourceSe;
-                }
-            // check if all the sources use SRM protocol
-            srm_source &= sourceSe.find(srm_protocol) == 0;
-
-
-            // set the destination SE for the transfer job,
-            // in case of this submission type multiple
-            // source/destination submission is not possible
-            // so we can just pick the first one
-            if (this->destinationSe.empty())
-                {
-                    this->destinationSe = destinationSe;
-                }
-
-            job_element_tupple tupple;
-            tupple.source = src;
-            tupple.destination = dest;
-            tupple.source_se = sourceSe;
-            tupple.dest_se = destinationSe;
-            tupple.checksum = string();
-            tupple.filesize = 0;
-            tupple.metadata = string();
-            tupple.fileIndex = fileIndex;
-
-            jobs.push_back(tupple);
-        }
-    //FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's vector has been created" << commit;
-
-    string seStr = getSesStr();
-    checkSe(seStr, vo);
-
-    map<string, int> waitTimeout;
-    db->getTimeoutForSe(seStr, waitTimeout);
-
-    TimeoutHandler th(waitTimeout);
-    for_each(jobs.begin(), jobs.end(), th);
+    // do the common initialisation
+    init(ctx, job);
+    // it is a plain old job
+    PlainOldJob<tns3__TransferJobElement> poj(job->transferJobElements, initialState);
+    // extract the job elements from tns3__TransferJob2 object and put them into a vector
+    poj.get(jobs, vo);
+    // set additional info
+    srm_source = poj.isSrm();
+    sourceSe = poj.getSourceSe();
+    destinationSe = poj.getDestinationSe();
 }
 
-JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
+JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob2 *job) :
     db (DBSingleton::instance().getDBObjectInstance()),
-    copyPinLifeTime(-1)
+    copyPinLifeTime(-1),
+    srm_source(true)
 {
     PROFILE_SCOPE("JobSubmitter::JobSubmitter(soap*, tns3__TransferJob2*)");
-
-    GSoapDelegationHandler handler (soap);
-    delegationId = handler.makeDelegationId();
-
-    CGsiAdapter cgsi (soap);
-    vo = cgsi.getClientVo();
-    dn = cgsi.getClientDn();
-
-    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is submitting a transfer job" << commit;
-
-    if (db->isDnBlacklisted(dn))
-        {
-            throw Err_Custom("The DN: " + dn + " is blacklisted!");
-        }
-
-    // check weather the job is well specified
-    if (job == 0 || job->transferJobElements.empty())
-        {
-            throw Err_Custom("The job was not defined");
-        }
 
     // checksum uses always delegation?
     if (job->credential)
@@ -224,76 +134,17 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
             throw Err_Custom("The MyProxy password should not be provided if delegation is used");
         }
 
-    // do the common initialization
-    init(job->jobParams);
+    // do the common initialisation
+    init(ctx, job);
 
-    // if at least one source uses different protocol than SRM it will be 'false'
-    srm_source = true;
-
-    // index of the file
-    int fileIndex = 0;
-
+    // it is a plain old job
+    PlainOldJob<tns3__TransferJobElement2> poj(job->transferJobElements, initialState);
     // extract the job elements from tns3__TransferJob2 object and put them into a vector
-    vector<tns3__TransferJobElement2 * >::iterator it;
-    for (it = job->transferJobElements.begin(); it < job->transferJobElements.end(); ++it, ++fileIndex)
-        {
-
-            string src = *(*it)->source, dest = *(*it)->dest;
-
-            string sourceSe = fileUrlToSeName(src, true);
-            string destinationSe = fileUrlToSeName(dest);
-
-            addSe(sourceSe);
-            addSe(destinationSe);
-
-            // set the source SE for the transfer job,
-            // in case of this submission type multiple
-            // source/destination submission is not possible
-            // so we can just pick the first one
-            if (this->sourceSe.empty())
-                {
-                    this->sourceSe = sourceSe;
-                }
-
-            // check if all the sources use SRM protocol
-            srm_source &= sourceSe.find(srm_protocol) == 0;
-
-            // set the destination SE for the transfer job,
-            // in case of this submission type multiple
-            // source/destination submission is not possible
-            // so we can just pick the first one
-            if (this->destinationSe.empty())
-                {
-                    this->destinationSe = destinationSe;
-                }
-
-            job_element_tupple tupple;
-            tupple.source = src;
-            tupple.destination = dest;
-            tupple.source_se = sourceSe;
-            tupple.dest_se = destinationSe;
-            if((*it)->checksum)
-                {
-                    tupple.checksum = *(*it)->checksum;
-                    if (!params.isParamSet(JobParameterHandler::CHECKSUM_METHOD))
-                        params.set(JobParameterHandler::CHECKSUM_METHOD, "relaxed");
-                }
-            tupple.filesize = 0;
-            tupple.metadata = string();
-            tupple.fileIndex = fileIndex;
-
-            jobs.push_back(tupple);
-        }
-    //FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's vector has been created" << commit;
-
-    string seStr = getSesStr();
-    checkSe(seStr, vo);
-
-    map<string, int> waitTimeout;
-    db->getTimeoutForSe(seStr, waitTimeout);
-
-    TimeoutHandler th(waitTimeout);
-    for_each(jobs.begin(), jobs.end(), th);
+    poj.get(jobs, vo, params);
+    // set additional info
+    srm_source = poj.isSrm();
+    sourceSe = poj.getSourceSe();
+    destinationSe = poj.getDestinationSe();
 }
 
 JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
@@ -302,6 +153,98 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
 {
     PROFILE_SCOPE("JobSubmitter::JobSubmitter(soap*, tns3__TransferJob3*)");
 
+    // do the common initialisation
+    init(ctx, job);
+
+    // index of the file
+    int fileIndex = 0;
+
+    // the object in charge of blacklist compatibility
+    BlacklistInspector inspector(vo);
+
+    // if at least one source uses different protocol than SRM it will be 'false'
+    srm_source = true;
+
+    // extract the job elements from tns3__TransferJob2 object and put them into a vector
+    vector<tns3__TransferJobElement3 * >::iterator it;
+    for (it = job->transferJobElements.begin(); it < job->transferJobElements.end(); it++)
+        {
+            tns3__TransferJobElement3* elem = (*it);
+
+            // prepare the job element and add it to the job
+            job_element_tupple tupple;
+
+            // common properties
+            tupple.filesize = elem->filesize ? *elem->filesize : 0;
+            tupple.metadata = elem->metadata ? *elem->metadata : string();
+
+            tupple.selectionStrategy = elem->selectionStrategy ? *elem->selectionStrategy : string();
+            if (!tupple.selectionStrategy.empty() && tupple.selectionStrategy != "orderly" && tupple.selectionStrategy != "auto")
+                throw Err_Custom("'" + tupple.selectionStrategy + "'");
+
+            // in the future the checksum should be assigned to pairs!
+            if (!elem->checksum.empty())
+                {
+                    tupple.checksum = (*it)->checksum.front();
+                    if (!params.isParamSet(JobParameterHandler::CHECKSUM_METHOD))
+                        params.set(JobParameterHandler::CHECKSUM_METHOD, "relaxed");
+                }
+
+            // pair sources with destinations and assign status
+
+            TransferCreator tc(fileIndex, initialState);
+            std::list< boost::tuple<std::string, std::string, std::string, int> > tuples =
+            		tc.pairSourceAndDestination(elem->source, elem->dest);
+            fileIndex = tc.nextFileIndex();
+
+            // if it is not multiple source/destination submission ..
+            if (tuples.size() == 1)
+                {
+                    // add the source and destination SE for the transfer job
+                    sourceSe = fileUrlToSeName(boost::get<0>(tuples.front()), true);
+                    destinationSe = fileUrlToSeName(boost::get<1>(tuples.front()));
+                }
+
+            // multiple pairs and reuse are not compatible!
+            if (tuples.size() > 1 && params.get(JobParameterHandler::REUSE) == "Y")
+                {
+                    throw Err_Custom("Reuse and multiple replica selection are incompatible!");
+                }
+
+            // TODO support flat file multi source/destination transfer job
+
+            // add each pair
+            std::list< boost::tuple<std::string, std::string, std::string, int> >::iterator it_p;
+            for (it_p = tuples.begin(); it_p != tuples.end(); it_p++)
+                {
+                    // set the values for source and destination
+                    tupple.source = boost::get<0>(*it_p);
+                    tupple.destination = boost::get<1>(*it_p);
+                    tupple.state = boost::get<2>(*it_p);
+                    tupple.fileIndex = boost::get<3>(*it_p);
+
+                    std::string sourceSe = fileUrlToSeName(boost::get<0>(*it_p), true);
+                    std::string destinationSe = fileUrlToSeName(boost::get<1>(*it_p));
+                    inspector.add(sourceSe);
+                    inspector.add(destinationSe);
+
+                    // check if all the sources use SRM protocol
+                    srm_source &= sourceSe.find(srm_protocol) == 0;
+
+                    tupple.source_se = sourceSe;
+                    tupple.dest_se = destinationSe;
+
+                    jobs.push_back(tupple);
+                }
+        }
+
+    inspector.inspect();
+    inspector.setWaitTimeout(jobs);
+}
+
+template <typename JOB>
+void JobSubmitter::init(soap* ctx, JOB* job)
+{
     GSoapDelegationHandler handler (ctx);
     delegationId = handler.makeDelegationId();
 
@@ -322,128 +265,22 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
             throw Err_Custom("The job was not defined");
         }
 
-    // do the common initialization
-    init(job->jobParams);
-
-    // index of the file
-    int fileIndex = 0;
-
-    // if at least one source uses different protocol than SRM it will be 'false'
-    srm_source = true;
-
-    // extract the job elements from tns3__TransferJob2 object and put them into a vector
-    vector<tns3__TransferJobElement3 * >::iterator it;
-    for (it = job->transferJobElements.begin(); it < job->transferJobElements.end(); it++, fileIndex++)
-        {
-            tns3__TransferJobElement3* elem = (*it);
-
-            // prepare the job element and add it to the job
-            job_element_tupple tupple;
-
-            // common properties
-            tupple.filesize = elem->filesize ? *elem->filesize : 0;
-            tupple.metadata = elem->metadata ? *elem->metadata : string();
-            tupple.selectionStrategy = elem->selectionStrategy ? *elem->selectionStrategy : string();
-            tupple.fileIndex = fileIndex;
-
-            // TODO for now we just use the first one!
-            // in the future the checksum should be assigned to pairs!
-            if (!elem->checksum.empty())
-                {
-                    tupple.checksum = (*it)->checksum.front();
-                    if (!params.isParamSet(JobParameterHandler::CHECKSUM_METHOD))
-                        params.set(JobParameterHandler::CHECKSUM_METHOD, "relaxed");
-                }
-
-            // pair sources with destinations
-            list< pair<string, string> > pairs;
-
-            pairSourceAndDestination(
-                elem->source,
-                elem->dest,
-                tupple.selectionStrategy,
-                pairs
-            );
-
-            // if it is not multiple source/destination submission ..
-            if (pairs.size() == 1)
-                {
-                    // add the source and destination SE for the transfer job
-                    sourceSe = fileUrlToSeName(pairs.front().first, true);
-                    destinationSe = fileUrlToSeName(pairs.front().second);
-                }
-
-            if (pairs.empty())
-                {
-                    throw Err_Custom("It has not been possible to pair the sources with destinations (protocols don't match)!");
-                }
-
-            // multiple pairs and reuse are not compatible!
-            if (pairs.size() > 1 && params.get(JobParameterHandler::REUSE) == "Y")
-                {
-                    throw Err_Custom("Reuse and multiple replica selection are incompatible!");
-                }
-
-            // add each pair
-            list< pair<string, string> >::iterator it_p;
-            for (it_p = pairs.begin(); it_p != pairs.end(); it_p++)
-                {
-                    // set the values for source and destination
-                    tupple.source = it_p->first;
-                    tupple.destination = it_p->second;
-
-                    string sourceSe = fileUrlToSeName(it_p->first, true), destinationSe = fileUrlToSeName(it_p->second);
-                    addSe(sourceSe);
-                    addSe(destinationSe);
-
-                    // check if all the sources use SRM protocol
-                    srm_source &= sourceSe.find(srm_protocol) == 0;
-
-                    tupple.source_se = sourceSe;
-                    tupple.dest_se = destinationSe;
-
-                    jobs.push_back(tupple);
-                }
-        }
-
-    string seStr = getSesStr();
-    checkSe(seStr, vo);
-
-    map<string, int> waitTimeout;
-    db->getTimeoutForSe(seStr, waitTimeout);
-
-    TimeoutHandler th(waitTimeout);
-    for_each(jobs.begin(), jobs.end(), th);
-}
-
-void JobSubmitter::init(tns3__TransferParams *jobParams)
-{
-
     id = UuidGenerator::generateUUID();
     FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Generated uuid " << id << commit;
 
-    if (jobParams)
+    if (job->jobParams)
         {
-            params(jobParams->keys, jobParams->values);
+            params(job->jobParams->keys, job->jobParams->values);
             //FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Parameter map has been created" << commit;
         }
-}
 
-void JobSubmitter::addSe(string& se)
-{
-    if (!uniqueSes.count(se))
-        {
+    bool use_bring_online =
+    		params.isParamSet(JobParameterHandler::BRING_ONLINE) &&
+    		params.get<int>(JobParameterHandler::BRING_ONLINE) > 0 &&
+    		params.isParamSet(JobParameterHandler::COPY_PIN_LIFETIME) &&
+    		params.get<int>(JobParameterHandler::COPY_PIN_LIFETIME) > 0;
 
-            uniqueSes.insert(se);
-            uniqueSesStr += "'" + se + "',";
-        }
-}
-
-string JobSubmitter::getSesStr()
-{
-    uniqueSesStr.resize(uniqueSesStr.size() - 1);
-    uniqueSesStr = "(" + uniqueSesStr + ")";
-    return uniqueSesStr;
+    initialState = (use_bring_online ? "STAGING" : "SUBMITTED");
 }
 
 string JobSubmitter::getActivity(string metadata)
@@ -585,82 +422,5 @@ string JobSubmitter::fileUrlToSeName(string url, bool source)
             string errMsg = "Can't extract hostname from url: " + url;
             throw Err_Custom(errMsg);
         }
-}
-
-void JobSubmitter::checkSe(string ses, string vo)
-{
-    list<string> notAllowed;
-    db->allowSubmit(ses, vo, notAllowed);
-
-    if (notAllowed.empty()) return;
-
-    string notAllowedStr = accumulate(notAllowed.begin(), notAllowed.end(), string(), lambda::_1 + lambda::_2 + ",");
-    notAllowedStr.resize(notAllowedStr.size() - 1);
-
-    throw Err_Custom("Following SEs: " + notAllowedStr + " are blacklisted!");
-
-    // check if the SE is blacklisted
-//    if (db->isSeBlacklisted(se, vo))
-//        {
-//            if (!db->allowSubmitForBlacklistedSe(se)) throw Err_Custom("The SE: " + se + " is blacklisted!");
-//        }
-    // if we don't care about MyOSQ return
-//    if (!theServerConfig().get<bool>("MyOSG")) return;
-
-    // checking of a state (active, disabled) in MyOSG  is commented out for now
-
-//	// load from local file which is update by a cron job
-//	OsgParser& osg = OsgParser::getInstance();
-//	// check in the OSG if the SE is 'active'
-//	optional<bool> state = osg.isActive(se);
-//	if (state.is_initialized() && !(*state)) throw Err_Custom("The SE: " + se + " is not active in the OSG!");
-//	// check in the OSG if the SE is 'disabled'
-//	state = osg.isDisabled(se);
-//	if (state.is_initialized() && *state) throw Err_Custom("The SE: " + se + " is disabled in the OSG!");
-
-}
-
-void JobSubmitter::pairSourceAndDestination(
-    vector<string>& sources,
-    vector<string>& destinations,
-    string& selectionStrategy,
-    list< pair<string, string> >& ret
-)
-{
-
-    if (!selectionStrategy.empty() && selectionStrategy != "orderly" && selectionStrategy != "auto")
-        throw Err_Custom("'" + selectionStrategy + "'");
-
-    // if it is single source - single destination submission just return the pair
-    if (sources.size() == 1 && destinations.size() == 1)
-        {
-            ret.push_front(
-                make_pair(sources.front(), destinations.front())
-            );
-
-            return;
-        }
-
-    vector<string>::iterator it_s, it_d;
-
-    for (it_s = sources.begin(); it_s != sources.end(); it_s++)
-        {
-            // retrieve the protocol
-            string::size_type pos = it_s->find("://");
-            string protocol = it_s->substr(0, pos);
-            // look for the corresponding destination
-            for (it_d = destinations.begin(); it_d != destinations.end(); it_d++)
-                {
-                    // if the destination uses the same protocol ...
-                    if (it_d->find(protocol) == 0 || it_d->find(srm_protocol) == 0 || protocol == srm_protocol)   // TODO verify!!!
-                        {
-                            ret.push_back(
-                                make_pair(*it_s, *it_d)
-                            );
-                        }
-                }
-        }
-
-    return;
 }
 
