@@ -371,7 +371,7 @@ protected:
                                                 checksum = "x";
                                             }
 
-                                        url << std::fixed << file_id << " " << surl << " " << durl << " " << checksum << " " << userFilesize << " " << fileMetadata << " " << bringonlineToken;
+                                        url << std::fixed << file_id << " " << surl << " " << durl << " " << checksum << " " << boost::lexical_cast<long long>(userFilesize) << " " << fileMetadata << " " << bringonlineToken;
                                         urls.push_back(url.str());
                                         url.str("");
                                     }
