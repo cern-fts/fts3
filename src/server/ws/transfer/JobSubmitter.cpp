@@ -86,6 +86,9 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob *job, bool delegation) :
 {
     PROFILE_SCOPE("JobSubmitter::JobSubmitter(soap*, tns3__TransferJob*, bool)");
 
+    // do the common initialisation
+    init(ctx, job);
+
     // check the delegation and MyProxy password settings
     if (delegation)
         {
@@ -109,8 +112,7 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob *job, bool delegation) :
             cred = *job->credential;
         }
 
-    // do the common initialisation
-    init(ctx, job);
+
     // it is a plain old job
     PlainOldJob<tns3__TransferJobElement> poj(job->transferJobElements, initialState);
     // extract the job elements from tns3__TransferJob2 object and put them into a vector
@@ -128,14 +130,15 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob2 *job) :
 {
     PROFILE_SCOPE("JobSubmitter::JobSubmitter(soap*, tns3__TransferJob2*)");
 
+   // do the common initialisation
+    init(ctx, job);
+
     // checksum uses always delegation?
     if (job->credential)
         {
             throw Err_Custom("The MyProxy password should not be provided if delegation is used");
         }
 
-    // do the common initialisation
-    init(ctx, job);
 
     // it is a plain old job
     PlainOldJob<tns3__TransferJobElement2> poj(job->transferJobElements, initialState);
@@ -245,6 +248,14 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
 template <typename JOB>
 void JobSubmitter::init(soap* ctx, JOB* job)
 {
+
+    // check wether the job is well specified
+    if (job == 0 || job->transferJobElements.empty())
+        {
+            throw Err_Custom("The job was not defined or job file is empty?");
+        }
+
+
     GSoapDelegationHandler handler (ctx);
     delegationId = handler.makeDelegationId();
 
@@ -257,12 +268,6 @@ void JobSubmitter::init(soap* ctx, JOB* job)
     if (db->isDnBlacklisted(dn))
         {
             throw Err_Custom("The DN: " + dn + " is blacklisted!");
-        }
-
-    // check weather the job is well specified
-    if (job == 0 || job->transferJobElements.empty())
-        {
-            throw Err_Custom("The job was not defined");
         }
 
     id = UuidGenerator::generateUUID();
@@ -360,6 +365,7 @@ string JobSubmitter::submit()
                 }
         }
 
+  try{
 
     // submit the transfer job (add it to the DB)
     db->submitPhysical (
@@ -374,6 +380,19 @@ string JobSubmitter::submit()
         destinationSe,
         params
     );
+  }
+    catch(Err& ex)
+        {
+
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;  
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + ex.what());         
+        }
+    catch(...)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: db->submitPhysical"  << commit;   
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );          
+        }
+
 
     //send state message - disabled for now but pls do not remove it
     //SingleTrStateInstance::instance().sendStateMessage(id, -1);
