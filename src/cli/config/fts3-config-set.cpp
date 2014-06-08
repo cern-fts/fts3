@@ -61,6 +61,8 @@ int main(int ac, char* av[])
                     string se = std::get<1>(*protocol);
                     string state = std::get<2>(*protocol);
                     ctx.setSeProtocol(udt, se, state);
+
+                    cout << "Done, just applied: " << udt << " " << se << " " << state << endl;
                     return 0;
                 }
 
@@ -68,48 +70,56 @@ int main(int ac, char* av[])
             if (maxActivePerSe.is_initialized())
                 {
                     ctx.setMaxSrcSeActive(maxActivePerSe.get().first, maxActivePerSe.get().second);
+                    cout << "Done, just applied: " << maxActivePerSe.get().first << " " << maxActivePerSe.get().second  << endl;
                 }
 
             maxActivePerSe = cli->getMaxDstSeActive();
             if (maxActivePerSe.is_initialized())
                 {
                     ctx.setMaxDstSeActive(maxActivePerSe.get().first, maxActivePerSe.get().second);
+		    cout << "Done, just applied: " << maxActivePerSe.get().first << " " << maxActivePerSe.get().second  << endl;
                 }
 
             optional<bool> drain = cli->drain();
             if (drain.is_initialized())
                 {
                     ctx.doDrain(drain.get());
+                    cout << "Done" << endl;
                 }
 
             optional<int> retry = cli->retry();
             if (retry.is_initialized())
                 {
                     ctx.retrySet(*retry);
+                    cout << "Done" << endl;
                 }
 
             optional<int> mode = cli->optimizer_mode();
             if (mode.is_initialized())
                 {
                     ctx.optimizerModeSet(*mode);
+                    cout << "Done" << endl;
                 }
 
             optional<int> secPerMb = cli->getSecPerMb();
             if (secPerMb.is_initialized())
                 {
                     ctx.setSecPerMb(*secPerMb);
+                    cout << "Done" << endl;
                 }
 
             optional<int> globalTimeout = cli->getGlobalTimeout();
             if (globalTimeout.is_initialized())
                 {
                     ctx.setGlobalTimeout(*globalTimeout);
+                    cout << "Done" << endl;
                 }
 
             optional<unsigned> queueTimeout = cli->queueTimeout();
             if (queueTimeout.is_initialized())
                 {
                     ctx.queueTimeoutSet(*queueTimeout);
+                    cout << "Done" << endl;
                 }
 
             map<string, int> bring_online = cli->getBringOnline();
@@ -117,6 +127,7 @@ int main(int ac, char* av[])
                 {
                     ctx.setBringOnline(bring_online);
                     // if bring online was used normal config was not!
+                    cout << "Done" << endl;
                     return 0;
                 }
 
@@ -126,6 +137,7 @@ int main(int ac, char* av[])
                     ctx.setBandwidthLimit(std::get<0>(*bandwidth_limitation),
                                           std::get<1>(*bandwidth_limitation),
                                           std::get<2>(*bandwidth_limitation));
+                    cout << "Done" << endl;
                     return 0;
                 }
 
@@ -135,6 +147,9 @@ int main(int ac, char* av[])
 
             implcfg__setConfigurationResponse resp;
             ctx.setConfiguration(config, resp);
+
+            cout << "Done" << endl;
+            
 
         }
     catch(cli_exception const & ex)

@@ -58,6 +58,9 @@ int main(int ac, char* av[])
             implcfg__delConfigurationResponse resp;
             ctx.delConfiguration(config, resp);
 
+
+	       cout << "Done, config deleted" << endl;
+
         }
     catch(cli_exception const & ex)
         {

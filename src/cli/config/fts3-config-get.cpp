@@ -82,6 +82,9 @@ int main(int ac, char* av[])
                     vector<string> &cfgs = resp.configuration->cfg;
                     ostream_iterator<string> it(cout, "\n");
                     copy(cfgs.begin(), cfgs.end(), it);
+
+                    if(cfgs.size() == 0)
+                      cout << "No config stored into the database" << endl;
                 }
         }
     catch(cli_exception const & ex)
