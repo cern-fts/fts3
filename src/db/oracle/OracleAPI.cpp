@@ -495,7 +495,7 @@ void OracleAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& f
     struct tm tTime;
     gmtime_r(&now, &tTime);
     std::vector< boost::tuple<std::string, std::string, std::string> > distinct;
-    distinct.reserve(1500); //approximation
+    distinct.reserve(500); //approximation
 
     try
         {

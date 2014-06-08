@@ -69,7 +69,7 @@ public:
         TRAITS::ActiveObjectType("ProcessQueueHandler", desc)
     {
         enableOptimization = theServerConfig().get<std::string > ("Optimizer");
-        messages.reserve(1000);
+        messages.reserve(300);
     }
 
     /* ---------------------------------------------------------------------- */

@@ -560,7 +560,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
     time_t now = time(NULL);
     struct tm tTime;
     std::vector< boost::tuple<std::string, std::string, std::string> > distinct;
-    distinct.reserve(1500); //approximation
+    distinct.reserve(500); //approximation
     int count = 0;
     bool manualConfigExists = false;
     int defaultFilesNum = 10;

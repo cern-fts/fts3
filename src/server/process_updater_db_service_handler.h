@@ -78,7 +78,7 @@ public:
     ) :
         TRAITS::ActiveObjectType("ProcessUpdaterDBServiceHandler", desc)
     {
-        messages.reserve(1000);
+        messages.reserve(500);
     }
 
     /* ---------------------------------------------------------------------- */
