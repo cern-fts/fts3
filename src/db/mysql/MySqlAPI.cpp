@@ -4343,7 +4343,7 @@ void MySqlAPI::revertToSubmitted()
                             time_t startTimestamp = timegm(&startTime);
                             double diff = difftime(now2, startTimestamp);
 
-                            if (diff > 500 && reuseJob != "Y")
+                            if (diff > 200 && reuseJob != "Y")
                                 {
                                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "The transfer with file id " << fileId << " seems to be stalled, restart it" << commit;
 
@@ -4611,7 +4611,7 @@ bool MySqlAPI::retryFromDead(std::vector<struct message_updater>& messages, bool
                     soci::rowset<int> rs = (
                                                sql.prepare <<
                                                " SELECT file_id FROM t_file "
-                                               " WHERE file_id = :fileId AND job_id = :jobId AND file_state='ACTIVE' AND"
+                                               " WHERE file_id = :fileId AND job_id = :jobId AND file_state in ('ACTIVE','READY') AND"
                                                " (hashed_id >= :hStart AND hashed_id <= :hEnd) ",
                                                soci::use(iter->file_id),
                                                soci::use(std::string(iter->job_id)),
