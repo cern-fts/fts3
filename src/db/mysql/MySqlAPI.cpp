@@ -2071,6 +2071,8 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
 
             double throughput = 0.0;
 
+	    std::string st;
+
             bool staging = false;
 
             int current_failures = retry;
@@ -2086,29 +2088,22 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
             if(job_id.empty() && transfer_status == "FAILED")
                 sql <<  "select job_id from t_file where pid=:pid and job_finished is NULL",soci::use(process_id), soci::into(job_id);
 
+ 
             // query for the file state in DB
-            soci::rowset<soci::row> rs = (
-                                             sql.prepare << "SELECT file_state FROM t_file WHERE file_id=:fileId and job_id=:jobId",
+            sql << "SELECT file_state FROM t_file WHERE file_id=:fileId and job_id=:jobId",
                                              soci::use(file_id),
-                                             soci::use(job_id)
-                                         );
+                                             soci::use(job_id),
+					     soci::into(st);
 
+            staging = (st == "STAGING");
 
-            // check if the state is STAGING, there should be just one row
-            std::string st;
-            soci::rowset<soci::row>::const_iterator it = rs.begin();
-            if (it != rs.end())
-                {
-                    soci::row const& r = *it;
-                    st = r.get<std::string>("file_state");
-                    staging = (st == "STAGING");
-                }
-
-            if(st == "ACTIVE" && (transfer_status != "FAILED" ||  transfer_status != "FINISHED" ||  transfer_status != "CANCELED"))
-                return true;
-
-
-
+            if(st == "FAILED" || st == "FINISHED" || st == "CANCELED" )
+            {
+		if(transfer_status == "SUBMITTED" || transfer_status == "READY" || transfer_status == "ACTIVE")
+		{
+			return false; //don't do anything, just return
+		}		
+            }
 
             soci::statement stmt(sql);
             std::ostringstream query;
