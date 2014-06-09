@@ -40,26 +40,9 @@ using namespace fts3::ws;
 using namespace db;
 using namespace boost;
 
-static void cipherRemove(const EVP_CIPHER *c, const char *from, const char *to, void *arg)
-{
-    if(c && (c->key_len * 8 < *(int *)arg))
-        {
-            OBJ_NAME_remove(OBJ_nid2sn(c->nid), OBJ_NAME_TYPE_CIPHER_METH);
-            OBJ_NAME_remove(OBJ_nid2ln(c->nid), OBJ_NAME_TYPE_CIPHER_METH);
-        }
-}
-
 
 void GSoapDelegationHandler::init()
-{
-    setenv("GLOBUS_THREAD_MODEL","pthread",1); //reset it
-    CRYPTO_malloc_init(); // Initialize malloc, free, etc for OpenSSL's use
-    SSL_library_init(); // Initialize OpenSSL's SSL libraries
-    SSL_load_error_strings(); // Load SSL error strings
-    ERR_load_BIO_strings(); // Load BIO error strings
-    OpenSSL_add_all_algorithms(); // Load all available encryption algorithms
-    int minbits = 128;
-    EVP_CIPHER_do_all(cipherRemove, &minbits);
+{ 
 }
 
 GSoapDelegationHandler::GSoapDelegationHandler(soap* ctx): ctx(ctx)

@@ -97,7 +97,7 @@ int runConsumerMonitoring(std::vector<struct message_monitoring>& messages)
 {
     string dir = string(MONITORING_DIR);
     vector<string> files = vector<string>();
-    files.reserve(1000);
+    files.reserve(300);
 
     if (getDir(dir,files) != 0)
         return errno;
@@ -137,7 +137,7 @@ int runConsumerStatus(std::vector<struct message>& messages)
 {
     string dir = string(STATUS_DIR);
     vector<string> files = vector<string>();
-    files.reserve(1000);
+    files.reserve(300);
 
     if (getDir(dir,files) != 0)
         return errno;
@@ -176,7 +176,7 @@ int runConsumerStall(std::vector<struct message_updater>& messages)
 {
     string dir = string(STALLED_DIR);
     vector<string> files = vector<string>();
-    files.reserve(1000);
+    files.reserve(300);
 
     if (getDir(dir,files) != 0)
         return errno;
@@ -217,7 +217,7 @@ int runConsumerLog(std::map<int, struct message_log>& messages)
 {
     string dir = string(LOG_DIR);
     vector<string> files = vector<string>();
-    files.reserve(1000);
+    files.reserve(300);
 
     if (getDir(dir,files) != 0)
         return errno;

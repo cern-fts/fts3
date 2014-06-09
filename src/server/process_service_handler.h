@@ -371,7 +371,7 @@ protected:
                                                 checksum = "x";
                                             }
 
-                                        url << std::fixed << file_id << " " << surl << " " << durl << " " << checksum << " " << userFilesize << " " << fileMetadata << " " << bringonlineToken;
+                                        url << std::fixed << file_id << " " << surl << " " << durl << " " << checksum << " " << boost::lexical_cast<long long>(userFilesize) << " " << fileMetadata << " " << bringonlineToken;
                                         urls.push_back(url.str());
                                         url.str("");
                                     }
@@ -662,8 +662,9 @@ protected:
                                                     }
                                                 else
                                                     {
-                                                        DBSingleton::instance().getDBObjectInstance()->setPidV(pr.getPid(), fileIds);
-                                                        std::map<int, std::string>::const_iterator iterFileIds;
+                                                        DBSingleton::instance().getDBObjectInstance()->setPidV(pr.getPid(), fileIds);                                                      
+                                                    }
+  							std::map<int, std::string>::const_iterator iterFileIds;
                                                         for (iterFileIds = fileIds.begin(); iterFileIds != fileIds.end(); ++iterFileIds)
                                                             {
                                                                 struct message_updater msg2;
@@ -674,14 +675,13 @@ protected:
                                                                         msg2.file_id = iterFileIds->first;
                                                                         msg2.process_id = (int) pr.getPid();
                                                                         msg2.timestamp = milliseconds_since_epoch();
-                                                                        ThreadSafeList::get_instance().push_back(msg2);
+                                                                        ThreadSafeList::get_instance().push_back(msg2);									
                                                                     }
                                                                 else
                                                                     {
                                                                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message length overun" << std::string(job_id).length() << commit;
                                                                     }
                                                             }
-                                                    }
                                             }
                                         params.clear();
                                     }

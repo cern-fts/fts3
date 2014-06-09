@@ -29,7 +29,7 @@ public:
     /**
      * Constructor
      */
-    bad_option(std::string const & opt, std::string const & msg) : cli_exception(msg), opt(opt) {}
+    bad_option(std::string const & opt, std::string const & msg) : cli_exception(msg), opt(opt), full_msg(opt + ": " + msg) {}
 
     /**
      * returns the error message
@@ -39,7 +39,7 @@ public:
     noexcept (true)
 #endif
     {
-        return (opt + ": " + msg).c_str();
+        return full_msg.c_str();
     }
 
     /**
@@ -56,6 +56,8 @@ public:
 private:
     /// program option name
     std::string opt;
+    /// combined error message
+    std::string full_msg;
 };
 
 }

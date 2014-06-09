@@ -495,7 +495,7 @@ void OracleAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& f
     struct tm tTime;
     gmtime_r(&now, &tTime);
     std::vector< boost::tuple<std::string, std::string, std::string> > distinct;
-    distinct.reserve(1500); //approximation
+    distinct.reserve(500); //approximation
 
     try
         {
@@ -2005,7 +2005,7 @@ bool OracleAPI::updateFileTransferStatusInternal(soci::session& sql, double thro
             if (it != rs.end())
                 {
                     soci::row const& r = *it;
-                    std::string st = r.get<std::string>("FILE_STATE");
+                    st = r.get<std::string>("FILE_STATE");
                     staging = (st == "STAGING");
                 }
 
@@ -3943,7 +3943,7 @@ bool OracleAPI::terminateReuseProcess(const std::string & jobId, int pid, const 
                     sql << " SELECT reuse_job FROM t_job WHERE job_id = :jobId AND reuse_job IS NOT NULL",
                         soci::use(job_id), soci::into(reuse, reuseInd);
 
-                    if (sql.got_data() && reuse == "Y")
+                    if (sql.got_data() && (reuse == "Y" || reuse == "H"))
                         {
                             sql.begin();
                             sql << " UPDATE t_file SET file_state = 'FAILED', job_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), "
@@ -3960,7 +3960,7 @@ bool OracleAPI::terminateReuseProcess(const std::string & jobId, int pid, const 
                     sql << " SELECT reuse_job FROM t_job WHERE job_id = :jobId AND reuse_job IS NOT NULL",
                         soci::use(jobId), soci::into(reuse, reuseInd);
 
-                    if (sql.got_data() && reuse == "Y")
+                    if (sql.got_data() && (reuse == "Y" || reuse == "H"))
                         {
                             sql.begin();
                             sql << " UPDATE t_file SET file_state = 'FAILED', job_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), "
@@ -4081,7 +4081,7 @@ void OracleAPI::revertToSubmitted()
                             time_t startTimestamp = timegm(&startTime);
                             double diff = difftime(now2, startTimestamp);
 
-                            if (diff > 500 && reuseJob != "Y")
+                            if (diff > 200 && reuseJob != "Y")
                                 {
                                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "The transfer with file id " << fileId << " seems to be stalled, restart it" << commit;
 
@@ -4340,7 +4340,7 @@ bool OracleAPI::retryFromDead(std::vector<struct message_updater>& messages, boo
                     soci::rowset<long long> rs = (
                                                      sql.prepare <<
                                                      " SELECT file_id FROM t_file "
-                                                     " WHERE file_id = :fileId AND job_id = :jobId AND file_state='ACTIVE' AND"
+                                                     " WHERE file_id = :fileId AND job_id = :jobId AND file_state in ('READY','ACTIVE') AND"
                                                      " (hashed_id >= :hStart AND hashed_id <= :hEnd) ",
                                                      soci::use(iter->file_id),
                                                      soci::use(std::string(iter->job_id)),

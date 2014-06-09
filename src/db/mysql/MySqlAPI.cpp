@@ -560,7 +560,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
     time_t now = time(NULL);
     struct tm tTime;
     std::vector< boost::tuple<std::string, std::string, std::string> > distinct;
-    distinct.reserve(1500); //approximation
+    distinct.reserve(500); //approximation
     int count = 0;
     bool manualConfigExists = false;
     int defaultFilesNum = 10;
@@ -2067,6 +2067,8 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
 
     try
         {
+            sql.begin();
+
             double throughput = 0.0;
 
             bool staging = false;
@@ -2098,7 +2100,7 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
             if (it != rs.end())
                 {
                     soci::row const& r = *it;
-                    std::string st = r.get<std::string>("file_state");
+                    st = r.get<std::string>("file_state");
                     staging = (st == "STAGING");
                 }
 
@@ -2106,7 +2108,7 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
                 return true;
 
 
-            sql.begin();
+
 
             soci::statement stmt(sql);
             std::ostringstream query;
@@ -4184,7 +4186,7 @@ bool MySqlAPI::terminateReuseProcess(const std::string & jobId, int pid, const s
                     sql << " SELECT reuse_job FROM t_job WHERE job_id = :jobId AND reuse_job IS NOT NULL",
                         soci::use(job_id), soci::into(reuse, reuseInd);
 
-                    if (sql.got_data() && reuse == "Y")
+                    if (sql.got_data() && (reuse == "Y" || reuse == "H"))
                         {
                             sql.begin();
                             sql << " UPDATE t_file SET file_state = 'FAILED', job_finished=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), "
@@ -4201,7 +4203,7 @@ bool MySqlAPI::terminateReuseProcess(const std::string & jobId, int pid, const s
                     sql << " SELECT reuse_job FROM t_job WHERE job_id = :jobId AND reuse_job IS NOT NULL",
                         soci::use(jobId), soci::into(reuse, reuseInd);
 
-                    if (sql.got_data() && reuse == "Y")
+                    if (sql.got_data() && (reuse == "Y" || reuse == "H"))
                         {
                             sql.begin();
                             sql << " UPDATE t_file SET file_state = 'FAILED', job_finished=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), "
@@ -4341,7 +4343,7 @@ void MySqlAPI::revertToSubmitted()
                             time_t startTimestamp = timegm(&startTime);
                             double diff = difftime(now2, startTimestamp);
 
-                            if (diff > 500 && reuseJob != "Y")
+                            if (diff > 200 && reuseJob != "Y")
                                 {
                                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "The transfer with file id " << fileId << " seems to be stalled, restart it" << commit;
 
@@ -4449,15 +4451,16 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                                     job_id = queryStr.substr(0, queryStr.length() - 1);
 
                                     sql.begin();
-                                    stmt = "DELETE FROM t_file WHERE job_id in (" +job_id+ ")";
-                                    sql << stmt;
-                                    stmt = "DELETE FROM t_job WHERE job_id in (" +job_id+ ")";
-                                    sql << stmt;
 
-                                    stmt = "INSERT INTO t_job_backup SELECT * FROM t_job WHERE job_id  in (" +job_id+ ")";
+				    stmt = "INSERT INTO t_job_backup SELECT * FROM t_job WHERE job_id  in (" +job_id+ ")";
                                     sql << stmt;
                                     stmt = "INSERT INTO t_file_backup SELECT * FROM t_file WHERE  job_id  in (" +job_id+ ")";
                                     sql << stmt;
+
+                                    stmt = "DELETE FROM t_file WHERE job_id in (" +job_id+ ")";
+                                    sql << stmt;
+                                    stmt = "DELETE FROM t_job WHERE job_id in (" +job_id+ ")";
+                                    sql << stmt;                                 
 
                                     count = 0;
                                     jobIdStmt.str(std::string());
@@ -4609,7 +4612,7 @@ bool MySqlAPI::retryFromDead(std::vector<struct message_updater>& messages, bool
                     soci::rowset<int> rs = (
                                                sql.prepare <<
                                                " SELECT file_id FROM t_file "
-                                               " WHERE file_id = :fileId AND job_id = :jobId AND file_state='ACTIVE' AND"
+                                               " WHERE file_id = :fileId AND job_id = :jobId AND file_state in ('ACTIVE','READY') AND"
                                                " (hashed_id >= :hStart AND hashed_id <= :hEnd) ",
                                                soci::use(iter->file_id),
                                                soci::use(std::string(iter->job_id)),

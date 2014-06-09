@@ -373,8 +373,8 @@ void checkInitDirs()
 
 int DoServer(int argc, char** argv)
 {
-
     int res = 0;
+    setenv("GLOBUS_THREAD_MODEL","pthread",1); //reset it
 
     try
         {
@@ -421,14 +421,14 @@ int DoServer(int argc, char** argv)
                             FILE* freopenLogFile = freopen(logDir.c_str(), "a", stderr);
                             if (freopenLogFile == NULL)
                                 {
-                                    std::cerr << "fts3 server failed to open log file, errno is:" << strerror(errno) << std::endl;
-                                    return 1;
+                                    std::cerr << "fts3 server failed to open log file " << logDir << " error is:" << strerror(errno) << std::endl;
+                                    exit(1);
                                 }
                         }
                     else
                         {
-                            std::cerr << "fts3 server failed to open log file, errno is:" << strerror(errno) << std::endl;
-                            return 1;
+                            std::cerr << "fts3 server failed to open log file " << logDir << " error is:" << strerror(errno) << std::endl;
+                            exit(1);
                         }
                 }
 
@@ -442,10 +442,7 @@ int DoServer(int argc, char** argv)
                 }
 
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Starting server..." << commit;
-            //setup openssl locks
-            StaticSslLocking::init_locks();
-            //init openssl
-            fts3::ws::GSoapDelegationHandler::init();
+        
             fts3_initialize_db_backend(false);
             struct sigaction action;
             action.sa_handler = _handle_sigint;
@@ -508,6 +505,17 @@ int main(int argc, char** argv)
     uid_t pw_uid = name_to_uid();
     setuid(pw_uid);
     seteuid(pw_uid);
+    
+    //check if user is set to fts3
+    char *buf = {0};
+    buf=(char *)malloc(10*sizeof(char));
+    cuserid(buf);
+    std::string user(buf);
+    if(user.empty() || user != "fts3")
+    {
+        std::cerr << "user fts3 does not exist, create first" << std::endl;
+    	return EXIT_FAILURE;
+    }
 
     //very first check before it goes to daemon mode
     try

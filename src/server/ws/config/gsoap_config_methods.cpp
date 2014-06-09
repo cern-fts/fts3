@@ -73,14 +73,6 @@ int fts3::implcfg__setConfiguration(soap* soap, config__Configuration *_configur
                     handler.add();
                 }
         }
-    catch(std::exception& ex)
-        {
-
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "A std::exception has been caught: " << ex.what() << commit;
-            soap_receiver_fault(soap, ex.what(), "ConfigurationException");
-            return SOAP_FAULT;
-
-        }
     catch(Err& ex)
         {
 
@@ -88,7 +80,14 @@ int fts3::implcfg__setConfiguration(soap* soap, config__Configuration *_configur
             soap_receiver_fault(soap, ex.what(), "ConfigurationException");
             return SOAP_FAULT;
         }
+    catch(...)
+        {
 
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "A std::exception has been caught: setConfiguration"  << commit;
+            soap_receiver_fault(soap, "setConfiguration", "ConfigurationException");
+            return SOAP_FAULT;
+
+        }
     return SOAP_OK;
 }
 
@@ -144,20 +143,20 @@ int fts3::implcfg__getConfiguration(soap* soap, string all, string name, string 
                 }
 
         }
-    catch(std::exception& ex)
-        {
-
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "A std::exception has been caught: " << ex.what() << commit;
-            soap_receiver_fault(soap, ex.what(), "ConfigurationException");
-            return SOAP_FAULT;
-
-        }
     catch(Err& ex)
         {
 
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
             soap_receiver_fault(soap, ex.what(), "ConfigurationException");
             return SOAP_FAULT;
+        }
+    catch(...)
+        {
+
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "A std::exception has been caught: getConfiguration"  << commit;
+            soap_receiver_fault(soap, "getConfiguration", "ConfigurationException");
+            return SOAP_FAULT;
+
         }
 
     return SOAP_OK;
@@ -192,20 +191,20 @@ int fts3::implcfg__delConfiguration(soap* soap, config__Configuration *_configur
                 }
 
         }
-    catch(std::exception& ex)
-        {
-
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "A std::exception has been caught: " << ex.what() << commit;
-            soap_receiver_fault(soap, ex.what(), "ConfigurationException");
-            return SOAP_FAULT;
-
-        }
     catch(Err& ex)
         {
 
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
             soap_receiver_fault(soap, ex.what(), "ConfigurationException");
             return SOAP_FAULT;
+        }
+    catch(...)
+        {
+
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "A std::exception has been caught: delConfiguration" << commit;
+            soap_receiver_fault(soap, "delConfiguration", "ConfigurationException");
+            return SOAP_FAULT;
+
         }
 
     return SOAP_OK;
