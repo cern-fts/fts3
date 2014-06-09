@@ -4451,15 +4451,16 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                                     job_id = queryStr.substr(0, queryStr.length() - 1);
 
                                     sql.begin();
-                                    stmt = "DELETE FROM t_file WHERE job_id in (" +job_id+ ")";
-                                    sql << stmt;
-                                    stmt = "DELETE FROM t_job WHERE job_id in (" +job_id+ ")";
-                                    sql << stmt;
 
-                                    stmt = "INSERT INTO t_job_backup SELECT * FROM t_job WHERE job_id  in (" +job_id+ ")";
+				    stmt = "INSERT INTO t_job_backup SELECT * FROM t_job WHERE job_id  in (" +job_id+ ")";
                                     sql << stmt;
                                     stmt = "INSERT INTO t_file_backup SELECT * FROM t_file WHERE  job_id  in (" +job_id+ ")";
                                     sql << stmt;
+
+                                    stmt = "DELETE FROM t_file WHERE job_id in (" +job_id+ ")";
+                                    sql << stmt;
+                                    stmt = "DELETE FROM t_job WHERE job_id in (" +job_id+ ")";
+                                    sql << stmt;                                 
 
                                     count = 0;
                                     jobIdStmt.str(std::string());
