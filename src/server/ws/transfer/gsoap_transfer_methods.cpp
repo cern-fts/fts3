@@ -726,7 +726,7 @@ int fts3::impltns__getTransferJobSummary(soap *soap, string _requestID,
 
         }
     catch(Err& ex)
-        {c
+        {
                     for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it)
                         {
 			    if(*it)
