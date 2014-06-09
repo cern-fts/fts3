@@ -2005,7 +2005,7 @@ bool OracleAPI::updateFileTransferStatusInternal(soci::session& sql, double thro
             if (it != rs.end())
                 {
                     soci::row const& r = *it;
-                    std::string st = r.get<std::string>("FILE_STATE");
+                    st = r.get<std::string>("FILE_STATE");
                     staging = (st == "STAGING");
                 }
 

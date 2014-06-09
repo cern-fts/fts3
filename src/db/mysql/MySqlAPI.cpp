@@ -2100,7 +2100,7 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
             if (it != rs.end())
                 {
                     soci::row const& r = *it;
-                    std::string st = r.get<std::string>("file_state");
+                    st = r.get<std::string>("file_state");
                     staging = (st == "STAGING");
                 }
 
