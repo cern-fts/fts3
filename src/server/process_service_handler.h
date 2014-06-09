@@ -675,8 +675,7 @@ protected:
                                                                         msg2.file_id = iterFileIds->first;
                                                                         msg2.process_id = (int) pr.getPid();
                                                                         msg2.timestamp = milliseconds_since_epoch();
-                                                                        ThreadSafeList::get_instance().push_back(msg2);
-									std::cout << "ADD FILE_ID = " << msg2.file_id << std::endl;
+                                                                        ThreadSafeList::get_instance().push_back(msg2);									
                                                                     }
                                                                 else
                                                                     {
