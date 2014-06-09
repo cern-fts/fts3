@@ -2067,6 +2067,8 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
 
     try
         {
+            sql.begin();
+
             double throughput = 0.0;
 
             bool staging = false;
@@ -2106,7 +2108,7 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
                 return true;
 
 
-            sql.begin();
+
 
             soci::statement stmt(sql);
             std::ostringstream query;

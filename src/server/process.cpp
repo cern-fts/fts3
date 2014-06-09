@@ -164,7 +164,7 @@ int ExecuteProcess::execProcessShell(std::string& forkMessage)
 
             // If we are here, execvp failed, so write the errno to the pipe
             ssize_t checkWriteSize;
-            checkWriteSize = write(pipefds[1], &errno, sizeof(int));
+            checkWriteSize = write(pipefds[1], &errno, sizeof(int));            
             _exit(EXIT_FAILURE);
         }
 
@@ -190,8 +190,8 @@ int ExecuteProcess::execProcessShell(std::string& forkMessage)
     // Close reading end
     close(pipefds[0]);
 
-    // Sleep for awhile but do not block waiting for child - 100ms
-    usleep(300000);
+    // Sleep for awhile but do not block waiting for child
+    usleep(50000);
     if(waitpid(pid, NULL, WNOHANG) != 0)
         {
             forkMessage = "Waiting for child process failure " + std::string(strerror(errno));
