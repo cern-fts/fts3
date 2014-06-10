@@ -148,7 +148,7 @@ def get_overview(http_request):
         FROM t_file
         WHERE (job_finished IS NULL OR job_finished >= %s)
               AND source_se = %%s AND dest_se = %%s
-              AND file_state in ('READY','ACTIVE','FINISHED','FAILED','CANCELED')
+              AND file_state in ('READY','ACTIVE','FINISHED','FAILED','CANCELED','SUBMITTED')
         """ % _db_to_date()
         params = [not_before.strftime('%Y-%m-%d %H:%M:%S'),
                   source, dest]
