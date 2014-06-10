@@ -733,15 +733,14 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                                                  "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                                                                  "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
                                                                  "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params "
-                                                                 " FROM t_file f LEFT JOIN t_job j ON (f.job_id = j.job_id) WHERE  "
-                                                                 " j.vo_name = f.vo_name AND f.file_state = 'SUBMITTED' AND j.job_finished is NULL AND "
+                                                                 " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) WHERE  "
+                                                                 "    f.file_state = 'SUBMITTED' AND j.job_finished is NULL AND "
                                                                  "    f.source_se = :source AND f.dest_se = :dest AND "
                                                                  "    f.vo_name = :vo_name AND "
                                                                  "    f.wait_timestamp IS NULL AND "
                                                                  "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
                                                                  "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
-                                                                 "    j.job_state in ('ACTIVE','READY','SUBMITTED') AND "
-                                                                 "    (j.reuse_job = 'N' OR j.reuse_job IS NULL) "
+                                                                 "     j.reuse_job = 'N' "
                                                                  "     ORDER BY j.priority DESC, j.submit_time LIMIT :filesNum ",
                                                                  soci::use(boost::get<0>(triplet)),
                                                                  soci::use(boost::get<1>(triplet)),
@@ -773,8 +772,8 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                         "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                                         "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
                                         "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params  "
-                                        " FROM t_file f LEFT JOIN t_job j ON (f.job_id = j.job_id) WHERE "
-                                        " j.vo_name = f.vo_name AND f.file_state = 'SUBMITTED' AND  "
+                                        " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) WHERE "
+                                        "    f.file_state = 'SUBMITTED' AND  "
                                         "    f.source_se = :source AND f.dest_se = :dest AND "
                                         "    f.vo_name = :vo_name AND ";
                                     select +=
@@ -786,8 +785,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                         "    f.wait_timestamp IS NULL AND "
                                         "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
                                         "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
-                                        "    j.job_state in ('ACTIVE','READY','SUBMITTED') AND "
-                                        "    (j.reuse_job = 'N' OR j.reuse_job IS NULL)  "
+                                        "    j.reuse_job = 'N'  "
                                         "    ORDER BY j.priority DESC, j.submit_time LIMIT :filesNum"
                                         ;
 
