@@ -231,6 +231,7 @@ static void call_perf(gfalt_transfer_status_t h, const char*, const char*, gpoin
             currentTransfer.throughput       = (double) avg;
             currentTransfer.transferredBytes = trans;
 
+/*
             double throughputTurl = 0.0;
 
             if (avg > 0 && inst > 0)
@@ -246,6 +247,7 @@ static void call_perf(gfalt_transfer_status_t h, const char*, const char*, gpoin
                                       "gsiftp:://fake",
                                       "ACTIVE");
                 }
+*/		
         }
 }
 
