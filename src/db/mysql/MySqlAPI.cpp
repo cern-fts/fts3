@@ -636,7 +636,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                      soci::use(boost::get<0>(triplet)), soci::use(boost::get<1>(triplet)), soci::into(count)
                                     );
             soci::statement stmt3 = (sql.prepare <<
-                                     " select count(*) from t_file where source_se=:source_se and dest_se=:dest_se and file_state in ('READY','ACTIVE') ",
+                                     " select count(*) from t_file where source_se=:source_se and dest_se=:dest_se and file_state in ('READY','ACTIVE') and job_finished is NULL ",
                                      soci::use(boost::get<0>(triplet)),
                                      soci::use(boost::get<1>(triplet)),
                                      soci::into(limit)
