@@ -742,7 +742,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                                                  "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
                                                                  "    j.job_state in ('ACTIVE','READY','SUBMITTED') AND "
                                                                  "    (j.reuse_job = 'N' OR j.reuse_job IS NULL) "
-                                                                 "     ORDER BY j.priority DESC, j.submit_time, f.file_id asc LIMIT :filesNum ",
+                                                                 "     ORDER BY j.priority DESC, j.submit_time LIMIT :filesNum ",
                                                                  soci::use(boost::get<0>(triplet)),
                                                                  soci::use(boost::get<1>(triplet)),
                                                                  soci::use(boost::get<2>(triplet)),
@@ -788,7 +788,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                         "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
                                         "    j.job_state in ('ACTIVE','READY','SUBMITTED') AND "
                                         "    (j.reuse_job = 'N' OR j.reuse_job IS NULL)  "
-                                        "    ORDER BY j.priority DESC, j.submit_time, f.file_id asc  LIMIT :filesNum"
+                                        "    ORDER BY j.priority DESC, j.submit_time LIMIT :filesNum"
                                         ;
 
 
