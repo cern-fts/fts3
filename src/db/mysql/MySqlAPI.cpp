@@ -560,7 +560,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
     time_t now = time(NULL);
     struct tm tTime;
     std::vector< boost::tuple<std::string, std::string, std::string> > distinct;
-    distinct.reserve(500); //approximation
+    distinct.reserve(300); //approximation
     int count = 0;
     bool manualConfigExists = false;
     int defaultFilesNum = 10;
@@ -574,16 +574,8 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
 
     try
         {
-            soci::rowset<std::string> rs1 = (
-                                                sql.prepare <<
-                                                " SELECT DISTINCT vo_name FROM t_job WHERE job_finished is null ");
-
-            for (soci::rowset<std::string>::const_iterator i1 = rs1.begin(); i1 != rs1.end(); ++i1)
-                {
-                    vo_name = (*i1);
-
                     soci::rowset<soci::row> rs2 = (sql.prepare <<
-                                                   " SELECT DISTINCT source_se, dest_se "
+                                                   " SELECT DISTINCT source_se, dest_se, vo_name "
                                                    " FROM t_file "
                                                    " WHERE "
                                                    "      file_state = 'SUBMITTED' AND "
@@ -596,9 +588,8 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                             soci::row const& r2 = *i2;
                             source_se = r2.get<std::string>("source_se","");
                             dest_se = r2.get<std::string>("dest_se","");
+			    vo_name = r2.get<std::string>("vo_name","");
 
-                            if(source_se.length()>0 && dest_se.length()>0 && vo_name.length()>0)
-                                {
                                     distinct.push_back(
                                         boost::tuple< std::string, std::string, std::string>(
                                             source_se,
@@ -615,9 +606,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                     if(linkExists == 0) //for some reason does not exist, add it
                                         sql << "INSERT INTO t_optimize_active (source_se, dest_se) VALUES (:source_se, :dest_se) ON DUPLICATE KEY UPDATE source_se=:source_se, dest_se=:dest_se",
                                             soci::use(source_se), soci::use(dest_se),soci::use(source_se), soci::use(dest_se);
-                                }
                         }
-                }
 
             if(distinct.empty())
                 return;
