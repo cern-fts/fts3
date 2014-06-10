@@ -574,14 +574,15 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
 
     try
         {
-                    soci::rowset<soci::row> rs2 = (sql.prepare <<
+                   soci::rowset<soci::row> rs2 = (sql.prepare <<
                                                    " SELECT DISTINCT source_se, dest_se, vo_name "
                                                    " FROM t_file "
                                                    " WHERE "
                                                    "      file_state = 'SUBMITTED' AND "
-                                                   "      (hashed_id >= :hStart AND hashed_id <= :hEnd) AND vo_name = :vo_name ",
-                                                   soci::use(hashSegment.start), soci::use(hashSegment.end),soci::use(vo_name)
+                                                   "      (hashed_id >= :hStart AND hashed_id <= :hEnd)  ",
+                                                   soci::use(hashSegment.start), soci::use(hashSegment.end)
                                                   );
+
 
                     for (soci::rowset<soci::row>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
                         {
