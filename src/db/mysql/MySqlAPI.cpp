@@ -2383,7 +2383,7 @@ void MySqlAPI::updateFileTransferProgressVector(std::vector<struct message_updat
             std::string dest_turl;
             std::string file_state;
 
-            soci::statement stmt = (sql.prepare << "UPDATE t_file SET throughput = :throughput, transferred = :transferred WHERE file_id = :fileId  AND file_state not in ('FINISHED','FAILED','CANCELED') ",
+            soci::statement stmt = (sql.prepare << "UPDATE t_file SET throughput = :throughput, transferred = :transferred WHERE file_id = :fileId ",
                                     soci::use(throughput), soci::use(transferred), soci::use(file_id));
 
             soci::statement stmtTurl = (sql.prepare << " INSERT INTO t_turl (source_surl, destin_surl, source_turl, destin_turl, datetime, throughput) "
