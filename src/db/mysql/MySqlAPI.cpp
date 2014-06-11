@@ -3225,7 +3225,7 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
 
             soci::statement stmt2 = (
                                         sql.prepare << "SELECT count(*) FROM t_file "
-                                        "WHERE source_se = :source AND dest_se = :dest_se and file_state in ('READY','ACTIVE') ",
+                                        "WHERE source_se = :source AND dest_se = :dest_se and file_state in ('READY','ACTIVE') and job_finished is NULL ",
                                         soci::use(source_hostname),soci::use(destin_hostname), soci::into(active));
             stmt2.execute(true);
 
@@ -3391,7 +3391,7 @@ bool MySqlAPI::updateOptimizer()
             //snapshot of active transfers
             soci::statement stmt7 = (
                                         sql.prepare << "SELECT count(*) FROM t_file "
-                                        "WHERE source_se = :source AND dest_se = :dest_se and file_state in ('READY','ACTIVE') ",
+                                        "WHERE source_se = :source AND dest_se = :dest_se and file_state in ('READY','ACTIVE') and job_finished is null ",
                                         soci::use(source_hostname),soci::use(destin_hostname), soci::into(active));
 
             //max number of active allowed per link
@@ -3862,7 +3862,7 @@ int MySqlAPI::getSeOut(const std::string & source, const std::set<std::string> &
             std::string source_hostname = source;
 
             sql << "SELECT COUNT(*) FROM t_file "
-                "WHERE t_file.source_se = :source AND t_file.file_state in ('READY','ACTIVE')  ",
+                "WHERE t_file.source_se = :source AND t_file.file_state in ('READY','ACTIVE') and job_finished is null ",
                 soci::use(source_hostname), soci::into(nActiveSource);
 
             ret += nActiveSource;
@@ -3902,7 +3902,7 @@ int MySqlAPI::getSeIn(const std::set<std::string> & source, const std::string & 
             std::string destin_hostname = destination;
 
             sql << "SELECT COUNT(*) FROM t_file "
-                "WHERE t_file.dest_se = :dst AND t_file.file_state in ('READY','ACTIVE') ",
+                "WHERE t_file.dest_se = :dst AND t_file.file_state in ('READY','ACTIVE') and job_finished is null ",
                 soci::use(destin_hostname), soci::into(nActiveDest);
 
             ret += nActiveDest;
@@ -3935,7 +3935,7 @@ int MySqlAPI::getCredits(soci::session& sql, const std::string & source_hostname
 
     try
         {
-            sql << " select count(*) from t_file where source_se=:source_se and dest_se=:dest_se and file_state in ('READY','ACTIVE') ",
+            sql << " select count(*) from t_file where source_se=:source_se and dest_se=:dest_se and file_state in ('READY','ACTIVE') and job_finished is null ",
                 soci::use(source_hostname),
                 soci::use(destin_hostname),
                 soci::into(limit);
