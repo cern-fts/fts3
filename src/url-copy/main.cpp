@@ -231,6 +231,7 @@ static void call_perf(gfalt_transfer_status_t h, const char*, const char*, gpoin
             currentTransfer.throughput       = (double) avg;
             currentTransfer.transferredBytes = trans;
 
+            /*
 
             double throughputTurl = 0.0;
 
@@ -247,6 +248,7 @@ static void call_perf(gfalt_transfer_status_t h, const char*, const char*, gpoin
                                       "gsiftp:://fake",
                                       "ACTIVE");
                 }
+             */		
         }
 }
 
@@ -387,7 +389,7 @@ void taskTimer(time_t* timeout)
 void taskStatusUpdater(int time)
 {
     //do not send url_copy heartbeat right after thread creation, wait a bit
-    sleep(time);
+    sleep(30);
 
     while (time)
         {
@@ -712,7 +714,7 @@ int main(int argc, char **argv)
     try
         {
             /*send an update message back to the server to indicate it's alive*/
-            boost::thread btUpdater(taskStatusUpdater, 120);
+            boost::thread btUpdater(taskStatusUpdater, 60);
         }
     catch (std::exception& e)
         {
