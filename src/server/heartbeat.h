@@ -67,13 +67,15 @@ private:
                 return true;
             }
 
+        /*
         diffTime = std::difftime(std::time(NULL), stallRecords);
-        if(diffTime > 3600)
+        if(diffTime > 7200)
             {
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Wall time passed stallRecords: " << diffTime << " secs "<< commit;
                 return true;
             }
-
+        */
+	
         return false;
     }
 
@@ -91,8 +93,8 @@ private:
                                 sleep(1);
                                 continue;
                             }
-                        
-			if (true == criticalThreadExpired(retrieveRecords, updateRecords , stallRecords))
+
+                        if (true == criticalThreadExpired(retrieveRecords, updateRecords , stallRecords))
                             {
                                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "One of the critical threads looks stalled" << commit;
                                 // Note: Would be nice to get the pstack output in the log
