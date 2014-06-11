@@ -66,16 +66,14 @@ private:
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Wall time passed updateRecords: " << diffTime << " secs "<< commit;
                 return true;
             }
-
         /*
         diffTime = std::difftime(std::time(NULL), stallRecords);
-        if(diffTime > 7200)
+        if(diffTime > 10000)
             {
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Wall time passed stallRecords: " << diffTime << " secs "<< commit;
                 return true;
             }
         */
-	
         return false;
     }
 

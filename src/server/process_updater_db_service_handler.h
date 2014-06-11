@@ -282,11 +282,10 @@ protected:
                                     }
                                 counterFailAll = 0;
                             }
-
+                        /*
                         if (stopThreads)
                             return;
 
-                        /*
                         if(!executeSanityOnce)
                             {
                                 DBSingleton::instance().getDBObjectInstance()->checkSanityState();
