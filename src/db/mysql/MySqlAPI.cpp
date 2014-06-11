@@ -574,39 +574,39 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
 
     try
         {
-                    soci::rowset<soci::row> rs2 = (sql.prepare <<
-                                                   " SELECT DISTINCT source_se, dest_se, vo_name "
-                                                   " FROM t_file "
-                                                   " WHERE "
-                                                   "      file_state = 'SUBMITTED' AND "
-                                                   "      (hashed_id >= :hStart AND hashed_id <= :hEnd)  ",
-                                                   soci::use(hashSegment.start), soci::use(hashSegment.end)
-                                                  );
+            soci::rowset<soci::row> rs2 = (sql.prepare <<
+                                           " SELECT DISTINCT source_se, dest_se, vo_name "
+                                           " FROM t_file "
+                                           " WHERE "
+                                           "      file_state = 'SUBMITTED' AND "
+                                           "      (hashed_id >= :hStart AND hashed_id <= :hEnd)  ",
+                                           soci::use(hashSegment.start), soci::use(hashSegment.end)
+                                          );
 
-                    for (soci::rowset<soci::row>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
-                        {
-                            soci::row const& r2 = *i2;
-                            source_se = r2.get<std::string>("source_se","");
-                            dest_se = r2.get<std::string>("dest_se","");
-			    vo_name = r2.get<std::string>("vo_name","");
+            for (soci::rowset<soci::row>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
+                {
+                    soci::row const& r2 = *i2;
+                    source_se = r2.get<std::string>("source_se","");
+                    dest_se = r2.get<std::string>("dest_se","");
+                    vo_name = r2.get<std::string>("vo_name","");
 
-                                    distinct.push_back(
-                                        boost::tuple< std::string, std::string, std::string>(
-                                            source_se,
-                                            dest_se,
-                                            vo_name
-                                        )
-                                    );
+                    distinct.push_back(
+                        boost::tuple< std::string, std::string, std::string>(
+                            source_se,
+                            dest_se,
+                            vo_name
+                        )
+                    );
 
-                                    long long int linkExists = 0;
-                                    sql << "select count(*) from t_optimize_active where source_se=:source_se and dest_se=:dest_se",
-                                        soci::use(source_se),
-                                        soci::use(dest_se),
-                                        soci::into(linkExists);
-                                    if(linkExists == 0) //for some reason does not exist, add it
-                                        sql << "INSERT INTO t_optimize_active (source_se, dest_se) VALUES (:source_se, :dest_se) ON DUPLICATE KEY UPDATE source_se=:source_se, dest_se=:dest_se",
-                                            soci::use(source_se), soci::use(dest_se),soci::use(source_se), soci::use(dest_se);
-                        }
+                    long long int linkExists = 0;
+                    sql << "select count(*) from t_optimize_active where source_se=:source_se and dest_se=:dest_se",
+                        soci::use(source_se),
+                        soci::use(dest_se),
+                        soci::into(linkExists);
+                    if(linkExists == 0) //for some reason does not exist, add it
+                        sql << "INSERT INTO t_optimize_active (source_se, dest_se) VALUES (:source_se, :dest_se) ON DUPLICATE KEY UPDATE source_se=:source_se, dest_se=:dest_se",
+                            soci::use(source_se), soci::use(dest_se),soci::use(source_se), soci::use(dest_se);
+                }
 
             if(distinct.empty())
                 return;
@@ -676,10 +676,10 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                     if(filesNum <=0 )
                                         {
                                             continue;
-                                        }                                    
+                                        }
                                 }
                         }
-                   
+
 
                     std::map<std::string, int> activityFilesNum =
                         getFilesNumPerActivity(sql, boost::get<0>(triplet), boost::get<1>(triplet), boost::get<2>(triplet), filesNum);
@@ -740,7 +740,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                         " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id AND f.vo_name = j.vo_name) WHERE "
                                         "    f.file_state = 'SUBMITTED' AND  "
                                         "    f.source_se = :source AND f.dest_se = :dest AND "
-					"    j.job_finished is NULL AND f.job_finished is NULL AND "
+                                        "    j.job_finished is NULL AND f.job_finished is NULL AND "
                                         "    f.vo_name = :vo_name AND ";
                                     select +=
                                         it_act->first == "default" ?
@@ -2035,7 +2035,7 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
 
             double throughput = 0.0;
 
-	    std::string st;
+            std::string st;
 
             bool staging = false;
 
@@ -2052,22 +2052,22 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
             if(job_id.empty() && transfer_status == "FAILED")
                 sql <<  "select job_id from t_file where pid=:pid and job_finished is NULL",soci::use(process_id), soci::into(job_id);
 
- 
+
             // query for the file state in DB
             sql << "SELECT file_state FROM t_file WHERE file_id=:fileId and job_id=:jobId",
-                                             soci::use(file_id),
-                                             soci::use(job_id),
-					     soci::into(st);
+                soci::use(file_id),
+                soci::use(job_id),
+                soci::into(st);
 
             staging = (st == "STAGING");
 
             if(st == "FAILED" || st == "FINISHED" || st == "CANCELED" )
-            {
-		if(transfer_status == "SUBMITTED" || transfer_status == "READY" || transfer_status == "ACTIVE")
-		{
-			return false; //don't do anything, just return
-		}		
-            }
+                {
+                    if(transfer_status == "SUBMITTED" || transfer_status == "READY" || transfer_status == "ACTIVE")
+                        {
+                            return false; //don't do anything, just return
+                        }
+                }
 
             soci::statement stmt(sql);
             std::ostringstream query;
@@ -2383,7 +2383,7 @@ void MySqlAPI::updateFileTransferProgressVector(std::vector<struct message_updat
             std::string dest_turl;
             std::string file_state;
 
-            soci::statement stmt = (sql.prepare << "UPDATE t_file SET throughput = :throughput, transferred = :transferred WHERE file_id = :fileId  AND file_state not in ('FINISHED','FAILED','CANCELED') ",
+            soci::statement stmt = (sql.prepare << "UPDATE t_file SET throughput = :throughput, transferred = :transferred WHERE file_id = :fileId ",
                                     soci::use(throughput), soci::use(transferred), soci::use(file_id));
 
             soci::statement stmtTurl = (sql.prepare << " INSERT INTO t_turl (source_surl, destin_surl, source_turl, destin_turl, datetime, throughput) "
@@ -2442,12 +2442,12 @@ void MySqlAPI::updateFileTransferProgressVector(std::vector<struct message_updat
 
                             if(file_state == "ACTIVE")
                                 {
-				    file_id = (*iter).file_id;
-				    
+                                    file_id = (*iter).file_id;
+
                                     if((*iter).throughput > 0.0 && file_id > 0 )
                                         {
                                             throughput = (*iter).throughput;
-                                            transferred = (*iter).transferred;                                            
+                                            transferred = (*iter).transferred;
                                             stmt.execute(true);
                                         }
                                 }
@@ -2457,7 +2457,7 @@ void MySqlAPI::updateFileTransferProgressVector(std::vector<struct message_updat
                                     dest_surl = (*iter).dest_surl;
                                     source_turl = (*iter).source_turl;
                                     dest_turl = (*iter).dest_turl;
-				    file_id = (*iter).file_id;
+                                    file_id = (*iter).file_id;
 
                                     if(source_turl == "gsiftp:://fake" && dest_turl == "gsiftp:://fake")
                                         continue;
@@ -2465,7 +2465,7 @@ void MySqlAPI::updateFileTransferProgressVector(std::vector<struct message_updat
                                     if((*iter).throughput > 0.0 && file_id > 0)
                                         {
                                             throughput = (*iter).throughput;
-                                        }                                    
+                                        }
 
                                     if(file_state == "FINISHED" && file_id > 0 )
                                         {
@@ -4411,7 +4411,7 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
 
                                     sql.begin();
 
-				    stmt = "INSERT INTO t_job_backup SELECT * FROM t_job WHERE job_id  in (" +job_id+ ")";
+                                    stmt = "INSERT INTO t_job_backup SELECT * FROM t_job WHERE job_id  in (" +job_id+ ")";
                                     sql << stmt;
                                     stmt = "INSERT INTO t_file_backup SELECT * FROM t_file WHERE  job_id  in (" +job_id+ ")";
                                     sql << stmt;
@@ -4419,7 +4419,7 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                                     stmt = "DELETE FROM t_file WHERE job_id in (" +job_id+ ")";
                                     sql << stmt;
                                     stmt = "DELETE FROM t_job WHERE job_id in (" +job_id+ ")";
-                                    sql << stmt;                                 
+                                    sql << stmt;
 
                                     count = 0;
                                     jobIdStmt.str(std::string());
@@ -4951,7 +4951,7 @@ bool MySqlAPI::isFileReadyState(int fileID)
             isReadyState = (state == "READY");
 
             if (isNull != soci::i_null)
-                isReadyHost = (host == hostname);            
+                isReadyHost = (host == hostname);
         }
     catch (std::exception& e)
         {
@@ -7042,23 +7042,23 @@ void MySqlAPI::transferLogFileVector(std::map<int, struct message_log>& messages
             std::map<int, struct message_log>::iterator iterLog = messagesLog.begin();
             while (iterLog != messagesLog.end())
                 {
-		  if(((*iterLog).second).msg_errno == 0)
-		  {
-                    filePath = ((*iterLog).second).filePath;
-                    fileId = ((*iterLog).second).file_id;
-                    debugFile = ((*iterLog).second).debugFile;
-                    stmt.execute(true);
+                    if(((*iterLog).second).msg_errno == 0)
+                        {
+                            filePath = ((*iterLog).second).filePath;
+                            fileId = ((*iterLog).second).file_id;
+                            debugFile = ((*iterLog).second).debugFile;
+                            stmt.execute(true);
 
-                    if (stmt.get_affected_rows() > 0)
-                        {
-                            // erase
-                            messagesLog.erase(iterLog++);
+                            if (stmt.get_affected_rows() > 0)
+                                {
+                                    // erase
+                                    messagesLog.erase(iterLog++);
+                                }
+                            else
+                                {
+                                    ++iterLog;
+                                }
                         }
-                    else
-                        {
-                            ++iterLog;
-                        }
-		  }
                 }
 
             sql.commit();
@@ -9621,23 +9621,23 @@ void MySqlAPI::getTransferJobStatusDetailed(std::string job_id, std::vector<boos
     try
         {
 
-                            soci::rowset<soci::row> rs = (
-                                        sql.prepare <<
-                                        " SELECT job_id, file_state, file_id, source_surl, dest_surl from t_file where job_id=:job_id order by file_id asc", soci::use(job_id)
-                                    );	
-         
+            soci::rowset<soci::row> rs = (
+                                             sql.prepare <<
+                                             " SELECT job_id, file_state, file_id, source_surl, dest_surl from t_file where job_id=:job_id order by file_id asc", soci::use(job_id)
+                                         );
 
-                            for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
-                                {
-                                    std::string job_id = i->get<std::string>("job_id");
-                                    std::string file_state = i->get<std::string>("file_state");				    
-                                    int file_id = i->get<int>("file_id");				    				    
-                                    std::string source_surl = i->get<std::string>("source_surl");
-                                    std::string dest_surl = i->get<std::string>("dest_surl");				    
-				    
-				    boost::tuple<std::string, std::string, int, std::string, std::string> record(job_id, file_state, file_id, source_surl, dest_surl);
-            			    files.push_back(record);
-                                }
+
+            for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+                {
+                    std::string job_id = i->get<std::string>("job_id");
+                    std::string file_state = i->get<std::string>("file_state");
+                    int file_id = i->get<int>("file_id");
+                    std::string source_surl = i->get<std::string>("source_surl");
+                    std::string dest_surl = i->get<std::string>("dest_surl");
+
+                    boost::tuple<std::string, std::string, int, std::string, std::string> record(job_id, file_state, file_id, source_surl, dest_surl);
+                    files.push_back(record);
+                }
         }
     catch (std::exception& e)
         {
