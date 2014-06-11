@@ -2450,13 +2450,13 @@ void MySqlAPI::updateFileTransferProgressVector(std::vector<struct message_updat
                                             transferred = (*iter).transferred;
                                             stmt.execute(true);
                                         }
-                                }                            
+                                }
                         }
                 }
 
             sql.commit();
-	    
-	    //now update t_turl table
+
+            //now update t_turl table
             sql.begin();
 
             for (iter = messages.begin(); iter != messages.end(); ++iter)
