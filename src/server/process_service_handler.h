@@ -662,26 +662,26 @@ protected:
                                                     }
                                                 else
                                                     {
-                                                        DBSingleton::instance().getDBObjectInstance()->setPidV(pr.getPid(), fileIds);                                                      
+                                                        DBSingleton::instance().getDBObjectInstance()->setPidV(pr.getPid(), fileIds);
                                                     }
-  							std::map<int, std::string>::const_iterator iterFileIds;
-                                                        for (iterFileIds = fileIds.begin(); iterFileIds != fileIds.end(); ++iterFileIds)
+                                                std::map<int, std::string>::const_iterator iterFileIds;
+                                                for (iterFileIds = fileIds.begin(); iterFileIds != fileIds.end(); ++iterFileIds)
+                                                    {
+                                                        struct message_updater msg2;
+                                                        if(std::string(job_id).length() <= 37)
                                                             {
-                                                                struct message_updater msg2;
-                                                                if(std::string(job_id).length() <= 37)
-                                                                    {
-                                                                        strncpy(msg2.job_id, std::string(job_id).c_str(), sizeof(msg2.job_id));
-                                                                        msg2.job_id[sizeof(msg2.job_id) - 1] = '\0';
-                                                                        msg2.file_id = iterFileIds->first;
-                                                                        msg2.process_id = (int) pr.getPid();
-                                                                        msg2.timestamp = milliseconds_since_epoch();
-                                                                        ThreadSafeList::get_instance().push_back(msg2);									
-                                                                    }
-                                                                else
-                                                                    {
-                                                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message length overun" << std::string(job_id).length() << commit;
-                                                                    }
+                                                                strncpy(msg2.job_id, std::string(job_id).c_str(), sizeof(msg2.job_id));
+                                                                msg2.job_id[sizeof(msg2.job_id) - 1] = '\0';
+                                                                msg2.file_id = iterFileIds->first;
+                                                                msg2.process_id = (int) pr.getPid();
+                                                                msg2.timestamp = milliseconds_since_epoch();
+                                                                ThreadSafeList::get_instance().push_back(msg2);
                                                             }
+                                                        else
+                                                            {
+                                                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message length overun" << std::string(job_id).length() << commit;
+                                                            }
+                                                    }
                                             }
                                         params.clear();
                                     }

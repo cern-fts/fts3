@@ -258,12 +258,12 @@ static void isPathSane(const std::string& path,
                                             msg << "Failed to chown for " << path;
                                             throw Err_System(msg.str());
                                         }
-				    int checkmode = chmod (path.c_str(), 0755);
+                                    int checkmode = chmod (path.c_str(), 0755);
                                     if (checkmode != 0)
                                         {
                                             msg << "Failed to chmod for " << path;
                                             throw Err_System(msg.str());
-                                        }					
+                                        }
                                 }
                         }
                     else
@@ -340,7 +340,7 @@ void checkInitDirs()
             isPathSane("/etc/fts3", true, R_OK, false);
             isPathSane(hostcert, false, R_OK);
             isPathSane(hostkey, false, R_OK);
-	    isPathSane(configfile, false, R_OK, true);
+            isPathSane(configfile, false, R_OK, true);
             isPathSane("/var/log/fts3");
             isPathSane("/var/lib/fts3");
             isPathSane("/var/lib/fts3/monitoring");
@@ -442,7 +442,7 @@ int DoServer(int argc, char** argv)
                 }
 
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Starting server..." << commit;
-        
+
             fts3_initialize_db_backend(false);
             struct sigaction action;
             action.sa_handler = _handle_sigint;
@@ -505,17 +505,17 @@ int main(int argc, char** argv)
     uid_t pw_uid = name_to_uid();
     setuid(pw_uid);
     seteuid(pw_uid);
-    
+
     //check if user is set to fts3
     char *buf = {0};
     buf=(char *)malloc(10*sizeof(char));
     cuserid(buf);
     std::string user(buf);
     if(user.empty() || user != "fts3")
-    {
-        std::cerr << "user fts3 does not exist, create first" << std::endl;
-    	return EXIT_FAILURE;
-    }
+        {
+            std::cerr << "user fts3 does not exist, create first" << std::endl;
+            return EXIT_FAILURE;
+        }
 
     //very first check before it goes to daemon mode
     try

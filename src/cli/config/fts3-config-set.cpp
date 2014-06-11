@@ -77,7 +77,7 @@ int main(int ac, char* av[])
             if (maxActivePerSe.is_initialized())
                 {
                     ctx.setMaxDstSeActive(maxActivePerSe.get().first, maxActivePerSe.get().second);
-		    cout << "Done, just applied: " << maxActivePerSe.get().first << " " << maxActivePerSe.get().second  << endl;
+                    cout << "Done, just applied: " << maxActivePerSe.get().first << " " << maxActivePerSe.get().second  << endl;
                 }
 
             optional<bool> drain = cli->drain();
@@ -149,7 +149,7 @@ int main(int ac, char* av[])
             ctx.setConfiguration(config, resp);
 
             cout << "Done" << endl;
-            
+
 
         }
     catch(cli_exception const & ex)

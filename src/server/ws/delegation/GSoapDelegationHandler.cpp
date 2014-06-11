@@ -42,7 +42,7 @@ using namespace boost;
 
 
 void GSoapDelegationHandler::init()
-{ 
+{
 }
 
 GSoapDelegationHandler::GSoapDelegationHandler(soap* ctx): ctx(ctx)

@@ -14,8 +14,10 @@
 #include <set>
 #include <map>
 
-namespace fts3 {
-namespace ws {
+namespace fts3
+{
+namespace ws
+{
 
 using namespace db;
 
@@ -58,22 +60,22 @@ class BlacklistInspector
 
 public:
 
-	BlacklistInspector(std::string const & vo) : db (DBSingleton::instance().getDBObjectInstance()), vo(vo) {}
-	virtual ~BlacklistInspector() {}
+    BlacklistInspector(std::string const & vo) : db (DBSingleton::instance().getDBObjectInstance()), vo(vo) {}
+    virtual ~BlacklistInspector() {}
 
-	void add(std::string const & se);
+    void add(std::string const & se);
 
-	void inspect() const;
-	void setWaitTimeout(std::list<job_element_tupple> & jobs) const;
+    void inspect() const;
+    void setWaitTimeout(std::list<job_element_tupple> & jobs) const;
 
 private:
 
     /// DB instance
     GenericDbIfce* db;
 
-	std::set<std::string> unique_ses;
-	std::string const & vo;
-	std::string unique_ses_str;
+    std::set<std::string> unique_ses;
+    std::string const & vo;
+    std::string unique_ses_str;
 };
 
 } /* namespace cli */

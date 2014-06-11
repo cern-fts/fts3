@@ -82,40 +82,44 @@ private:
     {
         while (!stopThreads)
             {
-                //if we drain a host, we need to let the other hosts know about it, hand-over all files to the rest
-                if (DrainMode::getInstance())
+                try
                     {
-                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more transfers for this instance!" << commit;
-                        sleep(1);
-                        continue;
-                    }
-                else if (true == criticalThreadExpired(retrieveRecords, updateRecords , stallRecords))
-                    {
-                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "One of the critical threads looks stalled" << commit;
-                        // Note: Would be nice to get the pstack output in the log
-                        ordered_shutdown();
-                    }
-                else
-                    {
-                        unsigned index=0, count=0, start=0, end=0;
-                        std::string serviceName = "fts_server";
-                        try
+                        //if we drain a host, we need to let the other hosts know about it, hand-over all files to the rest
+                        if (DrainMode::getInstance())
                             {
+                                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more transfers for this instance!" << commit;
+                                sleep(1);
+                                continue;
+                            }
+                        
+			if (true == criticalThreadExpired(retrieveRecords, updateRecords , stallRecords))
+                            {
+                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "One of the critical threads looks stalled" << commit;
+                                // Note: Would be nice to get the pstack output in the log
+                                ordered_shutdown();
+                            }
+                        else
+                            {
+                                unsigned index=0, count=0, start=0, end=0;
+                                std::string serviceName = "fts_server";
+
                                 db::DBSingleton::instance().getDBObjectInstance()->updateHeartBeat(&index, &count, &start, &end, serviceName);
                                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Systole: host " << index << " out of " << count
                                                                 << " [" << start << ':' << end << ']'
                                                                 << commit;
                             }
-                        catch (const std::exception& e)
-                            {
-                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Hearbeat failed: " << e.what() << commit;
-                            }
-                        catch (...)
-                            {
-                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Hearbeat failed " << commit;
-                            }
+                        sleep(60);
                     }
-                sleep(60);
+                catch (const std::exception& e)
+                    {
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Hearbeat failed: " << e.what() << commit;
+                        sleep(60);
+                    }
+                catch (...)
+                    {
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Hearbeat failed " << commit;
+                        sleep(60);
+                    }
             }
     }
 

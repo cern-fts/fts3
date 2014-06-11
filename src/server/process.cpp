@@ -164,7 +164,7 @@ int ExecuteProcess::execProcessShell(std::string& forkMessage)
 
             // If we are here, execvp failed, so write the errno to the pipe
             ssize_t checkWriteSize;
-            checkWriteSize = write(pipefds[1], &errno, sizeof(int));            
+            checkWriteSize = write(pipefds[1], &errno, sizeof(int));
             _exit(EXIT_FAILURE);
         }
 

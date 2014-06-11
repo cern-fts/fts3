@@ -84,7 +84,7 @@ int main(int ac, char* av[])
                     copy(cfgs.begin(), cfgs.end(), it);
 
                     if(cfgs.size() == 0)
-                      cout << "No config stored into the database" << endl;
+                        cout << "No config stored into the database" << endl;
                 }
         }
     catch(cli_exception const & ex)

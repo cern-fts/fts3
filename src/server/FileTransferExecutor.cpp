@@ -399,16 +399,16 @@ int FileTransferExecutor::execute()
                             else
                                 {
                                     db->updateFileTransferStatus(0.0, tf->JOB_ID, tf->FILE_ID, "ACTIVE", "",(int) pr.getPid(), 0, 0, false);
-                                    db->updateJobTransferStatus(tf->JOB_ID, "ACTIVE",0);                                
+                                    db->updateJobTransferStatus(tf->JOB_ID, "ACTIVE",0);
                                 }
-    				    SingleTrStateInstance::instance().sendStateMessage(tf->JOB_ID, tf->FILE_ID);
-                                    struct message_updater msg;
-                                    strncpy(msg.job_id, std::string(tf->JOB_ID).c_str(), sizeof(msg.job_id));
-                                    msg.job_id[sizeof(msg.job_id) - 1] = '\0';
-                                    msg.file_id = tf->FILE_ID;
-                                    msg.process_id = (int) pr.getPid();
-                                    msg.timestamp = milliseconds_since_epoch();
-                                    ThreadSafeList::get_instance().push_back(msg);
+                            SingleTrStateInstance::instance().sendStateMessage(tf->JOB_ID, tf->FILE_ID);
+                            struct message_updater msg;
+                            strncpy(msg.job_id, std::string(tf->JOB_ID).c_str(), sizeof(msg.job_id));
+                            msg.job_id[sizeof(msg.job_id) - 1] = '\0';
+                            msg.file_id = tf->FILE_ID;
+                            msg.process_id = (int) pr.getPid();
+                            msg.timestamp = milliseconds_since_epoch();
+                            ThreadSafeList::get_instance().push_back(msg);
                         }
                     /* Disabled for now but pls do not remove
                     else

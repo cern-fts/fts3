@@ -59,7 +59,7 @@ int main(int ac, char* av[])
             ctx.delConfiguration(config, resp);
 
 
-	       cout << "Done, config deleted" << endl;
+            cout << "Done, config deleted" << endl;
 
         }
     catch(cli_exception const & ex)

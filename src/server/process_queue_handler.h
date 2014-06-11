@@ -248,7 +248,7 @@ protected:
                                                                 << "\nDest: " << (*iter).dest_se << commit;
 
                                 updateDatabase((*iter));
-                            }                        
+                            }
                     }//end for
             }
         catch (const fs::filesystem_error& e)
@@ -430,7 +430,7 @@ protected:
 
                                 if(!messagesUpdater.empty())
                                     {
-  			                std::vector<struct message_updater>::iterator iterUpdater;
+                                        std::vector<struct message_updater>::iterator iterUpdater;
                                         for (iterUpdater = messagesUpdater.begin(); iterUpdater != messagesUpdater.end(); ++iterUpdater)
                                             {
                                                 if (iterUpdater->msg_errno == 0)
