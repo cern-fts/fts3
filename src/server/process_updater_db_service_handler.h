@@ -286,6 +286,7 @@ protected:
                         if (stopThreads)
                             return;
 
+                        /*
                         if(!executeSanityOnce)
                             {
                                 DBSingleton::instance().getDBObjectInstance()->checkSanityState();
@@ -298,7 +299,7 @@ protected:
                                 DBSingleton::instance().getDBObjectInstance()->checkSanityState();
                                 counter2 = 0;
                             }
-
+                        */
                         messages.clear();
                     }
                 catch (const std::exception& e)
