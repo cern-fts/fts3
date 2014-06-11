@@ -2450,8 +2450,32 @@ void MySqlAPI::updateFileTransferProgressVector(std::vector<struct message_updat
                                             transferred = (*iter).transferred;
                                             stmt.execute(true);
                                         }
-                                }
-                            else
+                                }                            
+                        }
+                }
+
+            sql.commit();
+	    
+	    //now update t_turl table
+            sql.begin();
+
+            std::vector<struct message_updater>::iterator iter;
+            for (iter = messages.begin(); iter != messages.end(); ++iter)
+                {
+                    throughput = 0.0;
+                    transferred = 0.0;
+                    file_id = 0;
+                    file_state = "";
+                    source_surl = "";
+                    dest_surl = "";
+                    source_turl = "";
+                    dest_turl = "";
+
+                    if (iter->msg_errno == 0 && (*iter).file_id > 0)
+                        {
+                            file_state = std::string((*iter).transfer_status);
+
+                            if(file_state != "ACTIVE")
                                 {
                                     source_surl = (*iter).source_surl;
                                     dest_surl = (*iter).dest_surl;
