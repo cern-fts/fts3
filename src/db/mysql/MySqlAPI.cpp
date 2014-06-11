@@ -2459,7 +2459,6 @@ void MySqlAPI::updateFileTransferProgressVector(std::vector<struct message_updat
 	    //now update t_turl table
             sql.begin();
 
-            std::vector<struct message_updater>::iterator iter;
             for (iter = messages.begin(); iter != messages.end(); ++iter)
                 {
                     throughput = 0.0;
