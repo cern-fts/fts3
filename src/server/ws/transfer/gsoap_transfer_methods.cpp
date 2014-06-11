@@ -333,8 +333,17 @@ int fts3::impltns__getFileStatus3(soap *soap, fts3::tns3__FileRequest *req,
                     status->transferFileState = soap_new_std__string(soap, -1);
                     *status->transferFileState = tmp->transferFileState;
 
-                    status->duration = tmp->finish_time - tmp->start_time;
-                    status->numFailures = tmp->numFailures;
+                    if(tmp->transferFileState == "NOT_USED")
+		    {
+                    	status->duration = 0;
+                    	status->numFailures = 0;		    
+		    }
+		    else
+		    {
+                    	status->duration = tmp->finish_time - tmp->start_time;
+                    	status->numFailures = tmp->numFailures;
+		    }
+		    
 
                     // Retries only on request!
                     if (req->retries)
@@ -442,6 +451,17 @@ int fts3::impltns__getFileStatus2(soap *soap, string _requestID, int _offset, in
 
                     status->transferFileState = soap_new_std__string(soap, -1);
                     *status->transferFileState = tmp->transferFileState;
+
+                    if(tmp->transferFileState == "NOT_USED")
+		    {
+                    	status->duration = 0;
+                    	status->numFailures = 0;		    
+		    }
+		    else
+		    {
+                    	status->duration = tmp->finish_time - tmp->start_time;
+                    	status->numFailures = tmp->numFailures;
+		    }
 
                     status->duration = tmp->finish_time - tmp->start_time;
                     status->numFailures = tmp->numFailures;
