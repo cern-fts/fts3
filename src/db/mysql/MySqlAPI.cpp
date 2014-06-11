@@ -690,14 +690,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                         }                                    
                                 }
                         }
-                    else
-                        {
-                            // round it up
-                            double temp = (double) filesNum / (double)hostCount;
-                            filesNum = static_cast<int>(ceil(temp));
-                            // not less than 2
-                            if (filesNum < 2) filesNum = 2;
-                        }
+                   
 
                     std::map<std::string, int> activityFilesNum =
                         getFilesNumPerActivity(sql, boost::get<0>(triplet), boost::get<1>(triplet), boost::get<2>(triplet), filesNum);
@@ -3410,7 +3403,7 @@ bool MySqlAPI::updateOptimizer()
             //sum of retried transfers per link
             soci::statement stmt9 = (
                                         sql.prepare << "select sum(retry) from t_file WHERE source_se = :source AND dest_se = :dest_se and "
-                                        "file_state in ('READY','ACTIVE','SUBMITTED') order by start_time DESC LIMIT 50 ",
+                                        "job_finished is NULL order by start_time DESC LIMIT 50 ",
                                         soci::use(source_hostname),soci::use(destin_hostname), soci::into(retry, isNullRetry));
 
             soci::statement stmt10 = (

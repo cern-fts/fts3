@@ -609,15 +609,7 @@ void OracleAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& f
                                                 filesNum = 2;
                                         }
                                 }
-                        }
-                    else
-                        {
-                            // round it up
-                            double temp = (double) filesNum / (double)hostCount;
-                            filesNum = static_cast<int>(ceil(temp));
-                            // not less than 2
-                            if (filesNum < 2) filesNum = 2;
-                        }
+                        }                   
 
                     std::map<std::string, int> activityFilesNum =
                         getFilesNumPerActivity(sql, boost::get<0>(triplet), boost::get<1>(triplet), boost::get<2>(triplet), filesNum);
