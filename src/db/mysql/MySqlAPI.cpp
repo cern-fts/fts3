@@ -611,17 +611,6 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
             if(distinct.empty())
                 return;
 
-            long long hostCount = 0;
-            sql <<
-                " SELECT COUNT(hostname) "
-                " FROM t_hosts "
-                " WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval 2 minute)",
-                soci::into(hostCount)
-                ;
-
-            if(hostCount < 1)
-                hostCount = 1;
-
             // Iterate through pairs, getting jobs IF the VO has not run out of credits
             // AND there are pending file transfers within the job
             boost::tuple<std::string, std::string, std::string> triplet;
@@ -709,7 +698,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                                                  "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                                                                  "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
                                                                  "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params "
-                                                                 " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) WHERE  "
+                                                                 " FROM t_file f LEFT JOIN t_job j ON (f.job_id = j.job_id AND f.vo_name = j.vo_name) WHERE  "
                                                                  "    f.file_state = 'SUBMITTED' AND j.job_finished is NULL AND f.job_finished is NULL AND "
                                                                  "    f.source_se = :source AND f.dest_se = :dest AND "
                                                                  "    f.vo_name = :vo_name AND "
@@ -748,10 +737,10 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                         "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                                         "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
                                         "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params  "
-                                        " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) WHERE "
+                                        " FROM t_file f LEFT JOIN t_job j ON (f.job_id = j.job_id AND f.vo_name = j.vo_name) WHERE "
                                         "    f.file_state = 'SUBMITTED' AND  "
                                         "    f.source_se = :source AND f.dest_se = :dest AND "
-					"    f.file_state = 'SUBMITTED' AND j.job_finished is NULL AND f.job_finished is NULL AND "
+					"    j.job_finished is NULL AND f.job_finished is NULL AND "
                                         "    f.vo_name = :vo_name AND ";
                                     select +=
                                         it_act->first == "default" ?
