@@ -282,7 +282,7 @@ protected:
                                     }
                                 counterFailAll = 0;
                             }
-
+                        /*
                         if (stopThreads)
                             return;
 
@@ -298,7 +298,7 @@ protected:
                                 DBSingleton::instance().getDBObjectInstance()->checkSanityState();
                                 counter2 = 0;
                             }
-
+                        */
                         messages.clear();
                     }
                 catch (const std::exception& e)
