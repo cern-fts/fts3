@@ -575,7 +575,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
     try
         {
             soci::rowset<soci::row> rs2 = (sql.prepare <<
-                                           " SELECT DISTINCT source_se, dest_se, vo_name "
+                                           " SELECT DISTINCT vo_name, source_se, dest_se "
                                            " FROM t_file "
                                            " WHERE "
                                            "      file_state = 'SUBMITTED' AND "
@@ -586,9 +586,9 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
             for (soci::rowset<soci::row>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
                 {
                     soci::row const& r2 = *i2;
+		    vo_name = r2.get<std::string>("vo_name","");		    
                     source_se = r2.get<std::string>("source_se","");
-                    dest_se = r2.get<std::string>("dest_se","");
-                    vo_name = r2.get<std::string>("vo_name","");
+                    dest_se = r2.get<std::string>("dest_se","");                    
 
                     distinct.push_back(
                         boost::tuple< std::string, std::string, std::string>(
