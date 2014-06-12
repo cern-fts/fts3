@@ -699,7 +699,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                                                  "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
                                                                  "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params "
                                                                  " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id AND f.vo_name = j.vo_name) WHERE  "
-                                                                 "    f.file_state = 'SUBMITTED' AND j.job_finished is NULL AND f.job_finished is NULL AND "
+                                                                 "    f.file_state = 'SUBMITTED' AND "
                                                                  "    f.source_se = :source AND f.dest_se = :dest AND "
                                                                  "    f.vo_name = :vo_name AND "
                                                                  "    f.wait_timestamp IS NULL AND "
@@ -730,7 +730,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                     if (it_act->second == 0) continue;
 
                                     std::string select =
-                                        " SELECT "
+                                        " SELECT SQL_NO_CACHE "
                                         "       f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
                                         "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, "
                                         "       f.checksum, j.checksum_method, j.source_space_token, "
@@ -739,8 +739,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                         "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params  "
                                         " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id AND f.vo_name = j.vo_name) WHERE "
                                         "    f.file_state = 'SUBMITTED' AND  "
-                                        "    f.source_se = :source AND f.dest_se = :dest AND "
-                                        "    j.job_finished is NULL AND f.job_finished is NULL AND "
+                                        "    f.source_se = :source AND f.dest_se = :dest AND "                                       
                                         "    f.vo_name = :vo_name AND ";
                                     select +=
                                         it_act->first == "default" ?
