@@ -16,103 +16,106 @@
 BOOST_AUTO_TEST_SUITE( common )
 BOOST_AUTO_TEST_SUITE(ThreadPoolTest)
 
-struct EmptyTask { void run() {} };
+struct EmptyTask
+{
+    void run() {}
+};
 
 BOOST_AUTO_TEST_CASE (ThreadPool_size)
 {
-	using namespace fts3::common;
+    using namespace fts3::common;
 
-	ThreadPool<EmptyTask> tp(10);
-	BOOST_CHECK_EQUAL(tp.size(), 10);
-	tp.join();
+    ThreadPool<EmptyTask> tp(10);
+    BOOST_CHECK_EQUAL(tp.size(), 10);
+    tp.join();
 }
 
 struct IdTask
 {
-	IdTask(boost::thread::id & id) : id(id) {}
+    IdTask(boost::thread::id & id) : id(id) {}
 
-	void run()
-	{
+    void run()
+    {
 //		boost::this_thread::sleep_for(boost::chrono::seconds(1));
-		sleep(1);
-		id = boost::this_thread::get_id();
-	}
+        sleep(1);
+        id = boost::this_thread::get_id();
+    }
 
-	boost::thread::id & id;
+    boost::thread::id & id;
 };
 
 BOOST_AUTO_TEST_CASE (ThreadPool_start)
 {
-	using namespace fts3::common;
+    using namespace fts3::common;
 
-	boost::thread::id ids[3];
+    boost::thread::id ids[3];
 
-	ThreadPool<IdTask> one_thread(1);
-	one_thread.start(new IdTask(ids[0]));
-	one_thread.start(new IdTask(ids[1]));
-	one_thread.join();
+    ThreadPool<IdTask> one_thread(1);
+    one_thread.start(new IdTask(ids[0]));
+    one_thread.start(new IdTask(ids[1]));
+    one_thread.join();
 
-	BOOST_CHECK_EQUAL(ids[0], ids[1]);
+    BOOST_CHECK_EQUAL(ids[0], ids[1]);
 
-	ThreadPool<IdTask> two_threads(2);
-	two_threads.start(new IdTask(ids[0]));
-	two_threads.start(new IdTask(ids[1]));
-	two_threads.join();
+    ThreadPool<IdTask> two_threads(2);
+    two_threads.start(new IdTask(ids[0]));
+    two_threads.start(new IdTask(ids[1]));
+    two_threads.join();
 
-	BOOST_CHECK_NE(ids[0], ids[1]);
+    BOOST_CHECK_NE(ids[0], ids[1]);
 
-	ThreadPool<IdTask> three_tasks(2);
-	three_tasks.start(new IdTask(ids[0]));
-	three_tasks.start(new IdTask(ids[1]));
-	three_tasks.start(new IdTask(ids[2]));
-	three_tasks.join();
+    ThreadPool<IdTask> three_tasks(2);
+    three_tasks.start(new IdTask(ids[0]));
+    three_tasks.start(new IdTask(ids[1]));
+    three_tasks.start(new IdTask(ids[2]));
+    three_tasks.join();
 
-	BOOST_CHECK_NE(ids[0], ids[1]);
-	BOOST_CHECK(ids[2] == ids[0] || ids[2] == ids[1]);
+    BOOST_CHECK_NE(ids[0], ids[1]);
+    BOOST_CHECK(ids[2] == ids[0] || ids[2] == ids[1]);
 }
 
 struct SleepyTask
 {
-	SleepyTask(bool & done) : done(done) {}
+    SleepyTask(bool & done) : done(done) {}
 
-	void run()
-	{
+    void run()
+    {
 //		boost::this_thread::sleep_for(boost::chrono::seconds(1));
-		sleep(1);
-		done = true;
-	}
+        sleep(1);
+        done = true;
+    }
 
-	bool & done;
+    bool & done;
 };
 
 BOOST_AUTO_TEST_CASE (ThreadPool_join)
 {
-	using namespace fts3::common;
+    using namespace fts3::common;
 
-	bool done = false;
+    bool done = false;
 
-	ThreadPool<SleepyTask> tp(1);
-	tp.start(new SleepyTask(done));
-	tp.join();
-	BOOST_CHECK(done);
+    ThreadPool<SleepyTask> tp(1);
+    tp.start(new SleepyTask(done));
+    tp.join();
+    BOOST_CHECK(done);
 }
 
 struct InfiniteTask
 {
-	void run()
-	{
-		while(true) boost::this_thread::interruption_point();
-	}
+    void run()
+    {
+        while(true) boost::this_thread::interruption_point();
+    }
 };
 
 BOOST_AUTO_TEST_CASE (ThreadPool_interrupt)
 {
-	using namespace fts3::common;
+    using namespace fts3::common;
 
-	ThreadPool<InfiniteTask> tp(1);
-	tp.start(new InfiniteTask());
-	tp.interrupt();
-	tp.join();
+    ThreadPool<InfiniteTask> tp(1);
+    tp.start(new InfiniteTask());
+    tp.interrupt();
+    tp.join();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

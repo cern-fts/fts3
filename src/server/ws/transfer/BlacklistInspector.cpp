@@ -15,21 +15,23 @@
 
 #include <boost/lambda/lambda.hpp>
 
-namespace fts3 {
-namespace ws {
+namespace fts3
+{
+namespace ws
+{
 
 using namespace fts3::common;
 
 void BlacklistInspector::add(std::string const & se)
 {
-	// treat the first one differently
-	if (unique_ses.empty())
-		{
-			unique_ses.insert(se);
-			// add the parenthesis
-			unique_ses_str += "('" + se + "')";
-		}
-	else if (!unique_ses.count(se))
+    // treat the first one differently
+    if (unique_ses.empty())
+        {
+            unique_ses.insert(se);
+            // add the parenthesis
+            unique_ses_str += "('" + se + "')";
+        }
+    else if (!unique_ses.count(se))
         {
             unique_ses.insert(se);
             // add any subsequent SE before the closing parenthesis
@@ -39,7 +41,7 @@ void BlacklistInspector::add(std::string const & se)
 
 void BlacklistInspector::inspect() const
 {
-	// get the list of SEs that are blacklisted
+    // get the list of SEs that are blacklisted
     std::list<std::string> notAllowed;
     db->allowSubmit(unique_ses_str, vo, notAllowed);
 
@@ -48,9 +50,9 @@ void BlacklistInspector::inspect() const
 
     // accumulate all the blacklisted SEs in one string, comma seperated
     std::string notAllowedStr = std::accumulate(
-    		notAllowed.begin(), notAllowed.end(), std::string(),
-    		boost::lambda::_1 + boost::lambda::_2 + ","
-    	);
+                                    notAllowed.begin(), notAllowed.end(), std::string(),
+                                    boost::lambda::_1 + boost::lambda::_2 + ","
+                                );
     // erase the leading comma
     notAllowedStr.resize(notAllowedStr.size() - 1);
 
@@ -60,7 +62,7 @@ void BlacklistInspector::inspect() const
 
 void BlacklistInspector::setWaitTimeout(std::list<job_element_tupple> & jobs) const
 {
-	// get the timeouts from DB
+    // get the timeouts from DB
     std::map<std::string, int> timeouts;
     db->getTimeoutForSe(unique_ses_str, timeouts);
     // create the assigner object

@@ -7544,8 +7544,9 @@ std::vector<std::string> MySqlAPI::getAllShareOnlyCfgs()
 }
 
 void MySqlAPI::checkSanityState()
-{
-    //TERMINAL STATES:  "FINISHED" FAILED" "CANCELED"
+{   
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Sanity states check thread started " << commit;
+
     soci::session sql(*connectionPool);
 
     unsigned int numberOfFiles = 0;
@@ -7568,7 +7569,7 @@ void MySqlAPI::checkSanityState()
                 {
                     soci::rowset<std::string> rs = (
                                                        sql.prepare <<
-                                                       " select job_id from t_job  where job_finished is null "
+                                                       " select job_id from t_job  where submit_time > (UTC_TIMESTAMP() - interval '2' HOUR ) "
                                                    );
 
                     soci::statement stmt1 = (sql.prepare << "SELECT COUNT(DISTINCT file_index) FROM t_file where job_id=:jobId ", soci::use(job_id), soci::into(numberOfFiles));
@@ -7726,7 +7727,7 @@ void MySqlAPI::checkSanityState()
                     //special case for canceled
                     soci::rowset<std::string> rs2 = (
                                                         sql.prepare <<
-                                                        " select job_id from t_job where job_finished is not null  "
+                                                        " select  job_id from t_job where job_finished > (UTC_TIMESTAMP() - interval '2' HOUR )  "
                                                     );
 
                     sql.begin();
@@ -7734,36 +7735,7 @@ void MySqlAPI::checkSanityState()
                         {
                             job_id = (*i2);
                             numberOfFilesRevert = 0;
-
-                            //check for m-replicas sanity
-                            stmt_m_replica.execute(true);
-                            //this is a m-replica job
-                            if(countMreplica > 1 && countMindex == 1)
-                                {
-                                    soci::rowset<soci::row> rsReplica = (
-                                                                            sql.prepare <<
-                                                                            " select file_state, COUNT(file_state) from t_file where job_id=:job_id group by file_state order by null ",
-                                                                            soci::use(job_id)
-                                                                        );
-
-                                    soci::rowset<soci::row>::const_iterator iRep;
-                                    for (iRep = rsReplica.begin(); iRep != rsReplica.end(); ++iRep)
-                                        {
-                                            std::string file_state = iRep->get<std::string>("file_state");
-                                            //long long countStates = iRep->get<long long>("COUNT(file_state)",0);
-
-                                            if(file_state == "FINISHED")
-                                                {
-                                                    sql << "UPDATE t_file SET "
-                                                        "    file_state = 'NOT_USED', job_finished = NULL, finish_time = NULL, "
-                                                        "    reason = '' "
-                                                        "    WHERE file_state in ('ACTIVE','READY','SUBMITTED') and job_id = :jobId", soci::use(job_id);
-                                                    continue;
-                                                }
-                                        }
-                                    continue;
-                                }
-
+                           
                             stmt6.execute(true);
 
                             if(numberOfFilesRevert > 0)
@@ -7773,12 +7745,12 @@ void MySqlAPI::checkSanityState()
                         }
                     sql.commit();
 
-                    //now check if a host has been offline for more than 30 min and set its transfers to failed
+                    //now check if a host has been offline for more than 120 min and set its transfers to failed
                     soci::rowset<std::string> rsCheckHosts = (
                                 sql.prepare <<
                                 " SELECT hostname "
                                 " FROM t_hosts "
-                                " WHERE beat < DATE_SUB(UTC_TIMESTAMP(), interval 59 minute) and service_name = 'fts_server' "
+                                " WHERE beat < DATE_SUB(UTC_TIMESTAMP(), interval 120 minute) and service_name = 'fts_server' "
                             );
 
                     std::vector<struct message_state> files;
@@ -7827,6 +7799,8 @@ void MySqlAPI::checkSanityState()
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
+	
+	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Sanity states check thread ended " << commit;	
 }
 
 

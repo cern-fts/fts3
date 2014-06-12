@@ -56,21 +56,21 @@ private:
         diffTime = std::difftime(std::time(NULL), retrieveRecords);
         if(diffTime > 3600)
             {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Wall time passed retrieveRecords: " << diffTime << " secs "<< commit;
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Wall time passed retrieve records: " << diffTime << " secs "<< commit;
                 return true;
             }
 
         diffTime = std::difftime(std::time(NULL), updateRecords);
         if(diffTime > 3600)
             {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Wall time passed updateRecords: " << diffTime << " secs "<< commit;
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Wall time passed update records: " << diffTime << " secs "<< commit;
                 return true;
             }
         /*
         diffTime = std::difftime(std::time(NULL), stallRecords);
         if(diffTime > 10000)
             {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Wall time passed stallRecords: " << diffTime << " secs "<< commit;
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Wall time passed stallRecords and cancelation thread exited: " << diffTime << " secs "<< commit;
                 return true;
             }
         */

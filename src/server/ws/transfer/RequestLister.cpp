@@ -74,20 +74,21 @@ impltns__ArrayOf_USCOREtns3_USCOREJobStatus* RequestLister::list(AuthorizationMa
             break;
         }
 
-    try{
-    	DBSingleton::instance().getDBObjectInstance()->listRequests(jobs, inGivenStates, "", dn, vo);
-    	FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's statuses have been read from the database" << commit;
-    }
+    try
+        {
+            DBSingleton::instance().getDBObjectInstance()->listRequests(jobs, inGivenStates, "", dn, vo);
+            FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's statuses have been read from the database" << commit;
+        }
     catch(Err& ex)
         {
 
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;  
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + ex.what());         
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + ex.what());
         }
     catch(...)
         {
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: RequestLister::list"  << commit;   
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );          
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: RequestLister::list"  << commit;
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 
     // create the object

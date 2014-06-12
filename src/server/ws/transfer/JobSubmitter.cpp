@@ -130,7 +130,7 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob2 *job) :
 {
     PROFILE_SCOPE("JobSubmitter::JobSubmitter(soap*, tns3__TransferJob2*)");
 
-   // do the common initialisation
+    // do the common initialisation
     init(ctx, job);
 
     // checksum uses always delegation?
@@ -197,7 +197,7 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
 
             TransferCreator tc(fileIndex, initialState);
             std::list< boost::tuple<std::string, std::string, std::string, int> > tuples =
-            		tc.pairSourceAndDestination(elem->source, elem->dest);
+                tc.pairSourceAndDestination(elem->source, elem->dest);
             fileIndex = tc.nextFileIndex();
 
             // if it is not multiple source/destination submission ..
@@ -280,10 +280,10 @@ void JobSubmitter::init(soap* ctx, JOB* job)
         }
 
     bool use_bring_online =
-    		params.isParamSet(JobParameterHandler::BRING_ONLINE) &&
-    		params.get<int>(JobParameterHandler::BRING_ONLINE) > 0 &&
-    		params.isParamSet(JobParameterHandler::COPY_PIN_LIFETIME) &&
-    		params.get<int>(JobParameterHandler::COPY_PIN_LIFETIME) > 0;
+        params.isParamSet(JobParameterHandler::BRING_ONLINE) &&
+        params.get<int>(JobParameterHandler::BRING_ONLINE) > 0 &&
+        params.isParamSet(JobParameterHandler::COPY_PIN_LIFETIME) &&
+        params.get<int>(JobParameterHandler::COPY_PIN_LIFETIME) > 0;
 
     initialState = (use_bring_online ? "STAGING" : "SUBMITTED");
 }
@@ -365,32 +365,33 @@ string JobSubmitter::submit()
                 }
         }
 
-  try{
+    try
+        {
 
-    // submit the transfer job (add it to the DB)
-    db->submitPhysical (
-        id,
-        jobs,
-        dn,
-        cred,
-        vo,
-        string(),
-        delegationId,
-        sourceSe,
-        destinationSe,
-        params
-    );
-  }
+            // submit the transfer job (add it to the DB)
+            db->submitPhysical (
+                id,
+                jobs,
+                dn,
+                cred,
+                vo,
+                string(),
+                delegationId,
+                sourceSe,
+                destinationSe,
+                params
+            );
+        }
     catch(Err& ex)
         {
 
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;  
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + ex.what());         
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + ex.what());
         }
     catch(...)
         {
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: db->submitPhysical"  << commit;   
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );          
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: db->submitPhysical"  << commit;
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 
 

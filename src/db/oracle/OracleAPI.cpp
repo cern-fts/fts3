@@ -609,7 +609,7 @@ void OracleAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& f
                                                 filesNum = 2;
                                         }
                                 }
-                        }                   
+                        }
 
                     std::map<std::string, int> activityFilesNum =
                         getFilesNumPerActivity(sql, boost::get<0>(triplet), boost::get<1>(triplet), boost::get<2>(triplet), filesNum);
@@ -1979,7 +1979,7 @@ bool OracleAPI::updateFileTransferStatusInternal(soci::session& sql, double thro
             time_t now = time(NULL);
             struct tm tTime;
             gmtime_r(&now, &tTime);
- 
+
             std::string st;
 
 
@@ -1987,21 +1987,21 @@ bool OracleAPI::updateFileTransferStatusInternal(soci::session& sql, double thro
 
             // query for the file state in DB
             sql << "SELECT file_state FROM t_file WHERE file_id=:fileId and job_id=:jobId",
-                                             soci::use(file_id),
-                                             soci::use(job_id),
-					     soci::into(st);
+                soci::use(file_id),
+                soci::use(job_id),
+                soci::into(st);
 
             staging = (st == "STAGING");
 
 
             if(st == "FAILED" || st == "FINISHED" || st == "CANCELED" )
-            {
-		if(transfer_status == "SUBMITTED" || transfer_status == "READY" || transfer_status == "ACTIVE")
-		{
-			return false; //don't do anything, just return
-		}		
-            }
-         
+                {
+                    if(transfer_status == "SUBMITTED" || transfer_status == "READY" || transfer_status == "ACTIVE")
+                        {
+                            return false; //don't do anything, just return
+                        }
+                }
+
             soci::statement stmt(sql);
             std::ostringstream query;
 
@@ -2333,12 +2333,12 @@ void OracleAPI::updateFileTransferProgressVector(std::vector<struct message_upda
 
                             if(file_state == "ACTIVE")
                                 {
- 				    file_id = (*iter).file_id;
-				    
+                                    file_id = (*iter).file_id;
+
                                     if((*iter).throughput > 0.0 && file_id > 0)
                                         {
                                             throughput = (*iter).throughput;
-                                            transferred = (*iter).transferred;                                            
+                                            transferred = (*iter).transferred;
                                             stmt.execute(true);
                                         }
                                 }
@@ -2348,7 +2348,7 @@ void OracleAPI::updateFileTransferProgressVector(std::vector<struct message_upda
                                     dest_surl = (*iter).dest_surl;
                                     source_turl = (*iter).source_turl;
                                     dest_turl = (*iter).dest_turl;
-				    file_id = (*iter).file_id;
+                                    file_id = (*iter).file_id;
 
                                     if(source_turl == "gsiftp:://fake" && dest_turl == "gsiftp:://fake")
                                         continue;
@@ -2356,7 +2356,7 @@ void OracleAPI::updateFileTransferProgressVector(std::vector<struct message_upda
                                     if((*iter).throughput > 0.0 && file_id > 0)
                                         {
                                             throughput = (*iter).throughput;
-                                        }                                    
+                                        }
 
                                     if(file_state == "FINISHED" && file_id > 0)
                                         {
@@ -4719,7 +4719,7 @@ bool OracleAPI::isFileReadyState(int fileID)
 
             if (isNull != soci::i_null)
                 isReadyHost = (host == hostname);
-            
+
         }
     catch (std::exception& e)
         {
@@ -6780,23 +6780,23 @@ void OracleAPI::transferLogFileVector(std::map<int, struct message_log>& message
             std::map<int, struct message_log>::iterator iterLog = messagesLog.begin();
             while (iterLog != messagesLog.end())
                 {
-		 if(((*iterLog).second).msg_errno == 0)
-		 {
-                    filePath = ((*iterLog).second).filePath;
-                    fileId = ((*iterLog).second).file_id;
-                    debugFile = ((*iterLog).second).debugFile;
-                    stmt.execute(true);
+                    if(((*iterLog).second).msg_errno == 0)
+                        {
+                            filePath = ((*iterLog).second).filePath;
+                            fileId = ((*iterLog).second).file_id;
+                            debugFile = ((*iterLog).second).debugFile;
+                            stmt.execute(true);
 
-                    if (stmt.get_affected_rows() > 0)
-                        {
-                            // erase
-                            messagesLog.erase(iterLog++);
+                            if (stmt.get_affected_rows() > 0)
+                                {
+                                    // erase
+                                    messagesLog.erase(iterLog++);
+                                }
+                            else
+                                {
+                                    ++iterLog;
+                                }
                         }
-                    else
-                        {
-                            ++iterLog;
-                        }
-                  }			
                 }
 
             sql.commit();
@@ -9470,23 +9470,23 @@ void OracleAPI::getTransferJobStatusDetailed(std::string job_id, std::vector<boo
     try
         {
 
-                            soci::rowset<soci::row> rs = (
-                                        sql.prepare <<
-                                        " SELECT job_id, file_state, file_id, source_surl, dest_surl from t_file where job_id=:job_id order by file_id asc", soci::use(job_id)
-                                    );	
-         
+            soci::rowset<soci::row> rs = (
+                                             sql.prepare <<
+                                             " SELECT job_id, file_state, file_id, source_surl, dest_surl from t_file where job_id=:job_id order by file_id asc", soci::use(job_id)
+                                         );
 
-                            for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
-                                {
-                                    std::string job_id = i->get<std::string>("job_id");
-                                    std::string file_state = i->get<std::string>("file_state");				    
-                                    int file_id = i->get<int>("file_id");				    				    
-                                    std::string source_surl = i->get<std::string>("source_surl");
-                                    std::string dest_surl = i->get<std::string>("dest_surl");				    
-				    
-				    boost::tuple<std::string, std::string, int, std::string, std::string> record(job_id, file_state, file_id, source_surl, dest_surl);
-            			    files.push_back(record);
-                                }
+
+            for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+                {
+                    std::string job_id = i->get<std::string>("job_id");
+                    std::string file_state = i->get<std::string>("file_state");
+                    int file_id = i->get<int>("file_id");
+                    std::string source_surl = i->get<std::string>("source_surl");
+                    std::string dest_surl = i->get<std::string>("dest_surl");
+
+                    boost::tuple<std::string, std::string, int, std::string, std::string> record(job_id, file_state, file_id, source_surl, dest_surl);
+                    files.push_back(record);
+                }
         }
     catch (std::exception& e)
         {

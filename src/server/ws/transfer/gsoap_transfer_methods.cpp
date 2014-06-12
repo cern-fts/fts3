@@ -120,7 +120,7 @@ int fts3::impltns__transferSubmit2(soap *soap, tns3__TransferJob *_job, struct i
             soap_receiver_fault(soap, ex.what(), "TransferException");
             return SOAP_FAULT;
         }
-   catch(...)
+    catch(...)
         {
 
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: transferSubmit2"  << commit;
@@ -156,7 +156,7 @@ int fts3::impltns__transferSubmit3(soap *soap, tns3__TransferJob2 *_job, struct 
             soap_receiver_fault(soap, ex.what(), "TransferException");
             return SOAP_FAULT;
         }
-   catch(...)
+    catch(...)
         {
 
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: transferSubmit3"  << commit;
@@ -189,7 +189,7 @@ int fts3::impltns__transferSubmit4(struct soap* ctx, tns3__TransferJob3 *job, im
             soap_receiver_fault(ctx, ex.what(), "TransferException");
             return SOAP_FAULT;
         }
-   catch(...)
+    catch(...)
         {
 
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: transferSubmit4"  << commit;
@@ -220,7 +220,7 @@ int fts3::impltns__listRequests(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOR
             soap_receiver_fault(soap, ex.what(), "TransferException");
             return SOAP_FAULT;
         }
-   catch(...)
+    catch(...)
         {
 
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: listRequests"  << commit;
@@ -252,7 +252,7 @@ int fts3::impltns__listRequests2(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCO
             soap_receiver_fault(soap, ex.what(), "TransferException");
             return SOAP_FAULT;
         }
-   catch(...)
+    catch(...)
         {
 
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: listRequests2"  << commit;
@@ -287,8 +287,8 @@ int fts3::impltns__getFileStatus3(soap *soap, fts3::tns3__FileRequest *req,
                                   fts3::impltns__getFileStatus3Response &resp)
 {
 
-            vector<FileTransferStatus*> statuses;
-            vector<FileTransferStatus*>::iterator it;
+    vector<FileTransferStatus*> statuses;
+    vector<FileTransferStatus*>::iterator it;
 
     try
         {
@@ -334,16 +334,16 @@ int fts3::impltns__getFileStatus3(soap *soap, fts3::tns3__FileRequest *req,
                     *status->transferFileState = tmp->transferFileState;
 
                     if(tmp->transferFileState == "NOT_USED")
-		    {
-                    	status->duration = 0;
-                    	status->numFailures = 0;		    
-		    }
-		    else
-		    {
-                    	status->duration = tmp->finish_time - tmp->start_time;
-                    	status->numFailures = tmp->numFailures;
-		    }
-		    
+                        {
+                            status->duration = 0;
+                            status->numFailures = 0;
+                        }
+                    else
+                        {
+                            status->duration = tmp->finish_time - tmp->start_time;
+                            status->numFailures = tmp->numFailures;
+                        }
+
 
                     // Retries only on request!
                     if (req->retries)
@@ -370,17 +370,17 @@ int fts3::impltns__getFileStatus3(soap *soap, fts3::tns3__FileRequest *req,
                 }
             for (it = statuses.begin(); it < statuses.end(); ++it)
                 {
-		    if(*it)
-                    	delete *it;
+                    if(*it)
+                        delete *it;
                 }
             statuses.clear();
         }
     catch(Err& ex)
         {
-           for (it = statuses.begin(); it < statuses.end(); ++it)
+            for (it = statuses.begin(); it < statuses.end(); ++it)
                 {
-		    if(*it)
-                    	delete *it;
+                    if(*it)
+                        delete *it;
                 }
             statuses.clear();
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "An exception has been caught: " << ex.what() << commit;
@@ -389,10 +389,10 @@ int fts3::impltns__getFileStatus3(soap *soap, fts3::tns3__FileRequest *req,
         }
     catch(...)
         {
-           for (it = statuses.begin(); it < statuses.end(); ++it)
+            for (it = statuses.begin(); it < statuses.end(); ++it)
                 {
-		    if(*it)
-                    	delete *it;
+                    if(*it)
+                        delete *it;
                 }
             statuses.clear();
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "An exception has been caught: getFileStatus" << commit;
@@ -409,9 +409,9 @@ int fts3::impltns__getFileStatus2(soap *soap, string _requestID, int _offset, in
 
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getFileStatus2' request" << commit;
 
-            // create response
-            vector<FileTransferStatus*> statuses;
-            vector<FileTransferStatus*>::iterator it;
+    // create response
+    vector<FileTransferStatus*> statuses;
+    vector<FileTransferStatus*>::iterator it;
 
     try
         {
@@ -453,15 +453,15 @@ int fts3::impltns__getFileStatus2(soap *soap, string _requestID, int _offset, in
                     *status->transferFileState = tmp->transferFileState;
 
                     if(tmp->transferFileState == "NOT_USED")
-		    {
-                    	status->duration = 0;
-                    	status->numFailures = 0;		    
-		    }
-		    else
-		    {
-                    	status->duration = tmp->finish_time - tmp->start_time;
-                    	status->numFailures = tmp->numFailures;
-		    }
+                        {
+                            status->duration = 0;
+                            status->numFailures = 0;
+                        }
+                    else
+                        {
+                            status->duration = tmp->finish_time - tmp->start_time;
+                            status->numFailures = tmp->numFailures;
+                        }
 
                     status->duration = tmp->finish_time - tmp->start_time;
                     status->numFailures = tmp->numFailures;
@@ -470,18 +470,18 @@ int fts3::impltns__getFileStatus2(soap *soap, string _requestID, int _offset, in
                 }
             for (it = statuses.begin(); it < statuses.end(); ++it)
                 {
-		    if(*it)
-                    	delete *it;
+                    if(*it)
+                        delete *it;
                 }
             statuses.clear();
 
         }
     catch(Err& ex)
         {
-           for (it = statuses.begin(); it < statuses.end(); ++it)
+            for (it = statuses.begin(); it < statuses.end(); ++it)
                 {
-		    if(*it)
-                    	delete *it;
+                    if(*it)
+                        delete *it;
                 }
             statuses.clear();
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "An exception has been caught: " << ex.what() << commit;
@@ -490,10 +490,10 @@ int fts3::impltns__getFileStatus2(soap *soap, string _requestID, int _offset, in
         }
     catch(...)
         {
-           for (it = statuses.begin(); it < statuses.end(); ++it)
+            for (it = statuses.begin(); it < statuses.end(); ++it)
                 {
-		    if(*it)
-                    	delete *it;
+                    if(*it)
+                        delete *it;
                 }
             statuses.clear();
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "An exception has been caught: getFileStatus" << commit;
@@ -549,8 +549,8 @@ int fts3::impltns__getTransferJobStatus(soap *ctx, string requestID,
                                         struct impltns__getTransferJobStatusResponse &resp)
 {
 
-            vector<JobStatus*> fileStatuses;
-	    vector<JobStatus*>::iterator it;
+    vector<JobStatus*> fileStatuses;
+    vector<JobStatus*>::iterator it;
 
     try
         {
@@ -570,13 +570,13 @@ int fts3::impltns__getTransferJobStatus(soap *ctx, string requestID,
                     GSoapJobStatus status (ctx, **fileStatuses.begin());
                     resp._getTransferJobStatusReturn = status;
 
-                    
+
                     for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it)
                         {
-			    if(*it)
-                            	delete *it;
+                            if(*it)
+                                delete *it;
                         }
-			fileStatuses.clear();
+                    fileStatuses.clear();
                 }
             else
                 {
@@ -586,24 +586,24 @@ int fts3::impltns__getTransferJobStatus(soap *ctx, string requestID,
         }
     catch (Err& ex)
         {
-		for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it)
-                        {
-			    if(*it)
-                            	delete *it;
-                        }
-			fileStatuses.clear();
+            for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it)
+                {
+                    if(*it)
+                        delete *it;
+                }
+            fileStatuses.clear();
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "An exception has been caught: " << ex.what() << commit;
             soap_receiver_fault(ctx, ex.what(), "TransferException");
             return SOAP_FAULT;
         }
     catch (...)
         {
-	   for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it)
-                        {
-			    if(*it)
-                            	delete *it;
-                        }
-			fileStatuses.clear();
+            for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it)
+                {
+                    if(*it)
+                        delete *it;
+                }
+            fileStatuses.clear();
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "An exception has been caught: getTransferJobStatus" << commit;
             soap_receiver_fault(ctx, "getTransferJobStatus", "TransferException");
             return SOAP_FAULT;
@@ -616,8 +616,8 @@ int fts3::impltns__getTransferJobStatus(soap *ctx, string requestID,
 int fts3::impltns__getTransferJobStatus2(soap *soap, fts3::tns3__JobRequest *req,
         fts3::impltns__getTransferJobStatus2Response &resp)
 {
-            vector<JobStatus*> fileStatuses;
-	    vector<JobStatus*>::iterator it;
+    vector<JobStatus*> fileStatuses;
+    vector<JobStatus*>::iterator it;
 
     try
         {
@@ -637,13 +637,13 @@ int fts3::impltns__getTransferJobStatus2(soap *soap, fts3::tns3__JobRequest *req
                     GSoapJobStatus status (soap, **fileStatuses.begin());
                     resp.getTransferJobStatusReturn = status;
 
-                    
+
                     for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it)
                         {
-			    if(*it)
-                            	delete *it;
+                            if(*it)
+                                delete *it;
                         }
-			fileStatuses.clear();
+                    fileStatuses.clear();
                 }
             else
                 {
@@ -652,24 +652,24 @@ int fts3::impltns__getTransferJobStatus2(soap *soap, fts3::tns3__JobRequest *req
         }
     catch (Err& ex)
         {
- for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it)
-                        {
-			    if(*it)
-                            	delete *it;
-                        }
-			fileStatuses.clear();
+            for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it)
+                {
+                    if(*it)
+                        delete *it;
+                }
+            fileStatuses.clear();
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "An exception has been caught: " << ex.what() << commit;
             soap_receiver_fault(soap, ex.what(), "TransferException");
             return SOAP_FAULT;
         }
     catch (...)
         {
- for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it)
-                        {
-			    if(*it)
-                            	delete *it;
-                        }
-			fileStatuses.clear();
+            for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it)
+                {
+                    if(*it)
+                        delete *it;
+                }
+            fileStatuses.clear();
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "An exception has been caught: getTransferJobStatus"  << commit;
             soap_receiver_fault(soap, "getTransferJobStatus", "TransferException");
             return SOAP_FAULT;
@@ -683,8 +683,8 @@ int fts3::impltns__getTransferJobSummary(soap *soap, string _requestID,
 {
 
 
-                    vector<JobStatus*>::iterator it;
-                   std::vector<JobStatus*> fileStatuses;
+    vector<JobStatus*>::iterator it;
+    std::vector<JobStatus*> fileStatuses;
     try
         {
             scoped_ptr<TransferJobs> job (
@@ -733,10 +733,10 @@ int fts3::impltns__getTransferJobSummary(soap *soap, string _requestID,
 
                     for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it)
                         {
-			    if(*it)
-                            	delete *it;
+                            if(*it)
+                                delete *it;
                         }
-			fileStatuses.clear();
+                    fileStatuses.clear();
 
                 }
             else
@@ -747,12 +747,12 @@ int fts3::impltns__getTransferJobSummary(soap *soap, string _requestID,
         }
     catch(Err& ex)
         {
-                    for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it)
-                        {
-			    if(*it)
-                            	delete *it;
-                        }
-			fileStatuses.clear();
+            for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it)
+                {
+                    if(*it)
+                        delete *it;
+                }
+            fileStatuses.clear();
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "An exception has been caught: " << ex.what() << commit;
             soap_receiver_fault(soap, ex.what(), "TransferException");
             return SOAP_FAULT;
@@ -760,12 +760,12 @@ int fts3::impltns__getTransferJobSummary(soap *soap, string _requestID,
     catch(...)
         {
 
-                    for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it)
-                        {
-			    if(*it)
-                            	delete *it;
-                        }
-			fileStatuses.clear();
+            for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it)
+                {
+                    if(*it)
+                        delete *it;
+                }
+            fileStatuses.clear();
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "An exception has been caught: getTransferJobSummary" << commit;
             soap_receiver_fault(soap, "getTransferJobSummary", "TransferException");
             return SOAP_FAULT;
@@ -778,8 +778,8 @@ int fts3::impltns__getTransferJobSummary(soap *soap, string _requestID,
 int fts3::impltns__getTransferJobSummary2(soap *ctx, string requestID, impltns__getTransferJobSummary2Response &resp)
 {
 
-            vector<JobStatus*> fileStatuses;
-            vector<JobStatus*>::iterator it;
+    vector<JobStatus*> fileStatuses;
+    vector<JobStatus*>::iterator it;
 
     try
         {
@@ -830,10 +830,10 @@ int fts3::impltns__getTransferJobSummary2(soap *ctx, string requestID, impltns__
 
                     for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it)
                         {
-			    if(*it)
-                            	delete *it;
+                            if(*it)
+                                delete *it;
                         }
-			fileStatuses.clear();
+                    fileStatuses.clear();
 
                 }
             else
@@ -846,24 +846,24 @@ int fts3::impltns__getTransferJobSummary2(soap *ctx, string requestID, impltns__
         }
     catch(Err& ex)
         {
-                   for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it)
-                        {
-			    if(*it)
-                            	delete *it;
-                        }
-			fileStatuses.clear();
+            for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it)
+                {
+                    if(*it)
+                        delete *it;
+                }
+            fileStatuses.clear();
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "An exception has been caught: " << ex.what() << commit;
             soap_receiver_fault(ctx, ex.what(), "TransferException");
             return SOAP_FAULT;
         }
-   catch(...)
+    catch(...)
         {
-                   for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it)
-                        {
-			    if(*it)
-                            	delete *it;
-                        }
-			fileStatuses.clear();
+            for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it)
+                {
+                    if(*it)
+                        delete *it;
+                }
+            fileStatuses.clear();
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "An exception has been caught: getTransferJobSummary2" << commit;
             soap_receiver_fault(ctx, "getTransferJobSummary2", "TransferException");
             return SOAP_FAULT;
@@ -879,7 +879,7 @@ int fts3::impltns__getTransferJobSummary3(soap *soap, fts3::tns3__JobRequest *re
 {
 #warning TODO: Query archive
 
-            vector<JobStatus*> fileStatuses;
+    vector<JobStatus*> fileStatuses;
 
     try
         {
@@ -932,9 +932,9 @@ int fts3::impltns__getTransferJobSummary3(soap *soap, fts3::tns3__JobRequest *re
                     for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it)
                         {
                             if(*it)
-                            	delete *it;
+                                delete *it;
                         }
-			fileStatuses.clear();
+                    fileStatuses.clear();
 
                 }
             else
@@ -945,26 +945,26 @@ int fts3::impltns__getTransferJobSummary3(soap *soap, fts3::tns3__JobRequest *re
         }
     catch(Err& ex)
         {
-          vector<JobStatus*>::iterator it;
-                    for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it)
-                        {
-                            if(*it)
-                            	delete *it;
-                        }
-			fileStatuses.clear();
+            vector<JobStatus*>::iterator it;
+            for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it)
+                {
+                    if(*it)
+                        delete *it;
+                }
+            fileStatuses.clear();
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "An exception has been caught: getTransferJobSummary " << commit;
             soap_receiver_fault(soap, "getTransferJobSummary", "TransferException");
             return SOAP_FAULT;
         }
     catch(...)
         {
-          vector<JobStatus*>::iterator it;
-                    for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it)
-                        {
-                            if(*it)
-                            	delete *it;
-                        }
-			fileStatuses.clear();
+            vector<JobStatus*>::iterator it;
+            for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it)
+                {
+                    if(*it)
+                        delete *it;
+                }
+            fileStatuses.clear();
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "An exception has been caught: "  << commit;
             soap_receiver_fault(soap, "getTransferJobSummary", "TransferException");
             return SOAP_FAULT;
@@ -1472,7 +1472,7 @@ int fts3::impltns__prioritySet(soap* ctx, string job_id, int priority, impltns__
             AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get());
 
             // check job status
-            
+
             DBSingleton::instance().getDBObjectInstance()->getTransferJobStatus(job_id, false, fileStatuses);
 
             string status;
@@ -1483,10 +1483,10 @@ int fts3::impltns__prioritySet(soap* ctx, string job_id, int priority, impltns__
                     // release the memory
                     for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it)
                         {
-			    if(*it)
-                            	delete *it;
+                            if(*it)
+                                delete *it;
                         }
-			fileStatuses.clear();
+                    fileStatuses.clear();
                 }
             else
                 {
@@ -1510,26 +1510,26 @@ int fts3::impltns__prioritySet(soap* ctx, string job_id, int priority, impltns__
         }
     catch(Err& ex)
         {
-             // release the memory
-                    for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it)
-                        {
-			    if(*it)
-                            	delete *it;
-                        }
-			fileStatuses.clear();
+            // release the memory
+            for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it)
+                {
+                    if(*it)
+                        delete *it;
+                }
+            fileStatuses.clear();
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
             soap_receiver_fault(ctx, ex.what(), "TransferException");
             return SOAP_FAULT;
         }
     catch (...)
         {
-      // release the memory
-                    for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it)
-                        {
-			    if(*it)
-                            	delete *it;
-                        }
-			fileStatuses.clear();
+            // release the memory
+            for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it)
+                {
+                    if(*it)
+                        delete *it;
+                }
+            fileStatuses.clear();
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the priority cannot be set"  << commit;
             return SOAP_FAULT;
         }
@@ -1540,7 +1540,7 @@ int fts3::impltns__prioritySet(soap* ctx, string job_id, int priority, impltns__
 int fts3::impltns__getSnapshot(soap* ctx, string vo, string src, string dst, impltns__getSnapshotResponse& resp)
 {
     try
-        {            
+        {
 
             std::string endpoint = theServerConfig().get<std::string > ("Alias");
             std::stringstream result;
