@@ -142,12 +142,12 @@ private:
                             waitTime = 0;
 			    
                         
-                        //counter++;
-                       // if (counter == 3600)
-                            //{
+                       counter++;
+                       if (counter == 3600)
+                            {
                                 DBSingleton::instance().getDBObjectInstance()->checkSanityState();
-                                //counter = 0;
-                            //}
+                                counter = 0;
+                            }
                     }
                 catch(...)
                     {
