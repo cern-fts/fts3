@@ -39,7 +39,7 @@ protected:
 public:
 
     CleanLogsHandlerActive(const std::string& desc = ""):
-        TRAITS::ActiveObjectType("CleanLogsHandlerActive", desc), waitTime(0) {}
+        TRAITS::ActiveObjectType("CleanLogsHandlerActive", desc), waitTime(0), counter(0) {}
 
     void beat()
     {
@@ -51,11 +51,17 @@ public:
 private:
 
     int waitTime;
+    int counter;
 
     void beat_impl(void)
     {
         while (1)
             {
+	    
+	    if (stopThreads)
+                   return;
+
+	    
                 try
                     {
                         waitTime += 1;
@@ -134,12 +140,22 @@ private:
                         sleep(1); //once a day
                         if(waitTime == 86400) //reset
                             waitTime = 0;
+			    
+                        
+                        //counter++;
+                       // if (counter == 3600)
+                            //{
+                                DBSingleton::instance().getDBObjectInstance()->checkSanityState();
+                                //counter = 0;
+                            //}
                     }
                 catch(...)
                     {
                         sleep(1); //once a day
                         if(waitTime == 86400) //reset
                             waitTime = 0;
+			    
+ 		        counter = 0;
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot delete old files" <<  commit;
                     }
             }
