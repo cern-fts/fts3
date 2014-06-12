@@ -802,7 +802,7 @@ protected:
                             }
                         sleep(3);
                     }
-                sleep(5);
+                sleep(3);
             } /*end while*/
     }
 
