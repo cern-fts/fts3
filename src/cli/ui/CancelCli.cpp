@@ -37,11 +37,18 @@ bool CancelCli::validate()
 
     // do the standard validation
     if (!CliBase::validate()) return false;
+    
+   // check whether to use delegation
+    if (!vm.count("file") && !vm.count("jobid"))
+        {
+            msgPrinter.error_msg("Either the bulk file or job ID list may be used!");
+            return false;
+        }    
 
     // check whether to use delegation
     if (vm.count("file") && vm.count("jobid"))
         {
-            msgPrinter.error_msg("Either the bulk file or job ID list may be used!");
+            msgPrinter.error_msg("Either the bulk file or job ID list may be used, can't use both!");
             return false;
         }
 
