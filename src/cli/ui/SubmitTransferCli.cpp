@@ -286,10 +286,15 @@ vector<File> SubmitTransferCli::getFiles()
 }
 
 bool SubmitTransferCli::performChecks()
-{
-
+{ 
     // in FTS3 delegation is supported by default
     delegate = true;
+    
+    if (((getSource().empty() || getDestination().empty())) && !vm.count("file"))
+        {
+            msgPrinter.error_msg("You need to specify source and destination surl's");
+            return false;
+        }    
 
     // the job cannot be specified twice
     if ((!getSource().empty() || !getDestination().empty()) && vm.count("file"))
