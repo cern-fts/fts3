@@ -4,12 +4,12 @@ function ErrorsCtrl($location, $scope, pairs, Errors)
 {
 	// Errors
 	$scope.pairs = pairs;
-		
+
 	// Filter
     $scope.showFilterDialog = function() {
     	document.getElementById('filterDialog').style.display = 'block';
     }
-    
+
     $scope.cancelFilters = function() {
     	document.getElementById('filterDialog').style.display = 'none';
     }
@@ -21,18 +21,18 @@ function ErrorsCtrl($location, $scope, pairs, Errors)
 		$location.search(filter);
 		document.getElementById('filterDialog').style.display = 'none';
 	}
-	
+
 	$scope.filter = {
 		source_se: validString($location.search().source_se),
 		dest_se:   validString($location.search().dest_se),
 		reason:    validString($location.search().reason)
 	}
-	
+
 	// On page change, reload
 	$scope.pageChanged = function(newPage) {
 		$location.search('page', newPage);
 	};
-	
+
 	// Set timer to trigger autorefresh
 	$scope.autoRefresh = setInterval(function() {
 		var filter = $location.search();
@@ -45,22 +45,31 @@ function ErrorsCtrl($location, $scope, pairs, Errors)
 }
 
 
+ErrorsCtrl.redirectTo = function(routeParams, path, search)
+{
+    if (search.source_se && search.dest_se)
+        return '/errors/list?source_se=' + search.source_se + '&dest_se=' + search.dest_se + '&time_window=' + search.time_window;
+    else
+        return '/errors/pairs';
+}
+
+
 ErrorsCtrl.resolve = {
 	pairs: function($rootScope, $q, $location, Errors) {
     	loading($rootScope);
-    	
+
     	var deferred = $q.defer();
 
     	var page = $location.search().page;
     	if (!page || page < 1)
     		page = 1;
-    	
+
     	Errors.query($location.search(),
   			  genericSuccessMethod(deferred, $rootScope),
 			  genericFailureMethod(deferred, $rootScope, $location));
-    	
+
     	return deferred.promise;
-    }		
+    }
 }
 
 
@@ -71,12 +80,12 @@ function ErrorsForPairCtrl($location, $scope, errors, ErrorsForPair)
 	$scope.errors    = errors
 	$scope.source_se = $location.search().source_se;
 	$scope.dest_se   = $location.search().dest_se;
-	
+
 	// Filter
     $scope.showFilterDialog = function() {
     	document.getElementById('filterDialog').style.display = 'block';
     }
-    
+
     $scope.cancelFilters = function() {
     	document.getElementById('filterDialog').style.display = 'none';
     }
@@ -91,7 +100,7 @@ function ErrorsForPairCtrl($location, $scope, errors, ErrorsForPair)
 		dest_se:   validString($location.search().dest_se),
 		reason:    validString($location.search().reason)
 	}
-	
+
 	// On page change, reload
 	$scope.pageChanged = function(newPage) {
 		$location.search('page', newPage);
@@ -103,17 +112,17 @@ function ErrorsForPairCtrl($location, $scope, errors, ErrorsForPair)
 ErrorsForPairCtrl.resolve = {
     errors: function($rootScope, $q, $location, ErrorsForPair) {
     	loading($rootScope);
-    	
+
     	var deferred = $q.defer();
 
     	var page = $location.search().page;
     	if (!page || page < 1)
     		page = 1;
-    	
+
     	ErrorsForPair.query($location.search(),
   			  genericSuccessMethod(deferred, $rootScope),
 			  genericFailureMethod(deferred, $rootScope, $location));
-    	
+
     	return deferred.promise;
     }
 }

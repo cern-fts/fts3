@@ -43,7 +43,7 @@ def get_errors(http_request):
 
     errors = errors.values('source_se', 'dest_se') \
         .annotate(count=Count('file_state')) \
-        .order_by('-count')
+        .order_by('-count', '-job_finished')
     # Fetch all first to avoid 'count' query
     return list(errors.all())
 
@@ -71,7 +71,7 @@ def get_errors_for_pair(http_request):
 
     transfers = transfers.values('vo_name', 'reason')
     transfers = transfers.annotate(count=Count('reason'))
-    transfers = transfers.order_by('-count')
+    transfers = transfers.order_by('-count', '-job_finished')
     # Trigger query to fetch all
     transfers = list(transfers)
 
