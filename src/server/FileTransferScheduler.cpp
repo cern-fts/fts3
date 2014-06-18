@@ -43,7 +43,7 @@ using namespace fts3::ws;
 
 
 FileTransferScheduler::FileTransferScheduler(
-    TransferFiles* file,
+    TransferFiles file,
     vector< boost::shared_ptr<ShareConfig> > cfgs,
     set<string> inses,
     set<string> outses,
@@ -54,8 +54,8 @@ FileTransferScheduler::FileTransferScheduler(
     db (DBSingleton::instance().getDBObjectInstance())
 {
 
-    srcSeName = file->SOURCE_SE;
-    destSeName = file->DEST_SE;
+    srcSeName = file.SOURCE_SE;
+    destSeName = file.DEST_SE;
 
     vector< boost::shared_ptr<ShareConfig> > no_auto_share;
 
@@ -153,8 +153,8 @@ bool FileTransferScheduler::schedule()
                             // set file status to failed
                             db->updateFileTransferStatus(
                                 0.0,
-                                file->JOB_ID,
-                                file->FILE_ID,
+                                file.JOB_ID,
+                                file.FILE_ID,
                                 JobStatusHandler::FTS3_STATUS_FAILED,
                                 msg,
                                 0,
@@ -164,7 +164,7 @@ bool FileTransferScheduler::schedule()
                             );
                             // set job states if necessary
                             db->updateJobTransferStatus(
-                                file->JOB_ID,
+                                file.JOB_ID,
                                 JobStatusHandler::FTS3_STATUS_FAILED,0
                             );
                             // log it

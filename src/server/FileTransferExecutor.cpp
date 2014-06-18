@@ -39,7 +39,7 @@ namespace server
 const string FileTransferExecutor::cmd = "fts_url_copy";
 
 
-FileTransferExecutor::FileTransferExecutor(TransferFiles* tf, TransferFileHandler& tfh, bool monitoringMsg, string infosys, string ftsHostName) :
+FileTransferExecutor::FileTransferExecutor(TransferFiles tf, TransferFileHandler& tfh, bool monitoringMsg, string infosys, string ftsHostName) :
     tf(tf),
     tfh(tfh),
     monitoringMsg(monitoringMsg),
@@ -77,13 +77,13 @@ int FileTransferExecutor::execute()
 {
     int scheduled = 0;
 
-    if (!tf)
+    if (tf.FILE_ID == 0)
         return 0;
 
     try
         {
-            string source_hostname = tf->SOURCE_SE;
-            string destin_hostname = tf->DEST_SE;
+            string source_hostname = tf.SOURCE_SE;
+            string destin_hostname = tf.DEST_SE;
             string params;
 
             // if the pair was already checked and not scheduled skip it
@@ -93,7 +93,7 @@ int FileTransferExecutor::execute()
 
             vector< boost::shared_ptr<ShareConfig> > cfgs;
 
-            ConfigurationAssigner cfgAssigner(tf.get());
+            ConfigurationAssigner cfgAssigner(tf);
             cfgAssigner.assign(cfgs);
 
             SeProtocolConfig protocol;
@@ -105,7 +105,7 @@ int FileTransferExecutor::execute()
 
             bool manualConfigExists = false;
 
-            optional<ProtocolResolver::protocol> p = ProtocolResolver::getUserDefinedProtocol(tf.get());
+            optional<ProtocolResolver::protocol> p = ProtocolResolver::getUserDefinedProtocol(tf);
 
             if (p.is_initialized())
                 {
@@ -133,26 +133,25 @@ int FileTransferExecutor::execute()
                 }
 
             FileTransferScheduler scheduler(
-                tf.get(),
+                tf,
                 cfgs,
                 tfh.getDestinations(source_hostname),
                 tfh.getSources(destin_hostname),
                 tfh.getDestinationsVos(source_hostname),
                 tfh.getSourcesVos(destin_hostname)
-
             );
 
             if (scheduler.schedule())   /*SET TO READY STATE WHEN TRUE*/
                 {
                     scheduled = 1;
 
-                    SingleTrStateInstance::instance().sendStateMessage(tf->JOB_ID, tf->FILE_ID);
+                    SingleTrStateInstance::instance().sendStateMessage(tf.JOB_ID, tf.FILE_ID);
                     bool isAutoTuned = false;
 
                     if (!cfgs.empty())
                         {
                             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Check link config for: " << source_hostname << " -> " << destin_hostname << commit;
-                            ProtocolResolver resolver(tf.get(), cfgs);
+                            ProtocolResolver resolver(tf, cfgs);
                             bool protocolExists = resolver.resolve();
                             if (protocolExists)
                                 {
@@ -170,14 +169,14 @@ int FileTransferExecutor::execute()
                         }
 
                     //get the proxy
-                    std::string proxy_file = generateProxy(tf->DN, tf->CRED_ID);
+                    std::string proxy_file = generateProxy(tf.DN, tf.CRED_ID);
                     std::string message;
                     if(false == checkValidProxy(proxy_file, message))
                         {
                             proxy_file = get_proxy_cert(
-                                             tf->DN, // user_dn
-                                             tf->CRED_ID, // user_cred
-                                             tf->VO_NAME, // vo_name
+                                             tf.DN, // user_dn
+                                             tf.CRED_ID, // user_cred
+                                             tf.VO_NAME, // vo_name
                                              "",
                                              "", // assoc_service
                                              "", // assoc_service_type
@@ -188,11 +187,11 @@ int FileTransferExecutor::execute()
 
 
                     params.append(" -Y ");
-                    params.append(prepareMetadataString(tf->DN));
+                    params.append(prepareMetadataString(tf.DN));
 
                     //disable for now, remove later
-                    string sourceSiteName = ""; //siteResolver.getSiteName(tf->SOURCE_SURL);
-                    string destSiteName = ""; //siteResolver.getSiteName(tf->DEST_SURL);
+                    string sourceSiteName = ""; //siteResolver.getSiteName(tf.SOURCE_SURL);
+                    string destSiteName = ""; //siteResolver.getSiteName(tf.DEST_SURL);
 
                     bool debug = db->getDebugMode(source_hostname, destin_hostname);
 
@@ -222,26 +221,26 @@ int FileTransferExecutor::execute()
                             params.append(proxy_file);
                         }
 
-                    if (std::string(tf->CHECKSUM).length() > 0)   //checksum
+                    if (std::string(tf.CHECKSUM).length() > 0)   //checksum
                         {
                             params.append(" -z ");
-                            params.append(tf->CHECKSUM);
+                            params.append(tf.CHECKSUM);
                         }
-                    if (std::string(tf->CHECKSUM_METHOD).length() > 0)   //checksum
+                    if (std::string(tf.CHECKSUM_METHOD).length() > 0)   //checksum
                         {
                             params.append(" -A ");
-                            params.append(tf->CHECKSUM_METHOD);
+                            params.append(tf.CHECKSUM_METHOD);
                         }
                     params.append(" -b ");
-                    params.append(tf->SOURCE_SURL);
+                    params.append(tf.SOURCE_SURL);
                     params.append(" -c ");
-                    params.append(tf->DEST_SURL);
+                    params.append(tf.DEST_SURL);
                     params.append(" -a ");
-                    params.append(tf->JOB_ID);
+                    params.append(tf.JOB_ID);
                     params.append(" -B ");
-                    params.append(lexical_cast<string >(tf->FILE_ID));
+                    params.append(lexical_cast<string >(tf.FILE_ID));
                     params.append(" -C ");
-                    params.append(tf->VO_NAME);
+                    params.append(tf.VO_NAME);
                     if (sourceSiteName.length() > 0)
                         {
                             params.append(" -D ");
@@ -252,7 +251,7 @@ int FileTransferExecutor::execute()
                             params.append(" -E ");
                             params.append(destSiteName);
                         }
-                    if (std::string(tf->OVERWRITE).length() > 0)
+                    if (std::string(tf.OVERWRITE).length() > 0)
                         {
                             params.append(" -d ");
                         }
@@ -312,51 +311,51 @@ int FileTransferExecutor::execute()
                                     params.append(lexical_cast<string >(DEFAULT_TIMEOUT));
                                 }
                         }
-                    if (std::string(tf->SOURCE_SPACE_TOKEN).length() > 0)
+                    if (std::string(tf.SOURCE_SPACE_TOKEN).length() > 0)
                         {
                             params.append(" -k ");
-                            params.append(tf->SOURCE_SPACE_TOKEN);
+                            params.append(tf.SOURCE_SPACE_TOKEN);
                         }
-                    if (std::string(tf->DEST_SPACE_TOKEN).length() > 0)
+                    if (std::string(tf.DEST_SPACE_TOKEN).length() > 0)
                         {
                             params.append(" -j ");
-                            params.append(tf->DEST_SPACE_TOKEN);
+                            params.append(tf.DEST_SPACE_TOKEN);
                         }
 
-                    if (tf->PIN_LIFETIME > 0)
+                    if (tf.PIN_LIFETIME > 0)
                         {
                             params.append(" -t ");
-                            params.append(lexical_cast<string >(tf->PIN_LIFETIME));
+                            params.append(lexical_cast<string >(tf.PIN_LIFETIME));
                         }
 
-                    if (tf->BRINGONLINE > 0)
+                    if (tf.BRINGONLINE > 0)
                         {
                             params.append(" -H ");
-                            params.append(lexical_cast<string >(tf->BRINGONLINE));
+                            params.append(lexical_cast<string >(tf.BRINGONLINE));
                         }
 
-                    if (tf->USER_FILESIZE > 0)
+                    if (tf.USER_FILESIZE > 0)
                         {
                             params.append(" -I ");
-                            params.append(lexical_cast<string >(tf->USER_FILESIZE));
+                            params.append(lexical_cast<string >(tf.USER_FILESIZE));
                         }
 
-                    if (tf->FILE_METADATA.length() > 0)
+                    if (tf.FILE_METADATA.length() > 0)
                         {
                             params.append(" -K ");
-                            params.append(prepareMetadataString(tf->FILE_METADATA));
+                            params.append(prepareMetadataString(tf.FILE_METADATA));
                         }
 
-                    if (tf->JOB_METADATA.length() > 0)
+                    if (tf.JOB_METADATA.length() > 0)
                         {
                             params.append(" -J ");
-                            params.append(prepareMetadataString(tf->JOB_METADATA));
+                            params.append(prepareMetadataString(tf.JOB_METADATA));
                         }
 
-                    if (tf->BRINGONLINE_TOKEN.length() > 0)
+                    if (tf.BRINGONLINE_TOKEN.length() > 0)
                         {
                             params.append(" -L ");
-                            params.append(tf->BRINGONLINE_TOKEN);
+                            params.append(tf.BRINGONLINE_TOKEN);
                         }
 
                     if(infosys.length() > 0)
@@ -372,7 +371,7 @@ int FileTransferExecutor::execute()
                             params.append(" -U ");
                         }
 
-                    bool ready = db->isFileReadyState(tf->FILE_ID);
+                    bool ready = db->isFileReadyState(tf.FILE_ID);
 
                     if (ready)
                         {
@@ -385,36 +384,36 @@ int FileTransferExecutor::execute()
                                 {
                                     if(forkMessage.empty())
                                         {
-                                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to fork " <<  tf->JOB_ID << "  " << tf->FILE_ID << commit;
-                                            db->updateFileTransferStatus(0.0, tf->JOB_ID, tf->FILE_ID, "FAILED", "Transfer failed to fork, check fts3server.log for more details",(int) pr.getPid(), 0, 0, false);
-                                            db->updateJobTransferStatus(tf->JOB_ID, "FAILED",0);
+                                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to fork " <<  tf.JOB_ID << "  " << tf.FILE_ID << commit;
+                                            db->updateFileTransferStatus(0.0, tf.JOB_ID, tf.FILE_ID, "FAILED", "Transfer failed to fork, check fts3server.log for more details",(int) pr.getPid(), 0, 0, false);
+                                            db->updateJobTransferStatus(tf.JOB_ID, "FAILED",0);
                                         }
                                     else
                                         {
-                                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to fork " <<  forkMessage << "   " <<  tf->JOB_ID << "  " << tf->FILE_ID << commit;
-                                            db->updateFileTransferStatus(0.0, tf->JOB_ID, tf->FILE_ID, "FAILED", "Transfer failed to fork, check fts3server.log for more details",(int) pr.getPid(), 0, 0, false);
-                                            db->updateJobTransferStatus(tf->JOB_ID, "FAILED",0);
+                                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to fork " <<  forkMessage << "   " <<  tf.JOB_ID << "  " << tf.FILE_ID << commit;
+                                            db->updateFileTransferStatus(0.0, tf.JOB_ID, tf.FILE_ID, "FAILED", "Transfer failed to fork, check fts3server.log for more details",(int) pr.getPid(), 0, 0, false);
+                                            db->updateJobTransferStatus(tf.JOB_ID, "FAILED",0);
                                         }
                                 }
                             else
                                 {
-                                    db->updateFileTransferStatus(0.0, tf->JOB_ID, tf->FILE_ID, "ACTIVE", "",(int) pr.getPid(), 0, 0, false);
-                                    db->updateJobTransferStatus(tf->JOB_ID, "ACTIVE",0);
+                                    db->updateFileTransferStatus(0.0, tf.JOB_ID, tf.FILE_ID, "ACTIVE", "",(int) pr.getPid(), 0, 0, false);
+                                    db->updateJobTransferStatus(tf.JOB_ID, "ACTIVE",0);
+                                    SingleTrStateInstance::instance().sendStateMessage(tf.JOB_ID, tf.FILE_ID);
+                                    struct message_updater msg;
+                                    strncpy(msg.job_id, std::string(tf.JOB_ID).c_str(), sizeof(msg.job_id));
+                                    msg.job_id[sizeof(msg.job_id) - 1] = '\0';
+                                    msg.file_id = tf.FILE_ID;
+                                    msg.process_id = (int) pr.getPid();
+                                    msg.timestamp = milliseconds_since_epoch();
+                                    ThreadSafeList::get_instance().push_back(msg);
                                 }
-                            SingleTrStateInstance::instance().sendStateMessage(tf->JOB_ID, tf->FILE_ID);
-                            struct message_updater msg;
-                            strncpy(msg.job_id, std::string(tf->JOB_ID).c_str(), sizeof(msg.job_id));
-                            msg.job_id[sizeof(msg.job_id) - 1] = '\0';
-                            msg.file_id = tf->FILE_ID;
-                            msg.process_id = (int) pr.getPid();
-                            msg.timestamp = milliseconds_since_epoch();
-                            ThreadSafeList::get_instance().push_back(msg);
                         }
                     /* Disabled for now but pls do not remove
                     else
                         {
-                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer already in active or ready state for this dest_url? " <<  tf->JOB_ID << "  " << tf->FILE_ID << commit;
-                            db->forkFailedRevertState(tf->JOB_ID, tf->FILE_ID);
+                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer already in active or ready state for this dest_url? " <<  tf.JOB_ID << "  " << tf.FILE_ID << commit;
+                            db->forkFailedRevertState(tf.JOB_ID, tf.FILE_ID);
                         }
                     */
                     params.clear();

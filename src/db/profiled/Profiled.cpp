@@ -67,12 +67,12 @@ TransferJobs* ProfiledDB::getTransferJob(std::string jobId, bool archive)
 }
 
 
-void ProfiledDB::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files)
+void ProfiledDB::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles> >& files)
 {
     PROFILE_PREFIXED("DB::", db->getByJobIdReuse(jobs, files));
 }
 
-void ProfiledDB::getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles*> >& files)
+void ProfiledDB::getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles> >& files)
 {
     PROFILE_PREFIXED("DB::", db->getByJobId(distinct, files));
 }
@@ -84,7 +84,7 @@ void ProfiledDB::getSe(Se* &se, std::string seName)
 }
 
 
-unsigned int ProfiledDB::updateFileStatus(TransferFiles* file, const std::string status)
+unsigned int ProfiledDB::updateFileStatus(TransferFiles file, const std::string status)
 {
     PROFILE_PREFIXED("DB::", return db->updateFileStatus(file, status));
 }
@@ -809,7 +809,7 @@ void ProfiledDB::updateHeartBeat(unsigned* index, unsigned* count, unsigned* sta
     PROFILE_PREFIXED("DB::", db->updateHeartBeat(index, count, start, end, service_name));
 }
 
-unsigned int ProfiledDB::updateFileStatusReuse(TransferFiles* file, const std::string status)
+unsigned int ProfiledDB::updateFileStatusReuse(TransferFiles file, const std::string status)
 {
     PROFILE_PREFIXED("DB::", return db->updateFileStatusReuse(file, status));
 }

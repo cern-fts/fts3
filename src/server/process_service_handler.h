@@ -179,7 +179,6 @@ protected:
     bool monitoringMessages;
     int execPoolSize;
     std::string cmd;
-    boost::thread_group g;
 
     std::string extractHostname(const std::string &surl)
     {
@@ -200,7 +199,7 @@ protected:
         fout.close();
     }
 
-    void getFiles( std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles*> >& voQueues)
+    void getFiles( std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles> >& voQueues)
     {
         try
             {
@@ -216,6 +215,21 @@ protected:
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler!" << commit;
             }
     }    
+    
+    
+    void copyMap(std::map< std::string, std::list<TransferFiles> >& tovoQueues, std::map< std::string, std::list<TransferFiles> >& fromvoQueues)
+    {
+	for (std::map< std::string, std::list<TransferFiles> >::iterator i = fromvoQueues.begin(); i != fromvoQueues.end(); ++i)
+			 {
+			    std::list<TransferFiles>& l = i->second;
+	                    for (std::list<TransferFiles>::iterator it = l.begin(); it != l.end(); ++it)
+	                        {
+	            			TransferFiles tfile = *it;
+                    			tovoQueues[tfile.VO_NAME].push_back(tfile);
+				}                   
+                	}			
+				    
+    }
 
     void executeUrlcopy(std::vector<TransferJobs*>& jobsReuse2, bool reuse)
     {
@@ -235,13 +249,15 @@ protected:
 		    
                         //get distinct source, dest, vo first
                         std::vector< boost::tuple<std::string, std::string, std::string> > distinct;
-                        std::map< std::string, std::list<TransferFiles*> > voQueues1;
-                        std::map< std::string, std::list<TransferFiles*> > voQueues2;
-                        std::map< std::string, std::list<TransferFiles*> > voQueues3;
-                        std::map< std::string, std::list<TransferFiles*> > voQueues4;
-                        std::map< std::string, std::list<TransferFiles*> > voQueues; //merged
+                        std::map< std::string, std::list<TransferFiles> > voQueues1;
+                        std::map< std::string, std::list<TransferFiles> > voQueues2;
+                        std::map< std::string, std::list<TransferFiles> > voQueues3;
+                        std::map< std::string, std::list<TransferFiles> > voQueues4;
+                        std::map< std::string, std::list<TransferFiles> > voQueues; //merged
+			
+  		        boost::thread_group g;
 
-                        DBSingleton::instance().getDBObjectInstance()->getVOPairs(distinct);
+                        DBSingleton::instance().getDBObjectInstance()->getVOPairs(distinct);			
 
                         if(distinct.empty())
                             return;
@@ -249,7 +265,6 @@ protected:
                         std::size_t const half_size1 = distinct.size() / 2;
                         std::vector< boost::tuple<std::string, std::string, std::string> > split_1(distinct.begin(), distinct.begin() + half_size1);
                         std::vector< boost::tuple<std::string, std::string, std::string> > split_2(distinct.begin() + half_size1, distinct.end());
-
 		        
                         std::size_t const half_size2 = split_1.size() / 2;
                         std::vector< boost::tuple<std::string, std::string, std::string> > split_11(split_1.begin(), split_1.begin() + half_size2);
@@ -257,30 +272,20 @@ protected:
 
                         std::size_t const half_size3 = split_2.size() / 2;
                         std::vector< boost::tuple<std::string, std::string, std::string> > split_12(split_2.begin(), split_2.begin() + half_size3);
-                        std::vector< boost::tuple<std::string, std::string, std::string> > split_22(split_2.begin() + half_size3, split_2.end());
+                        std::vector< boost::tuple<std::string, std::string, std::string> > split_22(split_2.begin() + half_size3, split_2.end());					
+
+                        g.create_thread(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_11), boost::ref(voQueues1)));
+                        g.create_thread(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_21), boost::ref(voQueues2)));
+                        g.create_thread(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_12), boost::ref(voQueues3)));
+                        g.create_thread(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_22), boost::ref(voQueues4)));
 						
-                        boost::thread t1(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_11), boost::ref(voQueues1)));
-                        boost::thread t2(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_21), boost::ref(voQueues2)));
-                        boost::thread t3(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_12), boost::ref(voQueues3)));
-                        boost::thread t4(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_22), boost::ref(voQueues4)));
-
-                        g.add_thread(&t1);
-                        g.add_thread(&t2);
-                        g.add_thread(&t3);
-                        g.add_thread(&t4);
-
                         // wait for them
                         g.join_all();
-			
-			g.remove_thread(&t1);
-			g.remove_thread(&t2);					
-			g.remove_thread(&t3);					
-			g.remove_thread(&t4);								
-
-                        voQueues.insert(voQueues1.begin(), voQueues1.end());
-                        voQueues.insert(voQueues2.begin(), voQueues2.end());
-                        voQueues.insert(voQueues3.begin(), voQueues3.end());
-                        voQueues.insert(voQueues4.begin(), voQueues4.end());						
+						
+			copyMap(voQueues, voQueues1);
+			copyMap(voQueues, voQueues2);
+			copyMap(voQueues, voQueues3);
+			copyMap(voQueues, voQueues4);																
 						
                         if(voQueues.empty())
                             return;
@@ -310,10 +315,9 @@ protected:
                                                 return;
                                             }
 
-                                        TransferFiles* tf = tfh.get(*it_vo);
+                                        TransferFiles tf = tfh.get(*it_vo);
 
-                                        if (tf)
-                                            {
+                                        
                                                 FileTransferExecutor* exec = new FileTransferExecutor(
                                                     tf,
                                                     tfh,
@@ -323,7 +327,7 @@ protected:
                                                 );
 
                                                 execPool.add(exec);
-                                            }
+                                        
                                     }
                             }
 
@@ -333,9 +337,9 @@ protected:
 			voQueues1.clear();
 			voQueues2.clear();
 			voQueues3.clear();
-			voQueues4.clear();
-			
-			voQueues.clear();		
+			voQueues4.clear();			
+			voQueues.clear();
+			distinct.clear();		
 
                         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Threadpool processed: " << initial_size << " files (" << execPool.executed() << " have been scheduled)" << commit;
                     }
@@ -371,10 +375,10 @@ protected:
                                 bool userProtocol = false;
                                 std::string checksumMethod("");
 
-                                TransferFiles* tempUrl = NULL;
+                                TransferFiles tempUrl;
 
-                                std::map< std::string, std::list<TransferFiles*> > voQueues;
-                                std::list<TransferFiles*>::const_iterator queueiter;
+                                std::map< std::string, std::list<TransferFiles> > voQueues;
+                                std::list<TransferFiles>::const_iterator queueiter;
 
                                 DBSingleton::instance().getDBObjectInstance()->getByJobIdReuse(jobsReuse2, voQueues);
 
@@ -402,36 +406,36 @@ protected:
                                                 return;
                                             }
 
-                                        TransferFiles* temp = (TransferFiles*) * queueiter;
+                                        TransferFiles temp = *queueiter;
                                         tempUrl = temp;
-                                        surl = temp->SOURCE_SURL;
-                                        durl = temp->DEST_SURL;
-                                        job_id = temp->JOB_ID;
-                                        vo_name = temp->VO_NAME;
-                                        cred_id = temp->CRED_ID;
-                                        dn = temp->DN;
-                                        file_id = temp->FILE_ID;
-                                        overwrite = temp->OVERWRITE;
-                                        source_hostname = temp->SOURCE_SE;
-                                        destin_hostname = temp->DEST_SE;
-                                        source_space_token = temp->SOURCE_SPACE_TOKEN;
-                                        dest_space_token = temp->DEST_SPACE_TOKEN;
-                                        pinLifetime = temp->PIN_LIFETIME;
-                                        bringOnline = temp->BRINGONLINE;
-                                        userFilesize = temp->USER_FILESIZE;
-                                        jobMetadata = prepareMetadataString(temp->JOB_METADATA);
-                                        fileMetadata = prepareMetadataString(temp->FILE_METADATA);
-                                        bringonlineToken = temp->BRINGONLINE_TOKEN;
-                                        checksumMethod = temp->CHECKSUM_METHOD;
+                                        surl = temp.SOURCE_SURL;
+                                        durl = temp.DEST_SURL;
+                                        job_id = temp.JOB_ID;
+                                        vo_name = temp.VO_NAME;
+                                        cred_id = temp.CRED_ID;
+                                        dn = temp.DN;
+                                        file_id = temp.FILE_ID;
+                                        overwrite = temp.OVERWRITE;
+                                        source_hostname = temp.SOURCE_SE;
+                                        destin_hostname = temp.DEST_SE;
+                                        source_space_token = temp.SOURCE_SPACE_TOKEN;
+                                        dest_space_token = temp.DEST_SPACE_TOKEN;
+                                        pinLifetime = temp.PIN_LIFETIME;
+                                        bringOnline = temp.BRINGONLINE;
+                                        userFilesize = temp.USER_FILESIZE;
+                                        jobMetadata = prepareMetadataString(temp.JOB_METADATA);
+                                        fileMetadata = prepareMetadataString(temp.FILE_METADATA);
+                                        bringonlineToken = temp.BRINGONLINE_TOKEN;
+                                        checksumMethod = temp.CHECKSUM_METHOD;
 
                                         if (fileMetadata.length() <= 0)
                                             fileMetadata = "x";
                                         if (bringonlineToken.length() <= 0)
                                             bringonlineToken = "x";
-                                        if (std::string(temp->CHECKSUM_METHOD).length() > 0)
+                                        if (std::string(temp.CHECKSUM_METHOD).length() > 0)
                                             {
-                                                if (std::string(temp->CHECKSUM).length() > 0)
-                                                    checksum = temp->CHECKSUM;
+                                                if (std::string(temp.CHECKSUM).length() > 0)
+                                                    checksum = temp.CHECKSUM;
                                                 else
                                                     checksum = "x";
                                             }
@@ -444,26 +448,7 @@ protected:
                                         urls.push_back(url.str());
                                         url.str("");
                                     }
-
-                                if(!tempUrl)
-                                    {
-                                        /** cleanup resources */
-                                        std::vector<TransferJobs*>::iterator iter2;
-                                        for (iter2 = jobsReuse2.begin(); iter2 != jobsReuse2.end(); ++iter2)
-                                            {
-                                                if(*iter2)
-                                                    delete *iter2;
-                                            }
-                                        jobsReuse2.clear();
-                                        for (queueiter = voQueues[vo].begin(); queueiter != voQueues[vo].end(); ++queueiter)
-                                            {
-                                                if(*queueiter)
-                                                    delete *queueiter;
-                                            }
-                                        voQueues[vo].clear();
-                                        fileIds.clear();
-                                        return;
-                                    }
+                                                                       
 
                                 //disable for now, remove later
                                 sourceSiteName = ""; //siteResolver.getSiteName(surl);
@@ -543,11 +528,11 @@ protected:
 
                                         for (queueiter = voQueues[vo].begin(); queueiter != voQueues[vo].end(); ++queueiter)
                                             {
-                                                TransferFiles* temp = (TransferFiles*) * queueiter;
-                                                fileIds.insert(std::make_pair(temp->FILE_ID, temp->JOB_ID));
+                                                TransferFiles temp = *queueiter;
+                                                fileIds.insert(std::make_pair(temp.FILE_ID, temp.JOB_ID));
                                             }
 
-                                        SingleTrStateInstance::instance().sendStateMessage(tempUrl->JOB_ID, -1);
+                                        SingleTrStateInstance::instance().sendStateMessage(tempUrl.JOB_ID, -1);
 
 
                                         debug = DBSingleton::instance().getDBObjectInstance()->getDebugMode(source_hostname, destin_hostname);
@@ -755,14 +740,8 @@ protected:
                                         params.clear();
                                     }
 
-                                jobsReuse2.clear();
-
-                                for (queueiter = voQueues[vo].begin(); queueiter != voQueues[vo].end(); ++queueiter)
-                                    {
-                                        if(*queueiter)
-                                            delete *queueiter;
-                                    }
-                                voQueues[vo].clear();
+                                jobsReuse2.clear();                               
+                                voQueues.clear();
                                 fileIds.clear();
 
                             }

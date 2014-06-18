@@ -75,7 +75,7 @@ public:
      *
      * @param file - a file that is being scheduled
      */
-    ConfigurationAssigner(TransferFiles* file);
+    ConfigurationAssigner(TransferFiles file);
     ConfigurationAssigner(const fts3::server::ConfigurationAssigner&);
 
     /**
@@ -93,7 +93,7 @@ public:
 private:
 
     /// file that is being scheduled
-    TransferFiles* file;
+    TransferFiles file;
     /// DB interface
     GenericDbIfce* db;
 
