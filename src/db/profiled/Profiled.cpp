@@ -72,9 +72,9 @@ void ProfiledDB::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std
     PROFILE_PREFIXED("DB::", db->getByJobIdReuse(jobs, files));
 }
 
-void ProfiledDB::getByJobId(std::map< std::string, std::list<TransferFiles*> >& files)
+void ProfiledDB::getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles*> >& files)
 {
-    PROFILE_PREFIXED("DB::", db->getByJobId(files));
+    PROFILE_PREFIXED("DB::", db->getByJobId(distinct, files));
 }
 
 
@@ -892,4 +892,9 @@ int ProfiledDB::getBufferOptimization()
 void ProfiledDB::getTransferJobStatusDetailed(std::string job_id, std::vector<boost::tuple<std::string, std::string, int, std::string, std::string> >& files)
 {
     PROFILE_PREFIXED("DB::", db->getTransferJobStatusDetailed(job_id, files));
+}
+
+void ProfiledDB::getVOPairs(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct)
+{
+    PROFILE_PREFIXED("DB::", db->getVOPairs(distinct));
 }

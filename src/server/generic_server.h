@@ -49,8 +49,8 @@ public:
 
         typename TRAITS::HeartBeatTypeActive heartBeatHandlerActive;
         heartBeatHandlerActive.beat();
-	
-	sleep(2);
+
+        sleep(2);
 
         typename TRAITS::CleanLogsTypeActive cLeanLogsHandlerActive;
         cLeanLogsHandlerActive.beat();

@@ -322,8 +322,6 @@ protected:
 
                         if(!messages.empty())
                             {
-                                if(messages.size() >= 8 )
-                                    {
                                         std::size_t const half_size1 = messages.size() / 2;
                                         std::vector<struct message> split_1(messages.begin(), messages.begin() + half_size1);
                                         std::vector<struct message> split_2(messages.begin() + half_size1, messages.end());
@@ -336,23 +334,24 @@ protected:
                                         std::vector<struct message> split_12(split_2.begin(), split_2.begin() + half_size3);
                                         std::vector<struct message> split_22(split_2.begin() + half_size3, split_2.end());
 
-                                        boost::thread *t1 = new boost::thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_11)));
-                                        boost::thread *t2 = new boost::thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_21)));
-                                        boost::thread *t3 = new boost::thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_12)));
-                                        boost::thread *t4 = new boost::thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_22)));
+                                        boost::thread t1(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_11)));
+                                        boost::thread t2(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_21)));
+                                        boost::thread t3(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_12)));
+                                        boost::thread t4(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_22)));
 
-                                        g.add_thread(t1);
-                                        g.add_thread(t2);
-                                        g.add_thread(t3);
-                                        g.add_thread(t4);
+                                        g.add_thread(&t1);
+                                        g.add_thread(&t2);
+                                        g.add_thread(&t3);
+                                        g.add_thread(&t4);					
 
                                         // wait for them
                                         g.join_all();
-                                    }
-                                else    //end < 8
-                                    {
-                                        executeUpdate(messages);
-                                    }
+					
+					g.remove_thread(&t1);
+					g.remove_thread(&t2);					
+					g.remove_thread(&t3);					
+					g.remove_thread(&t4);														
+                                
                                 messages.clear();
                             }
 
