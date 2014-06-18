@@ -22,7 +22,8 @@ config(function($routeProvider) {
                                        controller:  OptimizerDetailedCtrl,
                                        resolve:     OptimizerDetailedCtrl.resolve}).
 
-        when('/errors/',              {templateUrl: STATIC_ROOT + 'html/errors/errors.html',
+        when('/errors/',              {redirectTo:  ErrorsCtrl.redirectTo}).
+        when('/errors/pairs',         {templateUrl: STATIC_ROOT + 'html/errors/pairs.html',
                                        controller:  ErrorsCtrl,
                                        resolve:     ErrorsCtrl.resolve}).
         when('/errors/list',          {templateUrl: STATIC_ROOT + 'html/errors/list.html',
