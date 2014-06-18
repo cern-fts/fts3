@@ -92,8 +92,6 @@ string GSoapDelegationHandler::makeDelegationId()
 
     delegation_id[16] = '\0';
 
-    EVP_MD_CTX_cleanup(&ctx);
-
     return delegation_id;
 }
 
