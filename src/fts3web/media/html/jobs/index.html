@@ -16,8 +16,9 @@
             <th style="width: 12%">Submit time</th>
             <th style="width: 8%">Job state</th>
             <th style="width: 4%">VO</th>
-            <th style="width: 22%">Source SE</th>
-            <th style="width: 22%">Destination SE</th>
+            <th style="width: 20%">Source SE</th>
+            <th style="width: 20%">Destination SE</th>
+            <th style="width: 4%">Files</th>
             <th style="width: 6%">Priority</th>
             <th style="width: 14%">Destination space token</th>
         </tr>
@@ -34,6 +35,7 @@
             <td>{{job.vo_name}}</td>
             <td class="hscroll">{{job.source_se}}</td>
             <td class="hscroll">{{job.dest_se}}</td>
+            <td>{{job.count}}</td>
             <td>{{job.priority}}</td>
             <td>{{job.space_token}}</td>
         </tr>

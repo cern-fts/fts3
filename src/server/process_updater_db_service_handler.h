@@ -281,7 +281,7 @@ protected:
                                     }
                                 counterFailAll = 0;
                             }
-                    
+
                         messages.clear();
                     }
                 catch (const std::exception& e)

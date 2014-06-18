@@ -487,20 +487,13 @@ std::map<std::string, int> OracleAPI::getFilesNumPerActivity(soci::session& sql,
 }
 
 
-void OracleAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& files)
+void OracleAPI::getVOPairs(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct)
 {
-    soci::session sql(*connectionPool);
 
-    time_t now = time(NULL);
-    struct tm tTime;
-    gmtime_r(&now, &tTime);
-    std::vector< boost::tuple<std::string, std::string, std::string> > distinct;
-    distinct.reserve(500); //approximation
+    soci::session sql(*connectionPool);
 
     try
         {
-            int defaultFilesNum = 10;
-
             soci::rowset<soci::row> rs = (
                                              sql.prepare <<
                                              " SELECT DISTINCT source_se, dest_se, vo_name "
@@ -539,6 +532,28 @@ void OracleAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& f
                                 soci::use(source_se), soci::use(dest_se);
                         }
                 }
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }
+}
+
+void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles*> >& files)
+{
+    soci::session sql(*connectionPool);
+
+    time_t now = time(NULL);
+    struct tm tTime;
+    gmtime_r(&now, &tTime);
+
+    try
+        {
+            int defaultFilesNum = 10;
 
             if(distinct.empty())
                 return;

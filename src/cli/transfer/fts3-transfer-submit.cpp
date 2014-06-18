@@ -49,7 +49,7 @@ int main(int ac, char* av[])
             cli.reset (
                 getCli<SubmitTransferCli>(ac, av)
             );
-            if (!cli->validate()) return 0;	    
+            if (!cli->validate()) return 0;
 
             if (cli->rest())
                 {

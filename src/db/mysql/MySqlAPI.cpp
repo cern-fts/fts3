@@ -553,24 +553,10 @@ std::map<std::string, int> MySqlAPI::getFilesNumPerActivity(soci::session& sql, 
 }
 
 
-void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& files)
+
+void MySqlAPI::getVOPairs(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct)
 {
     soci::session sql(*connectionPool);
-
-    time_t now = time(NULL);
-    struct tm tTime;
-    std::vector< boost::tuple<std::string, std::string, std::string> > distinct;
-    distinct.reserve(300); //approximation
-    int count = 0;
-    bool manualConfigExists = false;
-    int defaultFilesNum = 10;
-    int filesNum = defaultFilesNum;
-    int limit = 0;
-    int maxActive = 0;
-    soci::indicator isNull = soci::i_ok;
-    std::string vo_name;
-    std::string source_se;
-    std::string dest_se;
 
     try
         {
@@ -585,17 +571,17 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
 
             for (soci::rowset<soci::row>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
                 {
-                    soci::row const& r2 = *i2;
-		    vo_name = r2.get<std::string>("vo_name","");		    
-                    source_se = r2.get<std::string>("source_se","");
-                    dest_se = r2.get<std::string>("dest_se","");                    
+                    soci::row const& r = *i2;
+                    std::string source_se = r.get<std::string>("source_se","");
+                    std::string dest_se = r.get<std::string>("dest_se","");
 
                     distinct.push_back(
                         boost::tuple< std::string, std::string, std::string>(
-                            source_se,
-                            dest_se,
-                            vo_name
+                            r.get<std::string>("source_se",""),
+                            r.get<std::string>("dest_se",""),
+                            r.get<std::string>("vo_name","")
                         )
+
                     );
 
                     long long int linkExists = 0;
@@ -607,9 +593,37 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                         sql << "INSERT INTO t_optimize_active (source_se, dest_se) VALUES (:source_se, :dest_se) ON DUPLICATE KEY UPDATE source_se=:source_se, dest_se=:dest_se",
                             soci::use(source_se), soci::use(dest_se),soci::use(source_se), soci::use(dest_se);
                 }
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }
 
-            if(distinct.empty())
-                return;
+}
+
+void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles*> >& files)
+{
+    soci::session sql(*connectionPool);
+
+    time_t now = time(NULL);
+    struct tm tTime;
+    int count = 0;
+    bool manualConfigExists = false;
+    int defaultFilesNum = 10;
+    int filesNum = defaultFilesNum;
+    int limit = 0;
+    int maxActive = 0;
+    soci::indicator isNull = soci::i_ok;
+    std::string vo_name;
+    std::string source_se;
+    std::string dest_se;
+
+    try
+        {
 
             // Iterate through pairs, getting jobs IF the VO has not run out of credits
             // AND there are pending file transfers within the job
@@ -739,7 +753,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                         "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params  "
                                         " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id AND f.vo_name = j.vo_name) WHERE "
                                         "    f.file_state = 'SUBMITTED' AND  "
-                                        "    f.source_se = :source AND f.dest_se = :dest AND "                                       
+                                        "    f.source_se = :source AND f.dest_se = :dest AND "
                                         "    f.vo_name = :vo_name AND ";
                                     select +=
                                         it_act->first == "default" ?
@@ -2456,55 +2470,55 @@ void MySqlAPI::updateFileTransferProgressVector(std::vector<struct message_updat
             sql.commit();
 
             //now update t_turl table, DISABLED for now due to deadlocks
-	    //DO not remove
-	    /*  
-            sql.begin();
+            //DO not remove
+            /*
+                sql.begin();
 
-            for (iter = messages.begin(); iter != messages.end(); ++iter)
-                {
-                    throughput = 0.0;
-                    transferred = 0.0;
-                    file_id = 0;
-                    file_state = "";
-                    source_surl = "";
-                    dest_surl = "";
-                    source_turl = "";
-                    dest_turl = "";
+                for (iter = messages.begin(); iter != messages.end(); ++iter)
+                    {
+                        throughput = 0.0;
+                        transferred = 0.0;
+                        file_id = 0;
+                        file_state = "";
+                        source_surl = "";
+                        dest_surl = "";
+                        source_turl = "";
+                        dest_turl = "";
 
-                    if (iter->msg_errno == 0 && (*iter).file_id > 0)
-                        {
-                            file_state = std::string((*iter).transfer_status);
+                        if (iter->msg_errno == 0 && (*iter).file_id > 0)
+                            {
+                                file_state = std::string((*iter).transfer_status);
 
-                            if(file_state != "ACTIVE")
-                                {
-                                    source_surl = (*iter).source_surl;
-                                    dest_surl = (*iter).dest_surl;
-                                    source_turl = (*iter).source_turl;
-                                    dest_turl = (*iter).dest_turl;
-                                    file_id = (*iter).file_id;
+                                if(file_state != "ACTIVE")
+                                    {
+                                        source_surl = (*iter).source_surl;
+                                        dest_surl = (*iter).dest_surl;
+                                        source_turl = (*iter).source_turl;
+                                        dest_turl = (*iter).dest_turl;
+                                        file_id = (*iter).file_id;
 
-                                    if(source_turl == "gsiftp:://fake" && dest_turl == "gsiftp:://fake")
-                                        continue;
+                                        if(source_turl == "gsiftp:://fake" && dest_turl == "gsiftp:://fake")
+                                            continue;
 
-                                    if((*iter).throughput > 0.0 && file_id > 0)
-                                        {
-                                            throughput = (*iter).throughput;
-                                        }
+                                        if((*iter).throughput > 0.0 && file_id > 0)
+                                            {
+                                                throughput = (*iter).throughput;
+                                            }
 
-                                    if(file_state == "FINISHED" && file_id > 0 )
-                                        {
-                                            stmtFinish.execute(true);
-                                        }
-                                    else if (file_state == "FAILED" && file_id > 0 )
-                                        {
-                                            stmtFail.execute(true);
-                                        }
-                                }
-                        }
-                }
+                                        if(file_state == "FINISHED" && file_id > 0 )
+                                            {
+                                                stmtFinish.execute(true);
+                                            }
+                                        else if (file_state == "FAILED" && file_id > 0 )
+                                            {
+                                                stmtFail.execute(true);
+                                            }
+                                    }
+                            }
+                    }
 
-            sql.commit();
-	    */
+                sql.commit();
+            */
         }
     catch (std::exception& e)
         {
@@ -7543,7 +7557,7 @@ std::vector<std::string> MySqlAPI::getAllShareOnlyCfgs()
 }
 
 void MySqlAPI::checkSanityState()
-{   
+{
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Sanity states check thread started " << commit;
 
     soci::session sql(*connectionPool);
@@ -7734,7 +7748,7 @@ void MySqlAPI::checkSanityState()
                         {
                             job_id = (*i2);
                             numberOfFilesRevert = 0;
-                           
+
                             stmt6.execute(true);
 
                             if(numberOfFilesRevert > 0)
@@ -7798,8 +7812,8 @@ void MySqlAPI::checkSanityState()
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
-	
-	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Sanity states check thread ended " << commit;	
+
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Sanity states check thread ended " << commit;
 }
 
 

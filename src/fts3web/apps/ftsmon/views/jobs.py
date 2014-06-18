@@ -96,9 +96,12 @@ class JobListDecorator(object):
             [job_id])
         result = self.cursor.fetchall()
         count = dict()
+        total = 0
         for r in result:
             count[r[0]] = r[1]
+            total += r[1]
         job['files'] = count
+        job['count'] = total
         return job
 
     def _decorated(self, index):

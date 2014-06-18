@@ -179,6 +179,7 @@ protected:
     bool monitoringMessages;
     int execPoolSize;
     std::string cmd;
+    boost::thread_group g;
 
     std::string extractHostname(const std::string &surl)
     {
@@ -199,6 +200,22 @@ protected:
         fout.close();
     }
 
+    void getFiles( std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles*> >& voQueues)
+    {
+        try
+            {
+                //now get files to be scheduled
+                DBSingleton::instance().getDBObjectInstance()->getByJobId(distinct, voQueues);
+            }
+        catch (std::exception& e)
+            {
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler:getFiles " << e.what() << commit;
+            }
+        catch (...)
+            {
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler!" << commit;
+            }
+    }    
 
     void executeUrlcopy(std::vector<TransferJobs*>& jobsReuse2, bool reuse)
     {
@@ -215,14 +232,59 @@ protected:
 
                 if (reuse == false)
                     {
-                        std::map< std::string, std::list<TransferFiles*> > voQueues;
+		    
+                        //get distinct source, dest, vo first
+                        std::vector< boost::tuple<std::string, std::string, std::string> > distinct;
+                        std::map< std::string, std::list<TransferFiles*> > voQueues1;
+                        std::map< std::string, std::list<TransferFiles*> > voQueues2;
+                        std::map< std::string, std::list<TransferFiles*> > voQueues3;
+                        std::map< std::string, std::list<TransferFiles*> > voQueues4;
+                        std::map< std::string, std::list<TransferFiles*> > voQueues; //merged
 
-                        DBSingleton::instance().getDBObjectInstance()->getByJobId(voQueues);
+                        DBSingleton::instance().getDBObjectInstance()->getVOPairs(distinct);
 
+                        if(distinct.empty())
+                            return;
+			
+                        std::size_t const half_size1 = distinct.size() / 2;
+                        std::vector< boost::tuple<std::string, std::string, std::string> > split_1(distinct.begin(), distinct.begin() + half_size1);
+                        std::vector< boost::tuple<std::string, std::string, std::string> > split_2(distinct.begin() + half_size1, distinct.end());
 
+		        
+                        std::size_t const half_size2 = split_1.size() / 2;
+                        std::vector< boost::tuple<std::string, std::string, std::string> > split_11(split_1.begin(), split_1.begin() + half_size2);
+                        std::vector< boost::tuple<std::string, std::string, std::string> > split_21(split_1.begin() + half_size2, split_1.end());
+
+                        std::size_t const half_size3 = split_2.size() / 2;
+                        std::vector< boost::tuple<std::string, std::string, std::string> > split_12(split_2.begin(), split_2.begin() + half_size3);
+                        std::vector< boost::tuple<std::string, std::string, std::string> > split_22(split_2.begin() + half_size3, split_2.end());
+						
+                        boost::thread t1(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_11), boost::ref(voQueues1)));
+                        boost::thread t2(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_21), boost::ref(voQueues2)));
+                        boost::thread t3(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_12), boost::ref(voQueues3)));
+                        boost::thread t4(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_22), boost::ref(voQueues4)));
+
+                        g.add_thread(&t1);
+                        g.add_thread(&t2);
+                        g.add_thread(&t3);
+                        g.add_thread(&t4);
+
+                        // wait for them
+                        g.join_all();
+			
+			g.remove_thread(&t1);
+			g.remove_thread(&t2);					
+			g.remove_thread(&t3);					
+			g.remove_thread(&t4);								
+
+                        voQueues.insert(voQueues1.begin(), voQueues1.end());
+                        voQueues.insert(voQueues2.begin(), voQueues2.end());
+                        voQueues.insert(voQueues3.begin(), voQueues3.end());
+                        voQueues.insert(voQueues4.begin(), voQueues4.end());						
+						
                         if(voQueues.empty())
                             return;
-
+			    
                         // create transfer-file handler
                         TransferFileHandler tfh(voQueues);
 
@@ -267,6 +329,13 @@ protected:
 
                         // wait for all the workers to finish
                         execPool.join();
+			
+			voQueues1.clear();
+			voQueues2.clear();
+			voQueues3.clear();
+			voQueues4.clear();
+			
+			voQueues.clear();		
 
                         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Threadpool processed: " << initial_size << " files (" << execPool.executed() << " have been scheduled)" << commit;
                     }

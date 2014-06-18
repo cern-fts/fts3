@@ -136,10 +136,10 @@ void SetCfgCli::parse(int ac, char* av[])
                 {
                     throw bad_option("drain", "drain may only take on/off values!");
                 }
-	   else if(ac > 3 && ac < 5)
-	        {
-		    throw bad_option("drain", "You need sto specify which endpoint to drain, -s missing?");
-		}
+            else if(ac > 3 && ac < 5)
+                {
+                    throw bad_option("drain", "You need sto specify which endpoint to drain, -s missing?");
+                }
         }
 
     if (vm.count("cfg"))

@@ -117,7 +117,7 @@ public:
 
     virtual void getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files) = 0;
 
-    virtual void getByJobId(std::map< std::string, std::list<TransferFiles*> >& files) = 0;
+    virtual void getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles*> >& files) = 0;
 
     virtual void getSe(Se* &se, std::string seName) = 0;
 
@@ -410,4 +410,7 @@ public:
     virtual int getBufferOptimization() = 0;
 
     virtual void getTransferJobStatusDetailed(std::string job_id, std::vector<boost::tuple<std::string, std::string, int, std::string, std::string> >& files) = 0;
+
+    virtual void getVOPairs(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct) = 0;
+
 };
