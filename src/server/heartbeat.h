@@ -54,14 +54,14 @@ private:
         double diffTime  = 0.0;
 
         diffTime = std::difftime(std::time(NULL), retrieveRecords);
-        if(diffTime > 3600)
+        if(diffTime > 7200)
             {
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Wall time passed retrieve records: " << diffTime << " secs "<< commit;
                 return true;
             }
 
         diffTime = std::difftime(std::time(NULL), updateRecords);
-        if(diffTime > 3600)
+        if(diffTime > 7200)
             {
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Wall time passed update records: " << diffTime << " secs "<< commit;
                 return true;
