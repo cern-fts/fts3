@@ -590,7 +590,7 @@ void MySqlAPI::getVOPairs(std::vector< boost::tuple<std::string, std::string, st
                         soci::use(dest_se),
                         soci::into(linkExists);
                     if(linkExists == 0) //for some reason does not exist, add it
-                        sql << "INSERT INTO t_optimize_active (source_se, dest_se) VALUES (:source_se, :dest_se) ON DUPLICATE KEY UPDATE source_se=:source_se, dest_se=:dest_se",
+                        sql << "INSERT INTO t_optimize_active (source_se, dest_se, active, ema) VALUES (:source_se, :dest_se, 2, 0) ON DUPLICATE KEY UPDATE source_se=:source_se, dest_se=:dest_se",
                             soci::use(source_se), soci::use(dest_se),soci::use(source_se), soci::use(dest_se);
                 }
         }
@@ -1517,7 +1517,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
                     Key p1 = (*itr).first;
                     std::string source_se = p1.first;
                     std::string dest_se = p1.second;
-                    sql << "INSERT INTO t_optimize_active (source_se, dest_se) VALUES (:source_se, :dest_se) ON DUPLICATE KEY UPDATE source_se=:source_se, dest_se=:dest_se",
+                    sql << "INSERT INTO t_optimize_active (source_se, dest_se, active, ema) VALUES (:source_se, :dest_se, 2, 0) ON DUPLICATE KEY UPDATE source_se=:source_se, dest_se=:dest_se",
                         soci::use(source_se), soci::use(dest_se),soci::use(source_se), soci::use(dest_se);
                 }
 
@@ -3418,8 +3418,8 @@ bool MySqlAPI::updateOptimizer()
                                          soci::use(source_hostname), soci::use(destin_hostname), soci::into(recordFound, isNullRecordsFound));
 
             soci::statement stmt15 = (
-                                         sql.prepare << "insert into t_optimize (source_se, dest_se, nostreams, datetime) "
-                                         " VALUES (:source_se, :dest_se, :nostreams, UTC_TIMESTAMP())",
+                                         sql.prepare << "insert into t_optimize (source_se, dest_se, nostreams, datetime, file_id) "
+                                         " VALUES (:source_se, :dest_se, :nostreams, UTC_TIMESTAMP(), 0)",
                                          soci::use(source_hostname),
                                          soci::use(destin_hostname),
                                          soci::use(insertStreams));
@@ -9471,7 +9471,7 @@ void MySqlAPI::setSourceMaxActive(const std::string & source_hostname, int maxAc
                         {
                             sql.begin();
 
-                            sql << "INSERT INTO t_optimize (source_se, active) VALUES (:source_se, :active)  ",
+                            sql << "INSERT INTO t_optimize (source_se, active, file_id) VALUES (:source_se, :active, 0)  ",
                                 soci::use(source_hostname), soci::use(maxActive);
 
                             sql.commit();
@@ -9523,7 +9523,7 @@ void MySqlAPI::setDestMaxActive(const std::string & destination_hostname, int ma
                         {
                             sql.begin();
 
-                            sql << "INSERT INTO t_optimize (dest_se, active) VALUES (:dest_se, :active)  ",
+                            sql << "INSERT INTO t_optimize (dest_se, active, file_id) VALUES (:dest_se, :active, 0)  ",
                                 soci::use(destination_hostname), soci::use(maxActive);
 
                             sql.commit();
