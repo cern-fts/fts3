@@ -109,7 +109,7 @@ public:
      *
      * @param job_id - transfer job ID
      */
-    ProtocolResolver(TransferFiles* file, vector< boost::shared_ptr<ShareConfig> >& cfgs);
+    ProtocolResolver(TransferFiles file, vector< boost::shared_ptr<ShareConfig> >& cfgs);
     ProtocolResolver(const fts3::server::ProtocolResolver&);
 
     /**
@@ -164,7 +164,7 @@ public:
      *
      * @return an object containing protocol parameters
      */
-    static optional<protocol> getUserDefinedProtocol(TransferFiles* file);
+    static optional<protocol> getUserDefinedProtocol(TransferFiles file);
 
 private:
 
@@ -233,7 +233,7 @@ private:
     optional<protocol> prot;
 
     // the transfer file
-    TransferFiles* file;
+    TransferFiles file;
 
     vector< boost::shared_ptr<ShareConfig> >& cfgs;
 

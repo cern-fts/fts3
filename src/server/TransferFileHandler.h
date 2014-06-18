@@ -60,10 +60,10 @@ class TransferFileHandler
 
 public:
 
-    TransferFileHandler(map< string, list<TransferFiles*> >& files);
+    TransferFileHandler(map< string, list<TransferFiles> >& files);
     virtual ~TransferFileHandler();
 
-    TransferFiles* get(string vo);
+    TransferFiles get(string vo);
 
     set<string>::iterator begin();
     set<string>::iterator end();
@@ -80,16 +80,16 @@ public:
 
 private:
 
-    TransferFiles* getFile(FileIndex index);
+    TransferFiles getFile(FileIndex index);
 
     optional<FileIndex> getIndex(string vo);
 
     optional< pair<string, string> > getNextPair(string vo);
 
-    map< string, set<string> >& getMapFromCache(map< string, list<TransferFiles*> >& files, GET_MAP_OPTS opt);
+    map< string, set<string> >& getMapFromCache(map< string, list<TransferFiles> >& files, GET_MAP_OPTS opt);
 
     // maps file indexes to file replicas
-    map< FileIndex, list<TransferFiles*> > fileIndexToFiles;
+    map< FileIndex, list<TransferFiles> > fileIndexToFiles;
 
     // maps VOs to file indexes
     // file indexes are organized in map: source-destination pair is mapped to file indexes
@@ -97,7 +97,7 @@ private:
 
     set<string> vos;
 
-    void freeList(list<TransferFiles*>& l);
+    void freeList(list<TransferFiles>& l);
 
     /// mutex that ensures thread safety
     mutex m;

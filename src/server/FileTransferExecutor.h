@@ -56,7 +56,7 @@ public:
      * @param infosys - information system host
      * @param ftsHostName - hostname of the machine hosting FTS3
      */
-    FileTransferExecutor(TransferFiles* tf, TransferFileHandler& tfh, bool monitoringMsg, string infosys, string ftsHostName);
+    FileTransferExecutor(TransferFiles tf, TransferFileHandler& tfh, bool monitoringMsg, string infosys, string ftsHostName);
 
     /**
      * Destructor.
@@ -85,7 +85,7 @@ private:
     set< pair<string, string> > notScheduled;
 
     /// variables from process_service_handler
-    scoped_ptr<TransferFiles> tf;
+    TransferFiles tf;
     TransferFileHandler& tfh;
     bool monitoringMsg;
     string infosys;

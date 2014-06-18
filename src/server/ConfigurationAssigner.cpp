@@ -42,7 +42,7 @@ using namespace fts3::common;
 
 using namespace boost::assign;
 
-ConfigurationAssigner::ConfigurationAssigner(TransferFiles* file) :
+ConfigurationAssigner::ConfigurationAssigner(TransferFiles file) :
     file(file),
     db (DBSingleton::instance().getDBObjectInstance()),
     assign_count(0)
@@ -58,9 +58,9 @@ ConfigurationAssigner::~ConfigurationAssigner()
 void ConfigurationAssigner::assign(vector< boost::shared_ptr<ShareConfig> >& out)
 {
 
-    string source = file->SOURCE_SE;
-    string destination = file->DEST_SE;
-    string vo = file->VO_NAME;
+    string source = file.SOURCE_SE;
+    string destination = file.DEST_SE;
+    string vo = file.VO_NAME;
 
     // possible configurations for SE
     list<cfg_type> se_cfgs = list_of
@@ -127,7 +127,7 @@ void ConfigurationAssigner::assignShareCfg(list<cfg_type> arg, vector< boost::sh
                     // add to out
                     out.push_back(ptr);
                     // add to DB
-                    db->addFileShareConfig(file->FILE_ID, ptr->source, ptr->destination, ptr->vo);
+                    db->addFileShareConfig(file.FILE_ID, ptr->source, ptr->destination, ptr->vo);
                     // a configuration has been assigned
                     assign_count++;
                     // set the respective flags
@@ -165,7 +165,7 @@ void ConfigurationAssigner::assignShareCfg(list<cfg_type> arg, vector< boost::sh
             // add to out
             out.push_back(ptr);
             // add to DB
-            db->addFileShareConfig(file->FILE_ID, ptr->source, ptr->destination, ptr->vo);
+            db->addFileShareConfig(file.FILE_ID, ptr->source, ptr->destination, ptr->vo);
             // a configuration has been assigned
             assign_count++;
             // set the respective flags

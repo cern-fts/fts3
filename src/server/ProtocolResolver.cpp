@@ -40,7 +40,7 @@ using namespace fts3::ws;
 using namespace fts3::common;
 using namespace boost::assign;
 
-ProtocolResolver::ProtocolResolver(TransferFiles* file, vector< boost::shared_ptr<ShareConfig> >& cfgs) :
+ProtocolResolver::ProtocolResolver(TransferFiles file, vector< boost::shared_ptr<ShareConfig> >& cfgs) :
     db(DBSingleton::instance().getDBObjectInstance()),
     file(file),
     cfgs(cfgs),
@@ -152,15 +152,15 @@ optional<ProtocolResolver::protocol> ProtocolResolver::getProtocolCfg(optional< 
     return ret;
 }
 
-optional<ProtocolResolver::protocol> ProtocolResolver::getUserDefinedProtocol(TransferFiles* file)
+optional<ProtocolResolver::protocol> ProtocolResolver::getUserDefinedProtocol(TransferFiles file)
 {
-    if (!file || file->INTERNAL_FILE_PARAMS.empty()) return optional<protocol>();
+    if (file.INTERNAL_FILE_PARAMS.empty()) return optional<protocol>();
 
     // regular expression for extracting protocol parameters
     static const regex re("^nostreams:(\\d+),timeout:(\\d+),buffersize:(\\d+)$");
 
     smatch what;
-    if (!regex_match(file->INTERNAL_FILE_PARAMS, what, re, match_extra)) return optional<protocol>();
+    if (!regex_match(file.INTERNAL_FILE_PARAMS, what, re, match_extra)) return optional<protocol>();
 
     protocol ret;
     ret.nostreams = lexical_cast<int>(what[1]);
@@ -276,8 +276,8 @@ ProtocolResolver::protocol ProtocolResolver::autotune()
 {
     protocol ret;
 
-    string source = file->SOURCE_SE;
-    string destination = file->DEST_SE;
+    string source = file.SOURCE_SE;
+    string destination = file.DEST_SE;
 
     OptimizerSample opt_config;
     DBSingleton::instance().getDBObjectInstance()->fetchOptimizationConfig2(&opt_config, source, destination);

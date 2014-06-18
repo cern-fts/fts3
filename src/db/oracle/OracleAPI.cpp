@@ -543,7 +543,7 @@ void OracleAPI::getVOPairs(std::vector< boost::tuple<std::string, std::string, s
         }
 }
 
-void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles*> >& files)
+void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles> >& files)
 {
     soci::session sql(*connectionPool);
 
@@ -663,7 +663,7 @@ void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, s
                             for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
                                 {
                                     TransferFiles const& tfile = *ti;
-                                    files[tfile.VO_NAME].push_back(new TransferFiles(tfile));
+                                    files[tfile.VO_NAME].push_back(tfile);
                                 }
                         }
                     else
@@ -718,39 +718,19 @@ void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, s
                                     for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
                                         {
                                             TransferFiles const& tfile = *ti;
-                                            files[tfile.VO_NAME].push_back(new TransferFiles(tfile));
+                                            files[tfile.VO_NAME].push_back(tfile);
                                         }
                                 }
                         }
                 }
         }
     catch (std::exception& e)
-        {
-            for (std::map< std::string, std::list<TransferFiles*> >::iterator i = files.begin(); i != files.end(); ++i)
-                {
-                    std::list<TransferFiles*>& l = i->second;
-                    for (std::list<TransferFiles*>::iterator it = l.begin(); it != l.end(); ++it)
-                        {
-                            if(*it)
-                                delete *it;
-                        }
-                    l.clear();
-                }
+        {            
             files.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
-        {
-            for (std::map< std::string, std::list<TransferFiles*> >::iterator i = files.begin(); i != files.end(); ++i)
-                {
-                    std::list<TransferFiles*>& l = i->second;
-                    for (std::list<TransferFiles*>::iterator it = l.begin(); it != l.end(); ++it)
-                        {
-                            if(*it)
-                                delete *it;
-                        }
-                    l.clear();
-                }
+        {            
             files.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
@@ -1031,7 +1011,7 @@ int OracleAPI::getBestNextReplica(soci::session& sql, const std::string & job_id
 }
 
 
-unsigned int OracleAPI::updateFileStatusReuse(TransferFiles* file, const std::string status)
+unsigned int OracleAPI::updateFileStatusReuse(TransferFiles file, const std::string status)
 {
     soci::session sql(*connectionPool);
 
@@ -1045,7 +1025,7 @@ unsigned int OracleAPI::updateFileStatusReuse(TransferFiles* file, const std::st
             soci::statement stmt(sql);
 
             stmt.exchange(soci::use(status, "state"));
-            stmt.exchange(soci::use(file->JOB_ID, "jobId"));
+            stmt.exchange(soci::use(file.JOB_ID, "jobId"));
             stmt.exchange(soci::use(hostname, "hostname"));
             stmt.alloc();
             stmt.prepare("UPDATE t_file SET "
@@ -1060,7 +1040,7 @@ unsigned int OracleAPI::updateFileStatusReuse(TransferFiles* file, const std::st
                 {
                     soci::statement jobStmt(sql);
                     jobStmt.exchange(soci::use(status, "state"));
-                    jobStmt.exchange(soci::use(file->JOB_ID, "jobId"));
+                    jobStmt.exchange(soci::use(file.JOB_ID, "jobId"));
                     jobStmt.alloc();
                     jobStmt.prepare("UPDATE t_job SET "
                                     "    job_state = :state "
@@ -1086,7 +1066,7 @@ unsigned int OracleAPI::updateFileStatusReuse(TransferFiles* file, const std::st
 
 
 
-unsigned int OracleAPI::updateFileStatus(TransferFiles* file, const std::string status)
+unsigned int OracleAPI::updateFileStatus(TransferFiles file, const std::string status)
 {
     soci::session sql(*connectionPool);
 
@@ -1099,7 +1079,7 @@ unsigned int OracleAPI::updateFileStatus(TransferFiles* file, const std::string 
             soci::statement stmt(sql);
 
             stmt.exchange(soci::use(status, "state"));
-            stmt.exchange(soci::use(file->FILE_ID, "fileId"));
+            stmt.exchange(soci::use(file.FILE_ID, "fileId"));
             stmt.exchange(soci::use(hostname, "hostname"));
             stmt.alloc();
             stmt.prepare("UPDATE t_file SET "
@@ -1113,7 +1093,7 @@ unsigned int OracleAPI::updateFileStatus(TransferFiles* file, const std::string 
                 {
                     soci::statement jobStmt(sql);
                     jobStmt.exchange(soci::use(status, "state"));
-                    jobStmt.exchange(soci::use(file->JOB_ID, "jobId"));
+                    jobStmt.exchange(soci::use(file.JOB_ID, "jobId"));
                     jobStmt.alloc();
                     jobStmt.prepare("UPDATE t_job SET "
                                     "    job_state = :state "
@@ -1138,7 +1118,7 @@ unsigned int OracleAPI::updateFileStatus(TransferFiles* file, const std::string 
 }
 
 
-void OracleAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files)
+void OracleAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles> >& files)
 {
     soci::session sql(*connectionPool);
 
@@ -1177,35 +1157,17 @@ void OracleAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std:
                     for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
                         {
                             TransferFiles const& tfile = *ti;
-                            files[tfile.VO_NAME].push_back(new TransferFiles(tfile));
+                            files[tfile.VO_NAME].push_back(tfile);
                         }
                 }
         }
     catch (std::exception& e)
-        {
-            for (std::map< std::string, std::list<TransferFiles*> >::iterator i = files.begin(); i != files.end(); ++i)
-                {
-                    std::list<TransferFiles*>& l = i->second;
-                    for (std::list<TransferFiles*>::iterator it = l.begin(); it != l.end(); ++it)
-                        {
-                            delete *it;
-                        }
-                    l.clear();
-                }
+        {            
             files.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
-        {
-            for (std::map< std::string, std::list<TransferFiles*> >::iterator i = files.begin(); i != files.end(); ++i)
-                {
-                    std::list<TransferFiles*>& l = i->second;
-                    for (std::list<TransferFiles*>::iterator it = l.begin(); it != l.end(); ++it)
-                        {
-                            delete *it;
-                        }
-                    l.clear();
-                }
+        {            
             files.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }

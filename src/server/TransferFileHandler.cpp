@@ -30,13 +30,13 @@ namespace fts3
 namespace server
 {
 
-map< string, set<string> >& TransferFileHandler::getMapFromCache(map< string, list<TransferFiles*> >& files, GET_MAP_OPTS opt)
+map< string, set<string> >& TransferFileHandler::getMapFromCache(map< string, list<TransferFiles> >& files, GET_MAP_OPTS opt)
 {
     if (init_cache.empty())
         {
             init_cache.resize(4); // there are four maps
 
-            map<string, list<TransferFiles*> >::iterator it_v;
+            map<string, list<TransferFiles> >::iterator it_v;
 
             map< string, set<FileIndex> > unique;
 
@@ -48,21 +48,21 @@ map< string, set<string> >& TransferFileHandler::getMapFromCache(map< string, li
                     // unique vo names
                     vos.insert(vo);
                     // ref to the list of files (for the given VO)
-                    list<TransferFiles*>& tfs = it_v->second;
-                    list<TransferFiles*>::iterator it_tf;
+                    list<TransferFiles>& tfs = it_v->second;
+                    list<TransferFiles>::iterator it_tf;
                     // iterate over all files in a given VO
                     for (it_tf = tfs.begin(); it_tf != tfs.end(); ++it_tf)
                         {
 
-                            TransferFiles* tmp = *it_tf;
+                            TransferFiles tmp = *it_tf;
 
-                            init_cache[SOURCE_TO_DESTINATIONS][tmp->SOURCE_SE].insert(tmp->DEST_SE);
-                            init_cache[SOURCE_TO_VOS][tmp->SOURCE_SE].insert(tmp->VO_NAME);
-                            init_cache[DESTINATION_TO_SOURCES][tmp->DEST_SE].insert(tmp->SOURCE_SE);
-                            init_cache[DESTINATION_TO_VOS][tmp->DEST_SE].insert(tmp->VO_NAME);
+                            init_cache[SOURCE_TO_DESTINATIONS][tmp.SOURCE_SE].insert(tmp.DEST_SE);
+                            init_cache[SOURCE_TO_VOS][tmp.SOURCE_SE].insert(tmp.VO_NAME);
+                            init_cache[DESTINATION_TO_SOURCES][tmp.DEST_SE].insert(tmp.SOURCE_SE);
+                            init_cache[DESTINATION_TO_VOS][tmp.DEST_SE].insert(tmp.VO_NAME);
 
                             // create index (job ID + file index)
-                            FileIndex index((*it_tf)->JOB_ID, tmp->FILE_INDEX);
+                            FileIndex index((*it_tf).JOB_ID, tmp.FILE_INDEX);
                             // file index to files mapping
                             fileIndexToFiles[index].push_back(tmp);
                             // check if the mapping for the VO already exists
@@ -70,7 +70,7 @@ map< string, set<string> >& TransferFileHandler::getMapFromCache(map< string, li
                                 {
                                     // if not creat it
                                     unique[vo].insert(index);
-                                    voToFileIndexes[it_v->first][make_pair(tmp->SOURCE_SE, tmp->DEST_SE)].push_back(index);
+                                    voToFileIndexes[it_v->first][make_pair(tmp.SOURCE_SE, tmp.DEST_SE)].push_back(index);
                                 }
                         }
 
@@ -82,7 +82,7 @@ map< string, set<string> >& TransferFileHandler::getMapFromCache(map< string, li
 }
 
 
-TransferFileHandler::TransferFileHandler(map< string, list<TransferFiles*> >& files) :
+TransferFileHandler::TransferFileHandler(map< string, list<TransferFiles> >& files) :
     sourceToDestinations(getMapFromCache(files, SOURCE_TO_DESTINATIONS)),
     sourceToVos(getMapFromCache(files, SOURCE_TO_VOS)),
     destinationToSources(getMapFromCache(files, DESTINATION_TO_SOURCES)),
@@ -94,21 +94,23 @@ TransferFileHandler::TransferFileHandler(map< string, list<TransferFiles*> >& fi
 
 TransferFileHandler::~TransferFileHandler()
 {
-    map< FileIndex, list<TransferFiles*> >::iterator it;
+    map< FileIndex, list<TransferFiles> >::iterator it;
     for (it = fileIndexToFiles.begin(); it != fileIndexToFiles.end(); ++it)
         {
             freeList(it->second);
         }
 }
 
-TransferFiles* TransferFileHandler::get(string vo)
+TransferFiles TransferFileHandler::get(string vo)
 {
+   TransferFiles ret;
+
     // get the index of the next File in turn for the VO
     optional<FileIndex> index = getIndex(vo);
     // if the index exists return the file
     if (index) return getFile(*index);
-    // otherwise return null
-    return 0;
+
+    return ret;
 }
 
 optional< pair<string, string> > TransferFileHandler::getNextPair(string vo)
@@ -158,15 +160,13 @@ optional<FileIndex> TransferFileHandler::getIndex(string vo)
     return index;
 }
 
-TransferFiles* TransferFileHandler::getFile(FileIndex index)
+TransferFiles TransferFileHandler::getFile(FileIndex index)
 {
-
+  // the return value
+    TransferFiles ret;
 
     // if there's no mapping for this index ..
-    if (fileIndexToFiles.find(index) == fileIndexToFiles.end()) return 0;
-
-    // the return value
-    TransferFiles* ret = 0;
+    if (fileIndexToFiles.find(index) == fileIndexToFiles.end()) return ret;  
 
     if (!fileIndexToFiles[index].empty())
         {
@@ -179,17 +179,8 @@ TransferFiles* TransferFileHandler::getFile(FileIndex index)
     return ret;
 }
 
-void TransferFileHandler::freeList(list<TransferFiles*>& l)
-{
-    // iterate over the list
-    list<TransferFiles*>::iterator it;
-    for (it = l.begin(); it != l.end(); ++it)
-        {
-            // and release the memory
-            if(*it)
-                delete *it;
-        }
-    // clear the list
+void TransferFileHandler::freeList(list<TransferFiles>& l)
+{    
     l.clear();
 }
 

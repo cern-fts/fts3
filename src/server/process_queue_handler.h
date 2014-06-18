@@ -196,7 +196,6 @@ public:
 protected:
 
     std::vector<struct message> messages;
-    boost::thread_group g;
     std::string enableOptimization;
     std::map<int, struct message_log> messagesLog;
     std::vector<struct message_updater> messagesUpdater;
@@ -322,6 +321,8 @@ protected:
 
                         if(!messages.empty())
                             {
+			          boost::thread_group g;
+				  
                                         std::size_t const half_size1 = messages.size() / 2;
                                         std::vector<struct message> split_1(messages.begin(), messages.begin() + half_size1);
                                         std::vector<struct message> split_2(messages.begin() + half_size1, messages.end());
@@ -333,24 +334,14 @@ protected:
                                         std::size_t const half_size3 = split_2.size() / 2;
                                         std::vector<struct message> split_12(split_2.begin(), split_2.begin() + half_size3);
                                         std::vector<struct message> split_22(split_2.begin() + half_size3, split_2.end());
-
-                                        boost::thread t1(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_11)));
-                                        boost::thread t2(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_21)));
-                                        boost::thread t3(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_12)));
-                                        boost::thread t4(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_22)));
-
-                                        g.add_thread(&t1);
-                                        g.add_thread(&t2);
-                                        g.add_thread(&t3);
-                                        g.add_thread(&t4);					
+                                       
+                                        g.create_thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_11)));
+                                        g.create_thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_21)));
+                                        g.create_thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_12)));
+                                        g.create_thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_22)));			
 
                                         // wait for them
-                                        g.join_all();
-					
-					g.remove_thread(&t1);
-					g.remove_thread(&t2);					
-					g.remove_thread(&t3);					
-					g.remove_thread(&t4);														
+                                        g.join_all();																						
                                 
                                 messages.clear();
                             }
