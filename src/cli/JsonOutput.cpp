@@ -65,22 +65,12 @@ void JsonOutput::printArray(std::string const path, pt::ptree const & obj)
 
     if (child.is_initialized())
         {
-            child.get().push_back(
-                pt::ptree::value_type(
-                    "",
-                    obj
-                )
-            );
+            child.get().push_back(std::make_pair("", obj));
         }
     else
         {
             pt::ptree new_child;
-            new_child.push_back(
-                pt::ptree::value_type(
-                    "",
-                    obj
-                )
-            );
+            new_child.push_back(std::make_pair("", obj));
             instance->json_out.put_child(path, new_child);
         }
 }

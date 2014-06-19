@@ -522,15 +522,15 @@ void MsgPrinter::print(std::string job_id, std::vector<tns3__DetailedFileStatus 
 	// add each file status to array
 	std::vector<tns3__DetailedFileStatus *>::const_iterator it;
 	for (it = v.begin(); it != v.end(); ++it)
-	{
-		tns3__DetailedFileStatus& stat = **it;
-		ptree item;
-		item.put("file_id", boost::lexical_cast<std::string>(stat.fileId));
-		item.put("state", stat.fileState);
-		item.put("source_surl", stat.sourceSurl);
-		item.put("dest_surl", stat.destSurl);
-        array.push_back(std::make_pair("", item));
-	}
+		{
+			tns3__DetailedFileStatus& stat = **it;
+			ptree item;
+			item.put("file_id", boost::lexical_cast<std::string>(stat.fileId));
+			item.put("state", stat.fileState);
+			item.put("source_surl", stat.sourceSurl);
+			item.put("dest_surl", stat.destSurl);
+			array.push_back(std::make_pair("", item));
+		}
 	// add the array to the JSON object
     object.put_child("files", array);
 	// print the JSON object
