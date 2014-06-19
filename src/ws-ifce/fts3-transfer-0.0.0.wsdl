@@ -86,6 +86,22 @@
     </sequence>
    </complexType>
    
+   <complexType name="DetailedFileStatus">
+    <sequence>
+     <element name="jobId" nillable="false" type="xsd:string"/>
+     <element name="sourceSurl" nillable="false" type="xsd:string"/>
+     <element name="destSurl" nillable="false" type="xsd:string"/>
+     <element name="fileId" nillable="false" type="xsd:int"/>
+     <element name="fileState" nillable="false" type="xsd:string"/>
+    </sequence>
+   </complexType>
+   
+   <complexType name="DetailedJobStatus">
+    <sequence>
+     <element maxOccurs="unbounded" name="transferStatus" nillable="false" type="tns3:DetailedFileStatus"/>
+    </sequence>
+   </complexType>   
+   
    <complexType name="TransferJob2">
     <sequence>
      <element maxOccurs="unbounded" name="transferJobElements" nillable="true" type="tns3:TransferJobElement2"/>
@@ -386,6 +402,14 @@
    </message> 
    
    <message name="blacklistSeResponse"/>
+   
+   <message name="detailedJobStatusRequest">
+      <part name="job_id" type="xsd:string"/>
+   </message>
+   
+   <message name="detailedJobStatusResponse">
+      <part name="detailedJobStatus" type="tns3:DetailedJobStatus"/>
+   </message>   
 
    <message name="getTransferJobSummary2Response">
 
@@ -833,6 +857,22 @@
          <fault message="impl:InternalException" name="InternalException"/>
          
       </operation>
+      
+    <operation name="detailedJobStatus" parameterOrder="detailedJobStatus">
+      
+         <input message="impl:detailedJobStatusRequest" name="detailedJobStatusRequest"/>
+
+         <output message="impl:detailedJobStatusResponse" name="detailedJobStatusResponse"/>
+      
+         <fault message="impl:AuthorizationException" name="AuthorizationException"/>
+
+         <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
+
+         <fault message="impl:InvalidArgumentException" name="InvalidArgumentException"/>
+
+         <fault message="impl:InternalException" name="InternalException"/>
+         
+      </operation>      
 
       <operation name="listRequests" parameterOrder="inGivenStates">
 
@@ -1517,7 +1557,49 @@
 
          </fault>
 
-      </operation>      
+      </operation>     
+      
+      <operation name="detailedJobStatus">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <input name="detailedJobStatusRequest">
+
+            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
+
+         </input>
+
+         <output name="detailedJobStatusResponse">
+
+            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
+
+         </output>
+
+         <fault name="AuthorizationException">
+
+            <wsdlsoap:fault name="AuthorizationException" use="literal"/>
+
+         </fault>
+
+         <fault name="ServiceBusyException">
+
+            <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
+
+         </fault>
+
+         <fault name="InvalidArgumentException">
+
+            <wsdlsoap:fault name="InvalidArgumentException" use="literal"/>
+
+         </fault>
+
+         <fault name="InternalException">
+
+            <wsdlsoap:fault name="InternalException" use="literal"/>
+
+         </fault>
+
+      </operation>         
 
       <operation name="listRequests">
 

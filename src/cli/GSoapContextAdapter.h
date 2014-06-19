@@ -349,6 +349,8 @@ public:
 
     std::string getSnapShot(string vo, string src, string dst);
 
+    tns3__DetailedJobStatus* getDetailedJobStatus(string job_id);
+
     ///@{
     /**
      * A group of methods returning details about interface version of the FTS3 service

@@ -27,6 +27,8 @@
 
 #include "TransferTypes.h"
 
+#include "ws-ifce/gsoap/gsoap_stubs.h"
+
 #include <string>
 #include <vector>
 #include <map>
@@ -102,6 +104,9 @@ private:
 
     static void print_cout(JobStatus const & j);
     static void print_json(JobStatus const & j);
+
+    static void print_cout(tns3__DetailedFileStatus * const & status);
+    static void print_json(tns3__DetailedFileStatus * const & status);
 
     ///
     static bool verbose;
