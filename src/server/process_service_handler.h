@@ -205,6 +205,53 @@ protected:
             {
                 //now get files to be scheduled
                 DBSingleton::instance().getDBObjectInstance()->getByJobId(distinct, voQueues);
+		
+		 // create transfer-file handler
+                        TransferFileHandler tfh(voQueues);
+
+                        // the worker thread pool
+                        ExecutorPool<FileTransferExecutor> execPool(execPoolSize);
+
+                        // loop until all files have been served
+
+                        int initial_size = tfh.size();
+
+
+                        while (!tfh.empty())
+                            {
+                                PROFILE_SCOPE("executeUrlcopy::while[!reuse]");
+
+                                // iterate over all VOs
+                                set<string>::iterator it_vo;
+                                for (it_vo = tfh.begin(); it_vo != tfh.end(); it_vo++)
+                                    {
+                                        if (stopThreads)
+                                            {
+                                                execPool.stop();
+                                                return;
+                                            }
+
+                                        TransferFiles tf = tfh.get(*it_vo);
+
+                                        
+                                                FileTransferExecutor* exec = new FileTransferExecutor(
+                                                    tf,
+                                                    tfh,
+                                                    monitoringMessages,
+                                                    infosys,
+                                                    ftsHostName
+                                                );
+
+                                                execPool.add(exec);
+                                        
+                                    }
+                            }
+
+                        // wait for all the workers to finish
+                        execPool.join();
+			
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Threadpool processed: " << initial_size << " files (" << execPool.executed() << " have been scheduled)" << commit;					
+		
             }
         catch (std::exception& e)
             {
@@ -214,22 +261,7 @@ protected:
             {
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler!" << commit;
             }
-    }    
-    
-    
-    void copyMap(std::map< std::string, std::list<TransferFiles> >& tovoQueues, std::map< std::string, std::list<TransferFiles> >& fromvoQueues)
-    {
-	for (std::map< std::string, std::list<TransferFiles> >::iterator i = fromvoQueues.begin(); i != fromvoQueues.end(); ++i)
-			 {
-			    std::list<TransferFiles>& l = i->second;
-	                    for (std::list<TransferFiles>::iterator it = l.begin(); it != l.end(); ++it)
-	                        {
-	            			TransferFiles tfile = *it;
-                    			tovoQueues[tfile.VO_NAME].push_back(tfile);
-				}                   
-                	}			
-				    
-    }
+    }              
 
     void executeUrlcopy(std::vector<TransferJobs*>& jobsReuse2, bool reuse)
     {
@@ -280,68 +312,14 @@ protected:
                         g.create_thread(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_22), boost::ref(voQueues4)));
 						
                         // wait for them
-                        g.join_all();
-						
-			copyMap(voQueues, voQueues1);
-			copyMap(voQueues, voQueues2);
-			copyMap(voQueues, voQueues3);
-			copyMap(voQueues, voQueues4);																
-						
-                        if(voQueues.empty())
-                            return;
-			    
-                        // create transfer-file handler
-                        TransferFileHandler tfh(voQueues);
-
-                        // the worker thread pool
-                        ExecutorPool<FileTransferExecutor> execPool(execPoolSize);
-
-                        // loop until all files have been served
-
-                        int initial_size = tfh.size();
-
-
-                        while (!tfh.empty())
-                            {
-                                PROFILE_SCOPE("executeUrlcopy::while[!reuse]");
-
-                                // iterate over all VOs
-                                set<string>::iterator it_vo;
-                                for (it_vo = tfh.begin(); it_vo != tfh.end(); it_vo++)
-                                    {
-                                        if (stopThreads)
-                                            {
-                                                execPool.stop();
-                                                return;
-                                            }
-
-                                        TransferFiles tf = tfh.get(*it_vo);
-
-                                        
-                                                FileTransferExecutor* exec = new FileTransferExecutor(
-                                                    tf,
-                                                    tfh,
-                                                    monitoringMessages,
-                                                    infosys,
-                                                    ftsHostName
-                                                );
-
-                                                execPool.add(exec);
-                                        
-                                    }
-                            }
-
-                        // wait for all the workers to finish
-                        execPool.join();
-			
+                        g.join_all();																															
+			                           			
 			voQueues1.clear();
 			voQueues2.clear();
 			voQueues3.clear();
 			voQueues4.clear();			
 			voQueues.clear();
 			distinct.clear();		
-
-                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Threadpool processed: " << initial_size << " files (" << execPool.executed() << " have been scheduled)" << commit;
                     }
                 else     /*reuse session*/
                     {

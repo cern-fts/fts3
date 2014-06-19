@@ -432,7 +432,7 @@ void MsgPrinter::print_json(tns3__DetailedFileStatus * const & status)
 			("dest_surl", status->destSurl)
 			;
 
-	JsonOutput::printArray("job", object);
+	JsonOutput::printArray("job.files", object);
 }
 
 void MsgPrinter::job_summary(JobSummary js)
