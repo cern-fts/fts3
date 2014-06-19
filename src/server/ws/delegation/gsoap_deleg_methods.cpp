@@ -136,10 +136,13 @@ int fts3::delegation__putProxy(struct soap* soap, std::string _delegationID, std
             handler.putProxy(_delegationID, _proxy);
 
         }
+    catch (Err_Transient& ex)
+		{
+			FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+		}
     catch (Err& ex)
         {
-            string msg = ex.what();
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << msg << commit;
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
             soap_receiver_fault(soap, ex.what(), "DelegationException");
             return SOAP_FAULT;
         }

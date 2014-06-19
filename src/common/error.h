@@ -171,5 +171,12 @@ private:
     std::string _desc;
 };
 
+/** An error that is transient and should not be propagated to the user.*/
+class Err_Transient : public Err_Custom
+{
+public:
+	Err_Transient(const std::string& aDesc) : Err_Custom(aDesc) {}
+};
+
 FTS3_COMMON_NAMESPACE_END
 
