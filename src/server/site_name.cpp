@@ -60,6 +60,7 @@ std::string SiteName::getSiteName(std::string& hostname)
         return site;
     else
         return std::string("");
+	
 }
 
 
