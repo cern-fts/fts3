@@ -60,7 +60,7 @@ bool TransferStatusCli::validate()
             return false;
         }
 
-    if (vm.count("p") && vm.size() > 2)
+    if (vm.count("p") && vm.size() > 3)
     	throw bad_option("p", "this option cannot be used together with other options!");
 
     return true;
