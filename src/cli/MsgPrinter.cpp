@@ -417,24 +417,6 @@ void MsgPrinter::print_json(JobStatus const & j)
     JsonOutput::printArray("job", object);
 }
 
-void MsgPrinter::print_cout(tns3__DetailedFileStatus * const & status)
-{
-	print_json(status);
-}
-
-void MsgPrinter::print_json(tns3__DetailedFileStatus * const & status)
-{
-	map<string, string> object = map_list_of
-			("job_id", status->jobId)
-			("file_id", lexical_cast<string>(status->fileId))
-			("file_state", status->fileState)
-			("source_surl", status->sourceSurl)
-			("dest_surl", status->destSurl)
-			;
-
-	JsonOutput::printArray("job.files", object);
-}
-
 void MsgPrinter::job_summary(JobSummary js)
 {
 
@@ -525,6 +507,34 @@ void MsgPrinter::file_list(vector<string> values, vector<string> retries)
         }
 
     JsonOutput::printArray("job.files", file);
+}
+
+void MsgPrinter::print(std::string job_id, std::vector<tns3__DetailedFileStatus *> const & v)
+{
+	// make sure the vector is not empty
+	if (v.empty()) return;
+	// create the JSON object
+	ptree object;
+	// add job ID
+	object.put("job_id", job_id);
+	// create array element
+    pt::ptree array;
+	// add each file status to array
+	std::vector<tns3__DetailedFileStatus *>::const_iterator it;
+	for (it = v.begin(); it != v.end(); ++it)
+	{
+		tns3__DetailedFileStatus& stat = **it;
+		ptree item;
+		item.put("file_id", boost::lexical_cast<std::string>(stat.fileId));
+		item.put("state", stat.fileState);
+		item.put("source_surl", stat.sourceSurl);
+		item.put("dest_surl", stat.destSurl);
+        array.push_back(std::make_pair("", item));
+	}
+	// add the array to the JSON object
+    object.put_child("files", array);
+	// print the JSON object
+	JsonOutput::printArray("jobs", object);
 }
 
 MsgPrinter::MsgPrinter(ostream& /*out*/): json(false)

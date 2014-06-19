@@ -100,7 +100,7 @@ int main(int ac, char* av[])
             		for (it = ids.begin(); it != ids.end(); ++it)
             			{
             				tns3__DetailedJobStatus* ptr = ctx.getDetailedJobStatus(*it);
-            				cli->printer().print(ptr->transferStatus);
+            				cli->printer().print(*it, ptr->transferStatus);
             			}
 
             		return 0;
