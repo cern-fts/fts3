@@ -203,10 +203,13 @@ protected:
     {
         try
             {
+	        if(distinct.empty())
+			return;
+	    
                 //now get files to be scheduled
                 DBSingleton::instance().getDBObjectInstance()->getByJobId(distinct, voQueues);
 		
-		if(distinct.empty() || voQueues.empty())
+		if(voQueues.empty())
 			return;
 		
 		 // create transfer-file handler
