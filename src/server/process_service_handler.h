@@ -206,6 +206,9 @@ protected:
                 //now get files to be scheduled
                 DBSingleton::instance().getDBObjectInstance()->getByJobId(distinct, voQueues);
 		
+		if(distinct.empty() || voQueues.empty())
+			return;
+		
 		 // create transfer-file handler
                         TransferFileHandler tfh(voQueues);
 
