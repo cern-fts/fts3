@@ -613,6 +613,17 @@ std::string GSoapContextAdapter::getSnapShot(string vo, string src, string dst)
     return resp._result;
 }
 
+tns3__DetailedJobStatus* GSoapContextAdapter::getDetailedJobStatus(string job_id)
+{
+	impltns__detailedJobStatusResponse resp;
+	if (soap_call_impltns__detailedJobStatus(ctx, endpoint.c_str(), 0, job_id, resp))
+		{
+			handleSoapFault("Operation failed.");
+		}
+
+	return resp._detailedJobStatus;
+}
+
 void GSoapContextAdapter::handleSoapFault(string /*msg*/)
 {
     throw gsoap_error(ctx);

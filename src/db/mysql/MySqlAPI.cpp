@@ -2020,10 +2020,10 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
 
 
             if(file_id == 0 && transfer_status == "FAILED")
-                sql <<  "select file_id from t_file where pid=:pid and job_finished is NULL",soci::use(process_id), soci::into(file_id);
+                sql <<  "select file_id from t_file where pid=:pid and job_finished is NULL and file_state in ('READY','ACTIVE') ",soci::use(process_id), soci::into(file_id);
 
             if(job_id.empty() && transfer_status == "FAILED")
-                sql <<  "select job_id from t_file where pid=:pid and job_finished is NULL",soci::use(process_id), soci::into(job_id);
+                sql <<  "select job_id from t_file where pid=:pid and job_finished is NULL and file_state in ('READY','ACTIVE') ",soci::use(process_id), soci::into(job_id);
 
 
             // query for the file state in DB
@@ -2196,7 +2196,8 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
             soci::indicator isNull = soci::i_ok;
 
             if(job_id.empty())
-                sql << " SELECT job_id from t_file where pid=:pid and job_finished is NOT NULL",soci::use(pid), soci::into(job_id);
+                sql << " SELECT job_id from t_file where pid=:pid and transferhost=:hostname and file_state in ('FINISHED','FAILED') ",
+			soci::use(pid),soci::use(hostname),soci::into(job_id);
 
             soci::statement stmt1 = (
                                         sql.prepare << " SELECT job_state, reuse_job from t_job  "
@@ -4138,7 +4139,7 @@ bool MySqlAPI::terminateReuseProcess(const std::string & jobId, int pid, const s
         {
             if(jobId.length() == 0)
                 {
-                    sql << " SELECT job_id from t_file where pid=:pid and job_finished is NULL LIMIT 1",
+                    sql << " SELECT job_id from t_file where pid=:pid and job_finished is NULL and file_state in ('READY','ACTIVE') LIMIT 1",
                         soci::use(pid), soci::into(job_id);
 
                     sql << " SELECT reuse_job FROM t_job WHERE job_id = :jobId AND reuse_job IS NOT NULL",

@@ -25,6 +25,9 @@
  */
 
 #include "TransferStatusCli.h"
+
+#include "exception/bad_option.h"
+
 #include <vector>
 
 using namespace fts3::cli;
@@ -35,6 +38,7 @@ TransferStatusCli::TransferStatusCli()
     // add fts3-transfer-status specific options
     specific.add_options()
     ("list,l", "List status for all files.")
+    ("p,p", "Get detailed status including file ID (JSON format only)")
     ("archive,a", "Query the archive.")
     ("detailed,d", "Retrieve details (i.e. transfer retries)")
     ("dump-failed,F", "Dump failed transfers into a file that can be used as input for submission")
@@ -55,6 +59,9 @@ bool TransferStatusCli::validate()
             printer().missing_parameter("Request ID");
             return false;
         }
+
+    if (vm.count("p") && vm.size() > 2)
+    	throw bad_option("p", "this option cannot be used together with other options!");
 
     return true;
 }
@@ -80,4 +87,9 @@ bool TransferStatusCli::dumpFailed()
 bool TransferStatusCli::detailed()
 {
     return vm.count("detailed");
+}
+
+bool TransferStatusCli::p()
+{
+    return vm.count("p");
 }

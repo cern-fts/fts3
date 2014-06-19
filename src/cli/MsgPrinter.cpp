@@ -417,6 +417,24 @@ void MsgPrinter::print_json(JobStatus const & j)
     JsonOutput::printArray("job", object);
 }
 
+void MsgPrinter::print_cout(tns3__DetailedFileStatus * const & status)
+{
+	print_json(status);
+}
+
+void MsgPrinter::print_json(tns3__DetailedFileStatus * const & status)
+{
+	map<string, string> object = map_list_of
+			("job_id", status->jobId)
+			("file_id", lexical_cast<string>(status->fileId))
+			("file_state", status->fileState)
+			("source_surl", status->sourceSurl)
+			("dest_surl", status->destSurl)
+			;
+
+	JsonOutput::printArray("job", object);
+}
+
 void MsgPrinter::job_summary(JobSummary js)
 {
 

@@ -98,6 +98,11 @@ public:
      * If true, be more detailed
      */
     bool detailed();
+
+    /**
+     * true if p option was used, false otherwise
+     */
+    bool p();
 };
 
 }
