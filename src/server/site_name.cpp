@@ -40,7 +40,7 @@ SiteName::~SiteName()
 
 std::string SiteName::getSiteName(std::string& hostname)
 {
-
+/*
     std::string se;
     char *base_scheme = NULL;
     char *base_host = NULL;
@@ -60,6 +60,7 @@ std::string SiteName::getSiteName(std::string& hostname)
         return site;
     else
         return std::string("");
+*/	
 }
 
 

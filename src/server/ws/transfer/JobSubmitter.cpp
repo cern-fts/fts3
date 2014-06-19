@@ -428,7 +428,7 @@ void JobSubmitter::checkProtocol(string file, bool source)
 string JobSubmitter::fileUrlToSeName(string url, bool source)
 {
     checkValidUrl(url);
-    checkProtocol(url, source);
+    //checkProtocol(url, source);
 
     smatch what;
     if (regex_match(url, what, fileUrlRegex, match_extra))

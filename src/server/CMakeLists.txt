@@ -27,7 +27,7 @@ include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/url-copy/)
 include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/db/generic/)
 include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/common/)
 include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/config/)
-include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/infosys/)
+#include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/infosys/)
 include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/cred/)
 include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/ws-ifce/)
 include_directories (BEFORE ${PROJECT_BINARY_DIR}/src/ws-ifce/)
@@ -84,7 +84,7 @@ target_link_libraries(fts_server ${fts_libs} fts_server_lib fts_proxy fts_config
                                  fts_common fts_db_generic
                                  fts_server_gsoap_transfer -lgsoap++
                                  fts_ws_ifce_server fts_ws_ifce_client
-                                 fts_profiler fts_infosys
+                                 fts_profiler
                                  ${Boost_LIBRARIES})
 
 # ------------------------------------------------------------------------
