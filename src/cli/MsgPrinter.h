@@ -68,7 +68,6 @@ public:
 
     void version(string version); //
 
-    void bulk_submission_error(int line, string msg); //
     void error_msg(string msg); //
 
     template<typename T>

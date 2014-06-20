@@ -245,19 +245,6 @@ void MsgPrinter::print_json(std::pair<std::string, std::string> const & id_statu
     JsonOutput::printArray("job", m);
 }
 
-void MsgPrinter::bulk_submission_error(int line, string msg)
-{
-
-    if (!json)
-        {
-            cout << "submit: in line " << line << ": " << msg << endl;
-            return;
-        }
-
-    JsonOutput::print("error.line", lexical_cast<string>(line));
-    JsonOutput::print("error.message", msg);
-}
-
 void MsgPrinter::version(string version)
 {
 
