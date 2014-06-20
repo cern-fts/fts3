@@ -331,48 +331,6 @@ void MsgPrinter::error_msg(string msg)
     JsonOutput::print("error.message", msg);
 }
 
-void MsgPrinter::gsoap_error_msg(string msg)
-{
-    // remove backspaces if any in the string
-    string::size_type  pos;
-    while((pos = msg.find(8)) != string::npos)
-        {
-            msg.erase(pos, 1);
-        }
-
-
-    pos = msg.find("\"\nDetail: ", 0);
-
-//	regex re (".*\"(.+)\"\nDetail: (.+)\n");
-
-    if (pos == string::npos)
-        {
-            error_msg(msg);
-            return;
-        }
-
-    if (!json)
-        {
-            cout << "error: " << msg << endl;
-            return;
-        }
-
-    string detail = msg.substr(pos + 10);
-    string::size_type size = detail.size();
-    if (detail[size - 1] == '\n') detail = detail.substr(0, size - 1);
-
-    pos = msg.find("\"");
-    string err_msg;
-    if (pos != string::npos) err_msg = msg.substr(pos + 1);
-    pos = msg.find("\"");
-    if (pos != string::npos) err_msg = msg.substr(0, pos);
-    size = err_msg.size();
-    if (err_msg[size - 1] == '\n') err_msg = err_msg.substr(0, size - 1);
-
-    JsonOutput::print("error.message", err_msg);
-    JsonOutput::print("error.detail", detail);
-}
-
 void MsgPrinter::print_cout(JobStatus const & j)
 {
     cout << "Request ID: " << j.jobId << endl;

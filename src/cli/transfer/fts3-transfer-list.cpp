@@ -128,7 +128,7 @@ int main(int ac, char* av[])
     catch(std::exception& ex)
         {
             if (cli.get())
-                cli->printer().gsoap_error_msg(ex.what());
+                cli->printer().error_msg(ex.what());
             else
                 std::cerr << ex.what() << std::endl;
             return 1;

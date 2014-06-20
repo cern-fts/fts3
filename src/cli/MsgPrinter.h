@@ -72,7 +72,6 @@ public:
     void wrong_endpoint_format(string endpoint); //
     void missing_parameter(string name);
     void error_msg(string msg); //
-    void gsoap_error_msg(string msg); //
 
     template<typename T>
     void print(std::vector<T> const & v);
