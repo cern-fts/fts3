@@ -258,18 +258,6 @@ void MsgPrinter::bulk_submission_error(int line, string msg)
     JsonOutput::print("error.message", msg);
 }
 
-void MsgPrinter::wrong_endpoint_format(string endpoint)
-{
-
-    if (!json)
-        {
-            cout << "wrongly formated endpoint: " << endpoint << endl;
-            return;
-        }
-
-    JsonOutput::print("wrong_format.endpoint", endpoint);
-}
-
 void MsgPrinter::version(string version)
 {
 

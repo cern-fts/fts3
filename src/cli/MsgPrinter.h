@@ -69,7 +69,6 @@ public:
     void version(string version); //
 
     void bulk_submission_error(int line, string msg); //
-    void wrong_endpoint_format(string endpoint); //
     void error_msg(string msg); //
 
     template<typename T>
