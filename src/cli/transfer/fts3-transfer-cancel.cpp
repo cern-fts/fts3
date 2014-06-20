@@ -93,11 +93,7 @@ int main(int ac, char* av[])
 
             vector<string> jobs = cli->getJobIds();
 
-            if (jobs.empty())
-                {
-                    cli->printer().missing_parameter("Job ID");
-                    return 0;
-                }
+            if (jobs.empty()) throw bad_option("jobid", "missing parameter");
 
             vector< pair<string, string> > ret = ctx.cancel(jobs);
             cli->printer().print(ret);

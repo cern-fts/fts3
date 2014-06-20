@@ -245,18 +245,6 @@ void MsgPrinter::print_json(std::pair<std::string, std::string> const & id_statu
     JsonOutput::printArray("job", m);
 }
 
-void MsgPrinter::missing_parameter(string name)
-{
-
-    if (!json)
-        {
-            cout << "missing parameter: " << name << endl;
-            return;
-        }
-
-    JsonOutput::print("error.missing_parameter", name);
-}
-
 void MsgPrinter::bulk_submission_error(int line, string msg)
 {
 
