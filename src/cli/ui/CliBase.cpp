@@ -111,7 +111,10 @@ void CliBase::parse(int ac, char* av[])
             endpoint = vm["service"].as<string>();
             // check if the endpoint has the right prefix
             if (endpoint.find("http") != 0 && endpoint.find("https") != 0 && endpoint.find("httpd") != 0)
-            	throw bad_option("service", "wrong endpoint format");
+            	{
+            		std::string msg =  "wrong endpoint format ('" + endpoint + "')";
+            		throw bad_option("service", msg);
+            	}
         }
     else
         {

@@ -50,14 +50,12 @@ using namespace fts3::common;
 int main(int ac, char* av[])
 {
     JsonOutput::create();
-    scoped_ptr<ListTransferCli> cli;
+    scoped_ptr<ListTransferCli> cli(new ListTransferCli);
 
     try
         {
-            // create and initialize the command line utility
-            cli.reset(
-                getCli<ListTransferCli>(ac, av)
-            );
+            // Initialise the command line utility
+    		cli->parse(ac, av);
             if (!cli->validate()) return 1;
 
             if (cli->rest())
@@ -67,7 +65,7 @@ int main(int ac, char* av[])
 
                     string url = cli->getService() + "/jobs";
 
-                    // prefix will be holding '?' at the first contacenation and then '&'
+                    // prefix will be holding '?' at the first concatenation and then '&'
                     char prefix = '?';
 
                     if (!dn.empty())
