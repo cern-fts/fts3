@@ -76,7 +76,7 @@ public:
 
     template<typename T>
     void print(std::vector<T> const & v);
-
+    void print(std::string job_id, std::vector<tns3__DetailedFileStatus*> const & v);
 
     void job_id(string job_id); //
     void status(JobStatus js);
@@ -104,9 +104,6 @@ private:
 
     static void print_cout(JobStatus const & j);
     static void print_json(JobStatus const & j);
-
-    static void print_cout(tns3__DetailedFileStatus * const & status);
-    static void print_json(tns3__DetailedFileStatus * const & status);
 
     ///
     static bool verbose;

@@ -311,7 +311,7 @@ string GSoapDelegationHandler::addKeyToProxyCertificate(string proxy, string key
     // if the private key does not match throw an exception
     if (mismatch)
         {
-            throw Err_Custom("Failed to add private key to the proxy certificate: key values mismatch!");
+            throw Err_Transient("Failed to add private key to the proxy certificate: key values mismatch!");
         }
 
     stringstream ss;
