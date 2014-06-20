@@ -105,6 +105,12 @@ private:
     static void print_cout(JobStatus const & j);
     static void print_json(JobStatus const & j);
 
+    template<typename T>
+    static void print_cout() {}
+
+    template<typename T>
+    static void print_json() {}
+
     ///
     static bool verbose;
     ///
@@ -114,6 +120,13 @@ private:
 template<typename T>
 void MsgPrinter::print(std::vector<T> const & v)
 {
+	if (v.empty())
+	{
+		if (json) print_json<T>();
+		else print_cout<T>();
+		return;
+	}
+
     void (*print)(T const &);
 
     if (json) print = print_json;
@@ -122,6 +135,13 @@ void MsgPrinter::print(std::vector<T> const & v)
     std::for_each(v.begin(), v.end(), print);
 }
 
+template<>
+void MsgPrinter::print_cout<JobStatus>();
+
+template<>
+void MsgPrinter::print_json<JobStatus>();
+
 } /* namespace server */
 } /* namespace fts3 */
+
 #endif /* MSGPRINTER_H_ */

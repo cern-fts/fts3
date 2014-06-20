@@ -537,6 +537,18 @@ void MsgPrinter::print(std::string job_id, std::vector<tns3__DetailedFileStatus 
 	JsonOutput::printArray("jobs", object);
 }
 
+template<>
+void MsgPrinter::print_cout<JobStatus>()
+{
+	std::cout << "No data have been found for the specified state(s) and/or user VO/VOMS roles." << std::endl;
+}
+
+template<>
+void MsgPrinter::print_json<JobStatus>()
+{
+	JsonOutput::print("job", "[]");
+}
+
 MsgPrinter::MsgPrinter(ostream& /*out*/): json(false)
 {
 
