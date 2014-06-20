@@ -3257,17 +3257,7 @@ bool OracleAPI::updateOptimizer()
 
                     now = getUTC(0);
 
-                    if(true == lanTransfer(source_hostname, destin_hostname))
-                        {
-                            highDefault = (highDefault * 3);
-                            lanTransferBool = true;
-                        }
-                    else
-                        {
-                            //default
-                            highDefault = tempDefault;
-                        }
-
+                    lanTransferBool = lanTransfer(source_hostname, destin_hostname);
 
                     // Weighted average
                     soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
@@ -3475,6 +3465,17 @@ bool OracleAPI::updateOptimizer()
                             sql.begin();
 
                             int pathFollowed = 0;
+			    
+			    //special case to increase active when dealing with LAN transfers of there is only one single/dest pair active
+			    if( (singleDest == 1 || lanTransferBool) && maxActive < 8 )
+			    {
+				highDefault = 8;
+			    	maxActive = highDefault;
+			    }
+			    else //reset
+			    {
+			    	highDefault = tempDefault;
+			    }			    
 
                             if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 98)) && throughputEMA > thrStored && retry <= retryStored)
                                 {
@@ -3485,11 +3486,7 @@ bool OracleAPI::updateOptimizer()
 
                                     if(maxActiveLimit)
                                         {
-                                            if(singleDest == 1)
-                                                {
-                                                    active = maxActive + spawnActive + 1;
-                                                }
-                                            else if (lanTransferBool)
+                                            if(singleDest == 1 || lanTransferBool)
                                                 {
                                                     active = maxActive + spawnActive + 1;
                                                 }

@@ -3494,15 +3494,7 @@ bool MySqlAPI::updateOptimizer()
                     ema = 0.0;
                     now = getUTC(0);
 
-                    if(true == lanTransfer(source_hostname, destin_hostname))
-                        {
-                            highDefault = (highDefault * 3);
-                            lanTransferBool = true;
-                        }
-                    else //default
-                        {
-                            highDefault = tempDefault;
-                        }
+                    lanTransferBool = lanTransfer(source_hostname, destin_hostname);                        
 
                     // check current active transfers for a linkmaxActive
                     stmt7.execute(true);
@@ -3711,6 +3703,17 @@ bool MySqlAPI::updateOptimizer()
                             sql.begin();
 
                             int pathFollowed = 0;
+			    
+			    //special case to increase active when dealing with LAN transfers of there is only one single/dest pair active
+			    if( (singleDest == 1 || lanTransferBool) && maxActive < 8 )
+			    {
+				highDefault = 8;
+			    	maxActive = highDefault;
+			    }
+			    else //reset
+			    {
+			    	highDefault = tempDefault;
+			    }
 
                             if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 98)) && throughputEMA > thrStored && retry <= retryStored)
                                 {
@@ -3721,11 +3724,7 @@ bool MySqlAPI::updateOptimizer()
 
                                     if(maxActiveLimit) // no limit
                                         {
-                                            if(singleDest == 1)
-                                                {
-                                                    active = maxActive + spawnActive + 1;
-                                                }
-                                            else if (lanTransferBool)
+                                            if(singleDest == 1 || lanTransferBool)
                                                 {
                                                     active = maxActive + spawnActive + 1;
                                                 }
