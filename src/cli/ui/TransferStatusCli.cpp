@@ -54,14 +54,9 @@ bool TransferStatusCli::validate()
 
     if (!CliBase::validate()) return false;
 
-    if (getJobIds().empty())
-        {
-            printer().missing_parameter("Request ID");
-            return false;
-        }
+    if (getJobIds().empty()) throw bad_option("jobid", "missing parameter");
 
-    if (vm.count("p") && vm.size() > 3)
-    	throw bad_option("p", "this option cannot be used together with other options!");
+    if (vm.count("p") && vm.size() > 3) throw bad_option("p", "this option cannot be used together with other options!");
 
     return true;
 }

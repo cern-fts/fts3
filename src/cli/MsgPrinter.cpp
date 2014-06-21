@@ -245,43 +245,6 @@ void MsgPrinter::print_json(std::pair<std::string, std::string> const & id_statu
     JsonOutput::printArray("job", m);
 }
 
-void MsgPrinter::missing_parameter(string name)
-{
-
-    if (!json)
-        {
-            cout << "missing parameter: " << name << endl;
-            return;
-        }
-
-    JsonOutput::print("error.missing_parameter", name);
-}
-
-void MsgPrinter::bulk_submission_error(int line, string msg)
-{
-
-    if (!json)
-        {
-            cout << "submit: in line " << line << ": " << msg << endl;
-            return;
-        }
-
-    JsonOutput::print("error.line", lexical_cast<string>(line));
-    JsonOutput::print("error.message", msg);
-}
-
-void MsgPrinter::wrong_endpoint_format(string endpoint)
-{
-
-    if (!json)
-        {
-            cout << "wrongly formated endpoint: " << endpoint << endl;
-            return;
-        }
-
-    JsonOutput::print("wrong_format.endpoint", endpoint);
-}
-
 void MsgPrinter::version(string version)
 {
 
@@ -329,48 +292,6 @@ void MsgPrinter::error_msg(string msg)
         }
 
     JsonOutput::print("error.message", msg);
-}
-
-void MsgPrinter::gsoap_error_msg(string msg)
-{
-    // remove backspaces if any in the string
-    string::size_type  pos;
-    while((pos = msg.find(8)) != string::npos)
-        {
-            msg.erase(pos, 1);
-        }
-
-
-    pos = msg.find("\"\nDetail: ", 0);
-
-//	regex re (".*\"(.+)\"\nDetail: (.+)\n");
-
-    if (pos == string::npos)
-        {
-            error_msg(msg);
-            return;
-        }
-
-    if (!json)
-        {
-            cout << "error: " << msg << endl;
-            return;
-        }
-
-    string detail = msg.substr(pos + 10);
-    string::size_type size = detail.size();
-    if (detail[size - 1] == '\n') detail = detail.substr(0, size - 1);
-
-    pos = msg.find("\"");
-    string err_msg;
-    if (pos != string::npos) err_msg = msg.substr(pos + 1);
-    pos = msg.find("\"");
-    if (pos != string::npos) err_msg = msg.substr(0, pos);
-    size = err_msg.size();
-    if (err_msg[size - 1] == '\n') err_msg = err_msg.substr(0, size - 1);
-
-    JsonOutput::print("error.message", err_msg);
-    JsonOutput::print("error.detail", detail);
 }
 
 void MsgPrinter::print_cout(JobStatus const & j)
@@ -535,6 +456,18 @@ void MsgPrinter::print(std::string job_id, std::vector<tns3__DetailedFileStatus 
     object.put_child("files", array);
 	// print the JSON object
 	JsonOutput::printArray("jobs", object);
+}
+
+template<>
+void MsgPrinter::print_cout<JobStatus>()
+{
+	std::cout << "No data have been found for the specified state(s) and/or user VO/VOMS roles." << std::endl;
+}
+
+template<>
+void MsgPrinter::print_json<JobStatus>()
+{
+	JsonOutput::print("job", "[]");
 }
 
 MsgPrinter::MsgPrinter(ostream& /*out*/): json(false)

@@ -2586,6 +2586,7 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
     soci::session sql(*connectionPool);
     int pid = 0;
     int file_id = 0;
+    bool executeCancel = false;
 
     try
         {
@@ -2604,6 +2605,8 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
                     pid = row.get<int>("pid");
                     file_id = row.get<int>("file_id");
                     requestIDs.push_back(pid);
+		    
+		    executeCancel = true;
 
                     stmt1.execute(true);
                 }
@@ -2612,7 +2615,7 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
 
             //now set job_finished to all files not having pid set
             //prevent more than on server to update the optimizer decisions
-            if(hashSegment.start == 0)
+            if(hashSegment.start == 0 && executeCancel == true)
                 {
                     file_id = 0;
 
@@ -3491,15 +3494,7 @@ bool MySqlAPI::updateOptimizer()
                     ema = 0.0;
                     now = getUTC(0);
 
-                    if(true == lanTransfer(source_hostname, destin_hostname))
-                        {
-                            highDefault = (highDefault * 3);
-                            lanTransferBool = true;
-                        }
-                    else //default
-                        {
-                            highDefault = tempDefault;
-                        }
+                    lanTransferBool = lanTransfer(source_hostname, destin_hostname);                        
 
                     // check current active transfers for a linkmaxActive
                     stmt7.execute(true);
@@ -3708,8 +3703,19 @@ bool MySqlAPI::updateOptimizer()
                             sql.begin();
 
                             int pathFollowed = 0;
+			    
+			    //special case to increase active when dealing with LAN transfers of there is only one single/dest pair active
+			    if( (singleDest == 1 || lanTransferBool) && maxActive < 8 )
+			    {
+				highDefault = 8;
+			    	maxActive = highDefault;
+			    }
+			    else //reset
+			    {
+			    	highDefault = tempDefault;
+			    }
 
-                            if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 98)) && throughputEMA > thrStored && retry <= retryStored)
+                            if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 97)) && throughputEMA > thrStored && retry <= retryStored)
                                 {
                                     int tempActive = active; //temp store current active
 
@@ -3718,11 +3724,7 @@ bool MySqlAPI::updateOptimizer()
 
                                     if(maxActiveLimit) // no limit
                                         {
-                                            if(singleDest == 1)
-                                                {
-                                                    active = maxActive + spawnActive + 1;
-                                                }
-                                            else if (lanTransferBool)
+                                            if(singleDest == 1 || lanTransferBool)
                                                 {
                                                     active = maxActive + spawnActive + 1;
                                                 }
