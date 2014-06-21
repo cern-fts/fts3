@@ -3526,12 +3526,14 @@ bool OracleAPI::updateOptimizer()
                                             active = maxActive + 1;
                                             ema = throughputEMA;
                                             pathFollowed = 2;
+					    stmt10.execute(true);
                                         }
                                     else
                                         {
                                             active = maxActive;
                                             ema = throughputEMA;
                                             pathFollowed = 2;
+					    stmt10.execute(true);
                                         }
                                 }
                             else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 95)) && throughputEMA < thrStored)
