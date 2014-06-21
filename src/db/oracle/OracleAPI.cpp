@@ -3051,29 +3051,36 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
 bool OracleAPI::getMaxActive(soci::session& sql, int active, int /*highDefault*/, const std::string & source_hostname, const std::string & destin_hostname)
 {
     long long int maxActiveSource = 0;
-    long long int maxActiveDest = 0;
-    soci::indicator isNullmaxActiveSource = soci::i_ok;
-    soci::indicator isNullmaxActiveDest = soci::i_ok;
+    long long int maxActiveDest = 0;   
 
     try
         {
+	    //check for source
             sql << " select active from t_optimize where source_se = :source_se and active is not NULL ",
                 soci::use(source_hostname),
-                soci::into(maxActiveSource, isNullmaxActiveSource);
-
-            if (sql.got_data() && active > maxActiveSource)
-                return false;
-
+                soci::into(maxActiveSource);
+         
+            //check for dest
             sql << " select active from t_optimize where dest_se = :dest_se and active is not NULL ",
                 soci::use(destin_hostname),
-                soci::into(maxActiveDest, isNullmaxActiveDest);
+                soci::into(maxActiveDest);
+		
+            //check for link max first
+            if(maxActiveSource > 0 && maxActiveDest > 0 && maxActiveSource == maxActiveDest && active > maxActiveSource)
+		return false;
 
-            //check limits for dest
-            if (sql.got_data() && active > maxActiveDest)
-                return false;
+	    //check for max source
+	    if (maxActiveSource > 0 && active > maxActiveSource)
+                return false;		
 
-            if(active >= MAX_ACTIVE_PER_LINK)
-                return false;
+            //check for max dest
+            if (maxActiveDest > 0 && active > maxActiveDest)
+                return false;		            		 		
+		            
+	    //not check, repsect default		     
+	    if( (maxActiveSource == 0 && maxActiveDest == 0) && active >= MAX_ACTIVE_PER_LINK)
+	    	return false;	
+	    		
         }
     catch (std::exception& e)
         {
