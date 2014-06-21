@@ -3477,7 +3477,7 @@ bool OracleAPI::updateOptimizer()
 			    	highDefault = tempDefault;
 			    }			    
 
-                            if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 98)) && throughputEMA > thrStored && retry <= retryStored)
+                            if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 97)) && throughputEMA > thrStored && retry <= retryStored)
                                 {
                                     int tempActive = active; //temp store current active
 
