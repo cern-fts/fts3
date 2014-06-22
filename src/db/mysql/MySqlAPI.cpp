@@ -2586,7 +2586,6 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
     soci::session sql(*connectionPool);
     int pid = 0;
     int file_id = 0;
-    bool executeCancel = false;
 
     try
         {
@@ -2594,8 +2593,7 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
                                           soci::use(hashSegment.start), soci::use(hashSegment.end));
 
             soci::statement stmt1 = (sql.prepare << "UPDATE t_file SET  job_finished = UTC_TIMESTAMP() "
-                                     "WHERE pid = :pid AND file_id = :file_id ",
-                                     soci::use(pid, "pid"), soci::use(file_id, "file_id"));
+                                     "WHERE file_id = :file_id ", soci::use(file_id, "file_id"));
 
             // Cancel files
             sql.begin();
@@ -2604,9 +2602,7 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
                     soci::row const& row = *i2;
                     pid = row.get<int>("pid");
                     file_id = row.get<int>("file_id");
-                    requestIDs.push_back(pid);
-		    
-		    executeCancel = true;
+                    requestIDs.push_back(pid);		   
 
                     stmt1.execute(true);
                 }
@@ -2615,7 +2611,7 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
 
             //now set job_finished to all files not having pid set
             //prevent more than on server to update the optimizer decisions
-            if(hashSegment.start == 0 && executeCancel == true)
+            if(hashSegment.start == 0)
                 {
                     file_id = 0;
 
