@@ -3538,7 +3538,14 @@ bool OracleAPI::updateOptimizer()
                                             ema = throughputEMA;
                                             pathFollowed = 2;
 					    stmt10.execute(true);
-					}				       
+					}	
+					else
+					{
+					    active = maxActive;
+                                            ema = throughputEMA;
+                                            pathFollowed = 2;
+					    stmt10.execute(true);					
+					}									       
 				       }                                   
 				    else
                                         {
