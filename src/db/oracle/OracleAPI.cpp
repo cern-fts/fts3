@@ -3456,7 +3456,7 @@ bool OracleAPI::updateOptimizer()
                         {
                             sql.begin();
 
-                            active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
+                            active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
                             ema = throughputEMA;
                             stmt10.execute(true);
                             updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, 10, bandwidthIn);
@@ -3484,7 +3484,7 @@ bool OracleAPI::updateOptimizer()
 			    	highDefault = tempDefault;
 			    }			    
 
-                            if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 97)) && throughputEMA > thrStored && retry <= retryStored)
+                            if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure >= 98)) && throughputEMA > thrStored && retry <= retryStored)
                                 {
                                     int tempActive = active; //temp store current active
 
@@ -3519,7 +3519,7 @@ bool OracleAPI::updateOptimizer()
                                             stmt10.execute(true);
                                         }
                                 }
-                            else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 98)) && throughputEMA == thrStored && retry <= retryStored)
+                            else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure >= 98)) && throughputEMA == thrStored && retry <= retryStored)
                                 {
                                     if(throughputSamples == 10) // spawn one every 10min
                                         {
@@ -3564,7 +3564,7 @@ bool OracleAPI::updateOptimizer()
                                     ema = throughputEMA;
                                     stmt10.execute(true);
                                 }
-                            else if ( ratioSuccessFailure < 99)
+                            else if ( ratioSuccessFailure < 98)
                                 {
                                     if(ratioSuccessFailure > rateStored && ratioSuccessFailure > 90 && retry <= retryStored)
                                         {
