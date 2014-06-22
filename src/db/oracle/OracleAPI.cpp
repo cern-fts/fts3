@@ -3466,12 +3466,13 @@ bool OracleAPI::updateOptimizer()
                             continue;
                         }
 
-                    //ratioSuccessFailure, rateStored, throughput, thrStored MUST never be zero
+                   //ratioSuccessFailure, rateStored, throughput, thrStored MUST never be zero
                     if(changed)
                         {
                             sql.begin();
 
                             int pathFollowed = 0;
+			    int tempActive = active; //temp store current active
 			    
 			    //special case to increase active when dealing with LAN transfers of there is only one single/dest pair active
 			    if( (singleDest == 1 || lanTransferBool) && maxActive < 8 )
@@ -3482,16 +3483,14 @@ bool OracleAPI::updateOptimizer()
 			    else //reset
 			    {
 			    	highDefault = tempDefault;
-			    }			    
+			    }
 
                             if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure >= 98)) && throughputEMA > thrStored && retry <= retryStored)
-                                {
-                                    int tempActive = active; //temp store current active
-
+                                {                                   
                                     //make sure we do not increase beyond limits set
                                     bool maxActiveLimit = getMaxActive(sql, maxActive, highDefault, source_hostname, destin_hostname);
 
-                                    if(maxActiveLimit)
+                                    if(maxActiveLimit) // no limit
                                         {
                                             if(singleDest == 1 || lanTransferBool)
                                                 {
@@ -3511,7 +3510,7 @@ bool OracleAPI::updateOptimizer()
                                             ema = throughputEMA;
                                             stmt10.execute(true);
                                         }
-                                    else
+                                    else //no change, max limit reached
                                         {
                                             active = maxActive;
                                             pathFollowed = 11;
@@ -3521,14 +3520,27 @@ bool OracleAPI::updateOptimizer()
                                 }
                             else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure >= 98)) && throughputEMA == thrStored && retry <= retryStored)
                                 {
-                                    if(throughputSamples == 10) // spawn one every 10min
-                                        {
+				   //make sure we do not increase beyond limits set
+                                    bool maxActiveLimit = getMaxActive(sql, maxActive, highDefault, source_hostname, destin_hostname);
+				    
+				    if(maxActiveLimit) // no limit
+				       {
+ 					if(throughputSamples == 10) // spawn one every 10min
+                                        {					
                                             active = maxActive + 1;
                                             ema = throughputEMA;
                                             pathFollowed = 2;
 					    stmt10.execute(true);
                                         }
-                                    else
+                                        else if(throughputSamples == 10 && (singleDest == 1 || lanTransferBool))
+			                {
+                                            active = maxActive + 1;
+                                            ema = throughputEMA;
+                                            pathFollowed = 2;
+					    stmt10.execute(true);
+					}				       
+				       }                                   
+				    else
                                         {
                                             active = maxActive;
                                             ema = throughputEMA;
@@ -3605,6 +3617,8 @@ bool OracleAPI::updateOptimizer()
         }
     return allowed;
 }
+
+
 
 
 
