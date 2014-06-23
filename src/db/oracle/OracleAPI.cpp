@@ -8509,7 +8509,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
     long long nFailedLastHour = 0;
     long long  nFinishedLastHour = 0;
     double  ratioSuccessFailure = 0;
-    std::string querySe = " SELECT DISTINCT source_se, dest_se FROM t_file ";
+    std::string querySe = " SELECT DISTINCT source_se, dest_se FROM t_job ";
 
     time_t now = time(NULL);
     struct tm tTime;
