@@ -409,11 +409,19 @@ optional< pair<string, int> > SetCfgCli::getMaxSeActive(string option)
     if (v.size() != 2) throw bad_option(option, "'--" + option + "' takes following parameters: number_of_active SE");
 
     string se = v[1];
-    int active = lexical_cast<int>(v[0]);
 
-    if (active < -1) throw bad_option("option", "values lower than -1 are not valid");
+    try
+    {
+    	int active = lexical_cast<int>(v[0]);
 
-    return make_pair(se, active);
+        if (active < -1) throw bad_option("option", "values lower than -1 are not valid");
+
+        return make_pair(se, active);
+    }
+    catch(bad_lexical_cast& ex)
+    {
+    	throw bad_option(option, "the number of active has to be an integer");
+    }
 }
 
 optional< pair<string, int> > SetCfgCli::getMaxSrcSeActive()
