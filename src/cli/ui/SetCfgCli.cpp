@@ -230,7 +230,10 @@ bool SetCfgCli::validate()
     if (vm.count("max-se-source-active") && vm.count("max-se-dest-active"))
 		{
     		if (vm["max-se-source-active"].as<int>() != vm["max-se-dest-active"].as<int>())
-    			throw bad_option("max-se-source-active", "the value for 'max-se-source-active' has to be equal to value of 'max-se-dest-active'");
+    			throw bad_option(
+    					"max-se-source-active, max-se-dest-active",
+    					"the value for 'max-se-source-active' has to be equal to value of 'max-se-dest-active'"
+    				);
 		}
 
     return true;
