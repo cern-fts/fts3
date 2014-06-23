@@ -318,14 +318,14 @@ void GSoapContextAdapter::getRolesOf (string dn, impltns__getRolesOfResponse& re
         handleSoapFault("Failed to get roles: getRolesOf.");
 }
 
-vector<JobStatus> GSoapContextAdapter::listRequests (vector<string> statuses, string dn, string vo)
+vector<JobStatus> GSoapContextAdapter::listRequests (vector<string> statuses, string dn, string vo, string source, string destination)
 {
 
     impltns__ArrayOf_USCOREsoapenc_USCOREstring* array = soap_new_impltns__ArrayOf_USCOREsoapenc_USCOREstring(ctx, -1);
     array->item = statuses;
 
     impltns__listRequests2Response resp;
-    if (soap_call_impltns__listRequests2(ctx, endpoint.c_str(), 0, array, dn, vo, resp))
+    if (soap_call_impltns__listRequests2(ctx, endpoint.c_str(), 0, array, dn, vo, source, destination, resp))
         handleSoapFault("Failed to list requests: listRequests2.");
 
     if (!resp._listRequests2Return)

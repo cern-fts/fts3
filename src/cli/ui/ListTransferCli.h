@@ -80,6 +80,15 @@ public:
      */
     vector<string> getStatusArray();
 
+    /**
+     *
+     */
+    string source();
+
+    /**
+     *
+     */
+    string destination();
 };
 
 }

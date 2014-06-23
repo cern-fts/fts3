@@ -159,7 +159,7 @@ public:
      * @param array statuses of interest
      * @param resp server response
      */
-    vector<JobStatus> listRequests (vector<string> statuses, string dn, string vo);
+    vector<JobStatus> listRequests (vector<string> statuses, string dn, string vo, string source, string destination);
 
     /**
      * Remote call to listVOManagers

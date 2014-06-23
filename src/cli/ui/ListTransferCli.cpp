@@ -34,6 +34,8 @@ ListTransferCli::ListTransferCli(): VoNameCli(false)
     // add hidden options (not printed in help)
     CliBase::hidden.add_options()
     ("state", value< vector<string> >(), "Specify states for querying.")
+    ("source_se", value<string>(), "Specify source SE for querying.")
+    ("dest_se", value<string>(), "Specify destination SE for querying.")
     ;
 
     // all positional parameters go to state
@@ -68,4 +70,24 @@ vector<string> ListTransferCli::getStatusArray()
         }
 
     return array;
+}
+
+string ListTransferCli::source()
+{
+	if (vm.count("source_se"))
+	{
+		return vm["source_se"].as<string>();
+	}
+
+	return string();
+}
+
+string ListTransferCli::destination()
+{
+	if (vm.count("dest_se"))
+	{
+		return vm["dest_se"].as<string>();
+	}
+
+	return string();
 }
