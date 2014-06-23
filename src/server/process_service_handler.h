@@ -188,15 +188,20 @@ protected:
 
     void createJobFile(std::string job_id, std::vector<std::string>& files)
     {
+      std::ofstream fout;
+      try{
         std::vector<std::string>::const_iterator iter;
         std::string filename = "/var/lib/fts3/" + job_id;
-        std::ofstream fout;
         fout.open(filename.c_str(), ios::out);
         for (iter = files.begin(); iter != files.end(); ++iter)
             {
                 fout << *iter << std::endl;
             }
         fout.close();
+	}catch(...)
+	{
+	 fout.close();
+	}
     }
 
     void getFiles( std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles> >& voQueues)
