@@ -10,21 +10,22 @@
 	    <plot-lines title="Throughput evolution" list="optimizer.evolution.items"
 	        x="datetime"
 	        y-left="active"
-	        y-right="throughput"/>
+	        y-right="throughput"></plot-lines>
 	</div>
-	
+
 	<div class="span6">
 	    <plot-lines title="Success rate evolution" list="optimizer.evolution.items"
 	        x="datetime"
 	        y-left="active"
-	        y-right="success"/>
+	        y-right="success"></plot-lines>
 	</div>
 </div>
 <div style="text-align: center">
     <plot-pie title="Current throughput" list="optimizer.throughput" legend-count="1" suffix="MB/s"></plot-pie>
 </div>
 
-<pagination rotate="false" num-pages="optimizer.evolution.pageCount" current-page="optimizer.evolution.page"
+<pagination rotate="false"
+    page="optimizer.evolution.page" total-items="optimizer.evolution.count" items-per-page="optimizer.evolution.pageSize"
     max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>
 
@@ -78,6 +79,7 @@
     </p>
 </div>
 
-<pagination rotate="false" num-pages="optimizer.pageCount" current-page="optimizer.page"
+<pagination rotate="false"
+    page="optimizer.evolution.page" total-items="optimizer.evolution.count" items-per-page="optimizer.evolution.pageSize"
     max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>

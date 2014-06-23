@@ -227,6 +227,18 @@ bool SetCfgCli::validate()
             return false;
         }
 
+	boost::optional<std::pair<std::string, int>> src = getMaxSeActive("max-se-source-active");
+	boost::optional<std::pair<std::string, int>> dst = getMaxSeActive("max-se-dest-active");
+
+	if (src.is_initialized() && dst.is_initialized())
+		{
+			if (src.get().second != dst.get().second)
+    			throw bad_option(
+    					"max-se-source-active, max-se-dest-active",
+    					"the number of active for source and destination has to be equal"
+    				);
+		}
+
     return true;
 }
 
@@ -394,14 +406,22 @@ optional< pair<string, int> > SetCfgCli::getMaxSeActive(string option)
     // make sure it was used corretly
     const vector<string>& v = vm[option].as< vector<string> >();
 
-    if (v.size() != 2) throw bad_option(option, "'--" + option + "' takes following parameters: SE number_of_active");
+    if (v.size() != 2) throw bad_option(option, "'--" + option + "' takes following parameters: number_of_active SE");
 
     string se = v[1];
-    int active = lexical_cast<int>(v[0]);
 
-    if (active < -1) throw bad_option("option", "values lower than -1 are not valid");
+    try
+    {
+    	int active = lexical_cast<int>(v[0]);
 
-    return make_pair(se, active);
+        if (active < -1) throw bad_option("option", "values lower than -1 are not valid");
+
+        return make_pair(se, active);
+    }
+    catch(bad_lexical_cast& ex)
+    {
+    	throw bad_option(option, "the number of active has to be an integer");
+    }
 }
 
 optional< pair<string, int> > SetCfgCli::getMaxSrcSeActive()

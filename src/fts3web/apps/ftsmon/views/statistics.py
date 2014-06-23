@@ -192,8 +192,6 @@ def get_pervo(http_request):
     if http_request.GET.get('dest_se', None):
         query = query.filter(source_se=http_request.GET['dest_se'])
 
-    query = query.order_by('file_state')
-
     per_vo = {}
     for voJob in query:
         vo = voJob['vo_name']
