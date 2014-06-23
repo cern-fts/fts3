@@ -55,9 +55,9 @@ void ProfiledDB::getTransferFileStatus(std::string requestID, bool archive,
 
 
 void ProfiledDB::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
-                              std::string restrictToClientDN, std::string forDN, std::string VOname)
+                              std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst)
 {
-    PROFILE_PREFIXED("DB::", db->listRequests(jobs, inGivenStates, restrictToClientDN, forDN, VOname));
+    PROFILE_PREFIXED("DB::", db->listRequests(jobs, inGivenStates, restrictToClientDN, forDN, VOname, src, dst));
 }
 
 

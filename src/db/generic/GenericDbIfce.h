@@ -111,7 +111,7 @@ public:
                                        unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files) = 0;
 
     virtual void listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
-                              std::string restrictToClientDN, std::string forDN, std::string VOname) = 0;
+                              std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst) = 0;
 
     virtual TransferJobs* getTransferJob(std::string jobId, bool archive) = 0;
 

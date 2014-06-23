@@ -50,7 +50,7 @@ public:
                                unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files);
 
     void listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
-                      std::string restrictToClientDN, std::string forDN, std::string VOname);
+                      std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst);
 
     TransferJobs* getTransferJob(std::string jobId, bool archive);
 

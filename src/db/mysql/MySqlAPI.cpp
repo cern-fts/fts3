@@ -1623,7 +1623,7 @@ void MySqlAPI::getTransferJobStatus(std::string requestID, bool archive, std::ve
  * std::vector<JobStatus*> jobs: the caller will deallocate memory JobStatus instances and clear the vector
  * std::vector<std::string> inGivenStates: order doesn't really matter, more than one states supported
  */
-void MySqlAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates, std::string restrictToClientDN, std::string forDN, std::string VOname)
+void MySqlAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates, std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst)
 {
     soci::session sql(*connectionPool);
 
@@ -1689,6 +1689,18 @@ void MySqlAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::stri
                 {
                     query << " AND cancel_job = 'Y' ";
                 }
+
+            if (!src.empty())
+				{
+					query << " AND source_se = :src ";
+					stmt.exchange(soci::use(src, "src"));
+				}
+
+            if (!dst.empty())
+				{
+					query << " AND dest_se = :dst ";
+					stmt.exchange(soci::use(dst, "dst"));
+				}
 
             JobStatus job;
             stmt.exchange(soci::into(job));
