@@ -34,8 +34,12 @@ ListTransferCli::ListTransferCli(): VoNameCli(false)
     // add hidden options (not printed in help)
     CliBase::hidden.add_options()
     ("state", value< vector<string> >(), "Specify states for querying.")
-    ("source_se", value<string>(), "Specify source SE for querying.")
-    ("dest_se", value<string>(), "Specify destination SE for querying.")
+    ;
+
+    // add fts3-transfer-list specific options
+    specific.add_options()
+    ("source_se", value<string>(), "Restrict to specific source SE.")
+    ("dest_se", value<string>(), "Restrict to specific destination SE.")
     ;
 
     // all positional parameters go to state
