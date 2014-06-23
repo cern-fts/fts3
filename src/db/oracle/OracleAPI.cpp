@@ -3501,7 +3501,7 @@ bool OracleAPI::updateOptimizer()
                                                     active = maxActive + spawnActive;
                                                 }
 
-                                            if(active > (tempActive + 10))
+                                            if(active > (tempActive + 7))
                                                 {
                                                     active = maxActive;
                                                 }
@@ -3528,6 +3528,10 @@ bool OracleAPI::updateOptimizer()
  					if(throughputSamples == 10) // spawn one every 10min
                                         {					
                                             active = maxActive + 1;
+                                            if(active > (tempActive + 7))
+                                                {
+                                                    active = maxActive;
+                                                }
                                             ema = throughputEMA;
                                             pathFollowed = 2;
 					    stmt10.execute(true);
@@ -3535,6 +3539,10 @@ bool OracleAPI::updateOptimizer()
                                         else if(throughputSamples == 10 && (singleDest == 1 || lanTransferBool))
 			                {
                                             active = maxActive + 1;
+                                            if(active > (tempActive + 7))
+                                                {
+                                                    active = maxActive;
+                                                }
                                             ema = throughputEMA;
                                             pathFollowed = 2;
 					    stmt10.execute(true);
