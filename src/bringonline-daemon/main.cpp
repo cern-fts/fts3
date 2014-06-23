@@ -87,6 +87,7 @@ bool retryTransfer(int errorNo, const std::string& category, const std::string& 
         return true;
 
 
+
     if (category == "SOURCE")
         {
             switch (errorNo)
@@ -99,6 +100,7 @@ bool retryTransfer(int errorNo, const std::string& category, const std::string& 
                 case E2BIG:           // Argument list too long
                 case ENOTDIR:         // Part of the path is not a directory
                 case EPROTONOSUPPORT: // Protocol not supported by gfal2 (plugin missing?)
+                case EINVAL:          // Invalid argument. i.e: invalid request token
                     retry = false;
                     break;
                 default:
