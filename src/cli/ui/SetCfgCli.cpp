@@ -235,7 +235,7 @@ bool SetCfgCli::validate()
 			if (src.get().second != dst.get().second)
     			throw bad_option(
     					"max-se-source-active, max-se-dest-active",
-    					"the value for 'max-se-source-active' has to be equal to value of 'max-se-dest-active'"
+    					"the number of active for source and destination has to be equal"
     				);
 		}
 
@@ -406,7 +406,7 @@ optional< pair<string, int> > SetCfgCli::getMaxSeActive(string option)
     // make sure it was used corretly
     const vector<string>& v = vm[option].as< vector<string> >();
 
-    if (v.size() != 2) throw bad_option(option, "'--" + option + "' takes following parameters: SE number_of_active");
+    if (v.size() != 2) throw bad_option(option, "'--" + option + "' takes following parameters: number_of_active SE");
 
     string se = v[1];
     int active = lexical_cast<int>(v[0]);
