@@ -227,9 +227,12 @@ bool SetCfgCli::validate()
             return false;
         }
 
-    if (vm.count("max-se-source-active") && vm.count("max-se-dest-active"))
+	boost::optional<std::pair<std::string, int>> src = getMaxSeActive("max-se-source-active");
+	boost::optional<std::pair<std::string, int>> dst = getMaxSeActive("max-se-dest-active");
+
+	if (src.is_initialized() && dst.is_initialized())
 		{
-    		if (vm["max-se-source-active"].as<int>() != vm["max-se-dest-active"].as<int>())
+			if (src.get().second != dst.get().second)
     			throw bad_option(
     					"max-se-source-active, max-se-dest-active",
     					"the value for 'max-se-source-active' has to be equal to value of 'max-se-dest-active'"
