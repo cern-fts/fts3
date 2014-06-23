@@ -491,6 +491,10 @@
       <part name="forDN" type="xsd:string"/>
 
       <part name="forVO" type="xsd:string"/>
+      
+      <part name="sourceSe" type="xsd:string"/>
+      
+      <part name="destSe" type="xsd:string"/>
 
    </message>
 
