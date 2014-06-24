@@ -264,7 +264,7 @@ optional<int> SetCfgCli::optimizer_mode()
 
     		if (mode < 1 || mode > 3)
 				{
-					throw bad_option("optimizer-mode", "only take following values are accepted: 1, 2 or 3");
+					throw bad_option("optimizer-mode", "only following values are accepted: 1, 2 or 3");
 				}
 
             return mode;
