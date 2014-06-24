@@ -271,11 +271,9 @@ int fts3::implcfg__setRetry(soap* ctx, std::string vo, int retry, implcfg__setRe
             CGsiAdapter cgsi(ctx);
             string dn = cgsi.getClientDn();
 	    
-	    std::string vo;
-
             // prepare the command for audit
             stringstream cmd;
-            cmd << "fts-config-set --retry " << retry << "  --vo " << vo;
+            cmd << "fts-config-set --retry " << vo << " " << retry;
 
             // audit the operation
             DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd.str(), "retry");
