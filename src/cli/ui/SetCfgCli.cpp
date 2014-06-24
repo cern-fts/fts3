@@ -56,7 +56,7 @@ SetCfgCli::SetCfgCli(bool spec)
                 "\n(Example: --drain on|off)"
             )
             (
-                "retry", value< vector<string> >(),
+                "retry", value< vector<string> >()->multitoken(),
                 "Sets the number of retries of each individual file transfer for the given VO (the value should be greater or equal to -1)."
                 "\n(Example: --retry $VO $NB_RETRY)"
             )
@@ -129,18 +129,6 @@ void SetCfgCli::parse(int ac, char* av[])
 
     // do the basic initialization
     CliBase::parse(ac, av);
-
-    if (vm.count("drain"))
-        {
-            if (vm["drain"].as<string>() != "on" && vm["drain"].as<string>() != "off")
-                {
-                    throw bad_option("drain", "drain may only take on/off values!");
-                }
-            else if(ac > 3 && ac < 5)
-                {
-                    throw bad_option("drain", "You need sto specify which endpoint to drain, -s missing?");
-                }
-        }
 
     if (vm.count("cfg"))
         {
@@ -227,6 +215,17 @@ optional<bool> SetCfgCli::drain()
 
     if (vm.count("drain"))
         {
+    		string const & value = vm["drain"].as<string>();
+
+			if (value != "on" && value != "off")
+				{
+					throw bad_option("drain", "drain may only take on/off values!");
+				}
+			else if(!vm.count("service"))
+				{
+					throw bad_option("drain", "You need specify which endpoint to drain, -s missing?");
+				}
+
             return vm["drain"].as<string>() == "on";
         }
 
