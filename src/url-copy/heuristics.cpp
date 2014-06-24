@@ -84,7 +84,7 @@ bool retryTransfer(int errorNo, const std::string& category, const std::string& 
         retry = false;
     found = message.find("with an error 550 File not found");
     if (found!=std::string::npos)
-        retry = false;		
+        retry = false;
     found = message.find("File exists and overwrite");
     if (found!=std::string::npos)
         retry = false;

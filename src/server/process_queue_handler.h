@@ -321,28 +321,28 @@ protected:
 
                         if(!messages.empty())
                             {
-			          boost::thread_group g;
-				  
-                                        std::size_t const half_size1 = messages.size() / 2;
-                                        std::vector<struct message> split_1(messages.begin(), messages.begin() + half_size1);
-                                        std::vector<struct message> split_2(messages.begin() + half_size1, messages.end());
+                                boost::thread_group g;
 
-                                        std::size_t const half_size2 = split_1.size() / 2;
-                                        std::vector<struct message> split_11(split_1.begin(), split_1.begin() + half_size2);
-                                        std::vector<struct message> split_21(split_1.begin() + half_size2, split_1.end());
+                                std::size_t const half_size1 = messages.size() / 2;
+                                std::vector<struct message> split_1(messages.begin(), messages.begin() + half_size1);
+                                std::vector<struct message> split_2(messages.begin() + half_size1, messages.end());
 
-                                        std::size_t const half_size3 = split_2.size() / 2;
-                                        std::vector<struct message> split_12(split_2.begin(), split_2.begin() + half_size3);
-                                        std::vector<struct message> split_22(split_2.begin() + half_size3, split_2.end());
-                                       
-                                        g.create_thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_11)));
-                                        g.create_thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_21)));
-                                        g.create_thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_12)));
-                                        g.create_thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_22)));			
+                                std::size_t const half_size2 = split_1.size() / 2;
+                                std::vector<struct message> split_11(split_1.begin(), split_1.begin() + half_size2);
+                                std::vector<struct message> split_21(split_1.begin() + half_size2, split_1.end());
 
-                                        // wait for them
-                                        g.join_all();																						
-                                
+                                std::size_t const half_size3 = split_2.size() / 2;
+                                std::vector<struct message> split_12(split_2.begin(), split_2.begin() + half_size3);
+                                std::vector<struct message> split_22(split_2.begin() + half_size3, split_2.end());
+
+                                g.create_thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_11)));
+                                g.create_thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_21)));
+                                g.create_thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_12)));
+                                g.create_thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_22)));
+
+                                // wait for them
+                                g.join_all();
+
                                 messages.clear();
                             }
 

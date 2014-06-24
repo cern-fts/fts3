@@ -82,17 +82,17 @@ void JsonOutput::printArray(std::string const path, pt::ptree const & obj)
 JsonOutput::~JsonOutput()
 {
     if (!json_out.empty())
-    	{
-    		// first write the output to a 'stringstream'
-    		std::stringstream str_out;
-    		pt::write_json(str_out, json_out);
-    		// then make sure all numbers and key words like true, false and null,
-    		// and also empty arrays ('[]') are not between double quotes
-    		static const boost::regex exp("\"(null|true|false|[]|[0-9]+(\\.[0-9]+)?)\"");
-    		std::string str = boost::regex_replace(str_out.str(), exp, "$1");
-    		// and finally print it to the output
-    		out << str;
-    	}
+        {
+            // first write the output to a 'stringstream'
+            std::stringstream str_out;
+            pt::write_json(str_out, json_out);
+            // then make sure all numbers and key words like true, false and null,
+            // and also empty arrays ('[]') are not between double quotes
+            static const boost::regex exp("\"(null|true|false|[]|[0-9]+(\\.[0-9]+)?)\"");
+            std::string str = boost::regex_replace(str_out.str(), exp, "$1");
+            // and finally print it to the output
+            out << str;
+        }
 }
 
 pt::ptree JsonOutput::to_ptree(std::map<std::string, std::string> const & values)

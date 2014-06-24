@@ -78,20 +78,20 @@ vector<string> ListTransferCli::getStatusArray()
 
 string ListTransferCli::source()
 {
-	if (vm.count("source_se"))
-	{
-		return vm["source_se"].as<string>();
-	}
+    if (vm.count("source_se"))
+        {
+            return vm["source_se"].as<string>();
+        }
 
-	return string();
+    return string();
 }
 
 string ListTransferCli::destination()
 {
-	if (vm.count("dest_se"))
-	{
-		return vm["dest_se"].as<string>();
-	}
+    if (vm.count("dest_se"))
+        {
+            return vm["dest_se"].as<string>();
+        }
 
-	return string();
+    return string();
 }

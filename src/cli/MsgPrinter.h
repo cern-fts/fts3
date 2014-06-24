@@ -116,12 +116,12 @@ private:
 template<typename T>
 void MsgPrinter::print(std::vector<T> const & v)
 {
-	if (v.empty())
-	{
-		if (json) print_json<T>();
-		else print_cout<T>();
-		return;
-	}
+    if (v.empty())
+        {
+            if (json) print_json<T>();
+            else print_cout<T>();
+            return;
+        }
 
     void (*print)(T const &);
 

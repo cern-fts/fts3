@@ -294,7 +294,7 @@ const int mode_3[] = {6,8,7,10};
 inline bool lanTransfer(const std::string source, const std::string dest)
 {
     if(source == dest)
-	return true;
+        return true;
 
     std::string sourceDomain;
     std::string destinDomain;

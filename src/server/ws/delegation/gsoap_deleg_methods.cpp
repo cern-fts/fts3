@@ -41,7 +41,7 @@ static boost::mutex qm;
 int fts3::delegation__getProxyReq(struct soap* soap, std::string _delegationID, struct delegation__getProxyReqResponse &_param_4)
 {
     boost::mutex::scoped_lock lock(qm);
-	
+
     try
         {
             AuthorizationManager::getInstance().authorize(
@@ -123,7 +123,7 @@ int fts3::delegation__renewProxyReq(struct soap* soap, std::string _delegationID
 int fts3::delegation__putProxy(struct soap* soap, std::string _delegationID, std::string _proxy, struct delegation__putProxyResponse &_param_7)
 {
     boost::mutex::scoped_lock lock(qm);
-    
+
     try
         {
             AuthorizationManager::getInstance().authorize(
@@ -137,9 +137,9 @@ int fts3::delegation__putProxy(struct soap* soap, std::string _delegationID, std
 
         }
     catch (Err_Transient& ex)
-		{
-			FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
-		}
+        {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+        }
     catch (Err& ex)
         {
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
@@ -152,7 +152,7 @@ int fts3::delegation__putProxy(struct soap* soap, std::string _delegationID, std
 
 int fts3::delegation__getTerminationTime(struct soap* soap, std::string _delegationID, struct delegation__getTerminationTimeResponse &_param_8)
 {
-    
+
     try
         {
             AuthorizationManager::getInstance().authorize(
