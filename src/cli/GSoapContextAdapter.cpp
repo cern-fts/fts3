@@ -539,10 +539,10 @@ void GSoapContextAdapter::setSeProtocol(string protocol, string se, string state
         }
 }
 
-void GSoapContextAdapter::retrySet(int retry)
+void GSoapContextAdapter::retrySet(string vo, int retry)
 {
     implcfg__setRetryResponse resp;
-    if (soap_call_implcfg__setRetry(ctx, endpoint.c_str(), 0, retry, resp))
+    if (soap_call_implcfg__setRetry(ctx, endpoint.c_str(), 0, vo, retry, resp))
         {
             handleSoapFault("Operation retrySet failed.");
         }

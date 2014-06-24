@@ -313,7 +313,7 @@ public:
      *
      * @param retry - number of retries to be set
      */
-    void retrySet(int retry);
+    void retrySet(string vo, int retry);
 
     /**
      * Remote call to optimizerModeSet

@@ -255,7 +255,7 @@ int fts3::implcfg__doDrain(soap* ctx, bool drain, struct implcfg__doDrainRespons
 
 /* ---------------------------------------------------------------------- */
 
-int fts3::implcfg__setRetry(soap* ctx, int retry, implcfg__setRetryResponse& _resp)
+int fts3::implcfg__setRetry(soap* ctx, std::string vo, int retry, implcfg__setRetryResponse& _resp)
 {
 
     try
