@@ -487,6 +487,7 @@
 
       <part name="inGivenStates" type="impl:ArrayOf_soapenc_string"/>
 
+      <part name="placeHolder" type="xsd:string"/>
 
       <part name="forDN" type="xsd:string"/>
 
