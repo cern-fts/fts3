@@ -5727,16 +5727,18 @@ void OracleAPI::setSeProtocol(std::string /*protocol*/, std::string se, std::str
 }
 
 
-void OracleAPI::setRetry(int retry)
+void OracleAPI::setRetry(int retry, const std::string & vo_name)
 {
     soci::session sql(*connectionPool);
 
     try
         {
             sql.begin();
+	    
+	    sql << "DELETE FROM t_server_config where vo_name = :vo_name", soci::use(vo_name);
 
-            sql << "UPDATE t_server_config SET retry = :retry",
-                soci::use(retry);
+            sql << "INSERT INTO t_server_config(retry, vo_name) VALUES(:retry, :vo_name)",
+                soci::use(retry), soci::use(vo_name);
 
             sql.commit();
         }
@@ -5751,7 +5753,6 @@ void OracleAPI::setRetry(int retry)
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }
-
 
 
 int OracleAPI::getRetry(const std::string & jobId)
@@ -5774,7 +5775,7 @@ int OracleAPI::getRetry(const std::string & jobId)
                 ;
 
             if (isNull == soci::i_null || nRetries <= 0)
-                {
+                {		    
                     sql <<
                         " SELECT retry FROM (SELECT rownum as rn, retry "
                         "  FROM t_server_config where vo_name=:vo_name) WHERE rn = 1",

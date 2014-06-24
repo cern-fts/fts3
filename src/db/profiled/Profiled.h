@@ -220,7 +220,7 @@ public:
 
     void setSeProtocol(std::string protocol, std::string se, std::string state);
 
-    void setRetry(int retry);
+    void setRetry(int retry, const std::string & vo);
 
     int getRetry(const std::string & jobId);
 

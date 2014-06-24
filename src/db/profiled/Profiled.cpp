@@ -584,9 +584,9 @@ void ProfiledDB::setSeProtocol(std::string protocol, std::string se, std::string
     PROFILE_PREFIXED("DB::", db->setSeProtocol(protocol, se, state));
 }
 
-void ProfiledDB::setRetry(int retry)
+void ProfiledDB::setRetry(int retry, const std::string & vo)
 {
-    PROFILE_PREFIXED("DB::", db->setRetry(retry));
+    PROFILE_PREFIXED("DB::", db->setRetry(retry, vo));
 }
 
 

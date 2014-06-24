@@ -247,7 +247,7 @@ public:
 
     virtual void setSeProtocol(std::string protocol, std::string se, std::string state);
 
-    virtual void setRetry(int retry);
+    virtual void setRetry(int retry, const std::string & vo);
 
     virtual int getRetry(const std::string & jobId);
 

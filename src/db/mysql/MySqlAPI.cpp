@@ -5976,16 +5976,18 @@ void MySqlAPI::setSeProtocol(std::string /*protocol*/, std::string se, std::stri
 }
 
 
-void MySqlAPI::setRetry(int retry)
+void MySqlAPI::setRetry(int retry, const std::string & vo_name)
 {
     soci::session sql(*connectionPool);
 
     try
         {
             sql.begin();
+	    
+	    sql << "DELETE FROM t_server_config where vo_name = :vo_name", soci::use(vo_name);
 
-            sql << "UPDATE t_server_config SET retry = :retry",
-                soci::use(retry);
+            sql << "INSERT INTO t_server_config(retry, vo_name) VALUES(:retry, :vo_name)",
+                soci::use(retry), soci::use(vo_name);
 
             sql.commit();
         }
@@ -6023,12 +6025,12 @@ int MySqlAPI::getRetry(const std::string & jobId)
                 ;
 
             if (isNull == soci::i_null || nRetries <= 0)
-                {
+                {		    		    
                     sql <<
                         " SELECT retry "
                         " FROM t_server_config where vo_name=:vo_name LIMIT 1",
                         soci::use(vo_name), soci::into(nRetries)
-                        ;
+                        ;			
                 }
             else if (isNull != soci::i_null && nRetries <= 0)
                 {
