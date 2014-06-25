@@ -17,6 +17,7 @@
 			<i class="icon-time"></i> Submitted time: {{job.job.submit_time}}<br/>
 			<i class="icon-time"></i> Job finished: {{job.job.job_finished}}<br/>
 			<i class="icon-star"></i> Priority: {{job.job.priority}}<br/>
+            <i class="icon-download-alt"></i> Bring online: {{job.job.bring_online}}<br/>
         </p>
     </div>
     <div class="span6">
@@ -25,6 +26,7 @@
             <i class="icon-remove"></i> Overwrite flag: {{job.job.overwrite_flag}}<br/>
             <i class="icon-refresh"></i> Reuse sessions: {{job.job.reuse_job}}<br/>
             <i class="icon-ban-circle"></i> Cancel flag: {{job.job.cancel_job}}<br/>
+            <i class="icon-time"></i> Pin lifetime: {{job.job.copy_pin_lifetime}}<br/>
         </p>
     </div>
 </div>
@@ -144,6 +146,7 @@
             </td>
             <td class="status {{file.file_state}}">
                 {{file.file_state}}
+                <span ng-show="file.source_surl == file.dest_surl" title="Staging only">(B)</span>
             </td>
             <td>{{file.filesize|filesize}}</td>
             <td>{{file.throughput|number:2}} MB/s</td>
