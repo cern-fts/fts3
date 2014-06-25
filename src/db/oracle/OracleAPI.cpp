@@ -236,10 +236,6 @@ void OracleAPI::submitdelete(const std::string & jobId, const std::multimap<std:
 
     try
         {
-
-
-
-
             sql.begin();
 
             soci::statement insertJob = (	sql.prepare << "INSERT INTO  t_job ( job_id, job_state, vo_name,submit_host, submit_time, user_dn, cred_id)"
@@ -252,11 +248,11 @@ void OracleAPI::submitdelete(const std::string & jobId, const std::multimap<std:
                                             soci::use(credID)
                                         );
             insertJob.execute(true);
-            sql.commit();
+            
 
             std::string sourceSurl;
             std::string sourceSE;
-//																												dmHost
+
             soci::statement pairStmt = (	sql.prepare << "INSERT INTO t_dm (vo_name, job_id, file_state, source_surl, source_se) "
                                             "VALUES (:voName, :jobId, :filestate,:sourceSurl, :source_se)",
                                             soci::use(voName),
@@ -264,15 +260,7 @@ void OracleAPI::submitdelete(const std::string & jobId, const std::multimap<std:
                                             soci::use(initialState),
                                             soci::use(sourceSurl),
                                             soci::use(sourceSE)
-                                       );
-            sql.begin();
-
-            // When reuse is enabled, we hash the job id instead of the file ID
-            // This guarantees that the whole set belong to the same machine, but keeping
-            // the load balance between hosts
-            soci::statement updateHashedId = (sql.prepare <<
-                                              "UPDATE t_dm SET hashed_id = conv(substring(md5(file_id) from 1 for 4), 16, 10) WHERE file_id = LAST_INSERT_ID()"
-                                             );
+                                       );           
 
 
             for(std::multimap <std::string, std::string> ::const_iterator mapit = rulsHost.begin(); mapit != rulsHost.end(); ++mapit)
@@ -280,8 +268,7 @@ void OracleAPI::submitdelete(const std::string & jobId, const std::multimap<std:
                     sourceSurl = (*mapit).first;
                     sourceSE = (*mapit).second;
 
-                    pairStmt.execute(true);
-                    updateHashedId.execute(true);
+                    pairStmt.execute(true);                    
                 }
 
             sql.commit();
@@ -4025,7 +4012,7 @@ bool OracleAPI::terminateReuseProcess(const std::string & jobId, int pid, const 
         {
             if(jobId.length() == 0)
                 {
-                    sql << " SELECT job_id from t_file where pid=:pid and job_finished is NULL LIMIT 1",
+                    sql << " SELECT job_id from t_file where pid=:pid and job_finished is NULL AND ROWNUM =1",
                         soci::use(pid), soci::into(job_id);
 
                     sql << " SELECT reuse_job FROM t_job WHERE job_id = :jobId AND reuse_job IS NOT NULL",
@@ -8715,11 +8702,11 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                                  ));
 
 
-            soci::statement st5((sql.prepare << "select reason, count(reason) as c from t_file where "
+            soci::statement st5((sql.prepare << "select * from (select reason, count(reason) as c from t_file where "
                                  " (job_finished >= (sys_extract_utc(systimestamp) - interval '60' minute)) "
                                  " AND file_state='FAILED' and "
                                  " source_se=:source_se and dest_se=:dest_se and vo_name =:vo_name_local   "
-                                 " group by reason order by c desc limit 1",
+                                 " group by reason order by c desc) WHERE ROWNUM=1",
                                  soci::use(source_se),
                                  soci::use(dest_se),
                                  soci::use(vo_name_local),
@@ -9910,7 +9897,7 @@ void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::
 
                             soci::rowset<soci::row> rs3 = (
                                                               sql.prepare <<
-                                                              " SELECT f.source_surl, f.job_id, f.file_id, "
+                                                              " SELECT * FROM (SELECT f.source_surl, f.job_id, f.file_id, "
                                                               " j.user_dn, j.cred_id "
                                                               " FROM t_dm f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                                               " WHERE  "
@@ -9920,7 +9907,7 @@ void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::
                                                               "	AND f.source_se = :source_se  "
                                                               " AND j.user_dn = :user_dn "
                                                               " AND j.vo_name = :vo_name "
-                                                              "	AND j.job_finished is null  ORDER BY j.submit_time LIMIT :limit ",
+                                                              "	AND j.job_finished is null  ORDER BY SYS_EXTRACT_UTC(j.submit_time)) WHERE ROWNUM <= :limit ",
                                                               soci::use(hashSegment.start), soci::use(hashSegment.end),
                                                               soci::use(source_se),
                                                               soci::use(user_dn),
@@ -10237,7 +10224,7 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
 
                             soci::rowset<soci::row> rs3 = (
                                                               sql.prepare <<
-                                                              " SELECT f.source_surl, f.job_id, f.file_id, j.copy_pin_lifetime, j.bring_online, "
+                                                              " SELECT * FROM (SELECT f.source_surl, f.job_id, f.file_id, j.copy_pin_lifetime, j.bring_online, "
                                                               " j.user_dn, j.cred_id, j.source_space_token"
                                                               " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                                               " WHERE  "
@@ -10248,7 +10235,7 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
                                                               "	AND f.source_se = :source_se  "
                                                               " AND j.user_dn = :user_dn "
                                                               " AND j.vo_name = :vo_name "
-                                                              "	AND j.job_finished is null ORDER BY j.submit_time LIMIT :limit ",
+                                                              "	AND j.job_finished is null ORDER BY SYS_EXTRACT_UTC(j.submit_time) )  WHERE ROWNUM <= :limit ",
                                                               soci::use(hashSegment.start), soci::use(hashSegment.end),
                                                               soci::use(source_se),
                                                               soci::use(user_dn),
