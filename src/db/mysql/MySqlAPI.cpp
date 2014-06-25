@@ -302,6 +302,7 @@ void MySqlAPI::submitdelete(const std::string & jobId, const std::multimap<std::
                             const std::string & userDN, const std::string & voName, const std::string & credID)
 {
     const std::string initialState = "DELETE";
+    std::ostringstream pairStmt;
 
     soci::session sql(*connectionPool);
 
@@ -322,32 +323,36 @@ void MySqlAPI::submitdelete(const std::string & jobId, const std::multimap<std::
 
             std::string sourceSurl;
             std::string sourceSE;
-//																												dmHost
-            soci::statement pairStmt = (	sql.prepare << "INSERT INTO t_dm (vo_name, job_id, file_state, source_surl, source_se) "
-                                            "VALUES (:voName, :jobId, :filestate,:sourceSurl, :source_se)",
-                                            soci::use(voName),
-                                            soci::use(jobId),
-                                            soci::use(initialState),
-                                            soci::use(sourceSurl),
-                                            soci::use(sourceSE)
-                                       );
 
-            // When reuse is enabled, we hash the job id instead of the file ID
-            // This guarantees that the whole set belong to the same machine, but keeping
-            // the load balance between hosts
-            soci::statement updateHashedId = (sql.prepare <<
-                                              "UPDATE t_dm SET hashed_id = conv(substring(md5(file_id) from 1 for 4), 16, 10) WHERE file_id = LAST_INSERT_ID()"
-                                             );
-
-
+            pairStmt << std::fixed << "INSERT INTO t_dm (vo_name, job_id, file_state, source_surl, source_se) VALUES ";
+           
             for(std::multimap <std::string, std::string> ::const_iterator mapit = rulsHost.begin(); mapit != rulsHost.end(); ++mapit)
                 {
                     sourceSurl = (*mapit).first;
                     sourceSE = (*mapit).second;
 
-                    pairStmt.execute(true);
-                    updateHashedId.execute(true);
+ 		    pairStmt << "(";
+		    pairStmt << "'";
+		    pairStmt << voName;
+                    pairStmt << "',";
+                    pairStmt << "'";
+                    pairStmt << jobId;
+                    pairStmt << "',";
+                    pairStmt << "'";
+                    pairStmt << initialState;
+                    pairStmt << "',";
+                    pairStmt << "'";
+                    pairStmt << sourceSurl;
+                    pairStmt << "',";
+                    pairStmt << "'";
+                    pairStmt << sourceSE;
+                    pairStmt << "',";
+		    pairStmt << getHashedId();
+                    pairStmt << "), ";	                    
                 }
+
+	    std::string queryStr = pairStmt.str();
+            sql << queryStr.substr(0, queryStr.length() - 1);
 
             sql.commit();
         }
