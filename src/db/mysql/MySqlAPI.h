@@ -379,7 +379,7 @@ public:
     virtual void updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string> >& files);
 
     //file_id / surl / proxy
-    virtual void getFilesForDeletion(std::vector< boost::tuple<int, std::string, std::string> >& files);
+    virtual void getFilesForDeletion(std::vector< boost::tuple<std::string, std::string, int, std::string, std::string> >& files);
 
     //job_id
     virtual void cancelDeletion(std::vector<std::string>& files);
@@ -413,6 +413,11 @@ private:
     std::string           hostname;
     std::string username_;
     std::vector<std::string> sanityVector;
+    
+    
+    void updateDeletionsStateInternal(soci::session& sql, std::vector< boost::tuple<int, std::string, std::string, std::string> >& files);
+    
+    void updateStagingStateInternal(soci::session& sql, std::vector< boost::tuple<int, std::string, std::string, std::string> >& files);
 
     bool getDrainInternal(soci::session& sql);
 

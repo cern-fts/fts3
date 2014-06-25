@@ -9832,7 +9832,39 @@ void MySqlAPI::getTransferJobStatusDetailed(std::string job_id, std::vector<boos
 
 
 
-
+void MySqlAPI::updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string> >& files)
+{
+    soci::session sql(*connectionPool);
+    try
+        {
+            updateDeletionsStateInternal(sql, files);
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+    
+void MySqlAPI::updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string> >& files)
+{
+   soci::session sql(*connectionPool);
+    try
+        {
+            updateStagingStateInternal(sql, files);
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
 
 
 
@@ -9842,9 +9874,8 @@ void MySqlAPI::getTransferJobStatusDetailed(std::string job_id, std::vector<boos
 //check job state for staging and deletions
 
 //deletions						 //file_id / state / reason / job_id
-void MySqlAPI::updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string> >& files)
+void MySqlAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< boost::tuple<int, std::string, std::string, std::string> >& files)
 {
-    soci::session sql(*connectionPool);
     int file_id = 0;
     std::string state;
     std::string reason;
@@ -9920,10 +9951,141 @@ void MySqlAPI::updateDeletionsState(std::vector< boost::tuple<int, std::string, 
         }
 }
 
-//file_id / surl / proxy
-void MySqlAPI::getFilesForDeletion(std::vector< boost::tuple<int, std::string, std::string> >& files)
+                                        //file_id / surl / proxy
+void MySqlAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::string, int, std::string, std::string> >& files)
 {
+   soci::session sql(*connectionPool);
 
+    try
+        {
+            soci::rowset<soci::row> rs2 = (sql.prepare <<
+                                           " SELECT DISTINCT vo_name, source_se, dest_se "
+                                           " FROM t_dm "
+                                           " WHERE "
+                                           "      file_state = 'DELETE' AND "
+                                           "      (hashed_id >= :hStart AND hashed_id <= :hEnd)  ",
+                                           soci::use(hashSegment.start), soci::use(hashSegment.end)
+                                          );
+
+            for (soci::rowset<soci::row>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
+                {
+                    soci::row const& r = *i2;
+                    std::string source_se = r.get<std::string>("source_se","");
+                    std::string dest_se = r.get<std::string>("dest_se","");
+                    std::string vo_name = r.get<std::string>("vo_name","");
+
+                    soci::rowset<soci::row> rs = (
+                                                     sql.prepare <<
+                                                     " SELECT distinct j.source_se, j.user_dn "
+                                                     " FROM t_db f INNER JOIN t_job j ON (f.job_id = j.job_id) "
+                                                     " WHERE "         
+                                                     "	f.file_state = 'DELETE' "
+                                                     "	AND f.start_time IS NULL and j.job_finished is null "
+                                                     "  AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd)"
+                                                     "  AND f.vo_name = :vo_name AND f.source_se=:source_se AND f.dest_se=:dest_se ",
+                                                     soci::use(hashSegment.start), soci::use(hashSegment.end),
+                                                     soci::use(vo_name), soci::use(source_se), soci::use(dest_se)
+                                                 );
+
+                    for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+                        {
+                            soci::row const& row = *i;
+
+                            source_se = row.get<std::string>("source_se");
+                            std::string user_dn = row.get<std::string>("user_dn");
+
+                            int maxValueConfig = 0;
+                            int currentDeleteActive = 0;
+                            int limit = 0;
+
+                            //check max configured
+                            sql << 	"SELECT concurrent_ops from t_stage_req "
+                                "WHERE vo_name=:vo_name and host = :endpoint and operation='delete' and concurrent_ops is NOT NULL ",
+                                soci::use(vo_name), soci::use(source_se), soci::into(maxValueConfig);
+
+                            //check current staging
+                            sql << 	"SELECT count(*) from t_dm "
+                                "WHERE vo_name=:vo_name and source_se = :endpoint and file_state='STARTED' and job_finished is not NULL ",
+                                soci::use(vo_name), soci::use(source_se), soci::into(currentDeleteActive);
+
+
+                            if(maxValueConfig > 0)
+                                {
+                                    if(currentDeleteActive > 0)
+                                        {
+                                            limit = maxValueConfig - currentDeleteActive;
+                                        }
+                                    else
+                                        {
+                                            limit = maxValueConfig;
+                                        }
+                                }
+                            else
+                                {
+                                    if(currentDeleteActive > 0)
+                                        {
+                                            limit = 2000 - currentDeleteActive;
+                                        }
+                                    else
+                                        {
+                                            limit = 2000;
+                                        }
+                                }
+
+                            soci::rowset<soci::row> rs3 = (
+                                                              sql.prepare <<
+                                                              " SELECT f.source_surl, f.job_id, f.file_id, "
+                                                              " j.user_dn, j.cred_id "
+                                                              " FROM t_dm f INNER JOIN t_job j ON (f.job_id = j.job_id) "
+                                                              " WHERE  "
+                                                              "	f.start_time "
+                                                              "	AND f.file_state = 'DELETE' "
+                                                              " AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd)"
+                                                              "	AND f.source_se = :source_se  "
+                                                              " AND j.user_dn = :user_dn "
+                                                              " AND j.vo_name = :vo_name "
+                                                              "	AND j.job_finished is null LIMIT :limit ",
+                                                              soci::use(hashSegment.start), soci::use(hashSegment.end),
+                                                              soci::use(source_se),
+                                                              soci::use(user_dn),
+                                                              soci::use(vo_name),
+                                                              soci::use(limit)
+                                                          );
+
+                            std::vector< boost::tuple<int, std::string, std::string, std::string> > filesState;
+			    std::string initState = "STARTED";
+			    std::string reason;
+			    
+                            for (soci::rowset<soci::row>::const_iterator i3 = rs3.begin(); i3 != rs2.end(); ++i3)
+                                {
+                                    soci::row const& row = *i3;
+                                    std::string source_url = row.get<std::string>("source_surl");
+                                    std::string job_id = row.get<std::string>("job_id");
+                                    int file_id = row.get<int>("file_id");                                    
+                                    user_dn = row.get<std::string>("user_dn");
+                                    std::string cred_id = row.get<std::string>("cred_id");
+
+                                    boost::tuple<std::string, std::string, int, std::string, std::string> record(source_url, job_id, file_id, user_dn, cred_id);
+                                    files.push_back(record);
+				    
+                                    boost::tuple<int, std::string, std::string, std::string> recordState(file_id, initState, reason, job_id);
+                                    filesState.push_back(recordState);				    				                                       
+                                }
+			    //file_id / state / reason / job_id
+			    //now update the initial state
+			    if(!filesState.empty())
+		            	updateDeletionsStateInternal(sql, filesState);
+                        }
+                }
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
 }
 
 //job_id
@@ -10219,6 +10381,10 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                                                               soci::use(limit)
                                                           );
 
+			    std::vector< boost::tuple<int, std::string, std::string, std::string> > filesState;
+		            std::string initState = "STARTED";
+			    std::string reason;
+			    
                             for (soci::rowset<soci::row>::const_iterator i3 = rs3.begin(); i3 != rs2.end(); ++i3)
                                 {
                                     soci::row const& row = *i3;
@@ -10233,10 +10399,14 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
 
                                     boost::tuple<std::string, std::string, int, int, int, std::string, std::string, std::string > record(source_url,job_id, file_id, copy_pin_lifetime, bring_online, user_dn, cred_id , source_space_token);
                                     files.push_back(record);
-
-                                    //make sure limit per vo and user_dn are respected
-                                    //at any given time no more than 2K default per user, ednpoint and vo or manuall
+				    
+				    boost::tuple<int, std::string, std::string, std::string> recordState(file_id, initState, reason, job_id);
+                                    filesState.push_back(recordState);		
                                 }
+				
+			    //now update the initial state
+			    if(!filesState.empty())
+		            	updateStagingStateInternal(sql, filesState);				
                         }
                 }
         }
@@ -10251,9 +10421,8 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
 }
 
 //file_id / state / reason / job_id
-void MySqlAPI::updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string> >& files)
+void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost::tuple<int, std::string, std::string, std::string> >& files)
 {
-    soci::session sql(*connectionPool);
     int file_id = 0;
     std::string state;
     std::string reason;

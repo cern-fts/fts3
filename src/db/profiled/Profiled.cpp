@@ -910,7 +910,7 @@ void ProfiledDB::updateDeletionsState(std::vector< boost::tuple<int, std::string
 }
 
 //file_id / surl / proxy
-void ProfiledDB::getFilesForDeletion(std::vector< boost::tuple<int, std::string, std::string> >& files)
+void ProfiledDB::getFilesForDeletion(std::vector< boost::tuple<std::string, std::string, int, std::string, std::string> >& files)
 {
     PROFILE_PREFIXED("DB::", db->getFilesForDeletion(files));
 }

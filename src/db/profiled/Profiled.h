@@ -340,7 +340,7 @@ public:
     void updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string> >& files);
 
     //file_id / surl / proxy
-    void getFilesForDeletion(std::vector< boost::tuple<int, std::string, std::string> >& files);
+    void getFilesForDeletion(std::vector< boost::tuple<std::string, std::string, int, std::string, std::string> >& files);
 
     //job_id
     void cancelDeletion(std::vector<std::string>& files);
