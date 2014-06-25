@@ -231,6 +231,7 @@ void OracleAPI::submitdelete(const std::string & jobId, const std::multimap<std:
                              const std::string & userDN, const std::string & voName, const std::string & credID)
 {
     const std::string initialState = "DELETE";
+    std::ostringstream pairStmt;
 
     soci::session sql(*connectionPool);
 
@@ -252,24 +253,38 @@ void OracleAPI::submitdelete(const std::string & jobId, const std::multimap<std:
 
             std::string sourceSurl;
             std::string sourceSE;
-
-            soci::statement pairStmt = (	sql.prepare << "INSERT INTO t_dm (vo_name, job_id, file_state, source_surl, source_se) "
-                                            "VALUES (:voName, :jobId, :filestate,:sourceSurl, :source_se)",
-                                            soci::use(voName),
-                                            soci::use(jobId),
-                                            soci::use(initialState),
-                                            soci::use(sourceSurl),
-                                            soci::use(sourceSE)
-                                       );           
-
+	    
+	    pairStmt << std::fixed << "INSERT ALL ";
 
             for(std::multimap <std::string, std::string> ::const_iterator mapit = rulsHost.begin(); mapit != rulsHost.end(); ++mapit)
                 {
                     sourceSurl = (*mapit).first;
                     sourceSE = (*mapit).second;
-
-                    pairStmt.execute(true);                    
+		    
+		    pairStmt << "INTO t_file (vo_name, job_id, file_state, source_surl, source_se, hashed_id) VALUES ";
+		    pairStmt << "(";
+		    pairStmt << "'";
+		    pairStmt << voName;
+                    pairStmt << "',";
+                    pairStmt << "'";
+                    pairStmt << jobId;
+                    pairStmt << "',";
+                    pairStmt << "'";
+                    pairStmt << initialState;
+                    pairStmt << "',";
+                    pairStmt << "'";
+                    pairStmt << sourceSurl;
+                    pairStmt << "',";
+                    pairStmt << "'";
+                    pairStmt << sourceSE;
+                    pairStmt << "',";
+		    pairStmt << getHashedId();
+                    pairStmt << ") ";		    
                 }
+		
+            std::string queryStr = pairStmt.str();
+            queryStr += " SELECT * FROM dual ";
+            sql << queryStr;		
 
             sql.commit();
         }
