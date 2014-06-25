@@ -27,17 +27,21 @@
 #include <common/error.h>
 #include "threadtraits.h"
 
+#include <boost/thread/locks.hpp>
+
 using namespace std;
 using namespace fts3::common;
 using namespace fts3::ws;
 
-//ThreadTraits::MUTEX _mutex;
+
+//serialize delegation request to avoid crashes due to multiple SSL initialization inside canl
+static boost::mutex qm;
+
 
 int fts3::delegation__getProxyReq(struct soap* soap, std::string _delegationID, struct delegation__getProxyReqResponse &_param_4)
 {
+    boost::mutex::scoped_lock lock(qm);
 
-//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__getProxyReq' request" << commit;
-//	ThreadTraits::LOCK lock(_mutex);
     try
         {
             AuthorizationManager::getInstance().authorize(
@@ -63,9 +67,7 @@ int fts3::delegation__getProxyReq(struct soap* soap, std::string _delegationID, 
 
 int fts3::delegation__getNewProxyReq(struct soap* soap, struct delegation__getNewProxyReqResponse &_param_5)
 {
-
-//	ThreadTraits::LOCK lock(_mutex);
-//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__getNewProxyReq' request" << commit;
+    boost::mutex::scoped_lock lock(qm);
 
     try
         {
@@ -93,8 +95,7 @@ int fts3::delegation__getNewProxyReq(struct soap* soap, struct delegation__getNe
 int fts3::delegation__renewProxyReq(struct soap* soap, std::string _delegationID, struct delegation__renewProxyReqResponse &_param_6)
 {
 
-//	ThreadTraits::LOCK lock(_mutex);
-//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__renewProxyReq' request" << commit;
+    boost::mutex::scoped_lock lock(qm);
 
     try
         {
@@ -121,8 +122,7 @@ int fts3::delegation__renewProxyReq(struct soap* soap, std::string _delegationID
 
 int fts3::delegation__putProxy(struct soap* soap, std::string _delegationID, std::string _proxy, struct delegation__putProxyResponse &_param_7)
 {
-//	ThreadTraits::LOCK lock(_mutex);
-//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__putProxy' request" << commit;
+    boost::mutex::scoped_lock lock(qm);
 
     try
         {
@@ -137,9 +137,9 @@ int fts3::delegation__putProxy(struct soap* soap, std::string _delegationID, std
 
         }
     catch (Err_Transient& ex)
-		{
-			FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
-		}
+        {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+        }
     catch (Err& ex)
         {
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
@@ -152,8 +152,6 @@ int fts3::delegation__putProxy(struct soap* soap, std::string _delegationID, std
 
 int fts3::delegation__getTerminationTime(struct soap* soap, std::string _delegationID, struct delegation__getTerminationTimeResponse &_param_8)
 {
-//	ThreadTraits::LOCK lock(_mutex);
-//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__getTerminationTime' request" << commit;
 
     try
         {
@@ -180,9 +178,6 @@ int fts3::delegation__getTerminationTime(struct soap* soap, std::string _delegat
 
 int fts3::delegation__destroy(struct soap* soap, std::string _delegationID, struct delegation__destroyResponse &_param_9)
 {
-//	ThreadTraits::LOCK lock(_mutex);
-//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__destroy' request" << commit;
-
     try
         {
             AuthorizationManager::getInstance().authorize(

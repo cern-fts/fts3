@@ -255,7 +255,7 @@ int fts3::implcfg__doDrain(soap* ctx, bool drain, struct implcfg__doDrainRespons
 
 /* ---------------------------------------------------------------------- */
 
-int fts3::implcfg__setRetry(soap* ctx, int retry, implcfg__setRetryResponse& _resp)
+int fts3::implcfg__setRetry(soap* ctx, std::string vo, int retry, implcfg__setRetryResponse& _resp)
 {
 
     try
@@ -273,16 +273,16 @@ int fts3::implcfg__setRetry(soap* ctx, int retry, implcfg__setRetryResponse& _re
 
             // prepare the command for audit
             stringstream cmd;
-            cmd << "fts-config-set --retry " << retry;
+            cmd << "fts-config-set --retry " << vo << " " << retry;
 
             // audit the operation
             DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd.str(), "retry");
 
             // set the number of retries
-            DBSingleton::instance().getDBObjectInstance()->setRetry(retry);
+            DBSingleton::instance().getDBObjectInstance()->setRetry(retry, vo);
 
             // log it
-            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << dn << " had set the retry value to " << retry << commit;
+            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << dn << " had set the retry value to " << retry << " for VO " << vo << commit;
 
         }
     catch(Err& ex)

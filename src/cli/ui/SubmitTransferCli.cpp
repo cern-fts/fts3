@@ -211,9 +211,10 @@ bool SubmitTransferCli::createJobElements()
                                 }
                             else
                                 {
-                                    // only one element is still not enough to define a job
-                                    printer().bulk_submission_error(lineCount, "destination is missing");
-                                    return false;
+                                    // one element is not enough to define a job
+                                    std::string msg =
+                                        "submit: in line " + boost::lexical_cast<std::string>(lineCount) + " destination is missing";
+                                    throw cli_exception(msg);
                                 }
 
                             // the third part should be the checksum (but its optional)

@@ -44,11 +44,13 @@ RequestLister::RequestLister(::soap* soap, impltns__ArrayOf_USCOREsoapenc_USCORE
     checkGivenStates (inGivenStates);
 }
 
-RequestLister::RequestLister(::soap* soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates, string dn, string vo):
+RequestLister::RequestLister(::soap* soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates, string dn, string vo, string src, string dst):
     soap(soap),
     cgsi(soap),
     dn(dn),
-    vo(vo)
+    vo(vo),
+    src(src),
+    dst(dst)
 {
 
     FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << cgsi.getClientDn() << " is listing transfer job requests" << commit;
@@ -76,7 +78,7 @@ impltns__ArrayOf_USCOREtns3_USCOREJobStatus* RequestLister::list(AuthorizationMa
 
     try
         {
-            DBSingleton::instance().getDBObjectInstance()->listRequests(jobs, inGivenStates, "", dn, vo);
+            DBSingleton::instance().getDBObjectInstance()->listRequests(jobs, inGivenStates, "", dn, vo, src, dst);
             FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's statuses have been read from the database" << commit;
         }
     catch(Err& ex)

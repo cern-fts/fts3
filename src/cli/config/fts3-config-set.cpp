@@ -87,10 +87,10 @@ int main(int ac, char* av[])
                     cout << "Done" << endl;
                 }
 
-            optional<int> retry = cli->retry();
+            optional< pair<string, int> > retry = cli->retry();
             if (retry.is_initialized())
                 {
-                    ctx.retrySet(*retry);
+                    ctx.retrySet(retry->first, retry->second);
                     cout << "Done" << endl;
                 }
 

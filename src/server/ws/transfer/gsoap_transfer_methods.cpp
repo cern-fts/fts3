@@ -232,16 +232,15 @@ int fts3::impltns__listRequests(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOR
 }
 
 /// Web service operation 'listRequests2' (returns error code or SOAP_OK)
-int fts3::impltns__listRequests2(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *_inGivenStates, string _forDN, string _forVO, struct impltns__listRequests2Response &_param_8)
+int fts3::impltns__listRequests2(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *_inGivenStates, string placeHolder, string _forDN, string _forVO, string src, string dst, struct impltns__listRequests2Response &_param_8)
 {
 
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'listRequests2' request" << commit;
 
     try
         {
-            // todo the jobs should be listed accordingly to the authorization level
             AuthorizationManager::Level lvl = AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::TRANSFER);
-            RequestLister lister(soap, _inGivenStates, _forDN, _forVO);
+            RequestLister lister(soap, _inGivenStates, _forDN, _forVO, src, dst);
             _param_8._listRequests2Return = lister.list(lvl);
 
         }
@@ -1573,10 +1572,10 @@ int fts3::impltns__detailedJobStatus(soap* ctx, std::string job_id, impltns__det
 
     try
         {
-    		// get the resource for authorization purposes
+            // get the resource for authorization purposes
             scoped_ptr<TransferJobs> job(
-            		DBSingleton::instance().getDBObjectInstance()->getTransferJob(job_id, false)
-            	);
+                DBSingleton::instance().getDBObjectInstance()->getTransferJob(job_id, false)
+            );
             // authorise
             AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get());
             // get the data from DB
@@ -1586,18 +1585,18 @@ int fts3::impltns__detailedJobStatus(soap* ctx, std::string job_id, impltns__det
             tns3__DetailedJobStatus *jobStatus = soap_new_tns3__DetailedJobStatus(ctx, -1);
             // reserve the space in response
             jobStatus->transferStatus.reserve(files.size());
-			// copy the data to response
+            // copy the data to response
             std::vector<boost::tuple<std::string, std::string, int, std::string, std::string> >::const_iterator it;
             for (it = files.begin(); it != files.end(); ++it)
-            	{
-            		tns3__DetailedFileStatus * item = soap_new_tns3__DetailedFileStatus(ctx, -1);
-            		item->jobId = boost::get<0>(*it);
-            		item->fileState = boost::get<1>(*it);
-            		item->fileId = boost::get<2>(*it);
-            		item->sourceSurl = boost::get<3>(*it);
-            		item->destSurl = boost::get<4>(*it);
-            		jobStatus->transferStatus.push_back(item);
-            	}
+                {
+                    tns3__DetailedFileStatus * item = soap_new_tns3__DetailedFileStatus(ctx, -1);
+                    item->jobId = boost::get<0>(*it);
+                    item->fileState = boost::get<1>(*it);
+                    item->fileId = boost::get<2>(*it);
+                    item->sourceSurl = boost::get<3>(*it);
+                    item->destSurl = boost::get<4>(*it);
+                    jobStatus->transferStatus.push_back(item);
+                }
             // set the response
             resp._detailedJobStatus = jobStatus;
         }
@@ -1616,5 +1615,5 @@ int fts3::impltns__detailedJobStatus(soap* ctx, std::string job_id, impltns__det
 
     return SOAP_OK;
 
-	return SOAP_OK;
+    return SOAP_OK;
 }

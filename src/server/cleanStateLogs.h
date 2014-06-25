@@ -143,7 +143,7 @@ private:
 
 
                         counter++;
-                        if (counter == 3600)
+                        if (counter == 14400) //every 4h
                             {
                                 DBSingleton::instance().getDBObjectInstance()->checkSanityState();
                                 counter = 0;

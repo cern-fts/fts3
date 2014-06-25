@@ -93,18 +93,18 @@ int main(int ac, char* av[])
             GSoapContextAdapter& ctx = cli->getGSoapContext();
 
             if (cli->p())
-            	{
-            		vector<string> ids = cli->getJobIds();
-            		vector<string>::const_iterator it;
+                {
+                    vector<string> ids = cli->getJobIds();
+                    vector<string>::const_iterator it;
 
-            		for (it = ids.begin(); it != ids.end(); ++it)
-            			{
-            				tns3__DetailedJobStatus* ptr = ctx.getDetailedJobStatus(*it);
-            				cli->printer().print(*it, ptr->transferStatus);
-            			}
+                    for (it = ids.begin(); it != ids.end(); ++it)
+                        {
+                            tns3__DetailedJobStatus* ptr = ctx.getDetailedJobStatus(*it);
+                            cli->printer().print(*it, ptr->transferStatus);
+                        }
 
-            		return 0;
-            	}
+                    return 0;
+                }
 
             // archived content?
             bool archive = cli->queryArchived();
@@ -218,7 +218,7 @@ int main(int ac, char* av[])
     catch(std::exception& ex)
         {
             if (cli.get())
-                cli->printer().gsoap_error_msg(ex.what());
+                cli->printer().error_msg(ex.what());
             else
                 std::cerr << ex.what() << std::endl;
             return 1;

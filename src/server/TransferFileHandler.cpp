@@ -103,7 +103,7 @@ TransferFileHandler::~TransferFileHandler()
 
 TransferFiles TransferFileHandler::get(string vo)
 {
-   TransferFiles ret;
+    TransferFiles ret;
 
     // get the index of the next File in turn for the VO
     optional<FileIndex> index = getIndex(vo);
@@ -162,11 +162,11 @@ optional<FileIndex> TransferFileHandler::getIndex(string vo)
 
 TransferFiles TransferFileHandler::getFile(FileIndex index)
 {
-  // the return value
+    // the return value
     TransferFiles ret;
 
     // if there's no mapping for this index ..
-    if (fileIndexToFiles.find(index) == fileIndexToFiles.end()) return ret;  
+    if (fileIndexToFiles.find(index) == fileIndexToFiles.end()) return ret;
 
     if (!fileIndexToFiles[index].empty())
         {
@@ -180,7 +180,7 @@ TransferFiles TransferFileHandler::getFile(FileIndex index)
 }
 
 void TransferFileHandler::freeList(list<TransferFiles>& l)
-{    
+{
     l.clear();
 }
 

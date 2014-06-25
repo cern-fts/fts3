@@ -38,8 +38,8 @@ namespace ws
 VersionResolver::VersionResolver()
 {
 
-    FILE *in;
-    char buff[512];
+    FILE *in = NULL;
+    char buff[512] = {0};
 
     in = popen("rpm -q --qf '%{VERSION}' fts-server", "r");
 

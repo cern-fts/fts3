@@ -69,7 +69,7 @@ public:
      * @param dn - user DN
      * @param vo - user VO
      */
-    RequestLister(::soap* soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates, string dn, string vo);
+    RequestLister(::soap* soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates, string dn, string vo, string src, string dst);
 
     /**
      * Retrieves job statuses from DB.
@@ -118,6 +118,12 @@ private:
 
     /// VO used for listing jobs
     string vo;
+
+    /// source SE
+    string src;
+
+    /// destination SE
+    string dst;
 
     /// the states of interest
     vector<string> inGivenStates;

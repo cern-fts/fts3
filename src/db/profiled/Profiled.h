@@ -50,7 +50,7 @@ public:
                                unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files);
 
     void listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
-                      std::string restrictToClientDN, std::string forDN, std::string VOname);
+                      std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst);
 
     TransferJobs* getTransferJob(std::string jobId, bool archive);
 
@@ -220,7 +220,7 @@ public:
 
     void setSeProtocol(std::string protocol, std::string se, std::string state);
 
-    void setRetry(int retry);
+    void setRetry(int retry, const std::string & vo);
 
     int getRetry(const std::string & jobId);
 
@@ -333,6 +333,40 @@ public:
     void getTransferJobStatusDetailed(std::string job_id, std::vector<boost::tuple<std::string, std::string, int, std::string, std::string> >& files);
 
     void getVOPairs(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct);
+
+
+    //NEW deletions and staging API
+    //deletions						 //file_id / state / reason
+    void updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string> >& files);
+
+    //file_id / surl / proxy
+    void getFilesForDeletion(std::vector< boost::tuple<int, std::string, std::string> >& files);
+
+    //job_id
+    void cancelDeletion(std::vector<std::string>& files);
+
+    //file_id / surl
+    void getDeletionFilesForCanceling(std::vector< boost::tuple<int, std::string, std::string> >& files);
+
+    void setMaxDeletionsPerEndpoint(int maxDeletions, const std::string & endpoint, const std::string & vo);
+    int getMaxDeletionsPerEndpoint(const std::string & endpoint, const std::string & vo);
+
+
+
+    //staging						//file_id / state / reason / token
+    void updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string> >& files);
+    //file_id / surl / proxy / pinlifetime / bringonlineTimeout
+    void getFilesForStaging(std::vector< boost::tuple<std::string, std::string, int, int, int, std::string, std::string, std::string> >& files);
+
+    //job_id
+    void cancelStaging(std::vector<std::string>& files);
+
+    //file_id / surl / token
+    void getStagingFilesForCanceling(std::vector< boost::tuple<int, std::string, std::string> >& files);
+
+    void setMaxStagingPerEndpoint(int maxStaging, const std::string & endpoint, const std::string & vo);
+    int getMaxStatingsPerEndpoint(const std::string & endpoint, const std::string & vo);
+
 };
 
 

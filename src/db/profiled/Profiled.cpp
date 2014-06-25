@@ -55,9 +55,9 @@ void ProfiledDB::getTransferFileStatus(std::string requestID, bool archive,
 
 
 void ProfiledDB::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
-                              std::string restrictToClientDN, std::string forDN, std::string VOname)
+                              std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst)
 {
-    PROFILE_PREFIXED("DB::", db->listRequests(jobs, inGivenStates, restrictToClientDN, forDN, VOname));
+    PROFILE_PREFIXED("DB::", db->listRequests(jobs, inGivenStates, restrictToClientDN, forDN, VOname, src, dst));
 }
 
 
@@ -584,9 +584,9 @@ void ProfiledDB::setSeProtocol(std::string protocol, std::string se, std::string
     PROFILE_PREFIXED("DB::", db->setSeProtocol(protocol, se, state));
 }
 
-void ProfiledDB::setRetry(int retry)
+void ProfiledDB::setRetry(int retry, const std::string & vo)
 {
-    PROFILE_PREFIXED("DB::", db->setRetry(retry));
+    PROFILE_PREFIXED("DB::", db->setRetry(retry, vo));
 }
 
 
@@ -897,4 +897,77 @@ void ProfiledDB::getTransferJobStatusDetailed(std::string job_id, std::vector<bo
 void ProfiledDB::getVOPairs(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct)
 {
     PROFILE_PREFIXED("DB::", db->getVOPairs(distinct));
+}
+
+
+
+
+
+//deletions
+void ProfiledDB::updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string> >& files)
+{
+    PROFILE_PREFIXED("DB::", db->updateDeletionsState(files));
+}
+
+//file_id / surl / proxy
+void ProfiledDB::getFilesForDeletion(std::vector< boost::tuple<int, std::string, std::string> >& files)
+{
+    PROFILE_PREFIXED("DB::", db->getFilesForDeletion(files));
+}
+
+//job_id
+void ProfiledDB::cancelDeletion(std::vector<std::string>& files)
+{
+    PROFILE_PREFIXED("DB::", db->cancelDeletion(files));
+}
+
+//file_id / surl
+void ProfiledDB::getDeletionFilesForCanceling(std::vector< boost::tuple<int, std::string, std::string> >& files)
+{
+    PROFILE_PREFIXED("DB::", db->getDeletionFilesForCanceling(files));
+}
+
+void ProfiledDB::setMaxDeletionsPerEndpoint(int maxDeletions, const std::string & endpoint, const std::string & vo)
+{
+    PROFILE_PREFIXED("DB::", db->setMaxDeletionsPerEndpoint(maxDeletions, endpoint, vo));
+}
+
+int ProfiledDB::getMaxDeletionsPerEndpoint(const std::string & endpoint, const std::string & vo)
+{
+    PROFILE_PREFIXED("DB::", return db->getMaxDeletionsPerEndpoint(endpoint, vo));
+}
+
+
+
+//staging						//file_id / state / reason / token
+void ProfiledDB::updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string> >& files)
+{
+    PROFILE_PREFIXED("DB::", db->updateStagingState(files));
+}
+//file_id / surl / proxy / pinlifetime / bringonlineTimeout
+void ProfiledDB::getFilesForStaging(std::vector< boost::tuple<std::string, std::string, int, int, int, std::string, std::string, std::string> >& files)
+{
+    PROFILE_PREFIXED("DB::", db->getFilesForStaging(files));
+}
+
+//job_id
+void ProfiledDB::cancelStaging(std::vector<std::string>& files)
+{
+    PROFILE_PREFIXED("DB::", db->cancelStaging(files));
+}
+
+//file_id / surl / token
+void ProfiledDB::getStagingFilesForCanceling(std::vector< boost::tuple<int, std::string, std::string> >& files)
+{
+    PROFILE_PREFIXED("DB::", db->getStagingFilesForCanceling(files));
+}
+
+void ProfiledDB::setMaxStagingPerEndpoint(int maxStaging, const std::string & endpoint, const std::string & vo)
+{
+    PROFILE_PREFIXED("DB::", db->setMaxStagingPerEndpoint(maxStaging, endpoint, vo));
+}
+
+int ProfiledDB::getMaxStatingsPerEndpoint(const std::string & endpoint, const std::string & vo)
+{
+    PROFILE_PREFIXED("DB::", return db->getMaxStatingsPerEndpoint(endpoint, vo));
 }

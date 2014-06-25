@@ -121,7 +121,7 @@ public:
      *
      * @return the number of retries if it has been set, otherwise the optional is not initialized
      */
-    optional<int> retry();
+    optional< pair<string, int> > retry();
 
     /**
      * Check the optimizer-mode option

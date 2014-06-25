@@ -811,7 +811,6 @@ void appendMessageToLogFileNoConfig(std::string & text)
         {
             fout << text << endl; //send to file
         }
-    fout.flush();
     fout.close(); //close file
     int chownExec = chown(logFileName, pw_uid, getgid());
     if(chownExec == -1)

@@ -36,6 +36,12 @@ ListTransferCli::ListTransferCli(): VoNameCli(false)
     ("state", value< vector<string> >(), "Specify states for querying.")
     ;
 
+    // add fts3-transfer-list specific options
+    specific.add_options()
+    ("source_se", value<string>(), "Restrict to specific source SE.")
+    ("dest_se", value<string>(), "Restrict to specific destination SE.")
+    ;
+
     // all positional parameters go to state
     CliBase::p.add("state", -1);
 }
@@ -68,4 +74,24 @@ vector<string> ListTransferCli::getStatusArray()
         }
 
     return array;
+}
+
+string ListTransferCli::source()
+{
+    if (vm.count("source_se"))
+        {
+            return vm["source_se"].as<string>();
+        }
+
+    return string();
+}
+
+string ListTransferCli::destination()
+{
+    if (vm.count("dest_se"))
+        {
+            return vm["dest_se"].as<string>();
+        }
+
+    return string();
 }

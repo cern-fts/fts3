@@ -46,7 +46,7 @@ public:
         // add an additional hint in case of 'reading token data header' error
         if (pos != std::string::npos)
             {
-                msg += " It might be the FTS server's CRL has expired!";
+                msg += " Please consult the FTS3 log files for more details.";
             }
 
         // remove backspaces from the string

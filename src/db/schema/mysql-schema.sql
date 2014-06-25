@@ -31,7 +31,8 @@ CREATE TABLE t_server_config (
   retry          INTEGER DEFAULT 0,
   max_time_queue INTEGER DEFAULT 0,
   global_timeout INTEGER DEFAULT 0,
-  sec_per_mb INTEGER DEFAULT 0
+  sec_per_mb INTEGER DEFAULT 0,
+  vo_name VARCHAR(100)
 );
 INSERT INTO t_server_config (retry,max_time_queue,global_timeout,sec_per_mb) values(0,0,0,0);
 
@@ -661,12 +662,13 @@ CREATE TABLE t_stage_req (
    vo_name           VARCHAR(100) NOT NULL
 -- hostname
    ,host           VARCHAR(150) NOT NULL			
---
+-- operation
+   ,operation           VARCHAR(150) NOT NULL
 -- parallel bringonline ops
   ,concurrent_ops INTEGER DEFAULT 0
   
 -- Set primary key
-  ,CONSTRAINT stagereq_pk PRIMARY KEY (vo_name, host)
+  ,CONSTRAINT stagereq_pk PRIMARY KEY (vo_name, host, operation)
 );
 
 --

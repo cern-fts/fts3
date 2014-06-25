@@ -725,12 +725,12 @@ void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, s
                 }
         }
     catch (std::exception& e)
-        {            
+        {
             files.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
-        {            
+        {
             files.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
@@ -1162,12 +1162,12 @@ void OracleAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std:
                 }
         }
     catch (std::exception& e)
-        {            
+        {
             files.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
-        {            
+        {
             files.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
@@ -1567,7 +1567,7 @@ void OracleAPI::getTransferJobStatus(std::string requestID, bool archive, std::v
  * std::vector<JobStatus*> jobs: the caller will deallocate memory JobStatus instances and clear the vector
  * std::vector<std::string> inGivenStates: order doesn't really matter, more than one states supported
  */
-void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates, std::string restrictToClientDN, std::string forDN, std::string VOname)
+void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates, std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst)
 {
     soci::session sql(*connectionPool);
 
@@ -1631,6 +1631,19 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
             if (searchForCanceling)
                 {
                     query << " AND cancel_job = 'Y' ";
+                }
+
+
+            if (!src.empty())
+                {
+                    query << " AND source_se = :src ";
+                    stmt.exchange(soci::use(src, "src"));
+                }
+
+            if (!dst.empty())
+                {
+                    query << " AND dest_se = :dst ";
+                    stmt.exchange(soci::use(dst, "dst"));
                 }
 
             JobStatus job;
@@ -2464,7 +2477,7 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs)
                 {
                     long long file_id = 0;
 
-                    soci::rowset<soci::row> rs2 = (sql.prepare << " select distinct file_id from t_file where file_state='CANCELED' and PID IS NULL and (job_finished is NULL or finish_time is NULL)");
+                    soci::rowset<soci::row> rs2 = (sql.prepare << " select file_id from t_file where file_state='CANCELED' and PID IS NULL and job_finished is NULL ");
 
                     soci::statement stmt2 = (sql.prepare << "UPDATE t_file SET job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp)  WHERE file_id=:file_id ", soci::use(file_id, "file_id"));
 
@@ -3052,28 +3065,35 @@ bool OracleAPI::getMaxActive(soci::session& sql, int active, int /*highDefault*/
 {
     long long int maxActiveSource = 0;
     long long int maxActiveDest = 0;
-    soci::indicator isNullmaxActiveSource = soci::i_ok;
-    soci::indicator isNullmaxActiveDest = soci::i_ok;
 
     try
         {
+            //check for source
             sql << " select active from t_optimize where source_se = :source_se and active is not NULL ",
                 soci::use(source_hostname),
-                soci::into(maxActiveSource, isNullmaxActiveSource);
+                soci::into(maxActiveSource);
 
-            if (sql.got_data() && active > maxActiveSource)
-                return false;
-
+            //check for dest
             sql << " select active from t_optimize where dest_se = :dest_se and active is not NULL ",
                 soci::use(destin_hostname),
-                soci::into(maxActiveDest, isNullmaxActiveDest);
+                soci::into(maxActiveDest);
 
-            //check limits for dest
-            if (sql.got_data() && active > maxActiveDest)
+            //check for link max first
+            if(maxActiveSource > 0 && maxActiveDest > 0 && maxActiveSource == maxActiveDest && active > maxActiveSource)
                 return false;
 
-            if(active >= MAX_ACTIVE_PER_LINK)
+            //check for max source
+            if (maxActiveSource > 0 && active > maxActiveSource)
                 return false;
+
+            //check for max dest
+            if (maxActiveDest > 0 && active > maxActiveDest)
+                return false;
+
+            //not check, repsect default
+            if( (maxActiveSource == 0 && maxActiveDest == 0) && active >= MAX_ACTIVE_PER_LINK)
+                return false;
+
         }
     catch (std::exception& e)
         {
@@ -3257,17 +3277,7 @@ bool OracleAPI::updateOptimizer()
 
                     now = getUTC(0);
 
-                    if(true == lanTransfer(source_hostname, destin_hostname))
-                        {
-                            highDefault = (highDefault * 3);
-                            lanTransferBool = true;
-                        }
-                    else
-                        {
-                            //default
-                            highDefault = tempDefault;
-                        }
-
+                    lanTransferBool = lanTransfer(source_hostname, destin_hostname);
 
                     // Weighted average
                     soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
@@ -3459,7 +3469,7 @@ bool OracleAPI::updateOptimizer()
                         {
                             sql.begin();
 
-                            active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
+                            active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
                             ema = throughputEMA;
                             stmt10.execute(true);
                             updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, 10, bandwidthIn);
@@ -3475,21 +3485,27 @@ bool OracleAPI::updateOptimizer()
                             sql.begin();
 
                             int pathFollowed = 0;
+                            int tempActive = active; //temp store current active
 
-                            if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 98)) && throughputEMA > thrStored && retry <= retryStored)
+                            //special case to increase active when dealing with LAN transfers of there is only one single/dest pair active
+                            if( (singleDest == 1 || lanTransferBool) && maxActive < 8 )
                                 {
-                                    int tempActive = active; //temp store current active
+                                    highDefault = 8;
+                                    maxActive = highDefault;
+                                }
+                            else //reset
+                                {
+                                    highDefault = tempDefault;
+                                }
 
+                            if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure >= 98)) && throughputEMA > thrStored && retry <= retryStored)
+                                {
                                     //make sure we do not increase beyond limits set
                                     bool maxActiveLimit = getMaxActive(sql, maxActive, highDefault, source_hostname, destin_hostname);
 
-                                    if(maxActiveLimit)
+                                    if(maxActiveLimit) // no limit
                                         {
-                                            if(singleDest == 1)
-                                                {
-                                                    active = maxActive + spawnActive + 1;
-                                                }
-                                            else if (lanTransferBool)
+                                            if(singleDest == 1 || lanTransferBool)
                                                 {
                                                     active = maxActive + spawnActive + 1;
                                                 }
@@ -3498,7 +3514,7 @@ bool OracleAPI::updateOptimizer()
                                                     active = maxActive + spawnActive;
                                                 }
 
-                                            if(active > (tempActive + 10))
+                                            if(active > (tempActive + 7))
                                                 {
                                                     active = maxActive;
                                                 }
@@ -3507,7 +3523,7 @@ bool OracleAPI::updateOptimizer()
                                             ema = throughputEMA;
                                             stmt10.execute(true);
                                         }
-                                    else
+                                    else //no change, max limit reached
                                         {
                                             active = maxActive;
                                             pathFollowed = 11;
@@ -3515,19 +3531,49 @@ bool OracleAPI::updateOptimizer()
                                             stmt10.execute(true);
                                         }
                                 }
-                            else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 98)) && throughputEMA == thrStored && retry <= retryStored)
+                            else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure >= 98)) && throughputEMA == thrStored && retry <= retryStored)
                                 {
-                                    if(throughputSamples == 10) // spawn one every 10min
+                                    //make sure we do not increase beyond limits set
+                                    bool maxActiveLimit = getMaxActive(sql, maxActive, highDefault, source_hostname, destin_hostname);
+
+                                    if(maxActiveLimit) // no limit
                                         {
-                                            active = maxActive + 1;
-                                            ema = throughputEMA;
-                                            pathFollowed = 2;
+                                            if(throughputSamples == 10) // spawn one every 10min
+                                                {
+                                                    active = maxActive + 1;
+                                                    if(active > (tempActive + 7))
+                                                        {
+                                                            active = maxActive;
+                                                        }
+                                                    ema = throughputEMA;
+                                                    pathFollowed = 2;
+                                                    stmt10.execute(true);
+                                                }
+                                            else if(throughputSamples == 10 && (singleDest == 1 || lanTransferBool))
+                                                {
+                                                    active = maxActive + 1;
+                                                    if(active > (tempActive + 7))
+                                                        {
+                                                            active = maxActive;
+                                                        }
+                                                    ema = throughputEMA;
+                                                    pathFollowed = 2;
+                                                    stmt10.execute(true);
+                                                }
+                                            else
+                                                {
+                                                    active = maxActive;
+                                                    ema = throughputEMA;
+                                                    pathFollowed = 2;
+                                                    stmt10.execute(true);
+                                                }
                                         }
                                     else
                                         {
                                             active = maxActive;
                                             ema = throughputEMA;
                                             pathFollowed = 2;
+                                            stmt10.execute(true);
                                         }
                                 }
                             else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 95)) && throughputEMA < thrStored)
@@ -3558,7 +3604,7 @@ bool OracleAPI::updateOptimizer()
                                     ema = throughputEMA;
                                     stmt10.execute(true);
                                 }
-                            else if ( ratioSuccessFailure < 99)
+                            else if ( ratioSuccessFailure < 98)
                                 {
                                     if(ratioSuccessFailure > rateStored && ratioSuccessFailure > 90 && retry <= retryStored)
                                         {
@@ -3599,6 +3645,8 @@ bool OracleAPI::updateOptimizer()
         }
     return allowed;
 }
+
+
 
 
 
@@ -5679,7 +5727,7 @@ void OracleAPI::setSeProtocol(std::string /*protocol*/, std::string se, std::str
 }
 
 
-void OracleAPI::setRetry(int retry)
+void OracleAPI::setRetry(int retry, const std::string & vo_name)
 {
     soci::session sql(*connectionPool);
 
@@ -5687,8 +5735,10 @@ void OracleAPI::setRetry(int retry)
         {
             sql.begin();
 
-            sql << "UPDATE t_server_config SET retry = :retry",
-                soci::use(retry);
+            sql << "DELETE FROM t_server_config where vo_name = :vo_name", soci::use(vo_name);
+
+            sql << "INSERT INTO t_server_config(retry, vo_name) VALUES(:retry, :vo_name)",
+                soci::use(retry), soci::use(vo_name);
 
             sql.commit();
         }
@@ -5705,34 +5755,34 @@ void OracleAPI::setRetry(int retry)
 }
 
 
-
 int OracleAPI::getRetry(const std::string & jobId)
 {
     soci::session sql(*connectionPool);
 
     int nRetries = 0;
     soci::indicator isNull = soci::i_ok;
+    std::string vo_name;
 
     try
         {
-
             sql <<
-                " SELECT retry "
+                " SELECT retry, vo_name "
                 " FROM t_job "
                 " WHERE job_id = :jobId ",
                 soci::use(jobId),
-                soci::into(nRetries, isNull)
+                soci::into(nRetries, isNull),
+                soci::into(vo_name)
                 ;
 
-            if (isNull != soci::i_null && nRetries == 0)
+            if (isNull == soci::i_null || nRetries <= 0)
                 {
                     sql <<
                         " SELECT retry FROM (SELECT rownum as rn, retry "
-                        "  FROM t_server_config) WHERE rn = 1",
-                        soci::into(nRetries)
+                        "  FROM t_server_config where vo_name=:vo_name) WHERE rn = 1",
+                        soci::use(vo_name), soci::into(nRetries)
                         ;
                 }
-            else if (isNull != soci::i_null && nRetries < 0)
+            else if (isNull != soci::i_null && nRetries <= 0)
                 {
                     nRetries = 0;
                 }
@@ -7280,7 +7330,7 @@ void OracleAPI::checkSanityState()
 
                             sql << "SELECT COUNT(DISTINCT file_index) FROM t_file where job_id=:jobId ", soci::use(*i), soci::into(numberOfFiles);
 
-                            if(numberOfFiles > 1)
+                            if(numberOfFiles > 0)
                                 {
                                     countFileInTerminalStates(sql, *i, allFinished, allCanceled, allFailed);
                                     terminalState = allFinished + allCanceled + allFailed;
@@ -8485,12 +8535,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
     soci::indicator isNull3 = soci::i_ok;
 
     soci::statement voStmt(sql);
-    if(!vo_name.empty())
-        {
-            voStmt = (sql.prepare << "select distinct vo_name from t_job where vo_name = :vo_name",
-                      soci::use(vo_name), soci::into(vo_name_local));
-        }
-    else
+    if(vo_name.empty())
         {
             voStmt = (sql.prepare << "select distinct vo_name from t_job ",
                       soci::into(vo_name_local));
@@ -8527,14 +8572,11 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                     querySe += " AND dest_se = :dest_se ";
                 }
         }
-    if(!destinEmpty || !sourceEmpty)
-        querySe += " AND vo_name= :vo_name";
-    else
-        querySe += " WHERE vo_name= :vo_name";
-    pairsStmt.exchange(soci::use(vo_name_local));
+
     pairsStmt.alloc();
     pairsStmt.prepare(querySe);
     pairsStmt.define_and_bind();
+
 
     try
         {
@@ -8630,14 +8672,131 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                                  soci::into(nFinishedLastHour)
                                 ));
 
-
-            voStmt.execute();
-            while (voStmt.fetch())
+            if(vo_name.empty())
                 {
-                    if(source_se_p.empty())
-                        source_se = "";
-                    if(dest_se_p.empty())
-                        dest_se = "";
+                    voStmt.execute();
+                    while (voStmt.fetch())
+                        {
+                            if(source_se_p.empty())
+                                source_se = "";
+                            if(dest_se_p.empty())
+                                dest_se = "";
+
+                            pairsStmt.execute();
+                            while (pairsStmt.fetch())
+                                {
+                                    active = 0;
+                                    maxActive = 0;
+                                    submitted = 0;
+                                    throughput1h = 0.0;
+                                    throughput30min = 0.0;
+                                    throughput15min = 0.0;
+                                    throughput5min = 0.0;
+                                    nFailedLastHour = 0;
+                                    nFinishedLastHour = 0;
+                                    ratioSuccessFailure = 0.0;
+
+
+                                    st1.execute(true);
+                                    st2.execute(true);
+                                    st7.execute(true);
+                                    st6.execute(true);
+                                    st3.execute(true);
+
+
+                                    //if all of the above return 0 then continue
+                                    if(active == 0 && nFinishedLastHour == 0 &&  nFailedLastHour == 0 && submitted == 0 && source_se_p.empty() && dest_se_p.empty())
+                                        continue;
+
+                                    result << "{\n";
+
+                                    result << std::fixed << "\"VO\":\"";
+                                    result <<   vo_name_local;
+                                    result <<   "\",\n";
+
+                                    result <<   "\"Source endpoint\":\"";
+                                    result <<   source_se;
+                                    result <<   "\",\n";
+
+                                    result <<   "\"Destination endpoint\":\"";
+                                    result <<   dest_se;
+                                    result <<   "\",\n";
+
+                                    //get active for this pair and vo
+                                    result <<   "\"Current active transfers\":\"";
+                                    result <<   active;
+                                    result <<   "\",\n";
+
+                                    //get max active for this pair no matter the vo
+                                    result <<   "\"Max active transfers\":\"";
+                                    result <<   maxActive;
+                                    result <<   "\",\n";
+
+                                    result <<   "\"Number of finished (last hour)\":\"";
+                                    result <<   long(nFinishedLastHour);
+                                    result <<   "\",\n";
+
+                                    result <<   "\"Number of failed (last hour)\":\"";
+                                    result <<   long(nFailedLastHour);
+                                    result <<   "\",\n";
+
+                                    //get submitted for this pair and vo
+                                    result <<   "\"Number of queued\":\"";
+                                    result <<   submitted;
+                                    result <<   "\",\n";
+
+
+                                    //average throughput block
+                                    st41.execute(true);
+                                    result <<   "\"Avg throughput (last 60min)\":\"";
+                                    result <<  std::setprecision(2) << throughput1h;
+                                    result <<   " MB/s\",\n";
+
+                                    st42.execute(true);
+                                    result <<   "\"Avg throughput (last 30min)\":\"";
+                                    result <<  std::setprecision(2) << throughput30min;
+                                    result <<   " MB/s\",\n";
+
+                                    st43.execute(true);
+                                    result <<   "\"Avg throughput (last 15min)\":\"";
+                                    result <<  std::setprecision(2) << throughput15min;
+                                    result <<   " MB/s\",\n";
+
+                                    st44.execute(true);
+                                    result <<   "\"Avg throughput (last 5min)\":\"";
+                                    result <<  std::setprecision(2) << throughput5min;
+                                    result <<   " MB/s\",\n";
+
+
+                                    //round up efficiency
+                                    if(nFinishedLastHour > 0)
+                                        {
+                                            ratioSuccessFailure = ceil((double)nFinishedLastHour/((double)nFinishedLastHour + (double)nFailedLastHour) * (100.0));
+                                        }
+
+                                    result <<   "\"Link efficiency (last hour)\":\"";
+                                    result <<   ratioSuccessFailure;
+                                    result <<   "%\",\n";
+
+                                    //most frequent error and number the last 30min
+                                    reason = "";
+                                    countReason = 0;
+                                    st5.execute(true);
+
+                                    result <<   "\"Most frequent error (last hour)\":\"";
+                                    result <<   countReason;
+                                    result <<   " times: ";
+                                    result <<   reason;
+                                    result <<   "\"\n";
+
+                                    result << "}\n";
+                                    result << "\n\n";
+                                }
+                        }
+                }
+            else
+                {
+                    vo_name_local = vo_name;
 
                     pairsStmt.execute();
                     while (pairsStmt.fetch())
@@ -9474,6 +9633,82 @@ void OracleAPI::getTransferJobStatusDetailed(std::string job_id, std::vector<boo
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }
+
+
+
+//NEW deletions and staging API
+//deletions						 //file_id / state / reason
+void OracleAPI::updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string> >& files)
+{
+
+}
+
+//file_id / surl / proxy
+void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<int, std::string, std::string> >& files)
+{
+
+}
+
+//job_id
+void OracleAPI::cancelDeletion(std::vector<std::string>& files)
+{
+
+}
+
+//file_id / surl
+void OracleAPI::getDeletionFilesForCanceling(std::vector< boost::tuple<int, std::string, std::string> >& files)
+{
+
+}
+
+void OracleAPI::setMaxDeletionsPerEndpoint(int maxDeletions, const std::string & endpoint, const std::string & vo)
+{
+
+}
+
+
+int OracleAPI::getMaxDeletionsPerEndpoint(const std::string & endpoint, const std::string & vo)
+{
+
+}
+
+
+
+//staging						//file_id / state / reason / token
+void OracleAPI::updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string> >& files)
+{
+
+}
+//file_id / surl / proxy / pinlifetime / bringonlineTimeout /
+void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::string, int, int, int, std::string, std::string, std::string> >& files)
+{
+
+}
+
+//job_id
+void OracleAPI::cancelStaging(std::vector<std::string>& files)
+{
+
+}
+
+//file_id / surl / token
+void OracleAPI::getStagingFilesForCanceling(std::vector< boost::tuple<int, std::string, std::string> >& files)
+{
+
+}
+
+void OracleAPI::setMaxStagingPerEndpoint(int maxStaging, const std::string & endpoint, const std::string & vo)
+{
+
+}
+
+
+int OracleAPI::getMaxStatingsPerEndpoint(const std::string & endpoint, const std::string & vo)
+{
+
+}
+
+
 
 
 

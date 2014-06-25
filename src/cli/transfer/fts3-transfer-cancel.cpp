@@ -93,11 +93,7 @@ int main(int ac, char* av[])
 
             vector<string> jobs = cli->getJobIds();
 
-            if (jobs.empty())
-                {
-                    cli->printer().missing_parameter("Job ID");
-                    return 0;
-                }
+            if (jobs.empty()) throw bad_option("jobid", "missing parameter");
 
             vector< pair<string, string> > ret = ctx.cancel(jobs);
             cli->printer().print(ret);
@@ -111,7 +107,7 @@ int main(int ac, char* av[])
     catch(std::exception& ex)
         {
             if (cli.get())
-                cli->printer().gsoap_error_msg(ex.what());
+                cli->printer().error_msg(ex.what());
             else
                 std::cerr << ex.what() << std::endl;
             return 1;

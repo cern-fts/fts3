@@ -28,7 +28,8 @@ CREATE TABLE t_server_config (
   retry       INTEGER default 0,
   max_time_queue INTEGER default 0,
   global_timeout INTEGER default 0,
-  sec_per_mb INTEGER default 0
+  sec_per_mb INTEGER default 0,
+  vo_name VARCHAR2(100)
 );
 insert into t_server_config(retry,max_time_queue,global_timeout,sec_per_mb) values(0,0,0,0);
 
@@ -364,7 +365,7 @@ CREATE TABLE t_se_pair_acl (
 CREATE TABLE t_vo_acl (
 --
 -- the name of the VO
-   vo_name		VARCHAR2(50)
+   vo_name		VARCHAR2(100)
 			CONSTRAINT vo_acl_vo_name_not_null NOT NULL
 --
 -- The principal name
@@ -423,7 +424,7 @@ CREATE TABLE t_job (
   ,voms_cred            BLOB
 --
 -- The VO that owns this job
-  ,vo_name              VARCHAR2(50)
+  ,vo_name              VARCHAR2(100)
 --
 -- The reason the job is in the current state
   ,reason           	VARCHAR2(2048)
@@ -632,7 +633,7 @@ CREATE TABLE t_file (
   ,hashed_id       INTEGER DEFAULT 0
 --
 -- The VO that owns this job
-  ,vo_name              VARCHAR(50)  
+  ,vo_name              VARCHAR(100)  
 );
 
 --
@@ -715,16 +716,18 @@ END;
 CREATE TABLE t_stage_req (
 --
 -- vo name
-   vo_name           VARCHAR2(255) CONSTRAINT stagereq_vo_name_not_null NOT NULL
+   vo_name           VARCHAR2(100) CONSTRAINT stagereq_vo_name_not_null NOT NULL
 --
 -- hostname
    ,host           VARCHAR2(255) CONSTRAINT stagereq_host_not_null NOT NULL
 --
+-- operation
+   ,operation           VARCHAR2(100) CONSTRAINT stagereq_operation_not_null NOT NULL
 -- parallel bringonline ops
   ,concurrent_ops              INTEGER DEFAULT 0
 --
 -- Set primary key
-  ,CONSTRAINT stagereq_pk PRIMARY KEY (vo_name, host)
+  ,CONSTRAINT stagereq_pk PRIMARY KEY (vo_name, host, operation)
 );
 
 --

@@ -20,7 +20,7 @@ from django.db import models
 
 STATES               = ['SUBMITTED', 'READY', 'ACTIVE', 'FAILED', 'FINISHED', 'CANCELED', 'STAGING', 'NOT_USED']
 ACTIVE_STATES        = ['SUBMITTED', 'READY', 'ACTIVE', 'STAGING']
-FILE_TERMINAL_STATES = ['FINISHED', 'FAILED', 'CANCELED']
+FILE_TERMINAL_STATES = ['FINISHED', 'FAILED', 'CANCELED', 'NOT_USED']
 
 
 class JobBase(models.Model):
