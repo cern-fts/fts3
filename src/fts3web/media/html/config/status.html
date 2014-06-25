@@ -4,6 +4,7 @@
 <table class="table">
     <thead>
         <tr>
+            <th>VO</th>
             <th>Retry</th>
             <th>Max. Time in queue</th>
             <th>Global timeout</th>
@@ -12,11 +13,19 @@
         </tr>
     </thead>
     <tbody>
-        <tr>
-            <td>{{ server.retry }}</td>
-            <td>{{ server.max_time_queue }}</td>
-            <td>{{ server.global_timeout }}</td>
-            <td>{{ server.sec_per_mb }}</td>
+        <tr ng-repeat="c in server.per_vo" ng-class-odd="'odd'">
+            <td>
+                <span ng-if="!c.vo_name">
+                    *
+                </span>
+                <span ng-if="c.vo_name">
+                    {{ c.vo_name }}
+                </span>
+            </td>
+            <td>{{ c.retry }}</td>
+            <td>{{ c.max_time_queue }}</td>
+            <td>{{ c.global_timeout }}</td>
+            <td>{{ c.sec_per_mb }}</td>
             <td>{{ server.optimizer_mode }}</td>
         </tr>
     </tbody>
