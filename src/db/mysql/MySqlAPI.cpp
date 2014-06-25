@@ -7678,7 +7678,7 @@ void MySqlAPI::checkSanityState()
                             countMindex = 0;
 
                             stmt1.execute(true);
-			    			  
+
 
                             if(numberOfFiles > 0)
                                 {
@@ -7715,16 +7715,19 @@ void MySqlAPI::checkSanityState()
                                         }
                                 }
 
-  			    //check for m-replicas sanity
+                            //check for m-replicas sanity
                             stmt_m_replica.execute(true);
                             //this is a m-replica job
                             if(countMreplica > 1 && countMindex == 1)
                                 {
+                                    std::string job_state;
                                     soci::rowset<soci::row> rsReplica = (
                                                                             sql.prepare <<
                                                                             " select file_state, COUNT(file_state) from t_file where job_id=:job_id group by file_state order by null ",
                                                                             soci::use(job_id)
                                                                         );
+
+                                    sql << "SELECT job_state from t_job where job_id=:job_id", soci::use(job_id), soci::into(job_state);
 
                                     soci::rowset<soci::row>::const_iterator iRep;
                                     for (iRep = rsReplica.begin(); iRep != rsReplica.end(); ++iRep)
@@ -7732,12 +7735,56 @@ void MySqlAPI::checkSanityState()
                                             std::string file_state = iRep->get<std::string>("file_state");
                                             //long long countStates = iRep->get<long long>("COUNT(file_state)",0);
 
-                                            if(file_state == "FINISHED")
+                                            if(file_state == "FINISHED") //if at least one is finished, reset the rest
                                                 {
                                                     sql << "UPDATE t_file SET "
                                                         "    file_state = 'NOT_USED', job_finished = NULL, finish_time = NULL, "
                                                         "    reason = '' "
                                                         "    WHERE file_state in ('ACTIVE','READY','SUBMITTED') and job_id = :jobId", soci::use(job_id);
+
+                                                    if(job_state != "FINISHED")
+                                                        {
+                                                            stmt3.execute(true); //set the job_state to finished if at least one finished
+                                                        }
+                                                }
+                                        }
+
+                                    //do some more sanity checks for m-replica jobs to avoid state incosistencies
+                                    if(job_state == "ACTIVE" || job_state == "READY")
+                                        {
+                                            long long countSubmittedActiveReady = 0;
+                                            sql << " SELECT count(*) from t_file where file_state in ('ACTIVE','READY','SUBMITTED') and job_id = :job_id",
+                                                soci::use(job_id), soci::into(countSubmittedActiveReady);
+
+                                            if(countSubmittedActiveReady == 0)
+                                                {
+                                                    long long countNotUsed = 0;
+                                                    sql << " SELECT count(*) from t_file where file_state = 'NOT_USED' and job_id = :job_id",
+                                                        soci::use(job_id), soci::into(countNotUsed);
+                                                    if(countNotUsed > 0)
+                                                        {
+							    bool found = false;
+                                                            std::vector<std::string>::iterator it2;
+                                                            for(it2 = sanityVector.begin(); it2 != sanityVector.end();)
+                                                                {
+                                                                    if(*it2 == job_id)
+                                                                        {
+                                                                            sql << "UPDATE t_file SET "
+                                                                                "    file_state = 'SUBMITTED', job_finished = NULL, finish_time = NULL, "
+                                                                                "    reason = '' "
+                                                                                "    WHERE file_state = 'NOT_USED' and job_id = :jobId LIMIT 1", soci::use(job_id);
+                                                                            it2 = sanityVector.erase(it2);
+									    found = true;
+                                                                        }
+                                                                    else
+                                                                        {
+                                                                            ++it2;
+                                                                        }
+                                                                }
+							    	
+							    if(!found)
+                                                            	sanityVector.push_back(job_id);
+                                                        }
                                                 }
                                         }
                                 }
@@ -7810,6 +7857,10 @@ void MySqlAPI::checkSanityState()
                                 }
                         }
                 }
+		
+		
+		if(sanityVector.size() == 10000) //clear the vector to avoid growing too much
+			sanityVector.clear();
         }
     catch (std::exception& e)
         {
@@ -9811,8 +9862,8 @@ void MySqlAPI::updateDeletionsState(std::vector< boost::tuple<int, std::string, 
                     boost::tuple<int, std::string, std::string, std::string>& tupleRecord = *itFind;
                     file_id = boost::get<0>(tupleRecord);
                     state = boost::get<1>(tupleRecord);
-                    reason = boost::get<2>(tupleRecord);   
-		    job_id  = boost::get<3>(tupleRecord);   
+                    reason = boost::get<2>(tupleRecord);
+                    job_id  = boost::get<3>(tupleRecord);
 
                     if (state == "STARTED")
                         {
@@ -9827,7 +9878,7 @@ void MySqlAPI::updateDeletionsState(std::vector< boost::tuple<int, std::string, 
                                 ;
                         }
                     else
-                        {                           
+                        {
                             sql <<
                                 " UPDATE t_file "
                                 " SET  job_finished=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), reason = :reason, file_state = :fileState "
@@ -9984,7 +10035,7 @@ void MySqlAPI::getDeletionFilesForCanceling(std::vector< boost::tuple<int, std::
                     soci::row const& row = *i2;
                     file_id = row.get<int>("file_id",0);
                     source_surl = row.get<std::string>("source_surl","");
-		    job_id = row.get<std::string>("job_id","");                   
+                    job_id = row.get<std::string>("job_id","");
                     boost::tuple<int, std::string, std::string> record(file_id, job_id, source_surl);
                     files.push_back(record);
                 }
@@ -10001,7 +10052,7 @@ void MySqlAPI::getDeletionFilesForCanceling(std::vector< boost::tuple<int, std::
 
 void MySqlAPI::setMaxDeletionsPerEndpoint(int maxDeletions, const std::string & endpoint, const std::string & vo)
 {
-   soci::session sql(*connectionPool);
+    soci::session sql(*connectionPool);
 
     try
         {
@@ -10159,12 +10210,12 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                                                               " AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd)"
                                                               "	AND f.source_se = :source_se  "
                                                               " AND j.user_dn = :user_dn "
-							      " AND j.vo_name = :vo_name "
+                                                              " AND j.vo_name = :vo_name "
                                                               "	AND j.job_finished is null LIMIT :limit ",
                                                               soci::use(hashSegment.start), soci::use(hashSegment.end),
                                                               soci::use(source_se),
                                                               soci::use(user_dn),
-							      soci::use(vo_name),
+                                                              soci::use(vo_name),
                                                               soci::use(limit)
                                                           );
 

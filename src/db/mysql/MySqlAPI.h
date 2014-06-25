@@ -412,6 +412,7 @@ private:
     soci::connection_pool* connectionPool;
     std::string           hostname;
     std::string username_;
+    std::vector<std::string> sanityVector;
 
     bool getDrainInternal(soci::session& sql);
 
