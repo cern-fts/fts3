@@ -318,7 +318,7 @@ void MySqlAPI::submitdelete(const std::string & jobId, const std::multimap<std::
                                             soci::use(userDN),
                                             soci::use(credID)
                                         );
-            insertJob.execute(true);         
+            insertJob.execute(true);
 
             std::string sourceSurl;
             std::string sourceSE;
@@ -330,7 +330,7 @@ void MySqlAPI::submitdelete(const std::string & jobId, const std::multimap<std::
                                             soci::use(initialState),
                                             soci::use(sourceSurl),
                                             soci::use(sourceSE)
-                                       );            
+                                       );
 
             // When reuse is enabled, we hash the job id instead of the file ID
             // This guarantees that the whole set belong to the same machine, but keeping
