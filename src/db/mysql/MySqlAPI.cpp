@@ -9959,7 +9959,7 @@ void MySqlAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::s
     try
         {
             soci::rowset<soci::row> rs2 = (sql.prepare <<
-                                           " SELECT DISTINCT vo_name, source_se, dest_se "
+                                           " SELECT DISTINCT vo_name, source_se "
                                            " FROM t_dm "
                                            " WHERE "
                                            "      file_state = 'DELETE' AND "
@@ -9971,7 +9971,6 @@ void MySqlAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::s
                 {
                     soci::row const& r = *i2;
                     std::string source_se = r.get<std::string>("source_se","");
-                    std::string dest_se = r.get<std::string>("dest_se","");
                     std::string vo_name = r.get<std::string>("vo_name","");
 
                     soci::rowset<soci::row> rs = (
@@ -9982,9 +9981,9 @@ void MySqlAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::s
                                                      "	f.file_state = 'DELETE' "
                                                      "	AND f.start_time IS NULL and j.job_finished is null "
                                                      "  AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd)"
-                                                     "  AND f.vo_name = :vo_name AND f.source_se=:source_se AND f.dest_se=:dest_se ",
+                                                     "  AND f.vo_name = :vo_name AND f.source_se=:source_se ",
                                                      soci::use(hashSegment.start), soci::use(hashSegment.end),
-                                                     soci::use(vo_name), soci::use(source_se), soci::use(dest_se)
+                                                     soci::use(vo_name), soci::use(source_se)
                                                  );
 
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
@@ -10005,7 +10004,7 @@ void MySqlAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::s
 
                             //check current staging
                             sql << 	"SELECT count(*) from t_dm "
-                                "WHERE vo_name=:vo_name and source_se = :endpoint and file_state='STARTED' and job_finished is not NULL ",
+                                "WHERE vo_name=:vo_name and source_se = :endpoint and file_state='STARTED' and job_finished is NULL ",
                                 soci::use(vo_name), soci::use(source_se), soci::into(currentDeleteActive);
 
 
@@ -10038,13 +10037,13 @@ void MySqlAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::s
                                                               " j.user_dn, j.cred_id "
                                                               " FROM t_dm f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                                               " WHERE  "
-                                                              "	f.start_time "
+                                                              "	f.start_time is NULL "
                                                               "	AND f.file_state = 'DELETE' "
                                                               " AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd)"
                                                               "	AND f.source_se = :source_se  "
                                                               " AND j.user_dn = :user_dn "
                                                               " AND j.vo_name = :vo_name "
-                                                              "	AND j.job_finished is null LIMIT :limit ",
+                                                              "	AND j.job_finished is null  ORDER BY j.submit_time LIMIT :limit ",
                                                               soci::use(hashSegment.start), soci::use(hashSegment.end),
                                                               soci::use(source_se),
                                                               soci::use(user_dn),
@@ -10286,7 +10285,7 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
     try
         {
             soci::rowset<soci::row> rs2 = (sql.prepare <<
-                                           " SELECT DISTINCT vo_name, source_se, dest_se "
+                                           " SELECT DISTINCT vo_name, source_se "
                                            " FROM t_file "
                                            " WHERE "
                                            "      file_state = 'STAGING' AND "
@@ -10298,7 +10297,6 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                 {
                     soci::row const& r = *i2;
                     std::string source_se = r.get<std::string>("source_se","");
-                    std::string dest_se = r.get<std::string>("dest_se","");
                     std::string vo_name = r.get<std::string>("vo_name","");
 
                     soci::rowset<soci::row> rs = (
@@ -10310,9 +10308,9 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                                                      "	AND f.file_state = 'STAGING' "
                                                      "	AND f.staging_start IS NULL and j.job_finished is null "
                                                      "  AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd)"
-                                                     "  AND f.vo_name = :vo_name AND f.source_se=:source_se AND f.dest_se=:dest_se ",
+                                                     "  AND f.vo_name = :vo_name AND f.source_se=:source_se ",
                                                      soci::use(hashSegment.start), soci::use(hashSegment.end),
-                                                     soci::use(vo_name), soci::use(source_se), soci::use(dest_se)
+                                                     soci::use(vo_name), soci::use(source_se)
                                                  );
 
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
@@ -10333,7 +10331,7 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
 
                             //check current staging
                             sql << 	"SELECT count(*) from t_file "
-                                "WHERE vo_name=:vo_name and source_se = :endpoint and file_state='STARTED' and job_finished is not NULL ",
+                                "WHERE vo_name=:vo_name and source_se = :endpoint and file_state='STARTED' and job_finished is NULL ",
                                 soci::use(vo_name), soci::use(source_se), soci::into(currentStagingActive);
 
 
@@ -10373,7 +10371,7 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                                                               "	AND f.source_se = :source_se  "
                                                               " AND j.user_dn = :user_dn "
                                                               " AND j.vo_name = :vo_name "
-                                                              "	AND j.job_finished is null LIMIT :limit ",
+                                                              "	AND j.job_finished is null ORDER BY j.submit_time LIMIT :limit ",
                                                               soci::use(hashSegment.start), soci::use(hashSegment.end),
                                                               soci::use(source_se),
                                                               soci::use(user_dn),

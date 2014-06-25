@@ -9614,11 +9614,11 @@ void OracleAPI::getTransferJobStatusDetailed(std::string job_id, std::vector<boo
 
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
-                    std::string job_id = i->get<std::string>("job_id");
-                    std::string file_state = i->get<std::string>("file_state");
-                    int file_id = i->get<int>("file_id");
-                    std::string source_surl = i->get<std::string>("source_surl");
-                    std::string dest_surl = i->get<std::string>("dest_surl");
+                    std::string job_id = i->get<std::string>("JOB_ID");
+                    std::string file_state = i->get<std::string>("FILE_STATE");
+                    int file_id = i->get<int>("FILE_ID");
+                    std::string source_surl = i->get<std::string>("SOURCE_SURL");
+                    std::string dest_surl = i->get<std::string>("DEST_SURL");
 
                     boost::tuple<std::string, std::string, int, std::string, std::string> record(job_id, file_state, file_id, source_surl, dest_surl);
                     files.push_back(record);
@@ -9774,9 +9774,9 @@ void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::
             for (soci::rowset<soci::row>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
                 {
                     soci::row const& r = *i2;
-                    std::string source_se = r.get<std::string>("source_se","");
-                    std::string dest_se = r.get<std::string>("dest_se","");
-                    std::string vo_name = r.get<std::string>("vo_name","");
+                    std::string source_se = r.get<std::string>("SOURCE_SE","");
+                    std::string dest_se = r.get<std::string>("DEST_SE","");
+                    std::string vo_name = r.get<std::string>("VO_NAME","");
 
                     soci::rowset<soci::row> rs = (
                                                      sql.prepare <<
@@ -9795,8 +9795,8 @@ void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::
                         {
                             soci::row const& row = *i;
 
-                            source_se = row.get<std::string>("source_se");
-                            std::string user_dn = row.get<std::string>("user_dn");
+                            source_se = row.get<std::string>("SOURCE_SE");
+                            std::string user_dn = row.get<std::string>("USER_DN");
 
                             int maxValueConfig = 0;
                             int currentDeleteActive = 0;
@@ -9863,11 +9863,11 @@ void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::
                             for (soci::rowset<soci::row>::const_iterator i3 = rs3.begin(); i3 != rs2.end(); ++i3)
                                 {
                                     soci::row const& row = *i3;
-                                    std::string source_url = row.get<std::string>("source_surl");
-                                    std::string job_id = row.get<std::string>("job_id");
-                                    int file_id = row.get<int>("file_id");                                    
-                                    user_dn = row.get<std::string>("user_dn");
-                                    std::string cred_id = row.get<std::string>("cred_id");
+                                    std::string source_url = row.get<std::string>("SOURCE_SURL");
+                                    std::string job_id = row.get<std::string>("JOB_ID");
+                                    int file_id = row.get<int>("FILE_ID");                                    
+                                    user_dn = row.get<std::string>("USER_DN");
+                                    std::string cred_id = row.get<std::string>("CRED_ID");
 
                                     boost::tuple<std::string, std::string, int, std::string, std::string> record(source_url, job_id, file_id, user_dn, cred_id);
                                     files.push_back(record);
@@ -9999,9 +9999,9 @@ void OracleAPI::getDeletionFilesForCanceling(std::vector< boost::tuple<int, std:
             for (soci::rowset<soci::row>::const_iterator i2 = rs.begin(); i2 != rs.end(); ++i2)
                 {
                     soci::row const& row = *i2;
-                    file_id = row.get<int>("file_id",0);
-                    source_surl = row.get<std::string>("source_surl","");
-                    job_id = row.get<std::string>("job_id","");
+                    file_id = row.get<int>("FILE_ID",0);
+                    source_surl = row.get<std::string>("SOURCE_SURL","");
+                    job_id = row.get<std::string>("JOB_ID","");
                     boost::tuple<int, std::string, std::string> record(file_id, job_id, source_surl);
                     files.push_back(record);
                 }
@@ -10192,14 +10192,14 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
                             for (soci::rowset<soci::row>::const_iterator i3 = rs3.begin(); i3 != rs2.end(); ++i3)
                                 {
                                     soci::row const& row = *i3;
-                                    std::string source_url = row.get<std::string>("source_surl");
-                                    std::string job_id = row.get<std::string>("job_id");
-                                    int file_id = row.get<int>("file_id");
-                                    int copy_pin_lifetime = row.get<int>("copy_pin_lifetime",0);
-                                    int bring_online = row.get<int>("bring_online",0);
-                                    user_dn = row.get<std::string>("user_dn");
-                                    std::string cred_id = row.get<std::string>("cred_id");
-                                    std::string source_space_token = row.get<std::string>("source_space_token","");
+                                    std::string source_url = row.get<std::string>("SOURCE_SURL");
+                                    std::string job_id = row.get<std::string>("JOB_ID");
+                                    int file_id = row.get<int>("FILE_ID");
+                                    int copy_pin_lifetime = row.get<int>("COPY_PIN_LIFETIME",0);
+                                    int bring_online = row.get<int>("BRING_ONLINE",0);
+                                    user_dn = row.get<std::string>("USER_DN");
+                                    std::string cred_id = row.get<std::string>("CRED_ID");
+                                    std::string source_space_token = row.get<std::string>("SOURCE_SPACE_TOKEN","");
 
                                     boost::tuple<std::string, std::string, int, int, int, std::string, std::string, std::string > record(source_url,job_id, file_id, copy_pin_lifetime, bring_online, user_dn, cred_id , source_space_token);
                                     files.push_back(record);
@@ -10432,9 +10432,9 @@ void OracleAPI::getStagingFilesForCanceling(std::vector< boost::tuple<int, std::
             for (soci::rowset<soci::row>::const_iterator i2 = rs.begin(); i2 != rs.end(); ++i2)
                 {
                     soci::row const& row = *i2;
-                    file_id = row.get<int>("file_id",0);
-                    source_surl = row.get<std::string>("source_surl","");
-                    token = row.get<std::string>("bringonline_token","");
+                    file_id = row.get<int>("FILE_ID",0);
+                    source_surl = row.get<std::string>("SOURCE_SURL","");
+                    token = row.get<std::string>("BRINGONLINE_TOKEN","");
                     boost::tuple<int, std::string, std::string> record(file_id, source_surl, token);
                     files.push_back(record);
                 }
