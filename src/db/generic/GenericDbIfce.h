@@ -413,4 +413,37 @@ public:
 
     virtual void getVOPairs(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct) = 0;
 
+
+    //NEW deletions and staging API
+    //deletions						 //file_id / state / reason
+    virtual void updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string> >& files) = 0;
+
+    //file_id / surl / proxy
+    virtual void getFilesForDeletion(std::vector< boost::tuple<int, std::string, std::string> >& files) = 0;
+
+    //job_id
+    virtual void cancelDeletion(std::vector<std::string>& files) = 0;
+
+    //file_id / surl
+    virtual void getDeletionFilesForCanceling(std::vector< boost::tuple<int, std::string, std::string> >& files) = 0;
+
+    virtual void setMaxDeletionsPerEndpoint(int maxDeletions, const std::string & endpoint, const std::string & vo) = 0;
+    virtual int getMaxDeletionsPerEndpoint(const std::string & endpoint, const std::string & vo) = 0;
+
+
+
+    //staging						//file_id / state / reason / token
+    virtual void updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string> >& files) = 0;
+    //file_id / surl / proxy / pinlifetime / bringonlineTimeout / spacetoken / job_id
+    virtual void getFilesForStaging(std::vector< boost::tuple<std::string, std::string, int, int, int, std::string, std::string, std::string> >& files) = 0;
+
+    //job_id
+    virtual void cancelStaging(std::vector<std::string>& files) = 0;
+
+    //file_id / surl / token
+    virtual void getStagingFilesForCanceling(std::vector< boost::tuple<int, std::string, std::string> >& files) = 0;
+
+    virtual void setMaxStagingPerEndpoint(int maxStaging, const std::string & endpoint, const std::string & vo) = 0;
+    virtual int getMaxStatingsPerEndpoint(const std::string & endpoint, const std::string & vo) = 0;
+
 };

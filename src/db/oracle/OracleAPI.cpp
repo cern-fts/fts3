@@ -5734,8 +5734,8 @@ void OracleAPI::setRetry(int retry, const std::string & vo_name)
     try
         {
             sql.begin();
-	    
-	    sql << "DELETE FROM t_server_config where vo_name = :vo_name", soci::use(vo_name);
+
+            sql << "DELETE FROM t_server_config where vo_name = :vo_name", soci::use(vo_name);
 
             sql << "INSERT INTO t_server_config(retry, vo_name) VALUES(:retry, :vo_name)",
                 soci::use(retry), soci::use(vo_name);
@@ -5775,7 +5775,7 @@ int OracleAPI::getRetry(const std::string & jobId)
                 ;
 
             if (isNull == soci::i_null || nRetries <= 0)
-                {		    
+                {
                     sql <<
                         " SELECT retry FROM (SELECT rownum as rn, retry "
                         "  FROM t_server_config where vo_name=:vo_name) WHERE rn = 1",
@@ -7330,7 +7330,7 @@ void OracleAPI::checkSanityState()
 
                             sql << "SELECT COUNT(DISTINCT file_index) FROM t_file where job_id=:jobId ", soci::use(*i), soci::into(numberOfFiles);
 
-                            if(numberOfFiles > 1)
+                            if(numberOfFiles > 0)
                                 {
                                     countFileInTerminalStates(sql, *i, allFinished, allCanceled, allFailed);
                                     terminalState = allFinished + allCanceled + allFailed;
@@ -9633,6 +9633,82 @@ void OracleAPI::getTransferJobStatusDetailed(std::string job_id, std::vector<boo
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }
+
+
+
+//NEW deletions and staging API
+//deletions						 //file_id / state / reason
+void OracleAPI::updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string> >& files)
+{
+
+}
+
+//file_id / surl / proxy
+void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<int, std::string, std::string> >& files)
+{
+
+}
+
+//job_id
+void OracleAPI::cancelDeletion(std::vector<std::string>& files)
+{
+
+}
+
+//file_id / surl
+void OracleAPI::getDeletionFilesForCanceling(std::vector< boost::tuple<int, std::string, std::string> >& files)
+{
+
+}
+
+void OracleAPI::setMaxDeletionsPerEndpoint(int maxDeletions, const std::string & endpoint, const std::string & vo)
+{
+
+}
+
+
+int OracleAPI::getMaxDeletionsPerEndpoint(const std::string & endpoint, const std::string & vo)
+{
+
+}
+
+
+
+//staging						//file_id / state / reason / token
+void OracleAPI::updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string> >& files)
+{
+
+}
+//file_id / surl / proxy / pinlifetime / bringonlineTimeout /
+void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::string, int, int, int, std::string, std::string, std::string> >& files)
+{
+
+}
+
+//job_id
+void OracleAPI::cancelStaging(std::vector<std::string>& files)
+{
+
+}
+
+//file_id / surl / token
+void OracleAPI::getStagingFilesForCanceling(std::vector< boost::tuple<int, std::string, std::string> >& files)
+{
+
+}
+
+void OracleAPI::setMaxStagingPerEndpoint(int maxStaging, const std::string & endpoint, const std::string & vo)
+{
+
+}
+
+
+int OracleAPI::getMaxStatingsPerEndpoint(const std::string & endpoint, const std::string & vo)
+{
+
+}
+
+
 
 
 

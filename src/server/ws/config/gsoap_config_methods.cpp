@@ -270,7 +270,7 @@ int fts3::implcfg__setRetry(soap* ctx, std::string vo, int retry, implcfg__setRe
             // get user dn
             CGsiAdapter cgsi(ctx);
             string dn = cgsi.getClientDn();
-	    
+
             // prepare the command for audit
             stringstream cmd;
             cmd << "fts-config-set --retry " << vo << " " << retry;

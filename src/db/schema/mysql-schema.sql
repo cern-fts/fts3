@@ -662,12 +662,13 @@ CREATE TABLE t_stage_req (
    vo_name           VARCHAR(100) NOT NULL
 -- hostname
    ,host           VARCHAR(150) NOT NULL			
---
+-- operation
+   ,operation           VARCHAR(150) NOT NULL
 -- parallel bringonline ops
   ,concurrent_ops INTEGER DEFAULT 0
   
 -- Set primary key
-  ,CONSTRAINT stagereq_pk PRIMARY KEY (vo_name, host)
+  ,CONSTRAINT stagereq_pk PRIMARY KEY (vo_name, host, operation)
 );
 
 --

@@ -801,7 +801,7 @@ int main(int argc, char **argv)
             errorMessage = "Failed to create the gfal2 handle: ";
             if (handleError && handleError->message)
                 {
-                    errorMessage += "INIT" + std::string(handleError->message);
+                    errorMessage += "INIT " + std::string(handleError->message);
                     abnormalTermination("FAILED", errorMessage, "Error");
                 }
         }

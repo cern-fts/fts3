@@ -215,16 +215,16 @@ optional<bool> SetCfgCli::drain()
 
     if (vm.count("drain"))
         {
-    		string const & value = vm["drain"].as<string>();
+            string const & value = vm["drain"].as<string>();
 
-			if (value != "on" && value != "off")
-				{
-					throw bad_option("drain", "drain may only take on/off values!");
-				}
-			else if(!vm.count("service"))
-				{
-					throw bad_option("drain", "You need specify which endpoint to drain, -s missing?");
-				}
+            if (value != "on" && value != "off")
+                {
+                    throw bad_option("drain", "drain may only take on/off values!");
+                }
+            else if(!vm.count("service"))
+                {
+                    throw bad_option("drain", "You need specify which endpoint to drain, -s missing?");
+                }
 
             return vm["drain"].as<string>() == "on";
         }
@@ -236,21 +236,21 @@ optional< pair<string, int> > SetCfgCli::retry()
 {
     if (vm.count("retry"))
         {
-    		// get a reference to the options set by the user
-    		vector<string> const & v = vm["retry"].as< vector<string> >();
-    		// make sure the number of parameters is correct
-    		if (v.size() != 2) throw bad_option("retry", "following parameters were expected: VO nb_of_retries");
+            // get a reference to the options set by the user
+            vector<string> const & v = vm["retry"].as< vector<string> >();
+            // make sure the number of parameters is correct
+            if (v.size() != 2) throw bad_option("retry", "following parameters were expected: VO nb_of_retries");
 
-    		try
-    		{
-    			int retries = lexical_cast<int>(v[1]);
-    			if (retries < -1) throw bad_option("retry", "incorrect value: the number of retries has to greater or equal to -1.");
-    			return make_pair(v[0], retries);
-    		}
-    		catch(bad_lexical_cast& ex)
-    		{
-    			throw bad_option("retry", "incorrect value: " + v[1] + " (the number of retries has be an integer).");
-    		}
+            try
+                {
+                    int retries = lexical_cast<int>(v[1]);
+                    if (retries < -1) throw bad_option("retry", "incorrect value: the number of retries has to greater or equal to -1.");
+                    return make_pair(v[0], retries);
+                }
+            catch(bad_lexical_cast& ex)
+                {
+                    throw bad_option("retry", "incorrect value: " + v[1] + " (the number of retries has be an integer).");
+                }
         }
 
     return optional< pair<string, int> >();
@@ -260,12 +260,12 @@ optional<int> SetCfgCli::optimizer_mode()
 {
     if (vm.count("optimizer-mode"))
         {
-    		int mode = vm["optimizer-mode"].as<int>();
+            int mode = vm["optimizer-mode"].as<int>();
 
-    		if (mode < 1 || mode > 3)
-				{
-					throw bad_option("optimizer-mode", "only following values are accepted: 1, 2 or 3");
-				}
+            if (mode < 1 || mode > 3)
+                {
+                    throw bad_option("optimizer-mode", "only following values are accepted: 1, 2 or 3");
+                }
 
             return mode;
         }
@@ -277,8 +277,8 @@ optional<unsigned> SetCfgCli::queueTimeout()
 {
     if (vm.count("queue-timeout"))
         {
-    		int timeout = vm["queue-timeout"].as<int>();
-    		if (timeout < 0) throw bad_option("queue-timeout", "the queue-timeout value has to be greater or equal to 0.");
+            int timeout = vm["queue-timeout"].as<int>();
+            if (timeout < 0) throw bad_option("queue-timeout", "the queue-timeout value has to be greater or equal to 0.");
             return timeout;
         }
 
