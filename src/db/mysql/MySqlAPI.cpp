@@ -298,6 +298,75 @@ void MySqlAPI::init(std::string username, std::string password, std::string conn
 
 
 
+void MySqlAPI::submitdelete(const std::string & jobId, const std::multimap<std::string,std::string>& rulsHost, 
+    				const std::string & userDN, const std::string & voName, const std::string & credID)
+{
+    const std::string initialState = "DELETE";
+
+        soci::session sql(*connectionPool);
+
+        try{
+
+
+
+
+				sql.begin();
+
+				soci::statement insertJob = (	sql.prepare << "INSERT INTO  t_job ( job_id, job_state, vo_name,submit_host, submit_time, user_dn, cred_id)"
+															   "VALUES (:jobId, :jobState, :voName , :hostname, UTC_TIMESTAMP(), :userDN, :credID)",
+												soci::use(jobId),
+												soci::use(initialState),
+												soci::use(voName),
+												soci::use(hostname),
+												soci::use(userDN),
+												soci::use(credID)
+											);
+				insertJob.execute(true);
+				sql.commit();
+
+				std::string sourceSurl;
+				std::string sourceSE;
+//																												dmHost
+				soci::statement pairStmt = (	sql.prepare << "INSERT INTO t_dm (vo_name, job_id, file_state, source_surl, source_se) "
+														   	   "VALUES (:voName, :jobId, :filestate,:sourceSurl, :source_se)",
+												soci::use(voName),
+												soci::use(jobId),
+												soci::use(initialState),
+												soci::use(sourceSurl),
+												soci::use(sourceSE)
+											);
+				sql.begin();
+
+				   // When reuse is enabled, we hash the job id instead of the file ID
+				            // This guarantees that the whole set belong to the same machine, but keeping
+				            // the load balance between hosts
+				            soci::statement updateHashedId = (sql.prepare <<
+				                                              "UPDATE t_dm SET hashed_id = conv(substring(md5(file_id) from 1 for 4), 16, 10) WHERE file_id = LAST_INSERT_ID()"
+				                                             );
+
+
+				for(std::multimap <std::string, std::string> ::const_iterator mapit = rulsHost.begin(); mapit != rulsHost.end(); ++mapit) {
+					sourceSurl = (*mapit).first;
+					sourceSE = (*mapit).second;
+
+					pairStmt.execute(true);
+					updateHashedId.execute(true);
+				}
+
+			   sql.commit();
+        }
+        catch(std::exception& e){
+        	sql.rollback();
+        	throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
+        }
+        catch(...){
+        	sql.rollback();
+        	throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+
+}
+
+
 
 TransferJobs* MySqlAPI::getTransferJob(std::string jobId, bool archive)
 {
