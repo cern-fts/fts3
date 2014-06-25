@@ -56,11 +56,10 @@ SrcDelCli::~SrcDelCli(){
 
 }
 
-optional<GSoapContextAdapter&> SrcDelCli::validate(bool init)
+bool SrcDelCli::validate(bool init)
 {
     // do the standard validation
-    if (!CliBase::validate(init).is_initialized())
-    	return optional<GSoapContextAdapter&>();
+	if(!CliBase::validate()) return false;
 
     // do the validation
     // In case of a user types an invalid expression...
@@ -90,13 +89,14 @@ optional<GSoapContextAdapter&> SrcDelCli::validate(bool init)
 						   while(!ifs.eof());
 						  cout<<"..::Parsing is done::..\t ..::#lines: "<<lineCount-1<<"::.."<<endl;
 				}
-				else	optional<GSoapContextAdapter&>();	// user wrote an invalid option
+				else return false;
 		}
 		else if (vm.count("Filename"))	// if -f option is not used... User want to delete 1 file
 		{
 			allFilenames.push_back(vm["Filename"].as<string>());
 		}
-    return *ctx;
+
+    return true;
 }
 
 std::vector<string> SrcDelCli::getFileName(){

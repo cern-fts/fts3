@@ -33,6 +33,9 @@
  #include <sys/stat.h>
  #include <fcntl.h>
 
+#include "exception/cli_exception.h"
+#include "JsonOutput.h"
+
 using namespace boost;
 using namespace std;
 using namespace fts3::cli;
@@ -58,9 +61,8 @@ int main(int ac, char* av[])
             cli->SrcDelCli::parse(ac,av);
 
             // validate command line options, and return respective gsoap context
-            optional<GSoapContextAdapter&> opt = cli->SrcDelCli::validate();
-            if (!opt.is_initialized()) return 0;
-            GSoapContextAdapter& ctx = opt.get();
+            if (!cli->validate()) return 1;
+            GSoapContextAdapter& ctx = cli->getGSoapContext();
 
             // delegate Proxy Certificate
             ProxyCertificateDelegator handler (
@@ -87,6 +89,12 @@ int main(int ac, char* av[])
             }
 
         }
+    catch(cli_exception const & ex)
+        {
+            if (cli->isJson()) JsonOutput::print(ex);
+            else std::cout << ex.what() << std::endl;
+            return 1;
+        }
     catch(std::exception& ex)
         {
             if (cli.get())
@@ -94,14 +102,6 @@ int main(int ac, char* av[])
             else
                 std::cerr << ex.what() << std::endl;
             return 1;
-        }
-    catch(string& ex)
-        {
-                if (cli.get())
-                    cli->printer().gsoap_error_msg(ex);
-                else
-                    std::cerr << ex << std::endl;
-                return 1;
         }
     catch(...)
         {

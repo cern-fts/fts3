@@ -25,7 +25,7 @@
 #ifndef SRCDESTCLI_H_
 #define SRCDESTCLI_H_
 
-#include "CliBase.h"
+#include "TransferCliBase.h"
 #include "SrcDestCli.h"
 #include "TransferCliBase.h"
 #include "TransferTypes.h"
@@ -46,7 +46,7 @@ namespace cli
  *  	- source (positional)
  *  	- destination (positional)
  */
-class SrcDelCli : public CliBase
+class SrcDelCli : public TransferCliBase
 {
 
 public:
@@ -78,7 +78,7 @@ public:
  	     * @return GSoapContexAdapter instance, or null if all activities
 	     * requested using program options have been done.
  	     */
-	    optional<GSoapContextAdapter&> validate(bool init = true);
+	    bool validate(bool init = true);
 
 	    /**
 	     * the name of the file containing bulk-job description
