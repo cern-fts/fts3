@@ -973,8 +973,8 @@ int ProfiledDB::getMaxStatingsPerEndpoint(const std::string & endpoint, const st
 }
 
 
-void ProfiledDB::submitdelete(const std::string & jobId, const std::multimap<std::string,std::string>& rulsHost, 
-    				const std::string & DN, const std::string & voName, const std::string & credID)
+void ProfiledDB::submitdelete(const std::string & jobId, const std::multimap<std::string,std::string>& rulsHost,
+                              const std::string & DN, const std::string & voName, const std::string & credID)
 {
     PROFILE_PREFIXED("DB::", db->submitdelete(jobId, rulsHost, DN, voName, credID));
 }

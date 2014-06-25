@@ -227,70 +227,74 @@ void OracleAPI::init(std::string username, std::string password, std::string con
 }
 
 
-void OracleAPI::submitdelete(const std::string & jobId, const std::multimap<std::string,std::string>& rulsHost, 
-    				const std::string & userDN, const std::string & voName, const std::string & credID)
+void OracleAPI::submitdelete(const std::string & jobId, const std::multimap<std::string,std::string>& rulsHost,
+                             const std::string & userDN, const std::string & voName, const std::string & credID)
 {
     const std::string initialState = "DELETE";
 
-        soci::session sql(*connectionPool);
+    soci::session sql(*connectionPool);
 
-        try{
+    try
+        {
 
 
 
 
-				sql.begin();
+            sql.begin();
 
-				soci::statement insertJob = (	sql.prepare << "INSERT INTO  t_job ( job_id, job_state, vo_name,submit_host, submit_time, user_dn, cred_id)"
-															   "VALUES (:jobId, :jobState, :voName , :hostname, UTC_TIMESTAMP(), :userDN, :credID)",
-												soci::use(jobId),
-												soci::use(initialState),
-												soci::use(voName),
-												soci::use(hostname),
-												soci::use(userDN),
-												soci::use(credID)
-											);
-				insertJob.execute(true);
-				sql.commit();
+            soci::statement insertJob = (	sql.prepare << "INSERT INTO  t_job ( job_id, job_state, vo_name,submit_host, submit_time, user_dn, cred_id)"
+                                            "VALUES (:jobId, :jobState, :voName , :hostname, UTC_TIMESTAMP(), :userDN, :credID)",
+                                            soci::use(jobId),
+                                            soci::use(initialState),
+                                            soci::use(voName),
+                                            soci::use(hostname),
+                                            soci::use(userDN),
+                                            soci::use(credID)
+                                        );
+            insertJob.execute(true);
+            sql.commit();
 
-				std::string sourceSurl;
-				std::string sourceSE;
+            std::string sourceSurl;
+            std::string sourceSE;
 //																												dmHost
-				soci::statement pairStmt = (	sql.prepare << "INSERT INTO t_dm (vo_name, job_id, file_state, source_surl, source_se) "
-														   	   "VALUES (:voName, :jobId, :filestate,:sourceSurl, :source_se)",
-												soci::use(voName),
-												soci::use(jobId),
-												soci::use(initialState),
-												soci::use(sourceSurl),
-												soci::use(sourceSE)
-											);
-				sql.begin();
+            soci::statement pairStmt = (	sql.prepare << "INSERT INTO t_dm (vo_name, job_id, file_state, source_surl, source_se) "
+                                            "VALUES (:voName, :jobId, :filestate,:sourceSurl, :source_se)",
+                                            soci::use(voName),
+                                            soci::use(jobId),
+                                            soci::use(initialState),
+                                            soci::use(sourceSurl),
+                                            soci::use(sourceSE)
+                                       );
+            sql.begin();
 
-				   // When reuse is enabled, we hash the job id instead of the file ID
-				            // This guarantees that the whole set belong to the same machine, but keeping
-				            // the load balance between hosts
-				            soci::statement updateHashedId = (sql.prepare <<
-				                                              "UPDATE t_dm SET hashed_id = conv(substring(md5(file_id) from 1 for 4), 16, 10) WHERE file_id = LAST_INSERT_ID()"
-				                                             );
+            // When reuse is enabled, we hash the job id instead of the file ID
+            // This guarantees that the whole set belong to the same machine, but keeping
+            // the load balance between hosts
+            soci::statement updateHashedId = (sql.prepare <<
+                                              "UPDATE t_dm SET hashed_id = conv(substring(md5(file_id) from 1 for 4), 16, 10) WHERE file_id = LAST_INSERT_ID()"
+                                             );
 
 
-				for(std::multimap <std::string, std::string> ::const_iterator mapit = rulsHost.begin(); mapit != rulsHost.end(); ++mapit) {
-					sourceSurl = (*mapit).first;
-					sourceSE = (*mapit).second;
+            for(std::multimap <std::string, std::string> ::const_iterator mapit = rulsHost.begin(); mapit != rulsHost.end(); ++mapit)
+                {
+                    sourceSurl = (*mapit).first;
+                    sourceSE = (*mapit).second;
 
-					pairStmt.execute(true);
-					updateHashedId.execute(true);
-				}
+                    pairStmt.execute(true);
+                    updateHashedId.execute(true);
+                }
 
-			   sql.commit();
+            sql.commit();
         }
-        catch(std::exception& e){
-        	sql.rollback();
-        	throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
+    catch(std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
         }
-        catch(...){
-        	sql.rollback();
-        	throw Err_Custom(std::string(__func__) + ": Caught exception " );
+    catch(...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 
 }
@@ -9721,10 +9725,10 @@ void OracleAPI::updateDeletionsState(std::vector< boost::tuple<int, std::string,
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }
-    
+
 void OracleAPI::updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string> >& files)
 {
-   soci::session sql(*connectionPool);
+    soci::session sql(*connectionPool);
     try
         {
             updateStagingStateInternal(sql, files);
@@ -9824,10 +9828,10 @@ void OracleAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< bo
         }
 }
 
-                                        //file_id / surl / proxy
+//file_id / surl / proxy
 void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::string, int, std::string, std::string> >& files)
 {
-   soci::session sql(*connectionPool);
+    soci::session sql(*connectionPool);
 
     try
         {
@@ -9850,7 +9854,7 @@ void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::
                                                      sql.prepare <<
                                                      " SELECT distinct j.source_se, j.user_dn "
                                                      " FROM t_db f INNER JOIN t_job j ON (f.job_id = j.job_id) "
-                                                     " WHERE "         
+                                                     " WHERE "
                                                      "	f.file_state = 'DELETE' "
                                                      "	AND f.start_time IS NULL and j.job_finished is null "
                                                      "  AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd)"
@@ -9925,28 +9929,28 @@ void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::
                                                           );
 
                             std::vector< boost::tuple<int, std::string, std::string, std::string> > filesState;
-			    std::string initState = "STARTED";
-			    std::string reason;
-			    
+                            std::string initState = "STARTED";
+                            std::string reason;
+
                             for (soci::rowset<soci::row>::const_iterator i3 = rs3.begin(); i3 != rs2.end(); ++i3)
                                 {
                                     soci::row const& row = *i3;
                                     std::string source_url = row.get<std::string>("SOURCE_SURL");
                                     std::string job_id = row.get<std::string>("JOB_ID");
-                                    int file_id = row.get<int>("FILE_ID");                                    
+                                    int file_id = row.get<int>("FILE_ID");
                                     user_dn = row.get<std::string>("USER_DN");
                                     std::string cred_id = row.get<std::string>("CRED_ID");
 
                                     boost::tuple<std::string, std::string, int, std::string, std::string> record(source_url, job_id, file_id, user_dn, cred_id);
                                     files.push_back(record);
-				    
+
                                     boost::tuple<int, std::string, std::string, std::string> recordState(file_id, initState, reason, job_id);
-                                    filesState.push_back(recordState);				    				                                       
+                                    filesState.push_back(recordState);
                                 }
-			    //file_id / state / reason / job_id
-			    //now update the initial state
-			    if(!filesState.empty())
-		            	updateDeletionsStateInternal(sql, filesState);
+                            //file_id / state / reason / job_id
+                            //now update the initial state
+                            if(!filesState.empty())
+                                updateDeletionsStateInternal(sql, filesState);
                         }
                 }
         }
@@ -10252,10 +10256,10 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
                                                               soci::use(limit)
                                                           );
 
-			    std::vector< boost::tuple<int, std::string, std::string, std::string> > filesState;
-		            std::string initState = "STARTED";
-			    std::string reason;
-			    
+                            std::vector< boost::tuple<int, std::string, std::string, std::string> > filesState;
+                            std::string initState = "STARTED";
+                            std::string reason;
+
                             for (soci::rowset<soci::row>::const_iterator i3 = rs3.begin(); i3 != rs2.end(); ++i3)
                                 {
                                     soci::row const& row = *i3;
@@ -10270,14 +10274,14 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
 
                                     boost::tuple<std::string, std::string, int, int, int, std::string, std::string, std::string > record(source_url,job_id, file_id, copy_pin_lifetime, bring_online, user_dn, cred_id , source_space_token);
                                     files.push_back(record);
-				    
-				    boost::tuple<int, std::string, std::string, std::string> recordState(file_id, initState, reason, job_id);
-                                    filesState.push_back(recordState);		
+
+                                    boost::tuple<int, std::string, std::string, std::string> recordState(file_id, initState, reason, job_id);
+                                    filesState.push_back(recordState);
                                 }
-				
-			    //now update the initial state
-			    if(!filesState.empty())
-		            	updateStagingStateInternal(sql, filesState);				
+
+                            //now update the initial state
+                            if(!filesState.empty())
+                                updateStagingStateInternal(sql, filesState);
                         }
                 }
         }

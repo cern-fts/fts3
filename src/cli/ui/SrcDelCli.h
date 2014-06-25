@@ -50,45 +50,45 @@ class SrcDelCli : public TransferCliBase
 {
 
 public:
-	/**
-	     * Default constructor.
-	     *
-	     * Creates FileName command line options
-	     * @return FileName string if it was given as CLI option, or an empty string if not
-	     */
-	    SrcDelCli();
+    /**
+         * Default constructor.
+         *
+         * Creates FileName command line options
+         * @return FileName string if it was given as CLI option, or an empty string if not
+         */
+    SrcDelCli();
 
-	    /*
-	     * 	Destructor
-	     */
-	    ~SrcDelCli();
+    /*
+     * 	Destructor
+     */
+    ~SrcDelCli();
 
-	    /*
-	     * 	Gets the file name (string) for the job.
-	     */
-	    std::vector<string> getFileName();
+    /*
+     * 	Gets the file name (string) for the job.
+     */
+    std::vector<string> getFileName();
 
- 	   /**
-	     * Validates command line options
-	     * 1. Checks the endpoint
-	     * 2. If -h or -V option were used respective informations are printed
-	     * 3. GSoapContexAdapter is created, and info about server requested
-	     * 4. Additional check regarding server are performed
-         * 5. If verbal additional info is printed
- 	     * @return GSoapContexAdapter instance, or null if all activities
-	     * requested using program options have been done.
- 	     */
-	    bool validate(bool init = true);
+    /**
+      * Validates command line options
+      * 1. Checks the endpoint
+      * 2. If -h or -V option were used respective informations are printed
+      * 3. GSoapContexAdapter is created, and info about server requested
+      * 4. Additional check regarding server are performed
+      * 5. If verbal additional info is printed
+      * @return GSoapContexAdapter instance, or null if all activities
+      * requested using program options have been done.
+      */
+    bool validate(bool init = true);
 
-	    /**
-	     * the name of the file containing bulk-job description
-	     */
-	    string bulk_file;
+    /**
+     * the name of the file containing bulk-job description
+     */
+    string bulk_file;
 
-	    /**
-	     * 	all the url's (files for deletion) which included in the file
-	     */
-	    vector<string> allFilenames;
+    /**
+     * 	all the url's (files for deletion) which included in the file
+     */
+    vector<string> allFilenames;
 };
 
 

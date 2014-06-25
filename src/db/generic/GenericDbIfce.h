@@ -94,9 +94,9 @@ public:
      **/
 
     virtual void init(std::string username, std::string password, std::string connectString, int pooledConn) = 0;
-    
-    virtual  void submitdelete(const std::string & jobId, const std::multimap<std::string,std::string>& rulsHost, 
-    				const std::string & DN, const std::string & voName, const std::string & credID) = 0;    
+
+    virtual  void submitdelete(const std::string & jobId, const std::multimap<std::string,std::string>& rulsHost,
+                               const std::string & DN, const std::string & voName, const std::string & credID) = 0;
 
     /**
      * Submit a transfer request to be stored in the database

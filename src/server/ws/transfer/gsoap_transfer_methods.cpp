@@ -37,6 +37,9 @@
 
 #include "common/logger.h"
 #include "common/error.h"
+#include "common/uuid_generator.h"
+#include "parse_url.h"
+#include "ws/delegation/GSoapDelegationHandler.h"
 
 #include <fstream>
 #include <sstream>
@@ -61,71 +64,71 @@ using namespace std;
 
 int fts3::impltns__fileDelete(soap* ctx, tns3__deleteFiles* fileNames,impltns__fileDeleteResponse& resp)
 {
-	 try{
+    try
+        {
 
-		 	 AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER);
-		 	resp._jobid = UuidGenerator::generateUUID();
+            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER);
+            resp._jobid = UuidGenerator::generateUUID();
 
-		     CGsiAdapter cgsi(ctx);
-		     string vo = cgsi.getClientVo();
-		     string dn = cgsi.getClientDn();
+            CGsiAdapter cgsi(ctx);
+            string vo = cgsi.getClientVo();
+            string dn = cgsi.getClientDn();
 
-		     string hostN;
-		     const regex fileUrlRegex("(.+://[a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
+            string hostN;
+            const regex fileUrlRegex("(.+://[a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
 
-		     multimap<string, string> rulsHost;
-		 	 vector<string>::iterator it;
+            multimap<string, string> rulsHost;
+            vector<string>::iterator it;
 
-		 	 for (it = fileNames->delf.begin(); it != fileNames->delf.end(); ++it){
+            for (it = fileNames->delf.begin(); it != fileNames->delf.end(); ++it)
+                {
 
-		 		//checks the url validation...
-		 		Uri u0 = Uri::Parse(*it);
-		 	    if(!(u0.Host.length() != 0 && u0.Protocol.length() != 0 && u0.Path.length() != 0))
-		 	    	return -1;
+                    //checks the url validation...
+                    Uri u0 = Uri::Parse(*it);
+                    if(!(u0.Host.length() != 0 && u0.Protocol.length() != 0 && u0.Path.length() != 0))
+		    {
+		        string errMsg2 = "Something not right with url: " + (*it);
+                        throw Err_Custom(errMsg2);
+                    }
+                    smatch what;
+                    if (regex_match(*it, what,fileUrlRegex, match_extra))
+                        {
+                            // indexes are shifted by 1 because at index 0 is the whole string
+                            hostN =  string(what[1]);
+                        }
+                    else
+                        {
+                            string errMsg = "Can't extract hostname from url: " + (*it);
+                            throw Err_Custom(errMsg);
+                        }
 
-		 	    smatch what;
-		 		if (regex_match(*it, what,fileUrlRegex, match_extra))
-		 		{
-		 			// indexes are shifted by 1 because at index 0 is the whole string
-		 			hostN =  string(what[1]);
-		 		}
-		 		else
-		 		{
-		 			string errMsg = "Can't extract hostname from url: " + (*it);
-		 			throw Err_Custom(errMsg);
-		 		}
+                    cout << "File URL  = "<< (*it)<<endl;
+                    // correlates the file url with its' hostname
+                    rulsHost.insert(pair<string, string>((*it),hostN));
 
-		 		cout << "File URL  = "<< (*it)<<endl;
-		 		// correlates the file url with its' hostname
-		 		rulsHost.insert(pair<string, string>((*it),hostN));
+                }
 
-		 	 }
+            std::string credID;
+            GSoapDelegationHandler handler(ctx);
+            credID = handler.makeDelegationId();
 
-//		 	for (std::multimap <std::string,std::string>::iterator mapit = rulsHost.begin(); mapit != rulsHost.end(); ++mapit)
-//		 	   {
-//		 	       cout << "  [" << (*mapit).first << ", " << (*mapit).second << "]" << endl;
-//		 	   }
+            DBSingleton::instance().getDBObjectInstance()->submitdelete(resp._jobid,rulsHost,dn,vo, credID);
 
-		 	std::string credID;
-		    GSoapDelegationHandler handler(ctx);
-		    credID = handler.makeDelegationId();
+        }
+    catch(Err& ex)
+        {
 
-	 		 DBSingleton::instance().getDBObjectInstance()->submitdelete(resp._jobid,rulsHost,dn,vo, credID);
-
-	 	 }
-	 catch(Err& ex){
-
-		 	 FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception when submitting file deletions has been caught: " << ex.what() << commit;
-		 	 soap_receiver_fault(ctx, ex.what(), "DeleteException");
-		 	 return SOAP_FAULT;
-	 	 }
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception when submitting file deletions has been caught: " << ex.what() << commit;
+            soap_receiver_fault(ctx, ex.what(), "DeleteException");
+            return SOAP_FAULT;
+        }
     catch(...)
         {
 
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception when submitting file deletions has been caught"  << commit;
-            soap_receiver_fault(soap, "fileDelete", "DeleteException");
+            soap_receiver_fault(ctx, "fileDelete", "DeleteException");
             return SOAP_FAULT;
-        }		 
+        }
     return SOAP_OK;
 }
 

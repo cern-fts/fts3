@@ -28,10 +28,10 @@
 #include "ui/SrcDelCli.h"
 #include <boost/scoped_ptr.hpp>
 
- #include <iostream>
- #include <sys/types.h>
- #include <sys/stat.h>
- #include <fcntl.h>
+#include <iostream>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include "exception/cli_exception.h"
 #include "JsonOutput.h"
@@ -79,14 +79,14 @@ int main(int ac, char* av[])
 
             string resjobid = ctx.deleteFile(vect);
             if(vect.empty())
-            {
-            	std::cerr<<".::FAILED::..The job(s) submittion FAILED !"<<endl;
-            	return -1;
-            }
+                {
+                    std::cerr<<".::FAILED::..The job(s) submittion FAILED !"<<endl;
+                    return -1;
+                }
             else
-            {
-            	cout<<"..::SUCCESS::..\nJob_id : "<<resjobid <<endl;
-            }
+                {
+                    cout<<"..::SUCCESS::..\nJob_id : "<<resjobid <<endl;
+                }
 
         }
     catch(cli_exception const & ex)

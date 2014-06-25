@@ -226,8 +226,8 @@ public:
      * @param pairs - se name - max number staging files pairs
      */
     void setBringOnline(map<string, int>& pairs);
-    
-    string deleteFile (std::vector<std::string>& filesForDelete);    
+
+    string deleteFile (std::vector<std::string>& filesForDelete);
 
     /**
      * Remote call to setBandwidthLimit

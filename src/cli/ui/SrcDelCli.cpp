@@ -40,67 +40,71 @@ using namespace std;
 
 
 
-SrcDelCli::SrcDelCli(){
+SrcDelCli::SrcDelCli()
+{
 
-	// add commandline option specific for the fts3-transfer-delete
-	specific.add_options()
-    	    ("source-token,S", value<string>(), "The source space token or its description (for SRM 2.2 transfers).")
-			("file,f", value<string>(&bulk_file), "Name of a configuration file.")
-			("Filename", value<string>(), "Specify the FileName.")
-			;
-	// add optional (that used without an option switch) command line option
-	p.add("Filename", 1);
+    // add commandline option specific for the fts3-transfer-delete
+    specific.add_options()
+    ("source-token,S", value<string>(), "The source space token or its description (for SRM 2.2 transfers).")
+    ("file,f", value<string>(&bulk_file), "Name of a configuration file.")
+    ("Filename", value<string>(), "Specify the FileName.")
+    ;
+    // add optional (that used without an option switch) command line option
+    p.add("Filename", 1);
 }
 
-SrcDelCli::~SrcDelCli(){
+SrcDelCli::~SrcDelCli()
+{
 
 }
 
 bool SrcDelCli::validate(bool init)
 {
     // do the standard validation
-	if(!CliBase::validate()) return false;
+    if(!CliBase::validate()) return false;
 
     // do the validation
     // In case of a user types an invalid expression...
     if (vm.count("file") && vm.count("Filename"))
-    {
-    	// print err
-        printer().error_msg("If a filename submission has been used each URL of files has to be specified inside the file separately for each file!");
-    	return optional<GSoapContextAdapter&>();
-    }
+        {
+            // print err
+            printer().error_msg("If a filename submission has been used each URL of files has to be specified inside the file separately for each file!");
+            return optional<GSoapContextAdapter&>();
+        }
 
     // first check if the -f option was used, try to open the file with bulk-job description
     ifstream ifs(bulk_file.c_str());
 
-		if(ifs)// -f option is used
-		{
-				if (vm.count("file"))
-				{
-						// Parse the file...
-						  int lineCount = 0;
-						  string line;
-						  do{
-							  	  lineCount++;
-								  getline(ifs, line);
-								  // expecting just 1 element for each line
-								  if (!line.empty()) allFilenames.push_back(line);
-							  }
-						   while(!ifs.eof());
-						  cout<<"..::Parsing is done::..\t ..::#lines: "<<lineCount-1<<"::.."<<endl;
-				}
-				else return false;
-		}
-		else if (vm.count("Filename"))	// if -f option is not used... User want to delete 1 file
-		{
-			allFilenames.push_back(vm["Filename"].as<string>());
-		}
+    if(ifs)// -f option is used
+        {
+            if (vm.count("file"))
+                {
+                    // Parse the file...
+                    int lineCount = 0;
+                    string line;
+                    do
+                        {
+                            lineCount++;
+                            getline(ifs, line);
+                            // expecting just 1 element for each line
+                            if (!line.empty()) allFilenames.push_back(line);
+                        }
+                    while(!ifs.eof());
+                    cout<<"..::Parsing is done::..\t ..::#lines: "<<lineCount-1<<"::.."<<endl;
+                }
+            else return false;
+        }
+    else if (vm.count("Filename"))	// if -f option is not used... User want to delete 1 file
+        {
+            allFilenames.push_back(vm["Filename"].as<string>());
+        }
 
     return true;
 }
 
-std::vector<string> SrcDelCli::getFileName(){
-	  return allFilenames;
+std::vector<string> SrcDelCli::getFileName()
+{
+    return allFilenames;
 }
 
 

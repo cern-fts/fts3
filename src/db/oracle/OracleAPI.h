@@ -59,9 +59,9 @@ public:
      **/
 
     virtual void init(std::string username, std::string password, std::string connectString, int pooledConn);
-    
-    virtual  void submitdelete(const std::string & jobId, const std::multimap<std::string,std::string>& rulsHost, 
-    				const std::string & DN, const std::string & voName, const std::string & credID);        
+
+    virtual  void submitdelete(const std::string & jobId, const std::multimap<std::string,std::string>& rulsHost,
+                               const std::string & DN, const std::string & voName, const std::string & credID);
 
     /**
      * Submit a transfer request to be stored in the database
@@ -414,11 +414,11 @@ private:
     size_t                poolSize;
     soci::connection_pool* connectionPool;
     std::string           hostname;
-    std::vector<std::string> sanityVector;    
-    
+    std::vector<std::string> sanityVector;
+
     void updateDeletionsStateInternal(soci::session& sql, std::vector< boost::tuple<int, std::string, std::string, std::string> >& files);
-    
-    void updateStagingStateInternal(soci::session& sql, std::vector< boost::tuple<int, std::string, std::string, std::string> >& files);    
+
+    void updateStagingStateInternal(soci::session& sql, std::vector< boost::tuple<int, std::string, std::string, std::string> >& files);
 
     bool getDrainInternal(soci::session& sql);
 
