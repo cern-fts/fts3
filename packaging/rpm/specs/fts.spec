@@ -392,6 +392,7 @@ fi
 %{_bindir}/fts-transfer-status
 %{_bindir}/fts-transfer-submit
 %{_bindir}/fts-transfer-cancel
+%{_bindir}/fts-transfer-delete
 %{_bindir}/fts-transfer-snapshot
 %{_bindir}/fts-delegation-init
 
