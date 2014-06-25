@@ -955,8 +955,8 @@ int OracleAPI::getBestNextReplica(soci::session& sql, const std::string & job_id
             soci::rowset<soci::row>::const_iterator it;
             for (it = rs.begin(); it != rs.end(); ++it)
                 {
-                    std::string source_se = it->get<std::string>("source_se","");
-                    std::string dest_se = it->get<std::string>("dest_se","");
+                    std::string source_se = it->get<std::string>("SOURCE_SE","");
+                    std::string dest_se = it->get<std::string>("DEST_SE","");
                     int queued = 0;
 
                     //get queued for this link and vo
@@ -9763,7 +9763,7 @@ void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::
     try
         {
             soci::rowset<soci::row> rs2 = (sql.prepare <<
-                                           " SELECT DISTINCT vo_name, source_se, dest_se "
+                                           " SELECT DISTINCT vo_name, source_se "
                                            " FROM t_dm "
                                            " WHERE "
                                            "      file_state = 'DELETE' AND "
@@ -9775,7 +9775,6 @@ void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::
                 {
                     soci::row const& r = *i2;
                     std::string source_se = r.get<std::string>("SOURCE_SE","");
-                    std::string dest_se = r.get<std::string>("DEST_SE","");
                     std::string vo_name = r.get<std::string>("VO_NAME","");
 
                     soci::rowset<soci::row> rs = (
@@ -9786,9 +9785,9 @@ void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::
                                                      "	f.file_state = 'DELETE' "
                                                      "	AND f.start_time IS NULL and j.job_finished is null "
                                                      "  AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd)"
-                                                     "  AND f.vo_name = :vo_name AND f.source_se=:source_se AND f.dest_se=:dest_se ",
+                                                     "  AND f.vo_name = :vo_name AND f.source_se=:source_se ",
                                                      soci::use(hashSegment.start), soci::use(hashSegment.end),
-                                                     soci::use(vo_name), soci::use(source_se), soci::use(dest_se)
+                                                     soci::use(vo_name), soci::use(source_se)
                                                  );
 
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
@@ -9809,7 +9808,7 @@ void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::
 
                             //check current staging
                             sql << 	"SELECT count(*) from t_dm "
-                                "WHERE vo_name=:vo_name and source_se = :endpoint and file_state='STARTED' and job_finished is not NULL ",
+                                "WHERE vo_name=:vo_name and source_se = :endpoint and file_state='STARTED' and job_finished is NULL ",
                                 soci::use(vo_name), soci::use(source_se), soci::into(currentDeleteActive);
 
 
@@ -9842,13 +9841,13 @@ void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::
                                                               " j.user_dn, j.cred_id "
                                                               " FROM t_dm f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                                               " WHERE  "
-                                                              "	f.start_time "
+                                                              "	f.start_time is NULL "
                                                               "	AND f.file_state = 'DELETE' "
                                                               " AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd)"
                                                               "	AND f.source_se = :source_se  "
                                                               " AND j.user_dn = :user_dn "
                                                               " AND j.vo_name = :vo_name "
-                                                              "	AND j.job_finished is null LIMIT :limit ",
+                                                              "	AND j.job_finished is null  ORDER BY j.submit_time LIMIT :limit ",
                                                               soci::use(hashSegment.start), soci::use(hashSegment.end),
                                                               soci::use(source_se),
                                                               soci::use(user_dn),
@@ -10090,7 +10089,7 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
     try
         {
             soci::rowset<soci::row> rs2 = (sql.prepare <<
-                                           " SELECT DISTINCT vo_name, source_se, dest_se "
+                                           " SELECT DISTINCT vo_name, source_se "
                                            " FROM t_file "
                                            " WHERE "
                                            "      file_state = 'STAGING' AND "
@@ -10101,9 +10100,8 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
             for (soci::rowset<soci::row>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
                 {
                     soci::row const& r = *i2;
-                    std::string source_se = r.get<std::string>("source_se","");
-                    std::string dest_se = r.get<std::string>("dest_se","");
-                    std::string vo_name = r.get<std::string>("vo_name","");
+                    std::string source_se = r.get<std::string>("SOURCE_SE","");
+                    std::string vo_name = r.get<std::string>("VO_NAME","");
 
                     soci::rowset<soci::row> rs = (
                                                      sql.prepare <<
@@ -10114,17 +10112,17 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
                                                      "	AND f.file_state = 'STAGING' "
                                                      "	AND f.staging_start IS NULL and j.job_finished is null "
                                                      "  AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd)"
-                                                     "  AND f.vo_name = :vo_name AND f.source_se=:source_se AND f.dest_se=:dest_se ",
+                                                     "  AND f.vo_name = :vo_name AND f.source_se=:source_se ",
                                                      soci::use(hashSegment.start), soci::use(hashSegment.end),
-                                                     soci::use(vo_name), soci::use(source_se), soci::use(dest_se)
+                                                     soci::use(vo_name), soci::use(source_se)
                                                  );
 
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                         {
                             soci::row const& row = *i;
 
-                            source_se = row.get<std::string>("source_se");
-                            std::string user_dn = row.get<std::string>("user_dn");
+                            source_se = row.get<std::string>("SOURCE_SE");
+                            std::string user_dn = row.get<std::string>("USER_DN");
 
                             int maxValueConfig = 0;
                             int currentStagingActive = 0;
@@ -10137,7 +10135,7 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
 
                             //check current staging
                             sql << 	"SELECT count(*) from t_file "
-                                "WHERE vo_name=:vo_name and source_se = :endpoint and file_state='STARTED' and job_finished is not NULL ",
+                                "WHERE vo_name=:vo_name and source_se = :endpoint and file_state='STARTED' and job_finished is NULL ",
                                 soci::use(vo_name), soci::use(source_se), soci::into(currentStagingActive);
 
 
@@ -10177,7 +10175,7 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
                                                               "	AND f.source_se = :source_se  "
                                                               " AND j.user_dn = :user_dn "
                                                               " AND j.vo_name = :vo_name "
-                                                              "	AND j.job_finished is null LIMIT :limit ",
+                                                              "	AND j.job_finished is null ORDER BY j.submit_time LIMIT :limit ",
                                                               soci::use(hashSegment.start), soci::use(hashSegment.end),
                                                               soci::use(source_se),
                                                               soci::use(user_dn),
@@ -10506,6 +10504,7 @@ int OracleAPI::getMaxStatingsPerEndpoint(const std::string & endpoint, const std
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }
+
 
 
 
