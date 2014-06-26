@@ -369,6 +369,8 @@ public:
 
     void submitdelete(const std::string & jobId, const std::multimap<std::string,std::string>& rulsHost,
                       const std::string & DN, const std::string & voName, const std::string & credID);
+		      
+    void checkJobOperation(std::vector<std::string>& jobs, std::vector< boost::tuple<std::string, std::string> >& ops);	      
 
 };
 

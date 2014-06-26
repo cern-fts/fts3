@@ -978,3 +978,9 @@ void ProfiledDB::submitdelete(const std::string & jobId, const std::multimap<std
 {
     PROFILE_PREFIXED("DB::", db->submitdelete(jobId, rulsHost, DN, voName, credID));
 }
+
+
+void ProfiledDB::checkJobOperation(std::vector<std::string>& jobs, std::vector< boost::tuple<std::string, std::string> >& ops)
+{
+   PROFILE_PREFIXED("DB::", db->checkJobOperation(jobs, ops));
+}

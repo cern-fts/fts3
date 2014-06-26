@@ -448,5 +448,7 @@ public:
 
     virtual void setMaxStagingPerEndpoint(int maxStaging, const std::string & endpoint, const std::string & vo) = 0;
     virtual int getMaxStatingsPerEndpoint(const std::string & endpoint, const std::string & vo) = 0;
+    
+    virtual void checkJobOperation(std::vector<std::string>& jobs, std::vector< boost::tuple<std::string, std::string> >& ops) = 0;
 
 };

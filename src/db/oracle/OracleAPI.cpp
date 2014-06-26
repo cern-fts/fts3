@@ -254,17 +254,17 @@ void OracleAPI::submitdelete(const std::string & jobId, const std::multimap<std:
             std::string sourceSurl;
             std::string sourceSE;
 
-	    pairStmt << std::fixed << "INSERT ALL ";
+            pairStmt << std::fixed << "INSERT ALL ";
 
             for(std::multimap <std::string, std::string> ::const_iterator mapit = rulsHost.begin(); mapit != rulsHost.end(); ++mapit)
                 {
                     sourceSurl = (*mapit).first;
                     sourceSE = (*mapit).second;
 
-		    pairStmt << "INTO t_file (vo_name, job_id, file_state, source_surl, source_se, hashed_id) VALUES ";
-		    pairStmt << "(";
-		    pairStmt << "'";
-		    pairStmt << voName;
+                    pairStmt << "INTO t_file (vo_name, job_id, file_state, source_surl, source_se, hashed_id) VALUES ";
+                    pairStmt << "(";
+                    pairStmt << "'";
+                    pairStmt << voName;
                     pairStmt << "',";
                     pairStmt << "'";
                     pairStmt << jobId;
@@ -278,7 +278,7 @@ void OracleAPI::submitdelete(const std::string & jobId, const std::multimap<std:
                     pairStmt << "'";
                     pairStmt << sourceSE;
                     pairStmt << "',";
-		    pairStmt << getHashedId();
+                    pairStmt << getHashedId();
                     pairStmt << ") ";
                 }
 
@@ -4259,7 +4259,7 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
                     std::string job_id;
                     soci::statement delFilesStmt = (sql.prepare << "DELETE FROM t_file WHERE job_id = :job_id", soci::use(job_id));
                     soci::statement delJobsStmt = (sql.prepare << "DELETE FROM t_job WHERE job_id = :job_id", soci::use(job_id));
-                    soci::statement delDmStmt = (sql.prepare << "DELETE FROM t_dm WHERE job_id = :job_id", soci::use(job_id));		    
+                    soci::statement delDmStmt = (sql.prepare << "DELETE FROM t_dm WHERE job_id = :job_id", soci::use(job_id));
 
                     soci::statement insertJobsStmt = (sql.prepare << "INSERT INTO t_job_backup SELECT * FROM t_job WHERE job_id = :job_id", soci::use(job_id));
                     soci::statement insertFileStmt = (sql.prepare << "INSERT INTO t_file_backup SELECT * FROM t_file WHERE job_id = :job_id", soci::use(job_id));
@@ -4283,8 +4283,8 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
 
                             delFilesStmt.execute(true);
                             *nFiles += delFilesStmt.get_affected_rows();
-			    
-			    delDmStmt.execute(true);			    
+
+                            delDmStmt.execute(true);
 
                             delJobsStmt.execute(true);
                             *nJobs += delJobsStmt.get_affected_rows();
@@ -8606,7 +8606,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
 
 
     if(!vo_name.empty())
-     	querySe = " SELECT DISTINCT source_se, dest_se FROM t_job where vo_name='" + vo_name + "'";
+        querySe = " SELECT DISTINCT source_se, dest_se FROM t_job where vo_name='" + vo_name + "'";
     else
         querySe = " SELECT DISTINCT source_se, dest_se FROM t_file";
 
@@ -8636,13 +8636,15 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
         {
             source_se = source_se_p;
             pairsStmt.exchange(soci::use(source_se));
-	    if(!vo_name.empty()){
-            	querySe += " and source_se = :source_se ";                
-		}
-            else{	
-	        querySe += " where source_se = :source_se ";
-		}
-           sourceEmpty = false;		
+            if(!vo_name.empty())
+                {
+                    querySe += " and source_se = :source_se ";
+                }
+            else
+                {
+                    querySe += " where source_se = :source_se ";
+                }
+            sourceEmpty = false;
         }
 
     if(!dest_se_p.empty())
@@ -8652,12 +8654,14 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                 {
                     dest_se = dest_se_p;
                     pairsStmt.exchange(soci::use(dest_se));
-		    if(!vo_name.empty()){
-                    	querySe += " and dest_se = :dest_se ";
-		    }else
-		    {
-                       	querySe += " where dest_se = :dest_se ";
-		    }
+                    if(!vo_name.empty())
+                        {
+                            querySe += " and dest_se = :dest_se ";
+                        }
+                    else
+                        {
+                            querySe += " where dest_se = :dest_se ";
+                        }
                 }
             else
                 {
@@ -10587,6 +10591,72 @@ int OracleAPI::getMaxStatingsPerEndpoint(const std::string & endpoint, const std
                     return maxValue;
                 }
             return 0; //default
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+
+
+void OracleAPI::checkJobOperation(std::vector<std::string >& jobs, std::vector< boost::tuple<std::string, std::string> >& ops)
+{
+    soci::session sql(*connectionPool);
+    std::string job_id;
+    std::string jobTransfer;
+    std::string jobStaging;    
+    long long jobDelete = 0;
+
+    try
+        {
+	   //ok
+           soci::statement stmtTransfer = (sql.prepare << " select job_id from t_job "
+	   						  " where job_id=:job_id and "
+							  " copy_pin_lifetime = -1 AND bring_online = -1 "
+							  " AND ROWNUM=1 ", soci::use(job_id), soci::into(jobTransfer));
+	   
+	   //ok
+           soci::statement stmtDelete   = (sql.prepare << " select file_id from t_dm where job_id=:job_id AND ROWNUM=1 ", 
+	   							soci::use(job_id), soci::into(jobDelete));	   
+	   
+	   //ok
+           soci::statement stmtStaging  = (sql.prepare << " select job_id from t_job "
+	   						  " where job_id=:job_id and "
+							  " copy_pin_lifetime > 0 OR bring_online > 0  "
+							  " AND ROWNUM=1 ", soci::use(job_id), soci::into(jobStaging));	   	   
+		
+	   for (std::vector<std::string>::const_iterator i = jobs.begin(); i != jobs.end(); ++i) 
+	   {
+	   	job_id = *i;
+		jobTransfer = std::string();
+		jobStaging = std::string();
+		jobDelete = 0;
+		
+		stmtTransfer.execute(true);
+		if(sql.got_data() && !jobTransfer.empty())
+		{
+			ops.push_back(boost::make_tuple(job_id, "TRANSFER"));
+			continue;
+		}
+				
+		stmtDelete.execute(true);
+		if(sql.got_data() && jobDelete > 0)
+		{
+			ops.push_back(boost::make_tuple(job_id, "DELETE"));
+			continue;
+		}				
+		
+		stmtStaging.execute(true);				
+		if(sql.got_data() && !jobStaging.empty())
+		{
+			ops.push_back(boost::make_tuple(job_id, "STAGING"));
+			continue;
+		}		
+	   }                               
         }
     catch (std::exception& e)
         {

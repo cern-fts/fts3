@@ -79,7 +79,7 @@ int main(int ac, char* av[])
 
             string resjobid = ctx.deleteFile(vect);
             std::cout<<"Job_id : "<<resjobid <<endl;
-                
+
 
         }
     catch(cli_exception const & ex)
