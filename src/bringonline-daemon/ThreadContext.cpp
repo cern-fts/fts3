@@ -18,8 +18,8 @@ ThreadContext::ThreadContext(ThreadContext const & prototype) : gfal2_handle(0),
 {
     // Set up handle
     GError *error = NULL;
-    gfal2_context_t handle = gfal2_context_new(&error);
-    if (!handle)
+    gfal2_handle = gfal2_context_new(&error);
+    if (!gfal2_handle)
         {
     		std::stringstream ss;
             ss << "BRINGONLINE bad initialization " << error->code << " " << error->message;
@@ -28,7 +28,7 @@ ThreadContext::ThreadContext(ThreadContext const & prototype) : gfal2_handle(0),
 
     const char *protocols[] = {"rfio", "gsidcap", "dcap", "gsiftp"};
 
-    gfal2_set_opt_string_list(handle, "SRM PLUGIN", "TURL_PROTOCOLS", protocols, 4, &error);
+    gfal2_set_opt_string_list(gfal2_handle, "SRM PLUGIN", "TURL_PROTOCOLS", protocols, 4, &error);
     if (error)
         {
     		std::stringstream ss;
@@ -38,11 +38,11 @@ ThreadContext::ThreadContext(ThreadContext const & prototype) : gfal2_handle(0),
 
     if (infosys.compare("false") == 0)
         {
-            gfal2_set_opt_boolean(handle, "BDII", "ENABLED", false, NULL);
+            gfal2_set_opt_boolean(gfal2_handle, "BDII", "ENABLED", false, NULL);
         }
     else
         {
-            gfal2_set_opt_string(handle, "BDII", "LCG_GFAL_INFOSYS", (char *) infosys.c_str(), NULL);
+            gfal2_set_opt_string(gfal2_handle, "BDII", "LCG_GFAL_INFOSYS", (char *) infosys.c_str(), NULL);
         }
 }
 
