@@ -159,7 +159,7 @@ public:
      * @param array statuses of interest
      * @param resp server response
      */
-    vector<JobStatus> listRequests (vector<string> statuses, string dn, string vo);
+    vector<JobStatus> listRequests (vector<string> statuses, string dn, string vo, string source, string destination);
 
     /**
      * Remote call to listVOManagers
@@ -226,6 +226,8 @@ public:
      * @param pairs - se name - max number staging files pairs
      */
     void setBringOnline(map<string, int>& pairs);
+
+    string deleteFile (std::vector<std::string>& filesForDelete);
 
     /**
      * Remote call to setBandwidthLimit
@@ -313,7 +315,7 @@ public:
      *
      * @param retry - number of retries to be set
      */
-    void retrySet(int retry);
+    void retrySet(string vo, int retry);
 
     /**
      * Remote call to optimizerModeSet

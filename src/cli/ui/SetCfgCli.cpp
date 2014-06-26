@@ -43,7 +43,7 @@ SetCfgCli::SetCfgCli(bool spec)
 
     if (spec)
         {
-            // add commandline options specific for fts3-transfer-submit
+            // add commandline options specific for fts3-config-set
             specific.add_options()
             (
                 "bring-online",
@@ -56,9 +56,9 @@ SetCfgCli::SetCfgCli(bool spec)
                 "\n(Example: --drain on|off)"
             )
             (
-                "retry", value<int>(),
-                "Sets the number of retries of each individual file transfer (the value should be greater or equal to -1)."
-                "\n(Example: --retry $NB_RETRY)"
+                "retry", value< vector<string> >()->multitoken(),
+                "Sets the number of retries of each individual file transfer for the given VO (the value should be greater or equal to -1)."
+                "\n(Example: --retry $VO $NB_RETRY)"
             )
             (
                 "optimizer-mode", value<int>(),
@@ -130,18 +130,6 @@ void SetCfgCli::parse(int ac, char* av[])
     // do the basic initialization
     CliBase::parse(ac, av);
 
-    if (vm.count("drain"))
-        {
-            if (vm["drain"].as<string>() != "on" && vm["drain"].as<string>() != "off")
-                {
-                    throw bad_option("drain", "drain may only take on/off values!");
-                }
-            else if(ac > 3 && ac < 5)
-                {
-                    throw bad_option("drain", "You need sto specify which endpoint to drain, -s missing?");
-                }
-        }
-
     if (vm.count("cfg"))
         {
             if (vm.count("bring-online"))
@@ -179,36 +167,6 @@ bool SetCfgCli::validate()
 
     if(!CliBase::validate()) return false;
 
-    if (vm.count("retry"))
-        {
-            int val = vm["retry"].as<int>();
-            if (val < -1)
-                {
-                    msgPrinter.error_msg("The retry value has to be greater or equal to -1.");
-                    return false;
-                }
-        }
-
-    if (vm.count("queue-timeout"))
-        {
-            int val = vm["queue-timeout"].as<int>();
-            if (val < 0)
-                {
-                    msgPrinter.error_msg("The queue-timeout value has to be greater or equal to 0.");
-                    return false;
-                }
-        }
-
-    if (vm.count("optimizer-mode"))
-        {
-            int val = vm["optimizer-mode"].as<int>();
-            if (val < 1 || val > 3)
-                {
-                    msgPrinter.error_msg("optimizer-mode may only take following values: 1, 2 or 3");
-                    return false;
-                }
-        }
-
     if (getConfigurations().empty()
             && !vm.count("drain")
             && !vm.count("retry")
@@ -227,17 +185,17 @@ bool SetCfgCli::validate()
             return false;
         }
 
-	boost::optional<std::pair<std::string, int>> src = getMaxSeActive("max-se-source-active");
-	boost::optional<std::pair<std::string, int>> dst = getMaxSeActive("max-se-dest-active");
+    boost::optional<std::pair<std::string, int>> src = getMaxSeActive("max-se-source-active");
+    boost::optional<std::pair<std::string, int>> dst = getMaxSeActive("max-se-dest-active");
 
-	if (src.is_initialized() && dst.is_initialized())
-		{
-			if (src.get().second != dst.get().second)
-    			throw bad_option(
-    					"max-se-source-active, max-se-dest-active",
-    					"the number of active for source and destination has to be equal"
-    				);
-		}
+    if (src.is_initialized() && dst.is_initialized())
+        {
+            if (src.get().second != dst.get().second)
+                throw bad_option(
+                    "max-se-source-active, max-se-dest-active",
+                    "the number of active for source and destination has to be equal"
+                );
+        }
 
     return true;
 }
@@ -257,27 +215,59 @@ optional<bool> SetCfgCli::drain()
 
     if (vm.count("drain"))
         {
+            string const & value = vm["drain"].as<string>();
+
+            if (value != "on" && value != "off")
+                {
+                    throw bad_option("drain", "drain may only take on/off values!");
+                }
+            else if(!vm.count("service"))
+                {
+                    throw bad_option("drain", "You need specify which endpoint to drain, -s missing?");
+                }
+
             return vm["drain"].as<string>() == "on";
         }
 
     return optional<bool>();
 }
 
-optional<int> SetCfgCli::retry()
+optional< pair<string, int> > SetCfgCli::retry()
 {
     if (vm.count("retry"))
         {
-            return vm["retry"].as<int>();
+            // get a reference to the options set by the user
+            vector<string> const & v = vm["retry"].as< vector<string> >();
+            // make sure the number of parameters is correct
+            if (v.size() != 2) throw bad_option("retry", "following parameters were expected: VO nb_of_retries");
+
+            try
+                {
+                    int retries = lexical_cast<int>(v[1]);
+                    if (retries < -1) throw bad_option("retry", "incorrect value: the number of retries has to greater or equal to -1.");
+                    return make_pair(v[0], retries);
+                }
+            catch(bad_lexical_cast& ex)
+                {
+                    throw bad_option("retry", "incorrect value: " + v[1] + " (the number of retries has be an integer).");
+                }
         }
 
-    return optional<int>();
+    return optional< pair<string, int> >();
 }
 
 optional<int> SetCfgCli::optimizer_mode()
 {
     if (vm.count("optimizer-mode"))
         {
-            return vm["optimizer-mode"].as<int>();
+            int mode = vm["optimizer-mode"].as<int>();
+
+            if (mode < 1 || mode > 3)
+                {
+                    throw bad_option("optimizer-mode", "only following values are accepted: 1, 2 or 3");
+                }
+
+            return mode;
         }
 
     return optional<int>();
@@ -287,7 +277,9 @@ optional<unsigned> SetCfgCli::queueTimeout()
 {
     if (vm.count("queue-timeout"))
         {
-            return vm["queue-timeout"].as<int>();
+            int timeout = vm["queue-timeout"].as<int>();
+            if (timeout < 0) throw bad_option("queue-timeout", "the queue-timeout value has to be greater or equal to 0.");
+            return timeout;
         }
 
     return optional<unsigned>();
@@ -411,17 +403,17 @@ optional< pair<string, int> > SetCfgCli::getMaxSeActive(string option)
     string se = v[1];
 
     try
-    {
-    	int active = lexical_cast<int>(v[0]);
+        {
+            int active = lexical_cast<int>(v[0]);
 
-        if (active < -1) throw bad_option("option", "values lower than -1 are not valid");
+            if (active < -1) throw bad_option("option", "values lower than -1 are not valid");
 
-        return make_pair(se, active);
-    }
+            return make_pair(se, active);
+        }
     catch(bad_lexical_cast& ex)
-    {
-    	throw bad_option(option, "the number of active has to be an integer");
-    }
+        {
+            throw bad_option(option, "the number of active has to be an integer");
+        }
 }
 
 optional< pair<string, int> > SetCfgCli::getMaxSrcSeActive()

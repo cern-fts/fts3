@@ -31,7 +31,8 @@ CREATE TABLE t_server_config (
   retry          INTEGER DEFAULT 0,
   max_time_queue INTEGER DEFAULT 0,
   global_timeout INTEGER DEFAULT 0,
-  sec_per_mb INTEGER DEFAULT 0
+  sec_per_mb INTEGER DEFAULT 0,
+  vo_name VARCHAR(100)
 );
 INSERT INTO t_server_config (retry,max_time_queue,global_timeout,sec_per_mb) values(0,0,0,0);
 
@@ -661,12 +662,13 @@ CREATE TABLE t_stage_req (
    vo_name           VARCHAR(100) NOT NULL
 -- hostname
    ,host           VARCHAR(150) NOT NULL			
---
+-- operation
+   ,operation           VARCHAR(150) NOT NULL
 -- parallel bringonline ops
   ,concurrent_ops INTEGER DEFAULT 0
   
 -- Set primary key
-  ,CONSTRAINT stagereq_pk PRIMARY KEY (vo_name, host)
+  ,CONSTRAINT stagereq_pk PRIMARY KEY (vo_name, host, operation)
 );
 
 --
@@ -735,12 +737,6 @@ CREATE TABLE t_dm (
 -- Dest SE host name
   dest_se              VARCHAR(150),  
 --
--- The error scope
-  error_scope      VARCHAR(32),
---
--- The FTS phase when the error happened
-  error_phase      VARCHAR(32),
---
 -- The reason the file is in this state
   reason           VARCHAR(2048),
 --
@@ -752,17 +748,10 @@ CREATE TABLE t_dm (
 --
 -- the timestamp when the file is in a terminal state
   start_time        TIMESTAMP NULL DEFAULT NULL,  
---
--- internal file parameters for storing information between retry attempts
-  internal_file_params  VARCHAR(255),
---
 -- this timestamp will be set when the job enter in one of the terminal 
 -- states (Finished, FinishedDirty, Failed, Canceled). Use for table
 -- partitioning
   job_finished          TIMESTAMP NULL DEFAULT NULL,
---
--- the pid of the process which is executing the file transfer
-  pid                   INTEGER,
 --
 -- dm op duration
   tx_duration           DOUBLE,
@@ -779,15 +768,6 @@ CREATE TABLE t_dm (
 --
 -- activity name
   activity   VARCHAR(255) DEFAULT "default",  
---
--- selection strategy used in case when multiple protocols were provided
-  selection_strategy VARCHAR(255),
---
--- Staging start timestamp
-  dm_start   TIMESTAMP NULL DEFAULT NULL,  
---
--- Staging finish timestamp
-  dm_finished   TIMESTAMP NULL DEFAULT NULL,
 --
 -- dm token
   dm_token VARCHAR(255),
@@ -862,6 +842,7 @@ INSERT INTO t_schema_vers (major,minor,patch) VALUES (1,0,0);
 -- Saves the bother of writing down again the same schema
 CREATE TABLE t_file_backup AS (SELECT * FROM t_file);
 CREATE TABLE t_job_backup  AS (SELECT * FROM t_job);
+CREATE TABLE t_dm_backup AS (SELECT * FROM t_dm);
 CREATE INDEX t_job_backup_job_id     ON t_job_backup(job_id);
 
 

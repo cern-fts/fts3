@@ -227,6 +227,81 @@ void OracleAPI::init(std::string username, std::string password, std::string con
 }
 
 
+void OracleAPI::submitdelete(const std::string & jobId, const std::multimap<std::string,std::string>& rulsHost,
+                             const std::string & userDN, const std::string & voName, const std::string & credID)
+{
+    const std::string initialState = "DELETE";
+    std::ostringstream pairStmt;
+
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            sql.begin();
+
+            soci::statement insertJob = (	sql.prepare << "INSERT INTO  t_job ( job_id, job_state, vo_name,submit_host, submit_time, user_dn, cred_id)"
+                                            "VALUES (:jobId, :jobState, :voName , :hostname, sys_extract_utc(systimestamp), :userDN, :credID)",
+                                            soci::use(jobId),
+                                            soci::use(initialState),
+                                            soci::use(voName),
+                                            soci::use(hostname),
+                                            soci::use(userDN),
+                                            soci::use(credID)
+                                        );
+            insertJob.execute(true);
+
+
+            std::string sourceSurl;
+            std::string sourceSE;
+
+	    pairStmt << std::fixed << "INSERT ALL ";
+
+            for(std::multimap <std::string, std::string> ::const_iterator mapit = rulsHost.begin(); mapit != rulsHost.end(); ++mapit)
+                {
+                    sourceSurl = (*mapit).first;
+                    sourceSE = (*mapit).second;
+
+		    pairStmt << "INTO t_file (vo_name, job_id, file_state, source_surl, source_se, hashed_id) VALUES ";
+		    pairStmt << "(";
+		    pairStmt << "'";
+		    pairStmt << voName;
+                    pairStmt << "',";
+                    pairStmt << "'";
+                    pairStmt << jobId;
+                    pairStmt << "',";
+                    pairStmt << "'";
+                    pairStmt << initialState;
+                    pairStmt << "',";
+                    pairStmt << "'";
+                    pairStmt << sourceSurl;
+                    pairStmt << "',";
+                    pairStmt << "'";
+                    pairStmt << sourceSE;
+                    pairStmt << "',";
+		    pairStmt << getHashedId();
+                    pairStmt << ") ";
+                }
+
+            std::string queryStr = pairStmt.str();
+            queryStr += " SELECT * FROM dual ";
+            sql << queryStr;
+
+            sql.commit();
+        }
+    catch(std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
+        }
+    catch(...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+
+}
+
+
 
 
 TransferJobs* OracleAPI::getTransferJob(std::string jobId, bool archive)
@@ -725,12 +800,12 @@ void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, s
                 }
         }
     catch (std::exception& e)
-        {            
+        {
             files.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
-        {            
+        {
             files.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
@@ -955,8 +1030,8 @@ int OracleAPI::getBestNextReplica(soci::session& sql, const std::string & job_id
             soci::rowset<soci::row>::const_iterator it;
             for (it = rs.begin(); it != rs.end(); ++it)
                 {
-                    std::string source_se = it->get<std::string>("source_se","");
-                    std::string dest_se = it->get<std::string>("dest_se","");
+                    std::string source_se = it->get<std::string>("SOURCE_SE","");
+                    std::string dest_se = it->get<std::string>("DEST_SE","");
                     int queued = 0;
 
                     //get queued for this link and vo
@@ -1162,12 +1237,12 @@ void OracleAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std:
                 }
         }
     catch (std::exception& e)
-        {            
+        {
             files.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
-        {            
+        {
             files.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
@@ -1567,7 +1642,7 @@ void OracleAPI::getTransferJobStatus(std::string requestID, bool archive, std::v
  * std::vector<JobStatus*> jobs: the caller will deallocate memory JobStatus instances and clear the vector
  * std::vector<std::string> inGivenStates: order doesn't really matter, more than one states supported
  */
-void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates, std::string restrictToClientDN, std::string forDN, std::string VOname)
+void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates, std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst)
 {
     soci::session sql(*connectionPool);
 
@@ -1631,6 +1706,19 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
             if (searchForCanceling)
                 {
                     query << " AND cancel_job = 'Y' ";
+                }
+
+
+            if (!src.empty())
+                {
+                    query << " AND source_se = :src ";
+                    stmt.exchange(soci::use(src, "src"));
+                }
+
+            if (!dst.empty())
+                {
+                    query << " AND dest_se = :dst ";
+                    stmt.exchange(soci::use(dst, "dst"));
                 }
 
             JobStatus job;
@@ -3051,36 +3139,36 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
 bool OracleAPI::getMaxActive(soci::session& sql, int active, int /*highDefault*/, const std::string & source_hostname, const std::string & destin_hostname)
 {
     long long int maxActiveSource = 0;
-    long long int maxActiveDest = 0;   
+    long long int maxActiveDest = 0;
 
     try
         {
-	    //check for source
+            //check for source
             sql << " select active from t_optimize where source_se = :source_se and active is not NULL ",
                 soci::use(source_hostname),
                 soci::into(maxActiveSource);
-         
+
             //check for dest
             sql << " select active from t_optimize where dest_se = :dest_se and active is not NULL ",
                 soci::use(destin_hostname),
                 soci::into(maxActiveDest);
-		
+
             //check for link max first
             if(maxActiveSource > 0 && maxActiveDest > 0 && maxActiveSource == maxActiveDest && active > maxActiveSource)
-		return false;
+                return false;
 
-	    //check for max source
-	    if (maxActiveSource > 0 && active > maxActiveSource)
-                return false;		
+            //check for max source
+            if (maxActiveSource > 0 && active > maxActiveSource)
+                return false;
 
             //check for max dest
             if (maxActiveDest > 0 && active > maxActiveDest)
-                return false;		            		 		
-		            
-	    //not check, repsect default		     
-	    if( (maxActiveSource == 0 && maxActiveDest == 0) && active >= MAX_ACTIVE_PER_LINK)
-	    	return false;	
-	    		
+                return false;
+
+            //not check, repsect default
+            if( (maxActiveSource == 0 && maxActiveDest == 0) && active >= MAX_ACTIVE_PER_LINK)
+                return false;
+
         }
     catch (std::exception& e)
         {
@@ -3466,27 +3554,27 @@ bool OracleAPI::updateOptimizer()
                             continue;
                         }
 
-                   //ratioSuccessFailure, rateStored, throughput, thrStored MUST never be zero
+                    //ratioSuccessFailure, rateStored, throughput, thrStored MUST never be zero
                     if(changed)
                         {
                             sql.begin();
 
                             int pathFollowed = 0;
-			    int tempActive = active; //temp store current active
-			    
-			    //special case to increase active when dealing with LAN transfers of there is only one single/dest pair active
-			    if( (singleDest == 1 || lanTransferBool) && maxActive < 8 )
-			    {
-				highDefault = 8;
-			    	maxActive = highDefault;
-			    }
-			    else //reset
-			    {
-			    	highDefault = tempDefault;
-			    }
+                            int tempActive = active; //temp store current active
+
+                            //special case to increase active when dealing with LAN transfers of there is only one single/dest pair active
+                            if( (singleDest == 1 || lanTransferBool) && maxActive < 8 )
+                                {
+                                    highDefault = 8;
+                                    maxActive = highDefault;
+                                }
+                            else //reset
+                                {
+                                    highDefault = tempDefault;
+                                }
 
                             if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure >= 98)) && throughputEMA > thrStored && retry <= retryStored)
-                                {                                   
+                                {
                                     //make sure we do not increase beyond limits set
                                     bool maxActiveLimit = getMaxActive(sql, maxActive, highDefault, source_hostname, destin_hostname);
 
@@ -3520,47 +3608,47 @@ bool OracleAPI::updateOptimizer()
                                 }
                             else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure >= 98)) && throughputEMA == thrStored && retry <= retryStored)
                                 {
-				   //make sure we do not increase beyond limits set
+                                    //make sure we do not increase beyond limits set
                                     bool maxActiveLimit = getMaxActive(sql, maxActive, highDefault, source_hostname, destin_hostname);
-				    
-				    if(maxActiveLimit) // no limit
-				       {
- 					if(throughputSamples == 10) // spawn one every 10min
-                                        {					
-                                            active = maxActive + 1;
-                                            if(active > (tempActive + 7))
+
+                                    if(maxActiveLimit) // no limit
+                                        {
+                                            if(throughputSamples == 10) // spawn one every 10min
+                                                {
+                                                    active = maxActive + 1;
+                                                    if(active > (tempActive + 7))
+                                                        {
+                                                            active = maxActive;
+                                                        }
+                                                    ema = throughputEMA;
+                                                    pathFollowed = 2;
+                                                    stmt10.execute(true);
+                                                }
+                                            else if(throughputSamples == 10 && (singleDest == 1 || lanTransferBool))
+                                                {
+                                                    active = maxActive + 1;
+                                                    if(active > (tempActive + 7))
+                                                        {
+                                                            active = maxActive;
+                                                        }
+                                                    ema = throughputEMA;
+                                                    pathFollowed = 2;
+                                                    stmt10.execute(true);
+                                                }
+                                            else
                                                 {
                                                     active = maxActive;
+                                                    ema = throughputEMA;
+                                                    pathFollowed = 2;
+                                                    stmt10.execute(true);
                                                 }
-                                            ema = throughputEMA;
-                                            pathFollowed = 2;
-					    stmt10.execute(true);
                                         }
-                                        else if(throughputSamples == 10 && (singleDest == 1 || lanTransferBool))
-			                {
-                                            active = maxActive + 1;
-                                            if(active > (tempActive + 7))
-                                                {
-                                                    active = maxActive;
-                                                }
-                                            ema = throughputEMA;
-                                            pathFollowed = 2;
-					    stmt10.execute(true);
-					}	
-					else
-					{
-					    active = maxActive;
-                                            ema = throughputEMA;
-                                            pathFollowed = 2;
-					    stmt10.execute(true);					
-					}									       
-				       }                                   
-				    else
+                                    else
                                         {
                                             active = maxActive;
                                             ema = throughputEMA;
                                             pathFollowed = 2;
-					    stmt10.execute(true);
+                                            stmt10.execute(true);
                                         }
                                 }
                             else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 95)) && throughputEMA < thrStored)
@@ -3939,7 +4027,7 @@ bool OracleAPI::terminateReuseProcess(const std::string & jobId, int pid, const 
         {
             if(jobId.length() == 0)
                 {
-                    sql << " SELECT job_id from t_file where pid=:pid and job_finished is NULL LIMIT 1",
+                    sql << " SELECT job_id from t_file where pid=:pid and job_finished is NULL AND ROWNUM =1",
                         soci::use(pid), soci::into(job_id);
 
                     sql << " SELECT reuse_job FROM t_job WHERE job_id = :jobId AND reuse_job IS NOT NULL",
@@ -4171,6 +4259,7 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
                     std::string job_id;
                     soci::statement delFilesStmt = (sql.prepare << "DELETE FROM t_file WHERE job_id = :job_id", soci::use(job_id));
                     soci::statement delJobsStmt = (sql.prepare << "DELETE FROM t_job WHERE job_id = :job_id", soci::use(job_id));
+                    soci::statement delDmStmt = (sql.prepare << "DELETE FROM t_dm WHERE job_id = :job_id", soci::use(job_id));		    
 
                     soci::statement insertJobsStmt = (sql.prepare << "INSERT INTO t_job_backup SELECT * FROM t_job WHERE job_id = :job_id", soci::use(job_id));
                     soci::statement insertFileStmt = (sql.prepare << "INSERT INTO t_file_backup SELECT * FROM t_file WHERE job_id = :job_id", soci::use(job_id));
@@ -4194,6 +4283,8 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
 
                             delFilesStmt.execute(true);
                             *nFiles += delFilesStmt.get_affected_rows();
+			    
+			    delDmStmt.execute(true);			    
 
                             delJobsStmt.execute(true);
                             *nJobs += delJobsStmt.get_affected_rows();
@@ -5714,7 +5805,7 @@ void OracleAPI::setSeProtocol(std::string /*protocol*/, std::string se, std::str
 }
 
 
-void OracleAPI::setRetry(int retry)
+void OracleAPI::setRetry(int retry, const std::string & vo_name)
 {
     soci::session sql(*connectionPool);
 
@@ -5722,8 +5813,10 @@ void OracleAPI::setRetry(int retry)
         {
             sql.begin();
 
-            sql << "UPDATE t_server_config SET retry = :retry",
-                soci::use(retry);
+            sql << "DELETE FROM t_server_config where vo_name = :vo_name", soci::use(vo_name);
+
+            sql << "INSERT INTO t_server_config(retry, vo_name) VALUES(:retry, :vo_name)",
+                soci::use(retry), soci::use(vo_name);
 
             sql.commit();
         }
@@ -5740,34 +5833,34 @@ void OracleAPI::setRetry(int retry)
 }
 
 
-
 int OracleAPI::getRetry(const std::string & jobId)
 {
     soci::session sql(*connectionPool);
 
     int nRetries = 0;
     soci::indicator isNull = soci::i_ok;
+    std::string vo_name;
 
     try
         {
-
             sql <<
-                " SELECT retry "
+                " SELECT retry, vo_name "
                 " FROM t_job "
                 " WHERE job_id = :jobId ",
                 soci::use(jobId),
-                soci::into(nRetries, isNull)
+                soci::into(nRetries, isNull),
+                soci::into(vo_name)
                 ;
 
-            if (isNull != soci::i_null && nRetries == 0)
+            if (isNull == soci::i_null || nRetries <= 0)
                 {
                     sql <<
                         " SELECT retry FROM (SELECT rownum as rn, retry "
-                        "  FROM t_server_config) WHERE rn = 1",
-                        soci::into(nRetries)
+                        "  FROM t_server_config where vo_name=:vo_name) WHERE rn = 1",
+                        soci::use(vo_name), soci::into(nRetries)
                         ;
                 }
-            else if (isNull != soci::i_null && nRetries < 0)
+            else if (isNull != soci::i_null && nRetries <= 0)
                 {
                     nRetries = 0;
                 }
@@ -6275,7 +6368,7 @@ void OracleAPI::bringOnlineReportStatusInternal(soci::session& sql,
                     sql.begin();
                     sql <<
                         " UPDATE t_file "
-                        " SET staging_start = sys_extract_utc(systimestamp), transferhost=:thost, file_state='STARTED' "
+                        " SET staging_start = sys_extract_utc(systimestamp), start_time = sys_extract_utc(systimestamp), transferhost=:thost, file_state='STARTED' "
                         " WHERE job_id = :jobId "
                         "   AND file_id= :fileId "
                         "   AND file_state='STAGING'",
@@ -7315,7 +7408,7 @@ void OracleAPI::checkSanityState()
 
                             sql << "SELECT COUNT(DISTINCT file_index) FROM t_file where job_id=:jobId ", soci::use(*i), soci::into(numberOfFiles);
 
-                            if(numberOfFiles > 1)
+                            if(numberOfFiles > 0)
                                 {
                                     countFileInTerminalStates(sql, *i, allFinished, allCanceled, allFailed);
                                     terminalState = allFinished + allCanceled + allFailed;
@@ -8508,8 +8601,14 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
     double throughput5min = 0.0;
     long long nFailedLastHour = 0;
     long long  nFinishedLastHour = 0;
-    double  ratioSuccessFailure = 0;
-    std::string querySe = " SELECT DISTINCT source_se, dest_se FROM t_file ";
+    double  ratioSuccessFailure = 0.0;
+    std::string querySe;
+
+
+    if(!vo_name.empty())
+     	querySe = " SELECT DISTINCT source_se, dest_se FROM t_job where vo_name='" + vo_name + "'";
+    else
+        querySe = " SELECT DISTINCT source_se, dest_se FROM t_file";
 
     time_t now = time(NULL);
     struct tm tTime;
@@ -8520,12 +8619,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
     soci::indicator isNull3 = soci::i_ok;
 
     soci::statement voStmt(sql);
-    if(!vo_name.empty())
-        {
-            voStmt = (sql.prepare << "select distinct vo_name from t_job where vo_name = :vo_name",
-                      soci::use(vo_name), soci::into(vo_name_local));
-        }
-    else
+    if(vo_name.empty())
         {
             voStmt = (sql.prepare << "select distinct vo_name from t_job ",
                       soci::into(vo_name_local));
@@ -8542,8 +8636,13 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
         {
             source_se = source_se_p;
             pairsStmt.exchange(soci::use(source_se));
-            querySe += " where source_se = :source_se ";
-            sourceEmpty = false;
+	    if(!vo_name.empty()){
+            	querySe += " and source_se = :source_se ";                
+		}
+            else{	
+	        querySe += " where source_se = :source_se ";
+		}
+           sourceEmpty = false;		
         }
 
     if(!dest_se_p.empty())
@@ -8553,7 +8652,12 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                 {
                     dest_se = dest_se_p;
                     pairsStmt.exchange(soci::use(dest_se));
-                    querySe += " where dest_se = :dest_se ";
+		    if(!vo_name.empty()){
+                    	querySe += " and dest_se = :dest_se ";
+		    }else
+		    {
+                       	querySe += " where dest_se = :dest_se ";
+		    }
                 }
             else
                 {
@@ -8562,11 +8666,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                     querySe += " AND dest_se = :dest_se ";
                 }
         }
-    if(!destinEmpty || !sourceEmpty)
-        querySe += " AND vo_name= :vo_name";
-    else
-        querySe += " WHERE vo_name= :vo_name";
-    pairsStmt.exchange(soci::use(vo_name_local));
+
     pairsStmt.alloc();
     pairsStmt.prepare(querySe);
     pairsStmt.define_and_bind();
@@ -8635,11 +8735,11 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                                  ));
 
 
-            soci::statement st5((sql.prepare << "select reason, count(reason) as c from t_file where "
+            soci::statement st5((sql.prepare << "select * from (select reason, count(reason) as c from t_file where "
                                  " (job_finished >= (sys_extract_utc(systimestamp) - interval '60' minute)) "
                                  " AND file_state='FAILED' and "
                                  " source_se=:source_se and dest_se=:dest_se and vo_name =:vo_name_local   "
-                                 " group by reason order by c desc limit 1",
+                                 " group by reason order by c desc) WHERE ROWNUM=1",
                                  soci::use(source_se),
                                  soci::use(dest_se),
                                  soci::use(vo_name_local),
@@ -8665,14 +8765,131 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                                  soci::into(nFinishedLastHour)
                                 ));
 
-
-            voStmt.execute();
-            while (voStmt.fetch())
+            if(vo_name.empty())
                 {
-                    if(source_se_p.empty())
-                        source_se = "";
-                    if(dest_se_p.empty())
-                        dest_se = "";
+                    voStmt.execute();
+                    while (voStmt.fetch())
+                        {
+                            if(source_se_p.empty())
+                                source_se = "";
+                            if(dest_se_p.empty())
+                                dest_se = "";
+
+                            pairsStmt.execute();
+                            while (pairsStmt.fetch())
+                                {
+                                    active = 0;
+                                    maxActive = 0;
+                                    submitted = 0;
+                                    throughput1h = 0.0;
+                                    throughput30min = 0.0;
+                                    throughput15min = 0.0;
+                                    throughput5min = 0.0;
+                                    nFailedLastHour = 0;
+                                    nFinishedLastHour = 0;
+                                    ratioSuccessFailure = 0.0;
+
+
+                                    st1.execute(true);
+                                    st2.execute(true);
+                                    st7.execute(true);
+                                    st6.execute(true);
+                                    st3.execute(true);
+
+
+                                    //if all of the above return 0 then continue
+                                    if(active == 0 && nFinishedLastHour == 0 &&  nFailedLastHour == 0 && submitted == 0 && source_se_p.empty() && dest_se_p.empty())
+                                        continue;
+
+                                    result << "{\n";
+
+                                    result << std::fixed << "\"VO\":\"";
+                                    result <<   vo_name_local;
+                                    result <<   "\",\n";
+
+                                    result <<   "\"Source endpoint\":\"";
+                                    result <<   source_se;
+                                    result <<   "\",\n";
+
+                                    result <<   "\"Destination endpoint\":\"";
+                                    result <<   dest_se;
+                                    result <<   "\",\n";
+
+                                    //get active for this pair and vo
+                                    result <<   "\"Current active transfers\":\"";
+                                    result <<   active;
+                                    result <<   "\",\n";
+
+                                    //get max active for this pair no matter the vo
+                                    result <<   "\"Max active transfers\":\"";
+                                    result <<   maxActive;
+                                    result <<   "\",\n";
+
+                                    result <<   "\"Number of finished (last hour)\":\"";
+                                    result <<   long(nFinishedLastHour);
+                                    result <<   "\",\n";
+
+                                    result <<   "\"Number of failed (last hour)\":\"";
+                                    result <<   long(nFailedLastHour);
+                                    result <<   "\",\n";
+
+                                    //get submitted for this pair and vo
+                                    result <<   "\"Number of queued\":\"";
+                                    result <<   submitted;
+                                    result <<   "\",\n";
+
+
+                                    //average throughput block
+                                    st41.execute(true);
+                                    result <<   "\"Avg throughput (last 60min)\":\"";
+                                    result <<  std::setprecision(2) << throughput1h;
+                                    result <<   " MB/s\",\n";
+
+                                    st42.execute(true);
+                                    result <<   "\"Avg throughput (last 30min)\":\"";
+                                    result <<  std::setprecision(2) << throughput30min;
+                                    result <<   " MB/s\",\n";
+
+                                    st43.execute(true);
+                                    result <<   "\"Avg throughput (last 15min)\":\"";
+                                    result <<  std::setprecision(2) << throughput15min;
+                                    result <<   " MB/s\",\n";
+
+                                    st44.execute(true);
+                                    result <<   "\"Avg throughput (last 5min)\":\"";
+                                    result <<  std::setprecision(2) << throughput5min;
+                                    result <<   " MB/s\",\n";
+
+
+                                    //round up efficiency
+                                    if(nFinishedLastHour > 0)
+                                        {
+                                            ratioSuccessFailure = ceil((double)nFinishedLastHour/((double)nFinishedLastHour + (double)nFailedLastHour) * (100.0));
+                                        }
+
+                                    result <<   "\"Link efficiency (last hour)\":\"";
+                                    result <<   ratioSuccessFailure;
+                                    result <<   "%\",\n";
+
+                                    //most frequent error and number the last 30min
+                                    reason = "";
+                                    countReason = 0;
+                                    st5.execute(true);
+
+                                    result <<   "\"Most frequent error (last hour)\":\"";
+                                    result <<   countReason;
+                                    result <<   " times: ";
+                                    result <<   reason;
+                                    result <<   "\"\n";
+
+                                    result << "}\n";
+                                    result << "\n\n";
+                                }
+                        }
+                }
+            else
+                {
+                    vo_name_local = vo_name;
 
                     pairsStmt.execute();
                     while (pairsStmt.fetch())
@@ -9490,11 +9707,11 @@ void OracleAPI::getTransferJobStatusDetailed(std::string job_id, std::vector<boo
 
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
-                    std::string job_id = i->get<std::string>("job_id");
-                    std::string file_state = i->get<std::string>("file_state");
-                    int file_id = i->get<int>("file_id");
-                    std::string source_surl = i->get<std::string>("source_surl");
-                    std::string dest_surl = i->get<std::string>("dest_surl");
+                    std::string job_id = i->get<std::string>("JOB_ID");
+                    std::string file_state = i->get<std::string>("FILE_STATE");
+                    int file_id = i->get<int>("FILE_ID");
+                    std::string source_surl = i->get<std::string>("SOURCE_SURL");
+                    std::string dest_surl = i->get<std::string>("DEST_SURL");
 
                     boost::tuple<std::string, std::string, int, std::string, std::string> record(job_id, file_state, file_id, source_surl, dest_surl);
                     files.push_back(record);
@@ -9509,6 +9726,879 @@ void OracleAPI::getTransferJobStatusDetailed(std::string job_id, std::vector<boo
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }
+
+
+
+void OracleAPI::updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string> >& files)
+{
+    soci::session sql(*connectionPool);
+    try
+        {
+            updateDeletionsStateInternal(sql, files);
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+
+void OracleAPI::updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string> >& files)
+{
+    soci::session sql(*connectionPool);
+    try
+        {
+            updateStagingStateInternal(sql, files);
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+
+
+
+
+//NEW deletions and staging API
+//need to diffenetiate delete and staging cancelations so as to avoid clash with transfers
+//check job state for staging and deletions
+
+//deletions						 //file_id / state / reason / job_id
+void OracleAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< boost::tuple<int, std::string, std::string, std::string> >& files)
+{
+    int file_id = 0;
+    std::string state;
+    std::string reason;
+    std::string job_id;
+    std::vector<struct message_state> filesMsg;
+
+    try
+        {
+
+            sql.begin();
+
+            std::vector< boost::tuple<int, std::string, std::string, std::string> >::iterator itFind;
+            for (itFind = files.begin(); itFind < files.end(); ++itFind)
+                {
+                    boost::tuple<int, std::string, std::string, std::string>& tupleRecord = *itFind;
+                    file_id = boost::get<0>(tupleRecord);
+                    state = boost::get<1>(tupleRecord);
+                    reason = boost::get<2>(tupleRecord);
+                    job_id  = boost::get<3>(tupleRecord);
+
+                    if (state == "STARTED")
+                        {
+                            sql <<
+                                " UPDATE t_dm "
+                                " SET start_time = sys_extract_utc(systimestamp), transferhost=:thost, file_state='STARTED' "
+                                " WHERE  "
+                                "	file_id= :fileId "
+                                "	AND file_state='DELETE'",
+                                soci::use(hostname),
+                                soci::use(file_id)
+                                ;
+                        }
+                    else
+                        {
+                            sql <<
+                                " UPDATE t_file "
+                                " SET  job_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), reason = :reason, file_state = :fileState "
+                                " WHERE "
+                                "	file_id = :fileId "
+                                "	AND file_state in ('STAGING','STARTED')",
+                                soci::use(reason),
+                                soci::use(state),
+                                soci::use(file_id)
+                                ;
+
+                            updateJobTransferStatusInternal(sql, job_id, state,0);
+                        }
+
+                    //send state message
+                    filesMsg = getStateOfTransferInternal(sql, job_id, file_id);
+                    if(!filesMsg.empty())
+                        {
+                            std::vector<struct message_state>::iterator it;
+                            for (it = filesMsg.begin(); it != filesMsg.end(); ++it)
+                                {
+                                    struct message_state tmp = (*it);
+                                    constructJSONMsg(&tmp);
+                                }
+                        }
+                    filesMsg.clear();
+                }
+            sql.commit();
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+
+//file_id / surl / proxy
+void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::string, int, std::string, std::string> >& files)
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            soci::rowset<soci::row> rs2 = (sql.prepare <<
+                                           " SELECT DISTINCT vo_name, source_se "
+                                           " FROM t_dm "
+                                           " WHERE "
+                                           "      file_state = 'DELETE' AND "
+                                           "      (hashed_id >= :hStart AND hashed_id <= :hEnd)  ",
+                                           soci::use(hashSegment.start), soci::use(hashSegment.end)
+                                          );
+
+            for (soci::rowset<soci::row>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
+                {
+                    soci::row const& r = *i2;
+                    std::string source_se = r.get<std::string>("SOURCE_SE","");
+                    std::string vo_name = r.get<std::string>("VO_NAME","");
+
+                    soci::rowset<soci::row> rs = (
+                                                     sql.prepare <<
+                                                     " SELECT distinct j.source_se, j.user_dn "
+                                                     " FROM t_db f INNER JOIN t_job j ON (f.job_id = j.job_id) "
+                                                     " WHERE "
+                                                     "	f.file_state = 'DELETE' "
+                                                     "	AND f.start_time IS NULL and j.job_finished is null "
+                                                     "  AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd)"
+                                                     "  AND f.vo_name = :vo_name AND f.source_se=:source_se ",
+                                                     soci::use(hashSegment.start), soci::use(hashSegment.end),
+                                                     soci::use(vo_name), soci::use(source_se)
+                                                 );
+
+                    for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+                        {
+                            soci::row const& row = *i;
+
+                            source_se = row.get<std::string>("SOURCE_SE");
+                            std::string user_dn = row.get<std::string>("USER_DN");
+
+                            int maxValueConfig = 0;
+                            int currentDeleteActive = 0;
+                            int limit = 0;
+
+                            //check max configured
+                            sql << 	"SELECT concurrent_ops from t_stage_req "
+                                "WHERE vo_name=:vo_name and host = :endpoint and operation='delete' and concurrent_ops is NOT NULL ",
+                                soci::use(vo_name), soci::use(source_se), soci::into(maxValueConfig);
+
+                            //check current staging
+                            sql << 	"SELECT count(*) from t_dm "
+                                "WHERE vo_name=:vo_name and source_se = :endpoint and file_state='STARTED' and job_finished is NULL ",
+                                soci::use(vo_name), soci::use(source_se), soci::into(currentDeleteActive);
+
+
+                            if(maxValueConfig > 0)
+                                {
+                                    if(currentDeleteActive > 0)
+                                        {
+                                            limit = maxValueConfig - currentDeleteActive;
+                                        }
+                                    else
+                                        {
+                                            limit = maxValueConfig;
+                                        }
+                                }
+                            else
+                                {
+                                    if(currentDeleteActive > 0)
+                                        {
+                                            limit = 2000 - currentDeleteActive;
+                                        }
+                                    else
+                                        {
+                                            limit = 2000;
+                                        }
+                                }
+
+                            soci::rowset<soci::row> rs3 = (
+                                                              sql.prepare <<
+                                                              " SELECT * FROM (SELECT f.source_surl, f.job_id, f.file_id, "
+                                                              " j.user_dn, j.cred_id "
+                                                              " FROM t_dm f INNER JOIN t_job j ON (f.job_id = j.job_id) "
+                                                              " WHERE  "
+                                                              "	f.start_time is NULL "
+                                                              "	AND f.file_state = 'DELETE' "
+                                                              " AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd)"
+                                                              "	AND f.source_se = :source_se  "
+                                                              " AND j.user_dn = :user_dn "
+                                                              " AND j.vo_name = :vo_name "
+                                                              "	AND j.job_finished is null  ORDER BY SYS_EXTRACT_UTC(j.submit_time)) WHERE ROWNUM <= :limit ",
+                                                              soci::use(hashSegment.start), soci::use(hashSegment.end),
+                                                              soci::use(source_se),
+                                                              soci::use(user_dn),
+                                                              soci::use(vo_name),
+                                                              soci::use(limit)
+                                                          );
+
+                            std::vector< boost::tuple<int, std::string, std::string, std::string> > filesState;
+                            std::string initState = "STARTED";
+                            std::string reason;
+
+                            for (soci::rowset<soci::row>::const_iterator i3 = rs3.begin(); i3 != rs2.end(); ++i3)
+                                {
+                                    soci::row const& row = *i3;
+                                    std::string source_url = row.get<std::string>("SOURCE_SURL");
+                                    std::string job_id = row.get<std::string>("JOB_ID");
+                                    int file_id = row.get<int>("FILE_ID");
+                                    user_dn = row.get<std::string>("USER_DN");
+                                    std::string cred_id = row.get<std::string>("CRED_ID");
+
+                                    boost::tuple<std::string, std::string, int, std::string, std::string> record(source_url, job_id, file_id, user_dn, cred_id);
+                                    files.push_back(record);
+
+                                    boost::tuple<int, std::string, std::string, std::string> recordState(file_id, initState, reason, job_id);
+                                    filesState.push_back(recordState);
+                                }
+                            //file_id / state / reason / job_id
+                            //now update the initial state
+                            if(!filesState.empty())
+                                updateDeletionsStateInternal(sql, filesState);
+                        }
+                }
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+
+//job_id
+void OracleAPI::cancelDeletion(std::vector<std::string>& files)
+{
+    soci::session sql(*connectionPool);
+    const std::string reason = "Job canceled by the user";
+    std::string job_id;
+    std::ostringstream cancelStmt1;
+    std::ostringstream cancelStmt2;
+    std::ostringstream jobIdStmt;
+
+    try
+        {
+            for (std::vector<std::string>::const_iterator i = files.begin(); i != files.end(); ++i)
+                {
+                    job_id = (*i);
+                    jobIdStmt << "'";
+                    jobIdStmt << job_id;
+                    jobIdStmt << "',";
+                }
+
+            std::string queryStr = jobIdStmt.str();
+            job_id = queryStr.substr(0, queryStr.length() - 1);
+
+            cancelStmt1 << "UPDATE t_job SET job_state = 'CANCELED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), cancel_job='Y' ";
+            cancelStmt1 << " ,reason = '";
+            cancelStmt1 << reason;
+            cancelStmt1 << "'";
+            cancelStmt1 << " WHERE job_id IN (";
+            cancelStmt1 << job_id;
+            cancelStmt1 << ")";
+            cancelStmt1 << " AND job_state NOT IN ('CANCELED','FINISHEDDIRTY', 'FINISHED', 'FAILED')";
+
+            cancelStmt2 << "UPDATE t_file SET file_state = 'CANCELED',  finish_time = sys_extract_utc(systimestamp) ";
+            cancelStmt2 << " ,reason = '";
+            cancelStmt2 << reason;
+            cancelStmt2 << "'";
+            cancelStmt2 << " WHERE job_id IN (";
+            cancelStmt2 << job_id;
+            cancelStmt2 << ")";
+            cancelStmt2 << " AND file_state NOT IN ('CANCELED','FINISHED','FAILED')";
+
+            soci::statement stmt1 = (sql.prepare << cancelStmt1.str());
+            soci::statement stmt2 = (sql.prepare << cancelStmt2.str());
+
+
+            sql.begin();
+            // Cancel job
+            stmt1.execute(true);
+
+            // Cancel files
+            stmt2.execute(true);
+            sql.commit();
+
+            jobIdStmt.str(std::string());
+            jobIdStmt.clear();
+            cancelStmt1.str(std::string());
+            cancelStmt1.clear();
+            cancelStmt2.str(std::string());
+            cancelStmt2.clear();
+
+        }
+    catch (std::exception& e)
+        {
+            jobIdStmt.str(std::string());
+            jobIdStmt.clear();
+            cancelStmt1.str(std::string());
+            cancelStmt1.clear();
+            cancelStmt2.str(std::string());
+            cancelStmt2.clear();
+
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            jobIdStmt.str(std::string());
+            jobIdStmt.clear();
+            cancelStmt1.str(std::string());
+            cancelStmt1.clear();
+            cancelStmt2.str(std::string());
+            cancelStmt2.clear();
+
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+
+}
+
+//file_id / surl
+void OracleAPI::getDeletionFilesForCanceling(std::vector< boost::tuple<int, std::string, std::string> >& files)
+{
+    soci::session sql(*connectionPool);
+    int file_id = 0;
+    std::string source_surl;
+    std::string job_id;
+
+    try
+        {
+            soci::rowset<soci::row> rs = (sql.prepare << " SELECT file_id, job_id, source_surl from t_dm WHERE "
+                                          "  file_state='CANCELED' and job_finished is NULL "
+                                          "  AND (hashed_id >= :hStart AND hashed_id <= :hEnd) ",
+                                          soci::use(hashSegment.start), soci::use(hashSegment.end));
+
+            // Cancel staging files
+            for (soci::rowset<soci::row>::const_iterator i2 = rs.begin(); i2 != rs.end(); ++i2)
+                {
+                    soci::row const& row = *i2;
+                    file_id = row.get<int>("FILE_ID",0);
+                    source_surl = row.get<std::string>("SOURCE_SURL","");
+                    job_id = row.get<std::string>("JOB_ID","");
+                    boost::tuple<int, std::string, std::string> record(file_id, job_id, source_surl);
+                    files.push_back(record);
+                }
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+
+void OracleAPI::setMaxDeletionsPerEndpoint(int maxDeletions, const std::string & endpoint, const std::string & vo)
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            sql.begin();
+
+            sql << " DELETE from t_stage_req where operation='delete' and vo_name=:vo_name and host = :endpoint",
+                soci::use(vo), soci::use(endpoint);
+
+            sql << 	" INSERT INTO concurrent_ops(vo_name, host, operation, concurrent_ops)  "
+                " VALUES(:vo, :endpoint, 'delete', maxDeletions) ",
+                soci::use(vo), soci::use(endpoint), soci::into(maxDeletions);
+
+            sql.commit();
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }
+}
+
+
+int OracleAPI::getMaxDeletionsPerEndpoint(const std::string & endpoint, const std::string & vo)
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            int maxValue = 0;;
+
+            sql << 	"SELECT concurrent_ops from t_stage_req "
+                "WHERE vo_name=:vo_name and host = :endpoint and operation='delete' and concurrent_ops is NOT NULL ",
+                soci::use(vo), soci::use(endpoint), soci::into(maxValue);
+
+            if (sql.got_data())
+                {
+                    return maxValue;
+                }
+            return 0; //default
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+
+
+
+//STAGING
+//need messaging, both for canceling and state transitions
+
+
+//WORKHORSE
+//alter table t_job add index t_staging_index(vo_name, source_se, dest_se, user_dn);
+//f.source_surl, f.job_id, f.file_id, j.copy_pin_lifetime, j.bring_online  , j.user_dn, j.cred_id, j.source_space_token
+void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::string, int, int, int, std::string, std::string, std::string > >& files)
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            soci::rowset<soci::row> rs2 = (sql.prepare <<
+                                           " SELECT DISTINCT vo_name, source_se "
+                                           " FROM t_file "
+                                           " WHERE "
+                                           "      file_state = 'STAGING' AND "
+                                           "      (hashed_id >= :hStart AND hashed_id <= :hEnd)  ",
+                                           soci::use(hashSegment.start), soci::use(hashSegment.end)
+                                          );
+
+            for (soci::rowset<soci::row>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
+                {
+                    soci::row const& r = *i2;
+                    std::string source_se = r.get<std::string>("SOURCE_SE","");
+                    std::string vo_name = r.get<std::string>("VO_NAME","");
+
+                    soci::rowset<soci::row> rs = (
+                                                     sql.prepare <<
+                                                     " SELECT distinct j.source_se, j.user_dn "
+                                                     " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
+                                                     " WHERE "
+                                                     "	(j.BRING_ONLINE > 0 OR j.COPY_PIN_LIFETIME > 0) "
+                                                     "	AND f.file_state = 'STAGING' "
+                                                     "	AND f.staging_start IS NULL and j.job_finished is null "
+                                                     "  AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd)"
+                                                     "  AND f.vo_name = :vo_name AND f.source_se=:source_se ",
+                                                     soci::use(hashSegment.start), soci::use(hashSegment.end),
+                                                     soci::use(vo_name), soci::use(source_se)
+                                                 );
+
+                    for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+                        {
+                            soci::row const& row = *i;
+
+                            source_se = row.get<std::string>("SOURCE_SE");
+                            std::string user_dn = row.get<std::string>("USER_DN");
+
+                            int maxValueConfig = 0;
+                            int currentStagingActive = 0;
+                            int limit = 0;
+
+                            //check max configured
+                            sql << 	"SELECT concurrent_ops from t_stage_req "
+                                "WHERE vo_name=:vo_name and host = :endpoint and operation='staging' and concurrent_ops is NOT NULL ",
+                                soci::use(vo_name), soci::use(source_se), soci::into(maxValueConfig);
+
+                            //check current staging
+                            sql << 	"SELECT count(*) from t_file "
+                                "WHERE vo_name=:vo_name and source_se = :endpoint and file_state='STARTED' and job_finished is NULL ",
+                                soci::use(vo_name), soci::use(source_se), soci::into(currentStagingActive);
+
+
+                            if(maxValueConfig > 0)
+                                {
+                                    if(currentStagingActive > 0)
+                                        {
+                                            limit = maxValueConfig - currentStagingActive;
+                                        }
+                                    else
+                                        {
+                                            limit = maxValueConfig;
+                                        }
+                                }
+                            else
+                                {
+                                    if(currentStagingActive > 0)
+                                        {
+                                            limit = 2000 - currentStagingActive;
+                                        }
+                                    else
+                                        {
+                                            limit = 2000;
+                                        }
+                                }
+
+                            soci::rowset<soci::row> rs3 = (
+                                                              sql.prepare <<
+                                                              " SELECT * FROM (SELECT f.source_surl, f.job_id, f.file_id, j.copy_pin_lifetime, j.bring_online, "
+                                                              " j.user_dn, j.cred_id, j.source_space_token"
+                                                              " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
+                                                              " WHERE  "
+                                                              " (j.BRING_ONLINE > 0 OR j.COPY_PIN_LIFETIME > 0) "
+                                                              "	AND f.staging_start IS NULL "
+                                                              "	AND f.file_state = 'STAGING' "
+                                                              " AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd)"
+                                                              "	AND f.source_se = :source_se  "
+                                                              " AND j.user_dn = :user_dn "
+                                                              " AND j.vo_name = :vo_name "
+                                                              "	AND j.job_finished is null ORDER BY SYS_EXTRACT_UTC(j.submit_time) )  WHERE ROWNUM <= :limit ",
+                                                              soci::use(hashSegment.start), soci::use(hashSegment.end),
+                                                              soci::use(source_se),
+                                                              soci::use(user_dn),
+                                                              soci::use(vo_name),
+                                                              soci::use(limit)
+                                                          );
+
+                            std::vector< boost::tuple<int, std::string, std::string, std::string> > filesState;
+                            std::string initState = "STARTED";
+                            std::string reason;
+
+                            for (soci::rowset<soci::row>::const_iterator i3 = rs3.begin(); i3 != rs2.end(); ++i3)
+                                {
+                                    soci::row const& row = *i3;
+                                    std::string source_url = row.get<std::string>("SOURCE_SURL");
+                                    std::string job_id = row.get<std::string>("JOB_ID");
+                                    int file_id = row.get<int>("FILE_ID");
+                                    int copy_pin_lifetime = row.get<int>("COPY_PIN_LIFETIME",0);
+                                    int bring_online = row.get<int>("BRING_ONLINE",0);
+                                    user_dn = row.get<std::string>("USER_DN");
+                                    std::string cred_id = row.get<std::string>("CRED_ID");
+                                    std::string source_space_token = row.get<std::string>("SOURCE_SPACE_TOKEN","");
+
+                                    boost::tuple<std::string, std::string, int, int, int, std::string, std::string, std::string > record(source_url,job_id, file_id, copy_pin_lifetime, bring_online, user_dn, cred_id , source_space_token);
+                                    files.push_back(record);
+
+                                    boost::tuple<int, std::string, std::string, std::string> recordState(file_id, initState, reason, job_id);
+                                    filesState.push_back(recordState);
+                                }
+
+                            //now update the initial state
+                            if(!filesState.empty())
+                                updateStagingStateInternal(sql, filesState);
+                        }
+                }
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+
+//file_id / state / reason / job_id
+void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost::tuple<int, std::string, std::string, std::string> >& files)
+{
+    int file_id = 0;
+    std::string state;
+    std::string reason;
+    std::string job_id;
+    std::vector<struct message_state> filesMsg;
+
+    try
+        {
+
+            sql.begin();
+
+            std::vector< boost::tuple<int, std::string, std::string, std::string> >::iterator itFind;
+            for (itFind = files.begin(); itFind < files.end(); ++itFind)
+                {
+                    boost::tuple<int, std::string, std::string, std::string>& tupleRecord = *itFind;
+                    file_id = boost::get<0>(tupleRecord);
+                    state = boost::get<1>(tupleRecord);
+                    reason = boost::get<2>(tupleRecord);
+                    job_id = boost::get<3>(tupleRecord);
+
+                    if (state == "STARTED")
+                        {
+                            sql <<
+                                " UPDATE t_file "
+                                " SET staging_start = sys_extract_utc(systimestamp), transferhost=:thost, file_state='STARTED' "
+                                " WHERE  "
+                                "	file_id= :fileId "
+                                "	AND file_state='STAGING'",
+                                soci::use(hostname),
+                                soci::use(file_id)
+                                ;
+                        }
+                    else
+                        {
+                            std::string source_surl;
+                            std::string dest_surl;
+                            std::string dbState;
+                            std::string dbReason;
+                            int stage_in_only = 0;
+
+                            sql << "select count(*) from t_file where file_id=:file_id and source_surl=dest_surl",
+                                soci::use(file_id),
+                                soci::into(stage_in_only);
+
+                            if(stage_in_only == 0)  //stage-in and transfer
+                                {
+                                    dbState = state == "FINISHED" ? "SUBMITTED" : state;
+                                    dbReason = state == "FINISHED" ? std::string() : reason;
+                                }
+                            else //stage-in only
+                                {
+                                    dbState = state == "FINISHED" ? "FINISHED" : state;
+                                    dbReason = state == "FINISHED" ? std::string() : reason;
+                                }
+
+                            sql <<
+                                " UPDATE t_file "
+                                " SET staging_finished = sys_extract_utc(systimestamp), job_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), reason = :reason, file_state = :fileState "
+                                " WHERE "
+                                "	file_id = :fileId "
+                                "	AND file_state in ('STAGING','STARTED')",
+                                soci::use(dbReason),
+                                soci::use(dbState),
+                                soci::use(file_id)
+                                ;
+
+                            updateJobTransferStatusInternal(sql, job_id, dbState,0);
+                        }
+
+                    //send state message
+                    filesMsg = getStateOfTransferInternal(sql, job_id, file_id);
+                    if(!filesMsg.empty())
+                        {
+                            std::vector<struct message_state>::iterator it;
+                            for (it = filesMsg.begin(); it != filesMsg.end(); ++it)
+                                {
+                                    struct message_state tmp = (*it);
+                                    constructJSONMsg(&tmp);
+                                }
+                        }
+                    filesMsg.clear();
+                }
+            sql.commit();
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+
+
+//what if half are staging and half transfers
+//must be called both
+//job_id
+void OracleAPI::cancelStaging(std::vector<std::string>& files)
+{
+    soci::session sql(*connectionPool);
+    const std::string reason = "Job canceled by the user";
+    std::string job_id;
+    std::ostringstream cancelStmt1;
+    std::ostringstream cancelStmt2;
+    std::ostringstream jobIdStmt;
+
+    try
+        {
+            for (std::vector<std::string>::const_iterator i = files.begin(); i != files.end(); ++i)
+                {
+                    job_id = (*i);
+                    jobIdStmt << "'";
+                    jobIdStmt << job_id;
+                    jobIdStmt << "',";
+                }
+
+            std::string queryStr = jobIdStmt.str();
+            job_id = queryStr.substr(0, queryStr.length() - 1);
+
+            cancelStmt1 << "UPDATE t_job SET job_state = 'CANCELED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), cancel_job='Y' ";
+            cancelStmt1 << " ,reason = '";
+            cancelStmt1 << reason;
+            cancelStmt1 << "'";
+            cancelStmt1 << " WHERE job_id IN (";
+            cancelStmt1 << job_id;
+            cancelStmt1 << ")";
+            cancelStmt1 << " AND job_state NOT IN ('CANCELED','FINISHEDDIRTY', 'FINISHED', 'FAILED')";
+
+            cancelStmt2 << "UPDATE t_file SET file_state = 'CANCELED',  finish_time = sys_extract_utc(systimestamp) ";
+            cancelStmt2 << " ,reason = '";
+            cancelStmt2 << reason;
+            cancelStmt2 << "'";
+            cancelStmt2 << " WHERE job_id IN (";
+            cancelStmt2 << job_id;
+            cancelStmt2 << ")";
+            cancelStmt2 << " AND file_state NOT IN ('CANCELED','FINISHED','FAILED')";
+
+            soci::statement stmt1 = (sql.prepare << cancelStmt1.str());
+            soci::statement stmt2 = (sql.prepare << cancelStmt2.str());
+
+
+            sql.begin();
+            // Cancel job
+            stmt1.execute(true);
+
+            // Cancel files
+            stmt2.execute(true);
+            sql.commit();
+
+            jobIdStmt.str(std::string());
+            jobIdStmt.clear();
+            cancelStmt1.str(std::string());
+            cancelStmt1.clear();
+            cancelStmt2.str(std::string());
+            cancelStmt2.clear();
+
+        }
+    catch (std::exception& e)
+        {
+            jobIdStmt.str(std::string());
+            jobIdStmt.clear();
+            cancelStmt1.str(std::string());
+            cancelStmt1.clear();
+            cancelStmt2.str(std::string());
+            cancelStmt2.clear();
+
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            jobIdStmt.str(std::string());
+            jobIdStmt.clear();
+            cancelStmt1.str(std::string());
+            cancelStmt1.clear();
+            cancelStmt2.str(std::string());
+            cancelStmt2.clear();
+
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+
+//file_id / surl / token
+void OracleAPI::getStagingFilesForCanceling(std::vector< boost::tuple<int, std::string, std::string> >& files)
+{
+    soci::session sql(*connectionPool);
+    int file_id = 0;
+    std::string source_surl;
+    std::string token;
+
+    try
+        {
+            soci::rowset<soci::row> rs = (sql.prepare << " SELECT file_id, source_surl, bringonline_token from t_file WHERE "
+                                          "  file_state='CANCELED' and job_finished is NULL "
+                                          "  AND (hashed_id >= :hStart AND hashed_id <= :hEnd) ",
+                                          soci::use(hashSegment.start), soci::use(hashSegment.end));
+
+            // Cancel staging files
+            for (soci::rowset<soci::row>::const_iterator i2 = rs.begin(); i2 != rs.end(); ++i2)
+                {
+                    soci::row const& row = *i2;
+                    file_id = row.get<int>("FILE_ID",0);
+                    source_surl = row.get<std::string>("SOURCE_SURL","");
+                    token = row.get<std::string>("BRINGONLINE_TOKEN","");
+                    boost::tuple<int, std::string, std::string> record(file_id, source_surl, token);
+                    files.push_back(record);
+                }
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+
+void OracleAPI::setMaxStagingPerEndpoint(int maxStaging, const std::string & endpoint, const std::string & vo)
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            sql.begin();
+
+            sql << " DELETE from t_stage_req where operation='staging' and vo_name=:vo_name and host = :endpoint",
+                soci::use(vo), soci::use(endpoint);
+
+            sql << 	" INSERT INTO concurrent_ops(vo_name, host, operation, concurrent_ops)  "
+                " VALUES(:vo, :endpoint, 'staging', maxDeletions) ",
+                soci::use(vo), soci::use(endpoint), soci::into(maxStaging);
+
+            sql.commit();
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }
+}
+
+
+int OracleAPI::getMaxStatingsPerEndpoint(const std::string & endpoint, const std::string & vo)
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            int maxValue = 0;;
+
+            sql << 	"SELECT concurrent_ops from t_stage_req "
+                "WHERE vo_name=:vo_name and host = :endpoint and operation='staging' and concurrent_ops is NOT NULL ",
+                soci::use(vo), soci::use(endpoint), soci::into(maxValue);
+
+            if (sql.got_data())
+                {
+                    return maxValue;
+                }
+            return 0; //default
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+
+
 
 
 

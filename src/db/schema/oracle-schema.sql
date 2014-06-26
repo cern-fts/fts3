@@ -28,7 +28,8 @@ CREATE TABLE t_server_config (
   retry       INTEGER default 0,
   max_time_queue INTEGER default 0,
   global_timeout INTEGER default 0,
-  sec_per_mb INTEGER default 0
+  sec_per_mb INTEGER default 0,
+  vo_name VARCHAR2(100)
 );
 insert into t_server_config(retry,max_time_queue,global_timeout,sec_per_mb) values(0,0,0,0);
 
@@ -364,7 +365,7 @@ CREATE TABLE t_se_pair_acl (
 CREATE TABLE t_vo_acl (
 --
 -- the name of the VO
-   vo_name		VARCHAR2(50)
+   vo_name		VARCHAR2(100)
 			CONSTRAINT vo_acl_vo_name_not_null NOT NULL
 --
 -- The principal name
@@ -423,7 +424,7 @@ CREATE TABLE t_job (
   ,voms_cred            BLOB
 --
 -- The VO that owns this job
-  ,vo_name              VARCHAR2(50)
+  ,vo_name              VARCHAR2(100)
 --
 -- The reason the job is in the current state
   ,reason           	VARCHAR2(2048)
@@ -632,8 +633,102 @@ CREATE TABLE t_file (
   ,hashed_id       INTEGER DEFAULT 0
 --
 -- The VO that owns this job
-  ,vo_name              VARCHAR(50)  
+  ,vo_name              VARCHAR(100)  
 );
+
+
+
+
+--
+-- t_dm stores the actual file transfers - one row per source/dest pair
+--
+CREATE TABLE t_dm (
+-- file_id is a unique identifier for a (source, destination) pair with a
+-- job.  It is created automatically.
+--
+   file_id		INTEGER
+			CONSTRAINT dm_file_id_not_null NOT NULL		     
+		        CONSTRAINT dm_file_id_pk PRIMARY KEY
+--
+-- file index
+   ,file_index       INTEGER
+--
+-- job_id (used in joins with file table)
+   ,job_id		CHAR(36)
+                    	CONSTRAINT dm_job_id_not_null NOT NULL
+			REFERENCES t_job(job_id)
+--
+-- The state of this file
+  ,file_state		VARCHAR2(32)
+                    	CONSTRAINT dm_file_state_not_null NOT NULL
+--
+-- Hostname which this file was transfered
+  ,dmHost       	VARCHAR2(150)
+--
+-- The Source
+  ,source_surl      	VARCHAR2(900)
+--
+-- The Destination
+  ,dest_surl		VARCHAR2(900)
+--
+-- Source SE host name
+  ,source_se         VARCHAR2(150)
+--
+-- Dest SE host name
+  ,dest_se           VARCHAR2(150)
+--
+-- The reason the file is in this state
+  ,reason           	VARCHAR2(2048)
+--
+-- the user-defined checksum of the file "checksum_type:checksum"
+  ,checksum         	VARCHAR2(100)
+--
+-- the timestamp when the file is in a terminal state
+  ,finish_time		TIMESTAMP WITH TIME ZONE DEFAULT NULL
+--
+-- the timestamp when the file is in a terminal state
+  ,start_time		TIMESTAMP WITH TIME ZONE DEFAULT NULL
+--
+-- this timestamp will be set when the job enter in one of the terminal
+-- states (Finished, FinishedDirty, Failed, Canceled). Use for table
+-- partitioning
+  ,job_finished          TIMESTAMP WITH TIME ZONE DEFAULT NULL
+--
+-- transfer duration
+  ,TX_DURATION		NUMBER
+--
+-- How many times should the transfer be retried
+  ,retry           NUMBER DEFAULT 0
+--
+-- user provided size of the file (bytes)
+  ,user_filesize         	INTEGER
+--
+-- user provided metadata
+  ,file_metadata    VARCHAR2(1024)
+--
+-- the timestamp that the file will be retried
+  ,retry_timestamp          TIMESTAMP WITH TIME ZONE DEFAULT NULL
+--
+--
+  ,wait_timestamp		TIMESTAMP WITH TIME ZONE DEFAULT NULL
+--
+--
+  ,wait_timeout			NUMBER
+--
+  ,hashed_id       INTEGER DEFAULT 0
+--
+-- The VO that owns this job
+  ,vo_name              VARCHAR(100)  
+);
+
+
+
+
+
+
+
+
+
 
 --
 -- Keep error reason that drove to retries
@@ -694,6 +789,22 @@ END;
 
 
 --
+-- autoinc sequence on file_id (t_dm)
+--
+CREATE SEQUENCE dm_file_id_seq;
+
+CREATE OR REPLACE TRIGGER dm_file_id_auto_inc
+BEFORE INSERT ON t_dm
+FOR EACH ROW
+WHEN (new.file_id IS NULL)
+BEGIN
+  SELECT dm_file_id_seq.nextval
+  INTO   :new.file_id from dual;
+END;
+/
+
+
+--
 -- autoinc sequence on auto_number
 --
 CREATE SEQUENCE t_optimize_auto_number_seq;
@@ -715,16 +826,18 @@ END;
 CREATE TABLE t_stage_req (
 --
 -- vo name
-   vo_name           VARCHAR2(255) CONSTRAINT stagereq_vo_name_not_null NOT NULL
+   vo_name           VARCHAR2(100) CONSTRAINT stagereq_vo_name_not_null NOT NULL
 --
 -- hostname
    ,host           VARCHAR2(255) CONSTRAINT stagereq_host_not_null NOT NULL
 --
+-- operation
+   ,operation           VARCHAR2(100) CONSTRAINT stagereq_operation_not_null NOT NULL
 -- parallel bringonline ops
   ,concurrent_ops              INTEGER DEFAULT 0
 --
 -- Set primary key
-  ,CONSTRAINT stagereq_pk PRIMARY KEY (vo_name, host)
+  ,CONSTRAINT stagereq_pk PRIMARY KEY (vo_name, host, operation)
 );
 
 --
@@ -800,6 +913,7 @@ INSERT INTO t_schema_vers (major,minor,patch) VALUES (1,0,0);
 
 CREATE TABLE t_file_backup AS (SELECT * FROM t_file);
 CREATE TABLE t_job_backup  AS (SELECT * FROM t_job);
+CREATE TABLE t_dm_backup AS (SELECT * FROM t_dm);
 
 CREATE INDEX t_job_backup_1            ON t_job_backup(job_id);
 CREATE INDEX t_file_backup_1            ON t_file_backup(job_id);

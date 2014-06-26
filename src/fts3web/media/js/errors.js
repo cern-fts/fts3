@@ -50,7 +50,7 @@ ErrorsCtrl.redirectTo = function(routeParams, path, search)
     if (search.source_se && search.dest_se)
         return '/errors/list?source_se=' + search.source_se + '&dest_se=' + search.dest_se + '&time_window=' + search.time_window;
     else
-        return '/errors/pairs';
+        return '/errors/pairs?source_se=' + search.source_se + '&dest_se=' + search.dest_se + '&time_window=' + search.time_window;
 }
 
 
@@ -121,7 +121,10 @@ ErrorsForPairCtrl.resolve = {
 
     	ErrorsForPair.query($location.search(),
   			  genericSuccessMethod(deferred, $rootScope),
-			  genericFailureMethod(deferred, $rootScope, $location));
+			  function () {
+			      stopLoading($rootScope);
+			      $location.path('/errors/pairs');
+			  });
 
     	return deferred.promise;
     }

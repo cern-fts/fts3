@@ -432,42 +432,42 @@ void MsgPrinter::file_list(vector<string> values, vector<string> retries)
 
 void MsgPrinter::print(std::string job_id, std::vector<tns3__DetailedFileStatus *> const & v)
 {
-	// make sure the vector is not empty
-	if (v.empty()) return;
-	// create the JSON object
-	ptree object;
-	// add job ID
-	object.put("job_id", job_id);
-	// create array element
+    // make sure the vector is not empty
+    if (v.empty()) return;
+    // create the JSON object
+    ptree object;
+    // add job ID
+    object.put("job_id", job_id);
+    // create array element
     pt::ptree array;
-	// add each file status to array
-	std::vector<tns3__DetailedFileStatus *>::const_iterator it;
-	for (it = v.begin(); it != v.end(); ++it)
-		{
-			tns3__DetailedFileStatus& stat = **it;
-			ptree item;
-			item.put("file_id", boost::lexical_cast<std::string>(stat.fileId));
-			item.put("state", stat.fileState);
-			item.put("source_surl", stat.sourceSurl);
-			item.put("dest_surl", stat.destSurl);
-			array.push_back(std::make_pair("", item));
-		}
-	// add the array to the JSON object
+    // add each file status to array
+    std::vector<tns3__DetailedFileStatus *>::const_iterator it;
+    for (it = v.begin(); it != v.end(); ++it)
+        {
+            tns3__DetailedFileStatus& stat = **it;
+            ptree item;
+            item.put("file_id", boost::lexical_cast<std::string>(stat.fileId));
+            item.put("state", stat.fileState);
+            item.put("source_surl", stat.sourceSurl);
+            item.put("dest_surl", stat.destSurl);
+            array.push_back(std::make_pair("", item));
+        }
+    // add the array to the JSON object
     object.put_child("files", array);
-	// print the JSON object
-	JsonOutput::printArray("jobs", object);
+    // print the JSON object
+    JsonOutput::printArray("jobs", object);
 }
 
 template<>
 void MsgPrinter::print_cout<JobStatus>()
 {
-	std::cout << "No data have been found for the specified state(s) and/or user VO/VOMS roles." << std::endl;
+    std::cout << "No data have been found for the specified state(s) and/or user VO/VOMS roles." << std::endl;
 }
 
 template<>
 void MsgPrinter::print_json<JobStatus>()
 {
-	JsonOutput::print("job", "[]");
+    JsonOutput::print("job", "[]");
 }
 
 MsgPrinter::MsgPrinter(ostream& /*out*/): json(false)

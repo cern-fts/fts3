@@ -41,13 +41,18 @@ def get_audit(http_request):
 def get_server_config(http_request):
     config = dict()
     cursor = connection.cursor()
-    cursor.execute("SELECT retry, max_time_queue, global_timeout, sec_per_mb FROM t_server_config")
+    cursor.execute("SELECT retry, max_time_queue, global_timeout, sec_per_mb, vo_name FROM t_server_config")
     server_config = cursor.fetchall()
-    if len(server_config) > 0:
-        config['retry'] = server_config[0][0]
-        config['max_time_queue'] = server_config[0][1]
-        config['global_timeout'] = server_config[0][2]
-        config['sec_per_mb'] = server_config[0][3]
+    config['per_vo'] = list()
+    for entry in server_config:
+        c = dict(
+            retry=entry[0],
+            max_time_queue=entry[1],
+            global_timeout=entry[2],
+            sec_per_mb=entry[3],
+            vo_name=entry[4]
+        )
+        config['per_vo'].append(c)
 
     cursor.execute("SELECT mode_opt FROM t_optimize_mode")
     modes = cursor.fetchall()

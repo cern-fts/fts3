@@ -269,6 +269,13 @@
      <element name="retries" type="xsd:boolean" minOccurs="1" maxOccurs="1"/>
     </sequence>
    </complexType>
+   
+ <complexType name="deleteFiles">
+                <sequence>
+                    <element maxOccurs="unbounded" name="delf" nillable="true" type="xsd:string"/>
+                </sequence>
+   </complexType>
+     
   
   </schema>
   <schema targetNamespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" xmlns="http://www.w3.org/2001/XMLSchema">
@@ -379,6 +386,19 @@
    </message> 
    
    <message name="debugSetResponse"/>
+   
+   <message name="fileDeleteRequest">
+   
+      <part name="file" type="tns3:deleteFiles"/>
+      
+   </message> 
+   
+   <message name="fileDeleteResponse">
+      
+      <part name="jobid" type="xsd:string"/>
+      
+   </message> 
+      
 
    <message name="blacklistDnRequest">
    
@@ -487,10 +507,15 @@
 
       <part name="inGivenStates" type="impl:ArrayOf_soapenc_string"/>
 
+      <part name="placeHolder" type="xsd:string"/>
 
       <part name="forDN" type="xsd:string"/>
 
       <part name="forVO" type="xsd:string"/>
+      
+      <part name="sourceSe" type="xsd:string"/>
+      
+      <part name="destSe" type="xsd:string"/>
 
    </message>
 
@@ -825,6 +850,22 @@
          <fault message="impl:InternalException" name="InternalException"/>
          
       </operation>
+      
+     <operation name="fileDelete" parameterOrder="file">
+      
+         <input message="impl:fileDeleteRequest" name="fileDeleteRequest"/>
+
+         <output message="impl:fileDeleteResponse" name="fileDeleteResponse"/>
+      
+         <fault message="impl:AuthorizationException" name="AuthorizationException"/>
+
+         <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
+
+         <fault message="impl:InvalidArgumentException" name="InvalidArgumentException"/>
+
+         <fault message="impl:InternalException" name="InternalException"/>
+         
+      </operation>      
       
       <operation name="blacklistDn" parameterOrder="blacklistDn">
       
@@ -1474,6 +1515,48 @@
          </fault>
 
       </operation>
+      
+	  <operation name="fileDelete">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <input name="fileDeleteRequest">
+
+            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
+
+         </input>
+
+         <output name="fileDeleteResponse">
+
+            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
+
+         </output>
+
+         <fault name="AuthorizationException">
+
+            <wsdlsoap:fault name="AuthorizationException" use="literal"/>
+
+         </fault>
+
+         <fault name="ServiceBusyException">
+
+            <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
+
+         </fault>
+
+         <fault name="InvalidArgumentException">
+
+            <wsdlsoap:fault name="InvalidArgumentException" use="literal"/>
+
+         </fault>
+
+         <fault name="InternalException">
+
+            <wsdlsoap:fault name="InternalException" use="literal"/>
+
+         </fault>
+
+      </operation>      
       
       <operation name="blacklistDn">
 

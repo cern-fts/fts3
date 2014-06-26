@@ -1,6 +1,6 @@
 /*
  *	Copyright notice:
- *	Copyright © Members of the EMI Collaboration, 2010.
+ *	Copyright Â© Members of the EMI Collaboration, 2010.
  *
  *	See www.eu-emi.eu for details on the copyright holders
  *
@@ -16,68 +16,76 @@
  *	See the License for the specific language governing permissions and
  *	limitations under the License.
  *
- * fts3-config-get.cpp
+ * fts3-transfer-del.cpp
  *
- *  Created on: Apr 3, 2012
- *      Author: Michał Simon
+ *  Created on: Nov 7, 2013
+ *      Author: Christina Skarpathiotaki
  */
 
 #include "GSoapContextAdapter.h"
+#include "ProxyCertificateDelegator.h"
 #include "MsgPrinter.h"
-#include "ui/SnapshotCli.h"
+#include "ui/SrcDelCli.h"
+#include <boost/scoped_ptr.hpp>
 
-#include "common/JobStatusHandler.h"
+#include <iostream>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include "exception/cli_exception.h"
 #include "JsonOutput.h"
 
-#include <iostream>
-#include <string>
-
-
-#include <boost/scoped_ptr.hpp>
-
-#include <boost/property_tree/json_parser.hpp>
-
 using namespace boost;
 using namespace std;
 using namespace fts3::cli;
-using namespace fts3::common;
 
 /**
- * This is the entry point for the fts3-transfer-cancel command line tool.
+ * This is the entry point for the fts3-transfer-delete command line tool.
  */
+
+
+
+
 int main(int ac, char* av[])
 {
-
-    JsonOutput::create();
-    scoped_ptr<SnapshotCli> cli;
+    scoped_ptr<SrcDelCli> cli;
 
     try
         {
             // create and initialize the command line utility
             cli.reset(
-                getCli<SnapshotCli>(ac, av)
+                new SrcDelCli
             );
-            if (!cli->validate()) return 0;
+
+            cli->SrcDelCli::parse(ac,av);
 
             // validate command line options, and return respective gsoap context
+            if (!cli->validate()) return 1;
             GSoapContextAdapter& ctx = cli->getGSoapContext();
 
+            // delegate Proxy Certificate
+            ProxyCertificateDelegator handler (
+                cli->getService(),
+                "",
+                0,
+                cli->printer()
+            );
 
-            string src = cli->getSource(), dst = cli->getDestination(), vo = cli->getVo();
+            handler.delegate();
 
 
-            std::string resp = ctx.getSnapShot(vo, src, dst);
-	    if(!resp.empty())
-            	std::cout << resp << std::endl;
-	    else
-	        std::cout << "{\"Message\":\"Nothing returned for the parameters provided\"}" << std::endl;
+            vector<string> vect =  cli->getFileName();
+
+            string resjobid = ctx.deleteFile(vect);
+            std::cout<<"Job_id : "<<resjobid <<endl;
+                
 
         }
     catch(cli_exception const & ex)
         {
-            std::cout << ex.what() << std::endl;
+            if (cli->isJson()) JsonOutput::print(ex);
+            else std::cout << ex.what() << std::endl;
             return 1;
         }
     catch(std::exception& ex)
@@ -91,9 +99,9 @@ int main(int ac, char* av[])
     catch(...)
         {
             if (cli.get())
-                cli->printer().error_msg("Exception of unknown type!");
+                cli->printer().error_msg("__Exception of unknown type!");
             else
-                std::cerr << "Exception of unknown type!" << std::endl;
+                std::cerr << "~Exception of unknown type!" << std::endl;
             return 1;
         }
 

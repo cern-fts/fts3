@@ -55,7 +55,7 @@ int main(int ac, char* av[])
     try
         {
             // Initialise the command line utility
-    		cli->parse(ac, av);
+            cli->parse(ac, av);
             if (!cli->validate()) return 1;
 
             if (cli->rest())
@@ -113,7 +113,8 @@ int main(int ac, char* av[])
             GSoapContextAdapter& ctx = cli->getGSoapContext();
 
             vector<string> array = cli->getStatusArray();
-            vector<fts3::cli::JobStatus> statuses = ctx.listRequests(array, cli->getUserDn(), cli->getVoName());
+            vector<fts3::cli::JobStatus> statuses =
+                ctx.listRequests(array, cli->getUserDn(), cli->getVoName(), cli->source(), cli->destination());
 
             cli->printer().print(statuses);
         }

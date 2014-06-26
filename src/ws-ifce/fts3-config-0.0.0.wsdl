@@ -102,6 +102,7 @@
     <message name="DrainResponse"/>
 
     <message name="RetryRequest">
+        <part name="vo" type="xsd:string"/>
 		<part name="retry" type="xsd:int"/>
     </message>
     

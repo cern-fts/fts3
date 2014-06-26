@@ -212,9 +212,9 @@ bool SubmitTransferCli::createJobElements()
                             else
                                 {
                                     // one element is not enough to define a job
-                            		std::string msg =
-                            				"submit: in line " + boost::lexical_cast<std::string>(lineCount) + " destination is missing";
-                            		throw cli_exception(msg);
+                                    std::string msg =
+                                        "submit: in line " + boost::lexical_cast<std::string>(lineCount) + " destination is missing";
+                                    throw cli_exception(msg);
                                 }
 
                             // the third part should be the checksum (but its optional)

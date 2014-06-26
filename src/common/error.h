@@ -175,7 +175,7 @@ private:
 class Err_Transient : public Err_Custom
 {
 public:
-	Err_Transient(const std::string& aDesc) : Err_Custom(aDesc) {}
+    Err_Transient(const std::string& aDesc) : Err_Custom(aDesc) {}
 };
 
 FTS3_COMMON_NAMESPACE_END

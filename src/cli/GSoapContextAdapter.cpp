@@ -247,6 +247,24 @@ string GSoapContextAdapter::transferSubmit (vector<File> const & files, map<stri
     return resp._transferSubmit4Return;
 }
 
+
+string GSoapContextAdapter::deleteFile (std::vector<std::string>& filesForDelete)
+{
+    impltns__fileDeleteResponse resp;
+    tns3__deleteFiles delFiles;
+
+    vector<string>::iterator it;
+    for(it=filesForDelete.begin(); it != filesForDelete.end(); ++it)
+        delFiles.delf.push_back(*it);
+
+    if (soap_call_impltns__fileDelete(ctx, endpoint.c_str(), 0, &delFiles,resp))
+        handleSoapFault("");
+
+    return resp._jobid;
+}
+
+
+
 JobStatus GSoapContextAdapter::getTransferJobStatus (string jobId, bool archive)
 {
     tns3__JobRequest req;
@@ -318,14 +336,14 @@ void GSoapContextAdapter::getRolesOf (string dn, impltns__getRolesOfResponse& re
         handleSoapFault("Failed to get roles: getRolesOf.");
 }
 
-vector<JobStatus> GSoapContextAdapter::listRequests (vector<string> statuses, string dn, string vo)
+vector<JobStatus> GSoapContextAdapter::listRequests (vector<string> statuses, string dn, string vo, string source, string destination)
 {
 
     impltns__ArrayOf_USCOREsoapenc_USCOREstring* array = soap_new_impltns__ArrayOf_USCOREsoapenc_USCOREstring(ctx, -1);
     array->item = statuses;
 
     impltns__listRequests2Response resp;
-    if (soap_call_impltns__listRequests2(ctx, endpoint.c_str(), 0, array, dn, vo, resp))
+    if (soap_call_impltns__listRequests2(ctx, endpoint.c_str(), 0, array, "", dn, vo, source, destination, resp))
         handleSoapFault("Failed to list requests: listRequests2.");
 
     if (!resp._listRequests2Return)
@@ -539,10 +557,10 @@ void GSoapContextAdapter::setSeProtocol(string protocol, string se, string state
         }
 }
 
-void GSoapContextAdapter::retrySet(int retry)
+void GSoapContextAdapter::retrySet(string vo, int retry)
 {
     implcfg__setRetryResponse resp;
-    if (soap_call_implcfg__setRetry(ctx, endpoint.c_str(), 0, retry, resp))
+    if (soap_call_implcfg__setRetry(ctx, endpoint.c_str(), 0, vo, retry, resp))
         {
             handleSoapFault("Operation retrySet failed.");
         }
@@ -615,13 +633,13 @@ std::string GSoapContextAdapter::getSnapShot(string vo, string src, string dst)
 
 tns3__DetailedJobStatus* GSoapContextAdapter::getDetailedJobStatus(string job_id)
 {
-	impltns__detailedJobStatusResponse resp;
-	if (soap_call_impltns__detailedJobStatus(ctx, endpoint.c_str(), 0, job_id, resp))
-		{
-			handleSoapFault("Operation failed.");
-		}
+    impltns__detailedJobStatusResponse resp;
+    if (soap_call_impltns__detailedJobStatus(ctx, endpoint.c_str(), 0, job_id, resp))
+        {
+            handleSoapFault("Operation failed.");
+        }
 
-	return resp._detailedJobStatus;
+    return resp._detailedJobStatus;
 }
 
 void GSoapContextAdapter::handleSoapFault(string /*msg*/)

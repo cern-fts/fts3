@@ -37,6 +37,9 @@
 
 #include "common/logger.h"
 #include "common/error.h"
+#include "common/uuid_generator.h"
+#include "parse_url.h"
+#include "ws/delegation/GSoapDelegationHandler.h"
 
 #include <fstream>
 #include <sstream>
@@ -57,6 +60,76 @@ using namespace fts3::config;
 using namespace fts3::ws;
 using namespace fts3::common;
 using namespace std;
+
+
+int fts3::impltns__fileDelete(soap* ctx, tns3__deleteFiles* fileNames,impltns__fileDeleteResponse& resp)
+{
+    try
+        {
+
+            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER);
+            resp._jobid = UuidGenerator::generateUUID();
+
+            CGsiAdapter cgsi(ctx);
+            string vo = cgsi.getClientVo();
+            string dn = cgsi.getClientDn();
+
+            string hostN;
+            const regex fileUrlRegex("(.+://[a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
+
+            multimap<string, string> rulsHost;
+            vector<string>::iterator it;
+
+            for (it = fileNames->delf.begin(); it != fileNames->delf.end(); ++it)
+                {
+
+                    //checks the url validation...
+                    Uri u0 = Uri::Parse(*it);
+                    if(!(u0.Host.length() != 0 && u0.Protocol.length() != 0 && u0.Path.length() != 0))
+                        {
+                            string errMsg2 = "Something not right with url: " + (*it);
+                            throw Err_Custom(errMsg2);
+                        }
+                    smatch what;
+                    if (regex_match(*it, what,fileUrlRegex, match_extra))
+                        {
+                            // indexes are shifted by 1 because at index 0 is the whole string
+                            hostN =  string(what[1]);
+                        }
+                    else
+                        {
+                            string errMsg = "Can't extract hostname from url: " + (*it);
+                            throw Err_Custom(errMsg);
+                        }
+
+                    // correlates the file url with its' hostname
+                    rulsHost.insert(pair<string, string>((*it),hostN));
+
+                }
+
+            std::string credID;
+            GSoapDelegationHandler handler(ctx);
+            credID = handler.makeDelegationId();
+
+            DBSingleton::instance().getDBObjectInstance()->submitdelete(resp._jobid,rulsHost,dn,vo, credID);
+
+        }
+    catch(Err& ex)
+        {
+
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception when submitting file deletions has been caught: " << ex.what() << commit;
+            soap_receiver_fault(ctx, ex.what(), "DeleteException");
+            return SOAP_FAULT;
+        }
+    catch(...)
+        {
+
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception when submitting file deletions has been caught"  << commit;
+            soap_receiver_fault(ctx, "fileDelete", "DeleteException");
+            return SOAP_FAULT;
+        }
+    return SOAP_OK;
+}
 
 /// Web service operation 'transferSubmit' (returns error code or SOAP_OK)
 int fts3::impltns__transferSubmit(soap *soap, tns3__TransferJob *_job, struct impltns__transferSubmitResponse &_param_3)
@@ -232,16 +305,15 @@ int fts3::impltns__listRequests(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOR
 }
 
 /// Web service operation 'listRequests2' (returns error code or SOAP_OK)
-int fts3::impltns__listRequests2(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *_inGivenStates, string _forDN, string _forVO, struct impltns__listRequests2Response &_param_8)
+int fts3::impltns__listRequests2(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *_inGivenStates, string placeHolder, string _forDN, string _forVO, string src, string dst, struct impltns__listRequests2Response &_param_8)
 {
 
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'listRequests2' request" << commit;
 
     try
         {
-            // todo the jobs should be listed accordingly to the authorization level
             AuthorizationManager::Level lvl = AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::TRANSFER);
-            RequestLister lister(soap, _inGivenStates, _forDN, _forVO);
+            RequestLister lister(soap, _inGivenStates, _forDN, _forVO, src, dst);
             _param_8._listRequests2Return = lister.list(lvl);
 
         }
@@ -1573,10 +1645,10 @@ int fts3::impltns__detailedJobStatus(soap* ctx, std::string job_id, impltns__det
 
     try
         {
-    		// get the resource for authorization purposes
+            // get the resource for authorization purposes
             scoped_ptr<TransferJobs> job(
-            		DBSingleton::instance().getDBObjectInstance()->getTransferJob(job_id, false)
-            	);
+                DBSingleton::instance().getDBObjectInstance()->getTransferJob(job_id, false)
+            );
             // authorise
             AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get());
             // get the data from DB
@@ -1586,18 +1658,18 @@ int fts3::impltns__detailedJobStatus(soap* ctx, std::string job_id, impltns__det
             tns3__DetailedJobStatus *jobStatus = soap_new_tns3__DetailedJobStatus(ctx, -1);
             // reserve the space in response
             jobStatus->transferStatus.reserve(files.size());
-			// copy the data to response
+            // copy the data to response
             std::vector<boost::tuple<std::string, std::string, int, std::string, std::string> >::const_iterator it;
             for (it = files.begin(); it != files.end(); ++it)
-            	{
-            		tns3__DetailedFileStatus * item = soap_new_tns3__DetailedFileStatus(ctx, -1);
-            		item->jobId = boost::get<0>(*it);
-            		item->fileState = boost::get<1>(*it);
-            		item->fileId = boost::get<2>(*it);
-            		item->sourceSurl = boost::get<3>(*it);
-            		item->destSurl = boost::get<4>(*it);
-            		jobStatus->transferStatus.push_back(item);
-            	}
+                {
+                    tns3__DetailedFileStatus * item = soap_new_tns3__DetailedFileStatus(ctx, -1);
+                    item->jobId = boost::get<0>(*it);
+                    item->fileState = boost::get<1>(*it);
+                    item->fileId = boost::get<2>(*it);
+                    item->sourceSurl = boost::get<3>(*it);
+                    item->destSurl = boost::get<4>(*it);
+                    jobStatus->transferStatus.push_back(item);
+                }
             // set the response
             resp._detailedJobStatus = jobStatus;
         }
@@ -1616,5 +1688,5 @@ int fts3::impltns__detailedJobStatus(soap* ctx, std::string job_id, impltns__det
 
     return SOAP_OK;
 
-	return SOAP_OK;
+    return SOAP_OK;
 }

@@ -1,5 +1,7 @@
 TRUNCATE t_job_backup;
 TRUNCATE t_file_backup;
+TRUNCATE t_dm_backup;
+TRUNCATE t_dm;
 TRUNCATE t_stage_req;
 TRUNCATE t_file;
 TRUNCATE t_file_share_config;

@@ -244,13 +244,12 @@ void issueBringOnLineStatus(gfal2_context_t handle, std::string infosys)
     int statusA = 0;
     int statusB = 0;
     GError *error = NULL;
-    const char *protocols[10];
-    protocols[0] = "rfio";
+    const char *protocols[] = {"rfio", "gsidcap", "dcap", "gsiftp"};
     UserProxyEnv* cert = NULL;
     long int pinlifetime = 28800;
     long int bringonlineTimeout = 28800;
 
-    gfal2_set_opt_string_list(handle, "SRM PLUGIN", "TURL_PROTOCOLS", protocols, 1, &error);
+    gfal2_set_opt_string_list(handle, "SRM PLUGIN", "TURL_PROTOCOLS", protocols, 4, &error);
     if (error)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Could not set the protocol list " << error->code << " " << error->message << commit;
@@ -332,6 +331,9 @@ void issueBringOnLineStatus(gfal2_context_t handle, std::string infosys)
                                             db::DBSingleton::instance().getDBObjectInstance()->addToken((*i).job_id, (*i).file_id, std::string(token));
                                             (*i).started = true;
                                             (*i).retries = 0;
+                                            // No need to poll in this case!
+                                            db::DBSingleton::instance().getDBObjectInstance()->bringOnlineReportStatus("FINISHED", "", (*i));
+                                            deleteIt = true;
                                         }
                                 }
                             else if ((*i).nextPoll <= now)     //poll
