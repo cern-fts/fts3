@@ -4534,6 +4534,10 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
 
                                     stmt = "DELETE FROM t_file WHERE job_id in (" +job_id+ ")";
                                     sql << stmt;
+				    				    
+                                    stmt = "DELETE FROM t_dm WHERE job_id in (" +job_id+ ")";
+                                    sql << stmt;				    
+				    
                                     stmt = "DELETE FROM t_job WHERE job_id in (" +job_id+ ")";
                                     sql << stmt;
 
@@ -8887,8 +8891,13 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
     double throughput5min = 0.0;
     long long nFailedLastHour = 0;
     long long  nFinishedLastHour = 0;
-    double  ratioSuccessFailure = 0;
-    std::string querySe = " SELECT DISTINCT source_se, dest_se FROM t_file ";
+    double  ratioSuccessFailure = 0.0;
+    std::string querySe;
+    
+    if(!vo_name.empty())
+     	querySe = " SELECT DISTINCT source_se, dest_se FROM t_job where vo_name='" + vo_name + "'";
+    else
+        querySe = " SELECT DISTINCT source_se, dest_se FROM t_file";
 
     time_t now = time(NULL);
     struct tm tTime;
@@ -8916,8 +8925,13 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
         {
             source_se = source_se_p;
             pairsStmt.exchange(soci::use(source_se));
-            querySe += " where source_se = :source_se ";
-            sourceEmpty = false;
+	    if(!vo_name.empty()){
+            	querySe += " and source_se = :source_se ";                
+		}
+            else{	
+	        querySe += " where source_se = :source_se ";
+		}
+           sourceEmpty = false;		
         }
 
     if(!dest_se_p.empty())
@@ -8927,7 +8941,12 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                 {
                     dest_se = dest_se_p;
                     pairsStmt.exchange(soci::use(dest_se));
-                    querySe += " where dest_se = :dest_se ";
+		    if(!vo_name.empty()){
+                    	querySe += " and dest_se = :dest_se ";
+		    }else
+		    {
+                       	querySe += " where dest_se = :dest_se ";
+		    }
                 }
             else
                 {

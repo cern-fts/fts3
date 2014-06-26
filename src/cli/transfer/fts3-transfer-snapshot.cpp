@@ -69,7 +69,10 @@ int main(int ac, char* av[])
 
 
             std::string resp = ctx.getSnapShot(vo, src, dst);
-            std::cout << resp << std::endl;
+	    if(!resp.empty())
+            	std::cout << resp << std::endl;
+	    else
+	        std::cout << "{\"Message\":\"Nothing returned for the parameters provided\"}" << std::endl;
 
         }
     catch(cli_exception const & ex)

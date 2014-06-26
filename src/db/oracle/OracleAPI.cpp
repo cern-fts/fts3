@@ -4259,6 +4259,7 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
                     std::string job_id;
                     soci::statement delFilesStmt = (sql.prepare << "DELETE FROM t_file WHERE job_id = :job_id", soci::use(job_id));
                     soci::statement delJobsStmt = (sql.prepare << "DELETE FROM t_job WHERE job_id = :job_id", soci::use(job_id));
+                    soci::statement delDmStmt = (sql.prepare << "DELETE FROM t_dm WHERE job_id = :job_id", soci::use(job_id));		    
 
                     soci::statement insertJobsStmt = (sql.prepare << "INSERT INTO t_job_backup SELECT * FROM t_job WHERE job_id = :job_id", soci::use(job_id));
                     soci::statement insertFileStmt = (sql.prepare << "INSERT INTO t_file_backup SELECT * FROM t_file WHERE job_id = :job_id", soci::use(job_id));
@@ -4282,6 +4283,8 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
 
                             delFilesStmt.execute(true);
                             *nFiles += delFilesStmt.get_affected_rows();
+			    
+			    delDmStmt.execute(true);			    
 
                             delJobsStmt.execute(true);
                             *nJobs += delJobsStmt.get_affected_rows();
@@ -8598,8 +8601,14 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
     double throughput5min = 0.0;
     long long nFailedLastHour = 0;
     long long  nFinishedLastHour = 0;
-    double  ratioSuccessFailure = 0;
-    std::string querySe = " SELECT DISTINCT source_se, dest_se FROM t_file ";
+    double  ratioSuccessFailure = 0.0;
+    std::string querySe;
+
+
+    if(!vo_name.empty())
+     	querySe = " SELECT DISTINCT source_se, dest_se FROM t_job where vo_name='" + vo_name + "'";
+    else
+        querySe = " SELECT DISTINCT source_se, dest_se FROM t_file";
 
     time_t now = time(NULL);
     struct tm tTime;
@@ -8627,8 +8636,13 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
         {
             source_se = source_se_p;
             pairsStmt.exchange(soci::use(source_se));
-            querySe += " where source_se = :source_se ";
-            sourceEmpty = false;
+	    if(!vo_name.empty()){
+            	querySe += " and source_se = :source_se ";                
+		}
+            else{	
+	        querySe += " where source_se = :source_se ";
+		}
+           sourceEmpty = false;		
         }
 
     if(!dest_se_p.empty())
@@ -8638,7 +8652,12 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                 {
                     dest_se = dest_se_p;
                     pairsStmt.exchange(soci::use(dest_se));
-                    querySe += " where dest_se = :dest_se ";
+		    if(!vo_name.empty()){
+                    	querySe += " and dest_se = :dest_se ";
+		    }else
+		    {
+                       	querySe += " where dest_se = :dest_se ";
+		    }
                 }
             else
                 {
@@ -8651,7 +8670,6 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
     pairsStmt.alloc();
     pairsStmt.prepare(querySe);
     pairsStmt.define_and_bind();
-
 
     try
         {
