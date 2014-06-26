@@ -21,7 +21,7 @@ ThreadContext::ThreadContext(ThreadContext const & prototype) : gfal2_handle(0),
     gfal2_context_t handle = gfal2_context_new(&error);
     if (!handle)
         {
-            std::stringstream ss;
+    		std::stringstream ss;
             ss << "BRINGONLINE bad initialization " << error->code << " " << error->message;
             throw Err_Custom(ss.str());
         }
@@ -31,7 +31,7 @@ ThreadContext::ThreadContext(ThreadContext const & prototype) : gfal2_handle(0),
     gfal2_set_opt_string_list(handle, "SRM PLUGIN", "TURL_PROTOCOLS", protocols, 4, &error);
     if (error)
         {
-            std::stringstream ss;
+    		std::stringstream ss;
             ss << "BRINGONLINE Could not set the protocol list " << error->code << " " << error->message;
             throw Err_Custom(ss.str());
         }
@@ -48,6 +48,6 @@ ThreadContext::ThreadContext(ThreadContext const & prototype) : gfal2_handle(0),
 
 ThreadContext::~ThreadContext()
 {
-    if(gfal2_handle) gfal2_context_free(gfal2_handle);
+	if(gfal2_handle) gfal2_context_free(gfal2_handle);
 }
 
