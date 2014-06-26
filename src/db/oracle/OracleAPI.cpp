@@ -249,18 +249,18 @@ void OracleAPI::submitdelete(const std::string & jobId, const std::multimap<std:
                                             soci::use(credID)
                                         );
             insertJob.execute(true);
-            
+
 
             std::string sourceSurl;
             std::string sourceSE;
-	    
+
 	    pairStmt << std::fixed << "INSERT ALL ";
 
             for(std::multimap <std::string, std::string> ::const_iterator mapit = rulsHost.begin(); mapit != rulsHost.end(); ++mapit)
                 {
                     sourceSurl = (*mapit).first;
                     sourceSE = (*mapit).second;
-		    
+
 		    pairStmt << "INTO t_file (vo_name, job_id, file_state, source_surl, source_se, hashed_id) VALUES ";
 		    pairStmt << "(";
 		    pairStmt << "'";
@@ -279,12 +279,12 @@ void OracleAPI::submitdelete(const std::string & jobId, const std::multimap<std:
                     pairStmt << sourceSE;
                     pairStmt << "',";
 		    pairStmt << getHashedId();
-                    pairStmt << ") ";		    
+                    pairStmt << ") ";
                 }
-		
+
             std::string queryStr = pairStmt.str();
             queryStr += " SELECT * FROM dual ";
-            sql << queryStr;		
+            sql << queryStr;
 
             sql.commit();
         }
@@ -6365,7 +6365,7 @@ void OracleAPI::bringOnlineReportStatusInternal(soci::session& sql,
                     sql.begin();
                     sql <<
                         " UPDATE t_file "
-                        " SET staging_start = sys_extract_utc(systimestamp), transferhost=:thost, file_state='STARTED' "
+                        " SET staging_start = sys_extract_utc(systimestamp), start_time = sys_extract_utc(systimestamp), transferhost=:thost, file_state='STARTED' "
                         " WHERE job_id = :jobId "
                         "   AND file_id= :fileId "
                         "   AND file_state='STAGING'",

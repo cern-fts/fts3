@@ -325,7 +325,7 @@ void MySqlAPI::submitdelete(const std::string & jobId, const std::multimap<std::
             std::string sourceSE;
 
             pairStmt << std::fixed << "INSERT INTO t_dm (vo_name, job_id, file_state, source_surl, source_se, hashed_id) VALUES ";
-           
+
             for(std::multimap <std::string, std::string> ::const_iterator mapit = rulsHost.begin(); mapit != rulsHost.end(); ++mapit)
                 {
                     sourceSurl = (*mapit).first;
@@ -348,7 +348,7 @@ void MySqlAPI::submitdelete(const std::string & jobId, const std::multimap<std::
                     pairStmt << sourceSE;
                     pairStmt << "',";
 		    pairStmt << getHashedId();
-                    pairStmt << "),";	                    
+                    pairStmt << "),";
                 }
 
 	    std::string queryStr = pairStmt.str();
@@ -6620,7 +6620,7 @@ void MySqlAPI::bringOnlineReportStatusInternal(soci::session& sql,
                     sql.begin();
                     sql <<
                         " UPDATE t_file "
-                        " SET staging_start = UTC_TIMESTAMP(), transferhost=:thost, file_state='STARTED' "
+                        " SET staging_start = UTC_TIMESTAMP(), start_time=UTC_TIMESTAMP(), transferhost=:thost, file_state='STARTED' "
                         " WHERE job_id = :jobId "
                         "	AND file_id= :fileId "
                         "	AND file_state='STAGING'",
