@@ -331,9 +331,9 @@ void MySqlAPI::submitdelete(const std::string & jobId, const std::multimap<std::
                     sourceSurl = (*mapit).first;
                     sourceSE = (*mapit).second;
 
- 		    pairStmt << "(";
-		    pairStmt << "'";
-		    pairStmt << voName;
+                    pairStmt << "(";
+                    pairStmt << "'";
+                    pairStmt << voName;
                     pairStmt << "',";
                     pairStmt << "'";
                     pairStmt << jobId;
@@ -347,11 +347,11 @@ void MySqlAPI::submitdelete(const std::string & jobId, const std::multimap<std::
                     pairStmt << "'";
                     pairStmt << sourceSE;
                     pairStmt << "',";
-		    pairStmt << getHashedId();
+                    pairStmt << getHashedId();
                     pairStmt << "),";
                 }
 
-	    std::string queryStr = pairStmt.str();
+            std::string queryStr = pairStmt.str();
             sql << queryStr.substr(0, queryStr.length() - 1);
 
             sql.commit();
@@ -1148,7 +1148,7 @@ int MySqlAPI::getBestNextReplica(soci::session& sql, const std::string & job_id,
     return bestFileId;
 }
 
-unsigned int MySqlAPI::updateFileStatusReuse(TransferFiles file, const std::string status)
+unsigned int MySqlAPI::updateFileStatusReuse(TransferFiles& file, const std::string status)
 {
     soci::session sql(*connectionPool);
 
@@ -1202,7 +1202,7 @@ unsigned int MySqlAPI::updateFileStatusReuse(TransferFiles file, const std::stri
 }
 
 
-unsigned int MySqlAPI::updateFileStatus(TransferFiles file, const std::string status)
+unsigned int MySqlAPI::updateFileStatus(TransferFiles& file, const std::string status)
 {
     soci::session sql(*connectionPool);
 
@@ -4534,10 +4534,10 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
 
                                     stmt = "DELETE FROM t_file WHERE job_id in (" +job_id+ ")";
                                     sql << stmt;
-				    				    
+
                                     stmt = "DELETE FROM t_dm WHERE job_id in (" +job_id+ ")";
-                                    sql << stmt;				    
-				    
+                                    sql << stmt;
+
                                     stmt = "DELETE FROM t_job WHERE job_id in (" +job_id+ ")";
                                     sql << stmt;
 
@@ -8893,9 +8893,9 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
     long long  nFinishedLastHour = 0;
     double  ratioSuccessFailure = 0.0;
     std::string querySe;
-    
+
     if(!vo_name.empty())
-     	querySe = " SELECT DISTINCT source_se, dest_se FROM t_job where vo_name='" + vo_name + "'";
+        querySe = " SELECT DISTINCT source_se, dest_se FROM t_job where vo_name='" + vo_name + "'";
     else
         querySe = " SELECT DISTINCT source_se, dest_se FROM t_file";
 
@@ -8925,13 +8925,15 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
         {
             source_se = source_se_p;
             pairsStmt.exchange(soci::use(source_se));
-	    if(!vo_name.empty()){
-            	querySe += " and source_se = :source_se ";                
-		}
-            else{	
-	        querySe += " where source_se = :source_se ";
-		}
-           sourceEmpty = false;		
+            if(!vo_name.empty())
+                {
+                    querySe += " and source_se = :source_se ";
+                }
+            else
+                {
+                    querySe += " where source_se = :source_se ";
+                }
+            sourceEmpty = false;
         }
 
     if(!dest_se_p.empty())
@@ -8941,12 +8943,14 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                 {
                     dest_se = dest_se_p;
                     pairsStmt.exchange(soci::use(dest_se));
-		    if(!vo_name.empty()){
-                    	querySe += " and dest_se = :dest_se ";
-		    }else
-		    {
-                       	querySe += " where dest_se = :dest_se ";
-		    }
+                    if(!vo_name.empty())
+                        {
+                            querySe += " and dest_se = :dest_se ";
+                        }
+                    else
+                        {
+                            querySe += " where dest_se = :dest_se ";
+                        }
                 }
             else
                 {
@@ -10043,7 +10047,7 @@ void MySqlAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< boo
 }
 
 //file_id / surl / proxy
-void MySqlAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::string, int, std::string, std::string> >& files)
+void MySqlAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::string, std::string, int, std::string, std::string> >& files)
 {
     soci::session sql(*connectionPool);
 
@@ -10146,7 +10150,7 @@ void MySqlAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::s
                             std::string initState = "STARTED";
                             std::string reason;
 
-                            for (soci::rowset<soci::row>::const_iterator i3 = rs3.begin(); i3 != rs2.end(); ++i3)
+                            for (soci::rowset<soci::row>::const_iterator i3 = rs3.begin(); i3 != rs3.end(); ++i3)
                                 {
                                     soci::row const& row = *i3;
                                     std::string source_url = row.get<std::string>("source_surl");
@@ -10155,7 +10159,7 @@ void MySqlAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::s
                                     user_dn = row.get<std::string>("user_dn");
                                     std::string cred_id = row.get<std::string>("cred_id");
 
-                                    boost::tuple<std::string, std::string, int, std::string, std::string> record(source_url, job_id, file_id, user_dn, cred_id);
+                                    boost::tuple<std::string, std::string, std::string, int, std::string, std::string> record(vo_name, source_url, job_id, file_id, user_dn, cred_id);
                                     files.push_back(record);
 
                                     boost::tuple<int, std::string, std::string, std::string> recordState(file_id, initState, reason, job_id);
@@ -10369,7 +10373,7 @@ int MySqlAPI::getMaxDeletionsPerEndpoint(const std::string & endpoint, const std
 //WORKHORSE
 //alter table t_job add index t_staging_index(vo_name, source_se, dest_se, user_dn);
 //f.source_surl, f.job_id, f.file_id, j.copy_pin_lifetime, j.bring_online  , j.user_dn, j.cred_id, j.source_space_token
-void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::string, int, int, int, std::string, std::string, std::string > >& files)
+void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string > >& files)
 {
     soci::session sql(*connectionPool);
 
@@ -10474,7 +10478,7 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                             std::string initState = "STARTED";
                             std::string reason;
 
-                            for (soci::rowset<soci::row>::const_iterator i3 = rs3.begin(); i3 != rs2.end(); ++i3)
+                            for (soci::rowset<soci::row>::const_iterator i3 = rs3.begin(); i3 != rs3.end(); ++i3)
                                 {
                                     soci::row const& row = *i3;
                                     std::string source_url = row.get<std::string>("source_surl");
@@ -10486,7 +10490,7 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                                     std::string cred_id = row.get<std::string>("cred_id");
                                     std::string source_space_token = row.get<std::string>("source_space_token","");
 
-                                    boost::tuple<std::string, std::string, int, int, int, std::string, std::string, std::string > record(source_url,job_id, file_id, copy_pin_lifetime, bring_online, user_dn, cred_id , source_space_token);
+                                    boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string > record(vo_name, source_url,job_id, file_id, copy_pin_lifetime, bring_online, user_dn, cred_id , source_space_token);
                                     files.push_back(record);
 
                                     boost::tuple<int, std::string, std::string, std::string> recordState(file_id, initState, reason, job_id);
@@ -10792,6 +10796,71 @@ int MySqlAPI::getMaxStatingsPerEndpoint(const std::string & endpoint, const std:
         }
 }
 
+
+void MySqlAPI::checkJobOperation(std::vector<std::string >& jobs, std::vector< boost::tuple<std::string, std::string> >& ops)
+{
+    soci::session sql(*connectionPool);
+    std::string job_id;
+    std::string jobTransfer;
+    std::string jobStaging;
+    long long jobDelete = 0;
+
+    try
+        {
+            //ok
+            soci::statement stmtTransfer = (sql.prepare << " select job_id from t_job "
+                                            " where job_id=:job_id and "
+                                            " copy_pin_lifetime = -1 AND bring_online = -1 "
+                                            " LIMIT 1 ", soci::use(job_id), soci::into(jobTransfer));
+
+            //ok
+            soci::statement stmtDelete   = (sql.prepare << " select file_id from t_dm where job_id=:job_id LIMIT 1",
+                                            soci::use(job_id), soci::into(jobDelete));
+
+            //ok
+            soci::statement stmtStaging  = (sql.prepare << " select job_id from t_job "
+                                            " where job_id=:job_id and "
+                                            " copy_pin_lifetime > 0 OR bring_online > 0 "
+                                            " LIMIT 1 ", soci::use(job_id), soci::into(jobStaging));
+
+            for (std::vector<std::string>::const_iterator i = jobs.begin(); i != jobs.end(); ++i)
+                {
+                    job_id = *i;
+                    jobTransfer = std::string();
+                    jobStaging = std::string();
+                    jobDelete = 0;
+
+                    stmtTransfer.execute(true);
+                    if(sql.got_data() && !jobTransfer.empty())
+                        {
+                            ops.push_back(boost::make_tuple(job_id, "TRANSFER"));
+                            continue;
+                        }
+
+                    stmtDelete.execute(true);
+                    if(sql.got_data() && jobDelete > 0)
+                        {
+                            ops.push_back(boost::make_tuple(job_id, "DELETE"));
+                            continue;
+                        }
+
+                    stmtStaging.execute(true);
+                    if(sql.got_data() && !jobStaging.empty())
+                        {
+                            ops.push_back(boost::make_tuple(job_id, "STAGING"));
+                            continue;
+                        }
+                }
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
 
 
 

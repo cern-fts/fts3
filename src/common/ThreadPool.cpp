@@ -120,65 +120,65 @@ BOOST_AUTO_TEST_CASE (ThreadPool_interrupt)
 
 struct InitTask
 {
-	InitTask(std::string & str) : str(str) {}
+    InitTask(std::string & str) : str(str) {}
 
-	void run(boost::any const & data)
-	{
-		if (data.empty()) return;
+    void run(boost::any const & data)
+    {
+        if (data.empty()) return;
 
-		std::string d = boost::any_cast<std::string>(data);
+        std::string d = boost::any_cast<std::string>(data);
 
-		str += d;
-	}
+        str += d;
+    }
 
-	std::string & str;
+    std::string & str;
 };
 
 void init_func(boost::any & data)
 {
-	data = std::string(".00$");
+    data = std::string(".00$");
 }
 
 BOOST_AUTO_TEST_CASE (ThreadPool_init_func)
 {
-	using namespace fts3::common;
+    using namespace fts3::common;
 
-	std::string ret[2] = {"10", "100"};
+    std::string ret[2] = {"10", "100"};
 
-	ThreadPool<InitTask> tp (2, init_func);
+    ThreadPool<InitTask> tp (2, init_func);
 
-	tp.start(new InitTask(ret[0]));
-	tp.start(new InitTask(ret[1]));
-	tp.join();
+    tp.start(new InitTask(ret[0]));
+    tp.start(new InitTask(ret[1]));
+    tp.join();
 
-	BOOST_CHECK_EQUAL(ret[0], "10.00$");
-	BOOST_CHECK_EQUAL(ret[1], "100.00$");
+    BOOST_CHECK_EQUAL(ret[0], "10.00$");
+    BOOST_CHECK_EQUAL(ret[1], "100.00$");
 }
 
 struct init_obj
 {
-	void operator() (boost::any & data)
-	{
-		data = std::string(".00$");
-	}
+    void operator() (boost::any & data)
+    {
+        data = std::string(".00$");
+    }
 };
 
 BOOST_AUTO_TEST_CASE (ThreadPool_init_obj)
 {
-	using namespace fts3::common;
+    using namespace fts3::common;
 
-	std::string ret[2] = {"10", "100"};
+    std::string ret[2] = {"10", "100"};
 
-	init_obj obj;
+    init_obj obj;
 
-	ThreadPool<InitTask, init_obj> tp (2, obj);
+    ThreadPool<InitTask, init_obj> tp (2, obj);
 
-	tp.start(new InitTask(ret[0]));
-	tp.start(new InitTask(ret[1]));
-	tp.join();
+    tp.start(new InitTask(ret[0]));
+    tp.start(new InitTask(ret[1]));
+    tp.join();
 
-	BOOST_CHECK_EQUAL(ret[0], "10.00$");
-	BOOST_CHECK_EQUAL(ret[1], "100.00$");
+    BOOST_CHECK_EQUAL(ret[0], "10.00$");
+    BOOST_CHECK_EQUAL(ret[1], "100.00$");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

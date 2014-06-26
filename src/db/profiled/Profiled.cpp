@@ -84,7 +84,7 @@ void ProfiledDB::getSe(Se* &se, std::string seName)
 }
 
 
-unsigned int ProfiledDB::updateFileStatus(TransferFiles file, const std::string status)
+unsigned int ProfiledDB::updateFileStatus(TransferFiles& file, const std::string status)
 {
     PROFILE_PREFIXED("DB::", return db->updateFileStatus(file, status));
 }
@@ -809,7 +809,7 @@ void ProfiledDB::updateHeartBeat(unsigned* index, unsigned* count, unsigned* sta
     PROFILE_PREFIXED("DB::", db->updateHeartBeat(index, count, start, end, service_name));
 }
 
-unsigned int ProfiledDB::updateFileStatusReuse(TransferFiles file, const std::string status)
+unsigned int ProfiledDB::updateFileStatusReuse(TransferFiles& file, const std::string status)
 {
     PROFILE_PREFIXED("DB::", return db->updateFileStatusReuse(file, status));
 }
@@ -910,7 +910,7 @@ void ProfiledDB::updateDeletionsState(std::vector< boost::tuple<int, std::string
 }
 
 //file_id / surl / proxy
-void ProfiledDB::getFilesForDeletion(std::vector< boost::tuple<std::string, std::string, int, std::string, std::string> >& files)
+void ProfiledDB::getFilesForDeletion(std::vector< boost::tuple<std::string, std::string, std::string, int, std::string, std::string> >& files)
 {
     PROFILE_PREFIXED("DB::", db->getFilesForDeletion(files));
 }
@@ -945,7 +945,7 @@ void ProfiledDB::updateStagingState(std::vector< boost::tuple<int, std::string, 
     PROFILE_PREFIXED("DB::", db->updateStagingState(files));
 }
 //file_id / surl / proxy / pinlifetime / bringonlineTimeout
-void ProfiledDB::getFilesForStaging(std::vector< boost::tuple<std::string, std::string, int, int, int, std::string, std::string, std::string> >& files)
+void ProfiledDB::getFilesForStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string> >& files)
 {
     PROFILE_PREFIXED("DB::", db->getFilesForStaging(files));
 }
@@ -977,4 +977,10 @@ void ProfiledDB::submitdelete(const std::string & jobId, const std::multimap<std
                               const std::string & DN, const std::string & voName, const std::string & credID)
 {
     PROFILE_PREFIXED("DB::", db->submitdelete(jobId, rulsHost, DN, voName, credID));
+}
+
+
+void ProfiledDB::checkJobOperation(std::vector<std::string>& jobs, std::vector< boost::tuple<std::string, std::string> >& ops)
+{
+    PROFILE_PREFIXED("DB::", db->checkJobOperation(jobs, ops));
 }

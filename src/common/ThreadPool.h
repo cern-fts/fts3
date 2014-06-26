@@ -29,8 +29,8 @@ namespace common
 template <typename TASK, typename INIT_FUNC = void (*)(boost::any&)>
 class ThreadPool
 {
-	/// optional initialisation function (a typedef for convenience)
-	typedef boost::optional<INIT_FUNC> init_func;
+    /// optional initialisation function (a typedef for convenience)
+    typedef boost::optional<INIT_FUNC> init_func;
 
     /**
      * A helper class that retrieves subsequent tasks from the queue
@@ -43,9 +43,9 @@ class ThreadPool
 
         /// constructor
         ThreadPoolWorker(ThreadPool & pool, init_func init_context) : t_pool(pool)
-    	{
-        	if (init_context.is_initialized()) (*init_context)(thread_context);
-    	}
+        {
+            if (init_context.is_initialized()) (*init_context)(thread_context);
+        }
 
         /// the run routine that retrieves subsequent tasks
         /// from the queue and then executes them

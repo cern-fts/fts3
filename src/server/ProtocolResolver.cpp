@@ -40,7 +40,7 @@ using namespace fts3::ws;
 using namespace fts3::common;
 using namespace boost::assign;
 
-ProtocolResolver::ProtocolResolver(TransferFiles file, vector< boost::shared_ptr<ShareConfig> >& cfgs) :
+ProtocolResolver::ProtocolResolver(TransferFiles& file, vector< boost::shared_ptr<ShareConfig> >& cfgs) :
     db(DBSingleton::instance().getDBObjectInstance()),
     file(file),
     cfgs(cfgs),
@@ -152,7 +152,7 @@ optional<ProtocolResolver::protocol> ProtocolResolver::getProtocolCfg(optional< 
     return ret;
 }
 
-optional<ProtocolResolver::protocol> ProtocolResolver::getUserDefinedProtocol(TransferFiles file)
+optional<ProtocolResolver::protocol> ProtocolResolver::getUserDefinedProtocol(TransferFiles& file)
 {
     if (file.INTERNAL_FILE_PARAMS.empty()) return optional<protocol>();
 
