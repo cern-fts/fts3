@@ -1,13 +1,18 @@
 drop trigger se_id_info_auto_inc;
 drop sequence file_file_id_seq;
 drop trigger file_file_id_auto_inc;
+drop sequence dm_file_id_seq;
+drop trigger dm_file_id_auto_inc;
 drop sequence se_id_info_seq;
 drop trigger t_optimize_auto_number_inc;
 drop sequence t_optimize_auto_number_seq;
 
 
+DROP TABLE t_turl;
 DROP TABLE t_job_backup;
 DROP TABLE t_file_backup;
+DROP TABLE t_dm_backup;
+DROP TABLE t_dm;
 DROP TABLE t_schema_vers;
 DROP TABLE t_stage_req;
 DROP TABLE t_file_share_config;

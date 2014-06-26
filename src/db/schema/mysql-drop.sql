@@ -1,5 +1,6 @@
 DROP TABLE IF EXISTS t_job_backup;
 DROP TABLE IF EXISTS t_file_backup;
+DROP TABLE IF EXISTS t_dm_backup;
 DROP TABLE IF EXISTS t_schema_vers;
 DROP TABLE IF EXISTS t_stage_req;
 DROP TABLE IF EXISTS t_file_share_config;
