@@ -25,29 +25,28 @@ class StagingTask
 {
 
 public:
-	StagingTask(message_bringonline ctx) : ctx(ctx), db(*db::DBSingleton::instance().getDBObjectInstance()) {}
-	virtual ~StagingTask() {}
-	virtual void run(boost::any const &) = 0;
+    StagingTask(message_bringonline ctx) : ctx(ctx), db(*db::DBSingleton::instance().getDBObjectInstance()) {}
+    virtual ~StagingTask() {}
+    virtual void run(boost::any const &) = 0;
 
-	bool retryTransfer(int errorNo, std::string const & category, std::string const & message);
+    bool retryTransfer(int errorNo, std::string const & category, std::string const & message);
 
-	void setProxy(gfal2_context_t handle);
+    void setProxy(gfal2_context_t handle);
 
-	message_bringonline const & get() const
-	{
-		return ctx;
-	}
+    message_bringonline const & get() const
+    {
+        return ctx;
+    }
+
+    static bool checkValidProxy(const std::string& filename, std::string& message)
+    {
+        boost::scoped_ptr<DelegCred> delegCredPtr(new DelegCred);
+        return delegCredPtr->isValidProxy(filename, message);
+    }
 
 protected:
-	message_bringonline ctx;
-	GenericDbIfce& db;
-
-private:
-	static bool checkValidProxy(const std::string& filename, std::string& message)
-	{
-	    boost::scoped_ptr<DelegCred> delegCredPtr(new DelegCred);
-	    return delegCredPtr->isValidProxy(filename, message);
-	}
+    message_bringonline ctx;
+    GenericDbIfce& db;
 };
 
 #endif /* StagingTask_H_ */

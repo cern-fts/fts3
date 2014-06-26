@@ -910,7 +910,7 @@ void ProfiledDB::updateDeletionsState(std::vector< boost::tuple<int, std::string
 }
 
 //file_id / surl / proxy
-void ProfiledDB::getFilesForDeletion(std::vector< boost::tuple<std::string, std::string, int, std::string, std::string> >& files)
+void ProfiledDB::getFilesForDeletion(std::vector< boost::tuple<std::string, std::string, std::string, int, std::string, std::string> >& files)
 {
     PROFILE_PREFIXED("DB::", db->getFilesForDeletion(files));
 }
@@ -945,7 +945,7 @@ void ProfiledDB::updateStagingState(std::vector< boost::tuple<int, std::string, 
     PROFILE_PREFIXED("DB::", db->updateStagingState(files));
 }
 //file_id / surl / proxy / pinlifetime / bringonlineTimeout
-void ProfiledDB::getFilesForStaging(std::vector< boost::tuple<std::string, std::string, int, int, int, std::string, std::string, std::string> >& files)
+void ProfiledDB::getFilesForStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string> >& files)
 {
     PROFILE_PREFIXED("DB::", db->getFilesForStaging(files));
 }
@@ -982,5 +982,5 @@ void ProfiledDB::submitdelete(const std::string & jobId, const std::multimap<std
 
 void ProfiledDB::checkJobOperation(std::vector<std::string>& jobs, std::vector< boost::tuple<std::string, std::string> >& ops)
 {
-   PROFILE_PREFIXED("DB::", db->checkJobOperation(jobs, ops));
+    PROFILE_PREFIXED("DB::", db->checkJobOperation(jobs, ops));
 }
