@@ -240,7 +240,7 @@ void OracleAPI::submitdelete(const std::string & jobId, const std::multimap<std:
             sql.begin();
 
             soci::statement insertJob = (	sql.prepare << "INSERT INTO  t_job ( job_id, job_state, vo_name,submit_host, submit_time, user_dn, cred_id)"
-                                            "VALUES (:jobId, :jobState, :voName , :hostname, UTC_TIMESTAMP(), :userDN, :credID)",
+                                            "VALUES (:jobId, :jobState, :voName , :hostname, sys_extract_utc(systimestamp), :userDN, :credID)",
                                             soci::use(jobId),
                                             soci::use(initialState),
                                             soci::use(voName),
