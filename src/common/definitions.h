@@ -58,7 +58,7 @@ inline double pround(double x, unsigned int digits)
  */
 inline double convertKbToMb(double throughput)
 {
-    return throughput != 0.0? pround((throughput / 1024), 2): 0.0;
+    return throughput != 0.0? pround((throughput / 1024), 3): 0.0;
 }
 
 struct message_base
