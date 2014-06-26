@@ -78,15 +78,8 @@ int main(int ac, char* av[])
             vector<string> vect =  cli->getFileName();
 
             string resjobid = ctx.deleteFile(vect);
-            if(vect.empty())
-                {
-                    std::cerr<<".::FAILED::..The job(s) submittion FAILED !"<<endl;
-                    return -1;
-                }
-            else
-                {
-                    cout<<"..::SUCCESS::..\nJob_id : "<<resjobid <<endl;
-                }
+            std::cout<<"Job_id : "<<resjobid <<endl;
+                
 
         }
     catch(cli_exception const & ex)

@@ -324,7 +324,7 @@ void MySqlAPI::submitdelete(const std::string & jobId, const std::multimap<std::
             std::string sourceSurl;
             std::string sourceSE;
 
-            pairStmt << std::fixed << "INSERT INTO t_dm (vo_name, job_id, file_state, source_surl, source_se) VALUES ";
+            pairStmt << std::fixed << "INSERT INTO t_dm (vo_name, job_id, file_state, source_surl, source_se, hashed_id) VALUES ";
            
             for(std::multimap <std::string, std::string> ::const_iterator mapit = rulsHost.begin(); mapit != rulsHost.end(); ++mapit)
                 {
@@ -348,7 +348,7 @@ void MySqlAPI::submitdelete(const std::string & jobId, const std::multimap<std::
                     pairStmt << sourceSE;
                     pairStmt << "',";
 		    pairStmt << getHashedId();
-                    pairStmt << "), ";	                    
+                    pairStmt << "),";	                    
                 }
 
 	    std::string queryStr = pairStmt.str();

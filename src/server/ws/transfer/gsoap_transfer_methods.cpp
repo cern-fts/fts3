@@ -102,7 +102,6 @@ int fts3::impltns__fileDelete(soap* ctx, tns3__deleteFiles* fileNames,impltns__f
                             throw Err_Custom(errMsg);
                         }
 
-                    cout << "File URL  = "<< (*it)<<endl;
                     // correlates the file url with its' hostname
                     rulsHost.insert(pair<string, string>((*it),hostN));
 
