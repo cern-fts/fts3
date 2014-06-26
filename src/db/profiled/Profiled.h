@@ -60,7 +60,7 @@ public:
 
     void getSe(Se* &se, std::string seName);
 
-    unsigned int updateFileStatus(TransferFiles file, const std::string status);
+    unsigned int updateFileStatus(TransferFiles& file, const std::string status);
 
     void addSe(std::string endpoint, std::string se_type, std::string site, std::string name, std::string state, std::string version, std::string host,
                std::string se_transfer_type, std::string se_transfer_protocol, std::string se_control_protocol, std::string gocdb_id);
@@ -298,7 +298,7 @@ public:
 
     void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end, std::string service_name);
 
-    unsigned int updateFileStatusReuse(TransferFiles file, const std::string status);
+    unsigned int updateFileStatusReuse(TransferFiles& file, const std::string status);
 
     void getCancelJob(std::vector<int>& requestIDs);
 

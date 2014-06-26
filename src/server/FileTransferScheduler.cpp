@@ -43,7 +43,7 @@ using namespace fts3::ws;
 
 
 FileTransferScheduler::FileTransferScheduler(
-    TransferFiles file,
+    TransferFiles& file,
     vector< boost::shared_ptr<ShareConfig> > cfgs,
     set<string> inses,
     set<string> outses,

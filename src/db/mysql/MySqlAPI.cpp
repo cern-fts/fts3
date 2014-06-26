@@ -1148,7 +1148,7 @@ int MySqlAPI::getBestNextReplica(soci::session& sql, const std::string & job_id,
     return bestFileId;
 }
 
-unsigned int MySqlAPI::updateFileStatusReuse(TransferFiles file, const std::string status)
+unsigned int MySqlAPI::updateFileStatusReuse(TransferFiles& file, const std::string status)
 {
     soci::session sql(*connectionPool);
 
@@ -1202,7 +1202,7 @@ unsigned int MySqlAPI::updateFileStatusReuse(TransferFiles file, const std::stri
 }
 
 
-unsigned int MySqlAPI::updateFileStatus(TransferFiles file, const std::string status)
+unsigned int MySqlAPI::updateFileStatus(TransferFiles& file, const std::string status)
 {
     soci::session sql(*connectionPool);
 

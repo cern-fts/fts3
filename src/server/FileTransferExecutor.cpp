@@ -39,7 +39,7 @@ namespace server
 const string FileTransferExecutor::cmd = "fts_url_copy";
 
 
-FileTransferExecutor::FileTransferExecutor(TransferFiles tf, TransferFileHandler& tfh, bool monitoringMsg, string infosys, string ftsHostName) :
+FileTransferExecutor::FileTransferExecutor(TransferFiles& tf, TransferFileHandler& tfh, bool monitoringMsg, string infosys, string ftsHostName) :
     tf(tf),
     tfh(tfh),
     monitoringMsg(monitoringMsg),

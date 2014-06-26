@@ -84,7 +84,7 @@ void ProfiledDB::getSe(Se* &se, std::string seName)
 }
 
 
-unsigned int ProfiledDB::updateFileStatus(TransferFiles file, const std::string status)
+unsigned int ProfiledDB::updateFileStatus(TransferFiles& file, const std::string status)
 {
     PROFILE_PREFIXED("DB::", return db->updateFileStatus(file, status));
 }
@@ -809,7 +809,7 @@ void ProfiledDB::updateHeartBeat(unsigned* index, unsigned* count, unsigned* sta
     PROFILE_PREFIXED("DB::", db->updateHeartBeat(index, count, start, end, service_name));
 }
 
-unsigned int ProfiledDB::updateFileStatusReuse(TransferFiles file, const std::string status)
+unsigned int ProfiledDB::updateFileStatusReuse(TransferFiles& file, const std::string status)
 {
     PROFILE_PREFIXED("DB::", return db->updateFileStatusReuse(file, status));
 }

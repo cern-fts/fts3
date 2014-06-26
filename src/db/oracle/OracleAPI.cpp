@@ -1086,7 +1086,7 @@ int OracleAPI::getBestNextReplica(soci::session& sql, const std::string & job_id
 }
 
 
-unsigned int OracleAPI::updateFileStatusReuse(TransferFiles file, const std::string status)
+unsigned int OracleAPI::updateFileStatusReuse(TransferFiles& file, const std::string status)
 {
     soci::session sql(*connectionPool);
 
@@ -1141,7 +1141,7 @@ unsigned int OracleAPI::updateFileStatusReuse(TransferFiles file, const std::str
 
 
 
-unsigned int OracleAPI::updateFileStatus(TransferFiles file, const std::string status)
+unsigned int OracleAPI::updateFileStatus(TransferFiles& file, const std::string status)
 {
     soci::session sql(*connectionPool);
 

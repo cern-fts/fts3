@@ -124,7 +124,7 @@ public:
 
     virtual void getSe(Se* &se, std::string seName) = 0;
 
-    virtual unsigned int updateFileStatus(TransferFiles file, const std::string status) = 0;
+    virtual unsigned int updateFileStatus(TransferFiles& file, const std::string status) = 0;
 
     virtual void addSe(std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
                        std::string SE_TRANSFER_TYPE, std::string SE_TRANSFER_PROTOCOL, std::string SE_CONTROL_PROTOCOL, std::string GOCDB_ID) = 0;
@@ -380,7 +380,7 @@ public:
         service_name = std::string("");
     }
 
-    virtual unsigned int updateFileStatusReuse(TransferFiles file, const std::string status) = 0;
+    virtual unsigned int updateFileStatusReuse(TransferFiles& file, const std::string status) = 0;
 
     virtual void getCancelJob(std::vector<int>& requestIDs) = 0;
 

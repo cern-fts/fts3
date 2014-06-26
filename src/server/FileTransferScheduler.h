@@ -64,7 +64,7 @@ public:
      * @param file - the file for which the scheduling decision has to be taken
      */
     FileTransferScheduler(
-        TransferFiles file,
+        TransferFiles& file,
         vector< boost::shared_ptr<ShareConfig> > cfgs,
         set<string> inses = set<string>(),
         set<string> outses = set<string>(),
