@@ -9956,7 +9956,7 @@ void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::
                             std::string initState = "STARTED";
                             std::string reason;
 
-                            for (soci::rowset<soci::row>::const_iterator i3 = rs3.begin(); i3 != rs2.end(); ++i3)
+                            for (soci::rowset<soci::row>::const_iterator i3 = rs3.begin(); i3 != rs3.end(); ++i3)
                                 {
                                     soci::row const& row = *i3;
                                     std::string source_url = row.get<std::string>("SOURCE_SURL");
@@ -10284,7 +10284,7 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
                             std::string initState = "STARTED";
                             std::string reason;
 
-                            for (soci::rowset<soci::row>::const_iterator i3 = rs3.begin(); i3 != rs2.end(); ++i3)
+                            for (soci::rowset<soci::row>::const_iterator i3 = rs3.begin(); i3 != rs3.end(); ++i3)
                                 {
                                     soci::row const& row = *i3;
                                     std::string source_url = row.get<std::string>("SOURCE_SURL");
