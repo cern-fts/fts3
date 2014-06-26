@@ -28,28 +28,10 @@ class BringOnlineTask : public StagingTask
 {
 
 public:
-	BringOnlineTask(message_bringonline ctx) : StagingTask(ctx), db(*db::DBSingleton::instance().getDBObjectInstance()) {};
+	BringOnlineTask(message_bringonline ctx) : StagingTask(ctx) {};
 	virtual ~BringOnlineTask() {}
 
 	virtual void run(boost::any const & thread_ctx);
-
-private:
-
-	static time_t getPollInterval(int nPolls)
-	{
-	    if (nPolls > 5)
-	        return 180;
-	    else
-	        return (2 << nPolls);
-	}
-
-	static bool checkValidProxy(const std::string& filename, std::string& message)
-	{
-	    boost::scoped_ptr<DelegCred> delegCredPtr(new DelegCred);
-	    return delegCredPtr->isValidProxy(filename, message);
-	}
-
-	GenericDbIfce& db;
 };
 
 

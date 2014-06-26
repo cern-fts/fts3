@@ -38,15 +38,16 @@ public:
 		return ctx;
 	}
 
+protected:
+	message_bringonline ctx;
+	GenericDbIfce& db;
+
+private:
 	static bool checkValidProxy(const std::string& filename, std::string& message)
 	{
 	    boost::scoped_ptr<DelegCred> delegCredPtr(new DelegCred);
 	    return delegCredPtr->isValidProxy(filename, message);
 	}
-
-protected:
-	message_bringonline ctx;
-	GenericDbIfce& db;
 };
 
 #endif /* StagingTask_H_ */

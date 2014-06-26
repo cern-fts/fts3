@@ -14,10 +14,8 @@ using namespace FTS3_COMMON_NAMESPACE;
 
 ThreadContext::ContextPrototype ThreadContext::prototype;
 
-ThreadContext::ThreadContext(ThreadContext const & prototype) : gfal2_handle(0)
+ThreadContext::ThreadContext(ThreadContext const & prototype) : gfal2_handle(0), infosys(prototype.infosys)
 {
-	infosys = prototype.infosys;
-
     // Set up handle
     GError *error = NULL;
     gfal2_context_t handle = gfal2_context_new(&error);
