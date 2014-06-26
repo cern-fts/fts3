@@ -62,6 +62,15 @@ int main(int ac, char* av[])
 
             // validate command line options, and return respective gsoap context
             if (!cli->validate()) return 1;
+	    
+	    
+            vector<string> vect =  cli->getFileName();    
+	    if(vect.size() == 0)
+	    {
+	        std::cout << "You need to provide either a file or sinlge file to be deleted" << std::endl;
+	    	exit(1);
+	    }
+	    
             GSoapContextAdapter& ctx = cli->getGSoapContext();
 
             // delegate Proxy Certificate
@@ -74,11 +83,8 @@ int main(int ac, char* av[])
 
             handler.delegate();
 
-
-            vector<string> vect =  cli->getFileName();
-
             string resjobid = ctx.deleteFile(vect);
-            std::cout<<"Job_id : "<<resjobid <<endl;
+            std::cout << resjobid <<endl;
 
 
         }
