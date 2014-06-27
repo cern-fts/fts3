@@ -8929,24 +8929,19 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                       soci::into(vo_name_local));
         }
 
-    soci::statement pairsStmt(sql);
-    pairsStmt.exchange(soci::into(source_se));
-    pairsStmt.exchange(soci::into(dest_se));
-
     bool sourceEmpty = true;
     bool destinEmpty = true;
 
     if(!source_se_p.empty())
         {
             source_se = source_se_p;
-            pairsStmt.exchange(soci::use(source_se));
             if(!vo_name.empty())
                 {
-                    querySe += " and source_se = :source_se ";
+                    querySe += " and source_se = '" + source_se + "'";
                 }
             else
                 {
-                    querySe += " where source_se = :source_se ";
+                    querySe += " where source_se ='" + source_se + "'";
                 }
             sourceEmpty = false;
         }
@@ -8957,30 +8952,28 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
             if(sourceEmpty)
                 {
                     dest_se = dest_se_p;
-                    pairsStmt.exchange(soci::use(dest_se));
                     if(!vo_name.empty())
                         {
-                            querySe += " and dest_se = :dest_se ";
+                            querySe += " and dest_se = '" + dest_se + "'";
                         }
                     else
                         {
-                            querySe += " where dest_se = :dest_se ";
+                            querySe += " where dest_se = '" + dest_se + "'";
                         }
                 }
             else
                 {
                     dest_se = dest_se_p;
-                    pairsStmt.exchange(soci::use(dest_se));
-                    querySe += " AND dest_se = :dest_se ";
+                    querySe += " AND dest_se = = '" + dest_se + "'";
                 }
         }
-
-    pairsStmt.alloc();
-    pairsStmt.prepare(querySe);
-    pairsStmt.define_and_bind();
-
+    
     try
         {
+            soci::statement pairsStmt((sql.prepare << querySe, soci::into(source_se), soci::into(dest_se)));   
+    
+
+	
             soci::statement st1((sql.prepare << "select count(*) from t_file where "
                                  " file_state='ACTIVE' and vo_name=:vo_name_local and "
                                  " source_se=:source_se and dest_se=:dest_se",
@@ -9009,7 +9002,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
             soci::statement st41((sql.prepare << "select avg(throughput) from t_file where  "
                                   " source_se=:source_se and dest_se=:dest_se "
                                   " AND  file_state in ('ACTIVE','FINISHED') and (job_finished is NULL OR  job_finished >= (UTC_TIMESTAMP() - interval '60' minute)) "
-                                  " AND throughput <> 0 ",
+                                  " AND throughput > 0 AND throughput is NOT NULL ",
                                   soci::use(source_se),
                                   soci::use(dest_se),
                                   soci::into(throughput1h, isNull2)
@@ -9018,7 +9011,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
             soci::statement st42((sql.prepare << "select avg(throughput) from t_file where  "
                                   " source_se=:source_se and dest_se=:dest_se "
                                   " AND  file_state in ('ACTIVE','FINISHED') and (job_finished is NULL OR  job_finished >= (UTC_TIMESTAMP() - interval '30' minute)) "
-                                  " AND throughput <> 0 ",
+                                  " AND throughput > 0 AND throughput is NOT NULL ",
                                   soci::use(source_se),
                                   soci::use(dest_se),
                                   soci::into(throughput30min, isNull2)
@@ -9027,7 +9020,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
             soci::statement st43((sql.prepare << "select avg(throughput) from t_file where  "
                                   " source_se=:source_se and dest_se=:dest_se "
                                   " AND  file_state in ('ACTIVE','FINISHED') and (job_finished is NULL OR  job_finished >= (UTC_TIMESTAMP() - interval '15' minute)) "
-                                  " AND throughput <> 0 ",
+                                  " AND throughput > 0 AND throughput is NOT NULL ",
                                   soci::use(source_se),
                                   soci::use(dest_se),
                                   soci::into(throughput15min, isNull2)
@@ -9036,7 +9029,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
             soci::statement st44((sql.prepare << "select avg(throughput) from t_file where  "
                                   " source_se=:source_se and dest_se=:dest_se "
                                   " AND  file_state in ('ACTIVE','FINISHED') and (job_finished is NULL OR  job_finished >= (UTC_TIMESTAMP() - interval '5' minute)) "
-                                  " AND throughput <> 0 ",
+                                  " AND throughput > 0 AND throughput is NOT NULL ",
                                   soci::use(source_se),
                                   soci::use(dest_se),
                                   soci::into(throughput5min, isNull2)
@@ -9046,7 +9039,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
             soci::statement st5((sql.prepare << "select reason, count(reason) as c from t_file where "
                                  " (job_finished >= (UTC_TIMESTAMP() - interval '60' minute)) "
                                  " AND file_state='FAILED' and "
-                                 " source_se=:source_se and dest_se=:dest_se and vo_name =:vo_name_local   "
+                                 " source_se=:source_se and dest_se=:dest_se and vo_name =:vo_name_local and reason is not null   "
                                  " group by reason order by c desc limit 1",
                                  soci::use(source_se),
                                  soci::use(dest_se),
@@ -9197,10 +9190,12 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                 }//end vo empty
             else
                 {
-                    vo_name_local = vo_name;
-
-                    pairsStmt.execute();
-                    while (pairsStmt.fetch()) //distinct source_se / dest_se
+                 
+		 vo_name_local = vo_name;
+		    
+		 if (pairsStmt.execute(true))
+                  {
+                    do
                         {
                             active = 0;
                             maxActive = 0;
@@ -9308,7 +9303,13 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
 
                             result << "}\n";
                             result << "\n\n";
-                        } //end distinct pair source_se / dest_se
+                            
+                        }
+                        while (pairsStmt.fetch());
+                }
+
+                   
+
                 }
         }
     catch (std::exception& e)
