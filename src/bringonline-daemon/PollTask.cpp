@@ -8,24 +8,16 @@
 #include "PollTask.h"
 
 #include "BringOnlineTask.h"
-#include "ThreadContext.h"
 #include "WaitingRoom.h"
 
 #include "common/logger.h"
 
 #include <gfal_api.h>
 
-using namespace FTS3_COMMON_NAMESPACE;
-
-void PollTask::run(boost::any const & thread_ctx)
+void PollTask::run(boost::any const &)
 {
-    // get the gfal2 gfal2_ctx
-    ThreadContext const & gfal2_ctx = boost::any_cast<ThreadContext const &>(thread_ctx);
-
-    setProxy(gfal2_ctx.get());
-
     GError *error = NULL;
-    int status = gfal2_bring_online_poll(gfal2_ctx.get(), ctx.url.c_str(), ctx.token.c_str(), &error);
+    int status = gfal2_bring_online_poll(gfal2_ctx, ctx.url.c_str(), ctx.token.c_str(), &error);
 
     if (status < 0)
         {
@@ -35,7 +27,7 @@ void PollTask::run(boost::any const & thread_ctx)
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE will be retried" << commit;
                     ctx.retries +=1;
                     ctx.started = false;
-                    WaitingRoom::get().add(new BringOnlineTask(ctx));
+                    WaitingRoom::instance().add(new BringOnlineTask(*this));
                 }
             else
                 {
@@ -51,7 +43,7 @@ void PollTask::run(boost::any const & thread_ctx)
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE polling token " << ctx.token << commit;
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE next attempt in " << interval << " seconds" << commit;
             ctx.started = true;
-            WaitingRoom::get().add(new PollTask(ctx));
+            WaitingRoom::instance().add(new PollTask(*this));
         }
     else
         {

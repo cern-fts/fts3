@@ -10,7 +10,7 @@
 
 void WaitingRoom::run()
 {
-    WaitingRoom& me = WaitingRoom::get();
+    WaitingRoom& me = WaitingRoom::instance();
 
     while (true)
         {
