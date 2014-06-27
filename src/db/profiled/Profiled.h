@@ -371,6 +371,9 @@ public:
                       const std::string & DN, const std::string & voName, const std::string & credID);
 
     void checkJobOperation(std::vector<std::string>& jobs, std::vector< boost::tuple<std::string, std::string> >& ops);
+    
+    void resetForRetryStaging(int file_id, const std::string & job_id);
+    void resetForRetryDelete(int file_id, const std::string & job_id);     
 
 };
 

@@ -7,6 +7,7 @@
 
 #include "PollTask.h"
 
+#include "BringOnlineTask.h"
 #include "ThreadContext.h"
 #include "WaitingRoom.h"
 
@@ -34,12 +35,11 @@ void PollTask::run(boost::any const & thread_ctx)
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE will be retried" << commit;
                     ctx.retries +=1;
                     ctx.started = false;
-                    WaitingRoom::get().add(new PollTask(ctx));
+                    WaitingRoom::get().add(new BringOnlineTask(ctx));
                 }
             else
                 {
                     db.bringOnlineReportStatus("FAILED", std::string(error->message), ctx);
-                    ctx.started = true;
                 }
             g_clear_error(&error);
         }
@@ -56,7 +56,6 @@ void PollTask::run(boost::any const & thread_ctx)
     else
         {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE finished token " << ctx.token << commit;
-            ctx.started = true;
             db.bringOnlineReportStatus("FINISHED", "", ctx);
         }
 }

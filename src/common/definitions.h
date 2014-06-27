@@ -25,6 +25,7 @@ limitations under the License. */
 #include <sys/socket.h>
 #include <sys/param.h>
 #include <unistd.h>
+#include <math.h>
 
 #define JOB_ID_LEN 36+1
 #define FILE_ID_LEN 36
@@ -33,6 +34,20 @@ limitations under the License. */
 #define MAX_NUM_MSGS 50000
 #define SOURCE_SE_ 100
 #define DEST_SE_ 100
+
+
+inline double activePercentageQueue(double active, double submitted, double rate)
+{
+        if(submitted > 0 && active > 0 && rate >= 98)
+	{
+		double temp =  ((active / submitted) * 100) < 0.050? (0.080 / 100) * submitted: active;
+		if(temp > 0 && temp > active)
+			return ceil(temp);
+		else
+			return active;
+	}
+	return active;
+}
 
 
 /**

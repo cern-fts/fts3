@@ -88,7 +88,7 @@ private:
                         if (DrainMode::getInstance())
                             {
                                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more transfers for this instance!" << commit;
-                                sleep(1);
+                                sleep(15);
                                 continue;
                             }
 

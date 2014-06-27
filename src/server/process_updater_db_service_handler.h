@@ -141,7 +141,7 @@ protected:
                             {
                                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking url_copy for this instance!" << commit;
                                 messages.clear();
-                                sleep(5);
+                                sleep(15);
                                 continue;
                             }
 
