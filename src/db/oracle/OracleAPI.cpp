@@ -8717,7 +8717,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
             soci::statement st41((sql.prepare << "select avg(throughput) from t_file where  "
                                   " source_se=:source_se and dest_se=:dest_se "
                                   " AND  file_state in ('ACTIVE','FINISHED') and (job_finished is NULL OR  job_finished >= (sys_extract_utc(systimestamp) - interval '60' minute)) "
-                                  " AND throughput <> 0 ",
+                                  " AND throughput > 0 AND throughput is not NULL ",
                                   soci::use(source_se),
                                   soci::use(dest_se),
                                   soci::into(throughput1h, isNull2)
@@ -8726,7 +8726,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
             soci::statement st42((sql.prepare << "select avg(throughput) from t_file where  "
                                   " source_se=:source_se and dest_se=:dest_se "
                                   " AND  file_state in ('ACTIVE','FINISHED') and (job_finished is NULL OR  job_finished >= (sys_extract_utc(systimestamp) - interval '30' minute)) "
-                                  " AND throughput <> 0 ",
+                                  " AND throughput > 0 AND throughput is not NULL ",
                                   soci::use(source_se),
                                   soci::use(dest_se),
                                   soci::into(throughput30min, isNull2)
@@ -8735,7 +8735,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
             soci::statement st43((sql.prepare << "select avg(throughput) from t_file where  "
                                   " source_se=:source_se and dest_se=:dest_se "
                                   " AND  file_state in ('ACTIVE','FINISHED') and (job_finished is NULL OR  job_finished >= (sys_extract_utc(systimestamp) - interval '15' minute)) "
-                                  " AND throughput <> 0 ",
+                                  " AND throughput > 0 AND throughput is not NULL ",
                                   soci::use(source_se),
                                   soci::use(dest_se),
                                   soci::into(throughput15min, isNull2)
@@ -8744,7 +8744,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
             soci::statement st44((sql.prepare << "select avg(throughput) from t_file where  "
                                   " source_se=:source_se and dest_se=:dest_se "
                                   " AND  file_state in ('ACTIVE','FINISHED') and (job_finished is NULL OR  job_finished >= (sys_extract_utc(systimestamp) - interval '5' minute)) "
-                                  " AND throughput <> 0 ",
+                                  " AND throughput > 0 AND throughput is not NULL ",
                                   soci::use(source_se),
                                   soci::use(dest_se),
                                   soci::into(throughput5min, isNull2)
@@ -8754,7 +8754,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
             soci::statement st5((sql.prepare << "select * from (select reason, count(reason) as c from t_file where "
                                  " (job_finished >= (sys_extract_utc(systimestamp) - interval '60' minute)) "
                                  " AND file_state='FAILED' and "
-                                 " source_se=:source_se and dest_se=:dest_se and vo_name =:vo_name_local   "
+                                 " source_se=:source_se and dest_se=:dest_se and vo_name =:vo_name_local and reason is not NULL "
                                  " group by reason order by c desc) WHERE ROWNUM=1",
                                  soci::use(source_se),
                                  soci::use(dest_se),
