@@ -9824,7 +9824,7 @@ void OracleAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< bo
                     else
                         {
                             sql <<
-                                " UPDATE t_file "
+                                " UPDATE t_dm "
                                 " SET  job_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), reason = :reason, file_state = :fileState "
                                 " WHERE "
                                 "	file_id = :fileId "
@@ -9832,10 +9832,107 @@ void OracleAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< bo
                                 soci::use(reason),
                                 soci::use(state),
                                 soci::use(file_id)
-                                ;
-
-                            updateJobTransferStatusInternal(sql, job_id, state,0);
+                                ;                            
                         }
+			
+		    //now update job state
+                    std::string job_state;
+                    long long numberOfFilesCanceled = 0;
+                    long long numberOfFilesFinished = 0;
+                    long long numberOfFilesFailed = 0;
+                    long long numberOfFilesStarted = 0;
+                    long long numberOfFilesDelete = 0;
+                    long long totalNumOfFilesInJob= 0;
+                    long long totalInTerminal = 0;
+
+                    soci::rowset<soci::row> rsReplica = (
+                                                            sql.prepare <<
+                                                            " select file_state, COUNT(file_state) from t_dm where job_id=:job_id group by file_state order by null ",
+                                                            soci::use(job_id)
+                                                        );
+
+                    soci::rowset<soci::row>::const_iterator iRep;
+                    for (iRep = rsReplica.begin(); iRep != rsReplica.end(); ++iRep)
+                        {
+                            std::string file_state = iRep->get<std::string>("file_state");
+                            long long countStates = iRep->get<long long>("COUNT(file_state)",0);
+
+                            if(file_state == "FINISHED")
+                                {
+                                    numberOfFilesFinished = countStates;
+                                }
+                            else if(file_state == "FAILED")
+                                {
+                                    numberOfFilesFailed = countStates;
+                                }
+                            else if(file_state == "STARTED")
+                                {
+                                    numberOfFilesStarted = countStates;
+                                }
+                            else if(file_state == "CANCELED")
+                                {
+                                    numberOfFilesCanceled = countStates;
+                                }
+                            else if(file_state == "DELETE")
+                                {
+                                    numberOfFilesDelete = countStates;
+                                }
+                        }
+
+                    totalNumOfFilesInJob = (numberOfFilesFinished + numberOfFilesFailed + numberOfFilesStarted + numberOfFilesCanceled + numberOfFilesDelete);
+                    totalInTerminal = (numberOfFilesFinished + numberOfFilesFailed + numberOfFilesCanceled);
+
+                    if(totalNumOfFilesInJob == numberOfFilesFinished) //all finished / job finished
+                        {
+                            sql << " UPDATE t_job SET "
+                                " job_state = 'FINISHED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp) "
+                                " WHERE job_id = :jobId ", soci::use(job_id);
+                        }
+                    else if (totalNumOfFilesInJob == numberOfFilesFailed) // all failed / job failed
+                        {
+                            sql << " UPDATE t_job SET "
+                                " job_state = 'FAILED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), reason='Job failed, check files for more details' "
+                                " WHERE job_id = :jobId ", soci::use(job_id);
+                        }
+                    else if (totalNumOfFilesInJob == numberOfFilesCanceled) // all canceled / job canceled
+                        {
+                            sql << " UPDATE t_job SET "
+                                " job_state = 'CANCELED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), reason='Job failed, check files for more details' "
+                                " WHERE job_id = :jobId ", soci::use(job_id);
+                        }
+                    else if (numberOfFilesStarted >= 1 &&  numberOfFilesDelete >= 1) //one file STARTED FILE/ JOB ACTIVE
+                        {
+                            std::string job_state;
+                            sql << "SELECT job_state from t_job where job_id=:job_id", soci::use(job_id), soci::into(job_state);
+                            if(job_state == "ACTIVE") //do not commit if already active
+                                {
+                                    //do nothings
+                                }
+                            else //set job to ACTIVE, >=1 in STARTED and there are DELETE
+                                {
+                                    sql << " UPDATE t_job SET "
+                                        " job_state = 'ACTIVE' "
+                                        " WHERE job_id = :jobId ", soci::use(job_id);
+                                }
+                        }
+                    else if(totalNumOfFilesInJob == totalInTerminal && numberOfFilesCanceled == 0 && numberOfFilesFailed > 0) //FINISHEDDIRTY CASE
+                        {
+                            sql << " UPDATE t_job SET "
+                                " job_state = 'FINISHEDDIRTY', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), reason='Job failed, check files for more details' "
+                                " WHERE job_id = :jobId ", soci::use(job_id);
+                        }
+                    else if(totalNumOfFilesInJob == totalInTerminal && numberOfFilesCanceled >= 1) //CANCELED
+                        {
+                            sql << " UPDATE t_job SET "
+                                " job_state = 'CANCELED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), reason='Job canceled, check files for more details' "
+                                " WHERE job_id = :jobId ", soci::use(job_id);
+                        }
+                    else
+                        {
+                            //it should never go here, if it does it means the state machine is bad!
+                        }
+
+			
 
                     //send state message
                     filesMsg = getStateOfTransferInternal(sql, job_id, file_id);
@@ -10032,7 +10129,7 @@ void OracleAPI::cancelDeletion(std::vector<std::string>& files)
             cancelStmt1 << ")";
             cancelStmt1 << " AND job_state NOT IN ('CANCELED','FINISHEDDIRTY', 'FINISHED', 'FAILED')";
 
-            cancelStmt2 << "UPDATE t_file SET file_state = 'CANCELED',  finish_time = sys_extract_utc(systimestamp) ";
+            cancelStmt2 << "UPDATE t_dm SET file_state = 'CANCELED',  finish_time = sys_extract_utc(systimestamp) ";
             cancelStmt2 << " ,reason = '";
             cancelStmt2 << reason;
             cancelStmt2 << "'";
