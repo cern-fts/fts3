@@ -1058,7 +1058,7 @@ int OracleAPI::getBestNextReplica(soci::session& sql, const std::string & job_id
                 }
 
             //not waste queries
-            if(pair.size() > 0)
+            if(!pair.empty())
                 {
                     //get min queue length
                     std::pair<std::pair<std::string, std::string>, int> minValue = *min_element(pair.begin(), pair.end(), pairCompare );
@@ -9836,7 +9836,6 @@ void OracleAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< bo
                         }
 			
 		    //now update job state
-                    std::string job_state;
                     long long numberOfFilesCanceled = 0;
                     long long numberOfFilesFinished = 0;
                     long long numberOfFilesFailed = 0;
@@ -10465,8 +10464,6 @@ void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boos
                         }
                     else
                         {
-                            std::string source_surl;
-                            std::string dest_surl;
                             std::string dbState;
                             std::string dbReason;
                             int stage_in_only = 0;
