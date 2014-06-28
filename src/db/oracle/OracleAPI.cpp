@@ -3136,7 +3136,7 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
     return allowed;
 }
 
-int OracleAPI::getMaxActive(soci::session& sql, int active, int /*highDefault*/, const std::string & source_hostname, const std::string & destin_hostname)
+int OracleAPI::getMaxActive(soci::session& sql, int /*active*/, int /*highDefault*/, const std::string & source_hostname, const std::string & destin_hostname)
 {
     int maxActiveSource = 0;
     int maxActiveDest = 0;
@@ -10683,14 +10683,182 @@ void OracleAPI::checkJobOperation(std::vector<std::string >& jobs, std::vector< 
 
 void OracleAPI::resetForRetryStaging(int file_id, const std::string & job_id)
 {
+    soci::session sql(*connectionPool);
 
+    int nRetries = 0;
+    soci::indicator isNull = soci::i_ok;
+    std::string vo_name;
+    int retry_delay = 0;
+
+    try
+        {
+            sql <<
+                " SELECT retry, vo_name, retry_delay "
+                " FROM t_job "
+                " WHERE job_id = :job_id ",
+                soci::use(job_id),
+                soci::into(nRetries, isNull),
+                soci::into(vo_name),
+                soci::into(retry_delay)
+                ;
+
+
+            if (isNull == soci::i_null || nRetries <= 0)
+                {
+                    sql <<
+                        " SELECT retry "
+                        " FROM t_server_config where vo_name=:vo_name ",
+                        soci::use(vo_name), soci::into(nRetries)
+                        ;
+                }
+            else if (isNull != soci::i_null && nRetries <= 0)
+                {
+                    nRetries = 0;
+                }
+
+            int nRetriesTimes = 0;
+            soci::indicator isNull2 = soci::i_ok;
+
+            sql << "SELECT retry FROM t_file WHERE file_id = :file_id AND job_id = :jobId ",
+                soci::use(file_id), soci::use(job_id), soci::into(nRetriesTimes, isNull2);
+
+
+            if(nRetries > 0 && nRetriesTimes <= nRetries-1 )
+                {
+                    //expressed in secs, default delay
+                    const int default_retry_delay = 120;
+
+                    sql.begin();
+
+                    if (retry_delay > 0)
+                        {
+                            // update
+                            time_t now = getUTC(retry_delay);
+                            struct tm tTime;
+                            gmtime_r(&now, &tTime);
+
+                            sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'STAGING', start_time=NULL, transferHost=NULL, t_log_file=NULL,"
+                                " t_log_file_debug=NULL, throughput = 0, current_failures = 1 "
+                                " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
+                                soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
+                        }
+                    else
+                        {
+                            // update
+                            time_t now = getUTC(default_retry_delay);
+                            struct tm tTime;
+                            gmtime_r(&now, &tTime);
+
+                            sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'STAGING', start_time=NULL, transferHost=NULL, "
+                                " t_log_file=NULL, t_log_file_debug=NULL, throughput = 0,  current_failures = 1 "
+                                " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
+                                soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
+                        }
+                    sql.commit();
+                }
+
+
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
 }
 
 
 void OracleAPI::resetForRetryDelete(int file_id, const std::string & job_id)
 {
+    soci::session sql(*connectionPool);
 
+    int nRetries = 0;
+    int retry_delay = 0;
+    soci::indicator isNull = soci::i_ok;
+    std::string vo_name;
+
+    try
+        {
+            sql <<
+                " SELECT retry, vo_name, retry_delay "
+                " FROM t_job "
+                " WHERE job_id = :job_id ",
+                soci::use(job_id),
+                soci::into(nRetries, isNull),
+                soci::into(vo_name),
+                soci::into(retry_delay)
+                ;
+
+            if (isNull == soci::i_null || nRetries <= 0)
+                {
+                    sql <<
+                        " SELECT retry "
+                        " FROM t_server_config where vo_name=:vo_name ",
+                        soci::use(vo_name), soci::into(nRetries)
+                        ;
+                }
+            else if (isNull != soci::i_null && nRetries <= 0)
+                {
+                    nRetries = 0;
+                }
+
+            int nRetriesTimes = 0;
+            soci::indicator isNull2 = soci::i_ok;
+
+            sql << "SELECT retry FROM t_dm WHERE file_id = :file_id AND job_id = :jobId ",
+                soci::use(file_id), soci::use(job_id), soci::into(nRetriesTimes, isNull2);
+
+
+            if(nRetries > 0 && nRetriesTimes <= nRetries-1 )
+                {
+                    //expressed in secs, default delay
+                    const int default_retry_delay = 120;
+
+                    sql.begin();
+
+                    if (retry_delay > 0)
+                        {
+                            // update
+                            time_t now = getUTC(retry_delay);
+                            struct tm tTime;
+                            gmtime_r(&now, &tTime);
+
+                            sql << "UPDATE t_dm SET retry_timestamp=:1, retry = :retry, file_state = 'DELETE', start_time=NULL, dmHost=NULL "
+                                " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','DELETE','FAILED','CANCELED')",
+                                soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
+                        }
+                    else
+                        {
+                            // update
+                            time_t now = getUTC(default_retry_delay);
+                            struct tm tTime;
+                            gmtime_r(&now, &tTime);
+
+                            sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'DELETE', start_time=NULL, dmHost=NULL  "
+                                " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
+                                soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
+                        }
+                    sql.commit();
+                }
+
+
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
 }
+
 
 
 

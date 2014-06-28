@@ -10142,8 +10142,6 @@ void MySqlAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< boo
                         }
                     filesMsg.clear();
                 }
-
-
             sql.commit();
         }
     catch (std::exception& e)
@@ -10326,7 +10324,7 @@ void MySqlAPI::cancelDeletion(std::vector<std::string>& files)
             cancelStmt1 << ")";
             cancelStmt1 << " AND job_state NOT IN ('CANCELED','FINISHEDDIRTY', 'FINISHED', 'FAILED')";
 
-            cancelStmt2 << "UPDATE t_file SET file_state = 'CANCELED',  finish_time = UTC_TIMESTAMP() ";
+            cancelStmt2 << "UPDATE t_dm SET file_state = 'CANCELED',  finish_time = UTC_TIMESTAMP() ";
             cancelStmt2 << " ,reason = '";
             cancelStmt2 << reason;
             cancelStmt2 << "'";
