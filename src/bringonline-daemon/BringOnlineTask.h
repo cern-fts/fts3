@@ -35,29 +35,29 @@ class BringOnlineTask : public StagingTask
 
 public:
 
-	/**
-	 * Creates a new BringOnlineTask from a message_bringonline
-	 *
-	 * @param ctx : bring-online task details
-	 */
-	BringOnlineTask(message_bringonline ctx);
+    /**
+     * Creates a new BringOnlineTask from a message_bringonline
+     *
+     * @param ctx : bring-online task details
+     */
+    BringOnlineTask(message_bringonline ctx);
 
-	/**
-	 * Creates a new BringOnlineTask from another StagingTask
-	 *
-	 * @param copy : a staging task (stills the gfal2 context of this object)
-	 */
-	BringOnlineTask(StagingTask & copy) : StagingTask(copy) {}
+    /**
+     * Creates a new BringOnlineTask from another StagingTask
+     *
+     * @param copy : a staging task (stills the gfal2 context of this object)
+     */
+    BringOnlineTask(StagingTask & copy) : StagingTask(copy) {}
 
-	/**
-	 * Destructor
-	 */
-	virtual ~BringOnlineTask() {}
+    /**
+     * Destructor
+     */
+    virtual ~BringOnlineTask() {}
 
-	/**
-	 * The routine is executed by the thread pool
-	 */
-	virtual void run(boost::any const &);
+    /**
+     * The routine is executed by the thread pool
+     */
+    virtual void run(boost::any const &);
 };
 
 

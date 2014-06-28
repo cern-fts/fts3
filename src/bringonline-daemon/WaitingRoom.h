@@ -27,9 +27,9 @@ class WaitingRoom
 
 public:
 
-	/**
-	 * Singleton instance
-	 */
+    /**
+     * Singleton instance
+     */
     static WaitingRoom& instance()
     {
         static WaitingRoom instance;

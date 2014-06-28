@@ -19,7 +19,7 @@ BringOnlineTask::BringOnlineTask(message_bringonline ctx) : StagingTask(ctx)
     gfal2_ctx = gfal2_context_new(&error);
     if (!gfal2_ctx)
         {
-    		std::stringstream ss;
+            std::stringstream ss;
             ss << "BRINGONLINE bad initialization " << error->code << " " << error->message;
             throw Err_Custom(ss.str());
         }
@@ -29,7 +29,7 @@ BringOnlineTask::BringOnlineTask(message_bringonline ctx) : StagingTask(ctx)
     gfal2_set_opt_string_list(gfal2_ctx, "SRM PLUGIN", "TURL_PROTOCOLS", protocols, 4, &error);
     if (error)
         {
-    		std::stringstream ss;
+            std::stringstream ss;
             ss << "BRINGONLINE Could not set the protocol list " << error->code << " " << error->message;
             throw Err_Custom(ss.str());
         }

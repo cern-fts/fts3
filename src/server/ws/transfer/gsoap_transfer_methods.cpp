@@ -1098,18 +1098,18 @@ int fts3::impltns__cancel(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOREstrin
                     vector<string> &jobs = _requestIDs->item;
                     std::vector<std::string>::iterator it;
                     if (!jobs.empty())
-                        {			
-			    /*that's how we need to check the operation (TRANSFER / DELETE / STAGING) per infividual job
-			    std::vector< boost::tuple<std::string, std::string> > ops;
-			    DBSingleton::instance().getDBObjectInstance()->checkJobOperation(jobs, ops);
-			    
-			    std::vector< boost::tuple<std::string, std::string> >::iterator it22;
-			    for (it22 = ops.begin(); it22 != ops.end(); ++it22)
-			    {
-			    	std::cout << boost::get<0>(*it22) << std::endl;
-			    	std::cout << boost::get<1>(*it22) << std::endl;				
-			    }
-			    */
+                        {
+                            /*that's how we need to check the operation (TRANSFER / DELETE / STAGING) per infividual job
+                            std::vector< boost::tuple<std::string, std::string> > ops;
+                            DBSingleton::instance().getDBObjectInstance()->checkJobOperation(jobs, ops);
+
+                            std::vector< boost::tuple<std::string, std::string> >::iterator it22;
+                            for (it22 = ops.begin(); it22 != ops.end(); ++it22)
+                            {
+                            	std::cout << boost::get<0>(*it22) << std::endl;
+                            	std::cout << boost::get<1>(*it22) << std::endl;
+                            }
+                            */
 
                             std::string jobId;
                             for (it = jobs.begin(); it != jobs.end();)
@@ -1223,7 +1223,7 @@ int fts3::impltns__cancel2(soap* ctx, impltns__ArrayOf_USCOREsoapenc_USCOREstrin
 
             // check if there are jobs to cancel in the request
             vector<string> &jobs = request->item;
-            if (jobs.empty()) return SOAP_OK;	                               
+            if (jobs.empty()) return SOAP_OK;
 
             // create the response
             resp._jobIDs = soap_new_impltns__ArrayOf_USCOREsoapenc_USCOREstring(ctx, -1);

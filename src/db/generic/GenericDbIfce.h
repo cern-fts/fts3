@@ -437,7 +437,7 @@ public:
 
     //staging						//file_id / state / reason / token
     virtual void updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string> >& files) = 0;
-    
+
     //vo / file_id / surl / proxy / pinlifetime / bringonlineTimeout / spacetoken / job_id
     virtual void getFilesForStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string> >& files) = 0;
 
@@ -451,8 +451,8 @@ public:
     virtual int getMaxStatingsPerEndpoint(const std::string & endpoint, const std::string & vo) = 0;
 
     virtual void checkJobOperation(std::vector<std::string>& jobs, std::vector< boost::tuple<std::string, std::string> >& ops) = 0;
-    
+
     virtual void resetForRetryStaging(int file_id, const std::string & job_id) = 0;
-    virtual void resetForRetryDelete(int file_id, const std::string & job_id) = 0;    
+    virtual void resetForRetryDelete(int file_id, const std::string & job_id) = 0;
 
 };

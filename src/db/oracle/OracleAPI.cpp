@@ -3147,27 +3147,27 @@ int OracleAPI::getMaxActive(soci::session& sql, int active, int /*highDefault*/,
             sql << " select active from t_optimize where source_se = :source_se and active is not NULL ",
                 soci::use(source_hostname),
                 soci::into(maxActiveSource);
-		
+
             if(maxActiveSource == 0)
-	    {
-  		//check for dest
-            	sql << " select active from t_optimize where dest_se = :dest_se and active is not NULL ",
-                	soci::use(destin_hostname),
-                	soci::into(maxActiveDest);
-			
-			if(maxActiveDest == 0)	  
-			{
-				return MAX_ACTIVE_PER_LINK;				
-			}
-			else
-			{
-				return maxActiveDest;
-			}
-	    }
-	    else
-	    {
-	    	return maxActiveSource;
-	    }		
+                {
+                    //check for dest
+                    sql << " select active from t_optimize where dest_se = :dest_se and active is not NULL ",
+                        soci::use(destin_hostname),
+                        soci::into(maxActiveDest);
+
+                    if(maxActiveDest == 0)
+                        {
+                            return MAX_ACTIVE_PER_LINK;
+                        }
+                    else
+                        {
+                            return maxActiveDest;
+                        }
+                }
+            else
+                {
+                    return maxActiveSource;
+                }
         }
     catch (std::exception& e)
         {
@@ -3297,12 +3297,12 @@ bool OracleAPI::updateOptimizer()
                                          " dest_se=:dest and "
                                          " job_finished is null",
                                          soci::use(destin_hostname), soci::into(singleDest));
-					 
-           //snapshot of submitted transfers
+
+            //snapshot of submitted transfers
             soci::statement stmt19 = (
-                                        sql.prepare << "SELECT count(*) FROM t_file "
-                                        "WHERE source_se = :source AND dest_se = :dest_se and file_state ='SUBMITTED' and job_finished is null ",
-                                        soci::use(source_hostname),soci::use(destin_hostname), soci::into(submitted));						 
+                                         sql.prepare << "SELECT count(*) FROM t_file "
+                                         "WHERE source_se = :source AND dest_se = :dest_se and file_state ='SUBMITTED' and job_finished is null ",
+                                         soci::use(source_hostname),soci::use(destin_hostname), soci::into(submitted));
 
 
 
@@ -3350,7 +3350,7 @@ bool OracleAPI::updateOptimizer()
                     isNullStreamsCurrent = soci::i_ok;
                     singleDest = 0;
                     lanTransferBool = false;
-    		    submitted = 0.0;
+                    submitted = 0.0;
                     ema = 0.0;
 
                     now = getUTC(0);
@@ -3420,9 +3420,9 @@ bool OracleAPI::updateOptimizer()
 
                     // Active transfers
                     stmt7.execute(true);
-		    
-		    //get submitted for this link
-		    stmt19.execute(true);		    
+
+                    //get submitted for this link
+                    stmt19.execute(true);
 
                     //check if there is any other source for a given dest
                     stmt18.execute(true);
@@ -3567,31 +3567,31 @@ bool OracleAPI::updateOptimizer()
 
                             int pathFollowed = 0;
                             int tempActive = active; //temp store current active
-			    
-			    //make sure we do not increase beyond limits set
-                            int maxActiveLimit = getMaxActive(sql, maxActive, highDefault, source_hostname, destin_hostname);			    
+
+                            //make sure we do not increase beyond limits set
+                            int maxActiveLimit = getMaxActive(sql, maxActive, highDefault, source_hostname, destin_hostname);
 
                             //special case to increase active when dealing with LAN transfers of there is only one single/dest pair active
                             if( ((singleDest == 1 || lanTransferBool) || (spawnActive == 2 || spawnActive == 3)) && maxActive < maxActiveLimit)
                                 {
-				    if(maxActive < 8)
-				    {
-                                    	highDefault = 8;
-                                    	maxActive = highDefault;
-				    }
-				    else
-				    {
-   		    	     		double percentage = activePercentageQueue(boost::lexical_cast<double>(maxActive), 
-				    						boost::lexical_cast<double>(submitted),
-											boost::lexical_cast<double>(ratioSuccessFailure));
-											
-			      		if(maxActive < boost::lexical_cast<int>(percentage))
-			        	{												
-                                    		highDefault = boost::lexical_cast<int>(percentage);
-                                    		maxActive = highDefault;
-			        	}								    
-				    }
-                                }			   
+                                    if(maxActive < 8)
+                                        {
+                                            highDefault = 8;
+                                            maxActive = highDefault;
+                                        }
+                                    else
+                                        {
+                                            double percentage = activePercentageQueue(boost::lexical_cast<double>(maxActive),
+                                                                boost::lexical_cast<double>(submitted),
+                                                                boost::lexical_cast<double>(ratioSuccessFailure));
+
+                                            if(maxActive < boost::lexical_cast<int>(percentage))
+                                                {
+                                                    highDefault = boost::lexical_cast<int>(percentage);
+                                                    maxActive = highDefault;
+                                                }
+                                        }
+                                }
 
                             if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure >= 98)) && throughputEMA > thrStored && retry <= retryStored)
                                 {
@@ -3602,7 +3602,7 @@ bool OracleAPI::updateOptimizer()
                                             ema = throughputEMA;
                                             stmt10.execute(true);
                                         }
-                                    else 
+                                    else
                                         {
                                             if(singleDest == 1 || lanTransferBool)
                                                 {
@@ -3630,7 +3630,7 @@ bool OracleAPI::updateOptimizer()
                                             active = maxActiveLimit;
                                             ema = throughputEMA;
                                             pathFollowed = 11;
-                                            stmt10.execute(true);					
+                                            stmt10.execute(true);
                                         }
                                     else
                                         {
