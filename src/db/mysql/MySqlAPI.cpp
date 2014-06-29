@@ -4550,8 +4550,9 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                                     stmt = "DELETE FROM t_file WHERE job_id in (" +job_id+ ")";
                                     sql << stmt;
 
-                                    stmt = "DELETE FROM t_dm WHERE job_id in (" +job_id+ ")";
-                                    sql << stmt;
+				    //disable for now until we finalize the table
+                                    //stmt = "DELETE FROM t_dm WHERE job_id in (" +job_id+ ")";
+                                    //sql << stmt;
 
                                     stmt = "DELETE FROM t_job WHERE job_id in (" +job_id+ ")";
                                     sql << stmt;

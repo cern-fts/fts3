@@ -4271,7 +4271,7 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
                     std::string job_id;
                     soci::statement delFilesStmt = (sql.prepare << "DELETE FROM t_file WHERE job_id = :job_id", soci::use(job_id));
                     soci::statement delJobsStmt = (sql.prepare << "DELETE FROM t_job WHERE job_id = :job_id", soci::use(job_id));
-                    soci::statement delDmStmt = (sql.prepare << "DELETE FROM t_dm WHERE job_id = :job_id", soci::use(job_id));
+                    //soci::statement delDmStmt = (sql.prepare << "DELETE FROM t_dm WHERE job_id = :job_id", soci::use(job_id));
 
                     soci::statement insertJobsStmt = (sql.prepare << "INSERT INTO t_job_backup SELECT * FROM t_job WHERE job_id = :job_id", soci::use(job_id));
                     soci::statement insertFileStmt = (sql.prepare << "INSERT INTO t_file_backup SELECT * FROM t_file WHERE job_id = :job_id", soci::use(job_id));
@@ -4296,7 +4296,7 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
                             delFilesStmt.execute(true);
                             *nFiles += delFilesStmt.get_affected_rows();
 
-                            delDmStmt.execute(true);
+                            //delDmStmt.execute(true);
 
                             delJobsStmt.execute(true);
                             *nJobs += delJobsStmt.get_affected_rows();
