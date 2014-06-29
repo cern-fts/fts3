@@ -3109,7 +3109,7 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
 
             soci::statement stmt2 = (
                                         sql.prepare << "SELECT count(*) FROM t_file "
-                                        "WHERE source_se = :source AND dest_se = :dest_se and file_state in ('READY','ACTIVE') ",
+                                        "WHERE source_se = :source AND dest_se = :dest_se and file_state = 'ACTIVE' ",
                                         soci::use(source_hostname),soci::use(destin_hostname), soci::into(active));
             stmt2.execute(true);
 
@@ -3235,7 +3235,7 @@ bool OracleAPI::updateOptimizer()
             //snapshot of active transfers
             soci::statement stmt7 = (
                                         sql.prepare << "SELECT count(*) FROM t_file "
-                                        "WHERE source_se = :source AND dest_se = :dest_se and file_state in ('READY','ACTIVE') ",
+                                        "WHERE source_se = :source AND dest_se = :dest_se and file_state = 'ACTIVE' and job_finished is null ",
                                         soci::use(source_hostname),soci::use(destin_hostname), soci::into(active));
 
             //max number of active allowed per link
