@@ -24,14 +24,40 @@
 
 #include <gfal_api.h>
 
+/**
+ * A bring-online task, when started using a thread pool issues a bring online operation
+ * if successful spawns a PollTask, if retries are set another BringOnlineTask otherwise
+ *
+ * @see StagingTask
+ */
 class BringOnlineTask : public StagingTask
 {
 
 public:
-	BringOnlineTask(message_bringonline ctx) : StagingTask(ctx) {};
-	virtual ~BringOnlineTask() {}
 
-	virtual void run(boost::any const & thread_ctx);
+    /**
+     * Creates a new BringOnlineTask from a message_bringonline
+     *
+     * @param ctx : bring-online task details
+     */
+    BringOnlineTask(message_bringonline ctx);
+
+    /**
+     * Creates a new BringOnlineTask from another StagingTask
+     *
+     * @param copy : a staging task (stills the gfal2 context of this object)
+     */
+    BringOnlineTask(StagingTask & copy) : StagingTask(copy) {}
+
+    /**
+     * Destructor
+     */
+    virtual ~BringOnlineTask() {}
+
+    /**
+     * The routine is executed by the thread pool
+     */
+    virtual void run(boost::any const &);
 };
 
 

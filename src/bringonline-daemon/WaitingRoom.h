@@ -19,23 +19,39 @@
 
 using namespace fts3::common;
 
+/**
+ * A waiting room for task that will be executed in a while
+ */
 class WaitingRoom
 {
 
 public:
 
-    static WaitingRoom& get()
+    /**
+     * Singleton instance
+     */
+    static WaitingRoom& instance()
     {
         static WaitingRoom instance;
         return instance;
     }
 
+    /**
+     * Puts new task into the waiting room
+     *
+     * @param task : a staging task
+     */
     void add(StagingTask* task)
     {
         boost::mutex::scoped_lock lock(m);
         tasks.push_back(task);
     }
 
+    /**
+     * Attaches the waiting room to a threadpool
+     *
+     * @param pool : the thread-pool that will be used to start tasks
+     */
     void attach(ThreadPool<StagingTask>& pool)
     {
         this->pool = &pool;
@@ -43,14 +59,31 @@ public:
         t.reset(new boost::thread(run));
     }
 
+    /**
+     * Destructor
+     */
     virtual ~WaitingRoom() {}
 
 private:
 
+    /**
+     * This routine is executed in a separate thread
+     */
     static void run();
 
+    /**
+     * Default constructor
+     */
     WaitingRoom() : t(0), pool(0) {}
+
+    /**
+     * Copy constructor (not implemented)
+     */
     WaitingRoom(WaitingRoom const &);
+
+    /**
+     * Assigment operator (not implemented)
+     */
     WaitingRoom& operator=(WaitingRoom const &);
 
     /// the queue with tasks that are waiting

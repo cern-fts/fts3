@@ -148,7 +148,6 @@ public:
 
                 /*session reuse process died or terminated unexpected, must terminate all files of a given job*/
                 if ( (std::string(msg.transfer_message).find("Transfer terminate handler called") != string::npos ||
-                        std::string(msg.transfer_message).find("Transfer terminate handler called") != string::npos ||
                         std::string(msg.transfer_message).find("Transfer process died") != string::npos ||
                         std::string(msg.transfer_message).find("because it was stalled") != string::npos ||
                         std::string(msg.transfer_message).find("canceled by the user") != string::npos ||

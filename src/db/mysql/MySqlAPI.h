@@ -411,9 +411,9 @@ public:
     virtual int getMaxStatingsPerEndpoint(const std::string & endpoint, const std::string & vo);
 
     virtual void checkJobOperation(std::vector<std::string>& jobs, std::vector< boost::tuple<std::string, std::string> >& ops);
-    
+
     virtual void resetForRetryStaging(int file_id, const std::string & job_id);
-    virtual void resetForRetryDelete(int file_id, const std::string & job_id);     
+    virtual void resetForRetryDelete(int file_id, const std::string & job_id);
 
 
 private:

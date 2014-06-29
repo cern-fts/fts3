@@ -7,6 +7,8 @@
 
 #include "StagingTask.h"
 
+std::string StagingTask::infosys;
+
 bool StagingTask::retryTransfer(int errorNo, const std::string& category, const std::string& message)
 {
     bool retry = true;
@@ -93,19 +95,19 @@ bool StagingTask::retryTransfer(int errorNo, const std::string& category, const 
     return retry;
 }
 
-void StagingTask::setProxy(gfal2_context_t handle)
+void StagingTask::setProxy()
 {
     GError *error = NULL;
     char* cert = const_cast<char*>(ctx.proxy.c_str());
 
-    int status = gfal2_set_opt_string(handle, "X509", "CERT", cert, &error);
+    int status = gfal2_set_opt_string(gfal2_ctx, "X509", "CERT", cert, &error);
     if (status < 0)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE setting X509 CERT failed " << error->code << " " << error->message << commit;
             g_clear_error(&error);
         }
 
-    status = gfal2_set_opt_string(handle, "X509", "KEY", cert, &error);
+    status = gfal2_set_opt_string(gfal2_ctx, "X509", "KEY", cert, &error);
     if (status < 0)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE setting X509 KEY failed " << error->code << " " << error->message << commit;

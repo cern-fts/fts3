@@ -58,7 +58,7 @@ SrcDelCli::~SrcDelCli()
 
 }
 
-bool SrcDelCli::validate(bool init)
+bool SrcDelCli::validate(bool /*init*/)
 {
     // do the standard validation
     if(!CliBase::validate()) return false;
