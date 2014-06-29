@@ -38,7 +38,7 @@ limitations under the License. */
 
 inline double activePercentageQueue(double active, double submitted, double rate)
 {
-    if(submitted > 0 && active > 0 && rate >= 98)
+    if(submitted > 0 && active > 0 && rate >= 96)
         {
             double temp =  ((active / submitted) * 100) < 0.050? (0.080 / 100) * submitted: active;
             if(temp > 0 && temp > active)
