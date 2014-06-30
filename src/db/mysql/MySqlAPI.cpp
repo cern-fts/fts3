@@ -1312,7 +1312,7 @@ void MySqlAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::
 
 
 
-void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_tupple> src_dest_pair,
+void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_tupple>& src_dest_pair,
                               const std::string & DN, const std::string & cred,
                               const std::string & voName, const std::string & myProxyServer, const std::string & delegationID,
                               const std::string & sourceSe, const std::string & destinationSe,
@@ -3301,7 +3301,7 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
 
             soci::statement stmt2 = (
                                         sql.prepare << "SELECT count(*) FROM t_file "
-                                        "WHERE source_se = :source AND dest_se = :dest_se and file_state in ('READY','ACTIVE') and job_finished is NULL ",
+                                        "WHERE source_se = :source AND dest_se = :dest_se and file_state = 'ACTIVE' and job_finished is NULL ",
                                         soci::use(source_hostname),soci::use(destin_hostname), soci::into(active));
             stmt2.execute(true);
 
@@ -3465,7 +3465,7 @@ bool MySqlAPI::updateOptimizer()
             //snapshot of active transfers
             soci::statement stmt7 = (
                                         sql.prepare << "SELECT count(*) FROM t_file "
-                                        "WHERE source_se = :source AND dest_se = :dest_se and file_state in ('READY','ACTIVE') and job_finished is null ",
+                                        "WHERE source_se = :source AND dest_se = :dest_se and file_state = 'ACTIVE' and job_finished is null ",
                                         soci::use(source_hostname),soci::use(destin_hostname), soci::into(active));
 
             //max number of active allowed per link
