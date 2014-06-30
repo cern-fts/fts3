@@ -525,7 +525,7 @@ std::map<std::string, long long> MySqlAPI::getActivitiesInQueue(soci::session& s
                                              "	f.wait_timestamp IS NULL AND "
                                              "	(f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
                                              "	(f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
-                                             "  j.job_state in ('ACTIVE','READY','SUBMITTED') AND "
+                                             "  j.job_state in ('ACTIVE','SUBMITTED') AND "
                                              "  (j.reuse_job = 'N' OR j.reuse_job IS NULL) "
                                              " GROUP BY activity ",
                                              soci::use(src),
@@ -710,7 +710,7 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                                      soci::use(boost::get<0>(triplet)), soci::use(boost::get<1>(triplet)), soci::into(count)
                                     );
             soci::statement stmt3 = (sql.prepare <<
-                                     " select count(*) from t_file where source_se=:source_se and dest_se=:dest_se and file_state in ('READY','ACTIVE') and job_finished is NULL ",
+                                     " select count(*) from t_file where source_se=:source_se and dest_se=:dest_se and file_state  = 'ACTIVE' and job_finished is NULL ",
                                      soci::use(boost::get<0>(triplet)),
                                      soci::use(boost::get<1>(triplet)),
                                      soci::into(limit)
@@ -791,7 +791,7 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                                                                  "    f.wait_timestamp IS NULL AND "
                                                                  "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
                                                                  "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
-                                                                 "     j.job_state in('ACTIVE','SUBMITTED','READY') AND j.reuse_job = 'N' "
+                                                                 "     j.job_state in('ACTIVE','SUBMITTED') AND j.reuse_job = 'N' "
                                                                  "     ORDER BY j.priority DESC, j.submit_time LIMIT :filesNum ",
                                                                  soci::use(boost::get<0>(triplet)),
                                                                  soci::use(boost::get<1>(triplet)),
@@ -836,7 +836,7 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                                         "    f.wait_timestamp IS NULL AND "
                                         "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
                                         "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
-                                        "    j.job_state in('ACTIVE','SUBMITTED','READY') AND j.reuse_job = 'N'  "
+                                        "    j.job_state in('ACTIVE','SUBMITTED') AND j.reuse_job = 'N'  "
                                         "    ORDER BY j.priority DESC, j.submit_time LIMIT :filesNum"
                                         ;
 
@@ -2092,10 +2092,10 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
 
 
             if(file_id == 0 && transfer_status == "FAILED")
-                sql <<  "select file_id from t_file where pid=:pid and job_finished is NULL and file_state in ('READY','ACTIVE') ",soci::use(process_id), soci::into(file_id);
+                sql <<  "select file_id from t_file where pid=:pid and job_finished is NULL and file_state  = 'ACTIVE' ",soci::use(process_id), soci::into(file_id);
 
             if(job_id.empty() && transfer_status == "FAILED")
-                sql <<  "select job_id from t_file where pid=:pid and job_finished is NULL and file_state in ('READY','ACTIVE') ",soci::use(process_id), soci::into(job_id);
+                sql <<  "select job_id from t_file where pid=:pid and job_finished is NULL and file_state  = 'ACTIVE' ",soci::use(process_id), soci::into(job_id);
 
 
             // query for the file state in DB
@@ -3511,7 +3511,7 @@ bool MySqlAPI::updateOptimizer()
 
             soci::statement stmt18 = (
                                          sql.prepare << " select count(distinct source_se) from t_file where "
-                                         " file_state in ('ACTIVE','READY','SUBMITTED') and "
+                                         " file_state in ('ACTIVE','SUBMITTED') and "
                                          " dest_se=:dest and "
                                          " job_finished is null",
                                          soci::use(destin_hostname), soci::into(singleDest));
@@ -3970,7 +3970,7 @@ int MySqlAPI::getSeOut(const std::string & source, const std::set<std::string> &
             std::string source_hostname = source;
 
             sql << "SELECT COUNT(*) FROM t_file "
-                "WHERE t_file.source_se = :source AND t_file.file_state in ('READY','ACTIVE') and job_finished is null ",
+                "WHERE t_file.source_se = :source AND t_file.file_state  = 'ACTIVE' and job_finished is null ",
                 soci::use(source_hostname), soci::into(nActiveSource);
 
             ret += nActiveSource;
@@ -4010,7 +4010,7 @@ int MySqlAPI::getSeIn(const std::set<std::string> & source, const std::string & 
             std::string destin_hostname = destination;
 
             sql << "SELECT COUNT(*) FROM t_file "
-                "WHERE t_file.dest_se = :dst AND t_file.file_state in ('READY','ACTIVE') and job_finished is null ",
+                "WHERE t_file.dest_se = :dst AND t_file.file_state  = 'ACTIVE' and job_finished is null ",
                 soci::use(destin_hostname), soci::into(nActiveDest);
 
             ret += nActiveDest;
@@ -4043,7 +4043,7 @@ int MySqlAPI::getCredits(soci::session& sql, const std::string & source_hostname
 
     try
         {
-            sql << " select count(*) from t_file where source_se=:source_se and dest_se=:dest_se and file_state in ('READY','ACTIVE') and job_finished is null ",
+            sql << " select count(*) from t_file where source_se=:source_se and dest_se=:dest_se and file_state  = 'ACTIVE' and job_finished is null ",
                 soci::use(source_hostname),
                 soci::use(destin_hostname),
                 soci::into(limit);
@@ -4258,7 +4258,7 @@ bool MySqlAPI::terminateReuseProcess(const std::string & jobId, int pid, const s
         {
             if(jobId.length() == 0)
                 {
-                    sql << " SELECT job_id from t_file where pid=:pid and job_finished is NULL and file_state in ('READY','ACTIVE') LIMIT 1",
+                    sql << " SELECT job_id from t_file where pid=:pid and job_finished is NULL and file_state  = 'ACTIVE' LIMIT 1",
                         soci::use(pid), soci::into(job_id);
 
                     sql << " SELECT reuse_job FROM t_job WHERE job_id = :jobId AND reuse_job IS NOT NULL",
@@ -4695,7 +4695,7 @@ bool MySqlAPI::retryFromDead(std::vector<struct message_updater>& messages, bool
                     soci::rowset<int> rs = (
                                                sql.prepare <<
                                                " SELECT file_id FROM t_file "
-                                               " WHERE file_id = :fileId AND job_id = :jobId AND file_state in ('ACTIVE','READY') AND"
+                                               " WHERE file_id = :fileId AND job_id = :jobId AND file_state = 'ACTIVE' AND"
                                                " (hashed_id >= :hStart AND hashed_id <= :hEnd) ",
                                                soci::use(iter->file_id),
                                                soci::use(std::string(iter->job_id)),
@@ -4824,7 +4824,7 @@ void MySqlAPI::unblacklistSe(std::string se)
             sql <<
                 " UPDATE t_file f, t_job j SET f.wait_timestamp = NULL, f.wait_timeout = NULL "
                 " WHERE f.job_id = j.job_id AND (f.source_se = :src OR f.dest_se = :dest) "
-                "	AND f.file_state IN ('ACTIVE', 'READY', 'SUBMITTED') "
+                "	AND f.file_state IN ('ACTIVE','SUBMITTED') "
                 "	AND NOT EXISTS ( "
                 "		SELECT NULL "
                 "		FROM t_bad_dns "
@@ -4866,7 +4866,7 @@ void MySqlAPI::unblacklistDn(std::string dn)
             sql <<
                 " UPDATE t_file f, t_job j SET f.wait_timestamp = NULL, f.wait_timeout = NULL "
                 " WHERE f.job_id = j.job_id AND j.user_dn = :dn "
-                "	AND f.file_state IN ('ACTIVE', 'READY', 'SUBMITTED') "
+                "	AND f.file_state IN ('ACTIVE','SUBMITTED') "
                 "	AND NOT EXISTS ( "
                 "		SELECT NULL "
                 "		FROM t_bad_ses "
@@ -5825,7 +5825,7 @@ int MySqlAPI::countActiveTransfers(std::string source, std::string destination, 
     try
         {
             sql << "SELECT COUNT(*) FROM t_file, t_file_share_config "
-                "WHERE t_file.file_state in ('ACTIVE','READY')  AND "
+                "WHERE t_file.file_state  = 'ACTIVE'  AND "
                 "      t_file_share_config.file_id = t_file.file_id AND "
                 "      t_file_share_config.source = :source AND "
                 "      t_file_share_config.destination = :dest AND "
@@ -5854,7 +5854,7 @@ int MySqlAPI::countActiveOutboundTransfersUsingDefaultCfg(std::string se, std::s
     try
         {
             sql << "SELECT COUNT(*) FROM t_file, t_file_share_config "
-                "WHERE t_file.file_state in ('ACTIVE','READY')  AND "
+                "WHERE t_file.file_state  = 'ACTIVE'  AND "
                 "      t_file.source_se = :source AND "
                 "      t_file.file_id = t_file_share_config.file_id AND "
                 "      t_file_share_config.source = '(*)' AND "
@@ -5883,7 +5883,7 @@ int MySqlAPI::countActiveInboundTransfersUsingDefaultCfg(std::string se, std::st
     try
         {
             sql << "SELECT COUNT(*) FROM t_file, t_file_share_config "
-                "WHERE t_file.file_state in ('ACTIVE','READY') AND "
+                "WHERE t_file.file_state  = 'ACTIVE' AND "
                 "      t_file.dest_se = :dest AND "
                 "      t_file.file_id = t_file_share_config.file_id AND "
                 "      t_file_share_config.source = '*' AND "
@@ -6255,14 +6255,14 @@ void MySqlAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
                     std::string job_id;
                     soci::rowset<std::string> rs = (sql.prepare << "SELECT job_id FROM t_job WHERE "
                                                     "    submit_time < (UTC_TIMESTAMP() - interval :interval hour) AND "
-                                                    "    job_state in ('SUBMITTED', 'READY') and job_finished is NULL ",
+                                                    "    job_state  = 'SUBMITTED' and job_finished is NULL ",
                                                     soci::use(maxTime));
 
-                    soci::statement stmt1 = (sql.prepare << "UPDATE t_file SET job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(),  file_state = 'CANCELED', reason = :reason WHERE job_id = :jobId AND file_state IN ('SUBMITTED','READY')",
+                    soci::statement stmt1 = (sql.prepare << "UPDATE t_file SET job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(),  file_state = 'CANCELED', reason = :reason WHERE job_id = :jobId AND file_state  = 'SUBMITTED'",
                                              soci::use(message), soci::use(job_id));
 
 
-                    soci::statement stmt2 = ( sql.prepare << "UPDATE t_job SET job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), job_state = 'CANCELED', reason = :reason WHERE job_id = :jobId AND job_state IN ('SUBMITTED','READY')",
+                    soci::statement stmt2 = ( sql.prepare << "UPDATE t_job SET job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), job_state = 'CANCELED', reason = :reason WHERE job_id = :jobId AND job_state  = 'SUBMITTED'",
                                               soci::use(message), soci::use(job_id));
 
 
@@ -7026,7 +7026,7 @@ void MySqlAPI::cancelFilesInTheQueue(const std::string& se, const std::string& v
                                              " SELECT file_id, job_id, file_index "
                                              " FROM t_file "
                                              " WHERE (source_se = :se OR dest_se = :se) "
-                                             "	AND file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED')",
+                                             "	AND file_state IN ('ACTIVE','SUBMITTED', 'NOT_USED')",
                                              soci::use(se),
                                              soci::use(se)
                                          )
@@ -7037,7 +7037,7 @@ void MySqlAPI::cancelFilesInTheQueue(const std::string& se, const std::string& v
                                              " FROM t_file f "
                                              " WHERE  (f.source_se = :se OR f.dest_se = :se) "
                                              "	AND f.vo_name = :vo "
-                                             " 	AND f.file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED') ",
+                                             " 	AND f.file_state IN ('ACTIVE','SUBMITTED', 'NOT_USED') ",
                                              soci::use(se),
                                              soci::use(se),
                                              soci::use(vo)
@@ -7123,7 +7123,7 @@ void MySqlAPI::cancelJobsInTheQueue(const std::string& dn, std::vector<std::stri
                                              " SELECT job_id "
                                              " FROM t_job "
                                              " WHERE user_dn = :dn "
-                                             "	AND job_state IN ('ACTIVE', 'READY', 'SUBMITTED')",
+                                             "	AND job_state IN ('ACTIVE','SUBMITTED')",
                                              soci::use(dn)
                                          );
 
@@ -7391,7 +7391,7 @@ void MySqlAPI::setFilesToWaiting(const std::string& se, const std::string& vo, i
                         " UPDATE t_file "
                         " SET wait_timestamp = UTC_TIMESTAMP(), wait_timeout = :timeout "
                         " WHERE (source_se = :src OR dest_se = :dest) "
-                        "	AND file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED') "
+                        "	AND file_state IN ('ACTIVE','SUBMITTED', 'NOT_USED') "
                         "	AND (wait_timestamp IS NULL OR wait_timeout IS NULL) ",
                         soci::use(timeout),
                         soci::use(se),
@@ -7407,7 +7407,7 @@ void MySqlAPI::setFilesToWaiting(const std::string& se, const std::string& vo, i
                         " SET f.wait_timestamp = UTC_TIMESTAMP(), f.wait_timeout = :timeout "
                         " WHERE (f.source_se = :src OR f.dest_se = :dest) "
                         "	AND j.vo_name = :vo "
-                        "	AND f.file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED') "
+                        "	AND f.file_state IN ('ACTIVE','SUBMITTED', 'NOT_USED') "
                         "	AND f.job_id = j.job_id "
                         "	AND (f.wait_timestamp IS NULL OR f.wait_timeout IS NULL) ",
                         soci::use(timeout),
@@ -7445,7 +7445,7 @@ void MySqlAPI::setFilesToWaiting(const std::string& dn, int timeout)
                 " UPDATE t_file f, t_job j "
                 " SET f.wait_timestamp = UTC_TIMESTAMP(), f.wait_timeout = :timeout "
                 " WHERE j.user_dn = :dn "
-                "	AND f.file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED') "
+                "	AND f.file_state IN ('ACTIVE','SUBMITTED', 'NOT_USED') "
                 "	AND f.job_id = j.job_id "
                 "	AND (f.wait_timestamp IS NULL OR f.wait_timeout IS NULL) ",
                 soci::use(timeout),
@@ -7480,7 +7480,7 @@ void MySqlAPI::cancelWaitingFiles(std::set<std::string>& jobs)
                                              " FROM t_file "
                                              " WHERE wait_timeout <> 0 "
                                              "	AND TIMESTAMPDIFF(SECOND, wait_timestamp, UTC_TIMESTAMP()) > wait_timeout "
-                                             "	AND file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED')"
+                                             "	AND file_state IN ('ACTIVE','SUBMITTED', 'NOT_USED')"
                                              "  AND (hashed_id >= :hStart AND hashed_id <= :hEnd) ",
                                              soci::use(hashSegment.start), soci::use(hashSegment.end)
                                          );
@@ -7496,7 +7496,7 @@ void MySqlAPI::cancelWaitingFiles(std::set<std::string>& jobs)
                     sql <<
                         " UPDATE t_file "
                         " SET file_state = 'CANCELED', finish_time = UTC_TIMESTAMP() "
-                        " WHERE file_id = :fileId AND file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED')",
+                        " WHERE file_id = :fileId AND file_state IN ('ACTIVE','SUBMITTED', 'NOT_USED')",
                         soci::use(it->get<int>("file_id"))
                         ;
                 }
@@ -7695,12 +7695,12 @@ void MySqlAPI::checkSanityState()
                                              "    reason = :failed "
                                              "    WHERE job_id = :jobId", soci::use(failed), soci::use(job_id));
 
-                    soci::statement stmt6 = (sql.prepare << "SELECT COUNT(*) FROM t_file where job_id=:jobId AND file_state in ('ACTIVE','READY','SUBMITTED','STAGING') ", soci::use(job_id), soci::into(numberOfFilesRevert));
+                    soci::statement stmt6 = (sql.prepare << "SELECT COUNT(*) FROM t_file where job_id=:jobId AND file_state in ('ACTIVE','SUBMITTED','STAGING') ", soci::use(job_id), soci::into(numberOfFilesRevert));
 
                     soci::statement stmt7 = (sql.prepare << "UPDATE t_file SET "
                                              "    file_state = 'FAILED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
                                              "    reason = 'Force failure due to file state inconsistency' "
-                                             "    WHERE file_state in ('ACTIVE','READY','SUBMITTED','STAGING') and job_id = :jobId", soci::use(job_id));
+                                             "    WHERE file_state in ('ACTIVE','SUBMITTED','STAGING') and job_id = :jobId", soci::use(job_id));
 
                     soci::statement stmt8 = (sql.prepare << " select count(*)  "
                                              " from t_file "
@@ -7820,7 +7820,7 @@ void MySqlAPI::checkSanityState()
                                                     sql << "UPDATE t_file SET "
                                                         "    file_state = 'NOT_USED', job_finished = NULL, finish_time = NULL, "
                                                         "    reason = '' "
-                                                        "    WHERE file_state in ('ACTIVE','READY','SUBMITTED') and job_id = :jobId", soci::use(job_id);
+                                                        "    WHERE file_state in ('ACTIVE','SUBMITTED') and job_id = :jobId", soci::use(job_id);
 
                                                     if(job_state != "FINISHED")
                                                         {
@@ -7833,7 +7833,7 @@ void MySqlAPI::checkSanityState()
                                     if(job_state == "ACTIVE" || job_state == "READY")
                                         {
                                             long long countSubmittedActiveReady = 0;
-                                            sql << " SELECT count(*) from t_file where file_state in ('ACTIVE','READY','SUBMITTED') and job_id = :job_id",
+                                            sql << " SELECT count(*) from t_file where file_state in ('ACTIVE','SUBMITTED') and job_id = :job_id",
                                                 soci::use(job_id), soci::into(countSubmittedActiveReady);
 
                                             if(countSubmittedActiveReady == 0)
@@ -7911,7 +7911,7 @@ void MySqlAPI::checkSanityState()
                             //now check and collect if there are any active/ready in these hosts
                             soci::rowset<soci::row> rsCheckHostsActive = (
                                         sql.prepare <<
-                                        " SELECT file_id, job_id from t_file where file_state in ('READY','ACTIVE') and transferHost = :transferHost ", soci::use(deadHost)
+                                        " SELECT file_id, job_id from t_file where file_state  = 'ACTIVE' and transferHost = :transferHost ", soci::use(deadHost)
                                     );
                             for (soci::rowset<soci::row>::const_iterator iCheckHostsActive = rsCheckHostsActive.begin(); iCheckHostsActive != rsCheckHostsActive.end(); ++iCheckHostsActive)
                                 {
@@ -7972,7 +7972,7 @@ void MySqlAPI::getFilesForNewSeCfg(std::string source, std::string destination, 
                                        " where f.source_se like :source "
                                        "	and f.dest_se like :destination "
                                        "	and f.vo_name = :vo "
-                                       "	and f.file_state in ('READY', 'ACTIVE') ",
+                                       "	and f.file_state = 'ACTIVE' ",
                                        soci::use(source == "*" ? "%" : source),
                                        soci::use(destination == "*" ? "%" : destination),
                                        soci::use(vo)
@@ -8003,7 +8003,7 @@ void MySqlAPI::getFilesForNewGrCfg(std::string source, std::string destination, 
         " from t_file f "
         " where "
         "	f.vo_name = :vo "
-        "	and f.file_state in ('READY', 'ACTIVE')  ";
+        "	and f.file_state  = 'ACTIVE'  ";
     if (source != "*")
         select +=
             "	and f.source_se in ( "
@@ -8100,7 +8100,7 @@ void MySqlAPI::delFileShareConfig(std::string group, std::string se)
                 "		select file_id "
                 "		from t_file "
                 "		where (source_se = :se or dest_se = :se) "
-                "			and file_state in ('READY', 'ACTIVE')"
+                "			and file_state  = 'ACTIVE'"
                 "	) ",
                 soci::use(group),
                 soci::use(group),
@@ -11222,7 +11222,7 @@ void MySqlAPI::updateFileTransferStatusJob(double throughputIn, std::string job_
             gmtime_r(&now, &tTime);
 
             if( (job_id.empty() || file_id == 0) && transfer_status == "FAILED")
-                sql <<  "select job_id from t_file where pid=:pid and job_finished is NULL and file_state in ('READY','ACTIVE') ",soci::use(process_id), soci::into(job_id);
+                sql <<  "select job_id from t_file where pid=:pid and job_finished is NULL and file_state  = 'ACTIVE' ",soci::use(process_id), soci::into(job_id);
 
 
             // query for the file state in DB
@@ -11357,7 +11357,7 @@ void MySqlAPI::updateFileTransferStatusJob(double throughputIn, std::string job_
                                          soci::use(job_id),
                                          soci::into(currentState),
                                          soci::into(reuseFlag, isNull));
-            stmt11.execute(true);
+            stmt11.execute(true);	   	   
 
             if(currentState == transfer_status)
                 return;
@@ -11410,7 +11410,7 @@ void MySqlAPI::updateFileTransferStatusJob(double throughputIn, std::string job_
                 }
 
             totalNumOfFilesInJob = (numberOfFilesReady + numberOfFilesSubmitted + numberOfFilesFinished + numberOfFilesFailed + numberOfFilesStarted + numberOfFilesCanceled);
-            totalInTerminal = (numberOfFilesFinished + numberOfFilesFailed + numberOfFilesCanceled);
+            totalInTerminal = (numberOfFilesFinished + numberOfFilesFailed + numberOfFilesCanceled);	    
 
             if(totalNumOfFilesInJob == numberOfFilesFinished) //all finished / job finished
                 {
@@ -11438,6 +11438,12 @@ void MySqlAPI::updateFileTransferStatusJob(double throughputIn, std::string job_
                                 " job_state = 'ACTIVE' "
                                 " WHERE job_id = :jobId ", soci::use(job_id);
                         }
+		    else if(currentState == "ACTIVE" && reuseFlag == "Y")
+		        {
+                            sql << " UPDATE t_job SET "
+                                " job_state = 'ACTIVE' "
+                                " WHERE job_id = :jobId ", soci::use(job_id);			
+			}	
                 }
             else if(totalNumOfFilesInJob == totalInTerminal && numberOfFilesCanceled == 0 && numberOfFilesFailed > 0) //FINISHEDDIRTY CASE
                 {

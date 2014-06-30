@@ -458,7 +458,7 @@ std::map<std::string, long long> OracleAPI::getActivitiesInQueue(soci::session& 
                                              "	f.wait_timestamp IS NULL AND "
                                              "	(f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
                                              "	(f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
-                                             "  j.job_state in ('ACTIVE','READY','SUBMITTED') AND "
+                                             "  j.job_state in ('ACTIVE','SUBMITTED') AND "
                                              "  (j.reuse_job = 'N' OR j.reuse_job IS NULL) "
                                              " GROUP BY activity ",
                                              soci::use(src),
@@ -674,7 +674,7 @@ void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, s
                             int maxActive = 0;
                             soci::indicator isNull = soci::i_ok;
 
-                            sql << " select count(*) from t_file where source_se=:source_se and dest_se=:dest_se and file_state in ('READY','ACTIVE') ",
+                            sql << " select count(*) from t_file where source_se=:source_se and dest_se=:dest_se and file_state = 'ACTIVE' ",
                                 soci::use(boost::get<0>(triplet)),
                                 soci::use(boost::get<1>(triplet)),
                                 soci::into(limit);
@@ -722,7 +722,7 @@ void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, s
                                                                  "    f.wait_timestamp IS NULL AND "
                                                                  "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
                                                                  "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
-                                                                 "    j.job_state in ('ACTIVE','READY','SUBMITTED') AND "
+                                                                 "    j.job_state in ('ACTIVE','SUBMITTED') AND "
                                                                  "    (j.reuse_job = 'N' OR j.reuse_job IS NULL) AND j.vo_name=:vo_name "
                                                                  "     ORDER BY j.priority DESC, j.submit_time) "
                                                                  " WHERE rn <= :filesNum ",
@@ -770,7 +770,7 @@ void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, s
                                         "    f.wait_timestamp IS NULL AND "
                                         "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
                                         "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
-                                        "    j.job_state in ('ACTIVE','READY','SUBMITTED') AND "
+                                        "    j.job_state in ('ACTIVE','SUBMITTED') AND "
                                         "    (j.reuse_job = 'N' OR j.reuse_job IS NULL) AND j.vo_name=:vo_name "
                                         "    ORDER BY j.priority DESC, j.submit_time)"
                                         " WHERE rn <= :filesNum"
@@ -3237,7 +3237,7 @@ bool OracleAPI::updateOptimizer()
             //sum of retried transfers per link
             soci::statement stmt9 = (
                                         sql.prepare << "select * from (SELECT sum(retry) from t_file WHERE source_se = :source AND dest_se = :dest_se and "
-                                        "file_state in ('READY','ACTIVE','SUBMITTED') order by start_time DESC) WHERE ROWNUM <= 50 ",
+                                        "file_state in ('ACTIVE','SUBMITTED') order by start_time DESC) WHERE ROWNUM <= 50 ",
                                         soci::use(source_hostname),soci::use(destin_hostname), soci::into(retry, isNullRetry));
 
             soci::statement stmt10 = (
@@ -3283,7 +3283,7 @@ bool OracleAPI::updateOptimizer()
 
             soci::statement stmt18 = (
                                          sql.prepare << " select count(distinct source_se) from t_file where "
-                                         " file_state in ('ACTIVE','READY','SUBMITTED') and "
+                                         " file_state in ('ACTIVE','SUBMITTED') and "
                                          " dest_se=:dest and "
                                          " job_finished is null",
                                          soci::use(destin_hostname), soci::into(singleDest));
@@ -3746,7 +3746,7 @@ int OracleAPI::getSeOut(const std::string & source, const std::set<std::string> 
             std::string source_hostname = source;
 
             sql << "SELECT COUNT(*) FROM t_file "
-                "WHERE t_file.source_se = :source AND t_file.file_state in ('READY','ACTIVE')  ",
+                "WHERE t_file.source_se = :source AND t_file.file_state  = 'ACTIVE'  ",
                 soci::use(source_hostname), soci::into(nActiveSource);
 
             ret += nActiveSource;
@@ -3786,7 +3786,7 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
             std::string destin_hostname = destination;
 
             sql << "SELECT COUNT(*) FROM t_file "
-                "WHERE t_file.dest_se = :dst AND t_file.file_state in ('READY','ACTIVE') ",
+                "WHERE t_file.dest_se = :dst AND t_file.file_state  = 'ACTIVE' ",
                 soci::use(destin_hostname), soci::into(nActiveDest);
 
             ret += nActiveDest;
@@ -3820,7 +3820,7 @@ int OracleAPI::getCredits(const std::string & source_hostname, const std::string
 
     try
         {
-            sql << " select count(*) from t_file where source_se=:source_se and dest_se=:dest_se and file_state in ('READY','ACTIVE') ",
+            sql << " select count(*) from t_file where source_se=:source_se and dest_se=:dest_se and file_state  = 'ACTIVE' ",
                 soci::use(source_hostname),
                 soci::use(destin_hostname),
                 soci::into(limit);
@@ -4435,7 +4435,7 @@ bool OracleAPI::retryFromDead(std::vector<struct message_updater>& messages, boo
                     soci::rowset<long long> rs = (
                                                      sql.prepare <<
                                                      " SELECT file_id FROM t_file "
-                                                     " WHERE file_id = :fileId AND job_id = :jobId AND file_state in ('READY','ACTIVE') AND"
+                                                     " WHERE file_id = :fileId AND job_id = :jobId AND file_state  = 'ACTIVE' AND"
                                                      " (hashed_id >= :hStart AND hashed_id <= :hEnd) ",
                                                      soci::use(iter->file_id),
                                                      soci::use(std::string(iter->job_id)),
@@ -4568,7 +4568,7 @@ void OracleAPI::unblacklistSe(std::string se)
             sql <<
                 " UPDATE t_file f SET f.wait_timestamp = NULL, f.wait_timeout = NULL "
                 " WHERE (f.source_se = :src OR f.dest_se = :dest) "
-                "   AND f.file_state IN ('ACTIVE', 'READY', 'SUBMITTED') "
+                "   AND f.file_state IN ('ACTIVE','SUBMITTED') "
                 "   AND NOT EXISTS ( "
                 "       SELECT NULL "
                 "       FROM t_bad_dns, t_job "
@@ -4612,7 +4612,7 @@ void OracleAPI::unblacklistDn(std::string dn)
                 " UPDATE (SELECT t_file.wait_timestamp AS wait_timestamp, t_file.wait_timeout AS wait_timeout "
                 "         FROM t_file INNER JOIN t_job ON t_file.job_id = t_job.job_id "
                 "         WHERE t_job.user_dn = :dn "
-                "         AND t_file.file_state in ('ACTIVE', 'READY', 'SUBMITTED') "
+                "         AND t_file.file_state in ('ACTIVE','SUBMITTED') "
                 "         AND NOT EXISTS (SELECT NULL "
                 "                         FROM t_bad_ses "
                 "                         WHERE (se = t_file.source_se OR se = t_file.dest_se) AND "
@@ -5576,7 +5576,7 @@ int OracleAPI::countActiveTransfers(std::string source, std::string destination,
     try
         {
             sql << "SELECT COUNT(*) FROM t_file, t_file_share_config "
-                "WHERE t_file.file_state in ('ACTIVE','READY')  AND "
+                "WHERE t_file.file_state  = 'ACTIVE'  AND "
                 "      t_file_share_config.file_id = t_file.file_id AND "
                 "      t_file_share_config.source = :source AND "
                 "      t_file_share_config.destination = :dest AND "
@@ -5605,7 +5605,7 @@ int OracleAPI::countActiveOutboundTransfersUsingDefaultCfg(std::string se, std::
     try
         {
             sql << "SELECT COUNT(*) FROM t_file, t_file_share_config "
-                "WHERE t_file.file_state in ('ACTIVE','READY')  AND "
+                "WHERE t_file.file_state  = 'ACTIVE'  AND "
                 "      t_file.source_se = :source AND "
                 "      t_file.file_id = t_file_share_config.file_id AND "
                 "      t_file_share_config.source = '(*)' AND "
@@ -5634,7 +5634,7 @@ int OracleAPI::countActiveInboundTransfersUsingDefaultCfg(std::string se, std::s
     try
         {
             sql << "SELECT COUNT(*) FROM t_file, t_file_share_config "
-                "WHERE t_file.file_state in ('ACTIVE','READY') AND "
+                "WHERE t_file.file_state  = 'ACTIVE' AND "
                 "      t_file.dest_se = :dest AND "
                 "      t_file.file_id = t_file_share_config.file_id AND "
                 "      t_file_share_config.source = '*' AND "
@@ -6004,7 +6004,7 @@ void OracleAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
                 {
                     soci::rowset<std::string> rs = (sql.prepare << "SELECT job_id FROM t_job WHERE "
                                                     "    submit_time < (sys_extract_utc(systimestamp) - numtodsinterval(:interval, 'hour')) AND "
-                                                    "    job_state in ('SUBMITTED', 'READY') and job_finished is NULL ",
+                                                    "    job_state  = 'SUBMITTED' and job_finished is NULL ",
                                                     soci::use(maxTime));
 
                     sql.begin();
@@ -6014,12 +6014,12 @@ void OracleAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
                             sql << "UPDATE t_file SET job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), "
                                 "    file_state = 'CANCELED', reason = :reason "
                                 "WHERE job_id = :jobId AND "
-                                "      file_state IN ('SUBMITTED','READY')",
+                                "      file_state  = 'SUBMITTED'",
                                 soci::use(message), soci::use(*i);
 
                             sql << "UPDATE t_job SET job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), "
                                 "    job_state = 'CANCELED', reason = :reason "
-                                "WHERE job_id = :jobId AND job_state IN ('SUBMITTED','READY')",
+                                "WHERE job_id = :jobId AND job_state  = 'SUBMITTED'",
                                 soci::use(message), soci::use(*i);
 
                             jobs.push_back(*i);
@@ -6749,7 +6749,7 @@ void OracleAPI::cancelFilesInTheQueue(const std::string& se, const std::string& 
                                              " SELECT file_id, job_id, file_index "
                                              " FROM t_file "
                                              " WHERE (source_se = :se OR dest_se = :se) "
-                                             "  AND file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED')",
+                                             "  AND file_state IN ('ACTIVE','SUBMITTED', 'NOT_USED')",
                                              soci::use(se),
                                              soci::use(se)
                                          )
@@ -6760,7 +6760,7 @@ void OracleAPI::cancelFilesInTheQueue(const std::string& se, const std::string& 
                                              " FROM t_file f "
                                              " WHERE  (f.source_se = :se OR f.dest_se = :se) "
                                              "  AND f.vo_name = :vo "
-                                             "  AND f.file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED') ",
+                                             "  AND f.file_state IN ('ACTIVE','SUBMITTED', 'NOT_USED') ",
                                              soci::use(se),
                                              soci::use(se),
                                              soci::use(vo)
@@ -6841,7 +6841,7 @@ void OracleAPI::cancelJobsInTheQueue(const std::string& dn, std::vector<std::str
                                              " SELECT job_id "
                                              " FROM t_job "
                                              " WHERE user_dn = :dn "
-                                             "  AND job_state IN ('ACTIVE', 'READY', 'SUBMITTED')",
+                                             "  AND job_state IN ('ACTIVE','SUBMITTED')",
                                              soci::use(dn)
                                          );
 
@@ -7111,7 +7111,7 @@ void OracleAPI::setFilesToWaiting(const std::string& se, const std::string& vo, 
                         " UPDATE t_file "
                         " SET wait_timestamp = sys_extract_utc(systimestamp), wait_timeout = :timeout "
                         " WHERE (source_se = :src OR dest_se = :dest) "
-                        "   AND file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED') "
+                        "   AND file_state IN ('ACTIVE','SUBMITTED', 'NOT_USED') "
                         "   AND (wait_timestamp IS NULL OR wait_timeout IS NULL) ",
                         soci::use(timeout),
                         soci::use(se),
@@ -7125,7 +7125,7 @@ void OracleAPI::setFilesToWaiting(const std::string& se, const std::string& vo, 
                         " SET wait_timestamp = sys_extract_utc(systimestamp), wait_timeout = :timeout "
                         " WHERE (source_se = :src OR dest_se = :dest) "
                         "   AND vo_name = : vo "
-                        "   AND file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED') "
+                        "   AND file_state IN ('ACTIVE','SUBMITTED', 'NOT_USED') "
                         "   AND (wait_timestamp IS NULL OR wait_timeout IS NULL) ",
                         soci::use(timeout),
                         soci::use(se),
@@ -7162,7 +7162,7 @@ void OracleAPI::setFilesToWaiting(const std::string& dn, int timeout)
                 " UPDATE (SELECT t_file.wait_timestamp AS wait_timestamp, t_file.wait_timeout AS wait_timeout "
                 "         FROM t_file INNER JOIN t_job ON t_file.job_id = t_job.job_id "
                 "         WHERE t_job.user_dn = :dn AND "
-                "               t_file.file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED') "
+                "               t_file.file_state IN ('ACTIVE','SUBMITTED', 'NOT_USED') "
                 "               AND (t_file.wait_timestamp IS NULL or t_file.wait_timeout IS NULL) "
                 " ) SET wait_timestamp = sys_extract_utc(systimestamp), wait_timeout = :timeout",
                 soci::use(dn), soci::use(timeout)
@@ -7196,7 +7196,7 @@ void OracleAPI::cancelWaitingFiles(std::set<std::string>& jobs)
                                              " FROM t_file "
                                              " WHERE wait_timeout <> 0 "
                                              "  AND (sys_extract_utc(systimestamp) - wait_timestamp) > numtodsinterval(wait_timeout, 'second') "
-                                             "  AND file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED')"
+                                             "  AND file_state IN ('ACTIVE','SUBMITTED', 'NOT_USED')"
                                              "  AND (hashed_id >= :hStart AND hashed_id <= :hEnd) ",
                                              soci::use(hashSegment.start), soci::use(hashSegment.end)
                                          );
@@ -7212,7 +7212,7 @@ void OracleAPI::cancelWaitingFiles(std::set<std::string>& jobs)
                     sql <<
                         " UPDATE t_file "
                         " SET file_state = 'CANCELED' , finish_time = sys_extract_utc(systimestamp) "
-                        " WHERE file_id = :fileId AND file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED')",
+                        " WHERE file_id = :fileId AND file_state IN ('ACTIVE','SUBMITTED', 'NOT_USED')",
                         soci::use(static_cast<int>(it->get<long long>("FILE_ID")))
                         ;
                 }
@@ -7483,7 +7483,7 @@ void OracleAPI::checkSanityState()
                                                     sql << "UPDATE t_file SET "
                                                         "    file_state = 'NOT_USED', job_finished = NULL, finish_time = NULL, "
                                                         "    reason = '' "
-                                                        "    WHERE file_state in ('ACTIVE','READY','SUBMITTED') and job_id = :jobId", soci::use(job_id);
+                                                        "    WHERE file_state in ('ACTIVE','SUBMITTED') and job_id = :jobId", soci::use(job_id);
                                                 }
                                         }
                                 }
@@ -7527,7 +7527,7 @@ void OracleAPI::checkSanityState()
                                                     sql << "UPDATE t_file SET "
                                                         "    file_state = 'NOT_USED', job_finished = NULL, finish_time = NULL, "
                                                         "    reason = '' "
-                                                        "    WHERE file_state in ('ACTIVE','READY','SUBMITTED') and job_id = :jobId", soci::use(job_id);
+                                                        "    WHERE file_state in ('ACTIVE','SUBMITTED') and job_id = :jobId", soci::use(job_id);
                                                     continue;
                                                 }
                                         }
@@ -7535,13 +7535,13 @@ void OracleAPI::checkSanityState()
                                 }
 
 
-                            sql << "SELECT COUNT(*) FROM t_file where job_id=:jobId AND file_state in ('ACTIVE','READY','SUBMITTED','STAGING') ", soci::use(*i2), soci::into(numberOfFilesRevert);
+                            sql << "SELECT COUNT(*) FROM t_file where job_id=:jobId AND file_state in ('ACTIVE','SUBMITTED','STAGING') ", soci::use(*i2), soci::into(numberOfFilesRevert);
                             if(numberOfFilesRevert > 0)
                                 {
                                     sql << "UPDATE t_file SET "
                                         "    file_state = 'FAILED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), "
                                         "    reason = 'Force failure due to file state inconsistency' "
-                                        "    WHERE file_state in ('ACTIVE','READY','SUBMITTED','STAGING') and job_id = :jobId", soci::use(*i2);
+                                        "    WHERE file_state in ('ACTIVE','SUBMITTED','STAGING') and job_id = :jobId", soci::use(*i2);
 
                                 }
                             //reset
@@ -7567,7 +7567,7 @@ void OracleAPI::checkSanityState()
                             //now check and collect if there are any active/ready in these hosts
                             soci::rowset<soci::row> rsCheckHostsActive = (
                                         sql.prepare <<
-                                        " SELECT file_id, job_id from t_file where file_state in ('READY','ACTIVE') and transferHost = :transferHost ", soci::use(deadHost)
+                                        " SELECT file_id, job_id from t_file where file_state  = 'ACTIVE' and transferHost = :transferHost ", soci::use(deadHost)
                                     );
                             for (soci::rowset<soci::row>::const_iterator iCheckHostsActive = rsCheckHostsActive.begin(); iCheckHostsActive != rsCheckHostsActive.end(); ++iCheckHostsActive)
                                 {
@@ -7681,7 +7681,7 @@ void OracleAPI::getFilesForNewSeCfg(std::string source, std::string destination,
                                              " where f.source_se like :source "
                                              "    and f.dest_se like :destination "
                                              "    and f.vo_name = :vo "
-                                             "    and f.file_state in ('READY', 'ACTIVE') ",
+                                             "    and f.file_state  = 'ACTIVE' ",
                                              soci::use(source == "*" ? "%" : source),
                                              soci::use(destination == "*" ? "%" : destination),
                                              soci::use(vo)
@@ -7712,7 +7712,7 @@ void OracleAPI::getFilesForNewGrCfg(std::string source, std::string destination,
         " from t_file f "
         " where "
         "   f.vo_name = :vo "
-        "   and f.file_state in ('READY', 'ACTIVE')  ";
+        "   and f.file_state  = 'ACTIVE'  ";
     if (source != "*")
         select +=
             "   and f.source_se in ( "
@@ -7809,7 +7809,7 @@ void OracleAPI::delFileShareConfig(std::string group, std::string se)
                 "       select file_id "
                 "       from t_file "
                 "       where (source_se = :se or dest_se = :se) "
-                "           and file_state in ('READY', 'ACTIVE')"
+                "           and file_state  = 'ACTIVE'"
                 "   ) ",
                 soci::use(group),
                 soci::use(group),
@@ -11032,7 +11032,7 @@ void OracleAPI::updateFileTransferStatusJob(double throughputIn, std::string job
             gmtime_r(&now, &tTime);
 
             if( (job_id.empty() || file_id == 0) && transfer_status == "FAILED")
-                sql <<  "select job_id from t_file where pid=:pid and job_finished is NULL and file_state in ('READY','ACTIVE') ",soci::use(process_id), soci::into(job_id);
+                sql <<  "select job_id from t_file where pid=:pid and job_finished is NULL and file_state  = 'ACTIVE' ",soci::use(process_id), soci::into(job_id);
 
 
             // query for the file state in DB
@@ -11248,6 +11248,12 @@ void OracleAPI::updateFileTransferStatusJob(double throughputIn, std::string job
                                 " job_state = 'ACTIVE' "
                                 " WHERE job_id = :jobId ", soci::use(job_id);
                         }
+		    else if(currentState == "ACTIVE" && reuseFlag == "Y")
+		        {
+                            sql << " UPDATE t_job SET "
+                                " job_state = 'ACTIVE' "
+                                " WHERE job_id = :jobId ", soci::use(job_id);			
+			}			
                 }
             else if(totalNumOfFilesInJob == totalInTerminal && numberOfFilesCanceled == 0 && numberOfFilesFailed > 0) //FINISHEDDIRTY CASE
                 {
