@@ -9745,7 +9745,7 @@ void OracleAPI::getTransferJobStatusDetailed(std::string job_id, std::vector<boo
 
 
 
-void OracleAPI::updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string> >& files)
+void OracleAPI::updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files)
 {
     soci::session sql(*connectionPool);
     try
@@ -9762,7 +9762,7 @@ void OracleAPI::updateDeletionsState(std::vector< boost::tuple<int, std::string,
         }
 }
 
-void OracleAPI::updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string> >& files)
+void OracleAPI::updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files)
 {
     soci::session sql(*connectionPool);
     try
@@ -9787,12 +9787,13 @@ void OracleAPI::updateStagingState(std::vector< boost::tuple<int, std::string, s
 //check job state for staging and deletions
 
 //deletions						 //file_id / state / reason / job_id
-void OracleAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< boost::tuple<int, std::string, std::string, std::string> >& files)
+void OracleAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files)
 {
     int file_id = 0;
     std::string state;
     std::string reason;
     std::string job_id;
+    bool retry = false;
     std::vector<struct message_state> filesMsg;
 
     try
@@ -9800,14 +9801,15 @@ void OracleAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< bo
 
             sql.begin();
 
-            std::vector< boost::tuple<int, std::string, std::string, std::string> >::iterator itFind;
+            std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >::iterator itFind;
             for (itFind = files.begin(); itFind < files.end(); ++itFind)
                 {
-                    boost::tuple<int, std::string, std::string, std::string>& tupleRecord = *itFind;
+                    boost::tuple<int, std::string, std::string, std::string, bool >& tupleRecord = *itFind;
                     file_id = boost::get<0>(tupleRecord);
                     state = boost::get<1>(tupleRecord);
                     reason = boost::get<2>(tupleRecord);
                     job_id  = boost::get<3>(tupleRecord);
+                    retry = boost::get<4>(tupleRecord);
 
                     if (state == "STARTED")
                         {
@@ -9823,19 +9825,57 @@ void OracleAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< bo
                         }
                     else
                         {
-                            sql <<
-                                " UPDATE t_dm "
-                                " SET  job_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), reason = :reason, file_state = :fileState "
-                                " WHERE "
-                                "	file_id = :fileId "
-                                "	AND file_state in ('STAGING','STARTED')",
-                                soci::use(reason),
-                                soci::use(state),
-                                soci::use(file_id)
-                                ;                            
+                            if(retry && state == "FAILED")
+                                {
+                                    bool shouldBeRetried = resetForRetryDelete(sql, file_id, job_id, retry);
+                                    if(shouldBeRetried)
+                                        continue;
+                                }
+                            else
+                                {
+
+                                    sql <<
+                                        " UPDATE t_dm "
+                                        " SET  job_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), reason = :reason, file_state = :fileState "
+                                        " WHERE "
+                                        "	file_id = :fileId "
+                                        "	AND file_state in ('STAGING','STARTED')",
+                                        soci::use(reason),
+                                        soci::use(state),
+                                        soci::use(file_id)
+                                        ;
+                                }
+
+                            //send state message
+                            filesMsg = getStateOfTransferInternal(sql, job_id, file_id);
+                            if(!filesMsg.empty())
+                                {
+                                    std::vector<struct message_state>::iterator it;
+                                    for (it = filesMsg.begin(); it != filesMsg.end(); ++it)
+                                        {
+                                            struct message_state tmp = (*it);
+                                            constructJSONMsg(&tmp);
+                                        }
+                                }
+                            filesMsg.clear();
+
                         }
-			
-		    //now update job state
+                }
+
+            sql.commit();
+
+            sql.begin();
+
+            for (itFind = files.begin(); itFind < files.end(); ++itFind)
+                {
+
+                    boost::tuple<int, std::string, std::string, std::string, bool >& tupleRecord = *itFind;
+                    file_id = boost::get<0>(tupleRecord);
+                    state = boost::get<1>(tupleRecord);
+                    reason = boost::get<2>(tupleRecord);
+                    job_id  = boost::get<3>(tupleRecord);
+                    retry = boost::get<4>(tupleRecord);
+                    //now update job state
                     long long numberOfFilesCanceled = 0;
                     long long numberOfFilesFinished = 0;
                     long long numberOfFilesFailed = 0;
@@ -9853,8 +9893,8 @@ void OracleAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< bo
                     soci::rowset<soci::row>::const_iterator iRep;
                     for (iRep = rsReplica.begin(); iRep != rsReplica.end(); ++iRep)
                         {
-                            std::string file_state = iRep->get<std::string>("file_state");
-                            long long countStates = iRep->get<long long>("COUNT(file_state)",0);
+                            std::string file_state = iRep->get<std::string>("FILE_STATE");
+                            int countStates = iRep->get<int>("COUNT(FILE_STATE)");
 
                             if(file_state == "FINISHED")
                                 {
@@ -9930,21 +9970,6 @@ void OracleAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< bo
                         {
                             //it should never go here, if it does it means the state machine is bad!
                         }
-
-			
-
-                    //send state message
-                    filesMsg = getStateOfTransferInternal(sql, job_id, file_id);
-                    if(!filesMsg.empty())
-                        {
-                            std::vector<struct message_state>::iterator it;
-                            for (it = filesMsg.begin(); it != filesMsg.end(); ++it)
-                                {
-                                    struct message_state tmp = (*it);
-                                    constructJSONMsg(&tmp);
-                                }
-                        }
-                    filesMsg.clear();
                 }
             sql.commit();
         }
@@ -10060,7 +10085,7 @@ void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::
                                                               soci::use(limit)
                                                           );
 
-                            std::vector< boost::tuple<int, std::string, std::string, std::string> > filesState;
+                            std::vector< boost::tuple<int, std::string, std::string, std::string, bool> > filesState;
                             std::string initState = "STARTED";
                             std::string reason;
 
@@ -10076,7 +10101,7 @@ void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::
                                     boost::tuple<std::string, std::string, std::string, int, std::string, std::string> record(vo_name, source_url, job_id, file_id, user_dn, cred_id);
                                     files.push_back(record);
 
-                                    boost::tuple<int, std::string, std::string, std::string> recordState(file_id, initState, reason, job_id);
+                                    boost::tuple<int, std::string, std::string, std::string, bool> recordState(file_id, initState, reason, job_id, false);
                                     filesState.push_back(recordState);
                                 }
                             //file_id / state / reason / job_id
@@ -10388,7 +10413,7 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
                                                               soci::use(limit)
                                                           );
 
-                            std::vector< boost::tuple<int, std::string, std::string, std::string> > filesState;
+                            std::vector< boost::tuple<int, std::string, std::string, std::string, bool> > filesState;
                             std::string initState = "STARTED";
                             std::string reason;
 
@@ -10407,7 +10432,7 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
                                     boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string > record(vo_name, source_url,job_id, file_id, copy_pin_lifetime, bring_online, user_dn, cred_id , source_space_token);
                                     files.push_back(record);
 
-                                    boost::tuple<int, std::string, std::string, std::string> recordState(file_id, initState, reason, job_id);
+                                    boost::tuple<int, std::string, std::string, std::string, bool> recordState(file_id, initState, reason, job_id, false);
                                     filesState.push_back(recordState);
                                 }
 
@@ -10428,12 +10453,13 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
 }
 
 //file_id / state / reason / job_id
-void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost::tuple<int, std::string, std::string, std::string> >& files)
+void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files)
 {
     int file_id = 0;
     std::string state;
     std::string reason;
     std::string job_id;
+    bool retry = false;
     std::vector<struct message_state> filesMsg;
 
     try
@@ -10441,14 +10467,15 @@ void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boos
 
             sql.begin();
 
-            std::vector< boost::tuple<int, std::string, std::string, std::string> >::iterator itFind;
+            std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >::iterator itFind;
             for (itFind = files.begin(); itFind < files.end(); ++itFind)
                 {
-                    boost::tuple<int, std::string, std::string, std::string>& tupleRecord = *itFind;
+                    boost::tuple<int, std::string, std::string, std::string, bool>& tupleRecord = *itFind;
                     file_id = boost::get<0>(tupleRecord);
                     state = boost::get<1>(tupleRecord);
                     reason = boost::get<2>(tupleRecord);
                     job_id = boost::get<3>(tupleRecord);
+                    retry = boost::get<4>(tupleRecord);
 
                     if (state == "STARTED")
                         {
@@ -10464,53 +10491,79 @@ void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boos
                         }
                     else
                         {
-                            std::string dbState;
-                            std::string dbReason;
-                            int stage_in_only = 0;
-
-                            sql << "select count(*) from t_file where file_id=:file_id and source_surl=dest_surl",
-                                soci::use(file_id),
-                                soci::into(stage_in_only);
-
-                            if(stage_in_only == 0)  //stage-in and transfer
+                            if(retry && state == "FAILED")
                                 {
-                                    dbState = state == "FINISHED" ? "SUBMITTED" : state;
-                                    dbReason = state == "FINISHED" ? std::string() : reason;
+                                    bool shouldBeRetried = resetForRetryStaging(sql, file_id, job_id, retry);
+                                    if(shouldBeRetried)
+                                        continue;
                                 }
-                            else //stage-in only
+                            else
                                 {
-                                    dbState = state == "FINISHED" ? "FINISHED" : state;
-                                    dbReason = state == "FINISHED" ? std::string() : reason;
+
+
+                                    std::string dbState;
+                                    std::string dbReason;
+                                    int stage_in_only = 0;
+
+                                    sql << "select count(*) from t_file where file_id=:file_id and source_surl=dest_surl",
+                                        soci::use(file_id),
+                                        soci::into(stage_in_only);
+
+                                    if(stage_in_only == 0)  //stage-in and transfer
+                                        {
+                                            dbState = state == "FINISHED" ? "SUBMITTED" : state;
+                                            dbReason = state == "FINISHED" ? std::string() : reason;
+                                        }
+                                    else //stage-in only
+                                        {
+                                            dbState = state == "FINISHED" ? "FINISHED" : state;
+                                            dbReason = state == "FINISHED" ? std::string() : reason;
+                                        }
+
+                                    sql <<
+                                        " UPDATE t_file "
+                                        " SET staging_finished = sys_extract_utc(systimestamp), job_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), reason = :reason, file_state = :fileState "
+                                        " WHERE "
+                                        "	file_id = :fileId "
+                                        "	AND file_state in ('STAGING','STARTED')",
+                                        soci::use(dbReason),
+                                        soci::use(dbState),
+                                        soci::use(file_id)
+                                        ;
+
+                                    //send state message
+                                    filesMsg = getStateOfTransferInternal(sql, job_id, file_id);
+                                    if(!filesMsg.empty())
+                                        {
+                                            std::vector<struct message_state>::iterator it;
+                                            for (it = filesMsg.begin(); it != filesMsg.end(); ++it)
+                                                {
+                                                    struct message_state tmp = (*it);
+                                                    constructJSONMsg(&tmp);
+                                                }
+                                        }
+                                    filesMsg.clear();
+
                                 }
-
-                            sql <<
-                                " UPDATE t_file "
-                                " SET staging_finished = sys_extract_utc(systimestamp), job_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), reason = :reason, file_state = :fileState "
-                                " WHERE "
-                                "	file_id = :fileId "
-                                "	AND file_state in ('STAGING','STARTED')",
-                                soci::use(dbReason),
-                                soci::use(dbState),
-                                soci::use(file_id)
-                                ;
-
-                            updateJobTransferStatusInternal(sql, job_id, dbState,0);
                         }
 
-                    //send state message
-                    filesMsg = getStateOfTransferInternal(sql, job_id, file_id);
-                    if(!filesMsg.empty())
-                        {
-                            std::vector<struct message_state>::iterator it;
-                            for (it = filesMsg.begin(); it != filesMsg.end(); ++it)
-                                {
-                                    struct message_state tmp = (*it);
-                                    constructJSONMsg(&tmp);
-                                }
-                        }
-                    filesMsg.clear();
+
                 }
             sql.commit();
+
+            for (itFind = files.begin(); itFind < files.end(); ++itFind)
+                {
+                    boost::tuple<int, std::string, std::string, std::string, bool>& tupleRecord = *itFind;
+                    file_id = boost::get<0>(tupleRecord);
+                    state = boost::get<1>(tupleRecord);
+                    reason = boost::get<2>(tupleRecord);
+                    job_id = boost::get<3>(tupleRecord);
+                    retry = boost::get<4>(tupleRecord);
+
+
+                    updateJobTransferStatusInternal(sql, job_id, state,0);
+
+                }
         }
     catch (std::exception& e)
         {
@@ -10775,83 +10828,464 @@ void OracleAPI::checkJobOperation(std::vector<std::string >& jobs, std::vector< 
 }
 
 
-void OracleAPI::resetForRetryStaging(int file_id, const std::string & job_id)
+bool OracleAPI::resetForRetryStaging(soci::session& sql, int file_id, const std::string & job_id, bool retry)
+{
+
+    bool willBeRetried = false;
+
+    if(retry)
+        {
+
+            int nRetries = 0;
+            soci::indicator isNull = soci::i_ok;
+            std::string vo_name;
+            int retry_delay = 0;
+
+            try
+                {
+                    sql <<
+                        " SELECT retry, vo_name, retry_delay "
+                        " FROM t_job "
+                        " WHERE job_id = :job_id ",
+                        soci::use(job_id),
+                        soci::into(nRetries, isNull),
+                        soci::into(vo_name),
+                        soci::into(retry_delay)
+                        ;
+
+
+                    if (isNull == soci::i_null || nRetries <= 0)
+                        {
+                            sql <<
+                                " SELECT retry "
+                                " FROM t_server_config where vo_name=:vo_name ",
+                                soci::use(vo_name), soci::into(nRetries)
+                                ;
+                        }
+                    else if (isNull != soci::i_null && nRetries <= 0)
+                        {
+                            nRetries = 0;
+                        }
+
+                    int nRetriesTimes = 0;
+                    soci::indicator isNull2 = soci::i_ok;
+
+                    sql << "SELECT retry FROM t_file WHERE file_id = :file_id AND job_id = :jobId ",
+                        soci::use(file_id), soci::use(job_id), soci::into(nRetriesTimes, isNull2);
+
+
+                    if(nRetries > 0 && nRetriesTimes <= nRetries-1 )
+                        {
+                            //expressed in secs, default delay
+                            const int default_retry_delay = 120;
+
+
+                            if (retry_delay > 0)
+                                {
+                                    // update
+                                    time_t now = getUTC(retry_delay);
+                                    struct tm tTime;
+                                    gmtime_r(&now, &tTime);
+
+                                    sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'STAGING', start_time=NULL, transferHost=NULL, t_log_file=NULL,"
+                                        " t_log_file_debug=NULL, throughput = 0, current_failures = 1 "
+                                        " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
+                                        soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
+
+                                    willBeRetried = true;
+                                }
+                            else
+                                {
+                                    // update
+                                    time_t now = getUTC(default_retry_delay);
+                                    struct tm tTime;
+                                    gmtime_r(&now, &tTime);
+
+                                    sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'STAGING', start_time=NULL, transferHost=NULL, "
+                                        " t_log_file=NULL, t_log_file_debug=NULL, throughput = 0,  current_failures = 1 "
+                                        " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
+                                        soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
+
+                                    willBeRetried = true;
+                                }
+                        }
+
+
+                }
+            catch (std::exception& e)
+                {
+                    throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+                }
+            catch (...)
+                {
+                    throw Err_Custom(std::string(__func__) + ": Caught exception " );
+                }
+        }
+
+    return willBeRetried;
+}
+
+
+bool OracleAPI::resetForRetryDelete(soci::session& sql, int file_id, const std::string & job_id, bool retry)
+{
+
+    bool willBeRetried = false;
+    if(retry)
+        {
+
+            int nRetries = 0;
+            int retry_delay = 0;
+            soci::indicator isNull = soci::i_ok;
+            std::string vo_name;
+
+            try
+                {
+                    sql <<
+                        " SELECT retry, vo_name, retry_delay "
+                        " FROM t_job "
+                        " WHERE job_id = :job_id ",
+                        soci::use(job_id),
+                        soci::into(nRetries, isNull),
+                        soci::into(vo_name),
+                        soci::into(retry_delay)
+                        ;
+
+                    if (isNull == soci::i_null || nRetries <= 0)
+                        {
+                            sql <<
+                                " SELECT retry "
+                                " FROM t_server_config where vo_name=:vo_name ",
+                                soci::use(vo_name), soci::into(nRetries)
+                                ;
+                        }
+                    else if (isNull != soci::i_null && nRetries <= 0)
+                        {
+                            nRetries = 0;
+                        }
+
+                    int nRetriesTimes = 0;
+                    soci::indicator isNull2 = soci::i_ok;
+
+                    sql << "SELECT retry FROM t_dm WHERE file_id = :file_id AND job_id = :jobId ",
+                        soci::use(file_id), soci::use(job_id), soci::into(nRetriesTimes, isNull2);
+
+
+                    if(nRetries > 0 && nRetriesTimes <= nRetries-1 )
+                        {
+                            //expressed in secs, default delay
+                            const int default_retry_delay = 120;
+
+                            if (retry_delay > 0)
+                                {
+                                    // update
+                                    time_t now = getUTC(retry_delay);
+                                    struct tm tTime;
+                                    gmtime_r(&now, &tTime);
+
+                                    sql << "UPDATE t_dm SET retry_timestamp=:1, retry = :retry, file_state = 'DELETE', start_time=NULL, dmHost=NULL "
+                                        " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','DELETE','FAILED','CANCELED')",
+                                        soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
+
+                                    willBeRetried = true;
+                                }
+                            else
+                                {
+                                    // update
+                                    time_t now = getUTC(default_retry_delay);
+                                    struct tm tTime;
+                                    gmtime_r(&now, &tTime);
+
+                                    sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'DELETE', start_time=NULL, dmHost=NULL  "
+                                        " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
+                                        soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
+
+                                    willBeRetried = true;
+                                }
+                        }
+
+
+                }
+            catch (std::exception& e)
+                {
+                    throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+                }
+            catch (...)
+                {
+                    throw Err_Custom(std::string(__func__) + ": Caught exception " );
+                }
+        }
+
+    return willBeRetried;
+}
+
+
+
+void OracleAPI::updateFileTransferStatusJob(double throughputIn, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
+        int process_id, double filesize, double duration, bool retry)
 {
     soci::session sql(*connectionPool);
 
-    int nRetries = 0;
-    soci::indicator isNull = soci::i_ok;
-    std::string vo_name;
-    int retry_delay = 0;
-
     try
         {
-            sql <<
-                " SELECT retry, vo_name, retry_delay "
-                " FROM t_job "
-                " WHERE job_id = :job_id ",
+            sql.begin();
+
+            double throughput = 0.0;
+
+            std::string st;
+
+            bool staging = false;
+
+            int current_failures = retry;
+
+            time_t now = time(NULL);
+            struct tm tTime;
+            gmtime_r(&now, &tTime);
+
+            if( (job_id.empty() || file_id == 0) && transfer_status == "FAILED")
+                sql <<  "select job_id from t_file where pid=:pid and job_finished is NULL and file_state in ('READY','ACTIVE') ",soci::use(process_id), soci::into(job_id);
+
+
+            // query for the file state in DB
+            sql << "SELECT file_state FROM t_file WHERE file_id=:fileId and job_id=:jobId",
+                soci::use(file_id),
                 soci::use(job_id),
-                soci::into(nRetries, isNull),
-                soci::into(vo_name),
-                soci::into(retry_delay)
-                ;
+                soci::into(st);
 
+            staging = (st == "STAGING");
 
-            if (isNull == soci::i_null || nRetries <= 0)
+            if(st == "FAILED" || st == "FINISHED" || st == "CANCELED" )
                 {
-                    sql <<
-                        " SELECT retry "
-                        " FROM t_server_config where vo_name=:vo_name ",
-                        soci::use(vo_name), soci::into(nRetries)
-                        ;
-                }
-            else if (isNull != soci::i_null && nRetries <= 0)
-                {
-                    nRetries = 0;
-                }
-
-            int nRetriesTimes = 0;
-            soci::indicator isNull2 = soci::i_ok;
-
-            sql << "SELECT retry FROM t_file WHERE file_id = :file_id AND job_id = :jobId ",
-                soci::use(file_id), soci::use(job_id), soci::into(nRetriesTimes, isNull2);
-
-
-            if(nRetries > 0 && nRetriesTimes <= nRetries-1 )
-                {
-                    //expressed in secs, default delay
-                    const int default_retry_delay = 120;
-
-                    sql.begin();
-
-                    if (retry_delay > 0)
+                    if(transfer_status == "SUBMITTED" || transfer_status == "READY" || transfer_status == "ACTIVE")
                         {
-                            // update
-                            time_t now = getUTC(retry_delay);
-                            struct tm tTime;
-                            gmtime_r(&now, &tTime);
+                            return;
+                        }
+                }
 
-                            sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'STAGING', start_time=NULL, transferHost=NULL, t_log_file=NULL,"
-                                " t_log_file_debug=NULL, throughput = 0, current_failures = 1 "
-                                " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
-                                soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
+            soci::statement stmt(sql);
+            std::ostringstream query;
+
+            query << "UPDATE t_file SET "
+                  "    file_state = :state, reason = :reason";
+            stmt.exchange(soci::use(transfer_status, "state"));
+            stmt.exchange(soci::use(transfer_message, "reason"));
+
+            if (transfer_status == "FINISHED" || transfer_status == "FAILED" || transfer_status == "CANCELED")
+                {
+                    query << ", FINISH_TIME = :time1";
+                    query << ", JOB_FINISHED = :time1";
+                    stmt.exchange(soci::use(tTime, "time1"));
+                }
+            if (transfer_status == "ACTIVE")
+                {
+                    query << ", START_TIME = :time1";
+                    stmt.exchange(soci::use(tTime, "time1"));
+                }
+
+            if (transfer_status == "ACTIVE" || transfer_status == "READY")
+                {
+                    query << ", transferHost = :hostname";
+                    stmt.exchange(soci::use(hostname, "hostname"));
+                }
+
+            if (transfer_status == "FINISHED")
+                {
+                    query << ", transferred = :filesize";
+                    stmt.exchange(soci::use(filesize, "filesize"));
+                }
+
+            if (transfer_status == "FAILED" || transfer_status == "CANCELED")
+                {
+                    query << ", transferred = :transferred";
+                    stmt.exchange(soci::use(0, "transferred"));
+                }
+
+
+            if (transfer_status == "STAGING")
+                {
+                    if (staging)
+                        {
+                            query << ", STAGING_FINISHED = :time1";
+                            stmt.exchange(soci::use(tTime, "time1"));
                         }
                     else
                         {
-                            // update
-                            time_t now = getUTC(default_retry_delay);
-                            struct tm tTime;
-                            gmtime_r(&now, &tTime);
-
-                            sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'STAGING', start_time=NULL, transferHost=NULL, "
-                                " t_log_file=NULL, t_log_file_debug=NULL, throughput = 0,  current_failures = 1 "
-                                " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
-                                soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
+                            query << ", STAGING_START = :time1";
+                            stmt.exchange(soci::use(tTime, "time1"));
                         }
-                    sql.commit();
                 }
 
+            if (filesize > 0 && duration > 0 && transfer_status == "FINISHED")
+                {
+                    if(throughputIn != 0.0)
+                        {
+                            throughput = convertKbToMb(throughputIn);
+                        }
+                    else
+                        {
+                            throughput = convertBtoM(filesize, duration);
+                        }
+                }
+            else if (filesize > 0 && duration <= 0 && transfer_status == "FINISHED")
+                {
+                    if(throughputIn != 0.0)
+                        {
+                            throughput = convertKbToMb(throughputIn);
+                        }
+                    else
+                        {
+                            throughput = convertBtoM(filesize, 1);
+                        }
+                }
+            else
+                {
+                    throughput = 0.0;
+                }
 
+            query << "   , pid = :pid, filesize = :filesize, tx_duration = :duration, throughput = :throughput, current_failures = :current_failures "
+                  "WHERE file_id = :fileId AND file_state NOT IN ('FAILED', 'FINISHED', 'CANCELED')";
+            stmt.exchange(soci::use(process_id, "pid"));
+            stmt.exchange(soci::use(filesize, "filesize"));
+            stmt.exchange(soci::use(duration, "duration"));
+            stmt.exchange(soci::use(throughput, "throughput"));
+            stmt.exchange(soci::use(current_failures, "current_failures"));
+            stmt.exchange(soci::use(file_id, "fileId"));
+            stmt.alloc();
+            stmt.prepare(query.str());
+            stmt.define_and_bind();
+            stmt.execute(true);
+
+            sql.commit();
+
+            sql.begin();
+
+            if(transfer_status == "FAILED")
+                useFileReplica(sql, job_id, file_id);
+
+            sql.commit();
+
+            sql.begin();
+
+            //now update job state
+
+            std::string currentState("");
+            std::string reuseFlag;
+            soci::indicator isNull = soci::i_ok;
+
+            soci::statement stmt11 = (
+                                         sql.prepare << " SELECT job_state, reuse_job from t_job  "
+                                         " WHERE job_id = :job_id ",
+                                         soci::use(job_id),
+                                         soci::into(currentState),
+                                         soci::into(reuseFlag, isNull));
+            stmt11.execute(true);
+
+            if(currentState == transfer_status)
+                return;
+
+            long long numberOfFilesCanceled = 0;
+            long long numberOfFilesReady = 0;
+            long long numberOfFilesFinished = 0;
+            long long numberOfFilesFailed = 0;
+            long long numberOfFilesStarted = 0;
+            long long numberOfFilesSubmitted = 0;
+            long long totalNumOfFilesInJob= 0;
+            long long totalInTerminal = 0;
+
+            soci::rowset<soci::row> rsReplica = (
+                                                    sql.prepare <<
+                                                    " select file_state, COUNT(file_state) from t_file where job_id=:job_id group by file_state order by null ",
+                                                    soci::use(job_id)
+                                                );
+
+            soci::rowset<soci::row>::const_iterator iRep;
+            for (iRep = rsReplica.begin(); iRep != rsReplica.end(); ++iRep)
+                {
+                    std::string file_state = iRep->get<std::string>("FILE_STATE");
+                    int countStates = iRep->get<int>("COUNT(FILE_STATE)");
+
+                    if(file_state == "FINISHED")
+                        {
+                            numberOfFilesFinished = countStates;
+                        }
+                    else if(file_state == "FAILED")
+                        {
+                            numberOfFilesFailed = countStates;
+                        }
+                    else if(file_state == "ACTIVE")
+                        {
+                            numberOfFilesStarted = countStates;
+                        }
+                    else if(file_state == "CANCELED")
+                        {
+                            numberOfFilesCanceled = countStates;
+                        }
+                    else if(file_state == "SUBMITTED")
+                        {
+                            numberOfFilesSubmitted = countStates;
+                        }
+                    else if(file_state == "READY")
+                        {
+                            numberOfFilesReady = countStates;
+                        }
+                }
+
+            totalNumOfFilesInJob = (numberOfFilesReady + numberOfFilesSubmitted + numberOfFilesFinished + numberOfFilesFailed + numberOfFilesStarted + numberOfFilesCanceled);
+            totalInTerminal = (numberOfFilesFinished + numberOfFilesFailed + numberOfFilesCanceled);
+
+            if(totalNumOfFilesInJob == numberOfFilesFinished) //all finished / job finished
+                {
+                    sql << " UPDATE t_job SET "
+                        " job_state = 'FINISHED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp) "
+                        " WHERE job_id = :jobId ", soci::use(job_id);
+                }
+            else if (totalNumOfFilesInJob == numberOfFilesFailed) // all failed / job failed
+                {
+                    sql << " UPDATE t_job SET "
+                        " job_state = 'FAILED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), reason='Job failed, check files for more details' "
+                        " WHERE job_id = :jobId ", soci::use(job_id);
+                }
+            else if (totalNumOfFilesInJob == numberOfFilesCanceled) // all canceled / job canceled
+                {
+                    sql << " UPDATE t_job SET "
+                        " job_state = 'CANCELED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), reason='Job failed, check files for more details' "
+                        " WHERE job_id = :jobId ", soci::use(job_id);
+                }
+            else if (numberOfFilesStarted >= 1 || numberOfFilesReady >=1 || numberOfFilesSubmitted >=1) //one file ACTIVE/READY FILE/ JOB ACTIVE
+                {
+                    if(currentState == "SUBMITTED") //do not commit if already active
+                        {
+                            sql << " UPDATE t_job SET "
+                                " job_state = 'ACTIVE' "
+                                " WHERE job_id = :jobId ", soci::use(job_id);
+                        }
+                }
+            else if(totalNumOfFilesInJob == totalInTerminal && numberOfFilesCanceled == 0 && numberOfFilesFailed > 0) //FINISHEDDIRTY CASE
+                {
+                    if (reuseFlag == "H")
+                        {
+                            sql << " UPDATE t_job SET "
+                                " job_state = 'FAILED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), reason='Job failed, check files for more details' "
+                                " WHERE job_id = :jobId ", soci::use(job_id);
+                        }
+                    else
+                        {
+                            sql << " UPDATE t_job SET "
+                                " job_state = 'FINISHEDDIRTY', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), reason='Job failed, check files for more details' "
+                                " WHERE job_id = :jobId ", soci::use(job_id);
+                        }
+                }
+            else if(totalNumOfFilesInJob == totalInTerminal && numberOfFilesCanceled >= 1) //CANCELED
+                {
+                    sql << " UPDATE t_job SET "
+                        " job_state = 'CANCELED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), reason='Job canceled, check files for more details' "
+                        " WHERE job_id = :jobId ", soci::use(job_id);
+                }
+            else
+                {
+                    //do nothing
+                }
+
+            sql.commit();
         }
     catch (std::exception& e)
         {
@@ -10861,98 +11295,9 @@ void OracleAPI::resetForRetryStaging(int file_id, const std::string & job_id)
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
 }
-
-
-void OracleAPI::resetForRetryDelete(int file_id, const std::string & job_id)
-{
-    soci::session sql(*connectionPool);
-
-    int nRetries = 0;
-    int retry_delay = 0;
-    soci::indicator isNull = soci::i_ok;
-    std::string vo_name;
-
-    try
-        {
-            sql <<
-                " SELECT retry, vo_name, retry_delay "
-                " FROM t_job "
-                " WHERE job_id = :job_id ",
-                soci::use(job_id),
-                soci::into(nRetries, isNull),
-                soci::into(vo_name),
-                soci::into(retry_delay)
-                ;
-
-            if (isNull == soci::i_null || nRetries <= 0)
-                {
-                    sql <<
-                        " SELECT retry "
-                        " FROM t_server_config where vo_name=:vo_name ",
-                        soci::use(vo_name), soci::into(nRetries)
-                        ;
-                }
-            else if (isNull != soci::i_null && nRetries <= 0)
-                {
-                    nRetries = 0;
-                }
-
-            int nRetriesTimes = 0;
-            soci::indicator isNull2 = soci::i_ok;
-
-            sql << "SELECT retry FROM t_dm WHERE file_id = :file_id AND job_id = :jobId ",
-                soci::use(file_id), soci::use(job_id), soci::into(nRetriesTimes, isNull2);
-
-
-            if(nRetries > 0 && nRetriesTimes <= nRetries-1 )
-                {
-                    //expressed in secs, default delay
-                    const int default_retry_delay = 120;
-
-                    sql.begin();
-
-                    if (retry_delay > 0)
-                        {
-                            // update
-                            time_t now = getUTC(retry_delay);
-                            struct tm tTime;
-                            gmtime_r(&now, &tTime);
-
-                            sql << "UPDATE t_dm SET retry_timestamp=:1, retry = :retry, file_state = 'DELETE', start_time=NULL, dmHost=NULL "
-                                " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','DELETE','FAILED','CANCELED')",
-                                soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
-                        }
-                    else
-                        {
-                            // update
-                            time_t now = getUTC(default_retry_delay);
-                            struct tm tTime;
-                            gmtime_r(&now, &tTime);
-
-                            sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'DELETE', start_time=NULL, dmHost=NULL  "
-                                " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
-                                soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
-                        }
-                    sql.commit();
-                }
-
-
-        }
-    catch (std::exception& e)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-    catch (...)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }
-}
-
 
 
 

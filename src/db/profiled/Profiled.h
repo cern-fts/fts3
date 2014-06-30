@@ -337,7 +337,7 @@ public:
 
     //NEW deletions and staging API
     //deletions						 //file_id / state / reason
-    void updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string> >& files);
+    void updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files);
 
     //vo_name, source_url, job_id, file_id, user_dn, cred_id
     void getFilesForDeletion(std::vector< boost::tuple<std::string, std::string, std::string, int, std::string, std::string> >& files);
@@ -354,7 +354,7 @@ public:
 
 
     //staging						//file_id / state / reason / token
-    void updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string> >& files);
+    void updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files);
     //file_id / surl / proxy / pinlifetime / bringonlineTimeout
     void getFilesForStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string> >& files);
 
@@ -372,8 +372,8 @@ public:
 
     void checkJobOperation(std::vector<std::string>& jobs, std::vector< boost::tuple<std::string, std::string> >& ops);
 
-    void resetForRetryStaging(int file_id, const std::string & job_id);
-    void resetForRetryDelete(int file_id, const std::string & job_id);
+    void updateFileTransferStatusJob(double throughput, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
+                                     int process_id, double filesize, double duration, bool retry);
 
 };
 

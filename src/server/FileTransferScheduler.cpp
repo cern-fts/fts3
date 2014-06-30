@@ -123,11 +123,7 @@ bool FileTransferScheduler::schedule()
                     // update file state to READY
                     if(allowed)
                         {
-                            unsigned updated = db->updateFileStatus(file, JobStatusHandler::FTS3_STATUS_READY);
-                            if(updated == 0)
-                                return false;
-                            else
-                                return true;
+                            return true;
                         }
                     return false;
                 }
@@ -193,13 +189,6 @@ bool FileTransferScheduler::schedule()
                     if (cfg->active_transfers - active_transfers > 0) continue;
                     return false;
                 }
-
-            // update file state to READY
-            unsigned updated = db->updateFileStatus(file, JobStatusHandler::FTS3_STATUS_READY);
-            if(updated == 0)
-                return false;
-            else
-                return true;
         }
     catch(std::exception& e)
         {

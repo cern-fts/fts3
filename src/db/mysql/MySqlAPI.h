@@ -380,7 +380,7 @@ public:
 
     //NEW deletions and staging API
     //deletions						 //file_id / state / reason
-    virtual void updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string> >& files);
+    virtual void updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files);
 
     //vo_name, source_url, job_id, file_id, user_dn, cred_id
     virtual void getFilesForDeletion(std::vector< boost::tuple<std::string, std::string, std::string, int, std::string, std::string> >& files);
@@ -397,7 +397,8 @@ public:
 
 
     //staging						//file_id / state / reason / token
-    virtual void updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string> >& files);
+    virtual void updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files);
+
     //file_id / surl / proxy / pinlifetime / bringonlineTimeout
     virtual void getFilesForStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string> >& files);
 
@@ -412,8 +413,8 @@ public:
 
     virtual void checkJobOperation(std::vector<std::string>& jobs, std::vector< boost::tuple<std::string, std::string> >& ops);
 
-    virtual void resetForRetryStaging(int file_id, const std::string & job_id);
-    virtual void resetForRetryDelete(int file_id, const std::string & job_id);
+    virtual void updateFileTransferStatusJob(double throughput, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
+            int process_id, double filesize, double duration, bool retry);
 
 
 private:
@@ -424,9 +425,13 @@ private:
     std::vector<std::string> sanityVector;
 
 
-    void updateDeletionsStateInternal(soci::session& sql, std::vector< boost::tuple<int, std::string, std::string, std::string> >& files);
+    bool resetForRetryStaging(soci::session& sql, int file_id, const std::string & job_id, bool retry);
 
-    void updateStagingStateInternal(soci::session& sql, std::vector< boost::tuple<int, std::string, std::string, std::string> >& files);
+    bool resetForRetryDelete(soci::session& sql, int file_id, const std::string & job_id, bool retry);
+
+    void updateDeletionsStateInternal(soci::session& sql, std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files);
+
+    void updateStagingStateInternal(soci::session& sql, std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files);
 
     bool getDrainInternal(soci::session& sql);
 
