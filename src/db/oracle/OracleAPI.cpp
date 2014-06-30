@@ -933,60 +933,50 @@ void OracleAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId
                                     int bestFileId = getBestNextReplica(sql, jobId, vo_name);
                                     if(bestFileId > 0)
                                         {
-                                            sql.begin();
                                             sql <<
                                                 " UPDATE t_file "
                                                 " SET file_state = 'SUBMITTED' "
                                                 " WHERE job_id = :jobId AND file_id = :file_id  "
                                                 " AND file_state = 'NOT_USED' ",
                                                 soci::use(jobId), soci::use(bestFileId);
-                                            sql.commit();
                                         }
                                     else
                                         {
-                                            sql.begin();
                                             sql <<
                                                 " UPDATE t_file "
                                                 " SET file_state = 'SUBMITTED' "
                                                 " WHERE job_id = :jobId "
                                                 " AND file_state = 'NOT_USED' AND file_id = ( select min(file_id) from t_file where file_state = 'NOT_USED' and job_id=:job_id )",
                                                 soci::use(jobId), soci::use(jobId);
-                                            sql.commit();
                                         }
                                 }
                             else if (selection_strategy == "orderly")
                                 {
-                                    sql.begin();
                                     sql <<
                                         " UPDATE t_file "
                                         " SET file_state = 'SUBMITTED' "
                                         " WHERE job_id = :jobId "
                                         " AND file_state = 'NOT_USED'  AND file_id = ( select min(file_id) from t_file where file_state = 'NOT_USED' and job_id=:job_id )",
                                         soci::use(jobId), soci::use(jobId);
-                                    sql.commit();
                                 }
                             else
                                 {
-                                    sql.begin();
                                     sql <<
                                         " UPDATE t_file "
                                         " SET file_state = 'SUBMITTED' "
                                         " WHERE job_id = :jobId "
                                         " AND file_state = 'NOT_USED'  AND file_id = ( select min(file_id) from t_file where file_state = 'NOT_USED' and job_id=:job_id ) ",
                                         soci::use(jobId), soci::use(jobId);
-                                    sql.commit();
                                 }
                         }
                     else //it's NULL, default is orderly
                         {
-                            sql.begin();
                             sql <<
                                 " UPDATE t_file "
                                 " SET file_state = 'SUBMITTED' "
                                 " WHERE job_id = :jobId "
                                 " AND file_state = 'NOT_USED'  AND file_id = ( select min(file_id) from t_file where file_state = 'NOT_USED' and job_id=:job_id ) ",
                                 soci::use(jobId), soci::use(jobId);
-                            sql.commit();
                         }
                 }
         }
