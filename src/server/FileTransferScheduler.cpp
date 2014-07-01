@@ -120,7 +120,6 @@ bool FileTransferScheduler::schedule()
             if(cfgs.empty())
                 {
                     bool allowed = db->isTrAllowed(srcSeName, destSeName);
-                    // update file state to READY
                     if(allowed)
                         {
                             return true;

@@ -163,19 +163,12 @@ public:
                             }
                     }
 
-                //update file state
+                //update file/job state
                 DBSingleton::instance().
                 getDBObjectInstance()->
                 updateFileTransferStatusJob(msg.throughput, job, msg.file_id, std::string(msg.transfer_status),
                                             std::string(msg.transfer_message), static_cast<int> (msg.process_id),
-                                            msg.filesize, msg.timeInSecs, msg.retry);
-
-                //update job_state
-                /*
-                        DBSingleton::instance().
-                        getDBObjectInstance()->
-                        updateJobTransferStatus(job, std::string(msg.transfer_status), static_cast<int> (msg.process_id));
-                */
+                                            msg.filesize, msg.timeInSecs, msg.retry);               
 
                 if(std::string(msg.job_id).length() > 0 && msg.file_id > 0)
                     SingleTrStateInstance::instance().sendStateMessage(job, msg.file_id);
