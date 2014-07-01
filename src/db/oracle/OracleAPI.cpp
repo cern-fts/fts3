@@ -8608,7 +8608,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
     long long  nFinishedLastHour = 0;
     double  ratioSuccessFailure = 0.0;
     std::string querySe;
-
+    std::string queryVO;
 
     if(!vo_name.empty())
         querySe = " SELECT DISTINCT source_se, dest_se FROM t_job where vo_name='" + vo_name + "'";
@@ -8622,17 +8622,11 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
     soci::indicator isNull1 = soci::i_ok;
     soci::indicator isNull2 = soci::i_ok;
     soci::indicator isNull3 = soci::i_ok;
-
-    soci::statement voStmt(sql);
+   
     if(vo_name.empty())
         {
-            voStmt = (sql.prepare << "select distinct vo_name from t_job ",
-                      soci::into(vo_name_local));
+            queryVO = "select distinct vo_name from t_job ";
         }
-
-    soci::statement pairsStmt(sql);
-    pairsStmt.exchange(soci::into(source_se));
-    pairsStmt.exchange(soci::into(dest_se));
 
     bool sourceEmpty = true;
     bool destinEmpty = true;
@@ -8640,14 +8634,15 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
     if(!source_se_p.empty())
         {
             source_se = source_se_p;
-            pairsStmt.exchange(soci::use(source_se));
             if(!vo_name.empty())
                 {
-                    querySe += " and source_se = :source_se ";
+                    querySe += " and source_se = '" + source_se + "'";
+		    queryVO += " and source_se = '" + source_se + "'";
                 }
             else
                 {
-                    querySe += " where source_se = :source_se ";
+                    querySe += " where source_se ='" + source_se + "'";
+		    queryVO += " where source_se ='" + source_se + "'";		    
                 }
             sourceEmpty = false;
         }
@@ -8658,30 +8653,31 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
             if(sourceEmpty)
                 {
                     dest_se = dest_se_p;
-                    pairsStmt.exchange(soci::use(dest_se));
                     if(!vo_name.empty())
                         {
-                            querySe += " and dest_se = :dest_se ";
+                            querySe += " and dest_se = '" + dest_se + "'";
+			    queryVO += " and dest_se = '" + dest_se + "'";
                         }
                     else
                         {
-                            querySe += " where dest_se = :dest_se ";
+                            querySe += " where dest_se = '" + dest_se + "'";
+			    queryVO += " where dest_se = '" + dest_se + "'";
                         }
                 }
             else
                 {
                     dest_se = dest_se_p;
-                    pairsStmt.exchange(soci::use(dest_se));
-                    querySe += " AND dest_se = :dest_se ";
+                    querySe += " AND dest_se = '" + dest_se + "'";
+		    queryVO += " AND dest_se = '" + dest_se + "'";
                 }
         }
 
-    pairsStmt.alloc();
-    pairsStmt.prepare(querySe);
-    pairsStmt.define_and_bind();
-
     try
         {
+	
+            soci::statement pairsStmt((sql.prepare << querySe, soci::into(source_se), soci::into(dest_se)));
+	    soci::statement voStmt((sql.prepare << queryVO, soci::into(vo_name_local)));
+	    	    		    	
             soci::statement st1((sql.prepare << "select count(*) from t_file where "
                                  " file_state='ACTIVE' and vo_name=:vo_name_local and "
                                  " source_se=:source_se and dest_se=:dest_se",
@@ -8777,7 +8773,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
             if(vo_name.empty())
                 {
                     voStmt.execute();
-                    while (voStmt.fetch())
+                    while (voStmt.fetch()) //distinct vo
                         {
                             if(source_se_p.empty())
                                 source_se = "";
@@ -8785,7 +8781,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                                 dest_se = "";
 
                             pairsStmt.execute();
-                            while (pairsStmt.fetch())
+                            while (pairsStmt.fetch()) //distinct source_se / dest_se
                                 {
                                     active = 0;
                                     maxActive = 0;
@@ -8798,13 +8794,11 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                                     nFinishedLastHour = 0;
                                     ratioSuccessFailure = 0.0;
 
-
                                     st1.execute(true);
                                     st2.execute(true);
                                     st7.execute(true);
                                     st6.execute(true);
                                     st3.execute(true);
-
 
                                     //if all of the above return 0 then continue
                                     if(active == 0 && nFinishedLastHour == 0 &&  nFailedLastHour == 0 && submitted == 0 && source_se_p.empty() && dest_se_p.empty())
@@ -8899,6 +8893,10 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
             else
                 {
                     vo_name_local = vo_name;
+ 		    if(source_se_p.empty())
+                                source_se = "";
+                    if(dest_se_p.empty())
+                                dest_se = "";		    
 
                     pairsStmt.execute();
                     while (pairsStmt.fetch())
@@ -8913,7 +8911,6 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                             nFailedLastHour = 0;
                             nFinishedLastHour = 0;
                             ratioSuccessFailure = 0.0;
-
 
                             st1.execute(true);
                             st2.execute(true);
