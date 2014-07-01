@@ -2091,7 +2091,7 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
             gmtime_r(&now, &tTime);
 
             if((job_id.empty() || file_id == 0) && transfer_status == "FAILED")
-                sql <<  "select file_id from t_file where pid=:pid and job_finished is NULL and file_state  = 'ACTIVE' ",soci::use(process_id), soci::into(file_id);
+                sql <<  "select file_id from t_file where pid=:pid and job_finished is NULL and file_state  = 'ACTIVE' LIMIT 1 ",soci::use(process_id), soci::into(file_id);
 
             // query for the file state in DB
             sql << "SELECT file_state FROM t_file WHERE file_id=:fileId and job_id=:jobId",
