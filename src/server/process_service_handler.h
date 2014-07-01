@@ -823,7 +823,7 @@ protected:
                                     }
                                 jobsReuse.clear();
                             }
-                        sleep(3);
+                        sleep(2);
                     }
                 catch (...)
                     {
@@ -839,9 +839,9 @@ protected:
                                     }
                                 jobsReuse.clear();
                             }
-                        sleep(3);
+                        sleep(2);
                     }
-                sleep(3);
+                sleep(2);
             } /*end while*/
     }
 

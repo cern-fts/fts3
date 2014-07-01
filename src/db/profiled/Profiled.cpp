@@ -904,7 +904,7 @@ void ProfiledDB::getVOPairs(std::vector< boost::tuple<std::string, std::string, 
 
 
 //deletions
-void ProfiledDB::updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string> >& files)
+void ProfiledDB::updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files)
 {
     PROFILE_PREFIXED("DB::", db->updateDeletionsState(files));
 }
@@ -940,7 +940,7 @@ int ProfiledDB::getMaxDeletionsPerEndpoint(const std::string & endpoint, const s
 
 
 //staging						//file_id / state / reason / token
-void ProfiledDB::updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string> >& files)
+void ProfiledDB::updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files)
 {
     PROFILE_PREFIXED("DB::", db->updateStagingState(files));
 }
@@ -985,13 +985,3 @@ void ProfiledDB::checkJobOperation(std::vector<std::string>& jobs, std::vector< 
     PROFILE_PREFIXED("DB::", db->checkJobOperation(jobs, ops));
 }
 
-
-void ProfiledDB::resetForRetryStaging(int file_id, const std::string & job_id)
-{
-    PROFILE_PREFIXED("DB::", db->resetForRetryStaging(file_id, job_id));
-}
-
-void ProfiledDB::resetForRetryDelete(int file_id, const std::string & job_id)
-{
-    PROFILE_PREFIXED("DB::", db->resetForRetryDelete(file_id, job_id));
-}
