@@ -11273,7 +11273,7 @@ void OracleAPI::updateFileTransferStatusJob(double throughputIn, std::string job
                                 " job_state = 'ACTIVE' "
                                 " WHERE job_id = :jobId ", soci::use(job_id);
                         }
-                    else if(currentState == "READY" && reuseFlag == "Y")
+                    else if(currentState == "READY" && (reuseFlag == "Y" || reuseFlag == "H"))
                         {
                             sql << " UPDATE t_job SET "
                                 " job_state = 'ACTIVE' "
