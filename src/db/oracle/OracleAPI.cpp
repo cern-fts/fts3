@@ -11304,7 +11304,7 @@ void OracleAPI::updateFileTransferStatusJob(double throughputIn, std::string job
             else if(numberOfFilesNotUsed>=1 && numberOfFilesFinished == 1) //M-REPLICA, at least one FINISHED
                 {
                     sql << " UPDATE t_job SET "
-                        " job_state = 'FINISHED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP() "
+                        " job_state = 'FINISHED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp) "
                         " WHERE job_id = :jobId ", soci::use(job_id);
                 }
             else
