@@ -54,6 +54,9 @@ limitations under the License. */
 #include "BringOnlineTask.h"
 #include "WaitingRoom.h"
 
+#include <vector>
+#include <string>
+
 using namespace FTS3_SERVER_NAMESPACE;
 using namespace FTS3_COMMON_NAMESPACE;
 
@@ -296,64 +299,47 @@ int DoServer(int argc, char** argv)
                             continue;
                         }
 
+                    std::vector<StagingTask::context_type> files;
+                    db::DBSingleton::instance().getDBObjectInstance()->getFilesForStaging(files);
 
-                    //select from the database the config for bringonline for each VO / hostname
-                    voHostnameConfig = db::DBSingleton::instance().getDBObjectInstance()->getVOBringonlineMax();
+                    std::vector<StagingTask::context_type>::iterator it;
+                    for (it = files.begin(); it != files.end(); ++it)
+                    {
+                    	// make sure it is a srm SE
+                    	std::string & url = boost::get<BringOnlineTask::url>(*it);
+                    	if (!isSrmUrl(url)) continue;
 
-                    if (!voHostnameConfig.empty())
-                        {
-                            for (it = voHostnameConfig.begin(); it != voHostnameConfig.end(); ++it)
-                                {
-                                    string voName = get < 0 > (*it);
-                                    string hostName = get < 1 > (*it);
-                                    int maxValue = get < 2 > (*it);
-                                    //get the files to be brought online for this VO/host/max
-                                    urls = db::DBSingleton::instance().getDBObjectInstance()->getBringOnlineFiles(voName, hostName, maxValue);
-                                }
-                        }
-                    else    //no config for any vo and/or se, hardcode 100 files at any given time for each hostname
-                        {
-                            urls = db::DBSingleton::instance().getDBObjectInstance()->getBringOnlineFiles("", "", 500);
-                        }
+                    	//get the proxy
+                    	std::string & dn = boost::get<BringOnlineTask::dn>(*it);
+                    	std::string & dlg_id = boost::get<BringOnlineTask::dlg_id>(*it);
+                    	std::string & vo = boost::get<BringOnlineTask::vo>(*it);
+    					proxy_file = generateProxy(dn, dlg_id);
 
-                    if (!urls.empty())
-                        {
-                            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE " << urls.size() << " are ready for bringonline"  << commit;
-                            for (itUrls = urls.begin(); itUrls != urls.end(); ++itUrls)
-                                {
-                                    if (true == isSrmUrl((*itUrls).url))
-                                        {
-                                            std::string dn;
-                                            std::string dlg_id;
-                                            std::string vo_name;
-                                            db::DBSingleton::instance().getDBObjectInstance()->getCredentials(vo_name, (*itUrls).job_id, (*itUrls).file_id, dn, dlg_id);
+    					std::string message;
+                        if(!BringOnlineTask::checkValidProxy(proxy_file, message))
+						{
+							proxy_file = get_proxy_cert(
+											 dn, // user_dn
+											 dlg_id, // user_cred
+											 vo, // vo_name
+											 "",
+											 "", // assoc_service
+											 "", // assoc_service_type
+											 false,
+											 ""
+										 );
+						}
 
-                                            //get the proxy
-                                            proxy_file = generateProxy(dn, dlg_id);
-                                            (*itUrls).proxy = proxy_file;
+    					try
+						{
+							threadpool.start(new BringOnlineTask(*it, proxy_file));
+						}
+    					catch(Err_Custom const & ex)
+    					{
+    						FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
+    					}
+                    }
 
-                                            std::string message;
-                                            if(false == StagingTask::checkValidProxy(proxy_file, message))
-                                                {
-                                                    proxy_file = get_proxy_cert(
-                                                                     dn, // user_dn
-                                                                     dlg_id, // user_cred
-                                                                     vo_name, // vo_name
-                                                                     "",
-                                                                     "", // assoc_service
-                                                                     "", // assoc_service_type
-                                                                     false,
-                                                                     ""
-                                                                 );
-                                                }
-
-                                            threadpool.start(new BringOnlineTask(*itUrls));
-                                        }
-                                }
-                        }
-
-                    urls.clear();
-                    voHostnameConfig.clear();
                     sleep(1);
                 }
         }

@@ -33,7 +33,12 @@ public:
      *
      * @param copy : a staging task (stills the gfal2 context of this object)
      */
-    PollTask(StagingTask & copy) : StagingTask(copy) {}
+    PollTask(StagingTask & copy, std::string token) : StagingTask(copy), token(token), nPolls(0) {}
+
+    /**
+     * Copy constructor
+     */
+    PollTask(PollTask & copy) : StagingTask(copy), token(copy.token), nPolls(copy.nPolls) {}
 
     /**
      * Destructor
@@ -59,6 +64,12 @@ private:
         else
             return (2 << nPolls);
     }
+
+    /// the token that will be used for polling
+    std::string token;
+
+    /// number of bring online polls
+    int nPolls;
 };
 
 #endif /* POLLTASK_H_ */

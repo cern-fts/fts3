@@ -12,17 +12,10 @@
 #include "common/logger.h"
 #include "common/error.h"
 
-BringOnlineTask::BringOnlineTask(message_bringonline ctx) : StagingTask(ctx)
+BringOnlineTask::BringOnlineTask(context_type const & ctx, std::string const & proxy) : StagingTask(ctx), proxy(proxy)
 {
-    // Set up handle
-    GError *error = NULL;
-    gfal2_ctx = gfal2_context_new(&error);
-    if (!gfal2_ctx)
-        {
-            std::stringstream ss;
-            ss << "BRINGONLINE bad initialization " << error->code << " " << error->message;
-            throw Err_Custom(ss.str());
-        }
+	// set up the gfal2 context
+	GError *error = NULL;
 
     const char *protocols[] = {"rfio", "gsidcap", "dcap", "gsiftp"};
 
@@ -33,6 +26,25 @@ BringOnlineTask::BringOnlineTask(message_bringonline ctx) : StagingTask(ctx)
             ss << "BRINGONLINE Could not set the protocol list " << error->code << " " << error->message;
             throw Err_Custom(ss.str());
         }
+
+    gfal2_set_opt_boolean(gfal2_ctx, "GRIDFTP PLUGIN", "SESSION_REUSE", true, &error);
+    if (error)
+		{
+			std::stringstream ss;
+			ss << "BRINGONLINE Could not set the session reuse " << error->code << " " << error->message;
+			throw Err_Custom(ss.str());
+		}
+
+    if (!boost::get<src_space_token>(ctx).empty())
+    {
+    	gfal2_set_opt_string(gfal2_ctx, "SRM PLUGIN", "SPACETOKENDESC", (char *) boost::get<src_space_token>(ctx).c_str(), &error);
+    	if (error)
+			{
+				std::stringstream ss;
+				ss << "BRINGONLINE Could not set the space token " << error->code << " " << error->message;
+				throw Err_Custom(ss.str());
+			}
+    }
 
     if (infosys == "false")
         {
@@ -47,58 +59,78 @@ BringOnlineTask::BringOnlineTask(message_bringonline ctx) : StagingTask(ctx)
     setProxy();
 }
 
+void BringOnlineTask::setProxy()
+{
+    GError *error = NULL;
+
+    //before any operation, check if the proxy is valid
+    std::string message;
+    bool isValid = checkValidProxy(proxy, message);
+    if(!isValid)
+        {
+    		state_update(boost::get<job_id>(ctx), boost::get<file_id>(ctx), "FAILED", message, false);
+			std::stringstream ss;
+			ss << "BRINGONLINE proxy certificate not valid: " << message;
+    		throw Err_Custom(ss.str());
+        }
+
+    char* cert = const_cast<char*>(proxy.c_str());
+
+    int status = gfal2_set_opt_string(gfal2_ctx, "X509", "CERT", cert, &error);
+    if (status < 0)
+        {
+    		state_update(boost::get<job_id>(ctx), boost::get<file_id>(ctx), "FAILED", error->message, false);
+			std::stringstream ss;
+			ss << "BRINGONLINE setting X509 CERT failed " << error->code << " " << error->message;
+			throw Err_Custom(ss.str());
+        }
+
+    status = gfal2_set_opt_string(gfal2_ctx, "X509", "KEY", cert, &error);
+    if (status < 0)
+        {
+			state_update(boost::get<job_id>(ctx), boost::get<file_id>(ctx), "FAILED", error->message, false);
+			std::stringstream ss;
+            ss << "BRINGONLINE setting X509 KEY failed " << error->code << " " << error->message;
+            throw Err_Custom(ss.str());
+        }
+}
+
 void BringOnlineTask::run(boost::any const &)
 {
     long int pinlifetime = 28800;
     long int bringonlineTimeout = 28800;
 
-    if(ctx.pinlifetime > pinlifetime)
+    if(boost::get<copy_pin_lifetime>(ctx) > pinlifetime)
         {
-            pinlifetime = ctx.pinlifetime;
+            pinlifetime = boost::get<copy_pin_lifetime>(ctx);
         }
 
-    if(ctx.bringonlineTimeout > bringonlineTimeout)
+    if(boost::get<bring_online_timeout>(ctx) > bringonlineTimeout)
         {
-            bringonlineTimeout = ctx.bringonlineTimeout;
+            bringonlineTimeout = boost::get<bring_online_timeout>(ctx);
         }
 
     GError *error = NULL;
     char token[512] = {0};
-    int status = gfal2_bring_online(gfal2_ctx, ctx.url.c_str(), pinlifetime, bringonlineTimeout, token, sizeof(token), 1, &error);
+    int status = gfal2_bring_online(gfal2_ctx, boost::get<url>(ctx).c_str(), pinlifetime, bringonlineTimeout, token, sizeof(token), 1, &error);
 
     if (status < 0)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE failed " << error->code << " " << error->message << commit;
-            if(true == retryTransfer(error->code, "SOURCE", std::string(error->message)) && ctx.retries < 3)
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE will be retried" << commit;
-                    ctx.retries +=1;
-                    WaitingRoom::instance().add(new BringOnlineTask(*this));
-                }
-            else
-                {
-                    db.bringOnlineReportStatus("FAILED", std::string(error->message), ctx);
-                    ctx.started = true;
-                }
+            bool retry = retryTransfer(error->code, "SOURCE", std::string(error->message));
+            state_update(boost::get<job_id>(ctx), boost::get<file_id>(ctx), "FAILED", error->message, retry);
             g_clear_error(&error);
         }
     else if (status == 0)
         {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE queued, got token " << token << commit;
-            ctx.token = std::string(token);
-            db.addToken(ctx.job_id, ctx.file_id, ctx.token);
-            ctx.started = true;
-            ctx.retries = 0;
-            WaitingRoom::instance().add(new PollTask(*this));
+            WaitingRoom::instance().add(new PollTask(*this, token));
         }
     else
         {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE succeeded, got token " << token << commit;
-            db.addToken(ctx.job_id, ctx.file_id, std::string(token));
-            ctx.started = true;
-            ctx.retries = 0;
             // No need to poll in this case!
-            db::DBSingleton::instance().getDBObjectInstance()->bringOnlineReportStatus("FINISHED", "", ctx);
+            state_update(boost::get<job_id>(ctx), boost::get<file_id>(ctx), "FINISHED", "", false);
         }
 }
 

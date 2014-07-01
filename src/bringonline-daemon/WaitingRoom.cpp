@@ -26,7 +26,7 @@ void WaitingRoom::run()
                         // next item to check
                         ++next;
                         // if the time has not yet come for the task simply continue
-                        if (it->get().started && it->get().nextPoll > now) continue;
+                        if (it->waiting(now)) continue;
                         // otherwise start the task
                         me.pool->start(me.tasks.release(it).release());
                     }

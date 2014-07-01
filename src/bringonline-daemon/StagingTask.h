@@ -8,8 +8,11 @@
 #ifndef StagingTask_H_
 #define StagingTask_H_
 
+#include "StagingStateUpdater.h"
+
 #include "common/definitions.h"
 #include "common/logger.h"
+#include "common/error.h"
 
 #include "db/generic/SingleDbInstance.h"
 
@@ -17,6 +20,7 @@
 
 #include <string>
 
+#include <boost/tuple/tuple.hpp>
 #include <boost/any.hpp>
 
 #include <gfal_api.h>
@@ -30,32 +34,43 @@ class StagingTask
 {
 
 public:
+
+	typedef boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string> context_type;
+
+	enum
+	{
+		vo,
+		url,
+		job_id,
+		file_id,
+		copy_pin_lifetime,
+		bring_online_timeout,
+		dn,
+		dlg_id,
+		src_space_token
+	};
+
     /**
      * Creates a new StagingTask from a message_bringonline
      *
      * @param ctx : staging task details
+     * @param proxy : path to the proxy certificate
      */
-    StagingTask(message_bringonline ctx) : ctx(ctx), gfal2_ctx(0), db(*db::DBSingleton::instance().getDBObjectInstance()) {}
+    StagingTask(context_type const & ctx) :
+    	state_update(StagingStateUpdater::instance()), ctx(ctx), gfal2_ctx(), wait_until() {}
 
     /**
      * Creates a new StagingTask from another StagingTask
      *
      * @param copy : a staging task (stills the gfal2 context of this object!)
      */
-    StagingTask(StagingTask & copy) : ctx(copy.ctx), gfal2_ctx(copy.gfal2_ctx), db(*db::DBSingleton::instance().getDBObjectInstance())
-    {
-        copy.gfal2_ctx = 0;
-    }
+    StagingTask(StagingTask & copy) :
+    	state_update(StagingStateUpdater::instance()), ctx(copy.ctx), gfal2_ctx(copy.gfal2_ctx), wait_until(copy.wait_until) {}
 
     /**
      * Destructor
-     *
-     * (RAII style handling of gfal2 context)
      */
-    virtual ~StagingTask()
-    {
-        if(gfal2_ctx) gfal2_context_free(gfal2_ctx);
-    }
+    virtual ~StagingTask() {}
 
     /**
      * The routine is executed by the thread pool
@@ -81,42 +96,68 @@ public:
         StagingTask::infosys = infosys;
     }
 
-    /**
-     * @return : task details
-     */
-    message_bringonline const & get() const
+    bool waiting(time_t now)
     {
-        return ctx;
-    }
-
-    /**
-     * Checks if a proxy is valid
-     *
-     * @param filename : file name of the proxy
-     * @param message : potential error message
-     */
-    static bool checkValidProxy(const std::string& filename, std::string& message)
-    {
-        boost::scoped_ptr<DelegCred> delegCredPtr(new DelegCred);
-        return delegCredPtr->isValidProxy(filename, message);
+    	return wait_until > now;
     }
 
 protected:
 
     /**
-     * sets the proxy
+     * gfal2 context wrapper so we can benefit from RAII
      */
-    void setProxy();
+    struct Gfal2CtxWrapper
+    {
+    	/// Constructor
+    	Gfal2CtxWrapper() : gfal2_ctx(0)
+    	{
+    		// Set up handle
+    		GError *error = NULL;
+    		gfal2_ctx = gfal2_context_new(&error);
+    		if (!gfal2_ctx)
+    			{
+    				std::stringstream ss;
+    				ss << "BRINGONLINE bad initialization " << error->code << " " << error->message;
+    				// the memory was not allocated so it is safe to throw
+    				throw Err_Custom(ss.str());
+    			}
+    	}
+
+    	/// Copy constructor, steals the pointer from the parameter!
+    	Gfal2CtxWrapper(Gfal2CtxWrapper & copy) : gfal2_ctx(copy.gfal2_ctx)
+    	{
+    		copy.gfal2_ctx = 0;
+    	}
+
+    	/// conversion to normal gfal2 context
+    	operator gfal2_context_t()
+		{
+    		return gfal2_ctx;
+		}
+
+    	/// Destructor
+    	~Gfal2CtxWrapper()
+    	{
+    		if(gfal2_ctx) gfal2_context_free(gfal2_ctx);
+    	}
+
+    private:
+    	/// the gfal2 context itself
+    	gfal2_context_t gfal2_ctx;
+    };
 
     /// the infosys used to create all gfal2 contexts
     static std::string infosys;
 
+    /// asynchronous state updater
+    StagingStateUpdater & state_update;
     /// staging details
-    message_bringonline ctx;
+    context_type ctx;
     /// gfal2 context
-    gfal2_context_t gfal2_ctx;
-    /// DB interface
-    GenericDbIfce& db;
+    Gfal2CtxWrapper gfal2_ctx;
+    /// wait in the wait room until given time
+    time_t wait_until;
+
 };
 
 #endif /* StagingTask_H_ */

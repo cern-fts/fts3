@@ -40,7 +40,7 @@ public:
      *
      * @param ctx : bring-online task details
      */
-    BringOnlineTask(message_bringonline ctx);
+    BringOnlineTask(context_type const & ctx, std::string const & proxy);
 
     /**
      * Creates a new BringOnlineTask from another StagingTask
@@ -58,6 +58,28 @@ public:
      * The routine is executed by the thread pool
      */
     virtual void run(boost::any const &);
+
+    /**
+     * Checks if a proxy is valid
+     *
+     * @param filename : file name of the proxy
+     * @param message : potential error message
+     */
+    static bool checkValidProxy(std::string const & filename, std::string& message)
+    {
+        boost::scoped_ptr<DelegCred> delegCredPtr(new DelegCred);
+        return delegCredPtr->isValidProxy(filename, message);
+    }
+
+private:
+
+    /**
+     * sets the proxy
+     */
+    void setProxy();
+
+    /// path to the proxy certificate
+    std::string proxy;
 };
 
 
