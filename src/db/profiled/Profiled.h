@@ -372,9 +372,6 @@ public:
 
     void checkJobOperation(std::vector<std::string>& jobs, std::vector< boost::tuple<std::string, std::string> >& ops);
 
-    void updateFileTransferStatusJob(double throughput, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
-                                     int process_id, double filesize, double duration, bool retry);
-
 };
 
 

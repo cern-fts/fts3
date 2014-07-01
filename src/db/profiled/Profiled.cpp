@@ -985,9 +985,3 @@ void ProfiledDB::checkJobOperation(std::vector<std::string>& jobs, std::vector< 
     PROFILE_PREFIXED("DB::", db->checkJobOperation(jobs, ops));
 }
 
-
-void ProfiledDB::updateFileTransferStatusJob(double throughput, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
-        int process_id, double filesize, double duration, bool retry)
-{
-    PROFILE_PREFIXED("DB::", db->updateFileTransferStatusJob(throughput, job_id, file_id, transfer_status, transfer_message, process_id, filesize, duration, retry));
-}

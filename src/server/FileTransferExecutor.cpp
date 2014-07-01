@@ -384,18 +384,21 @@ int FileTransferExecutor::execute()
                                 {
 				    failed = true;
                                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to fork " <<  tf.JOB_ID << "  " << tf.FILE_ID << commit;
-                                    db->updateFileTransferStatusJob(0.0, tf.JOB_ID, tf.FILE_ID, "FAILED", "Transfer failed to fork, check fts3server.log for more details",(int) pr.getPid(), 0, 0, false);                                   
+                                    db->updateFileTransferStatus(0.0, tf.JOB_ID, tf.FILE_ID, "FAILED", "Transfer failed to fork, check fts3server.log for more details",(int) pr.getPid(), 0, 0, false);                                   
+				    db->updateJobTransferStatus(tf.JOB_ID, "FAILED",0); 
                                 }
                             else
                                 {
 				    failed = true;				
                                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to fork " <<  forkMessage << "   " <<  tf.JOB_ID << "  " << tf.FILE_ID << commit;
-                                    db->updateFileTransferStatusJob(0.0, tf.JOB_ID, tf.FILE_ID, "FAILED", "Transfer failed to fork, check fts3server.log for more details",(int) pr.getPid(), 0, 0, false);                                    
+                                    db->updateFileTransferStatus(0.0, tf.JOB_ID, tf.FILE_ID, "FAILED", "Transfer failed to fork, check fts3server.log for more details",(int) pr.getPid(), 0, 0, false);                                    
+				    db->updateJobTransferStatus(tf.JOB_ID, "FAILED",0); 
                                 }
                         }
                     else
                         {
-                            db->updateFileTransferStatusJob(0.0, tf.JOB_ID, tf.FILE_ID, "ACTIVE", "",(int) pr.getPid(), 0, 0, false);                            
+                            db->updateFileTransferStatus(0.0, tf.JOB_ID, tf.FILE_ID, "ACTIVE", "",(int) pr.getPid(), 0, 0, false);     
+			    db->updateJobTransferStatus(tf.JOB_ID, "ACTIVE",0);                        
 			}
 
                             SingleTrStateInstance::instance().sendStateMessage(tf.JOB_ID, tf.FILE_ID);
@@ -406,7 +409,7 @@ int FileTransferExecutor::execute()
                             msg.process_id = (int) pr.getPid();
                             msg.timestamp = milliseconds_since_epoch();
 			    
-			    if(!failed) //only at watcher when the file has started
+			    if(!failed) //only set watcher when the file has started
                             	ThreadSafeList::get_instance().push_back(msg);
 
                     params.clear();
