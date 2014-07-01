@@ -11178,12 +11178,13 @@ void OracleAPI::updateFileTransferStatusJob(double throughputIn, std::string job
             long long numberOfFilesFailed = 0;
             long long numberOfFilesStarted = 0;
             long long numberOfFilesSubmitted = 0;
+	    long long numberOfFilesNotUsed = 0;
             long long totalNumOfFilesInJob= 0;
             long long totalInTerminal = 0;
 
             soci::rowset<soci::row> rsReplica = (
                                                     sql.prepare <<
-                                                    " select file_state, COUNT(file_state) from t_file where job_id=:job_id group by file_state order by null ",
+                                                    " select file_state, COUNT(DISTINCT file_index) from t_file where job_id=:job_id group by file_state order by null ",
                                                     soci::use(job_id)
                                                 );
 
@@ -11191,7 +11192,7 @@ void OracleAPI::updateFileTransferStatusJob(double throughputIn, std::string job
             for (iRep = rsReplica.begin(); iRep != rsReplica.end(); ++iRep)
                 {
                     std::string file_state = iRep->get<std::string>("FILE_STATE");
-                    int countStates = iRep->get<int>("COUNT(FILE_STATE)");
+                    int countStates = iRep->get<int>("COUNT(DISTINCT FILE_INDEX)");
 
                     if(file_state == "FINISHED")
                         {
@@ -11217,9 +11218,13 @@ void OracleAPI::updateFileTransferStatusJob(double throughputIn, std::string job
                         {
                             numberOfFilesReady = countStates;
                         }
+		     else if(file_state == "NOT_USED")
+                        {
+                            numberOfFilesNotUsed = countStates;
+                        }
                 }
 
-            totalNumOfFilesInJob = (numberOfFilesReady + numberOfFilesSubmitted + numberOfFilesFinished + numberOfFilesFailed + numberOfFilesStarted + numberOfFilesCanceled);
+            totalNumOfFilesInJob = (numberOfFilesReady + numberOfFilesSubmitted + numberOfFilesFinished + numberOfFilesFailed + numberOfFilesStarted + numberOfFilesCanceled + numberOfFilesNotUsed);
             totalInTerminal = (numberOfFilesFinished + numberOfFilesFailed + numberOfFilesCanceled);
 
             if(totalNumOfFilesInJob == numberOfFilesFinished) //all finished / job finished
@@ -11248,7 +11253,7 @@ void OracleAPI::updateFileTransferStatusJob(double throughputIn, std::string job
                                 " job_state = 'ACTIVE' "
                                 " WHERE job_id = :jobId ", soci::use(job_id);
                         }
-		    else if(currentState == "ACTIVE" && reuseFlag == "Y")
+		    else if(currentState == "READY" && reuseFlag == "Y")
 		        {
                             sql << " UPDATE t_job SET "
                                 " job_state = 'ACTIVE' "
@@ -11274,6 +11279,12 @@ void OracleAPI::updateFileTransferStatusJob(double throughputIn, std::string job
                 {
                     sql << " UPDATE t_job SET "
                         " job_state = 'CANCELED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), reason='Job canceled, check files for more details' "
+                        " WHERE job_id = :jobId ", soci::use(job_id);
+                }
+            else if(numberOfFilesNotUsed>=1 && numberOfFilesFinished == 1) //M-REPLICA, at least one FINISHED
+                {
+                    sql << " UPDATE t_job SET "
+                        " job_state = 'FINISHED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP() "
                         " WHERE job_id = :jobId ", soci::use(job_id);
                 }
             else

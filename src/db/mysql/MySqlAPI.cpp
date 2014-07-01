@@ -10009,9 +10009,9 @@ void MySqlAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< boo
                                 soci::use(file_id)
                                 ;
                         }
-                    else
+                    else if(state == "FAILED")
                         {
-                            if(retry && state == "FAILED")
+                            if(retry)
                                 {
                                     bool shouldBeRetried = resetForRetryDelete(sql, file_id, job_id, retry);
                                     if(shouldBeRetried)
@@ -10019,7 +10019,6 @@ void MySqlAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< boo
                                 }
                             else
                                 {
-
                                     sql <<
                                         " UPDATE t_dm "
                                         " SET  job_finished=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), reason = :reason, file_state = :fileState "
@@ -10029,8 +10028,21 @@ void MySqlAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< boo
                                         soci::use(state),
                                         soci::use(file_id)
                                         ;
-                                }
-                        }
+			       }
+                          }
+                      else
+                          {
+                                    sql <<
+                                        " UPDATE t_dm "
+                                        " SET  job_finished=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), reason = :reason, file_state = :fileState "
+                                        " WHERE "
+                                        "	file_id = :fileId ",
+                                        soci::use(reason),
+                                        soci::use(state),
+                                        soci::use(file_id)
+                                        ;                                
+                          }
+
                     //send state message
                     filesMsg = getStateOfTransferInternal(sql, job_id, file_id);
                     if(!filesMsg.empty())
@@ -11357,7 +11369,7 @@ void MySqlAPI::updateFileTransferStatusJob(double throughputIn, std::string job_
                                          soci::use(job_id),
                                          soci::into(currentState),
                                          soci::into(reuseFlag, isNull));
-            stmt11.execute(true);	   	   
+            stmt11.execute(true);	 
 
             if(currentState == transfer_status)
                 return;
@@ -11368,12 +11380,13 @@ void MySqlAPI::updateFileTransferStatusJob(double throughputIn, std::string job_
             long long numberOfFilesFailed = 0;
             long long numberOfFilesStarted = 0;
             long long numberOfFilesSubmitted = 0;
+            long long numberOfFilesNotUsed = 0;
             long long totalNumOfFilesInJob= 0;
-            long long totalInTerminal = 0;
+            long long totalInTerminal = 0;           
 
             soci::rowset<soci::row> rsReplica = (
                                                     sql.prepare <<
-                                                    " select file_state, COUNT(file_state) from t_file where job_id=:job_id group by file_state order by null ",
+                                                    " select file_state, COUNT(DISTINCT file_index) from t_file where job_id=:job_id group by file_state order by null ",
                                                     soci::use(job_id)
                                                 );
 
@@ -11381,7 +11394,7 @@ void MySqlAPI::updateFileTransferStatusJob(double throughputIn, std::string job_
             for (iRep = rsReplica.begin(); iRep != rsReplica.end(); ++iRep)
                 {
                     std::string file_state = iRep->get<std::string>("file_state");
-                    long long countStates = iRep->get<long long>("COUNT(file_state)",0);
+                    long long countStates = iRep->get<long long>("COUNT(DISTINCT file_index)",0);
 
                     if(file_state == "FINISHED")
                         {
@@ -11407,9 +11420,13 @@ void MySqlAPI::updateFileTransferStatusJob(double throughputIn, std::string job_
                         {
                             numberOfFilesReady = countStates;
                         }
+		     else if(file_state == "NOT_USED")
+                        {
+                            numberOfFilesNotUsed = countStates;
+                        }
                 }
 
-            totalNumOfFilesInJob = (numberOfFilesReady + numberOfFilesSubmitted + numberOfFilesFinished + numberOfFilesFailed + numberOfFilesStarted + numberOfFilesCanceled);
+            totalNumOfFilesInJob = (numberOfFilesReady + numberOfFilesSubmitted + numberOfFilesFinished + numberOfFilesFailed + numberOfFilesStarted + numberOfFilesCanceled + numberOfFilesNotUsed);
             totalInTerminal = (numberOfFilesFinished + numberOfFilesFailed + numberOfFilesCanceled);	    
 
             if(totalNumOfFilesInJob == numberOfFilesFinished) //all finished / job finished
@@ -11430,7 +11447,7 @@ void MySqlAPI::updateFileTransferStatusJob(double throughputIn, std::string job_
                         " job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), reason='Job failed, check files for more details' "
                         " WHERE job_id = :jobId ", soci::use(job_id);
                 }
-            else if (numberOfFilesStarted >= 1 || numberOfFilesReady >=1 || numberOfFilesSubmitted >=1) //one file ACTIVE/READY FILE/ JOB ACTIVE
+            else if (numberOfFilesStarted >= 1 || numberOfFilesReady >=1 || numberOfFilesSubmitted >=1 || numberOfFilesFailed>=1) //one file ACTIVE/READY FILE/ JOB ACTIVE
                 {
                     if(currentState == "SUBMITTED") //do not commit if already active
                         {
@@ -11438,7 +11455,7 @@ void MySqlAPI::updateFileTransferStatusJob(double throughputIn, std::string job_
                                 " job_state = 'ACTIVE' "
                                 " WHERE job_id = :jobId ", soci::use(job_id);
                         }
-		    else if(currentState == "ACTIVE" && reuseFlag == "Y")
+		    else if(currentState == "READY" && reuseFlag == "Y")
 		        {
                             sql << " UPDATE t_job SET "
                                 " job_state = 'ACTIVE' "
@@ -11460,10 +11477,16 @@ void MySqlAPI::updateFileTransferStatusJob(double throughputIn, std::string job_
                                 " WHERE job_id = :jobId ", soci::use(job_id);
                         }
                 }
-            else if(totalNumOfFilesInJob == totalInTerminal && numberOfFilesCanceled >= 1) //CANCELED
+            else if(totalNumOfFilesInJob == totalInTerminal && numberOfFilesCanceled >= 1) //CANCELED, at least one CANCELED
                 {
                     sql << " UPDATE t_job SET "
                         " job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), reason='Job canceled, check files for more details' "
+                        " WHERE job_id = :jobId ", soci::use(job_id);
+                }
+            else if(numberOfFilesNotUsed>=1 && numberOfFilesFinished == 1) //M-REPLICA, at least one FINISHED
+                {
+                    sql << " UPDATE t_job SET "
+                        " job_state = 'FINISHED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP() "
                         " WHERE job_id = :jobId ", soci::use(job_id);
                 }
             else
