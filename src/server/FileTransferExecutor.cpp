@@ -370,7 +370,7 @@ int FileTransferExecutor::execute()
                         {
                             params.append(" -U ");
                         }
-                    
+
 
                     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd << " " << params << commit;
                     ExecuteProcess pr(cmd, params);

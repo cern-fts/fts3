@@ -9985,7 +9985,6 @@ void MySqlAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< boo
 
     try
         {
-
             sql.begin();
 
             std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >::iterator itFind;
@@ -10028,20 +10027,20 @@ void MySqlAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< boo
                                         soci::use(state),
                                         soci::use(file_id)
                                         ;
-			       }
-                          }
-                      else
-                          {
-                                    sql <<
-                                        " UPDATE t_dm "
-                                        " SET  job_finished=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), reason = :reason, file_state = :fileState "
-                                        " WHERE "
-                                        "	file_id = :fileId ",
-                                        soci::use(reason),
-                                        soci::use(state),
-                                        soci::use(file_id)
-                                        ;                                
-                          }
+                                }
+                        }
+                    else
+                        {
+                            sql <<
+                                " UPDATE t_dm "
+                                " SET  job_finished=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), reason = :reason, file_state = :fileState "
+                                " WHERE "
+                                "	file_id = :fileId ",
+                                soci::use(reason),
+                                soci::use(state),
+                                soci::use(file_id)
+                                ;
+                        }
 
                     //send state message
                     filesMsg = getStateOfTransferInternal(sql, job_id, file_id);
@@ -10202,6 +10201,47 @@ void MySqlAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::s
                     std::string source_se = r.get<std::string>("source_se","");
                     std::string vo_name = r.get<std::string>("vo_name","");
 
+                    int maxValueConfig = 0;
+                    int currentDeleteActive = 0;
+                    int limit = 0;
+
+                    //check max configured
+                    sql << 	"SELECT concurrent_ops from t_stage_req "
+                        "WHERE vo_name=:vo_name and host = :endpoint and operation='delete' and concurrent_ops is NOT NULL ",
+                        soci::use(vo_name), soci::use(source_se), soci::into(maxValueConfig);
+
+                    //check current staging
+                    sql << 	"SELECT count(*) from t_dm "
+                        "WHERE vo_name=:vo_name and source_se = :endpoint and file_state='STARTED' and job_finished is NULL ",
+                        soci::use(vo_name), soci::use(source_se), soci::into(currentDeleteActive);
+
+                    if(maxValueConfig > 0)
+                        {
+                            if(currentDeleteActive > 0)
+                                {
+                                    limit = maxValueConfig - currentDeleteActive;
+                                }
+                            else
+                                {
+                                    limit = maxValueConfig;
+                                }
+                        }
+                    else
+                        {
+                            if(currentDeleteActive > 0)
+                                {
+                                    limit = 2000 - currentDeleteActive;
+                                }
+                            else
+                                {
+                                    limit = 2000;
+                                }
+                        }
+
+                    if(limit == 0) //no free slots
+                        continue;
+
+
                     soci::rowset<soci::row> rs = (
                                                      sql.prepare <<
                                                      " SELECT distinct j.source_se, j.user_dn "
@@ -10221,44 +10261,6 @@ void MySqlAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::s
 
                             source_se = row.get<std::string>("source_se");
                             std::string user_dn = row.get<std::string>("user_dn");
-
-                            int maxValueConfig = 0;
-                            int currentDeleteActive = 0;
-                            int limit = 0;
-
-                            //check max configured
-                            sql << 	"SELECT concurrent_ops from t_stage_req "
-                                "WHERE vo_name=:vo_name and host = :endpoint and operation='delete' and concurrent_ops is NOT NULL ",
-                                soci::use(vo_name), soci::use(source_se), soci::into(maxValueConfig);
-
-                            //check current staging
-                            sql << 	"SELECT count(*) from t_dm "
-                                "WHERE vo_name=:vo_name and source_se = :endpoint and file_state='STARTED' and job_finished is NULL ",
-                                soci::use(vo_name), soci::use(source_se), soci::into(currentDeleteActive);
-
-
-                            if(maxValueConfig > 0)
-                                {
-                                    if(currentDeleteActive > 0)
-                                        {
-                                            limit = maxValueConfig - currentDeleteActive;
-                                        }
-                                    else
-                                        {
-                                            limit = maxValueConfig;
-                                        }
-                                }
-                            else
-                                {
-                                    if(currentDeleteActive > 0)
-                                        {
-                                            limit = 2000 - currentDeleteActive;
-                                        }
-                                    else
-                                        {
-                                            limit = 2000;
-                                        }
-                                }
 
                             soci::rowset<soci::row> rs3 = (
                                                               sql.prepare <<
@@ -10528,6 +10530,47 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                     std::string source_se = r.get<std::string>("source_se","");
                     std::string vo_name = r.get<std::string>("vo_name","");
 
+                    int maxValueConfig = 0;
+                    int currentStagingActive = 0;
+                    int limit = 0;
+
+                    //check max configured
+                    sql << 	"SELECT concurrent_ops from t_stage_req "
+                        "WHERE vo_name=:vo_name and host = :endpoint and operation='staging' and concurrent_ops is NOT NULL ",
+                        soci::use(vo_name), soci::use(source_se), soci::into(maxValueConfig);
+
+                    //check current staging
+                    sql << 	"SELECT count(*) from t_file "
+                        "WHERE vo_name=:vo_name and source_se = :endpoint and file_state='STARTED' and job_finished is NULL ",
+                        soci::use(vo_name), soci::use(source_se), soci::into(currentStagingActive);
+
+
+                    if(maxValueConfig > 0)
+                        {
+                            if(currentStagingActive > 0)
+                                {
+                                    limit = maxValueConfig - currentStagingActive;
+                                }
+                            else
+                                {
+                                    limit = maxValueConfig;
+                                }
+                        }
+                    else
+                        {
+                            if(currentStagingActive > 0)
+                                {
+                                    limit = 2000 - currentStagingActive;
+                                }
+                            else
+                                {
+                                    limit = 2000;
+                                }
+                        }
+
+                    if(limit == 0)
+                        continue;
+
                     soci::rowset<soci::row> rs = (
                                                      sql.prepare <<
                                                      " SELECT distinct j.source_se, j.user_dn "
@@ -10535,7 +10578,7 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                                                      " WHERE "
                                                      "	(j.BRING_ONLINE > 0 OR j.COPY_PIN_LIFETIME > 0) "
                                                      "	AND f.file_state = 'STAGING' "
-                                                     "	AND f.staging_start IS NULL and j.job_finished is null "
+                                                     "	AND f.start_time IS NULL and j.job_finished is null "
                                                      "  AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd)"
                                                      "  AND f.vo_name = :vo_name AND f.source_se=:source_se ",
                                                      soci::use(hashSegment.start), soci::use(hashSegment.end),
@@ -10549,44 +10592,6 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                             source_se = row.get<std::string>("source_se");
                             std::string user_dn = row.get<std::string>("user_dn");
 
-                            int maxValueConfig = 0;
-                            int currentStagingActive = 0;
-                            int limit = 0;
-
-                            //check max configured
-                            sql << 	"SELECT concurrent_ops from t_stage_req "
-                                "WHERE vo_name=:vo_name and host = :endpoint and operation='staging' and concurrent_ops is NOT NULL ",
-                                soci::use(vo_name), soci::use(source_se), soci::into(maxValueConfig);
-
-                            //check current staging
-                            sql << 	"SELECT count(*) from t_file "
-                                "WHERE vo_name=:vo_name and source_se = :endpoint and file_state='STARTED' and job_finished is NULL ",
-                                soci::use(vo_name), soci::use(source_se), soci::into(currentStagingActive);
-
-
-                            if(maxValueConfig > 0)
-                                {
-                                    if(currentStagingActive > 0)
-                                        {
-                                            limit = maxValueConfig - currentStagingActive;
-                                        }
-                                    else
-                                        {
-                                            limit = maxValueConfig;
-                                        }
-                                }
-                            else
-                                {
-                                    if(currentStagingActive > 0)
-                                        {
-                                            limit = 2000 - currentStagingActive;
-                                        }
-                                    else
-                                        {
-                                            limit = 2000;
-                                        }
-                                }
-
                             soci::rowset<soci::row> rs3 = (
                                                               sql.prepare <<
                                                               " SELECT f.source_surl, f.job_id, f.file_id, j.copy_pin_lifetime, j.bring_online, "
@@ -10594,7 +10599,7 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                                                               " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                                               " WHERE  "
                                                               " (j.BRING_ONLINE > 0 OR j.COPY_PIN_LIFETIME > 0) "
-                                                              "	AND f.staging_start IS NULL "
+                                                              "	AND f.start_time IS NULL "
                                                               "	AND f.file_state = 'STAGING' "
                                                               " AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd)"
                                                               "	AND f.source_se = :source_se  "
@@ -10676,7 +10681,7 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost
                         {
                             sql <<
                                 " UPDATE t_file "
-                                " SET staging_start = UTC_TIMESTAMP(), transferhost=:thost, file_state='STARTED' "
+                                " SET start_time = UTC_TIMESTAMP(), transferhost=:thost, file_state='STARTED' "
                                 " WHERE  "
                                 "	file_id= :fileId "
                                 "	AND file_state='STAGING'",
@@ -10684,9 +10689,9 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost
                                 soci::use(file_id)
                                 ;
                         }
-                    else
+                    else if(state == "FAILED")
                         {
-                            if(retry && state == "FAILED")
+                            if(retry )
                                 {
                                     bool shouldBeRetried = resetForRetryStaging(sql, file_id, job_id, retry);
                                     if(shouldBeRetried)
@@ -10694,40 +10699,49 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost
                                 }
                             else
                                 {
-
-
-                                    std::string dbState;
-                                    std::string dbReason;
-                                    int stage_in_only = 0;
-
-                                    sql << "select count(*) from t_file where file_id=:file_id and source_surl=dest_surl",
-                                        soci::use(file_id),
-                                        soci::into(stage_in_only);
-
-                                    if(stage_in_only == 0)  //stage-in and transfer
-                                        {
-                                            dbState = state == "FINISHED" ? "SUBMITTED" : state;
-                                            dbReason = state == "FINISHED" ? std::string() : reason;
-                                        }
-                                    else //stage-in only
-                                        {
-                                            dbState = state == "FINISHED" ? "FINISHED" : state;
-                                            dbReason = state == "FINISHED" ? std::string() : reason;
-                                        }
-
                                     sql <<
                                         " UPDATE t_file "
-                                        " SET staging_finished = UTC_TIMESTAMP(), job_finished=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), reason = :reason, file_state = :fileState "
+                                        " SET job_finished=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), reason = :reason, file_state = :fileState "
                                         " WHERE "
                                         "	file_id = :fileId "
                                         "	AND file_state in ('STAGING','STARTED')",
-                                        soci::use(dbReason),
-                                        soci::use(dbState),
+                                        soci::use(reason),
+                                        soci::use(state),
                                         soci::use(file_id)
                                         ;
+                                }
+                        }
+                    else
+                        {
+                            std::string dbState;
+                            std::string dbReason;
+                            int stage_in_only = 0;
 
+                            sql << "select count(*) from t_file where file_id=:file_id and source_surl=dest_surl",
+                                soci::use(file_id),
+                                soci::into(stage_in_only);
+
+                            if(stage_in_only == 0)  //stage-in and transfer
+                                {
+                                    dbState = state == "FINISHED" ? "SUBMITTED" : state;
+                                    dbReason = state == "FINISHED" ? std::string() : reason;
+                                }
+                            else //stage-in only
+                                {
+                                    dbState = state == "FINISHED" ? "FINISHED" : state;
+                                    dbReason = state == "FINISHED" ? std::string() : reason;
                                 }
 
+                            sql <<
+                                " UPDATE t_file "
+                                " SET job_finished=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), reason = :reason, file_state = :fileState "
+                                " WHERE "
+                                "	file_id = :fileId "
+                                "	AND file_state in ('STAGING','STARTED')",
+                                soci::use(dbReason),
+                                soci::use(dbState),
+                                soci::use(file_id)
+                                ;
                         }
 
                     //send state message
@@ -11369,7 +11383,7 @@ void MySqlAPI::updateFileTransferStatusJob(double throughputIn, std::string job_
                                          soci::use(job_id),
                                          soci::into(currentState),
                                          soci::into(reuseFlag, isNull));
-            stmt11.execute(true);	 
+            stmt11.execute(true);
 
             if(currentState == transfer_status)
                 return;
@@ -11382,7 +11396,7 @@ void MySqlAPI::updateFileTransferStatusJob(double throughputIn, std::string job_
             long long numberOfFilesSubmitted = 0;
             long long numberOfFilesNotUsed = 0;
             long long totalNumOfFilesInJob= 0;
-            long long totalInTerminal = 0;           
+            long long totalInTerminal = 0;
 
             soci::rowset<soci::row> rsReplica = (
                                                     sql.prepare <<
@@ -11420,14 +11434,14 @@ void MySqlAPI::updateFileTransferStatusJob(double throughputIn, std::string job_
                         {
                             numberOfFilesReady = countStates;
                         }
-		     else if(file_state == "NOT_USED")
+                    else if(file_state == "NOT_USED")
                         {
                             numberOfFilesNotUsed = countStates;
                         }
                 }
 
             totalNumOfFilesInJob = (numberOfFilesReady + numberOfFilesSubmitted + numberOfFilesFinished + numberOfFilesFailed + numberOfFilesStarted + numberOfFilesCanceled + numberOfFilesNotUsed);
-            totalInTerminal = (numberOfFilesFinished + numberOfFilesFailed + numberOfFilesCanceled);	    
+            totalInTerminal = (numberOfFilesFinished + numberOfFilesFailed + numberOfFilesCanceled);
 
             if(totalNumOfFilesInJob == numberOfFilesFinished) //all finished / job finished
                 {
@@ -11455,12 +11469,12 @@ void MySqlAPI::updateFileTransferStatusJob(double throughputIn, std::string job_
                                 " job_state = 'ACTIVE' "
                                 " WHERE job_id = :jobId ", soci::use(job_id);
                         }
-		    else if(currentState == "READY" && reuseFlag == "Y")
-		        {
+                    else if(currentState == "READY" && reuseFlag == "Y")
+                        {
                             sql << " UPDATE t_job SET "
                                 " job_state = 'ACTIVE' "
-                                " WHERE job_id = :jobId ", soci::use(job_id);			
-			}	
+                                " WHERE job_id = :jobId ", soci::use(job_id);
+                        }
                 }
             else if(totalNumOfFilesInJob == totalInTerminal && numberOfFilesCanceled == 0 && numberOfFilesFailed > 0) //FINISHEDDIRTY CASE
                 {

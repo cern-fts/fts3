@@ -9788,7 +9788,6 @@ void OracleAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< bo
 
     try
         {
-
             sql.begin();
 
             std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >::iterator itFind;
@@ -9805,7 +9804,7 @@ void OracleAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< bo
                         {
                             sql <<
                                 " UPDATE t_dm "
-                                " SET start_time = sys_extract_utc(systimestamp), transferhost=:thost, file_state='STARTED' "
+                                " SET start_time = sys_extract_utc(systimestamp), dmHost=:thost, file_state='STARTED' "
                                 " WHERE  "
                                 "	file_id= :fileId "
                                 "	AND file_state='DELETE'",
@@ -9813,9 +9812,9 @@ void OracleAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< bo
                                 soci::use(file_id)
                                 ;
                         }
-                    else
+                    else if(state == "FAILED")
                         {
-                            if(retry && state == "FAILED")
+                            if(retry)
                                 {
                                     bool shouldBeRetried = resetForRetryDelete(sql, file_id, job_id, retry);
                                     if(shouldBeRetried)
@@ -9823,33 +9822,41 @@ void OracleAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< bo
                                 }
                             else
                                 {
-
                                     sql <<
                                         " UPDATE t_dm "
                                         " SET  job_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), reason = :reason, file_state = :fileState "
                                         " WHERE "
-                                        "	file_id = :fileId "
-                                        "	AND file_state in ('STAGING','STARTED')",
+                                        "	file_id = :fileId ",
                                         soci::use(reason),
                                         soci::use(state),
                                         soci::use(file_id)
                                         ;
                                 }
-
-                            //send state message
-                            filesMsg = getStateOfTransferInternal(sql, job_id, file_id);
-                            if(!filesMsg.empty())
-                                {
-                                    std::vector<struct message_state>::iterator it;
-                                    for (it = filesMsg.begin(); it != filesMsg.end(); ++it)
-                                        {
-                                            struct message_state tmp = (*it);
-                                            constructJSONMsg(&tmp);
-                                        }
-                                }
-                            filesMsg.clear();
-
                         }
+                    else
+                        {
+                            sql <<
+                                " UPDATE t_dm "
+                                " SET  job_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), reason = :reason, file_state = :fileState "
+                                " WHERE "
+                                "	file_id = :fileId ",
+                                soci::use(reason),
+                                soci::use(state),
+                                soci::use(file_id)
+                                ;
+                        }
+                    //send state message
+                    filesMsg = getStateOfTransferInternal(sql, job_id, file_id);
+                    if(!filesMsg.empty())
+                        {
+                            std::vector<struct message_state>::iterator it;
+                            for (it = filesMsg.begin(); it != filesMsg.end(); ++it)
+                                {
+                                    struct message_state tmp = (*it);
+                                    constructJSONMsg(&tmp);
+                                }
+                        }
+                    filesMsg.clear();
                 }
 
             sql.commit();
@@ -9997,6 +10004,47 @@ void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::
                     std::string source_se = r.get<std::string>("SOURCE_SE","");
                     std::string vo_name = r.get<std::string>("VO_NAME","");
 
+                    int maxValueConfig = 0;
+                    int currentDeleteActive = 0;
+                    int limit = 0;
+
+                    //check max configured
+                    sql << 	"SELECT concurrent_ops from t_stage_req "
+                        "WHERE vo_name=:vo_name and host = :endpoint and operation='delete' and concurrent_ops is NOT NULL ",
+                        soci::use(vo_name), soci::use(source_se), soci::into(maxValueConfig);
+
+                    //check current staging
+                    sql << 	"SELECT count(*) from t_dm "
+                        "WHERE vo_name=:vo_name and source_se = :endpoint and file_state='STARTED' and job_finished is NULL ",
+                        soci::use(vo_name), soci::use(source_se), soci::into(currentDeleteActive);
+
+
+                    if(maxValueConfig > 0)
+                        {
+                            if(currentDeleteActive > 0)
+                                {
+                                    limit = maxValueConfig - currentDeleteActive;
+                                }
+                            else
+                                {
+                                    limit = maxValueConfig;
+                                }
+                        }
+                    else
+                        {
+                            if(currentDeleteActive > 0)
+                                {
+                                    limit = 2000 - currentDeleteActive;
+                                }
+                            else
+                                {
+                                    limit = 2000;
+                                }
+                        }
+
+                    if(limit == 0)
+                        continue;
+
                     soci::rowset<soci::row> rs = (
                                                      sql.prepare <<
                                                      " SELECT distinct j.source_se, j.user_dn "
@@ -10016,44 +10064,6 @@ void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::
 
                             source_se = row.get<std::string>("SOURCE_SE");
                             std::string user_dn = row.get<std::string>("USER_DN");
-
-                            int maxValueConfig = 0;
-                            int currentDeleteActive = 0;
-                            int limit = 0;
-
-                            //check max configured
-                            sql << 	"SELECT concurrent_ops from t_stage_req "
-                                "WHERE vo_name=:vo_name and host = :endpoint and operation='delete' and concurrent_ops is NOT NULL ",
-                                soci::use(vo_name), soci::use(source_se), soci::into(maxValueConfig);
-
-                            //check current staging
-                            sql << 	"SELECT count(*) from t_dm "
-                                "WHERE vo_name=:vo_name and source_se = :endpoint and file_state='STARTED' and job_finished is NULL ",
-                                soci::use(vo_name), soci::use(source_se), soci::into(currentDeleteActive);
-
-
-                            if(maxValueConfig > 0)
-                                {
-                                    if(currentDeleteActive > 0)
-                                        {
-                                            limit = maxValueConfig - currentDeleteActive;
-                                        }
-                                    else
-                                        {
-                                            limit = maxValueConfig;
-                                        }
-                                }
-                            else
-                                {
-                                    if(currentDeleteActive > 0)
-                                        {
-                                            limit = 2000 - currentDeleteActive;
-                                        }
-                                    else
-                                        {
-                                            limit = 2000;
-                                        }
-                                }
 
                             soci::rowset<soci::row> rs3 = (
                                                               sql.prepare <<
@@ -10323,6 +10333,47 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
                     std::string source_se = r.get<std::string>("SOURCE_SE","");
                     std::string vo_name = r.get<std::string>("VO_NAME","");
 
+                    int maxValueConfig = 0;
+                    int currentStagingActive = 0;
+                    int limit = 0;
+
+                    //check max configured
+                    sql << 	"SELECT concurrent_ops from t_stage_req "
+                        "WHERE vo_name=:vo_name and host = :endpoint and operation='staging' and concurrent_ops is NOT NULL ",
+                        soci::use(vo_name), soci::use(source_se), soci::into(maxValueConfig);
+
+                    //check current staging
+                    sql << 	"SELECT count(*) from t_file "
+                        "WHERE vo_name=:vo_name and source_se = :endpoint and file_state='STARTED' and job_finished is NULL ",
+                        soci::use(vo_name), soci::use(source_se), soci::into(currentStagingActive);
+
+
+                    if(maxValueConfig > 0)
+                        {
+                            if(currentStagingActive > 0)
+                                {
+                                    limit = maxValueConfig - currentStagingActive;
+                                }
+                            else
+                                {
+                                    limit = maxValueConfig;
+                                }
+                        }
+                    else
+                        {
+                            if(currentStagingActive > 0)
+                                {
+                                    limit = 2000 - currentStagingActive;
+                                }
+                            else
+                                {
+                                    limit = 2000;
+                                }
+                        }
+
+                    if(limit == 0)
+                        continue;
+
                     soci::rowset<soci::row> rs = (
                                                      sql.prepare <<
                                                      " SELECT distinct j.source_se, j.user_dn "
@@ -10330,7 +10381,7 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
                                                      " WHERE "
                                                      "	(j.BRING_ONLINE > 0 OR j.COPY_PIN_LIFETIME > 0) "
                                                      "	AND f.file_state = 'STAGING' "
-                                                     "	AND f.staging_start IS NULL and j.job_finished is null "
+                                                     "	AND f.start_time IS NULL and j.job_finished is null "
                                                      "  AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd)"
                                                      "  AND f.vo_name = :vo_name AND f.source_se=:source_se ",
                                                      soci::use(hashSegment.start), soci::use(hashSegment.end),
@@ -10344,44 +10395,6 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
                             source_se = row.get<std::string>("SOURCE_SE");
                             std::string user_dn = row.get<std::string>("USER_DN");
 
-                            int maxValueConfig = 0;
-                            int currentStagingActive = 0;
-                            int limit = 0;
-
-                            //check max configured
-                            sql << 	"SELECT concurrent_ops from t_stage_req "
-                                "WHERE vo_name=:vo_name and host = :endpoint and operation='staging' and concurrent_ops is NOT NULL ",
-                                soci::use(vo_name), soci::use(source_se), soci::into(maxValueConfig);
-
-                            //check current staging
-                            sql << 	"SELECT count(*) from t_file "
-                                "WHERE vo_name=:vo_name and source_se = :endpoint and file_state='STARTED' and job_finished is NULL ",
-                                soci::use(vo_name), soci::use(source_se), soci::into(currentStagingActive);
-
-
-                            if(maxValueConfig > 0)
-                                {
-                                    if(currentStagingActive > 0)
-                                        {
-                                            limit = maxValueConfig - currentStagingActive;
-                                        }
-                                    else
-                                        {
-                                            limit = maxValueConfig;
-                                        }
-                                }
-                            else
-                                {
-                                    if(currentStagingActive > 0)
-                                        {
-                                            limit = 2000 - currentStagingActive;
-                                        }
-                                    else
-                                        {
-                                            limit = 2000;
-                                        }
-                                }
-
                             soci::rowset<soci::row> rs3 = (
                                                               sql.prepare <<
                                                               " SELECT * FROM (SELECT f.source_surl, f.job_id, f.file_id, j.copy_pin_lifetime, j.bring_online, "
@@ -10389,7 +10402,7 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
                                                               " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                                               " WHERE  "
                                                               " (j.BRING_ONLINE > 0 OR j.COPY_PIN_LIFETIME > 0) "
-                                                              "	AND f.staging_start IS NULL "
+                                                              "	AND f.start_time IS NULL "
                                                               "	AND f.file_state = 'STAGING' "
                                                               " AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd)"
                                                               "	AND f.source_se = :source_se  "
@@ -10471,7 +10484,7 @@ void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boos
                         {
                             sql <<
                                 " UPDATE t_file "
-                                " SET staging_start = sys_extract_utc(systimestamp), transferhost=:thost, file_state='STARTED' "
+                                " SET start_time = sys_extract_utc(systimestamp), transferhost=:thost, file_state='STARTED' "
                                 " WHERE  "
                                 "	file_id= :fileId "
                                 "	AND file_state='STAGING'",
@@ -10479,9 +10492,9 @@ void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boos
                                 soci::use(file_id)
                                 ;
                         }
-                    else
+                    else if(state == "FAILED")
                         {
-                            if(retry && state == "FAILED")
+                            if(retry)
                                 {
                                     bool shouldBeRetried = resetForRetryStaging(sql, file_id, job_id, retry);
                                     if(shouldBeRetried)
@@ -10489,55 +10502,62 @@ void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boos
                                 }
                             else
                                 {
-
-
-                                    std::string dbState;
-                                    std::string dbReason;
-                                    int stage_in_only = 0;
-
-                                    sql << "select count(*) from t_file where file_id=:file_id and source_surl=dest_surl",
-                                        soci::use(file_id),
-                                        soci::into(stage_in_only);
-
-                                    if(stage_in_only == 0)  //stage-in and transfer
-                                        {
-                                            dbState = state == "FINISHED" ? "SUBMITTED" : state;
-                                            dbReason = state == "FINISHED" ? std::string() : reason;
-                                        }
-                                    else //stage-in only
-                                        {
-                                            dbState = state == "FINISHED" ? "FINISHED" : state;
-                                            dbReason = state == "FINISHED" ? std::string() : reason;
-                                        }
-
                                     sql <<
                                         " UPDATE t_file "
-                                        " SET staging_finished = sys_extract_utc(systimestamp), job_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), reason = :reason, file_state = :fileState "
+                                        " SET job_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), reason = :reason, file_state = :fileState "
                                         " WHERE "
                                         "	file_id = :fileId "
-                                        "	AND file_state in ('STAGING','STARTED')",
-                                        soci::use(dbReason),
-                                        soci::use(dbState),
+                                        "	AND file_state = 'STARTED' ",
+                                        soci::use(reason),
+                                        soci::use(state),
                                         soci::use(file_id)
                                         ;
-
-                                    //send state message
-                                    filesMsg = getStateOfTransferInternal(sql, job_id, file_id);
-                                    if(!filesMsg.empty())
-                                        {
-                                            std::vector<struct message_state>::iterator it;
-                                            for (it = filesMsg.begin(); it != filesMsg.end(); ++it)
-                                                {
-                                                    struct message_state tmp = (*it);
-                                                    constructJSONMsg(&tmp);
-                                                }
-                                        }
-                                    filesMsg.clear();
-
                                 }
                         }
+                    else
+                        {
+                            std::string dbState;
+                            std::string dbReason;
+                            int stage_in_only = 0;
 
+                            sql << "select count(*) from t_file where file_id=:file_id and source_surl=dest_surl",
+                                soci::use(file_id),
+                                soci::into(stage_in_only);
 
+                            if(stage_in_only == 0)  //stage-in and transfer
+                                {
+                                    dbState = state == "FINISHED" ? "SUBMITTED" : state;
+                                    dbReason = state == "FINISHED" ? std::string() : reason;
+                                }
+                            else //stage-in only
+                                {
+                                    dbState = state == "FINISHED" ? "FINISHED" : state;
+                                    dbReason = state == "FINISHED" ? std::string() : reason;
+                                }
+
+                            sql <<
+                                " UPDATE t_file "
+                                " SET job_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), reason = :reason, file_state = :fileState "
+                                " WHERE "
+                                "	file_id = :fileId "
+                                "	AND file_state in ('STAGING','STARTED')",
+                                soci::use(dbReason),
+                                soci::use(dbState),
+                                soci::use(file_id)
+                                ;
+                        }
+                    //send state message
+                    filesMsg = getStateOfTransferInternal(sql, job_id, file_id);
+                    if(!filesMsg.empty())
+                        {
+                            std::vector<struct message_state>::iterator it;
+                            for (it = filesMsg.begin(); it != filesMsg.end(); ++it)
+                                {
+                                    struct message_state tmp = (*it);
+                                    constructJSONMsg(&tmp);
+                                }
+                        }
+                    filesMsg.clear();
                 }
             sql.commit();
 
@@ -11178,7 +11198,7 @@ void OracleAPI::updateFileTransferStatusJob(double throughputIn, std::string job
             long long numberOfFilesFailed = 0;
             long long numberOfFilesStarted = 0;
             long long numberOfFilesSubmitted = 0;
-	    long long numberOfFilesNotUsed = 0;
+            long long numberOfFilesNotUsed = 0;
             long long totalNumOfFilesInJob= 0;
             long long totalInTerminal = 0;
 
@@ -11218,7 +11238,7 @@ void OracleAPI::updateFileTransferStatusJob(double throughputIn, std::string job
                         {
                             numberOfFilesReady = countStates;
                         }
-		     else if(file_state == "NOT_USED")
+                    else if(file_state == "NOT_USED")
                         {
                             numberOfFilesNotUsed = countStates;
                         }
@@ -11253,12 +11273,12 @@ void OracleAPI::updateFileTransferStatusJob(double throughputIn, std::string job
                                 " job_state = 'ACTIVE' "
                                 " WHERE job_id = :jobId ", soci::use(job_id);
                         }
-		    else if(currentState == "READY" && reuseFlag == "Y")
-		        {
+                    else if(currentState == "READY" && reuseFlag == "Y")
+                        {
                             sql << " UPDATE t_job SET "
                                 " job_state = 'ACTIVE' "
-                                " WHERE job_id = :jobId ", soci::use(job_id);			
-			}			
+                                " WHERE job_id = :jobId ", soci::use(job_id);
+                        }
                 }
             else if(totalNumOfFilesInJob == totalInTerminal && numberOfFilesCanceled == 0 && numberOfFilesFailed > 0) //FINISHEDDIRTY CASE
                 {
