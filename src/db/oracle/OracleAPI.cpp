@@ -11204,7 +11204,7 @@ void OracleAPI::updateFileTransferStatusJob(double throughputIn, std::string job
 
             soci::rowset<soci::row> rsReplica = (
                                                     sql.prepare <<
-                                                    " select file_state, COUNT(DISTINCT file_index) from t_file where job_id=:job_id group by file_state order by null ",
+                                                    " select file_state, COUNT(file_state) from t_file where job_id=:job_id group by file_state order by null ",
                                                     soci::use(job_id)
                                                 );
 
@@ -11212,7 +11212,7 @@ void OracleAPI::updateFileTransferStatusJob(double throughputIn, std::string job
             for (iRep = rsReplica.begin(); iRep != rsReplica.end(); ++iRep)
                 {
                     std::string file_state = iRep->get<std::string>("FILE_STATE");
-                    int countStates = iRep->get<int>("COUNT(DISTINCT FILE_INDEX)");
+                    int countStates = iRep->get<int>("COUNT(FILE_STATE)");
 
                     if(file_state == "FINISHED")
                         {
