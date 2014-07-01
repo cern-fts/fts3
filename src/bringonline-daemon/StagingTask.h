@@ -35,20 +35,20 @@ class StagingTask
 
 public:
 
-	typedef boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string> context_type;
+    typedef boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string> context_type;
 
-	enum
-	{
-		vo,
-		url,
-		job_id,
-		file_id,
-		copy_pin_lifetime,
-		bring_online_timeout,
-		dn,
-		dlg_id,
-		src_space_token
-	};
+    enum
+    {
+        vo,
+        url,
+        job_id,
+        file_id,
+        copy_pin_lifetime,
+        bring_online_timeout,
+        dn,
+        dlg_id,
+        src_space_token
+    };
 
     /**
      * Creates a new StagingTask from a message_bringonline
@@ -57,7 +57,7 @@ public:
      * @param proxy : path to the proxy certificate
      */
     StagingTask(context_type const & ctx) :
-    	state_update(StagingStateUpdater::instance()), ctx(ctx), gfal2_ctx(), wait_until() {}
+        state_update(StagingStateUpdater::instance()), ctx(ctx), gfal2_ctx(), wait_until() {}
 
     /**
      * Creates a new StagingTask from another StagingTask
@@ -65,7 +65,7 @@ public:
      * @param copy : a staging task (stills the gfal2 context of this object!)
      */
     StagingTask(StagingTask & copy) :
-    	state_update(StagingStateUpdater::instance()), ctx(copy.ctx), gfal2_ctx(copy.gfal2_ctx), wait_until(copy.wait_until) {}
+        state_update(StagingStateUpdater::instance()), ctx(copy.ctx), gfal2_ctx(copy.gfal2_ctx), wait_until(copy.wait_until) {}
 
     /**
      * Destructor
@@ -98,7 +98,7 @@ public:
 
     bool waiting(time_t now)
     {
-    	return wait_until > now;
+        return wait_until > now;
     }
 
 protected:
@@ -108,42 +108,42 @@ protected:
      */
     struct Gfal2CtxWrapper
     {
-    	/// Constructor
-    	Gfal2CtxWrapper() : gfal2_ctx(0)
-    	{
-    		// Set up handle
-    		GError *error = NULL;
-    		gfal2_ctx = gfal2_context_new(&error);
-    		if (!gfal2_ctx)
-    			{
-    				std::stringstream ss;
-    				ss << "BRINGONLINE bad initialization " << error->code << " " << error->message;
-    				// the memory was not allocated so it is safe to throw
-    				throw Err_Custom(ss.str());
-    			}
-    	}
+        /// Constructor
+        Gfal2CtxWrapper() : gfal2_ctx(0)
+        {
+            // Set up handle
+            GError *error = NULL;
+            gfal2_ctx = gfal2_context_new(&error);
+            if (!gfal2_ctx)
+                {
+                    std::stringstream ss;
+                    ss << "BRINGONLINE bad initialization " << error->code << " " << error->message;
+                    // the memory was not allocated so it is safe to throw
+                    throw Err_Custom(ss.str());
+                }
+        }
 
-    	/// Copy constructor, steals the pointer from the parameter!
-    	Gfal2CtxWrapper(Gfal2CtxWrapper & copy) : gfal2_ctx(copy.gfal2_ctx)
-    	{
-    		copy.gfal2_ctx = 0;
-    	}
+        /// Copy constructor, steals the pointer from the parameter!
+        Gfal2CtxWrapper(Gfal2CtxWrapper & copy) : gfal2_ctx(copy.gfal2_ctx)
+        {
+            copy.gfal2_ctx = 0;
+        }
 
-    	/// conversion to normal gfal2 context
-    	operator gfal2_context_t()
-		{
-    		return gfal2_ctx;
-		}
+        /// conversion to normal gfal2 context
+        operator gfal2_context_t()
+        {
+            return gfal2_ctx;
+        }
 
-    	/// Destructor
-    	~Gfal2CtxWrapper()
-    	{
-    		if(gfal2_ctx) gfal2_context_free(gfal2_ctx);
-    	}
+        /// Destructor
+        ~Gfal2CtxWrapper()
+        {
+            if(gfal2_ctx) gfal2_context_free(gfal2_ctx);
+        }
 
     private:
-    	/// the gfal2 context itself
-    	gfal2_context_t gfal2_ctx;
+        /// the gfal2 context itself
+        gfal2_context_t gfal2_ctx;
     };
 
     /// the infosys used to create all gfal2 contexts

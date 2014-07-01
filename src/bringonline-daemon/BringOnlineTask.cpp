@@ -14,8 +14,8 @@
 
 BringOnlineTask::BringOnlineTask(context_type const & ctx, std::string const & proxy) : StagingTask(ctx), proxy(proxy)
 {
-	// set up the gfal2 context
-	GError *error = NULL;
+    // set up the gfal2 context
+    GError *error = NULL;
 
     const char *protocols[] = {"rfio", "gsidcap", "dcap", "gsiftp"};
 
@@ -29,22 +29,22 @@ BringOnlineTask::BringOnlineTask(context_type const & ctx, std::string const & p
 
     gfal2_set_opt_boolean(gfal2_ctx, "GRIDFTP PLUGIN", "SESSION_REUSE", true, &error);
     if (error)
-		{
-			std::stringstream ss;
-			ss << "BRINGONLINE Could not set the session reuse " << error->code << " " << error->message;
-			throw Err_Custom(ss.str());
-		}
+        {
+            std::stringstream ss;
+            ss << "BRINGONLINE Could not set the session reuse " << error->code << " " << error->message;
+            throw Err_Custom(ss.str());
+        }
 
     if (!boost::get<src_space_token>(ctx).empty())
-    {
-    	gfal2_set_opt_string(gfal2_ctx, "SRM PLUGIN", "SPACETOKENDESC", (char *) boost::get<src_space_token>(ctx).c_str(), &error);
-    	if (error)
-			{
-				std::stringstream ss;
-				ss << "BRINGONLINE Could not set the space token " << error->code << " " << error->message;
-				throw Err_Custom(ss.str());
-			}
-    }
+        {
+            gfal2_set_opt_string(gfal2_ctx, "SRM PLUGIN", "SPACETOKENDESC", (char *) boost::get<src_space_token>(ctx).c_str(), &error);
+            if (error)
+                {
+                    std::stringstream ss;
+                    ss << "BRINGONLINE Could not set the space token " << error->code << " " << error->message;
+                    throw Err_Custom(ss.str());
+                }
+        }
 
     if (infosys == "false")
         {
@@ -68,10 +68,10 @@ void BringOnlineTask::setProxy()
     bool isValid = checkValidProxy(proxy, message);
     if(!isValid)
         {
-    		state_update(boost::get<job_id>(ctx), boost::get<file_id>(ctx), "FAILED", message, false);
-			std::stringstream ss;
-			ss << "BRINGONLINE proxy certificate not valid: " << message;
-    		throw Err_Custom(ss.str());
+            state_update(boost::get<job_id>(ctx), boost::get<file_id>(ctx), "FAILED", message, false);
+            std::stringstream ss;
+            ss << "BRINGONLINE proxy certificate not valid: " << message;
+            throw Err_Custom(ss.str());
         }
 
     char* cert = const_cast<char*>(proxy.c_str());
@@ -79,17 +79,17 @@ void BringOnlineTask::setProxy()
     int status = gfal2_set_opt_string(gfal2_ctx, "X509", "CERT", cert, &error);
     if (status < 0)
         {
-    		state_update(boost::get<job_id>(ctx), boost::get<file_id>(ctx), "FAILED", error->message, false);
-			std::stringstream ss;
-			ss << "BRINGONLINE setting X509 CERT failed " << error->code << " " << error->message;
-			throw Err_Custom(ss.str());
+            state_update(boost::get<job_id>(ctx), boost::get<file_id>(ctx), "FAILED", error->message, false);
+            std::stringstream ss;
+            ss << "BRINGONLINE setting X509 CERT failed " << error->code << " " << error->message;
+            throw Err_Custom(ss.str());
         }
 
     status = gfal2_set_opt_string(gfal2_ctx, "X509", "KEY", cert, &error);
     if (status < 0)
         {
-			state_update(boost::get<job_id>(ctx), boost::get<file_id>(ctx), "FAILED", error->message, false);
-			std::stringstream ss;
+            state_update(boost::get<job_id>(ctx), boost::get<file_id>(ctx), "FAILED", error->message, false);
+            std::stringstream ss;
             ss << "BRINGONLINE setting X509 KEY failed " << error->code << " " << error->message;
             throw Err_Custom(ss.str());
         }

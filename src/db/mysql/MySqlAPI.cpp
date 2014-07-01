@@ -2205,11 +2205,11 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
             sql.commit();
 
             if(transfer_status == "FAILED")
-	    {
-       		sql.begin();
-                useFileReplica(sql, job_id, file_id);
-		sql.commit();
-	    }
+                {
+                    sql.begin();
+                    useFileReplica(sql, job_id, file_id);
+                    sql.commit();
+                }
         }
     catch (std::exception& e)
         {
@@ -2266,10 +2266,10 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
             soci::indicator isNull = soci::i_ok;
 
             if(job_id.empty())
-	    {
-                sql << " SELECT job_id from t_file where pid=:pid and transferhost=:hostname and file_state in ('FINISHED','FAILED') LIMIT 1 ",
-                    soci::use(pid),soci::use(hostname),soci::into(job_id);
-            }		    
+                {
+                    sql << " SELECT job_id from t_file where pid=:pid and transferhost=:hostname and file_state in ('FINISHED','FAILED') LIMIT 1 ",
+                        soci::use(pid),soci::use(hostname),soci::into(job_id);
+                }
 
             soci::statement stmt1 = (
                                         sql.prepare << " SELECT job_state, reuse_job from t_job  "
@@ -8911,7 +8911,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
     soci::indicator isNull1 = soci::i_ok;
     soci::indicator isNull2 = soci::i_ok;
     soci::indicator isNull3 = soci::i_ok;
-   
+
     if(vo_name.empty())
         {
             queryVO = "select distinct vo_name from t_job ";
@@ -8926,12 +8926,12 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
             if(!vo_name.empty())
                 {
                     querySe += " and source_se = '" + source_se + "'";
-		    queryVO += " and source_se = '" + source_se + "'";
+                    queryVO += " and source_se = '" + source_se + "'";
                 }
             else
                 {
                     querySe += " where source_se ='" + source_se + "'";
-		    queryVO += " where source_se ='" + source_se + "'";		    
+                    queryVO += " where source_se ='" + source_se + "'";
                 }
             sourceEmpty = false;
         }
@@ -8945,27 +8945,27 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                     if(!vo_name.empty())
                         {
                             querySe += " and dest_se = '" + dest_se + "'";
-			    queryVO += " and dest_se = '" + dest_se + "'";
+                            queryVO += " and dest_se = '" + dest_se + "'";
                         }
                     else
                         {
                             querySe += " where dest_se = '" + dest_se + "'";
-			    queryVO += " where dest_se = '" + dest_se + "'";
+                            queryVO += " where dest_se = '" + dest_se + "'";
                         }
                 }
             else
                 {
                     dest_se = dest_se_p;
                     querySe += " AND dest_se = '" + dest_se + "'";
-		    queryVO += " AND dest_se = '" + dest_se + "'";
+                    queryVO += " AND dest_se = '" + dest_se + "'";
                 }
         }
 
     try
         {
             soci::statement pairsStmt((sql.prepare << querySe, soci::into(source_se), soci::into(dest_se)));
-	    soci::statement voStmt((sql.prepare << queryVO, soci::into(vo_name_local)));
-	    	    
+            soci::statement voStmt((sql.prepare << queryVO, soci::into(vo_name_local)));
+
             soci::statement st1((sql.prepare << "select count(*) from t_file where "
                                  " file_state='ACTIVE' and vo_name=:vo_name_local and "
                                  " source_se=:source_se and dest_se=:dest_se",
@@ -9183,10 +9183,10 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
             else
                 {
                     vo_name_local = vo_name;
- 		    if(source_se_p.empty())
-                                source_se = "";
+                    if(source_se_p.empty())
+                        source_se = "";
                     if(dest_se_p.empty())
-                                dest_se = "";		    
+                        dest_se = "";
 
                     if (pairsStmt.execute(true))
                         {
@@ -10735,7 +10735,20 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost
                                     dbReason = state == "FINISHED" ? std::string() : reason;
                                 }
 
+			    if(dbState == "SUBMITTED")
+			    {			    
                             sql <<
+                                " UPDATE t_file "
+                                " SET job_finished=NULL, finish_time=NULL, start_time=NULL, transferhost=NULL, reason = '', file_state = :fileState "
+                                " WHERE "
+                                "	file_id = :fileId ",
+                                soci::use(dbState),
+                                soci::use(file_id)
+                                ;
+			     }	
+			     else if(dbState == "FINISHED")
+			     {
+                              sql <<
                                 " UPDATE t_file "
                                 " SET job_finished=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), reason = :reason, file_state = :fileState "
                                 " WHERE "
@@ -10744,7 +10757,21 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost
                                 soci::use(dbReason),
                                 soci::use(dbState),
                                 soci::use(file_id)
-                                ;
+                                ;			     
+			     }
+			     else
+			     {
+                              sql <<
+                                " UPDATE t_file "
+                                " SET job_finished=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), reason = :reason, file_state = :fileState "
+                                " WHERE "
+                                "	file_id = :fileId "
+                                "	AND file_state in ('STAGING','STARTED')",
+                                soci::use(dbReason),
+                                soci::use(dbState),
+                                soci::use(file_id)
+                                ;			     
+			     }
                         }
 
                     //send state message
