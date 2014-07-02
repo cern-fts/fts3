@@ -320,13 +320,13 @@ protected:
                         std::vector< boost::tuple<std::string, std::string, std::string> > split_22(split_2.begin() + half_size3, split_2.end());
 
                         //create threads only when needed
-                        if(!voQueues1.empty())
+                        if(!split_11.empty())
                             g.create_thread(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_11), boost::ref(voQueues1)));
-                        if(!voQueues2.empty())
+                        if(!split_21.empty())
                             g.create_thread(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_21), boost::ref(voQueues2)));
-                        if(!voQueues3.empty())
+                        if(!split_12.empty())
                             g.create_thread(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_12), boost::ref(voQueues3)));
-                        if(!voQueues4.empty())
+                        if(!split_22.empty())
                             g.create_thread(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_22), boost::ref(voQueues4)));
 
                         // wait for them

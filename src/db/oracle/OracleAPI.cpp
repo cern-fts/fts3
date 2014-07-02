@@ -9701,10 +9701,33 @@ void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::
                                     boost::tuple<int, std::string, std::string, std::string, bool> recordState(file_id, initState, reason, job_id, false);
                                     filesState.push_back(recordState);
                                 }
-                            //file_id / state / reason / job_id
+				
                             //now update the initial state
                             if(!filesState.empty())
-                                updateDeletionsStateInternal(sql, filesState);
+                                {
+                                    std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >::iterator itFind;
+                                    for (itFind = filesState.begin(); itFind < filesState.end(); ++itFind)
+                                        {
+                                            boost::tuple<int, std::string, std::string, std::string, bool>& tupleRecord = *itFind;
+                                            int file_id = boost::get<0>(tupleRecord);
+                                            std::string job_id = boost::get<3>(tupleRecord);
+
+                                            //send state message
+                                            std::vector<struct message_state> filesMsg;
+                                            filesMsg = getStateOfTransferInternal(sql, job_id, file_id);
+                                            if(!filesMsg.empty())
+                                                {
+                                                    std::vector<struct message_state>::iterator it;
+                                                    for (it = filesMsg.begin(); it != filesMsg.end(); ++it)
+                                                        {
+                                                            struct message_state tmp = (*it);
+                                                            constructJSONMsg(&tmp);
+                                                        }
+                                                }
+                                            filesMsg.clear();
+                                        }
+                                    updateDeletionsStateInternal(sql, filesState);
+                                }	  
                         }
                 }
         }
@@ -10038,7 +10061,30 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
 
                             //now update the initial state
                             if(!filesState.empty())
-                                updateStagingStateInternal(sql, filesState);
+                                {
+                                    std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >::iterator itFind;
+                                    for (itFind = filesState.begin(); itFind < filesState.end(); ++itFind)
+                                        {
+                                            boost::tuple<int, std::string, std::string, std::string, bool>& tupleRecord = *itFind;
+                                            int file_id = boost::get<0>(tupleRecord);
+                                            std::string job_id = boost::get<3>(tupleRecord);
+
+                                            //send state message
+                                            std::vector<struct message_state> filesMsg;
+                                            filesMsg = getStateOfTransferInternal(sql, job_id, file_id);
+                                            if(!filesMsg.empty())
+                                                {
+                                                    std::vector<struct message_state>::iterator it;
+                                                    for (it = filesMsg.begin(); it != filesMsg.end(); ++it)
+                                                        {
+                                                            struct message_state tmp = (*it);
+                                                            constructJSONMsg(&tmp);
+                                                        }
+                                                }
+                                            filesMsg.clear();
+                                        }
+                                    updateStagingStateInternal(sql, filesState);
+                                }
                         }
                 }
         }
