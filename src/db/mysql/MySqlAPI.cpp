@@ -10694,13 +10694,16 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost
                         }
                     else if(state == "FAILED")
                         {
-                            if(retry )
+                    		bool shouldBeRetried = retry;
+
+                    		if(retry )
                                 {
-                                    bool shouldBeRetried = resetForRetryStaging(sql, file_id, job_id, retry);
+                                    shouldBeRetried = resetForRetryStaging(sql, file_id, job_id, retry);
                                     if(shouldBeRetried)
                                         continue;
                                 }
-                            else
+
+                    		if (!retry || !shouldBeRetried)
                                 {
                                     sql <<
                                         " UPDATE t_file "

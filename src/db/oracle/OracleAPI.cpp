@@ -10494,13 +10494,16 @@ void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boos
                         }
                     else if(state == "FAILED")
                         {
+                    		bool shouldBeRetried = retry;
+
                             if(retry)
                                 {
-                                    bool shouldBeRetried = resetForRetryStaging(sql, file_id, job_id, retry);
+                                    shouldBeRetried = resetForRetryStaging(sql, file_id, job_id, retry);
                                     if(shouldBeRetried)
                                         continue;
                                 }
-                            else
+
+                            if (!retry || !shouldBeRetried)
                                 {
                                     sql <<
                                         " UPDATE t_file "
