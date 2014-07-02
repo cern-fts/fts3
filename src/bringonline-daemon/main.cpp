@@ -143,6 +143,8 @@ int DoServer(int argc, char** argv)
 
     try
         {
+	    setenv("GLOBUS_THREAD_MODEL", "pthread", 1); 
+	
             REGISTER_SIGNAL(SIGABRT);
             REGISTER_SIGNAL(SIGSEGV);
             REGISTER_SIGNAL(SIGTERM);
