@@ -338,6 +338,10 @@ int DoServer(int argc, char** argv)
                                 {
                                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
                                 }
+                           catch(...)
+                                {
+                                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception, continuing to see..." << commit;
+                                }				
                         }
 
                     boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
