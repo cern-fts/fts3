@@ -14,47 +14,18 @@ See the License for the specific language governing permissions and
 limitations under the License. */
 
 #include "server_dev.h"
-#include <list>
-#include <cstdio>
-#include <signal.h>
-#include <unistd.h>
-#include <iostream>
 #include "common/error.h"
 #include "common/logger.h"
 #include "common/ThreadPool.h"
 #include "config/serverconfig.h"
-#include "db/generic/SingleDbInstance.h"
-#include "ws/delegation/GSoapDelegationHandler.h"
-#include <fstream>
 #include "server.h"
-#include "daemonize.h"
 #include "signal_logger.h"
-#include "StaticSslLocking.h"
-#include <iomanip>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include "queue_updater.h"
-#include <boost/filesystem.hpp>
-#include "name_to_uid.h"
-#include <sys/resource.h>
-#include "queue_bringonline.h"
-#include "UserProxyEnv.h"
-#include "DelegCred.h"
-#include "CredService.h"
-#include <gfal_api.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
-#include "name_to_uid.h"
-#include "cred-utility.h"
-#include "name_to_uid.h"
-#include "DrainMode.h"
 
 #include "StagingTask.h"
 #include "BringOnlineTask.h"
 #include "WaitingRoom.h"
+#include "FetchStaging.h"
 
-#include <vector>
 #include <string>
 
 using namespace FTS3_SERVER_NAMESPACE;
@@ -71,14 +42,6 @@ static int fexists(const char *filename)
     struct stat buffer;
     if (stat(filename, &buffer) == 0) return 0;
     return -1;
-}
-
-static bool isSrmUrl(const std::string & url)
-{
-    if (url.compare(0, 6, "srm://") == 0)
-        return true;
-
-    return false;
 }
 
 int fts3_teardown_db_backend()
@@ -132,12 +95,6 @@ void fts3_initialize_db_backend()
         {
             throw;
         }
-}
-
-static std::string generateProxy(const std::string& dn, const std::string& dlg_id)
-{
-    boost::scoped_ptr<DelegCred> delegCredPtr(new DelegCred);
-    return delegCredPtr->getFileName(dn, dlg_id);
 }
 
 void heartbeat(void)
@@ -286,74 +243,11 @@ int DoServer(int argc, char** argv)
 
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE daemon started..." << commit;
 
-            while (!stopThreads)
-                {
-                    try  //this loop must never exit
-                        {
-                            //if we drain a host, no need to check if url_copy are reporting being alive
-                            if (DrainMode::getInstance())
-                                {
-                                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking stage-in files for this instance!" << commit;
-                                    sleep(15);
-                                    continue;
-                                }
+            FetchStaging fs(threadpool);
 
-                            std::vector<StagingTask::context_type> files;
-                            db::DBSingleton::instance().getDBObjectInstance()->getFilesForStaging(files);
-
-                            std::vector<StagingTask::context_type>::iterator it;
-                            for (it = files.begin(); it != files.end(); ++it)
-                                {
-                                    // make sure it is a srm SE
-                                    std::string & url = boost::get<BringOnlineTask::url>(*it);
-                                    if (!isSrmUrl(url)) continue;
-
-                                    //get the proxy
-                                    std::string & dn = boost::get<BringOnlineTask::dn>(*it);
-                                    std::string & dlg_id = boost::get<BringOnlineTask::dlg_id>(*it);
-                                    std::string & vo = boost::get<BringOnlineTask::vo>(*it);
-                                    proxy_file = generateProxy(dn, dlg_id);
-
-                                    std::string message;
-                                    if(!BringOnlineTask::checkValidProxy(proxy_file, message))
-                                        {
-                                            proxy_file = get_proxy_cert(
-                                                             dn, // user_dn
-                                                             dlg_id, // user_cred
-                                                             vo, // vo_name
-                                                             "",
-                                                             "", // assoc_service
-                                                             "", // assoc_service_type
-                                                             false,
-                                                             ""
-                                                         );
-                                        }
-
-                                    try
-                                        {
-                                            threadpool.start(new BringOnlineTask(*it, proxy_file));
-                                        }
-                                    catch(Err_Custom const & ex)
-                                        {
-                                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
-                                        }
-                                    catch(...)
-                                        {
-                                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception, continuing to see..." << commit;
-                                        }
-                                }
-
-                            boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
-                        }
-                    catch (Err& e)
-                        {
-                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE " << e.what() << commit;
-                        }
-                    catch (...)
-                        {
-                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Fatal error (unknown origin)" << commit;
-                        }
-                }
+            boost::thread_group gr;
+            gr.create_thread(boost::bind(&FetchStaging::fetch, fs));
+            gr.join_all();
         }
     catch (Err& e)
         {

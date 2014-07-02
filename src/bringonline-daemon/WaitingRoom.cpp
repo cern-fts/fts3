@@ -15,8 +15,7 @@ void WaitingRoom::run()
 
     while (true)
         {
-            if(stopThreads) //either  gracefully or not
-                return;
+            if(stopThreads) return;//either  gracefully or not
 
             {
                 // lock the mutex
