@@ -2427,47 +2427,34 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs)
 {
     soci::session sql(*connectionPool);
     long long pid = 0;
+    int file_id = 0;
 
     try
         {
-            soci::rowset<soci::row> rs = (sql.prepare << " select distinct pid from t_file where PID IS NOT NULL AND file_state='CANCELED' and job_finished is NULL AND (hashed_id >= :hStart AND hashed_id <= :hEnd) ",
+            soci::rowset<soci::row> rs = (sql.prepare << " select distinct pid, file_id from t_file where "
+	    						 " file_state='CANCELED' and job_finished is NULL "
+							 " AND (hashed_id >= :hStart AND hashed_id <= :hEnd) "
+							 " AND staging_start is NULL ",
                                           soci::use(hashSegment.start), soci::use(hashSegment.end));
 
             soci::statement stmt1 = (sql.prepare << "UPDATE t_file SET  job_finished = sys_extract_utc(systimestamp) "
-                                     "WHERE pid = :pid ",
-                                     soci::use(pid, "pid"));
+                                     "WHERE file_id = :file_id ",
+                                     soci::use(pid, "file_id"));
 
             // Cancel files
             sql.begin();
             for (soci::rowset<soci::row>::const_iterator i2 = rs.begin(); i2 != rs.end(); ++i2)
                 {
                     soci::row const& row = *i2;
-                    pid = row.get<long long>("PID");
-                    requestIDs.push_back(boost::lexical_cast<int>(pid));
+                    pid = row.get<long long>("PID",0);
+		    file_id = row.get<int>("FILE_ID");
+		    
+		    if(pid > 0)
+                    	requestIDs.push_back(boost::lexical_cast<int>(pid));
 
                     stmt1.execute(true);
                 }
-            sql.commit();
-
-            //now set job_finished to all files not having pid set
-            //prevent more than on server to update the optimizer decisions
-            if(hashSegment.start == 0)
-                {
-                    long long file_id = 0;
-
-                    soci::rowset<soci::row> rs2 = (sql.prepare << " select file_id from t_file where file_state='CANCELED' and PID IS NULL and job_finished is NULL ");
-
-                    soci::statement stmt2 = (sql.prepare << "UPDATE t_file SET job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp)  WHERE file_id=:file_id ", soci::use(file_id, "file_id"));
-
-                    sql.begin();
-                    for (soci::rowset<soci::row>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
-                        {
-                            soci::row const& row = *i2;
-                            file_id = row.get<long long>("FILE_ID");
-                            stmt2.execute(true);
-                        }
-                    sql.commit();
-                }
+            sql.commit();           
         }
     catch (std::exception& e)
         {
@@ -6541,43 +6528,43 @@ std::vector<struct message_state> OracleAPI::getStateOfDeleteInternal(soci::sess
             soci::rowset<soci::row>::const_iterator it;
             struct tm aux_tm;
 
-            for (it = rs.begin(); it != rs.end(); ++it)
+           for (it = rs.begin(); it != rs.end(); ++it)
                 {
-                    ret.job_id = it->get<std::string>("job_id");
-                    ret.job_state = it->get<std::string>("job_state");
-                    ret.vo_name = it->get<std::string>("vo_name");
-                    ret.job_metadata = it->get<std::string>("job_metadata","");
-                    ret.retry_max = it->get<int>("retry_max",0);
-                    ret.file_id = it->get<int>("file_id");
-                    ret.file_state = it->get<std::string>("file_state");
+                    ret.job_id = it->get<std::string>("JOB_ID");
+                    ret.job_state = it->get<std::string>("JOB_STATE");
+                    ret.vo_name = it->get<std::string>("VO_NAME");
+                    ret.job_metadata = it->get<std::string>("JOB_METADATA","");
+                    ret.retry_max = static_cast<int>(it->get<long long>("RETRY_MAX", 0));
+                    ret.file_id = static_cast<int>(it->get<long long>("FILE_ID"));
+                    ret.file_state = it->get<std::string>("FILE_STATE");
                     if(ret.file_state == "SUBMITTED")
                         {
-                            aux_tm = it->get<struct tm>("submit_time");
+                            aux_tm = it->get<struct tm>("SUBMIT_TIME");
                             ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);
                         }
                     else if(ret.file_state == "STAGING")
                         {
-                            aux_tm = it->get<struct tm>("submit_time");
+                            aux_tm = it->get<struct tm>("SUBMIT_TIME");
                             ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);
                         }
                     else if(ret.file_state == "DELETE")
                         {
-                            aux_tm = it->get<struct tm>("submit_time");
+                            aux_tm = it->get<struct tm>("SUBMIT_TIME");
                             ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);
                         }
                     else if(ret.file_state == "ACTIVE")
                         {
-                            aux_tm = it->get<struct tm>("start_time");
+                            aux_tm = it->get<struct tm>("START_TIME");
                             ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);
                         }
                     else
                         {
                             ret.timestamp = getStrUTCTimestamp();
                         }
-                    ret.retry_counter = it->get<int>("retry_counter",0);
-                    ret.file_metadata = it->get<std::string>("file_metadata","");
-                    ret.source_se = it->get<std::string>("source_se");
-                    ret.dest_se = it->get<std::string>("dest_se");
+                    ret.retry_counter = static_cast<int>(it->get<double>("RETRY_COUNTER",0));
+                    ret.file_metadata = it->get<std::string>("FILE_METADATA","");
+                    ret.source_se = it->get<std::string>("SOURCE_SE");
+                    ret.dest_se = it->get<std::string>("DEST_SE");
                     temp.push_back(ret);
                 }
         }
@@ -10354,94 +10341,7 @@ void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boos
 }
 
 
-//what if half are staging and half transfers
-//must be called both
-//job_id
-void OracleAPI::cancelStaging(std::vector<std::string>& files)
-{
-    soci::session sql(*connectionPool);
-    const std::string reason = "Job canceled by the user";
-    std::string job_id;
-    std::ostringstream cancelStmt1;
-    std::ostringstream cancelStmt2;
-    std::ostringstream jobIdStmt;
 
-    try
-        {
-            for (std::vector<std::string>::const_iterator i = files.begin(); i != files.end(); ++i)
-                {
-                    job_id = (*i);
-                    jobIdStmt << "'";
-                    jobIdStmt << job_id;
-                    jobIdStmt << "',";
-                }
-
-            std::string queryStr = jobIdStmt.str();
-            job_id = queryStr.substr(0, queryStr.length() - 1);
-
-            cancelStmt1 << "UPDATE t_job SET job_state = 'CANCELED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), cancel_job='Y' ";
-            cancelStmt1 << " ,reason = '";
-            cancelStmt1 << reason;
-            cancelStmt1 << "'";
-            cancelStmt1 << " WHERE job_id IN (";
-            cancelStmt1 << job_id;
-            cancelStmt1 << ")";
-            cancelStmt1 << " AND job_state NOT IN ('CANCELED','FINISHEDDIRTY', 'FINISHED', 'FAILED')";
-
-            cancelStmt2 << "UPDATE t_file SET file_state = 'CANCELED',  finish_time = sys_extract_utc(systimestamp) ";
-            cancelStmt2 << " ,reason = '";
-            cancelStmt2 << reason;
-            cancelStmt2 << "'";
-            cancelStmt2 << " WHERE job_id IN (";
-            cancelStmt2 << job_id;
-            cancelStmt2 << ")";
-            cancelStmt2 << " AND file_state NOT IN ('CANCELED','FINISHED','FAILED')";
-
-            soci::statement stmt1 = (sql.prepare << cancelStmt1.str());
-            soci::statement stmt2 = (sql.prepare << cancelStmt2.str());
-
-
-            sql.begin();
-            // Cancel job
-            stmt1.execute(true);
-
-            // Cancel files
-            stmt2.execute(true);
-            sql.commit();
-
-            jobIdStmt.str(std::string());
-            jobIdStmt.clear();
-            cancelStmt1.str(std::string());
-            cancelStmt1.clear();
-            cancelStmt2.str(std::string());
-            cancelStmt2.clear();
-
-        }
-    catch (std::exception& e)
-        {
-            jobIdStmt.str(std::string());
-            jobIdStmt.clear();
-            cancelStmt1.str(std::string());
-            cancelStmt1.clear();
-            cancelStmt2.str(std::string());
-            cancelStmt2.clear();
-
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-    catch (...)
-        {
-            jobIdStmt.str(std::string());
-            jobIdStmt.clear();
-            cancelStmt1.str(std::string());
-            cancelStmt1.clear();
-            cancelStmt2.str(std::string());
-            cancelStmt2.clear();
-
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }
-}
 
 //file_id / surl / token
 void OracleAPI::getStagingFilesForCanceling(std::vector< boost::tuple<int, std::string, std::string> >& files)
@@ -10455,7 +10355,7 @@ void OracleAPI::getStagingFilesForCanceling(std::vector< boost::tuple<int, std::
         {
             soci::rowset<soci::row> rs = (sql.prepare << " SELECT file_id, source_surl, bringonline_token from t_file WHERE "
                                           "  file_state='CANCELED' and job_finished is NULL "
-                                          "  AND (hashed_id >= :hStart AND hashed_id <= :hEnd) ",
+                                          "  AND (hashed_id >= :hStart AND hashed_id <= :hEnd) AND staging_start is NOT NULL ",
                                           soci::use(hashSegment.start), soci::use(hashSegment.end));
 
             // Cancel staging files

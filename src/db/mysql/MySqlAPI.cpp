@@ -2574,7 +2574,10 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
 
     try
         {
-            soci::rowset<soci::row> rs = (sql.prepare << " select distinct pid, file_id from t_file where PID IS NOT NULL AND file_state='CANCELED' and job_finished is NULL AND (hashed_id >= :hStart AND hashed_id <= :hEnd) ",
+            soci::rowset<soci::row> rs = (sql.prepare << " select distinct pid, file_id from t_file where "
+	    						 " file_state='CANCELED' and job_finished is NULL "
+							 " AND (hashed_id >= :hStart AND hashed_id <= :hEnd) " 
+							 " AND staging_start is NULL ",
                                           soci::use(hashSegment.start), soci::use(hashSegment.end));
 
             soci::statement stmt1 = (sql.prepare << "UPDATE t_file SET  job_finished = UTC_TIMESTAMP() "
@@ -2585,34 +2588,15 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
             for (soci::rowset<soci::row>::const_iterator i2 = rs.begin(); i2 != rs.end(); ++i2)
                 {
                     soci::row const& row = *i2;
-                    pid = row.get<int>("pid");
+                    pid = row.get<int>("pid",0);
                     file_id = row.get<int>("file_id");
-                    requestIDs.push_back(pid);
-
+		    
+		    if(pid > 0)
+                    	requestIDs.push_back(pid);
+			
                     stmt1.execute(true);
                 }
             sql.commit();
-
-
-            //now set job_finished to all files not having pid set
-            //prevent more than on server to update the optimizer decisions
-            if(hashSegment.start == 0)
-                {
-                    file_id = 0;
-
-                    soci::rowset<soci::row> rs2 = (sql.prepare << " select file_id from t_file where file_state='CANCELED' and PID IS NULL and job_finished is NULL ");
-
-                    soci::statement stmt2 = (sql.prepare << "UPDATE t_file SET job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP()  WHERE file_id=:file_id ", soci::use(file_id, "file_id"));
-
-                    sql.begin();
-                    for (soci::rowset<soci::row>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
-                        {
-                            soci::row const& row = *i2;
-                            file_id = row.get<int>("file_id");
-                            stmt2.execute(true);
-                        }
-                    sql.commit();
-                }
         }
     catch (std::exception& e)
         {
@@ -10422,7 +10406,7 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost
                         {
                             sql <<
                                 " UPDATE t_file "
-                                " SET start_time = UTC_TIMESTAMP(), transferhost=:thost, file_state='STARTED' "
+                                " SET start_time = UTC_TIMESTAMP(),staging_start=UTC_TIMESTAMP(), transferhost=:thost, file_state='STARTED' "
                                 " WHERE  "
                                 "	file_id= :fileId "
                                 "	AND file_state='STAGING'",
@@ -10445,7 +10429,7 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost
                                 {
                                     sql <<
                                         " UPDATE t_file "
-                                        " SET job_finished=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), reason = :reason, file_state = :fileState "
+                                        " SET job_finished=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), staging_finished=UTC_TIMESTAMP(), reason = :reason, file_state = :fileState "
                                         " WHERE "
                                         "	file_id = :fileId "
                                         "	AND file_state in ('STAGING','STARTED')",
@@ -10491,7 +10475,7 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost
                                 {
                                     sql <<
                                         " UPDATE t_file "
-                                        " SET job_finished=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), reason = :reason, file_state = :fileState "
+                                        " SET staging_finished=UTC_TIMESTAMP(), job_finished=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), reason = :reason, file_state = :fileState "
                                         " WHERE "
                                         "	file_id = :fileId "
                                         "	AND file_state in ('STAGING','STARTED')",
@@ -10504,7 +10488,7 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost
                                 {
                                     sql <<
                                         " UPDATE t_file "
-                                        " SET job_finished=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), reason = :reason, file_state = :fileState "
+                                        " SET staging_finished=UTC_TIMESTAMP(), job_finished=UTC_TIMESTAMP(), finish_time=UTC_TIMESTAMP(), reason = :reason, file_state = :fileState "
                                         " WHERE "
                                         "	file_id = :fileId "
                                         "	AND file_state in ('STAGING','STARTED')",
@@ -10555,94 +10539,6 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost
 }
 
 
-//what if half are staging and half transfers
-//must be called both
-//job_id
-void MySqlAPI::cancelStaging(std::vector<std::string>& files)
-{
-    soci::session sql(*connectionPool);
-    const std::string reason = "Job canceled by the user";
-    std::string job_id;
-    std::ostringstream cancelStmt1;
-    std::ostringstream cancelStmt2;
-    std::ostringstream jobIdStmt;
-
-    try
-        {
-            for (std::vector<std::string>::const_iterator i = files.begin(); i != files.end(); ++i)
-                {
-                    job_id = (*i);
-                    jobIdStmt << "'";
-                    jobIdStmt << job_id;
-                    jobIdStmt << "',";
-                }
-
-            std::string queryStr = jobIdStmt.str();
-            job_id = queryStr.substr(0, queryStr.length() - 1);
-
-            cancelStmt1 << "UPDATE t_job SET job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), cancel_job='Y' ";
-            cancelStmt1 << " ,reason = '";
-            cancelStmt1 << reason;
-            cancelStmt1 << "'";
-            cancelStmt1 << " WHERE job_id IN (";
-            cancelStmt1 << job_id;
-            cancelStmt1 << ")";
-            cancelStmt1 << " AND job_state NOT IN ('CANCELED','FINISHEDDIRTY', 'FINISHED', 'FAILED')";
-
-            cancelStmt2 << "UPDATE t_file SET file_state = 'CANCELED',  finish_time = UTC_TIMESTAMP() ";
-            cancelStmt2 << " ,reason = '";
-            cancelStmt2 << reason;
-            cancelStmt2 << "'";
-            cancelStmt2 << " WHERE job_id IN (";
-            cancelStmt2 << job_id;
-            cancelStmt2 << ")";
-            cancelStmt2 << " AND file_state NOT IN ('CANCELED','FINISHED','FAILED')";
-
-            soci::statement stmt1 = (sql.prepare << cancelStmt1.str());
-            soci::statement stmt2 = (sql.prepare << cancelStmt2.str());
-
-
-            sql.begin();
-            // Cancel job
-            stmt1.execute(true);
-
-            // Cancel files
-            stmt2.execute(true);
-            sql.commit();
-
-            jobIdStmt.str(std::string());
-            jobIdStmt.clear();
-            cancelStmt1.str(std::string());
-            cancelStmt1.clear();
-            cancelStmt2.str(std::string());
-            cancelStmt2.clear();
-
-        }
-    catch (std::exception& e)
-        {
-            jobIdStmt.str(std::string());
-            jobIdStmt.clear();
-            cancelStmt1.str(std::string());
-            cancelStmt1.clear();
-            cancelStmt2.str(std::string());
-            cancelStmt2.clear();
-
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-    catch (...)
-        {
-            jobIdStmt.str(std::string());
-            jobIdStmt.clear();
-            cancelStmt1.str(std::string());
-            cancelStmt1.clear();
-            cancelStmt2.str(std::string());
-            cancelStmt2.clear();
-
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }
-}
 
 //file_id / surl / token
 void MySqlAPI::getStagingFilesForCanceling(std::vector< boost::tuple<int, std::string, std::string> >& files)
@@ -10655,8 +10551,8 @@ void MySqlAPI::getStagingFilesForCanceling(std::vector< boost::tuple<int, std::s
     try
         {
             soci::rowset<soci::row> rs = (sql.prepare << " SELECT file_id, source_surl, bringonline_token from t_file WHERE "
-                                          "  file_state='CANCELED' and job_finished is NULL "
-                                          "  AND (hashed_id >= :hStart AND hashed_id <= :hEnd) ",
+                                          "  file_state='CANCELED' and job_finished is NULL and  "
+                                          "  AND (hashed_id >= :hStart AND hashed_id <= :hEnd)  AND staging_start is NOT NULL ",
                                           soci::use(hashSegment.start), soci::use(hashSegment.end));
 
             // Cancel staging files

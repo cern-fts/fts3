@@ -431,8 +431,6 @@ public:
     //vo / file_id / surl / proxy / pinlifetime / bringonlineTimeout / spacetoken / job_id
     virtual void getFilesForStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string> >& files) = 0;
 
-    //job_id
-    virtual void cancelStaging(std::vector<std::string>& files) = 0;
 
     //file_id / surl / token
     virtual void getStagingFilesForCanceling(std::vector< boost::tuple<int, std::string, std::string> >& files) = 0;

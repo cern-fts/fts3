@@ -919,11 +919,6 @@ void ProfiledDB::getFilesForStaging(std::vector< boost::tuple<std::string, std::
     PROFILE_PREFIXED("DB::", db->getFilesForStaging(files));
 }
 
-//job_id
-void ProfiledDB::cancelStaging(std::vector<std::string>& files)
-{
-    PROFILE_PREFIXED("DB::", db->cancelStaging(files));
-}
 
 //file_id / surl / token
 void ProfiledDB::getStagingFilesForCanceling(std::vector< boost::tuple<int, std::string, std::string> >& files)
