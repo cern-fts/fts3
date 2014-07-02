@@ -145,6 +145,7 @@ int FileTransferExecutor::execute()
                 {
                     scheduled = 1;
 
+                    //send SUBMITTED message
                     SingleTrStateInstance::instance().sendStateMessage(tf.JOB_ID, tf.FILE_ID);
                     bool isAutoTuned = false;
 
@@ -401,6 +402,7 @@ int FileTransferExecutor::execute()
                             db->updateJobTransferStatus(tf.JOB_ID, "ACTIVE",0);
                         }
 
+                    //send ACTIVE
                     SingleTrStateInstance::instance().sendStateMessage(tf.JOB_ID, tf.FILE_ID);
                     struct message_updater msg;
                     strncpy(msg.job_id, std::string(tf.JOB_ID).c_str(), sizeof(msg.job_id));

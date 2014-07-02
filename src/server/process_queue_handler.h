@@ -175,7 +175,9 @@ public:
                 updateJobTransferStatus(job, std::string(msg.transfer_status), static_cast<int> (msg.process_id));
 
                 if(std::string(msg.job_id).length() > 0 && msg.file_id > 0)
-                    SingleTrStateInstance::instance().sendStateMessage(job, msg.file_id);
+                    {
+                        SingleTrStateInstance::instance().sendStateMessage(job, msg.file_id);
+                    }
             }
         catch (std::exception& e)
             {
@@ -333,10 +335,15 @@ protected:
                                 std::vector<struct message> split_12(split_2.begin(), split_2.begin() + half_size3);
                                 std::vector<struct message> split_22(split_2.begin() + half_size3, split_2.end());
 
-                                g.create_thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_11)));
-                                g.create_thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_21)));
-                                g.create_thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_12)));
-                                g.create_thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_22)));
+                                //create threads only when needed
+                                if(!split_11.empty())
+                                    g.create_thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_11)));
+                                if(!split_21.empty())
+                                    g.create_thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_21)));
+                                if(!split_12.empty())
+                                    g.create_thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_12)));
+                                if(!split_22.empty())
+                                    g.create_thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_22)));
 
                                 // wait for them
                                 g.join_all();

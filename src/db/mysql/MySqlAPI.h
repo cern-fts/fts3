@@ -272,16 +272,6 @@ public:
 
     virtual int activeProcessesForThisHost();
 
-    virtual void setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<int>& files);
-
-    virtual std::vector< boost::tuple<std::string, std::string, int> >  getVOBringonlineMax();
-
-    virtual std::vector<struct message_bringonline> getBringOnlineFiles(std::string voName, std::string hostName, int maxValue);
-
-    virtual void bringOnlineReportStatus(const std::string & state, const std::string & message, const struct message_bringonline& msg);
-
-    virtual void addToken(const std::string & job_id, int file_id, const std::string & token);
-
     virtual void getCredentials(std::string & vo_name, const std::string & job_id, int file_id, std::string & dn, std::string & dlg_id);
 
     virtual void setMaxStageOp(const std::string& se, const std::string& vo, int val);

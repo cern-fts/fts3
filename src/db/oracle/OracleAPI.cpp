@@ -813,96 +813,6 @@ void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, s
 
 
 
-
-void OracleAPI::setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<int>& files)
-{
-    soci::session sql(*connectionPool);
-
-    try
-        {
-            // first check if it is a multi-source/destination submission
-            // count the alternative replicas, if there is more than one it makes sense to set the NOT_USED state
-
-            sql.begin();
-
-            std::string flag;
-            soci::indicator ind = soci::i_ok;
-
-            sql << " select reuse_job from t_job where job_id = :job_id ", soci::use(jobId), soci::into(flag, ind);
-
-            if (ind == soci::i_ok && flag == "H") //don't set to NOT_USED state for multi-hop - ONLY for multiple repicas
-                return;
-
-
-
-            int count = 0;
-
-            sql <<
-                "SELECT COUNT(*) "
-                "FROM t_file "
-                "WHERE job_id = :jobId AND file_index = :fileIndex",
-                soci::use(jobId),
-                soci::use(fileIndex),
-                soci::into(count)
-                ;
-
-            if (count < 2) return;
-
-            soci::statement stmt(sql);
-
-            stmt.exchange(soci::use(jobId, "jobId"));
-            stmt.exchange(soci::use(fileIndex, "fileIndex"));
-            stmt.alloc();
-            stmt.prepare(
-                "UPDATE t_file "
-                "SET file_state = 'NOT_USED' "
-                "WHERE "
-                "   job_id = :jobId AND "
-                "   file_index = :fileIndex "
-                "   AND file_state = 'SUBMITTED' "
-            );
-            stmt.define_and_bind();
-            stmt.execute(true);
-            long long  affected_rows = stmt.get_affected_rows();
-            sql.commit();
-
-            if (affected_rows > 0)
-                {
-
-                    soci::rowset<soci::row> rs = (
-                                                     sql.prepare <<
-                                                     " SELECT file_id "
-                                                     " FROM t_file "
-                                                     " WHERE job_id = :jobId "
-                                                     "  AND file_index = :fileIndex "
-                                                     "  AND file_state = 'NOT_USED' ",
-                                                     soci::use(jobId),
-                                                     soci::use(fileIndex)
-                                                 );
-
-                    soci::rowset<soci::row>::const_iterator it;
-                    for (it = rs.begin(); it != rs.end(); ++it)
-                        {
-                            files.push_back(
-                                static_cast<int>(it->get<long long>("FILE_ID"))
-                            );
-                        }
-                }
-
-
-        }
-    catch (std::exception& e)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-    catch (...)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }
-}
-
 void OracleAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId)
 {
     //auto-pick and manuall replica logic must be added here
@@ -3962,6 +3872,20 @@ void OracleAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                                                                      "FAILED", "Transfer has been forced-killed because it was stalled",
                                                                      boost::lexical_cast<int>(pid), 0, 0, false);
                                     updateJobTransferStatusInternal(sql, jobId, "FAILED",0);
+
+                                    std::vector<struct message_state> files;
+                                    //send state monitoring message for the state transition
+                                    files = getStateOfTransferInternal(sql, jobId, fileId);
+                                    if(!files.empty())
+                                        {
+                                            std::vector<struct message_state>::iterator it;
+                                            for (it = files.begin(); it != files.end(); ++it)
+                                                {
+                                                    struct message_state tmp = (*it);
+                                                    constructJSONMsg(&tmp);
+                                                }
+                                            files.clear();
+                                        }
                                 }
 
                         }
@@ -4450,6 +4374,22 @@ bool OracleAPI::retryFromDead(std::vector<struct message_updater>& messages, boo
                             ok = true;
                             updateFileTransferStatusInternal(sql, 0.0, (*iter).job_id, (*iter).file_id, transfer_status, transfer_message, (*iter).process_id, 0, 0,false);
                             updateJobTransferStatusInternal(sql, (*iter).job_id, status,0);
+
+                            std::vector<struct message_state> files;
+                            //send state monitoring message for the state transition
+                            files = getStateOfTransferInternal(sql, (*iter).job_id, (*iter).file_id);
+                            if(!files.empty())
+                                {
+                                    std::vector<struct message_state>::iterator it;
+                                    for (it = files.begin(); it != files.end(); ++it)
+                                        {
+                                            struct message_state tmp = (*it);
+                                            constructJSONMsg(&tmp);
+                                        }
+                                    files.clear();
+                                }
+
+
                         }
                 }
         }
@@ -6167,368 +6107,6 @@ int OracleAPI::activeProcessesForThisHost()
 }
 
 
-std::vector< boost::tuple<std::string, std::string, int> >  OracleAPI::getVOBringonlineMax()
-{
-
-    soci::session sql(*connectionPool);
-
-    std::vector< boost::tuple<std::string, std::string, int> > ret;
-
-    try
-        {
-            soci::rowset<soci::row> rs = (
-                                             sql.prepare <<
-                                             "SELECT vo_name, host, concurrent_ops FROM t_stage_req"
-                                         );
-
-            for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
-                {
-                    soci::row const& row = *i;
-
-                    boost::tuple<std::string, std::string, int> item (
-                        row.get<std::string>("VO_NAME",""),
-                        row.get<std::string>("HOST",""),
-                        static_cast<int>(row.get<long long>("CONCURRENT_OPS",0))
-                    );
-
-                    ret.push_back(item);
-                }
-
-        }
-    catch (std::exception& e)
-        {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-    catch (...)
-        {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }
-
-    return ret;
-
-}
-
-std::vector<message_bringonline> OracleAPI::getBringOnlineFiles(std::string voName, std::string hostName, int maxValue)
-{
-
-    soci::session sql(*connectionPool);
-
-    std::vector<message_bringonline> ret;
-
-    try
-        {
-
-            if (voName.empty())
-                {
-
-                    soci::rowset<soci::row> rs = (
-                                                     sql.prepare <<
-                                                     " SELECT distinct(f.source_se) "
-                                                     " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
-                                                     " WHERE "
-                                                     "  (j.BRING_ONLINE > 0 OR j.COPY_PIN_LIFETIME > 0) "
-                                                     "  AND f.file_state = 'STAGING' "
-                                                     "  AND f.staging_start IS NULL and f.source_surl like 'srm%' and j.job_finished is null "
-                                                     "  AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd)",
-                                                     soci::use(hashSegment.start), soci::use(hashSegment.end)
-                                                 );
-
-                    for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
-                        {
-                            soci::row const& row = *i;
-
-                            std::string hostV = row.get<std::string>("SOURCE_SE");
-
-                            unsigned int currentStagingFilesNoConfig = 0;
-
-                            sql <<
-                                " SELECT COUNT(*) "
-                                " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
-                                " WHERE "
-                                "       (j.BRING_ONLINE > 0 OR j.COPY_PIN_LIFETIME > 0) "
-                                "   AND f.file_state = 'STAGING' "
-                                "   AND f.staging_start IS NOT NULL "
-                                "   AND f.source_se = :hostV  and f.source_surl like 'srm%' and j.job_finished is null",
-                                soci::use(hostV),
-                                soci::into(currentStagingFilesNoConfig)
-                                ;
-
-                            int maxNoConfig = currentStagingFilesNoConfig > 0 ? maxValue - currentStagingFilesNoConfig : maxValue;
-                            if(maxNoConfig > 500 || maxNoConfig < 0)
-                                maxNoConfig = 500;
-
-                            soci::rowset<soci::row> rs2 = (
-                                                              sql.prepare <<
-                                                              " SELECT * FROM ("
-                                                              " SELECT rownum as rn, f.source_surl, f.job_id, f.file_id, j.copy_pin_lifetime, j.bring_online "
-                                                              " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
-                                                              " WHERE  "
-                                                              " (j.BRING_ONLINE > 0 OR j.COPY_PIN_LIFETIME > 0) "
-                                                              " AND f.staging_start IS NULL "
-                                                              " AND f.file_state = 'STAGING' "
-                                                              " AND f.source_se = :source_se and f.source_surl like 'srm%'   "
-                                                              " AND j.job_finished is null "
-                                                              " ) WHERE rn <= :limit",
-                                                              soci::use(hostV),
-                                                              soci::use(maxNoConfig)
-
-                                                          );
-
-                            for (soci::rowset<soci::row>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
-                                {
-                                    soci::row const& row2 = *i2;
-
-                                    struct message_bringonline msg;
-                                    msg.url = row2.get<std::string>("SOURCE_SURL");
-                                    msg.job_id = row2.get<std::string>("JOB_ID");
-                                    msg.file_id = static_cast<int>(row2.get<long long>("FILE_ID"));
-                                    msg.pinlifetime = static_cast<int>(row2.get<double>("COPY_PIN_LIFETIME",0));
-                                    msg.bringonlineTimeout = static_cast<int>(row2.get<double>("BRING_ONLINE",0));
-
-                                    ret.push_back(msg);
-                                    bringOnlineReportStatusInternal(sql, "STARTED", "", msg);
-                                }
-                        }
-                }
-            else
-                {
-
-                    unsigned currentStagingFilesConfig = 0;
-
-                    sql <<
-                        " SELECT COUNT(*) FROM t_job j INNER JOIN t_file f ON (j.job_id = f.job_id) "
-                        " WHERE  "
-                        "   (j.BRING_ONLINE > 0 OR j.COPY_PIN_LIFETIME > 0) "
-                        "   AND f.file_state = 'STAGING' "
-                        "   AND f.STAGING_START IS NOT NULL "
-                        "   AND j.vo_name = :vo_name "
-                        "   AND f.source_se = :source_se and f.source_surl like 'srm%'   ",
-                        soci::use(voName),
-                        soci::use(hostName),
-                        soci::into(currentStagingFilesConfig)
-                        ;
-
-                    int maxConfig = currentStagingFilesConfig > 0 ? maxValue - currentStagingFilesConfig : maxValue;
-                    if(maxConfig > 500 || maxConfig < 0)
-                        maxConfig = 500;
-
-                    soci::rowset<soci::row> rs = (
-                                                     sql.prepare <<
-                                                     " SELECT * FROM ("
-                                                     " SELECT rownum as rn, f.source_surl, f.job_id, f.file_id, j.copy_pin_lifetime, j.bring_online "
-                                                     " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
-                                                     " WHERE  "
-                                                     "  (j.BRING_ONLINE > 0 OR j.COPY_PIN_LIFETIME > 0) "
-                                                     "  AND f.staging_START IS NULL "
-                                                     "  AND f.file_state = 'STAGING' "
-                                                     "  AND f.source_se = :source_se "
-                                                     "  AND j.vo_name = :vo_name and f.source_surl like 'srm%'   "
-                                                     "  AND j.job_finished is null"
-                                                     ") WHERE rn <= :limit",
-                                                     soci::use(hostName),
-                                                     soci::use(voName),
-                                                     soci::use(maxConfig)
-                                                 );
-
-                    for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
-                        {
-                            soci::row const& row = *i;
-
-                            struct message_bringonline msg;
-                            msg.url = row.get<std::string>("SOURCE_SURL");
-                            msg.job_id = row.get<std::string>("JOB_ID");
-                            msg.file_id = static_cast<int>(row.get<long long>("FILE_ID"));
-                            msg.pinlifetime = static_cast<int>(row.get<double>("COPY_PIN_LIFETIME",0));
-                            msg.bringonlineTimeout = static_cast<int>(row.get<double>("BRING_ONLINE",0));
-
-                            ret.push_back(msg);
-                            bringOnlineReportStatusInternal(sql, "STARTED", "", msg);
-                        }
-                }
-
-        }
-    catch (std::exception& e)
-        {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-    catch (...)
-        {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }
-
-    return ret;
-}
-
-void OracleAPI::bringOnlineReportStatusInternal(soci::session& sql,
-        const std::string & state, const std::string & message,
-        const struct message_bringonline& msg)
-{
-
-    std::vector<struct message_state> files;
-
-    try
-        {
-            if (state == "STARTED")
-                {
-                    sql.begin();
-                    sql <<
-                        " UPDATE t_file "
-                        " SET staging_start = sys_extract_utc(systimestamp), start_time = sys_extract_utc(systimestamp), transferhost=:thost, file_state='STARTED' "
-                        " WHERE job_id = :jobId "
-                        "   AND file_id= :fileId "
-                        "   AND file_state='STAGING'",
-                        soci::use(hostname),
-                        soci::use(msg.job_id),
-                        soci::use(msg.file_id)
-                        ;
-                    sql.commit();
-                }
-            else
-                {
-                    std::string source_surl;
-                    std::string dest_surl;
-                    std::string dbState;
-                    std::string dbReason;
-                    int stage_in_only = 0;
-
-                    sql << "select count(*) from t_file where job_id=:job_id and file_id=:file_id and source_surl=dest_surl",
-                        soci::use(msg.job_id),
-                        soci::use(msg.file_id),
-                        soci::into(stage_in_only);
-
-                    if(stage_in_only == 0)  //stage-in and transfer
-                        {
-                            dbState = state == "FINISHED" ? "SUBMITTED" : state;
-                            dbReason = state == "FINISHED" ? std::string() : message;
-                        }
-                    else //stage-in only
-                        {
-                            dbState = state == "FINISHED" ? "FINISHED" : state;
-                            dbReason = state == "FINISHED" ? std::string() : message;
-                        }
-
-
-                    sql.begin();
-                    sql <<
-                        " UPDATE t_file "
-                        " SET staging_finished = sys_extract_utc(systimestamp), "
-                        " job_finished=sys_extract_utc(systimestamp) , "
-                        " finish_time=sys_extract_utc(systimestamp), "
-                        " reason = :reason, file_state = :fileState "
-                        " WHERE job_id = :jobId "
-                        "	AND file_id = :fileId "
-                        "	AND file_state in ('STAGING','STARTED')",
-                        soci::use(dbReason),
-                        soci::use(dbState),
-                        soci::use(msg.job_id),
-                        soci::use(msg.file_id)
-                        ;
-                    sql.commit();
-
-                    //check if session reuse has been issued
-                    soci::indicator isNull = soci::i_ok;
-                    std::string reuse("");
-                    sql << " select reuse_job from t_job where job_id=:jobId", soci::use(msg.job_id), soci::into(reuse, isNull);
-                    if (isNull != soci::i_null && reuse == "Y")
-                        {
-                            int countTr = 0;
-                            sql << " select count(*) from t_file where job_id=:jobId and file_state in ('STAGING','STARTED') ", soci::use(msg.job_id), soci::into(countTr);
-                            if(countTr == 0)
-                                {
-                                    if(stage_in_only == 0)
-                                        {
-                                            updateJobTransferStatusInternal(sql, msg.job_id, "SUBMITTED",0);
-                                        }
-                                    else
-                                        {
-                                            updateJobTransferStatusInternal(sql, msg.job_id, dbState,0);
-                                        }
-                                }
-                        }
-                    else
-                        {
-                            updateJobTransferStatusInternal(sql, msg.job_id, dbState,0);
-                        }
-                }
-
-            //send state message
-            files = getStateOfTransferInternal(sql, msg.job_id, msg.file_id);
-            if(!files.empty())
-                {
-                    std::vector<struct message_state>::iterator it;
-                    for (it = files.begin(); it != files.end(); ++it)
-                        {
-                            struct message_state tmp = (*it);
-                            constructJSONMsg(&tmp);
-                        }
-                }
-            files.clear();
-
-        }
-    catch (std::exception& e)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-    catch (...)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }
-}
-
-void OracleAPI::bringOnlineReportStatus(const std::string & state, const std::string & message, const struct message_bringonline& msg)
-{
-    soci::session sql(*connectionPool);
-    try
-        {
-            bringOnlineReportStatusInternal(sql, state, message, msg);
-        }
-    catch (std::exception& e)
-        {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-    catch (...)
-        {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }
-
-}
-
-void OracleAPI::addToken(const std::string & job_id, int file_id, const std::string & token)
-{
-    soci::session sql(*connectionPool);
-
-    try
-        {
-            sql.begin();
-
-            sql <<
-                " UPDATE t_file "
-                " SET bringonline_token = :token "
-                " WHERE job_id = :jobId "
-                "   AND file_id = :fileId "
-                "   AND file_state = 'STARTED' ",
-                soci::use(token),
-                soci::use(job_id),
-                soci::use(file_id);
-
-            sql.commit();
-
-        }
-    catch (std::exception& e)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-    catch (...)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }
-}
-
-
 void OracleAPI::getCredentials(std::string & vo_name, const std::string & job_id, int, std::string & dn, std::string & dlg_id)
 {
 
@@ -6926,27 +6504,17 @@ void OracleAPI::transferLogFileVector(std::map<int, struct message_log>& message
 std::vector<struct message_state> OracleAPI::getStateOfTransferInternal(soci::session& sql, const std::string& jobId, int fileId)
 {
     message_state ret;
-    soci::indicator ind = soci::i_ok;
     std::vector<struct message_state> temp;
-    int retry = 0;
 
     try
         {
-            sql << "SELECT retry FROM "
-                " (SELECT rownum as rn, retry FROM t_server_config) "
-                "WHERE rn = 1", soci::into(retry, ind);
-            if (ind == soci::i_null)
-                {
-                    retry = 0;
-                }
-
             soci::rowset<soci::row> rs = (fileId ==-1) ? (
                                              sql.prepare <<
                                              " SELECT "
-                                             "	j.job_id, j.job_state, j.vo_name, "
+                                             "	j.submit_time, j.job_id, j.job_state, j.vo_name, "
                                              "	j.job_metadata, j.retry AS retry_max, f.file_id, "
                                              "	f.file_state, f.retry AS retry_counter, f.file_metadata, "
-                                             "	f.source_se, f.dest_se "
+                                             "	f.source_se, f.dest_se, f.start_time "
                                              " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                              " WHERE "
                                              " 	j.job_id = :jobId ",
@@ -6956,10 +6524,10 @@ std::vector<struct message_state> OracleAPI::getStateOfTransferInternal(soci::se
                                          (
                                              sql.prepare <<
                                              " SELECT "
-                                             "	j.job_id, j.job_state, j.vo_name, "
+                                             "	j.submit_time, j.job_id, j.job_state, j.vo_name, "
                                              "	j.job_metadata, j.retry AS retry_max, f.file_id, "
                                              "	f.file_state, f.retry AS retry_counter, f.file_metadata, "
-                                             "	f.source_se, f.dest_se "
+                                             "	f.source_se, f.dest_se, f.start_time "
                                              " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                              " WHERE "
                                              " 	j.job_id = :jobId "
@@ -6970,6 +6538,8 @@ std::vector<struct message_state> OracleAPI::getStateOfTransferInternal(soci::se
 
 
             soci::rowset<soci::row>::const_iterator it;
+            struct tm aux_tm;
+
             for (it = rs.begin(); it != rs.end(); ++it)
                 {
                     ret.job_id = it->get<std::string>("JOB_ID");
@@ -6979,20 +6549,37 @@ std::vector<struct message_state> OracleAPI::getStateOfTransferInternal(soci::se
                     ret.retry_max = static_cast<int>(it->get<long long>("RETRY_MAX", 0));
                     ret.file_id = static_cast<int>(it->get<long long>("FILE_ID"));
                     ret.file_state = it->get<std::string>("FILE_STATE");
+                    if(ret.file_state == "SUBMITTED")
+                        {
+                            aux_tm = it->get<struct tm>("SUBMIT_TIME");
+                            ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);
+                        }
+                    else if(ret.file_state == "STAGING")
+                        {
+                            aux_tm = it->get<struct tm>("SUBMIT_TIME");
+                            ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);
+                        }
+                    else if(ret.file_state == "DELETE")
+                        {
+                            aux_tm = it->get<struct tm>("SUBMIT_TIME");
+                            ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);
+                        }
+                    else if(ret.file_state == "ACTIVE")
+                        {
+                            aux_tm = it->get<struct tm>("START_TIME");
+                            ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);
+                        }
+                    else
+                        {
+                            ret.timestamp = getStrUTCTimestamp();
+                        }
                     ret.retry_counter = static_cast<int>(it->get<double>("RETRY_COUNTER",0));
                     ret.file_metadata = it->get<std::string>("FILE_METADATA","");
                     ret.source_se = it->get<std::string>("SOURCE_SE");
                     ret.dest_se = it->get<std::string>("DEST_SE");
                     ret.timestamp = getStrUTCTimestamp();
-
-                    if(ret.retry_max == 0)
-                        {
-                            ret.retry_max = retry;
-                        }
-
                     temp.push_back(ret);
                 }
-
         }
     catch (std::exception& e)
         {
@@ -9845,18 +9432,7 @@ void OracleAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< bo
                                 soci::use(file_id)
                                 ;
                         }
-                    //send state message
-                    filesMsg = getStateOfTransferInternal(sql, job_id, file_id);
-                    if(!filesMsg.empty())
-                        {
-                            std::vector<struct message_state>::iterator it;
-                            for (it = filesMsg.begin(); it != filesMsg.end(); ++it)
-                                {
-                                    struct message_state tmp = (*it);
-                                    constructJSONMsg(&tmp);
-                                }
-                        }
-                    filesMsg.clear();
+
                 }
 
             sql.commit();
@@ -9969,6 +9545,27 @@ void OracleAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< bo
                         }
                 }
             sql.commit();
+
+            for (itFind = files.begin(); itFind < files.end(); ++itFind)
+                {
+                    boost::tuple<int, std::string, std::string, std::string, bool >& tupleRecord = *itFind;
+                    file_id = boost::get<0>(tupleRecord);
+                    job_id  = boost::get<3>(tupleRecord);
+
+                    //send state message
+                    filesMsg = getStateOfTransferInternal(sql, job_id, file_id);
+                    if(!filesMsg.empty())
+                        {
+                            std::vector<struct message_state>::iterator it;
+                            for (it = filesMsg.begin(); it != filesMsg.end(); ++it)
+                                {
+                                    struct message_state tmp = (*it);
+                                    constructJSONMsg(&tmp);
+                                }
+                        }
+                    filesMsg.clear();
+                }
+
         }
     catch (std::exception& e)
         {
@@ -10494,7 +10091,7 @@ void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boos
                         }
                     else if(state == "FAILED")
                         {
-                    		bool shouldBeRetried = retry;
+                            bool shouldBeRetried = retry;
 
                             if(retry)
                                 {
@@ -10538,56 +10135,44 @@ void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boos
                                     dbReason = state == "FINISHED" ? std::string() : reason;
                                 }
 
- 			    if(dbState == "SUBMITTED")
-			    {
-                            sql <<
-                                " UPDATE t_file "
-                                " SET job_finished=NULL, finish_time=NULL, start_time=NULL, transferhost=NULL, reason = '', file_state = :fileState "
-                                " WHERE "
-                                "	file_id = :fileId ",
-                                soci::use(dbState),
-                                soci::use(file_id)
-                                ;
-			     }	
-			     else if(dbState == "FINISHED")
-			     {
-                              sql <<
-                                " UPDATE t_file "
-                                " SET job_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), reason = :reason, file_state = :fileState "
-                                " WHERE "
-                                "	file_id = :fileId "
-                                "	AND file_state in ('STAGING','STARTED')",
-                                soci::use(dbReason),
-                                soci::use(dbState),
-                                soci::use(file_id)
-                                ;			     
-			     }
-			     else
-			     {
-                              sql <<
-                                " UPDATE t_file "
-                                " SET job_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), reason = :reason, file_state = :fileState "
-                                " WHERE "
-                                "	file_id = :fileId "
-                                "	AND file_state in ('STAGING','STARTED')",
-                                soci::use(dbReason),
-                                soci::use(dbState),
-                                soci::use(file_id)
-                                ;			     
-			     }
-                        }
-                    //send state message
-                    filesMsg = getStateOfTransferInternal(sql, job_id, file_id);
-                    if(!filesMsg.empty())
-                        {
-                            std::vector<struct message_state>::iterator it;
-                            for (it = filesMsg.begin(); it != filesMsg.end(); ++it)
+                            if(dbState == "SUBMITTED")
                                 {
-                                    struct message_state tmp = (*it);
-                                    constructJSONMsg(&tmp);
+                                    sql <<
+                                        " UPDATE t_file "
+                                        " SET job_finished=NULL, finish_time=NULL, start_time=NULL, transferhost=NULL, reason = '', file_state = :fileState "
+                                        " WHERE "
+                                        "	file_id = :fileId ",
+                                        soci::use(dbState),
+                                        soci::use(file_id)
+                                        ;
+                                }
+                            else if(dbState == "FINISHED")
+                                {
+                                    sql <<
+                                        " UPDATE t_file "
+                                        " SET job_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), reason = :reason, file_state = :fileState "
+                                        " WHERE "
+                                        "	file_id = :fileId "
+                                        "	AND file_state in ('STAGING','STARTED')",
+                                        soci::use(dbReason),
+                                        soci::use(dbState),
+                                        soci::use(file_id)
+                                        ;
+                                }
+                            else
+                                {
+                                    sql <<
+                                        " UPDATE t_file "
+                                        " SET job_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), reason = :reason, file_state = :fileState "
+                                        " WHERE "
+                                        "	file_id = :fileId "
+                                        "	AND file_state in ('STAGING','STARTED')",
+                                        soci::use(dbReason),
+                                        soci::use(dbState),
+                                        soci::use(file_id)
+                                        ;
                                 }
                         }
-                    filesMsg.clear();
                 }
             sql.commit();
 
@@ -10600,8 +10185,20 @@ void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boos
                     job_id = boost::get<3>(tupleRecord);
                     retry = boost::get<4>(tupleRecord);
 
-
                     updateJobTransferStatusInternal(sql, job_id, state,0);
+
+                    //send state message
+                    filesMsg = getStateOfTransferInternal(sql, job_id, file_id);
+                    if(!filesMsg.empty())
+                        {
+                            std::vector<struct message_state>::iterator it;
+                            for (it = filesMsg.begin(); it != filesMsg.end(); ++it)
+                                {
+                                    struct message_state tmp = (*it);
+                                    constructJSONMsg(&tmp);
+                                }
+                        }
+                    filesMsg.clear();
 
                 }
         }

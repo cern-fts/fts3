@@ -319,10 +319,15 @@ protected:
                         std::vector< boost::tuple<std::string, std::string, std::string> > split_12(split_2.begin(), split_2.begin() + half_size3);
                         std::vector< boost::tuple<std::string, std::string, std::string> > split_22(split_2.begin() + half_size3, split_2.end());
 
-                        g.create_thread(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_11), boost::ref(voQueues1)));
-                        g.create_thread(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_21), boost::ref(voQueues2)));
-                        g.create_thread(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_12), boost::ref(voQueues3)));
-                        g.create_thread(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_22), boost::ref(voQueues4)));
+                        //create threads only when needed
+                        if(!voQueues1.empty())
+                            g.create_thread(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_11), boost::ref(voQueues1)));
+                        if(!voQueues2.empty())
+                            g.create_thread(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_21), boost::ref(voQueues2)));
+                        if(!voQueues3.empty())
+                            g.create_thread(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_12), boost::ref(voQueues3)));
+                        if(!voQueues4.empty())
+                            g.create_thread(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_22), boost::ref(voQueues4)));
 
                         // wait for them
                         g.join_all();
@@ -514,6 +519,12 @@ protected:
                                                          "", // assoc_service_type
                                                          false,
                                                          "");
+
+
+                                        //send SUBMITTED message
+                                        SingleTrStateInstance::instance().sendStateMessage(tempUrl.JOB_ID, -1);
+
+
                                         /*set all to ready, special case for session reuse*/
                                         DBSingleton::instance().getDBObjectInstance()->updateFileStatusReuse(tempUrl, "READY");
 
@@ -522,8 +533,6 @@ protected:
                                                 TransferFiles temp = *queueiter;
                                                 fileIds.insert(std::make_pair(temp.FILE_ID, temp.JOB_ID));
                                             }
-
-                                        SingleTrStateInstance::instance().sendStateMessage(tempUrl.JOB_ID, -1);
 
 
                                         debug = DBSingleton::instance().getDBObjectInstance()->getDebugMode(source_hostname, destin_hostname);
