@@ -98,15 +98,17 @@ config(function($routeProvider) {
         replace: false,
         template: '{{ value }} {{ suffix }}',
         link: function(scope, element, attr) {
-            scope.value = scope.$eval(attr.optionalNumber);
             scope.decimals = scope.$eval(attr.decimals);
-            if (scope.value == null || scope.value == undefined) {
-                scope.value = '-';
-            }
-            else {
-                scope.value = Number(scope.value).toFixed(scope.decimals);
-                scope.suffix = attr.suffix;
-            }
+            scope.$watch(attr.optionalNumber, function(val) {
+                scope.value = val;
+                if (scope.value == null || scope.value == undefined) {
+                    scope.value = '-';
+                }
+                else {
+                    scope.value = Number(scope.value).toFixed(scope.decimals);
+                    scope.suffix = attr.suffix;
+                }
+            });
         }
     }
 })
