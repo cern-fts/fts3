@@ -217,7 +217,7 @@ static inline void constructJSONMsg(struct message_state* state)
     if(json_message.str().length() < 3000)
         {
             strncpy(message.msg, std::string(json_message.str()).c_str(), sizeof(message.msg));
-            message.msg[sizeof(message.msg) - 1] = '\0';            
+            message.msg[sizeof(message.msg) - 1] = '\0';
             runProducerMonitoring( message );
         }
 }

@@ -6911,9 +6911,9 @@ std::vector<struct message_state> MySqlAPI::getStateOfTransferInternal(soci::ses
                                          );
 
 
-            soci::rowset<soci::row>::const_iterator it;            
+            soci::rowset<soci::row>::const_iterator it;
 
-	    struct tm aux_tm;		
+            struct tm aux_tm;
             for (it = rs.begin(); it != rs.end(); ++it)
                 {
                     ret.job_id = it->get<std::string>("job_id");
@@ -6926,7 +6926,7 @@ std::vector<struct message_state> MySqlAPI::getStateOfTransferInternal(soci::ses
                     if(ret.file_state == "SUBMITTED")
                         {
                             aux_tm = it->get<struct tm>("submit_time");
-                            ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);			    
+                            ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);
                         }
                     else if(ret.file_state == "STAGING")
                         {
@@ -6941,7 +6941,7 @@ std::vector<struct message_state> MySqlAPI::getStateOfTransferInternal(soci::ses
                     else if(ret.file_state == "ACTIVE")
                         {
                             aux_tm = it->get<struct tm>("start_time");
-                            ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);			    		    
+                            ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);
                         }
                     else
                         {
@@ -6950,7 +6950,7 @@ std::vector<struct message_state> MySqlAPI::getStateOfTransferInternal(soci::ses
                     ret.retry_counter = it->get<int>("retry_counter",0);
                     ret.file_metadata = it->get<std::string>("file_metadata","");
                     ret.source_se = it->get<std::string>("source_se");
-                    ret.dest_se = it->get<std::string>("dest_se");                    
+                    ret.dest_se = it->get<std::string>("dest_se");
                     temp.push_back(ret);
                 }
         }

@@ -42,15 +42,15 @@ bool stopThreads = false;
 using namespace FTS3_COMMON_NAMESPACE;
 
 
-/*
-enable when user_dn is used
 
+//enable when user_dn/source_url/dest_url is used
+/*
 string started[] = {"agent_fqdn", "transfer_id", "endpnt", "timestamp", "src_srm_v", "dest_srm_v",
                     "vo", "src_url", "dst_url", "src_hostname", "dst_hostname", "src_site_name", "dst_site_name", "t_channel",
-                    "srm_space_token_src", "srm_space_token_dst", "user_dn"
+                    "srm_space_token_src", "srm_space_token_dst", "user_dn", "src_url", "dst_url"
                    };
 
-string startedToken[] = {"$a$", "$b$", "$c$", "$d$", "$e$", "$f$", "$g$", "$h$", "$i$", "$j$", "$k$", "$l$", "$m$", "$n$", "$o$", "$p$", "$q$"};
+string startedToken[] = {"$a$", "$b$", "$c$", "$d$", "$e$", "$f$", "$g$", "$h$", "$i$", "$j$", "$k$", "$l$", "$m$", "$n$", "$o$", "$p$", "$q$", "$r$", "$s$"};
 
 string completed[] = {"tr_id", "endpnt", "src_srm_v", "dest_srm_v", "vo", "src_url", "dst_url", "src_hostname", "dst_hostname", "src_site_name",
                       "dst_site_name", "t_channel", "timestamp_tr_st", "timestamp_tr_comp", "timestamp_chk_src_st", "timestamp_chk_src_ended", "timestamp_checksum_dest_st",
@@ -60,8 +60,8 @@ string completed[] = {"tr_id", "endpnt", "src_srm_v", "dest_srm_v", "vo", "src_u
                      };
 
 std::string completedToken[] = {"$a$", "$b$", "$c$", "$d$", "$e$", "$f$", "$g$", "$h$", "$i$", "$j$", "$k$", "$l$", "$m$", "$n$", "$o$", "$p$", "$q$", "$r$", "$s$", "$t$", "$u$", "$v$", "$w$", "$x$", "$y$", "$z$", "$0$", "$1$", "$2$", "$3$", "$4$", "$5$", "$6$", "$7$", "$8$", "$9$", "$10$", "$11$", "$12$", "$13$", "$14$", "$15$"};
-
 */
+
 
 
 
@@ -80,6 +80,8 @@ string completed[] = {"tr_id", "endpnt", "src_srm_v", "dest_srm_v", "vo", "src_u
                      };
 
 std::string completedToken[] = {"$a$", "$b$", "$c$", "$d$", "$e$", "$f$", "$g$", "$h$", "$i$", "$j$", "$k$", "$l$", "$m$", "$n$", "$o$", "$p$", "$q$", "$r$", "$s$", "$t$", "$u$", "$v$", "$w$", "$x$", "$y$", "$z$", "$0$", "$1$", "$2$", "$3$", "$4$", "$5$", "$6$", "$7$", "$8$", "$9$", "$10$", "$11$", "$12$", "$13$", "$14$"};
+
+
 
 //utility routine private to this file
 void find_and_replace(string &source, const string & find, string & replace)

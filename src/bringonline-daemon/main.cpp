@@ -290,10 +290,9 @@ int DoServer(int argc, char** argv)
 
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE daemon started..." << commit;
 
-            try  //this loop must never exit
+            while (!stopThreads)
                 {
-
-                    while (!stopThreads)
+                    try  //this loop must never exit
                         {
                             //if we drain a host, no need to check if url_copy are reporting being alive
                             if (DrainMode::getInstance())
@@ -350,14 +349,14 @@ int DoServer(int argc, char** argv)
 
                             boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
                         }
-                }
-            catch (Err& e)
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE " << e.what() << commit;
-                }
-            catch (...)
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Fatal error (unknown origin)" << commit;
+                    catch (Err& e)
+                        {
+                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE " << e.what() << commit;
+                        }
+                    catch (...)
+                        {
+                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Fatal error (unknown origin)" << commit;
+                        }
                 }
         }
     catch (Err& e)
