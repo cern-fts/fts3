@@ -6501,6 +6501,101 @@ void OracleAPI::transferLogFileVector(std::map<int, struct message_log>& message
         }
 }
 
+
+std::vector<struct message_state> OracleAPI::getStateOfDeleteInternal(soci::session& sql, const std::string& jobId, int fileId)
+{
+    message_state ret;
+    std::vector<struct message_state> temp;
+
+    try
+        {
+            soci::rowset<soci::row> rs = (fileId ==-1) ? (
+                                             sql.prepare <<
+                                             " SELECT "
+                                             "	j.submit_time, j.job_id, j.job_state, j.vo_name, "
+                                             "	j.job_metadata, j.retry AS retry_max, f.file_id, "
+                                             "	f.file_state, f.retry AS retry_counter, f.file_metadata, "
+                                             "	f.source_se, f.dest_se, f.start_time "
+                                             " FROM t_dm f INNER JOIN t_job j ON (f.job_id = j.job_id) "
+                                             " WHERE "
+                                             " 	j.job_id = :jobId ",
+                                             soci::use(jobId)
+                                         )
+                                         :
+                                         (
+                                             sql.prepare <<
+                                             " SELECT "
+                                             "	j.submit_time, j.job_id, j.job_state, j.vo_name, "
+                                             "	j.job_metadata, j.retry AS retry_max, f.file_id, "
+                                             "	f.file_state, f.retry AS retry_counter, f.file_metadata, "
+                                             "	f.source_se, f.dest_se, f.start_time "
+                                             " FROM t_dm f INNER JOIN t_job j ON (f.job_id = j.job_id) "
+                                             " WHERE "
+                                             " 	j.job_id = :jobId "
+                                             "  AND f.file_id = :fileId ",
+                                             soci::use(jobId),
+                                             soci::use(fileId)
+                                         );
+
+
+            soci::rowset<soci::row>::const_iterator it;
+            struct tm aux_tm;
+
+            for (it = rs.begin(); it != rs.end(); ++it)
+                {
+                    ret.job_id = it->get<std::string>("job_id");
+                    ret.job_state = it->get<std::string>("job_state");
+                    ret.vo_name = it->get<std::string>("vo_name");
+                    ret.job_metadata = it->get<std::string>("job_metadata","");
+                    ret.retry_max = it->get<int>("retry_max",0);
+                    ret.file_id = it->get<int>("file_id");
+                    ret.file_state = it->get<std::string>("file_state");
+                    if(ret.file_state == "SUBMITTED")
+                        {
+                            aux_tm = it->get<struct tm>("submit_time");
+                            ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);
+                        }
+                    else if(ret.file_state == "STAGING")
+                        {
+                            aux_tm = it->get<struct tm>("submit_time");
+                            ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);
+                        }
+                    else if(ret.file_state == "DELETE")
+                        {
+                            aux_tm = it->get<struct tm>("submit_time");
+                            ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);
+                        }
+                    else if(ret.file_state == "ACTIVE")
+                        {
+                            aux_tm = it->get<struct tm>("start_time");
+                            ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);
+                        }
+                    else
+                        {
+                            ret.timestamp = getStrUTCTimestamp();
+                        }
+                    ret.retry_counter = it->get<int>("retry_counter",0);
+                    ret.file_metadata = it->get<std::string>("file_metadata","");
+                    ret.source_se = it->get<std::string>("source_se");
+                    ret.dest_se = it->get<std::string>("dest_se");
+                    ret.timestamp = getStrUTCTimestamp();
+                    temp.push_back(ret);
+                }
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+
+    return temp;
+
+}
+
+
 std::vector<struct message_state> OracleAPI::getStateOfTransferInternal(soci::session& sql, const std::string& jobId, int fileId)
 {
     message_state ret;
@@ -9553,7 +9648,7 @@ void OracleAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< bo
                     job_id  = boost::get<3>(tupleRecord);
 
                     //send state message
-                    filesMsg = getStateOfTransferInternal(sql, job_id, file_id);
+                    filesMsg = getStateOfDeleteInternal(sql, job_id, file_id);
                     if(!filesMsg.empty())
                         {
                             std::vector<struct message_state>::iterator it;
@@ -9714,7 +9809,7 @@ void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::
 
                                             //send state message
                                             std::vector<struct message_state> filesMsg;
-                                            filesMsg = getStateOfTransferInternal(sql, job_id, file_id);
+                                            filesMsg = getStateOfDeleteInternal(sql, job_id, file_id);
                                             if(!filesMsg.empty())
                                                 {
                                                     std::vector<struct message_state>::iterator it;

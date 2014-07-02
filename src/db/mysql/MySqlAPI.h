@@ -461,5 +461,7 @@ private:
     std::vector<struct message_state> getStateOfTransferInternal(soci::session& sql, const std::string& jobId, int fileId);
 
     int getBestNextReplica(soci::session& sql, const std::string & job_id, const std::string & vo_name);
+    
+    std::vector<struct message_state> getStateOfDeleteInternal(soci::session& sql, const std::string& jobId, int fileId);    
 
 };
