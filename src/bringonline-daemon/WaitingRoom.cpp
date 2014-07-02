@@ -6,6 +6,7 @@
  */
 
 #include "WaitingRoom.h"
+extern bool stopThreads;
 
 
 void WaitingRoom::run()
@@ -14,6 +15,9 @@ void WaitingRoom::run()
 
     while (true)
         {
+            if(stopThreads) //either  gracefully or not
+                return;
+
             {
                 // lock the mutex
                 boost::mutex::scoped_lock lock(me.m);
@@ -23,6 +27,8 @@ void WaitingRoom::run()
                 boost::ptr_list<StagingTask>::iterator it, next = me.tasks.begin();
                 while ((it = next) != me.tasks.end())
                     {
+                        if(stopThreads)
+                            return;
                         // next item to check
                         ++next;
                         // if the time has not yet come for the task simply continue

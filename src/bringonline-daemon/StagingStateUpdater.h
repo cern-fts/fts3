@@ -16,6 +16,8 @@
 #include <boost/thread.hpp>
 #include <boost/tuple/tuple.hpp>
 
+extern bool stopThreads;
+
 /**
  * A utility for carrying out asynchronous state updates,
  * which are accumulated and than send to DB at the same time
@@ -70,6 +72,9 @@ private:
 
         while (true)
             {
+                if(stopThreads) //either  gracefully or not
+                    return;
+
                 // wait 10 seconds before checking again
                 boost::this_thread::sleep(boost::posix_time::milliseconds(10000));
                 // temporary vector for DB update

@@ -21,7 +21,13 @@ void PollTask::run(boost::any const &)
 
     if (status < 0)
         {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE polling failed, token " << token << ", "  << error->code << " " << error->message << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE polling FAILED "
+                                           << boost::get<job_id>(ctx) << " "
+                                           << boost::get<file_id>(ctx) <<  "  "
+                                           << token << " "
+                                           << error->code << " "
+                                           << error->message << commit;
+
             bool retry = retryTransfer(error->code, "SOURCE", error->message);
             state_update(boost::get<job_id>(ctx), boost::get<file_id>(ctx), "FAILED", error->message, retry);
             g_clear_error(&error);
@@ -30,13 +36,21 @@ void PollTask::run(boost::any const &)
         {
             time_t interval = getPollInterval(++nPolls), now = time(NULL);
             wait_until = now + interval;
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE polling token " << token << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE polling "
+                                            << boost::get<job_id>(ctx) << " "
+                                            << boost::get<file_id>(ctx) <<  "  "
+                                            << token << commit;
+
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE next attempt in " << interval << " seconds" << commit;
             WaitingRoom::instance().add(new PollTask(*this));
         }
     else
         {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE finished token " << token << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE FINISHED  "
+                                            << boost::get<job_id>(ctx) << " "
+                                            << boost::get<file_id>(ctx) <<  "  "
+                                            << token << commit;
+
             state_update(boost::get<job_id>(ctx), boost::get<file_id>(ctx), "FINISHED", "", false);
         }
 }

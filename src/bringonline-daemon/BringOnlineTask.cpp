@@ -116,19 +116,27 @@ void BringOnlineTask::run(boost::any const &)
 
     if (status < 0)
         {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE failed " << error->code << " " << error->message << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE FAILED "
+                                           << boost::get<job_id>(ctx) << " "
+                                           << boost::get<file_id>(ctx) <<  " "
+                                           << error->code << " " << error->message  << commit;
+
             bool retry = retryTransfer(error->code, "SOURCE", std::string(error->message));
             state_update(boost::get<job_id>(ctx), boost::get<file_id>(ctx), "FAILED", error->message, retry);
             g_clear_error(&error);
         }
     else if (status == 0)
         {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE queued, got token " << token << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE queued, got token " << token  << " "
+                                            << boost::get<job_id>(ctx) << " "
+                                            << boost::get<file_id>(ctx) <<  commit;
             WaitingRoom::instance().add(new PollTask(*this, token));
         }
     else
         {
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE succeeded, got token " << token << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE FINISHED, got token " << token   << " "
+                                            << boost::get<job_id>(ctx) << " "
+                                            << boost::get<file_id>(ctx) <<  commit;
             // No need to poll in this case!
             state_update(boost::get<job_id>(ctx), boost::get<file_id>(ctx), "FINISHED", "", false);
         }
