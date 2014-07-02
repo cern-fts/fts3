@@ -9796,7 +9796,7 @@ void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::
                                     boost::tuple<int, std::string, std::string, std::string, bool> recordState(file_id, initState, reason, job_id, false);
                                     filesState.push_back(recordState);
                                 }
-				
+
                             //now update the initial state
                             if(!filesState.empty())
                                 {
@@ -9822,7 +9822,7 @@ void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::
                                             filesMsg.clear();
                                         }
                                     updateDeletionsStateInternal(sql, filesState);
-                                }	  
+                                }
                         }
                 }
         }
