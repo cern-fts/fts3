@@ -193,11 +193,7 @@ int DoServer(int argc, char** argv)
             REGISTER_SIGNAL(SIGFPE);
             REGISTER_SIGNAL(SIGBUS);
             REGISTER_SIGNAL(SIGTRAP);
-            REGISTER_SIGNAL(SIGSYS);
-
-            // Set X509_ environment variables properly
-            setenv("X509_USER_CERT", hostcert, 1);
-            setenv("X509_USER_KEY", hostkey, 1);
+            REGISTER_SIGNAL(SIGSYS);        
 
             //re-read here
             FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv, true);
