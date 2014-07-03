@@ -60,6 +60,13 @@ int fts3_teardown_db_backend()
 
 void _handle_sigint(int)
 {
+
+    //Point 2: Michal need to finish it up
+    //if a signal is received, iterate through states and call the function below
+    //before exiting the process
+    //struct message_bringonline msg;
+    //runProducerStaging(msg);
+
     if (stackTrace.length() > 0)
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << stackTrace << commit;
     stopThreads = true;
@@ -143,8 +150,8 @@ int DoServer(int argc, char** argv)
 
     try
         {
-	    setenv("GLOBUS_THREAD_MODEL", "pthread", 1); 
-	
+            setenv("GLOBUS_THREAD_MODEL", "pthread", 1);
+
             REGISTER_SIGNAL(SIGABRT);
             REGISTER_SIGNAL(SIGSEGV);
             REGISTER_SIGNAL(SIGTERM);
@@ -152,7 +159,7 @@ int DoServer(int argc, char** argv)
             REGISTER_SIGNAL(SIGFPE);
             REGISTER_SIGNAL(SIGBUS);
             REGISTER_SIGNAL(SIGTRAP);
-            REGISTER_SIGNAL(SIGSYS);        
+            REGISTER_SIGNAL(SIGSYS);
 
             //re-read here
             FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv, true);

@@ -15,6 +15,10 @@
 
 #include <boost/thread.hpp>
 #include <boost/tuple/tuple.hpp>
+#include "producer_consumer_common.h"
+#include "common/logger.h"
+
+using namespace FTS3_COMMON_NAMESPACE;
 
 extern bool stopThreads;
 
@@ -69,27 +73,90 @@ private:
     static void run()
     {
         StagingStateUpdater & me = instance();
+	std::vector<value_type> recover;
 
         while (true)
             {
-                if(stopThreads) //either  gracefully or not
-                    return;
+                try
+                    {
+                        if(stopThreads) //either  gracefully or not
+                            return;
 
-                // wait 10 seconds before checking again
-                boost::this_thread::sleep(boost::posix_time::milliseconds(10000));
-                // temporary vector for DB update
-                std::vector<value_type> tmp;
-                // critical section
-                {
-                    // lock the vector
-                    boost::mutex::scoped_lock lock(me.m);
-                    // if the vector is empty there is nothing to do
-                    if (me.updates.empty()) continue;
-                    // swap the vectors in order to quickly release the lock
-                    me.updates.swap(tmp);
-                }
-                // run the DB query
-                me.db.updateStagingState(tmp);
+                        // wait 10 seconds before checking again
+                        boost::this_thread::sleep(boost::posix_time::milliseconds(10000));
+                        // temporary vector for DB update
+                        std::vector<value_type> tmp;
+                        // critical section
+                        {
+                            // lock the vector
+                            boost::mutex::scoped_lock lock(me.m);
+                            // if the vector is empty there is nothing to do
+                            if (me.updates.empty()) continue;
+                            // swap the vectors in order to quickly release the lock
+                            me.updates.swap(tmp);
+                        }
+
+			//copy to recover container
+			recover = tmp; 
+                        // run the DB query
+                        me.db.updateStagingState(tmp);
+			recover.clear();
+                    }
+		catch(std::exception& ex)
+                    {
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
+                    
+                        struct message_bringonline msg;
+			std::vector<value_type>::iterator itFind;
+			for (itFind = recover.begin(); itFind != recover.end(); ++itFind)
+			{
+				boost::tuple<int, std::string, std::string, std::string, bool>& tupleRecord = *itFind;
+                                int file_id = boost::get<0>(tupleRecord);
+                                std::string transfer_status = boost::get<1>(tupleRecord);
+                                std::string transfer_message = boost::get<2>(tupleRecord);
+                                std::string job_id = boost::get<3>(tupleRecord);
+
+                                msg.file_id = file_id;
+                                strncpy(msg.job_id, job_id.c_str(), sizeof(msg.job_id));
+                                msg.job_id[sizeof(msg.job_id) -1] = '\0';
+                                strncpy(msg.transfer_status, transfer_status.c_str(), sizeof(msg.transfer_status));
+                                msg.transfer_status[sizeof(msg.transfer_status) -1] = '\0';
+                                strncpy(msg.transfer_message, transfer_message.c_str(), sizeof(msg.transfer_message));
+                                msg.transfer_message[sizeof(msg.transfer_message) -1] = '\0';
+					    
+				//store the states into fs to be restored in the next run
+                                runProducerStaging(msg);
+			}			
+			recover.clear();
+			
+                    }		    
+                catch(...) //use catch-all, the state must be recovered no matter what
+                    {
+  		        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Something went really bad, trying to recover!" << commit;
+			                       
+                        struct message_bringonline msg;
+			std::vector<value_type>::iterator itFind;
+			for (itFind = recover.begin(); itFind != recover.end(); ++itFind)
+			{
+				boost::tuple<int, std::string, std::string, std::string, bool>& tupleRecord = *itFind;
+                                int file_id = boost::get<0>(tupleRecord);
+                                std::string transfer_status = boost::get<1>(tupleRecord);
+                                std::string transfer_message = boost::get<2>(tupleRecord);
+                                std::string job_id = boost::get<3>(tupleRecord);
+
+                                msg.file_id = file_id;
+                                strncpy(msg.job_id, job_id.c_str(), sizeof(msg.job_id));
+                                msg.job_id[sizeof(msg.job_id) -1] = '\0';
+                                strncpy(msg.transfer_status, transfer_status.c_str(), sizeof(msg.transfer_status));
+                                msg.transfer_status[sizeof(msg.transfer_status) -1] = '\0';
+                                strncpy(msg.transfer_message, transfer_message.c_str(), sizeof(msg.transfer_message));
+                                msg.transfer_message[sizeof(msg.transfer_message) -1] = '\0';
+					    
+				//store the states into fs to be restored in the next run
+                                runProducerStaging(msg);
+			}			
+			recover.clear();
+                    }
             }
     }
 

@@ -41,6 +41,7 @@ using namespace FTS3_COMMON_NAMESPACE;
 using namespace db;
 
 
+
 static unsigned getHashedId(void)
 {
     static __thread std::mt19937 *generator = NULL;
@@ -2575,9 +2576,9 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
     try
         {
             soci::rowset<soci::row> rs = (sql.prepare << " select distinct pid, file_id from t_file where "
-	    						 " file_state='CANCELED' and job_finished is NULL "
-							 " AND (hashed_id >= :hStart AND hashed_id <= :hEnd) " 
-							 " AND staging_start is NULL ",
+                                          " file_state='CANCELED' and job_finished is NULL "
+                                          " AND (hashed_id >= :hStart AND hashed_id <= :hEnd) "
+                                          " AND staging_start is NULL ",
                                           soci::use(hashSegment.start), soci::use(hashSegment.end));
 
             soci::statement stmt1 = (sql.prepare << "UPDATE t_file SET  job_finished = UTC_TIMESTAMP() "
@@ -2590,10 +2591,10 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
                     soci::row const& row = *i2;
                     pid = row.get<int>("pid",0);
                     file_id = row.get<int>("file_id");
-		    
-		    if(pid > 0)
-                    	requestIDs.push_back(pid);
-			
+
+                    if(pid > 0)
+                        requestIDs.push_back(pid);
+
                     stmt1.execute(true);
                 }
             sql.commit();
@@ -10214,9 +10215,36 @@ int MySqlAPI::getMaxDeletionsPerEndpoint(const std::string & endpoint, const std
 void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string > >& files)
 {
     soci::session sql(*connectionPool);
+    std::vector< boost::tuple<int, std::string, std::string, std::string, bool> > filesState;
+    std::vector<struct message_bringonline> messages;
 
     try
         {
+	    int exitCode = runConsumerStaging(messages);
+	    if(exitCode != 0)
+                        {
+                            char buffer[128]= {0};
+                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the status messages for staging:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
+                        }
+
+            if(!messages.empty())
+                {
+                    std::vector<struct message_bringonline>::iterator iterUpdater;
+                    for (iterUpdater = messages.begin(); iterUpdater != messages.end(); ++iterUpdater)
+                        {
+                            if (iterUpdater->msg_errno == 0)
+                                {
+                                    //now restore messages : //file_id / state / reason / job_id / retry
+                                    filesState.push_back(boost::make_tuple((*iterUpdater).file_id,
+                                                                           std::string((*iterUpdater).transfer_status),
+                                                                           std::string((*iterUpdater).transfer_message),
+                                                                           std::string((*iterUpdater).job_id),
+                                                                           0));
+                                }
+                        }
+                }
+
+	    //now get frash states/files from the database
             soci::rowset<soci::row> rs2 = (sql.prepare <<
                                            " SELECT DISTINCT vo_name, source_se "
                                            " FROM t_file "
@@ -10315,7 +10343,6 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                                                               soci::use(limit)
                                                           );
 
-                            std::vector< boost::tuple<int, std::string, std::string, std::string, bool> > filesState;
                             std::string initState = "STARTED";
                             std::string reason;
 
@@ -10337,32 +10364,65 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                                     boost::tuple<int, std::string, std::string, std::string, bool> recordState(file_id, initState, reason, job_id, false);
                                     filesState.push_back(recordState);
                                 }
+                        }
+                }
 
-                            //now update the initial state
+            //now update the initial state
+            if(!filesState.empty())
+                {
+                    std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >::iterator itFind;
+                    for (itFind = filesState.begin(); itFind < filesState.end(); ++itFind)
+                        {
+                            boost::tuple<int, std::string, std::string, std::string, bool>& tupleRecord = *itFind;
+                            int file_id = boost::get<0>(tupleRecord);
+                            std::string job_id = boost::get<3>(tupleRecord);
+
+                            //send state message
+                            std::vector<struct message_state> filesMsg;
+                            filesMsg = getStateOfTransferInternal(sql, job_id, file_id);
+                            if(!filesMsg.empty())
+                                {
+                                    std::vector<struct message_state>::iterator it;
+                                    for (it = filesMsg.begin(); it != filesMsg.end(); ++it)
+                                        {
+                                            struct message_state tmp = (*it);
+                                            constructJSONMsg(&tmp);
+                                        }
+                                }
+                            filesMsg.clear();
+                        }
+
+                    try
+                        {
+                            updateStagingStateInternal(sql, filesState);
+			    filesState.clear();
+                        }
+                    catch(...)
+                        {
+                            //save state and restore afterwards
                             if(!filesState.empty())
                                 {
                                     std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >::iterator itFind;
+                                    struct message_bringonline msg;
                                     for (itFind = filesState.begin(); itFind < filesState.end(); ++itFind)
                                         {
                                             boost::tuple<int, std::string, std::string, std::string, bool>& tupleRecord = *itFind;
                                             int file_id = boost::get<0>(tupleRecord);
+                                            std::string transfer_status = boost::get<1>(tupleRecord);
+                                            std::string transfer_message = boost::get<2>(tupleRecord);
                                             std::string job_id = boost::get<3>(tupleRecord);
 
-                                            //send state message
-                                            std::vector<struct message_state> filesMsg;
-                                            filesMsg = getStateOfTransferInternal(sql, job_id, file_id);
-                                            if(!filesMsg.empty())
-                                                {
-                                                    std::vector<struct message_state>::iterator it;
-                                                    for (it = filesMsg.begin(); it != filesMsg.end(); ++it)
-                                                        {
-                                                            struct message_state tmp = (*it);
-                                                            constructJSONMsg(&tmp);
-                                                        }
-                                                }
-                                            filesMsg.clear();
+                                            msg.file_id = file_id;
+                                            strncpy(msg.job_id, job_id.c_str(), sizeof(msg.job_id));
+                                            msg.job_id[sizeof(msg.job_id) -1] = '\0';
+                                            strncpy(msg.transfer_status, transfer_status.c_str(), sizeof(msg.transfer_status));
+                                            msg.transfer_status[sizeof(msg.transfer_status) -1] = '\0';
+                                            strncpy(msg.transfer_message, transfer_message.c_str(), sizeof(msg.transfer_message));
+                                            msg.transfer_message[sizeof(msg.transfer_message) -1] = '\0';
+					    
+					    //store the states into fs to be restored in the next run of this function
+                                            runProducerStaging(msg);
                                         }
-                                    updateStagingStateInternal(sql, filesState);
                                 }
                         }
                 }
@@ -10377,7 +10437,7 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
         }
 }
 
-//file_id / state / reason / job_id
+//file_id / state / reason / job_id / retry
 void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files)
 {
     int file_id = 0;

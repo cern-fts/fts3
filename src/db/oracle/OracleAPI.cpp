@@ -2432,9 +2432,9 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs)
     try
         {
             soci::rowset<soci::row> rs = (sql.prepare << " select distinct pid, file_id from t_file where "
-	    						 " file_state='CANCELED' and job_finished is NULL "
-							 " AND (hashed_id >= :hStart AND hashed_id <= :hEnd) "
-							 " AND staging_start is NULL ",
+                                          " file_state='CANCELED' and job_finished is NULL "
+                                          " AND (hashed_id >= :hStart AND hashed_id <= :hEnd) "
+                                          " AND staging_start is NULL ",
                                           soci::use(hashSegment.start), soci::use(hashSegment.end));
 
             soci::statement stmt1 = (sql.prepare << "UPDATE t_file SET  job_finished = sys_extract_utc(systimestamp) "
@@ -2447,14 +2447,14 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs)
                 {
                     soci::row const& row = *i2;
                     pid = row.get<long long>("PID",0);
-		    file_id = row.get<int>("FILE_ID");
-		    
-		    if(pid > 0)
-                    	requestIDs.push_back(boost::lexical_cast<int>(pid));
+                    file_id = row.get<int>("FILE_ID");
+
+                    if(pid > 0)
+                        requestIDs.push_back(boost::lexical_cast<int>(pid));
 
                     stmt1.execute(true);
                 }
-            sql.commit();           
+            sql.commit();
         }
     catch (std::exception& e)
         {
@@ -6528,7 +6528,7 @@ std::vector<struct message_state> OracleAPI::getStateOfDeleteInternal(soci::sess
             soci::rowset<soci::row>::const_iterator it;
             struct tm aux_tm;
 
-           for (it = rs.begin(); it != rs.end(); ++it)
+            for (it = rs.begin(); it != rs.end(); ++it)
                 {
                     ret.job_id = it->get<std::string>("JOB_ID");
                     ret.job_state = it->get<std::string>("JOB_STATE");
