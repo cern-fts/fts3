@@ -10611,7 +10611,7 @@ void MySqlAPI::getStagingFilesForCanceling(std::vector< boost::tuple<int, std::s
     try
         {
             soci::rowset<soci::row> rs = (sql.prepare << " SELECT file_id, source_surl, bringonline_token from t_file WHERE "
-                                          "  file_state='CANCELED' and job_finished is NULL and  "
+                                          "  file_state='CANCELED' and job_finished is NULL "
                                           "  AND (hashed_id >= :hStart AND hashed_id <= :hEnd)  AND staging_start is NOT NULL ",
                                           soci::use(hashSegment.start), soci::use(hashSegment.end));
 
