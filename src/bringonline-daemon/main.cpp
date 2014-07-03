@@ -24,6 +24,7 @@ limitations under the License. */
 #include "Gfal2Task.h"
 #include "FetchStaging.h"
 #include "FetchCancelStaging.h"
+#include "StagingStateUpdater.h"
 
 #include <string>
 
@@ -59,12 +60,7 @@ int fts3_teardown_db_backend()
 
 void _handle_sigint(int)
 {
-
-    //Point 2: Michal need to finish it up
-    //if a signal is received, iterate through states and call the function below
-    //before exiting the process
-    //struct message_bringonline msg;
-    //runProducerStaging(msg);
+	StagingStateUpdater::instance().recover();
 
     if (stackTrace.length() > 0)
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << stackTrace << commit;
