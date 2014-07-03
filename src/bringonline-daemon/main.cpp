@@ -21,10 +21,9 @@ limitations under the License. */
 #include "server.h"
 #include "signal_logger.h"
 
-#include "StagingTask.h"
-#include "BringOnlineTask.h"
-#include "WaitingRoom.h"
+#include "Gfal2Task.h"
 #include "FetchStaging.h"
+#include "FetchCancelStaging.h"
 
 #include <string>
 
@@ -241,21 +240,14 @@ int DoServer(int argc, char** argv)
 
             boost::thread hbThread(heartbeat);
 
-            vector< boost::tuple<string, string, int> >::iterator it;
-            std::vector< boost::tuple<std::string, std::string, int> > voHostnameConfig;
-            std::vector<struct message_bringonline> urls;
-            vector<struct message_bringonline>::iterator itUrls;
-
-            StagingTask::createPrototype(infosys);
-            fts3::common::ThreadPool<StagingTask> threadpool(10);
-            WaitingRoom::instance().attach(threadpool);
-
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE daemon started..." << commit;
-
-            FetchStaging fs(threadpool);
+            fts3::common::ThreadPool<Gfal2Task> threadpool(10);
+            FetchStaging fs(threadpool, infosys);
+            FetchCancelStaging fcs(threadpool);
 
             boost::thread_group gr;
             gr.create_thread(boost::bind(&FetchStaging::fetch, fs));
+            gr.create_thread(boost::bind(&FetchCancelStaging::fetch, fcs));
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE daemon started..." << commit;
             gr.join_all();
         }
     catch (Err& e)

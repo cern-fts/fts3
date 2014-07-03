@@ -9,11 +9,15 @@
 #define FETCHSTAGING_H_
 
 #include "common/ThreadPool.h"
-#include "StagingTask.h"
+#include "Gfal2Task.h"
 
 #include "cred/DelegCred.h"
 
+#include <string>
+
 #include <boost/scoped_ptr.hpp>
+
+using namespace fts3::common;
 
 /**
  * Fetches the staging jobs from DB in a separate thread
@@ -22,8 +26,8 @@ class FetchStaging
 {
 
 public:
-    FetchStaging(ThreadPool<StagingTask> & threadpool) : threadpool(threadpool) {}
-    virtual ~FetchStaging() {}
+	FetchStaging(ThreadPool<Gfal2Task> & threadpool, std::string const & infosys) : threadpool(threadpool), infosys(infosys) {}
+	virtual ~FetchStaging() {}
 
     void fetch();
 
@@ -43,7 +47,8 @@ private:
         return delegCredPtr->getFileName(dn, dlg_id);
     }
 
-    ThreadPool<StagingTask> & threadpool;
+	ThreadPool<Gfal2Task> & threadpool;
+	std::string infosys;
 };
 
 #endif /* FETCHSTAGING_H_ */

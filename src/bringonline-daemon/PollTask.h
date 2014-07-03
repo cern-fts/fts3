@@ -33,12 +33,12 @@ public:
      *
      * @param copy : a staging task (stills the gfal2 context of this object)
      */
-    PollTask(StagingTask & copy, std::string token) : StagingTask(copy), token(token), nPolls(0) {}
+    PollTask(StagingTask & copy, std::string token) : StagingTask(copy), token(token), nPolls(0), wait_until() {}
 
     /**
      * Copy constructor
      */
-    PollTask(PollTask & copy) : StagingTask(copy), token(copy.token), nPolls(copy.nPolls) {}
+    PollTask(PollTask & copy) : StagingTask(copy), token(copy.token), nPolls(copy.nPolls), wait_until(copy.wait_until) {}
 
     /**
      * Destructor
@@ -49,6 +49,14 @@ public:
      * The routine is executed by the thread pool
      */
     virtual void run(boost::any const &);
+
+    /**
+     * @return : true if the task is still waiting, false otherwise
+     */
+    bool waiting(time_t now)
+    {
+        return wait_until > now;
+    }
 
 private:
 
@@ -70,6 +78,9 @@ private:
 
     /// number of bring online polls
     int nPolls;
+
+    /// wait in the wait room until given time
+    time_t wait_until;
 };
 
 #endif /* POLLTASK_H_ */

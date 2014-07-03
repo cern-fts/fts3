@@ -42,7 +42,7 @@ void PollTask::run(boost::any const &)
                                             << token << commit;
 
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE next attempt in " << interval << " seconds" << commit;
-            WaitingRoom::instance().add(new PollTask(*this));
+            WaitingRoom<PollTask>::instance().add(new PollTask(*this));
         }
     else
         {

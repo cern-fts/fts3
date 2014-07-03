@@ -8,15 +8,22 @@
 #include "FetchStaging.h"
 
 #include "BringOnlineTask.h"
+#include "PollTask.h"
+#include "WaitingRoom.h"
 
 #include "server/DrainMode.h"
 
 #include "cred/cred-utility.h"
 
+#include "db/generic/SingleDbInstance.h"
+
 extern bool stopThreads;
 
 void FetchStaging::fetch()
 {
+    StagingTask::createPrototype(infosys);
+    WaitingRoom<PollTask>::instance().attach(threadpool);
+
     while (!stopThreads)
         {
             try  //this loop must never exit

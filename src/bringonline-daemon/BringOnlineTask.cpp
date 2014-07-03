@@ -6,6 +6,7 @@
  */
 
 #include "BringOnlineTask.h"
+#include "PollTask.h"
 
 #include "WaitingRoom.h"
 
@@ -130,7 +131,7 @@ void BringOnlineTask::run(boost::any const &)
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE queued, got token " << token  << " "
                                             << boost::get<job_id>(ctx) << " "
                                             << boost::get<file_id>(ctx) <<  commit;
-            WaitingRoom::instance().add(new PollTask(*this, token));
+            WaitingRoom<PollTask>::instance().add(new PollTask(*this, token));
         }
     else
         {
