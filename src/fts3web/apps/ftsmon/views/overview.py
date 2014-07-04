@@ -17,6 +17,7 @@
 from datetime import datetime, timedelta
 from django.db import connection
 from django.db.models import Count, Avg
+import itertools
 import types
 import sys
 
@@ -118,6 +119,31 @@ class OverviewExtended(object):
             return self.objects[indexes]
 
 
+def _get_state_vo_count_throughput(cursor, source, destination, vo, not_before):
+    query_params = [source, destination]
+    query = """
+    SELECT file_state, vo_name, count(file_id),
+           SUM(CASE WHEN file_state = 'ACTIVE' THEN throughput ELSE 0 END)
+    FROM t_file
+    WHERE source_se = %s
+          AND dest_se = %s
+    """
+    if not_before:
+        query += " AND job_finished >= %s" % _db_to_date()
+        query_params.append(not_before)
+    else:
+        query += " AND file_state IN ('ACTIVE', 'SUBMITTED')"
+
+    if vo:
+        query += " AND vo_name = %s"
+        query_params.append(vo)
+
+    query += " GROUP BY file_state, vo_name ORDER BY NULL"
+
+    cursor.execute(query, query_params)
+    return cursor.fetchall()
+
+
 @jsonify
 def get_overview(http_request):
     filters = setup_filters(http_request)
@@ -142,24 +168,12 @@ def get_overview(http_request):
 
     cursor.execute(pairs_query, pairs_params)
     for (source, dest) in cursor.fetchall():
-        query = """
-        SELECT file_state, vo_name, count(file_id),
-               SUM(CASE WHEN file_state = 'ACTIVE' THEN throughput ELSE 0 END)
-        FROM t_file
-        WHERE (job_finished IS NULL OR job_finished >= %s)
-              AND source_se = %%s AND dest_se = %%s
-              AND file_state in ('READY','ACTIVE','FINISHED','FAILED','CANCELED','SUBMITTED')
-        """ % _db_to_date()
-        params = [not_before.strftime('%Y-%m-%d %H:%M:%S'),
-                  source, dest]
-        if filters['vo']:
-            query += " AND vo_name = %s"
-            params.append(filters['vo'])
-        query += " GROUP BY file_state, vo_name ORDER BY NULL"
-
         all_vos = []
-        cursor.execute(query, params)
-        for row in cursor.fetchall():
+
+        non_terminal = _get_state_vo_count_throughput(cursor, source, dest, filters['vo'], None)
+        terminal = _get_state_vo_count_throughput(cursor, source, dest, filters['vo'], not_before)
+
+        for row in itertools.chain(non_terminal, terminal):
             all_vos.append(row[1])
             triplet_key = (source, dest, row[1])
             triplet = triplets.get(triplet_key, dict())
@@ -173,8 +187,7 @@ def get_overview(http_request):
         query = _db_limit("""
         SELECT agrthroughput
         FROM t_optimizer_evolution
-        WHERE source_se = %%s AND dest_se = %%s
-            AND datetime >= %s
+        WHERE source_se = %%s AND dest_se = %%s AND datetime >= %s
         ORDER BY datetime DESC
         """ % _db_to_date(), 1)
 
