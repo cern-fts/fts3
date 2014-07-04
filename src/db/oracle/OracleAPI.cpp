@@ -6499,10 +6499,10 @@ std::vector<struct message_state> OracleAPI::getStateOfDeleteInternal(soci::sess
             soci::rowset<soci::row> rs = (fileId ==-1) ? (
                                              sql.prepare <<
                                              " SELECT "
-                                             "	j.submit_time, j.job_id, j.job_state, j.vo_name, "
+                                             "	j.user_dn, j.submit_time, j.job_id, j.job_state, j.vo_name, "
                                              "	j.job_metadata, j.retry AS retry_max, f.file_id, "
                                              "	f.file_state, f.retry AS retry_counter, f.file_metadata, "
-                                             "	f.source_se, f.dest_se, f.start_time "
+                                             "	f.source_se, f.dest_se, f.start_time, f.source_surl, f.dest_surl "
                                              " FROM t_dm f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                              " WHERE "
                                              " 	j.job_id = :jobId ",
@@ -6512,10 +6512,10 @@ std::vector<struct message_state> OracleAPI::getStateOfDeleteInternal(soci::sess
                                          (
                                              sql.prepare <<
                                              " SELECT "
-                                             "	j.submit_time, j.job_id, j.job_state, j.vo_name, "
+                                             "	j.user_dn, j.submit_time, j.job_id, j.job_state, j.vo_name, "
                                              "	j.job_metadata, j.retry AS retry_max, f.file_id, "
                                              "	f.file_state, f.retry AS retry_counter, f.file_metadata, "
-                                             "	f.source_se, f.dest_se, f.start_time "
+                                             "	f.source_se, f.dest_se, f.start_time, f.source_surl, f.dest_surl "
                                              " FROM t_dm f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                              " WHERE "
                                              " 	j.job_id = :jobId "
@@ -6565,6 +6565,13 @@ std::vector<struct message_state> OracleAPI::getStateOfDeleteInternal(soci::sess
                     ret.file_metadata = it->get<std::string>("FILE_METADATA","");
                     ret.source_se = it->get<std::string>("SOURCE_SE");
                     ret.dest_se = it->get<std::string>("DEST_SE");
+		    
+		    /*
+                    ret.user_dn = it->get<std::string>("USER_DN","");
+                    ret.source_url = it->get<std::string>("SOURCE_SURL","");
+                    ret.dest_url = it->get<std::string>("DEST_SURL","");		    
+		    */		    
+		    
                     temp.push_back(ret);
                 }
         }
@@ -6592,10 +6599,10 @@ std::vector<struct message_state> OracleAPI::getStateOfTransferInternal(soci::se
             soci::rowset<soci::row> rs = (fileId ==-1) ? (
                                              sql.prepare <<
                                              " SELECT "
-                                             "	j.submit_time, j.job_id, j.job_state, j.vo_name, "
+                                             "	j.user_dn, j.submit_time, j.job_id, j.job_state, j.vo_name, "
                                              "	j.job_metadata, j.retry AS retry_max, f.file_id, "
                                              "	f.file_state, f.retry AS retry_counter, f.file_metadata, "
-                                             "	f.source_se, f.dest_se, f.start_time "
+                                             "	f.source_se, f.dest_se, f.start_time, f.source_surl, f.dest_surl "
                                              " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                              " WHERE "
                                              " 	j.job_id = :jobId ",
@@ -6605,10 +6612,10 @@ std::vector<struct message_state> OracleAPI::getStateOfTransferInternal(soci::se
                                          (
                                              sql.prepare <<
                                              " SELECT "
-                                             "	j.submit_time, j.job_id, j.job_state, j.vo_name, "
+                                             "	j.user_dn, j.submit_time, j.job_id, j.job_state, j.vo_name, "
                                              "	j.job_metadata, j.retry AS retry_max, f.file_id, "
                                              "	f.file_state, f.retry AS retry_counter, f.file_metadata, "
-                                             "	f.source_se, f.dest_se, f.start_time "
+                                             "	f.source_se, f.dest_se, f.start_time, f.source_surl, f.dest_surl "
                                              " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                              " WHERE "
                                              " 	j.job_id = :jobId "
@@ -6658,6 +6665,13 @@ std::vector<struct message_state> OracleAPI::getStateOfTransferInternal(soci::se
                     ret.file_metadata = it->get<std::string>("FILE_METADATA","");
                     ret.source_se = it->get<std::string>("SOURCE_SE");
                     ret.dest_se = it->get<std::string>("DEST_SE");
+		    
+		    /*
+                    ret.user_dn = it->get<std::string>("USER_DN","");
+                    ret.source_url = it->get<std::string>("SOURCE_SURL","");
+                    ret.dest_url = it->get<std::string>("DEST_SURL","");		    
+		    */				    
+		    
                     temp.push_back(ret);
                 }
         }

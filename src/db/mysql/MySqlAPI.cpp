@@ -6778,10 +6778,10 @@ std::vector<struct message_state> MySqlAPI::getStateOfDeleteInternal(soci::sessi
             soci::rowset<soci::row> rs = (fileId ==-1) ? (
                                              sql.prepare <<
                                              " SELECT "
-                                             "	j.submit_time, j.job_id, j.job_state, j.vo_name, "
+                                             "	j.user_dn, j.submit_time, j.job_id, j.job_state, j.vo_name, "
                                              "	j.job_metadata, j.retry AS retry_max, f.file_id, "
                                              "	f.file_state, f.retry AS retry_counter, f.file_metadata, "
-                                             "	f.source_se, f.dest_se, f.start_time "
+                                             "	f.source_se, f.dest_se, f.start_time , f.source_surl, f.dest_surl"
                                              " FROM t_dm f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                              " WHERE "
                                              " 	j.job_id = :jobId ",
@@ -6794,7 +6794,7 @@ std::vector<struct message_state> MySqlAPI::getStateOfDeleteInternal(soci::sessi
                                              "	j.submit_time, j.job_id, j.job_state, j.vo_name, "
                                              "	j.job_metadata, j.retry AS retry_max, f.file_id, "
                                              "	f.file_state, f.retry AS retry_counter, f.file_metadata, "
-                                             "	f.source_se, f.dest_se, f.start_time "
+                                             "	f.source_se, f.dest_se, f.start_time , f.source_surl, f.dest_surl"
                                              " FROM t_dm f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                              " WHERE "
                                              " 	j.job_id = :jobId "
@@ -6844,6 +6844,13 @@ std::vector<struct message_state> MySqlAPI::getStateOfDeleteInternal(soci::sessi
                     ret.file_metadata = it->get<std::string>("file_metadata","");
                     ret.source_se = it->get<std::string>("source_se");
                     ret.dest_se = it->get<std::string>("dest_se");
+		    
+		    /*
+                    ret.user_dn = it->get<std::string>("user_dn","");
+                    ret.source_url = it->get<std::string>("source_surl","");
+                    ret.dest_url = it->get<std::string>("dest_surl","");		    
+		    */
+		    
                     temp.push_back(ret);
                 }
         }
@@ -6870,10 +6877,10 @@ std::vector<struct message_state> MySqlAPI::getStateOfTransferInternal(soci::ses
             soci::rowset<soci::row> rs = (fileId ==-1) ? (
                                              sql.prepare <<
                                              " SELECT "
-                                             "	j.submit_time, j.job_id, j.job_state, j.vo_name, "
+                                             "	j.user_dn, j.submit_time, j.job_id, j.job_state, j.vo_name, "
                                              "	j.job_metadata, j.retry AS retry_max, f.file_id, "
                                              "	f.file_state, f.retry AS retry_counter, f.file_metadata, "
-                                             "	f.source_se, f.dest_se, f.start_time "
+                                             "	f.source_se, f.dest_se, f.start_time, f.source_surl, f.dest_surl "
                                              " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                              " WHERE "
                                              " 	j.job_id = :jobId ",
@@ -6883,10 +6890,10 @@ std::vector<struct message_state> MySqlAPI::getStateOfTransferInternal(soci::ses
                                          (
                                              sql.prepare <<
                                              " SELECT "
-                                             "	j.submit_time, j.job_id, j.job_state, j.vo_name, "
+                                             "	j.user_dn, j.submit_time, j.job_id, j.job_state, j.vo_name, "
                                              "	j.job_metadata, j.retry AS retry_max, f.file_id, "
                                              "	f.file_state, f.retry AS retry_counter, f.file_metadata, "
-                                             "	f.source_se, f.dest_se, f.start_time "
+                                             "	f.source_se, f.dest_se, f.start_time, f.source_surl, f.dest_surl "
                                              " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                              " WHERE "
                                              " 	j.job_id = :jobId "
@@ -6936,6 +6943,13 @@ std::vector<struct message_state> MySqlAPI::getStateOfTransferInternal(soci::ses
                     ret.file_metadata = it->get<std::string>("file_metadata","");
                     ret.source_se = it->get<std::string>("source_se");
                     ret.dest_se = it->get<std::string>("dest_se");
+		    
+		    /*	
+                    ret.user_dn = it->get<std::string>("user_dn","");
+                    ret.source_url = it->get<std::string>("source_surl","");
+                    ret.dest_url = it->get<std::string>("dest_surl","");		    
+		    */		    
+		    
                     temp.push_back(ret);
                 }
         }
