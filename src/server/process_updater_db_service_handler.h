@@ -121,7 +121,6 @@ protected:
         static unsigned int counter1 = 0;
         static unsigned int counterFailAll = 0;
         static unsigned int countReverted = 0;
-        static unsigned int counter2 = 0;
         static unsigned int counterTimeoutWaiting = 0;
         static unsigned int counterCanceled = 0;
         std::vector<int> requestIDs;
@@ -141,7 +140,7 @@ protected:
                             {
                                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking url_copy for this instance!" << commit;
                                 messages.clear();
-                                sleep(5);
+                                sleep(15);
                                 continue;
                             }
 
@@ -293,7 +292,6 @@ protected:
                         counter1 = 0;
                         counterFailAll = 0;
                         countReverted = 0;
-                        counter2 = 0;
                         counterTimeoutWaiting = 0;
                         counterCanceled = 0;
                         messages.clear();
@@ -305,7 +303,6 @@ protected:
                         counter1 = 0;
                         counterFailAll = 0;
                         countReverted = 0;
-                        counter2 = 0;
                         counterTimeoutWaiting = 0;
                         counterCanceled = 0;
                         messages.clear();

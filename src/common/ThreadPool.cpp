@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_SUITE(ThreadPoolTest)
 
 struct EmptyTask
 {
-    void run() {}
+    void run(boost::any const &) {}
 };
 
 BOOST_AUTO_TEST_CASE (ThreadPool_size)
@@ -34,7 +34,7 @@ struct IdTask
 {
     IdTask(boost::thread::id & id) : id(id) {}
 
-    void run()
+    void run(boost::any const &)
     {
 //		boost::this_thread::sleep_for(boost::chrono::seconds(1));
         sleep(1);
@@ -78,7 +78,7 @@ struct SleepyTask
 {
     SleepyTask(bool & done) : done(done) {}
 
-    void run()
+    void run(boost::any const &)
     {
 //		boost::this_thread::sleep_for(boost::chrono::seconds(1));
         sleep(1);
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE (ThreadPool_join)
 
 struct InfiniteTask
 {
-    void run()
+    void run(boost::any const &)
     {
         while(true) boost::this_thread::interruption_point();
     }
@@ -116,6 +116,69 @@ BOOST_AUTO_TEST_CASE (ThreadPool_interrupt)
     tp.start(new InfiniteTask());
     tp.interrupt();
     tp.join();
+}
+
+struct InitTask
+{
+    InitTask(std::string & str) : str(str) {}
+
+    void run(boost::any const & data)
+    {
+        if (data.empty()) return;
+
+        std::string d = boost::any_cast<std::string>(data);
+
+        str += d;
+    }
+
+    std::string & str;
+};
+
+void init_func(boost::any & data)
+{
+    data = std::string(".00$");
+}
+
+BOOST_AUTO_TEST_CASE (ThreadPool_init_func)
+{
+    using namespace fts3::common;
+
+    std::string ret[2] = {"10", "100"};
+
+    ThreadPool<InitTask> tp (2, init_func);
+
+    tp.start(new InitTask(ret[0]));
+    tp.start(new InitTask(ret[1]));
+    tp.join();
+
+    BOOST_CHECK_EQUAL(ret[0], "10.00$");
+    BOOST_CHECK_EQUAL(ret[1], "100.00$");
+}
+
+struct init_obj
+{
+    void operator() (boost::any & data)
+    {
+        data = std::string(".00$");
+    }
+};
+
+BOOST_AUTO_TEST_CASE (ThreadPool_init_obj)
+{
+    using namespace fts3::common;
+
+    std::string ret[2] = {"10", "100"};
+
+    init_obj obj;
+
+    ThreadPool<InitTask, init_obj> tp (2, obj);
+
+    tp.start(new InitTask(ret[0]));
+    tp.start(new InitTask(ret[1]));
+    tp.join();
+
+    BOOST_CHECK_EQUAL(ret[0], "10.00$");
+    BOOST_CHECK_EQUAL(ret[1], "100.00$");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

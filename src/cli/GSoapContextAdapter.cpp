@@ -247,6 +247,24 @@ string GSoapContextAdapter::transferSubmit (vector<File> const & files, map<stri
     return resp._transferSubmit4Return;
 }
 
+
+string GSoapContextAdapter::deleteFile (std::vector<std::string>& filesForDelete)
+{
+    impltns__fileDeleteResponse resp;
+    tns3__deleteFiles delFiles;
+
+    vector<string>::iterator it;
+    for(it=filesForDelete.begin(); it != filesForDelete.end(); ++it)
+        delFiles.delf.push_back(*it);
+
+    if (soap_call_impltns__fileDelete(ctx, endpoint.c_str(), 0, &delFiles,resp))
+        handleSoapFault("");
+
+    return resp._jobid;
+}
+
+
+
 JobStatus GSoapContextAdapter::getTransferJobStatus (string jobId, bool archive)
 {
     tns3__JobRequest req;

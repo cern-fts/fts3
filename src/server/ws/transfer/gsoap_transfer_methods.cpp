@@ -37,6 +37,9 @@
 
 #include "common/logger.h"
 #include "common/error.h"
+#include "common/uuid_generator.h"
+#include "parse_url.h"
+#include "ws/delegation/GSoapDelegationHandler.h"
 
 #include <fstream>
 #include <sstream>
@@ -57,6 +60,76 @@ using namespace fts3::config;
 using namespace fts3::ws;
 using namespace fts3::common;
 using namespace std;
+
+
+int fts3::impltns__fileDelete(soap* ctx, tns3__deleteFiles* fileNames,impltns__fileDeleteResponse& resp)
+{
+    try
+        {
+
+            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER);
+            resp._jobid = UuidGenerator::generateUUID();
+
+            CGsiAdapter cgsi(ctx);
+            string vo = cgsi.getClientVo();
+            string dn = cgsi.getClientDn();
+
+            string hostN;
+            const regex fileUrlRegex("(.+://[a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
+
+            multimap<string, string> rulsHost;
+            vector<string>::iterator it;
+
+            for (it = fileNames->delf.begin(); it != fileNames->delf.end(); ++it)
+                {
+
+                    //checks the url validation...
+                    Uri u0 = Uri::Parse(*it);
+                    if(!(u0.Host.length() != 0 && u0.Protocol.length() != 0 && u0.Path.length() != 0))
+                        {
+                            string errMsg2 = "Something not right with url: " + (*it);
+                            throw Err_Custom(errMsg2);
+                        }
+                    smatch what;
+                    if (regex_match(*it, what,fileUrlRegex, match_extra))
+                        {
+                            // indexes are shifted by 1 because at index 0 is the whole string
+                            hostN =  string(what[1]);
+                        }
+                    else
+                        {
+                            string errMsg = "Can't extract hostname from url: " + (*it);
+                            throw Err_Custom(errMsg);
+                        }
+
+                    // correlates the file url with its' hostname
+                    rulsHost.insert(pair<string, string>((*it),hostN));
+
+                }
+
+            std::string credID;
+            GSoapDelegationHandler handler(ctx);
+            credID = handler.makeDelegationId();
+
+            DBSingleton::instance().getDBObjectInstance()->submitdelete(resp._jobid,rulsHost,dn,vo, credID);
+
+        }
+    catch(Err& ex)
+        {
+
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception when submitting file deletions has been caught: " << ex.what() << commit;
+            soap_receiver_fault(ctx, ex.what(), "DeleteException");
+            return SOAP_FAULT;
+        }
+    catch(...)
+        {
+
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception when submitting file deletions has been caught"  << commit;
+            soap_receiver_fault(ctx, "fileDelete", "DeleteException");
+            return SOAP_FAULT;
+        }
+    return SOAP_OK;
+}
 
 /// Web service operation 'transferSubmit' (returns error code or SOAP_OK)
 int fts3::impltns__transferSubmit(soap *soap, tns3__TransferJob *_job, struct impltns__transferSubmitResponse &_param_3)
@@ -1014,7 +1087,6 @@ int fts3::impltns__getServiceMetadata(soap *soap, string _key, struct impltns__g
 /// Web service operation 'cancel' (returns error code or SOAP_OK)
 int fts3::impltns__cancel(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *_requestIDs, struct impltns__cancelResponse &_param_14)
 {
-
     try
         {
             CGsiAdapter cgsi (soap);
@@ -1027,6 +1099,17 @@ int fts3::impltns__cancel(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOREstrin
                     std::vector<std::string>::iterator it;
                     if (!jobs.empty())
                         {
+                            /*that's how we need to check the operation (TRANSFER / DELETE / STAGING) per infividual job
+                            std::vector< boost::tuple<std::string, std::string> > ops;
+                            DBSingleton::instance().getDBObjectInstance()->checkJobOperation(jobs, ops);
+
+                            std::vector< boost::tuple<std::string, std::string> >::iterator it22;
+                            for (it22 = ops.begin(); it22 != ops.end(); ++it22)
+                            {
+                            	std::cout << boost::get<0>(*it22) << std::endl;
+                            	std::cout << boost::get<1>(*it22) << std::endl;
+                            }
+                            */
 
                             std::string jobId;
                             for (it = jobs.begin(); it != jobs.end();)

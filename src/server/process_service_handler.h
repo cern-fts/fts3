@@ -118,10 +118,7 @@ public:
         cmd = "fts_url_copy";
 
         execPoolSize = theServerConfig().get<int> ("InternalThreadPool");
-
-        char hostname[MAXHOSTNAMELEN];
-        gethostname(hostname, MAXHOSTNAMELEN);
-        ftsHostName = std::string(hostname);
+        ftsHostName = theServerConfig().get<std::string > ("Alias");
         allowedVOs = std::string("");
         infosys = theServerConfig().get<std::string > ("Infosys");
         const vector<std::string> voNameList(theServerConfig().get< vector<string> >("AuthorizedVO"));
@@ -319,10 +316,15 @@ protected:
                         std::vector< boost::tuple<std::string, std::string, std::string> > split_12(split_2.begin(), split_2.begin() + half_size3);
                         std::vector< boost::tuple<std::string, std::string, std::string> > split_22(split_2.begin() + half_size3, split_2.end());
 
-                        g.create_thread(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_11), boost::ref(voQueues1)));
-                        g.create_thread(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_21), boost::ref(voQueues2)));
-                        g.create_thread(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_12), boost::ref(voQueues3)));
-                        g.create_thread(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_22), boost::ref(voQueues4)));
+                        //create threads only when needed
+                        if(!split_11.empty())
+                            g.create_thread(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_11), boost::ref(voQueues1)));
+                        if(!split_21.empty())
+                            g.create_thread(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_21), boost::ref(voQueues2)));
+                        if(!split_12.empty())
+                            g.create_thread(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_12), boost::ref(voQueues3)));
+                        if(!split_22.empty())
+                            g.create_thread(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_22), boost::ref(voQueues4)));
 
                         // wait for them
                         g.join_all();
@@ -514,6 +516,12 @@ protected:
                                                          "", // assoc_service_type
                                                          false,
                                                          "");
+
+
+                                        //send SUBMITTED message
+                                        SingleTrStateInstance::instance().sendStateMessage(tempUrl.JOB_ID, -1);
+
+
                                         /*set all to ready, special case for session reuse*/
                                         DBSingleton::instance().getDBObjectInstance()->updateFileStatusReuse(tempUrl, "READY");
 
@@ -522,8 +530,6 @@ protected:
                                                 TransferFiles temp = *queueiter;
                                                 fileIds.insert(std::make_pair(temp.FILE_ID, temp.JOB_ID));
                                             }
-
-                                        SingleTrStateInstance::instance().sendStateMessage(tempUrl.JOB_ID, -1);
 
 
                                         debug = DBSingleton::instance().getDBObjectInstance()->getDebugMode(source_hostname, destin_hostname);
@@ -680,6 +686,9 @@ protected:
                                         params.append(" -M ");
                                         params.append(infosys);
 
+                                        params.append(" -7 ");
+                                        params.append(ftsHostName);
+
                                         params.append(" -Y ");
                                         params.append(prepareMetadataString(dn));
 
@@ -771,7 +780,7 @@ protected:
                                 if (!drainMode)
                                     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more transfers for this instance!" << commit;
                                 drainMode = true;
-                                sleep(3);
+                                sleep(15);
                                 continue;
                             }
                         else
@@ -823,7 +832,7 @@ protected:
                                     }
                                 jobsReuse.clear();
                             }
-                        sleep(3);
+                        sleep(2);
                     }
                 catch (...)
                     {
@@ -839,9 +848,9 @@ protected:
                                     }
                                 jobsReuse.clear();
                             }
-                        sleep(3);
+                        sleep(2);
                     }
-                sleep(3);
+                sleep(2);
             } /*end while*/
     }
 

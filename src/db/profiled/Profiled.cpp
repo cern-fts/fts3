@@ -26,7 +26,7 @@ void ProfiledDB::init(std::string username, std::string password, std::string co
     PROFILE_PREFIXED("DB::", db->init(username, password, connectString, pooledConn));
 }
 
-void ProfiledDB::submitPhysical(const std::string & jobId, std::list<job_element_tupple> src_dest_pair,
+void ProfiledDB::submitPhysical(const std::string & jobId, std::list<job_element_tupple>& src_dest_pair,
                                 const std::string & DN, const std::string & cred,
                                 const std::string & voName, const std::string & myProxyServer, const std::string & delegationID,
                                 const std::string & sourceSe, const std::string & destinationSe,
@@ -84,7 +84,7 @@ void ProfiledDB::getSe(Se* &se, std::string seName)
 }
 
 
-unsigned int ProfiledDB::updateFileStatus(TransferFiles file, const std::string status)
+unsigned int ProfiledDB::updateFileStatus(TransferFiles& file, const std::string status)
 {
     PROFILE_PREFIXED("DB::", return db->updateFileStatus(file, status));
 }
@@ -650,37 +650,6 @@ std::vector< std::pair<std::string, std::string> > ProfiledDB::getAllPairCfgs()
 }
 
 
-void ProfiledDB::setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<int>& files)
-{
-    PROFILE_PREFIXED("DB::", db->setFilesToNotUsed(jobId, fileIndex, files));
-}
-
-
-std::vector< boost::tuple<std::string, std::string, int> > ProfiledDB::getVOBringonlineMax()
-{
-    PROFILE_PREFIXED("DB::", return db->getVOBringonlineMax());
-}
-
-
-std::vector<struct message_bringonline> ProfiledDB::getBringOnlineFiles(std::string voName, std::string hostName, int maxValue)
-{
-    PROFILE_PREFIXED("DB::", return db->getBringOnlineFiles(voName, hostName, maxValue));
-}
-
-
-void ProfiledDB::bringOnlineReportStatus(const std::string & state,
-        const std::string & message, const struct message_bringonline& msg)
-{
-    PROFILE_PREFIXED("DB::", db->bringOnlineReportStatus(state, message, msg));
-}
-
-
-void ProfiledDB::addToken(const std::string & job_id, int file_id, const std::string & token)
-{
-    PROFILE_PREFIXED("DB::", db->addToken(job_id, file_id, token));
-}
-
-
 void ProfiledDB::getCredentials(std::string & vo_name, const std::string & job_id, int file_id, std::string & dn, std::string & dlg_id)
 {
     PROFILE_PREFIXED("DB::", db->getCredentials(vo_name, job_id, file_id, dn, dlg_id));
@@ -809,7 +778,7 @@ void ProfiledDB::updateHeartBeat(unsigned* index, unsigned* count, unsigned* sta
     PROFILE_PREFIXED("DB::", db->updateHeartBeat(index, count, start, end, service_name));
 }
 
-unsigned int ProfiledDB::updateFileStatusReuse(TransferFiles file, const std::string status)
+unsigned int ProfiledDB::updateFileStatusReuse(TransferFiles& file, const std::string status)
 {
     PROFILE_PREFIXED("DB::", return db->updateFileStatusReuse(file, status));
 }
@@ -904,13 +873,13 @@ void ProfiledDB::getVOPairs(std::vector< boost::tuple<std::string, std::string, 
 
 
 //deletions
-void ProfiledDB::updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string> >& files)
+void ProfiledDB::updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files)
 {
     PROFILE_PREFIXED("DB::", db->updateDeletionsState(files));
 }
 
 //file_id / surl / proxy
-void ProfiledDB::getFilesForDeletion(std::vector< boost::tuple<int, std::string, std::string> >& files)
+void ProfiledDB::getFilesForDeletion(std::vector< boost::tuple<std::string, std::string, std::string, int, std::string, std::string> >& files)
 {
     PROFILE_PREFIXED("DB::", db->getFilesForDeletion(files));
 }
@@ -940,21 +909,16 @@ int ProfiledDB::getMaxDeletionsPerEndpoint(const std::string & endpoint, const s
 
 
 //staging						//file_id / state / reason / token
-void ProfiledDB::updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string> >& files)
+void ProfiledDB::updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files)
 {
     PROFILE_PREFIXED("DB::", db->updateStagingState(files));
 }
 //file_id / surl / proxy / pinlifetime / bringonlineTimeout
-void ProfiledDB::getFilesForStaging(std::vector< boost::tuple<std::string, std::string, int, int, int, std::string, std::string, std::string> >& files)
+void ProfiledDB::getFilesForStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string> >& files)
 {
     PROFILE_PREFIXED("DB::", db->getFilesForStaging(files));
 }
 
-//job_id
-void ProfiledDB::cancelStaging(std::vector<std::string>& files)
-{
-    PROFILE_PREFIXED("DB::", db->cancelStaging(files));
-}
 
 //file_id / surl / token
 void ProfiledDB::getStagingFilesForCanceling(std::vector< boost::tuple<int, std::string, std::string> >& files)
@@ -971,3 +935,17 @@ int ProfiledDB::getMaxStatingsPerEndpoint(const std::string & endpoint, const st
 {
     PROFILE_PREFIXED("DB::", return db->getMaxStatingsPerEndpoint(endpoint, vo));
 }
+
+
+void ProfiledDB::submitdelete(const std::string & jobId, const std::multimap<std::string,std::string>& rulsHost,
+                              const std::string & DN, const std::string & voName, const std::string & credID)
+{
+    PROFILE_PREFIXED("DB::", db->submitdelete(jobId, rulsHost, DN, voName, credID));
+}
+
+
+void ProfiledDB::checkJobOperation(std::vector<std::string>& jobs, std::vector< boost::tuple<std::string, std::string> >& ops)
+{
+    PROFILE_PREFIXED("DB::", db->checkJobOperation(jobs, ops));
+}
+

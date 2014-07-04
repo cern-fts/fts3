@@ -1,4 +1,6 @@
 DELETE FROM t_job_backup;
+DELETE FROM t_dm_backup;
+DELETE FROM t_dm;
 DELETE FROM t_file_backup;
 DELETE FROM t_stage_req;
 DELETE FROM t_file;

@@ -60,10 +60,14 @@ public:
 
     virtual void init(std::string username, std::string password, std::string connectString, int pooledConn);
 
+
+    virtual  void submitdelete(const std::string & jobId, const std::multimap<std::string,std::string>& rulsHost,
+                               const std::string & DN, const std::string & voName, const std::string & credID);
+
     /**
      * Submit a transfer request to be stored in the database
      **/
-    virtual void submitPhysical(const std::string & jobId, std::list<job_element_tupple> src_dest_pair,
+    virtual void submitPhysical(const std::string & jobId, std::list<job_element_tupple>& src_dest_pair,
                                 const std::string & DN, const std::string & cred,
                                 const std::string & voName, const std::string & myProxyServer, const std::string & delegationID,
                                 const std::string & sourceSe, const std::string & destinationSe,
@@ -85,7 +89,7 @@ public:
 
     virtual void getSe(Se* &se, std::string seName);
 
-    virtual unsigned int updateFileStatus(TransferFiles file, const std::string status);
+    virtual unsigned int updateFileStatus(TransferFiles& file, const std::string status);
 
     virtual void addSe(std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
                        std::string SE_TRANSFER_TYPE, std::string SE_TRANSFER_PROTOCOL, std::string SE_CONTROL_PROTOCOL, std::string GOCDB_ID);
@@ -268,16 +272,6 @@ public:
 
     virtual int activeProcessesForThisHost();
 
-    virtual void setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<int>& files);
-
-    virtual std::vector< boost::tuple<std::string, std::string, int> >  getVOBringonlineMax();
-
-    virtual std::vector<struct message_bringonline> getBringOnlineFiles(std::string voName, std::string hostName, int maxValue);
-
-    virtual void bringOnlineReportStatus(const std::string & state, const std::string & message, const struct message_bringonline& msg);
-
-    virtual void addToken(const std::string & job_id, int file_id, const std::string & token);
-
     virtual void getCredentials(std::string & vo_name, const std::string & job_id, int file_id, std::string & dn, std::string & dlg_id);
 
     virtual void setMaxStageOp(const std::string& se, const std::string& vo, int val);
@@ -336,7 +330,7 @@ public:
 
     virtual void transferLogFileVector(std::map<int, struct message_log>& messagesLog);
 
-    unsigned int updateFileStatusReuse(TransferFiles file, const std::string status);
+    unsigned int updateFileStatusReuse(TransferFiles& file, const std::string status);
 
     void getCancelJob(std::vector<int>& requestIDs);
 
@@ -376,10 +370,10 @@ public:
 
     //NEW deletions and staging API
     //deletions						 //file_id / state / reason
-    virtual void updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string> >& files);
+    virtual void updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files);
 
-    //file_id / surl / proxy
-    virtual void getFilesForDeletion(std::vector< boost::tuple<int, std::string, std::string> >& files);
+    //vo_name, source_url, job_id, file_id, user_dn, cred_id
+    virtual void getFilesForDeletion(std::vector< boost::tuple<std::string, std::string, std::string, int, std::string, std::string> >& files);
 
     //job_id
     virtual void cancelDeletion(std::vector<std::string>& files);
@@ -393,12 +387,10 @@ public:
 
 
     //staging						//file_id / state / reason / token
-    virtual void updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string> >& files);
-    //file_id / surl / proxy / pinlifetime / bringonlineTimeout
-    virtual void getFilesForStaging(std::vector< boost::tuple<std::string, std::string, int, int, int, std::string, std::string, std::string> >& files);
+    virtual void updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files);
 
-    //job_id
-    virtual void cancelStaging(std::vector<std::string>& files);
+    //file_id / surl / proxy / pinlifetime / bringonlineTimeout
+    virtual void getFilesForStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string> >& files);
 
     //file_id / surl / token
     virtual void getStagingFilesForCanceling(std::vector< boost::tuple<int, std::string, std::string> >& files);
@@ -406,12 +398,24 @@ public:
     virtual void setMaxStagingPerEndpoint(int maxStaging, const std::string & endpoint, const std::string & vo);
     virtual int getMaxStatingsPerEndpoint(const std::string & endpoint, const std::string & vo);
 
+    virtual void checkJobOperation(std::vector<std::string>& jobs, std::vector< boost::tuple<std::string, std::string> >& ops);
+
 
 private:
     size_t                poolSize;
     soci::connection_pool* connectionPool;
     std::string           hostname;
     std::string username_;
+    std::vector<std::string> sanityVector;
+
+
+    bool resetForRetryStaging(soci::session& sql, int file_id, const std::string & job_id, bool retry);
+
+    bool resetForRetryDelete(soci::session& sql, int file_id, const std::string & job_id, bool retry);
+
+    void updateDeletionsStateInternal(soci::session& sql, std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files);
+
+    void updateStagingStateInternal(soci::session& sql, std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files);
 
     bool getDrainInternal(soci::session& sql);
 
@@ -449,10 +453,12 @@ private:
 
     void updateOptimizerEvolution(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname, int active, double throughput, double successRate, int buffer, int bandwidth);
 
-    bool getMaxActive(soci::session& sql, int active, int highDefault, const std::string & source_hostname, const std::string & destination_hostname);
+    int getMaxActive(soci::session& sql, int active, int highDefault, const std::string & source_hostname, const std::string & destination_hostname);
 
     std::vector<struct message_state> getStateOfTransferInternal(soci::session& sql, const std::string& jobId, int fileId);
 
     int getBestNextReplica(soci::session& sql, const std::string & job_id, const std::string & vo_name);
+
+    std::vector<struct message_state> getStateOfDeleteInternal(soci::session& sql, const std::string& jobId, int fileId);
 
 };

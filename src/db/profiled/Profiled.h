@@ -38,7 +38,7 @@ public:
 
     void init(std::string username, std::string password, std::string connectString, int pooledConn);
 
-    void submitPhysical(const std::string & jobId, std::list<job_element_tupple> src_dest_pair,
+    void submitPhysical(const std::string & jobId, std::list<job_element_tupple>& src_dest_pair,
                         const std::string & DN, const std::string & cred,
                         const std::string & voName, const std::string & myProxyServer, const std::string & delegationID,
                         const std::string & sourceSe, const std::string & destinationSe,
@@ -60,7 +60,7 @@ public:
 
     void getSe(Se* &se, std::string seName);
 
-    unsigned int updateFileStatus(TransferFiles file, const std::string status);
+    unsigned int updateFileStatus(TransferFiles& file, const std::string status);
 
     void addSe(std::string endpoint, std::string se_type, std::string site, std::string name, std::string state, std::string version, std::string host,
                std::string se_transfer_type, std::string se_transfer_protocol, std::string se_control_protocol, std::string gocdb_id);
@@ -244,16 +244,6 @@ public:
 
     std::vector< std::pair<std::string, std::string> > getAllPairCfgs();
 
-    void setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<int>& files);
-
-    std::vector< boost::tuple<std::string, std::string, int> >  getVOBringonlineMax();
-
-    std::vector<struct message_bringonline> getBringOnlineFiles(std::string voName, std::string hostName, int maxValue);
-
-    void bringOnlineReportStatus(const std::string & state, const std::string & message, const struct message_bringonline& msg);
-
-    void addToken(const std::string & job_id, int file_id, const std::string & token);
-
     void getCredentials(std::string & vo_name, const std::string & job_id, int file_id, std::string & dn, std::string & dlg_id);
 
     void setMaxStageOp(const std::string& se, const std::string& vo, int val);
@@ -298,7 +288,7 @@ public:
 
     void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end, std::string service_name);
 
-    unsigned int updateFileStatusReuse(TransferFiles file, const std::string status);
+    unsigned int updateFileStatusReuse(TransferFiles& file, const std::string status);
 
     void getCancelJob(std::vector<int>& requestIDs);
 
@@ -337,10 +327,10 @@ public:
 
     //NEW deletions and staging API
     //deletions						 //file_id / state / reason
-    void updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string> >& files);
+    void updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files);
 
-    //file_id / surl / proxy
-    void getFilesForDeletion(std::vector< boost::tuple<int, std::string, std::string> >& files);
+    //vo_name, source_url, job_id, file_id, user_dn, cred_id
+    void getFilesForDeletion(std::vector< boost::tuple<std::string, std::string, std::string, int, std::string, std::string> >& files);
 
     //job_id
     void cancelDeletion(std::vector<std::string>& files);
@@ -354,18 +344,21 @@ public:
 
 
     //staging						//file_id / state / reason / token
-    void updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string> >& files);
+    void updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files);
     //file_id / surl / proxy / pinlifetime / bringonlineTimeout
-    void getFilesForStaging(std::vector< boost::tuple<std::string, std::string, int, int, int, std::string, std::string, std::string> >& files);
+    void getFilesForStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string> >& files);
 
-    //job_id
-    void cancelStaging(std::vector<std::string>& files);
 
     //file_id / surl / token
     void getStagingFilesForCanceling(std::vector< boost::tuple<int, std::string, std::string> >& files);
 
     void setMaxStagingPerEndpoint(int maxStaging, const std::string & endpoint, const std::string & vo);
     int getMaxStatingsPerEndpoint(const std::string & endpoint, const std::string & vo);
+
+    void submitdelete(const std::string & jobId, const std::multimap<std::string,std::string>& rulsHost,
+                      const std::string & DN, const std::string & voName, const std::string & credID);
+
+    void checkJobOperation(std::vector<std::string>& jobs, std::vector< boost::tuple<std::string, std::string> >& ops);
 
 };
 

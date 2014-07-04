@@ -121,6 +121,16 @@ add_dependencies(fts-transfer-status fts_cli_common)
 target_link_libraries (fts-transfer-status fts_cli_common)
 
 # ------------------------------------------------------------------------
+# fts-transfer-delete
+
+add_executable(fts-transfer-delete
+    transfer/fts3-transfer-delete.cpp
+    ui/SrcDelCli.cpp 
+)
+add_dependencies(fts-transfer-delete fts_cli_common)
+target_link_libraries (fts-transfer-delete fts_cli_common)
+
+# ------------------------------------------------------------------------
 # fts-transfer-list
 
 add_executable(fts-transfer-list
@@ -231,6 +241,7 @@ install(TARGETS
 	fts-set-blacklist
 	fts-set-priority
 	fts-transfer-snapshot
+	fts-transfer-delete
 	fts-delegation-init
 	RUNTIME             DESTINATION ${BIN_INSTALL_DIR} )
 

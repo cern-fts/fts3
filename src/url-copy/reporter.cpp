@@ -85,8 +85,6 @@ void Reporter::sendMessage(double throughput, bool retry,
                            const string& transfer_status, const string& transfer_message,
                            double timeInSecs, off_t filesize)
 {
-    boost::recursive_mutex::scoped_lock lock(mutex);
-
     msg->file_id  = file_id;
     strncpy(msg->job_id, job_id.c_str(), sizeof(msg->job_id));
     msg->job_id[sizeof(msg->job_id) -1] = '\0';
@@ -127,7 +125,6 @@ void Reporter::sendTerminal(double throughput, bool retry,
                             const string& transfer_status, const string& transfer_message,
                             double timeInSecs, off_t filesize)
 {
-    boost::recursive_mutex::scoped_lock lock(mutex);
     // Did we send it already?
     if(!multiple)
         {
@@ -146,7 +143,6 @@ void Reporter::sendPing(const std::string& job_id, unsigned file_id,
                         double throughput, off_t transferred,
                         std::string source_surl, std::string dest_surl,std::string source_turl, std::string dest_turl, const std::string& transfer_status)
 {
-    boost::recursive_mutex::scoped_lock lock(mutex);
     strncpy(msg_updater->job_id, job_id.c_str(), sizeof(msg_updater->job_id));
     msg_updater->job_id[sizeof(msg_updater->job_id) -1] = '\0';
     msg_updater->file_id = file_id;
@@ -180,8 +176,6 @@ void Reporter::sendPing(const std::string& job_id, unsigned file_id,
 void Reporter::sendLog(const std::string& job_id, unsigned file_id,
                        const std::string& logFileName, bool debug)
 {
-    boost::recursive_mutex::scoped_lock lock(mutex);
-
     msg_log->file_id = file_id;
     strncpy(msg_log->job_id, job_id.c_str(), sizeof(msg_log->job_id));
     msg_log->job_id[sizeof(msg_log->job_id) -1] = '\0';

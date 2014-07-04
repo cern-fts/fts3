@@ -25,6 +25,7 @@ limitations under the License. */
 #include <sys/socket.h>
 #include <sys/param.h>
 #include <unistd.h>
+#include <math.h>
 
 #define JOB_ID_LEN 36+1
 #define FILE_ID_LEN 36
@@ -33,6 +34,20 @@ limitations under the License. */
 #define MAX_NUM_MSGS 50000
 #define SOURCE_SE_ 100
 #define DEST_SE_ 100
+
+
+inline double activePercentageQueue(double active, double submitted, double rate)
+{
+    if(submitted > 0 && active > 0 && rate >= 96)
+        {
+            double temp =  ((active / submitted) * 100) < 0.050? (0.080 / 100) * submitted: active;
+            if(temp > 0 && temp > active)
+                return ceil(temp);
+            else
+                return active;
+        }
+    return active;
+}
 
 
 /**
@@ -58,7 +73,7 @@ inline double pround(double x, unsigned int digits)
  */
 inline double convertKbToMb(double throughput)
 {
-    return throughput != 0.0? pround((throughput / 1024), 2): 0.0;
+    return throughput != 0.0? pround((throughput / 1024), 3): 0.0;
 }
 
 struct message_base
@@ -175,27 +190,22 @@ public:
 struct message_bringonline: public message_base
 {
 public:
-    message_bringonline():job_id(""),url(""), proxy(""), token(""), retries(0),
-        file_id(0),started(false),timestamp(0),pinlifetime(0),bringonlineTimeout(0),
-        nPolls(0), nextPoll(0)
+    message_bringonline(): file_id(0)
     {
+        memset(job_id, 0, sizeof (job_id));
+        memset(transfer_status, 0, sizeof (transfer_status));
+        memset(transfer_message, 0, sizeof (transfer_message));
     }
 
     ~message_bringonline()
     {
     }
-    std::string job_id;
-    std::string url;
-    std::string proxy;
-    std::string token;
-    int retries;
+
     int file_id;
-    bool started;
-    time_t timestamp;
-    int pinlifetime;
-    int bringonlineTimeout;
-    int nPolls;
-    time_t nextPoll;
+    char job_id[JOB_ID_LEN];
+    char transfer_status[TRANFER_STATUS_LEN];
+    char transfer_message[TRANSFER_MESSAGE];
+
 };
 
 
@@ -223,6 +233,11 @@ public:
     std::string job_metadata;
     std::string file_metadata;
     std::string timestamp;
+    /*
+    std::string user_dn;
+    std::string source_url;
+    std::string dest_url;
+    */
 
 };
 

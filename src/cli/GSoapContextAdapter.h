@@ -227,6 +227,8 @@ public:
      */
     void setBringOnline(map<string, int>& pairs);
 
+    string deleteFile (std::vector<std::string>& filesForDelete);
+
     /**
      * Remote call to setBandwidthLimit
      */

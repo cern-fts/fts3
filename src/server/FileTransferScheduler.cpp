@@ -43,7 +43,7 @@ using namespace fts3::ws;
 
 
 FileTransferScheduler::FileTransferScheduler(
-    TransferFiles file,
+    TransferFiles& file,
     vector< boost::shared_ptr<ShareConfig> > cfgs,
     set<string> inses,
     set<string> outses,
@@ -120,14 +120,9 @@ bool FileTransferScheduler::schedule()
             if(cfgs.empty())
                 {
                     bool allowed = db->isTrAllowed(srcSeName, destSeName);
-                    // update file state to READY
                     if(allowed)
                         {
-                            unsigned updated = db->updateFileStatus(file, JobStatusHandler::FTS3_STATUS_READY);
-                            if(updated == 0)
-                                return false;
-                            else
-                                return true;
+                            return true;
                         }
                     return false;
                 }
@@ -193,13 +188,6 @@ bool FileTransferScheduler::schedule()
                     if (cfg->active_transfers - active_transfers > 0) continue;
                     return false;
                 }
-
-            // update file state to READY
-            unsigned updated = db->updateFileStatus(file, JobStatusHandler::FTS3_STATUS_READY);
-            if(updated == 0)
-                return false;
-            else
-                return true;
         }
     catch(std::exception& e)
         {

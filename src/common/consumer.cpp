@@ -65,7 +65,7 @@ boost::posix_time::time_duration::tick_type milliseconds_since_epoch()
 }
 
 
-int getDir (string dir, vector<string> &files)
+int getDir (string dir, vector<string> &files, const std::string& extension)
 {
     DIR *dp=NULL;
     struct dirent *dirp=NULL;
@@ -78,7 +78,7 @@ int getDir (string dir, vector<string> &files)
     while ((dirp = readdir(dp)) != NULL)
         {
             std::string fileName = string(dirp->d_name);
-            size_t found = fileName.find("ready");
+            size_t found = fileName.find(extension);
             if(found!=std::string::npos)
                 {
                     std::string copyFilename = dir + fileName;
@@ -99,7 +99,7 @@ int runConsumerMonitoring(std::vector<struct message_monitoring>& messages)
     vector<string> files = vector<string>();
     files.reserve(300);
 
-    if (getDir(dir,files) != 0)
+    if (getDir(dir,files, "ready") != 0)
         return errno;
 
     for (unsigned int i = 0; i < files.size(); i++)
@@ -139,7 +139,7 @@ int runConsumerStatus(std::vector<struct message>& messages)
     vector<string> files = vector<string>();
     files.reserve(300);
 
-    if (getDir(dir,files) != 0)
+    if (getDir(dir,files, "ready") != 0)
         return errno;
 
     for (unsigned int i = 0; i < files.size(); i++)
@@ -178,7 +178,7 @@ int runConsumerStall(std::vector<struct message_updater>& messages)
     vector<string> files = vector<string>();
     files.reserve(300);
 
-    if (getDir(dir,files) != 0)
+    if (getDir(dir,files, "ready") != 0)
         return errno;
 
     for (unsigned int i = 0; i < files.size(); i++)
@@ -219,7 +219,7 @@ int runConsumerLog(std::map<int, struct message_log>& messages)
     vector<string> files = vector<string>();
     files.reserve(300);
 
-    if (getDir(dir,files) != 0)
+    if (getDir(dir,files, "ready") != 0)
         return errno;
 
     for (unsigned int i = 0; i < files.size(); i++)
@@ -252,5 +252,83 @@ int runConsumerLog(std::map<int, struct message_log>& messages)
     return 0;
 }
 
+
+int runConsumerDeletions(std::vector<struct message_bringonline>& messages)
+{
+    string dir = string(STATUS_DM_DIR);
+    vector<string> files = vector<string>();
+    files.reserve(300);
+
+    if (getDir(dir,files, "delete") != 0)
+        return errno;
+
+    for (unsigned int i = 0; i < files.size(); i++)
+        {
+            FILE *fp = NULL;
+            struct message_bringonline msg;
+            if ((fp = fopen(files[i].c_str(), "r")) != NULL)
+                {
+                    size_t readElements = fread(&msg, sizeof(message_bringonline), 1, fp);
+                    if(readElements == 0)
+                        readElements = fread(&msg, sizeof(message_bringonline), 1, fp);
+
+                    if (readElements == 1)
+                        messages.push_back(msg);
+                    else
+                        msg.set_error(EBADMSG);
+
+                    unlink(files[i].c_str());
+                    fclose(fp);
+                }
+            else
+                {
+                    msg.set_error(errno);
+                    if(fp != NULL)
+                        fclose(fp);
+                }
+        }
+    files.clear();
+
+    return 0;
+}
+
+int runConsumerStaging(std::vector<struct message_bringonline>& messages)
+{
+    string dir = string(STATUS_DM_DIR);
+    vector<string> files = vector<string>();
+    files.reserve(300);
+
+    if (getDir(dir,files, "staging") != 0)
+        return errno;
+
+    for (unsigned int i = 0; i < files.size(); i++)
+        {
+            FILE *fp = NULL;
+            struct message_bringonline msg;
+            if ((fp = fopen(files[i].c_str(), "r")) != NULL)
+                {
+                    size_t readElements = fread(&msg, sizeof(message_bringonline), 1, fp);
+                    if(readElements == 0)
+                        readElements = fread(&msg, sizeof(message_bringonline), 1, fp);
+
+                    if (readElements == 1)
+                        messages.push_back(msg);
+                    else
+                        msg.set_error(EBADMSG);
+
+                    unlink(files[i].c_str());
+                    fclose(fp);
+                }
+            else
+                {
+                    msg.set_error(errno);
+                    if(fp != NULL)
+                        fclose(fp);
+                }
+        }
+    files.clear();
+
+    return 0;
+}
 
 

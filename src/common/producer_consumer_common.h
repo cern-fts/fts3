@@ -42,8 +42,9 @@
 #define MONITORING_DIR "/var/lib/fts3/monitoring/"
 #define STATUS_DIR "/var/lib/fts3/status/"
 #define LOG_DIR "/var/lib/fts3/logs/"
+#define STATUS_DM_DIR "/var/lib/fts3/status/"
 
-int getDir (std::string dir, std::vector<std::string> &files);
+int getDir (std::string dir, std::vector<std::string> &files, const std::string& extension);
 
 void getUniqueTempFileName(const std::string& basename, std::string& tempname);
 
@@ -71,6 +72,14 @@ int runProducerStall(struct message_updater &msg);
 int runConsumerLog(std::map<int, struct message_log>& messages);
 
 int runProducerLog(struct message_log &msg);
+
+//for staging and deletion recovery
+int runConsumerDeletions(std::vector<struct message_bringonline>& messages);
+int runProducerDeletions(struct message_bringonline &msg);
+
+int runConsumerStaging(std::vector<struct message_bringonline>& messages);
+int runProducerStaging(struct message_bringonline &msg);
+
 
 
 

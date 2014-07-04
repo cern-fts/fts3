@@ -95,10 +95,13 @@ public:
 
     virtual void init(std::string username, std::string password, std::string connectString, int pooledConn) = 0;
 
+    virtual  void submitdelete(const std::string & jobId, const std::multimap<std::string,std::string>& rulsHost,
+                               const std::string & DN, const std::string & voName, const std::string & credID) = 0;
+
     /**
      * Submit a transfer request to be stored in the database
      **/
-    virtual void submitPhysical(const std::string & jobId, std::list<job_element_tupple> src_dest_pair,
+    virtual void submitPhysical(const std::string & jobId, std::list<job_element_tupple>& src_dest_pair,
                                 const std::string & DN, const std::string & cred,
                                 const std::string & voName, const std::string & myProxyServer, const std::string & delegationID,
                                 const std::string & sourceSe, const std::string & destinationSe,
@@ -121,7 +124,7 @@ public:
 
     virtual void getSe(Se* &se, std::string seName) = 0;
 
-    virtual unsigned int updateFileStatus(TransferFiles file, const std::string status) = 0;
+    virtual unsigned int updateFileStatus(TransferFiles& file, const std::string status) = 0;
 
     virtual void addSe(std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
                        std::string SE_TRANSFER_TYPE, std::string SE_TRANSFER_PROTOCOL, std::string SE_CONTROL_PROTOCOL, std::string GOCDB_ID) = 0;
@@ -306,16 +309,6 @@ public:
 
     virtual std::vector< std::pair<std::string, std::string> > getAllPairCfgs() = 0;
 
-    virtual void setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<int>& files) = 0;
-
-    virtual std::vector< boost::tuple<std::string, std::string, int> >  getVOBringonlineMax() = 0;
-
-    virtual std::vector<struct message_bringonline> getBringOnlineFiles(std::string voName, std::string hostName, int maxValue) = 0;
-
-    virtual void bringOnlineReportStatus(const std::string & state, const std::string & message, const struct message_bringonline& msg) = 0;
-
-    virtual void addToken(const std::string & job_id, int file_id, const std::string & token) = 0;
-
     virtual void getCredentials(std::string & vo_name, const std::string & job_id, int file_id, std::string & dn, std::string & dlg_id) = 0;
 
     virtual void setMaxStageOp(const std::string& se, const std::string& vo, int val) = 0;
@@ -377,7 +370,7 @@ public:
         service_name = std::string("");
     }
 
-    virtual unsigned int updateFileStatusReuse(TransferFiles file, const std::string status) = 0;
+    virtual unsigned int updateFileStatusReuse(TransferFiles& file, const std::string status) = 0;
 
     virtual void getCancelJob(std::vector<int>& requestIDs) = 0;
 
@@ -416,10 +409,10 @@ public:
 
     //NEW deletions and staging API
     //deletions						 //file_id / state / reason
-    virtual void updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string> >& files) = 0;
+    virtual void updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files) = 0;
 
-    //file_id / surl / proxy
-    virtual void getFilesForDeletion(std::vector< boost::tuple<int, std::string, std::string> >& files) = 0;
+    //vo_name, source_url, job_id, file_id, user_dn, cred_id
+    virtual void getFilesForDeletion(std::vector< boost::tuple<std::string, std::string, std::string, int, std::string, std::string> >& files) = 0;
 
     //job_id
     virtual void cancelDeletion(std::vector<std::string>& files) = 0;
@@ -433,17 +426,19 @@ public:
 
 
     //staging						//file_id / state / reason / token
-    virtual void updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string> >& files) = 0;
-    //file_id / surl / proxy / pinlifetime / bringonlineTimeout / spacetoken / job_id
-    virtual void getFilesForStaging(std::vector< boost::tuple<std::string, std::string, int, int, int, std::string, std::string, std::string> >& files) = 0;
+    virtual void updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files) = 0;
 
-    //job_id
-    virtual void cancelStaging(std::vector<std::string>& files) = 0;
+    //vo / file_id / surl / proxy / pinlifetime / bringonlineTimeout / spacetoken / job_id
+    virtual void getFilesForStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string> >& files) = 0;
+
 
     //file_id / surl / token
     virtual void getStagingFilesForCanceling(std::vector< boost::tuple<int, std::string, std::string> >& files) = 0;
 
     virtual void setMaxStagingPerEndpoint(int maxStaging, const std::string & endpoint, const std::string & vo) = 0;
     virtual int getMaxStatingsPerEndpoint(const std::string & endpoint, const std::string & vo) = 0;
+
+    virtual void checkJobOperation(std::vector<std::string>& jobs, std::vector< boost::tuple<std::string, std::string> >& ops) = 0;
+
 
 };

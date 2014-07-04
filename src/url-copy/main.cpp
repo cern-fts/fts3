@@ -59,11 +59,11 @@ static std::string errorPhase("");
 static std::string reasonClass("");
 static std::string errorMessage("");
 static std::string readFile("");
-static char hostname[1024] = {0};
 static volatile bool propagated = false;
 static volatile bool terminalState = false;
 static std::string globalErrorMessage("");
 static std::vector<std::string> turlVector;
+static bool completeMsgSent = false;
 
 time_t globalTimeout;
 
@@ -294,8 +294,11 @@ void abnormalTermination(const std::string& classification, const std::string&, 
     msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
     msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, finalState);
     msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
-    if(UrlCopyOpts::getInstance().monitoringMessages)
-        msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
+    if(UrlCopyOpts::getInstance().monitoringMessages && !completeMsgSent)
+        {
+            completeMsgSent = true;
+            msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
+        }
 
     reporter.timeout = UrlCopyOpts::getInstance().timeout;
     reporter.nostreams = UrlCopyOpts::getInstance().nStreams;
@@ -701,10 +704,7 @@ int main(int argc, char **argv)
     currentTransfer.jobId = opts.jobId;
 
     UserProxyEnv* cert = NULL;
-
-    hostname[1023] = '\0';
-    gethostname(hostname, 1023);
-
+  
     if(argc < 4)
         {
             errorMessage = "INIT Failed to read url-copy process arguments";
@@ -815,6 +815,7 @@ int main(int argc, char **argv)
             retry = true;
             errorMessage = std::string("");
             currentTransfer.throughput = 0.0;
+            completeMsgSent = false;
 
             currentTransfer = transferList[ii];
 
@@ -831,7 +832,8 @@ int main(int argc, char **argv)
             fileManagement.generateLogFile();
 
             msg_ifce::getInstance()->set_tr_timestamp_start(&tr_completed, msg_ifce::getInstance()->getTimestamp());
-            msg_ifce::getInstance()->set_agent_fqdn(&tr_completed, hostname);
+            msg_ifce::getInstance()->set_agent_fqdn(&tr_completed, opts.alias);
+	    msg_ifce::getInstance()->set_endpoint(&tr_completed, opts.alias);
             msg_ifce::getInstance()->set_t_channel(&tr_completed, fileManagement.getSePair());
             msg_ifce::getInstance()->set_transfer_id(&tr_completed, fileManagement.getLogFileName());
             msg_ifce::getInstance()->set_source_srm_version(&tr_completed, srmVersion(currentTransfer.sourceUrl));
@@ -905,6 +907,8 @@ int main(int argc, char **argv)
                                              opts.jobId, currentTransfer.fileId,
                                              "ACTIVE", "", 0,
                                              currentTransfer.fileSize);
+
+                        sleep(1); //add a sleep of 1sec for reuse only in order to give time for ACTIVE state to be sent back to the server
                     }
 
                 if ( (access(opts.proxy.c_str(), F_OK) != 0) || (access(opts.proxy.c_str(), R_OK) != 0))
@@ -1339,9 +1343,6 @@ stop:
                             logger.INFO() << "Send monitoring complete message" << std::endl;
                             msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
-                            if(opts.monitoringMessages)
-                                msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
-
                             std::string archiveErr = fileManagement.archive();
                             if (!archiveErr.empty())
                                 logger.ERROR() << "Could not archive: " << archiveErr << std::endl;
@@ -1402,8 +1403,11 @@ stop:
             logger.INFO() << "Send monitoring complete message" << std::endl;
             msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
-            if(opts.monitoringMessages)
-                msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
+            if(opts.monitoringMessages && !completeMsgSent)
+                {
+                    completeMsgSent = true;
+                    msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
+                }
 
             std::string archiveErr = fileManagement.archive();
             if (!archiveErr.empty())
