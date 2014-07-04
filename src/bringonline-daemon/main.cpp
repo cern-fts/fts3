@@ -60,7 +60,7 @@ int fts3_teardown_db_backend()
 
 void _handle_sigint(int)
 {
-	StagingStateUpdater::instance().recover();
+    StagingStateUpdater::instance().recover();
 
     if (stackTrace.length() > 0)
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << stackTrace << commit;

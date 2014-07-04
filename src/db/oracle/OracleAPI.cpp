@@ -6565,13 +6565,13 @@ std::vector<struct message_state> OracleAPI::getStateOfDeleteInternal(soci::sess
                     ret.file_metadata = it->get<std::string>("FILE_METADATA","");
                     ret.source_se = it->get<std::string>("SOURCE_SE");
                     ret.dest_se = it->get<std::string>("DEST_SE");
-		    
-		    /*
-                    ret.user_dn = it->get<std::string>("USER_DN","");
-                    ret.source_url = it->get<std::string>("SOURCE_SURL","");
-                    ret.dest_url = it->get<std::string>("DEST_SURL","");		    
-		    */		    
-		    
+
+                    /*
+                            ret.user_dn = it->get<std::string>("USER_DN","");
+                            ret.source_url = it->get<std::string>("SOURCE_SURL","");
+                            ret.dest_url = it->get<std::string>("DEST_SURL","");
+                    */
+
                     temp.push_back(ret);
                 }
         }
@@ -6665,13 +6665,13 @@ std::vector<struct message_state> OracleAPI::getStateOfTransferInternal(soci::se
                     ret.file_metadata = it->get<std::string>("FILE_METADATA","");
                     ret.source_se = it->get<std::string>("SOURCE_SE");
                     ret.dest_se = it->get<std::string>("DEST_SE");
-		    
-		    /*
-                    ret.user_dn = it->get<std::string>("USER_DN","");
-                    ret.source_url = it->get<std::string>("SOURCE_SURL","");
-                    ret.dest_url = it->get<std::string>("DEST_SURL","");		    
-		    */				    
-		    
+
+                    /*
+                            ret.user_dn = it->get<std::string>("USER_DN","");
+                            ret.source_url = it->get<std::string>("SOURCE_SURL","");
+                            ret.dest_url = it->get<std::string>("DEST_SURL","");
+                    */
+
                     temp.push_back(ret);
                 }
         }
@@ -7144,15 +7144,15 @@ void OracleAPI::checkSanityState()
                                                       soci::use(job_id),
                                                       soci::into(countMreplica),
                                                       soci::into(countMindex));
-						      
-		    //this section is for deletion jobs				      
+
+                    //this section is for deletion jobs
                     soci::statement stmtDel1 = (sql.prepare << "SELECT COUNT(*) FROM t_dm where job_id=:jobId AND file_state in ('DELETE','STARTED') ", soci::use(job_id), soci::into(numberOfFilesDelete));
 
                     soci::statement stmtDel2 = (sql.prepare << "UPDATE t_dm SET "
-                                             "    file_state = 'FAILED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), "
-                                             "    reason = 'Force failure due to file state inconsistency' "
-                                             "    WHERE file_state in ('DELETE','STARTED') and job_id = :jobId", soci::use(job_id));
-						      
+                                                "    file_state = 'FAILED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), "
+                                                "    reason = 'Force failure due to file state inconsistency' "
+                                                "    WHERE file_state in ('DELETE','STARTED') and job_id = :jobId", soci::use(job_id));
+
 
                     sql.begin();
                     for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
@@ -7221,7 +7221,7 @@ void OracleAPI::checkSanityState()
                                     soci::rowset<soci::row>::const_iterator iRep;
                                     for (iRep = rsReplica.begin(); iRep != rsReplica.end(); ++iRep)
                                         {
-                                            std::string file_state = iRep->get<std::string>("FILE_STATE");                                            
+                                            std::string file_state = iRep->get<std::string>("FILE_STATE");
 
                                             if(file_state == "FINISHED") //if at least one is finished, reset the rest
                                                 {
@@ -7286,16 +7286,16 @@ void OracleAPI::checkSanityState()
                                                         sql.prepare <<
                                                         " select  job_id from t_job where job_finished > (sys_extract_utc(systimestamp) - interval '12' HOUR )  "
                                                     );
-						    
+
                     sql.begin();
                     for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
                         {
                             job_id = (*i2);
                             numberOfFilesRevert = 0;
-			    numberOfFilesDelete = 0;
+                            numberOfFilesDelete = 0;
 
                             stmt6.execute(true);
-			    stmtDel1.execute(true);
+                            stmtDel1.execute(true);
 
                             if(numberOfFilesRevert > 0)
                                 {
@@ -7304,7 +7304,7 @@ void OracleAPI::checkSanityState()
                             if(numberOfFilesDelete > 0)
                                 {
                                     stmtDel2.execute(true);
-                                }				
+                                }
                         }
                     sql.commit();
 
@@ -9761,12 +9761,12 @@ void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::
 
     try
         {
-	    int exitCode = runConsumerDeletions(messages);
-	    if(exitCode != 0)
-                        {
-                            char buffer[128]= {0};
-                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the status messages for staging:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
-                        }
+            int exitCode = runConsumerDeletions(messages);
+            if(exitCode != 0)
+                {
+                    char buffer[128]= {0};
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the status messages for staging:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
+                }
 
             if(!messages.empty())
                 {
@@ -9784,7 +9784,7 @@ void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::
                                 }
                         }
                 }
-		
+
             soci::rowset<soci::row> rs2 = (sql.prepare <<
                                            " SELECT DISTINCT vo_name, source_se "
                                            " FROM t_dm "
@@ -9844,7 +9844,7 @@ void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::
                     soci::rowset<soci::row> rs = (
                                                      sql.prepare <<
                                                      " SELECT distinct j.source_se, j.user_dn "
-                                                     " FROM t_db f INNER JOIN t_job j ON (f.job_id = j.job_id) "
+                                                     " FROM t_dm f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                                      " WHERE "
                                                      "	f.file_state = 'DELETE' "
                                                      "	AND f.start_time IS NULL and j.job_finished is null "
@@ -9902,7 +9902,7 @@ void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::
                                 }
                         }
                 }
-           //now update the initial state
+            //now update the initial state
             if(!filesState.empty())
                 {
                     std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >::iterator itFind;
@@ -9930,7 +9930,7 @@ void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::
                     try
                         {
                             updateDeletionsStateInternal(sql, filesState);
-			    filesState.clear();
+                            filesState.clear();
                         }
                     catch(...)
                         {
@@ -9954,14 +9954,14 @@ void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::
                                             msg.transfer_status[sizeof(msg.transfer_status) -1] = '\0';
                                             strncpy(msg.transfer_message, transfer_message.c_str(), sizeof(msg.transfer_message));
                                             msg.transfer_message[sizeof(msg.transfer_message) -1] = '\0';
-					    
-					    //store the states into fs to be restored in the next run of this function
+
+                                            //store the states into fs to be restored in the next run of this function
                                             runProducerDeletions(msg);
                                         }
                                 }
                         }
                 }
-        }  
+        }
     catch (std::exception& e)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
@@ -10171,12 +10171,12 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
 
     try
         {
-	    int exitCode = runConsumerStaging(messages);
-	    if(exitCode != 0)
-                        {
-                            char buffer[128]= {0};
-                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the status messages for staging:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
-                        }
+            int exitCode = runConsumerStaging(messages);
+            if(exitCode != 0)
+                {
+                    char buffer[128]= {0};
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the status messages for staging:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
+                }
 
             if(!messages.empty())
                 {
@@ -10194,7 +10194,7 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
                                 }
                         }
                 }
-		
+
             soci::rowset<soci::row> rs2 = (sql.prepare <<
                                            " SELECT DISTINCT vo_name, source_se "
                                            " FROM t_file "
@@ -10317,7 +10317,7 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
                                 }
                         }
                 }
-		
+
             //now update the initial state
             if(!filesState.empty())
                 {
@@ -10346,7 +10346,7 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
                     try
                         {
                             updateStagingStateInternal(sql, filesState);
-			    filesState.clear();
+                            filesState.clear();
                         }
                     catch(...)
                         {
@@ -10370,8 +10370,8 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
                                             msg.transfer_status[sizeof(msg.transfer_status) -1] = '\0';
                                             strncpy(msg.transfer_message, transfer_message.c_str(), sizeof(msg.transfer_message));
                                             msg.transfer_message[sizeof(msg.transfer_message) -1] = '\0';
-					    
-					    //store the states into fs to be restored in the next run of this function
+
+                                            //store the states into fs to be restored in the next run of this function
                                             runProducerStaging(msg);
                                         }
                                 }

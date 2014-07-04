@@ -20,11 +20,11 @@ class Gfal2Task
 {
 public:
 
-	/// Default constructor
-	Gfal2Task() : gfal2_ctx() {}
+    /// Default constructor
+    Gfal2Task() : gfal2_ctx() {}
 
-	/// Copy constructor
-	Gfal2Task(Gfal2Task & copy) : gfal2_ctx(copy.gfal2_ctx) {}
+    /// Copy constructor
+    Gfal2Task(Gfal2Task & copy) : gfal2_ctx(copy.gfal2_ctx) {}
 
     /**
      * The routine is executed by the thread pool

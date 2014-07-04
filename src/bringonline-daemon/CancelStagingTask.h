@@ -15,12 +15,12 @@
 
 class CancelStagingTask : public Gfal2Task
 {
-	// file_id, surl, token
-	typedef boost::tuple<int, std::string, std::string> context_type;
+    // file_id, surl, token
+    typedef boost::tuple<int, std::string, std::string> context_type;
 
 public:
-	CancelStagingTask(context_type const & ctx) : ctx(ctx) {}
-	virtual ~CancelStagingTask() {}
+    CancelStagingTask(context_type const & ctx) : ctx(ctx) {}
+    virtual ~CancelStagingTask() {}
 
     /**
      * The routine is executed by the thread pool

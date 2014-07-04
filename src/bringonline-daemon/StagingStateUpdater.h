@@ -57,14 +57,14 @@ public:
 
     void recover()
     {
-    	std::vector<value_type> tmp;
-    	// critical section
-    	{
-    		boost::mutex::scoped_lock lock(m);
-    		tmp.swap(updates);
-    	}
+        std::vector<value_type> tmp;
+        // critical section
+        {
+            boost::mutex::scoped_lock lock(m);
+            tmp.swap(updates);
+        }
 
-    	recover(tmp);
+        recover(tmp);
     }
 
     /// Destructor
@@ -105,18 +105,18 @@ private:
                             me.updates.swap(tmp);
                         }
 
-						// run the DB query
-						me.db.updateStagingState(tmp);
+                        // run the DB query
+                        me.db.updateStagingState(tmp);
                     }
                 catch(std::exception& ex)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
                         me.recover(tmp);
-                    }		    
+                    }
                 catch(...) //use catch-all, the state must be recovered no matter what
                     {
-                		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Something went really bad, trying to recover!" << commit;
-                		me.recover(tmp);
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Something went really bad, trying to recover!" << commit;
+                        me.recover(tmp);
                     }
                 tmp.clear();
             }
@@ -125,26 +125,26 @@ private:
     void recover(std::vector<value_type> const & recover)
     {
         message_bringonline msg;
-		std::vector<value_type>::const_iterator itFind;
-		for (itFind = recover.begin(); itFind != recover.end(); ++itFind)
-		{
-			value_type const & tupleRecord = *itFind;
-			int file_id = boost::get<0>(tupleRecord);
-			std::string const & transfer_status = boost::get<1>(tupleRecord);
-			std::string const & transfer_message = boost::get<2>(tupleRecord);
-			std::string const & job_id = boost::get<3>(tupleRecord);
+        std::vector<value_type>::const_iterator itFind;
+        for (itFind = recover.begin(); itFind != recover.end(); ++itFind)
+            {
+                value_type const & tupleRecord = *itFind;
+                int file_id = boost::get<0>(tupleRecord);
+                std::string const & transfer_status = boost::get<1>(tupleRecord);
+                std::string const & transfer_message = boost::get<2>(tupleRecord);
+                std::string const & job_id = boost::get<3>(tupleRecord);
 
-			msg.file_id = file_id;
-			strncpy(msg.job_id, job_id.c_str(), sizeof(msg.job_id));
-			msg.job_id[sizeof(msg.job_id) -1] = '\0';
-			strncpy(msg.transfer_status, transfer_status.c_str(), sizeof(msg.transfer_status));
-			msg.transfer_status[sizeof(msg.transfer_status) -1] = '\0';
-			strncpy(msg.transfer_message, transfer_message.c_str(), sizeof(msg.transfer_message));
-			msg.transfer_message[sizeof(msg.transfer_message) -1] = '\0';
+                msg.file_id = file_id;
+                strncpy(msg.job_id, job_id.c_str(), sizeof(msg.job_id));
+                msg.job_id[sizeof(msg.job_id) -1] = '\0';
+                strncpy(msg.transfer_status, transfer_status.c_str(), sizeof(msg.transfer_status));
+                msg.transfer_status[sizeof(msg.transfer_status) -1] = '\0';
+                strncpy(msg.transfer_message, transfer_message.c_str(), sizeof(msg.transfer_message));
+                msg.transfer_message[sizeof(msg.transfer_message) -1] = '\0';
 
-			//store the states into fs to be restored in the next run
-			runProducerStaging(msg);
-		}
+                //store the states into fs to be restored in the next run
+                runProducerStaging(msg);
+            }
     }
 
     /// the worker thread

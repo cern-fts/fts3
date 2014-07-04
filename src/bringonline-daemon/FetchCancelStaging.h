@@ -17,14 +17,14 @@ class FetchCancelStaging
 {
 
 public:
-	FetchCancelStaging(ThreadPool<Gfal2Task> & threadpool) : threadpool(threadpool) {}
-	virtual ~FetchCancelStaging() {}
+    FetchCancelStaging(ThreadPool<Gfal2Task> & threadpool) : threadpool(threadpool) {}
+    virtual ~FetchCancelStaging() {}
 
-	void fetch();
+    void fetch();
 
 private:
 
-	ThreadPool<Gfal2Task> & threadpool;
+    ThreadPool<Gfal2Task> & threadpool;
 };
 
 #endif /* FETCHCANCELSTAGING_H_ */
