@@ -9677,9 +9677,35 @@ void OracleAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< bo
 void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::string, std::string, int, std::string, std::string> >& files)
 {
     soci::session sql(*connectionPool);
+    std::vector<struct message_bringonline> messages;
+    std::vector< boost::tuple<int, std::string, std::string, std::string, bool> > filesState;
 
     try
         {
+	    int exitCode = runConsumerDeletions(messages);
+	    if(exitCode != 0)
+                        {
+                            char buffer[128]= {0};
+                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the status messages for staging:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
+                        }
+
+            if(!messages.empty())
+                {
+                    std::vector<struct message_bringonline>::iterator iterUpdater;
+                    for (iterUpdater = messages.begin(); iterUpdater != messages.end(); ++iterUpdater)
+                        {
+                            if (iterUpdater->msg_errno == 0)
+                                {
+                                    //now restore messages : //file_id / state / reason / job_id / retry
+                                    filesState.push_back(boost::make_tuple((*iterUpdater).file_id,
+                                                                           std::string((*iterUpdater).transfer_status),
+                                                                           std::string((*iterUpdater).transfer_message),
+                                                                           std::string((*iterUpdater).job_id),
+                                                                           0));
+                                }
+                        }
+                }
+		
             soci::rowset<soci::row> rs2 = (sql.prepare <<
                                            " SELECT DISTINCT vo_name, source_se "
                                            " FROM t_dm "
@@ -9795,36 +9821,68 @@ void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::
                                     boost::tuple<int, std::string, std::string, std::string, bool> recordState(file_id, initState, reason, job_id, false);
                                     filesState.push_back(recordState);
                                 }
+                        }
+                }
+           //now update the initial state
+            if(!filesState.empty())
+                {
+                    std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >::iterator itFind;
+                    for (itFind = filesState.begin(); itFind < filesState.end(); ++itFind)
+                        {
+                            boost::tuple<int, std::string, std::string, std::string, bool>& tupleRecord = *itFind;
+                            int file_id = boost::get<0>(tupleRecord);
+                            std::string job_id = boost::get<3>(tupleRecord);
 
-                            //now update the initial state
+                            //send state message
+                            std::vector<struct message_state> filesMsg;
+                            filesMsg = getStateOfDeleteInternal(sql, job_id, file_id);
+                            if(!filesMsg.empty())
+                                {
+                                    std::vector<struct message_state>::iterator it;
+                                    for (it = filesMsg.begin(); it != filesMsg.end(); ++it)
+                                        {
+                                            struct message_state tmp = (*it);
+                                            constructJSONMsg(&tmp);
+                                        }
+                                }
+                            filesMsg.clear();
+                        }
+
+                    try
+                        {
+                            updateDeletionsStateInternal(sql, filesState);
+			    filesState.clear();
+                        }
+                    catch(...)
+                        {
+                            //save state and restore afterwards
                             if(!filesState.empty())
                                 {
                                     std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >::iterator itFind;
+                                    struct message_bringonline msg;
                                     for (itFind = filesState.begin(); itFind < filesState.end(); ++itFind)
                                         {
                                             boost::tuple<int, std::string, std::string, std::string, bool>& tupleRecord = *itFind;
                                             int file_id = boost::get<0>(tupleRecord);
+                                            std::string transfer_status = boost::get<1>(tupleRecord);
+                                            std::string transfer_message = boost::get<2>(tupleRecord);
                                             std::string job_id = boost::get<3>(tupleRecord);
 
-                                            //send state message
-                                            std::vector<struct message_state> filesMsg;
-                                            filesMsg = getStateOfDeleteInternal(sql, job_id, file_id);
-                                            if(!filesMsg.empty())
-                                                {
-                                                    std::vector<struct message_state>::iterator it;
-                                                    for (it = filesMsg.begin(); it != filesMsg.end(); ++it)
-                                                        {
-                                                            struct message_state tmp = (*it);
-                                                            constructJSONMsg(&tmp);
-                                                        }
-                                                }
-                                            filesMsg.clear();
+                                            msg.file_id = file_id;
+                                            strncpy(msg.job_id, job_id.c_str(), sizeof(msg.job_id));
+                                            msg.job_id[sizeof(msg.job_id) -1] = '\0';
+                                            strncpy(msg.transfer_status, transfer_status.c_str(), sizeof(msg.transfer_status));
+                                            msg.transfer_status[sizeof(msg.transfer_status) -1] = '\0';
+                                            strncpy(msg.transfer_message, transfer_message.c_str(), sizeof(msg.transfer_message));
+                                            msg.transfer_message[sizeof(msg.transfer_message) -1] = '\0';
+					    
+					    //store the states into fs to be restored in the next run of this function
+                                            runProducerDeletions(msg);
                                         }
-                                    updateDeletionsStateInternal(sql, filesState);
                                 }
                         }
                 }
-        }
+        }  
     catch (std::exception& e)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
@@ -10029,9 +10087,35 @@ int OracleAPI::getMaxDeletionsPerEndpoint(const std::string & endpoint, const st
 void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string > >& files)
 {
     soci::session sql(*connectionPool);
+    std::vector< boost::tuple<int, std::string, std::string, std::string, bool> > filesState;
+    std::vector<struct message_bringonline> messages;
 
     try
         {
+	    int exitCode = runConsumerStaging(messages);
+	    if(exitCode != 0)
+                        {
+                            char buffer[128]= {0};
+                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the status messages for staging:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
+                        }
+
+            if(!messages.empty())
+                {
+                    std::vector<struct message_bringonline>::iterator iterUpdater;
+                    for (iterUpdater = messages.begin(); iterUpdater != messages.end(); ++iterUpdater)
+                        {
+                            if (iterUpdater->msg_errno == 0)
+                                {
+                                    //now restore messages : //file_id / state / reason / job_id / retry
+                                    filesState.push_back(boost::make_tuple((*iterUpdater).file_id,
+                                                                           std::string((*iterUpdater).transfer_status),
+                                                                           std::string((*iterUpdater).transfer_message),
+                                                                           std::string((*iterUpdater).job_id),
+                                                                           0));
+                                }
+                        }
+                }
+		
             soci::rowset<soci::row> rs2 = (sql.prepare <<
                                            " SELECT DISTINCT vo_name, source_se "
                                            " FROM t_file "
@@ -10152,32 +10236,65 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
                                     boost::tuple<int, std::string, std::string, std::string, bool> recordState(file_id, initState, reason, job_id, false);
                                     filesState.push_back(recordState);
                                 }
+                        }
+                }
+		
+            //now update the initial state
+            if(!filesState.empty())
+                {
+                    std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >::iterator itFind;
+                    for (itFind = filesState.begin(); itFind < filesState.end(); ++itFind)
+                        {
+                            boost::tuple<int, std::string, std::string, std::string, bool>& tupleRecord = *itFind;
+                            int file_id = boost::get<0>(tupleRecord);
+                            std::string job_id = boost::get<3>(tupleRecord);
 
-                            //now update the initial state
+                            //send state message
+                            std::vector<struct message_state> filesMsg;
+                            filesMsg = getStateOfTransferInternal(sql, job_id, file_id);
+                            if(!filesMsg.empty())
+                                {
+                                    std::vector<struct message_state>::iterator it;
+                                    for (it = filesMsg.begin(); it != filesMsg.end(); ++it)
+                                        {
+                                            struct message_state tmp = (*it);
+                                            constructJSONMsg(&tmp);
+                                        }
+                                }
+                            filesMsg.clear();
+                        }
+
+                    try
+                        {
+                            updateStagingStateInternal(sql, filesState);
+			    filesState.clear();
+                        }
+                    catch(...)
+                        {
+                            //save state and restore afterwards
                             if(!filesState.empty())
                                 {
                                     std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >::iterator itFind;
+                                    struct message_bringonline msg;
                                     for (itFind = filesState.begin(); itFind < filesState.end(); ++itFind)
                                         {
                                             boost::tuple<int, std::string, std::string, std::string, bool>& tupleRecord = *itFind;
                                             int file_id = boost::get<0>(tupleRecord);
+                                            std::string transfer_status = boost::get<1>(tupleRecord);
+                                            std::string transfer_message = boost::get<2>(tupleRecord);
                                             std::string job_id = boost::get<3>(tupleRecord);
 
-                                            //send state message
-                                            std::vector<struct message_state> filesMsg;
-                                            filesMsg = getStateOfTransferInternal(sql, job_id, file_id);
-                                            if(!filesMsg.empty())
-                                                {
-                                                    std::vector<struct message_state>::iterator it;
-                                                    for (it = filesMsg.begin(); it != filesMsg.end(); ++it)
-                                                        {
-                                                            struct message_state tmp = (*it);
-                                                            constructJSONMsg(&tmp);
-                                                        }
-                                                }
-                                            filesMsg.clear();
+                                            msg.file_id = file_id;
+                                            strncpy(msg.job_id, job_id.c_str(), sizeof(msg.job_id));
+                                            msg.job_id[sizeof(msg.job_id) -1] = '\0';
+                                            strncpy(msg.transfer_status, transfer_status.c_str(), sizeof(msg.transfer_status));
+                                            msg.transfer_status[sizeof(msg.transfer_status) -1] = '\0';
+                                            strncpy(msg.transfer_message, transfer_message.c_str(), sizeof(msg.transfer_message));
+                                            msg.transfer_message[sizeof(msg.transfer_message) -1] = '\0';
+					    
+					    //store the states into fs to be restored in the next run of this function
+                                            runProducerStaging(msg);
                                         }
-                                    updateStagingStateInternal(sql, filesState);
                                 }
                         }
                 }
@@ -10191,6 +10308,7 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }
+
 
 //file_id / state / reason / job_id
 void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files)
@@ -10247,7 +10365,7 @@ void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boos
                                         " SET job_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), reason = :reason, file_state = :fileState "
                                         " WHERE "
                                         "	file_id = :fileId "
-                                        "	AND file_state = 'STARTED' ",
+                                        "	AND file_state in ('STAGING','STARTED') ",
                                         soci::use(reason),
                                         soci::use(state),
                                         soci::use(file_id)
