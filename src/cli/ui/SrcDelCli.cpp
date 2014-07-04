@@ -90,7 +90,6 @@ bool SrcDelCli::validate(bool /*init*/)
                             if (!line.empty()) allFilenames.push_back(line);
                         }
                     while(!ifs.eof());
-                    cout<<"..::Parsing is done::..\t ..::#lines: "<<lineCount-1<<"::.."<<endl;
                 }
             else return false;
         }
