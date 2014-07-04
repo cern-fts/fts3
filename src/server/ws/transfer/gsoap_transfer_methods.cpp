@@ -75,7 +75,7 @@ int fts3::impltns__fileDelete(soap* ctx, tns3__deleteFiles* fileNames,impltns__f
             string dn = cgsi.getClientDn();
 
             string hostN;
-            const regex fileUrlRegex("(.+://[a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
+            const regex fileUrlRegex("([a-zA-Z][a-zA-Z0-9+\.-]*://[a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
 
             multimap<string, string> rulsHost;
             vector<string>::iterator it;
@@ -87,7 +87,7 @@ int fts3::impltns__fileDelete(soap* ctx, tns3__deleteFiles* fileNames,impltns__f
                     Uri u0 = Uri::Parse(*it);
                     if(!(u0.Host.length() != 0 && u0.Protocol.length() != 0 && u0.Path.length() != 0))
                         {
-                            string errMsg2 = "Something not right with url: " + (*it);
+                            string errMsg2 = "Something is not right with uri: " + (*it);
                             throw Err_Custom(errMsg2);
                         }
                     smatch what;
