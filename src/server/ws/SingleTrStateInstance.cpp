@@ -50,6 +50,8 @@ SingleTrStateInstance::SingleTrStateInstance(): monitoringMessages(true)
     std::string monitoringMessagesStr = theServerConfig().get<std::string > ("MonitoringMessaging");
     if(monitoringMessagesStr == "false")
         monitoringMessages = false;
+
+    ftsAlias = theServerConfig().get<std::string > ("Alias");
 }
 
 SingleTrStateInstance::~SingleTrStateInstance()
@@ -139,6 +141,14 @@ void SingleTrStateInstance::constructJSONMsg(struct message_state* state)
 
     std::ostringstream json_message;
     json_message << "SS {";
+
+    /*Enable and fix when ready
+    json_message << "\"ftsAlias\":" << "\"" << ftsAlias << "\",";
+    json_message << "\"user_dn\":" << "\"" << state->user_dn << "\",";
+    json_message << "\"source_url\":" << "\"" << state->source_url << "\",";
+    json_message << "\"dest_url\":" << "\"" << state->dest_url << "\",";
+    */
+
     json_message << "\"vo_name\":" << "\"" << state->vo_name << "\",";
     json_message << "\"source_se\":" << "\"" << state->source_se << "\",";
     json_message << "\"dest_se\":" << "\"" << state->dest_se << "\",";

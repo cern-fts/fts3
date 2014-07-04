@@ -153,14 +153,6 @@ void msg_ifce::SendTransferStartMessage(transfer_completed *tr_started)
                 text.append(",\"$q$\":\"");
                 text.append(tr_started->user_dn);
                 text.append("\"");
-
-                text.append(",\"$r$\":\"");
-                text.append(tr_started->source_url);
-                text.append("\"");
-
-                text.append(",\"$s$\":\"");
-                text.append(tr_started->dest_url);
-                text.append("\"");
             */
 
             text.append("}");

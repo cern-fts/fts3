@@ -190,8 +190,18 @@ static inline void constructJSONMsg(struct message_state* state)
     if(!monitoringMessages)
         return;
 
+    std::string ftsAlias = theServerConfig().get<std::string > ("Alias");
+
     std::ostringstream json_message;
     json_message << "SS {";
+
+    /*Enable and fix when ready
+    json_message << "\"ftsAlias\":" << "\"" << ftsAlias << "\",";
+    json_message << "\"user_dn\":" << "\"" << state->user_dn << "\",";
+    json_message << "\"source_url\":" << "\"" << state->source_url << "\",";
+    json_message << "\"dest_url\":" << "\"" << state->dest_url << "\",";
+    */
+
     json_message << "\"vo_name\":" << "\"" << state->vo_name << "\",";
     json_message << "\"source_se\":" << "\"" << state->source_se << "\",";
     json_message << "\"dest_se\":" << "\"" << state->dest_se << "\",";

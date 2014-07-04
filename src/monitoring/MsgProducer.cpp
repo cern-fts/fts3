@@ -47,10 +47,10 @@ using namespace FTS3_COMMON_NAMESPACE;
 /*
 string started[] = {"agent_fqdn", "transfer_id", "endpnt", "timestamp", "src_srm_v", "dest_srm_v",
                     "vo", "src_url", "dst_url", "src_hostname", "dst_hostname", "src_site_name", "dst_site_name", "t_channel",
-                    "srm_space_token_src", "srm_space_token_dst", "user_dn", "src_url", "dst_url"
+                    "srm_space_token_src", "srm_space_token_dst", "user_dn"
                    };
 
-string startedToken[] = {"$a$", "$b$", "$c$", "$d$", "$e$", "$f$", "$g$", "$h$", "$i$", "$j$", "$k$", "$l$", "$m$", "$n$", "$o$", "$p$", "$q$", "$r$", "$s$"};
+string startedToken[] = {"$a$", "$b$", "$c$", "$d$", "$e$", "$f$", "$g$", "$h$", "$i$", "$j$", "$k$", "$l$", "$m$", "$n$", "$o$", "$p$", "$q$"};
 
 string completed[] = {"tr_id", "endpnt", "src_srm_v", "dest_srm_v", "vo", "src_url", "dst_url", "src_hostname", "dst_hostname", "src_site_name",
                       "dst_site_name", "t_channel", "timestamp_tr_st", "timestamp_tr_comp", "timestamp_chk_src_st", "timestamp_chk_src_ended", "timestamp_checksum_dest_st",

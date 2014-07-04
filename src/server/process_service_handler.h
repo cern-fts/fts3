@@ -118,10 +118,7 @@ public:
         cmd = "fts_url_copy";
 
         execPoolSize = theServerConfig().get<int> ("InternalThreadPool");
-
-        char hostname[MAXHOSTNAMELEN];
-        gethostname(hostname, MAXHOSTNAMELEN);
-        ftsHostName = std::string(hostname);
+        ftsHostName = theServerConfig().get<std::string > ("Alias");
         allowedVOs = std::string("");
         infosys = theServerConfig().get<std::string > ("Infosys");
         const vector<std::string> voNameList(theServerConfig().get< vector<string> >("AuthorizedVO"));
@@ -688,6 +685,9 @@ protected:
 
                                         params.append(" -M ");
                                         params.append(infosys);
+
+                                        params.append(" -7 ");
+                                        params.append(ftsHostName);
 
                                         params.append(" -Y ");
                                         params.append(prepareMetadataString(dn));

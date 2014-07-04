@@ -372,6 +372,9 @@ int FileTransferExecutor::execute()
                             params.append(" -U ");
                         }
 
+                    params.append(" -7 ");
+                    params.append(ftsHostName);
+
 
                     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd << " " << params << commit;
                     ExecuteProcess pr(cmd, params);

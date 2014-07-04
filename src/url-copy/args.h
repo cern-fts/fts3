@@ -58,6 +58,7 @@ public:
     unsigned    timeout;
     int    	secPerMb;
     std::string user_dn;
+    std::string alias;
 
     bool areTransfersOnFile() const
     {
