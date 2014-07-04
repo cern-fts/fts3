@@ -6791,7 +6791,7 @@ std::vector<struct message_state> MySqlAPI::getStateOfDeleteInternal(soci::sessi
                                          (
                                              sql.prepare <<
                                              " SELECT "
-                                             "	j.submit_time, j.job_id, j.job_state, j.vo_name, "
+                                             "	j.user_dn, j.submit_time, j.job_id, j.job_state, j.vo_name, "
                                              "	j.job_metadata, j.retry AS retry_max, f.file_id, "
                                              "	f.file_state, f.retry AS retry_counter, f.file_metadata, "
                                              "	f.source_se, f.dest_se, f.start_time , f.source_surl, f.dest_surl"
