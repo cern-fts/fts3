@@ -7338,6 +7338,7 @@ void MySqlAPI::checkSanityState()
     unsigned int allFailed = 0;
     unsigned int allCanceled = 0;
     unsigned int numberOfFilesRevert = 0;
+    unsigned int numberOfFilesDelete = 0;
 
     long long  countMreplica = 0;
     long long  countMindex = 0;
@@ -7377,12 +7378,12 @@ void MySqlAPI::checkSanityState()
                                              "    reason = :failed "
                                              "    WHERE job_id = :jobId", soci::use(failed), soci::use(job_id));
 
-                    soci::statement stmt6 = (sql.prepare << "SELECT COUNT(*) FROM t_file where job_id=:jobId AND file_state in ('ACTIVE','SUBMITTED','STAGING') ", soci::use(job_id), soci::into(numberOfFilesRevert));
+                    soci::statement stmt6 = (sql.prepare << "SELECT COUNT(*) FROM t_file where job_id=:jobId AND file_state in ('ACTIVE','SUBMITTED','STAGING','STARTED') ", soci::use(job_id), soci::into(numberOfFilesRevert));
 
                     soci::statement stmt7 = (sql.prepare << "UPDATE t_file SET "
                                              "    file_state = 'FAILED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
                                              "    reason = 'Force failure due to file state inconsistency' "
-                                             "    WHERE file_state in ('ACTIVE','SUBMITTED','STAGING') and job_id = :jobId", soci::use(job_id));
+                                             "    WHERE file_state in ('ACTIVE','SUBMITTED','STAGING','STARTED') and job_id = :jobId", soci::use(job_id));
 
                     soci::statement stmt8 = (sql.prepare << " select count(*)  "
                                              " from t_file "
@@ -7426,6 +7427,15 @@ void MySqlAPI::checkSanityState()
                                                       soci::use(job_id),
                                                       soci::into(countMreplica),
                                                       soci::into(countMindex));
+						      
+		    //this section is for deletion jobs				      
+                    soci::statement stmtDel1 = (sql.prepare << "SELECT COUNT(*) FROM t_dm where job_id=:jobId AND file_state in ('DELETE','STARTED') ", soci::use(job_id), soci::into(numberOfFilesDelete));
+
+                    soci::statement stmtDel2 = (sql.prepare << "UPDATE t_dm SET "
+                                             "    file_state = 'FAILED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+                                             "    reason = 'Force failure due to file state inconsistency' "
+                                             "    WHERE file_state in ('DELETE','STARTED') and job_id = :jobId", soci::use(job_id));
+						      
 
                     sql.begin();
                     for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
@@ -7560,19 +7570,25 @@ void MySqlAPI::checkSanityState()
                                                         sql.prepare <<
                                                         " select  job_id from t_job where job_finished > (UTC_TIMESTAMP() - interval '12' HOUR )  "
                                                     );
-
+						    
                     sql.begin();
                     for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
                         {
                             job_id = (*i2);
                             numberOfFilesRevert = 0;
+			    numberOfFilesDelete = 0;
 
                             stmt6.execute(true);
+			    stmtDel1.execute(true);
 
                             if(numberOfFilesRevert > 0)
                                 {
                                     stmt7.execute(true);
                                 }
+                            if(numberOfFilesDelete > 0)
+                                {
+                                    stmtDel2.execute(true);
+                                }				
                         }
                     sql.commit();
 
