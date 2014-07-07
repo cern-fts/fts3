@@ -62,6 +62,16 @@
                     </extension>
                 </complexContent>
             </complexType>
+            
+		    <element name="InvalidArgumentExceptionElement" type="tns3:InvalidArgumentException"/>
+		    
+		    <complexType name="InvalidArgumentException">
+		        <complexContent>
+		            <extension base="config:ConfigurationException">
+		                <sequence/>
+		            </extension>
+		        </complexContent>
+		    </complexType>            
 
             <element name="AuthorizationExceptionElement" type="config:AuthorizationException"/>
 
@@ -212,6 +222,10 @@
     <message name="InvalidConfigurationException">
         <part name="fault" element="config:InvalidConfigurationExceptionElement"/>
     </message>
+    
+    <message name="InvalidArgumentException">
+        <part name="fault" element="tns3:InvalidArgumentExceptionElement"/>
+    </message>    
     
     <portType name="Config">
         <operation name="setConfiguration" parameterOrder="configuration">
