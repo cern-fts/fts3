@@ -74,7 +74,7 @@ public:
      * @param category : error category
      * @param message : error message
      */
-    bool retryTransfer(int errorNo, std::string const & category, std::string const & message);
+    static bool retryTransfer(int errorNo, std::string const & category, std::string const & message);
 
 protected:
 
