@@ -63,7 +63,7 @@
                 </complexContent>
             </complexType>
             
-		    <element name="InvalidArgumentExceptionElement" type="tns3:InvalidArgumentException"/>
+		    <element name="InvalidArgumentExceptionElement" type="config:InvalidArgumentException"/>
 		    
 		    <complexType name="InvalidArgumentException">
 		        <complexContent>
