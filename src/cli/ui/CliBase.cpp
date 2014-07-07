@@ -175,15 +175,15 @@ bool CliBase::validate()
     return true;
 }
 
-GSoapContextAdapter& CliBase::getGSoapContext(bool init)
+GSoapContextAdapter& CliBase::getGSoapContext()
 {
     // create and initialize gsoap context
     ctx = new GSoapContextAdapter(endpoint);
-    if (init) ctx->init();
 
     // if verbose print general info
     if (isVerbose())
         {
+    		ctx->getInterfaceDeatailes();
             msgPrinter.endpoint(ctx->getEndpoint());
             msgPrinter.service_version(ctx->getVersion());
             msgPrinter.service_interface(ctx->getInterface());

@@ -88,25 +88,6 @@ public:
         return ctx;
     }
 
-
-    /**
-     * Initializes CGSI plugin for the soap object, respectively to the protocol that is used (https, httpg,..).
-     * 		Moreover, sets the namespaces.
-     * Initializes the object with service version, metadata, schema version and interface version.
-     *
-     * @return true if all information were received
-     * @see SrvManager::initSoap(soap*, string)
-     */
-    void init();
-
-    /**
-     * Handles soap fault. Calls soap_stream_fault, then throws a gsoap_error exception with given message
-     *
-     * @param msg exception message
-     */
-    void handleSoapFault(string msg);
-
-
     /**
      * Remote call that will be transferSubmit2 or transferSubmit3
      *
@@ -352,6 +333,8 @@ public:
     std::string getSnapShot(string vo, string src, string dst);
 
     tns3__DetailedJobStatus* getDetailedJobStatus(string job_id);
+
+    void getInterfaceDeatailes();
 
     ///@{
     /**

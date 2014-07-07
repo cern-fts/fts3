@@ -42,10 +42,7 @@ namespace cli
 using namespace boost;
 using namespace std;
 
-PythonApi::PythonApi(py::str endpoint) : ctx(py::extract<string>(endpoint))
-{
-    ctx.init();
-}
+PythonApi::PythonApi(py::str endpoint) : ctx(py::extract<string>(endpoint)) {}
 
 PythonApi::~PythonApi()
 {
