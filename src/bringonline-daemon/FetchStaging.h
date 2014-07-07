@@ -26,7 +26,7 @@ class FetchStaging
 {
 
 public:
-    FetchStaging(ThreadPool<Gfal2Task> & threadpool, std::string const & infosys) : threadpool(threadpool), infosys(infosys) {}
+    FetchStaging(ThreadPool<Gfal2Task> & threadpool) : threadpool(threadpool) {}
     virtual ~FetchStaging() {}
 
     void fetch();
@@ -48,7 +48,6 @@ private:
     }
 
     ThreadPool<Gfal2Task> & threadpool;
-    std::string infosys;
 };
 
 #endif /* FETCHSTAGING_H_ */

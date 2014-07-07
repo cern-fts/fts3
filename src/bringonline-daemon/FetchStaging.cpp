@@ -21,7 +21,6 @@ extern bool stopThreads;
 
 void FetchStaging::fetch()
 {
-    StagingTask::createPrototype(infosys);
     WaitingRoom<PollTask>::instance().attach(threadpool);
 
     while (!stopThreads)

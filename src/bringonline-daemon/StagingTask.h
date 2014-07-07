@@ -76,20 +76,7 @@ public:
      */
     bool retryTransfer(int errorNo, std::string const & category, std::string const & message);
 
-    /**
-     * Creates a prototype for all gfal2 contexts that will be created
-     *
-     * @infosys : name of the information system
-     */
-    static void createPrototype(std::string const & infosys)
-    {
-        StagingTask::infosys = infosys;
-    }
-
 protected:
-
-    /// the infosys used to create all gfal2 contexts
-    static std::string infosys;
 
     /// asynchronous state updater
     StagingStateUpdater & state_update;

@@ -236,8 +236,10 @@ int DoServer(int argc, char** argv)
 
             boost::thread hbThread(heartbeat);
 
+            Gfal2Task::createPrototype(infosys);
+
             fts3::common::ThreadPool<Gfal2Task> threadpool(10);
-            FetchStaging fs(threadpool, infosys);
+            FetchStaging fs(threadpool);
             FetchCancelStaging fcs(threadpool);
 
             boost::thread_group gr;
