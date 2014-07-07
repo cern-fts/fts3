@@ -26,12 +26,16 @@
 
 #include "SrcDelCli.h"
 #include "BulkSubmissionParser.h"
+
 #include "common/JobParameterHandler.h"
+
 #include <boost/algorithm/string.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/assign.hpp>
+#include <boost/regex.hpp>
 
+#include <algorithm>
 #include <stdexcept>
 
 using namespace fts3::cli;
@@ -93,14 +97,22 @@ bool SrcDelCli::validate(bool /*init*/)
                 }
             else return false;
         }
-    else if (vm.count("Filename"))	// if -f option is not used... User want to delete 1 file
-        {
-//    		std::vector<std::string>& filenames = vm["Filename"].as< std::vector<std::string> >();
-//
-//            allFilenames.push_back(vm["Filename"].as<string>());
-        }
+
+    std::for_each(allFilenames.begin(), allFilenames.end(), validateFileName);
 
     return true;
+}
+
+void SrcDelCli::validateFileName(std::string const & url)
+{
+	static regex const fileUrlRegex("([a-zA-Z][a-zA-Z0-9+\.-]*://[a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
+
+    // check the regular expression
+    smatch what;
+    if (!regex_match(url, what,fileUrlRegex, match_extra))
+        {
+            throw cli_exception("Wrong url format: " + url);
+        }
 }
 
 std::vector<string> SrcDelCli::getFileName()

@@ -63,8 +63,6 @@ int main(int ac, char* av[])
 
             string jobId("");
 
-//		if (cli->useDelegation()) {
-
             vector<File> files = cli->getFiles();
 
 
@@ -83,18 +81,8 @@ int main(int ac, char* av[])
             // submit the job
             jobId = ctx.transferSubmit (
                         files,
-                        params/*,
-					cli->useCheckSum()*/
+                        params
                     );
-//
-//		} else {
-//			// submit the job
-//			jobId = ctx.transferSubmit (
-//					cli->getJobElements(),
-//					cli->getParams(),
-//					cli->getPassword()
-//				);
-//		}
 
             cli->printer().job_id(jobId);
 
