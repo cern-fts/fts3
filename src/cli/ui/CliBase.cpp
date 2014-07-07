@@ -168,8 +168,7 @@ bool CliBase::validate()
     // if endpoint could not be determined, we cannot do anything
     if (endpoint.empty())
         {
-            msgPrinter.error_msg("Failed to determine the endpoint");
-            return false;
+    		throw bad_option("service", "failed to determine the endpoint");
         }
 
     return true;

@@ -24,6 +24,8 @@
 
 #include "DebugSetCli.h"
 
+#include "exception/cli_exception.h"
+
 using namespace fts3::cli;
 
 const string DebugSetCli::ON = "on";
@@ -83,8 +85,7 @@ bool DebugSetCli::validate()
     // make sure that at least one SE and debug mode were specified
     if (opts.size() < 2)
         {
-            msgPrinter.error_msg("SE name and debug mode has to be specified (on/off)!");
-            return false;
+    		throw cli_exception("SE name and debug mode has to be specified (on/off)!");
         }
 
     // index of debug mode (the last parameter)
@@ -98,8 +99,7 @@ bool DebugSetCli::validate()
     // otherwise it's an error
     else
         {
-            msgPrinter.error_msg("Debug mode has to be specified (on/off)!");
-            return false;
+    		throw cli_exception("Debug mode has to be specified (on/off)!");
         }
 
     // source is always the first one

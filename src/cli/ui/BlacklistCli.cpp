@@ -24,6 +24,8 @@
 
 #include "BlacklistCli.h"
 
+#include "exception/bad_option.h"
+
 #include <boost/algorithm/string.hpp>
 
 namespace fts3
@@ -80,28 +82,23 @@ bool BlacklistCli::validate()
 
     if (mode != ON && mode != OFF)
         {
-            msgPrinter.error_msg("The mode has to be either 'on' or 'off'");
-            return false;
+    		throw bad_option("mode", "has to be either 'on' or 'off'");
         }
 
     if (type != SE && type != DN)
         {
-            msgPrinter.error_msg("The type has to be either 'se' or 'dn'");
-            return false;
+    		throw bad_option("type", "has to be either 'se' or 'dn'");
         }
 
 
-    if ( (!vm.count("status") || status != "WAIT")
-            && timeout != 0)
+    if ( (!vm.count("status") || status != "WAIT") && timeout != 0)
         {
-            msgPrinter.error_msg("You may only specify the timeout for the 'WAIT' status");
-            return false;
+    		throw bad_option("timeout", "may be only specified if status = 'WAIT'");
         }
 
     if (vm.count("allow-submit") && status == "CANCEL")
         {
-            msgPrinter.error_msg("If the 'allow-submit' option is used you may not use 'CANCEL' status");
-            return false;
+    		throw bad_option("allow-submit", "may not be used if status = 'CANCEL'");
         }
 
     return true;

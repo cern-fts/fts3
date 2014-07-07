@@ -72,8 +72,7 @@ bool SrcDelCli::validate(bool /*init*/)
     if (vm.count("file") && vm.count("Filename"))
         {
             // print err
-            printer().error_msg("If a filename submission has been used each URL of files has to be specified inside the file separately for each file!");
-            return optional<GSoapContextAdapter&>();
+    		throw cli_exception("If a filename submission has been used each URL of files has to be specified inside the file separately for each file!");
         }
 
     // first check if the -f option was used, try to open the file with bulk-job description
@@ -111,7 +110,7 @@ void SrcDelCli::validateFileName(std::string const & url)
     smatch what;
     if (!regex_match(url, what,fileUrlRegex, match_extra))
         {
-            throw cli_exception("Wrong url format: " + url);
+            throw cli_exception("Wrong URL format: " + url);
         }
 }
 
