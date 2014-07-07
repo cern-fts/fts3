@@ -49,15 +49,11 @@ using namespace fts3::cli;
 
 int main(int ac, char* av[])
 {
-    scoped_ptr<SrcDelCli> cli;
+    scoped_ptr<SrcDelCli> cli(new SrcDelCli);
 
     try
         {
             // create and initialize the command line utility
-            cli.reset(
-                new SrcDelCli
-            );
-
             cli->SrcDelCli::parse(ac,av);
 
             // validate command line options, and return respective gsoap context

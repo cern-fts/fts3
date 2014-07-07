@@ -53,10 +53,8 @@ BOOST_AUTO_TEST_CASE (JobIDCli_Test)
 
     int ac = 6;
 
-    unique_ptr<JobIdCli> cli (
-        getCli<JobIdCli>(ac, av)
-    );
-
+    unique_ptr<JobIdCli> cli (new JobIdCli);
+    cli->parse(ac, av);
     cli->validate();
 
     const vector<string> ids = cli->getJobIds();

@@ -264,21 +264,6 @@ protected:
     MsgPrinter msgPrinter;
 };
 
-/**
- * Factory method for fts3 CLIs
- * 	The object has to be created in two steps:
- * 	1. creating program options (base + tool specific)
- * 	2. parsing parameters accordingly to the options created in step 1.
- */
-template<typename CLI>
-CLI* getCli(int ac, char* av[])
-{
-
-    CliBase* ret = new CLI; // done to ensure it's used only with classes derived from CliBase
-    ret->parse(ac, av);
-    return dynamic_cast<CLI*>(ret);
-}
-
 }
 }
 

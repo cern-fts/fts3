@@ -41,14 +41,11 @@ using namespace fts3::common;
 int main(int ac, char* av[])
 {
     JsonOutput::create();
-    scoped_ptr<SubmitTransferCli> cli;
+    scoped_ptr<SubmitTransferCli> cli (new SubmitTransferCli);
 
     try
         {
-            // create and initialize the command line utility
-            cli.reset (
-                getCli<SubmitTransferCli>(ac, av)
-            );
+            cli->parse(ac, av);
             if (!cli->validate()) return 0;
 
             if (cli->rest())

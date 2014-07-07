@@ -59,14 +59,12 @@ int main(int ac, char* av[])
     static const int DEFAULT_LIMIT = 100;
 
     JsonOutput::create();
-    scoped_ptr<TransferStatusCli> cli;
+    scoped_ptr<TransferStatusCli> cli (new TransferStatusCli);
 
     try
         {
             // create and initialize the command line utility
-            cli.reset (
-                getCli<TransferStatusCli>(ac, av)
-            );
+    		cli->parse(ac, av);
             if (!cli->validate()) return 0;
 
             if (cli->rest())
