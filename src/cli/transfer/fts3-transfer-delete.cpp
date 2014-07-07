@@ -67,7 +67,7 @@ int main(int ac, char* av[])
             vector<string> vect =  cli->getFileName();
             if(vect.size() == 0)
                 {
-                    std::cout << "You need to provide either a file or sinlge file to be deleted" << std::endl;
+                    std::cout << "You need to provide either a file name of a bulk deletion or a list of files to be deleted" << std::endl;
                     exit(1);
                 }
 

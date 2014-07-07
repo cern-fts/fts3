@@ -47,10 +47,10 @@ SrcDelCli::SrcDelCli()
     specific.add_options()
     ("source-token,S", value<string>(), "The source space token or its description (for SRM 2.2 transfers).")
     ("file,f", value<string>(&bulk_file), "Name of a configuration file.")
-    ("Filename", value<string>(), "Specify the FileName.")
+    ("Filename", value< vector<string> >(&allFilenames)->multitoken(), "Specify the FileName(s).")
     ;
     // add optional (that used without an option switch) command line option
-    p.add("Filename", 1);
+    p.add("Filename", -1);
 }
 
 SrcDelCli::~SrcDelCli()
@@ -95,7 +95,9 @@ bool SrcDelCli::validate(bool /*init*/)
         }
     else if (vm.count("Filename"))	// if -f option is not used... User want to delete 1 file
         {
-            allFilenames.push_back(vm["Filename"].as<string>());
+//    		std::vector<std::string>& filenames = vm["Filename"].as< std::vector<std::string> >();
+//
+//            allFilenames.push_back(vm["Filename"].as<string>());
         }
 
     return true;
