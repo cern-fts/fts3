@@ -104,7 +104,7 @@ bool SrcDelCli::validate(bool /*init*/)
 
 void SrcDelCli::validateFileName(std::string const & url)
 {
-	static regex const fileUrlRegex("([a-zA-Z][a-zA-Z0-9+\.-]*://[a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
+	static regex const fileUrlRegex("([a-zA-Z][a-zA-Z0-9+\\.-]*://[a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
 
     // check the regular expression
     smatch what;
