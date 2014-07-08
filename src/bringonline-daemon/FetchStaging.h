@@ -26,8 +26,8 @@ class FetchStaging
 {
 
 public:
-	FetchStaging(ThreadPool<Gfal2Task> & threadpool, std::string const & infosys) : threadpool(threadpool), infosys(infosys) {}
-	virtual ~FetchStaging() {}
+    FetchStaging(ThreadPool<Gfal2Task> & threadpool) : threadpool(threadpool) {}
+    virtual ~FetchStaging() {}
 
     void fetch();
 
@@ -47,8 +47,7 @@ private:
         return delegCredPtr->getFileName(dn, dlg_id);
     }
 
-	ThreadPool<Gfal2Task> & threadpool;
-	std::string infosys;
+    ThreadPool<Gfal2Task> & threadpool;
 };
 
 #endif /* FETCHSTAGING_H_ */

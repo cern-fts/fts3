@@ -20,18 +20,29 @@ class Gfal2Task
 {
 public:
 
-	/// Default constructor
-	Gfal2Task() : gfal2_ctx() {}
+    /// Default constructor
+    Gfal2Task() : gfal2_ctx() {}
 
-	/// Copy constructor
-	Gfal2Task(Gfal2Task & copy) : gfal2_ctx(copy.gfal2_ctx) {}
+    /// Copy constructor
+    Gfal2Task(Gfal2Task & copy) : gfal2_ctx(copy.gfal2_ctx) {}
 
     /**
      * The routine is executed by the thread pool
      */
     virtual void run(boost::any const &) = 0;
 
+    /// Destructor
     virtual ~Gfal2Task() {}
+
+    /**
+     * Creates a prototype for all gfal2 contexts that will be created
+     *
+     * @infosys : name of the information system
+     */
+    static void createPrototype(std::string const & infosys)
+    {
+        Gfal2Task::infosys = infosys;
+    }
 
 protected:
     /**
@@ -51,6 +62,15 @@ protected:
                     ss << "BRINGONLINE bad initialization " << error->code << " " << error->message;
                     // the memory was not allocated so it is safe to throw
                     throw Err_Custom(ss.str());
+                }
+
+            if (infosys == "false")
+                {
+                    gfal2_set_opt_boolean(gfal2_ctx, "BDII", "ENABLED", false, NULL);
+                }
+            else
+                {
+                    gfal2_set_opt_string(gfal2_ctx, "BDII", "LCG_GFAL_INFOSYS", (char *) infosys.c_str(), NULL);
                 }
         }
 
@@ -77,9 +97,11 @@ protected:
         gfal2_context_t gfal2_ctx;
     };
 
+    /// the infosys used to create all gfal2 contexts
+    static std::string infosys;
+
     /// gfal2 context
     Gfal2CtxWrapper gfal2_ctx;
 };
-
 
 #endif /* DMTASK_H_ */

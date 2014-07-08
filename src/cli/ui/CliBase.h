@@ -110,7 +110,7 @@ public:
      * @return GSoapContexAdapter instance, or null if all activities
      * 				requested using program options have been done.
      */
-    GSoapContextAdapter& getGSoapContext(bool init = true);
+    GSoapContextAdapter& getGSoapContext();
 
     /**
      * Prints help message if the -h option has been used.
@@ -263,21 +263,6 @@ private:
 protected:
     MsgPrinter msgPrinter;
 };
-
-/**
- * Factory method for fts3 CLIs
- * 	The object has to be created in two steps:
- * 	1. creating program options (base + tool specific)
- * 	2. parsing parameters accordingly to the options created in step 1.
- */
-template<typename CLI>
-CLI* getCli(int ac, char* av[])
-{
-
-    CliBase* ret = new CLI; // done to ensure it's used only with classes derived from CliBase
-    ret->parse(ac, av);
-    return dynamic_cast<CLI*>(ret);
-}
 
 }
 }

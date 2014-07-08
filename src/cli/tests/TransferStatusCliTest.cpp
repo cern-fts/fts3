@@ -45,9 +45,8 @@ BOOST_AUTO_TEST_CASE (TransferStatusCli_options)
 
     int ac = 2;
 
-    unique_ptr<TransferStatusCli> cli (
-        getCli<TransferStatusCli>(ac, av)
-    );
+    unique_ptr<TransferStatusCli> cli (new TransferStatusCli);
+    cli->parse(ac, av);
 
     BOOST_CHECK(cli->list());
 }

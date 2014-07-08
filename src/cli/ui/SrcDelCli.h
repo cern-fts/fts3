@@ -80,6 +80,9 @@ public:
       */
     bool validate(bool init = true);
 
+    ///
+    static void validateFileName(std::string const & url);
+
     /**
      * the name of the file containing bulk-job description
      */

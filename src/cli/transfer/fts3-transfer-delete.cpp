@@ -49,15 +49,11 @@ using namespace fts3::cli;
 
 int main(int ac, char* av[])
 {
-    scoped_ptr<SrcDelCli> cli;
+    scoped_ptr<SrcDelCli> cli(new SrcDelCli);
 
     try
         {
             // create and initialize the command line utility
-            cli.reset(
-                new SrcDelCli
-            );
-
             cli->SrcDelCli::parse(ac,av);
 
             // validate command line options, and return respective gsoap context
@@ -67,7 +63,7 @@ int main(int ac, char* av[])
             vector<string> vect =  cli->getFileName();
             if(vect.size() == 0)
                 {
-                    std::cout << "You need to provide either a file or sinlge file to be deleted" << std::endl;
+                    std::cout << "You need to provide either a file name of a bulk deletion or a list of files to be deleted" << std::endl;
                     exit(1);
                 }
 

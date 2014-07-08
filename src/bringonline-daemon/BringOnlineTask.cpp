@@ -47,15 +47,6 @@ BringOnlineTask::BringOnlineTask(context_type const & ctx, std::string const & p
                 }
         }
 
-    if (infosys == "false")
-        {
-            gfal2_set_opt_boolean(gfal2_ctx, "BDII", "ENABLED", false, NULL);
-        }
-    else
-        {
-            gfal2_set_opt_string(gfal2_ctx, "BDII", "LCG_GFAL_INFOSYS", (char *) infosys.c_str(), NULL);
-        }
-
     // set the proxy certificate
     setProxy();
 }

@@ -26,12 +26,16 @@
 
 #include "SrcDelCli.h"
 #include "BulkSubmissionParser.h"
+
 #include "common/JobParameterHandler.h"
+
 #include <boost/algorithm/string.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/assign.hpp>
+#include <boost/regex.hpp>
 
+#include <algorithm>
 #include <stdexcept>
 
 using namespace fts3::cli;
@@ -47,10 +51,10 @@ SrcDelCli::SrcDelCli()
     specific.add_options()
     ("source-token,S", value<string>(), "The source space token or its description (for SRM 2.2 transfers).")
     ("file,f", value<string>(&bulk_file), "Name of a configuration file.")
-    ("Filename", value<string>(), "Specify the FileName.")
+    ("Filename", value< vector<string> >(&allFilenames)->multitoken(), "Specify the FileName(s).")
     ;
     // add optional (that used without an option switch) command line option
-    p.add("Filename", 1);
+    p.add("Filename", -1);
 }
 
 SrcDelCli::~SrcDelCli()
@@ -68,8 +72,7 @@ bool SrcDelCli::validate(bool /*init*/)
     if (vm.count("file") && vm.count("Filename"))
         {
             // print err
-            printer().error_msg("If a filename submission has been used each URL of files has to be specified inside the file separately for each file!");
-            return optional<GSoapContextAdapter&>();
+    		throw cli_exception("If a filename submission has been used each URL of files has to be specified inside the file separately for each file!");
         }
 
     // first check if the -f option was used, try to open the file with bulk-job description
@@ -90,16 +93,25 @@ bool SrcDelCli::validate(bool /*init*/)
                             if (!line.empty()) allFilenames.push_back(line);
                         }
                     while(!ifs.eof());
-                    cout<<"..::Parsing is done::..\t ..::#lines: "<<lineCount-1<<"::.."<<endl;
                 }
             else return false;
         }
-    else if (vm.count("Filename"))	// if -f option is not used... User want to delete 1 file
-        {
-            allFilenames.push_back(vm["Filename"].as<string>());
-        }
+
+    std::for_each(allFilenames.begin(), allFilenames.end(), validateFileName);
 
     return true;
+}
+
+void SrcDelCli::validateFileName(std::string const & url)
+{
+	static regex const fileUrlRegex("([a-zA-Z][a-zA-Z0-9+\\.-]*://[a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
+
+    // check the regular expression
+    smatch what;
+    if (!regex_match(url, what,fileUrlRegex, match_extra))
+        {
+            throw cli_exception("Wrong URL format: " + url);
+        }
 }
 
 std::vector<string> SrcDelCli::getFileName()

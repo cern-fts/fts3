@@ -60,7 +60,7 @@ int fts3_teardown_db_backend()
 
 void _handle_sigint(int)
 {
-	StagingStateUpdater::instance().recover();
+    StagingStateUpdater::instance().recover();
 
     if (stackTrace.length() > 0)
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << stackTrace << commit;
@@ -236,8 +236,10 @@ int DoServer(int argc, char** argv)
 
             boost::thread hbThread(heartbeat);
 
+            Gfal2Task::createPrototype(infosys);
+
             fts3::common::ThreadPool<Gfal2Task> threadpool(10);
-            FetchStaging fs(threadpool, infosys);
+            FetchStaging fs(threadpool);
             FetchCancelStaging fcs(threadpool);
 
             boost::thread_group gr;

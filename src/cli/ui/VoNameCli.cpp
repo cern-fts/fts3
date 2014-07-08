@@ -24,6 +24,8 @@
 
 #include "VoNameCli.h"
 
+#include "exception/cli_exception.h"
+
 using namespace fts3::cli;
 
 VoNameCli::VoNameCli(bool pos): pos(pos)
@@ -62,8 +64,7 @@ bool VoNameCli::validate()
         {
             if (getVoName().empty())
                 {
-                    msgPrinter.error_msg("The VO name has to be specified");
-                    return false;
+            		throw cli_exception("The VO name has to be specified");
                 }
         }
 

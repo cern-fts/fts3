@@ -35,17 +35,6 @@ namespace fts3
 namespace cli
 {
 
-typedef boost::tuple< std::string, std::string, boost::optional<std::string>, boost::optional<int>, boost::optional<std::string> > JobElement;
-
-enum ElementMember
-{
-    SOURCE,
-    DESTINATION,
-    CHECKSUM,
-    FILE_SIZE,
-    FILE_METADATA
-};
-
 /**
  * Job element (single file)
  */

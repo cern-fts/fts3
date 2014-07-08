@@ -74,11 +74,8 @@ BOOST_AUTO_TEST_CASE (CliBase_short_options)
     // argument count
     int ac = 7;
 
-    unique_ptr<CliBaseTester> cli (
-        getCli<CliBaseTester>(ac, av)
-    );
-
-//    cli->mute();
+    unique_ptr<CliBaseTester> cli (new CliBaseTester);
+    cli->parse(ac, av);
 
     // all 5 parameters should be available in vm variable
     BOOST_CHECK(cli->printHelp(string()));
@@ -88,8 +85,6 @@ BOOST_AUTO_TEST_CASE (CliBase_short_options)
 
     // the endpoint shouldn't be empty since it's starting with http
     BOOST_CHECK(!cli->getService().empty());
-
-//    cli->unmute();
 }
 
 BOOST_AUTO_TEST_CASE (CliBase_long_options)
@@ -110,9 +105,8 @@ BOOST_AUTO_TEST_CASE (CliBase_long_options)
     // argument count
     int ac = 7;
 
-    unique_ptr<CliBaseTester> cli (
-        getCli<CliBaseTester>(ac, av)
-    );
+    unique_ptr<CliBaseTester> cli (new CliBaseTester);
+    cli->parse(ac, av);
 
     // all 5 parameters should be available in vm variable
     BOOST_CHECK(cli->printHelp(string()));

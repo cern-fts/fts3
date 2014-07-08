@@ -6844,13 +6844,13 @@ std::vector<struct message_state> MySqlAPI::getStateOfDeleteInternal(soci::sessi
                     ret.file_metadata = it->get<std::string>("file_metadata","");
                     ret.source_se = it->get<std::string>("source_se");
                     ret.dest_se = it->get<std::string>("dest_se");
-		    
-		    /*
-                    ret.user_dn = it->get<std::string>("user_dn","");
-                    ret.source_url = it->get<std::string>("source_surl","");
-                    ret.dest_url = it->get<std::string>("dest_surl","");		    
-		    */
-		    
+
+                    /*
+                            ret.user_dn = it->get<std::string>("user_dn","");
+                            ret.source_url = it->get<std::string>("source_surl","");
+                            ret.dest_url = it->get<std::string>("dest_surl","");
+                    */
+
                     temp.push_back(ret);
                 }
         }
@@ -6943,13 +6943,13 @@ std::vector<struct message_state> MySqlAPI::getStateOfTransferInternal(soci::ses
                     ret.file_metadata = it->get<std::string>("file_metadata","");
                     ret.source_se = it->get<std::string>("source_se");
                     ret.dest_se = it->get<std::string>("dest_se");
-		    
-		    /*	
-                    ret.user_dn = it->get<std::string>("user_dn","");
-                    ret.source_url = it->get<std::string>("source_surl","");
-                    ret.dest_url = it->get<std::string>("dest_surl","");		    
-		    */		    
-		    
+
+                    /*
+                            ret.user_dn = it->get<std::string>("user_dn","");
+                            ret.source_url = it->get<std::string>("source_surl","");
+                            ret.dest_url = it->get<std::string>("dest_surl","");
+                    */
+
                     temp.push_back(ret);
                 }
         }
@@ -7338,6 +7338,7 @@ void MySqlAPI::checkSanityState()
     unsigned int allFailed = 0;
     unsigned int allCanceled = 0;
     unsigned int numberOfFilesRevert = 0;
+    unsigned int numberOfFilesDelete = 0;
 
     long long  countMreplica = 0;
     long long  countMindex = 0;
@@ -7377,12 +7378,12 @@ void MySqlAPI::checkSanityState()
                                              "    reason = :failed "
                                              "    WHERE job_id = :jobId", soci::use(failed), soci::use(job_id));
 
-                    soci::statement stmt6 = (sql.prepare << "SELECT COUNT(*) FROM t_file where job_id=:jobId AND file_state in ('ACTIVE','SUBMITTED','STAGING') ", soci::use(job_id), soci::into(numberOfFilesRevert));
+                    soci::statement stmt6 = (sql.prepare << "SELECT COUNT(*) FROM t_file where job_id=:jobId AND file_state in ('ACTIVE','SUBMITTED','STAGING','STARTED') ", soci::use(job_id), soci::into(numberOfFilesRevert));
 
                     soci::statement stmt7 = (sql.prepare << "UPDATE t_file SET "
                                              "    file_state = 'FAILED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
                                              "    reason = 'Force failure due to file state inconsistency' "
-                                             "    WHERE file_state in ('ACTIVE','SUBMITTED','STAGING') and job_id = :jobId", soci::use(job_id));
+                                             "    WHERE file_state in ('ACTIVE','SUBMITTED','STAGING','STARTED') and job_id = :jobId", soci::use(job_id));
 
                     soci::statement stmt8 = (sql.prepare << " select count(*)  "
                                              " from t_file "
@@ -7426,6 +7427,15 @@ void MySqlAPI::checkSanityState()
                                                       soci::use(job_id),
                                                       soci::into(countMreplica),
                                                       soci::into(countMindex));
+
+                    //this section is for deletion jobs
+                    soci::statement stmtDel1 = (sql.prepare << "SELECT COUNT(*) FROM t_dm where job_id=:jobId AND file_state in ('DELETE','STARTED') ", soci::use(job_id), soci::into(numberOfFilesDelete));
+
+                    soci::statement stmtDel2 = (sql.prepare << "UPDATE t_dm SET "
+                                                "    file_state = 'FAILED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+                                                "    reason = 'Force failure due to file state inconsistency' "
+                                                "    WHERE file_state in ('DELETE','STARTED') and job_id = :jobId", soci::use(job_id));
+
 
                     sql.begin();
                     for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
@@ -7566,12 +7576,18 @@ void MySqlAPI::checkSanityState()
                         {
                             job_id = (*i2);
                             numberOfFilesRevert = 0;
+                            numberOfFilesDelete = 0;
 
                             stmt6.execute(true);
+                            stmtDel1.execute(true);
 
                             if(numberOfFilesRevert > 0)
                                 {
                                     stmt7.execute(true);
+                                }
+                            if(numberOfFilesDelete > 0)
+                                {
+                                    stmtDel2.execute(true);
                                 }
                         }
                     sql.commit();
@@ -9881,12 +9897,12 @@ void MySqlAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::s
 
     try
         {
-	    int exitCode = runConsumerDeletions(messages);
-	    if(exitCode != 0)
-                        {
-                            char buffer[128]= {0};
-                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the status messages for staging:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
-                        }
+            int exitCode = runConsumerDeletions(messages);
+            if(exitCode != 0)
+                {
+                    char buffer[128]= {0};
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the status messages for staging:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
+                }
 
             if(!messages.empty())
                 {
@@ -9965,7 +9981,7 @@ void MySqlAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::s
                     soci::rowset<soci::row> rs = (
                                                      sql.prepare <<
                                                      " SELECT distinct j.source_se, j.user_dn "
-                                                     " FROM t_db f INNER JOIN t_job j ON (f.job_id = j.job_id) "
+                                                     " FROM t_dm f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                                      " WHERE "
                                                      "	f.file_state = 'DELETE' "
                                                      "	AND f.start_time IS NULL and j.job_finished is null "
@@ -10001,7 +10017,7 @@ void MySqlAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::s
                                                               soci::use(vo_name),
                                                               soci::use(limit)
                                                           );
-                            
+
                             std::string initState = "STARTED";
                             std::string reason;
 
@@ -10019,11 +10035,11 @@ void MySqlAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::s
 
                                     boost::tuple<int, std::string, std::string, std::string, bool> recordState(file_id, initState, reason, job_id, false);
                                     filesState.push_back(recordState);
-                                }                          
+                                }
                         }
                 }
 
-           //now update the initial state
+            //now update the initial state
             if(!filesState.empty())
                 {
                     std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >::iterator itFind;
@@ -10051,7 +10067,7 @@ void MySqlAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::s
                     try
                         {
                             updateDeletionsStateInternal(sql, filesState);
-			    filesState.clear();
+                            filesState.clear();
                         }
                     catch(...)
                         {
@@ -10075,8 +10091,8 @@ void MySqlAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::s
                                             msg.transfer_status[sizeof(msg.transfer_status) -1] = '\0';
                                             strncpy(msg.transfer_message, transfer_message.c_str(), sizeof(msg.transfer_message));
                                             msg.transfer_message[sizeof(msg.transfer_message) -1] = '\0';
-					    
-					    //store the states into fs to be restored in the next run of this function
+
+                                            //store the states into fs to be restored in the next run of this function
                                             runProducerDeletions(msg);
                                         }
                                 }
@@ -10292,12 +10308,12 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
 
     try
         {
-	    int exitCode = runConsumerStaging(messages);
-	    if(exitCode != 0)
-                        {
-                            char buffer[128]= {0};
-                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the status messages for staging:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
-                        }
+            int exitCode = runConsumerStaging(messages);
+            if(exitCode != 0)
+                {
+                    char buffer[128]= {0};
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the status messages for staging:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
+                }
 
             if(!messages.empty())
                 {
@@ -10316,7 +10332,7 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                         }
                 }
 
-	    //now get frash states/files from the database
+            //now get frash states/files from the database
             soci::rowset<soci::row> rs2 = (sql.prepare <<
                                            " SELECT DISTINCT vo_name, source_se "
                                            " FROM t_file "
@@ -10467,7 +10483,7 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                     try
                         {
                             updateStagingStateInternal(sql, filesState);
-			    filesState.clear();
+                            filesState.clear();
                         }
                     catch(...)
                         {
@@ -10491,8 +10507,8 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                                             msg.transfer_status[sizeof(msg.transfer_status) -1] = '\0';
                                             strncpy(msg.transfer_message, transfer_message.c_str(), sizeof(msg.transfer_message));
                                             msg.transfer_message[sizeof(msg.transfer_message) -1] = '\0';
-					    
-					    //store the states into fs to be restored in the next run of this function
+
+                                            //store the states into fs to be restored in the next run of this function
                                             runProducerStaging(msg);
                                         }
                                 }

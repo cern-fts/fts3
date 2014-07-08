@@ -24,6 +24,8 @@
 
 #include "PriorityCli.h"
 
+#include "exception/bad_option.h"
+
 namespace fts3
 {
 namespace cli
@@ -54,8 +56,7 @@ bool PriorityCli::validate()
 
     if (priority < 1 || priority > 5)
         {
-            msgPrinter.error_msg("The priority has to take a value in range of 1 to 5");
-            return false;
+    		throw bad_option("priority", "has to take a value in range of 1 to 5");
         }
 
     return true;
