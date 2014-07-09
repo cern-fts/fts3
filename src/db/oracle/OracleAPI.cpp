@@ -10569,6 +10569,9 @@ void OracleAPI::getStagingFilesForCanceling(std::vector< boost::tuple<int, std::
                                           "  AND (hashed_id >= :hStart AND hashed_id <= :hEnd) AND staging_start is NOT NULL ",
                                           soci::use(hashSegment.start), soci::use(hashSegment.end));
 
+            soci::statement stmt1 = (sql.prepare << "UPDATE t_file SET  job_finished = UTC_TIMESTAMP() "
+                                     "WHERE file_id = :file_id ", soci::use(file_id, "file_id"));
+
             // Cancel staging files
             for (soci::rowset<soci::row>::const_iterator i2 = rs.begin(); i2 != rs.end(); ++i2)
                 {
@@ -10578,6 +10581,8 @@ void OracleAPI::getStagingFilesForCanceling(std::vector< boost::tuple<int, std::
                     token = row.get<std::string>("BRINGONLINE_TOKEN","");
                     boost::tuple<int, std::string, std::string> record(file_id, source_surl, token);
                     files.push_back(record);
+
+                    stmt1.execute(true);
                 }
         }
     catch (std::exception& e)
