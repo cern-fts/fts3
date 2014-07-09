@@ -298,29 +298,58 @@ void MySqlAPI::init(std::string username, std::string password, std::string conn
 }
 
 
-
 void MySqlAPI::submitdelete(const std::string & jobId, const std::multimap<std::string,std::string>& rulsHost,
                             const std::string & userDN, const std::string & voName, const std::string & credID)
 {
+	if (rulsHost.empty()) return;
+
     const std::string initialState = "DELETE";
     std::ostringstream pairStmt;
 
     soci::session sql(*connectionPool);
 
+    // first check if the job conserns only one SE
+    std::string const & src_se = rulsHost.begin()->second;
+    bool same_src_se = true;
+
+    std::multimap<std::string,std::string>::const_iterator it;
+    for (it = rulsHost.begin(); it != rulsHost.end(); ++it)
+    	{
+    		same_src_se = it->second == src_se;
+    		if (!same_src_se) break;
+    	}
+
     try
         {
             sql.begin();
 
-            soci::statement insertJob = (	sql.prepare << "INSERT INTO  t_job ( job_id, job_state, vo_name,submit_host, submit_time, user_dn, cred_id)"
-                                            "VALUES (:jobId, :jobState, :voName , :hostname, UTC_TIMESTAMP(), :userDN, :credID)",
-                                            soci::use(jobId),
-                                            soci::use(initialState),
-                                            soci::use(voName),
-                                            soci::use(hostname),
-                                            soci::use(userDN),
-                                            soci::use(credID)
-                                        );
-            insertJob.execute(true);
+			if (same_src_se)
+				{
+					soci::statement insertJob = (	sql.prepare << "INSERT INTO  t_job ( job_id, job_state, vo_name,submit_host, submit_time, user_dn, cred_id, source_se)"
+													"VALUES (:jobId, :jobState, :voName , :hostname, UTC_TIMESTAMP(), :userDN, :credID, :src_se)",
+													soci::use(jobId),
+													soci::use(initialState),
+													soci::use(voName),
+													soci::use(hostname),
+													soci::use(userDN),
+													soci::use(credID),
+													soci::use(src_se)
+												);
+					insertJob.execute(true);
+				}
+			else
+				{
+					soci::statement insertJob = (	sql.prepare << "INSERT INTO  t_job ( job_id, job_state, vo_name,submit_host, submit_time, user_dn, cred_id)"
+													"VALUES (:jobId, :jobState, :voName , :hostname, UTC_TIMESTAMP(), :userDN, :credID)",
+													soci::use(jobId),
+													soci::use(initialState),
+													soci::use(voName),
+													soci::use(hostname),
+													soci::use(userDN),
+													soci::use(credID)
+												);
+					insertJob.execute(true);
+				}
 
             std::string sourceSurl;
             std::string sourceSE;
