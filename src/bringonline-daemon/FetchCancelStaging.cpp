@@ -7,7 +7,7 @@
 
 #include "FetchCancelStaging.h"
 
-#include "CancelStagingTask.h"
+#include "PollTask.h"
 
 #include "server/DrainMode.h"
 
@@ -46,7 +46,8 @@ void FetchCancelStaging::fetch()
                         {
                             try
                                 {
-                                    threadpool.start(new CancelStagingTask(*it));
+                            		std::string const & token = boost::get<2>(*it);
+                            		PollTask::cancel(token);
                                 }
                             catch(Err_Custom const & ex)
                                 {
@@ -58,7 +59,8 @@ void FetchCancelStaging::fetch()
                                 }
                         }
 
-                    boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+                    // sleep for 10 seconds
+                    boost::this_thread::sleep(boost::posix_time::milliseconds(10000));
 
                 }
             catch (Err& e)

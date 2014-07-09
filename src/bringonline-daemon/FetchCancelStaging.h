@@ -11,6 +11,8 @@
 #include "common/ThreadPool.h"
 #include "Gfal2Task.h"
 
+#include <boost/tuple/tuple.hpp>
+
 using namespace fts3::common;
 
 class FetchCancelStaging
