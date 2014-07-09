@@ -1523,7 +1523,23 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
                     sql << "INSERT INTO t_optimize_active (source_se, dest_se, active, ema) VALUES (:source_se, :dest_se, 2, 0) ON DUPLICATE KEY UPDATE source_se=:source_se, dest_se=:dest_se",
                         soci::use(source_se), soci::use(dest_se),soci::use(source_se), soci::use(dest_se);
                 }
+        
 
+	    /*send submitted message here / check for deleted as well
+            soci::rowset<soci::row> rs = (
+                                             sql.prepare <<
+                                             "select file_id from t_file where job_id = :job_id",
+                                             soci::use(jobId)
+                                         );
+
+            soci::rowset<soci::row>::const_iterator it;
+            for (it = rs.begin(); it != rs.end(); ++it)
+                {
+                    std::cout << it->get<int>("file_id") << std::endl;
+	        }
+	    */
+		
+		
             sql.commit();
             pairStmt.str(std::string());
             pairStmt.clear();
@@ -4446,16 +4462,22 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                                                  );
 
                     int count = 0;
+		    int drainCounter = 0;
                     bool drain = false;
 
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                         {
+			    if( 100 == drainCounter++)
+			    {
+			    drainCounter = 0; //reset
                             drain = getDrainInternal(sql);
                             if(drain)
                                 {
                                     sql.commit();
+				    sleep(15);
                                     return;
                                 }
+			    }				
 
                             count++;
                             soci::row const& r = *i;
@@ -4490,6 +4512,7 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                                     jobIdStmt.str(std::string());
                                     jobIdStmt.clear();
                                     sql.commit();
+				    sleep(1); // give it sometime to breath
                                 }
                         }
 
@@ -8567,15 +8590,7 @@ void MySqlAPI::updateOptimizerEvolution(soci::session& sql, const std::string & 
         {
             if(throughput > 0 && successRate > 0)
                 {
-                    double agrthroughput = 0.0;
-                    soci::indicator ind = soci::i_ok;
-                    sql << " select sum(throughput) from t_file where file_state='ACTIVE' and source_se=:source_se and dest_se=:dest_se and throughput > 0 ",
-                        soci::use(source_hostname), soci::use(destination_hostname), soci::into(agrthroughput, ind);
-
-                    if(ind == soci::i_null || agrthroughput == 0)
-                        {
-                            agrthroughput = 0.0;
-                        }
+                    double agrthroughput = 0.0;                    
 
                     sql.begin();
                     sql << " INSERT INTO t_optimizer_evolution (datetime, source_se, dest_se, active, throughput, filesize, buffer, nostreams, agrthroughput) "

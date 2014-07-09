@@ -4211,14 +4211,22 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
                     soci::statement insertFileStmt = (sql.prepare << "INSERT INTO t_file_backup SELECT * FROM t_file WHERE job_id = :job_id", soci::use(job_id));
 
                     int count = 0;
+		    int drainCounter = 0;
+		    bool drain = false;
+		    
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                         {
-                            bool drain = getDrainInternal(sql);
+  			    if( 100 == drainCounter++)
+			    {
+			    drainCounter = 0; //reset
+                            drain = getDrainInternal(sql);
                             if(drain)
                                 {
                                     sql.commit();
+				    sleep(15);
                                     return;
                                 }
+			    }				
 
                             count++;
                             soci::row const& r = *i;
@@ -4240,7 +4248,9 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
                                 {
                                     count = 0;
                                     sql.commit();
+				    sleep(1);
                                 }
+				
                         }
                     sql.commit();
 
@@ -8340,15 +8350,7 @@ void OracleAPI::updateOptimizerEvolution(soci::session& sql, const std::string &
         {
             if(throughput > 0 && successRate > 0)
                 {
-                    double agrthroughput = 0.0;
-                    soci::indicator ind = soci::i_ok;
-                    sql << " select sum(throughput) from t_file where file_state='ACTIVE' and source_se=:source_se and dest_se=:dest_se and throughput > 0 ",
-                        soci::use(source_hostname), soci::use(destination_hostname), soci::into(agrthroughput, ind);
-
-                    if(ind == soci::i_null || agrthroughput == 0)
-                        {
-                            agrthroughput = 0.0;
-                        }
+                    double agrthroughput = 0.0;                   
 
                     sql.begin();
                     sql << " INSERT INTO t_optimizer_evolution (datetime, source_se, dest_se, active, throughput, filesize, buffer, nostreams, agrthroughput) "
