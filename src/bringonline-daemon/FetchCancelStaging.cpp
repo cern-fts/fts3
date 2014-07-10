@@ -42,23 +42,19 @@ void FetchCancelStaging::fetch()
                     db::DBSingleton::instance().getDBObjectInstance()->getStagingFilesForCanceling(files);
 
                     std::vector< boost::tuple<int, std::string, std::string> >::const_iterator it;
+                    std::set<std::string> tokens;
+
                     for (it = files.begin(); it != files.end(); ++it)
                         {
-                            try
-                                {
-                            		std::string const & token = boost::get<2>(*it);
-                            		PollTask::cancel(token);
-                                }
-                            catch(Err_Custom const & ex)
-                                {
-                                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
-                                }
-                            catch(...)
-                                {
-                                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception, continuing to see..." << commit;
-                                }
+							std::string const & token = boost::get<2>(*it);
+							tokens.insert(token);
                         }
 
+                    if (!tokens.empty())
+                    	{
+                    		// do the cancellation
+                    		PollTask::cancel(tokens);
+                    	}
                     // sleep for 10 seconds
                     boost::this_thread::sleep(boost::posix_time::milliseconds(10000));
 

@@ -17,6 +17,9 @@
 #include <string>
 #include <set>
 
+#include <algorithm>
+#include <iterator>
+
 #include <boost/thread.hpp>
 
 /**
@@ -74,6 +77,20 @@ public:
     {
     	boost::unique_lock<boost::shared_mutex> lock(mx);
     	active_tokens.erase(token);
+    }
+
+    static void cancel(std::set<std::string> const & remove)
+    {
+    	boost::unique_lock<boost::shared_mutex> lock(mx);
+    	// the result of set difference operation
+    	std::set<string> result;
+    	std::set_difference(
+    			active_tokens.begin(), active_tokens.end(),
+    			remove.begin(), remove.end(),
+    			std::inserter(result, result.end())
+    		);
+    	// swap the active_token with our result
+    	active_tokens.swap(result);
     }
 
 private:
