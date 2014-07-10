@@ -21,6 +21,7 @@ limitations under the License. */
 #include <gfal_api.h>
 #include <string>
 #include <transfer/gfal_transfer.h>
+#include <cstring>
 
 #include "args.h"
 #include "definitions.h"
@@ -45,6 +46,7 @@ limitations under the License. */
 #include <iterator>
 #include <vector>
 #include <boost/algorithm/string.hpp>
+#include "common/panic.h"
 
 using namespace std;
 using boost::thread;
@@ -422,40 +424,13 @@ void taskStatusUpdater(int time)
 }
 
 
-
-std::string log_stack(int sig)
-{
-    std::string stackTrace;
-
-    if(sig == SIGSEGV || sig == SIGBUS || sig == SIGABRT)
-        {
-            const int stack_size = 25;
-            void * array[stack_size]= {0};
-            int nSize = backtrace(array, stack_size);
-            char ** symbols = backtrace_symbols(array, nSize);
-            for (register int i = 0; i < nSize; ++i)
-                {
-                    if(symbols && symbols[i])
-                        {
-                            stackTrace += std::string(symbols[i]) + '\n';
-                        }
-                }
-            if(symbols)
-                {
-                    free(symbols);
-                }
-        }
-    return stackTrace;
-}
-
-
-void signalHandler(int signum)
+void shutdown_callback(int signum, void*)
 {
     Logger& logger = Logger::getInstance();
 
-    logger.WARNING() << "Received signal " << signum << std::endl;
+    logger.WARNING() << "Received signal " << signum << " (" << strsignal(signum) << ")" << std::endl;
 
-    std::string stackTrace = log_stack(signum);
+    std::string stackTrace = fts3::common::Panic::stack_dump();
     if (stackTrace.length() > 0)
         {
             if (propagated == false)
@@ -679,15 +654,7 @@ int main(int argc, char **argv)
     Logger &logger = Logger::getInstance();
 
     // register signals handler
-    signal(SIGINT, signalHandler);
-    signal(SIGUSR1, signalHandler);
-    signal(SIGABRT, signalHandler);
-    signal(SIGSEGV, signalHandler);
-    signal(SIGTERM, signalHandler);
-    signal(SIGILL, signalHandler);
-    signal(SIGBUS, signalHandler);
-    signal(SIGTRAP, signalHandler);
-    signal(SIGSYS, signalHandler);
+    fts3::common::Panic::setup_signal_handlers(shutdown_callback, NULL);
 
     //set_terminate(myterminate);
     //set_unexpected(myunexpected);
