@@ -27,7 +27,7 @@ if 'FTS3WEB_CONFIG' in os.environ:
     FTS3WEB_CONFIG.read(os.environ['FTS3WEB_CONFIG'])
 else:
     FTS3WEB_CONFIG.read('/etc/fts3web/fts3web.ini')
-    
+
 # Load /etc/fts3/fts3config if exists
 fts3cfg = None
 if os.path.exists('/etc/fts3/fts3config'):
@@ -42,14 +42,14 @@ if not FTS3WEB_CONFIG.has_section('database'):
     print >>sys.stderr, "           Using /etc/fts3/fts3config instead"
     if not fts3cfg:
         raise Exception('[database] not present, and could not load /etc/fts3/fts3config')
-    
+
     dbType = fts3cfg.get('fts3', 'DbType')
     dbUser = fts3cfg.get('fts3', 'DbUserName')
     dbPass = fts3cfg.get('fts3', 'DbPassword')
     dbName = fts3cfg.get('fts3', 'DbConnectString')
     dbHost = ''
     dbPort = ''
-    
+
     # Need some translation
     if dbType == 'sqlite':
         dbType = 'sqlite3'
@@ -58,8 +58,8 @@ if not FTS3WEB_CONFIG.has_section('database'):
         if not match:
             raise ValueError('Could not parse %s' % dbName)
         (dbHost, dbPort, dbName) = match.group(1, 3, 4)
-        
-    
+
+
     # Copy to configuration
     FTS3WEB_CONFIG.add_section('database')
     FTS3WEB_CONFIG.set('database', 'engine',   dbType)
@@ -68,14 +68,14 @@ if not FTS3WEB_CONFIG.has_section('database'):
     FTS3WEB_CONFIG.set('database', 'name',     dbName)
     FTS3WEB_CONFIG.set('database', 'host',     dbHost)
     FTS3WEB_CONFIG.set('database', 'port',     dbPort)
-    
+
     if FTS3WEB_CONFIG.get('database', 'engine') == 'sqlite':
         FTS3WEB_CONFIG.set('database', 'engine', 'sqlite3')
 
 if not FTS3WEB_CONFIG.get('site', 'name'):
     FTS3WEB_CONFIG.set('site', 'name', fts3cfg.get('fts3', 'SiteName'))
 
-### 
+###
 if 'BASE_URL' in os.environ:
     BASE_URL = os.environ['BASE_URL']
 else:
@@ -160,7 +160,7 @@ SESSION_ENGINE='django.contrib.sessions.backends.cache'
 # A sample logging configuration
 LOGGING = {
     'version': 1,
-# Uncomment this to get log the queries
+# Uncomment this to log the queries
 #    'handlers': {
 #        'console': {
 #            'class': 'logging.StreamHandler',
