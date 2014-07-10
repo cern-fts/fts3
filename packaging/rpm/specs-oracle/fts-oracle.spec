@@ -1,5 +1,5 @@
 Name: fts-oracle
-Version: 3.2.25
+Version: 3.2.26
 Release: 1%{?dist}
 Summary: File Transfer Service V3 oracle plug-in
 Group: Applications/Internet
@@ -70,7 +70,7 @@ make install DESTDIR=%{buildroot}
 
 
 %changelog
-* Wed Aug 07 2013 Michal Simon <michal.simon@cern.ch> - 3.1.1-2
+* Wed Aug 07 2013 Michal Simon <michal.simon@cern.ch> - 3.2.26-1
   - no longer linking explicitly to boost libraries with '-mt' sufix 
   - sql scripts have been moved to datadir
 * Tue Aug 06 2013 Michal Simon <michal.simon@cern.ch> - 3.1.0-1

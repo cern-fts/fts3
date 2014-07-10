@@ -183,21 +183,37 @@ def get_servers(http_request):
 def get_pervo(http_request):
     not_before = datetime.utcnow() - timedelta(minutes=30)
 
-    query = File.objects.values('file_state', 'vo_name') \
-        .filter(Q(job_finished__gte=not_before) | Q(job_finished__isnull=True)) \
-        .annotate(count=Count('file_state'))
+    # Terminal first
+    terminal = File.objects.values('file_state', 'vo_name') \
+        .filter(job_finished__gte=not_before).annotate(count=Count('file_state'))
 
     if http_request.GET.get('source_se', None):
-        query = query.filter(source_se=http_request.GET['source_se'])
+        terminal = terminal.filter(source_se=http_request.GET['source_se'])
     if http_request.GET.get('dest_se', None):
-        query = query.filter(source_se=http_request.GET['dest_se'])
+        terminal = terminal.filter(source_se=http_request.GET['dest_se'])
 
     per_vo = {}
-    for voJob in query:
-        vo = voJob['vo_name']
+    for row in terminal:
+        vo = row['vo_name']
         if vo not in per_vo:
             per_vo[vo] = {}
-        per_vo[vo][voJob['file_state']] = voJob['count']
+        per_vo[vo][row['file_state']] = row['count']
+
+    # Non terminal, one by one
+    # See ticket #1083
+    for state in ['ACTIVE', 'SUBMITTED']:
+        non_terminal = File.objects.values('vo_name').filter(Q(job_finished__isnull=True) & Q(file_state=state))
+        if http_request.GET.get('source_se', None):
+            non_terminal = non_terminal.filter(source_se=http_request.GET['source_se'])
+        if http_request.GET.get('dest_se', None):
+            non_terminal = non_terminal.filter(source_se=http_request.GET['dest_se'])
+        non_terminal = non_terminal.annotate(count=Count('file_state'))
+
+        for row in non_terminal:
+            vo = row['vo_name']
+            if vo not in per_vo:
+                per_vo[vo] = {}
+            per_vo[vo][state] = row['count']
 
     return per_vo
 

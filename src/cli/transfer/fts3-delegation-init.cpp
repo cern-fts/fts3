@@ -37,14 +37,12 @@ using namespace fts3::cli;
 int main(int ac, char* av[])
 {
 
-    scoped_ptr<DelegationCli> cli;
+    scoped_ptr<DelegationCli> cli(new DelegationCli);
 
     try
         {
             // create and initialize the command line utility
-            cli.reset (
-                getCli<DelegationCli>(ac, av)
-            );
+            cli->parse(ac, av);
             if (!cli->validate()) return 0;
 
             // validate command line options, and return respective gSOAP context

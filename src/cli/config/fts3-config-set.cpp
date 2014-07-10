@@ -42,13 +42,12 @@ using namespace fts3::common;
  */
 int main(int ac, char* av[])
 {
+	unique_ptr<SetCfgCli> cli(new SetCfgCli);
 
     try
         {
             // create and initialize the command line utility
-            unique_ptr<SetCfgCli> cli (
-                getCli<SetCfgCli>(ac, av)
-            );
+            cli->parse(ac, av);
             if (!cli->validate()) return 0;
 
             // validate command line options, and return respective gsoap context

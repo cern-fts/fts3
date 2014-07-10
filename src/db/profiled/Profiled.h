@@ -244,16 +244,6 @@ public:
 
     std::vector< std::pair<std::string, std::string> > getAllPairCfgs();
 
-    void setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<int>& files);
-
-    std::vector< boost::tuple<std::string, std::string, int> >  getVOBringonlineMax();
-
-    std::vector<struct message_bringonline> getBringOnlineFiles(std::string voName, std::string hostName, int maxValue);
-
-    void bringOnlineReportStatus(const std::string & state, const std::string & message, const struct message_bringonline& msg);
-
-    void addToken(const std::string & job_id, int file_id, const std::string & token);
-
     void getCredentials(std::string & vo_name, const std::string & job_id, int file_id, std::string & dn, std::string & dlg_id);
 
     void setMaxStageOp(const std::string& se, const std::string& vo, int val);
@@ -358,8 +348,6 @@ public:
     //file_id / surl / proxy / pinlifetime / bringonlineTimeout
     void getFilesForStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string> >& files);
 
-    //job_id
-    void cancelStaging(std::vector<std::string>& files);
 
     //file_id / surl / token
     void getStagingFilesForCanceling(std::vector< boost::tuple<int, std::string, std::string> >& files);

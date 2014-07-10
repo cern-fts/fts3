@@ -34,17 +34,17 @@ StorageParametrization = {
 # They will be replaced with the values of StorageParametrization
 StorageAreaPairs = [
     (
-        'gsiftp://hepgrid11.ph.liv.ac.uk/dpm/ph.liv.ac.uk/home/%(vo)s/',
-        'gsiftp://dcachepool1.du1.cesnet.cz/data/du.cesnet.cz/%(vo)s/'
+        'gsiftp://storage01.lcg.cscs.ch/pnfs/lcg.cscs.ch/%(vo)s/',
+        'gsiftp://dcdoor01.pic.es:2811/pnfs/pic.es/data/%(vo)s/'
     ),
     (
-        'srm://hepgrid11.ph.liv.ac.uk:8446/srm/managerv2?SFN=/dpm/ph.liv.ac.uk/home/%(vo)s/',
+        'srm://grid002.ft.uam.es:8443/srm/managerv2?SFN=/pnfs/ft.uam.es/data/%(vo)s/',
         'srm://storage01.lcg.cscs.ch:8443/srm/managerv2?SFN=/pnfs/lcg.cscs.ch/%(vo)s/'
     ),
-    (
-        'davs://lxfsra04a04.cern.ch/dpm/cern.ch/home/%(vo)s/',
-        'davs://lxfsra10a01.cern.ch/dpm/cern.ch/home/%(vo)s/'
-    )
+#    (
+#        'davs://lxfsra04a04.cern.ch/dpm/cern.ch/home/%(vo)s/',
+#        'davs://lxfsra10a01.cern.ch/dpm/cern.ch/home/%(vo)s/'
+#    )
 ]
 
 # Logging level

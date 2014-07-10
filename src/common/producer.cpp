@@ -59,7 +59,7 @@ std::string getNewMessageFile(const char* BASE_DIR)
     return tempname;
 }
 
-int writeMessage(const void* buffer, size_t bufsize, const char* BASE_DIR)
+int writeMessage(const void* buffer, size_t bufsize, const char* BASE_DIR, const std::string & extension)
 {
     std::string tempname = getNewMessageFile(BASE_DIR);
     if(tempname.length() <= 0)
@@ -80,7 +80,7 @@ int writeMessage(const void* buffer, size_t bufsize, const char* BASE_DIR)
 
     // Rename to final name (sort of commit)
     // Try twice too
-    std::string renamedFile = tempname + "_ready";
+    std::string renamedFile = tempname +  extension; //"_ready or _staging or _delete";
     int r = rename(tempname.c_str(), renamedFile.c_str());
     if (r == -1)
         r = rename(tempname.c_str(), renamedFile.c_str());
@@ -93,23 +93,34 @@ int writeMessage(const void* buffer, size_t bufsize, const char* BASE_DIR)
 
 int runProducerMonitoring(message_monitoring &msg)
 {
-    return writeMessage(&msg, sizeof(message_monitoring), MONITORING_DIR);
+    return writeMessage(&msg, sizeof(message_monitoring), MONITORING_DIR, "_ready");
 }
 
 
 int runProducerStatus(message &msg)
 {
-    return writeMessage(&msg, sizeof(message), STATUS_DIR);
+    return writeMessage(&msg, sizeof(message), STATUS_DIR, "_ready");
 }
 
 
 int runProducerStall(message_updater &msg)
 {
-    return writeMessage(&msg, sizeof(message_updater), STALLED_DIR);
+    return writeMessage(&msg, sizeof(message_updater), STALLED_DIR, "_ready");
 }
 
 
 int runProducerLog(message_log &msg)
 {
-    return writeMessage(&msg, sizeof(msg), LOG_DIR);
+    return writeMessage(&msg, sizeof(msg), LOG_DIR, "_ready");
+}
+
+int runProducerDeletions(struct message_bringonline &msg)
+{
+    return writeMessage(&msg, sizeof(msg), STATUS_DM_DIR, "_delete");
+}
+
+
+int runProducerStaging(struct message_bringonline &msg)
+{
+    return writeMessage(&msg, sizeof(msg), STATUS_DM_DIR, "_staging");
 }

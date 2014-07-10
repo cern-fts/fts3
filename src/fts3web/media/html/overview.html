@@ -24,34 +24,31 @@
                 <i class="icon-th-list" ng-click="filterBy({dest_se: ''})"></i>
                 Destination
             </th>
-            <th style="width: 5%">
+            <th style="width: 6%">
                 <i class="icon-th-list" ng-click="filterBy({vo: ''})"></i>
                 VO
             </th>
-            <th style="width: 5%" class="numeric">
+            <th style="width: 6%" class="numeric">
                 <span order-by="submitted">Queued</span>
             </th>
-            <th style="width: 5%" class="numeric">
+            <th style="width: 6%" class="numeric">
                 <span order-by="active">Active</span>
             </th>
-            <th style="width: 5%" class="numeric">
+            <th style="width: 6%" class="numeric">
                 <span order-by="finished">Finished</span>
             </th>
-            <th style="width: 5%" class="numeric">
+            <th style="width: 6%" class="numeric">
                 <span order-by="failed">Failed</span>
             </th>
-            <th style="width: 5%" class="numeric">
+            <th style="width: 6%" class="numeric">
                 <span order-by="canceled">Cancel</span>
             </th>
 
-            <th style="width: 8%" class="numeric">
+            <th style="width: 9%" class="numeric">
                 <span order-by="rate">Rate (last 1h)</span>
             </th>
-            <th style="width: 8%" class="numeric">
+            <th style="width: 9%" class="numeric">
                 <span title="VO Throughput" order-by="throughput">VO Thr.</span>
-            </th>
-            <th style="width: 8%" class="numeric">
-                <span title="Last known aggregated throughput" order-by="aggregated">Aggr. Thr.</span>
             </th>
             <th style="width: 2%"></th>
         </tr>
@@ -117,9 +114,6 @@
             <td class="numeric">
                 <span optional-number="o.current" suffix="MB/s" decimals="2"></span>
             </td>
-            <td class="numeric">
-                <span optional-number="o.aggregated" suffix="MB/s" decimals="2"></span>
-            </td>
             <td>
                 <a href="#/optimizer/detailed?source={{o.source_se}}&destination={{o.dest_se}}&time_window={{globalFilter.time_window}}">
                     <i class="icon-signal"></i>
@@ -130,7 +124,7 @@
             <td colspan="11" style="background: #CCC" ng-show="o.show">
                 <dl>
                     <dt>Average transfer duration</dt>
-                    <dd><span optional-number="o.avg_duration" suffix="seconds" decimals="2"></span></dd>                    
+                    <dd><span optional-number="o.avg_duration" suffix="seconds" decimals="2"></span></dd>
                     <dt>Most frequent error</dt>
                     <dd>{{o.most_frequent_error}}</dd>
                 </dl>
@@ -152,9 +146,6 @@
             </td>
             <td class="numeric">
                 <span optional-number="overview.summary.current" suffix="MB/s" decimals="2"></span>
-            </td>
-            <td class="numeric">
-                <span optional-number="overview.summary.aggregated" suffix="MB/s" decimals="2"></span>
             </td>
             <td>&nbsp;</td>
         </tr>

@@ -148,12 +148,12 @@ void msg_ifce::SendTransferStartMessage(transfer_completed *tr_started)
             text.append(tr_started->srm_space_token_dest);
             text.append("\"");
 
-            /*enable when user_dn
+            //enable when user_dn
+            /*
                 text.append(",\"$q$\":\"");
                 text.append(tr_started->user_dn);
                 text.append("\"");
             */
-
 
             text.append("}");
 
@@ -353,9 +353,9 @@ void msg_ifce::SendTransferFinishMessage(transfer_completed *tr_completed)
             text.append("\"");
 
             /*enable when user_dn
-                text.append(",\"$15$\":\"");
-                text.append(tr_completed->user_dn);
-                text.append("\"");
+            text.append(",\"$15$\":\"");
+            text.append(tr_completed->user_dn);
+            text.append("\"");
             */
 
             text.append("}");

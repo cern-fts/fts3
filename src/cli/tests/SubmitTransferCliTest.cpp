@@ -74,9 +74,8 @@ BOOST_AUTO_TEST_CASE (SubmitTransferCli_bulk_submission)
     // argument count
     int ac = 5;
 
-    unique_ptr<SubmitTransferCli> cli (
-        getCli<SubmitTransferCli>(ac, av)
-    );
+    unique_ptr<SubmitTransferCli> cli (new SubmitTransferCli);
+    cli->parse(ac, av);
 
 
     cli->validate();
@@ -112,10 +111,8 @@ BOOST_AUTO_TEST_CASE (SubmitTransferCli_other_options)
     // argument count
     int ac = 6;
 
-    unique_ptr<SubmitTransferCli> cli (
-        getCli<SubmitTransferCli>(ac, av)
-    );
-
+    unique_ptr<SubmitTransferCli> cli (new SubmitTransferCli);
+    cli->parse(ac, av);
     cli->validate();
 
     BOOST_CHECK(cli->isBlocking());
@@ -136,10 +133,8 @@ BOOST_AUTO_TEST_CASE (SubmitTransferCli_submission_no_job)
     // argument count
     int ac = 3;
 
-    unique_ptr<SubmitTransferCli> cli (
-        getCli<SubmitTransferCli>(ac, av)
-    );
-
+    unique_ptr<SubmitTransferCli> cli (new SubmitTransferCli);
+    cli->parse(ac, av);
     cli->validate();
 
     BOOST_CHECK_THROW(cli->getFiles(), bad_option);
@@ -161,10 +156,8 @@ BOOST_AUTO_TEST_CASE (SubmitTransferCli_submission_no_checksum)
     // argument count
     int ac = 5;
 
-    unique_ptr<SubmitTransferCli> cli (
-        getCli<SubmitTransferCli>(ac, av)
-    );
-
+    unique_ptr<SubmitTransferCli> cli (new SubmitTransferCli);
+    cli->parse(ac, av);
     cli->validate();
 
     BOOST_CHECK_EQUAL(cli->getSource(), "srm://source/file.in");
@@ -194,10 +187,8 @@ BOOST_AUTO_TEST_CASE (SubmitTransferCli_submission_with_checksum)
     // argument count
     int ac = 6;
 
-    unique_ptr<SubmitTransferCli> cli (
-        getCli<SubmitTransferCli>(ac, av)
-    );
-
+    unique_ptr<SubmitTransferCli> cli (new SubmitTransferCli);
+    cli->parse(ac, av);
     cli->validate();
 
     BOOST_CHECK(cli->getSource().compare("srm://source/file.in") == 0);
@@ -232,10 +223,8 @@ BOOST_FIXTURE_TEST_CASE (SubmitTransferCli_parameters, SubmitTransferCli)
     // argument count
     int ac = 15;
 
-    unique_ptr<SubmitTransferCli> cli (
-        getCli<SubmitTransferCli>(ac, av)
-    );
-
+    unique_ptr<SubmitTransferCli> cli (new SubmitTransferCli);
+    cli->parse(ac, av);
     cli->validate();
 
     map<string, string> params = cli->getParams();

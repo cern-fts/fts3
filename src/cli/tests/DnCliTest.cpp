@@ -49,9 +49,8 @@ BOOST_AUTO_TEST_CASE (DnCli_short_options)
     // argument count
     int ac = 5;
 
-    unique_ptr<DnCli> cli (
-        getCli<DnCli>(ac, av)
-    );
+    unique_ptr<DnCli> cli (new DnCli);
+    cli->parse(ac, av);
 
     // all 5 parameters should be available in vm variable
     BOOST_CHECK(!cli->getUserDn().empty());
@@ -73,9 +72,8 @@ BOOST_AUTO_TEST_CASE (DnCli_long_options)
 
     int ac = 5;
 
-    unique_ptr<DnCli> cli (
-        getCli<DnCli>(ac, av)
-    );
+    unique_ptr<DnCli> cli (new DnCli);
+    cli->parse(ac, av);
 
     // all 5 parameters should be available in vm variable
     BOOST_CHECK(!cli->getUserDn().empty());

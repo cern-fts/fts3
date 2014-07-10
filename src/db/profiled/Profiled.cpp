@@ -650,37 +650,6 @@ std::vector< std::pair<std::string, std::string> > ProfiledDB::getAllPairCfgs()
 }
 
 
-void ProfiledDB::setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<int>& files)
-{
-    PROFILE_PREFIXED("DB::", db->setFilesToNotUsed(jobId, fileIndex, files));
-}
-
-
-std::vector< boost::tuple<std::string, std::string, int> > ProfiledDB::getVOBringonlineMax()
-{
-    PROFILE_PREFIXED("DB::", return db->getVOBringonlineMax());
-}
-
-
-std::vector<struct message_bringonline> ProfiledDB::getBringOnlineFiles(std::string voName, std::string hostName, int maxValue)
-{
-    PROFILE_PREFIXED("DB::", return db->getBringOnlineFiles(voName, hostName, maxValue));
-}
-
-
-void ProfiledDB::bringOnlineReportStatus(const std::string & state,
-        const std::string & message, const struct message_bringonline& msg)
-{
-    PROFILE_PREFIXED("DB::", db->bringOnlineReportStatus(state, message, msg));
-}
-
-
-void ProfiledDB::addToken(const std::string & job_id, int file_id, const std::string & token)
-{
-    PROFILE_PREFIXED("DB::", db->addToken(job_id, file_id, token));
-}
-
-
 void ProfiledDB::getCredentials(std::string & vo_name, const std::string & job_id, int file_id, std::string & dn, std::string & dlg_id)
 {
     PROFILE_PREFIXED("DB::", db->getCredentials(vo_name, job_id, file_id, dn, dlg_id));
@@ -950,11 +919,6 @@ void ProfiledDB::getFilesForStaging(std::vector< boost::tuple<std::string, std::
     PROFILE_PREFIXED("DB::", db->getFilesForStaging(files));
 }
 
-//job_id
-void ProfiledDB::cancelStaging(std::vector<std::string>& files)
-{
-    PROFILE_PREFIXED("DB::", db->cancelStaging(files));
-}
 
 //file_id / surl / token
 void ProfiledDB::getStagingFilesForCanceling(std::vector< boost::tuple<int, std::string, std::string> >& files)

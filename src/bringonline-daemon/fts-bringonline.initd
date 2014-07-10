@@ -1,9 +1,9 @@
 #!/bin/sh
 #
-# APPNAME - <summary>
+# FTS3 - File transfer service
 #
 # chkconfig:    - 80 20
-# description:  Enable a run of fts bringonline daemon
+# description:  Enable a run of fts daemon for deletions and staging ops
 # processname:  fts_bringonline
 
 # http://fedoraproject.org/wiki/FCNewInit/Initscripts
@@ -27,43 +27,83 @@ prog=$(basename $exec)
 
 [ -e /etc/sysconfig/$prog ] && . /etc/sysconfig/$prog
 
-lockfile=/var/lock/subsys/fts-bringonline
+lockfile=/var/lock/subsys/fts-dm
 export GLOBUS_THREAD_MODEL=pthread
-export X509_USER_CERT=/etc/grid-security/fts3hostcert.pem
-export X509_USER_KEY=/etc/grid-security/fts3hostkey.pem
 
 start() {
     echo -n $"Starting $prog: "
     # if not running, start it up here, usually something like "daemon $exec"
-    if [ ! -f $lockfile ] ; then
-    touch "$lockfile" && success || failure 
-    sleep 15  
-    daemon fts_bringonline
-    retval=$?
-    echo
-    [ $retval -eq 0 ] && touch $lockfile
-    return $retval
+    pgrep $prog
+    retval=$?    
+    if [ ! -f $lockfile ] && [ $retval -eq 1 ] ; then
+        touch "$lockfile" && success || failure
+        daemon $prog -t 25
+        retval=$?
+        echo
+        [ $retval -eq 0 ] && touch $lockfile
+
+        # Wait for a while to check if it did start
+        # See https://svnweb.cern.ch/trac/fts3/ticket/969
+        echo "Wait for 23 seconds..."
+        sleep 23
+        pgrep $prog &> /dev/null
+        retval=$?
+        if [ $retval -ne 0 ]; then
+            failure
+            echo "The process died unexpectedly!"
+            rm $lockfile
+        else
+            echo
+            success
+        fi
+
+        return $retval
     else
-        pgrep fts_bringonline
-	retval=$?
+        pgrep $prog
+        retval=$?
         if [ -f $lockfile ] && [ $retval -eq 1 ] ; then
-		restart		
-	else
-        	echo "Already running"
-		return $retval
-	fi
-	
+                restart
+        else
+                echo "Already running"
+                return $retval
+        fi
     fi
 }
 
 stop() {
     echo -n $"Stopping $prog: "
-    # stop it here, often "killproc $prog"
-    rm -f "$lockfile" && success || failure 
-    pkill -9 fts_bringonline
-    retval=$?
+    # Is running?
+    pgrep $prog &> /dev/null
+    if [ $? -ne 0 ]; then
+        failure
+        if [ -f "$lockfile" ]; then
+            rm -f "$lockfile"
+            echo "$prog is not running, but a lock file was found"
+        else
+            echo "$prog is not running"
+        fi
+        return 1
+    fi
+    # Kill it gracefully and give some time
+    killproc $prog -2
+    sleep 30
+    pgrep $prog &> /dev/null
+    if [ $? -eq 0 ]; then
+        # Force it
+        killproc $prog -9
+        retval=$?
+    else
+        retval=0
+    fi
+
+    if [ $retval -eq 0 ]; then
+        rm -f "$lockfile"
+        success
+    else
+        failure
+    fi
+
     echo
-    [ $retval -eq 0 ] && rm -f $lockfile
     return $retval
 }
 
@@ -86,7 +126,7 @@ case "$1" in
         if status $prog >/dev/null ; then
             restart
         fi
-	;;
+        ;;
     reload)
         # If config can be reloaded without restarting, implement it here,
         # remove the "exit", and add "reload" to the usage message below.

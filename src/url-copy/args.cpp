@@ -43,10 +43,11 @@ const option UrlCopyOpts::long_options[] =
     {"global-timeout",    no_argument,       0, 'Z'},
     {"sec-per-mb",    	  required_argument, 0, 'V'},
     {"user-dn",    	  required_argument, 0, 'Y'},
+    {"alias",    	  required_argument, 0, '7'},
     {0, 0, 0, 0}
 };
 
-const char UrlCopyOpts::short_options[] = "PONM:L:K:J:I:H:GRFD:E:C:z:A:t:a:b:c:de:f:h:ij:k:B:5:UZV:Y:";
+const char UrlCopyOpts::short_options[] = "PONM:L:K:J:I:H:GRFD:E:C:z:A:t:a:b:c:de:f:h:ij:k:B:5:UZV:Y:7:";
 
 
 UrlCopyOpts::UrlCopyOpts(): monitoringMessages(false), autoTunned(false),
@@ -200,6 +201,9 @@ int UrlCopyOpts::parse(int argc, char * const argv[])
                             break;
                         case 'Y':
                             user_dn = optarg;
+                            break;
+                        case '7':
+                            alias = optarg;
                             break;
                         case 'k':
                             sourceTokenDescription = optarg;

@@ -4,7 +4,7 @@
 %global selinux_variants mls targeted
 
 Name: fts
-Version: 3.2.25
+Version: 3.2.26
 Release: 1%{?dist}
 Summary: File Transfer Service V3
 Group: System Environment/Daemons
@@ -13,7 +13,7 @@ URL: https://svnweb.cern.ch/trac/fts3/wiki
 # The source for this package was pulled from upstream's vcs.  Use the
 # following commands to generate the tarball:
 #  svn export https://svn.cern.ch/reps/fts3/trunk fts3
-#  tar -czvf fts-3.2.25-1.tar.gz fts3
+#  tar -czvf fts-3.2.25-2.tar.gz fts3
 Source0: https://grid-deployment.web.cern.ch/grid-deployment/dms/fts3/tar/%{name}-%{version}.tar.gz
 Source1: fts.te
 Source2: fts.fc
@@ -392,6 +392,7 @@ fi
 %{_bindir}/fts-transfer-status
 %{_bindir}/fts-transfer-submit
 %{_bindir}/fts-transfer-cancel
+%{_bindir}/fts-transfer-delete
 %{_bindir}/fts-transfer-snapshot
 %{_bindir}/fts-delegation-init
 
@@ -444,13 +445,11 @@ fi
 %{_datadir}/selinux/*/fts.pp
 
 %changelog
-* Mon May 12 2014 Michal Simon <michal.simon@cern.ch> - 3.2.25-1
-  - Update for new upstream release
-* Tue Feb 04 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.24-4
+* Tue Feb 04 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.26-1
   - introduced dist back in the release
-* Tue Jan 14 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.24-3
+* Tue Jan 14 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.25-3
   - using cmake28
-* Mon Jan 13 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.24-2
+* Mon Jan 13 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.25-2
   - separated rpms for messaging and infosys subsystems
 * Mon Nov 18 2013 Alejandro Alvarez Ayllon <aalvarez@cern.ch> - 3.1.33-2
   - Added missing changelog entry

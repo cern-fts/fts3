@@ -55,14 +55,12 @@ using namespace fts3::common;
 int main(int ac, char* av[])
 {
     JsonOutput::create();
-    scoped_ptr<CancelCli> cli;
+    scoped_ptr<CancelCli> cli(new CancelCli);
 
     try
         {
             // create and initialize the command line utility
-            cli.reset(
-                getCli<CancelCli>(ac, av)
-            );
+            cli->parse(ac, av);
             if (!cli->validate()) return 0;
 
             if (cli->rest())

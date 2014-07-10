@@ -190,27 +190,22 @@ public:
 struct message_bringonline: public message_base
 {
 public:
-    message_bringonline():job_id(""),url(""), proxy(""), token(""), retries(0),
-        file_id(0),started(false),timestamp(0),pinlifetime(0),bringonlineTimeout(0),
-        nPolls(0), nextPoll(0)
+    message_bringonline(): file_id(0)
     {
+        memset(job_id, 0, sizeof (job_id));
+        memset(transfer_status, 0, sizeof (transfer_status));
+        memset(transfer_message, 0, sizeof (transfer_message));
     }
 
     ~message_bringonline()
     {
     }
-    std::string job_id;
-    std::string url;
-    std::string proxy;
-    std::string token;
-    int retries;
+
     int file_id;
-    bool started;
-    time_t timestamp;
-    int pinlifetime;
-    int bringonlineTimeout;
-    int nPolls;
-    time_t nextPoll;
+    char job_id[JOB_ID_LEN];
+    char transfer_status[TRANFER_STATUS_LEN];
+    char transfer_message[TRANSFER_MESSAGE];
+
 };
 
 
@@ -238,6 +233,11 @@ public:
     std::string job_metadata;
     std::string file_metadata;
     std::string timestamp;
+    /*
+    std::string user_dn;
+    std::string source_url;
+    std::string dest_url;
+    */
 
 };
 

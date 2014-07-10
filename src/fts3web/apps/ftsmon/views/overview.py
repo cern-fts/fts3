@@ -17,6 +17,7 @@
 from datetime import datetime, timedelta
 from django.db import connection
 from django.db.models import Count, Avg
+import itertools
 import types
 import sys
 
@@ -118,6 +119,76 @@ class OverviewExtended(object):
             return self.objects[indexes]
 
 
+def _get_state_vo_count_throughput(cursor, source, destination, vo_list, not_before):
+    """
+    Group by are really slow, so iterate over the vos and states, and do it ourselves
+    """
+    query_params = [source, destination, None, None]
+
+    # Files in terminal state
+    if not_before:
+        file_states = ['FINISHED', 'FAILED', 'CANCELED']
+        query = """
+            SELECT COUNT(file_id), 0
+            FROM t_file
+            WHERE source_se = %%s AND dest_se = %%s AND vo_name = %%s AND file_state = %%s AND job_finished >= %s
+            ORDER BY NULL
+        """ % _db_to_date()
+        query_params.append(not_before)
+    # Files in non-terminal state
+    else:
+        file_states = ['SUBMITTED', 'ACTIVE']
+        query = """
+            SELECT COUNT(file_id), SUM(throughput)
+            FROM t_file
+            WHERE source_se = %s AND dest_se = %s AND vo_name = %s AND file_state = %s
+            ORDER BY NULL
+        """
+
+    result = list()
+    for vo in vo_list:
+        query_params[2] = vo
+        for state in file_states:
+            query_params[3] = state
+            cursor.execute(query, query_params)
+            for row in cursor.fetchall():
+                result.append((vo, state, row[0], row[1]))
+
+    return result
+
+
+def _get_pairs(cursor, not_before, filters):
+    pairs_params = []
+    pairs_query = "SELECT DISTINCT source_se, dest_se FROM t_file WHERE "
+    if not_before:
+        pairs_query += " job_finished >= %s " % _db_to_date()
+        pairs_params.append(not_before)
+    else:
+        pairs_query += " job_finished IS NULL "
+
+    if filters['source_se']:
+        pairs_query += " AND source_se = %s"
+        pairs_params.append(filters['source_se'])
+    if filters['dest_se']:
+        pairs_query += " AND dest_se = %s"
+        pairs_params.append(filters['dest_se'])
+
+    cursor.execute(pairs_query, pairs_params)
+    return cursor.fetchall()
+
+
+def _get_vos(cursor, not_before):
+    vo_query = "SELECT DISTINCT vo_name FROM t_job "
+    vo_params = []
+    if not_before:
+        vo_query += " WHERE job_finished >= %s" % _db_to_date()
+        vo_params.append(not_before)
+    else:
+        vo_query += " WHERE job_finished IS NULL"
+    cursor.execute(vo_query, vo_params)
+    return [row[0] for row in cursor.fetchall()]
+
+
 @jsonify
 def get_overview(http_request):
     filters = setup_filters(http_request)
@@ -128,67 +199,28 @@ def get_overview(http_request):
 
     cursor = connection.cursor()
 
+    # Get all vos
+    all_vos = list()
+    if filters['vo']:
+        all_vos.append(filters['vo'])
+    else:
+        all_vos = _get_vos(cursor, not_before) +  _get_vos(cursor, None)
+
     # Get all pairs first
-    pairs_query = "SELECT DISTINCT source_se, dest_se FROM t_file WHERE 1=1"
-    pairs_params = []
-    if filters['source_se']:
-        pairs_query += " AND source_se = %s"
-        pairs_params.append(filters['source_se'])
-    if filters['dest_se']:
-        pairs_query += " AND dest_se = %s"
-        pairs_params.append(filters['dest_se'])
+    pairs = _get_pairs(cursor, not_before, filters) + _get_pairs(cursor, None, filters)
 
     triplets = {}
+    for (source, dest) in pairs:
+        non_terminal = _get_state_vo_count_throughput(cursor, source, dest, all_vos, None)
+        terminal = _get_state_vo_count_throughput(cursor, source, dest, all_vos, not_before)
 
-    cursor.execute(pairs_query, pairs_params)
-    for (source, dest) in cursor.fetchall():
-        query = """
-        SELECT file_state, vo_name, count(file_id),
-               SUM(CASE WHEN file_state = 'ACTIVE' THEN throughput ELSE 0 END)
-        FROM t_file
-        WHERE (job_finished IS NULL OR job_finished >= %s)
-              AND source_se = %%s AND dest_se = %%s
-              AND file_state in ('READY','ACTIVE','FINISHED','FAILED','CANCELED','SUBMITTED')
-        """ % _db_to_date()
-        params = [not_before.strftime('%Y-%m-%d %H:%M:%S'),
-                  source, dest]
-        if filters['vo']:
-            query += " AND vo_name = %s"
-            params.append(filters['vo'])
-        query += " GROUP BY file_state, vo_name ORDER BY NULL"
-
-        all_vos = []
-        cursor.execute(query, params)
-        for row in cursor.fetchall():
-            all_vos.append(row[1])
-            triplet_key = (source, dest, row[1])
+        for row in itertools.chain(non_terminal, terminal):
+            triplet_key = (source, dest, row[0])
             triplet = triplets.get(triplet_key, dict())
-            triplet[row[0].lower()] = row[2]
+            triplet[row[1].lower()] = row[2]
             if row[3]:
                 triplet['current'] = triplet.get('current', 0) + row[3]
             triplets[triplet_key] = triplet
-
-        # Snapshot for the pair
-        # Can not get it per VO :(
-        query = _db_limit("""
-        SELECT agrthroughput
-        FROM t_optimizer_evolution
-        WHERE source_se = %%s AND dest_se = %%s
-            AND datetime >= %s
-        ORDER BY datetime DESC
-        """ % _db_to_date(), 1)
-
-        params = [source, dest, not_before.strftime('%Y-%m-%d %H:%M:%S')]
-
-        cursor.execute(query, params)
-        aggregated_total = cursor.fetchall()
-        if len(aggregated_total):
-            aggregated_total = aggregated_total[0][0]
-            if aggregated_total:
-                for vo in all_vos:
-                    triplet_key = (source, dest, vo)
-                    triplets[triplet_key]['aggregated'] = aggregated_total
-
 
     # Limitations
     limit_query = "SELECT source_se, dest_se, throughput, active FROM t_optimize WHERE throughput IS NOT NULL or active IS NOT NULL"
@@ -238,13 +270,6 @@ def get_overview(http_request):
         else:
              # NULL current last
             sorting_method = lambda o: (o.get('current', sys.maxint), o.get('active', 0))
-    elif order_by == 'aggregated':
-        if order_desc:
-            # NULL current first (so when reversing, they are last)
-            sorting_method = lambda o: (o.get('aggregated', None), o.get('active', 0))
-        else:
-             # NULL current last
-            sorting_method = lambda o: (o.get('aggregated', sys.maxint), o.get('active', 0))
     elif order_by == 'rate':
         sorting_method = lambda o: (o.get('rate', 0), o.get('finished', 0))
     else:
@@ -258,7 +283,6 @@ def get_overview(http_request):
         'failed': sum(map(lambda o: o.get('failed', 0), objs), 0),
         'canceled': sum(map(lambda o: o.get('canceled', 0), objs), 0),
         'current': sum(map(lambda o: o.get('current', 0), objs), 0),
-        'aggregated': sum(map(lambda o: o.get('aggregated', 0), objs), 0),
     }
     if summary['finished'] > 0 or summary['failed'] > 0:
         summary['rate'] = (float(summary['finished']) / (summary['finished'] + summary['failed'])) * 100

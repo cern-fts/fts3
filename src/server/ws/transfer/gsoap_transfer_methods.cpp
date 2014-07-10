@@ -75,7 +75,7 @@ int fts3::impltns__fileDelete(soap* ctx, tns3__deleteFiles* fileNames,impltns__f
             string dn = cgsi.getClientDn();
 
             string hostN;
-            const regex fileUrlRegex("(.+://[a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
+            const regex fileUrlRegex("([a-zA-Z][a-zA-Z0-9+\.-]*://[a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
 
             multimap<string, string> rulsHost;
             vector<string>::iterator it;
@@ -87,7 +87,7 @@ int fts3::impltns__fileDelete(soap* ctx, tns3__deleteFiles* fileNames,impltns__f
                     Uri u0 = Uri::Parse(*it);
                     if(!(u0.Host.length() != 0 && u0.Protocol.length() != 0 && u0.Path.length() != 0))
                         {
-                            string errMsg2 = "Something not right with url: " + (*it);
+                            string errMsg2 = "Something is not right with uri: " + (*it);
                             throw Err_Custom(errMsg2);
                         }
                     smatch what;
@@ -1124,12 +1124,9 @@ int fts3::impltns__cancel(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOREstrin
 
                                     AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::TRANSFER, job.get());
 
-                                    // check if the job ID exists
-                                    scoped_ptr<TransferJobs> ptr (
-                                        DBSingleton::instance().getDBObjectInstance()->getTransferJob(*it, false)
-                                    );
+                                  
                                     // if not throw an exception
-                                    if (!ptr.get()) throw Err_Custom("Transfer job: " + *it + " does not exist!");
+                                    if (!job.get()) throw Err_Custom("Transfer job: " + *it + " does not exist!");
 
                                     vector<JobStatus*> status;
                                     DBSingleton::instance().getDBObjectInstance()->getTransferJobStatus(*it, false, status);
@@ -1244,15 +1241,10 @@ int fts3::impltns__cancel2(soap* ctx, impltns__ArrayOf_USCOREsoapenc_USCOREstrin
                         DBSingleton::instance().getDBObjectInstance()->getTransferJob(*it, false)
                     );
 
-                    AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get());
-
-                    // check if the job ID exists
-                    scoped_ptr<TransferJobs> ptr (
-                        DBSingleton::instance().getDBObjectInstance()->getTransferJob(*it, false)
-                    );
+                    AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get());                    
 
                     // if not add appropriate response
-                    if (!ptr.get())
+                    if (!job.get())
                         {
                             resp_job_ids.push_back(*it);
                             resp_job_status.push_back("DOES_NOT_EXIST");

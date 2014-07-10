@@ -168,22 +168,21 @@ bool CliBase::validate()
     // if endpoint could not be determined, we cannot do anything
     if (endpoint.empty())
         {
-            msgPrinter.error_msg("Failed to determine the endpoint");
-            return false;
+    		throw bad_option("service", "failed to determine the endpoint");
         }
 
     return true;
 }
 
-GSoapContextAdapter& CliBase::getGSoapContext(bool init)
+GSoapContextAdapter& CliBase::getGSoapContext()
 {
     // create and initialize gsoap context
     ctx = new GSoapContextAdapter(endpoint);
-    if (init) ctx->init();
 
     // if verbose print general info
     if (isVerbose())
         {
+    		ctx->getInterfaceDeatailes();
             msgPrinter.endpoint(ctx->getEndpoint());
             msgPrinter.service_version(ctx->getVersion());
             msgPrinter.service_interface(ctx->getInterface());

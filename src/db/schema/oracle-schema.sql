@@ -897,6 +897,14 @@ CREATE INDEX t_url_datetime ON t_turl(datetime);
 CREATE INDEX t_url_finish ON t_turl(finish);
 CREATE INDEX t_url_fail ON t_turl(fail);
 
+
+CREATE INDEX t_dm_job_id  ON t_dm(job_id);
+CREATE INDEX t_dm_all  ON t_dm(vo_name, source_se, file_state);
+CREATE INDEX t_dm_source  ON t_dm(source_se, file_state);
+CREATE INDEX t_dm_state  ON t_dm(file_state, hashed_id);
+
+
+
 --
 --
 -- Schema version

@@ -5,7 +5,7 @@
 %global __provides_exclude_from ^%{python_sitearch}/fts/.*\\.so$
 
 Name: fts-client
-Version: 3.2.25
+Version: 3.2.26
 Release: 1%{?dist}
 Summary: File Transfer Service V3
 Group: Applications/Internet
@@ -14,7 +14,7 @@ URL: https://svnweb.cern.ch/trac/fts3/wiki
 # The source for this package was pulled from upstream's vcs.  Use the
 # following commands to generate the tarball:
 #  svn export https://svn.cern.ch/reps/fts3/trunk fts3
-#  tar -czvf fts-3.2.25-1.tar.gz fts3
+#  tar -czvf fts-3.2.25-2.tar.gz fts3
 Source0:   https://grid-deployment.web.cern.ch/grid-deployment/dms/fts3/tar/%{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
@@ -115,6 +115,7 @@ make install DESTDIR=%{buildroot}
 %{_bindir}/fts-transfer-list
 %{_bindir}/fts-transfer-status
 %{_bindir}/fts-transfer-submit
+%{_bindir}/fts-transfer-delete
 %{_bindir}/fts-transfer-cancel
 %{_bindir}/fts-transfer-snapshot
 %{_bindir}/fts-delegation-init
@@ -123,6 +124,7 @@ make install DESTDIR=%{buildroot}
 
 %files -n fts-libs
 %defattr(-,root,root,-)
+%{_libdir}/libfts_common.so*
 %{_libdir}/libfts_cli_common.so*
 %{_libdir}/libfts_ws_ifce_client.so*
 %{_libdir}/libfts_ws_ifce_server.so*
@@ -136,8 +138,6 @@ make install DESTDIR=%{buildroot}
 %{python_sitearch}/fts
 
 %changelog
-* Mon May 12 2014 Michal Simon <michal.simon@cern.ch> - 3.2.25-1
-  - Update for new upstream release
-* Tue Apr 08 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.24-5
+* Tue Apr 08 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.26-1
   - Forked client-only spec file for SL5
 

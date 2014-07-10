@@ -50,6 +50,8 @@ SingleTrStateInstance::SingleTrStateInstance(): monitoringMessages(true)
     std::string monitoringMessagesStr = theServerConfig().get<std::string > ("MonitoringMessaging");
     if(monitoringMessagesStr == "false")
         monitoringMessages = false;
+
+    ftsAlias = theServerConfig().get<std::string > ("Alias");
 }
 
 SingleTrStateInstance::~SingleTrStateInstance()
@@ -139,6 +141,14 @@ void SingleTrStateInstance::constructJSONMsg(struct message_state* state)
 
     std::ostringstream json_message;
     json_message << "SS {";
+
+    /*Enable and fix when ready
+    json_message << "\"ftsAlias\":" << "\"" << ftsAlias << "\",";
+    json_message << "\"user_dn\":" << "\"" << state->user_dn << "\",";
+    json_message << "\"source_url\":" << "\"" << state->source_url << "\",";
+    json_message << "\"dest_url\":" << "\"" << state->dest_url << "\",";
+    */
+
     json_message << "\"vo_name\":" << "\"" << state->vo_name << "\",";
     json_message << "\"source_se\":" << "\"" << state->source_se << "\",";
     json_message << "\"dest_se\":" << "\"" << state->dest_se << "\",";
@@ -156,7 +166,7 @@ void SingleTrStateInstance::constructJSONMsg(struct message_state* state)
         json_message << "\"file_metadata\":" << state->file_metadata << ",";
     else
         json_message << "\"file_metadata\":\"\",";
-    json_message << "\"timestamp\":" << "\"" << _getTrTimestampUTC() << "\"";
+    json_message << "\"timestamp\":" << "\"" << state->timestamp << "\"";
     json_message << "}";
 
     struct message_monitoring message;
@@ -165,7 +175,6 @@ void SingleTrStateInstance::constructJSONMsg(struct message_state* state)
         {
             strncpy(message.msg, std::string(json_message.str()).c_str(), sizeof(message.msg));
             message.msg[sizeof(message.msg) - 1] = '\0';
-            message.timestamp = milliseconds_since_epoch();
             runProducerMonitoring( message );
         }
     else

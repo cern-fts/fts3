@@ -75,6 +75,8 @@ private:
     // assignment operator is private
     static boost::scoped_ptr<SingleTrStateInstance> i;
 
+    std::string ftsAlias;
+
     bool monitoringMessages;
 };
 
