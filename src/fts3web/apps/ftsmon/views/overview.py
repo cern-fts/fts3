@@ -220,7 +220,11 @@ def get_overview(http_request):
             triplet[row[1].lower()] = row[2]
             if row[3]:
                 triplet['current'] = triplet.get('current', 0) + row[3]
-            triplets[triplet_key] = triplet
+
+            # Only if at least a value is != 0
+            total = sum(map(lambda s: triplet.get(s, 0), ['submitted', 'active', 'finished', 'failed', 'canceled']))
+            if total > 0:
+                triplets[triplet_key] = triplet
 
     # Limitations
     limit_query = "SELECT source_se, dest_se, throughput, active FROM t_optimize WHERE throughput IS NOT NULL or active IS NOT NULL"
