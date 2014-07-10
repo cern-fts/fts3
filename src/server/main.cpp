@@ -42,6 +42,7 @@ limitations under the License. */
 #include "profiler/Profiler.h"
 #include <fstream>
 #include "panic.h"
+#include <execinfo.h>
 
 namespace fs = boost::filesystem;
 using boost::thread;
@@ -337,12 +338,55 @@ void checkInitDirs()
         }
 }
 
+static void shutdown_callback(int signal, void*)
+{
+    int exit_status = 0;
+
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Caught signal " << signal
+            << " (" << strsignal(signal) << ")" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Future signals will be ignored!" << commit;
+
+    stopThreads = true;
+
+    // Some require traceback
+    switch (signal)
+        {
+            case SIGABRT: case SIGSEGV: case SIGTERM:
+            case SIGILL: case SIGFPE: case SIGBUS:
+            case SIGTRAP: case SIGSYS:
+                exit_status = -signal;
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Stack trace: \n" << Panic::stack_dump() << commit;
+                break;
+            default:
+                break;
+        }
+
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopping" << commit;
+    sleep(15);
+    try
+        {
+            theServer().stop();
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS db connections closing" << commit;
+            db::DBSingleton::tearDown();
+            sleep(10);
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS db connections closed" << commit;
+        }
+    catch(...)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unexpected exception when forcing the database teardown" << commit;
+        }
+
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopped" << commit;
+    _exit(exit_status);
+}
+
 
 int DoServer(int argc, char** argv)
 {
     setenv("GLOBUS_THREAD_MODEL","pthread",1); //reset it
     // Register signal handlers
-    Panic::setup_signal_handlers();
+    Panic::setup_signal_handlers(shutdown_callback, NULL);
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Signal handlers installed" << commit;
 
     try
         {

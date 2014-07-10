@@ -13,13 +13,13 @@ See the License for the specific language governing permissions and
 limitations under the License. */
 
 #include "panic.h"
-#include "server.h"
-#include "common/logger.h"
-#include "db/generic/SingleDbInstance.h"
 #include <cstring>
 #include <execinfo.h>
 #include <semaphore.h>
 #include <signal.h>
+
+#include <string>
+#include <boost/thread.hpp>
 
 /*
  * This file contains the logic to handle signals, logging them and
@@ -30,7 +30,7 @@ limitations under the License. */
  * happen in a separate thread, outside the signal handling logic.
  */
 
-using namespace FTS3_SERVER_NAMESPACE;
+using namespace FTS3_NAMESPACE;
 using namespace FTS3_COMMON_NAMESPACE;
 
 static sem_t semaphore;
@@ -39,84 +39,22 @@ static int raised_signal = 0;
 // Minimalistic logic inside a signal!
 static void signal_handler(int signal)
 {
-    extern bool stopThreads;
-
-    stopThreads = true;
     raised_signal = signal;
-
     // From man sem_post
     // sem_post() is async-signal-safe: it may be safely called within a signal handler.
     sem_post(&semaphore);
 }
 
-// Log the stack
-static void log_stack(void)
-{
-    std::string stackTrace;
-
-    const int stack_size = 25;
-    void * array[stack_size]= {0};
-    int nSize = backtrace(array, stack_size);
-    char ** symbols = backtrace_symbols(array, nSize);
-    for (register int i = 0; i < nSize; ++i)
-        {
-            if(symbols && symbols[i])
-                {
-                    stackTrace+=std::string(symbols[i]) + '\n';
-                }
-        }
-    if(symbols)
-        {
-            free(symbols);
-        }
-
-    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Stack trace: \n" << stackTrace << commit;
-}
-
 // Thread that logs, waits and kills
-static void signal_watchdog(void)
+static void signal_watchdog(void (*shutdown_callback)(int, void*), void* udata)
 {
     sem_wait(&semaphore);
-
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Caught signal " << raised_signal
-            << " (" << strsignal(raised_signal) << ")" << commit;
-    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Future signals will be ignored!" << commit;
-
-    // Some require traceback
-    int exit_status = 0;
-
-    switch (raised_signal)
-        {
-            case SIGABRT: case SIGSEGV: case SIGTERM:
-            case SIGILL: case SIGFPE: case SIGBUS:
-            case SIGTRAP: case SIGSYS:
-                exit_status = -raised_signal;
-                log_stack();
-                break;
-            default:
-                break;
-        }
-
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopping" << commit;
-    sleep(15);
-    try
-        {
-            theServer().stop();
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS db connections closing" << commit;
-            db::DBSingleton::tearDown();
-            sleep(10);
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS db connections closed" << commit;
-        }
-    catch(...)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unexpected exception when forcing the database teardown" << commit;
-        }
-
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopped" << commit;
-    _exit(exit_status);
+    shutdown_callback(raised_signal, udata);
 }
 
 // Set up the callbacks, and launch the watchdog thread
+static void (*_arg_shutdown_callback)(int, void*);
+static void *_arg_udata;
 static void set_handlers(void)
 {
     static const int CATCH_SIGNALS[] = {
@@ -138,15 +76,38 @@ static void set_handlers(void)
         sigaction(CATCH_SIGNALS[i], &actions[i], NULL);
     }
 
-    boost::thread watchdog(signal_watchdog);
-
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Signal handlers installed" << commit;
+    boost::thread watchdog(signal_watchdog, _arg_shutdown_callback, _arg_udata);
 }
 
 // Wrap set_handlers, so it is called only once
-void Panic::setup_signal_handlers()
+void Panic::setup_signal_handlers(void (*shutdown_callback)(int, void*), void* udata)
 {
     // First thing, wait for a signal to be caught
     static boost::once_flag set_handlers_flag = BOOST_ONCE_INIT;
+    _arg_shutdown_callback = shutdown_callback;
+    _arg_udata = udata;
     boost::call_once(&set_handlers, set_handlers_flag);
+}
+
+
+std::string Panic::stack_dump(void) {
+    std::string stackTrace;
+
+    const int stack_size = 25;
+    void * array[stack_size]= {0};
+    int nSize = backtrace(array, stack_size);
+    char ** symbols = backtrace_symbols(array, nSize);
+    for (register int i = 0; i < nSize; ++i)
+        {
+            if(symbols && symbols[i])
+                {
+                    stackTrace+=std::string(symbols[i]) + '\n';
+                }
+        }
+    if(symbols)
+        {
+            free(symbols);
+        }
+
+    return stackTrace;
 }

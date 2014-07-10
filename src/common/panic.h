@@ -17,14 +17,18 @@ limitations under the License. */
 
 #pragma once
 
-#include "server_dev.h"
+#include "common_dev.h"
 
-FTS3_SERVER_NAMESPACE_START
+#include <string>
+
+FTS3_COMMON_NAMESPACE_START
 
 namespace Panic {
 
-void setup_signal_handlers();
+void setup_signal_handlers(void (*shutdown_callback)(int, void*), void* udata);
+
+std::string stack_dump(void);
 
 }
 
-FTS3_SERVER_NAMESPACE_END
+FTS3_COMMON_NAMESPACE_END
