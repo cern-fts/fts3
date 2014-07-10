@@ -12,3 +12,6 @@ rpm -qa | grep fts
 
 #export DEBUG=1
 
+voms-proxy-info --all
+
+
