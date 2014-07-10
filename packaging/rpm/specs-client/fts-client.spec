@@ -5,7 +5,7 @@
 %global __provides_exclude_from ^%{python_sitearch}/fts/.*\\.so$
 
 Name: fts-client
-Version: 3.2.25
+Version: 3.2.26
 Release: 5%{?dist}
 Summary: File Transfer Service V3
 Group: Applications/Internet
@@ -14,7 +14,7 @@ URL: https://svnweb.cern.ch/trac/fts3/wiki
 # The source for this package was pulled from upstream's vcs.  Use the
 # following commands to generate the tarball:
 #  svn export https://svn.cern.ch/reps/fts3/trunk fts3
-#  tar -czvf fts-3.2.25-2.tar.gz fts3
+#  tar -czvf fts-3.2.26-2.tar.gz fts3
 Source0:   https://grid-deployment.web.cern.ch/grid-deployment/dms/fts3/tar/%{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
@@ -138,6 +138,6 @@ make install DESTDIR=%{buildroot}
 %{python_sitearch}/fts
 
 %changelog
-* Tue Apr 08 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.25-5
+* Tue Apr 08 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.26-5
   - Forked client-only spec file for SL5
 
