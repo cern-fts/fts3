@@ -3171,7 +3171,7 @@ bool OracleAPI::updateOptimizer()
                                         soci::use(source_hostname),soci::use(destin_hostname), soci::into(retry, isNullRetry));
 
             soci::statement stmt10 = (
-                                         sql.prepare << "update t_optimize_active set active=:active, ema=:ema where "
+                                         sql.prepare << "update t_optimize_active set active=:active, ema=:ema, datetime=sys_extract_utc(systimestamp) where "
                                          " source_se=:source and dest_se=:dest ",
                                          soci::use(active), soci::use(ema), soci::use(source_hostname), soci::use(destin_hostname));
 
@@ -10601,7 +10601,7 @@ void OracleAPI::getStagingFilesForCanceling(std::vector< boost::tuple<int, std::
                                           "  AND (hashed_id >= :hStart AND hashed_id <= :hEnd) AND staging_start is NOT NULL ",
                                           soci::use(hashSegment.start), soci::use(hashSegment.end));
 
-            soci::statement stmt1 = (sql.prepare << "UPDATE t_file SET  job_finished = UTC_TIMESTAMP() "
+            soci::statement stmt1 = (sql.prepare << "UPDATE t_file SET  job_finished = sys_extract_utc(systimestamp) "
                                      "WHERE file_id = :file_id ", soci::use(file_id, "file_id"));
 
             // Cancel staging files

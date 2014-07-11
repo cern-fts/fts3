@@ -3423,7 +3423,7 @@ bool MySqlAPI::updateOptimizer()
                                         soci::use(source_hostname),soci::use(destin_hostname), soci::into(retry, isNullRetry));
 
             soci::statement stmt10 = (
-                                         sql.prepare << "update t_optimize_active set active=:active, ema=:ema where "
+                                         sql.prepare << "update t_optimize_active set active=:active, ema=:ema, datetime=UTC_TIMESTAMP() where "
                                          " source_se=:source and dest_se=:dest ",
                                          soci::use(active), soci::use(ema), soci::use(source_hostname), soci::use(destin_hostname));
 
@@ -8982,7 +8982,6 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                                             result <<   reason;
                                         }
                                     result <<   "\"\n";
-
                                     result << "}\n";
                                     result << "\n\n";
 
@@ -8995,7 +8994,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                     if(source_se_p.empty())
                         source_se = "";
                     if(dest_se_p.empty())
-                        dest_se = "";                  
+                        dest_se = "";
 
                     soci::rowset<soci::row> rs = (
                                                      sql.prepare << querySeAll
@@ -9011,7 +9010,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                                  soci::use(source_se_check),
                                  soci::use(dest_se_check),
                                  soci::use(vo_name_local),
-                                 soci::into(exists);				 
+                                 soci::into(exists);
 
                             if(exists > 0)
                                 {
