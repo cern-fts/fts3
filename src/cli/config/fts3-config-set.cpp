@@ -42,7 +42,7 @@ using namespace fts3::common;
  */
 int main(int ac, char* av[])
 {
-	unique_ptr<SetCfgCli> cli(new SetCfgCli);
+    unique_ptr<SetCfgCli> cli(new SetCfgCli);
 
     try
         {

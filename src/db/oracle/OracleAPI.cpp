@@ -230,7 +230,7 @@ void OracleAPI::init(std::string username, std::string password, std::string con
 void OracleAPI::submitdelete(const std::string & jobId, const std::multimap<std::string,std::string>& rulsHost,
                              const std::string & userDN, const std::string & voName, const std::string & credID)
 {
-	if (rulsHost.empty()) return;
+    if (rulsHost.empty()) return;
 
     const std::string initialState = "DELETE";
     std::ostringstream pairStmt;
@@ -243,42 +243,42 @@ void OracleAPI::submitdelete(const std::string & jobId, const std::multimap<std:
 
     std::multimap<std::string,std::string>::const_iterator it;
     for (it = rulsHost.begin(); it != rulsHost.end(); ++it)
-    	{
-    		same_src_se = it->second == src_se;
-    		if (!same_src_se) break;
-    	}
+        {
+            same_src_se = it->second == src_se;
+            if (!same_src_se) break;
+        }
 
     try
         {
             sql.begin();
 
             if(same_src_se)
-				{
-					soci::statement insertJob = (	sql.prepare << "INSERT INTO  t_job ( job_id, job_state, vo_name,submit_host, submit_time, user_dn, cred_id, source_se)"
-													"VALUES (:jobId, :jobState, :voName , :hostname, sys_extract_utc(systimestamp), :userDN, :credID, :src_se)",
-													soci::use(jobId),
-													soci::use(initialState),
-													soci::use(voName),
-													soci::use(hostname),
-													soci::use(userDN),
-													soci::use(credID),
-													soci::use(src_se)
-												);
-					insertJob.execute(true);
-				}
-				else
-				{
-					soci::statement insertJob = (	sql.prepare << "INSERT INTO  t_job ( job_id, job_state, vo_name,submit_host, submit_time, user_dn, cred_id)"
-													"VALUES (:jobId, :jobState, :voName , :hostname, sys_extract_utc(systimestamp), :userDN, :credID)",
-													soci::use(jobId),
-													soci::use(initialState),
-													soci::use(voName),
-													soci::use(hostname),
-													soci::use(userDN),
-													soci::use(credID)
-												);
-					insertJob.execute(true);
-				}
+                {
+                    soci::statement insertJob = (	sql.prepare << "INSERT INTO  t_job ( job_id, job_state, vo_name,submit_host, submit_time, user_dn, cred_id, source_se)"
+                                                    "VALUES (:jobId, :jobState, :voName , :hostname, sys_extract_utc(systimestamp), :userDN, :credID, :src_se)",
+                                                    soci::use(jobId),
+                                                    soci::use(initialState),
+                                                    soci::use(voName),
+                                                    soci::use(hostname),
+                                                    soci::use(userDN),
+                                                    soci::use(credID),
+                                                    soci::use(src_se)
+                                                );
+                    insertJob.execute(true);
+                }
+            else
+                {
+                    soci::statement insertJob = (	sql.prepare << "INSERT INTO  t_job ( job_id, job_state, vo_name,submit_host, submit_time, user_dn, cred_id)"
+                                                    "VALUES (:jobId, :jobState, :voName , :hostname, sys_extract_utc(systimestamp), :userDN, :credID)",
+                                                    soci::use(jobId),
+                                                    soci::use(initialState),
+                                                    soci::use(voName),
+                                                    soci::use(hostname),
+                                                    soci::use(userDN),
+                                                    soci::use(credID)
+                                                );
+                    insertJob.execute(true);
+                }
 
 
             std::string sourceSurl;
@@ -4211,22 +4211,22 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
                     soci::statement insertFileStmt = (sql.prepare << "INSERT INTO t_file_backup SELECT * FROM t_file WHERE job_id = :job_id", soci::use(job_id));
 
                     int count = 0;
-		    int drainCounter = 0;
-		    bool drain = false;
+                    int drainCounter = 0;
+                    bool drain = false;
 
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                         {
-  			    if( 100 == drainCounter++)
-			    {
-			    drainCounter = 0; //reset
-                            drain = getDrainInternal(sql);
-                            if(drain)
+                            if( 100 == drainCounter++)
                                 {
-                                    sql.commit();
-				    sleep(15);
-                                    return;
+                                    drainCounter = 0; //reset
+                                    drain = getDrainInternal(sql);
+                                    if(drain)
+                                        {
+                                            sql.commit();
+                                            sleep(15);
+                                            return;
+                                        }
                                 }
-			    }
 
                             count++;
                             soci::row const& r = *i;
@@ -4248,7 +4248,7 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
                                 {
                                     count = 0;
                                     sql.commit();
-				    sleep(1);
+                                    sleep(1);
                                 }
 
                         }

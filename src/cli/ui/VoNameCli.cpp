@@ -64,7 +64,7 @@ bool VoNameCli::validate()
         {
             if (getVoName().empty())
                 {
-            		throw cli_exception("The VO name has to be specified");
+                    throw cli_exception("The VO name has to be specified");
                 }
         }
 

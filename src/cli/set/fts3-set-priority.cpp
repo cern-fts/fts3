@@ -42,7 +42,7 @@ using namespace fts3::cli;
  */
 int main(int ac, char* av[])
 {
-	scoped_ptr<PriorityCli> cli (new PriorityCli);
+    scoped_ptr<PriorityCli> cli (new PriorityCli);
 
     try
         {

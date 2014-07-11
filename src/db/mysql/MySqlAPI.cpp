@@ -301,7 +301,7 @@ void MySqlAPI::init(std::string username, std::string password, std::string conn
 void MySqlAPI::submitdelete(const std::string & jobId, const std::multimap<std::string,std::string>& rulsHost,
                             const std::string & userDN, const std::string & voName, const std::string & credID)
 {
-	if (rulsHost.empty()) return;
+    if (rulsHost.empty()) return;
 
     const std::string initialState = "DELETE";
     std::ostringstream pairStmt;
@@ -314,42 +314,42 @@ void MySqlAPI::submitdelete(const std::string & jobId, const std::multimap<std::
 
     std::multimap<std::string,std::string>::const_iterator it;
     for (it = rulsHost.begin(); it != rulsHost.end(); ++it)
-    	{
-    		same_src_se = it->second == src_se;
-    		if (!same_src_se) break;
-    	}
+        {
+            same_src_se = it->second == src_se;
+            if (!same_src_se) break;
+        }
 
     try
         {
             sql.begin();
 
-			if (same_src_se)
-				{
-					soci::statement insertJob = (	sql.prepare << "INSERT INTO  t_job ( job_id, job_state, vo_name,submit_host, submit_time, user_dn, cred_id, source_se)"
-													"VALUES (:jobId, :jobState, :voName , :hostname, UTC_TIMESTAMP(), :userDN, :credID, :src_se)",
-													soci::use(jobId),
-													soci::use(initialState),
-													soci::use(voName),
-													soci::use(hostname),
-													soci::use(userDN),
-													soci::use(credID),
-													soci::use(src_se)
-												);
-					insertJob.execute(true);
-				}
-			else
-				{
-					soci::statement insertJob = (	sql.prepare << "INSERT INTO  t_job ( job_id, job_state, vo_name,submit_host, submit_time, user_dn, cred_id)"
-													"VALUES (:jobId, :jobState, :voName , :hostname, UTC_TIMESTAMP(), :userDN, :credID)",
-													soci::use(jobId),
-													soci::use(initialState),
-													soci::use(voName),
-													soci::use(hostname),
-													soci::use(userDN),
-													soci::use(credID)
-												);
-					insertJob.execute(true);
-				}
+            if (same_src_se)
+                {
+                    soci::statement insertJob = (	sql.prepare << "INSERT INTO  t_job ( job_id, job_state, vo_name,submit_host, submit_time, user_dn, cred_id, source_se)"
+                                                    "VALUES (:jobId, :jobState, :voName , :hostname, UTC_TIMESTAMP(), :userDN, :credID, :src_se)",
+                                                    soci::use(jobId),
+                                                    soci::use(initialState),
+                                                    soci::use(voName),
+                                                    soci::use(hostname),
+                                                    soci::use(userDN),
+                                                    soci::use(credID),
+                                                    soci::use(src_se)
+                                                );
+                    insertJob.execute(true);
+                }
+            else
+                {
+                    soci::statement insertJob = (	sql.prepare << "INSERT INTO  t_job ( job_id, job_state, vo_name,submit_host, submit_time, user_dn, cred_id)"
+                                                    "VALUES (:jobId, :jobState, :voName , :hostname, UTC_TIMESTAMP(), :userDN, :credID)",
+                                                    soci::use(jobId),
+                                                    soci::use(initialState),
+                                                    soci::use(voName),
+                                                    soci::use(hostname),
+                                                    soci::use(userDN),
+                                                    soci::use(credID)
+                                                );
+                    insertJob.execute(true);
+                }
 
             std::string sourceSurl;
             std::string sourceSE;
@@ -1525,19 +1525,19 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
                 }
 
 
-	    /*send submitted message here / check for deleted as well
-            soci::rowset<soci::row> rs = (
-                                             sql.prepare <<
-                                             "select file_id from t_file where job_id = :job_id",
-                                             soci::use(jobId)
-                                         );
+            /*send submitted message here / check for deleted as well
+                soci::rowset<soci::row> rs = (
+                                                 sql.prepare <<
+                                                 "select file_id from t_file where job_id = :job_id",
+                                                 soci::use(jobId)
+                                             );
 
-            soci::rowset<soci::row>::const_iterator it;
-            for (it = rs.begin(); it != rs.end(); ++it)
-                {
-                    std::cout << it->get<int>("file_id") << std::endl;
-	        }
-	    */
+                soci::rowset<soci::row>::const_iterator it;
+                for (it = rs.begin(); it != rs.end(); ++it)
+                    {
+                        std::cout << it->get<int>("file_id") << std::endl;
+                }
+            */
 
 
             sql.commit();
@@ -2018,10 +2018,16 @@ bool MySqlAPI::updateFileTransferStatus(double throughputIn, std::string job_id,
         }
     catch (std::exception& e)
         {
+            //try again if deadlocked
+            updateFileTransferStatusInternal(sql, throughputIn, job_id, file_id, transfer_status, transfer_message, process_id, filesize, duration, retry);
+
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
+            //try again if deadlocked
+            updateFileTransferStatusInternal(sql, throughputIn, job_id, file_id, transfer_status, transfer_message, process_id, filesize, duration, retry);
+
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
     return true;
@@ -2186,7 +2192,6 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
 
 bool MySqlAPI::updateJobTransferStatus(std::string job_id, const std::string status, int pid)
 {
-
     soci::session sql(*connectionPool);
 
     try
@@ -2195,10 +2200,16 @@ bool MySqlAPI::updateJobTransferStatus(std::string job_id, const std::string sta
         }
     catch (std::exception& e)
         {
+            //try again if deadlocked
+            updateJobTransferStatusInternal(sql, job_id, status, pid);
+
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
+            //try again if deadlocked
+            updateJobTransferStatusInternal(sql, job_id, status, pid);
+
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
     return true;
@@ -4462,22 +4473,22 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                                                  );
 
                     int count = 0;
-		    int drainCounter = 0;
+                    int drainCounter = 0;
                     bool drain = false;
 
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                         {
-			    if( 100 == drainCounter++)
-			    {
-			    drainCounter = 0; //reset
-                            drain = getDrainInternal(sql);
-                            if(drain)
+                            if( 100 == drainCounter++)
                                 {
-                                    sql.commit();
-				    sleep(15);
-                                    return;
+                                    drainCounter = 0; //reset
+                                    drain = getDrainInternal(sql);
+                                    if(drain)
+                                        {
+                                            sql.commit();
+                                            sleep(15);
+                                            return;
+                                        }
                                 }
-			    }
 
                             count++;
                             soci::row const& r = *i;
@@ -4512,7 +4523,7 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                                     jobIdStmt.str(std::string());
                                     jobIdStmt.clear();
                                     sql.commit();
-				    sleep(1); // give it sometime to breath
+                                    sleep(1); // give it sometime to breath
                                 }
                         }
 
@@ -6485,15 +6496,14 @@ void MySqlAPI::setMaxStageOp(const std::string& se, const std::string& vo, int v
 
 void MySqlAPI::updateProtocol(const std::string& /*jobId*/, int fileId, int nostreams, int timeout, int buffersize, double filesize)
 {
+    soci::session sql(*connectionPool);
 
     std::stringstream internalParams;
-    soci::session sql(*connectionPool);
+    internalParams << "nostreams:" << nostreams << ",timeout:" << timeout << ",buffersize:" << buffersize;
 
     try
         {
             sql.begin();
-
-            internalParams << "nostreams:" << nostreams << ",timeout:" << timeout << ",buffersize:" << buffersize;
 
             sql <<
                 " UPDATE t_file set INTERNAL_FILE_PARAMS=:1, FILESIZE=:2 where file_id=:fileId ",
@@ -6507,11 +6517,35 @@ void MySqlAPI::updateProtocol(const std::string& /*jobId*/, int fileId, int nost
     catch (std::exception& e)
         {
             sql.rollback();
+
+            //try again if deadlock occured
+            sql.begin();
+
+            sql <<
+                " UPDATE t_file set INTERNAL_FILE_PARAMS=:1, FILESIZE=:2 where file_id=:fileId ",
+                soci::use(internalParams.str()),
+                soci::use(filesize),
+                soci::use(fileId);
+
+            sql.commit();
+
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
             sql.rollback();
+
+            //try again if deadlock occured
+            sql.begin();
+
+            sql <<
+                " UPDATE t_file set INTERNAL_FILE_PARAMS=:1, FILESIZE=:2 where file_id=:fileId ",
+                soci::use(internalParams.str()),
+                soci::use(filesize),
+                soci::use(fileId);
+
+            sql.commit();
+
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }
@@ -8640,6 +8674,16 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
     double  ratioSuccessFailure = 0.0;
     std::string querySe;
     std::string queryVO;
+    std::string querySeAll;
+    std::string queryFileSePair;
+
+    std::string dest_se_check;
+    std::string source_se_check;
+
+    int exists = 0;
+
+    //get all se's
+    querySeAll = "SELECT source_se, dest_se from t_optimize_active ";
 
     if(!vo_name.empty())
         querySe = " SELECT DISTINCT source_se, dest_se FROM t_job where vo_name='" + vo_name + "'";
@@ -8861,10 +8905,10 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
 
                                     //get max active for this pair no matter the vo
                                     result <<   "\"Max active transfers\":\"";
-				    if(isNull1 == soci::i_null)
-				    	result <<   0;
-				    else
-                                    	result <<   maxActive;
+                                    if(isNull1 == soci::i_null)
+                                        result <<   0;
+                                    else
+                                        result <<   maxActive;
                                     result <<   "\",\n";
 
                                     result <<   "\"Number of finished (last hour)\":\"";
@@ -8884,34 +8928,34 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                                     //average throughput block
                                     st41.execute(true);
                                     result <<   "\"Avg throughput (last 60min)\":\"";
-				    if(isNull2 == soci::i_null)
-				    	result <<   0;
-				    else
-                                    	result <<  std::setprecision(2) << throughput1h;
+                                    if(isNull2 == soci::i_null)
+                                        result <<   0;
+                                    else
+                                        result <<  std::setprecision(2) << throughput1h;
                                     result <<   " MB/s\",\n";
 
                                     st42.execute(true);
                                     result <<   "\"Avg throughput (last 30min)\":\"";
-				    if(isNull3 == soci::i_null)
-				    	result <<   0;
-				    else
-                                    	result <<  std::setprecision(2) << throughput30min;				    
+                                    if(isNull3 == soci::i_null)
+                                        result <<   0;
+                                    else
+                                        result <<  std::setprecision(2) << throughput30min;
                                     result <<   " MB/s\",\n";
 
                                     st43.execute(true);
                                     result <<   "\"Avg throughput (last 15min)\":\"";
-				    if(isNull4 == soci::i_null)
-				    	result <<   0;
-				    else
-                                    	result <<  std::setprecision(2) << throughput15min;				    				    
+                                    if(isNull4 == soci::i_null)
+                                        result <<   0;
+                                    else
+                                        result <<  std::setprecision(2) << throughput15min;
                                     result <<   " MB/s\",\n";
 
                                     st44.execute(true);
                                     result <<   "\"Avg throughput (last 5min)\":\"";
-				    if(isNull5 == soci::i_null)
-				    	result <<   0;
-				    else
-                                    	result <<  std::setprecision(2) << throughput5min;				    				    				    
+                                    if(isNull5 == soci::i_null)
+                                        result <<   0;
+                                    else
+                                        result <<  std::setprecision(2) << throughput5min;
                                     result <<   " MB/s\",\n";
 
 
@@ -8930,18 +8974,18 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                                     countReason = 0;
                                     st5.execute(true);
 
-                                    result <<   "\"Most frequent error (last hour)\":\"";				    
-	 		            if(isNull6 != soci::i_null)
-                                    {
-                                    	result <<   countReason;
-                                    	result <<   " times: ";				   
-                                    	result <<   reason;                                    	
-				    }
-				    result <<   "\"\n";
+                                    result <<   "\"Most frequent error (last hour)\":\"";
+                                    if(isNull6 != soci::i_null)
+                                        {
+                                            result <<   countReason;
+                                            result <<   " times: ";
+                                            result <<   reason;
+                                        }
+                                    result <<   "\"\n";
 
                                     result << "}\n";
-                                    result << "\n\n";        
-				    
+                                    result << "\n\n";
+
                                 } //end distinct pair source_se / dest_se
                         } //end distinct vo
                 }//end vo empty
@@ -8952,10 +8996,26 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                         source_se = "";
                     if(dest_se_p.empty())
                         dest_se = "";
-                    
-		    pairsStmt.execute();
-                    while (pairsStmt.fetch()) //distinct vo
-                        {		    
+
+                    soci::statement querySeAllStmt((sql.prepare << querySeAll, soci::into(source_se_check), soci::into(dest_se_check)));
+
+                    soci::rowset<soci::row> rs = (
+                                                     sql.prepare << querySeAll
+                                                 );
+
+                    for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+                        {
+                            source_se_check = i->get<std::string>("source_se");
+                            dest_se_check = i->get<std::string>("dest_se");
+
+                            sql  << "select file_id from t_file where source_se= :source_se and dest_se=:dest_se and vo_name=:vo_name LIMIT 1",
+                                 soci::use(source_se_check),
+                                 soci::use(dest_se_check),
+                                 soci::use(vo_name_local),
+                                 soci::into(exists);
+
+                            if(exists > 0)
+                                {
                                     active = 0;
                                     maxActive = 0;
                                     submitted = 0;
@@ -8966,7 +9026,8 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                                     nFailedLastHour = 0;
                                     nFinishedLastHour = 0;
                                     ratioSuccessFailure = 0.0;
-
+				    source_se = source_se_check;
+				    dest_se = dest_se_check;
 
                                     st1.execute(true);
                                     st2.execute(true);
@@ -9000,10 +9061,10 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
 
                                     //get max active for this pair no matter the vo
                                     result <<   "\"Max active transfers\":\"";
-				    if(isNull1 == soci::i_null)
-				    	result <<   0;
-				    else
-                                    	result <<   maxActive;
+                                    if(isNull1 == soci::i_null)
+                                        result <<   0;
+                                    else
+                                        result <<   maxActive;
                                     result <<   "\",\n";
 
                                     result <<   "\"Number of finished (last hour)\":\"";
@@ -9023,34 +9084,34 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                                     //average throughput block
                                     st41.execute(true);
                                     result <<   "\"Avg throughput (last 60min)\":\"";
-				    if(isNull2 == soci::i_null)
-				    	result <<   0;
-				    else
-                                    	result <<  std::setprecision(2) << throughput1h;
+                                    if(isNull2 == soci::i_null)
+                                        result <<   0;
+                                    else
+                                        result <<  std::setprecision(2) << throughput1h;
                                     result <<   " MB/s\",\n";
 
                                     st42.execute(true);
                                     result <<   "\"Avg throughput (last 30min)\":\"";
-				    if(isNull3 == soci::i_null)
-				    	result <<   0;
-				    else
-                                    	result <<  std::setprecision(2) << throughput30min;				    
+                                    if(isNull3 == soci::i_null)
+                                        result <<   0;
+                                    else
+                                        result <<  std::setprecision(2) << throughput30min;
                                     result <<   " MB/s\",\n";
 
                                     st43.execute(true);
                                     result <<   "\"Avg throughput (last 15min)\":\"";
-				    if(isNull4 == soci::i_null)
-				    	result <<   0;
-				    else
-                                    	result <<  std::setprecision(2) << throughput15min;				    				    
+                                    if(isNull4 == soci::i_null)
+                                        result <<   0;
+                                    else
+                                        result <<  std::setprecision(2) << throughput15min;
                                     result <<   " MB/s\",\n";
 
                                     st44.execute(true);
                                     result <<   "\"Avg throughput (last 5min)\":\"";
-				    if(isNull5 == soci::i_null)
-				    	result <<   0;
-				    else
-                                    	result <<  std::setprecision(2) << throughput5min;				    				    				    
+                                    if(isNull5 == soci::i_null)
+                                        result <<   0;
+                                    else
+                                        result <<  std::setprecision(2) << throughput5min;
                                     result <<   " MB/s\",\n";
 
 
@@ -9070,16 +9131,17 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                                     st5.execute(true);
 
                                     result <<   "\"Most frequent error (last hour)\":\"";
-	 		            if(isNull6 != soci::i_null)
-                                    {
-                                    	result <<   countReason;
-                                    	result <<   " times: ";				   
-                                    	result <<   reason;
-				    }
-                                    result <<   "\"\n";				    
+                                    if(isNull6 != soci::i_null)
+                                        {
+                                            result <<   countReason;
+                                            result <<   " times: ";
+                                            result <<   reason;
+                                        }
+                                    result <<   "\"\n";
 
                                     result << "}\n";
-                                    result << "\n\n";                         
+                                    result << "\n\n";
+                                }
                         }
                 }
         }

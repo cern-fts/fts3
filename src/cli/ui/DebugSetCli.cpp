@@ -85,7 +85,7 @@ bool DebugSetCli::validate()
     // make sure that at least one SE and debug mode were specified
     if (opts.size() < 2)
         {
-    		throw cli_exception("SE name and debug mode has to be specified (on/off)!");
+            throw cli_exception("SE name and debug mode has to be specified (on/off)!");
         }
 
     // index of debug mode (the last parameter)
@@ -99,7 +99,7 @@ bool DebugSetCli::validate()
     // otherwise it's an error
     else
         {
-    		throw cli_exception("Debug mode has to be specified (on/off)!");
+            throw cli_exception("Debug mode has to be specified (on/off)!");
         }
 
     // source is always the first one

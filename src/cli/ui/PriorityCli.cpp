@@ -56,7 +56,7 @@ bool PriorityCli::validate()
 
     if (priority < 1 || priority > 5)
         {
-    		throw bad_option("priority", "has to take a value in range of 1 to 5");
+            throw bad_option("priority", "has to take a value in range of 1 to 5");
         }
 
     return true;

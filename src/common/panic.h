@@ -23,7 +23,8 @@ limitations under the License. */
 
 FTS3_COMMON_NAMESPACE_START
 
-namespace Panic {
+namespace Panic
+{
 
 void setup_signal_handlers(void (*shutdown_callback)(int, void*), void* udata);
 

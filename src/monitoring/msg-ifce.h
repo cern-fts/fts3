@@ -83,9 +83,9 @@ typedef struct
     std::string tr_timestamp_complete;
     std::string channel_type;
     std::string user_dn;
-    
+
     std::string file_metadata;
-    std::string job_metadata;    
+    std::string job_metadata;
 
 } transfer_completed;
 
@@ -147,9 +147,9 @@ public:
     void set_tr_timestamp_complete(transfer_completed* tr_completed, const std::string & value);
     void set_channel_type(transfer_completed* tr_completed, const std::string & value);
     void set_user_dn(transfer_completed* tr_completed, const std::string & value);
-    
-    void set_file_metadata(transfer_completed* tr_completed, const std::string & value);    
-    void set_job_metadata(transfer_completed* tr_completed, const std::string & value);        
+
+    void set_file_metadata(transfer_completed* tr_completed, const std::string & value);
+    void set_job_metadata(transfer_completed* tr_completed, const std::string & value);
 
     static msg_ifce* getInstance();
     ~msg_ifce();

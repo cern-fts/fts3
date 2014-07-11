@@ -82,23 +82,23 @@ bool BlacklistCli::validate()
 
     if (mode != ON && mode != OFF)
         {
-    		throw bad_option("mode", "has to be either 'on' or 'off'");
+            throw bad_option("mode", "has to be either 'on' or 'off'");
         }
 
     if (type != SE && type != DN)
         {
-    		throw bad_option("type", "has to be either 'se' or 'dn'");
+            throw bad_option("type", "has to be either 'se' or 'dn'");
         }
 
 
     if ( (!vm.count("status") || status != "WAIT") && timeout != 0)
         {
-    		throw bad_option("timeout", "may be only specified if status = 'WAIT'");
+            throw bad_option("timeout", "may be only specified if status = 'WAIT'");
         }
 
     if (vm.count("allow-submit") && status == "CANCEL")
         {
-    		throw bad_option("allow-submit", "may not be used if status = 'CANCEL'");
+            throw bad_option("allow-submit", "may not be used if status = 'CANCEL'");
         }
 
     return true;

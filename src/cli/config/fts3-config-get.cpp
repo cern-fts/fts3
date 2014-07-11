@@ -43,7 +43,7 @@ using namespace fts3::cli;
  */
 int main(int ac, char* av[])
 {
-	std::unique_ptr<GetCfgCli> cli(new GetCfgCli);
+    std::unique_ptr<GetCfgCli> cli(new GetCfgCli);
 
 
     try
