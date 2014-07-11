@@ -26,20 +26,21 @@ void PollTask::run(boost::any const &)
 		return;
 	}
 
+	std::vector<char const *> urls = ctx.getUrls();
+
     GError *error = NULL;
-    int status = gfal2_bring_online_poll(gfal2_ctx, boost::get<url>(ctx).c_str(), token.c_str(), &error);
+    int status = gfal2_bring_online_poll_list(gfal2_ctx, urls.size(), &*urls.begin(), token.c_str(), &error);
 
     if (status < 0)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE polling FAILED "
-                                           << boost::get<job_id>(ctx) << " "
-                                           << boost::get<file_id>(ctx) <<  "  "
+                                           << ctx.getLogMsg()
                                            << token << " "
                                            << error->code << " "
                                            << error->message << commit;
 
             bool retry = retryTransfer(error->code, "SOURCE", error->message);
-            state_update(boost::get<job_id>(ctx), boost::get<file_id>(ctx), "FAILED", error->message, retry);
+            state_update(ctx, "FAILED", error->message, retry);
             g_clear_error(&error);
         }
     else if(status == 0)
@@ -47,8 +48,7 @@ void PollTask::run(boost::any const &)
             time_t interval = getPollInterval(++nPolls), now = time(NULL);
             wait_until = now + interval;
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE polling "
-                                            << boost::get<job_id>(ctx) << " "
-                                            << boost::get<file_id>(ctx) <<  "  "
+                                            << ctx.getLogMsg()
                                             << token << commit;
 
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE next attempt in " << interval << " seconds" << commit;
@@ -57,27 +57,24 @@ void PollTask::run(boost::any const &)
     else
         {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE FINISHED  "
-                                            << boost::get<job_id>(ctx) << " "
-                                            << boost::get<file_id>(ctx) <<  "  "
+                                            << ctx.getLogMsg()
                                             << token << commit;
 
-            state_update(boost::get<job_id>(ctx), boost::get<file_id>(ctx), "FINISHED", "", false);
+            state_update(ctx, "FINISHED", "", false);
         }
 }
 
 void PollTask::abort()
 {
-	char const * surl = boost::get<url>(ctx).c_str();
+	std::vector<char const *> urls = ctx.getUrls();
 
 	GError * err;
-	int status = gfal2_abort_files(gfal2_ctx, 1, &surl, token.c_str(), &err);
+	int status = gfal2_abort_files(gfal2_ctx, urls.size(), &*urls.begin(), token.c_str(), &err);
 
 	if (status < 0)
 	{
 		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE abort FAILED "
-									   << boost::get<0>(ctx) << " "
-									   << boost::get<1>(ctx) <<  " "
-									   << boost::get<2>(ctx) <<  " "
+									   << ctx.getLogMsg()
 									   << err->code << " " << err->message  << commit;
 		g_clear_error(&err);
 	}
