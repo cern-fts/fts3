@@ -8995,9 +8995,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                     if(source_se_p.empty())
                         source_se = "";
                     if(dest_se_p.empty())
-                        dest_se = "";
-
-                    soci::statement querySeAllStmt((sql.prepare << querySeAll, soci::into(source_se_check), soci::into(dest_se_check)));
+                        dest_se = "";                  
 
                     soci::rowset<soci::row> rs = (
                                                      sql.prepare << querySeAll
@@ -9007,12 +9005,13 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                         {
                             source_se_check = i->get<std::string>("source_se");
                             dest_se_check = i->get<std::string>("dest_se");
+			    exists = 0; //reset
 
                             sql  << "select file_id from t_file where source_se= :source_se and dest_se=:dest_se and vo_name=:vo_name LIMIT 1",
                                  soci::use(source_se_check),
                                  soci::use(dest_se_check),
                                  soci::use(vo_name_local),
-                                 soci::into(exists);
+                                 soci::into(exists);				 
 
                             if(exists > 0)
                                 {
