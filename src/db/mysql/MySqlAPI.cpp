@@ -8653,6 +8653,10 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
     soci::indicator isNull1 = soci::i_ok;
     soci::indicator isNull2 = soci::i_ok;
     soci::indicator isNull3 = soci::i_ok;
+    soci::indicator isNull4 = soci::i_ok;
+    soci::indicator isNull5 = soci::i_ok;
+    soci::indicator isNull6 = soci::i_ok;
+
 
     if(vo_name.empty())
         {
@@ -8748,7 +8752,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                                   " AND throughput > 0 AND throughput is NOT NULL ",
                                   soci::use(source_se),
                                   soci::use(dest_se),
-                                  soci::into(throughput30min, isNull2)
+                                  soci::into(throughput30min, isNull3)
                                  ));
 
             soci::statement st43((sql.prepare << "select avg(throughput) from t_file where  "
@@ -8757,7 +8761,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                                   " AND throughput > 0 AND throughput is NOT NULL ",
                                   soci::use(source_se),
                                   soci::use(dest_se),
-                                  soci::into(throughput15min, isNull2)
+                                  soci::into(throughput15min, isNull4)
                                  ));
 
             soci::statement st44((sql.prepare << "select avg(throughput) from t_file where  "
@@ -8766,7 +8770,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                                   " AND throughput > 0 AND throughput is NOT NULL ",
                                   soci::use(source_se),
                                   soci::use(dest_se),
-                                  soci::into(throughput5min, isNull2)
+                                  soci::into(throughput5min, isNull5)
                                  ));
 
 
@@ -8778,7 +8782,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                                  soci::use(source_se),
                                  soci::use(dest_se),
                                  soci::use(vo_name_local),
-                                 soci::into(reason, isNull3),
+                                 soci::into(reason, isNull6),
                                  soci::into(countReason)
                                 ));
 
@@ -8857,7 +8861,10 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
 
                                     //get max active for this pair no matter the vo
                                     result <<   "\"Max active transfers\":\"";
-                                    result <<   maxActive;
+				    if(isNull1 == soci::i_null)
+				    	result <<   0;
+				    else
+                                    	result <<   maxActive;
                                     result <<   "\",\n";
 
                                     result <<   "\"Number of finished (last hour)\":\"";
@@ -8877,22 +8884,34 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                                     //average throughput block
                                     st41.execute(true);
                                     result <<   "\"Avg throughput (last 60min)\":\"";
-                                    result <<  std::setprecision(2) << throughput1h;
+				    if(isNull2 == soci::i_null)
+				    	result <<   0;
+				    else
+                                    	result <<  std::setprecision(2) << throughput1h;
                                     result <<   " MB/s\",\n";
 
                                     st42.execute(true);
                                     result <<   "\"Avg throughput (last 30min)\":\"";
-                                    result <<  std::setprecision(2) << throughput30min;
+				    if(isNull3 == soci::i_null)
+				    	result <<   0;
+				    else
+                                    	result <<  std::setprecision(2) << throughput30min;				    
                                     result <<   " MB/s\",\n";
 
                                     st43.execute(true);
                                     result <<   "\"Avg throughput (last 15min)\":\"";
-                                    result <<  std::setprecision(2) << throughput15min;
+				    if(isNull4 == soci::i_null)
+				    	result <<   0;
+				    else
+                                    	result <<  std::setprecision(2) << throughput15min;				    				    
                                     result <<   " MB/s\",\n";
 
                                     st44.execute(true);
                                     result <<   "\"Avg throughput (last 5min)\":\"";
-                                    result <<  std::setprecision(2) << throughput5min;
+				    if(isNull5 == soci::i_null)
+				    	result <<   0;
+				    else
+                                    	result <<  std::setprecision(2) << throughput5min;				    				    				    
                                     result <<   " MB/s\",\n";
 
 
@@ -8911,14 +8930,18 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                                     countReason = 0;
                                     st5.execute(true);
 
-                                    result <<   "\"Most frequent error (last hour)\":\"";
-                                    result <<   countReason;
-                                    result <<   " times: ";
-                                    result <<   reason;
-                                    result <<   "\"\n";
+                                    result <<   "\"Most frequent error (last hour)\":\"";				    
+	 		            if(isNull6 != soci::i_null)
+                                    {
+                                    	result <<   countReason;
+                                    	result <<   " times: ";				   
+                                    	result <<   reason;                                    	
+				    }
+				    result <<   "\"\n";
 
                                     result << "}\n";
-                                    result << "\n\n";
+                                    result << "\n\n";        
+				    
                                 } //end distinct pair source_se / dest_se
                         } //end distinct vo
                 }//end vo empty
@@ -8929,11 +8952,10 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                         source_se = "";
                     if(dest_se_p.empty())
                         dest_se = "";
-
-                    if (pairsStmt.execute(true))
-                        {
-                            do
-                                {
+                    
+		    pairsStmt.execute();
+                    while (pairsStmt.fetch()) //distinct vo
+                        {		    
                                     active = 0;
                                     maxActive = 0;
                                     submitted = 0;
@@ -8978,7 +9000,10 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
 
                                     //get max active for this pair no matter the vo
                                     result <<   "\"Max active transfers\":\"";
-                                    result <<   maxActive;
+				    if(isNull1 == soci::i_null)
+				    	result <<   0;
+				    else
+                                    	result <<   maxActive;
                                     result <<   "\",\n";
 
                                     result <<   "\"Number of finished (last hour)\":\"";
@@ -8998,22 +9023,34 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                                     //average throughput block
                                     st41.execute(true);
                                     result <<   "\"Avg throughput (last 60min)\":\"";
-                                    result <<  std::setprecision(2) << throughput1h;
+				    if(isNull2 == soci::i_null)
+				    	result <<   0;
+				    else
+                                    	result <<  std::setprecision(2) << throughput1h;
                                     result <<   " MB/s\",\n";
 
                                     st42.execute(true);
                                     result <<   "\"Avg throughput (last 30min)\":\"";
-                                    result <<  std::setprecision(2) << throughput30min;
+				    if(isNull3 == soci::i_null)
+				    	result <<   0;
+				    else
+                                    	result <<  std::setprecision(2) << throughput30min;				    
                                     result <<   " MB/s\",\n";
 
                                     st43.execute(true);
                                     result <<   "\"Avg throughput (last 15min)\":\"";
-                                    result <<  std::setprecision(2) << throughput15min;
+				    if(isNull4 == soci::i_null)
+				    	result <<   0;
+				    else
+                                    	result <<  std::setprecision(2) << throughput15min;				    				    
                                     result <<   " MB/s\",\n";
 
                                     st44.execute(true);
                                     result <<   "\"Avg throughput (last 5min)\":\"";
-                                    result <<  std::setprecision(2) << throughput5min;
+				    if(isNull5 == soci::i_null)
+				    	result <<   0;
+				    else
+                                    	result <<  std::setprecision(2) << throughput5min;				    				    				    
                                     result <<   " MB/s\",\n";
 
 
@@ -9033,16 +9070,16 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                                     st5.execute(true);
 
                                     result <<   "\"Most frequent error (last hour)\":\"";
-                                    result <<   countReason;
-                                    result <<   " times: ";
-                                    result <<   reason;
-                                    result <<   "\"\n";
+	 		            if(isNull6 != soci::i_null)
+                                    {
+                                    	result <<   countReason;
+                                    	result <<   " times: ";				   
+                                    	result <<   reason;
+				    }
+                                    result <<   "\"\n";				    
 
                                     result << "}\n";
-                                    result << "\n\n";
-
-                                }
-                            while (pairsStmt.fetch());
+                                    result << "\n\n";                         
                         }
                 }
         }
