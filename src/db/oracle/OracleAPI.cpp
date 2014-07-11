@@ -1212,9 +1212,9 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
 
     //check if it's multiple-replica or multi-hop and set hashedId and file_index accordingly
     bool mreplica = is_mreplica(src_dest_pair);
-    bool mhop     = is_mhop(src_dest_pair);
+    bool mhop     = is_mhop(src_dest_pair) || hop == "Y";
 
-    if( reuseFlag != "N" && (mreplica || mhop))
+    if( reuseFlag != "N" && ((reuseFlag != "H" && mhop) || mreplica))
         {
             throw Err_Custom("Session reuse (-r) can't be used with multiple replicas or multi-hop jobs!");
         }
@@ -4213,7 +4213,7 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
                     int count = 0;
 		    int drainCounter = 0;
 		    bool drain = false;
-		    
+
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                         {
   			    if( 100 == drainCounter++)
@@ -4226,7 +4226,7 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
 				    sleep(15);
                                     return;
                                 }
-			    }				
+			    }
 
                             count++;
                             soci::row const& r = *i;
@@ -4250,7 +4250,7 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
                                     sql.commit();
 				    sleep(1);
                                 }
-				
+
                         }
                     sql.commit();
 
@@ -5824,7 +5824,7 @@ int OracleAPI::getRetry(const std::string & jobId)
                 soci::into(vo_name)
                 ;
 
-            if (isNull == soci::i_null || nRetries <= 0)
+            if (isNull == soci::i_null)
                 {
                     sql <<
                         " SELECT retry FROM (SELECT rownum as rn, retry "
@@ -5832,9 +5832,9 @@ int OracleAPI::getRetry(const std::string & jobId)
                         soci::use(vo_name), soci::into(nRetries)
                         ;
                 }
-            else if (isNull != soci::i_null && nRetries <= 0)
+            else if (nRetries < 0)
                 {
-                    nRetries = 0;
+                    nRetries = -1;
                 }
 
             if(nRetries > 0)
@@ -8350,7 +8350,7 @@ void OracleAPI::updateOptimizerEvolution(soci::session& sql, const std::string &
         {
             if(throughput > 0 && successRate > 0)
                 {
-                    double agrthroughput = 0.0;                   
+                    double agrthroughput = 0.0;
 
                     sql.begin();
                     sql << " INSERT INTO t_optimizer_evolution (datetime, source_se, dest_se, active, throughput, filesize, buffer, nostreams, agrthroughput) "
