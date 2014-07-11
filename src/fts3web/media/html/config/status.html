@@ -15,10 +15,10 @@
     <tbody>
         <tr ng-repeat="c in server.per_vo" ng-class-odd="'odd'">
             <td>
-                <span ng-if="!c.vo_name">
+                <span ng-show="!c.vo_name">
                     *
                 </span>
-                <span ng-if="c.vo_name">
+                <span ng-show="c.vo_name">
                     {{ c.vo_name }}
                 </span>
             </td>
