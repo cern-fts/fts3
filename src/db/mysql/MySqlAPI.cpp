@@ -1274,9 +1274,9 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
 
     //check if it's multiple-replica or multi-hop and set hashedId and file_index accordingly
     bool mreplica = is_mreplica(src_dest_pair);
-    bool mhop     = is_mhop(src_dest_pair);
+    bool mhop     = is_mhop(src_dest_pair) || hop == "Y";
 
-    if( reuseFlag != "N" && (mreplica || mhop))
+    if( reuseFlag != "N" && ((reuseFlag != "H" && mhop) || mreplica))
         {
             throw Err_Custom("Session reuse (-r) can't be used with multiple replicas or multi-hop jobs!");
         }
@@ -1523,7 +1523,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
                     sql << "INSERT INTO t_optimize_active (source_se, dest_se, active, ema) VALUES (:source_se, :dest_se, 2, 0) ON DUPLICATE KEY UPDATE source_se=:source_se, dest_se=:dest_se",
                         soci::use(source_se), soci::use(dest_se),soci::use(source_se), soci::use(dest_se);
                 }
-        
+
 
 	    /*send submitted message here / check for deleted as well
             soci::rowset<soci::row> rs = (
@@ -1538,8 +1538,8 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
                     std::cout << it->get<int>("file_id") << std::endl;
 	        }
 	    */
-		
-		
+
+
             sql.commit();
             pairStmt.str(std::string());
             pairStmt.clear();
@@ -4477,7 +4477,7 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
 				    sleep(15);
                                     return;
                                 }
-			    }				
+			    }
 
                             count++;
                             soci::row const& r = *i;
@@ -8590,7 +8590,7 @@ void MySqlAPI::updateOptimizerEvolution(soci::session& sql, const std::string & 
         {
             if(throughput > 0 && successRate > 0)
                 {
-                    double agrthroughput = 0.0;                    
+                    double agrthroughput = 0.0;
 
                     sql.begin();
                     sql << " INSERT INTO t_optimizer_evolution (datetime, source_se, dest_se, active, throughput, filesize, buffer, nostreams, agrthroughput) "
