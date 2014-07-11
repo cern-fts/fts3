@@ -9,7 +9,7 @@ class FTSDebug(base.TestBase):
 
     def tearDown(self):
         for (src, dst) in self.transfers:
-            self.client.setDebug(src, dst, 'OFF')
+            self.client.setDebug(src, dst, 'off')
 
         base.TestBase.tearDown(self)
     def test_ftsDebug(self):
@@ -18,7 +18,7 @@ class FTSDebug(base.TestBase):
         """
         for (src, dst) in self.transfers:
             self.surl.create(src)
-            self.client.setDebug(src, dst, 'ON')
+            self.client.setDebug(src, dst, 'on')
             jobId = self.client.submit([{'sources': [src], 'destinations': [dst]}])
             logging.info("Got job id %s" % jobId)
             state = self.client.poll(jobId)

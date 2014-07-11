@@ -17,9 +17,9 @@ limitations under the License. */
 #include "common/error.h"
 #include "common/logger.h"
 #include "common/ThreadPool.h"
+#include "common/panic.h"
 #include "config/serverconfig.h"
 #include "server.h"
-#include "signal_logger.h"
 
 #include "Gfal2Task.h"
 #include "FetchStaging.h"
@@ -58,13 +58,28 @@ int fts3_teardown_db_backend()
     return 0;
 }
 
-void _handle_sigint(int)
+void shutdown_callback(int signal, void*)
 {
     StagingStateUpdater::instance().recover();
 
-    if (stackTrace.length() > 0)
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << stackTrace << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Caught signal " << signal
+             << " (" << strsignal(signal) << ")" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Future signals will be ignored!" << commit;
+
     stopThreads = true;
+
+    // Some require traceback
+    switch (signal)
+        {
+            case SIGABRT: case SIGSEGV: case SIGTERM:
+            case SIGILL: case SIGFPE: case SIGBUS:
+            case SIGTRAP: case SIGSYS:
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Stack trace: \n" << Panic::stack_dump() << commit;
+                break;
+            default:
+                break;
+        }
+
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE daemon stopping" << commit;
     sleep(5);
     int db_status = fts3_teardown_db_backend();
@@ -147,14 +162,8 @@ int DoServer(int argc, char** argv)
         {
             setenv("GLOBUS_THREAD_MODEL", "pthread", 1);
 
-            REGISTER_SIGNAL(SIGABRT);
-            REGISTER_SIGNAL(SIGSEGV);
-            REGISTER_SIGNAL(SIGTERM);
-            REGISTER_SIGNAL(SIGILL);
-            REGISTER_SIGNAL(SIGFPE);
-            REGISTER_SIGNAL(SIGBUS);
-            REGISTER_SIGNAL(SIGTRAP);
-            REGISTER_SIGNAL(SIGSYS);
+            Panic::setup_signal_handlers(shutdown_callback, NULL);
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE signal handlers installed" << commit;
 
             //re-read here
             FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv, true);
@@ -210,11 +219,6 @@ int DoServer(int argc, char** argv)
             infosys = theServerConfig().get<std::string > ("Infosys");
 
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE starting daemon..." << commit;
-            struct sigaction action;
-            action.sa_handler = _handle_sigint;
-            sigemptyset(&action.sa_mask);
-            action.sa_flags = SA_RESTART;
-            sigaction(SIGINT, &action, NULL);
 
             try
                 {

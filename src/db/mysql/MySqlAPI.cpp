@@ -298,29 +298,58 @@ void MySqlAPI::init(std::string username, std::string password, std::string conn
 }
 
 
-
 void MySqlAPI::submitdelete(const std::string & jobId, const std::multimap<std::string,std::string>& rulsHost,
                             const std::string & userDN, const std::string & voName, const std::string & credID)
 {
+	if (rulsHost.empty()) return;
+
     const std::string initialState = "DELETE";
     std::ostringstream pairStmt;
 
     soci::session sql(*connectionPool);
 
+    // first check if the job conserns only one SE
+    std::string const & src_se = rulsHost.begin()->second;
+    bool same_src_se = true;
+
+    std::multimap<std::string,std::string>::const_iterator it;
+    for (it = rulsHost.begin(); it != rulsHost.end(); ++it)
+    	{
+    		same_src_se = it->second == src_se;
+    		if (!same_src_se) break;
+    	}
+
     try
         {
             sql.begin();
 
-            soci::statement insertJob = (	sql.prepare << "INSERT INTO  t_job ( job_id, job_state, vo_name,submit_host, submit_time, user_dn, cred_id)"
-                                            "VALUES (:jobId, :jobState, :voName , :hostname, UTC_TIMESTAMP(), :userDN, :credID)",
-                                            soci::use(jobId),
-                                            soci::use(initialState),
-                                            soci::use(voName),
-                                            soci::use(hostname),
-                                            soci::use(userDN),
-                                            soci::use(credID)
-                                        );
-            insertJob.execute(true);
+			if (same_src_se)
+				{
+					soci::statement insertJob = (	sql.prepare << "INSERT INTO  t_job ( job_id, job_state, vo_name,submit_host, submit_time, user_dn, cred_id, source_se)"
+													"VALUES (:jobId, :jobState, :voName , :hostname, UTC_TIMESTAMP(), :userDN, :credID, :src_se)",
+													soci::use(jobId),
+													soci::use(initialState),
+													soci::use(voName),
+													soci::use(hostname),
+													soci::use(userDN),
+													soci::use(credID),
+													soci::use(src_se)
+												);
+					insertJob.execute(true);
+				}
+			else
+				{
+					soci::statement insertJob = (	sql.prepare << "INSERT INTO  t_job ( job_id, job_state, vo_name,submit_host, submit_time, user_dn, cred_id)"
+													"VALUES (:jobId, :jobState, :voName , :hostname, UTC_TIMESTAMP(), :userDN, :credID)",
+													soci::use(jobId),
+													soci::use(initialState),
+													soci::use(voName),
+													soci::use(hostname),
+													soci::use(userDN),
+													soci::use(credID)
+												);
+					insertJob.execute(true);
+				}
 
             std::string sourceSurl;
             std::string sourceSE;
@@ -1245,9 +1274,9 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
 
     //check if it's multiple-replica or multi-hop and set hashedId and file_index accordingly
     bool mreplica = is_mreplica(src_dest_pair);
-    bool mhop     = is_mhop(src_dest_pair);
+    bool mhop     = is_mhop(src_dest_pair) || hop == "Y";
 
-    if( reuseFlag != "N" && (mreplica || mhop))
+    if( reuseFlag != "N" && ((reuseFlag != "H" && mhop) || mreplica))
         {
             throw Err_Custom("Session reuse (-r) can't be used with multiple replicas or multi-hop jobs!");
         }
@@ -1494,6 +1523,22 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
                     sql << "INSERT INTO t_optimize_active (source_se, dest_se, active, ema) VALUES (:source_se, :dest_se, 2, 0) ON DUPLICATE KEY UPDATE source_se=:source_se, dest_se=:dest_se",
                         soci::use(source_se), soci::use(dest_se),soci::use(source_se), soci::use(dest_se);
                 }
+
+
+	    /*send submitted message here / check for deleted as well
+            soci::rowset<soci::row> rs = (
+                                             sql.prepare <<
+                                             "select file_id from t_file where job_id = :job_id",
+                                             soci::use(jobId)
+                                         );
+
+            soci::rowset<soci::row>::const_iterator it;
+            for (it = rs.begin(); it != rs.end(); ++it)
+                {
+                    std::cout << it->get<int>("file_id") << std::endl;
+	        }
+	    */
+
 
             sql.commit();
             pairStmt.str(std::string());
@@ -4417,16 +4462,22 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                                                  );
 
                     int count = 0;
+		    int drainCounter = 0;
                     bool drain = false;
 
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                         {
+			    if( 100 == drainCounter++)
+			    {
+			    drainCounter = 0; //reset
                             drain = getDrainInternal(sql);
                             if(drain)
                                 {
                                     sql.commit();
+				    sleep(15);
                                     return;
                                 }
+			    }
 
                             count++;
                             soci::row const& r = *i;
@@ -4461,6 +4512,7 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                                     jobIdStmt.str(std::string());
                                     jobIdStmt.clear();
                                     sql.commit();
+				    sleep(1); // give it sometime to breath
                                 }
                         }
 
@@ -6030,7 +6082,7 @@ int MySqlAPI::getRetry(const std::string & jobId)
                 soci::into(vo_name)
                 ;
 
-            if (isNull == soci::i_null || nRetries <= 0)
+            if (isNull == soci::i_null)
                 {
                     sql <<
                         " SELECT retry "
@@ -6038,9 +6090,9 @@ int MySqlAPI::getRetry(const std::string & jobId)
                         soci::use(vo_name), soci::into(nRetries)
                         ;
                 }
-            else if (isNull != soci::i_null && nRetries <= 0)
+            else if (nRetries < 0)
                 {
-                    nRetries = 0;
+                    nRetries = -1;
                 }
 
 
@@ -8539,14 +8591,6 @@ void MySqlAPI::updateOptimizerEvolution(soci::session& sql, const std::string & 
             if(throughput > 0 && successRate > 0)
                 {
                     double agrthroughput = 0.0;
-                    soci::indicator ind = soci::i_ok;
-                    sql << " select sum(throughput) from t_file where file_state='ACTIVE' and source_se=:source_se and dest_se=:dest_se and throughput > 0 ",
-                        soci::use(source_hostname), soci::use(destination_hostname), soci::into(agrthroughput, ind);
-
-                    if(ind == soci::i_null || agrthroughput == 0)
-                        {
-                            agrthroughput = 0.0;
-                        }
 
                     sql.begin();
                     sql << " INSERT INTO t_optimizer_evolution (datetime, source_se, dest_se, active, throughput, filesize, buffer, nostreams, agrthroughput) "
@@ -10703,6 +10747,9 @@ void MySqlAPI::getStagingFilesForCanceling(std::vector< boost::tuple<int, std::s
                                           "  AND (hashed_id >= :hStart AND hashed_id <= :hEnd)  AND staging_start is NOT NULL ",
                                           soci::use(hashSegment.start), soci::use(hashSegment.end));
 
+            soci::statement stmt1 = (sql.prepare << "UPDATE t_file SET  job_finished = UTC_TIMESTAMP() "
+                                     "WHERE file_id = :file_id ", soci::use(file_id, "file_id"));
+
             // Cancel staging files
             for (soci::rowset<soci::row>::const_iterator i2 = rs.begin(); i2 != rs.end(); ++i2)
                 {
@@ -10712,6 +10759,8 @@ void MySqlAPI::getStagingFilesForCanceling(std::vector< boost::tuple<int, std::s
                     token = row.get<std::string>("bringonline_token","");
                     boost::tuple<int, std::string, std::string> record(file_id, source_surl, token);
                     files.push_back(record);
+
+                    stmt1.execute(true);
                 }
         }
     catch (std::exception& e)

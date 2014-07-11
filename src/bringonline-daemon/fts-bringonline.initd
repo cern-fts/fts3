@@ -29,8 +29,6 @@ prog=$(basename $exec)
 
 lockfile=/var/lock/subsys/fts-dm
 export GLOBUS_THREAD_MODEL=pthread
-export X509_USER_CERT=/etc/grid-security/fts3hostcert.pem
-export X509_USER_KEY=/etc/grid-security/fts3hostkey.pem
 
 start() {
     echo -n $"Starting $prog: "

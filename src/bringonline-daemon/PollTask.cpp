@@ -14,8 +14,18 @@
 
 #include <gfal_api.h>
 
+boost::shared_mutex PollTask::mx;
+
+std::set<std::string> PollTask::active_tokens;
+
 void PollTask::run(boost::any const &)
 {
+	if (!active())
+	{
+		abort();
+		return;
+	}
+
     GError *error = NULL;
     int status = gfal2_bring_online_poll(gfal2_ctx, boost::get<url>(ctx).c_str(), token.c_str(), &error);
 
@@ -53,5 +63,23 @@ void PollTask::run(boost::any const &)
 
             state_update(boost::get<job_id>(ctx), boost::get<file_id>(ctx), "FINISHED", "", false);
         }
+}
+
+void PollTask::abort()
+{
+	char const * surl = boost::get<url>(ctx).c_str();
+
+	GError * err;
+	int status = gfal2_abort_files(gfal2_ctx, 1, &surl, token.c_str(), &err);
+
+	if (status < 0)
+	{
+		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE abort FAILED "
+									   << boost::get<0>(ctx) << " "
+									   << boost::get<1>(ctx) <<  " "
+									   << boost::get<2>(ctx) <<  " "
+									   << err->code << " " << err->message  << commit;
+		g_clear_error(&err);
+	}
 }
 

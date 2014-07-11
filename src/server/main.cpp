@@ -41,6 +41,8 @@ limitations under the License. */
 #include <boost/thread.hpp>
 #include "profiler/Profiler.h"
 #include <fstream>
+#include "panic.h"
+#include <execinfo.h>
 
 namespace fs = boost::filesystem;
 using boost::thread;
@@ -113,45 +115,11 @@ int proc_find()
 }
 
 
-static void taskTimer(int time)
-{
-    boost::this_thread::sleep(boost::posix_time::seconds(time));
-    _exit(0);
-}
-
-
-
 static int fexists(const char *filename)
 {
     struct stat buffer;
     if (stat(filename, &buffer) == 0) return 0;
     return -1;
-}
-
-
-void _handle_sigint(int)
-{
-    stopThreads = true;
-    if (stackTrace.length() > 0)
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << stackTrace << commit;
-    boost::thread bt(taskTimer, 30);
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopping" << commit;
-    sleep(15);
-    try
-        {
-            theServer().stop();
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS db connections closing" << commit;
-            db::DBSingleton::tearDown();
-            sleep(10);
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS db connections closed" << commit;
-        }
-    catch(...)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unexpected exception when forcing the database teardown" << commit;
-        }
-    StaticSslLocking::kill_locks();
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopped" << commit;
-    _exit(0);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -370,23 +338,58 @@ void checkInitDirs()
         }
 }
 
+static void shutdown_callback(int signal, void*)
+{
+    int exit_status = 0;
+
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Caught signal " << signal
+            << " (" << strsignal(signal) << ")" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Future signals will be ignored!" << commit;
+
+    stopThreads = true;
+
+    // Some require traceback
+    switch (signal)
+        {
+            case SIGABRT: case SIGSEGV: case SIGTERM:
+            case SIGILL: case SIGFPE: case SIGBUS:
+            case SIGTRAP: case SIGSYS:
+                exit_status = -signal;
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Stack trace: \n" << Panic::stack_dump() << commit;
+                break;
+            default:
+                break;
+        }
+
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopping" << commit;
+    sleep(15);
+    try
+        {
+            theServer().stop();
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS db connections closing" << commit;
+            db::DBSingleton::tearDown();
+            sleep(10);
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS db connections closed" << commit;
+        }
+    catch(...)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unexpected exception when forcing the database teardown" << commit;
+        }
+
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopped" << commit;
+    _exit(exit_status);
+}
+
 
 int DoServer(int argc, char** argv)
 {
-    int res = 0;
     setenv("GLOBUS_THREAD_MODEL","pthread",1); //reset it
+    // Register signal handlers
+    Panic::setup_signal_handlers(shutdown_callback, NULL);
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Signal handlers installed" << commit;
 
     try
         {
-            REGISTER_SIGNAL(SIGABRT);
-            REGISTER_SIGNAL(SIGSEGV);
-            REGISTER_SIGNAL(SIGTERM);
-            REGISTER_SIGNAL(SIGILL);
-            REGISTER_SIGNAL(SIGFPE);
-            REGISTER_SIGNAL(SIGBUS);
-            REGISTER_SIGNAL(SIGTRAP);
-            REGISTER_SIGNAL(SIGSYS);
-
             std::string arguments("");
             size_t foundHelp;
             if (argc > 1)
@@ -444,11 +447,6 @@ int DoServer(int argc, char** argv)
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Starting server..." << commit;
 
             fts3_initialize_db_backend(false);
-            struct sigaction action;
-            action.sa_handler = _handle_sigint;
-            sigemptyset(&action.sa_mask);
-            action.sa_flags = SA_RESTART;
-            res = sigaction(SIGINT, &action, NULL);
 
             //initialize queue updater here to avoid race conditions
             ThreadSafeList::get_instance();
