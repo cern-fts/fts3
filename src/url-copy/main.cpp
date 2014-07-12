@@ -646,7 +646,7 @@ __attribute__((constructor)) void begin(void)
     uid_t pw_uid = name_to_uid();
     setuid(pw_uid);
     seteuid(pw_uid);
-    StaticSslLocking::init_locks();
+    setenv("GLOBUS_THREAD_MODEL", "pthread", 1);    
 }
 
 int main(int argc, char **argv)
@@ -1405,8 +1405,6 @@ stop:
 
     if (opts.areTransfersOnFile() && readFile.length() > 0)
         unlink(readFile.c_str());
-
-    StaticSslLocking::kill_locks();
 
     sleep(1);
     return EXIT_SUCCESS;
