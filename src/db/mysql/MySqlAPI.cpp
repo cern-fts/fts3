@@ -8683,7 +8683,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
     int exists = 0;
 
     //get all se's
-    querySeAll = "SELECT source_se, dest_se from t_optimize_active ";
+    querySeAll = "SELECT source_se, dest_se from t_optimize_active datetime>= (UTC_TIMESTAMP() - interval '60' minute) ";
 
     if(!vo_name.empty())
         querySe = " SELECT DISTINCT source_se, dest_se FROM t_job where vo_name='" + vo_name + "'";
@@ -9006,7 +9006,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                             dest_se_check = i->get<std::string>("dest_se");
 			    exists = 0; //reset
 
-                            sql  << "select file_id from t_file where source_se= :source_se and dest_se=:dest_se and vo_name=:vo_name LIMIT 1",
+                            sql  << "select file_id from t_file where source_se= :source_se and dest_se=:dest_se and vo_name=:vo_name AND file_state IN ('FAILED', 'FINISHED', 'CANCELED', 'SUBMITTED', 'ACTIVE') LIMIT 1",
                                  soci::use(source_se_check),
                                  soci::use(dest_se_check),
                                  soci::use(vo_name_local),
