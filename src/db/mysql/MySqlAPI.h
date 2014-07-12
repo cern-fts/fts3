@@ -408,6 +408,7 @@ private:
     std::string username_;
     std::vector<std::string> sanityVector;
 
+    void transferLogFileVectorInternal(soci::session& sql, std::map<int, struct message_log>& messagesLog);
 
     bool resetForRetryStaging(soci::session& sql, int file_id, const std::string & job_id, bool retry);
 
