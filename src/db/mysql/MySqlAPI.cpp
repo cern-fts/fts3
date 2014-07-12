@@ -8683,7 +8683,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
     int exists = 0;
 
     //get all se's
-    querySeAll = "SELECT source_se, dest_se from t_optimize_active datetime>= (UTC_TIMESTAMP() - interval '60' minute) ";
+    querySeAll = "SELECT source_se, dest_se from t_optimize_active WHERE datetime>= (UTC_TIMESTAMP() - interval '60' minute) ";
 
     if(!vo_name.empty())
         querySe = " SELECT DISTINCT source_se, dest_se FROM t_job where vo_name='" + vo_name + "'";
