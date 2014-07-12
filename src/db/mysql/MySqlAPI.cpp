@@ -6801,8 +6801,32 @@ void MySqlAPI::cancelJobsInTheQueue(const std::string& dn, std::vector<std::stri
 
 void MySqlAPI::transferLogFileVector(std::map<int, struct message_log>& messagesLog)
 {
-    soci::session sql(*connectionPool);
+   soci::session sql(*connectionPool);
+  
+   try
+        {
+            transferLogFileVectorInternal(sql, messagesLog);
+        }
+    catch (std::exception& e)
+        {
+	   //retry if deadlocked
+            transferLogFileVectorInternal(sql, messagesLog);
 
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+	   //retry if deadlocked
+            transferLogFileVectorInternal(sql, messagesLog);
+
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }
+
+}
+
+
+void MySqlAPI::transferLogFileVectorInternal(soci::session& sql, std::map<int, struct message_log>& messagesLog)
+{
     std::string filePath;
     //soci doesn't access bool
     unsigned int debugFile = 0;
