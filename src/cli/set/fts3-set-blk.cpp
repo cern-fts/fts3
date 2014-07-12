@@ -37,12 +37,12 @@ using namespace fts3::cli;
  */
 int main(int ac, char* av[])
 {
-	unique_ptr<BlacklistCli> cli(new BlacklistCli);
+    unique_ptr<BlacklistCli> cli(new BlacklistCli);
 
     try
         {
             // create and initialize the command line utility
-    		cli->parse(ac, av);
+            cli->parse(ac, av);
             if (!cli->validate()) return 0;
 
             // validate command line options, and return respective gsoap context

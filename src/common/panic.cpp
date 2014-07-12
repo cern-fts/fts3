@@ -57,7 +57,8 @@ static void (*_arg_shutdown_callback)(int, void*);
 static void *_arg_udata;
 static void set_handlers(void)
 {
-    static const int CATCH_SIGNALS[] = {
+    static const int CATCH_SIGNALS[] =
+    {
         SIGABRT, SIGSEGV, SIGTERM,
         SIGILL, SIGFPE, SIGBUS,
         SIGTRAP, SIGSYS,
@@ -69,12 +70,13 @@ static void set_handlers(void)
     sem_init(&semaphore, 0, 0);
 
     memset(actions, 0, sizeof(actions));
-    for (size_t i = 0; i < N_CATCH_SIGNALS; ++i) {
-        actions[i].sa_handler = &signal_handler;
-        sigemptyset(&actions[i].sa_mask);
-        actions[i].sa_flags = SA_RESTART;
-        sigaction(CATCH_SIGNALS[i], &actions[i], NULL);
-    }
+    for (size_t i = 0; i < N_CATCH_SIGNALS; ++i)
+        {
+            actions[i].sa_handler = &signal_handler;
+            sigemptyset(&actions[i].sa_mask);
+            actions[i].sa_flags = SA_RESTART;
+            sigaction(CATCH_SIGNALS[i], &actions[i], NULL);
+        }
 
     boost::thread watchdog(signal_watchdog, _arg_shutdown_callback, _arg_udata);
 }
@@ -90,7 +92,8 @@ void Panic::setup_signal_handlers(void (*shutdown_callback)(int, void*), void* u
 }
 
 
-std::string Panic::stack_dump(void) {
+std::string Panic::stack_dump(void)
+{
     std::string stackTrace;
 
     const int stack_size = 25;

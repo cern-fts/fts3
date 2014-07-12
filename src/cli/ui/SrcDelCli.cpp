@@ -72,7 +72,7 @@ bool SrcDelCli::validate(bool /*init*/)
     if (vm.count("file") && vm.count("Filename"))
         {
             // print err
-    		throw cli_exception("If a filename submission has been used each URL of files has to be specified inside the file separately for each file!");
+            throw cli_exception("If a filename submission has been used each URL of files has to be specified inside the file separately for each file!");
         }
 
     // first check if the -f option was used, try to open the file with bulk-job description
@@ -104,7 +104,7 @@ bool SrcDelCli::validate(bool /*init*/)
 
 void SrcDelCli::validateFileName(std::string const & url)
 {
-	static regex const fileUrlRegex("([a-zA-Z][a-zA-Z0-9+\\.-]*://[a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
+    static regex const fileUrlRegex("([a-zA-Z][a-zA-Z0-9+\\.-]*://[a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
 
     // check the regular expression
     smatch what;

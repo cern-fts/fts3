@@ -76,7 +76,7 @@ bool FileTransferExecutor::checkValidProxy(const std::string& filename, std::str
 int FileTransferExecutor::execute()
 {
     int scheduled = 0;
-       
+
     //stop forking when a signal is received to avoid deadlocks
     if (tf.FILE_ID == 0 || stopThreads)
         return 0;

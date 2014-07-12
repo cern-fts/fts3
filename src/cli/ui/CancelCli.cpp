@@ -40,7 +40,7 @@ bool CancelCli::validate()
 
     if (!vm.count("file") && !vm.count("jobid"))
         {
-    		throw bad_option("file", "Either the bulk file or job ID list may be used, can't use both!");
+            throw bad_option("file", "Either the bulk file or job ID list may be used, can't use both!");
         }
 
     prepareJobIds();

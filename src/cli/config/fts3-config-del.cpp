@@ -40,7 +40,7 @@ using namespace fts3::cli;
  */
 int main(int ac, char* av[])
 {
-	unique_ptr<DelCfgCli> cli(new DelCfgCli);
+    unique_ptr<DelCfgCli> cli(new DelCfgCli);
 
     try
         {

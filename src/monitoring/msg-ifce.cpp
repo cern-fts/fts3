@@ -153,6 +153,31 @@ void msg_ifce::SendTransferStartMessage(transfer_completed *tr_started)
                 text.append(",\"$q$\":\"");
                 text.append(tr_started->user_dn);
                 text.append("\"");
+
+            if(tr_completed->file_metadata.length() > 0)
+            {
+            	text.append(",\"$r$\":");
+            	text.append(tr_completed->file_metadata);
+            	text.append("");
+            }
+            else
+            {
+            	text.append(",\"$r$\":{}");
+            }
+
+            if(tr_completed->job_metadata.length() > 0)
+            {
+            	text.append(",\"$s$\":");
+            	text.append(tr_completed->job_metadata);
+            	text.append("");
+            }
+            else
+            {
+            	text.append(",\"$s$\":{}");
+            }
+
+
+
             */
 
             text.append("}");
@@ -356,6 +381,29 @@ void msg_ifce::SendTransferFinishMessage(transfer_completed *tr_completed)
             text.append(",\"$15$\":\"");
             text.append(tr_completed->user_dn);
             text.append("\"");
+
+            if(tr_completed->file_metadata.length() > 0)
+            {
+            	text.append(",\"$16$\":");
+            	text.append(tr_completed->file_metadata);
+            	text.append("");
+            }
+            else
+            {
+            	text.append(",\"$16$\":{}");
+            }
+
+            if(tr_completed->job_metadata.length() > 0)
+            {
+            	text.append(",\"$17$\":");
+            	text.append(tr_completed->job_metadata);
+            	text.append("");
+            }
+            else
+            {
+            	text.append(",\"$17$\":{}");
+            }
+
             */
 
             text.append("}");
@@ -661,6 +709,20 @@ void msg_ifce::set_user_dn(transfer_completed* tr_completed, const std::string &
     if (tr_completed)
         tr_completed->user_dn = value;
 }
+
+void msg_ifce::set_file_metadata(transfer_completed* tr_completed, const std::string & value)
+{
+    if (tr_completed)
+        tr_completed->file_metadata = value;
+}
+
+
+void msg_ifce::set_job_metadata(transfer_completed* tr_completed, const std::string & value)
+{
+    if (tr_completed)
+        tr_completed->job_metadata = value;
+}
+
 
 std::string msg_ifce::getTimestamp()
 {
