@@ -104,10 +104,10 @@ MsgProducer::MsgProducer()
     producer_transfer_started = NULL;
     producer_transfer_state = NULL;
     destination_transfer_state = NULL;
-    connectionIsOK = false;
     FTS3_CONFIG_NAMESPACE::theServerConfig().read(0, NULL);
     FTSEndpoint = FTS3_CONFIG_NAMESPACE::theServerConfig().get<std::string>("Alias");
     readConfig();
+    getConnection();
 }
 
 MsgProducer::~MsgProducer()
@@ -169,12 +169,6 @@ bool MsgProducer::sendMessage(std::string &temp)
 
 bool MsgProducer::getConnection()
 {
-
-    if (connectionIsOK == false )
-        {
-
-            readConfig();
-
             // Create a ConnectionFactory
             std::unique_ptr<ConnectionFactory> connectionFactory(
                 ConnectionFactory::createCMSConnectionFactory(brokerURI));
@@ -218,9 +212,7 @@ bool MsgProducer::getConnection()
             producer_transfer_state = session->createProducer(destination_transfer_state);
             producer_transfer_state->setDeliveryMode(DeliveryMode::PERSISTENT);
             producer_transfer_state->setTimeToLive(ttl);
-
-            connectionIsOK = true;
-        }
+       
     return true;
 }
 
@@ -244,7 +236,7 @@ void MsgProducer::readConfig()
             this->logfilename = getLOGFILENAME();
             this->logfilepath = getLOGFILEDIR();
 
-            this->brokerURI = "tcp://" + broker + "?wireFormat=stomp&soKeepAlive=true";
+            this->brokerURI = "tcp://" + broker + "?wireFormat=stomp&soKeepAlive=true&wireFormat.MaxInactivityDuration=-1";
 
         }
     catch (...)
@@ -260,7 +252,6 @@ void MsgProducer::readConfig()
 void MsgProducer::onException( const CMSException& ex AMQCPP_UNUSED)
 {
     logger::writeLog(ex.getStackTraceString(), true);
-    connectionIsOK = false;
     stopThreads = true;
     std::queue<std::string> myQueue = concurrent_queue::getInstance()->the_queue;
     std::string ret;
@@ -284,8 +275,7 @@ void MsgProducer::run()
         {
             try
                 {
-                    //send messages
-                    getConnection(); //make sure there is a valid connection to the broker
+                    //send messages                    
                     msg = concurrent_queue::getInstance()->pop();
                     msgBk = msg;
                     sendMessage(msg);
@@ -294,7 +284,6 @@ void MsgProducer::run()
                 }
             catch (CMSException& e)
                 {
-                    connectionIsOK = false;
                     if(msgBk.length() > 5)  //random number,just to make it's not empty
                         {
                             concurrent_queue::getInstance()->push(msgBk);
@@ -302,20 +291,19 @@ void MsgProducer::run()
                         }
                     errorMessage = e.getStackTraceString();
                     logger::writeLog(errorMessage, true);
-                    cleanup();
                     sleep(10);
+		    exit(15);
                 }
             catch (...)
                 {
-                    connectionIsOK = false;
                     if(msgBk.length() > 5)  //random number,just to make it's not empty
                         {
                             concurrent_queue::getInstance()->push(msgBk);
                             send_message(msgBk);
                         }
                     logger::writeLog("Unhandled exception occured", true);
-                    cleanup();
                     sleep(10);
+                    exit(15);
                 }
         }
 }
