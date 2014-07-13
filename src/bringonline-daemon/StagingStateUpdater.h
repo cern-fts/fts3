@@ -59,14 +59,14 @@ public:
         std::vector<int>::const_iterator it_v;
         // iterate over jobs
         for (it_m = ctx.getJobs().begin(); it_m != ctx.getJobs().end(); ++it_m)
-        {
-        	std::string const & job_id = it_m->first;
-        	// iterate over files
-        	for (it_v = it_m->second.begin(); it_v != it_m->second.end(); ++it_v)
-        	{
-        		updates.push_back(value_type(*it_v, state, reason, job_id, retry));
-        	}
-        }
+            {
+                std::string const & job_id = it_m->first;
+                // iterate over files
+                for (it_v = it_m->second.begin(); it_v != it_m->second.end(); ++it_v)
+                    {
+                        updates.push_back(value_type(*it_v, state, reason, job_id, retry));
+                    }
+            }
     }
 
     void recover()

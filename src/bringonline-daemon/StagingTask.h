@@ -40,7 +40,7 @@ public:
      * @param ctx : staging task details
      */
     StagingTask(StagingContext const & ctx) :
-    	Gfal2Task(), state_update(StagingStateUpdater::instance()), ctx(ctx) {}
+        Gfal2Task(), state_update(StagingStateUpdater::instance()), ctx(ctx) {}
 
     /**
      * Creates a new StagingTask from another StagingTask
@@ -48,7 +48,7 @@ public:
      * @param copy : a staging task (stills the gfal2 context of this object!)
      */
     StagingTask(StagingTask & copy) :
-    	Gfal2Task(copy), state_update(StagingStateUpdater::instance()), ctx(copy.ctx) {}
+        Gfal2Task(copy), state_update(StagingStateUpdater::instance()), ctx(copy.ctx) {}
 
     /**
      * Destructor

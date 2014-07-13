@@ -22,10 +22,10 @@ class StagingContext
 
 public:
 
-	// typedef for convenience
-	typedef boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string> context_type;
+    // typedef for convenience
+    typedef boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string> context_type;
 
-	enum
+    enum
     {
         vo,
         surl,
@@ -38,46 +38,46 @@ public:
         src_space_token
     };
 
-	StagingContext() : pinlifetime(28800), bringonlineTimeout(28800) {}
+    StagingContext() : pinlifetime(28800), bringonlineTimeout(28800) {}
 
-	StagingContext(StagingContext const & copy) :
-		surls(copy.surls),
-		pinlifetime(copy.pinlifetime),
-		bringonlineTimeout(copy.bringonlineTimeout),
-		delegationId(copy.delegationId),
-		jobs(copy.jobs),
-		proxy(copy.proxy)
-	{
+    StagingContext(StagingContext const & copy) :
+        surls(copy.surls),
+        pinlifetime(copy.pinlifetime),
+        bringonlineTimeout(copy.bringonlineTimeout),
+        delegationId(copy.delegationId),
+        jobs(copy.jobs),
+        proxy(copy.proxy)
+    {
 
-	}
+    }
 
-	virtual ~StagingContext() {}
+    virtual ~StagingContext() {}
 
-	void add(context_type const & ctx);
+    void add(context_type const & ctx);
 
-	std::map< std::string, std::vector<int> > const & getJobs() const
-	{
-		return jobs;
-	}
+    std::map< std::string, std::vector<int> > const & getJobs() const
+    {
+        return jobs;
+    }
 
-	std::vector<char const *> getUrls() const;
+    std::vector<char const *> getUrls() const;
 
-	std::string const & getProxy() const
-	{
-		return proxy;
-	}
+    std::string const & getProxy() const
+    {
+        return proxy;
+    }
 
-	int getPinlifetime() const
-	{
-		return pinlifetime;
-	}
+    int getPinlifetime() const
+    {
+        return pinlifetime;
+    }
 
-	int getBringonlineTimeout() const
-	{
-		return bringonlineTimeout;
-	}
+    int getBringonlineTimeout() const
+    {
+        return bringonlineTimeout;
+    }
 
-	std::string getLogMsg() const;
+    std::string getLogMsg() const;
 
     /**
      * Checks if a proxy is valid

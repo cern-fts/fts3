@@ -646,7 +646,7 @@ __attribute__((constructor)) void begin(void)
     uid_t pw_uid = name_to_uid();
     setuid(pw_uid);
     seteuid(pw_uid);
-    setenv("GLOBUS_THREAD_MODEL", "pthread", 1);    
+    setenv("GLOBUS_THREAD_MODEL", "pthread", 1);
 }
 
 int main(int argc, char **argv)

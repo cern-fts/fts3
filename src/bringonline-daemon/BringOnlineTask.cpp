@@ -94,16 +94,16 @@ void BringOnlineTask::run(boost::any const &)
 
     std::vector<char const *> urls = ctx.getUrls();
     int status = gfal2_bring_online_list(
-    		gfal2_ctx,
-    		urls.size(),
-    		&*urls.begin(),
-    		ctx.getPinlifetime(),
-    		ctx.getBringonlineTimeout(),
-    		token,
-    		sizeof(token),
-    		1,
-    		&error
-    	);
+                     gfal2_ctx,
+                     urls.size(),
+                     &*urls.begin(),
+                     ctx.getPinlifetime(),
+                     ctx.getBringonlineTimeout(),
+                     token,
+                     sizeof(token),
+                     1,
+                     &error
+                 );
 
     if (status < 0)
         {
@@ -118,7 +118,7 @@ void BringOnlineTask::run(boost::any const &)
     else if (status == 0)
         {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE queued, got token " << token  << " "
-            								<< ctx.getLogMsg() << commit;
+                                            << ctx.getLogMsg() << commit;
 
             WaitingRoom<PollTask>::instance().add(new PollTask(*this, token));
         }

@@ -63,7 +63,7 @@ void shutdown_callback(int signal, void*)
     StagingStateUpdater::instance().recover();
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Caught signal " << signal
-             << " (" << strsignal(signal) << ")" << commit;
+                                    << " (" << strsignal(signal) << ")" << commit;
     FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Future signals will be ignored!" << commit;
 
     stopThreads = true;
@@ -71,13 +71,18 @@ void shutdown_callback(int signal, void*)
     // Some require traceback
     switch (signal)
         {
-            case SIGABRT: case SIGSEGV: case SIGTERM:
-            case SIGILL: case SIGFPE: case SIGBUS:
-            case SIGTRAP: case SIGSYS:
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Stack trace: \n" << Panic::stack_dump() << commit;
-                break;
-            default:
-                break;
+        case SIGABRT:
+        case SIGSEGV:
+        case SIGTERM:
+        case SIGILL:
+        case SIGFPE:
+        case SIGBUS:
+        case SIGTRAP:
+        case SIGSYS:
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Stack trace: \n" << Panic::stack_dump() << commit;
+            break;
+        default:
+            break;
         }
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE daemon stopping" << commit;

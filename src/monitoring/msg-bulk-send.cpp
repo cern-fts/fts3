@@ -102,12 +102,17 @@ void DoServer() throw()
         }
 }
 
-int main()
+int main(int argc,  char** argv)
 {
     //switch to non-priviledged user to avoid reading the hostcert
     uid_t pw_uid = name_to_uid();
     setuid(pw_uid);
     seteuid(pw_uid);
+
+    if(argc > 1) //if any param is provided stay attached to terminal
+        {
+            DoServer();
+        }
 
     int d =  daemon(0,0);
     if(d < 0)

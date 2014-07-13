@@ -176,9 +176,9 @@ int FileTransferExecutor::execute()
                     if(false == checkValidProxy(proxy_file, message))
                         {
                             if(!message.empty())
-                            {
-				 FTS3_COMMON_LOGGER_NEWLOG(ERR) << message  << commit;
-			    }
+                                {
+                                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << message  << commit;
+                                }
                             proxy_file = get_proxy_cert(
                                              tf.DN, // user_dn
                                              tf.CRED_ID, // user_cred

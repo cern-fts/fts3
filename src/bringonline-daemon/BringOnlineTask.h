@@ -40,10 +40,10 @@ class BringOnlineTask : public StagingTask
 
     enum
     {
-    	vo,
-    	dn,
-    	se,
-    	space_token
+        vo,
+        dn,
+        se,
+        space_token
     };
 
 public:
