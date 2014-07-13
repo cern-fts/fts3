@@ -169,50 +169,50 @@ bool MsgProducer::sendMessage(std::string &temp)
 
 bool MsgProducer::getConnection()
 {
-            // Create a ConnectionFactory
-            std::unique_ptr<ConnectionFactory> connectionFactory(
-                ConnectionFactory::createCMSConnectionFactory(brokerURI));
+    // Create a ConnectionFactory
+    std::unique_ptr<ConnectionFactory> connectionFactory(
+        ConnectionFactory::createCMSConnectionFactory(brokerURI));
 
-            // Create a Connection
-            if (true == getUSE_BROKER_CREDENTIALS())
-                connection = connectionFactory->createConnection(getUSERNAME(), getPASSWORD());
-            else
-                connection = connectionFactory->createConnection();
+    // Create a Connection
+    if (true == getUSE_BROKER_CREDENTIALS())
+        connection = connectionFactory->createConnection(getUSERNAME(), getPASSWORD());
+    else
+        connection = connectionFactory->createConnection();
 
-            connection->setExceptionListener(this);
-            connection->start();
+    connection->setExceptionListener(this);
+    connection->start();
 
-            session = connection->createSession(Session::AUTO_ACKNOWLEDGE);
+    session = connection->createSession(Session::AUTO_ACKNOWLEDGE);
 
-            // Create the destination (Topic or Queue)
-            if (getTOPIC())
-                {
-                    destination_transfer_started = session->createTopic(startqueueName);
-                    destination_transfer_completed = session->createTopic(completequeueName);
-                    destination_transfer_state = session->createTopic(statequeueName);
-                }
-            else
-                {
-                    destination_transfer_started = session->createQueue(startqueueName);
-                    destination_transfer_completed = session->createQueue(completequeueName);
-                    destination_transfer_state = session->createQueue(statequeueName);
-                }
+    // Create the destination (Topic or Queue)
+    if (getTOPIC())
+        {
+            destination_transfer_started = session->createTopic(startqueueName);
+            destination_transfer_completed = session->createTopic(completequeueName);
+            destination_transfer_state = session->createTopic(statequeueName);
+        }
+    else
+        {
+            destination_transfer_started = session->createQueue(startqueueName);
+            destination_transfer_completed = session->createQueue(completequeueName);
+            destination_transfer_state = session->createQueue(statequeueName);
+        }
 
-            int ttl = GetIntVal(getTTL());
+    int ttl = GetIntVal(getTTL());
 
-            // Create a message producer
-            producer_transfer_started = session->createProducer(destination_transfer_started);
-            producer_transfer_started->setDeliveryMode(DeliveryMode::PERSISTENT);
-            producer_transfer_started->setTimeToLive(ttl);
+    // Create a message producer
+    producer_transfer_started = session->createProducer(destination_transfer_started);
+    producer_transfer_started->setDeliveryMode(DeliveryMode::PERSISTENT);
+    producer_transfer_started->setTimeToLive(ttl);
 
-            producer_transfer_completed = session->createProducer(destination_transfer_completed);
-            producer_transfer_completed->setDeliveryMode(DeliveryMode::PERSISTENT);
-            producer_transfer_completed->setTimeToLive(ttl);
+    producer_transfer_completed = session->createProducer(destination_transfer_completed);
+    producer_transfer_completed->setDeliveryMode(DeliveryMode::PERSISTENT);
+    producer_transfer_completed->setTimeToLive(ttl);
 
-            producer_transfer_state = session->createProducer(destination_transfer_state);
-            producer_transfer_state->setDeliveryMode(DeliveryMode::PERSISTENT);
-            producer_transfer_state->setTimeToLive(ttl);
-       
+    producer_transfer_state = session->createProducer(destination_transfer_state);
+    producer_transfer_state->setDeliveryMode(DeliveryMode::PERSISTENT);
+    producer_transfer_state->setTimeToLive(ttl);
+
     return true;
 }
 
@@ -275,7 +275,7 @@ void MsgProducer::run()
         {
             try
                 {
-                    //send messages                    
+                    //send messages
                     msg = concurrent_queue::getInstance()->pop();
                     msgBk = msg;
                     sendMessage(msg);
@@ -292,7 +292,7 @@ void MsgProducer::run()
                     errorMessage = e.getStackTraceString();
                     logger::writeLog(errorMessage, true);
                     sleep(10);
-		    exit(15);
+                    exit(15);
                 }
             catch (...)
                 {

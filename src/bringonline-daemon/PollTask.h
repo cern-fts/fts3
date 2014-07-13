@@ -42,10 +42,10 @@ public:
      * @param copy : a staging task (stills the gfal2 context of this object)
      */
     PollTask(StagingTask & copy, std::string token) : StagingTask(copy), token(token), nPolls(0), wait_until()
-	{
-    	boost::unique_lock<boost::shared_mutex> lock(mx);
-    	active_tokens.insert(token);
-	}
+    {
+        boost::unique_lock<boost::shared_mutex> lock(mx);
+        active_tokens.insert(token);
+    }
 
     /**
      * Copy constructor
@@ -57,7 +57,7 @@ public:
      */
     virtual ~PollTask()
     {
-    	if (gfal2_ctx) cancel(token);
+        if (gfal2_ctx) cancel(token);
     }
 
     /**
@@ -75,22 +75,22 @@ public:
 
     static void cancel(std::string const & token)
     {
-    	boost::unique_lock<boost::shared_mutex> lock(mx);
-    	active_tokens.erase(token);
+        boost::unique_lock<boost::shared_mutex> lock(mx);
+        active_tokens.erase(token);
     }
 
     static void cancel(std::set<std::string> const & remove)
     {
-    	boost::unique_lock<boost::shared_mutex> lock(mx);
-    	// the result of set difference operation
-    	std::set<string> result;
-    	std::set_difference(
-    			active_tokens.begin(), active_tokens.end(),
-    			remove.begin(), remove.end(),
-    			std::inserter(result, result.end())
-    		);
-    	// swap the active_token with our result
-    	active_tokens.swap(result);
+        boost::unique_lock<boost::shared_mutex> lock(mx);
+        // the result of set difference operation
+        std::set<string> result;
+        std::set_difference(
+            active_tokens.begin(), active_tokens.end(),
+            remove.begin(), remove.end(),
+            std::inserter(result, result.end())
+        );
+        // swap the active_token with our result
+        active_tokens.swap(result);
     }
 
 private:
@@ -103,8 +103,8 @@ private:
     /// @return : true if the PollTask is still active, false otherwise
     bool active()
     {
-    	boost::shared_lock<boost::shared_mutex> lock(mx);
-    	return active_tokens.count(token);
+        boost::shared_lock<boost::shared_mutex> lock(mx);
+        return active_tokens.count(token);
     }
 
     /// aborts the bring online operation

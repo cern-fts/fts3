@@ -46,15 +46,15 @@ void FetchCancelStaging::fetch()
 
                     for (it = files.begin(); it != files.end(); ++it)
                         {
-							std::string const & token = boost::get<2>(*it);
-							tokens.insert(token);
+                            std::string const & token = boost::get<2>(*it);
+                            tokens.insert(token);
                         }
 
                     if (!tokens.empty())
-                    	{
-                    		// do the cancellation
-                    		PollTask::cancel(tokens);
-                    	}
+                        {
+                            // do the cancellation
+                            PollTask::cancel(tokens);
+                        }
                     // sleep for 10 seconds
                     boost::this_thread::sleep(boost::posix_time::milliseconds(10000));
 

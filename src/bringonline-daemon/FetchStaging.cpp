@@ -64,20 +64,20 @@ void FetchStaging::fetch()
 
                     std::map<key_type, StagingContext>::const_iterator it_t;
                     for (it_t = tasks.begin(); it_t != tasks.end(); ++it_t)
-						{
-							try
-								{
-									threadpool.start(new BringOnlineTask(*it_t));
-								}
-							catch(Err_Custom const & ex)
-								{
-									FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
-								}
-							catch(...)
-								{
-									FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception, continuing to see..." << commit;
-								}
-						}
+                        {
+                            try
+                                {
+                                    threadpool.start(new BringOnlineTask(*it_t));
+                                }
+                            catch(Err_Custom const & ex)
+                                {
+                                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
+                                }
+                            catch(...)
+                                {
+                                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception, continuing to see..." << commit;
+                                }
+                        }
 
                     boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
                 }

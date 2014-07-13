@@ -687,21 +687,27 @@ void MySqlAPI::getVOPairs(std::vector< boost::tuple<std::string, std::string, st
                     );
 
                     long long int linkExists = 0;
-                    sql << "select count(*) from t_optimize_active where source_se=:source_se and dest_se=:dest_se",
+                    sql << "select count(*) from t_optimize_active where source_se=:source_se and dest_se=:dest_se and datetime >= (UTC_TIMESTAMP() - interval '5' MINUTE)",
                         soci::use(source_se),
                         soci::use(dest_se),
                         soci::into(linkExists);
                     if(linkExists == 0) //for some reason does not exist, add it
-                        sql << "INSERT INTO t_optimize_active (source_se, dest_se, active, ema) VALUES (:source_se, :dest_se, 2, 0) ON DUPLICATE KEY UPDATE source_se=:source_se, dest_se=:dest_se",
+                    {
+                        sql.begin();
+                        sql << "INSERT INTO t_optimize_active (source_se, dest_se, active, ema) VALUES (:source_se, :dest_se, 2, 0) ON DUPLICATE KEY UPDATE source_se=:source_se, dest_se=:dest_se, datetime=UTC_TIMESTAMP()",
                             soci::use(source_se), soci::use(dest_se),soci::use(source_se), soci::use(dest_se);
+                        sql.commit();
+                    }
                 }
         }
     catch (std::exception& e)
         {
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
 
@@ -2018,17 +2024,35 @@ bool MySqlAPI::updateFileTransferStatus(double throughputIn, std::string job_id,
         }
     catch (std::exception& e)
         {
-            //try again if deadlocked
-            updateFileTransferStatusInternal(sql, throughputIn, job_id, file_id, transfer_status, transfer_message, process_id, filesize, duration, retry);
-
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            try
+                {
+                    //try again if deadlocked
+                    updateFileTransferStatusInternal(sql, throughputIn, job_id, file_id, transfer_status, transfer_message, process_id, filesize, duration, retry);
+                }
+            catch (std::exception& e)
+                {
+                    throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+                }
+            catch (...)
+                {
+                    throw Err_Custom(std::string(__func__) + ": Caught exception " );
+                }
         }
     catch (...)
         {
-            //try again if deadlocked
-            updateFileTransferStatusInternal(sql, throughputIn, job_id, file_id, transfer_status, transfer_message, process_id, filesize, duration, retry);
-
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            try
+                {
+                    //try again if deadlocked
+                    updateFileTransferStatusInternal(sql, throughputIn, job_id, file_id, transfer_status, transfer_message, process_id, filesize, duration, retry);
+                }
+            catch (std::exception& e)
+                {
+                    throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+                }
+            catch (...)
+                {
+                    throw Err_Custom(std::string(__func__) + ": Caught exception " );
+                }
         }
     return true;
 }
@@ -2200,17 +2224,36 @@ bool MySqlAPI::updateJobTransferStatus(std::string job_id, const std::string sta
         }
     catch (std::exception& e)
         {
-            //try again if deadlocked
-            updateJobTransferStatusInternal(sql, job_id, status, pid);
+            try
+                {
+                    //try again if deadlocked
+                    updateJobTransferStatusInternal(sql, job_id, status, pid);
+                }
+            catch (std::exception& e)
+                {
+                    throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+                }
+            catch (...)
+                {
+                    throw Err_Custom(std::string(__func__) + ": Caught exception " );
+                }
 
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            //try again if deadlocked
-            updateJobTransferStatusInternal(sql, job_id, status, pid);
-
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            try
+                {
+                    //try again if deadlocked
+                    updateJobTransferStatusInternal(sql, job_id, status, pid);
+                }
+            catch (std::exception& e)
+                {
+                    throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+                }
+            catch (...)
+                {
+                    throw Err_Custom(std::string(__func__) + ": Caught exception " );
+                }
         }
     return true;
 }
@@ -2234,6 +2277,8 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
             std::string currentState("");
             std::string reuseFlag;
             soci::indicator isNull = soci::i_ok;
+
+            sql.begin();
 
             if(job_id.empty())
                 {
@@ -2306,8 +2351,6 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
             int numberOfFilesTerminal = numberOfFilesCanceled + numberOfFilesFailed + numberOfFilesFinished;
 
             bool jobFinished = (numberOfFilesInJob == numberOfFilesTerminal);
-
-            sql.begin();
 
             if (jobFinished)
                 {
@@ -6801,25 +6844,41 @@ void MySqlAPI::cancelJobsInTheQueue(const std::string& dn, std::vector<std::stri
 
 void MySqlAPI::transferLogFileVector(std::map<int, struct message_log>& messagesLog)
 {
-   soci::session sql(*connectionPool);
-  
-   try
+    soci::session sql(*connectionPool);
+
+    try
         {
             transferLogFileVectorInternal(sql, messagesLog);
         }
     catch (std::exception& e)
         {
-	   //retry if deadlocked
+           try{
+            //retry if deadlocked
             transferLogFileVectorInternal(sql, messagesLog);
-
+             }
+    catch (std::exception& e)
+        {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-	   //retry if deadlocked
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }           
+        }
+    catch (...)
+        {
+           try{
+            //retry if deadlocked
             transferLogFileVectorInternal(sql, messagesLog);
-
-            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+             }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }           
         }
 
 }
@@ -8707,7 +8766,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
     int exists = 0;
 
     //get all se's
-    querySeAll = "SELECT source_se, dest_se from t_optimize_active WHERE datetime>= (UTC_TIMESTAMP() - interval '60' minute) ";
+    querySeAll = "SELECT source_se, dest_se from t_optimize_active WHERE datetime >= (UTC_TIMESTAMP() - interval '60' minute) ";
 
     if(!vo_name.empty())
         querySe = " SELECT DISTINCT source_se, dest_se FROM t_job where vo_name='" + vo_name + "'";
@@ -9028,7 +9087,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                         {
                             source_se_check = i->get<std::string>("source_se");
                             dest_se_check = i->get<std::string>("dest_se");
-			    exists = 0; //reset
+                            exists = 0; //reset
 
                             sql  << "select file_id from t_file where source_se= :source_se and dest_se=:dest_se and vo_name=:vo_name AND file_state IN ('FAILED', 'FINISHED', 'CANCELED', 'SUBMITTED', 'ACTIVE') LIMIT 1",
                                  soci::use(source_se_check),
@@ -9048,8 +9107,8 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                                     nFailedLastHour = 0;
                                     nFinishedLastHour = 0;
                                     ratioSuccessFailure = 0.0;
-				    source_se = source_se_check;
-				    dest_se = dest_se_check;
+                                    source_se = source_se_check;
+                                    dest_se = dest_se_check;
 
                                     st1.execute(true);
                                     st2.execute(true);

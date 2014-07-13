@@ -20,13 +20,13 @@ std::set<std::string> PollTask::active_tokens;
 
 void PollTask::run(boost::any const &)
 {
-	if (!active())
-	{
-		abort();
-		return;
-	}
+    if (!active())
+        {
+            abort();
+            return;
+        }
 
-	std::vector<char const *> urls = ctx.getUrls();
+    std::vector<char const *> urls = ctx.getUrls();
 
     GError *error = NULL;
     int status = gfal2_bring_online_poll_list(gfal2_ctx, urls.size(), &*urls.begin(), token.c_str(), &error);
@@ -66,17 +66,17 @@ void PollTask::run(boost::any const &)
 
 void PollTask::abort()
 {
-	std::vector<char const *> urls = ctx.getUrls();
+    std::vector<char const *> urls = ctx.getUrls();
 
-	GError * err;
-	int status = gfal2_abort_files(gfal2_ctx, urls.size(), &*urls.begin(), token.c_str(), &err);
+    GError * err;
+    int status = gfal2_abort_files(gfal2_ctx, urls.size(), &*urls.begin(), token.c_str(), &err);
 
-	if (status < 0)
-	{
-		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE abort FAILED "
-									   << ctx.getLogMsg()
-									   << err->code << " " << err->message  << commit;
-		g_clear_error(&err);
-	}
+    if (status < 0)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE abort FAILED "
+                                           << ctx.getLogMsg()
+                                           << err->code << " " << err->message  << commit;
+            g_clear_error(&err);
+        }
 }
 

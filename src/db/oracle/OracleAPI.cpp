@@ -624,26 +624,31 @@ void OracleAPI::getVOPairs(std::vector< boost::tuple<std::string, std::string, s
                     );
 
                     long long int linkExists = 0;
-                    sql << "select count(*) from t_optimize_active where source_se=:source_se and dest_se=:dest_se",
+                    sql << "select count(*) from t_optimize_active where source_se=:source_se and dest_se=:dest_se and datetime >= (sys_extract_utc(systimestamp) - interval '5' MINUTE)",
                         soci::use(source_se),
                         soci::use(dest_se),
                         soci::into(linkExists);
                     if(linkExists == 0) //for some reason does not exist, add it
                         {
+			    sql.begin();
                             sql << " MERGE INTO t_optimize_active USING "
                                 "    (SELECT :source_se as source, :dest_se as dest FROM dual) Pair "
                                 " ON (t_optimize_active.source_se = Pair.source AND t_optimize_active.dest_se = Pair.dest) "
-                                " WHEN NOT MATCHED THEN INSERT (source_se, dest_se) VALUES (Pair.source, Pair.dest)",
+			        " WHEN MATCHED THEN UPDATE SET datetime = sys_extract_utc(systimestamp) "
+                                " WHEN NOT MATCHED THEN INSERT (source_se, dest_se, datetime) VALUES (Pair.source, Pair.dest, sys_extract_utc(systimestamp) )",
                                 soci::use(source_se), soci::use(dest_se);
+			    sql.commit();
                         }
                 }
         }
     catch (std::exception& e)
         {
+	    sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
+    	    sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
 }
