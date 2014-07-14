@@ -143,10 +143,10 @@ void SingleTrStateInstance::constructJSONMsg(struct message_state* state)
     json_message << "SS {";
 
 
-    json_message << "\"ftsAlias\":" << "\"" << ftsAlias << "\",";
+    json_message << "\"endpnt\":" << "\"" << ftsAlias << "\",";
     json_message << "\"user_dn\":" << "\"" << state->user_dn << "\",";
-    json_message << "\"source_url\":" << "\"" << state->source_url << "\",";
-    json_message << "\"dest_url\":" << "\"" << state->dest_url << "\",";
+    json_message << "\"src_url\":" << "\"" << state->source_url << "\",";
+    json_message << "\"dst_url\":" << "\"" << state->dest_url << "\",";
     json_message << "\"vo_name\":" << "\"" << state->vo_name << "\",";
     json_message << "\"source_se\":" << "\"" << state->source_se << "\",";
     json_message << "\"dest_se\":" << "\"" << state->dest_se << "\",";
