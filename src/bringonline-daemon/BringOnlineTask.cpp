@@ -57,21 +57,21 @@ void BringOnlineTask::setProxy()
 
     //before any operation, check if the proxy is valid
     std::string message;
-    bool isValid = StagingContext::checkValidProxy(ctx.getProxy(), message);
+    bool isValid = StagingContext::checkValidProxy(ctx.proxy, message);
     if(!isValid)
         {
-            state_update(ctx, "FAILED", message, false);
+            state_update(ctx.jobs, "FAILED", message, false);
             std::stringstream ss;
             ss << "BRINGONLINE proxy certificate not valid: " << message;
             throw Err_Custom(ss.str());
         }
 
-    char* cert = const_cast<char*>(ctx.getProxy().c_str());
+    char* cert = const_cast<char*>(ctx.proxy.c_str());
 
     int status = gfal2_set_opt_string(gfal2_ctx, "X509", "CERT", cert, &error);
     if (status < 0)
         {
-            state_update(ctx, "FAILED", error->message, false);
+            state_update(ctx.jobs, "FAILED", error->message, false);
             std::stringstream ss;
             ss << "BRINGONLINE setting X509 CERT failed " << error->code << " " << error->message;
             throw Err_Custom(ss.str());
@@ -80,7 +80,7 @@ void BringOnlineTask::setProxy()
     status = gfal2_set_opt_string(gfal2_ctx, "X509", "KEY", cert, &error);
     if (status < 0)
         {
-            state_update(ctx, "FAILED", error->message, false);
+            state_update(ctx.jobs, "FAILED", error->message, false);
             std::stringstream ss;
             ss << "BRINGONLINE setting X509 KEY failed " << error->code << " " << error->message;
             throw Err_Custom(ss.str());
@@ -94,16 +94,16 @@ void BringOnlineTask::run(boost::any const &)
 
     std::vector<char const *> urls = ctx.getUrls();
     int status = gfal2_bring_online_list(
-                     gfal2_ctx,
-                     urls.size(),
-                     &*urls.begin(),
-                     ctx.getPinlifetime(),
-                     ctx.getBringonlineTimeout(),
-                     token,
-                     sizeof(token),
-                     1,
-                     &error
-                 );
+    				gfal2_ctx,
+    				urls.size(),
+    				&*urls.begin(),
+    				ctx.pinlifetime,
+    				ctx.bringonlineTimeout,
+    				token,
+    				sizeof(token),
+    				1,
+    				&error
+    			);
 
     if (status < 0)
         {
@@ -112,7 +112,7 @@ void BringOnlineTask::run(boost::any const &)
                                            << error->code << " " << error->message  << commit;
 
             bool retry = retryTransfer(error->code, "SOURCE", std::string(error->message));
-            state_update(ctx, "FAILED", error->message, retry);
+            state_update(ctx.jobs, "FAILED", error->message, retry);
             g_clear_error(&error);
         }
     else if (status == 0)
@@ -120,6 +120,7 @@ void BringOnlineTask::run(boost::any const &)
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE queued, got token " << token  << " "
                                             << ctx.getLogMsg() << commit;
 
+            state_update(ctx.jobs, token);
             WaitingRoom<PollTask>::instance().add(new PollTask(*this, token));
         }
     else
@@ -127,7 +128,7 @@ void BringOnlineTask::run(boost::any const &)
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE FINISHED, got token " << token   << " "
                                             << ctx.getLogMsg() <<  commit;
             // No need to poll in this case!
-            state_update(ctx, "FINISHED", "", false);
+            state_update(ctx.jobs, "FINISHED", "", false);
         }
 }
 

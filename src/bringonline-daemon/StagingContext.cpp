@@ -24,7 +24,7 @@ void StagingContext::add(context_type const & ctx)
             bringonlineTimeout = boost::get<bring_online_timeout>(ctx);
         }
 
-    surls.push_back(boost::get<surl>(ctx));
+    surls.insert(boost::get<surl>(ctx));
 
     if (delegationId.empty()) delegationId = boost::get<dlg_id>(ctx);
 
@@ -57,7 +57,7 @@ std::vector<char const *> StagingContext::getUrls() const
     std::vector<char const *> ret;
     ret.reserve(surls.size());
 
-    std::vector<std::string>::const_iterator it;
+    std::set<std::string>::const_iterator it;
     for (it = surls.begin(); it != surls.end(); ++it)
         {
             ret.push_back(it->c_str());

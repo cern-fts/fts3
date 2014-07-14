@@ -20,6 +20,8 @@
 
 #include <vector>
 #include <string>
+#include <unordered_map>
+#include <set>
 
 extern bool stopThreads;
 
@@ -42,12 +44,15 @@ void FetchCancelStaging::fetch()
                     db::DBSingleton::instance().getDBObjectInstance()->getStagingFilesForCanceling(files);
 
                     std::vector< boost::tuple<int, std::string, std::string> >::const_iterator it;
-                    std::set<std::string> tokens;
+
+                    std::unordered_map<std::string, std::set<std::string> > tokens;
 
                     for (it = files.begin(); it != files.end(); ++it)
                         {
-                            std::string const & token = boost::get<2>(*it);
-                            tokens.insert(token);
+							std::string const & token = boost::get<2>(*it);
+							std::string const & url   = boost::get<1>(*it);
+
+							tokens[token].insert(url);
                         }
 
                     if (!tokens.empty())
