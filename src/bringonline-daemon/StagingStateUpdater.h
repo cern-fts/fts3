@@ -50,7 +50,7 @@ public:
      * @param reason : reason for changing the state
      * @param retry : true is the file requires retry, false otherwise
      */
-    void operator()(StagingContext const & ctx, std::string const & state, std::string const & reason, bool retry)
+    void operator()(std::map< std::string, std::vector<int> > const & jobs, std::string const & state, std::string const & reason, bool retry)
     {
         // lock the vector
         boost::mutex::scoped_lock lock(m);
@@ -58,7 +58,7 @@ public:
         std::map< std::string, std::vector<int> >::const_iterator it_m;
         std::vector<int>::const_iterator it_v;
         // iterate over jobs
-        for (it_m = ctx.getJobs().begin(); it_m != ctx.getJobs().end(); ++it_m)
+        for (it_m = jobs.begin(); it_m != jobs.end(); ++it_m)
             {
                 std::string const & job_id = it_m->first;
                 // iterate over files
@@ -66,6 +66,22 @@ public:
                     {
                         updates.push_back(value_type(*it_v, state, reason, job_id, retry));
                     }
+            }
+    }
+
+    void operator()(std::map< std::string, std::vector<int> > const & jobs, std::string const & token)
+    {
+        try
+            {
+        		db.updateBringOnlineToken(jobs, token);
+            }
+        catch(std::exception& ex)
+            {
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
+            }
+        catch(...)
+            {
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception while updating the bring-online token!" << commit;
             }
     }
 

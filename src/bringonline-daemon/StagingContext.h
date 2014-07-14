@@ -14,11 +14,14 @@
 #include <string>
 #include <map>
 #include <memory>
+#include <set>
 
 #include <boost/tuple/tuple.hpp>
 
 class StagingContext
 {
+	friend class BringOnlineTask;
+	friend class PollTask;
 
 public:
 
@@ -99,7 +102,7 @@ private:
         return delegCredPtr->getFileName(dn, dlg_id);
     }
 
-    std::vector<std::string> surls;
+    std::set<std::string> mutable surls;
     int pinlifetime;
     int bringonlineTimeout;
     std::string delegationId;

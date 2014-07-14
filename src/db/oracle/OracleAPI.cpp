@@ -9577,7 +9577,49 @@ void OracleAPI::updateStagingState(std::vector< boost::tuple<int, std::string, s
         }
 }
 
+void OracleAPI::updateBringOnlineToken(std::map< std::string, std::vector<int> > const & jobs, std::string const & token)
+{
+	soci::session sql(*connectionPool);
+    try
+        {
+    		std::map< std::string, std::vector<int> >::const_iterator it_m;
+    		std::vector<int>::const_iterator it_v;
 
+
+    		sql.begin();
+    		for (it_m = jobs.begin(); it_m != jobs.end(); ++it_m)
+				{
+					std::string const & job_id = it_m->first;
+
+					it_v = it_m->second.begin();
+					std::string file_ids = "(" + boost::lexical_cast<std::string>(*it_v);
+					++it_v;
+
+					for (; it_v != it_m->second.end(); ++it_v)
+						{
+							file_ids += ", " + boost::lexical_cast<std::string>(*it_v);
+						}
+
+					file_ids += ")";
+
+					std::stringstream query;
+					query << "update t_file set bringonline_token = :token where job_id = :jobId and file_id IN " << file_ids;
+
+                    sql << query.str(),
+                        soci::use(token),
+                        soci::use(job_id);
+				}
+			sql.commit();
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
 
 
 //NEW deletions and staging API
@@ -10350,9 +10392,9 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
                                     soci::row const& row = *i3;
                                     std::string source_url = row.get<std::string>("SOURCE_SURL");
                                     std::string job_id = row.get<std::string>("JOB_ID");
-                                    int file_id = row.get<int>("FILE_ID");
-                                    int copy_pin_lifetime = row.get<int>("COPY_PIN_LIFETIME",0);
-                                    int bring_online = row.get<int>("BRING_ONLINE",0);
+                                    long long file_id = row.get<long long>("FILE_ID");
+                                    double copy_pin_lifetime = row.get<double>("COPY_PIN_LIFETIME",0);
+                                    double bring_online = row.get<double>("BRING_ONLINE",0);
                                     user_dn = row.get<std::string>("USER_DN");
                                     std::string cred_id = row.get<std::string>("CRED_ID");
                                     std::string source_space_token = row.get<std::string>("SOURCE_SPACE_TOKEN","");

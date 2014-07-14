@@ -9893,7 +9893,49 @@ void MySqlAPI::updateStagingState(std::vector< boost::tuple<int, std::string, st
         }
 }
 
+void MySqlAPI::updateBringOnlineToken(std::map< std::string, std::vector<int> > const & jobs, std::string const & token)
+{
+	soci::session sql(*connectionPool);
+    try
+        {
+    		std::map< std::string, std::vector<int> >::const_iterator it_m;
+    		std::vector<int>::const_iterator it_v;
 
+
+    		sql.begin();
+    		for (it_m = jobs.begin(); it_m != jobs.end(); ++it_m)
+				{
+					std::string const & job_id = it_m->first;
+
+					it_v = it_m->second.begin();
+					std::string file_ids = "(" + boost::lexical_cast<std::string>(*it_v);
+					++it_v;
+
+					for (; it_v != it_m->second.end(); ++it_v)
+						{
+							file_ids += ", " + boost::lexical_cast<std::string>(*it_v);
+						}
+
+					file_ids += ")";
+
+					std::stringstream query;
+					query << "update t_file set bringonline_token = :token where job_id = :jobId and file_id IN " << file_ids;
+
+                    sql << query.str(),
+                        soci::use(token),
+                        soci::use(job_id);
+				}
+			sql.commit();
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
 
 
 //NEW deletions and staging API

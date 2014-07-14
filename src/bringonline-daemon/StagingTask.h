@@ -69,7 +69,7 @@ protected:
     /// asynchronous state updater
     StagingStateUpdater & state_update;
     /// staging details
-    StagingContext ctx;
+    StagingContext const ctx;
 };
 
 #endif /* StagingTask_H_ */
