@@ -2462,7 +2462,7 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs)
 {
     soci::session sql(*connectionPool);
     long long pid = 0;
-    int file_id = 0;
+    long long file_id = 0;
 
     try
         {
@@ -2482,7 +2482,7 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs)
                 {
                     soci::row const& row = *i2;
                     pid = row.get<long long>("PID",0);
-                    file_id = row.get<int>("FILE_ID");
+                    file_id = row.get<long long>("FILE_ID");
 
                     if(pid > 0)
                         requestIDs.push_back(boost::lexical_cast<int>(pid));
