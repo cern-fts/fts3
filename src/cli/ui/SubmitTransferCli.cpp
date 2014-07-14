@@ -137,7 +137,7 @@ optional<string> SubmitTransferCli::getMetadata()
     return optional<string>();
 }
 
-bool SubmitTransferCli::checkValidUrl(const std::string &uri, MsgPrinter& msgPrinter)
+bool SubmitTransferCli::checkValidUrl(const std::string &uri, MsgPrinter& /*msgPrinter*/)
 {
     Uri u0 = Uri::Parse(uri);
     bool ok = u0.Host.length() != 0 && u0.Protocol.length() != 0 && u0.Path.length() != 0;
