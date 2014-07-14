@@ -30,7 +30,7 @@ import settings
 
 def _db_to_date():
     if settings.DATABASES['default']['ENGINE'] == 'django.db.backends.oracle':
-        return 'TO_DATE(%s, \'YYYY-MM-DD HH24:MI:SS\')'
+        return 'TO_TIMESTAMP(%s, \'YYYY-MM-DD HH24:MI:SS.FF\')'
     elif settings.DATABASES['default']['ENGINE'] == 'django.db.backends.mysql':
         return 'STR_TO_DATE(%s, \'%%Y-%%m-%%d %%H:%%i:%%S\')'
     else:
