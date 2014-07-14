@@ -83,7 +83,7 @@ static std::string replace_dn(std::string& user_dn)
 static std::string replaceMetadataString(std::string text)
 {
     text = boost::replace_all_copy(text, "?"," ");
-    text = boost::replace_all_copy(text, "\\\"","");
+    text = boost::replace_all_copy(text, "\\\"","\"");
     return text;
 }
 

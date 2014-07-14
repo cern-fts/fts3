@@ -7005,12 +7005,9 @@ std::vector<struct message_state> MySqlAPI::getStateOfDeleteInternal(soci::sessi
                     ret.file_metadata = it->get<std::string>("file_metadata","");
                     ret.source_se = it->get<std::string>("source_se");
                     ret.dest_se = it->get<std::string>("dest_se");
-
-                    /*
-                            ret.user_dn = it->get<std::string>("user_dn","");
-                            ret.source_url = it->get<std::string>("source_surl","");
-                            ret.dest_url = it->get<std::string>("dest_surl","");
-                    */
+		    ret.user_dn = it->get<std::string>("user_dn","");
+		    ret.source_url = it->get<std::string>("source_surl","");
+		    ret.dest_url = it->get<std::string>("dest_surl","");
 
                     temp.push_back(ret);
                 }
@@ -7104,12 +7101,9 @@ std::vector<struct message_state> MySqlAPI::getStateOfTransferInternal(soci::ses
                     ret.file_metadata = it->get<std::string>("file_metadata","");
                     ret.source_se = it->get<std::string>("source_se");
                     ret.dest_se = it->get<std::string>("dest_se");
-
-                    /*
-                            ret.user_dn = it->get<std::string>("user_dn","");
-                            ret.source_url = it->get<std::string>("source_surl","");
-                            ret.dest_url = it->get<std::string>("dest_surl","");
-                    */
+		    ret.user_dn = it->get<std::string>("user_dn","");
+		    ret.source_url = it->get<std::string>("source_surl","");
+		    ret.dest_url = it->get<std::string>("dest_surl","");
 
                     temp.push_back(ret);
                 }

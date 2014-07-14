@@ -6613,12 +6613,9 @@ std::vector<struct message_state> OracleAPI::getStateOfDeleteInternal(soci::sess
                     ret.file_metadata = it->get<std::string>("FILE_METADATA","");
                     ret.source_se = it->get<std::string>("SOURCE_SE");
                     ret.dest_se = it->get<std::string>("DEST_SE");
-
-                    /*
-                            ret.user_dn = it->get<std::string>("USER_DN","");
-                            ret.source_url = it->get<std::string>("SOURCE_SURL","");
-                            ret.dest_url = it->get<std::string>("DEST_SURL","");
-                    */
+		    ret.user_dn = it->get<std::string>("USER_DN","");
+	            ret.source_url = it->get<std::string>("SOURCE_SURL","");
+                    ret.dest_url = it->get<std::string>("DEST_SURL","");
 
                     temp.push_back(ret);
                 }
@@ -6713,12 +6710,9 @@ std::vector<struct message_state> OracleAPI::getStateOfTransferInternal(soci::se
                     ret.file_metadata = it->get<std::string>("FILE_METADATA","");
                     ret.source_se = it->get<std::string>("SOURCE_SE");
                     ret.dest_se = it->get<std::string>("DEST_SE");
-
-                    /*
-                            ret.user_dn = it->get<std::string>("USER_DN","");
-                            ret.source_url = it->get<std::string>("SOURCE_SURL","");
-                            ret.dest_url = it->get<std::string>("DEST_SURL","");
-                    */
+		    ret.user_dn = it->get<std::string>("USER_DN","");
+		    ret.source_url = it->get<std::string>("SOURCE_SURL","");
+		    ret.dest_url = it->get<std::string>("DEST_SURL","");
 
                     temp.push_back(ret);
                 }
