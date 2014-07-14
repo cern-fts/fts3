@@ -127,6 +127,10 @@ td.SUBMITTED, .SUBMITTED {
 	background: #AAA;
 }
 
+.DELETE {
+    background: #CC5200;
+}
+
 /* Staging button */
 .btn-staging {
     color: #ffffff;
@@ -153,6 +157,33 @@ td.SUBMITTED, .SUBMITTED {
     color: white;
     background-color: #990099;
     border-color: #993D7A;
+}
+
+.btn-delete {
+    color: #ffffff;
+    background-color: #CC5200;
+    background-image: linear-gradient(to bottom, #CC8352, #CC5200);
+    border-color: #CC8352;
+}
+
+.btn-delete:hover {
+    color: #ffffff;
+    background-color: #CC5200;
+    background-image: none;
+    border-color: #CC8352;
+}
+
+.btn-delete.active {
+    color: #ffffff;
+    background-color: #993D00;
+    background-image: none;
+    border-color: #CC5200;
+}
+
+.btn-delete[disabled] {
+    color: white;
+    background-color: #CC8352;
+    border-color: #CC6A29;
 }
 
 /* Overview */
