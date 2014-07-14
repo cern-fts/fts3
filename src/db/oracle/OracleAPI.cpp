@@ -10392,9 +10392,9 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
                                     soci::row const& row = *i3;
                                     std::string source_url = row.get<std::string>("SOURCE_SURL");
                                     std::string job_id = row.get<std::string>("JOB_ID");
-                                    int file_id = row.get<int>("FILE_ID");
-                                    int copy_pin_lifetime = row.get<int>("COPY_PIN_LIFETIME",0);
-                                    int bring_online = row.get<int>("BRING_ONLINE",0);
+                                    long long file_id = row.get<long long>("FILE_ID");
+                                    double copy_pin_lifetime = row.get<double>("COPY_PIN_LIFETIME",0);
+                                    double bring_online = row.get<double>("BRING_ONLINE",0);
                                     user_dn = row.get<std::string>("USER_DN");
                                     std::string cred_id = row.get<std::string>("CRED_ID");
                                     std::string source_space_token = row.get<std::string>("SOURCE_SPACE_TOKEN","");
