@@ -20,8 +20,8 @@
 
 class StagingContext
 {
-	friend class BringOnlineTask;
-	friend class PollTask;
+    friend class BringOnlineTask;
+    friend class PollTask;
 
 public:
 

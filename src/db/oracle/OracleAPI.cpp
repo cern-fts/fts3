@@ -630,25 +630,25 @@ void OracleAPI::getVOPairs(std::vector< boost::tuple<std::string, std::string, s
                         soci::into(linkExists);
                     if(linkExists == 0) //for some reason does not exist, add it
                         {
-			    sql.begin();
+                            sql.begin();
                             sql << " MERGE INTO t_optimize_active USING "
                                 "    (SELECT :source_se as source, :dest_se as dest FROM dual) Pair "
                                 " ON (t_optimize_active.source_se = Pair.source AND t_optimize_active.dest_se = Pair.dest) "
-			        " WHEN MATCHED THEN UPDATE SET datetime = sys_extract_utc(systimestamp) "
+                                " WHEN MATCHED THEN UPDATE SET datetime = sys_extract_utc(systimestamp) "
                                 " WHEN NOT MATCHED THEN INSERT (source_se, dest_se, datetime) VALUES (Pair.source, Pair.dest, sys_extract_utc(systimestamp) )",
                                 soci::use(source_se), soci::use(dest_se);
-			    sql.commit();
+                            sql.commit();
                         }
                 }
         }
     catch (std::exception& e)
         {
-	    sql.rollback();
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-    	    sql.rollback();
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
 }
@@ -4189,7 +4189,7 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
 
     try
         {
-	    //update heartbeat first, the first must get 0
+            //update heartbeat first, the first must get 0
             updateHeartBeatInternal(sql, &index, &count1, &start, &end, service_name);
 
             //prevent more than on server to update the optimizer decisions
@@ -4202,12 +4202,12 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
 
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                         {
-			    count++;
+                            count++;
 
                             if(count == 1000)
                                 {
-				    //update heartbeat first
-				    updateHeartBeatInternal(sql, &index, &count1, &start, &end, service_name);
+                                    //update heartbeat first
+                                    updateHeartBeatInternal(sql, &index, &count1, &start, &end, service_name);
 
                                     drain = getDrainInternal(sql);
                                     if(drain)
@@ -6613,8 +6613,8 @@ std::vector<struct message_state> OracleAPI::getStateOfDeleteInternal(soci::sess
                     ret.file_metadata = it->get<std::string>("FILE_METADATA","");
                     ret.source_se = it->get<std::string>("SOURCE_SE");
                     ret.dest_se = it->get<std::string>("DEST_SE");
-		    ret.user_dn = it->get<std::string>("USER_DN","");
-	            ret.source_url = it->get<std::string>("SOURCE_SURL","");
+                    ret.user_dn = it->get<std::string>("USER_DN","");
+                    ret.source_url = it->get<std::string>("SOURCE_SURL","");
                     ret.dest_url = it->get<std::string>("DEST_SURL","");
 
                     temp.push_back(ret);
@@ -6710,9 +6710,9 @@ std::vector<struct message_state> OracleAPI::getStateOfTransferInternal(soci::se
                     ret.file_metadata = it->get<std::string>("FILE_METADATA","");
                     ret.source_se = it->get<std::string>("SOURCE_SE");
                     ret.dest_se = it->get<std::string>("DEST_SE");
-		    ret.user_dn = it->get<std::string>("USER_DN","");
-		    ret.source_url = it->get<std::string>("SOURCE_SURL","");
-		    ret.dest_url = it->get<std::string>("DEST_SURL","");
+                    ret.user_dn = it->get<std::string>("USER_DN","");
+                    ret.source_url = it->get<std::string>("SOURCE_SURL","");
+                    ret.dest_url = it->get<std::string>("DEST_SURL","");
 
                     temp.push_back(ret);
                 }
@@ -8276,7 +8276,7 @@ void OracleAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* star
 
     try
         {
-          updateHeartBeatInternal(sql, index, count, start, end, service_name);
+            updateHeartBeatInternal(sql, index, count, start, end, service_name);
         }
     catch (std::exception& e)
         {
@@ -9579,46 +9579,46 @@ void OracleAPI::updateStagingState(std::vector< boost::tuple<int, std::string, s
 
 void OracleAPI::updateBringOnlineToken(std::map< std::string, std::vector<int> > const & jobs, std::string const & token)
 {
-	soci::session sql(*connectionPool);
+    soci::session sql(*connectionPool);
     try
         {
-    		std::map< std::string, std::vector<int> >::const_iterator it_m;
-    		std::vector<int>::const_iterator it_v;
+            std::map< std::string, std::vector<int> >::const_iterator it_m;
+            std::vector<int>::const_iterator it_v;
 
 
-    		sql.begin();
-    		for (it_m = jobs.begin(); it_m != jobs.end(); ++it_m)
-				{
-					std::string const & job_id = it_m->first;
+            sql.begin();
+            for (it_m = jobs.begin(); it_m != jobs.end(); ++it_m)
+                {
+                    std::string const & job_id = it_m->first;
 
-					it_v = it_m->second.begin();
-					std::string file_ids = "(" + boost::lexical_cast<std::string>(*it_v);
-					++it_v;
+                    it_v = it_m->second.begin();
+                    std::string file_ids = "(" + boost::lexical_cast<std::string>(*it_v);
+                    ++it_v;
 
-					for (; it_v != it_m->second.end(); ++it_v)
-						{
-							file_ids += ", " + boost::lexical_cast<std::string>(*it_v);
-						}
+                    for (; it_v != it_m->second.end(); ++it_v)
+                        {
+                            file_ids += ", " + boost::lexical_cast<std::string>(*it_v);
+                        }
 
-					file_ids += ")";
+                    file_ids += ")";
 
-					std::stringstream query;
-					query << "update t_file set bringonline_token = :token where job_id = :jobId and file_id IN " << file_ids;
+                    std::stringstream query;
+                    query << "update t_file set bringonline_token = :token where job_id = :jobId and file_id IN " << file_ids;
 
                     sql << query.str(),
                         soci::use(token),
                         soci::use(job_id);
-				}
-			sql.commit();
+                }
+            sql.commit();
         }
     catch (std::exception& e)
         {
-    		sql.rollback();
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-    		sql.rollback();
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }

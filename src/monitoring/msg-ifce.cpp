@@ -149,31 +149,31 @@ void msg_ifce::SendTransferStartMessage(transfer_completed *tr_started)
             text.append("\"");
 
 
-                text.append(",\"$q$\":\"");
-                text.append(tr_started->user_dn);
-                text.append("\"");
+            text.append(",\"$q$\":\"");
+            text.append(tr_started->user_dn);
+            text.append("\"");
 
             if(tr_started->file_metadata.length() > 0)
-            {
-            	text.append(",\"$r$\":");
-            	text.append(tr_started->file_metadata);
-            	text.append("");
-            }
+                {
+                    text.append(",\"$r$\":");
+                    text.append(tr_started->file_metadata);
+                    text.append("");
+                }
             else
-            {
-            	text.append(",\"$r$\":\"\"");
-            }
+                {
+                    text.append(",\"$r$\":\"\"");
+                }
 
             if(tr_started->job_metadata.length() > 0)
-            {
-            	text.append(",\"$s$\":");
-            	text.append(tr_started->job_metadata);
-            	text.append("");
-            }
+                {
+                    text.append(",\"$s$\":");
+                    text.append(tr_started->job_metadata);
+                    text.append("");
+                }
             else
-            {
-            	text.append(",\"$s$\":\"\"");
-            }
+                {
+                    text.append(",\"$s$\":\"\"");
+                }
 
 
             text.append("}");
@@ -378,26 +378,26 @@ void msg_ifce::SendTransferFinishMessage(transfer_completed *tr_completed)
             text.append("\"");
 
             if(tr_completed->file_metadata.length() > 0)
-            {
-            	text.append(",\"$16$\":");
-            	text.append(tr_completed->file_metadata);
-            	text.append("");
-            }
+                {
+                    text.append(",\"$16$\":");
+                    text.append(tr_completed->file_metadata);
+                    text.append("");
+                }
             else
-            {
-            	text.append(",\"$16$\":\"\"");
-            }
+                {
+                    text.append(",\"$16$\":\"\"");
+                }
 
             if(tr_completed->job_metadata.length() > 0)
-            {
-            	text.append(",\"$17$\":");
-            	text.append(tr_completed->job_metadata);
-            	text.append("");
-            }
+                {
+                    text.append(",\"$17$\":");
+                    text.append(tr_completed->job_metadata);
+                    text.append("");
+                }
             else
-            {
-            	text.append(",\"$17$\":\"\"");
-            }        
+                {
+                    text.append(",\"$17$\":\"\"");
+                }
 
             text.append("}");
 

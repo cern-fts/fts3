@@ -49,10 +49,10 @@ void FetchCancelStaging::fetch()
 
                     for (it = files.begin(); it != files.end(); ++it)
                         {
-							std::string const & token = boost::get<2>(*it);
-							std::string const & url   = boost::get<1>(*it);
+                            std::string const & token = boost::get<2>(*it);
+                            std::string const & url   = boost::get<1>(*it);
 
-							tokens[token].insert(url);
+                            tokens[token].insert(url);
                         }
 
                     if (!tokens.empty())

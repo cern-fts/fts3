@@ -45,10 +45,10 @@ public:
      * @param copy : a staging task (stills the gfal2 context of this object)
      */
     PollTask(StagingTask & copy, std::string token) : StagingTask(copy), token(token), nPolls(0), wait_until()
-	{
-    	boost::unique_lock<boost::shared_mutex> lock(mx);
-    	active_tokens[token].insert(ctx.surls.begin(), ctx.surls.end());
-	}
+    {
+        boost::unique_lock<boost::shared_mutex> lock(mx);
+        active_tokens[token].insert(ctx.surls.begin(), ctx.surls.end());
+    }
 
     /**
      * Copy constructor
