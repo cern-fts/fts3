@@ -91,7 +91,7 @@ stop() {
     sleep 30
     pgrep $prog &> /dev/null
     if [ $? -eq 0 ]; then
-        # Force it
+        echo " Force it, signal 2 did not work"
         killproc $prog -9
         retval=$?
     else
