@@ -299,7 +299,45 @@ protected:
 
                         boost::thread_group g;
 
-                        DBSingleton::instance().getDBObjectInstance()->getVOPairs(distinct);
+                        try
+                            {
+                                DBSingleton::instance().getDBObjectInstance()->getVOPairs(distinct);
+                            }
+                        catch (std::exception& e)
+                            {
+                                //try again if deadlocked
+                                sleep(1);
+                                try
+                                    {
+                                        DBSingleton::instance().getDBObjectInstance()->getVOPairs(distinct);
+                                    }
+                                catch (std::exception& e)
+                                    {
+                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler " << e.what() << commit;
+                                    }
+                                catch (...)
+                                    {
+                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler!" << commit;
+                                    }
+                            }
+                        catch (...)
+                            {
+                                //try again if deadlocked
+                                sleep(1);
+                                try
+                                    {
+                                        DBSingleton::instance().getDBObjectInstance()->getVOPairs(distinct);
+                                    }
+                                catch (std::exception& e)
+                                    {
+                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler " << e.what() << commit;
+                                    }
+                                catch (...)
+                                    {
+                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler!" << commit;
+                                    }
+                            }
+
 
                         if(distinct.empty())
                             return;

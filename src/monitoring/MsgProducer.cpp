@@ -111,7 +111,7 @@ bool MsgProducer::sendMessage(std::string &temp)
             temp += 4;
             TextMessage* message = session->createTextMessage(temp);
             producer_transfer_started->send(message);
-	    logger::writeLog(temp);	    
+            logger::writeLog(temp);
             delete message;
         }
     else if (temp.compare(0, 2, "CO") == 0)
@@ -126,7 +126,7 @@ bool MsgProducer::sendMessage(std::string &temp)
             temp += 4;
             TextMessage* message = session->createTextMessage(temp);
             producer_transfer_completed->send(message);
-	    logger::writeLog(temp);
+            logger::writeLog(temp);
             delete message;
         }
     else if (temp.compare(0, 2, "SS") == 0)

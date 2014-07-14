@@ -94,16 +94,16 @@ void BringOnlineTask::run(boost::any const &)
 
     std::vector<char const *> urls = ctx.getUrls();
     int status = gfal2_bring_online_list(
-    				gfal2_ctx,
-    				urls.size(),
-    				&*urls.begin(),
-    				ctx.pinlifetime,
-    				ctx.bringonlineTimeout,
-    				token,
-    				sizeof(token),
-    				1,
-    				&error
-    			);
+                     gfal2_ctx,
+                     urls.size(),
+                     &*urls.begin(),
+                     ctx.pinlifetime,
+                     ctx.bringonlineTimeout,
+                     token,
+                     sizeof(token),
+                     1,
+                     &error
+                 );
 
     if (status < 0)
         {

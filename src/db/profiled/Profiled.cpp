@@ -916,7 +916,7 @@ void ProfiledDB::updateStagingState(std::vector< boost::tuple<int, std::string, 
 
 void ProfiledDB::updateBringOnlineToken(std::map< std::string, std::vector<int> > const & jobs, std::string const & token)
 {
-	PROFILE_PREFIXED("DB::", db->updateBringOnlineToken(jobs, token));
+    PROFILE_PREFIXED("DB::", db->updateBringOnlineToken(jobs, token));
 }
 
 //file_id / surl / proxy / pinlifetime / bringonlineTimeout

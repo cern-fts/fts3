@@ -73,7 +73,7 @@ public:
     {
         try
             {
-        		db.updateBringOnlineToken(jobs, token);
+                db.updateBringOnlineToken(jobs, token);
             }
         catch(std::exception& ex)
             {

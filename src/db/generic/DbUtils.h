@@ -194,7 +194,7 @@ static inline void constructJSONMsg(struct message_state* state)
 
     std::ostringstream json_message;
     json_message << "SS {";
-    
+
     json_message << "\"endpnt\":" << "\"" << ftsAlias << "\",";
     json_message << "\"user_dn\":" << "\"" << state->user_dn << "\",";
     json_message << "\"src_url\":" << "\"" << state->source_url << "\",";
