@@ -353,7 +353,6 @@ static void shutdown_callback(int signal, void*)
         {
         case SIGABRT:
         case SIGSEGV:
-        case SIGTERM:
         case SIGILL:
         case SIGFPE:
         case SIGBUS:
