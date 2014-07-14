@@ -696,7 +696,7 @@ void MySqlAPI::getVOPairs(std::vector< boost::tuple<std::string, std::string, st
                     if(linkExists == 0) //for some reason does not exist, add it
                         {
                             sql.begin();
-                            sql << "INSERT INTO t_optimize_active (source_se, dest_se, active, ema, datetime, UTC_TIMESTAMP()) VALUES (:source_se, :dest_se, 2, 0) ON DUPLICATE KEY UPDATE source_se=:source_se, dest_se=:dest_se, datetime=UTC_TIMESTAMP()",
+                            sql << "INSERT INTO t_optimize_active (source_se, dest_se, active, ema, datetime) VALUES (:source_se, :dest_se, 2, 0, UTC_TIMESTAMP()) ON DUPLICATE KEY UPDATE source_se=:source_se, dest_se=:dest_se, datetime=UTC_TIMESTAMP()",
                                 soci::use(source_se), soci::use(dest_se),soci::use(source_se), soci::use(dest_se);
                             sql.commit();
                         }
