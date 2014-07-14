@@ -9929,10 +9929,12 @@ void MySqlAPI::updateBringOnlineToken(std::map< std::string, std::vector<int> > 
         }
     catch (std::exception& e)
         {
+    		sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
+    		sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }
