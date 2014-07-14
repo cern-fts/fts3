@@ -4482,31 +4482,24 @@ void MySqlAPI::revertToSubmitted()
 
 void MySqlAPI::backup(long* nJobs, long* nFiles)
 {
-    try
-        {
-            unsigned index=0, count=0, start=0, end=0;
-            std::string service_name = "fts_backup";
-            updateHeartBeat(&index, &count, &start, &end, service_name);
-        }
-    catch (std::exception& e)
-        {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-    catch (...)
-        {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }
 
     soci::session sql(*connectionPool);
-
+    
+    unsigned index=0, count1=0, start=0, end=0;
+    std::string service_name = "fts_backup";            
     *nJobs = 0;
     *nFiles = 0;
     std::ostringstream jobIdStmt;
     std::string job_id;
     std::string stmt;
+    int count = 0;
+    bool drain = false;    
 
     try
         {
+	    //update heartbeat first, the first must get 0
+            updateHeartBeatInternal(sql, &index, &count1, &start, &end, service_name);	
+		
             //prevent more than on server to update the optimizer decisions
             if(hashSegment.start == 0)
                 {
@@ -4515,15 +4508,15 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                                                      "  select  job_id from t_job where job_finished < (UTC_TIMESTAMP() - interval '7' DAY ) "
                                                  );
 
-                    int count = 0;
-                    int drainCounter = 0;
-                    bool drain = false;
-
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                         {
-                            if( 100 == drainCounter++)
+			    count++;
+			    
+                            if(count == 1000)
                                 {
-                                    drainCounter = 0; //reset
+				    //update heartbeat first
+				    updateHeartBeatInternal(sql, &index, &count1, &start, &end, service_name);
+				                                    
                                     drain = getDrainInternal(sql);
                                     if(drain)
                                         {
@@ -4532,8 +4525,7 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                                             return;
                                         }
                                 }
-
-                            count++;
+                           
                             soci::row const& r = *i;
                             job_id = r.get<std::string>("job_id");
                             jobIdStmt << "'";
@@ -7013,12 +7005,9 @@ std::vector<struct message_state> MySqlAPI::getStateOfDeleteInternal(soci::sessi
                     ret.file_metadata = it->get<std::string>("file_metadata","");
                     ret.source_se = it->get<std::string>("source_se");
                     ret.dest_se = it->get<std::string>("dest_se");
-
-                    /*
-                            ret.user_dn = it->get<std::string>("user_dn","");
-                            ret.source_url = it->get<std::string>("source_surl","");
-                            ret.dest_url = it->get<std::string>("dest_surl","");
-                    */
+		    ret.user_dn = it->get<std::string>("user_dn","");
+		    ret.source_url = it->get<std::string>("source_surl","");
+		    ret.dest_url = it->get<std::string>("dest_surl","");
 
                     temp.push_back(ret);
                 }
@@ -7112,12 +7101,9 @@ std::vector<struct message_state> MySqlAPI::getStateOfTransferInternal(soci::ses
                     ret.file_metadata = it->get<std::string>("file_metadata","");
                     ret.source_se = it->get<std::string>("source_se");
                     ret.dest_se = it->get<std::string>("dest_se");
-
-                    /*
-                            ret.user_dn = it->get<std::string>("user_dn","");
-                            ret.source_url = it->get<std::string>("source_surl","");
-                            ret.dest_url = it->get<std::string>("dest_surl","");
-                    */
+		    ret.user_dn = it->get<std::string>("user_dn","");
+		    ret.source_url = it->get<std::string>("source_surl","");
+		    ret.dest_url = it->get<std::string>("dest_surl","");
 
                     temp.push_back(ret);
                 }
@@ -8626,7 +8612,24 @@ void MySqlAPI::resetSanityRuns(soci::session& sql, struct message_sanity &msg)
 void MySqlAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end, std::string service_name)
 {
     soci::session sql(*connectionPool);
+    
+    try
+        {
+          updateHeartBeatInternal(sql, index, count, start, end, service_name);
+        }
+    catch (std::exception& e)
+        {            
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }    
+}
 
+
+void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsigned* count, unsigned* start, unsigned* end, std::string service_name)
+{
     try
         {
             sql.begin();
@@ -8699,7 +8702,6 @@ void MySqlAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }
-
 
 void MySqlAPI::updateOptimizerEvolution(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname, int active, double throughput, double successRate, int buffer, int bandwidth)
 {

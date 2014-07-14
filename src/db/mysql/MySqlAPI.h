@@ -407,6 +407,8 @@ private:
     std::string           hostname;
     std::string username_;
     std::vector<std::string> sanityVector;
+    
+    void updateHeartBeatInternal(soci::session& sql, unsigned* index, unsigned* count, unsigned* start, unsigned* end, std::string service_name);    
 
     void transferLogFileVectorInternal(soci::session& sql, std::map<int, struct message_log>& messagesLog);
 

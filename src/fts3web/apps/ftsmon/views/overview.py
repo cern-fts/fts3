@@ -30,7 +30,7 @@ import settings
 
 def _db_to_date():
     if settings.DATABASES['default']['ENGINE'] == 'django.db.backends.oracle':
-        return 'TO_DATE(%s, \'YYYY-MM-DD HH24:MI:SS\')'
+        return 'TO_TIMESTAMP(%s, \'YYYY-MM-DD HH24:MI:SS.FF\')'
     elif settings.DATABASES['default']['ENGINE'] == 'django.db.backends.mysql':
         return 'STR_TO_DATE(%s, \'%%Y-%%m-%%d %%H:%%i:%%S\')'
     else:
@@ -137,7 +137,7 @@ def get_overview(http_request):
         all_vos = [row[0] for row in cursor.fetchall()]
 
     # Get all pairs first
-    cursor.execute("SELECT DISTINCT source_se, dest_se FROM t_optimize_active WHERE datetime >= %s" % _db_to_date(), [not_before])
+    cursor.execute("SELECT source_se, dest_se FROM t_optimize_active WHERE datetime >= %s" % _db_to_date(), [not_before])
     all_pairs = cursor.fetchall()
 
     triplets = {}

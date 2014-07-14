@@ -2462,7 +2462,7 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs)
 {
     soci::session sql(*connectionPool);
     long long pid = 0;
-    int file_id = 0;
+    long long file_id = 0;
 
     try
         {
@@ -2482,7 +2482,7 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs)
                 {
                     soci::row const& row = *i2;
                     pid = row.get<long long>("PID",0);
-                    file_id = row.get<int>("FILE_ID");
+                    file_id = row.get<long long>("FILE_ID");
 
                     if(pid > 0)
                         requestIDs.push_back(boost::lexical_cast<int>(pid));
@@ -2856,7 +2856,7 @@ void OracleAPI::setDebugMode(std::string source_hostname, std::string destin_hos
                 {
                     sql << "DELETE FROM t_debug WHERE source_se = :source AND dest_se = :dest",
                         soci::use(source_hostname), soci::use(destin_hostname);
-                    sql << "INSERT INTO t_debug (source_se, dest_se, debug) VALUES (:source, :dest, :mode)",
+                    sql << "INSERT INTO t_debug (source_se, dest_se, debug) VALUES (:source, :dest, :debug)",
                         soci::use(source_hostname), soci::use(destin_hostname), soci::use(mode);
                 }
 
@@ -4175,55 +4175,40 @@ void OracleAPI::revertToSubmitted()
 void OracleAPI::backup(long* nJobs, long* nFiles)
 {
 
-    try
-        {
-            unsigned index=0, count=0, start=0, end=0;
-            std::string service_name = "fts_backup";
-            updateHeartBeat(&index, &count, &start, &end, service_name);
-        }
-    catch (std::exception& e)
-        {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-    catch (...)
-        {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }
-
     soci::session sql(*connectionPool);
 
+    unsigned index=0, count1=0, start=0, end=0;
+    std::string service_name = "fts_backup";
     *nJobs = 0;
     *nFiles = 0;
+    std::ostringstream jobIdStmt;
+    std::string job_id;
+    std::string stmt;
+    int count = 0;
+    bool drain = false;
 
     try
         {
+	    //update heartbeat first, the first must get 0
+            updateHeartBeatInternal(sql, &index, &count1, &start, &end, service_name);
+
+            //prevent more than on server to update the optimizer decisions
             if(hashSegment.start == 0)
                 {
                     soci::rowset<soci::row> rs = (
                                                      sql.prepare <<
-                                                     " SELECT job_id "
-                                                     " FROM  t_job "
-                                                     " WHERE "
-                                                     " job_finished < (systimestamp - interval '7' DAY ) "
+                                                     "  select  job_id from t_job where job_finished < (systimestamp - interval '7' DAY ) "
                                                  );
-
-                    std::string job_id;
-                    soci::statement delFilesStmt = (sql.prepare << "DELETE FROM t_file WHERE job_id = :job_id", soci::use(job_id));
-                    soci::statement delJobsStmt = (sql.prepare << "DELETE FROM t_job WHERE job_id = :job_id", soci::use(job_id));
-                    //soci::statement delDmStmt = (sql.prepare << "DELETE FROM t_dm WHERE job_id = :job_id", soci::use(job_id));
-
-                    soci::statement insertJobsStmt = (sql.prepare << "INSERT INTO t_job_backup SELECT * FROM t_job WHERE job_id = :job_id", soci::use(job_id));
-                    soci::statement insertFileStmt = (sql.prepare << "INSERT INTO t_file_backup SELECT * FROM t_file WHERE job_id = :job_id", soci::use(job_id));
-
-                    int count = 0;
-                    int drainCounter = 0;
-                    bool drain = false;
 
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                         {
-                            if( 100 == drainCounter++)
+			    count++;
+
+                            if(count == 1000)
                                 {
-                                    drainCounter = 0; //reset
+				    //update heartbeat first
+				    updateHeartBeatInternal(sql, &index, &count1, &start, &end, service_name);
+
                                     drain = getDrainInternal(sql);
                                     if(drain)
                                         {
@@ -4233,31 +4218,41 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
                                         }
                                 }
 
-                            count++;
                             soci::row const& r = *i;
                             job_id = r.get<std::string>("JOB_ID");
+                            jobIdStmt << "'";
+                            jobIdStmt << job_id;
+                            jobIdStmt << "',";
 
-                            insertJobsStmt.execute(true);
-                            insertFileStmt.execute(true);
-
-                            delFilesStmt.execute(true);
-                            *nFiles += delFilesStmt.get_affected_rows();
-
-                            //delDmStmt.execute(true);
-
-                            delJobsStmt.execute(true);
-                            *nJobs += delJobsStmt.get_affected_rows();
-
-                            //commit every 10 records
-                            if(count==1000)
+                            if(count == 1000)
                                 {
-                                    count = 0;
-                                    sql.commit();
-                                    sleep(1);
-                                }
+                                    std::string queryStr = jobIdStmt.str();
+                                    job_id = queryStr.substr(0, queryStr.length() - 1);
 
+                                    sql.begin();
+
+                                    stmt = "INSERT INTO t_job_backup SELECT * FROM t_job WHERE job_id  in (" +job_id+ ")";
+                                    sql << stmt;
+                                    stmt = "INSERT INTO t_file_backup SELECT * FROM t_file WHERE  job_id  in (" +job_id+ ")";
+                                    sql << stmt;
+
+                                    stmt = "DELETE FROM t_file WHERE job_id in (" +job_id+ ")";
+                                    sql << stmt;
+
+                                    //disable for now until we finalize the table
+                                    //stmt = "DELETE FROM t_dm WHERE job_id in (" +job_id+ ")";
+                                    //sql << stmt;
+
+                                    stmt = "DELETE FROM t_job WHERE job_id in (" +job_id+ ")";
+                                    sql << stmt;
+
+                                    count = 0;
+                                    jobIdStmt.str(std::string());
+                                    jobIdStmt.clear();
+                                    sql.commit();
+                                    sleep(1); // give it sometime to breath
+                                }
                         }
-                    sql.commit();
 
                     //delete from t_optimizer_evolution > 7 days old records
                     sql.begin();
@@ -4278,21 +4273,29 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
                     sql << "update t_turl set finish=0 where finish > 100000000000";
                     sql << "update t_turl set fail=0 where fail > 100000000000";
                     sql.commit();
-
-
                 }
+
+            jobIdStmt.str(std::string());
+            jobIdStmt.clear();
         }
     catch (std::exception& e)
         {
+            jobIdStmt.str(std::string());
+            jobIdStmt.clear();
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
+            jobIdStmt.str(std::string());
+            jobIdStmt.clear();
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }
+
+
+
 
 void OracleAPI::forkFailedRevertState(const std::string & jobId, int fileId)
 {
@@ -6610,12 +6613,9 @@ std::vector<struct message_state> OracleAPI::getStateOfDeleteInternal(soci::sess
                     ret.file_metadata = it->get<std::string>("FILE_METADATA","");
                     ret.source_se = it->get<std::string>("SOURCE_SE");
                     ret.dest_se = it->get<std::string>("DEST_SE");
-
-                    /*
-                            ret.user_dn = it->get<std::string>("USER_DN","");
-                            ret.source_url = it->get<std::string>("SOURCE_SURL","");
-                            ret.dest_url = it->get<std::string>("DEST_SURL","");
-                    */
+		    ret.user_dn = it->get<std::string>("USER_DN","");
+	            ret.source_url = it->get<std::string>("SOURCE_SURL","");
+                    ret.dest_url = it->get<std::string>("DEST_SURL","");
 
                     temp.push_back(ret);
                 }
@@ -6710,12 +6710,9 @@ std::vector<struct message_state> OracleAPI::getStateOfTransferInternal(soci::se
                     ret.file_metadata = it->get<std::string>("FILE_METADATA","");
                     ret.source_se = it->get<std::string>("SOURCE_SE");
                     ret.dest_se = it->get<std::string>("DEST_SE");
-
-                    /*
-                            ret.user_dn = it->get<std::string>("USER_DN","");
-                            ret.source_url = it->get<std::string>("SOURCE_SURL","");
-                            ret.dest_url = it->get<std::string>("DEST_SURL","");
-                    */
+		    ret.user_dn = it->get<std::string>("USER_DN","");
+		    ret.source_url = it->get<std::string>("SOURCE_SURL","");
+		    ret.dest_url = it->get<std::string>("DEST_SURL","");
 
                     temp.push_back(ret);
                 }
@@ -8273,12 +8270,26 @@ void OracleAPI::resetSanityRuns(soci::session& sql, struct message_sanity &msg)
         }
 }
 
-
-
 void OracleAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end, std::string service_name)
 {
     soci::session sql(*connectionPool);
 
+    try
+        {
+          updateHeartBeatInternal(sql, index, count, start, end, service_name);
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+
+void OracleAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsigned* count, unsigned* start, unsigned* end, std::string service_name)
+{
     try
         {
             sql.begin();

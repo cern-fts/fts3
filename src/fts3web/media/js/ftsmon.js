@@ -241,6 +241,8 @@ function joinStates(states)
         str += 'NOT_USED,';
     if (states.started)
         str += 'STARTED,';
+    if (states.delete)
+        str += 'DELETE,';
     if (str.length > 0)
         str = str.slice(0, -1);
     return str;
@@ -274,6 +276,8 @@ function statesFromString(str)
                 st.not_used = true;
             if (states[i] == 'STARTED')
                 st.started = true;
+            if (states[i] == 'DELETE')
+                st.delete = true;
         }
     }
 

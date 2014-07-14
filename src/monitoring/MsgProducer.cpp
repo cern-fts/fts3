@@ -43,8 +43,6 @@ using namespace FTS3_COMMON_NAMESPACE;
 
 
 
-//enable when user_dn/source_url/dest_url is used
-/*
 string started[] = {"agent_fqdn", "transfer_id", "endpnt", "timestamp", "src_srm_v", "dest_srm_v",
                     "vo", "src_url", "dst_url", "src_hostname", "dst_hostname", "src_site_name", "dst_site_name", "t_channel",
                     "srm_space_token_src", "srm_space_token_dst", "user_dn", "file_meta", "job_meta"
@@ -60,26 +58,7 @@ string completed[] = {"tr_id", "endpnt", "src_srm_v", "dest_srm_v", "vo", "src_u
                      };
 
 std::string completedToken[] = {"$a$", "$b$", "$c$", "$d$", "$e$", "$f$", "$g$", "$h$", "$i$", "$j$", "$k$", "$l$", "$m$", "$n$", "$o$", "$p$", "$q$", "$r$", "$s$", "$t$", "$u$", "$v$", "$w$", "$x$", "$y$", "$z$", "$0$", "$1$", "$2$", "$3$", "$4$", "$5$", "$6$", "$7$", "$8$", "$9$", "$10$", "$11$", "$12$", "$13$", "$14$", "$15$", "$16$", "$17$"};
-*/
 
-
-
-
-string started[] = {"agent_fqdn", "transfer_id", "endpnt", "timestamp", "src_srm_v", "dest_srm_v",
-                    "vo", "src_url", "dst_url", "src_hostname", "dst_hostname", "src_site_name", "dst_site_name", "t_channel",
-                    "srm_space_token_src", "srm_space_token_dst"
-                   };
-
-string startedToken[] = {"$a$", "$b$", "$c$", "$d$", "$e$", "$f$", "$g$", "$h$", "$i$", "$j$", "$k$", "$l$", "$m$", "$n$", "$o$", "$p$"};
-
-string completed[] = {"tr_id", "endpnt", "src_srm_v", "dest_srm_v", "vo", "src_url", "dst_url", "src_hostname", "dst_hostname", "src_site_name",
-                      "dst_site_name", "t_channel", "timestamp_tr_st", "timestamp_tr_comp", "timestamp_chk_src_st", "timestamp_chk_src_ended", "timestamp_checksum_dest_st",
-                      "timestamp_checksum_dest_ended", "t_timeout", "chk_timeout", "t_error_code", "tr_error_scope", "t_failure_phase", "tr_error_category", "t_final_transfer_state",
-                      "tr_bt_transfered", "nstreams", "buf_size", "tcp_buf_size", "block_size", "f_size", "time_srm_prep_st", "time_srm_prep_end", "time_srm_fin_st", "time_srm_fin_end",
-                      "srm_space_token_src", "srm_space_token_dst", "t__error_message", "tr_timestamp_start", "tr_timestamp_complete", "channel_type"
-                     };
-
-std::string completedToken[] = {"$a$", "$b$", "$c$", "$d$", "$e$", "$f$", "$g$", "$h$", "$i$", "$j$", "$k$", "$l$", "$m$", "$n$", "$o$", "$p$", "$q$", "$r$", "$s$", "$t$", "$u$", "$v$", "$w$", "$x$", "$y$", "$z$", "$0$", "$1$", "$2$", "$3$", "$4$", "$5$", "$6$", "$7$", "$8$", "$9$", "$10$", "$11$", "$12$", "$13$", "$14$"};
 
 
 
@@ -124,7 +103,7 @@ bool MsgProducer::sendMessage(std::string &temp)
 
     if (temp.compare(0, 2, "ST") == 0)
         {
-            for (index = 0; index < 16; index++)
+            for (index = 0; index < 19; index++)
                 find_and_replace(temp, startedToken[index], started[index]);
             temp = temp.substr(2, temp.length()); //remove message prefix
             tempFTS = "\"endpnt\":\"" + FTSEndpoint + "\"";
@@ -132,11 +111,12 @@ bool MsgProducer::sendMessage(std::string &temp)
             temp += 4;
             TextMessage* message = session->createTextMessage(temp);
             producer_transfer_started->send(message);
+	    logger::writeLog(temp);	    
             delete message;
         }
     else if (temp.compare(0, 2, "CO") == 0)
         {
-            for (index = 0; index < 41; index++)
+            for (index = 0; index < 44; index++)
                 {
                     find_and_replace(temp, completedToken[index], completed[index]);
                 }
@@ -146,6 +126,7 @@ bool MsgProducer::sendMessage(std::string &temp)
             temp += 4;
             TextMessage* message = session->createTextMessage(temp);
             producer_transfer_completed->send(message);
+	    logger::writeLog(temp);
             delete message;
         }
     else if (temp.compare(0, 2, "SS") == 0)

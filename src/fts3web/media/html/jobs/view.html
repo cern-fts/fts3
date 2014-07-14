@@ -70,6 +70,9 @@
     <button type="button" class="btn btn-info btn-small"
             ng-model="filter.state.submitted" btn-checkbox
             ng-disabled="!job.states.SUBMITTED">{{job.states.SUBMITTED}} SUBMITTED</button>
+    <button type="button" class="btn btn-delete btn-small"
+            ng-model="filter.state.delete" btn-checkbox
+            ng-disabled="!job.states.DELETE">{{job.states.DELETE}} DELETE</button>
     <button type="button" class="btn btn-info btn-small"
             ng-model="filter.state.ready" btn-checkbox
             ng-disabled="!job.states.READY">{{job.states.READY}} READY</button>

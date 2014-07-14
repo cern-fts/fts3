@@ -825,7 +825,7 @@ CREATE INDEX t_dm_all  ON t_dm(vo_name, source_se, file_state);
 CREATE INDEX t_dm_source  ON t_dm(source_se, file_state);
 CREATE INDEX t_dm_state  ON t_dm(file_state, hashed_id);
 
-
+CREATE INDEX t_optimize_active_datetime  ON t_optimize_active(datetime);
 -- 
 --
 -- Schema version

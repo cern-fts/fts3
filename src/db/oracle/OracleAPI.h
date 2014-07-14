@@ -405,6 +405,8 @@ private:
     soci::connection_pool* connectionPool;
     std::string           hostname;
     std::vector<std::string> sanityVector;
+    
+    void updateHeartBeatInternal(soci::session& sql, unsigned* index, unsigned* count, unsigned* start, unsigned* end, std::string service_name);     
 
     bool resetForRetryStaging(soci::session& sql, int file_id, const std::string & job_id, bool retry);
 

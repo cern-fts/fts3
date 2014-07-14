@@ -233,11 +233,9 @@ public:
     std::string job_metadata;
     std::string file_metadata;
     std::string timestamp;
-    /*
     std::string user_dn;
     std::string source_url;
     std::string dest_url;
-    */
 
 };
 
