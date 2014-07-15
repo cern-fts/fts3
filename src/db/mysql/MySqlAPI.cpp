@@ -3815,9 +3815,10 @@ bool MySqlAPI::updateOptimizer()
                             active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
                             ema = throughputEMA;
                             stmt10.execute(true);
-                            updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, 10, bandwidthIn);
 
                             sql.commit();
+
+                            updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, 10, bandwidthIn);
 
                             continue;
                         }
@@ -3978,9 +3979,10 @@ bool MySqlAPI::updateOptimizer()
                                     stmt10.execute(true);
                                 }
 
+                            sql.commit();
+
                             updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, pathFollowed, bandwidthIn);
 
-                            sql.commit();
                         }
                 } //end for
         } //end try
@@ -8905,12 +8907,72 @@ void MySqlAPI::updateOptimizerEvolution(soci::session& sql, const std::string & 
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+
+            try
+                {
+		    //deadlock retry
+                    sleep(1);
+                    if(throughput > 0 && successRate > 0)
+                        {
+                            double agrthroughput = 0.0;
+
+                            sql.begin();
+                            sql << " INSERT INTO t_optimizer_evolution (datetime, source_se, dest_se, active, throughput, filesize, buffer, nostreams, agrthroughput) "
+                                " values(UTC_TIMESTAMP(), :source, :dest, :active, :throughput, :filesize, :buffer, :nostreams, :agrthroughput) ",
+                                soci::use(source_hostname),
+                                soci::use(destination_hostname),
+                                soci::use(active),
+                                soci::use(throughput),
+                                soci::use(successRate),
+                                soci::use(buffer),
+                                soci::use(bandwidth),
+                                soci::use(agrthroughput);
+                            sql.commit();
+                        }
+                }
+            catch (std::exception& e)
+                {
+                    sql.rollback();
+                }
+            catch (...)
+                {
+                    sql.rollback();
+                }
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+
+            try
+                {
+		    //deadlock retry
+                    sleep(1);
+                    if(throughput > 0 && successRate > 0)
+                        {
+                            double agrthroughput = 0.0;
+
+                            sql.begin();
+                            sql << " INSERT INTO t_optimizer_evolution (datetime, source_se, dest_se, active, throughput, filesize, buffer, nostreams, agrthroughput) "
+                                " values(UTC_TIMESTAMP(), :source, :dest, :active, :throughput, :filesize, :buffer, :nostreams, :agrthroughput) ",
+                                soci::use(source_hostname),
+                                soci::use(destination_hostname),
+                                soci::use(active),
+                                soci::use(throughput),
+                                soci::use(successRate),
+                                soci::use(buffer),
+                                soci::use(bandwidth),
+                                soci::use(agrthroughput);
+                            sql.commit();
+                        }
+                }
+            catch (std::exception& e)
+                {
+                    sql.rollback();
+                }
+            catch (...)
+                {
+                    sql.rollback();
+                }
         }
 }
 

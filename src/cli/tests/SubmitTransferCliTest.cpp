@@ -229,14 +229,16 @@ BOOST_FIXTURE_TEST_CASE (SubmitTransferCli_parameters, SubmitTransferCli)
     unique_ptr<SubmitTransferCli> cli (new SubmitTransferCli);
     cli->parse(ac, av);
 
-    try {
-    cli->validate();
-    }catch(cli_exception & ex)
-    {
-    	string s1, s2;
-    	s1 = ex.what();
-    	s2 = ex.what();
-    }
+    try
+        {
+            cli->validate();
+        }
+    catch(cli_exception & ex)
+        {
+            string s1, s2;
+            s1 = ex.what();
+            s2 = ex.what();
+        }
 
     map<string, string> params = cli->getParams();
 

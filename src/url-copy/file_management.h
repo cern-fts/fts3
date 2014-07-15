@@ -76,6 +76,8 @@ public:
         return arcFileName;
     }
 
+    bool isCastor(std::string& source_se, std::string& dest_se);
+
 private:
     std::string source_url;
     std::string dest_url;
@@ -94,4 +96,5 @@ private:
     char *base_host;
     char *base_path;
     int base_port;
+    bool reuse;
 };
