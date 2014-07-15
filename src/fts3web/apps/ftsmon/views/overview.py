@@ -137,7 +137,15 @@ def get_overview(http_request):
         all_vos = [row[0] for row in cursor.fetchall()]
 
     # Get all pairs first
-    cursor.execute("SELECT source_se, dest_se FROM t_optimize_active WHERE datetime >= %s" % _db_to_date(), [not_before])
+    pairs_query = "SELECT source_se, dest_se FROM t_optimize_active WHERE datetime >= %s " % _db_to_date()
+    pairs_params = [not_before]
+    if filters['source_se']:
+        pairs_query += "  AND source_se = %s"
+        pairs_params.append(filters['source_se'])
+    if filters['dest_se']:
+        pairs_query += " AND dest_se = %s"
+        pairs_params.append(filters['dest_se'])
+    cursor.execute(pairs_query, pairs_params)
     all_pairs = cursor.fetchall()
 
     triplets = {}
