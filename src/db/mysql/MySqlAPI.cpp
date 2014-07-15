@@ -4500,11 +4500,27 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
     std::string stmt;
     int count = 0;
     bool drain = false;
+    int activeHosts = 0;
 
     try
         {
+	     
+  	     // Total number of working instances, prevent from starting a second one
+            soci::statement stmtActiveHosts = (
+                                        sql.prepare << "SELECT COUNT(hostname) FROM t_hosts "
+                                        "  WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval 30 minute) and service_name = :service_name",
+                                        soci::use(service_name),
+                                        soci::into(activeHosts));
+            stmtActiveHosts.execute(true);
+	    
+	    if(activeHosts > 0)
+	    {
+		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Backup already running, won't start" << commit;	    
+	    	return;	
+	    }
+	
             //update heartbeat first, the first must get 0
-            updateHeartBeatInternal(sql, &index, &count1, &start, &end, service_name);
+            updateHeartBeatInternal(sql, &index, &count1, &start, &end, service_name);	    
 
             //prevent more than on server to update the optimizer decisions
             if(hashSegment.start == 0)

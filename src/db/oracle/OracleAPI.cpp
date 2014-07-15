@@ -4186,9 +4186,23 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
     std::string stmt;
     int count = 0;
     bool drain = false;
+    long long activeHosts = 0;    
 
     try
         {
+            // Total number of working instances, prevent from starting a second one
+            sql << "SELECT COUNT(hostname) FROM t_hosts "
+                "  WHERE beat >= (sys_extract_utc(systimestamp) - interval '30' minute) and service_name = :service_name",
+                soci::use(service_name),
+                soci::into(activeHosts);
+		
+	    if(activeHosts > 0)
+	    {
+		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Backup already running, won't start" << commit;	    
+	    	return;	
+	    }		
+		
+	
             //update heartbeat first, the first must get 0
             updateHeartBeatInternal(sql, &index, &count1, &start, &end, service_name);
 
