@@ -243,6 +243,7 @@ std::string FileManagement::generateLogFileName(std::string, std::string, unsign
     return new_name;
 }
 
+/*
 bool FileManagement::isCastor(std::string& source_se, std::string& dest_se)
 {
     std::ifstream myfile("/etc/fts3/castor.config");
@@ -268,3 +269,4 @@ bool FileManagement::isCastor(std::string& source_se, std::string& dest_se)
         }
     return reuse;
 }
+*/
