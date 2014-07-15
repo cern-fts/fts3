@@ -42,6 +42,9 @@ config(function($routeProvider) {
         when('/config/limits',        {templateUrl: STATIC_ROOT + 'html/config/limits.html',
                                        controller:  ConfigLimitsCtrl,
                                        resolve:     ConfigLimitsCtrl.resolve}).
+        when('/config/gfal2',         {templateUrl: STATIC_ROOT + 'html/config/gfal2.html',
+                                       controller:  Gfal2Ctrl,
+                                       resolve:     Gfal2Ctrl.resolve}).
 
         when('/statistics/overview',  {templateUrl: STATIC_ROOT + 'html/statistics/overview.html',
                                        controller:  StatsOverviewCtrl,
