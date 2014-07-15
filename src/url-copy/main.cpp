@@ -798,6 +798,7 @@ int main(int argc, char **argv)
             reporter.dest_se = fileManagement.getDestHostname();
             fileManagement.generateLogFile();
 
+
             msg_ifce::getInstance()->set_tr_timestamp_start(&tr_completed, msg_ifce::getInstance()->getTimestamp());
             msg_ifce::getInstance()->set_agent_fqdn(&tr_completed, opts.alias);
             msg_ifce::getInstance()->set_endpoint(&tr_completed, opts.alias);
@@ -841,6 +842,13 @@ int main(int argc, char **argv)
                     gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "SESSION_REUSE", TRUE, NULL);
                     logger.INFO() << "GridFTP session reuse enabled since both uri's are gsiftp" << std::endl;
                 }
+	    /*	
+            else if(false == fileManagement.isCastor(reporter.source_se, reporter.dest_se))
+                {
+                    gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "SESSION_REUSE", TRUE, NULL);
+                    logger.INFO() << "GridFTP session reuse enabled since none of the endpoints is CASTOR" << std::endl;
+                }
+	    */	
 
             // Scope
             {

@@ -2069,7 +2069,7 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
 
     try
         {
-  
+
 
             double throughput = 0.0;
 
@@ -2101,8 +2101,8 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
                             return false; //don't do anything, just return
                         }
                 }
-		
-            sql.begin();		
+
+            sql.begin();
 
             soci::statement stmt(sql);
             std::ostringstream query;
@@ -2357,8 +2357,8 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
             int numberOfFilesTerminal = numberOfFilesCanceled + numberOfFilesFailed + numberOfFilesFinished;
 
             bool jobFinished = (numberOfFilesInJob == numberOfFilesTerminal);
-	    
-           sql.begin();	    
+
+            sql.begin();
 
             if (jobFinished)
                 {
@@ -2584,9 +2584,9 @@ void MySqlAPI::updateFileTransferProgressVector(std::vector<struct message_updat
         }
 }
 
-void MySqlAPI::cancelJob(std::vector<std::string>& requestIDs)
+
+void MySqlAPI::cancelJobInternal(soci::session& sql, std::vector<std::string>& requestIDs)
 {
-    soci::session sql(*connectionPool);
     const std::string reason = "Job canceled by the user";
     std::string job_id;
     std::ostringstream cancelStmt1;
@@ -2667,6 +2667,48 @@ void MySqlAPI::cancelJob(std::vector<std::string>& requestIDs)
 
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+
+void MySqlAPI::cancelJob(std::vector<std::string>& requestIDs)
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            cancelJobInternal(sql, requestIDs);
+        }
+    catch (std::exception& e)
+        {
+            try
+                {
+                    sleep(1);
+                    cancelJobInternal(sql, requestIDs);
+                }
+            catch (std::exception& e)
+                {
+                    throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+                }
+            catch (...)
+                {
+                    throw Err_Custom(std::string(__func__) + ": Caught exception " );
+                }
+        }
+    catch (...)
+        {
+            try
+                {
+                    sleep(1);
+                    cancelJobInternal(sql, requestIDs);
+                }
+            catch (std::exception& e)
+                {
+                    throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+                }
+            catch (...)
+                {
+                    throw Err_Custom(std::string(__func__) + ": Caught exception " );
+                }
         }
 }
 
@@ -3773,9 +3815,10 @@ bool MySqlAPI::updateOptimizer()
                             active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
                             ema = throughputEMA;
                             stmt10.execute(true);
-                            updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, 10, bandwidthIn);
 
                             sql.commit();
+
+                            updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, 10, bandwidthIn);
 
                             continue;
                         }
@@ -3936,9 +3979,10 @@ bool MySqlAPI::updateOptimizer()
                                     stmt10.execute(true);
                                 }
 
+                            sql.commit();
+
                             updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, pathFollowed, bandwidthIn);
 
-                            sql.commit();
                         }
                 } //end for
         } //end try
@@ -4504,23 +4548,23 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
 
     try
         {
-	     
-  	     // Total number of working instances, prevent from starting a second one
+
+            // Total number of working instances, prevent from starting a second one
             soci::statement stmtActiveHosts = (
-                                        sql.prepare << "SELECT COUNT(hostname) FROM t_hosts "
-                                        "  WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval 30 minute) and service_name = :service_name",
-                                        soci::use(service_name),
-                                        soci::into(activeHosts));
+                                                  sql.prepare << "SELECT COUNT(hostname) FROM t_hosts "
+                                                  "  WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval 30 minute) and service_name = :service_name",
+                                                  soci::use(service_name),
+                                                  soci::into(activeHosts));
             stmtActiveHosts.execute(true);
-	    
-	    if(activeHosts > 0)
-	    {
-		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Backup already running, won't start" << commit;	    
-	    	return;	
-	    }
-	
+
+            if(activeHosts > 0)
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Backup already running, won't start" << commit;
+                    return;
+                }
+
             //update heartbeat first, the first must get 0
-            updateHeartBeatInternal(sql, &index, &count1, &start, &end, service_name);	    
+            updateHeartBeatInternal(sql, &index, &count1, &start, &end, service_name);
 
             //prevent more than on server to update the optimizer decisions
             if(hashSegment.start == 0)
@@ -6910,7 +6954,7 @@ void MySqlAPI::cancelJobsInTheQueue(const std::string& dn, std::vector<std::stri
                     jobs.push_back(it->get<std::string>("job_id"));
                 }
 
-            cancelJob(jobs);
+            cancelJobInternal(sql, jobs);
         }
     catch (std::exception& e)
         {
@@ -8389,10 +8433,8 @@ int MySqlAPI::getOptimizerMode(soci::session& sql)
     return modeDefault;
 }
 
-void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId, int retry, const std::string& reason)
+void MySqlAPI::setRetryTransferInternal(soci::session& sql, const std::string & jobId, int fileId, int retry, const std::string& reason)
 {
-    soci::session sql(*connectionPool);
-
     //expressed in secs, default delay
     const int default_retry_delay = 120;
     int retry_delay = 0;
@@ -8464,6 +8506,48 @@ void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId, int retry
         {
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }
+}
+
+void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId, int retry, const std::string& reason)
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            setRetryTransferInternal(sql, jobId, fileId, retry, reason);
+        }
+    catch (std::exception& e)
+        {
+            try
+                {
+                    sleep(TIME_TO_SLEEP_BETWEEN_TRANSACTION_RETRIES);
+                    setRetryTransferInternal(sql, jobId, fileId, retry, reason);
+                }
+            catch (std::exception& e)
+                {
+                    throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+                }
+            catch (...)
+                {
+                    throw Err_Custom(std::string(__func__) + ": Caught exception ");
+                }
+        }
+    catch (...)
+        {
+            try
+                {
+                    sleep(TIME_TO_SLEEP_BETWEEN_TRANSACTION_RETRIES);
+                    setRetryTransferInternal(sql, jobId, fileId, retry, reason);
+                }
+            catch (std::exception& e)
+                {
+                    throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+                }
+            catch (...)
+                {
+                    throw Err_Custom(std::string(__func__) + ": Caught exception ");
+                }
         }
 }
 
@@ -8823,12 +8907,72 @@ void MySqlAPI::updateOptimizerEvolution(soci::session& sql, const std::string & 
     catch (std::exception& e)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+
+            try
+                {
+		    //deadlock retry
+                    sleep(1);
+                    if(throughput > 0 && successRate > 0)
+                        {
+                            double agrthroughput = 0.0;
+
+                            sql.begin();
+                            sql << " INSERT INTO t_optimizer_evolution (datetime, source_se, dest_se, active, throughput, filesize, buffer, nostreams, agrthroughput) "
+                                " values(UTC_TIMESTAMP(), :source, :dest, :active, :throughput, :filesize, :buffer, :nostreams, :agrthroughput) ",
+                                soci::use(source_hostname),
+                                soci::use(destination_hostname),
+                                soci::use(active),
+                                soci::use(throughput),
+                                soci::use(successRate),
+                                soci::use(buffer),
+                                soci::use(bandwidth),
+                                soci::use(agrthroughput);
+                            sql.commit();
+                        }
+                }
+            catch (std::exception& e)
+                {
+                    sql.rollback();
+                }
+            catch (...)
+                {
+                    sql.rollback();
+                }
         }
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+
+            try
+                {
+		    //deadlock retry
+                    sleep(1);
+                    if(throughput > 0 && successRate > 0)
+                        {
+                            double agrthroughput = 0.0;
+
+                            sql.begin();
+                            sql << " INSERT INTO t_optimizer_evolution (datetime, source_se, dest_se, active, throughput, filesize, buffer, nostreams, agrthroughput) "
+                                " values(UTC_TIMESTAMP(), :source, :dest, :active, :throughput, :filesize, :buffer, :nostreams, :agrthroughput) ",
+                                soci::use(source_hostname),
+                                soci::use(destination_hostname),
+                                soci::use(active),
+                                soci::use(throughput),
+                                soci::use(successRate),
+                                soci::use(buffer),
+                                soci::use(bandwidth),
+                                soci::use(agrthroughput);
+                            sql.commit();
+                        }
+                }
+            catch (std::exception& e)
+                {
+                    sql.rollback();
+                }
+            catch (...)
+                {
+                    sql.rollback();
+                }
         }
 }
 

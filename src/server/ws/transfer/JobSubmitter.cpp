@@ -385,13 +385,66 @@ string JobSubmitter::submit()
     catch(Err& ex)
         {
 
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + ex.what());
+            try
+                {
+                    sleep(1);
+
+                    // submit the transfer job (add it to the DB)
+                    db->submitPhysical (
+                        id,
+                        jobs,
+                        dn,
+                        cred,
+                        vo,
+                        string(),
+                        delegationId,
+                        sourceSe,
+                        destinationSe,
+                        params
+                    );
+                }
+            catch(Err& ex)
+                {
+
+                    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+                    throw Err_Custom(std::string(__func__) + ": Caught exception " + ex.what());
+                }
+            catch(...)
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: db->submitPhysical"  << commit;
+                    throw Err_Custom(std::string(__func__) + ": Caught exception " );
+                }
         }
     catch(...)
         {
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: db->submitPhysical"  << commit;
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            try
+                {
+                    sleep(1);
+                    // submit the transfer job (add it to the DB)
+                    db->submitPhysical (
+                        id,
+                        jobs,
+                        dn,
+                        cred,
+                        vo,
+                        string(),
+                        delegationId,
+                        sourceSe,
+                        destinationSe,
+                        params
+                    );
+                }
+            catch(Err& ex)
+                {
+
+                    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+                    throw Err_Custom(std::string(__func__) + ": Caught exception " + ex.what());
+                }
+            catch(...)
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: db->submitPhysical"  << commit;
+                    throw Err_Custom(std::string(__func__) + ": Caught exception " );
+                }
         }
 
 

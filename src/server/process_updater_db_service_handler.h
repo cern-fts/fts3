@@ -193,13 +193,69 @@ protected:
                         counterCanceled++;
                         if (counterCanceled == 10)
                             {
-                                DBSingleton::instance().getDBObjectInstance()->getCancelJob(requestIDs);
-                                if (!requestIDs.empty())   /*if canceled jobs found and transfer already started, kill them*/
+                                try
                                     {
-                                        killRunningJob(requestIDs);
-                                        requestIDs.clear(); /*clean the list*/
+                                        DBSingleton::instance().getDBObjectInstance()->getCancelJob(requestIDs);
+                                        if (!requestIDs.empty())   /*if canceled jobs found and transfer already started, kill them*/
+                                            {
+                                                killRunningJob(requestIDs);
+                                                requestIDs.clear(); /*clean the list*/
+                                            }
+                                        counterCanceled = 0;
                                     }
-                                counterCanceled = 0;
+                                catch (const std::exception& e)
+                                    {
+                                        try
+                                            {
+                                                sleep(1);
+                                                DBSingleton::instance().getDBObjectInstance()->getCancelJob(requestIDs);
+                                                if (!requestIDs.empty())   /*if canceled jobs found and transfer already started, kill them*/
+                                                    {
+                                                        killRunningJob(requestIDs);
+                                                        requestIDs.clear(); /*clean the list*/
+                                                    }
+                                                counterCanceled = 0;
+                                            }
+                                        catch (const std::exception& e)
+                                            {
+                                                counterCanceled = 0;
+                                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown exception "
+                                                                               << e.what()
+                                                                               << commit;
+                                            }
+                                        catch (...)
+                                            {
+                                                counterCanceled = 0;
+                                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
+
+                                            }
+                                    }
+                                catch (...)
+                                    {
+                                        try
+                                            {
+                                                sleep(1);
+                                                DBSingleton::instance().getDBObjectInstance()->getCancelJob(requestIDs);
+                                                if (!requestIDs.empty())   /*if canceled jobs found and transfer already started, kill them*/
+                                                    {
+                                                        killRunningJob(requestIDs);
+                                                        requestIDs.clear(); /*clean the list*/
+                                                    }
+                                                counterCanceled = 0;
+                                            }
+                                        catch (const std::exception& e)
+                                            {
+                                                counterCanceled = 0;
+                                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown exception "
+                                                                               << e.what()
+                                                                               << commit;
+                                            }
+                                        catch (...)
+                                            {
+                                                counterCanceled = 0;
+                                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
+                                            }
+                                    }
                             }
 
 

@@ -466,4 +466,8 @@ private:
 
     std::vector<struct message_state> getStateOfDeleteInternal(soci::session& sql, const std::string& jobId, int fileId);
 
+    void setRetryTransferInternal(soci::session& sql, const std::string & jobId, int fileId, int retry, const std::string& reason);
+
+    void cancelJobInternal(soci::session& sql, std::vector<std::string>& requestIDs);
+
 };
