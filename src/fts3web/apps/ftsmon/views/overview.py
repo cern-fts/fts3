@@ -178,7 +178,22 @@ def get_overview(http_request):
                 for row in cursor.fetchall():
                     triplet[row[0].lower()] = row[1]
 
-                triplets[triplet_key] = triplet
+                # Total files
+                total_files = sum(triplet.values())
+                if total_files > 0:
+                    # Throughput
+                    if triplet.get('active') > 0:
+                        cursor.execute(
+                            "SELECT SUM(throughput) FROM t_file "
+                            "WHERE source_se = %s AND dest_se=%s "
+                            "      AND vo_name=%s AND file_state='ACTIVE' AND throughput > 0",
+                            [source, dest, vo]
+                        )
+                        thr = cursor.fetchall()
+                        if len(thr) and thr[0][0]:
+                            triplet['current'] = thr[0][0]
+
+                    triplets[triplet_key] = triplet
 
     # Limitations
     limit_query = "SELECT source_se, dest_se, throughput, active FROM t_optimize WHERE throughput IS NOT NULL or active IS NOT NULL"
