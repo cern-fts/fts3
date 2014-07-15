@@ -444,7 +444,42 @@ protected:
                                             }
 
                                         //now update the progress markers in a "bulk fashion"
-                                        DBSingleton::instance().getDBObjectInstance()->updateFileTransferProgressVector(messagesUpdater);
+                                        try
+                                            {
+                                                DBSingleton::instance().getDBObjectInstance()->updateFileTransferProgressVector(messagesUpdater);
+                                            }
+                                        catch (std::exception& e)
+                                            {
+                                                try
+                                                    {
+                                                        sleep(1);
+                                                        DBSingleton::instance().getDBObjectInstance()->updateFileTransferProgressVector(messagesUpdater);
+                                                    }
+                                                catch (std::exception& e)
+                                                    {
+                                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
+                                                    }
+                                                catch (...)
+                                                    {
+                                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
+                                                    }
+                                            }
+                                        catch (...)
+                                            {
+                                                try
+                                                    {
+                                                        sleep(1);
+                                                        DBSingleton::instance().getDBObjectInstance()->updateFileTransferProgressVector(messagesUpdater);
+                                                    }
+                                                catch (std::exception& e)
+                                                    {
+                                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
+                                                    }
+                                                catch (...)
+                                                    {
+                                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
+                                                    }
+                                            }
                                     }
                                 messagesUpdater.clear();
                             }
