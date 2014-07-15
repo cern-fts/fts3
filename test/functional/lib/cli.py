@@ -39,7 +39,7 @@ class Cli:
 
         # If retry is not explicit, set it to 0
         if '--retry' not in extraArgs:
-            extraArgs += ['--retry', '-1']
+            extraArgs += ['--retry', '0']
 
         # Label the job
         caller = inspect.stack()[1][3]
@@ -96,7 +96,7 @@ class Cli:
             cmdArray += ['--detailed']
         out = self._spawn(cmdArray)
         detailedState = json.loads(out)
-        fileStates = detailedState['job'][0]['files']
+        fileStates = detailedState['job']['files']
         pairDict = {}
         for f in fileStates:
             src = f['source']

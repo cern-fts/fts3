@@ -35,7 +35,7 @@ StorageParametrization = {
 StorageAreaPairs = [
     (
         'gsiftp://storage01.lcg.cscs.ch/pnfs/lcg.cscs.ch/%(vo)s/',
-        'gsiftp://dcachepool1.du1.cesnet.cz/data/du.cesnet.cz/%(vo)s/'
+        'gsiftp://dcdoor01.pic.es:2811/pnfs/pic.es/data/%(vo)s/'
     ),
     (
         'srm://grid002.ft.uam.es:8443/srm/managerv2?SFN=/pnfs/ft.uam.es/data/%(vo)s/',
