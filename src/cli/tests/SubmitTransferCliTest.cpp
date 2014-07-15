@@ -103,13 +103,15 @@ BOOST_AUTO_TEST_CASE (SubmitTransferCli_other_options)
         "prog_name",
         "-s",
         "https://fts3-server:8080",
+        "srm://src/file.in",
+        "srm://dst/file.out",
         "-b",
         "-e",
         "1234"
     };
 
     // argument count
-    int ac = 6;
+    int ac = 8;
 
     unique_ptr<SubmitTransferCli> cli (new SubmitTransferCli);
     cli->parse(ac, av);
@@ -135,8 +137,7 @@ BOOST_AUTO_TEST_CASE (SubmitTransferCli_submission_no_job)
 
     unique_ptr<SubmitTransferCli> cli (new SubmitTransferCli);
     cli->parse(ac, av);
-    cli->validate();
-
+    BOOST_CHECK_THROW(cli->validate(), cli_exception);
     BOOST_CHECK_THROW(cli->getFiles(), bad_option);
 }
 
@@ -218,14 +219,24 @@ BOOST_FIXTURE_TEST_CASE (SubmitTransferCli_parameters, SubmitTransferCli)
         "-I", "id",
         "-t", "dest-token",
         "-S", "source-token",
-        "--copy-pin-lifetime", "123"
+        "--copy-pin-lifetime", "123",
+        "srm://src/file.in",
+        "srm://dst/file.out"
     };
     // argument count
     int ac = 15;
 
     unique_ptr<SubmitTransferCli> cli (new SubmitTransferCli);
     cli->parse(ac, av);
+
+    try {
     cli->validate();
+    }catch(cli_exception & ex)
+    {
+    	string s1, s2;
+    	s1 = ex.what();
+    	s2 = ex.what();
+    }
 
     map<string, string> params = cli->getParams();
 

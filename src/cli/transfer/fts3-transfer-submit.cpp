@@ -46,7 +46,7 @@ int main(int ac, char* av[])
     try
         {
             cli->parse(ac, av);
-            if (!cli->validate()) return 0;
+            if (!cli->validate()) return 1;
 
             if (cli->rest())
                 {
