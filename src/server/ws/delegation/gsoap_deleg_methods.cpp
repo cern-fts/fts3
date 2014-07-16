@@ -34,7 +34,7 @@ using namespace fts3::common;
 using namespace fts3::ws;
 
 
-//serialize delegation request to avoid crashes due to multiple SSL initialization inside canl
+//Serialise delegation request to avoid crashes due to multiple SSL initialisation inside canl
 static boost::mutex qm;
 
 

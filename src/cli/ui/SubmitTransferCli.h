@@ -230,6 +230,8 @@ private:
      */
     string askForPassword();
 
+    static void parseMetadata(std::string const & metadata);
+
     /**
      * checks if the provided url is valid
      */
