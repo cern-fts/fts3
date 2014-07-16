@@ -848,6 +848,16 @@ int main(int argc, char **argv)
                     gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "SESSION_REUSE", TRUE, NULL);
                     logger.INFO() << "GridFTP session reuse enabled since none of the endpoints is CASTOR" << std::endl;
                 }
+            else if(true == fileManagement.isCastor(reporter.source_se, reporter.dest_se))
+                {
+                    gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "SESSION_REUSE", FALSE, NULL);
+                    logger.INFO() << "GridFTP session reuse is disabled since one of the endpoints is CASTOR" << std::endl;
+                }	
+	    else
+	        {
+                   gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "SESSION_REUSE", TRUE, NULL);
+                   logger.INFO() << "GridFTP session reuse enabled " << std::endl;		
+                }		   			
 	    */	
 
             // Scope

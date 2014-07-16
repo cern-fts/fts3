@@ -10902,7 +10902,7 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                                                      " SELECT distinct j.source_se, j.user_dn "
                                                      " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                                      " WHERE "
-                                                     "	(j.BRING_ONLINE > 0 OR j.COPY_PIN_LIFETIME > 0) "
+                                                     "	(j.BRING_ONLINE >= 0 OR j.COPY_PIN_LIFETIME >= 0) "
                                                      "	AND f.file_state = 'STAGING' "
                                                      "	AND f.start_time IS NULL and j.job_finished is null "
                                                      "  AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd)"
@@ -10924,7 +10924,7 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                                                               " j.user_dn, j.cred_id, j.source_space_token"
                                                               " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                                               " WHERE  "
-                                                              " (j.BRING_ONLINE > 0 OR j.COPY_PIN_LIFETIME > 0) "
+                                                              " (j.BRING_ONLINE >= 0 OR j.COPY_PIN_LIFETIME >= 0) "
                                                               "	AND f.start_time IS NULL "
                                                               "	AND f.file_state = 'STAGING' "
                                                               " AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd)"
@@ -11319,7 +11319,7 @@ void MySqlAPI::checkJobOperation(std::vector<std::string >& jobs, std::vector< b
             //ok
             soci::statement stmtStaging  = (sql.prepare << " select job_id from t_job "
                                             " where job_id=:job_id and "
-                                            " copy_pin_lifetime > 0 OR bring_online > 0 "
+                                            " (copy_pin_lifetime >= 0 OR bring_online >= 0) "
                                             " LIMIT 1 ", soci::use(job_id), soci::into(jobStaging));
 
             for (std::vector<std::string>::const_iterator i = jobs.begin(); i != jobs.end(); ++i)
