@@ -34,7 +34,7 @@ using namespace FTS3_NAMESPACE;
 using namespace FTS3_COMMON_NAMESPACE;
 
 static sem_t semaphore;
-static int raised_signal = 0;
+static sig_atomic_t raised_signal = 0;
 
 // Minimalistic logic inside a signal!
 static void signal_handler(int signal)
@@ -57,24 +57,32 @@ static void (*_arg_shutdown_callback)(int, void*);
 static void *_arg_udata;
 static void set_handlers(void)
 {
-    static const int CATCH_SIGNALS[] = {
-        SIGABRT, SIGSEGV, SIGTERM,
-        SIGILL, SIGFPE, SIGBUS,
-        SIGTRAP, SIGSYS,
-        SIGINT, SIGTERM, SIGUSR1
+    static const int CATCH_SIGNALS[] =
+    {
+        SIGABRT, SIGSEGV, SIGILL, SIGFPE,
+        SIGBUS, SIGTRAP, SIGSYS,
+        SIGINT, SIGUSR1, SIGTERM
     };
     static const size_t N_CATCH_SIGNALS = sizeof(CATCH_SIGNALS) / sizeof(int);
     static struct sigaction actions[N_CATCH_SIGNALS];
 
     sem_init(&semaphore, 0, 0);
 
+    static sigset_t proc_mask;
+    sigemptyset(&proc_mask);
+
     memset(actions, 0, sizeof(actions));
-    for (size_t i = 0; i < N_CATCH_SIGNALS; ++i) {
-        actions[i].sa_handler = &signal_handler;
-        sigemptyset(&actions[i].sa_mask);
-        actions[i].sa_flags = SA_RESTART;
-        sigaction(CATCH_SIGNALS[i], &actions[i], NULL);
-    }
+    for (size_t i = 0; i < N_CATCH_SIGNALS; ++i)
+        {
+            actions[i].sa_handler = &signal_handler;
+            sigemptyset(&actions[i].sa_mask);
+            actions[i].sa_flags = SA_RESTART;
+            sigaction(CATCH_SIGNALS[i], &actions[i], NULL);
+            sigaddset(&proc_mask, CATCH_SIGNALS[i]);
+        }
+
+    // Unblock signals (daemon may have blocked some of them)
+    sigprocmask(SIG_UNBLOCK, &proc_mask, NULL);
 
     boost::thread watchdog(signal_watchdog, _arg_shutdown_callback, _arg_udata);
 }
@@ -90,7 +98,8 @@ void Panic::setup_signal_handlers(void (*shutdown_callback)(int, void*), void* u
 }
 
 
-std::string Panic::stack_dump(void) {
+std::string Panic::stack_dump(void)
+{
     std::string stackTrace;
 
     const int stack_size = 25;

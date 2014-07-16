@@ -1124,7 +1124,7 @@ int fts3::impltns__cancel(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOREstrin
 
                                     AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::TRANSFER, job.get());
 
-                                  
+
                                     // if not throw an exception
                                     if (!job.get()) throw Err_Custom("Transfer job: " + *it + " does not exist!");
 
@@ -1241,7 +1241,7 @@ int fts3::impltns__cancel2(soap* ctx, impltns__ArrayOf_USCOREsoapenc_USCOREstrin
                         DBSingleton::instance().getDBObjectInstance()->getTransferJob(*it, false)
                     );
 
-                    AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get());                    
+                    AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get());
 
                     // if not add appropriate response
                     if (!job.get())

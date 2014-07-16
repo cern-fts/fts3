@@ -83,7 +83,7 @@ static std::string replace_dn(std::string& user_dn)
 static std::string replaceMetadataString(std::string text)
 {
     text = boost::replace_all_copy(text, "?"," ");
-    text = boost::replace_all_copy(text, "\\\"","");
+    text = boost::replace_all_copy(text, "\\\"","\"");
     return text;
 }
 
@@ -646,7 +646,7 @@ __attribute__((constructor)) void begin(void)
     uid_t pw_uid = name_to_uid();
     setuid(pw_uid);
     seteuid(pw_uid);
-    StaticSslLocking::init_locks();
+    setenv("GLOBUS_THREAD_MODEL", "pthread", 1);
 }
 
 int main(int argc, char **argv)
@@ -798,6 +798,7 @@ int main(int argc, char **argv)
             reporter.dest_se = fileManagement.getDestHostname();
             fileManagement.generateLogFile();
 
+
             msg_ifce::getInstance()->set_tr_timestamp_start(&tr_completed, msg_ifce::getInstance()->getTimestamp());
             msg_ifce::getInstance()->set_agent_fqdn(&tr_completed, opts.alias);
             msg_ifce::getInstance()->set_endpoint(&tr_completed, opts.alias);
@@ -817,6 +818,9 @@ int main(int argc, char **argv)
             msg_ifce::getInstance()->set_srm_space_token_dest(&tr_completed, opts.destTokenDescription);
             msg_ifce::getInstance()->set_srm_space_token_source(&tr_completed, opts.sourceTokenDescription);
             msg_ifce::getInstance()->set_user_dn(&tr_completed, replace_dn(opts.user_dn));
+
+            msg_ifce::getInstance()->set_file_metadata(&tr_completed, replaceMetadataString(currentTransfer.fileMetadata) );
+            msg_ifce::getInstance()->set_job_metadata(&tr_completed, replaceMetadataString(opts.jobMetadata) );
 
             if(opts.monitoringMessages)
                 msg_ifce::getInstance()->SendTransferStartMessage(&tr_completed);
@@ -838,6 +842,23 @@ int main(int argc, char **argv)
                     gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "SESSION_REUSE", TRUE, NULL);
                     logger.INFO() << "GridFTP session reuse enabled since both uri's are gsiftp" << std::endl;
                 }
+	    /*	
+            else if(false == fileManagement.isCastor(reporter.source_se, reporter.dest_se))
+                {
+                    gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "SESSION_REUSE", TRUE, NULL);
+                    logger.INFO() << "GridFTP session reuse enabled since none of the endpoints is CASTOR" << std::endl;
+                }
+            else if(true == fileManagement.isCastor(reporter.source_se, reporter.dest_se))
+                {
+                    gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "SESSION_REUSE", FALSE, NULL);
+                    logger.INFO() << "GridFTP session reuse is disabled since one of the endpoints is CASTOR" << std::endl;
+                }	
+	    else
+	        {
+                   gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "SESSION_REUSE", TRUE, NULL);
+                   logger.INFO() << "GridFTP session reuse enabled " << std::endl;		
+                }		   			
+	    */	
 
             // Scope
             {
@@ -1402,8 +1423,6 @@ stop:
 
     if (opts.areTransfersOnFile() && readFile.length() > 0)
         unlink(readFile.c_str());
-
-    StaticSslLocking::kill_locks();
 
     sleep(1);
     return EXIT_SUCCESS;

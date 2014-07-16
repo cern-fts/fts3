@@ -8,6 +8,8 @@
 #ifndef STAGINGSTATEUPDATER_H_
 #define STAGINGSTATEUPDATER_H_
 
+#include "StagingContext.h"
+
 #include "db/generic/SingleDbInstance.h"
 
 #include <string>
@@ -48,11 +50,39 @@ public:
      * @param reason : reason for changing the state
      * @param retry : true is the file requires retry, false otherwise
      */
-    void operator()(std::string const & job_id, int file_id, std::string const & state, std::string const & reason, bool retry)
+    void operator()(std::map< std::string, std::vector<int> > const & jobs, std::string const & state, std::string const & reason, bool retry)
     {
         // lock the vector
         boost::mutex::scoped_lock lock(m);
-        updates.push_back(value_type(file_id, state, reason, job_id, retry));
+        // iterators
+        std::map< std::string, std::vector<int> >::const_iterator it_m;
+        std::vector<int>::const_iterator it_v;
+        // iterate over jobs
+        for (it_m = jobs.begin(); it_m != jobs.end(); ++it_m)
+            {
+                std::string const & job_id = it_m->first;
+                // iterate over files
+                for (it_v = it_m->second.begin(); it_v != it_m->second.end(); ++it_v)
+                    {
+                        updates.push_back(value_type(*it_v, state, reason, job_id, retry));
+                    }
+            }
+    }
+
+    void operator()(std::map< std::string, std::vector<int> > const & jobs, std::string const & token)
+    {
+        try
+            {
+                db.updateBringOnlineToken(jobs, token);
+            }
+        catch(std::exception& ex)
+            {
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
+            }
+        catch(...)
+            {
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception while updating the bring-online token!" << commit;
+            }
     }
 
     void recover()

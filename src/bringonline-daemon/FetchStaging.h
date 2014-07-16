@@ -13,9 +13,13 @@
 
 #include "cred/DelegCred.h"
 
-#include <string>
 
 #include <boost/scoped_ptr.hpp>
+
+#include <tuple>
+#include <vector>
+#include <string>
+#include <map>
 
 using namespace fts3::common;
 
@@ -32,6 +36,10 @@ public:
     void fetch();
 
 private:
+
+    // typedefs for convenience
+    // vo, dn ,se, source_space_token
+    typedef std::tuple<std::string, std::string, std::string, std::string> key_type;
 
     static bool isSrmUrl(const std::string & url)
     {

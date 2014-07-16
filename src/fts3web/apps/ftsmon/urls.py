@@ -33,6 +33,7 @@ urlpatterns = patterns('ftsmon.views',
     url(r'^config/server$', 'config.get_server_config'),
     url(r'^config/debug$',  'config.get_debug_config'),
     url(r'^config/limits',  'config.get_limit_config'),
+    url(r'^config/gfal2',   'config.get_gfal2_config'),
 
     url(r'^stats$',            'statistics.get_overview'),
     url(r'^stats/servers$',    'statistics.get_servers'),

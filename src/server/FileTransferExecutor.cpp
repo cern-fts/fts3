@@ -76,7 +76,7 @@ bool FileTransferExecutor::checkValidProxy(const std::string& filename, std::str
 int FileTransferExecutor::execute()
 {
     int scheduled = 0;
-       
+
     //stop forking when a signal is received to avoid deadlocks
     if (tf.FILE_ID == 0 || stopThreads)
         return 0;
@@ -175,6 +175,10 @@ int FileTransferExecutor::execute()
                     std::string message;
                     if(false == checkValidProxy(proxy_file, message))
                         {
+                            if(!message.empty())
+                                {
+                                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << message  << commit;
+                                }
                             proxy_file = get_proxy_cert(
                                              tf.DN, // user_dn
                                              tf.CRED_ID, // user_cred

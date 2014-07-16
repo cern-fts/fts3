@@ -18,6 +18,7 @@
 #include "cred/DelegCred.h"
 
 #include <string>
+#include <utility>
 
 #include <boost/scoped_ptr.hpp>
 #include <boost/any.hpp>
@@ -33,6 +34,18 @@
 class BringOnlineTask : public StagingTask
 {
 
+    // typedefs for convenience
+    // vo, dn ,se, source_space_token
+    typedef std::tuple<std::string, std::string, std::string, std::string> key_type;
+
+    enum
+    {
+        vo,
+        dn,
+        se,
+        space_token
+    };
+
 public:
 
     /**
@@ -40,7 +53,7 @@ public:
      *
      * @param ctx : bring-online task details
      */
-    BringOnlineTask(context_type const & ctx, std::string const & proxy);
+    BringOnlineTask(std::pair<key_type, StagingContext> const & ctx);
 
     /**
      * Creates a new BringOnlineTask from another StagingTask
@@ -59,27 +72,12 @@ public:
      */
     virtual void run(boost::any const &);
 
-    /**
-     * Checks if a proxy is valid
-     *
-     * @param filename : file name of the proxy
-     * @param message : potential error message
-     */
-    static bool checkValidProxy(std::string const & filename, std::string& message)
-    {
-        boost::scoped_ptr<DelegCred> delegCredPtr(new DelegCred);
-        return delegCredPtr->isValidProxy(filename, message);
-    }
-
 private:
 
     /**
      * sets the proxy
      */
     void setProxy();
-
-    /// path to the proxy certificate
-    std::string proxy;
 };
 
 

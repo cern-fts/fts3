@@ -120,7 +120,7 @@ void GSoapContextAdapter::getInterfaceDeatailes()
         }
     else
         {
-    		throw gsoap_error(ctx);
+            throw gsoap_error(ctx);
         }
 
     impltns__getVersionResponse vresp;
@@ -131,7 +131,7 @@ void GSoapContextAdapter::getInterfaceDeatailes()
         }
     else
         {
-    		throw gsoap_error(ctx);
+            throw gsoap_error(ctx);
         }
 
     impltns__getSchemaVersionResponse sresp;
@@ -142,7 +142,7 @@ void GSoapContextAdapter::getInterfaceDeatailes()
         }
     else
         {
-    		throw gsoap_error(ctx);
+            throw gsoap_error(ctx);
         }
 
     impltns__getServiceMetadataResponse mresp;
@@ -153,7 +153,7 @@ void GSoapContextAdapter::getInterfaceDeatailes()
         }
     else
         {
-    		throw gsoap_error(ctx);
+            throw gsoap_error(ctx);
         }
 }
 
@@ -230,7 +230,7 @@ string GSoapContextAdapter::transferSubmit (vector<File> const & files, map<stri
 
     impltns__transferSubmit4Response resp;
     if (soap_call_impltns__transferSubmit4(ctx, endpoint.c_str(), 0, &job, resp))
-    	throw gsoap_error(ctx);
+        throw gsoap_error(ctx);
 
     return resp._transferSubmit4Return;
 }
@@ -246,7 +246,7 @@ string GSoapContextAdapter::deleteFile (std::vector<std::string>& filesForDelete
         delFiles.delf.push_back(*it);
 
     if (soap_call_impltns__fileDelete(ctx, endpoint.c_str(), 0, &delFiles,resp))
-    	throw gsoap_error(ctx);
+        throw gsoap_error(ctx);
 
     return resp._jobid;
 }
@@ -262,7 +262,7 @@ JobStatus GSoapContextAdapter::getTransferJobStatus (string jobId, bool archive)
 
     impltns__getTransferJobStatus2Response resp;
     if (soap_call_impltns__getTransferJobStatus2(ctx, endpoint.c_str(), 0, &req, resp))
-    	throw gsoap_error(ctx);
+        throw gsoap_error(ctx);
 
     if (!resp.getTransferJobStatusReturn)
         throw cli_exception("The response from the server is empty!");
@@ -293,7 +293,7 @@ vector< pair<string, string> > GSoapContextAdapter::cancel(vector<string> jobIds
 
 
     if (soap_call_impltns__cancel2(ctx, endpoint.c_str(), 0, &rqst, resp))
-    	throw gsoap_error(ctx);
+        throw gsoap_error(ctx);
 
     vector< pair<string, string> > ret;
 
@@ -315,13 +315,13 @@ vector< pair<string, string> > GSoapContextAdapter::cancel(vector<string> jobIds
 void GSoapContextAdapter::getRoles (impltns__getRolesResponse& resp)
 {
     if (soap_call_impltns__getRoles(ctx, endpoint.c_str(), 0, resp))
-    	throw gsoap_error(ctx);
+        throw gsoap_error(ctx);
 }
 
 void GSoapContextAdapter::getRolesOf (string dn, impltns__getRolesOfResponse& resp)
 {
     if (soap_call_impltns__getRolesOf(ctx, endpoint.c_str(), 0, dn, resp))
-    	throw gsoap_error(ctx);
+        throw gsoap_error(ctx);
 }
 
 vector<JobStatus> GSoapContextAdapter::listRequests (vector<string> statuses, string dn, string vo, string source, string destination)
@@ -332,7 +332,7 @@ vector<JobStatus> GSoapContextAdapter::listRequests (vector<string> statuses, st
 
     impltns__listRequests2Response resp;
     if (soap_call_impltns__listRequests2(ctx, endpoint.c_str(), 0, array, "", dn, vo, source, destination, resp))
-    	throw gsoap_error(ctx);
+        throw gsoap_error(ctx);
 
     if (!resp._listRequests2Return)
         throw cli_exception("The response from the server is empty!");
@@ -367,7 +367,7 @@ vector<JobStatus> GSoapContextAdapter::listRequests (vector<string> statuses, st
 void GSoapContextAdapter::listVoManagers(string vo, impltns__listVOManagersResponse& resp)
 {
     if (soap_call_impltns__listVOManagers(ctx, endpoint.c_str(), 0, vo, resp))
-    	throw gsoap_error(ctx);
+        throw gsoap_error(ctx);
 }
 
 JobSummary GSoapContextAdapter::getTransferJobSummary (string jobId, bool archive)
@@ -379,7 +379,7 @@ JobSummary GSoapContextAdapter::getTransferJobSummary (string jobId, bool archiv
 
     impltns__getTransferJobSummary3Response resp;
     if (soap_call_impltns__getTransferJobSummary3(ctx, endpoint.c_str(), 0, &req, resp))
-    	throw gsoap_error(ctx);
+        throw gsoap_error(ctx);
 
     if (!resp.getTransferJobSummary2Return)
         throw cli_exception("The response from the server is empty!");
@@ -424,7 +424,7 @@ int GSoapContextAdapter::getFileStatus (string jobId, bool archive, int offset, 
 
     impltns__getFileStatus3Response resp3;
     if (soap_call_impltns__getFileStatus3(ctx, endpoint.c_str(), 0, &req, resp3))
-    	throw gsoap_error(ctx);
+        throw gsoap_error(ctx);
 
     resp._getFileStatusReturn = resp3.getFileStatusReturn;
 
@@ -434,19 +434,19 @@ int GSoapContextAdapter::getFileStatus (string jobId, bool archive, int offset, 
 void GSoapContextAdapter::setConfiguration (config__Configuration *config, implcfg__setConfigurationResponse& resp)
 {
     if (soap_call_implcfg__setConfiguration(ctx, endpoint.c_str(), 0, config, resp))
-    	throw gsoap_error(ctx);
+        throw gsoap_error(ctx);
 }
 
 void GSoapContextAdapter::getConfiguration (string src, string dest, string all, string name, implcfg__getConfigurationResponse& resp)
 {
     if (soap_call_implcfg__getConfiguration(ctx, endpoint.c_str(), 0, all, name, src, dest, resp))
-    	throw gsoap_error(ctx);
+        throw gsoap_error(ctx);
 }
 
 void GSoapContextAdapter::delConfiguration(config__Configuration *config, implcfg__delConfigurationResponse& resp)
 {
     if (soap_call_implcfg__delConfiguration(ctx, endpoint.c_str(), 0, config, resp))
-    	throw gsoap_error(ctx);
+        throw gsoap_error(ctx);
 }
 
 void GSoapContextAdapter::setBringOnline(map<string, int>& pairs)
@@ -465,7 +465,7 @@ void GSoapContextAdapter::setBringOnline(map<string, int>& pairs)
 
     implcfg__setBringOnlineResponse resp;
     if (soap_call_implcfg__setBringOnline(ctx, endpoint.c_str(), 0, &bring_online, resp))
-    	throw gsoap_error(ctx);
+        throw gsoap_error(ctx);
 }
 
 void GSoapContextAdapter::setBandwidthLimit(const std::string& source_se, const std::string& dest_se, int limit)
@@ -479,20 +479,20 @@ void GSoapContextAdapter::setBandwidthLimit(const std::string& source_se, const 
 
     implcfg__setBandwidthLimitResponse resp;
     if (soap_call_implcfg__setBandwidthLimit(ctx, endpoint.c_str(), 0, &bandwidth_limit, resp))
-    	throw gsoap_error(ctx);
+        throw gsoap_error(ctx);
 }
 
 void GSoapContextAdapter::getBandwidthLimit(implcfg__getBandwidthLimitResponse& resp)
 {
     if (soap_call_implcfg__getBandwidthLimit(ctx, endpoint.c_str(), 0, resp))
-    	throw gsoap_error(ctx);
+        throw gsoap_error(ctx);
 }
 
 void GSoapContextAdapter::debugSet(string source, string destination, bool debug)
 {
     impltns__debugSetResponse resp;
     if (soap_call_impltns__debugSet(ctx, endpoint.c_str(), 0, source, destination, debug, resp))
-    	throw gsoap_error(ctx);
+        throw gsoap_error(ctx);
 }
 
 void GSoapContextAdapter::blacklistDn(string subject, string status, int timeout, bool mode)
@@ -500,7 +500,7 @@ void GSoapContextAdapter::blacklistDn(string subject, string status, int timeout
 
     impltns__blacklistDnResponse resp;
     if (soap_call_impltns__blacklistDn(ctx, endpoint.c_str(), 0, subject, mode, status, timeout, resp))
-    	throw gsoap_error(ctx);
+        throw gsoap_error(ctx);
 }
 
 void GSoapContextAdapter::blacklistSe(string name, string vo, string status, int timeout, bool mode)
@@ -508,84 +508,84 @@ void GSoapContextAdapter::blacklistSe(string name, string vo, string status, int
 
     impltns__blacklistSeResponse resp;
     if (soap_call_impltns__blacklistSe(ctx, endpoint.c_str(), 0, name, vo, status, timeout, mode, resp))
-    	throw gsoap_error(ctx);
+        throw gsoap_error(ctx);
 }
 
 void GSoapContextAdapter::doDrain(bool drain)
 {
     implcfg__doDrainResponse resp;
     if (soap_call_implcfg__doDrain(ctx, endpoint.c_str(), 0, drain, resp))
-    	throw gsoap_error(ctx);
+        throw gsoap_error(ctx);
 }
 
 void GSoapContextAdapter::prioritySet(string jobId, int priority)
 {
     impltns__prioritySetResponse resp;
     if (soap_call_impltns__prioritySet(ctx, endpoint.c_str(), 0, jobId, priority, resp))
-    	throw gsoap_error(ctx);
+        throw gsoap_error(ctx);
 }
 
 void GSoapContextAdapter::setSeProtocol(string protocol, string se, string state)
 {
     implcfg__setSeProtocolResponse resp;
     if (soap_call_implcfg__setSeProtocol(ctx, endpoint.c_str(), 0, protocol, se, state, resp))
-    	throw gsoap_error(ctx);
+        throw gsoap_error(ctx);
 }
 
 void GSoapContextAdapter::retrySet(string vo, int retry)
 {
     implcfg__setRetryResponse resp;
     if (soap_call_implcfg__setRetry(ctx, endpoint.c_str(), 0, vo, retry, resp))
-    	throw gsoap_error(ctx);
+        throw gsoap_error(ctx);
 }
 
 void GSoapContextAdapter::optimizerModeSet(int mode)
 {
     implcfg__setOptimizerModeResponse resp;
     if (soap_call_implcfg__setOptimizerMode(ctx, endpoint.c_str(), 0, mode, resp))
-    	throw gsoap_error(ctx);
+        throw gsoap_error(ctx);
 }
 
 void GSoapContextAdapter::queueTimeoutSet(unsigned timeout)
 {
     implcfg__setQueueTimeoutResponse resp;
     if (soap_call_implcfg__setQueueTimeout(ctx, endpoint.c_str(), 0, timeout, resp))
-    	throw gsoap_error(ctx);
+        throw gsoap_error(ctx);
 }
 
 void GSoapContextAdapter::setGlobalTimeout(int timeout)
 {
     implcfg__setGlobalTimeoutResponse resp;
     if (soap_call_implcfg__setGlobalTimeout(ctx, endpoint.c_str(), 0, timeout, resp))
-    	throw gsoap_error(ctx);
+        throw gsoap_error(ctx);
 }
 
 void GSoapContextAdapter::setSecPerMb(int secPerMb)
 {
     implcfg__setSecPerMbResponse resp;
     if (soap_call_implcfg__setSecPerMb(ctx, endpoint.c_str(), 0, secPerMb, resp))
-    	throw gsoap_error(ctx);
+        throw gsoap_error(ctx);
 }
 
 void GSoapContextAdapter::setMaxDstSeActive(string se, int active)
 {
     implcfg__maxDstSeActiveResponse resp;
     if (soap_call_implcfg__maxDstSeActive(ctx, endpoint.c_str(), 0, se, active, resp))
-    	throw gsoap_error(ctx);
+        throw gsoap_error(ctx);
 }
 
 void GSoapContextAdapter::setMaxSrcSeActive(string se, int active)
 {
     implcfg__maxSrcSeActiveResponse resp;
     if (soap_call_implcfg__maxSrcSeActive(ctx, endpoint.c_str(), 0, se, active, resp))
-    	throw gsoap_error(ctx);
+        throw gsoap_error(ctx);
 }
 
 std::string GSoapContextAdapter::getSnapShot(string vo, string src, string dst)
 {
     impltns__getSnapshotResponse resp;
     if (soap_call_impltns__getSnapshot(ctx, endpoint.c_str(), 0, vo, src, dst, resp))
-    	throw gsoap_error(ctx);
+        throw gsoap_error(ctx);
 
     return resp._result;
 }
@@ -594,7 +594,7 @@ tns3__DetailedJobStatus* GSoapContextAdapter::getDetailedJobStatus(string job_id
 {
     impltns__detailedJobStatusResponse resp;
     if (soap_call_impltns__detailedJobStatus(ctx, endpoint.c_str(), 0, job_id, resp))
-    	throw gsoap_error(ctx);
+        throw gsoap_error(ctx);
 
     return resp._detailedJobStatus;
 }

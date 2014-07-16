@@ -39,7 +39,7 @@ using namespace fts3::cli;
  */
 int main(int ac, char* av[])
 {
-	unique_ptr<DebugSetCli> cli(new DebugSetCli);
+    unique_ptr<DebugSetCli> cli(new DebugSetCli);
 
     try
         {

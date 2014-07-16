@@ -14,6 +14,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
 from django.db import connection
 from django.db.models import Q
 from ftsweb.models import ConfigAudit
@@ -114,3 +115,18 @@ def get_limit_config(http_request):
         max_cfg = max_cfg.order_by('-active')
 
     return max_cfg
+
+
+@jsonify
+def get_gfal2_config(http_request):
+    try:
+        config_files = os.listdir('/etc/gfal2.d')
+    except:
+        config_files = list()
+
+    config = dict()
+    for cfg in config_files:
+        cfg_path = os.path.join('/etc/gfal2.d', cfg)
+        config[cfg_path] = open(cfg_path).read()
+
+    return config

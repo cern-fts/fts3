@@ -181,7 +181,7 @@ bool SetCfgCli::validate()
             && !vm.count("sec-per-mb")
        )
         {
-    		throw cli_exception("No parameters have been specified.");
+            throw cli_exception("No parameters have been specified.");
         }
 
     boost::optional<std::pair<std::string, int>> src = getMaxSeActive("max-se-source-active");

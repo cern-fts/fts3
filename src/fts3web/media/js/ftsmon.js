@@ -42,6 +42,9 @@ config(function($routeProvider) {
         when('/config/limits',        {templateUrl: STATIC_ROOT + 'html/config/limits.html',
                                        controller:  ConfigLimitsCtrl,
                                        resolve:     ConfigLimitsCtrl.resolve}).
+        when('/config/gfal2',         {templateUrl: STATIC_ROOT + 'html/config/gfal2.html',
+                                       controller:  Gfal2Ctrl,
+                                       resolve:     Gfal2Ctrl.resolve}).
 
         when('/statistics/overview',  {templateUrl: STATIC_ROOT + 'html/statistics/overview.html',
                                        controller:  StatsOverviewCtrl,
@@ -241,6 +244,8 @@ function joinStates(states)
         str += 'NOT_USED,';
     if (states.started)
         str += 'STARTED,';
+    if (states.delete)
+        str += 'DELETE,';
     if (str.length > 0)
         str = str.slice(0, -1);
     return str;
@@ -274,6 +279,8 @@ function statesFromString(str)
                 st.not_used = true;
             if (states[i] == 'STARTED')
                 st.started = true;
+            if (states[i] == 'DELETE')
+                st.delete = true;
         }
     }
 

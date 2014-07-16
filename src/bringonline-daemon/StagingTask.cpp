@@ -9,6 +9,7 @@
 
 #include "common/error.h"
 
+
 bool StagingTask::retryTransfer(int errorNo, const std::string& category, const std::string& message)
 {
     bool retry = true;

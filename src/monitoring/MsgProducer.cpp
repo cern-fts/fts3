@@ -43,43 +43,22 @@ using namespace FTS3_COMMON_NAMESPACE;
 
 
 
-//enable when user_dn/source_url/dest_url is used
-/*
 string started[] = {"agent_fqdn", "transfer_id", "endpnt", "timestamp", "src_srm_v", "dest_srm_v",
                     "vo", "src_url", "dst_url", "src_hostname", "dst_hostname", "src_site_name", "dst_site_name", "t_channel",
-                    "srm_space_token_src", "srm_space_token_dst", "user_dn"
+                    "srm_space_token_src", "srm_space_token_dst", "user_dn", "file_metadata", "job_metadata"
                    };
 
-string startedToken[] = {"$a$", "$b$", "$c$", "$d$", "$e$", "$f$", "$g$", "$h$", "$i$", "$j$", "$k$", "$l$", "$m$", "$n$", "$o$", "$p$", "$q$"};
+string startedToken[] = {"$a$", "$b$", "$c$", "$d$", "$e$", "$f$", "$g$", "$h$", "$i$", "$j$", "$k$", "$l$", "$m$", "$n$", "$o$", "$p$", "$q$", "$r$", "$s$"};
 
 string completed[] = {"tr_id", "endpnt", "src_srm_v", "dest_srm_v", "vo", "src_url", "dst_url", "src_hostname", "dst_hostname", "src_site_name",
                       "dst_site_name", "t_channel", "timestamp_tr_st", "timestamp_tr_comp", "timestamp_chk_src_st", "timestamp_chk_src_ended", "timestamp_checksum_dest_st",
                       "timestamp_checksum_dest_ended", "t_timeout", "chk_timeout", "t_error_code", "tr_error_scope", "t_failure_phase", "tr_error_category", "t_final_transfer_state",
                       "tr_bt_transfered", "nstreams", "buf_size", "tcp_buf_size", "block_size", "f_size", "time_srm_prep_st", "time_srm_prep_end", "time_srm_fin_st", "time_srm_fin_end",
-                      "srm_space_token_src", "srm_space_token_dst", "t__error_message", "tr_timestamp_start", "tr_timestamp_complete", "channel_type", "user_dn"
+                      "srm_space_token_src", "srm_space_token_dst", "t__error_message", "tr_timestamp_start", "tr_timestamp_complete", "channel_type", "user_dn", "file_metadata", "job_metadata"
                      };
 
-std::string completedToken[] = {"$a$", "$b$", "$c$", "$d$", "$e$", "$f$", "$g$", "$h$", "$i$", "$j$", "$k$", "$l$", "$m$", "$n$", "$o$", "$p$", "$q$", "$r$", "$s$", "$t$", "$u$", "$v$", "$w$", "$x$", "$y$", "$z$", "$0$", "$1$", "$2$", "$3$", "$4$", "$5$", "$6$", "$7$", "$8$", "$9$", "$10$", "$11$", "$12$", "$13$", "$14$", "$15$"};
-*/
+std::string completedToken[] = {"$a$", "$b$", "$c$", "$d$", "$e$", "$f$", "$g$", "$h$", "$i$", "$j$", "$k$", "$l$", "$m$", "$n$", "$o$", "$p$", "$q$", "$r$", "$s$", "$t$", "$u$", "$v$", "$w$", "$x$", "$y$", "$z$", "$0$", "$1$", "$2$", "$3$", "$4$", "$5$", "$6$", "$7$", "$8$", "$9$", "$10$", "$11$", "$12$", "$13$", "$14$", "$15$", "$16$", "$17$"};
 
-
-
-
-string started[] = {"agent_fqdn", "transfer_id", "endpnt", "timestamp", "src_srm_v", "dest_srm_v",
-                    "vo", "src_url", "dst_url", "src_hostname", "dst_hostname", "src_site_name", "dst_site_name", "t_channel",
-                    "srm_space_token_src", "srm_space_token_dst"
-                   };
-
-string startedToken[] = {"$a$", "$b$", "$c$", "$d$", "$e$", "$f$", "$g$", "$h$", "$i$", "$j$", "$k$", "$l$", "$m$", "$n$", "$o$", "$p$"};
-
-string completed[] = {"tr_id", "endpnt", "src_srm_v", "dest_srm_v", "vo", "src_url", "dst_url", "src_hostname", "dst_hostname", "src_site_name",
-                      "dst_site_name", "t_channel", "timestamp_tr_st", "timestamp_tr_comp", "timestamp_chk_src_st", "timestamp_chk_src_ended", "timestamp_checksum_dest_st",
-                      "timestamp_checksum_dest_ended", "t_timeout", "chk_timeout", "t_error_code", "tr_error_scope", "t_failure_phase", "tr_error_category", "t_final_transfer_state",
-                      "tr_bt_transfered", "nstreams", "buf_size", "tcp_buf_size", "block_size", "f_size", "time_srm_prep_st", "time_srm_prep_end", "time_srm_fin_st", "time_srm_fin_end",
-                      "srm_space_token_src", "srm_space_token_dst", "t__error_message", "tr_timestamp_start", "tr_timestamp_complete", "channel_type"
-                     };
-
-std::string completedToken[] = {"$a$", "$b$", "$c$", "$d$", "$e$", "$f$", "$g$", "$h$", "$i$", "$j$", "$k$", "$l$", "$m$", "$n$", "$o$", "$p$", "$q$", "$r$", "$s$", "$t$", "$u$", "$v$", "$w$", "$x$", "$y$", "$z$", "$0$", "$1$", "$2$", "$3$", "$4$", "$5$", "$6$", "$7$", "$8$", "$9$", "$10$", "$11$", "$12$", "$13$", "$14$"};
 
 
 
@@ -104,10 +83,10 @@ MsgProducer::MsgProducer()
     producer_transfer_started = NULL;
     producer_transfer_state = NULL;
     destination_transfer_state = NULL;
-    connectionIsOK = false;
     FTS3_CONFIG_NAMESPACE::theServerConfig().read(0, NULL);
     FTSEndpoint = FTS3_CONFIG_NAMESPACE::theServerConfig().get<std::string>("Alias");
     readConfig();
+    getConnection();
 }
 
 MsgProducer::~MsgProducer()
@@ -124,7 +103,7 @@ bool MsgProducer::sendMessage(std::string &temp)
 
     if (temp.compare(0, 2, "ST") == 0)
         {
-            for (index = 0; index < 16; index++)
+            for (index = 0; index < 19; index++)
                 find_and_replace(temp, startedToken[index], started[index]);
             temp = temp.substr(2, temp.length()); //remove message prefix
             tempFTS = "\"endpnt\":\"" + FTSEndpoint + "\"";
@@ -132,11 +111,12 @@ bool MsgProducer::sendMessage(std::string &temp)
             temp += 4;
             TextMessage* message = session->createTextMessage(temp);
             producer_transfer_started->send(message);
+            logger::writeLog(temp);
             delete message;
         }
     else if (temp.compare(0, 2, "CO") == 0)
         {
-            for (index = 0; index < 41; index++)
+            for (index = 0; index < 44; index++)
                 {
                     find_and_replace(temp, completedToken[index], completed[index]);
                 }
@@ -146,6 +126,7 @@ bool MsgProducer::sendMessage(std::string &temp)
             temp += 4;
             TextMessage* message = session->createTextMessage(temp);
             producer_transfer_completed->send(message);
+            logger::writeLog(temp);
             delete message;
         }
     else if (temp.compare(0, 2, "SS") == 0)
@@ -169,58 +150,50 @@ bool MsgProducer::sendMessage(std::string &temp)
 
 bool MsgProducer::getConnection()
 {
+    // Create a ConnectionFactory
+    std::unique_ptr<ConnectionFactory> connectionFactory(
+        ConnectionFactory::createCMSConnectionFactory(brokerURI));
 
-    if (connectionIsOK == false )
+    // Create a Connection
+    if (true == getUSE_BROKER_CREDENTIALS())
+        connection = connectionFactory->createConnection(getUSERNAME(), getPASSWORD());
+    else
+        connection = connectionFactory->createConnection();
+
+    connection->setExceptionListener(this);
+    connection->start();
+
+    session = connection->createSession(Session::AUTO_ACKNOWLEDGE);
+
+    // Create the destination (Topic or Queue)
+    if (getTOPIC())
         {
-
-            readConfig();
-
-            // Create a ConnectionFactory
-            std::unique_ptr<ConnectionFactory> connectionFactory(
-                ConnectionFactory::createCMSConnectionFactory(brokerURI));
-
-            // Create a Connection
-            if (true == getUSE_BROKER_CREDENTIALS())
-                connection = connectionFactory->createConnection(getUSERNAME(), getPASSWORD());
-            else
-                connection = connectionFactory->createConnection();
-
-            connection->setExceptionListener(this);
-            connection->start();
-
-            session = connection->createSession(Session::AUTO_ACKNOWLEDGE);
-
-            // Create the destination (Topic or Queue)
-            if (getTOPIC())
-                {
-                    destination_transfer_started = session->createTopic(startqueueName);
-                    destination_transfer_completed = session->createTopic(completequeueName);
-                    destination_transfer_state = session->createTopic(statequeueName);
-                }
-            else
-                {
-                    destination_transfer_started = session->createQueue(startqueueName);
-                    destination_transfer_completed = session->createQueue(completequeueName);
-                    destination_transfer_state = session->createQueue(statequeueName);
-                }
-
-            int ttl = GetIntVal(getTTL());
-
-            // Create a message producer
-            producer_transfer_started = session->createProducer(destination_transfer_started);
-            producer_transfer_started->setDeliveryMode(DeliveryMode::PERSISTENT);
-            producer_transfer_started->setTimeToLive(ttl);
-
-            producer_transfer_completed = session->createProducer(destination_transfer_completed);
-            producer_transfer_completed->setDeliveryMode(DeliveryMode::PERSISTENT);
-            producer_transfer_completed->setTimeToLive(ttl);
-
-            producer_transfer_state = session->createProducer(destination_transfer_state);
-            producer_transfer_state->setDeliveryMode(DeliveryMode::PERSISTENT);
-            producer_transfer_state->setTimeToLive(ttl);
-
-            connectionIsOK = true;
+            destination_transfer_started = session->createTopic(startqueueName);
+            destination_transfer_completed = session->createTopic(completequeueName);
+            destination_transfer_state = session->createTopic(statequeueName);
         }
+    else
+        {
+            destination_transfer_started = session->createQueue(startqueueName);
+            destination_transfer_completed = session->createQueue(completequeueName);
+            destination_transfer_state = session->createQueue(statequeueName);
+        }
+
+    int ttl = GetIntVal(getTTL());
+
+    // Create a message producer
+    producer_transfer_started = session->createProducer(destination_transfer_started);
+    producer_transfer_started->setDeliveryMode(DeliveryMode::PERSISTENT);
+    producer_transfer_started->setTimeToLive(ttl);
+
+    producer_transfer_completed = session->createProducer(destination_transfer_completed);
+    producer_transfer_completed->setDeliveryMode(DeliveryMode::PERSISTENT);
+    producer_transfer_completed->setTimeToLive(ttl);
+
+    producer_transfer_state = session->createProducer(destination_transfer_state);
+    producer_transfer_state->setDeliveryMode(DeliveryMode::PERSISTENT);
+    producer_transfer_state->setTimeToLive(ttl);
+
     return true;
 }
 
@@ -244,7 +217,7 @@ void MsgProducer::readConfig()
             this->logfilename = getLOGFILENAME();
             this->logfilepath = getLOGFILEDIR();
 
-            this->brokerURI = "tcp://" + broker + "?wireFormat=stomp&soKeepAlive=true";
+            this->brokerURI = "tcp://" + broker + "?wireFormat=stomp&soKeepAlive=true&wireFormat.MaxInactivityDuration=-1";
 
         }
     catch (...)
@@ -260,7 +233,6 @@ void MsgProducer::readConfig()
 void MsgProducer::onException( const CMSException& ex AMQCPP_UNUSED)
 {
     logger::writeLog(ex.getStackTraceString(), true);
-    connectionIsOK = false;
     stopThreads = true;
     std::queue<std::string> myQueue = concurrent_queue::getInstance()->the_queue;
     std::string ret;
@@ -285,7 +257,6 @@ void MsgProducer::run()
             try
                 {
                     //send messages
-                    getConnection(); //make sure there is a valid connection to the broker
                     msg = concurrent_queue::getInstance()->pop();
                     msgBk = msg;
                     sendMessage(msg);
@@ -294,7 +265,6 @@ void MsgProducer::run()
                 }
             catch (CMSException& e)
                 {
-                    connectionIsOK = false;
                     if(msgBk.length() > 5)  //random number,just to make it's not empty
                         {
                             concurrent_queue::getInstance()->push(msgBk);
@@ -302,20 +272,19 @@ void MsgProducer::run()
                         }
                     errorMessage = e.getStackTraceString();
                     logger::writeLog(errorMessage, true);
-                    cleanup();
                     sleep(10);
+                    exit(15);
                 }
             catch (...)
                 {
-                    connectionIsOK = false;
                     if(msgBk.length() > 5)  //random number,just to make it's not empty
                         {
                             concurrent_queue::getInstance()->push(msgBk);
                             send_message(msgBk);
                         }
                     logger::writeLog("Unhandled exception occured", true);
-                    cleanup();
                     sleep(10);
+                    exit(15);
                 }
         }
 }

@@ -70,7 +70,6 @@ private:
     std::string logfilename;
     std::string logfilepath;
     std::string errorMessage;
-    bool connectionIsOK;
     bool getConnection();
     void readConfig();
 

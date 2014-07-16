@@ -137,13 +137,13 @@ optional<string> SubmitTransferCli::getMetadata()
     return optional<string>();
 }
 
-bool SubmitTransferCli::checkValidUrl(const std::string &uri, MsgPrinter& msgPrinter)
+bool SubmitTransferCli::checkValidUrl(const std::string &uri, MsgPrinter& /*msgPrinter*/)
 {
     Uri u0 = Uri::Parse(uri);
     bool ok = u0.Host.length() != 0 && u0.Protocol.length() != 0 && u0.Path.length() != 0;
     if (!ok)
         {
-    		throw cli_exception("Not valid uri format, check submitted uri's");
+            throw cli_exception("Not valid uri format, check submitted uri's");
         }
 
     return true;
@@ -291,23 +291,23 @@ bool SubmitTransferCli::performChecks()
 
     if (((getSource().empty() || getDestination().empty())) && !vm.count("file"))
         {
-    		throw cli_exception("You need to specify source and destination surl's");
+            throw cli_exception("You need to specify source and destination surl's");
         }
 
     // the job cannot be specified twice
     if ((!getSource().empty() || !getDestination().empty()) && vm.count("file"))
         {
-    		throw bad_option("file", "You may not specify a transfer on the command line if the -f option is used.");
+            throw bad_option("file", "You may not specify a transfer on the command line if the -f option is used.");
         }
 
     if (vm.count("file-size") && vm.count("file"))
         {
-    		throw bad_option("file-size", "If a bulk submission has been used file size has to be specified inside the bulk file separately for each file and no using '--file-size' option!");
+            throw bad_option("file-size", "If a bulk submission has been used file size has to be specified inside the bulk file separately for each file and no using '--file-size' option!");
         }
 
     if (vm.count("file-metadata") && vm.count("file"))
         {
-    		throw bad_option("file-metadata", "If a bulk submission has been used file metadata have to be specified inside the bulk file separately for each file and no using '--file-metadata' option!");
+            throw bad_option("file-metadata", "If a bulk submission has been used file metadata have to be specified inside the bulk file separately for each file and no using '--file-metadata' option!");
         }
 
     return true;

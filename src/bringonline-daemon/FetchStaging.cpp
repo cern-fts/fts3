@@ -10,12 +10,17 @@
 #include "BringOnlineTask.h"
 #include "PollTask.h"
 #include "WaitingRoom.h"
+#include "StagingContext.h"
 
 #include "server/DrainMode.h"
 
 #include "cred/cred-utility.h"
 
 #include "db/generic/SingleDbInstance.h"
+
+#include "common/parse_url.h"
+
+#include <map>
 
 extern bool stopThreads;
 
@@ -35,40 +40,34 @@ void FetchStaging::fetch()
                             continue;
                         }
 
-                    std::vector<StagingTask::context_type> files;
+                    std::map<key_type, StagingContext> tasks;
+
+                    std::vector<StagingContext::context_type> files;
                     db::DBSingleton::instance().getDBObjectInstance()->getFilesForStaging(files);
 
-                    std::vector<StagingTask::context_type>::iterator it;
-                    for (it = files.begin(); it != files.end(); ++it)
+                    std::vector<StagingContext::context_type>::iterator it_f;
+                    for (it_f = files.begin(); it_f != files.end(); ++it_f)
                         {
                             // make sure it is a srm SE
-                            std::string & url = boost::get<BringOnlineTask::url>(*it);
+                            std::string & url = boost::get<StagingContext::surl>(*it_f);
                             if (!isSrmUrl(url)) continue;
+                            // get the SE name
+                            Uri uri = Uri::Parse(boost::get<StagingContext::surl>(*it_f));
+                            std::string se = uri.Host;
+                            // get the other values necessary for the key
+                            std::string & dn = boost::get<StagingContext::dn>(*it_f);
+                            std::string & vo = boost::get<StagingContext::vo>(*it_f);
+                            std::string& space_token = boost::get<StagingContext::src_space_token>(*it_f);
 
-                            //get the proxy
-                            std::string & dn = boost::get<BringOnlineTask::dn>(*it);
-                            std::string & dlg_id = boost::get<BringOnlineTask::dlg_id>(*it);
-                            std::string & vo = boost::get<BringOnlineTask::vo>(*it);
-                            std::string proxy_file = generateProxy(dn, dlg_id);
+                            tasks[key_type(vo, dn, se, space_token)].add(*it_f);
+                        }
 
-                            std::string message;
-                            if(!BringOnlineTask::checkValidProxy(proxy_file, message))
-                                {
-                                    proxy_file = get_proxy_cert(
-                                                     dn, // user_dn
-                                                     dlg_id, // user_cred
-                                                     vo, // vo_name
-                                                     "",
-                                                     "", // assoc_service
-                                                     "", // assoc_service_type
-                                                     false,
-                                                     ""
-                                                 );
-                                }
-
+                    std::map<key_type, StagingContext>::const_iterator it_t;
+                    for (it_t = tasks.begin(); it_t != tasks.end(); ++it_t)
+                        {
                             try
                                 {
-                                    threadpool.start(new BringOnlineTask(*it, proxy_file));
+                                    threadpool.start(new BringOnlineTask(*it_t));
                                 }
                             catch(Err_Custom const & ex)
                                 {
