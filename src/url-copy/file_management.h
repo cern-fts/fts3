@@ -21,6 +21,9 @@
 #include <iostream>
 #include <ctime>
 #include "parse_url.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 class FileManagement
 {
@@ -76,9 +79,6 @@ public:
         return arcFileName;
     }
 
-    /*
-    bool isCastor(std::string& source_se, std::string& dest_se);
-    */
 
 private:
     std::string source_url;
@@ -98,5 +98,5 @@ private:
     char *base_host;
     char *base_path;
     int base_port;
-    bool reuse;
+    bool castor;
 };
