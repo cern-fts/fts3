@@ -2102,7 +2102,7 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
                         }
                 }
 
-            sql.begin();
+
 
             soci::statement stmt(sql);
             std::ostringstream query;
@@ -2195,6 +2195,9 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
             stmt.alloc();
             stmt.prepare(query.str());
             stmt.define_and_bind();
+	    
+            sql.begin();
+	    
             stmt.execute(true);
 
             sql.commit();
