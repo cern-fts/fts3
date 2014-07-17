@@ -6685,7 +6685,6 @@ std::vector<struct message_state> OracleAPI::getStateOfTransferInternal(soci::se
 
 
             soci::rowset<soci::row>::const_iterator it;
-            struct tm aux_tm;
 
             for (it = rs.begin(); it != rs.end(); ++it)
                 {
@@ -6698,23 +6697,19 @@ std::vector<struct message_state> OracleAPI::getStateOfTransferInternal(soci::se
                     ret.file_state = it->get<std::string>("FILE_STATE");
                     if(ret.file_state == "SUBMITTED")
                         {
-                            aux_tm = it->get<struct tm>("SUBMIT_TIME");
-                            ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);
+                            ret.timestamp = boost::lexical_cast<std::string>(soci::getTimeT(*it, "SUBMIT_TIME"));
                         }
                     else if(ret.file_state == "STAGING")
                         {
-                            aux_tm = it->get<struct tm>("SUBMIT_TIME");
-                            ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);
+                            ret.timestamp = boost::lexical_cast<std::string>(soci::getTimeT(*it, "SUBMIT_TIME"));
                         }
                     else if(ret.file_state == "DELETE")
                         {
-                            aux_tm = it->get<struct tm>("SUBMIT_TIME");
-                            ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);
+                            ret.timestamp = boost::lexical_cast<std::string>(soci::getTimeT(*it, "SUBMIT_TIME"));
                         }
                     else if(ret.file_state == "ACTIVE")
                         {
-                            aux_tm = it->get<struct tm>("START_TIME");
-                            ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);
+                            ret.timestamp = boost::lexical_cast<std::string>(soci::getTimeT(*it, "START_TIME"));
                         }
                     else
                         {
@@ -10408,9 +10403,9 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
                                     soci::row const& row = *i3;
                                     std::string source_url = row.get<std::string>("SOURCE_SURL");
                                     std::string job_id = row.get<std::string>("JOB_ID");
-                                    long long file_id = row.get<long long>("FILE_ID");
-                                    double copy_pin_lifetime = row.get<double>("COPY_PIN_LIFETIME",0);
-                                    double bring_online = row.get<double>("BRING_ONLINE",0);
+                                    int file_id = static_cast<int>(row.get<long long>("FILE_ID"));
+                                    int copy_pin_lifetime = static_cast<int>(row.get<double>("COPY_PIN_LIFETIME", 0));
+                                    int bring_online = static_cast<int>(row.get<double>("BRING_ONLINE",0));
                                     user_dn = row.get<std::string>("USER_DN");
                                     std::string cred_id = row.get<std::string>("CRED_ID");
                                     std::string source_space_token = row.get<std::string>("SOURCE_SPACE_TOKEN","");
