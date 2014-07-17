@@ -1157,7 +1157,8 @@ void OracleAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std:
                                                          "    f.job_finished IS NULL AND "
                                                          "    f.wait_timestamp IS NULL AND "
                                                          "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
-                                                         "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) ",
+                                                         "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) "
+                                                         "ORDER BY f.file_id ASC",
                                                          soci::use(jobId),
                                                          soci::use(tTime),
                                                          soci::use(hashSegment.start), soci::use(hashSegment.end)
