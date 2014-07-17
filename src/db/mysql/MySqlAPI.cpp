@@ -3560,8 +3560,7 @@ bool MySqlAPI::updateOptimizer()
             soci::statement stmt18 = (
                                          sql.prepare << " select count(distinct source_se) from t_file where "
                                          " file_state in ('ACTIVE','SUBMITTED') and "
-                                         " dest_se=:dest and "
-                                         " job_finished is null",
+                                         " dest_se=:dest ",
                                          soci::use(destin_hostname), soci::into(singleDest));
 
             //snapshot of submitted transfers
