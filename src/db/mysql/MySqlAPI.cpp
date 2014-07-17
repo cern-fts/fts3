@@ -559,7 +559,7 @@ std::map<std::string, long long> MySqlAPI::getActivitiesInQueue(soci::session& s
                                              "	(f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
                                              "  j.job_state in ('ACTIVE','SUBMITTED') AND "
                                              "  (j.reuse_job = 'N' OR j.reuse_job IS NULL) "
-                                             " GROUP BY activity ",
+                                             " GROUP BY activity ORDER BY NULL ",
                                              soci::use(src),
                                              soci::use(dst),
                                              soci::use(vo),
