@@ -823,7 +823,7 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                                                                  "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
                                                                  "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params "
                                                                  " FROM t_job j INNER JOIN t_file f ON (j.job_id = f.job_id) WHERE  "
-                                                                 "    f.job_finished is null AND f.file_state = 'SUBMITTED' AND "
+                                                                 "    f.file_state = 'SUBMITTED' AND "
                                                                  "    f.source_se = :source AND f.dest_se = :dest AND "
                                                                  "    f.vo_name = :vo_name AND "
                                                                  "    f.wait_timestamp IS NULL AND "
@@ -862,7 +862,7 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                                         "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
                                         "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params  "
                                         " FROM t_job j INNER JOIN t_file f ON (j.job_id = f.job_id) WHERE "
-                                        "    f.job_finished is null AND  f.file_state = 'SUBMITTED' AND  "
+                                        "    f.file_state = 'SUBMITTED' AND  "
                                         "    f.source_se = :source AND f.dest_se = :dest AND "
                                         "    f.vo_name = :vo_name AND ";
                                     select +=
