@@ -100,6 +100,8 @@ bool MsgProducer::sendMessage(std::string &temp)
 
     std::string tempFTS("");
     register int index = 0;
+    
+    try{
 
     if (temp.compare(0, 2, "ST") == 0)
         {
@@ -145,6 +147,12 @@ bool MsgProducer::sendMessage(std::string &temp)
             delete message;
         }
 
+     }
+     catch(...) //catch all
+     {
+     	send_message(temp);
+     }
+     
     return true;
 }
 
