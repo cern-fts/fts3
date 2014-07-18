@@ -549,11 +549,11 @@ std::map<std::string, long long> MySqlAPI::getActivitiesInQueue(soci::session& s
         {
             soci::rowset<soci::row> rs = (
                                              sql.prepare <<
-                                             " SELECT activity, COUNT(DISTINCT f.job_id, f.file_index) AS count "
+                                             " SELECT SQL_NO_CACHE activity, COUNT(DISTINCT f.job_id, f.file_index) AS count "
                                              " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) WHERE "
                                              "  j.vo_name = f.vo_name AND f.file_state = 'SUBMITTED' AND "
                                              "	f.source_se = :source AND f.dest_se = :dest AND "
-                                             "	f.vo_name = :vo_name AND "
+                                             "	f.vo_name = :vo_name AND j.vo_name = :vo_name AND "
                                              "	f.wait_timestamp IS NULL AND "
                                              "	(f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
                                              "	(f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
@@ -563,6 +563,7 @@ std::map<std::string, long long> MySqlAPI::getActivitiesInQueue(soci::session& s
                                              soci::use(src),
                                              soci::use(dst),
                                              soci::use(vo),
+					     soci::use(vo),
                                              soci::use(tTime),
                                              soci::use(hashSegment.start),
                                              soci::use(hashSegment.end)
@@ -825,7 +826,7 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                                                                  " FROM t_job j INNER JOIN t_file f ON (j.job_id = f.job_id) WHERE  "
                                                                  "    f.file_state = 'SUBMITTED' AND "
                                                                  "    f.source_se = :source AND f.dest_se = :dest AND "
-                                                                 "    f.vo_name = :vo_name AND "
+                                                                 "    f.vo_name = :vo_name AND j.vo_name=:vo_name AND "
                                                                  "    f.wait_timestamp IS NULL AND "
                                                                  "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
                                                                  "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
@@ -834,6 +835,7 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                                                                  soci::use(boost::get<0>(triplet)),
                                                                  soci::use(boost::get<1>(triplet)),
                                                                  soci::use(boost::get<2>(triplet)),
+								 soci::use(boost::get<2>(triplet)),
                                                                  soci::use(tTime),
                                                                  soci::use(hashSegment.start), soci::use(hashSegment.end),
                                                                  soci::use(filesNum)
@@ -864,7 +866,7 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                                         " FROM t_job j INNER JOIN t_file f ON (j.job_id = f.job_id) WHERE "
                                         "    f.file_state = 'SUBMITTED' AND  "
                                         "    f.source_se = :source AND f.dest_se = :dest AND "
-                                        "    f.vo_name = :vo_name AND ";
+                                        "    f.vo_name = :vo_name AND j.vo_name = :vo_name AND ";
                                     select +=
                                         it_act->first == "default" ?
                                         "	  (f.activity = :activity OR f.activity = '' OR f.activity IS NULL) AND "
@@ -885,6 +887,7 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                                                                          soci::use(boost::get<0>(triplet)),
                                                                          soci::use(boost::get<1>(triplet)),
                                                                          soci::use(boost::get<2>(triplet)),
+									 soci::use(boost::get<2>(triplet)),
                                                                          soci::use(it_act->first),
                                                                          soci::use(tTime),
                                                                          soci::use(hashSegment.start), soci::use(hashSegment.end),
