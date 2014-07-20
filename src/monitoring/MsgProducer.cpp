@@ -100,7 +100,7 @@ bool MsgProducer::sendMessage(std::string &temp)
 
     std::string tempFTS("");
     register int index = 0;
-    
+
     if (temp.compare(0, 2, "ST") == 0)
         {
             for (index = 0; index < 19; index++)

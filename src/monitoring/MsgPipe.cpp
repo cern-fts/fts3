@@ -54,11 +54,11 @@ void handler(int sig)
             std::queue<std::string> myQueue = concurrent_queue::getInstance()->the_queue;
             std::string ret;
             while(!myQueue.empty())
-                        {
-                            ret = myQueue.front();
-                            myQueue.pop();
-                            send_message(ret);
-                        }             
+                {
+                    ret = myQueue.front();
+                    myQueue.pop();
+                    send_message(ret);
+                }
             sleep(5);
             exit(0);
         }
