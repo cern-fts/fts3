@@ -417,8 +417,8 @@ map<string, string> SubmitTransferCli::getParams()
 
     if (vm.count("job-metadata"))
         {
-    		std::string const & metadata = vm["job-metadata"].as<string>();
-    		parseMetadata(metadata);
+            std::string const & metadata = vm["job-metadata"].as<string>();
+            parseMetadata(metadata);
             parameters[JobParameterHandler::JOB_METADATA] = metadata;
         }
 
@@ -480,26 +480,26 @@ string SubmitTransferCli::getFileName()
 
 void SubmitTransferCli::parseMetadata(std::string const & metadata)
 {
-	using namespace boost::property_tree;
+    using namespace boost::property_tree;
 
-	// first check it is JSON
-	if (metadata[0] != '{' || metadata[metadata.size() - 1] != '}') return;
-	// than check if the JSON format is correct
+    // first check it is JSON
+    if (metadata[0] != '{' || metadata[metadata.size() - 1] != '}') return;
+    // than check if the JSON format is correct
     try
         {
             // JSON parsing
-    		ptree pt;
-    		std::stringstream iostr;
-    		iostr << metadata;
+            ptree pt;
+            std::stringstream iostr;
+            iostr << metadata;
             read_json(iostr, pt);
 
         }
     catch(json_parser_error& ex)
         {
             // handle errors in JSON format
-    		std::stringstream err;
-    		err << "JSON error : " << ex.message() << ". ";
-    		err << "Possibly single quotes around metadata are missing!";
+            std::stringstream err;
+            err << "JSON error : " << ex.message() << ". ";
+            err << "Possibly single quotes around metadata are missing!";
             throw cli_exception(err.str());
         }
 }

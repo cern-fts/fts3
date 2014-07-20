@@ -841,8 +841,8 @@ int main(int argc, char **argv)
                 {
                     gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "SESSION_REUSE", TRUE, NULL);
                     logger.INFO() << "GridFTP session reuse enabled since both uri's are gsiftp" << std::endl;
-                }   	    
-	    
+                }
+
             // Scope
             {
                 gfalt_set_user_data(params, NULL, NULL);

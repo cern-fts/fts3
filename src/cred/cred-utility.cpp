@@ -21,6 +21,9 @@
 #include "common/error.h"
 #include "DelegCred.h"
 #include <boost/thread.hpp>
+#include "gridsite.h"
+#include <stdio.h>
+#include <time.h>
 
 static boost::mutex qm;
 
@@ -201,6 +204,11 @@ time_t get_proxy_lifetime(const std::string& filename) /*throw ()*/
 
     time_t lifetime = (time_t)-1;
 
+    time_t now = time(NULL);
+
+    struct tm *utc;
+    utc = gmtime(&now);
+
     // Check that the file Exists
     int result = access(filename.c_str(), R_OK);
     if(0 != result)
@@ -208,53 +216,29 @@ time_t get_proxy_lifetime(const std::string& filename) /*throw ()*/
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Requested Proxy doesn't exist. A new one should be created. Reason is " << strerror(errno) << commit;
             return lifetime;
         }
-    // Check if it's valid
-    globus_gsi_cred_handle_t        proxy_handle = 0;
-    globus_gsi_cred_handle_attrs_t  handle_attrs = 0;
-    try
+
+    time_t start;
+    time_t finish;
+
+
+    FILE *fp = fopen(filename.c_str(), "r");
+
+    if(fp)
         {
-            // Init handle attributes
-            globus_result_t result = globus_gsi_cred_handle_attrs_init(&handle_attrs);
-            if(0 != result)
+            X509  *cert =  PEM_read_X509(fp, NULL, NULL, NULL);
+
+            fclose(fp);
+
+            if(cert)
                 {
-                    //throw RuntimeError("Cannot Init Handle Attributes");
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot Init Handle Attributes" << commit;
+                    start  = GRSTasn1TimeToTimeT((char *)ASN1_STRING_data(X509_get_notBefore(cert)),0);
+                    finish = GRSTasn1TimeToTimeT((char *)ASN1_STRING_data(X509_get_notAfter(cert)),0);
+
+                    X509_free(cert);
+
+                    lifetime = finish - timegm(utc);
+
                 }
-            // Init handle
-            result =  globus_gsi_cred_handle_init(&proxy_handle,handle_attrs);
-            if(0 != result)
-                {
-                    //throw RuntimeError("Cannot Init Handle");
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot Init Handle" << commit;
-                }
-            // Load Proxy
-            result = globus_gsi_cred_read_proxy(proxy_handle,const_cast<char *>(filename.c_str()));
-            if(0 != result)
-                {
-                    //throw RuntimeError("Cannot Load Proxy File");
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot Load Proxy File" << commit;
-                }
-            // Get Lifetime (in seconds)
-            result = globus_gsi_cred_get_lifetime(proxy_handle,&lifetime);
-            if(0 != result)
-                {
-                    //throw RuntimeError("Cannot Get Proxy Lifetime");
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot Get Proxy Lifetime" << commit;
-                }
-        }
-    catch(const std::exception& exc)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) <<" Cannot Check Proxy Validity. Reason is: " << exc.what() << commit;
-            lifetime = (time_t)-1;
-        }
-    // Destroy handles
-    if(0 != proxy_handle)
-        {
-            globus_gsi_cred_handle_destroy(proxy_handle);
-        }
-    if(0 != handle_attrs)
-        {
-            globus_gsi_cred_handle_attrs_destroy(handle_attrs);
-        }
+        }    
     return lifetime;
 }

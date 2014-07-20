@@ -563,7 +563,7 @@ std::map<std::string, long long> MySqlAPI::getActivitiesInQueue(soci::session& s
                                              soci::use(src),
                                              soci::use(dst),
                                              soci::use(vo),
-					     soci::use(vo),
+                                             soci::use(vo),
                                              soci::use(tTime),
                                              soci::use(hashSegment.start),
                                              soci::use(hashSegment.end)
@@ -835,7 +835,7 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                                                                  soci::use(boost::get<0>(triplet)),
                                                                  soci::use(boost::get<1>(triplet)),
                                                                  soci::use(boost::get<2>(triplet)),
-								 soci::use(boost::get<2>(triplet)),
+                                                                 soci::use(boost::get<2>(triplet)),
                                                                  soci::use(tTime),
                                                                  soci::use(hashSegment.start), soci::use(hashSegment.end),
                                                                  soci::use(filesNum)
@@ -887,7 +887,7 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                                                                          soci::use(boost::get<0>(triplet)),
                                                                          soci::use(boost::get<1>(triplet)),
                                                                          soci::use(boost::get<2>(triplet)),
-									 soci::use(boost::get<2>(triplet)),
+                                                                         soci::use(boost::get<2>(triplet)),
                                                                          soci::use(it_act->first),
                                                                          soci::use(tTime),
                                                                          soci::use(hashSegment.start), soci::use(hashSegment.end),
@@ -8916,7 +8916,7 @@ void MySqlAPI::updateOptimizerEvolution(soci::session& sql, const std::string & 
 
             try
                 {
-		    //deadlock retry
+                    //deadlock retry
                     sleep(1);
                     if(throughput > 0 && successRate > 0)
                         {
@@ -8951,7 +8951,7 @@ void MySqlAPI::updateOptimizerEvolution(soci::session& sql, const std::string & 
 
             try
                 {
-		    //deadlock retry
+                    //deadlock retry
                     sleep(1);
                     if(throughput > 0 && successRate > 0)
                         {
