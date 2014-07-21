@@ -11045,6 +11045,16 @@ void MySqlAPI::getAlreadyStartedStaging(std::vector< boost::tuple<std::string, s
 
     try
         {
+            sql <<
+                " UPDATE t_file "
+                " SET start_time = NULL, staging_start=NULL, transferhost=NULL, file_state='STAGING' "
+                " WHERE  "
+                "   file_state='STARTED'"
+                "   AND (bringonline_token = '' OR bringonline_token IS NULL)"
+                "   AND start_time IS NOT NULL "
+                "   AND staging_start IS NOT NULL "
+                ;
+
             soci::rowset<soci::row> rs3 =
                     (
                         sql.prepare <<
