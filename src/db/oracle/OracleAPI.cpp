@@ -10514,19 +10514,19 @@ void OracleAPI::getAlreadyStartedStaging(std::vector< boost::tuple<std::string, 
             for (soci::rowset<soci::row>::const_iterator i3 = rs3.begin(); i3 != rs3.end(); ++i3)
                 {
                     soci::row const& row = *i3;
-                    std::string vo_name = row.get<std::string>("vo_name");
-                    std::string source_url = row.get<std::string>("source_surl");
-                    std::string job_id = row.get<std::string>("job_id");
-                    int file_id = row.get<int>("file_id");
-                    int copy_pin_lifetime = row.get<int>("copy_pin_lifetime",0);
-                    int bring_online = row.get<int>("bring_online",0);
-                    std::string user_dn = row.get<std::string>("user_dn");
-                    std::string cred_id = row.get<std::string>("cred_id");
-                    std::string source_space_token = row.get<std::string>("source_space_token","");
+                    std::string vo_name = row.get<std::string>("VO_NAME");
+                    std::string source_url = row.get<std::string>("SOURCE_SURL");
+                    std::string job_id = row.get<std::string>("JOB_ID");
+                    int file_id = row.get<int>("FILE_ID");
+                    int copy_pin_lifetime = static_cast<int>(row.get<double>("COPY_PIN_LIFETIME"),0);
+                    int bring_online = static_cast<int>(row.get<double>("BRING_ONLINE"),0);
+                    std::string user_dn = row.get<std::string>("USER_DN");
+                    std::string cred_id = row.get<std::string>("CRED_ID");
+                    std::string source_space_token = row.get<std::string>("SOURCE_SPACE_TOKEN","");
 
                     std::string bringonline_token;
-                    soci::indicator isNull = row.get_indicator("bringonline_token");
-                    if (isNull == soci::i_ok) bringonline_token = row.get<std::string>("bringonline_token");
+                    soci::indicator isNull = row.get_indicator("BRINGONLINE_TOKEN");
+                    if (isNull == soci::i_ok) bringonline_token = row.get<std::string>("BRINGONLINE_TOKEN");
 
                     boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string, std::string > record(vo_name, source_url,job_id, file_id, copy_pin_lifetime, bring_online, user_dn, cred_id , source_space_token, bringonline_token);
                     files.push_back(record);
