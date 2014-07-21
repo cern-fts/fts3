@@ -4549,6 +4549,7 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
     std::string job_id;
     std::string stmt;
     int count = 0;
+    int countBeat = 0;
     bool drain = false;
     int activeHosts = 0;
 
@@ -4583,9 +4584,13 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                         {
                             count++;
+			    countBeat++;
 
-                            if(count == 1000)
+                            if(countBeat == 10000)
                                 {
+				     //reset
+				     countBeat = 0;
+				     
                                     //update heartbeat first
                                     updateHeartBeatInternal(sql, &index, &count1, &start, &end, service_name);
 
