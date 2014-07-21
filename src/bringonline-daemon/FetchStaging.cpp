@@ -10,7 +10,6 @@
 #include "BringOnlineTask.h"
 #include "PollTask.h"
 #include "WaitingRoom.h"
-#include "StagingContext.h"
 
 #include "server/DrainMode.h"
 
@@ -27,6 +26,19 @@ extern bool stopThreads;
 void FetchStaging::fetch()
 {
     WaitingRoom<PollTask>::instance().attach(threadpool);
+
+    try  // we want to be sure that this won't break our fetching thread
+        {
+            recoverStartedTasks();
+        }
+    catch (Err& e)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE " << e.what() << commit;
+        }
+    catch (...)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Fatal error (unknown origin)" << commit;
+        }
 
     while (!stopThreads)
         {
@@ -67,7 +79,7 @@ void FetchStaging::fetch()
                         {
                             try
                                 {
-                                    threadpool.start(new BringOnlineTask(*it_t));
+                                    threadpool.start(new BringOnlineTask(it_t->second));
                                 }
                             catch(Err_Custom const & ex)
                                 {
@@ -88,6 +100,51 @@ void FetchStaging::fetch()
             catch (...)
                 {
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Fatal error (unknown origin)" << commit;
+                }
+        }
+}
+
+void FetchStaging::recoverStartedTasks()
+{
+    std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string, std::string> > files;
+    std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string, std::string> >::const_iterator it_f;
+
+    try
+        {
+            db::DBSingleton::instance().getDBObjectInstance()->getAlreadyStartedStaging(files);
+        }
+    catch(Err_Custom const & ex)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
+        }
+    catch(...)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception, continuing to see..." << commit;
+        }
+
+    std::map<std::string, StagingContext> tasks;
+
+    for (it_f = files.begin(); it_f != files.end(); ++it_f)
+        {
+            std::string const & token = boost::get<9>(*it_f);
+            tasks[token].add(get_context(*it_f));
+        }
+
+    std::map<std::string, StagingContext>::const_iterator it_t;
+
+    for (it_t = tasks.begin(); it_t != tasks.end(); ++it_t)
+        {
+            try
+                {
+                    threadpool.start(new PollTask(it_t->second, it_t->first));
+                }
+            catch(Err_Custom const & ex)
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
+                }
+            catch(...)
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown exception, continuing to see..." << commit;
                 }
         }
 }

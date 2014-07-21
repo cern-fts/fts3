@@ -72,6 +72,24 @@ protected:
                 {
                     gfal2_set_opt_string(gfal2_ctx, "BDII", "LCG_GFAL_INFOSYS", (char *) infosys.c_str(), NULL);
                 }
+
+            const char *protocols[] = {"rfio", "gsidcap", "dcap", "gsiftp"};
+
+            gfal2_set_opt_string_list(gfal2_ctx, "SRM PLUGIN", "TURL_PROTOCOLS", protocols, 4, &error);
+            if (error)
+                {
+                    std::stringstream ss;
+                    ss << "BRINGONLINE Could not set the protocol list " << error->code << " " << error->message;
+                    throw Err_Custom(ss.str());
+                }
+
+            gfal2_set_opt_boolean(gfal2_ctx, "GRIDFTP PLUGIN", "SESSION_REUSE", true, &error);
+            if (error)
+                {
+                    std::stringstream ss;
+                    ss << "BRINGONLINE Could not set the session reuse " << error->code << " " << error->message;
+                    throw Err_Custom(ss.str());
+                }
         }
 
         /// Copy constructor, steals the pointer from the parameter!

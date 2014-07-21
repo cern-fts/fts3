@@ -38,13 +38,24 @@ class PollTask : public StagingTask
 {
 
 public:
+    /**
+     * Creates a PollTask from StagingContext (for recovery purposes only)
+     *
+     * @param ctx : staging context (recover from DB after crash)
+     * @param token : token that is needed for polling
+     */
+    PollTask(StagingContext const & ctx, std::string const & token) : StagingTask(ctx), token(token), nPolls(0), wait_until(0)
+    {
+        boost::unique_lock<boost::shared_mutex> lock(mx);
+        active_tokens[token].insert(ctx.surls.begin(), ctx.surls.end());
+    }
 
     /**
      * Creates a new PollTask task from another StagingTask
      *
      * @param copy : a staging task (stills the gfal2 context of this object)
      */
-    PollTask(StagingTask & copy, std::string token) : StagingTask(copy), token(token), nPolls(0), wait_until()
+    PollTask(StagingTask & copy, std::string const & token) : StagingTask(copy), token(token), nPolls(0), wait_until()
     {
         boost::unique_lock<boost::shared_mutex> lock(mx);
         active_tokens[token].insert(ctx.surls.begin(), ctx.surls.end());
