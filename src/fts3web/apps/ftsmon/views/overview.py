@@ -101,7 +101,7 @@ class OverviewExtended(object):
     def _get_frequent_error(self, source, destination, vo):
         reason = File.objects.filter(source_se=source, dest_se=destination, vo_name=vo) \
             .filter(job_finished__gte=self.not_before, file_state='FAILED') \
-            .values('reason').annotate(count=Count('reason')).values('reason', 'count').order_by('-count')
+            .values('reason').annotate(count=Count('reason')).values('reason', 'count').order_by('-count')[:1]
         if len(reason) > 0:
             return "[%(count)d] %(reason)s" % reason[0]
         else:
