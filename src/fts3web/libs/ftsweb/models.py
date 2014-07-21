@@ -138,6 +138,53 @@ class File(FileBase):
         db_table = 't_file'
 
 
+class DmFile(models.Model):
+    file_id       = models.IntegerField(primary_key=True)
+    job           = models.ForeignKey('Job', db_column = 'job_id', related_name = '+', null = True)
+    file_state    = models.CharField(max_length=32)
+    transferHost  = models.CharField(max_length=150, db_column='dmHost')
+    source_surl   = models.CharField(max_length=900)
+    dest_surl     = models.CharField(max_length=900)
+    source_se     = models.CharField(max_length=150)
+    dest_se       = models.CharField(max_length=150)
+    reason        = models.CharField(max_length=2048)
+    checksum      = models.CharField(max_length=100)
+    finish_time   = models.DateTimeField()
+    start_time    = models.DateTimeField()
+    job_finished  = models.DateTimeField()
+    tx_duration   = models.FloatField()
+    retry         = models.IntegerField()
+    user_filesize = models.FloatField()
+    file_metadata = models.CharField(max_length=1024)
+    activity      = models.CharField(max_length=255)
+    dm_token      = models.CharField(max_length=255)
+    retry_timestamp = models.DateTimeField()
+    wait_timestamp	= models.DateTimeField()
+    wait_timeout    = models.IntegerField()
+    hashed_id       = models.IntegerField()
+    vo_name         = models.CharField(max_length=100)
+
+    # Compatibility fields, so it can be used as regular file
+    filesize = 0
+    transferred = 0
+    throughput = 0
+
+    def get_start_time(self):
+        """
+        Return staging_start, or start_time or None in that order
+        """
+        if self.start_time:
+            return self.start_time
+        else:
+            return None
+
+    def __str__(self):
+        return str(self.file_id)
+
+    class Meta:
+        db_table = 't_dm'
+
+
 class RetryError(models.Model):
     attempt  = models.IntegerField()
     datetime = models.DateTimeField()

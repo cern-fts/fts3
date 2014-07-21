@@ -41,6 +41,9 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/assign.hpp>
 
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
+
 using namespace boost::algorithm;
 using namespace boost;
 using namespace boost::assign;
@@ -259,6 +262,7 @@ bool SubmitTransferCli::createJobElements()
             if (vm.count("file-metadata"))
                 {
                     file_metadata = vm["file-metadata"].as<string>();
+                    parseMetadata(*file_metadata);
                 }
 
             // then if the source and destination have been given create a Task
@@ -413,7 +417,9 @@ map<string, string> SubmitTransferCli::getParams()
 
     if (vm.count("job-metadata"))
         {
-            parameters[JobParameterHandler::JOB_METADATA] = vm["job-metadata"].as<string>();
+            std::string const & metadata = vm["job-metadata"].as<string>();
+            parseMetadata(metadata);
+            parameters[JobParameterHandler::JOB_METADATA] = metadata;
         }
 
     if (vm.count("retry"))
@@ -472,3 +478,28 @@ string SubmitTransferCli::getFileName()
     return string();
 }
 
+void SubmitTransferCli::parseMetadata(std::string const & metadata)
+{
+    using namespace boost::property_tree;
+
+    // first check it is JSON
+    if (metadata[0] != '{' || metadata[metadata.size() - 1] != '}') return;
+    // than check if the JSON format is correct
+    try
+        {
+            // JSON parsing
+            ptree pt;
+            std::stringstream iostr;
+            iostr << metadata;
+            read_json(iostr, pt);
+
+        }
+    catch(json_parser_error& ex)
+        {
+            // handle errors in JSON format
+            std::stringstream err;
+            err << "JSON error : " << ex.message() << ". ";
+            err << "Possibly single quotes around metadata are missing!";
+            throw cli_exception(err.str());
+        }
+}

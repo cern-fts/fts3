@@ -236,7 +236,7 @@ void MsgProducer::onException( const CMSException& ex AMQCPP_UNUSED)
     stopThreads = true;
     std::queue<std::string> myQueue = concurrent_queue::getInstance()->the_queue;
     std::string ret;
-    while(myQueue.empty())
+    while(!myQueue.empty())
         {
             ret = myQueue.front();
             myQueue.pop();

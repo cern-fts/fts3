@@ -67,6 +67,35 @@ inline time_t getTimeT(values const& v, const std::string& name)
 }
 
 
+inline time_t getTimeT(row const& r, const std::string& name)
+{
+    std::tm when;
+
+    if (r.get_indicator(name) != soci::i_ok)
+        return time(NULL);
+
+    switch (r.get_properties(name).get_data_type())
+        {
+        case dt_double:
+            return static_cast<time_t>(r.get<double>(name));
+        case dt_integer:
+            return static_cast<time_t>(r.get<int>(name));
+        case dt_long_long:
+            return static_cast<time_t>(r.get<long long>(name));
+        case dt_unsigned_long_long:
+            return static_cast<time_t>(r.get<unsigned long long>(name));
+        case dt_date:
+            when = r.get<std::tm>(name);
+            return timegm(&when);
+        case dt_string:
+            strptime(r.get<std::string>(name).c_str(), "%d-%b-%y %H.%M.%S.000000 %p %z", &when);
+            return timegm(&when);
+        default:
+            throw std::bad_cast();
+        }
+}
+
+
 template <>
 struct type_conversion<Cred>
 {

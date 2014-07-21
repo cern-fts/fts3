@@ -37,7 +37,7 @@ using namespace std;
 
 
 
-FileManagement::FileManagement() :file_id(0), logFileName("/var/log/fts3/"), base_scheme(NULL), base_host(NULL), base_path(NULL), base_port(0), reuse(false)
+FileManagement::FileManagement() :file_id(0), logFileName("/var/log/fts3/"), base_scheme(NULL), base_host(NULL), base_path(NULL), base_port(0), castor(false)
 {
     try
         {
@@ -243,30 +243,4 @@ std::string FileManagement::generateLogFileName(std::string, std::string, unsign
     return new_name;
 }
 
-/*
-bool FileManagement::isCastor(std::string& source_se, std::string& dest_se)
-{
-    std::ifstream myfile("/etc/fts3/castor.config");
-    if(myfile)
-        {
-            std::string sLine;
-            while (!myfile.eof())
-                {
-                    getline(myfile, sLine);
-                    std::size_t found = source_se.find(sLine);
-                    if (found!=std::string::npos)
-                        {
-                            reuse = true;
-                        }
 
-                    found=dest_se.find(sLine);
-                    if (found!=std::string::npos)
-                        {
-                            reuse = true;
-                        }
-                }
-            myfile.close();
-        }
-    return reuse;
-}
-*/

@@ -1157,7 +1157,8 @@ void OracleAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std:
                                                          "    f.job_finished IS NULL AND "
                                                          "    f.wait_timestamp IS NULL AND "
                                                          "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
-                                                         "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) ",
+                                                         "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) "
+                                                         "ORDER BY f.file_id ASC",
                                                          soci::use(jobId),
                                                          soci::use(tTime),
                                                          soci::use(hashSegment.start), soci::use(hashSegment.end)
@@ -3497,7 +3498,7 @@ bool OracleAPI::updateOptimizer()
                             int maxActiveLimit = getMaxActive(sql, maxActive, highDefault, source_hostname, destin_hostname);
 
                             //special case to increase active when dealing with LAN transfers of there is only one single/dest pair active
-                            if( ((singleDest == 1 || lanTransferBool) || (spawnActive == 2 || spawnActive == 3)) && maxActive < maxActiveLimit)
+                            if( ratioSuccessFailure >= 96 && ((singleDest == 1 || lanTransferBool) || (spawnActive == 2 || spawnActive == 3)) && maxActive < maxActiveLimit)
                                 {
                                     if(maxActive < 8)
                                         {
@@ -6685,7 +6686,6 @@ std::vector<struct message_state> OracleAPI::getStateOfTransferInternal(soci::se
 
 
             soci::rowset<soci::row>::const_iterator it;
-            struct tm aux_tm;
 
             for (it = rs.begin(); it != rs.end(); ++it)
                 {
@@ -6698,23 +6698,19 @@ std::vector<struct message_state> OracleAPI::getStateOfTransferInternal(soci::se
                     ret.file_state = it->get<std::string>("FILE_STATE");
                     if(ret.file_state == "SUBMITTED")
                         {
-                            aux_tm = it->get<struct tm>("SUBMIT_TIME");
-                            ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);
+                            ret.timestamp = boost::lexical_cast<std::string>(soci::getTimeT(*it, "SUBMIT_TIME"));
                         }
                     else if(ret.file_state == "STAGING")
                         {
-                            aux_tm = it->get<struct tm>("SUBMIT_TIME");
-                            ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);
+                            ret.timestamp = boost::lexical_cast<std::string>(soci::getTimeT(*it, "SUBMIT_TIME"));
                         }
                     else if(ret.file_state == "DELETE")
                         {
-                            aux_tm = it->get<struct tm>("SUBMIT_TIME");
-                            ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);
+                            ret.timestamp = boost::lexical_cast<std::string>(soci::getTimeT(*it, "SUBMIT_TIME"));
                         }
                     else if(ret.file_state == "ACTIVE")
                         {
-                            aux_tm = it->get<struct tm>("START_TIME");
-                            ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);
+                            ret.timestamp = boost::lexical_cast<std::string>(soci::getTimeT(*it, "START_TIME"));
                         }
                     else
                         {
@@ -10408,9 +10404,9 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
                                     soci::row const& row = *i3;
                                     std::string source_url = row.get<std::string>("SOURCE_SURL");
                                     std::string job_id = row.get<std::string>("JOB_ID");
-                                    long long file_id = row.get<long long>("FILE_ID");
-                                    double copy_pin_lifetime = row.get<double>("COPY_PIN_LIFETIME",0);
-                                    double bring_online = row.get<double>("BRING_ONLINE",0);
+                                    int file_id = static_cast<int>(row.get<long long>("FILE_ID"));
+                                    int copy_pin_lifetime = static_cast<int>(row.get<double>("COPY_PIN_LIFETIME", 0));
+                                    int bring_online = static_cast<int>(row.get<double>("BRING_ONLINE",0));
                                     user_dn = row.get<std::string>("USER_DN");
                                     std::string cred_id = row.get<std::string>("CRED_ID");
                                     std::string source_space_token = row.get<std::string>("SOURCE_SPACE_TOKEN","");

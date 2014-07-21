@@ -53,14 +53,11 @@ void handler(int sig)
             stopThreads = true;
             std::queue<std::string> myQueue = concurrent_queue::getInstance()->the_queue;
             std::string ret;
-            if(!myQueue.empty())
+            while(!myQueue.empty())
                 {
-                    while(myQueue.empty())
-                        {
-                            ret = myQueue.front();
-                            myQueue.pop();
-                            send_message(ret);
-                        }
+                    ret = myQueue.front();
+                    myQueue.pop();
+                    send_message(ret);
                 }
             sleep(5);
             exit(0);
@@ -87,7 +84,6 @@ MsgPipe::~MsgPipe()
 
 void MsgPipe::run()
 {
-
     std::vector<struct message_monitoring> messages;
     std::vector<struct message_monitoring>::const_iterator iter;
 
@@ -133,7 +129,7 @@ void MsgPipe::cleanup()
 {
     std::queue<std::string> myQueue = concurrent_queue::getInstance()->the_queue;
     std::string ret;
-    while(myQueue.empty())
+    while(!myQueue.empty())
         {
             ret = myQueue.front();
             myQueue.pop();

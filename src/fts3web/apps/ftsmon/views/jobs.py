@@ -20,7 +20,7 @@ from django.http import Http404
 from datetime import datetime, timedelta
 
 from jsonify import jsonify, jsonify_paged
-from ftsweb.models import Job, File, RetryError
+from ftsweb.models import Job, File, RetryError, DmFile
 from util import get_order_by, ordered_field, paged
 from diagnosis import JobDiagnosis
 
@@ -229,7 +229,9 @@ def get_job_transfers(http_request, job_id):
     files = File.objects.filter(job=job_id)
 
     if not files:
-        raise Http404
+        files = DmFile.objects.filter(job=job_id)
+        if not files:
+            raise Http404
 
     # Ordering
     (order_by, order_desc) = get_order_by(http_request)

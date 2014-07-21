@@ -390,9 +390,9 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy)
             time_t now = time(NULL);
 
             if (difftime(incomingExpirationTime, now) < 3600)
-				{
-					throw Err_Custom("The proxy has to be valid for at least an hour!");
-				}
+                {
+                    throw Err_Custom("The proxy has to be valid for at least an hour!");
+                }
 
             scoped_ptr<CredCache> cache (
                 DBSingleton::instance().getDBObjectInstance()->findGrDPStorageCacheElement(delegationId, dn)

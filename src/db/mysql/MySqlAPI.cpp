@@ -549,19 +549,20 @@ std::map<std::string, long long> MySqlAPI::getActivitiesInQueue(soci::session& s
         {
             soci::rowset<soci::row> rs = (
                                              sql.prepare <<
-                                             " SELECT activity, COUNT(DISTINCT f.job_id, f.file_index) AS count "
+                                             " SELECT SQL_NO_CACHE activity, COUNT(DISTINCT f.job_id, f.file_index) AS count "
                                              " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) WHERE "
                                              "  j.vo_name = f.vo_name AND f.file_state = 'SUBMITTED' AND "
                                              "	f.source_se = :source AND f.dest_se = :dest AND "
-                                             "	f.vo_name = :vo_name AND "
+                                             "	f.vo_name = :vo_name AND j.vo_name = :vo_name AND "
                                              "	f.wait_timestamp IS NULL AND "
                                              "	(f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
                                              "	(f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
                                              "  j.job_state in ('ACTIVE','SUBMITTED') AND "
                                              "  (j.reuse_job = 'N' OR j.reuse_job IS NULL) "
-                                             " GROUP BY activity ",
+                                             " GROUP BY activity ORDER BY NULL ",
                                              soci::use(src),
                                              soci::use(dst),
+                                             soci::use(vo),
                                              soci::use(vo),
                                              soci::use(tTime),
                                              soci::use(hashSegment.start),
@@ -823,9 +824,9 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                                                                  "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
                                                                  "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params "
                                                                  " FROM t_job j INNER JOIN t_file f ON (j.job_id = f.job_id) WHERE  "
-                                                                 "    f.job_finished is null AND f.file_state = 'SUBMITTED' AND "
+                                                                 "    f.file_state = 'SUBMITTED' AND "
                                                                  "    f.source_se = :source AND f.dest_se = :dest AND "
-                                                                 "    f.vo_name = :vo_name AND "
+                                                                 "    f.vo_name = :vo_name AND j.vo_name=:vo_name AND "
                                                                  "    f.wait_timestamp IS NULL AND "
                                                                  "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
                                                                  "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
@@ -833,6 +834,7 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                                                                  "     ORDER BY j.priority DESC, j.submit_time LIMIT :filesNum ",
                                                                  soci::use(boost::get<0>(triplet)),
                                                                  soci::use(boost::get<1>(triplet)),
+                                                                 soci::use(boost::get<2>(triplet)),
                                                                  soci::use(boost::get<2>(triplet)),
                                                                  soci::use(tTime),
                                                                  soci::use(hashSegment.start), soci::use(hashSegment.end),
@@ -862,9 +864,9 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                                         "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
                                         "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params  "
                                         " FROM t_job j INNER JOIN t_file f ON (j.job_id = f.job_id) WHERE "
-                                        "    f.job_finished is null AND  f.file_state = 'SUBMITTED' AND  "
+                                        "    f.file_state = 'SUBMITTED' AND  "
                                         "    f.source_se = :source AND f.dest_se = :dest AND "
-                                        "    f.vo_name = :vo_name AND ";
+                                        "    f.vo_name = :vo_name AND j.vo_name = :vo_name AND ";
                                     select +=
                                         it_act->first == "default" ?
                                         "	  (f.activity = :activity OR f.activity = '' OR f.activity IS NULL) AND "
@@ -884,6 +886,7 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                                                                          select,
                                                                          soci::use(boost::get<0>(triplet)),
                                                                          soci::use(boost::get<1>(triplet)),
+                                                                         soci::use(boost::get<2>(triplet)),
                                                                          soci::use(boost::get<2>(triplet)),
                                                                          soci::use(it_act->first),
                                                                          soci::use(tTime),
@@ -1222,7 +1225,8 @@ void MySqlAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::
                                                          "    f.job_finished IS NULL AND "
                                                          "    f.wait_timestamp IS NULL AND "
                                                          "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
-                                                         "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) ",
+                                                         "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) "
+                                                         "ORDER BY f.file_id ASC",
                                                          soci::use(jobId),
                                                          soci::use(tTime),
                                                          soci::use(hashSegment.start), soci::use(hashSegment.end)
@@ -2102,7 +2106,7 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
                         }
                 }
 
-            sql.begin();
+
 
             soci::statement stmt(sql);
             std::ostringstream query;
@@ -2195,6 +2199,9 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
             stmt.alloc();
             stmt.prepare(query.str());
             stmt.define_and_bind();
+
+            sql.begin();
+
             stmt.execute(true);
 
             sql.commit();
@@ -3557,8 +3564,7 @@ bool MySqlAPI::updateOptimizer()
             soci::statement stmt18 = (
                                          sql.prepare << " select count(distinct source_se) from t_file where "
                                          " file_state in ('ACTIVE','SUBMITTED') and "
-                                         " dest_se=:dest and "
-                                         " job_finished is null",
+                                         " dest_se=:dest ",
                                          soci::use(destin_hostname), soci::into(singleDest));
 
             //snapshot of submitted transfers
@@ -3835,7 +3841,7 @@ bool MySqlAPI::updateOptimizer()
                             int maxActiveLimit = getMaxActive(sql, maxActive, highDefault, source_hostname, destin_hostname);
 
                             //special case to increase active when dealing with LAN transfers of there is only one single/dest pair active
-                            if( ((singleDest == 1 || lanTransferBool) || (spawnActive == 2 || spawnActive == 3)) && maxActive < maxActiveLimit)
+                            if( ratioSuccessFailure >= 96 && ((singleDest == 1 || lanTransferBool) || (spawnActive == 2 || spawnActive == 3)) && maxActive < maxActiveLimit)
                                 {
                                     if(maxActive < 8)
                                         {
@@ -8910,7 +8916,7 @@ void MySqlAPI::updateOptimizerEvolution(soci::session& sql, const std::string & 
 
             try
                 {
-		    //deadlock retry
+                    //deadlock retry
                     sleep(1);
                     if(throughput > 0 && successRate > 0)
                         {
@@ -8945,7 +8951,7 @@ void MySqlAPI::updateOptimizerEvolution(soci::session& sql, const std::string & 
 
             try
                 {
-		    //deadlock retry
+                    //deadlock retry
                     sleep(1);
                     if(throughput > 0 && successRate > 0)
                         {
