@@ -11056,19 +11056,19 @@ void MySqlAPI::getAlreadyStartedStaging(std::vector< boost::tuple<std::string, s
                 ;
 
             soci::rowset<soci::row> rs3 =
-                    (
-                        sql.prepare <<
-                        " SELECT f.vo_name, f.source_surl, f.job_id, f.file_id, j.copy_pin_lifetime, j.bring_online, "
-                        " j.user_dn, j.cred_id, j.source_space_token, f.bringonline_token "
-                        " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
-                        " WHERE  "
-                        " (j.BRING_ONLINE >= 0 OR j.COPY_PIN_LIFETIME >= 0) "
-                        " AND f.start_time IS NOT NULL "
-                        " AND f.file_state = 'STARTED' "
-                        " AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd)"
-                        " AND j.job_finished is null ",
-                        soci::use(hashSegment.start), soci::use(hashSegment.end)
-                    );
+                (
+                    sql.prepare <<
+                    " SELECT f.vo_name, f.source_surl, f.job_id, f.file_id, j.copy_pin_lifetime, j.bring_online, "
+                    " j.user_dn, j.cred_id, j.source_space_token, f.bringonline_token "
+                    " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
+                    " WHERE  "
+                    " (j.BRING_ONLINE >= 0 OR j.COPY_PIN_LIFETIME >= 0) "
+                    " AND f.start_time IS NOT NULL "
+                    " AND f.file_state = 'STARTED' "
+                    " AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd)"
+                    " AND j.job_finished is null ",
+                    soci::use(hashSegment.start), soci::use(hashSegment.end)
+                );
 
             for (soci::rowset<soci::row>::const_iterator i3 = rs3.begin(); i3 != rs3.end(); ++i3)
                 {

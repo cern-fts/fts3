@@ -309,6 +309,7 @@ protected:
                                 sleep(1);
                                 try
                                     {
+                                        distinct.clear();
                                         DBSingleton::instance().getDBObjectInstance()->getVOPairs(distinct);
                                     }
                                 catch (std::exception& e)
@@ -326,6 +327,7 @@ protected:
                                 sleep(1);
                                 try
                                     {
+                                        distinct.clear();
                                         DBSingleton::instance().getDBObjectInstance()->getVOPairs(distinct);
                                     }
                                 catch (std::exception& e)
