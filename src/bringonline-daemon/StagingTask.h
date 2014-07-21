@@ -40,7 +40,25 @@ public:
      * @param ctx : staging task details
      */
     StagingTask(StagingContext const & ctx) :
-        Gfal2Task(), state_update(StagingStateUpdater::instance()), ctx(ctx) {}
+        Gfal2Task(), state_update(StagingStateUpdater::instance()), ctx(ctx)
+    {
+        // set up the gfal2 context
+        GError *error = NULL;
+
+        if (!ctx.srcSpaceToken.empty())
+            {
+                gfal2_set_opt_string(gfal2_ctx, "SRM PLUGIN", "SPACETOKENDESC", (char *) ctx.srcSpaceToken.c_str(), &error);
+                if (error)
+                    {
+                        std::stringstream ss;
+                        ss << "BRINGONLINE Could not set the space token " << error->code << " " << error->message;
+                        throw Err_Custom(ss.str());
+                    }
+            }
+
+        // set the proxy certificate
+        setProxy();
+    }
 
     /**
      * Creates a new StagingTask from another StagingTask
@@ -66,10 +84,16 @@ public:
 
 protected:
 
+    /**
+     * sets the proxy
+     */
+    void setProxy();
+
     /// asynchronous state updater
     StagingStateUpdater & state_update;
     /// staging details
     StagingContext const ctx;
+
 };
 
 #endif /* StagingTask_H_ */

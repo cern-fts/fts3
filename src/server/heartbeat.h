@@ -103,10 +103,54 @@ private:
                                 unsigned index=0, count=0, start=0, end=0;
                                 std::string serviceName = "fts_server";
 
-                                db::DBSingleton::instance().getDBObjectInstance()->updateHeartBeat(&index, &count, &start, &end, serviceName);
-                                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Systole: host " << index << " out of " << count
-                                                                << " [" << start << ':' << end << ']'
-                                                                << commit;
+                                try
+                                    {
+
+                                        db::DBSingleton::instance().getDBObjectInstance()->updateHeartBeat(&index, &count, &start, &end, serviceName);
+                                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Systole: host " << index << " out of " << count
+                                                                        << " [" << start << ':' << end << ']'
+                                                                        << commit;
+                                    }
+                                catch (const std::exception& e)
+                                    {
+                                        try
+                                            {
+                                                sleep(1);
+                                                db::DBSingleton::instance().getDBObjectInstance()->updateHeartBeat(&index, &count, &start, &end, serviceName);
+                                                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Systole: host " << index << " out of " << count
+                                                                                << " [" << start << ':' << end << ']'
+                                                                                << commit;
+                                            }
+                                        catch (const std::exception& e)
+                                            {
+                                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Hearbeat failed: " << e.what() << commit;
+
+                                            }
+                                        catch (...)
+                                            {
+                                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Hearbeat failed " << commit;
+                                            }
+                                    }
+                                catch (...)
+                                    {
+                                        try
+                                            {
+                                                sleep(1);
+                                                db::DBSingleton::instance().getDBObjectInstance()->updateHeartBeat(&index, &count, &start, &end, serviceName);
+                                                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Systole: host " << index << " out of " << count
+                                                                                << " [" << start << ':' << end << ']'
+                                                                                << commit;
+                                            }
+                                        catch (const std::exception& e)
+                                            {
+                                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Hearbeat failed: " << e.what() << commit;
+
+                                            }
+                                        catch (...)
+                                            {
+                                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Hearbeat failed " << commit;
+                                            }
+                                    }
                             }
                         sleep(60);
                     }

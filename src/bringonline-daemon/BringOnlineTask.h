@@ -53,7 +53,7 @@ public:
      *
      * @param ctx : bring-online task details
      */
-    BringOnlineTask(std::pair<key_type, StagingContext> const & ctx);
+    BringOnlineTask(StagingContext const & ctx): StagingTask(ctx) {}
 
     /**
      * Creates a new BringOnlineTask from another StagingTask
@@ -71,13 +71,6 @@ public:
      * The routine is executed by the thread pool
      */
     virtual void run(boost::any const &);
-
-private:
-
-    /**
-     * sets the proxy
-     */
-    void setProxy();
 };
 
 

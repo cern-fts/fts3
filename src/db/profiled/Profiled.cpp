@@ -925,6 +925,10 @@ void ProfiledDB::getFilesForStaging(std::vector< boost::tuple<std::string, std::
     PROFILE_PREFIXED("DB::", db->getFilesForStaging(files));
 }
 
+void ProfiledDB::getAlreadyStartedStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string, std::string> >& files)
+{
+    PROFILE_PREFIXED("DB::", db->getAlreadyStartedStaging(files));
+}
 
 //file_id / surl / token
 void ProfiledDB::getStagingFilesForCanceling(std::vector< boost::tuple<int, std::string, std::string> >& files)

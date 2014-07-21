@@ -96,3 +96,38 @@ bool StagingTask::retryTransfer(int errorNo, const std::string& category, const 
     return retry;
 }
 
+void StagingTask::setProxy()
+{
+    GError *error = NULL;
+
+    //before any operation, check if the proxy is valid
+    std::string message;
+    bool isValid = StagingContext::checkValidProxy(ctx.proxy, message);
+    if(!isValid)
+        {
+            state_update(ctx.jobs, "FAILED", message, false);
+            std::stringstream ss;
+            ss << "BRINGONLINE proxy certificate not valid: " << message;
+            throw Err_Custom(ss.str());
+        }
+
+    char* cert = const_cast<char*>(ctx.proxy.c_str());
+
+    int status = gfal2_set_opt_string(gfal2_ctx, "X509", "CERT", cert, &error);
+    if (status < 0)
+        {
+            state_update(ctx.jobs, "FAILED", error->message, false);
+            std::stringstream ss;
+            ss << "BRINGONLINE setting X509 CERT failed " << error->code << " " << error->message;
+            throw Err_Custom(ss.str());
+        }
+
+    status = gfal2_set_opt_string(gfal2_ctx, "X509", "KEY", cert, &error);
+    if (status < 0)
+        {
+            state_update(ctx.jobs, "FAILED", error->message, false);
+            std::stringstream ss;
+            ss << "BRINGONLINE setting X509 KEY failed " << error->code << " " << error->message;
+            throw Err_Custom(ss.str());
+        }
+}

@@ -11039,6 +11039,68 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
         }
 }
 
+void MySqlAPI::getAlreadyStartedStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string, std::string> >& files)
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            sql <<
+                " UPDATE t_file "
+                " SET start_time = NULL, staging_start=NULL, transferhost=NULL, file_state='STAGING' "
+                " WHERE  "
+                "   file_state='STARTED'"
+                "   AND (bringonline_token = '' OR bringonline_token IS NULL)"
+                "   AND start_time IS NOT NULL "
+                "   AND staging_start IS NOT NULL "
+                ;
+
+            soci::rowset<soci::row> rs3 =
+                (
+                    sql.prepare <<
+                    " SELECT f.vo_name, f.source_surl, f.job_id, f.file_id, j.copy_pin_lifetime, j.bring_online, "
+                    " j.user_dn, j.cred_id, j.source_space_token, f.bringonline_token "
+                    " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
+                    " WHERE  "
+                    " (j.BRING_ONLINE >= 0 OR j.COPY_PIN_LIFETIME >= 0) "
+                    " AND f.start_time IS NOT NULL "
+                    " AND f.file_state = 'STARTED' "
+                    " AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd)"
+                    " AND j.job_finished is null ",
+                    soci::use(hashSegment.start), soci::use(hashSegment.end)
+                );
+
+            for (soci::rowset<soci::row>::const_iterator i3 = rs3.begin(); i3 != rs3.end(); ++i3)
+                {
+                    soci::row const& row = *i3;
+                    std::string vo_name = row.get<std::string>("vo_name");
+                    std::string source_url = row.get<std::string>("source_surl");
+                    std::string job_id = row.get<std::string>("job_id");
+                    int file_id = row.get<int>("file_id");
+                    int copy_pin_lifetime = row.get<int>("copy_pin_lifetime",0);
+                    int bring_online = row.get<int>("bring_online",0);
+                    std::string user_dn = row.get<std::string>("user_dn");
+                    std::string cred_id = row.get<std::string>("cred_id");
+                    std::string source_space_token = row.get<std::string>("source_space_token","");
+
+                    std::string bringonline_token;
+                    soci::indicator isNull = row.get_indicator("bringonline_token");
+                    if (isNull == soci::i_ok) bringonline_token = row.get<std::string>("bringonline_token");
+
+                    boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string, std::string > record(vo_name, source_url,job_id, file_id, copy_pin_lifetime, bring_online, user_dn, cred_id , source_space_token, bringonline_token);
+                    files.push_back(record);
+                }
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+
 //file_id / state / reason / job_id / retry
 void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files)
 {

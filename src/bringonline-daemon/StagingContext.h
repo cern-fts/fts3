@@ -22,6 +22,7 @@ class StagingContext
 {
     friend class BringOnlineTask;
     friend class PollTask;
+    friend class StagingTask;
 
 public:
 
@@ -65,21 +66,6 @@ public:
 
     std::vector<char const *> getUrls() const;
 
-    std::string const & getProxy() const
-    {
-        return proxy;
-    }
-
-    int getPinlifetime() const
-    {
-        return pinlifetime;
-    }
-
-    int getBringonlineTimeout() const
-    {
-        return bringonlineTimeout;
-    }
-
     std::string getLogMsg() const;
 
     /**
@@ -108,6 +94,7 @@ private:
     std::string delegationId;
     std::map< std::string, std::vector<int> > jobs;
     std::string proxy;
+    std::string srcSpaceToken;
 };
 
 #endif /* STAGINGCONTEXT_H_ */
