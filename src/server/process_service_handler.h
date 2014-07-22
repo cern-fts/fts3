@@ -69,6 +69,7 @@ limitations under the License. */
 #include "profiler/Macros.h"
 #include <boost/thread.hpp>
 #include <boost/scoped_ptr.hpp>
+#include "oauth.h"
 
 extern bool stopThreads;
 extern time_t retrieveRecords;
@@ -322,6 +323,7 @@ protected:
                 std::string destin_hostname("");
                 SeProtocolConfig protocol;
                 std::string proxy_file("");
+                std::string oauth_file("");
                 bool debug = false;
 
                 if (reuse == false)
@@ -445,6 +447,7 @@ protected:
                                 std::string bringonlineToken("");
                                 bool userProtocol = false;
                                 std::string checksumMethod("");
+                                std::string userCred;
 
                                 TransferFiles tempUrl;
 
@@ -498,6 +501,7 @@ protected:
                                         fileMetadata = prepareMetadataString(temp.FILE_METADATA);
                                         bringonlineToken = temp.BRINGONLINE_TOKEN;
                                         checksumMethod = temp.CHECKSUM_METHOD;
+                                        userCred = temp.USER_CREDENTIALS;
 
                                         if (fileMetadata.length() <= 0)
                                             fileMetadata = "x";
@@ -595,6 +599,7 @@ protected:
                                                          false,
                                                          "");
 
+                                        oauth_file = fts3::generateOauthConfigFile(DBSingleton::instance().getDBObjectInstance(), dn, userCred);
 
                                         //send SUBMITTED message
                                         SingleTrStateInstance::instance().sendStateMessage(tempUrl.JOB_ID, -1);
@@ -635,6 +640,12 @@ protected:
                                             {
                                                 params.append(" -proxy ");
                                                 params.append(proxy_file);
+                                            }
+
+                                        if (userCred.length() > 0)
+                                            {
+                                                params.append(" -oauth ");
+                                                params.append(oauth_file);
                                             }
 
                                         if (multihop)

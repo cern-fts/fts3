@@ -1218,7 +1218,7 @@ void MySqlAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::
                                                          "       f.checksum, j.checksum_method, j.source_space_token, "
                                                          "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                                                          "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
-                                                         "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params "
+                                                         "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params, j.user_cred "
                                                          "FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                                          "WHERE f.job_id = :jobId AND"
                                                          "    f.file_state = 'SUBMITTED' AND "
