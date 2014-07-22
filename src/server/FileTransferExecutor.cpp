@@ -39,7 +39,9 @@ namespace server
 const string FileTransferExecutor::cmd = "fts_url_copy";
 
 
-FileTransferExecutor::FileTransferExecutor(TransferFiles& tf, TransferFileHandler& tfh, bool monitoringMsg, string infosys, string ftsHostName) :
+FileTransferExecutor::FileTransferExecutor(TransferFiles& tf,
+        TransferFileHandler& tfh, bool monitoringMsg, string infosys,
+        string ftsHostName):
     tf(tf),
     tfh(tfh),
     monitoringMsg(monitoringMsg),
@@ -71,6 +73,30 @@ bool FileTransferExecutor::checkValidProxy(const std::string& filename, std::str
 {
     boost::scoped_ptr<DelegCred> delegCredPtr(new DelegCred);
     return delegCredPtr->isValidProxy(filename, message);
+}
+
+std::string FileTransferExecutor::generateOauthConfigFile(const std::string& dn, const std::string& cs_name)
+{
+    OAuth oauth;
+    if (cs_name.empty() || !db->getOauthCredentials(dn, cs_name, oauth))
+        return "";
+
+    char oauth_path[] = "/tmp/fts-oauth-XXXXXX";
+    int fd = mkstemp(oauth_path);
+    FILE* f = fdopen(fd, "w");
+
+    std::string upper_cs_name = cs_name;
+    boost::to_upper(upper_cs_name);
+
+    fprintf(f, "[%s]\n", upper_cs_name.c_str());
+    fprintf(f, "APP_KEY=%s\n", oauth.app_key.c_str());
+    fprintf(f, "APP_SECRET=%s\n", oauth.app_secret.c_str());
+    fprintf(f, "ACCESS_TOKEN=%s\n", oauth.access_token.c_str());
+    fprintf(f, "ACCESS_TOKEN_SECRET=%s\n", oauth.access_token_secret.c_str());
+
+    fclose(f);
+    close(fd);
+    return oauth_path;
 }
 
 int FileTransferExecutor::execute()
@@ -191,7 +217,10 @@ int FileTransferExecutor::execute()
                                          );
                         }
 
+                    // OAuth credentials
+                    std::string oauth_file = generateOauthConfigFile(tf.DN, tf.USER_CREDENTIALS);
 
+                    // Metadata
                     params.append(" -Y ");
                     params.append(prepareMetadataString(tf.DN));
 
@@ -225,6 +254,12 @@ int FileTransferExecutor::execute()
                         {
                             params.append(" -proxy ");
                             params.append(proxy_file);
+                        }
+
+                    if (oauth_file.length() > 0)
+                        {
+                            params.append(" -oauth ");
+                            params.append(oauth_file);
                         }
 
                     if (std::string(tf.CHECKSUM).length() > 0)   //checksum

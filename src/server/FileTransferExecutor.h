@@ -76,6 +76,8 @@ private:
 
     bool checkValidProxy(const std::string& filename, std::string& message);
 
+    std::string generateOauthConfigFile(const std::string& dn, const std::string& cs_name);
+
     /**
      * @return the metadata string
      */
