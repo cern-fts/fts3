@@ -39,14 +39,13 @@ namespace server
 const string FileTransferExecutor::cmd = "fts_url_copy";
 
 
-FileTransferExecutor::FileTransferExecutor(TransferFiles& tf,
-        TransferFileHandler& tfh, bool monitoringMsg, string infosys,
-        string ftsHostName):
+FileTransferExecutor::FileTransferExecutor(TransferFiles& tf, TransferFileHandler& tfh, bool monitoringMsg, string infosys, string ftsHostName, string proxy) :
     tf(tf),
     tfh(tfh),
     monitoringMsg(monitoringMsg),
     infosys(infosys),
     ftsHostName(ftsHostName),
+    proxy(proxy),
     db(DBSingleton::instance().getDBObjectInstance())
 {
 }
@@ -61,18 +60,6 @@ string FileTransferExecutor::prepareMetadataString(std::string text)
     text = boost::replace_all_copy(text, " ", "?");
     text = boost::replace_all_copy(text, "\"", "\\\"");
     return text;
-}
-
-std::string FileTransferExecutor::generateProxy(const std::string& dn, const std::string& dlg_id)
-{
-    boost::scoped_ptr<DelegCred> delegCredPtr(new DelegCred);
-    return delegCredPtr->getFileName(dn, dlg_id);
-}
-
-bool FileTransferExecutor::checkValidProxy(const std::string& filename, std::string& message)
-{
-    boost::scoped_ptr<DelegCred> delegCredPtr(new DelegCred);
-    return delegCredPtr->isValidProxy(filename, message);
 }
 
 std::string FileTransferExecutor::generateOauthConfigFile(const std::string& dn, const std::string& cs_name)
@@ -99,13 +86,14 @@ std::string FileTransferExecutor::generateOauthConfigFile(const std::string& dn,
     return oauth_path;
 }
 
-int FileTransferExecutor::execute()
+void FileTransferExecutor::run(boost::any & ctx)
 {
-    int scheduled = 0;
+    if (ctx.empty()) ctx = 0;
+
+    int & scheduled = boost::any_cast<int &>(ctx);
 
     //stop forking when a signal is received to avoid deadlocks
-    if (tf.FILE_ID == 0 || stopThreads)
-        return 0;
+    if (tf.FILE_ID == 0 || stopThreads) return;
 
     try
         {
@@ -114,7 +102,7 @@ int FileTransferExecutor::execute()
             string params;
 
             // if the pair was already checked and not scheduled skip it
-            if (notScheduled.count(make_pair(source_hostname, destin_hostname))) return scheduled;
+            if (notScheduled.count(make_pair(source_hostname, destin_hostname))) return;
 
             /*check if manual config exist for this pair and vo*/
 
@@ -170,7 +158,7 @@ int FileTransferExecutor::execute()
 
             if (scheduler.schedule())   /*SET TO READY STATE WHEN TRUE*/
                 {
-                    scheduled = 1;
+                    scheduled += 1;
 
                     //send SUBMITTED message
                     SingleTrStateInstance::instance().sendStateMessage(tf.JOB_ID, tf.FILE_ID);
@@ -194,27 +182,6 @@ int FileTransferExecutor::execute()
                                 {
                                     isAutoTuned = true;
                                 }
-                        }
-
-                    //get the proxy
-                    std::string proxy_file = generateProxy(tf.DN, tf.CRED_ID);
-                    std::string message;
-                    if(false == checkValidProxy(proxy_file, message))
-                        {
-                            if(!message.empty())
-                                {
-                                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << message  << commit;
-                                }
-                            proxy_file = get_proxy_cert(
-                                             tf.DN, // user_dn
-                                             tf.CRED_ID, // user_cred
-                                             tf.VO_NAME, // vo_name
-                                             "",
-                                             "", // assoc_service
-                                             "", // assoc_service_type
-                                             false,
-                                             ""
-                                         );
                         }
 
                     // OAuth credentials
@@ -250,10 +217,10 @@ int FileTransferExecutor::execute()
                             params.append(" -P ");
                         }
 
-                    if (proxy_file.length() > 0)
+                    if (proxy.length() > 0)
                         {
                             params.append(" -proxy ");
-                            params.append(proxy_file);
+                            params.append(proxy);
                         }
 
                     if (oauth_file.length() > 0)
@@ -472,8 +439,6 @@ int FileTransferExecutor::execute()
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Process thread exception unknown" <<  commit;
         }
-
-    return scheduled;
 }
 
 } /* namespace server */

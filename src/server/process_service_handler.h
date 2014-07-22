@@ -23,7 +23,7 @@ limitations under the License. */
 #include "SingleDbInstance.h"
 #include "common/logger.h"
 #include "common/error.h"
-#include "common/ExecutorPool.h"
+#include "common/ThreadPool.h"
 #include "process.h"
 #include <iostream>
 #include <map>
@@ -37,6 +37,7 @@ limitations under the License. */
 #include "TransferFileHandler.h"
 #include "ConfigurationAssigner.h"
 #include "ProtocolResolver.h"
+#include "DelegCred.h"
 #include <signal.h>
 #include "parse_url.h"
 #include "cred-utility.h"
@@ -220,7 +221,9 @@ protected:
                 TransferFileHandler tfh(voQueues);
 
                 // the worker thread pool
-                ExecutorPool<FileTransferExecutor> execPool(execPoolSize);
+                common::ThreadPool<FileTransferExecutor> execPool(execPoolSize);
+
+                std::map< std::pair<std::string, std::string>, std::string > proxies;
 
                 // loop until all files have been served
 
@@ -237,30 +240,65 @@ protected:
                             {
                                 if (stopThreads)
                                     {
-                                        execPool.stop();
+                                        execPool.interrupt();
                                         return;
                                     }
 
                                 TransferFiles tf = tfh.get(*it_vo);
 
+                                std::pair<std::string, std::string> proxy_key(tf.DN, tf.CRED_ID);
+
+                                if (proxies.find(proxy_key) == proxies.end())
+                                    {
+                                        boost::scoped_ptr<Cred> cred (DBSingleton::instance().getDBObjectInstance()->
+                                                    findGrDPStorageElement(tf.CRED_ID, tf.DN)
+                                            );
+                                        time_t db_lifetime = cred->termination_time - time(NULL);
+
+                                        boost::scoped_ptr<DelegCred> delegCredPtr(new DelegCred);
+                                        std::string filename = delegCredPtr->getFileName(tf.DN, tf.CRED_ID);
+                                        time_t lifetime = get_proxy_lifetime(filename);
+
+                                        std::string message;
+                                        if (db_lifetime > lifetime)
+                                            {
+                                                if (!message.empty())
+                                                    {
+                                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << message  << commit;
+                                                    }
+
+                                                filename = get_proxy_cert(
+                                                                 tf.DN, // user_dn
+                                                                 tf.CRED_ID, // user_cred
+                                                                 tf.VO_NAME, // vo_name
+                                                                 "",
+                                                                 "", // assoc_service
+                                                                 "", // assoc_service_type
+                                                                 false,
+                                                                 ""
+                                                             );
+                                            }
+
+                                        proxies[proxy_key] = filename;
+                                    }
 
                                 FileTransferExecutor* exec = new FileTransferExecutor(
                                     tf,
                                     tfh,
                                     monitoringMessages,
                                     infosys,
-                                    ftsHostName
+                                    ftsHostName,
+                                    proxies[proxy_key]
                                 );
 
-                                execPool.add(exec);
+                                execPool.start(exec);
 
                             }
                     }
 
                 // wait for all the workers to finish
                 execPool.join();
-
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Threadpool processed: " << initial_size << " files (" << execPool.executed() << " have been scheduled)" << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Threadpool processed: " << initial_size << " files (" << execPool.reduce(std::plus<int>()) << " have been scheduled)" << commit;
 
             }
         catch (std::exception& e)
