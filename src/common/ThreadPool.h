@@ -36,9 +36,8 @@ class ThreadPool
      * A helper class that retrieves subsequent tasks from the queue
      * and then executes them
      */
-    class ThreadPoolWorker
+    struct ThreadPoolWorker
     {
-
     public:
 
         /// constructor
@@ -59,7 +58,7 @@ class ThreadPool
                 }
         }
 
-    private:
+//    private:
         /// optional data, initialised by the 'init_context' parameter
         boost::any thread_context;
         /// reference to the thread pool object
@@ -134,6 +133,22 @@ public:
     size_t size()
     {
         return group.size();
+    }
+
+    /// executes a reduce operation on all thread contexts
+    template<class RET, template<class> class OPERATION>
+    RET reduce(OPERATION<RET> op)
+    {
+        typename boost::ptr_vector<ThreadPoolWorker>::iterator it;
+        RET init = RET();
+
+        for (it = workers.begin(); it != workers.end(); ++it)
+        {
+            if (it->thread_context.empty()) continue;
+            init = op(init, boost::any_cast<RET>(it->thread_context));
+        }
+
+        return init;
     }
 
 private:
