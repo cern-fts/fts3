@@ -50,6 +50,11 @@ void StagingContext::add(context_type const & ctx)
                             );
                 }
         }
+
+    if (srcSpaceToken.empty())
+        {
+            srcSpaceToken = boost::get<src_space_token>(ctx);
+        }
 }
 
 std::vector<char const *> StagingContext::getUrls() const
