@@ -365,7 +365,7 @@ void abnormalTermination(const std::string& classification, const std::string&, 
 
     cancelTransfer();
     sleep(1);
-    exit(1);
+    _exit(1);
 }
 
 void canceler()
@@ -771,6 +771,17 @@ int main(int argc, char **argv)
                     errorMessage += "INIT " + std::string(handleError->message);
                     abnormalTermination("FAILED", errorMessage, "Error");
                 }
+        }
+
+    // Load OAuth credentials, if any
+    if (!opts.oauthFile.empty())
+        {
+            if (gfal2_load_opts_from_file(handle, opts.oauthFile.c_str(), &handleError) < 0)
+                {
+                    errorMessage = "OAUTH " + std::string(handleError->message);
+                    abnormalTermination("FAILED", errorMessage, "Error");
+                }
+            unlink(opts.oauthFile.c_str());
         }
 
 

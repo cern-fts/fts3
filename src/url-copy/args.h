@@ -59,6 +59,7 @@ public:
     int    	secPerMb;
     std::string user_dn;
     std::string alias;
+    std::string oauthFile;
 
     bool areTransfersOnFile() const
     {
