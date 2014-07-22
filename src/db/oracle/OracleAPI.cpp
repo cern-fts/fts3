@@ -10504,6 +10504,8 @@ void OracleAPI::getAlreadyStartedStaging(std::vector< boost::tuple<std::string, 
                 "   AND (bringonline_token = '' OR bringonline_token IS NULL)"
                 "   AND start_time IS NOT NULL "
                 "   AND staging_start IS NOT NULL "
+                "   AND (hashed_id >= :hStart AND hashed_id <= :hEnd)",
+                soci::use(hashSegment.start), soci::use(hashSegment.end)
                 ;
 
             soci::rowset<soci::row> rs3 =
