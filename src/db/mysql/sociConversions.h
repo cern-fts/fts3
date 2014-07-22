@@ -32,6 +32,7 @@
 #include <SeProtocolConfig.h>
 #include <ShareConfig.h>
 #include <TransferJobs.h>
+#include <OAuth.h>
 #include <soci.h>
 #include <time.h>
 
@@ -371,6 +372,20 @@ struct type_conversion<FileRetry>
         struct tm aux_tm;
         aux_tm = v.get<tm>("datetime");
         retry.datetime = timegm(&aux_tm);
+    }
+};
+
+template<>
+struct type_conversion<OAuth>
+{
+    typedef values base_type;
+
+    static void from_base(values const& v, indicator, OAuth& oauth)
+    {
+        oauth.app_key      = v.get<std::string>("app_key");
+        oauth.app_secret   = v.get<std::string>("app_secret");
+        oauth.access_token = v.get<std::string>("access_token");
+        oauth.access_token_secret = v.get<std::string>("access_token_secret");
     }
 };
 

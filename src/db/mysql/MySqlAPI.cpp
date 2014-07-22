@@ -4590,7 +4590,7 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                                 {
 				     //reset
 				     countBeat = 0;
-				     
+
                                     //update heartbeat first
                                     updateHeartBeatInternal(sql, &index, &count1, &start, &end, service_name);
 
@@ -11629,7 +11629,31 @@ bool MySqlAPI::resetForRetryDelete(soci::session& sql, int file_id, const std::s
 }
 
 
+bool MySqlAPI::getOauthCredentials(const std::string& user_dn, const std::string& cloud_name, OAuth& oauth)
+{
+    soci::session sql(*connectionPool);
 
+    try
+        {
+            sql << "SELECT app_key, app_secret, access_token, access_token_secret "
+                   "FROM t_cloudStorage cs, t_cloudStorageUser cu "
+                   "WHERE cu.user_dn=:user_dn AND cs.cloudStorage_name=:cs_name AND cs.cloudStorage_name = cu.cloudStorage_name",
+                   soci::use(user_dn), soci::use(cloud_name), soci::into(oauth);
+
+             if (!sql.got_data())
+                 return false;
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+
+    return true;
+}
 
 
 // the class factories

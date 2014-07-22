@@ -365,6 +365,7 @@ public:
 
     void checkJobOperation(std::vector<std::string>& jobs, std::vector< boost::tuple<std::string, std::string> >& ops);
 
+    bool getOauthCredentials(const std::string& user_dn, const std::string& cloud_name, OAuth& oauth);
 };
 
 

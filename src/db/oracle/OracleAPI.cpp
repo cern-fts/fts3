@@ -11077,7 +11077,10 @@ bool OracleAPI::resetForRetryDelete(soci::session& sql, int file_id, const std::
 }
 
 
-
+bool OracleAPI::getOauthCredentials(const std::string& user_dn, const std::string& cloud_name, OAuth& oauth)
+{
+    return false;
+}
 
 
 
