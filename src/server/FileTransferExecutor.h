@@ -11,8 +11,6 @@
 #include <boost/thread.hpp>
 #include <boost/any.hpp>
 
-#include "common/ThreadSafeQueue.h"
-
 #include "db/generic/SingleDbInstance.h"
 
 #include "TransferFileHandler.h"

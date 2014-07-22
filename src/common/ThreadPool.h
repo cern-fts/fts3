@@ -8,8 +8,6 @@
 #ifndef THREADPOOL_H_
 #define THREADPOOL_H_
 
-#include "ThreadSafeQueue.h"
-
 #include <boost/thread.hpp>
 #include <boost/ptr_container/ptr_deque.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
