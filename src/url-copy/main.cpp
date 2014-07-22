@@ -430,11 +430,11 @@ void shutdown_callback(int signum, void*)
 
     logger.WARNING() << "Received signal " << signum << " (" << strsignal(signum) << ")" << std::endl;
 
-    std::string stackTrace = fts3::common::Panic::stack_dump();
-    if (stackTrace.length() > 0)
+    if (signum == SIGABRT || signum == SIGSEGV || signum ==  SIGILL || signum ==  SIGFPE || signum == SIGBUS || signum ==  SIGTRAP || signum ==  SIGSYS)
         {
             if (propagated == false)
                 {
+	            std::string stackTrace = fts3::common::Panic::stack_dump();
                     propagated = true;
                     logger.ERROR() << "TRANSFER process died: " << currentTransfer.jobId << std::endl;
                     logger.ERROR() << "Received signal: " << signum << std::endl;
