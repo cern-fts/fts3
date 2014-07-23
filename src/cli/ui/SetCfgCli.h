@@ -142,7 +142,7 @@ public:
      *
      * @return SE name - value mapping
      */
-    std::vector< std::tuple<std::string, std::string, int> > getBringOnline();
+    std::vector< std::pair<std::string, int> > getBringOnline();
 
     /**
      * Get the bandwidth limitation
@@ -201,7 +201,7 @@ private:
     vector<string> cfgs;
 
     /// SE name + VO name and the respective value of maximum concurrent files in staging process
-    std::vector< std::tuple<std::string, std::string, int> > bring_online;
+    std::vector< std::pair<std::string, int> > bring_online;
 
     // Source, dest, limit
     optional<std::tuple<string, string, int> > bandwidth_limitation;
