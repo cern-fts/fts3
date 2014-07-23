@@ -310,7 +310,7 @@ void SetCfgCli::parseBringOnline()
             try
                 {
                     bring_online.push_back(std::make_pair(*first, boost::lexical_cast<int>(*second)));
-                    first += 3;
+                    first += 2;
                 }
             catch(boost::bad_lexical_cast const & ex)
                 {
