@@ -22,8 +22,9 @@
             
             <complexType name="BringOnlinePair">
             	<sequence>
-            		<element minOccurs="1" maxOccurs="1" name="first" type="xsd:string"/>
-            		<element minOccurs="1" maxOccurs="1" name="second" type="xsd:int"/>
+            		<element minOccurs="1" maxOccurs="1" name="se" type="xsd:string"/>
+            		<element minOccurs="1" maxOccurs="1" name="vo" type="xsd:string"/>
+            		<element minOccurs="1" maxOccurs="1" name="value" type="xsd:int"/>
             	</sequence>
             </complexType>
             
