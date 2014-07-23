@@ -5847,7 +5847,7 @@ int OracleAPI::getRetry(const std::string & jobId)
                 soci::into(vo_name)
                 ;
 
-            if (isNull == soci::i_null)
+            if (isNull == soci::i_null || retry == 0)
                 {
                     sql <<
                         " SELECT retry FROM (SELECT rownum as rn, retry "
