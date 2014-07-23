@@ -283,22 +283,18 @@ exit 0
 # Messaging scriptlets
 %post msg
 /sbin/chkconfig --add fts-msg-bulk
-/sbin/chkconfig --add fts-msg-cron
 exit 0
 
 %preun msg
 if [ $1 -eq 0 ] ; then
     /sbin/service fts-msg-bulk stop >/dev/null 2>&1
     /sbin/chkconfig --del fts-msg-bulk
-    /sbin/service fts-msg-cron stop >/dev/null 2>&1
-    /sbin/chkconfig --del fts-msg-cron
 fi
 exit 0
 
 %postun msg
 if [ $1 -eq 0 ] ; then
     /sbin/service fts-msg-bulk condrestart >/dev/null 2>&1 || :
-    /sbin/service fts-msg-cron condrestart >/dev/null 2>&1 || :
 fi
 exit 0
 
@@ -373,13 +369,9 @@ fi
 
 %files msg
 %{_sbindir}/fts_msg_bulk
-%{_sbindir}/fts_msg_cron
 %attr(0755,root,root) %{_initddir}/fts-msg-bulk
-%attr(0755,root,root) %{_initddir}/fts-msg-cron
-%attr(0755,root,root) %{_sysconfdir}/cron.hourly/fts-msg-cron
 %config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/fts3/fts-msg-monitoring.conf
 %{_mandir}/man8/fts_msg_bulk.8.gz
-%{_mandir}/man8/fts_msg_cron.8.gz
 
 %files client
 %{_bindir}/fts-config-set

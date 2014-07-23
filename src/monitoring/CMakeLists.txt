@@ -60,19 +60,8 @@ if(FTS3_COMPILE_WITH_UNITTEST_NEW)
 endif()
 target_link_libraries(fts_msg_bulk ${ACTIVEMQCPP_LIBRARIES} fts_common fts_config -lrt ${Boost_LIBRARIES})
 
-set(fts_msg_cron_SOURCES msg-cron.cpp Logger.cpp utility_routines.cpp)
-add_executable (fts_msg_cron ${fts_msg_cron_SOURCES})
-if(FTS3_COMPILE_WITH_UNITTEST_NEW)
-	target_link_libraries(fts_msg_cron -lboost_unit_test_framework)
-endif()
-add_dependencies(fts_msg_cron fts_common fts_db_generic fts_config)
-target_link_libraries(fts_msg_cron ${CMAKE_THREAD_LIBS_INIT} fts_db_generic fts_common fts_config -lrt ${Boost_LIBRARIES})
-
 
 install(TARGETS         fts_msg_bulk 
-	RUNTIME             DESTINATION ${SBIN_INSTALL_DIR} )
-
-install(TARGETS         fts_msg_cron
 	RUNTIME             DESTINATION ${SBIN_INSTALL_DIR} )
 
 install(TARGETS         fts_msg_ifce 
