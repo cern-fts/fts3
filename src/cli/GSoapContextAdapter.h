@@ -206,7 +206,7 @@ public:
      *
      * @param pairs - se name - max number staging files pairs
      */
-    void setBringOnline(map<string, int>& pairs);
+    void setBringOnline(std::vector< std::tuple<std::string, std::string, int> > const &);
 
     string deleteFile (std::vector<std::string>& filesForDelete);
 

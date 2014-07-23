@@ -46,9 +46,9 @@ SetCfgCli::SetCfgCli(bool spec)
             // add commandline options specific for fts3-config-set
             specific.add_options()
             (
-                "bring-online",
-                "If this switch is used the user should provide SE_NAME VALUE pairs in order to set the maximum number of files that are staged concurrently for a given SE."
-                "\n(Example: --bring-online $SE_NAME $VALUE ...)"
+                "bring-online", value< vector<string> >()->multitoken(),
+                "If this switch is used the user should provide SE_NAME VO_NAME VALUE triplets in order to set the maximum number of files that are staged concurrently for a given SE - VI."
+                "\n(Example: --bring-online $SE_NAME $VO_NAME $VALUE ...)"
             )
             (
                 "drain", value<string>(),
@@ -132,15 +132,15 @@ void SetCfgCli::parse(int ac, char* av[])
 
     if (vm.count("cfg"))
         {
-            if (vm.count("bring-online"))
-                parseBringOnline();
-            else
-                cfgs = vm["cfg"].as< vector<string> >();
+            cfgs = vm["cfg"].as< vector<string> >();
         }
     else if(vm.count("max-bandwidth"))
         {
             parseMaxBandwidth();
         }
+
+    if (vm.count("bring-online"))
+        parseBringOnline();
 
     // check JSON configurations
     vector<string>::iterator it;
@@ -298,29 +298,26 @@ optional< std::tuple<string, string, string> > SetCfgCli::getProtocol()
 
 void SetCfgCli::parseBringOnline()
 {
+    std::vector<std::string> const & vec = vm["bring-online"].as< std::vector<std::string> >();
+    if (vec.size() % 3) throw bad_option("bring-online", "consecutive 'SE_NAME VO_NAME VALUE' triplets were expected!");
 
-    vector<string> v = vm["cfg"].as< vector<string> >();
-    // check if the number of parameters is even
-    if (v.size() % 2) throw bad_option("bring-online", "After specifying '--bring-online' SE_NAME - VALUE pairs have to be given!");
+    std::vector<std::string>::const_iterator first = vec.begin(), second, third;
 
-    vector<string>::iterator first = v.begin(), second;
-
-    do
+    while (first != vec.end())
         {
             second = first + 1;
+            third = second + 1;
+
             try
                 {
-                    bring_online.insert(
-                        make_pair(*first, lexical_cast<int>(*second))
-                    );
-                    first += 2;
+                    bring_online.push_back(std::make_tuple(*first, *second, boost::lexical_cast<int>(*third)));
+                    first += 3;
                 }
             catch(boost::bad_lexical_cast const & ex)
                 {
-                    throw bad_option("bring-online", "The bring-online value: " + *second + " is not a correct integer (int) value!");
+                    throw bad_option("bring-online", "value: " + *third + " is not a correct integer (int) value!");
                 }
         }
-    while (first != v.end());
 }
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
@@ -377,7 +374,7 @@ void SetCfgCli::parseMaxBandwidth()
     bandwidth_limitation = make_optional(std::tuple<string, string, int>(source_se, dest_se, limit));
 }
 
-map<string, int> SetCfgCli::getBringOnline()
+std::vector< std::tuple<std::string, std::string, int> > SetCfgCli::getBringOnline()
 {
     return bring_online;
 }
