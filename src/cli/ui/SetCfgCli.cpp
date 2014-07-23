@@ -47,8 +47,8 @@ SetCfgCli::SetCfgCli(bool spec)
             specific.add_options()
             (
                 "bring-online", value< vector<string> >()->multitoken(),
-                "If this switch is used the user should provide SE_NAME VALUE pairs in order to set the maximum number of files that are staged concurrently for a given SE."
-                "\n(Example: --bring-online $SE_NAME $VALUE ...)"
+                "If this switch is used the user should provide SE_NAME VO_NAME VALUE triplets in order to set the maximum number of files that are staged concurrently for a given SE - VI."
+                "\n(Example: --bring-online $SE_NAME $VO_NAME $VALUE ...)"
             )
             (
                 "drain", value<string>(),
@@ -132,15 +132,15 @@ void SetCfgCli::parse(int ac, char* av[])
 
     if (vm.count("cfg"))
         {
-            if (vm.count("bring-online"))
-                parseBringOnline();
-            else
-                cfgs = vm["cfg"].as< vector<string> >();
+            cfgs = vm["cfg"].as< vector<string> >();
         }
     else if(vm.count("max-bandwidth"))
         {
             parseMaxBandwidth();
         }
+
+    if (vm.count("bring-online"))
+        parseBringOnline();
 
     // check JSON configurations
     vector<string>::iterator it;
