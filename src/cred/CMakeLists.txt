@@ -23,6 +23,8 @@ add_dependencies(fts_proxy fts_common fts_db_generic)
 target_link_libraries(fts_proxy fts_common fts_db_generic)
 target_link_libraries(fts_proxy ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(fts_proxy -lglobus_common -lglobus_gsi_credential)
+target_link_libraries(fts_proxy -lvomsapi)
+
 set_target_properties(fts_proxy		        PROPERTIES
                                                 LIBRARY_OUTPUT_DIRECTORY
 ${PROJECT_BINARY_DIR}/src/cred
