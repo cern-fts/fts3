@@ -258,7 +258,8 @@ protected:
 
                                         boost::scoped_ptr<DelegCred> delegCredPtr(new DelegCred);
                                         std::string filename = delegCredPtr->getFileName(tf.DN, tf.CRED_ID);
-                                        time_t lifetime = get_proxy_lifetime(filename);
+                                        time_t lifetime, voms_lifetime;
+                                        get_proxy_lifetime(filename, &lifetime, &voms_lifetime);
 
                                         std::string message;
                                         if (db_lifetime > lifetime)
