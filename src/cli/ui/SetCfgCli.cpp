@@ -47,7 +47,7 @@ SetCfgCli::SetCfgCli(bool spec)
             specific.add_options()
             (
                 "bring-online", value< vector<string> >()->multitoken(),
-                "If this switch is used the user should provide SE_NAME VO_NAME VALUE triplets in order to set the maximum number of files that are staged concurrently for a given SE - VI."
+                "If this switch is used the user should provide SE_NAME VALUE triplets in order to set the maximum number of files that are staged concurrently for a given SE - VI."
                 "\n(Example: --bring-online $SE_NAME $VO_NAME $VALUE ...)"
             )
             (
@@ -299,23 +299,22 @@ optional< std::tuple<string, string, string> > SetCfgCli::getProtocol()
 void SetCfgCli::parseBringOnline()
 {
     std::vector<std::string> const & vec = vm["bring-online"].as< std::vector<std::string> >();
-    if (vec.size() % 3) throw bad_option("bring-online", "consecutive 'SE_NAME VO_NAME VALUE' triplets were expected!");
+    if (vec.size() % 2) throw bad_option("bring-online", "consecutive 'SE_NAME VALUE' triplets were expected!");
 
-    std::vector<std::string>::const_iterator first = vec.begin(), second, third;
+    std::vector<std::string>::const_iterator first = vec.begin(), second;
 
     while (first != vec.end())
         {
             second = first + 1;
-            third = second + 1;
 
             try
                 {
-                    bring_online.push_back(std::make_tuple(*first, *second, boost::lexical_cast<int>(*third)));
-                    first += 3;
+                    bring_online.push_back(std::make_pair(*first, boost::lexical_cast<int>(*second)));
+                    first += 2;
                 }
             catch(boost::bad_lexical_cast const & ex)
                 {
-                    throw bad_option("bring-online", "value: " + *third + " is not a correct integer (int) value!");
+                    throw bad_option("bring-online", "value: " + *second + " is not a correct integer (int) value!");
                 }
         }
 }
@@ -374,7 +373,7 @@ void SetCfgCli::parseMaxBandwidth()
     bandwidth_limitation = make_optional(std::tuple<string, string, int>(source_se, dest_se, limit));
 }
 
-std::vector< std::tuple<std::string, std::string, int> > SetCfgCli::getBringOnline()
+std::vector< std::pair<std::string, int> > SetCfgCli::getBringOnline()
 {
     return bring_online;
 }

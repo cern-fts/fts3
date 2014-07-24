@@ -97,7 +97,7 @@ struct type_conversion<TransferJobs>
         job.AGENT_DN       = v.get<std::string>("agent_dn", "");
         job.SUBMIT_HOST    = v.get<std::string>("submit_host");
         job.USER_DN        = v.get<std::string>("user_dn");
-        job.USER_CRED      = v.get<std::string>("user_cred");
+        job.USER_CRED      = v.get<std::string>("user_cred", "");
         job.CRED_ID        = v.get<std::string>("cred_id");
         job.SPACE_TOKEN    = v.get<std::string>("space_token", "");
         job.STORAGE_CLASS  = v.get<std::string>("storage_class", "");
