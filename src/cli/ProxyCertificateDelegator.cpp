@@ -41,11 +41,10 @@ namespace cli
 {
 
 
-ProxyCertificateDelegator::ProxyCertificateDelegator(string endpoint, string delegationId, long userRequestedDelegationExpTime, MsgPrinter& printer):
+ProxyCertificateDelegator::ProxyCertificateDelegator(string endpoint, string delegationId, long userRequestedDelegationExpTime):
     delegationId(delegationId),
     endpoint(endpoint),
-    userRequestedDelegationExpTime(userRequestedDelegationExpTime),
-    printer(printer)
+    userRequestedDelegationExpTime(userRequestedDelegationExpTime)
 {
 
     dctx = glite_delegation_new(endpoint.c_str());
@@ -103,7 +102,7 @@ void ProxyCertificateDelegator::delegate()
 
     // get local proxy run time
     time_t localProxyTimeLeft = isCertValid(string());
-    printer.delegation_local_expiration(
+    MsgPrinter::instance().delegation_local_expiration(
         (long int)((localProxyTimeLeft) / 3600),
         (long int)((localProxyTimeLeft) % 3600 / 60)
     );
@@ -117,7 +116,7 @@ void ProxyCertificateDelegator::delegate()
 
             time_t timeLeftOnServer = expTime - time(0);
 
-            printer.delegation_service_proxy(
+            MsgPrinter::instance().delegation_service_proxy(
                 (long int)((timeLeftOnServer) / 3600),
                 (long int)((timeLeftOnServer) % 3600 / 60)
             );
@@ -125,7 +124,7 @@ void ProxyCertificateDelegator::delegate()
             if (timeLeftOnServer > REDELEGATION_TIME_LIMIT)
                 {
                     // don;t bother redelegating
-                    printer.delegation_msg(
+                    MsgPrinter::instance().delegation_msg(
                         "Not bothering to do delegation, since the server already has a delegated credential for this user lasting longer than 4 hours."
                     );
                     needDelegation = false;
@@ -137,7 +136,7 @@ void ProxyCertificateDelegator::delegate()
                     if (localProxyTimeLeft > timeLeftOnServer)
                         {
                             // we improve the situation (the new proxy will last longer)
-                            printer.delegation_msg(
+                            MsgPrinter::instance().delegation_msg(
                                 "Will redo delegation since the credential on the server has left that 4 hours validity left."
                             );
                             needDelegation = true;
@@ -146,7 +145,7 @@ void ProxyCertificateDelegator::delegate()
                     else
                         {
                             // we cannot improve the proxy on the server
-                            printer.delegation_msg(
+                            MsgPrinter::instance().delegation_msg(
                                 "Delegated proxy on server has less than 6 hours left.\nBut the local proxy has less time left than the one on the server, so cannot be used to refresh it!"
                             );
                             needDelegation=false;
@@ -156,7 +155,7 @@ void ProxyCertificateDelegator::delegate()
     else
         {
             // no proxy on server: do standard delegation
-            printer.delegation_msg("No proxy found on server. Requesting standard delegation.");
+            MsgPrinter::instance().delegation_msg("No proxy found on server. Requesting standard delegation.");
             needDelegation = true;
             renewDelegation = false;
         }
@@ -184,7 +183,7 @@ void ProxyCertificateDelegator::delegate()
                     requestProxyDelegationTime = userRequestedDelegationExpTime;
                 }
 
-            printer.delegation_request_duration(
+                MsgPrinter::instance().delegation_request_duration(
                 (int)((requestProxyDelegationTime) / 3600),
                 (int)((requestProxyDelegationTime) % 3600 / 60)
             );
@@ -197,20 +196,20 @@ void ProxyCertificateDelegator::delegate()
 
             if (err == -1)
                 {
-                    printer.delegation_request_success(false);
+                    MsgPrinter::instance().delegation_request_success(false);
                     string errMsg = glite_delegation_get_error(dctx);
 //        	printer.delegation_request_error(errMsg);
 
 //            // TODO don't use string value to discover the error (???) do we need retry? yes we do!
                     if (errMsg.find("key values mismatch") != string::npos)
                         {
-                            printer.delegation_request_retry();
+                            MsgPrinter::instance().delegation_request_retry();
                             return delegate();
                         }
                     throw cli_exception(errMsg);
                 }
 
-            printer.delegation_request_success(true);
+            MsgPrinter::instance().delegation_request_success(true);
         }
 }
 

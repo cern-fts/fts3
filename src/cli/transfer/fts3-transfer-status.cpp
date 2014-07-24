@@ -58,7 +58,6 @@ int main(int ac, char* av[])
 {
     static const int DEFAULT_LIMIT = 100;
 
-    JsonOutput::create();
     scoped_ptr<TransferStatusCli> cli (new TransferStatusCli);
 
     try
@@ -98,7 +97,7 @@ int main(int ac, char* av[])
                     for (it = ids.begin(); it != ids.end(); ++it)
                         {
                             tns3__DetailedJobStatus* ptr = ctx.getDetailedJobStatus(*it);
-                            cli->printer().print(*it, ptr->transferStatus);
+                            MsgPrinter::instance().print(*it, ptr->transferStatus);
                         }
 
                     return 0;
@@ -129,7 +128,7 @@ int main(int ac, char* av[])
                             // do the request
                             JobSummary summary = ctx.getTransferJobSummary(jobId, archive);
                             // print the response
-                            cli->printer().job_summary(summary);
+                            MsgPrinter::instance().job_summary(summary);
                         }
                     else
                         {
@@ -138,7 +137,7 @@ int main(int ac, char* av[])
                             // print the response
                             if (!status.jobStatus.empty())
                                 {
-                                    cli->printer().status(status);
+                                    MsgPrinter::instance().status(status);
                                 }
                         }
 
@@ -188,7 +187,7 @@ int main(int ac, char* av[])
                                                                 lambda::bind(&tns3__FileTransferRetry::reason, lambda::_1)
                                                             );
 
-                                                            cli->printer().file_list(values, retries);
+                                                            MsgPrinter::instance().file_list(values, retries);
                                                         }
 
                                                     if (cli->dumpFailed() && isTransferFailed(*stat->transferFileState))
@@ -209,24 +208,17 @@ int main(int ac, char* av[])
         }
     catch(cli_exception const & ex)
         {
-            if (cli->isJson()) JsonOutput::print(ex);
-            else std::cout << ex.what() << std::endl;
+            MsgPrinter::instance().print(ex);
             return 1;
         }
     catch(std::exception& ex)
         {
-            if (cli.get())
-                cli->printer().error_msg(ex.what());
-            else
-                std::cerr << ex.what() << std::endl;
+            MsgPrinter::instance().print(ex);
             return 1;
         }
     catch(...)
         {
-            if (cli.get())
-                cli->printer().error_msg("Exception of unknown type!");
-            else
-                std::cerr << "Exception of unknown type!" << std::endl;
+            MsgPrinter::instance().print("error", "exception of unknown type!");
             return 1;
         }
 

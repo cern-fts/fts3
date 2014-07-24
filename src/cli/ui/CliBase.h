@@ -74,10 +74,10 @@ public:
     /**
      * Default constructor.
      *
-     * Initializes service discovery parameters. Moreover creates the basic
+     * Initialises service discovery parameters. Moreover creates the basic
      * command line options, and marks them as visible.
      */
-    CliBase(ostream& out = std::cout);
+    CliBase();
 
     /**
      * Destructor
@@ -157,11 +157,6 @@ public:
      * @return implementing class should return a string with instruction on how to use the tool
      */
     virtual string getUsageString(string tool);
-
-    MsgPrinter& printer()
-    {
-        return msgPrinter;
-    }
 
 protected:
 
@@ -259,9 +254,6 @@ private:
     string FTS3_IFC_VERSION;
     string FTS3_INTERFACE_VERSION;
     ///@}
-
-protected:
-    MsgPrinter msgPrinter;
 };
 
 }
