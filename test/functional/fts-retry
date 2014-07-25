@@ -40,7 +40,7 @@ class TestRetry(base.TestBase):
             src = 'gsiftp://does.not.exist.ch:8443/path/file'
             logging.info("Retry transfer with non reachable source %s => %s" % (src, dst))
             jobId = self.client.submit([{'sources': [src], 'destinations': [dst]}],
-                                       extraArgs = ['--retry', '0', '--retry-delay', '10'])
+                                       extraArgs = ['--retry', '-1', '--retry-delay', '10'])
             logging.info("Got job id %s" % jobId)
             state = self.client.poll(jobId)
             logging.info("Finished with %s" % state)
