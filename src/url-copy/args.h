@@ -17,7 +17,6 @@ public:
     bool monitoringMessages;
     bool autoTunned;
     bool manualConfig;
-    bool debug;
     bool overwrite;
     bool daemonize;
     bool logToStderr;
@@ -25,6 +24,7 @@ public:
     bool multihop;
     bool enable_udt;
     bool global_timeout;
+    unsigned debugLevel;
 
     enum CompareChecksum
     {

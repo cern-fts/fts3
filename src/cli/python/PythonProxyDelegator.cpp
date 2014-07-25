@@ -13,8 +13,7 @@ namespace cli
 {
 
 PythonProxyDelegator::PythonProxyDelegator(py::str endpoint, py::str delegationId, long expTime) :
-    printer(out),
-    delegator(py::extract<string>(endpoint), py::extract<string>(delegationId), expTime, printer)
+    delegator(py::extract<string>(endpoint), py::extract<string>(delegationId), expTime)
 {
 
 }

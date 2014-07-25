@@ -37,60 +37,63 @@ class JsonOutput
 
 public:
 
-    /**
-     * Creates a single instance of JsonOutput
-     */
-    static void create(std::ostream& out = std::cout);
-
-    /**
-     * Puts given message in the given node of JSON output
-     */
-    static void print(std::string const path, std::string const msg);
-
-    /**
-     * Puts the CLI exception into respective node of JSON output
-     */
-    static void print(cli_exception const & ex);
-
-    /**
-     * Puts the map object into given node as a array of key-value pairs
-     */
-    static void printArray(std::string const path, std::map<std::string, std::string> const & object);
-
-    /**
-     * Puts the value into given node as a array member
-     */
-    static void printArray(std::string const path, std::string const value);
-
-    /**
-     * Puts the value into given node as a array member
-     */
-    static void printArray(std::string const path, pt::ptree const & obj);
+    /// Constructor
+    JsonOutput(std::ostream& out) : out (&out) {};
 
     /**
      * Prints the JSON message to the given output stream
      */
     virtual ~JsonOutput();
 
-private:
+    /**
+     * Sets the output stream
+     *
+     * @param ostr : output stream
+     */
+    void setOutputStream(std::ostream & ostr)
+    {
+       out = &ostr;
+    }
 
-    /// Private constructor
-    JsonOutput(std::ostream& out) : out (out) {};
-    /// Copy constructor (not implemented)
-    JsonOutput(JsonOutput const&);
-    /// Assignment operator (not implemented)
-    void operator=(JsonOutput const&);
+    /**
+     * Puts given message in the given node of JSON output
+     */
+    void print(std::string const & path, std::string const & msg);
+
+    /**
+     * Puts the CLI exception into respective node of JSON output
+     */
+    void print(cli_exception const & ex);
+
+    /**
+     * Puts the standard exception into respective node of JSON output
+     */
+    void print(std::exception const & ex);
+
+    /**
+     * Puts the map object into given node as a array of key-value pairs
+     */
+    void printArray(std::string const & path, std::map<std::string, std::string> const & object);
+
+    /**
+     * Puts the value into given node as a array member
+     */
+    void printArray(std::string const & path, std::string const & value);
+
+    /**
+     * Puts the value into given node as a array member
+     */
+    void printArray(std::string const & path, pt::ptree const & obj);
+
+private:
 
     /// converts all the pairs from map to ptree
     static pt::ptree to_ptree(std::map<std::string, std::string> const & values);
 
-    /// the singleton instance
-    static boost::scoped_ptr<JsonOutput> instance;
-
     /// the ptree used to store the JSON object
     pt::ptree json_out;
     /// the output stream
-    std::ostream& out;
+    std::ostream * out;
 };
 
 } /* namespace cli */

@@ -26,13 +26,14 @@
 #define MSGPRINTER_H_
 
 #include "TransferTypes.h"
+#include "JsonOutput.h"
+#include "exception/cli_exception.h"
 
 #include "ws-ifce/gsoap/gsoap_stubs.h"
 
 #include <string>
 #include <vector>
-#include <map>
-#include <iostream>
+#include <ostream>
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -48,6 +49,18 @@ class MsgPrinter
 {
 
 public:
+
+    static MsgPrinter & instance()
+    {
+        static MsgPrinter printer;
+        return printer;
+    }
+
+    void setOutputStream(std::ostream & ostr)
+    {
+        this->ostr = &ostr;
+        jout.setOutputStream(ostr);
+    }
 
     void delegation_local_expiration(long int h, long int m); //
     void delegation_service_proxy(long int h, long int m); //
@@ -68,19 +81,22 @@ public:
 
     void version(string version); //
 
-    void error_msg(string msg); //
-
     template<typename T>
     void print(std::vector<T> const & v);
     void print(std::string job_id, std::vector<tns3__DetailedFileStatus*> const & v);
+
+    void print(cli_exception const & ex);
+    void print(std::exception const & ex);
+
+    void print(std::string const & subject, std::string const & msg);
 
     void job_id(string job_id); //
     void status(JobStatus js);
     void job_summary(JobSummary js);
     void file_list(vector<string> values, vector<string> retries);
 
-    MsgPrinter(ostream& out = std::cout);
-    virtual ~MsgPrinter();
+
+    virtual ~MsgPrinter() {}
 
     void setVerbose(bool verbose)
     {
@@ -95,20 +111,28 @@ public:
 
 private:
 
-    static void print_cout(std::pair<std::string, std::string> const & id_status);
-    static void print_json(std::pair<std::string, std::string> const & id_status);
+    MsgPrinter() : ostr(&std::cout), jout(std::cout), verbose(false), json(false) {}
+    MsgPrinter(MsgPrinter const &);
+    MsgPrinter & operator=(MsgPrinter const &);
 
-    static void print_cout(JobStatus const & j);
-    static void print_json(JobStatus const & j);
+    void print_ostr(std::pair<std::string, std::string> const & id_status);
+    void print_json(std::pair<std::string, std::string> const & id_status);
+
+    void print_ostr(JobStatus const & j);
+    void print_json(JobStatus const & j);
 
     template<typename T>
-    static void print_cout() {}
+    void print_ostr() {}
 
     template<typename T>
-    static void print_json() {}
+    void print_json() {}
 
     ///
-    static bool verbose;
+    std::ostream * ostr;
+    ///
+    JsonOutput jout;
+    ///
+    bool verbose;
     ///
     bool json;
 };
@@ -119,23 +143,29 @@ void MsgPrinter::print(std::vector<T> const & v)
     if (v.empty())
         {
             if (json) print_json<T>();
-            else print_cout<T>();
+            else print_ostr<T>();
             return;
         }
 
-    void (*print)(T const &);
+    void (MsgPrinter::*print)(T const &);
 
-    if (json) print = print_json;
-    else print = print_cout;
+    if (json) print = &MsgPrinter::print_json;
+    else print = &MsgPrinter::print_ostr;
 
-    std::for_each(v.begin(), v.end(), print);
+    std::for_each(v.begin(), v.end(), boost::bind(print, this, _1));
 }
 
 template<>
-void MsgPrinter::print_cout<JobStatus>();
+inline void MsgPrinter::print_ostr<JobStatus>()
+{
+    (*ostr) << "No data have been found for the specified state(s) and/or user VO/VOMS roles." << std::endl;
+}
 
 template<>
-void MsgPrinter::print_json<JobStatus>();
+inline void MsgPrinter::print_json<JobStatus>()
+{
+    jout.print("job", "[]");
+}
 
 } /* namespace server */
 } /* namespace fts3 */

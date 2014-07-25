@@ -49,7 +49,6 @@ using namespace fts3::common;
  */
 int main(int ac, char* av[])
 {
-    JsonOutput::create();
     scoped_ptr<ListTransferCli> cli(new ListTransferCli);
 
     try
@@ -105,7 +104,7 @@ int main(int ac, char* av[])
                     ResponseParser parser(ss);
                     vector<fts3::cli::JobStatus> stats = parser.getJobs("jobs");
 
-                    cli->printer().print(stats);
+                    MsgPrinter::instance().print(stats);
                     return 0;
                 }
 
@@ -116,28 +115,21 @@ int main(int ac, char* av[])
             vector<fts3::cli::JobStatus> statuses =
                 ctx.listRequests(array, cli->getUserDn(), cli->getVoName(), cli->source(), cli->destination());
 
-            cli->printer().print(statuses);
+            MsgPrinter::instance().print(statuses);
         }
     catch(cli_exception const & ex)
         {
-            if (cli->isJson()) JsonOutput::print(ex);
-            else std::cout << ex.what() << std::endl;
+            MsgPrinter::instance().print(ex);
             return 1;
         }
     catch(std::exception& ex)
         {
-            if (cli.get())
-                cli->printer().error_msg(ex.what());
-            else
-                std::cerr << ex.what() << std::endl;
+            MsgPrinter::instance().print(ex);
             return 1;
         }
     catch(...)
         {
-            if (cli.get())
-                cli->printer().error_msg("Exception of unknown type!");
-            else
-                std::cerr << "Exception of unknown type!" << std::endl;
+            MsgPrinter::instance().print("error", "exception of unknown type!");
             return 1;
         }
 

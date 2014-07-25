@@ -33,7 +33,6 @@ public:
 
 private:
     stringstream out;
-    MsgPrinter printer;
     ProxyCertificateDelegator delegator;
 };
 

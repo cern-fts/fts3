@@ -52,8 +52,7 @@ int main(int ac, char* av[])
             ProxyCertificateDelegator handler (
                 cli->getService(),
                 cli->getDelegationId(),
-                cli->getExpirationTime(),
-                cli->printer()
+                cli->getExpirationTime()
             );
 
             handler.delegate();
@@ -61,24 +60,17 @@ int main(int ac, char* av[])
         }
     catch(cli_exception const & ex)
         {
-            if (cli->isJson()) JsonOutput::print(ex);
-            else std::cout << ex.what() << std::endl;
+            MsgPrinter::instance().print(ex);
             return 1;
         }
     catch(std::exception& ex)
         {
-            if (cli.get())
-                cli->printer().error_msg(ex.what());
-            else
-                std::cerr << ex.what() << std::endl;
+            MsgPrinter::instance().print(ex);
             return 1;
         }
     catch(...)
         {
-            if (cli.get())
-                cli->printer().error_msg("Exception of unknown type!");
-            else
-                std::cerr << "Exception of unknown type!" << std::endl;
+            MsgPrinter::instance().print("error", "exception of unknown type!");
             return 1;
         }
 

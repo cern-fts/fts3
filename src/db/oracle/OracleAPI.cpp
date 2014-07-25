@@ -2788,42 +2788,42 @@ void OracleAPI::deleteGrDPStorageElement(std::string delegationID, std::string d
 
 
 
-bool OracleAPI::getDebugMode(std::string source_hostname, std::string destin_hostname)
+unsigned OracleAPI::getDebugLevel(std::string source_hostname, std::string destin_hostname)
 {
     soci::session sql(*connectionPool);
 
-    bool isDebug = false;
     try
         {
             std::string debug;
+            unsigned level;
+
             sql <<
-                " SELECT debug "
+                " SELECT debug, debug_level "
                 " FROM t_debug "
                 " WHERE source_se = :source "
                 "	AND (dest_se = '' OR dest_se IS NULL) ",
                 soci::use(source_hostname),
-                soci::into(debug)
+                soci::into(debug), soci::into(level)
                 ;
 
-            isDebug = (debug == "on");
-            if (isDebug) return isDebug;
+            if (debug == "on") return level;
 
             sql <<
-                " SELECT debug "
+                " SELECT debug, debug_level "
                 " FROM t_debug "
                 " WHERE source_se = :destin "
                 "	AND (dest_se = '' OR dest_se IS NULL) ",
                 soci::use(destin_hostname),
-                soci::into(debug)
+                soci::into(debug), soci::into(level)
                 ;
 
-            isDebug = (debug == "on");
-            if (isDebug) return isDebug;
+            if (debug == "on") return level;
 
-            sql << "SELECT debug FROM t_debug WHERE source_se = :source AND dest_se = :dest",
-                soci::use(source_hostname), soci::use(destin_hostname), soci::into(debug);
+            sql << "SELECT debug, debug_level FROM t_debug WHERE source_se = :source AND dest_se = :dest",
+                soci::use(source_hostname), soci::use(destin_hostname),
+                soci::into(debug), soci::into(level);
 
-            isDebug = (debug == "on");
+            if (debug == "on") return level;
         }
     catch (std::exception& e)
         {
@@ -2833,12 +2833,12 @@ bool OracleAPI::getDebugMode(std::string source_hostname, std::string destin_hos
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
-    return isDebug;
+    return 0;
 }
 
 
 
-void OracleAPI::setDebugMode(std::string source_hostname, std::string destin_hostname, std::string mode)
+void OracleAPI::setDebugLevel(std::string source_hostname, std::string destin_hostname, unsigned level)
 {
     soci::session sql(*connectionPool);
 
@@ -2846,19 +2846,21 @@ void OracleAPI::setDebugMode(std::string source_hostname, std::string destin_hos
         {
             sql.begin();
 
+            std::string mode = (level?"on":"off");
+
             if (destin_hostname.length() == 0)
                 {
                     sql << "DELETE FROM t_debug WHERE source_se = :source AND dest_se IS NULL",
                         soci::use(source_hostname);
-                    sql << "INSERT INTO t_debug (source_se, debug) VALUES (:source, :debug)",
-                        soci::use(source_hostname), soci::use(mode);
+                    sql << "INSERT INTO t_debug (source_se, debug, debug_level) VALUES (:source, :debug, :level)",
+                        soci::use(source_hostname), soci::use(mode), soci::use(level);
                 }
             else
                 {
                     sql << "DELETE FROM t_debug WHERE source_se = :source AND dest_se = :dest",
                         soci::use(source_hostname), soci::use(destin_hostname);
-                    sql << "INSERT INTO t_debug (source_se, dest_se, debug) VALUES (:source, :dest, :debug)",
-                        soci::use(source_hostname), soci::use(destin_hostname), soci::use(mode);
+                    sql << "INSERT INTO t_debug (source_se, dest_se, debug, debug_level) VALUES (:source, :dest, :debug, :level)",
+                        soci::use(source_hostname), soci::use(destin_hostname), soci::use(mode), soci::use(level);
                 }
 
             sql.commit();

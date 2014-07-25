@@ -54,23 +54,23 @@ int main(int ac, char* av[])
             ctx.debugSet(
                 cli->getSource(),
                 cli->getDestination(),
-                cli->getDebugMode()
+                cli->getDebugLevel()
             );
 
         }
     catch(cli_exception const & ex)
         {
-            cout << ex.what() << endl;
+            MsgPrinter::instance().print(ex);
             return 1;
         }
-    catch(std::exception& e)
+    catch(std::exception& ex)
         {
-            cerr << "error: " << e.what() << "\n";
+            MsgPrinter::instance().print(ex);
             return 1;
         }
     catch(...)
         {
-            cerr << "Exception of unknown type!\n";
+            MsgPrinter::instance().print("error", "exception of unknown type!");
             return 1;
         }
 

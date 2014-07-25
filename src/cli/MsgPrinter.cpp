@@ -26,7 +26,7 @@
 
 #include "common/JobStatusHandler.h"
 
-#include "JsonOutput.h"
+
 
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/optional.hpp>
@@ -47,8 +47,6 @@ using namespace boost;
 using namespace boost::assign;
 using namespace fts3::common;
 
-bool MsgPrinter::verbose = false;
-
 void MsgPrinter::delegation_request_duration(long int h, long int m)
 {
 
@@ -56,11 +54,11 @@ void MsgPrinter::delegation_request_duration(long int h, long int m)
 
     if (!json)
         {
-            cout << "Requesting delegated proxy for " << h << " hours and " << m << " minutes." << endl;
+            (*ostr) << "Requesting delegated proxy for " << h << " hours and " << m << " minutes." << endl;
             return;
         }
 
-    JsonOutput::print("delegation.request.duration", lexical_cast<string>(h) + ":" + lexical_cast<string>(m));
+    jout.print("delegation.request.duration", lexical_cast<string>(h) + ":" + lexical_cast<string>(m));
 }
 
 void MsgPrinter::delegation_request_retry()
@@ -70,11 +68,11 @@ void MsgPrinter::delegation_request_retry()
 
     if (!json)
         {
-            cout << "Retrying!" << endl;
+            (*ostr) << "Retrying!" << endl;
             return;
         }
 
-    JsonOutput::print("delegation.request.retry", "true");
+    jout.print("delegation.request.retry", "true");
 }
 
 void MsgPrinter::delegation_request_error(string error)
@@ -84,11 +82,11 @@ void MsgPrinter::delegation_request_error(string error)
 
     if (!json)
         {
-            cout << "delegation: " << error << endl;
+            (*ostr) << "delegation: " << error << endl;
             return;
         }
 
-    JsonOutput::print("delegation.request.error", error);
+    jout.print("delegation.request.error", error);
 }
 
 void MsgPrinter::delegation_request_success(bool b)
@@ -98,14 +96,14 @@ void MsgPrinter::delegation_request_success(bool b)
 
     if (!json)
         {
-            if (b) cout << "Credential has been successfully delegated to the service." << endl;
+            if (b) (*ostr) << "Credential has been successfully delegated to the service." << endl;
             return;
         }
 
     stringstream ss;
     ss << std::boolalpha << b;
 
-    JsonOutput::print("delegation.request.delegated_successfully", ss.str());
+    jout.print("delegation.request.delegated_successfully", ss.str());
 }
 
 void MsgPrinter::delegation_local_expiration(long int h, long int m)
@@ -115,11 +113,11 @@ void MsgPrinter::delegation_local_expiration(long int h, long int m)
 
     if (!json)
         {
-            cout << "Remaining time for the local proxy is " << h << "hours and " << m << " minutes." << endl;
+            (*ostr) << "Remaining time for the local proxy is " << h << "hours and " << m << " minutes." << endl;
             return;
         }
 
-    JsonOutput::print("delegation.expiration_time.local", lexical_cast<string>(h) + ":" + lexical_cast<string>(m));
+    jout.print("delegation.expiration_time.local", lexical_cast<string>(h) + ":" + lexical_cast<string>(m));
 }
 
 void MsgPrinter::delegation_service_proxy(long int h, long int m)
@@ -129,11 +127,11 @@ void MsgPrinter::delegation_service_proxy(long int h, long int m)
 
     if (!json)
         {
-            cout << "Remaining time for the proxy on the server side is " << h << " hours and " << m << " minutes." << endl;
+            (*ostr) << "Remaining time for the proxy on the server side is " << h << " hours and " << m << " minutes." << endl;
             return;
         }
 
-    JsonOutput::print("delegation.expiration_time.service", lexical_cast<string>(h) + ":" + lexical_cast<string>(m));
+    jout.print("delegation.expiration_time.service", lexical_cast<string>(h) + ":" + lexical_cast<string>(m));
 }
 
 void MsgPrinter::delegation_msg(string msg)
@@ -143,11 +141,11 @@ void MsgPrinter::delegation_msg(string msg)
 
     if (!json)
         {
-            cout << msg << endl;
+            (*ostr) << msg << endl;
             return;
         }
 
-    JsonOutput::print("delegation.message", msg);
+    jout.print("delegation.message", msg);
 }
 
 void MsgPrinter::endpoint(string endpoint)
@@ -155,11 +153,11 @@ void MsgPrinter::endpoint(string endpoint)
 
     if (!json)
         {
-            cout << "# Using endpoint: " << endpoint << endl;
+            (*ostr) << "# Using endpoint: " << endpoint << endl;
             return;
         }
 
-    JsonOutput::print("endpoint", endpoint);
+    jout.print("endpoint", endpoint);
 }
 
 void MsgPrinter::service_version(string version)
@@ -167,11 +165,11 @@ void MsgPrinter::service_version(string version)
 
     if (!json)
         {
-            cout << "# Service version: " << version << endl;
+            (*ostr) << "# Service version: " << version << endl;
             return;
         }
 
-    JsonOutput::print("service_version", version);
+    jout.print("service_version", version);
 }
 
 void MsgPrinter::service_interface(string interface)
@@ -179,11 +177,11 @@ void MsgPrinter::service_interface(string interface)
 
     if (!json)
         {
-            cout << "# Interface version: " << interface << endl;
+            (*ostr) << "# Interface version: " << interface << endl;
             return;
         }
 
-    JsonOutput::print("service_interface", interface);
+    jout.print("service_interface", interface);
 }
 
 void MsgPrinter::service_schema(string schema)
@@ -191,11 +189,11 @@ void MsgPrinter::service_schema(string schema)
 
     if (!json)
         {
-            cout << "# Schema version: " << schema << endl;
+            (*ostr) << "# Schema version: " << schema << endl;
             return;
         }
 
-    JsonOutput::print("service_schema", schema);
+    jout.print("service_schema", schema);
 }
 
 void MsgPrinter::service_metadata(string metadata)
@@ -203,11 +201,11 @@ void MsgPrinter::service_metadata(string metadata)
 
     if (!json)
         {
-            cout << "# Service features: " << metadata << endl;
+            (*ostr) << "# Service features: " << metadata << endl;
             return;
         }
 
-    JsonOutput::print("service_metadata", metadata);
+    jout.print("service_metadata", metadata);
 }
 
 void MsgPrinter::client_version(string version)
@@ -215,11 +213,11 @@ void MsgPrinter::client_version(string version)
 
     if (!json)
         {
-            cout << "# Client version: " << version << endl;
+            (*ostr) << "# Client version: " << version << endl;
             return;
         }
 
-    JsonOutput::print("client_version", version);
+    jout.print("client_version", version);
 }
 
 void MsgPrinter::client_interface(string interface)
@@ -227,22 +225,22 @@ void MsgPrinter::client_interface(string interface)
 
     if (!json)
         {
-            cout << "# Client interface version: " << interface << endl;
+            (*ostr) << "# Client interface version: " << interface << endl;
             return;
         }
 
-    JsonOutput::print("client_interface", interface);
+    jout.print("client_interface", interface);
 }
 
-void MsgPrinter::print_cout(std::pair<std::string, std::string> const & id_status)
+void MsgPrinter::print_ostr(std::pair<std::string, std::string> const & id_status)
 {
-    std::cout << "job " << id_status.first << ": " << id_status.second << endl;
+    (*ostr) << "job " << id_status.first << ": " << id_status.second << endl;
 }
 
 void MsgPrinter::print_json(std::pair<std::string, std::string> const & id_status)
 {
     std::map<std::string, std::string> m = boost::assign::map_list_of ("job_id", id_status.first) ("job_state", id_status.second);
-    JsonOutput::printArray("job", m);
+    jout.printArray("job", m);
 }
 
 void MsgPrinter::version(string version)
@@ -250,11 +248,11 @@ void MsgPrinter::version(string version)
 
     if (!json)
         {
-            cout << "version: " << version << endl;
+            (*ostr) << "version: " << version << endl;
             return;
         }
 
-    JsonOutput::print("client_version", version);
+    jout.print("client_version", version);
 }
 
 void MsgPrinter::job_id(string job_id)
@@ -262,11 +260,11 @@ void MsgPrinter::job_id(string job_id)
 
     if (!json)
         {
-            cout << job_id << endl;
+            (*ostr) << job_id << endl;
             return;
         }
 
-    JsonOutput::print("job.job_id", job_id);
+    jout.print("job.job_id", job_id);
 }
 
 void MsgPrinter::status(JobStatus js)
@@ -274,41 +272,35 @@ void MsgPrinter::status(JobStatus js)
 
     if (!json)
         {
-            cout << js.jobStatus << endl;
+            (*ostr) << js.jobStatus << endl;
             return;
         }
 
     map<string, string> object = map_list_of ("job_id", js.jobId) ("status", js.jobStatus);
-    JsonOutput::printArray("job", object);
+    jout.printArray("job", object);
 }
 
-void MsgPrinter::error_msg(string msg)
+void MsgPrinter::print(std::string const & subject, std::string const & msg)
 {
-
-    if (!json)
-        {
-            cout << msg << endl;
-            return;
-        }
-
-    JsonOutput::print("error.message", msg);
+    if (!json) (*ostr) << subject << " : " << msg << std::endl;
+    else jout.print(subject, msg);
 }
 
-void MsgPrinter::print_cout(JobStatus const & j)
+void MsgPrinter::print_ostr(JobStatus const & j)
 {
-    cout << "Request ID: " << j.jobId << endl;
-    cout << "Status: " << j.jobStatus << endl;
+    (*ostr) << "Request ID: " << j.jobId << endl;
+    (*ostr) << "Status: " << j.jobStatus << endl;
 
     // if not verbose return
     if (!verbose) return;
 
-    cout << "Client DN: " << j.clientDn << endl;
-    cout << "Reason: " << (j.reason.empty() ? "<None>": j.reason) << endl;
-    cout << "Submission time: " << j.submitTime << endl;
-    cout << "Files: " << (j.numFiles == -1 ? "n/a" : boost::lexical_cast<std::string>(j.numFiles)) << endl;
-    cout << "Priority: " << j.priority << endl;
-    cout << "VOName: " << j.voName << endl;
-    cout << endl;
+    (*ostr) << "Client DN: " << j.clientDn << endl;
+    (*ostr) << "Reason: " << (j.reason.empty() ? "<None>": j.reason) << endl;
+    (*ostr) << "Submission time: " << j.submitTime << endl;
+    (*ostr) << "Files: " << (j.numFiles == -1 ? "n/a" : boost::lexical_cast<std::string>(j.numFiles)) << endl;
+    (*ostr) << "Priority: " << j.priority << endl;
+    (*ostr) << "VOName: " << j.voName << endl;
+    (*ostr) << endl;
 }
 
 void MsgPrinter::print_json(JobStatus const & j)
@@ -335,7 +327,7 @@ void MsgPrinter::print_json(JobStatus const & j)
             object = aux;
         }
 
-    JsonOutput::printArray("job", object);
+    jout.printArray("job", object);
 }
 
 void MsgPrinter::job_summary(JobSummary js)
@@ -343,13 +335,13 @@ void MsgPrinter::job_summary(JobSummary js)
 
     if (!json)
         {
-            print_cout(js.status);
-            cout << "\tActive: " << js.numActive << endl;
-            cout << "\tReady: " << js.numReady << endl;
-            cout << "\tCanceled: " << js.numCanceled << endl;
-            cout << "\tFinished: " << js.numFinished << endl;
-            cout << "\tSubmitted: " << js.numSubmitted << endl;
-            cout << "\tFailed: " << js.numFailed << endl;
+            print_ostr(js.status);
+            (*ostr) << "\tActive: " << js.numActive << endl;
+            (*ostr) << "\tReady: " << js.numReady << endl;
+            (*ostr) << "\tCanceled: " << js.numCanceled << endl;
+            (*ostr) << "\tFinished: " << js.numFinished << endl;
+            (*ostr) << "\tSubmitted: " << js.numSubmitted << endl;
+            (*ostr) << "\tFailed: " << js.numFailed << endl;
             return;
         }
 
@@ -371,7 +363,7 @@ void MsgPrinter::job_summary(JobSummary js)
                                  ("summary.failed", lexical_cast<string>(js.numFailed))
                                  ;
 
-    JsonOutput::printArray("job", object);
+    jout.printArray("job", object);
 }
 
 void MsgPrinter::file_list(vector<string> values, vector<string> retries)
@@ -389,20 +381,20 @@ void MsgPrinter::file_list(vector<string> values, vector<string> retries)
 
     if (!json)
         {
-            cout << "  Source:      " << values[SOURCE] << endl;
-            cout << "  Destination: " << values[DESTINATION] << endl;
-            cout << "  State:       " << values[STATE] << endl;;
-            cout << "  Reason:      " << values[REASON] << endl;
-            cout << "  Duration:    " << values[DURATION] << endl;
+            (*ostr) << "  Source:      " << values[SOURCE] << endl;
+            (*ostr) << "  Destination: " << values[DESTINATION] << endl;
+            (*ostr) << "  State:       " << values[STATE] << endl;;
+            (*ostr) << "  Reason:      " << values[REASON] << endl;
+            (*ostr) << "  Duration:    " << values[DURATION] << endl;
 
             if (retries.size() > 0)
                 {
-                    cout << "  Retries: " << endl;
-                    for_each(retries.begin(), retries.end(), cout << ("    " + lambda::_1) << '\n');
+                    (*ostr) << "  Retries: " << endl;
+                    for_each(retries.begin(), retries.end(), (*ostr) << ("    " + lambda::_1) << '\n');
                 }
             else
                 {
-                    cout << "  Retries:     " << values[RETRIES] << endl;
+                    (*ostr) << "  Retries:     " << values[RETRIES] << endl;
                 }
             return;
         }
@@ -427,7 +419,7 @@ void MsgPrinter::file_list(vector<string> values, vector<string> retries)
             file.put("retries", values[RETRIES]);
         }
 
-    JsonOutput::printArray("job.files", file);
+    jout.printArray("job.files", file);
 }
 
 void MsgPrinter::print(std::string job_id, std::vector<tns3__DetailedFileStatus *> const & v)
@@ -455,29 +447,18 @@ void MsgPrinter::print(std::string job_id, std::vector<tns3__DetailedFileStatus 
     // add the array to the JSON object
     object.put_child("files", array);
     // print the JSON object
-    JsonOutput::printArray("jobs", object);
+    jout.printArray("jobs", object);
 }
 
-template<>
-void MsgPrinter::print_cout<JobStatus>()
+void MsgPrinter::print(cli_exception const & ex)
 {
-    std::cout << "No data have been found for the specified state(s) and/or user VO/VOMS roles." << std::endl;
+    if (!json) (*ostr) << ex.what() << std::endl;
+    else jout.print(ex);
 }
 
-template<>
-void MsgPrinter::print_json<JobStatus>()
+void MsgPrinter::print(std::exception const & ex)
 {
-    JsonOutput::print("job", "[]");
-}
-
-MsgPrinter::MsgPrinter(ostream& /*out*/): json(false)
-{
-
-}
-
-MsgPrinter::~MsgPrinter()
-{
-
+    if (!json) (*ostr) << ex.what() << std::endl;
 }
 
 } /* namespace server */

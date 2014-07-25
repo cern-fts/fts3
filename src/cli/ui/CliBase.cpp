@@ -40,7 +40,7 @@ const string CliBase::error = "error";
 const string CliBase::result = "result";
 const string CliBase::parameter_error = "parameter_error";
 
-CliBase::CliBase(ostream& out): visible("Allowed options"), ctx(NULL), msgPrinter(out)
+CliBase::CliBase(): visible("Allowed options"), ctx(NULL)
 {
 
     // add basic command line options
@@ -74,11 +74,11 @@ void CliBase::parse(int ac, char* av[])
             string str(av[i]);
             if (str == "-v")
                 {
-                    msgPrinter.setVerbose(true);
+                    MsgPrinter::instance().setVerbose(true);
                 }
             else if (str == "-j")
                 {
-                    msgPrinter.setJson(true);
+                MsgPrinter::instance().setJson(true);
                 }
         }
 
@@ -97,11 +97,11 @@ void CliBase::parse(int ac, char* av[])
     notify(vm);
 
     // check is the output is verbose
-    msgPrinter.setVerbose(
+    MsgPrinter::instance().setVerbose(
         vm.count("verbose")
     );
     // check if the output is in json format
-    msgPrinter.setJson(
+    MsgPrinter::instance().setJson(
         vm.count("json")
     );
 
@@ -183,13 +183,13 @@ GSoapContextAdapter& CliBase::getGSoapContext()
     if (isVerbose())
         {
             ctx->getInterfaceDeatailes();
-            msgPrinter.endpoint(ctx->getEndpoint());
-            msgPrinter.service_version(ctx->getVersion());
-            msgPrinter.service_interface(ctx->getInterface());
-            msgPrinter.service_schema(ctx->getSchema());
-            msgPrinter.service_metadata(ctx->getMetadata());
-            msgPrinter.client_version(version);
-            msgPrinter.client_interface(interface);
+            MsgPrinter::instance().endpoint(ctx->getEndpoint());
+            MsgPrinter::instance().service_version(ctx->getVersion());
+            MsgPrinter::instance().service_interface(ctx->getInterface());
+            MsgPrinter::instance().service_schema(ctx->getSchema());
+            MsgPrinter::instance().service_metadata(ctx->getMetadata());
+            MsgPrinter::instance().client_version(version);
+            MsgPrinter::instance().client_interface(interface);
         }
 
     return *ctx;
@@ -229,7 +229,7 @@ bool CliBase::printVersion()
     // check whether the -V option was used
     if (vm.count("version"))
         {
-            msgPrinter.version(version);
+        MsgPrinter::instance().version(version);
             return true;
         }
 

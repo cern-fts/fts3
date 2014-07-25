@@ -93,9 +93,9 @@ public:
 
     void deleteGrDPStorageElement(std::string delegationID, std::string dn);
 
-    bool getDebugMode(std::string source_hostname, std::string destin_hostname);
+    unsigned getDebugLevel(std::string source_hostname, std::string destin_hostname);
 
-    void setDebugMode(std::string source_hostname, std::string destin_hostname, std::string mode);
+    void setDebugLevel(std::string source_hostname, std::string destin_hostname, unsigned level);
 
     void getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std::string & vos);
 

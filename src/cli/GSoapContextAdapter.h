@@ -238,9 +238,9 @@ public:
      *
      * @param source - source se (or the single SE
      * @param destination - destination se (might be empty)
-     * @param debug - debug mode
+     * @param level - debug level
      */
-    void debugSet(string source, string destination, bool debug);
+    void debugSet(string source, string destination, unsigned level);
 
     /**
      * Remote call to blacklistDN

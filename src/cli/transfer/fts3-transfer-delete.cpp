@@ -44,9 +44,6 @@ using namespace fts3::cli;
  * This is the entry point for the fts3-transfer-delete command line tool.
  */
 
-
-
-
 int main(int ac, char* av[])
 {
     scoped_ptr<SrcDelCli> cli(new SrcDelCli);
@@ -73,8 +70,7 @@ int main(int ac, char* av[])
             ProxyCertificateDelegator handler (
                 cli->getService(),
                 "",
-                0,
-                cli->printer()
+                0
             );
 
             handler.delegate();
@@ -86,24 +82,17 @@ int main(int ac, char* av[])
         }
     catch(cli_exception const & ex)
         {
-            if (cli->isJson()) JsonOutput::print(ex);
-            else std::cout << ex.what() << std::endl;
+            MsgPrinter::instance().print(ex);
             return 1;
         }
     catch(std::exception& ex)
         {
-            if (cli.get())
-                cli->printer().error_msg(ex.what());
-            else
-                std::cerr << ex.what() << std::endl;
+            MsgPrinter::instance().print(ex);
             return 1;
         }
     catch(...)
         {
-            if (cli.get())
-                cli->printer().error_msg("__Exception of unknown type!");
-            else
-                std::cerr << "~Exception of unknown type!" << std::endl;
+            MsgPrinter::instance().print("error", "exception of unknown type!");
             return 1;
         }
 

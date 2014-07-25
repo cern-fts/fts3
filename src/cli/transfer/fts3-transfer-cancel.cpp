@@ -54,7 +54,6 @@ using namespace fts3::common;
  */
 int main(int ac, char* av[])
 {
-    JsonOutput::create();
     scoped_ptr<CancelCli> cli(new CancelCli);
 
     try
@@ -81,7 +80,7 @@ int main(int ac, char* av[])
                             ret.push_back(std::make_pair(p.get("job_id"), p.get("job_state")));
                         }
 
-                    cli->printer().print(ret);
+                    MsgPrinter::instance().print(ret);
 
                     return 0;
                 }
@@ -94,28 +93,21 @@ int main(int ac, char* av[])
             if (jobs.empty()) throw bad_option("jobid", "missing parameter");
 
             vector< pair<string, string> > ret = ctx.cancel(jobs);
-            cli->printer().print(ret);
+            MsgPrinter::instance().print(ret);
         }
     catch(cli_exception const & ex)
         {
-            if (cli->isJson()) JsonOutput::print(ex);
-            else std::cout << ex.what() << std::endl;
+            MsgPrinter::instance().print(ex);
             return 1;
         }
     catch(std::exception& ex)
         {
-            if (cli.get())
-                cli->printer().error_msg(ex.what());
-            else
-                std::cerr << ex.what() << std::endl;
+            MsgPrinter::instance().print(ex);
             return 1;
         }
     catch(...)
         {
-            if (cli.get())
-                cli->printer().error_msg("Exception of unknown type!");
-            else
-                std::cerr << "Exception of unknown type!" << std::endl;
+            MsgPrinter::instance().print("error", "exception of unknown type!");
             return 1;
         }
 
