@@ -323,7 +323,7 @@ protected:
                 std::string destin_hostname("");
                 SeProtocolConfig protocol;
                 std::string proxy_file("");
-                bool debug = false;
+                unsigned debugLevel = 0;
 
                 if (reuse == false)
                     {
@@ -611,10 +611,12 @@ protected:
                                             }
 
 
-                                        debug = DBSingleton::instance().getDBObjectInstance()->getDebugMode(source_hostname, destin_hostname);
-                                        if (debug == true)
+                                        debugLevel = DBSingleton::instance().getDBObjectInstance()->getDebugLevel(source_hostname, destin_hostname);
+                                        if (debugLevel == true)
                                             {
-                                                params.append(" -F ");
+                                                params.append(" -F=");
+                                                params.append(boost::lexical_cast<std::string>(debugLevel));
+                                                params.append(" ");
                                             }
 
                                         if (manualConfigExists || userProtocol)

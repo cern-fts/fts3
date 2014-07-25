@@ -54,7 +54,7 @@ int main(int ac, char* av[])
             ctx.debugSet(
                 cli->getSource(),
                 cli->getDestination(),
-                cli->getDebugMode()
+                cli->getDebugLevel()
             );
 
         }

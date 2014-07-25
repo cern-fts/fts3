@@ -33,7 +33,7 @@ const string DebugSetCli::OFF = "off";
 
 DebugSetCli::DebugSetCli()
 {
-    mode = false;
+    level = 0;
 
     // add hidden options
     hidden.add_options()
@@ -82,10 +82,10 @@ bool DebugSetCli::validate()
             );
         }
 
-    // make sure that at least one SE and debug mode were specified
+    // make sure that at least one SE and debug level were specified
     if (opts.size() < 2)
         {
-            throw cli_exception("SE name and debug mode has to be specified (on/off)!");
+            throw cli_exception("SE name and debug mode has to be specified (on/off/integer)!");
         }
 
     // index of debug mode (the last parameter)
@@ -93,13 +93,20 @@ bool DebugSetCli::validate()
     // value of debug mode
     string mode_str = opts[mode_index];
     // it should be either ON
-    if (mode_str == ON) mode = true;
+    if (mode_str == ON) level = 1;
     // or OFF
-    else if (mode_str == OFF) mode = false;
-    // otherwise it's an error
+    else if (mode_str == OFF) level = 0;
+    // try integer
     else
         {
-            throw cli_exception("Debug mode has to be specified (on/off)!");
+            try
+                {
+                    level = boost::lexical_cast<int>(mode_str);
+                }
+            catch (...)
+                {
+                    throw cli_exception("Debug mode has to be specified (on/off)!");
+                }
         }
 
     // source is always the first one
@@ -113,5 +120,5 @@ bool DebugSetCli::validate()
 
 string DebugSetCli::getUsageString(string tool)
 {
-    return "Usage: " + tool + " [options] (SE | SOURCE DESTINATION) MODE";
+    return "Usage: " + tool + " [options] (SE | SOURCE DESTINATION) LEVEL";
 }

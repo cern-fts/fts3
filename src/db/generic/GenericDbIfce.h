@@ -158,9 +158,9 @@ public:
 
     virtual void deleteGrDPStorageElement(std::string delegationID, std::string dn) = 0;
 
-    virtual bool getDebugMode(std::string source_hostname, std::string destin_hostname) = 0;
+    virtual unsigned getDebugLevel(std::string source_hostname, std::string destin_hostname) = 0;
 
-    virtual void setDebugMode(std::string source_hostname, std::string destin_hostname, std::string mode) = 0;
+    virtual void setDebugLevel(std::string source_hostname, std::string destin_hostname, unsigned level) = 0;
 
     virtual void getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std::string & vos) = 0;
 

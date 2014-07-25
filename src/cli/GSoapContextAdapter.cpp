@@ -488,10 +488,10 @@ void GSoapContextAdapter::getBandwidthLimit(implcfg__getBandwidthLimitResponse& 
         throw gsoap_error(ctx);
 }
 
-void GSoapContextAdapter::debugSet(string source, string destination, bool debug)
+void GSoapContextAdapter::debugSet(string source, string destination, unsigned level)
 {
-    impltns__debugSetResponse resp;
-    if (soap_call_impltns__debugSet(ctx, endpoint.c_str(), 0, source, destination, debug, resp))
+    impltns__debugLevelSetResponse resp;
+    if (soap_call_impltns__debugLevelSet(ctx, endpoint.c_str(), 0, source, destination, level, resp))
         throw gsoap_error(ctx);
 }
 

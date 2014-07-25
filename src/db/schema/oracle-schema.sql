@@ -133,6 +133,9 @@ CREATE TABLE t_debug (
 --
 -- debug on/off
    debug		VARCHAR2(3) default 'off'
+--
+-- debug level
+  debug_level           INTEGER DEFAULT 1
 );
 
 

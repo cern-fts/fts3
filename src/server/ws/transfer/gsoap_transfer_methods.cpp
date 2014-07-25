@@ -1425,15 +1425,12 @@ int fts3::impltns__getRolesOf(soap *soap, string _otherDN, struct impltns__getRo
     return SOAP_OK;
 }
 
-/// Web service operation 'getRolesOf' (returns error code or SOAP_OK)
+/// Web service operation 'debugSet' (returns error code or SOAP_OK)
 int fts3::impltns__debugSet(struct soap* soap, string _source, string _destination, bool _debug, struct impltns__debugSetResponse &_param_16)
 {
-
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'debugSet' request" << commit;
-
     try
         {
-
             CGsiAdapter cgsi(soap);
             string dn = cgsi.getClientDn();
 
@@ -1445,22 +1442,20 @@ int fts3::impltns__debugSet(struct soap* soap, string _source, string _destinati
                 }
 
             AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::CONFIG, AuthorizationManager::dummy);
-            DBSingleton::instance().getDBObjectInstance()->setDebugMode (
+            DBSingleton::instance().getDBObjectInstance()->setDebugLevel (
                 _source,
                 _destination,
-                _debug ? "on" : "off"
+                _debug ? 1 : 0
             );
 
             string cmd = "fts3-debug-set ";
             cmd += (_debug ? "on " : "off ") + _source + " " + _destination;
             DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd, "debug");
-
         }
     catch(Err& ex)
         {
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
             soap_receiver_fault(soap, ex.what(), "TransferException");
-
             return SOAP_FAULT;
         }
     catch (...)
@@ -1468,7 +1463,47 @@ int fts3::impltns__debugSet(struct soap* soap, string _source, string _destinati
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown"  << commit;
             return SOAP_FAULT;
         }
+    return SOAP_OK;
+}
 
+int fts3::impltns__debugLevelSet(struct soap* soap, string _source, string _destination, int _level, struct impltns__debugLevelSetResponse &_resp)
+{
+//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'debugLevelSet' request" << commit;
+    try
+        {
+            CGsiAdapter cgsi(soap);
+            string dn = cgsi.getClientDn();
+
+            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn
+                                             << " is turning debug to level "
+                                             << _level << " for " << _source << commit;
+            if (!_destination.empty())
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG (INFO) << " and " << _destination << " pair" << commit;
+                }
+
+            AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::CONFIG, AuthorizationManager::dummy);
+            DBSingleton::instance().getDBObjectInstance()->setDebugLevel (
+                _source,
+                _destination,
+                _level
+            );
+
+            string cmd = "fts3-debug-set ";
+            cmd += boost::lexical_cast<std::string>(_level) + " " + _source + " " + _destination;
+            DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd, "debug");
+        }
+    catch(Err& ex)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+            soap_receiver_fault(soap, ex.what(), "TransferException");
+            return SOAP_FAULT;
+        }
+    catch (...)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown"  << commit;
+            return SOAP_FAULT;
+        }
     return SOAP_OK;
 }
 

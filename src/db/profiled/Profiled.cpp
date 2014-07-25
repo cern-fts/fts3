@@ -181,15 +181,15 @@ void ProfiledDB::deleteGrDPStorageElement(std::string delegationID, std::string 
 }
 
 
-bool ProfiledDB::getDebugMode(std::string source_hostname, std::string destin_hostname)
+unsigned ProfiledDB::getDebugLevel(std::string source_hostname, std::string destin_hostname)
 {
-    PROFILE_PREFIXED("DB::", return db->getDebugMode(source_hostname, destin_hostname));
+    PROFILE_PREFIXED("DB::", return db->getDebugLevel(source_hostname, destin_hostname));
 }
 
 
-void ProfiledDB::setDebugMode(std::string source_hostname, std::string destin_hostname, std::string mode)
+void ProfiledDB::setDebugLevel(std::string source_hostname, std::string destin_hostname, unsigned level)
 {
-    PROFILE_PREFIXED("DB::", db->setDebugMode(source_hostname, destin_hostname, mode));
+    PROFILE_PREFIXED("DB::", db->setDebugLevel(source_hostname, destin_hostname, level));
 }
 
 

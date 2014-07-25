@@ -316,7 +316,7 @@ void abnormalTermination(const std::string& classification, const std::string&, 
     std::string moveFile = fileManagement.archive();
 
     reporter.sendLog(currentTransfer.jobId, currentTransfer.fileId, fileManagement._getLogArchivedFileFullPath(),
-                     UrlCopyOpts::getInstance().debug);
+                     UrlCopyOpts::getInstance().debugLevel);
 
     if (moveFile.length() != 0)
         {
@@ -827,7 +827,7 @@ int main(int argc, char **argv)
 
             if (!opts.logToStderr)
                 {
-                    int checkError = Logger::getInstance().redirectTo(fileManagement.getLogFilePath(), opts.debug);
+                    int checkError = Logger::getInstance().redirectTo(fileManagement.getLogFilePath(), opts.debugLevel);
                     if (checkError != 0)
                         {
                             std::string message = mapErrnoToString(checkError);
@@ -908,11 +908,31 @@ int main(int argc, char **argv)
                     }
 
                 /*gfal2 debug logging*/
-                if (opts.debug == true)
+                if (opts.debugLevel)
                     {
-                        logger.INFO() << "Set the transfer to debug mode" << std::endl;
+                        logger.INFO() << "Set the transfer to debug level " << opts.debugLevel << std::endl;
                         gfal_set_verbose(GFAL_VERBOSE_TRACE | GFAL_VERBOSE_VERBOSE | GFAL_VERBOSE_TRACE_PLUGIN);
                         gfal_log_set_handler((GLogFunc) log_func, NULL);
+
+                        if (opts.debugLevel >= 2)
+                            {
+                                setenv("CGSI_TRACE", "1", 1);
+                                setenv("GLOBUS_FTP_CLIENT_DEBUG_LEVEL", "1", 1);
+                                setenv("GLOBUS_FTP_CONTROL_DEBUG_LEVEL", "1", 1);
+                            }
+                        if (opts.debugLevel >= 3)
+                            {
+                                setenv("GLOBUS_GSI_AUTHZ_DEBUG_LEVEL", "1", 1);
+                                setenv("GLOBUS_CALLOUT_DEBUG_LEVEL", "1", 1);
+                                setenv("GLOBUS_GSI_CERT_UTILS_DEBUG_LEVEL", "1", 1);
+                                setenv("GLOBUS_GSI_CRED_DEBUG_LEVEL", "1", 1);
+                                setenv("GLOBUS_GSI_PROXY_DEBUG_LEVEL", "1", 1);
+                                setenv("GLOBUS_GSI_SYSCONFIG_DEBUG_LEVEL", "1", 1);
+                                setenv("GLOBUS_GSI_GSS_ASSIST_DEBUG_LEVEL", "1", 1);
+                                setenv("GLOBUS_GSSAPI_DEBUG_LEVEL", "1", 1);
+                                setenv("GLOBUS_NEXUS_DEBUG_LEVEL", "1", 1);
+                                setenv("GLOBUS_GIS_OPENSSL_ERROR_DEBUG_LEVEL", "1", 1);
+                            }
                     }
 
                 if (!opts.sourceTokenDescription.empty())
@@ -1147,7 +1167,7 @@ int main(int argc, char **argv)
 
 
                 logger.INFO() << "Transfer Starting" << std::endl;
-                reporter.sendLog(opts.jobId, currentTransfer.fileId, fileManagement.getLogFilePath(), opts.debug);
+                reporter.sendLog(opts.jobId, currentTransfer.fileId, fileManagement.getLogFilePath(), opts.debugLevel);
 
                 if (gfalt_copy_file(handle, params, (currentTransfer.sourceUrl).c_str(), (currentTransfer.destUrl).c_str(), &tmp_err) != 0)
                     {
@@ -1318,7 +1338,7 @@ stop:
                             if (!archiveErr.empty())
                                 logger.ERROR() << "Could not archive: " << archiveErr << std::endl;
                             reporter.sendLog(opts.jobId, currentTransfer.fileId, fileManagement._getLogArchivedFileFullPath(),
-                                             opts.debug);
+                                             opts.debugLevel);
                             break; // exit the loop
                         }
                 }
@@ -1384,7 +1404,7 @@ stop:
             if (!archiveErr.empty())
                 logger.ERROR() << "Could not archive: " << archiveErr << std::endl;
             reporter.sendLog(opts.jobId, currentTransfer.fileId, fileManagement._getLogArchivedFileFullPath(),
-                             opts.debug);
+                             opts.debugLevel);
         }//end for reuse loop
 
     if (params)

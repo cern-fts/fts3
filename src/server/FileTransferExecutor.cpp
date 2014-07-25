@@ -167,11 +167,13 @@ void FileTransferExecutor::run(boost::any & ctx)
                     string sourceSiteName = ""; //siteResolver.getSiteName(tf.SOURCE_SURL);
                     string destSiteName = ""; //siteResolver.getSiteName(tf.DEST_SURL);
 
-                    bool debug = db->getDebugMode(source_hostname, destin_hostname);
+                    unsigned debugLevel = db->getDebugLevel(source_hostname, destin_hostname);
 
-                    if (debug == true)
+                    if (debugLevel)
                         {
-                            params.append(" -F ");
+                            params.append(" -F=");
+                            params.append(boost::lexical_cast<std::string>(debugLevel));
+                            params.append(" ");
                         }
 
                     if (manualConfigExists || manualProtocol)

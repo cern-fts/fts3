@@ -123,9 +123,9 @@ public:
 
     virtual void deleteGrDPStorageElement(std::string delegationID, std::string dn);
 
-    virtual bool getDebugMode(std::string source_hostname, std::string destin_hostname);
+    virtual unsigned getDebugLevel(std::string source_hostname, std::string destin_hostname);
 
-    virtual void setDebugMode(std::string source_hostname, std::string destin_hostname, std::string mode);
+    virtual void setDebugLevel(std::string source_hostname, std::string destin_hostname, unsigned level);
 
     virtual void auditConfiguration(const std::string & dn, const std::string & config, const std::string & action);
 

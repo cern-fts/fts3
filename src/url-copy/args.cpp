@@ -19,7 +19,7 @@ const option UrlCopyOpts::long_options[] =
     {"bringonline",       required_argument, 0, 'H'},
     {"reuse",             no_argument,       0, 'G'},
     {"multi-hop",         no_argument,       0, 'R'},
-    {"debug",             no_argument,       0, 'F'},
+    {"debug",             optional_argument, 0, 'F'},
     {"source-site",       required_argument, 0, 'D'},
     {"dest-site",         required_argument, 0, 'E'},
     {"vo",                required_argument, 0, 'C'},
@@ -51,8 +51,9 @@ const char UrlCopyOpts::short_options[] = "PONM:L:K:J:I:H:GRFD:E:C:z:A:t:a:b:c:d
 
 
 UrlCopyOpts::UrlCopyOpts(): monitoringMessages(false), autoTunned(false),
-    manualConfig(false), debug(false), overwrite(false), daemonize(false),
+    manualConfig(false), overwrite(false), daemonize(false),
     logToStderr(false), reuse(false), multihop(false), enable_udt(false),global_timeout(false),
+    debugLevel(0),
     compareChecksum(CHECKSUM_DONT_CHECK),
     fileId(0), userFileSize(0), bringOnline(-1), copyPinLifetime(-1),
     nStreams(DEFAULT_NOSTREAMS), tcpBuffersize(DEFAULT_BUFFSIZE),
@@ -137,7 +138,10 @@ int UrlCopyOpts::parse(int argc, char * const argv[])
                             multihop = true;
                             break;
                         case 'F':
-                            debug = true;
+                            if (optarg)
+                                debugLevel = boost::lexical_cast<unsigned>(optarg);
+                            else
+                                debugLevel = 1;
                             break;
                         case 'D':
                             sourceSiteName = optarg;
