@@ -52,7 +52,7 @@ const char UrlCopyOpts::short_options[] = "PONM:L:K:J:I:H:GRFD:E:C:z:A:t:a:b:c:d
 
 UrlCopyOpts::UrlCopyOpts(): monitoringMessages(false), autoTunned(false),
     manualConfig(false), overwrite(false), daemonize(false),
-    logToStderr(false), reuse(false), multihop(false), enable_udt(false),global_timeout(false),
+    logToStderr(false), reuse(false), multihop(false), enable_udt(false), enable_ipv6(false),global_timeout(false),
     debugLevel(0),
     compareChecksum(CHECKSUM_DONT_CHECK),
     fileId(0), userFileSize(0), bringOnline(-1), copyPinLifetime(-1),
@@ -154,6 +154,9 @@ int UrlCopyOpts::parse(int argc, char * const argv[])
                             break;
                         case 'U':
                             enable_udt = true;
+                            break;
+                        case 'p':
+                            enable_ipv6 = true;
                             break;
                         case 'Z':
                             global_timeout = true;

@@ -304,6 +304,8 @@ public:
 
     bool isProtocolUDT(const std::string & source_hostname, const std::string & destination_hostname);
 
+    bool isProtocolIPv6(const std::string & source_hostname, const std::string & destination_hostname);
+
     int getStreamsOptimization(const std::string & source_hostname, const std::string & destination_hostname);
 
     int getGlobalTimeout();

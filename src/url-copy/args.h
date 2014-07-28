@@ -23,6 +23,7 @@ public:
     bool reuse;
     bool multihop;
     bool enable_udt;
+    bool enable_ipv6;
     bool global_timeout;
     unsigned debugLevel;
 
