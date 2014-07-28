@@ -2852,14 +2852,14 @@ void OracleAPI::setDebugLevel(std::string source_hostname, std::string destin_ho
                 {
                     sql << "DELETE FROM t_debug WHERE source_se = :source AND dest_se IS NULL",
                         soci::use(source_hostname);
-                    sql << "INSERT INTO t_debug (source_se, debug, debug_level) VALUES (:source, :debug, :level)",
+                    sql << "INSERT INTO t_debug (source_se, debug, debug_level) VALUES (:source, :debug, :debug_level)",
                         soci::use(source_hostname), soci::use(mode), soci::use(level);
                 }
             else
                 {
                     sql << "DELETE FROM t_debug WHERE source_se = :source AND dest_se = :dest",
                         soci::use(source_hostname), soci::use(destin_hostname);
-                    sql << "INSERT INTO t_debug (source_se, dest_se, debug, debug_level) VALUES (:source, :dest, :debug, :level)",
+                    sql << "INSERT INTO t_debug (source_se, dest_se, debug, debug_level) VALUES (:source, :dest, :debug, :debug_level)",
                         soci::use(source_hostname), soci::use(destin_hostname), soci::use(mode), soci::use(level);
                 }
 
