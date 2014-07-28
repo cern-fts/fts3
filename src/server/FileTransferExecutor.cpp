@@ -171,7 +171,7 @@ void FileTransferExecutor::run(boost::any & ctx)
 
                     if (debugLevel)
                         {
-                            params.append(" -F=");
+                            params.append(" -debug=");
                             params.append(boost::lexical_cast<std::string>(debugLevel));
                             params.append(" ");
                         }
