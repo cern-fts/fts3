@@ -81,6 +81,9 @@ CREATE TABLE t_optimize (
 --
 -- udt
   udt          VARCHAR(3) CHECK (udt in ('on', 'off')),
+--
+-- IPv6
+  ipv6         VARCHAR(3) CHECK (ipv6 in ('on', 'off')),
   
   CONSTRAINT t_optimize_pk PRIMARY KEY (auto_number)
 );
@@ -134,7 +137,7 @@ CREATE TABLE t_debug (
   dest_se      VARCHAR(150),
 --
 -- debug on/off
-  debug        VARCHAR(3) DEFAULT 'off'
+  debug        VARCHAR(3) DEFAULT 'off',
 --
 -- debug level
   debug_level  INTEGER DEFAULT 1

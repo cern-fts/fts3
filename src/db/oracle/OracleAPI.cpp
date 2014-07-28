@@ -5749,7 +5749,7 @@ void OracleAPI::setPriority(std::string job_id, int priority)
         }
 }
 
-void OracleAPI::setSeProtocol(std::string /*protocol*/, std::string se, std::string state)
+void OracleAPI::setSeProtocol(std::string protocol, std::string se, std::string state)
 {
     soci::session sql(*connectionPool);
 
@@ -5770,7 +5770,7 @@ void OracleAPI::setSeProtocol(std::string /*protocol*/, std::string se, std::str
                 {
                     sql <<
                         " UPDATE t_optimize "
-                        " SET udt = :udt "
+                        " SET " << protocol << " = :state "
                         " WHERE source_se = :se ",
                         soci::use(state),
                         soci::use(se)
@@ -5779,8 +5779,8 @@ void OracleAPI::setSeProtocol(std::string /*protocol*/, std::string se, std::str
             else
                 {
                     sql <<
-                        " INSERT INTO t_optimize (source_se, udt, file_id) "
-                        " VALUES (:se, :udt, 0)",
+                        " INSERT INTO t_optimize (source_se, " << protocol << ", file_id) "
+                        " VALUES (:se, :state, 0)",
                         soci::use(se),
                         soci::use(state)
                         ;

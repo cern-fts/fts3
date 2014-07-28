@@ -6146,7 +6146,7 @@ void MySqlAPI::setPriority(std::string job_id, int priority)
         }
 }
 
-void MySqlAPI::setSeProtocol(std::string /*protocol*/, std::string se, std::string state)
+void MySqlAPI::setSeProtocol(std::string protocol, std::string se, std::string state)
 {
     soci::session sql(*connectionPool);
 
@@ -6167,7 +6167,7 @@ void MySqlAPI::setSeProtocol(std::string /*protocol*/, std::string se, std::stri
                 {
                     sql <<
                         " UPDATE t_optimize "
-                        " SET udt = :udt "
+                        " SET " << protocol << " = :state "
                         " WHERE source_se = :se ",
                         soci::use(state),
                         soci::use(se)
@@ -6176,8 +6176,8 @@ void MySqlAPI::setSeProtocol(std::string /*protocol*/, std::string se, std::stri
             else
                 {
                     sql <<
-                        " INSERT INTO t_optimize (source_se, udt, file_id) "
-                        " VALUES (:se, :udt, 0)",
+                        " INSERT INTO t_optimize (source_se, " << protocol << ", file_id) "
+                        " VALUES (:se, :state, 0)",
                         soci::use(se),
                         soci::use(state)
                         ;
