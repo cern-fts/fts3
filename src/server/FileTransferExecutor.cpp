@@ -351,7 +351,7 @@ void FileTransferExecutor::run(boost::any & ctx)
 
                     if(ipv6)
                         {
-                            params.append(" -p ");
+                            params.append(" -X ");
                         }
 
                     params.append(" -7 ");
