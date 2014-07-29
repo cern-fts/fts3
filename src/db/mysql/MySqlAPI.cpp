@@ -6246,7 +6246,7 @@ int MySqlAPI::getRetry(const std::string & jobId)
                 soci::into(vo_name)
                 ;
 
-            if (isNull == soci::i_null)
+            if (isNull == soci::i_null || nRetries == 0)
                 {
                     sql <<
                         " SELECT retry "
