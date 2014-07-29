@@ -38,7 +38,8 @@ The File Transfer Service V3 oracle plug-in
 # Make sure the version in the spec file and the version used
 # for building matches
 fts_cmake_ver=`sed -n 's/^set(VERSION_\(MAJOR\|MINOR\|PATCH\) \([0-9]\+\).*/\2/p' CMakeLists.txt | paste -sd '.'`
-if [ "$fts_cmake_ver" != "%{version}" ]; then
+fts_spec_ver=`expr "%{version}" : '\([0-9]*\\.[0-9]*\\.[0-9]*\)'`
+if [ "$fts_cmake_ver" != "$fts_spec_ver" ]; then
     echo "The version in the spec file does not match the CMakeLists.txt version!"
     echo "$fts_cmake_ver != %{version}"
     exit 1
