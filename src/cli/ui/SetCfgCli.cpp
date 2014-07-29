@@ -85,8 +85,9 @@ SetCfgCli::SetCfgCli(bool spec)
                 "\n(Example: --max-bandwidth $LIMIT)"
             )
             (	"protocol", value< vector<string> >()->multitoken(),
-                "Set protocol (UDT) for given SE"
+                "Set protocol (UDT | IPv6) for given SE"
                 "\n(Example: --protocol udt $SE_NAME on|off)"
+                "\n(Example: --protocol ipv6 $SE_NAME on|off)"
             )
             (
                 "max-se-source-active", value< vector<string> >()->multitoken(),
@@ -290,7 +291,7 @@ optional< std::tuple<string, string, string> > SetCfgCli::getProtocol()
     if (!vm.count("protocol")) return optional< std::tuple<string, string, string> >();
     // make sure it was used corretly
     const vector<string>& v = vm["protocol"].as< vector<string> >();
-    if (v.size() != 3) throw bad_option("protocol", "'--protocol' takes following parameters: udt SE on/off");
+    if (v.size() != 3) throw bad_option("protocol", "'--protocol' takes following parameters: udt/ipv6 SE on/off");
     if (v[2] != "on" && v[2] != "off") throw bad_option("protocol", "'--protocol' can only be switched 'on' or 'off'");
 
     return std::make_tuple(v[0], v[1], v[2]);

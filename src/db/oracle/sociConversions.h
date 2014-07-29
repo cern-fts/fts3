@@ -41,6 +41,7 @@ namespace soci
 inline time_t getTimeT(values const& v, const std::string& name)
 {
     std::tm when;
+    std::string str_repr;
 
     if (v.get_indicator(name) != soci::i_ok)
         return time(NULL);
@@ -59,7 +60,8 @@ inline time_t getTimeT(values const& v, const std::string& name)
             when = v.get<std::tm>(name);
             return mktime(&when);
         case dt_string:
-            strptime(v.get<std::string>(name).c_str(), "%d-%b-%y %H.%M.%S.000000 %p %z", &when);
+            str_repr = v.get<std::string>(name);
+            strptime(str_repr.c_str(), "%d-%b-%y %I.%M.%S.000000 %p %z", &when);
             return mktime(&when);
         default:
             throw std::bad_cast();
@@ -88,7 +90,7 @@ inline time_t getTimeT(row const& r, const std::string& name)
             when = r.get<std::tm>(name);
             return mktime(&when);
         case dt_string:
-            strptime(r.get<std::string>(name).c_str(), "%d-%b-%y %H.%M.%S.000000 %p %z", &when);
+            strptime(r.get<std::string>(name).c_str(), "%d-%b-%y %I.%M.%S.000000 %p %z", &when);
             return mktime(&when);
         default:
             throw std::bad_cast();

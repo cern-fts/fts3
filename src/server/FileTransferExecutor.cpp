@@ -363,6 +363,13 @@ void FileTransferExecutor::run(boost::any & ctx)
                             params.append(" -U ");
                         }
 
+                    bool ipv6 = db->isProtocolIPv6(source_hostname, destin_hostname);
+
+                    if(ipv6)
+                        {
+                            params.append(" -X ");
+                        }
+
                     params.append(" -7 ");
                     params.append(ftsHostName);
 

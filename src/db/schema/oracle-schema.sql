@@ -80,7 +80,10 @@ CREATE TABLE t_optimize (
    datetime			TIMESTAMP WITH TIME ZONE,
 --
 -- udt
-   udt VARCHAR2(3) CHECK (udt in ('on', 'off'))
+   udt VARCHAR2(3) CHECK (udt in ('on', 'off')),
+--
+-- IPv6
+   ipv6 VARCHAR2(3) CHECK (ipv6 in ('on', 'off'))
 );
 
 --
@@ -132,7 +135,7 @@ CREATE TABLE t_debug (
    dest_se		VARCHAR2(255),
 --
 -- debug on/off
-   debug		VARCHAR2(3) default 'off'
+   debug		VARCHAR2(3) default 'off',
 --
 -- debug level
   debug_level           INTEGER DEFAULT 1

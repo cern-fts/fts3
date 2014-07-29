@@ -346,6 +346,8 @@ public:
 
     virtual bool isProtocolUDT(const std::string & source_hostname, const std::string & destination_hostname);
 
+    virtual bool isProtocolIPv6(const std::string & source_hostname, const std::string & destination_hostname);
+
     virtual int getStreamsOptimization(const std::string & source_hostname, const std::string & destination_hostname);
 
     virtual int getGlobalTimeout();

@@ -763,6 +763,12 @@ int main(int argc, char **argv)
             gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "ENABLE_UDT", TRUE, NULL);
         }
 
+    // Enable IPv6
+    if (opts.enable_ipv6)
+        {
+            gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "IPV6", TRUE, NULL);
+        }
+
     if (!handle)
         {
             errorMessage = "Failed to create the gfal2 handle: ";

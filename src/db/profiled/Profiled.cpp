@@ -818,6 +818,11 @@ bool ProfiledDB::isProtocolUDT(const std::string & source_hostname, const std::s
     PROFILE_PREFIXED("DB::", return db->isProtocolUDT(source_hostname, destination_hostname));
 }
 
+bool ProfiledDB::isProtocolIPv6(const std::string & source_hostname, const std::string & destination_hostname)
+{
+    PROFILE_PREFIXED("DB::", return db->isProtocolIPv6(source_hostname, destination_hostname));
+}
+
 int ProfiledDB::getStreamsOptimization(const std::string & source_hostname, const std::string & destination_hostname)
 {
     PROFILE_PREFIXED("DB::", return db->getStreamsOptimization(source_hostname, destination_hostname));
