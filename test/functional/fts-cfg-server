@@ -23,12 +23,6 @@ class TestFTSCfgServer(base.TestBase):
             cmdArray = ['fts-config-set', '-s', config.Fts3Endpoint, '--drain', i]
             self.client._spawn(cmdArray)
 
-    def retry(self):
-        number = 5
-        logging.info("Setting option --retry to %d" % number)
-        cmdArray = ['fts-config-set', '-s', config.Fts3Endpoint, '--retry', config.Vo, str(number)]
-        self.client._spawn(cmdArray)
-
     def optimizer_mode(self):
         for i in range(1, 4):
             logging.info("Setting option --optimizer-mode to %d" % i)
