@@ -37,11 +37,10 @@ class TestFTSCfgServer(base.TestBase):
 
     def test_fts_cfg_server(self):
         """
-        Test options for fts-cfg-server command: bring-online, drain, retry, optimizer-mode, queue-timeout
+        Test options for fts-cfg-server command: bring-online, drain, optimizer-mode, queue-timeout
         """
         self.bring_online()
         #self.drain()
-        self.retry()
         self.optimizer_mode()
         #self.queue_timeout()
 
