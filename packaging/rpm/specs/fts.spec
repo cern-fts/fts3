@@ -4,8 +4,8 @@
 %global selinux_variants mls targeted
 
 Name: fts
-Version: 3.2.26
-Release: 5%{?dist}
+Version: 3.2.27
+Release: 1%{?dist}
 Summary: File Transfer Service V3
 Group: System Environment/Daemons
 License: ASL 2.0
