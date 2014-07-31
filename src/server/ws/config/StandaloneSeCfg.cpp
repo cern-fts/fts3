@@ -45,13 +45,9 @@ StandaloneSeCfg::StandaloneSeCfg(string dn, string name) : StandaloneCfg(dn), se
     if (se == any) se = wildcard;
 
     // get SE active state
-    Se* seobj = 0;
-    db->getSe(seobj, se);
-    if (seobj)
-        {
-            active = seobj->STATE == on;
-            delete seobj;
-        }
+    boost::scoped_ptr<LinkConfig> ptr (db->getLinkConfig(se, "*"));
+    if (ptr.get())
+        active = ptr->state == on;
     else
         throw Err_Custom("The SE: " + name + " does not exist!");
 
