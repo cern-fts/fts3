@@ -52,7 +52,7 @@ static void print_stacktrace(int sig)
 // Minimalistic logic inside a signal!
 static void signal_handler(int signal)
 {
-    print_stacktrace(signal);
+    if (signal != raised_signal) print_stacktrace(signal);
     raised_signal = signal;
     // From man sem_post
     // sem_post() is async-signal-safe: it may be safely called within a signal handler.
