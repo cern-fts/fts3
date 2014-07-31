@@ -4,8 +4,8 @@
 %global selinux_variants mls targeted
 
 Name: fts
-Version: 3.2.26
-Release: 5%{?dist}
+Version: 3.2.27
+Release: 1%{?dist}
 Summary: File Transfer Service V3
 Group: System Environment/Daemons
 License: ASL 2.0
@@ -173,7 +173,8 @@ cp -p %{SOURCE1} %{SOURCE2} SELinux
 # Make sure the version in the spec file and the version used
 # for building matches
 fts_cmake_ver=`sed -n 's/^set(VERSION_\(MAJOR\|MINOR\|PATCH\) \([0-9]\+\).*/\2/p' CMakeLists.txt | paste -sd '.'`
-if [ "$fts_cmake_ver" != "%{version}" ]; then
+fts_spec_ver=`expr "%{version}" : '\([0-9]*\\.[0-9]*\\.[0-9]*\)'`
+if [ "$fts_cmake_ver" != "$fts_spec_ver" ]; then
     echo "The version in the spec file does not match the CMakeLists.txt version!"
     echo "$fts_cmake_ver != %{version}"
     exit 1

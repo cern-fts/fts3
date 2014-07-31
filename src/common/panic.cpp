@@ -18,6 +18,7 @@ limitations under the License. */
 #include <semaphore.h>
 #include <signal.h>
 
+#include <iostream>
 #include <string>
 #include <boost/thread.hpp>
 
@@ -36,9 +37,22 @@ using namespace FTS3_COMMON_NAMESPACE;
 static sem_t semaphore;
 static sig_atomic_t raised_signal = 0;
 
+
+static void print_stacktrace(int sig)
+{
+    void *array[25];
+    size_t size = backtrace(array, 25);
+
+    // print out all the frames to stderr
+    std::cerr << "Caught signal: " << sig << std::endl;
+    std::cerr << "Stack trace:" << std::endl;
+    backtrace_symbols_fd(array, size, STDERR_FILENO);
+}
+
 // Minimalistic logic inside a signal!
 static void signal_handler(int signal)
 {
+    print_stacktrace(signal);
     raised_signal = signal;
     // From man sem_post
     // sem_post() is async-signal-safe: it may be safely called within a signal handler.

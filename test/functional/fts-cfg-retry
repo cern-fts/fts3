@@ -1,0 +1,43 @@
+#!/usr/bin/env python
+# meta: proxy=true
+# meta: preconfig=../FTS3-config
+import itertools
+import logging
+from lib import base, config 
+
+
+class TestCfgRetry(base.TestBase):
+
+    def test_retry_default(self):
+        """
+        Set the default retries to 2, send a transfer with 0, so 2 retries
+        should happen
+        """
+        n_retries = 2
+        logging.info("Setting option --retry to %d" % n_retries)
+        cmdArray = ['fts-config-set', '-s', config.Fts3Endpoint, '--retry', config.Vo, str(n_retries)]
+        self.client._spawn(cmdArray)
+
+        for (src, dst) in self.transfers:
+            src = 'gsiftp://does.not.exist.ch:8443/path/file'
+            logging.info("Retry transfer with non reachable source %s => %s" % (src, dst))
+            jobId = self.client.submit([{'sources': [src], 'destinations': [dst]}],
+                                       extraArgs = ['--retry', '0', '--retry-delay', '5'])
+            logging.info("Got job id %s" % jobId)
+            state = self.client.poll(jobId)
+            logging.info("Finished with %s" % state)
+            self.assertEqual('FAILED', state, 'job.state')
+
+            files = self.client.getFileInfo(jobId)
+            i = 0
+            for pair in files.keys():
+                fileLabel = 'job.files[' + str(i) + ']'
+                self.assertEqual('FAILED', files[pair]['state'], fileLabel + '.state')
+                self.assertEqual(n_retries, int(files[pair]['retries']), fileLabel + '.retries')
+                i += 1
+
+
+if __name__ == '__main__':
+    import sys
+    sys.exit(TestCfgRetry().run())
+
