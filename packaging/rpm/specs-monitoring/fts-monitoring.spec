@@ -1,7 +1,7 @@
 Summary: FTS3 Web Application for monitoring
 Name: fts-monitoring
 Version: 3.2.26.2
-Release: 1%{?dist}
+Release: 2%{?dist}
 URL: https://svnweb.cern.ch/trac/fts3
 License: ASL 2.0
 Group: Applications/Internet
@@ -16,6 +16,7 @@ Requires: httpd
 Requires: mod_wsgi
 Requires: python
 Requires: python-decorator
+Requires: python-matplotlib
 
 Source0: https://grid-deployment.web.cern.ch/grid-deployment/dms/fts3/tar/%{name}-%{version}.tar.gz
 
