@@ -18,7 +18,7 @@ limitations under the License. */
 #include <semaphore.h>
 #include <signal.h>
 
-#include <iostream>
+#include <stdio.h>
 #include <string>
 #include <boost/thread.hpp>
 
@@ -44,15 +44,15 @@ static void print_stacktrace(int sig)
     size_t size = backtrace(array, 25);
 
     // print out all the frames to stderr
-    std::cerr << "Caught signal: " << sig << std::endl;
-    std::cerr << "Stack trace:" << std::endl;
+    fprintf(stderr, "Caught signal: %d\n", sig);
+    fprintf(stderr, "Stack trace: \n");
     backtrace_symbols_fd(array, size, STDERR_FILENO);
 }
 
 // Minimalistic logic inside a signal!
 static void signal_handler(int signal)
 {
-    print_stacktrace(signal);
+    if (signal != raised_signal) print_stacktrace(signal);
     raised_signal = signal;
     // From man sem_post
     // sem_post() is async-signal-safe: it may be safely called within a signal handler.
