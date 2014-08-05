@@ -341,12 +341,12 @@ TransferJobs* OracleAPI::getTransferJob(std::string jobId, bool archive)
     std::string query;
     if (archive)
         {
-            query = "SELECT t_job_backup.vo_name, t_job_backup.user_dn "
+            query = "SELECT t_job_backup.vo_name, t_job_backup.user_dn, t_job_backup.job_state "
                     "FROM t_job_backup WHERE t_job_backup.job_id = :jobId";
         }
     else
         {
-            query = "SELECT t_job.vo_name, t_job.user_dn "
+            query = "SELECT t_job.vo_name, t_job.user_dn, t_job.job_state "
                     "FROM t_job WHERE t_job.job_id = :jobId";
         }
 
@@ -357,7 +357,9 @@ TransferJobs* OracleAPI::getTransferJob(std::string jobId, bool archive)
 
             sql << query,
                 soci::use(jobId),
-                soci::into(job->VO_NAME), soci::into(job->USER_DN);
+                soci::into(job->VO_NAME),
+                soci::into(job->USER_DN),
+                soci::into(job->JOB_STATE);
 
             if (!sql.got_data())
                 {
