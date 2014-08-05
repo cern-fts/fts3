@@ -367,6 +367,9 @@ public:
 
     void checkJobOperation(std::vector<std::string>& jobs, std::vector< boost::tuple<std::string, std::string> >& ops);
 
+    bool isDmJob(std::string const & job);
+
+    void cancelDmJobs(std::vector<std::string> const & jobs);
 };
 
 

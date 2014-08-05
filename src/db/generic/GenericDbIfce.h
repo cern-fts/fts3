@@ -446,5 +446,7 @@ public:
 
     virtual void checkJobOperation(std::vector<std::string>& jobs, std::vector< boost::tuple<std::string, std::string> >& ops) = 0;
 
+    virtual bool isDmJob(std::string const & job) = 0;
 
+    virtual void cancelDmJobs(std::vector<std::string> const & jobs) = 0;
 };

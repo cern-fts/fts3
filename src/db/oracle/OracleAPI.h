@@ -467,4 +467,7 @@ private:
 
     std::vector<struct message_state> getStateOfDeleteInternal(soci::session& sql, const std::string& jobId, int fileId);
 
+    bool isDmJob(std::string const & job);
+
+    void cancelDmJobs(std::vector<std::string> const & jobs);
 };

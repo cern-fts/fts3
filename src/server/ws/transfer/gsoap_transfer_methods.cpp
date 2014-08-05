@@ -1139,132 +1139,16 @@ int fts3::impltns__cancel2(soap* ctx, impltns__ArrayOf_USCOREsoapenc_USCOREstrin
                 JobCancelHandler handler (ctx, request->item);
                 handler.cancel(resp);
             }
-
-//            CGsiAdapter cgsi (ctx);
-//            string dn = cgsi.getClientDn();
-//
-//            // check if the request exists
-//            if (!request) return SOAP_OK;
-//
-//            // check if there are jobs to cancel in the request
-//            vector<string> &jobs = request->item;
-//            if (jobs.empty()) return SOAP_OK;
-//
-//            // create the response
-//            resp._jobIDs = soap_new_impltns__ArrayOf_USCOREsoapenc_USCOREstring(ctx, -1);
-//            resp._status = soap_new_impltns__ArrayOf_USCOREsoapenc_USCOREstring(ctx, -1);
-//
-//            // helper vectors
-//            vector<string> &resp_job_ids = resp._jobIDs->item;
-//            vector<string> &resp_job_status = resp._status->item;
-//            vector<string> cancel;
-//
-//            std::vector<std::string>::iterator it;
-//
-//            std::string jobId;
-//            for (it = jobs.begin(); it != jobs.end(); ++it)
-//                {
-//                    // authorize the operation for each job ID
-//                    scoped_ptr<TransferJobs> job (
-//                        DBSingleton::instance().getDBObjectInstance()->getTransferJob(*it, false)
-//                    );
-//
-//                    AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get());
-//
-//                    // if not add appropriate response
-//                    if (!job.get())
-//                        {
-//                            resp_job_ids.push_back(*it);
-//                            resp_job_status.push_back("DOES_NOT_EXIST");
-//                            continue;
-//                        }
-//
-//                    vector<JobStatus*> status;
-//                    DBSingleton::instance().getDBObjectInstance()->getTransferJobStatus(*it, false, status);
-//
-//                    if (!status.empty())
-//                        {
-//                            // get transfer-job status
-//                            string stat = (*status.begin())->jobStatus;
-//                            // release the memory
-//                            vector<JobStatus*>::iterator it_s;
-//                            for (it_s = status.begin(); it_s != status.end(); it_s++)
-//                                {
-//                                    delete *it_s;
-//                                }
-//                            // check if transfer-job is finished
-//                            if (JobStatusHandler::getInstance().isTransferFinished(stat))
-//                                {
-//                                    resp_job_ids.push_back(*it);
-//                                    resp_job_status.push_back(stat);
-//                                    continue;
-//                                }
-//                        }
-//
-//                    cancel.push_back(*it);
-//
-//                    jobId += *it ;
-//                    jobId += ", ";
-//                }
-//
-//            if (cancel.empty()) return SOAP_OK;
-//
-//            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << "is canceling a transfer jobs: " << jobId << commit;
-//
-//            DBSingleton::instance().getDBObjectInstance()->cancelJob(cancel);
-//
-//            //send state message for cancellation
-//            std::vector<int> files;
-//            std::vector<std::string>::iterator it2;
-//            std::vector<int>::iterator it3;
-//            for (it2 = jobs.begin(); it2 != jobs.end(); ++it2)
-//                {
-//                    DBSingleton::instance().getDBObjectInstance()->getFilesForJobInCancelState((*it2), files);
-//                    if(!files.empty())
-//                        {
-//                            for (it3 = files.begin(); it3 != files.end(); ++it3)
-//                                {
-//                                    SingleTrStateInstance::instance().sendStateMessage((*it2), (*it3));
-//                                }
-//                            files.clear();
-//                        }
-//                }
-//
-//            for (it = cancel.begin(); it != cancel.end(); ++it)
-//                {
-//                    resp_job_ids.push_back(*it);
-//                    resp_job_status.push_back("CANCELED");
-//                }
-
         }
     catch(Err& ex)
         {
-            // the string that has to be erased
-            const string erase = "SOAP fault: SOAP-ENV:Server - ";
-            // Backspace character
-            const char bs = 8;
-            // glite error message that is used in case that transfer could not be canceled because it is in terminal state
-            string glite_err_msg = "Cancel failed (nothing was done).";
-            // add the backspaces at the front of the message in orger to erased unwanted text
-            for (int i = 0; i < erase.size(); i++)
-                {
-                    glite_err_msg = bs + glite_err_msg;
-                }
-            // check if we want to replace the original message with the glite one
-            string err_msg (ex.what());
-            if (err_msg.find("does not exist") != string::npos)
-                {
-                    err_msg = glite_err_msg;
-                }
-            // handle the exception
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
-            soap_receiver_fault(ctx, err_msg.c_str(), 0);
-
+            soap_receiver_fault(ctx, ex.what(), 0);
             return SOAP_FAULT;
         }
     catch (...)
         {
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, job can't be canceled "  << commit;
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, job can't be cancelled "  << commit;
             return SOAP_FAULT;
         }
 

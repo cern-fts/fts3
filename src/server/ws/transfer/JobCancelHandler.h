@@ -31,7 +31,6 @@ public:
     virtual ~JobCancelHandler() {}
 
     void cancel();
-
     void cancel(impltns__cancel2Response & resp);
 
 private:

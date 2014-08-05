@@ -30,6 +30,8 @@ std::string const JobCancelHandler::DOES_NOT_EXIST = "DOES_NOT_EXIST";
 
 void JobCancelHandler::cancel()
 {
+    // jobs that will be cancelled
+    std::vector<std::string> cancel, cancel_dm;
     // get the user DN
     CGsiAdapter cgsi (ctx);
     std::string const dn = cgsi.getClientDn();
@@ -38,18 +40,33 @@ void JobCancelHandler::cancel()
     std::vector<std::string>::const_iterator it;
     for (it = jobs.begin(); it != jobs.end(); ++it)
         {
-            std::string status = get_state(*it, dn);
+            std::string const & job = *it;
+            std::string status = get_state(job, dn);
             if (status == DOES_NOT_EXIST)
-                throw Err_Custom("Transfer job: " + *it + " does not exist!");
+                throw Err_Custom("Transfer job: " + job + " does not exist!");
             else if (status != CANCELED)
-                throw Err_Custom("Transfer job: " + *it + " cannot be cancelled (it is in " + status + " state)");
-            FTS3_COMMON_LOGGER_NEWLOG (INFO) << *it << ", ";
+                throw Err_Custom("Transfer job: " + job + " cannot be cancelled (it is in " + status + " state)");
+            // if the job is OK add it to respective vector
+            if (db.isDmJob(job))
+                cancel_dm.push_back(job);
+            else
+                cancel.push_back(job);
+            FTS3_COMMON_LOGGER_NEWLOG (INFO) << job << ", ";
         }
     FTS3_COMMON_LOGGER_NEWLOG (INFO) << commit;
     // cancel the jobs
-    db.cancelJob(jobs);
-    // and send a state changed message to monitoring
-    std::for_each(jobs.begin(), jobs.end(), boost::bind(&JobCancelHandler::send_msg, this, _1));
+    if (!cancel.empty())
+        {
+            db.cancelJob(cancel);
+            // and send a state changed message to monitoring
+            std::for_each(cancel.begin(), cancel.end(), boost::bind(&JobCancelHandler::send_msg, this, _1));
+        }
+    if (!cancel_dm.empty())
+        {
+            db.cancelDmJobs(cancel_dm);
+            // and send a state changed message to monitoring
+            std::for_each(cancel_dm.begin(), cancel_dm.end(), boost::bind(&JobCancelHandler::send_msg, this, _1));
+        }
 }
 
 void JobCancelHandler::cancel(impltns__cancel2Response & resp)
@@ -61,7 +78,7 @@ void JobCancelHandler::cancel(impltns__cancel2Response & resp)
     std::vector<std::string> & resp_jobs = resp._jobIDs->item;
     std::vector<std::string> & resp_stat = resp._status->item;
     // jobs that will be cancelled
-    std::vector<std::string> cancel;
+    std::vector<std::string> cancel, cancel_dm;
     // get the user DN
     CGsiAdapter cgsi (ctx);
     std::string const dn = cgsi.getClientDn();
@@ -70,26 +87,40 @@ void JobCancelHandler::cancel(impltns__cancel2Response & resp)
     std::vector<std::string>::const_iterator it;
     for (it = jobs.begin(); it != jobs.end(); ++it)
         {
-            std::string status = get_state(*it, dn);
-            resp_jobs.push_back(*it);
+            std::string const & job = *it;
+            std::string status = get_state(job, dn);
+            resp_jobs.push_back(job);
             resp_stat.push_back(status);
             if (status == CANCELED)
                 {
-                    cancel.push_back(*it);
-                    FTS3_COMMON_LOGGER_NEWLOG (INFO) << *it << ", ";
+                    if (db.isDmJob(job))
+                        cancel_dm.push_back(job);
+                    else
+                        cancel.push_back(job);
+                    FTS3_COMMON_LOGGER_NEWLOG (INFO) << job << ", ";
                 }
         }
     // in case no job was suitable for cancelling
-    if (cancel.empty())
+    if (cancel.empty() && cancel_dm.empty())
         {
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << " not a single job was suitable for cancelling ";
             return;
         }
     FTS3_COMMON_LOGGER_NEWLOG (INFO) << commit;
     // cancel the jobs
-    db.cancelJob(cancel);
-    // and send a state changed message to monitoring
-    std::for_each(cancel.begin(), cancel.end(), boost::bind(&JobCancelHandler::send_msg, this, _1));
+    if (!cancel.empty())
+        {
+            db.cancelJob(cancel);
+            // and send a state changed message to monitoring
+            std::for_each(cancel.begin(), cancel.end(), boost::bind(&JobCancelHandler::send_msg, this, _1));
+        }
+    if (!cancel_dm.empty())
+        {
+            db.cancelDmJobs(cancel_dm);
+            // and send a state changed message to monitoring
+            std::for_each(cancel_dm.begin(), cancel_dm.end(), boost::bind(&JobCancelHandler::send_msg, this, _1));
+        }
+
 }
 
 std::string JobCancelHandler::get_state(std::string const & job, std::string const & dn)

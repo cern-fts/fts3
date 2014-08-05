@@ -474,4 +474,7 @@ private:
 
     void cancelJobInternal(soci::session& sql, std::vector<std::string>& requestIDs);
 
+    bool isDmJob(std::string const & job);
+
+    void cancelDmJobs(std::vector<std::string> const & jobs);
 };
