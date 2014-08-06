@@ -52,6 +52,9 @@ public:
     void listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
                       std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst);
 
+    void listRequestsDm(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
+                                  std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst);
+
     TransferJobs* getTransferJob(std::string jobId, bool archive);
 
     void getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles> >& files);

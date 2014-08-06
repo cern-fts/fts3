@@ -1670,7 +1670,8 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
                 {
                     do
                         {
-                            jobs.push_back(new JobStatus(job));
+                            if (job.numFiles > 0)
+                                jobs.push_back(new JobStatus(job));
                         }
                     while (stmt.fetch());
                 }
@@ -1700,7 +1701,127 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
         }
 }
 
+void OracleAPI::listRequestsDm(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
+                              std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst)
+{
+    soci::session sql(*connectionPool);
 
+    try
+        {
+            std::ostringstream query;
+            soci::statement stmt(sql);
+            bool searchForCanceling = false;
+
+
+            query << "SELECT DISTINCT job_id, job_state, reason, submit_time, user_dn, "
+                  "                 vo_name, priority, cancel_job, "
+                  "                 (SELECT COUNT(t_dm.file_id) FROM t_dm WHERE t_dm.job_id = t_job.job_id) as numFiles "
+                  "FROM t_job ";
+
+            //joins
+            if (!restrictToClientDN.empty())
+                {
+                    query << "LEFT OUTER JOIN t_vo_acl ON t_vo_acl.vo_name = t_job.vo_name ";
+                }
+
+            //gain the benefit from the statement pooling
+            std::sort(inGivenStates.begin(), inGivenStates.end());
+
+            if (inGivenStates.size() > 0)
+                {
+                    std::vector<std::string>::const_iterator i;
+                    i = std::find_if(inGivenStates.begin(), inGivenStates.end(),
+                                     std::bind2nd(std::equal_to<std::string>(), std::string("CANCELED")));
+                    searchForCanceling = (i != inGivenStates.end());
+
+                    std::string jobStatusesIn = "'" + inGivenStates[0] + "'";
+                    for (unsigned i = 1; i < inGivenStates.size(); ++i)
+                        {
+                            jobStatusesIn += (",'" + inGivenStates[i] + "'");
+                        }
+                    query << "WHERE job_state IN (" << jobStatusesIn << ") ";
+                }
+            else
+                {
+                    query << "WHERE 1 ";
+                }
+
+            if (!restrictToClientDN.empty())
+                {
+                    query << " AND (t_job.user_dn = :clientDn OR t_vo_acl.principal = :clientDn) ";
+                    stmt.exchange(soci::use(restrictToClientDN, "clientDn"));
+                }
+
+            if (!VOname.empty())
+                {
+                    query << " AND vo_name = :vo ";
+                    stmt.exchange(soci::use(VOname, "vo"));
+                }
+
+            if (!forDN.empty())
+                {
+                    query << " AND user_dn = :userDn ";
+                    stmt.exchange(soci::use(forDN, "userDn"));
+                }
+
+            if (searchForCanceling)
+                {
+                    query << " AND cancel_job = 'Y' ";
+                }
+
+            if (!src.empty())
+                {
+                    query << " AND source_se = :src ";
+                    stmt.exchange(soci::use(src, "src"));
+                }
+
+            if (!dst.empty())
+                {
+                    query << " AND dest_se = :dst ";
+                    stmt.exchange(soci::use(dst, "dst"));
+                }
+
+            JobStatus job;
+            stmt.exchange(soci::into(job));
+            stmt.alloc();
+            std::string test = query.str();
+            stmt.prepare(query.str());
+            stmt.define_and_bind();
+
+            if (stmt.execute(true))
+                {
+                    do
+                        {
+                            if (job.numFiles > 0)
+                                jobs.push_back(new JobStatus(job));
+                        }
+                    while (stmt.fetch());
+                }
+
+        }
+    catch (std::exception& e)
+        {
+            std::vector< JobStatus* >::iterator it;
+            for (it = jobs.begin(); it != jobs.end(); ++it)
+                {
+                    if(*it)
+                        delete (*it);
+                }
+            jobs.clear();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
+        }
+    catch (...)
+        {
+            std::vector< JobStatus* >::iterator it;
+            for (it = jobs.begin(); it != jobs.end(); ++it)
+                {
+                    if(*it)
+                        delete (*it);
+                }
+            jobs.clear();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
 
 void OracleAPI::getTransferFileStatus(std::string requestID, bool archive,
                                       unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files)

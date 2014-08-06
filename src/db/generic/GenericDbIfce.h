@@ -116,6 +116,9 @@ public:
     virtual void listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
                               std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst) = 0;
 
+    virtual void listRequestsDm(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
+                                  std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst) = 0;
+
     virtual TransferJobs* getTransferJob(std::string jobId, bool archive) = 0;
 
     virtual void getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles> >& files) = 0;

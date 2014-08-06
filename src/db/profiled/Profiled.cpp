@@ -60,6 +60,11 @@ void ProfiledDB::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::st
     PROFILE_PREFIXED("DB::", db->listRequests(jobs, inGivenStates, restrictToClientDN, forDN, VOname, src, dst));
 }
 
+void ProfiledDB::listRequestsDm(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
+                              std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst)
+{
+    PROFILE_PREFIXED("DB::", db->listRequestsDm(jobs, inGivenStates, restrictToClientDN, forDN, VOname, src, dst));
+}
 
 TransferJobs* ProfiledDB::getTransferJob(std::string jobId, bool archive)
 {

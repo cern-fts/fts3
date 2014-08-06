@@ -78,6 +78,8 @@ public:
 
     virtual void listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates, std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst);
 
+    virtual void listRequestsDm(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates, std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst);
+
     virtual TransferJobs* getTransferJob(std::string jobId, bool archive);
 
     virtual void getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std::string & vos);

@@ -26,7 +26,9 @@
 #define REQUESTLISTER_H_
 
 #include "ws-ifce/gsoap/gsoap_stubs.h"
+
 #include "db/generic/JobStatus.h"
+#include "db/generic/SingleDbInstance.h"
 
 #include "ws/CGsiAdapter.h"
 #include "ws/AuthorizationManager.h"
@@ -128,6 +130,8 @@ private:
     /// the states of interest
     vector<string> inGivenStates;
 
+    ///
+    GenericDbIfce & db;
 };
 
 }
