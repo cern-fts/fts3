@@ -46,7 +46,12 @@ public:
 
     void getTransferJobStatus(std::string requestID, bool archive, std::vector<JobStatus*>& jobs);
 
+    void getDmJobStatus(std::string requestID, bool archive, std::vector<JobStatus*>& jobs);
+
     void getTransferFileStatus(std::string requestID, bool archive,
+                               unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files);
+
+    void getDmFileStatus(std::string requestID, bool archive,
                                unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files);
 
     void listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,

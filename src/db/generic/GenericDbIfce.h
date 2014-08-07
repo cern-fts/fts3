@@ -109,8 +109,14 @@ public:
 
     virtual void getTransferJobStatus(std::string requestID, bool archive, std::vector<JobStatus*>& jobs) = 0;
 
+    virtual void getDmJobStatus(std::string requestID, bool archive, std::vector<JobStatus*>& jobs) = 0;
+
     // If limit == 0, then all results
     virtual void getTransferFileStatus(std::string requestID, bool archive,
+                                       unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files) = 0;
+
+    // If limit == 0, then all results
+    virtual void getDmFileStatus(std::string requestID, bool archive,
                                        unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files) = 0;
 
     virtual void listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,

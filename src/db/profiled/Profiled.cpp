@@ -45,12 +45,22 @@ void ProfiledDB::getTransferJobStatus(std::string requestID, bool archive, std::
     PROFILE_PREFIXED("DB::", db->getTransferJobStatus(requestID, archive, jobs));
 }
 
-
+void ProfiledDB::getDmJobStatus(std::string requestID, bool archive, std::vector<JobStatus*>& jobs)
+{
+    PROFILE_PREFIXED("DB::", db->getDmJobStatus(requestID, archive, jobs));
+}
 
 void ProfiledDB::getTransferFileStatus(std::string requestID, bool archive,
                                        unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files)
 {
     PROFILE_PREFIXED("DB::", db->getTransferFileStatus(requestID, archive, offset, limit, files));
+}
+
+
+void ProfiledDB::getDmFileStatus(std::string requestID, bool archive,
+                                       unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files)
+{
+    PROFILE_PREFIXED("DB::", db->getDmFileStatus(requestID, archive, offset, limit, files));
 }
 
 
