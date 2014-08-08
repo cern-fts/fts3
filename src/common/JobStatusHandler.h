@@ -71,7 +71,8 @@ public:
         FTS3_STATUS_ACTIVE_ID,
         FTS3_STATUS_STAGING_ID,
         FTS3_STATUS_NOT_USED_ID,
-        FTS3_STATUS_DELETE_ID
+        FTS3_STATUS_DELETE_ID,
+        FTS3_STATUS_STARTED_ID
     };
 
     ///@{
@@ -89,6 +90,7 @@ public:
     static const std::string FTS3_STATUS_STAGING;
     static const std::string FTS3_STATUS_NOT_USED;
     static const std::string FTS3_STATUS_DELETE;
+    static const std::string FTS3_STATUS_STARTED;
     ///@}
 
     /**

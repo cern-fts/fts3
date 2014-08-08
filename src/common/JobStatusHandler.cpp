@@ -38,7 +38,7 @@ using namespace boost::assign;
 using namespace fts3::common;
 using namespace boost;
 
-// initialize std::string constants
+// Initialise std::string constants
 const std::string JobStatusHandler::FTS3_STATUS_FINISHEDDIRTY = "FINISHEDDIRTY";
 const std::string JobStatusHandler::FTS3_STATUS_CANCELED = "CANCELED";
 const std::string JobStatusHandler::FTS3_STATUS_UNKNOWN = "UNKNOWN";
@@ -50,6 +50,7 @@ const std::string JobStatusHandler::FTS3_STATUS_ACTIVE = "ACTIVE";
 const std::string JobStatusHandler::FTS3_STATUS_STAGING = "STAGING";
 const std::string JobStatusHandler::FTS3_STATUS_NOT_USED = "NOT_USED";
 const std::string JobStatusHandler::FTS3_STATUS_DELETE = "DELETE";
+const std::string JobStatusHandler::FTS3_STATUS_STARTED = "STARTED";
 
 JobStatusHandler::JobStatusHandler():
     statusNameToId(map_list_of
@@ -63,10 +64,11 @@ JobStatusHandler::JobStatusHandler():
                    (FTS3_STATUS_FAILED, FTS3_STATUS_FAILED_ID)
                    (FTS3_STATUS_STAGING, FTS3_STATUS_STAGING_ID)
                    (FTS3_STATUS_NOT_USED, FTS3_STATUS_NOT_USED_ID)
-                   (FTS3_STATUS_DELETE, FTS3_STATUS_DELETE_ID).to_container(statusNameToId))
+                   (FTS3_STATUS_DELETE, FTS3_STATUS_DELETE_ID)
+                   (FTS3_STATUS_STARTED, FTS3_STATUS_STARTED_ID).to_container(statusNameToId))
 {
 
-    // the constant map is initialized in initializer list
+    // the constant map is initialised in initialiser list
 }
 
 bool JobStatusHandler::isTransferFinished(std::string status)
