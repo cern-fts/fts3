@@ -36,8 +36,6 @@
 #include "exception/cli_exception.h"
 #include "JsonOutput.h"
 
-using namespace boost;
-using namespace std;
 using namespace fts3::cli;
 
 /**
@@ -46,36 +44,36 @@ using namespace fts3::cli;
 
 int main(int ac, char* av[])
 {
-    scoped_ptr<SrcDelCli> cli(new SrcDelCli);
-
     try
         {
-            // create and initialize the command line utility
-            cli->SrcDelCli::parse(ac,av);
+            SrcDelCli cli;
+            // create and initialise the command line utility
+            cli.parse(ac,av);
 
             // validate command line options, and return respective gsoap context
-            if (!cli->validate()) return 1;
+            if (!cli.validate()) return 1;
 
-
-            vector<string> vect =  cli->getFileName();
+            std::vector<std::string> vect =  cli.getFileName();
             if(vect.size() == 0)
                 {
                     std::cout << "You need to provide either a file name of a bulk deletion or a list of files to be deleted" << std::endl;
-                    exit(1);
+                    return 1;
                 }
 
-            GSoapContextAdapter& ctx = cli->getGSoapContext();
+            GSoapContextAdapter ctx (cli.getService());
+            ctx.printServiceDetails(cli.isVerbose());
+            cli.printCliDeatailes();
 
             // delegate Proxy Certificate
             ProxyCertificateDelegator handler (
-                cli->getService(),
+                cli.getService(),
                 "",
                 0
             );
 
             handler.delegate();
 
-            string resjobid = ctx.deleteFile(vect);
+            std::string resjobid = ctx.deleteFile(vect);
             std::cout << resjobid <<endl;
 
 

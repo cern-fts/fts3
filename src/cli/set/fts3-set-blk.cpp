@@ -27,9 +27,6 @@
 #include "ui/BlacklistCli.h"
 #include "exception/cli_exception.h"
 
-#include <memory>
-
-using namespace std;
 using namespace fts3::cli;
 
 /**
@@ -37,28 +34,29 @@ using namespace fts3::cli;
  */
 int main(int ac, char* av[])
 {
-    unique_ptr<BlacklistCli> cli(new BlacklistCli);
-
     try
         {
-            // create and initialize the command line utility
-            cli->parse(ac, av);
-            if (!cli->validate()) return 0;
+            BlacklistCli cli;
+            // create and initialise the command line utility
+            cli.parse(ac, av);
+            if (!cli.validate()) return 1;
 
             // validate command line options, and return respective gsoap context
-            GSoapContextAdapter& ctx = cli->getGSoapContext();
+            GSoapContextAdapter ctx (cli.getService());
+            ctx.printServiceDetails(cli.isVerbose());
+            cli.printCliDeatailes();
 
-            string type = cli->getSubjectType();
+            std::string type = cli.getSubjectType();
 
             if (type == "se")
                 {
 
                     ctx.blacklistSe(
-                        cli->getSubjectName(),
-                        cli->getVo(),
-                        cli->getStatus(),
-                        cli->getTimeout(),
-                        cli->getBlkMode()
+                        cli.getSubjectName(),
+                        cli.getVo(),
+                        cli.getStatus(),
+                        cli.getTimeout(),
+                        cli.getBlkMode()
                     );
 
                 }
@@ -66,10 +64,10 @@ int main(int ac, char* av[])
                 {
 
                     ctx.blacklistDn(
-                        cli->getSubjectName(),
-                        cli->getStatus(),
-                        cli->getTimeout(),
-                        cli->getBlkMode()
+                        cli.getSubjectName(),
+                        cli.getStatus(),
+                        cli.getTimeout(),
+                        cli.getBlkMode()
                     );
                 }
 

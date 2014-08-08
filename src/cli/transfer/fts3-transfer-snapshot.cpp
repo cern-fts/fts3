@@ -49,20 +49,19 @@ using namespace fts3::common;
  */
 int main(int ac, char* av[])
 {
-
-    scoped_ptr<SnapshotCli> cli(new SnapshotCli);
-
     try
         {
+            SnapshotCli cli;
             // create and initialize the command line utility
-            cli->parse(ac, av);
-            if (!cli->validate()) return 0;
+            cli.parse(ac, av);
+            if (!cli.validate()) return 1;
 
             // validate command line options, and return respective gsoap context
-            GSoapContextAdapter& ctx = cli->getGSoapContext();
+            GSoapContextAdapter ctx (cli.getService());
+            ctx.printServiceDetails(cli.isVerbose());
+            cli.printCliDeatailes();
 
-
-            string src = cli->getSource(), dst = cli->getDestination(), vo = cli->getVo();
+            std::string src = cli.getSource(), dst = cli.getDestination(), vo = cli.getVo();
 
 
             std::string resp = ctx.getSnapShot(vo, src, dst);

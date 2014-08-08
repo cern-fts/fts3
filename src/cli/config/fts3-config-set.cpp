@@ -51,7 +51,9 @@ int main(int ac, char* av[])
             if (!cli->validate()) return 0;
 
             // validate command line options, and return respective gsoap context
-            GSoapContextAdapter& ctx = cli->getGSoapContext();
+            GSoapContextAdapter ctx (cli->getService());
+            ctx.printServiceDetails(cli->isVerbose());
+            cli->printCliDeatailes();
 
             optional<std::tuple<string, string, string>> protocol = cli->getProtocol();
             if (protocol.is_initialized())

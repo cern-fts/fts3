@@ -40,7 +40,7 @@ const string CliBase::error = "error";
 const string CliBase::result = "result";
 const string CliBase::parameter_error = "parameter_error";
 
-CliBase::CliBase(): visible("Allowed options"), ctx(NULL)
+CliBase::CliBase(): visible("Allowed options")
 {
 
     // add basic command line options
@@ -54,15 +54,6 @@ CliBase::CliBase(): visible("Allowed options"), ctx(NULL)
 
     version = getCliVersion();
     interface = version;
-}
-
-CliBase::~CliBase()
-{
-    if (ctx)
-        {
-            delete ctx;
-            ctx = NULL;
-        }
 }
 
 void CliBase::parse(int ac, char* av[])
@@ -174,25 +165,14 @@ bool CliBase::validate()
     return true;
 }
 
-GSoapContextAdapter& CliBase::getGSoapContext()
+void CliBase::printCliDeatailes()
 {
-    // create and initialize gsoap context
-    ctx = new GSoapContextAdapter(endpoint);
-
     // if verbose print general info
     if (isVerbose())
         {
-            ctx->getInterfaceDeatailes();
-            MsgPrinter::instance().print_info("# Using endpoint", "endpoint", ctx->getEndpoint());
-            MsgPrinter::instance().print_info("# Service version", "service_version", ctx->getVersion());
-            MsgPrinter::instance().print_info("# Interface version", "service_interface", ctx->getInterface());
-            MsgPrinter::instance().print_info("# Schema version", "service_schema", ctx->getSchema());
-            MsgPrinter::instance().print_info("# Service features", "service_metadata", ctx->getMetadata());
             MsgPrinter::instance().print_info("# Client version", "client_version", version);
             MsgPrinter::instance().print_info("# Client interface version", "client_interface", interface);
         }
-
-    return *ctx;
 }
 
 string CliBase::getUsageString(string tool)

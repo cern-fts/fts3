@@ -39,13 +39,9 @@
 #include <algorithm>
 #include <sstream>
 
-#include <boost/scoped_ptr.hpp>
-
 #include <boost/lambda/bind.hpp>
 #include <boost/lambda/lambda.hpp>
 
-using namespace boost;
-using namespace std;
 using namespace fts3::cli;
 using namespace fts3::common;
 
@@ -54,17 +50,16 @@ using namespace fts3::common;
  */
 int main(int ac, char* av[])
 {
-    scoped_ptr<CancelCli> cli(new CancelCli);
-
     try
         {
+            CancelCli cli;
             // create and initialize the command line utility
-            cli->parse(ac, av);
-            if (!cli->validate()) return 0;
+            cli.parse(ac, av);
+            if (!cli.validate()) return 1;
 
-            if (cli->rest())
+            if (cli.rest())
                 {
-                    vector<string> jobIds = cli->getJobIds();
+                    std::vector<std::string> jobIds = cli.getJobIds();
                     vector<string>::iterator itr;
 
                     std::vector< std::pair< std::string, std::string> > ret;
@@ -72,8 +67,8 @@ int main(int ac, char* av[])
                     for (itr = jobIds.begin(); itr != jobIds.end(); ++itr)
                         {
                             std::stringstream ss;
-                            string url = cli->getService() + "/jobs/" + *itr;
-                            HttpRequest http (url, cli->capath(), cli->proxy(), ss);
+                            std::string url = cli.getService() + "/jobs/" + *itr;
+                            HttpRequest http (url, cli.capath(), cli.proxy(), ss);
                             http.del();
 
                             ResponseParser p(ss);
@@ -86,13 +81,15 @@ int main(int ac, char* av[])
                 }
 
             // validate command line options, and return respective gsoap context
-            GSoapContextAdapter& ctx = cli->getGSoapContext();
+            GSoapContextAdapter ctx (cli.getService());
+            ctx.printServiceDetails(cli.isVerbose());
+            cli.printCliDeatailes();
 
-            vector<string> jobs = cli->getJobIds();
+            std::vector<std::string> jobs = cli.getJobIds();
 
             if (jobs.empty()) throw bad_option("jobid", "missing parameter");
 
-            vector< pair<string, string> > ret = ctx.cancel(jobs);
+            std::vector< std::pair<std::string, std::string> > ret = ctx.cancel(jobs);
             MsgPrinter::instance().print(ret);
         }
     catch(cli_exception const & ex)

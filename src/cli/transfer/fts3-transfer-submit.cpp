@@ -28,10 +28,6 @@
 #include "exception/cli_exception.h"
 #include "JsonOutput.h"
 
-#include <boost/scoped_ptr.hpp>
-
-using namespace std;
-using namespace boost;
 using namespace fts3::cli;
 using namespace fts3::common;
 
@@ -40,38 +36,39 @@ using namespace fts3::common;
  */
 int main(int ac, char* av[])
 {
-    scoped_ptr<SubmitTransferCli> cli (new SubmitTransferCli);
-
     try
         {
-            cli->parse(ac, av);
-            if (!cli->validate()) return 1;
+            SubmitTransferCli cli;
+            cli.parse(ac, av);
+            if (!cli.validate()) return 1;
 
-            if (cli->rest())
+            if (cli.rest())
                 {
-                    string url = cli->getService() + "/jobs";
-                    string job = cli->getFileName();
+                    std::string url = cli.getService() + "/jobs";
+                    std::string job = cli.getFileName();
 
-                    HttpRequest http (url, cli->capath(), cli->proxy(), cout);
+                    HttpRequest http (url, cli.capath(), cli.proxy(), cout);
                     http.put(job);
                     return 0;
                 }
 
             // validate command line options, and return respective gSOAP context
-            GSoapContextAdapter& ctx = cli->getGSoapContext();
+            GSoapContextAdapter ctx (cli.getService());
+            ctx.printServiceDetails(cli.isVerbose());
+            cli.printCliDeatailes();
 
-            string jobId("");
+            std::string jobId("");
 
-            vector<File> files = cli->getFiles();
+            std::vector<File> files = cli.getFiles();
 
 
-            map<string, string> params = cli->getParams();
+            std::map<std::string, std::string> params = cli.getParams();
 
             // delegate Proxy Certificate
             ProxyCertificateDelegator handler (
-                cli->getService(),
-                cli->getDelegationId(),
-                cli->getExpirationTime()
+                cli.getService(),
+                cli.getDelegationId(),
+                cli.getExpirationTime()
             );
 
             handler.delegate();
@@ -85,7 +82,7 @@ int main(int ac, char* av[])
             MsgPrinter::instance().print_info("job_id", jobId);
 
             // check if the -b option has been used
-            if (cli->isBlocking())
+            if (cli.isBlocking())
                 {
 
                     fts3::cli::JobStatus status;

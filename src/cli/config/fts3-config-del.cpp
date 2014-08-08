@@ -30,9 +30,7 @@
 
 #include <string>
 #include <vector>
-#include <memory>
 
-using namespace std;
 using namespace fts3::cli;
 
 /**
@@ -40,25 +38,25 @@ using namespace fts3::cli;
  */
 int main(int ac, char* av[])
 {
-    unique_ptr<DelCfgCli> cli(new DelCfgCli);
-
     try
         {
-            // create and initialize the command line utility
-            cli->parse(ac, av);
-            if (!cli->validate()) return 0;
+            // create and initialise the command line utility
+            DelCfgCli cli;
+            cli.parse(ac, av);
+            if (!cli.validate()) return 1;
 
             // validate command line options, and return respective gsoap context
-            GSoapContextAdapter& ctx  = cli->getGSoapContext();
+            GSoapContextAdapter ctx (cli.getService());
+            ctx.printServiceDetails(cli.isVerbose());
+            cli.printCliDeatailes();
 
             config__Configuration *config = soap_new_config__Configuration(ctx, -1);
-            config->cfg = cli->getConfigurations();
+            config->cfg = cli.getConfigurations();
 
             implcfg__delConfigurationResponse resp;
             ctx.delConfiguration(config, resp);
 
-
-            cout << "Done, config deleted" << endl;
+            std::cout << "Done, configuration deleted" << std::endl;
 
         }
     catch(cli_exception const & ex)

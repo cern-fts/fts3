@@ -35,7 +35,6 @@
 #include <iterator>
 #include <algorithm>
 
-using namespace std;
 using namespace fts3::cli;
 
 /**
@@ -43,48 +42,48 @@ using namespace fts3::cli;
  */
 int main(int ac, char* av[])
 {
-    std::unique_ptr<GetCfgCli> cli(new GetCfgCli);
-
-
     try
         {
-            // create and initialize the command line utility
-            cli->parse(ac, av);
-            if (!cli->validate()) return 0;
+            GetCfgCli cli;
+            // create and initialise the command line utility
+            cli.parse(ac, av);
+            if (!cli.validate()) return 1;
 
             // validate command line options, and return respective gsoap context
-            GSoapContextAdapter& ctx = cli->getGSoapContext();
+            GSoapContextAdapter ctx (cli.getService());
+            ctx.printServiceDetails(cli.isVerbose());
+            cli.printCliDeatailes();
 
-            string source = cli->getSource();
-            string destination =  cli->getDestination();
+            std::string source = cli.getSource();
+            std::string destination =  cli.getDestination();
 
-            if (cli->getBandwidth())
+            if (cli.getBandwidth())
                 {
                     implcfg__getBandwidthLimitResponse resp;
                     ctx.getBandwidthLimit(resp);
 
-                    cout << resp.limit << std::endl;
+                    std::cout << resp.limit << std::endl;
                 }
             else
                 {
-                    string all;
-                    if (cli->all())
+                    std::string all;
+                    if (cli.all())
                         {
                             if (!source.empty() && !destination.empty()) throw bad_option("all", "'--all' may only be used if querying for a single SE");
                             all = "all";
                         }
 
-                    if (cli->vo()) all = "vo";
+                    if (cli.vo()) all = "vo";
 
                     implcfg__getConfigurationResponse resp;
-                    ctx.getConfiguration(source, destination, all, cli->getName(), resp);
+                    ctx.getConfiguration(source, destination, all, cli.getName(), resp);
 
-                    vector<string> &cfgs = resp.configuration->cfg;
-                    ostream_iterator<string> it(cout, "\n");
-                    copy(cfgs.begin(), cfgs.end(), it);
+                    std::vector<std::string> &cfgs = resp.configuration->cfg;
+                    std::ostream_iterator<std::string> it(std::cout, "\n");
+                    std::copy(cfgs.begin(), cfgs.end(), it);
 
                     if(cfgs.size() == 0)
-                        cout << "No config stored into the database" << endl;
+                        std::cout << "No config stored into the database" << std::endl;
                 }
         }
     catch(cli_exception const & ex)

@@ -33,13 +33,9 @@
 #include "exception/cli_exception.h"
 #include "JsonOutput.h"
 
-#include <boost/scoped_ptr.hpp>
-
 #include <algorithm>
 #include <sstream>
 
-using namespace std;
-using namespace boost;
 using namespace fts3::cli;
 using namespace fts3::common;
 
@@ -49,20 +45,19 @@ using namespace fts3::common;
  */
 int main(int ac, char* av[])
 {
-    scoped_ptr<ListTransferCli> cli(new ListTransferCli);
-
     try
         {
+            ListTransferCli cli;
             // Initialise the command line utility
-            cli->parse(ac, av);
-            if (!cli->validate()) return 1;
+            cli.parse(ac, av);
+            if (!cli.validate()) return 1;
 
-            if (cli->rest())
+            if (cli.rest())
                 {
-                    vector<string> statuses = cli->getStatusArray();
-                    string dn = cli->getUserDn(), vo = cli->getVoName();
+                    std::vector<std::string> statuses = cli.getStatusArray();
+                    std::string dn = cli.getUserDn(), vo = cli.getVoName();
 
-                    string url = cli->getService() + "/jobs";
+                    std::string url = cli.getService() + "/jobs";
 
                     // prefix will be holding '?' at the first concatenation and then '&'
                     char prefix = '?';
@@ -91,10 +86,10 @@ int main(int ac, char* av[])
                             prefix = '&';
                         }
 
-                    string capath = cli->capath();
-                    string proxy = cli->proxy();
+                    std::string capath = cli.capath();
+                    std::string proxy = cli.proxy();
 
-                    stringstream ss;
+                    std::stringstream ss;
 
                     ss << "{\"jobs\":";
                     HttpRequest http (url, capath, proxy, ss);
@@ -102,18 +97,20 @@ int main(int ac, char* av[])
                     ss << '}';
 
                     ResponseParser parser(ss);
-                    vector<fts3::cli::JobStatus> stats = parser.getJobs("jobs");
+                    std::vector<fts3::cli::JobStatus> stats = parser.getJobs("jobs");
 
                     MsgPrinter::instance().print(stats);
                     return 0;
                 }
 
             // validate command line options, and return respective gsoap context
-            GSoapContextAdapter& ctx = cli->getGSoapContext();
+            GSoapContextAdapter ctx (cli.getService());
+            ctx.printServiceDetails(cli.isVerbose());
+            cli.printCliDeatailes();
 
-            vector<string> array = cli->getStatusArray();
-            vector<fts3::cli::JobStatus> statuses =
-                ctx.listRequests(array, cli->getUserDn(), cli->getVoName(), cli->source(), cli->destination());
+            std::vector<std::string> array = cli.getStatusArray();
+            std::vector<fts3::cli::JobStatus> statuses =
+                ctx.listRequests(array, cli.getUserDn(), cli.getVoName(), cli.source(), cli.destination());
 
             MsgPrinter::instance().print(statuses);
         }
