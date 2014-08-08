@@ -183,13 +183,13 @@ GSoapContextAdapter& CliBase::getGSoapContext()
     if (isVerbose())
         {
             ctx->getInterfaceDeatailes();
-            MsgPrinter::instance().endpoint(ctx->getEndpoint());
-            MsgPrinter::instance().service_version(ctx->getVersion());
-            MsgPrinter::instance().service_interface(ctx->getInterface());
-            MsgPrinter::instance().service_schema(ctx->getSchema());
-            MsgPrinter::instance().service_metadata(ctx->getMetadata());
-            MsgPrinter::instance().client_version(version);
-            MsgPrinter::instance().client_interface(interface);
+            MsgPrinter::instance().print_info("# Using endpoint", "endpoint", ctx->getEndpoint());
+            MsgPrinter::instance().print_info("# Service version", "service_version", ctx->getVersion());
+            MsgPrinter::instance().print_info("# Interface version", "service_interface", ctx->getInterface());
+            MsgPrinter::instance().print_info("# Schema version", "service_schema", ctx->getSchema());
+            MsgPrinter::instance().print_info("# Service features", "service_metadata", ctx->getMetadata());
+            MsgPrinter::instance().print_info("# Client version", "client_version", version);
+            MsgPrinter::instance().print_info("# Client interface version", "client_interface", interface);
         }
 
     return *ctx;
@@ -229,7 +229,7 @@ bool CliBase::printVersion()
     // check whether the -V option was used
     if (vm.count("version"))
         {
-        MsgPrinter::instance().version(version);
+        MsgPrinter::instance().print("client_version", version);
             return true;
         }
 

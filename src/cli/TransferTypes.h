@@ -28,7 +28,6 @@
 #include <string>
 #include <vector>
 #include <boost/optional/optional.hpp>
-#include <boost/tuple/tuple.hpp>
 
 namespace fts3
 {

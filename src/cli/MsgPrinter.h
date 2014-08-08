@@ -62,24 +62,10 @@ public:
         jout.setOutputStream(ostr);
     }
 
-    void delegation_local_expiration(long int h, long int m); //
-    void delegation_service_proxy(long int h, long int m); //
-    void delegation_msg(string msg); //
-    void delegation_request_duration(long int h, long int m); //
-    void delegation_request_retry(); //
-    void delegation_request_success(bool b); //
-    void delegation_request_error(string error); //
-
-    void endpoint(string endpoint); //
-    void service_version(string version); //
-    void service_interface(string interface); //
-    void service_schema(string schema); //
-    void service_metadata(string metadata); //
-    void client_version(string version); //
-    void client_interface(string interface); //
-
-
-    void version(string version); //
+    void print_info(std::string const & ostr_subject, std::string const & json_subject, long int h, long int m);
+    void print_info(std::string const & ostr_subject, std::string const & json_subject, std::string const & msg);
+    void print_info(std::string const & json_subject, std::string const & msg);
+    void print_info(std::string const & ostr_subject, std::string const & json_subject, bool flag);
 
     template<typename T>
     void print(std::vector<T> const & v);
@@ -90,7 +76,6 @@ public:
 
     void print(std::string const & subject, std::string const & msg);
 
-    void job_id(string job_id); //
     void status(JobStatus js);
     void job_summary(JobSummary js);
     void file_list(vector<string> values, vector<string> retries);
