@@ -981,7 +981,7 @@ void ProfiledDB::checkJobOperation(std::vector<std::string>& jobs, std::vector< 
 
 bool ProfiledDB::isDmJob(std::string const & job)
 {
-    PROFILE_PREFIXED("DB::", db->isDmJob(job));
+    PROFILE_PREFIXED("DB::", return db->isDmJob(job));
 }
 
 void ProfiledDB::cancelDmJobs(std::vector<std::string> const & jobs)
