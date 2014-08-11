@@ -2528,7 +2528,7 @@ bool OracleAPI::updateJobTransferStatusInternal(soci::session& sql, std::string 
                     // Update job_finished in files
                     sql << "UPDATE t_file SET "
                            " job_finished = sys_extract_utc(systimestamp) "
-                           "WHERE job_id = :jobId",
+                           "WHERE job_id = :jobId AND job_finished IS NULL",
                            soci::use(job_id, "jobId");
                 }
             // Job not finished yet

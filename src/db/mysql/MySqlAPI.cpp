@@ -2670,7 +2670,7 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
                     // Update job_finished in files
                     sql << "UPDATE t_file SET "
                            " job_finished = UTC_TIMESTAMP() "
-                           "WHERE job_id = :jobId",
+                           "WHERE job_id = :jobId AND job_finished IS NULL",
                            soci::use(job_id, "jobId");
                 }
             // Job not finished yet
