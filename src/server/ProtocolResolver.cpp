@@ -31,7 +31,7 @@
 #include <vector>
 
 #include <boost/assign/list_of.hpp>
-#include <boost/regex.hpp>
+#include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 
 FTS3_SERVER_NAMESPACE_START
@@ -156,16 +156,30 @@ optional<ProtocolResolver::protocol> ProtocolResolver::getUserDefinedProtocol(Tr
 {
     if (file.INTERNAL_FILE_PARAMS.empty()) return optional<protocol>();
 
-    // regular expression for extracting protocol parameters
-    static const regex re("^nostreams:(\\d+),timeout:(\\d+),buffersize:(\\d+)$");
-
-    smatch what;
-    if (!regex_match(file.INTERNAL_FILE_PARAMS, what, re, match_extra)) return optional<protocol>();
+    vector<string> params;
+    split(params, file.INTERNAL_FILE_PARAMS, is_any_of(","));
 
     protocol ret;
-    ret.nostreams = lexical_cast<int>(what[1]);
-    ret.urlcopy_tx_to = lexical_cast<int>(what[2]);
-    ret.tcp_buffer_size = lexical_cast<int>(what[3]);
+
+    for (vector<string>::const_iterator i = params.begin(); i != params.end(); ++i)
+        {
+            if (starts_with(*i, "nostreams:"))
+                {
+                    ret.nostreams = lexical_cast<int>(i->substr(10));
+                }
+            else if (starts_with(*i, "timeout:"))
+                {
+                    ret.urlcopy_tx_to = lexical_cast<int>(i->substr(8));
+                }
+            else if (starts_with(*i, "buffersize:"))
+                {
+                    ret.tcp_buffer_size = lexical_cast<int>(i->substr(11));
+                }
+            else if (*i == "strict")
+                {
+                    ret.strict_copy = true;
+                }
+        }
 
     return ret;
 }

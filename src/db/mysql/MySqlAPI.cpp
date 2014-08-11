@@ -1279,6 +1279,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
     const std::string nostreams		   = params.get(JobParameterHandler::NOSTREAMS);
     const std::string buffSize		   = params.get(JobParameterHandler::BUFFER_SIZE);
     const std::string timeout		   = params.get(JobParameterHandler::TIMEOUT);
+    const std::string strictCopy       = params.get(JobParameterHandler::STRICT_COPY);
 
     std::string reuseFlag = "N"; //default
     if (reuse == "Y")
@@ -1321,6 +1322,12 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
         {
             if (!jobParams.empty()) jobParams += ",";
             jobParams += "buffersize:" + buffSize;
+        }
+    // strict-copy was specified
+    if (strictCopy == "Y")
+        {
+            if (!jobParams.empty()) jobParams += ",";
+            jobParams += "strict";
         }
 
     soci::session sql(*connectionPool);

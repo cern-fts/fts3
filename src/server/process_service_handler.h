@@ -440,6 +440,7 @@ protected:
                                 int StreamsperFile = 0;
                                 int Timeout = 0;
                                 double userFilesize = 0;
+                                bool StrictCopy = false;
                                 bool manualProtocol = false;
                                 std::string jobMetadata("");
                                 std::string fileMetadata("");
@@ -540,6 +541,7 @@ protected:
                                         BufSize = (*p).tcp_buffer_size;
                                         StreamsperFile = (*p).nostreams;
                                         Timeout = (*p).urlcopy_tx_to;
+                                        StrictCopy = (*p).strict_copy;
                                         manualProtocol = true;
                                     }
                                 else
@@ -617,6 +619,11 @@ protected:
                                                 params.append(" -debug=");
                                                 params.append(boost::lexical_cast<std::string>(debugLevel));
                                                 params.append(" ");
+                                            }
+
+                                        if (StrictCopy)
+                                            {
+                                                params.append(" --strict-copy ");
                                             }
 
                                         if (manualConfigExists || userProtocol)

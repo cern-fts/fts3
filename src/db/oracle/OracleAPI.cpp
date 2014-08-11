@@ -1211,6 +1211,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
     const std::string nostreams		   = params.get(JobParameterHandler::NOSTREAMS);
     const std::string buffSize		   = params.get(JobParameterHandler::BUFFER_SIZE);
     const std::string timeout		   = params.get(JobParameterHandler::TIMEOUT);
+    const std::string strictCopy       = params.get(JobParameterHandler::STRICT_COPY);
 
     std::string reuseFlag = "N";
     if (reuse == "Y")
@@ -1254,6 +1255,12 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
         {
             if (!jobParams.empty()) jobParams += ",";
             jobParams += "buffersize:" + buffSize;
+        }
+    // strict-copy was specified
+    if (strictCopy == "Y")
+        {
+            if (!jobParams.empty()) jobParams += ",";
+            jobParams += "strict";
         }
 
     //multiple insert statements

@@ -85,6 +85,7 @@ SubmitTransferCli::SubmitTransferCli()
     ("nostreams", value<int>(), "number of streams that will be used for the given transfer-job")
     ("timeout", value<int>(), "timeout (expressed in seconds) that will be used for the given job")
     ("buff-size", value<int>(), "buffer size (expressed in bytes) that will be used for the given transfer-job")
+    ("strict-copy", "disable all checks, just copy the file")
     ;
 
     // add hidden options
@@ -451,6 +452,10 @@ map<string, string> SubmitTransferCli::getParams()
             int val = vm["timeout"].as<int>();
             if (val <= 0) throw bad_option("timeout", "The timeout has to be greater than 0!");
             parameters[JobParameterHandler::TIMEOUT] = lexical_cast<string>(val);
+        }
+    if (vm.count("strict-copy"))
+        {
+        parameters[JobParameterHandler::STRICT_COPY] = "Y";
         }
 
     return parameters;
