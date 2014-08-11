@@ -78,24 +78,14 @@ void MsgPrinter::print_info(std::string const & ostr_subject, std::string const 
 
 void MsgPrinter::print_info(std::string const & ostr_subject, std::string const & json_subject, std::string const & msg)
 {
-    if (!json)
-        {
-            (*ostr) << ostr_subject << ": " << msg << endl;
-            return;
-        }
+    if (!verbose) return;
 
-    jout.print(json_subject, msg);
+    print(ostr_subject, json_subject, msg);
 }
 
 void MsgPrinter::print_info(std::string const & json_subject, std::string const & msg)
 {
-    if (!json)
-        {
-            (*ostr) << msg << endl;
-            return;
-        }
-
-    jout.print(json_subject, msg);
+    print_info("", json_subject, msg);
 }
 
 void MsgPrinter::print_ostr(std::pair<std::string, std::string> const & id_status)
@@ -109,10 +99,19 @@ void MsgPrinter::print_json(std::pair<std::string, std::string> const & id_statu
     jout.printArray("job", m);
 }
 
+void MsgPrinter::print(std::string const & ostr_subject, std::string const & json_subject, std::string const & msg)
+{
+    if (!json)
+        {
+            if (!ostr_subject.empty()) (*ostr) << ostr_subject << " : ";
+            (*ostr) << msg << std::endl;
+        }
+    else jout.print(json_subject, msg);
+}
+
 void MsgPrinter::print(std::string const & subject, std::string const & msg)
 {
-    if (!json) (*ostr) << subject << " : " << msg << std::endl;
-    else jout.print(subject, msg);
+    print(subject, subject, msg);
 }
 
 void MsgPrinter::print_ostr(JobStatus const & j)

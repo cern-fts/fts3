@@ -67,6 +67,8 @@ public:
     void print_info(std::string const & json_subject, std::string const & msg);
     void print_info(std::string const & ostr_subject, std::string const & json_subject, bool flag);
 
+//    void print(std::string const & json_subject, std::string const & msg);
+
     template<typename T>
     void print(std::vector<T> const & v);
     void print(std::string job_id, std::vector<tns3__DetailedFileStatus*> const & v);
@@ -75,6 +77,8 @@ public:
     void print(std::exception const & ex);
 
     void print(std::string const & subject, std::string const & msg);
+    void print(std::string const & ostr_subject, std::string const & json_subject, std::string const & msg);
+
 
     void status(JobStatus js);
     void job_summary(JobSummary js);

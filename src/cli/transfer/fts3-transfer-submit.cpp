@@ -79,7 +79,7 @@ int main(int ac, char* av[])
                         params
                     );
 
-            MsgPrinter::instance().print_info("job_id", jobId);
+            MsgPrinter::instance().print("", "job_id", jobId);
 
             // check if the -b option has been used
             if (cli.isBlocking())
