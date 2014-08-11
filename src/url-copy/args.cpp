@@ -45,15 +45,17 @@ const option UrlCopyOpts::long_options[] =
     {"sec-per-mb",    	  required_argument, 0, 'V'},
     {"user-dn",    	  required_argument, 0, 'Y'},
     {"alias",    	  required_argument, 0, '7'},
+    {"strict-copy",   no_argument,       0, 'S'},
     {0, 0, 0, 0}
 };
 
-const char UrlCopyOpts::short_options[] = "PONM:L:K:J:I:H:GRFD:E:C:z:A:t:a:b:c:de:f:h:ij:k:B:5:UXZV:Y:7:";
+const char UrlCopyOpts::short_options[] = "PONM:L:K:J:I:H:GRFD:E:C:z:A:t:a:b:c:de:f:h:ij:k:B:5:UXZV:Y:7:S";
 
 
 UrlCopyOpts::UrlCopyOpts(): monitoringMessages(false), autoTunned(false),
     manualConfig(false), overwrite(false), daemonize(false),
-    logToStderr(false), reuse(false), multihop(false), enable_udt(false), enable_ipv6(false),global_timeout(false),
+    logToStderr(false), reuse(false), multihop(false), enable_udt(false), enable_ipv6(false),
+    global_timeout(false), strictCopy(false),
     debugLevel(0),
     compareChecksum(CHECKSUM_DONT_CHECK),
     fileId(0), userFileSize(0), bringOnline(-1), copyPinLifetime(-1),
@@ -224,6 +226,9 @@ int UrlCopyOpts::parse(int argc, char * const argv[])
                             break;
                         case '1':
                             logToStderr = true;
+                            break;
+                        case 'S':
+                            strictCopy = true;
                             break;
                         case '?':
                             errorMessage = usage(argv[0]);
