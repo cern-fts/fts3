@@ -71,9 +71,13 @@ public:
     void print(std::exception const & ex);
 
     /**
-     * Puts the map object into given node as a array of key-value pairs
+     * Puts the container object into given node as a array of key-value pairs
      */
-    void printArray(std::string const & path, std::map<std::string, std::string> const & object);
+    template <typename CONTAINER>
+    void printArray(std::string const & path, CONTAINER const & object)
+    {
+        printArray(path, to_ptree(object));
+    }
 
     /**
      * Puts the value into given node as a array member
@@ -87,8 +91,21 @@ public:
 
 private:
 
-    /// converts all the pairs from map to ptree
-    static pt::ptree to_ptree(std::map<std::string, std::string> const & values);
+    /// converts all the pairs from a given container to ptree
+    template <typename CONTAINER>
+    static pt::ptree to_ptree(CONTAINER const & values)
+    {
+        pt::ptree pt;
+
+        typename CONTAINER::const_iterator it;
+        for (it = values.begin(); it != values.end(); ++it)
+            {
+                pt.put(it->first, it->second);
+            }
+
+        return pt;
+    }
+
 
     /// the ptree used to store the JSON object
     pt::ptree json_out;

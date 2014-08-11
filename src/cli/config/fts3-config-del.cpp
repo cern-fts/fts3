@@ -47,7 +47,7 @@ int main(int ac, char* av[])
 
             // validate command line options, and return respective gsoap context
             GSoapContextAdapter ctx (cli.getService());
-            ctx.printServiceDetails(cli.isVerbose());
+            ctx.printServiceDetails();
             cli.printCliDeatailes();
 
             config__Configuration *config = soap_new_config__Configuration(ctx, -1);

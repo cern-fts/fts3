@@ -45,7 +45,7 @@ int main(int ac, char* av[])
 
             // validate command line options, and return respective gsoap context
             GSoapContextAdapter ctx (cli.getService());
-            ctx.printServiceDetails(cli.isVerbose());
+            ctx.printServiceDetails();
             cli.printCliDeatailes();
 
             // submit the job

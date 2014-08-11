@@ -25,6 +25,7 @@
 #ifndef MSGPRINTER_H_
 #define MSGPRINTER_H_
 
+#include "JobStatus.h"
 #include "TransferTypes.h"
 #include "JsonOutput.h"
 #include "exception/cli_exception.h"
@@ -79,6 +80,7 @@ public:
     void print(std::string const & subject, std::string const & msg);
     void print(std::string const & ostr_subject, std::string const & json_subject, std::string const & msg);
 
+    void print(JobStatus2 const & status);
 
     void status(JobStatus js);
     void job_summary(JobSummary js);
@@ -109,6 +111,12 @@ private:
 
     void print_ostr(JobStatus const & j);
     void print_json(JobStatus const & j);
+
+    void print_ostr(JobStatus2 const & j);
+    void print_json(JobStatus2 const & j);
+
+    void print_ostr_nana(JobStatus2::FileInfo const & f);
+    void print_json(JobStatus2::FileInfo const & f);
 
     template<typename T>
     void print_ostr() {}

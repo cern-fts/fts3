@@ -73,7 +73,6 @@ struct File
     boost::optional<std::string> metadata;
 };
 
-
 struct JobStatus
 {
 
@@ -139,15 +138,12 @@ struct JobSummary
     {
     };
 
-    /// tns3__TransferJobSummary fields
     JobStatus status;
     int numActive;
     int numCanceled;
     int numFailed;
     int numFinished;
     int numSubmitted;
-
-    /// tns3__TransferJobSummary2 fields
     int numReady;
 };
 
