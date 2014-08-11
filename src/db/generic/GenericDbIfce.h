@@ -187,10 +187,6 @@ public:
 
     virtual int getSeIn(const std::set<std::string> & source, const std::string & destination) = 0;
 
-    virtual void setAllowed(const std::string & job_id, int file_id, const std::string & source_se, const std::string & dest, int nostreams, int timeout, int buffersize) = 0;
-
-    virtual void setAllowedNoOptimize(const std::string & job_id, int file_id, const std::string & params) = 0;
-
     virtual bool terminateReuseProcess(const std::string & jobId, int pid, const std::string & message) = 0;
 
     virtual void forceFailTransfers(std::map<int, std::string>& collectJobs) = 0;

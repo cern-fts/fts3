@@ -255,19 +255,6 @@ int ProfiledDB::getSeIn(const std::set<std::string> & source, const std::string 
 }
 
 
-void ProfiledDB::setAllowed(const std::string & job_id, int file_id, const std::string & source_se, const std::string & dest,
-                            int nostreams, int timeout, int buffersize)
-{
-    PROFILE_PREFIXED("DB::", db->setAllowed(job_id, file_id, source_se, dest, nostreams, timeout, buffersize));
-}
-
-
-void ProfiledDB::setAllowedNoOptimize(const std::string & job_id, int file_id, const std::string & params)
-{
-    PROFILE_PREFIXED("DB::", db->setAllowedNoOptimize(job_id, file_id, params));
-}
-
-
 bool ProfiledDB::terminateReuseProcess(const std::string & jobId, int pid, const std::string & message)
 {
     PROFILE_PREFIXED("DB::", return db->terminateReuseProcess(jobId, pid, message));
