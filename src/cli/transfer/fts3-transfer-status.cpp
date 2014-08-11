@@ -35,14 +35,10 @@
 #include <string>
 #include <iterator>
 
-#include <boost/scoped_ptr.hpp>
 #include <boost/assign.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <boost/lambda/bind.hpp>
 
-using namespace std;
-using namespace boost;
-using namespace boost::assign;
 using namespace fts3::cli;
 using namespace fts3::common;
 
@@ -58,41 +54,41 @@ int main(int ac, char* av[])
 {
     static const int DEFAULT_LIMIT = 100;
 
-    scoped_ptr<TransferStatusCli> cli (new TransferStatusCli);
-
     try
         {
+            TransferStatusCli cli;
             // create and initialize the command line utility
-            cli->parse(ac, av);
-            if (!cli->validate()) return 0;
+            cli.parse(ac, av);
+            if (!cli.validate()) return 1;
 
-            if (cli->rest())
+            if (cli.rest())
                 {
-                    vector<string> jobIds = cli->getJobIds();
-                    vector<string>::iterator itr;
+                    std::vector<std::string> jobIds = cli.getJobIds();
+                    std::vector<std::string>::iterator itr;
 
                     for (itr = jobIds.begin(); itr != jobIds.end(); ++itr)
                         {
-                            string url = cli->getService() + "/jobs/" + *itr;
+                            std::string url = cli.getService() + "/jobs/" + *itr;
 
-                            stringstream ss;
-                            HttpRequest http (url, cli->capath(), cli->proxy(), ss);
+                            std::stringstream ss;
+                            HttpRequest http (url, cli.capath(), cli.proxy(), ss);
                             http.get();
                             ResponseParser respons(ss);
 
-                            cout << respons.get("job_state") << endl;
-
+                            std::cout << respons.get("job_state") << std::endl;
                         }
                     return 0;
                 }
 
             // validate command line options, and return respective gsoap context
-            GSoapContextAdapter& ctx = cli->getGSoapContext();
+            GSoapContextAdapter ctx (cli.getService());
+            ctx.printServiceDetails(cli.isVerbose());
+            cli.printCliDeatailes();
 
-            if (cli->p())
+            if (cli.p())
                 {
-                    vector<string> ids = cli->getJobIds();
-                    vector<string>::const_iterator it;
+                    std::vector<std::string> ids = cli.getJobIds();
+                    std::vector<std::string>::const_iterator it;
 
                     for (it = ids.begin(); it != ids.end(); ++it)
                         {
@@ -104,26 +100,26 @@ int main(int ac, char* av[])
                 }
 
             // archived content?
-            bool archive = cli->queryArchived();
+            bool archive = cli.queryArchived();
             // get job IDs that have to be check
-            vector<string> jobIds = cli->getJobIds();
+            std::vector<std::string> jobIds = cli.getJobIds();
 
             // iterate over job IDs
-            vector<string>::iterator it;
+            std::vector<std::string>::iterator it;
             for (it = jobIds.begin(); it < jobIds.end(); it++)
                 {
 
-                    string jobId = *it;
+                    std::string jobId = *it;
 
                     std::ofstream failedFiles;
-                    if (cli->dumpFailed())
+                    if (cli.dumpFailed())
                         {
                             failedFiles.open(jobId.c_str(), ios_base::out);
                             if (failedFiles.fail())
                                 throw bad_option("dump-failed", strerror(errno));
                         }
 
-                    if (cli->isVerbose())
+                    if (cli.isVerbose())
                         {
                             // do the request
                             JobSummary summary = ctx.getTransferJobSummary(jobId, archive);
@@ -144,7 +140,7 @@ int main(int ac, char* av[])
                     // TODO test!
                     // If a list is requested, or dumping the failed transfers,
                     // get the transfers
-                    if (cli->list() || cli->dumpFailed())
+                    if (cli.list() || cli.dumpFailed())
                         {
                             int offset = 0;
                             int cnt = 0;
@@ -153,7 +149,7 @@ int main(int ac, char* av[])
                                 {
                                     // do the request
                                     impltns__getFileStatusResponse resp;
-                                    cnt = ctx.getFileStatus(jobId, archive, offset, DEFAULT_LIMIT, cli->detailed(), resp);
+                                    cnt = ctx.getFileStatus(jobId, archive, offset, DEFAULT_LIMIT, cli.detailed(), resp);
 
                                     if (cnt > 0 && resp._getFileStatusReturn)
                                         {
@@ -167,10 +163,10 @@ int main(int ac, char* av[])
                                                 {
                                                     tns3__FileTransferStatus* stat = *it;
 
-                                                    if (cli->list())
+                                                    if (cli.list())
                                                         {
                                                             vector<string> values =
-                                                                list_of
+                                                                boost::assign::list_of
                                                                 (*stat->sourceSURL)
                                                                 (*stat->destSURL)
                                                                 (*stat->transferFileState)
@@ -184,13 +180,13 @@ int main(int ac, char* av[])
                                                                 stat->retries.begin(),
                                                                 stat->retries.end(),
                                                                 inserter(retries, retries.begin()),
-                                                                lambda::bind(&tns3__FileTransferRetry::reason, lambda::_1)
+                                                                boost::lambda::bind(&tns3__FileTransferRetry::reason, lambda::_1)
                                                             );
 
                                                             MsgPrinter::instance().file_list(values, retries);
                                                         }
 
-                                                    if (cli->dumpFailed() && isTransferFailed(*stat->transferFileState))
+                                                    if (cli.dumpFailed() && isTransferFailed(*stat->transferFileState))
                                                         {
                                                             failedFiles << *stat->sourceSURL << " "
                                                                         << *stat->destSURL

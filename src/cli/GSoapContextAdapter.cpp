@@ -23,6 +23,7 @@
  */
 
 #include "GSoapContextAdapter.h"
+#include "MsgPrinter.h"
 
 #include "exception/cli_exception.h"
 #include "exception/gsoap_error.h"
@@ -106,6 +107,20 @@ void GSoapContextAdapter::clean()
 GSoapContextAdapter::~GSoapContextAdapter()
 {
     clean();
+}
+
+void GSoapContextAdapter::printServiceDetails(bool verbose)
+{
+    // if verbose print general info
+    if (verbose)
+        {
+            getInterfaceDeatailes();
+            MsgPrinter::instance().print_info("# Using endpoint", "endpoint", endpoint);
+            MsgPrinter::instance().print_info("# Service version", "service_version", version);
+            MsgPrinter::instance().print_info("# Interface version", "service_interface", interface);
+            MsgPrinter::instance().print_info("# Schema version", "service_schema", schema);
+            MsgPrinter::instance().print_info("# Service features", "service_metadata", metadata);
+        }
 }
 
 void GSoapContextAdapter::getInterfaceDeatailes()

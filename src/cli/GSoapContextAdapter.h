@@ -79,6 +79,13 @@ public:
     virtual ~GSoapContextAdapter();
 
     /**
+     * Prints out service details (like interface version, etc.) if verbose
+     *
+     * @param verbose : if true prints service details
+     */
+    void printServiceDetails(bool verbose);
+
+    /**
      * Type cast operator.
      *
      * @return pointer do gsoap context (soap*)
@@ -334,39 +341,14 @@ public:
 
     tns3__DetailedJobStatus* getDetailedJobStatus(string job_id);
 
-    void getInterfaceDeatailes();
-
-    ///@{
-    /**
-     * A group of methods returning details about interface version of the FTS3 service
-     */
-    string getEndpoint()
-    {
-        return endpoint;
-    }
-
-    string getInterface()
-    {
-        return interface;
-    }
-
-    string getVersion()
+    std::string getVersion()
     {
         return version;
     }
 
-    string getSchema()
-    {
-        return schema;
-    }
-
-    string getMetadata()
-    {
-        return metadata;
-    }
-    ///@}
-
 private:
+
+    void getInterfaceDeatailes();
 
     void clean();
 

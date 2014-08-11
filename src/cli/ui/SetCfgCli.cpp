@@ -128,7 +128,7 @@ SetCfgCli::~SetCfgCli()
 void SetCfgCli::parse(int ac, char* av[])
 {
 
-    // do the basic initialization
+    // do the basic initialisation
     CliBase::parse(ac, av);
 
     if (vm.count("cfg"))

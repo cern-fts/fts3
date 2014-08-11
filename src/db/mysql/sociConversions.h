@@ -248,7 +248,14 @@ struct type_conversion<FileTransferStatus>
         struct tm aux_tm;
         transfer.fileId            = v.get<int>("file_id");
         transfer.sourceSURL        = v.get<std::string>("source_surl");
-        transfer.destSURL          = v.get<std::string>("dest_surl");
+        try
+            {
+                transfer.destSURL          = v.get<std::string>("dest_surl");
+            }
+        catch(...)
+            {
+                // ignore since DM operations (deletion) do not have destination
+            }
         transfer.transferFileState = v.get<std::string>("file_state");
         transfer.reason            = v.get<std::string>("reason", "");
         transfer.numFailures	   = v.get<int>("retry", 0);

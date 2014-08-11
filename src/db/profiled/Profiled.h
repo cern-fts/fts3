@@ -46,11 +46,19 @@ public:
 
     void getTransferJobStatus(std::string requestID, bool archive, std::vector<JobStatus*>& jobs);
 
+    void getDmJobStatus(std::string requestID, bool archive, std::vector<JobStatus*>& jobs);
+
     void getTransferFileStatus(std::string requestID, bool archive,
+                               unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files);
+
+    void getDmFileStatus(std::string requestID, bool archive,
                                unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files);
 
     void listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
                       std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst);
+
+    void listRequestsDm(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
+                                  std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst);
 
     TransferJobs* getTransferJob(std::string jobId, bool archive);
 
@@ -368,6 +376,10 @@ public:
     void checkJobOperation(std::vector<std::string>& jobs, std::vector< boost::tuple<std::string, std::string> >& ops);
 
     bool getOauthCredentials(const std::string& user_dn, const std::string& cloud_name, OAuth& oauth);
+
+    bool isDmJob(std::string const & job);
+
+    void cancelDmJobs(std::vector<std::string> const & jobs);
 };
 
 

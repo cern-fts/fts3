@@ -25,10 +25,6 @@
 #include "JsonOutput.h"
 #include "exception/cli_exception.h"
 
-#include <boost/scoped_ptr.hpp>
-
-using namespace std;
-using namespace boost;
 using namespace fts3::cli;
 
 /**
@@ -36,23 +32,18 @@ using namespace fts3::cli;
  */
 int main(int ac, char* av[])
 {
-
-    scoped_ptr<DelegationCli> cli(new DelegationCli);
-
     try
         {
-            // create and initialize the command line utility
-            cli->parse(ac, av);
-            if (!cli->validate()) return 0;
-
-            // validate command line options, and return respective gSOAP context
-            cli->getGSoapContext();
+            DelegationCli cli;
+            // create and initialise the command line utility
+            cli.parse(ac, av);
+            if (!cli.validate()) return 1;
 
             // delegate Proxy Certificate
             ProxyCertificateDelegator handler (
-                cli->getService(),
-                cli->getDelegationId(),
-                cli->getExpirationTime()
+                cli.getService(),
+                cli.getDelegationId(),
+                cli.getExpirationTime()
             );
 
             handler.delegate();

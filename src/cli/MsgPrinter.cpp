@@ -47,189 +47,55 @@ using namespace boost;
 using namespace boost::assign;
 using namespace fts3::common;
 
-void MsgPrinter::delegation_request_duration(long int h, long int m)
+void MsgPrinter::print_info(std::string const & ostr_subject, std::string const & json_subject, bool flag)
 {
-
     if (!verbose) return;
 
     if (!json)
         {
-            (*ostr) << "Requesting delegated proxy for " << h << " hours and " << m << " minutes." << endl;
+            if (flag) (*ostr) << ostr_subject << endl;
             return;
         }
 
-    jout.print("delegation.request.duration", lexical_cast<string>(h) + ":" + lexical_cast<string>(m));
+    std::stringstream ss;
+    ss << std::boolalpha << flag;
+
+    jout.print(json_subject, ss.str());
 }
 
-void MsgPrinter::delegation_request_retry()
+void MsgPrinter::print_info(std::string const & ostr_subject, std::string const & json_subject, long int h, long int m)
 {
-
     if (!verbose) return;
 
     if (!json)
         {
-            (*ostr) << "Retrying!" << endl;
+            (*ostr) << ostr_subject << ": " << h << "hours and " << m << " minutes." << endl;
             return;
         }
 
-    jout.print("delegation.request.retry", "true");
+    jout.print(json_subject, lexical_cast<string>(h) + ":" + lexical_cast<string>(m));
 }
 
-void MsgPrinter::delegation_request_error(string error)
+void MsgPrinter::print_info(std::string const & ostr_subject, std::string const & json_subject, std::string const & msg)
 {
-
-//	if (!verbose) return;
-
     if (!json)
         {
-            (*ostr) << "delegation: " << error << endl;
+            (*ostr) << ostr_subject << ": " << msg << endl;
             return;
         }
 
-    jout.print("delegation.request.error", error);
+    jout.print(json_subject, msg);
 }
 
-void MsgPrinter::delegation_request_success(bool b)
+void MsgPrinter::print_info(std::string const & json_subject, std::string const & msg)
 {
-
-    if (!verbose) return;
-
-    if (!json)
-        {
-            if (b) (*ostr) << "Credential has been successfully delegated to the service." << endl;
-            return;
-        }
-
-    stringstream ss;
-    ss << std::boolalpha << b;
-
-    jout.print("delegation.request.delegated_successfully", ss.str());
-}
-
-void MsgPrinter::delegation_local_expiration(long int h, long int m)
-{
-
-    if (!verbose) return;
-
-    if (!json)
-        {
-            (*ostr) << "Remaining time for the local proxy is " << h << "hours and " << m << " minutes." << endl;
-            return;
-        }
-
-    jout.print("delegation.expiration_time.local", lexical_cast<string>(h) + ":" + lexical_cast<string>(m));
-}
-
-void MsgPrinter::delegation_service_proxy(long int h, long int m)
-{
-
-    if (!verbose) return;
-
-    if (!json)
-        {
-            (*ostr) << "Remaining time for the proxy on the server side is " << h << " hours and " << m << " minutes." << endl;
-            return;
-        }
-
-    jout.print("delegation.expiration_time.service", lexical_cast<string>(h) + ":" + lexical_cast<string>(m));
-}
-
-void MsgPrinter::delegation_msg(string msg)
-{
-
-    if (!verbose) return;
-
     if (!json)
         {
             (*ostr) << msg << endl;
             return;
         }
 
-    jout.print("delegation.message", msg);
-}
-
-void MsgPrinter::endpoint(string endpoint)
-{
-
-    if (!json)
-        {
-            (*ostr) << "# Using endpoint: " << endpoint << endl;
-            return;
-        }
-
-    jout.print("endpoint", endpoint);
-}
-
-void MsgPrinter::service_version(string version)
-{
-
-    if (!json)
-        {
-            (*ostr) << "# Service version: " << version << endl;
-            return;
-        }
-
-    jout.print("service_version", version);
-}
-
-void MsgPrinter::service_interface(string interface)
-{
-
-    if (!json)
-        {
-            (*ostr) << "# Interface version: " << interface << endl;
-            return;
-        }
-
-    jout.print("service_interface", interface);
-}
-
-void MsgPrinter::service_schema(string schema)
-{
-
-    if (!json)
-        {
-            (*ostr) << "# Schema version: " << schema << endl;
-            return;
-        }
-
-    jout.print("service_schema", schema);
-}
-
-void MsgPrinter::service_metadata(string metadata)
-{
-
-    if (!json)
-        {
-            (*ostr) << "# Service features: " << metadata << endl;
-            return;
-        }
-
-    jout.print("service_metadata", metadata);
-}
-
-void MsgPrinter::client_version(string version)
-{
-
-    if (!json)
-        {
-            (*ostr) << "# Client version: " << version << endl;
-            return;
-        }
-
-    jout.print("client_version", version);
-}
-
-void MsgPrinter::client_interface(string interface)
-{
-
-    if (!json)
-        {
-            (*ostr) << "# Client interface version: " << interface << endl;
-            return;
-        }
-
-    jout.print("client_interface", interface);
+    jout.print(json_subject, msg);
 }
 
 void MsgPrinter::print_ostr(std::pair<std::string, std::string> const & id_status)
@@ -241,43 +107,6 @@ void MsgPrinter::print_json(std::pair<std::string, std::string> const & id_statu
 {
     std::map<std::string, std::string> m = boost::assign::map_list_of ("job_id", id_status.first) ("job_state", id_status.second);
     jout.printArray("job", m);
-}
-
-void MsgPrinter::version(string version)
-{
-
-    if (!json)
-        {
-            (*ostr) << "version: " << version << endl;
-            return;
-        }
-
-    jout.print("client_version", version);
-}
-
-void MsgPrinter::job_id(string job_id)
-{
-
-    if (!json)
-        {
-            (*ostr) << job_id << endl;
-            return;
-        }
-
-    jout.print("job.job_id", job_id);
-}
-
-void MsgPrinter::status(JobStatus js)
-{
-
-    if (!json)
-        {
-            (*ostr) << js.jobStatus << endl;
-            return;
-        }
-
-    map<string, string> object = map_list_of ("job_id", js.jobId) ("status", js.jobStatus);
-    jout.printArray("job", object);
 }
 
 void MsgPrinter::print(std::string const & subject, std::string const & msg)
@@ -327,6 +156,19 @@ void MsgPrinter::print_json(JobStatus const & j)
             object = aux;
         }
 
+    jout.printArray("job", object);
+}
+
+void MsgPrinter::status(JobStatus js)
+{
+
+    if (!json)
+        {
+            (*ostr) << js.jobStatus << endl;
+            return;
+        }
+
+    map<string, string> object = map_list_of ("job_id", js.jobId) ("status", js.jobStatus);
     jout.printArray("job", object);
 }
 

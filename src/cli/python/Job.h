@@ -29,7 +29,6 @@
 #include "python/PyFile.h"
 
 #include <boost/python.hpp>
-#include <boost/tuple/tuple.hpp>
 
 #include <string>
 #include <map>

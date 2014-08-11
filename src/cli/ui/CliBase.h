@@ -82,7 +82,7 @@ public:
     /**
      * Destructor
      */
-    virtual ~CliBase();
+    virtual ~CliBase() {}
 
     /**
      * Initializes the object with command line options.
@@ -105,12 +105,9 @@ public:
     virtual bool validate();
 
     /**
-     * If verbal additional info is printed
-     *
-     * @return GSoapContexAdapter instance, or null if all activities
-     * 				requested using program options have been done.
+     * If verbose additional info is printed
      */
-    GSoapContextAdapter& getGSoapContext();
+    void printCliDeatailes();
 
     /**
      * Prints help message if the -h option has been used.
@@ -228,11 +225,6 @@ protected:
      * the name of the utility
      */
     string toolname;
-
-    /**
-     * gsoap context
-     */
-    GSoapContextAdapter* ctx;
 
 private:
 

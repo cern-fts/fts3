@@ -45,12 +45,22 @@ void ProfiledDB::getTransferJobStatus(std::string requestID, bool archive, std::
     PROFILE_PREFIXED("DB::", db->getTransferJobStatus(requestID, archive, jobs));
 }
 
-
+void ProfiledDB::getDmJobStatus(std::string requestID, bool archive, std::vector<JobStatus*>& jobs)
+{
+    PROFILE_PREFIXED("DB::", db->getDmJobStatus(requestID, archive, jobs));
+}
 
 void ProfiledDB::getTransferFileStatus(std::string requestID, bool archive,
                                        unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files)
 {
     PROFILE_PREFIXED("DB::", db->getTransferFileStatus(requestID, archive, offset, limit, files));
+}
+
+
+void ProfiledDB::getDmFileStatus(std::string requestID, bool archive,
+                                       unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files)
+{
+    PROFILE_PREFIXED("DB::", db->getDmFileStatus(requestID, archive, offset, limit, files));
 }
 
 
@@ -60,6 +70,11 @@ void ProfiledDB::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::st
     PROFILE_PREFIXED("DB::", db->listRequests(jobs, inGivenStates, restrictToClientDN, forDN, VOname, src, dst));
 }
 
+void ProfiledDB::listRequestsDm(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
+                              std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst)
+{
+    PROFILE_PREFIXED("DB::", db->listRequestsDm(jobs, inGivenStates, restrictToClientDN, forDN, VOname, src, dst));
+}
 
 TransferJobs* ProfiledDB::getTransferJob(std::string jobId, bool archive)
 {
@@ -968,4 +983,14 @@ void ProfiledDB::checkJobOperation(std::vector<std::string>& jobs, std::vector< 
 bool ProfiledDB::getOauthCredentials(const std::string& user_dn, const std::string& cloud_name, OAuth& oauth)
 {
     PROFILE_PREFIXED("DB::", return db->getOauthCredentials(user_dn, cloud_name, oauth));
+}
+
+bool ProfiledDB::isDmJob(std::string const & job)
+{
+    PROFILE_PREFIXED("DB::", db->isDmJob(job));
+}
+
+void ProfiledDB::cancelDmJobs(std::vector<std::string> const & jobs)
+{
+    PROFILE_PREFIXED("DB::", db->cancelDmJobs(jobs));
 }

@@ -1,5 +1,5 @@
 Name:    fts-tests
-Version: 3.2.25
+Version: 3.2.27
 Release: 1%{?dist}
 Summary: Testing package for FTS3
 Group:   Application/Internet
