@@ -25,8 +25,6 @@
 #include "rest/HttpRequest.h"
 #include "exception/bad_option.h"
 
-#include "common/JobStatusHandler.h"
-
 #include "exception/cli_exception.h"
 #include "JsonOutput.h"
 
@@ -40,12 +38,6 @@
 #include <boost/lambda/bind.hpp>
 
 using namespace fts3::cli;
-using namespace fts3::common;
-
-static bool isTransferFailed(const std::string& state)
-{
-    return state == "CANCELED" || state == "FAILED";
-}
 
 /**
  * This is the entry point for the fts3-transfer-status command line tool.
@@ -119,13 +111,12 @@ int main(int ac, char* av[])
                                 throw bad_option("dump-failed", strerror(errno));
                         }
 
-                    JobStatus2 status = cli.isVerbose() ?
+                    JobStatus status = cli.isVerbose() ?
                             ctx.getTransferJobSummary(jobId, archive)
                             :
                             ctx.getTransferJobStatus(jobId, archive)
                             ;
 
-                    // TODO test!
                     // If a list is requested, or dumping the failed transfers,
                     // get the transfers
                     if (cli.list() || cli.dumpFailed())

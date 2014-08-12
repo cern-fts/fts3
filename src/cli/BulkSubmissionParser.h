@@ -25,7 +25,7 @@
 #ifndef BULKSUBMISSIONPARSER_H_
 #define BULKSUBMISSIONPARSER_H_
 
-#include "TransferTypes.h"
+#include "File.h"
 
 #include "exception/cli_exception.h"
 

@@ -19,14 +19,13 @@
 
 #include "GSoapContextAdapter.h"
 #include "ProxyCertificateDelegator.h"
+#include "File.h"
+
 #include "ui/SubmitTransferCli.h"
 #include "rest/HttpRequest.h"
 #include "common/JobStatusHandler.h"
-
-#include "TransferTypes.h"
-
 #include "exception/cli_exception.h"
-#include "JsonOutput.h"
+
 
 using namespace fts3::cli;
 using namespace fts3::common;

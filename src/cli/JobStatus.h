@@ -26,7 +26,7 @@ namespace cli {
 
 namespace pt = boost::property_tree;
 
-class JobStatus2
+class JobStatus
 {
     friend class MsgPrinter;
     friend class JsonOutput;
@@ -46,7 +46,7 @@ public:
 
     typedef std::tuple<int, int, int, int, int , int> JobSummary;
 
-    JobStatus2(std::string const & jobId, std::string const & status, std::string const & dn, std::string const & reason,
+    JobStatus(std::string const & jobId, std::string const & status, std::string const & dn, std::string const & reason,
               std::string const & vo, std::string const & submitTime, int nbFiles, int priority,
               boost::optional<JobSummary> summary = boost::optional<JobSummary>()) :
             jobId(jobId),
@@ -59,7 +59,7 @@ public:
             priority(priority),
             summary(summary) {}
 
-    virtual ~JobStatus2() {}
+    virtual ~JobStatus() {}
 
     void addFile(tns3__FileTransferStatus const & gsoapFile)
     {
