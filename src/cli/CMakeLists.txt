@@ -225,6 +225,9 @@ install(FILES "${MAN_INPUT_DIR}/fts-transfer-submit.1" DESTINATION ${MAN_INSTALL
 install(FILES "${MAN_INPUT_DIR}/fts-set-priority.1" DESTINATION ${MAN_INSTALL_DIR}/man1/)
 install(FILES "${MAN_INPUT_DIR}/fts-set-debug.1" DESTINATION ${MAN_INSTALL_DIR}/man1/)
 install(FILES "${MAN_INPUT_DIR}/fts-set-blacklist.1" DESTINATION ${MAN_INSTALL_DIR}/man1/)
+install(FILES "${MAN_INPUT_DIR}/fts-transfer-snapshot.1" DESTINATION ${MAN_INSTALL_DIR}/man1/)
+install(FILES "${MAN_INPUT_DIR}/fts-transfer-delete.1" DESTINATION ${MAN_INSTALL_DIR}/man1/)
+install(FILES "${MAN_INPUT_DIR}/fts-delegation-init.1" DESTINATION ${MAN_INSTALL_DIR}/man1/)
 
 # ------------------------------------------------------------------------
 
