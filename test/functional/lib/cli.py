@@ -96,7 +96,7 @@ class Cli:
             cmdArray += ['--detailed']
         out = self._spawn(cmdArray)
         detailedState = json.loads(out)
-        fileStates = detailedState['job']['files']
+        fileStates = detailedState['job'][0]['files']
         pairDict = {}
         for f in fileStates:
             src = f['source']
