@@ -214,7 +214,7 @@ void MsgPrinter::print_ostr(JobStatus const & status, bool short_out)
                 }
             else
                 {
-                    (*ostr) << "  Retries:     0" << std::endl;
+                    (*ostr) << "  Retries:     " << it->nbFailures << std::endl;
                 }
         }
 
@@ -262,7 +262,7 @@ void MsgPrinter::print_json(JobStatus const & status)
 
                 if (it->retries.empty())
                     {
-                        file.put("retries", 0);
+                        file.put("retries", it->nbFailures);
                     }
                 else
                     {

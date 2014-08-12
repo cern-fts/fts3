@@ -133,8 +133,8 @@ int main(int ac, char* av[])
                                     if (cnt > 0 && resp._getFileStatusReturn)
                                         {
 
-                                            std::vector<tns3__FileTransferStatus * >& vect = resp._getFileStatusReturn->item;
-                                            std::vector<tns3__FileTransferStatus * >::iterator it;
+                                            std::vector<tns3__FileTransferStatus * > const & vect = resp._getFileStatusReturn->item;
+                                            std::vector<tns3__FileTransferStatus * >::const_iterator it;
                                             std::vector<tns3__FileTransferRetry*>::const_iterator ri;
 
                                             // print the response
