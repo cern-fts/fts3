@@ -60,12 +60,13 @@ public:
      */
     struct protocol
     {
-        protocol():nostreams(4),no_tx_activity_to(0),tcp_buffer_size(0),urlcopy_tx_to(3600) {}
+        protocol():nostreams(4),no_tx_activity_to(0),tcp_buffer_size(0),urlcopy_tx_to(3600), strict_copy(false) {}
 
         int nostreams;
         int no_tx_activity_to;
         int tcp_buffer_size;
         int urlcopy_tx_to;
+        bool strict_copy;
 
         static const int size = 4;
 

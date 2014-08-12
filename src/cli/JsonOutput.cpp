@@ -37,11 +37,6 @@ void JsonOutput::print(std::exception const & ex)
     print("error", ex.what());
 }
 
-void JsonOutput::printArray(std::string const & path, std::map<std::string, std::string> const & object)
-{
-    printArray(path, to_ptree(object));
-}
-
 void JsonOutput::printArray(std::string const & path, std::string const & value)
 {
     pt::ptree item;
@@ -80,20 +75,6 @@ JsonOutput::~JsonOutput()
             // and finally print it to the output
             (*out) << str;
         }
-}
-
-pt::ptree JsonOutput::to_ptree(std::map<std::string, std::string> const & values)
-{
-
-    pt::ptree pt;
-
-    std::map<std::string, std::string>::const_iterator it;
-    for (it = values.begin(); it != values.end(); ++it)
-        {
-            pt.put(it->first, it->second);
-        }
-
-    return pt;
 }
 
 } /* namespace cli */

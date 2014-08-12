@@ -1279,6 +1279,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
     const std::string nostreams		   = params.get(JobParameterHandler::NOSTREAMS);
     const std::string buffSize		   = params.get(JobParameterHandler::BUFFER_SIZE);
     const std::string timeout		   = params.get(JobParameterHandler::TIMEOUT);
+    const std::string strictCopy       = params.get(JobParameterHandler::STRICT_COPY);
 
     std::string reuseFlag = "N"; //default
     if (reuse == "Y")
@@ -1321,6 +1322,12 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
         {
             if (!jobParams.empty()) jobParams += ",";
             jobParams += "buffersize:" + buffSize;
+        }
+    // strict-copy was specified
+    if (strictCopy == "Y")
+        {
+            if (!jobParams.empty()) jobParams += ",";
+            jobParams += "strict";
         }
 
     soci::session sql(*connectionPool);
@@ -2670,7 +2677,7 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
                     // Update job_finished in files
                     sql << "UPDATE t_file SET "
                            " job_finished = UTC_TIMESTAMP() "
-                           "WHERE job_id = :jobId",
+                           "WHERE job_id = :jobId AND job_finished IS NULL",
                            soci::use(job_id, "jobId");
                 }
             // Job not finished yet
@@ -4389,45 +4396,6 @@ int MySqlAPI::getCredits(soci::session& sql, const std::string & source_hostname
 }
 
 
-
-void MySqlAPI::setAllowedNoOptimize(const std::string & job_id, int file_id, const std::string & params)
-{
-    soci::session sql(*connectionPool);
-
-    try
-        {
-            sql.begin();
-
-            if (file_id)
-                {
-                    soci::statement stmt1 = (
-                                                sql.prepare << "UPDATE t_file SET internal_file_params = :params WHERE file_id = :fileId AND job_id = :jobId",
-                                                soci::use(params), soci::use(file_id), soci::use(job_id));
-                    stmt1.execute(true);
-                }
-            else
-                {
-                    soci::statement stmt2 = (
-                                                sql.prepare << "UPDATE t_file SET internal_file_params = :params WHERE job_id = :jobId",
-                                                soci::use(params), soci::use(job_id));
-                    stmt2.execute(true);
-                }
-            sql.commit();
-        }
-    catch (std::exception& e)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-    catch (...)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception ");
-        }
-}
-
-
-
 void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
 {
     soci::session sql(*connectionPool);
@@ -4535,49 +4503,6 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }
-
-
-
-
-void MySqlAPI::setAllowed(const std::string & job_id, int file_id, const std::string & /*source_se*/, const std::string & /*dest*/,
-                          int nostreams, int timeout, int buffersize)
-{
-    soci::session sql(*connectionPool);
-    std::stringstream params;
-
-    try
-        {
-            sql.begin();
-
-            params << "nostreams:" << nostreams << ",timeout:" << timeout << ",buffersize:" << buffersize;
-
-            if (file_id != -1)
-                {
-                    sql << "UPDATE t_file SET internal_file_params = :params WHERE file_id = :fileId AND job_id = :jobId",
-                        soci::use(params.str()), soci::use(file_id), soci::use(job_id);
-
-                }
-            else
-                {
-
-                    sql << "UPDATE t_file SET internal_file_params = :params WHERE job_id = :jobId",
-                        soci::use(params.str()), soci::use(job_id);
-                }
-
-            sql.commit();
-        }
-    catch (std::exception& e)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-    catch (...)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }
-}
-
 
 
 bool MySqlAPI::terminateReuseProcess(const std::string & jobId, int pid, const std::string & message)

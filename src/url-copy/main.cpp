@@ -885,6 +885,9 @@ int main(int argc, char **argv)
                 logger.INFO() << "Bringonline token:" << currentTransfer.tokenBringOnline << std::endl;
                 logger.INFO() << "Multihop: " << opts.multihop << std::endl;
                 logger.INFO() << "UDT: " << opts.enable_udt << std::endl;
+                if (opts.strictCopy) {
+                    logger.INFO() << "Copy only transfer!" << std::endl;
+                }
 
                 //set to active only for reuse
                 if (opts.areTransfersOnFile())
@@ -957,6 +960,9 @@ int main(int argc, char **argv)
 
                 if (!opts.destTokenDescription.empty())
                     gfalt_set_dst_spacetoken(params, opts.destTokenDescription.c_str(), NULL);
+
+                if (opts.strictCopy)
+                    gfalt_set_strict_copy_mode(params, TRUE, NULL);
 
                 gfalt_set_create_parent_dir(params, TRUE, NULL);
 
@@ -1054,10 +1060,14 @@ int main(int argc, char **argv)
                         logger.INFO() << "Overwrite is enabled" << std::endl;
                         gfalt_set_replace_existing_file(params, TRUE, NULL);
                     }
+                else if (opts.strictCopy)
+                    {
+                        logger.INFO() << "Overwrite is not enabled, but this is a copy-only transfer" << std::endl;
+                    }
                 else
                     {
                         struct stat statbufdestOver;
-                        //if overwrite is not enabled, check if  exists and stop the transfer if it does
+                        // if overwrite is not enabled, check if  exists and stop the transfer if it does
                         logger.INFO() << "Stat the dest surl to check if file already exists" << std::endl;
                         errorMessage = ""; //reset
                         if (gfal2_stat(handle, (currentTransfer.destUrl).c_str(), &statbufdestOver, &tmp_err) == 0)
@@ -1231,63 +1241,70 @@ int main(int argc, char **argv)
                 currentTransfer.transferredBytes = currentTransfer.fileSize;
                 msg_ifce::getInstance()->set_total_bytes_transfered(&tr_completed, currentTransfer.transferredBytes);
 
-                logger.INFO() << "DESTINATION Stat the dest surl start" << std::endl;
-                off_t dest_size;
-                errorCode = statWithRetries(handle, "DESTINATION", currentTransfer.destUrl, &dest_size, &errorMessage);
-                if (errorCode != 0)
+                if (!opts.strictCopy)
                     {
-                        logger.ERROR() << "DESTINATION Failed to get dest file size, errno:" << errorCode << ", "
-                                       << errorMessage << std::endl;
-                        errorMessage = "DESTINATION Failed to get dest file size: " + errorMessage;
-                        errorScope = DESTINATION;
-                        reasonClass = mapErrnoToString(errorCode);
-                        errorPhase = TRANSFER_FINALIZATION;
-                        retry = retryTransfer(errorCode, "DESTINATION", errorMessage);
-                        goto stop;
-                    }
+                        logger.INFO() << "DESTINATION Stat the dest surl start" << std::endl;
+                        off_t dest_size;
+                        errorCode = statWithRetries(handle, "DESTINATION", currentTransfer.destUrl, &dest_size, &errorMessage);
+                        if (errorCode != 0)
+                            {
+                                logger.ERROR() << "DESTINATION Failed to get dest file size, errno:" << errorCode << ", "
+                                               << errorMessage << std::endl;
+                                errorMessage = "DESTINATION Failed to get dest file size: " + errorMessage;
+                                errorScope = DESTINATION;
+                                reasonClass = mapErrnoToString(errorCode);
+                                errorPhase = TRANSFER_FINALIZATION;
+                                retry = retryTransfer(errorCode, "DESTINATION", errorMessage);
+                                goto stop;
+                            }
 
-                if (dest_size <= 0)
-                    {
-                        errorMessage = "DESTINATION file size is 0";
-                        logger.ERROR() << errorMessage << std::endl;
-                        errorScope = DESTINATION;
-                        reasonClass = mapErrnoToString(gfal_posix_code_error());
-                        errorPhase = TRANSFER_FINALIZATION;
-                        retry = true;
-                        goto stop;
-                    }
+                        if (dest_size <= 0)
+                            {
+                                errorMessage = "DESTINATION file size is 0";
+                                logger.ERROR() << errorMessage << std::endl;
+                                errorScope = DESTINATION;
+                                reasonClass = mapErrnoToString(gfal_posix_code_error());
+                                errorPhase = TRANSFER_FINALIZATION;
+                                retry = true;
+                                goto stop;
+                            }
 
-                if (currentTransfer.userFileSize != 0 && currentTransfer.userFileSize != dest_size)
-                    {
-                        std::stringstream error_;
-                        error_ << "DESTINATION User specified destination file size is " << currentTransfer.userFileSize << " but stat returned " << dest_size;
-                        errorMessage = error_.str();
-                        logger.ERROR() << errorMessage << std::endl;
-                        errorScope = DESTINATION;
-                        reasonClass = mapErrnoToString(gfal_posix_code_error());
-                        errorPhase = TRANSFER_FINALIZATION;
-                        retry = true;
-                        goto stop;
-                    }
+                        if (currentTransfer.userFileSize != 0 && currentTransfer.userFileSize != dest_size)
+                            {
+                                std::stringstream error_;
+                                error_ << "DESTINATION User specified destination file size is " << currentTransfer.userFileSize << " but stat returned " << dest_size;
+                                errorMessage = error_.str();
+                                logger.ERROR() << errorMessage << std::endl;
+                                errorScope = DESTINATION;
+                                reasonClass = mapErrnoToString(gfal_posix_code_error());
+                                errorPhase = TRANSFER_FINALIZATION;
+                                retry = true;
+                                goto stop;
+                            }
 
-                logger.INFO() << "DESTINATION  file size: " << dest_size << std::endl;
+                        logger.INFO() << "DESTINATION  file size: " << dest_size << std::endl;
 
-                //check source and dest file sizes
-                if (currentTransfer.fileSize == dest_size)
-                    {
-                        logger.INFO() << "DESTINATION Source and destination file size matching" << std::endl;
+                        //check source and dest file sizes
+                        if (currentTransfer.fileSize == dest_size)
+                            {
+                                logger.INFO() << "DESTINATION Source and destination file size matching" << std::endl;
+                            }
+                        else
+                            {
+                                errorMessage = "DESTINATION Source and destination file size mismatch ";
+                                errorMessage += boost::lexical_cast<std::string>(currentTransfer.fileSize);
+                                errorMessage += " <> ";
+                                errorMessage += boost::lexical_cast<std::string>(dest_size);
+                                logger.ERROR() << errorMessage << std::endl;
+                                errorScope = DESTINATION;
+                                reasonClass = mapErrnoToString(gfal_posix_code_error());
+                                errorPhase = TRANSFER_FINALIZATION;
+                                goto stop;
+                            }
                     }
                 else
                     {
-                        errorMessage = "DESTINATION Source and destination file size mismatch ";
-                        errorMessage += boost::lexical_cast<std::string>(currentTransfer.fileSize);
-                        errorMessage += " <> ";
-                        errorMessage += boost::lexical_cast<std::string>(dest_size);
-                        logger.ERROR() << errorMessage << std::endl;
-                        errorScope = DESTINATION;
-                        reasonClass = mapErrnoToString(gfal_posix_code_error());
-                        errorPhase = TRANSFER_FINALIZATION;
-                        goto stop;
+                        logger.INFO() << "Skipping destination file size check" << std::endl;
                     }
 
                 gfalt_set_user_data(params, NULL, NULL);

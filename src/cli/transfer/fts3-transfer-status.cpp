@@ -18,7 +18,7 @@
  */
 
 #include "GSoapContextAdapter.h"
-#include "TransferTypes.h"
+#include "JobStatus.h"
 #include "ui/TransferStatusCli.h"
 
 #include "rest/ResponseParser.h"
@@ -82,7 +82,7 @@ int main(int ac, char* av[])
 
             // validate command line options, and return respective gsoap context
             GSoapContextAdapter ctx (cli.getService());
-            ctx.printServiceDetails(cli.isVerbose());
+            ctx.printServiceDetails();
             cli.printCliDeatailes();
 
             if (cli.p())
@@ -119,23 +119,11 @@ int main(int ac, char* av[])
                                 throw bad_option("dump-failed", strerror(errno));
                         }
 
-                    if (cli.isVerbose())
-                        {
-                            // do the request
-                            JobSummary summary = ctx.getTransferJobSummary(jobId, archive);
-                            // print the response
-                            MsgPrinter::instance().job_summary(summary);
-                        }
-                    else
-                        {
-                            // do the request
-                            fts3::cli::JobStatus status = ctx.getTransferJobStatus(jobId, archive);
-                            // print the response
-                            if (!status.jobStatus.empty())
-                                {
-                                    MsgPrinter::instance().status(status);
-                                }
-                        }
+                    JobStatus2 status = cli.isVerbose() ?
+                            ctx.getTransferJobSummary(jobId, archive)
+                            :
+                            ctx.getTransferJobStatus(jobId, archive)
+                            ;
 
                     // TODO test!
                     // If a list is requested, or dumping the failed transfers,
@@ -162,36 +150,37 @@ int main(int ac, char* av[])
                                             for (it = vect.begin(); it < vect.end(); it++)
                                                 {
                                                     tns3__FileTransferStatus* stat = *it;
+                                                    status.addFile(*stat);
 
-                                                    if (cli.list())
-                                                        {
-                                                            vector<string> values =
-                                                                boost::assign::list_of
-                                                                (*stat->sourceSURL)
-                                                                (*stat->destSURL)
-                                                                (*stat->transferFileState)
-                                                                (lexical_cast<string>(stat->numFailures))
-                                                                (*stat->reason)
-                                                                (lexical_cast<string>(stat->duration))
-                                                                ;
-
-                                                            vector<string> retries;
-                                                            transform(
-                                                                stat->retries.begin(),
-                                                                stat->retries.end(),
-                                                                inserter(retries, retries.begin()),
-                                                                boost::lambda::bind(&tns3__FileTransferRetry::reason, lambda::_1)
-                                                            );
-
-                                                            MsgPrinter::instance().file_list(values, retries);
-                                                        }
-
-                                                    if (cli.dumpFailed() && isTransferFailed(*stat->transferFileState))
-                                                        {
-                                                            failedFiles << *stat->sourceSURL << " "
-                                                                        << *stat->destSURL
-                                                                        << std::endl;
-                                                        }
+//                                                    if (cli.list())
+//                                                        {
+//                                                            vector<string> values =
+//                                                                boost::assign::list_of
+//                                                                (*stat->sourceSURL)
+//                                                                (*stat->destSURL)
+//                                                                (*stat->transferFileState)
+//                                                                (lexical_cast<string>(stat->numFailures))
+//                                                                (*stat->reason)
+//                                                                (lexical_cast<string>(stat->duration))
+//                                                                ;
+//
+//                                                            vector<string> retries;
+//                                                            transform(
+//                                                                stat->retries.begin(),
+//                                                                stat->retries.end(),
+//                                                                inserter(retries, retries.begin()),
+//                                                                boost::lambda::bind(&tns3__FileTransferRetry::reason, lambda::_1)
+//                                                            );
+//
+//                                                            MsgPrinter::instance().file_list(values, retries);
+//                                                        }
+//
+//                                                    if (cli.dumpFailed() && isTransferFailed(*stat->transferFileState))
+//                                                        {
+//                                                            failedFiles << *stat->sourceSURL << " "
+//                                                                        << *stat->destSURL
+//                                                                        << std::endl;
+//                                                        }
                                                 }
                                         }
 
@@ -199,6 +188,8 @@ int main(int ac, char* av[])
                                 }
                             while(cnt == DEFAULT_LIMIT);
                         }
+
+                    MsgPrinter::instance().print(status);
                 }
 
         }

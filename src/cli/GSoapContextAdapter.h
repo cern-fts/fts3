@@ -25,6 +25,7 @@
 #define GSOAPCONTEXADAPTER_H_
 
 #include "TransferTypes.h"
+#include "JobStatus.h"
 #include "ws-ifce/gsoap/gsoap_stubs.h"
 
 #include <vector>
@@ -83,7 +84,7 @@ public:
      *
      * @param verbose : if true prints service details
      */
-    void printServiceDetails(bool verbose);
+    void printServiceDetails();
 
     /**
      * Type cast operator.
@@ -115,7 +116,7 @@ public:
      *
      * @return an object holding the job status
      */
-    JobStatus getTransferJobStatus (string jobId, bool archive);
+    JobStatus2 getTransferJobStatus (string jobId, bool archive);
 
     /**
      * Remote call to getRoles
@@ -166,7 +167,7 @@ public:
      *
      * @return an object containing job summary
      */
-    JobSummary getTransferJobSummary (string jobId, bool archive);
+    JobStatus2 getTransferJobSummary (string jobId, bool archive);
 
     /**
      * Remote call to getFileStatus

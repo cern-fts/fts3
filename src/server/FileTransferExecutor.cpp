@@ -98,6 +98,7 @@ void FileTransferExecutor::run(boost::any & ctx)
             int BufSize = 0;
             int StreamsperFile = 0;
             int Timeout = 0;
+            bool StrictCopy = false;
             bool manualProtocol = false;
 
             bool manualConfigExists = false;
@@ -109,6 +110,7 @@ void FileTransferExecutor::run(boost::any & ctx)
                     BufSize = (*p).tcp_buffer_size;
                     StreamsperFile = (*p).nostreams;
                     Timeout = (*p).urlcopy_tx_to;
+                    StrictCopy = (*p).strict_copy;
                     manualProtocol = true;
                 }
             else
@@ -178,6 +180,11 @@ void FileTransferExecutor::run(boost::any & ctx)
                     string destSiteName = ""; //siteResolver.getSiteName(tf.DEST_SURL);
 
                     unsigned debugLevel = db->getDebugLevel(source_hostname, destin_hostname);
+
+                    if (StrictCopy)
+                        {
+                            params.append(" --strict-copy ");
+                        }
 
                     if (debugLevel)
                         {

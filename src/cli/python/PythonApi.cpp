@@ -24,6 +24,7 @@
 
 #include "PythonApi.h"
 #include "TransferTypes.h"
+#include "JobStatus.h"
 
 #include "exception/bad_option.h"
 
@@ -77,8 +78,8 @@ void PythonApi::cancelAll(py::list ids)
 
 py::str PythonApi::getStatus(py::str id, bool archive)
 {
-    JobStatus s = ctx.getTransferJobStatus(py::extract<string>(id), archive);
-    return s.jobStatus.c_str();
+    JobStatus2 s = ctx.getTransferJobStatus(py::extract<string>(id), archive);
+    return s.getStatus().c_str();
 }
 
 py::str PythonApi::getVersion()

@@ -255,19 +255,6 @@ int ProfiledDB::getSeIn(const std::set<std::string> & source, const std::string 
 }
 
 
-void ProfiledDB::setAllowed(const std::string & job_id, int file_id, const std::string & source_se, const std::string & dest,
-                            int nostreams, int timeout, int buffersize)
-{
-    PROFILE_PREFIXED("DB::", db->setAllowed(job_id, file_id, source_se, dest, nostreams, timeout, buffersize));
-}
-
-
-void ProfiledDB::setAllowedNoOptimize(const std::string & job_id, int file_id, const std::string & params)
-{
-    PROFILE_PREFIXED("DB::", db->setAllowedNoOptimize(job_id, file_id, params));
-}
-
-
 bool ProfiledDB::terminateReuseProcess(const std::string & jobId, int pid, const std::string & message)
 {
     PROFILE_PREFIXED("DB::", return db->terminateReuseProcess(jobId, pid, message));
@@ -987,7 +974,7 @@ bool ProfiledDB::getOauthCredentials(const std::string& user_dn, const std::stri
 
 bool ProfiledDB::isDmJob(std::string const & job)
 {
-    PROFILE_PREFIXED("DB::", db->isDmJob(job));
+    PROFILE_PREFIXED("DB::", return db->isDmJob(job));
 }
 
 void ProfiledDB::cancelDmJobs(std::vector<std::string> const & jobs)

@@ -167,12 +167,8 @@ bool CliBase::validate()
 
 void CliBase::printCliDeatailes()
 {
-    // if verbose print general info
-    if (isVerbose())
-        {
-            MsgPrinter::instance().print_info("# Client version", "client_version", version);
-            MsgPrinter::instance().print_info("# Client interface version", "client_interface", interface);
-        }
+    MsgPrinter::instance().print_info("# Client version", "client_version", version);
+    MsgPrinter::instance().print_info("# Client interface version", "client_interface", interface);
 }
 
 string CliBase::getUsageString(string tool)

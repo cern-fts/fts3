@@ -25,6 +25,7 @@ public:
     bool enable_udt;
     bool enable_ipv6;
     bool global_timeout;
+    bool strictCopy;
     unsigned debugLevel;
 
     enum CompareChecksum

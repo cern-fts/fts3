@@ -121,10 +121,6 @@ public:
 
     int getSeIn(const std::set<std::string> & source, const std::string & destination);
 
-    void setAllowed(const std::string & job_id, int file_id, const std::string & source_se, const std::string & dest, int nostreams, int timeout, int buffersize);
-
-    void setAllowedNoOptimize(const std::string & job_id, int file_id, const std::string & params);
-
     bool terminateReuseProcess(const std::string & jobId, int pid, const std::string & message);
 
     void forceFailTransfers(std::map<int, std::string>& collectJobs);

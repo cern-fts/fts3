@@ -109,18 +109,15 @@ GSoapContextAdapter::~GSoapContextAdapter()
     clean();
 }
 
-void GSoapContextAdapter::printServiceDetails(bool verbose)
+void GSoapContextAdapter::printServiceDetails()
 {
     // if verbose print general info
-    if (verbose)
-        {
-            getInterfaceDeatailes();
-            MsgPrinter::instance().print_info("# Using endpoint", "endpoint", endpoint);
-            MsgPrinter::instance().print_info("# Service version", "service_version", version);
-            MsgPrinter::instance().print_info("# Interface version", "service_interface", interface);
-            MsgPrinter::instance().print_info("# Schema version", "service_schema", schema);
-            MsgPrinter::instance().print_info("# Service features", "service_metadata", metadata);
-        }
+    getInterfaceDeatailes();
+    MsgPrinter::instance().print_info("# Using endpoint", "endpoint", endpoint);
+    MsgPrinter::instance().print_info("# Service version", "service_version", version);
+    MsgPrinter::instance().print_info("# Interface version", "service_interface", interface);
+    MsgPrinter::instance().print_info("# Schema version", "service_schema", schema);
+    MsgPrinter::instance().print_info("# Service features", "service_metadata", metadata);
 }
 
 void GSoapContextAdapter::getInterfaceDeatailes()
@@ -268,7 +265,7 @@ string GSoapContextAdapter::deleteFile (std::vector<std::string>& filesForDelete
 
 
 
-JobStatus GSoapContextAdapter::getTransferJobStatus (string jobId, bool archive)
+JobStatus2 GSoapContextAdapter::getTransferJobStatus (string jobId, bool archive)
 {
     tns3__JobRequest req;
 
@@ -286,7 +283,7 @@ JobStatus GSoapContextAdapter::getTransferJobStatus (string jobId, bool archive)
     char time_buff[20];
     strftime(time_buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&submitTime));
 
-    return JobStatus(
+    return JobStatus2(
                *resp.getTransferJobStatusReturn->jobID,
                *resp.getTransferJobStatusReturn->jobStatus,
                *resp.getTransferJobStatusReturn->clientDN,
@@ -385,7 +382,7 @@ void GSoapContextAdapter::listVoManagers(string vo, impltns__listVOManagersRespo
         throw gsoap_error(ctx);
 }
 
-JobSummary GSoapContextAdapter::getTransferJobSummary (string jobId, bool archive)
+JobStatus2 GSoapContextAdapter::getTransferJobSummary (string jobId, bool archive)
 {
     tns3__JobRequest req;
 
@@ -403,25 +400,25 @@ JobSummary GSoapContextAdapter::getTransferJobSummary (string jobId, bool archiv
     char time_buff[20];
     strftime(time_buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&submitTime));
 
-    JobStatus status = JobStatus(
-                           *resp.getTransferJobSummary2Return->jobStatus->jobID,
-                           *resp.getTransferJobSummary2Return->jobStatus->jobStatus,
-                           *resp.getTransferJobSummary2Return->jobStatus->clientDN,
-                           *resp.getTransferJobSummary2Return->jobStatus->reason,
-                           *resp.getTransferJobSummary2Return->jobStatus->voName,
-                           time_buff,
-                           resp.getTransferJobSummary2Return->jobStatus->numFiles,
-                           resp.getTransferJobSummary2Return->jobStatus->priority
-                       );
+    JobStatus2::JobSummary summary (
+            resp.getTransferJobSummary2Return->numActive,
+            resp.getTransferJobSummary2Return->numReady,
+            resp.getTransferJobSummary2Return->numCanceled,
+            resp.getTransferJobSummary2Return->numFinished,
+            resp.getTransferJobSummary2Return->numSubmitted,
+            resp.getTransferJobSummary2Return->numFailed
+        );
 
-    return JobSummary (
-               status,
-               resp.getTransferJobSummary2Return->numActive,
-               resp.getTransferJobSummary2Return->numCanceled,
-               resp.getTransferJobSummary2Return->numFailed,
-               resp.getTransferJobSummary2Return->numFinished,
-               resp.getTransferJobSummary2Return->numSubmitted,
-               resp.getTransferJobSummary2Return->numReady
+    return JobStatus2(
+               *resp.getTransferJobSummary2Return->jobStatus->jobID,
+               *resp.getTransferJobSummary2Return->jobStatus->jobStatus,
+               *resp.getTransferJobSummary2Return->jobStatus->clientDN,
+               *resp.getTransferJobSummary2Return->jobStatus->reason,
+               *resp.getTransferJobSummary2Return->jobStatus->voName,
+               time_buff,
+               resp.getTransferJobSummary2Return->jobStatus->numFiles,
+               resp.getTransferJobSummary2Return->jobStatus->priority,
+               summary
            );
 }
 

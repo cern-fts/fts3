@@ -54,7 +54,7 @@ int main(int ac, char* av[])
 
             // validate command line options, and return respective gSOAP context
             GSoapContextAdapter ctx (cli.getService());
-            ctx.printServiceDetails(cli.isVerbose());
+            ctx.printServiceDetails();
             cli.printCliDeatailes();
 
             std::string jobId("");
@@ -79,20 +79,19 @@ int main(int ac, char* av[])
                         params
                     );
 
-            MsgPrinter::instance().print_info("job_id", jobId);
+            MsgPrinter::instance().print("", "job_id", jobId);
 
             // check if the -b option has been used
             if (cli.isBlocking())
                 {
-
-                    fts3::cli::JobStatus status;
+                    std::string status;
                     // wait until the transfer is ready
                     do
                         {
                             sleep(2);
-                            status = ctx.getTransferJobStatus(jobId, false);
+                            status = ctx.getTransferJobStatus(jobId, false).getStatus();
                         }
-                    while (!JobStatusHandler::getInstance().isTransferFinished(status.jobStatus));
+                    while (!JobStatusHandler::getInstance().isTransferFinished(status));
                 }
 
         }

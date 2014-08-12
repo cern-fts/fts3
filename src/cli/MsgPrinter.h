@@ -25,6 +25,7 @@
 #ifndef MSGPRINTER_H_
 #define MSGPRINTER_H_
 
+#include "JobStatus.h"
 #include "TransferTypes.h"
 #include "JsonOutput.h"
 #include "exception/cli_exception.h"
@@ -67,6 +68,8 @@ public:
     void print_info(std::string const & json_subject, std::string const & msg);
     void print_info(std::string const & ostr_subject, std::string const & json_subject, bool flag);
 
+//    void print(std::string const & json_subject, std::string const & msg);
+
     template<typename T>
     void print(std::vector<T> const & v);
     void print(std::string job_id, std::vector<tns3__DetailedFileStatus*> const & v);
@@ -75,6 +78,9 @@ public:
     void print(std::exception const & ex);
 
     void print(std::string const & subject, std::string const & msg);
+    void print(std::string const & ostr_subject, std::string const & json_subject, std::string const & msg);
+
+    void print(JobStatus2 const & status);
 
     void status(JobStatus js);
     void job_summary(JobSummary js);
@@ -105,6 +111,12 @@ private:
 
     void print_ostr(JobStatus const & j);
     void print_json(JobStatus const & j);
+
+    void print_ostr(JobStatus2 const & j);
+    void print_json(JobStatus2 const & j);
+
+    void print_ostr_nana(JobStatus2::FileInfo const & f);
+    void print_json(JobStatus2::FileInfo const & f);
 
     template<typename T>
     void print_ostr() {}
