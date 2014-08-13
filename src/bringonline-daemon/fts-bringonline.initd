@@ -27,7 +27,7 @@ prog=$(basename $exec)
 
 [ -e /etc/sysconfig/$prog ] && . /etc/sysconfig/$prog
 
-lockfile=/var/lock/subsys/fts-dm
+lockfile=/var/lock/subsys/fts-bringonline
 export GLOBUS_THREAD_MODEL=pthread
 
 start() {
