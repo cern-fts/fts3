@@ -114,155 +114,6 @@ void MsgPrinter::print(std::string const & subject, std::string const & msg)
     print(subject, subject, msg);
 }
 
-void MsgPrinter::print_ostr(JobStatus const & j)
-{
-    (*ostr) << "Request ID: " << j.jobId << std::endl;
-    (*ostr) << "Status: " << j.jobStatus << std::endl;
-
-    // if not verbose return
-    if (!verbose) return;
-
-    (*ostr) << "Client DN: " << j.clientDn << std::endl;
-    (*ostr) << "Reason: " << (j.reason.empty() ? "<None>": j.reason) << std::endl;
-    (*ostr) << "Submission time: " << j.submitTime << std::endl;
-    (*ostr) << "Files: " << (j.numFiles == -1 ? "n/a" : boost::lexical_cast<std::string>(j.numFiles)) << std::endl;
-    (*ostr) << "Priority: " << j.priority << std::endl;
-    (*ostr) << "VOName: " << j.voName << std::endl;
-    (*ostr) << std::endl;
-}
-
-void MsgPrinter::print_json(JobStatus const & j)
-{
-    map<string, string> object;
-
-    if (verbose)
-        {
-            map<string, string> aux = map_list_of
-                                      ("job_id", j.jobId)
-                                      ("status", j.jobStatus)
-                                      ("dn", j.clientDn)
-                                      ("reason", j.reason.empty() ? "<None>": j.reason)
-                                      ("submision_time", j.submitTime)
-                                      ("file_count", (j.numFiles == -1 ? "n/a" : boost::lexical_cast<std::string>(j.numFiles)))
-                                      ("priority", lexical_cast<string>(j.priority))
-                                      ("vo", j.voName)
-                                      ;
-            object = aux;
-        }
-    else
-        {
-            map<string, string> aux = map_list_of ("job_id", j.jobId) ("status", j.jobStatus);
-            object = aux;
-        }
-
-    jout.printArray("job", object);
-}
-
-void MsgPrinter::status(JobStatus js)
-{
-
-    if (!json)
-        {
-            (*ostr) << js.jobStatus << std::endl;
-            return;
-        }
-
-    map<string, string> object = map_list_of ("job_id", js.jobId) ("status", js.jobStatus);
-    jout.printArray("job", object);
-}
-
-void MsgPrinter::job_summary(JobSummary js)
-{
-
-    if (!json)
-        {
-            print_ostr(js.status);
-            (*ostr) << "\tActive: " << js.numActive << std::endl;
-            (*ostr) << "\tReady: " << js.numReady << std::endl;
-            (*ostr) << "\tCanceled: " << js.numCanceled << std::endl;
-            (*ostr) << "\tFinished: " << js.numFinished << std::endl;
-            (*ostr) << "\tSubmitted: " << js.numSubmitted << std::endl;
-            (*ostr) << "\tFailed: " << js.numFailed << std::endl;
-            return;
-        }
-
-    map<string, string> object = map_list_of
-                                 ("job_id", js.status.jobId)
-                                 ("status", js.status.jobStatus)
-                                 ("dn", js.status.clientDn)
-                                 ("reason", js.status.reason.empty() ? "<None>": js.status.reason)
-                                 ("submision_time", js.status.submitTime)
-                                 ("file_count", lexical_cast<string>(js.status.numFiles))
-                                 ("priority", lexical_cast<string>(js.status.priority))
-                                 ("vo", js.status.voName)
-
-                                 ("summary.active", lexical_cast<string>(js.numActive))
-                                 ("summary.ready", lexical_cast<string>(js.numReady))
-                                 ("summary.canceled", lexical_cast<string>(js.numCanceled))
-                                 ("summary.finished", lexical_cast<string>(js.numFinished))
-                                 ("summary.submitted", lexical_cast<string>(js.numSubmitted))
-                                 ("summary.failed", lexical_cast<string>(js.numFailed))
-                                 ;
-
-    jout.printArray("job", object);
-}
-
-void MsgPrinter::file_list(vector<string> values, vector<string> retries)
-{
-
-    enum
-    {
-        SOURCE,
-        DESTINATION,
-        STATE,
-        RETRIES,
-        REASON,
-        DURATION
-    };
-
-    if (!json)
-        {
-            (*ostr) << "  Source:      " << values[SOURCE] << std::endl;
-            (*ostr) << "  Destination: " << values[DESTINATION] << std::endl;
-            (*ostr) << "  State:       " << values[STATE] << std::endl;;
-            (*ostr) << "  Reason:      " << values[REASON] << std::endl;
-            (*ostr) << "  Duration:    " << values[DURATION] << std::endl;
-
-            if (retries.size() > 0)
-                {
-                    (*ostr) << "  Retries: " << std::endl;
-                    for_each(retries.begin(), retries.end(), (*ostr) << ("    " + lambda::_1) << '\n');
-                }
-            else
-                {
-                    (*ostr) << "  Retries:     " << values[RETRIES] << std::endl;
-                }
-            return;
-        }
-
-    ptree file;
-    file.put("source", values[SOURCE]);
-    file.put("destination", values[DESTINATION]);
-    file.put("state", values[STATE]);
-    file.put("reason", values[REASON]);
-    file.put("duration", values[DURATION]);
-
-    if (retries.size() > 0)
-        {
-            ptree retriesArray;
-            vector<string>::const_iterator i;
-            for (i = retries.begin(); i != retries.end(); ++i)
-                retriesArray.push_front(std::make_pair("", ptree(*i)));
-            file.put_child("retries", retriesArray);
-        }
-    else
-        {
-            file.put("retries", values[RETRIES]);
-        }
-
-    jout.printArray("job.files", file);
-}
-
 void MsgPrinter::print(std::string job_id, std::vector<tns3__DetailedFileStatus *> const & v)
 {
     // make sure the vector is not empty
@@ -302,22 +153,32 @@ void MsgPrinter::print(std::exception const & ex)
     if (!json) (*ostr) << ex.what() << std::endl;
 }
 
-void MsgPrinter::print(JobStatus2 const & status)
+void MsgPrinter::print(JobStatus const & status)
 {
     if (json) print_json(status);
-    else print_ostr(status);
+    else print_ostr(status, true);
 }
 
-void MsgPrinter::print_ostr(JobStatus2 const & status)
+void MsgPrinter::print_ostr(JobStatus const & j)
 {
-    if (!verbose)
-    {
-        (*ostr) << status.status << std::endl;
-    }
+    print_ostr(j, false);
+}
+
+void MsgPrinter::print_ostr(JobStatus const & status, bool short_out)
+{
+    if (short_out && !verbose)
+        {
+            (*ostr) << status.status << std::endl;
+        }
     else
         {
             (*ostr) << "Request ID: " << status.jobId << std::endl;
             (*ostr) << "Status: " << status.status << std::endl;
+        }
+
+    if (verbose)
+        {
+
             (*ostr) << "Client DN: " << status.dn << std::endl;
             (*ostr) << "Reason: " << (status.reason.empty() ? "<None>": status.reason) << std::endl;
             (*ostr) << "Submission time: " << status.submitTime << std::endl;
@@ -336,31 +197,31 @@ void MsgPrinter::print_ostr(JobStatus2 const & status)
                 }
         }
 
-        std::vector<JobStatus2::FileInfo>::const_iterator it;
-        for (it = status.files.begin(); it != status.files.end(); ++it)
-            {
-                (*ostr) << std::endl;
-                (*ostr) << "  Source:      " << it->src << std::endl;
-                (*ostr) << "  Destination: " << it->dst << std::endl;
-                (*ostr) << "  State:       " << it->state << std::endl;;
-                (*ostr) << "  Reason:      " << it->reason << std::endl;
-                (*ostr) << "  Duration:    " << it->duration << std::endl;
+    std::vector<JobStatus::FileInfo>::const_iterator it;
+    for (it = status.files.begin(); it != status.files.end(); ++it)
+        {
+            (*ostr) << std::endl;
+            (*ostr) << "  Source:      " << it->src << std::endl;
+            (*ostr) << "  Destination: " << it->dst << std::endl;
+            (*ostr) << "  State:       " << it->state << std::endl;;
+            (*ostr) << "  Reason:      " << it->reason << std::endl;
+            (*ostr) << "  Duration:    " << it->duration << std::endl;
 
-                if (it->retries.size() > 0)
-                    {
-                        (*ostr) << "  Retries: " << std::endl;
-                        std::for_each(it->retries.begin(), it->retries.end(), (*ostr) << ("    " + lambda::_1) << '\n');
-                    }
-                else
-                    {
-                        (*ostr) << "  Retries:     0" << std::endl;
-                    }
-            }
+            if (it->retries.size() > 0)
+                {
+                    (*ostr) << "  Retries: " << std::endl;
+                    std::for_each(it->retries.begin(), it->retries.end(), (*ostr) << ("    " + lambda::_1) << '\n');
+                }
+            else
+                {
+                    (*ostr) << "  Retries:     " << it->nbFailures << std::endl;
+                }
+        }
 
-        (*ostr) << std::endl;
+    (*ostr) << std::endl;
 }
 
-void MsgPrinter::print_json(JobStatus2 const & status)
+void MsgPrinter::print_json(JobStatus const & status)
 {
     ptree job;
     job.put("job_id", status.jobId);
@@ -389,7 +250,7 @@ void MsgPrinter::print_json(JobStatus2 const & status)
     if (!status.files.empty())
     {
         ptree files;
-        std::vector<JobStatus2::FileInfo>::const_iterator it;
+        std::vector<JobStatus::FileInfo>::const_iterator it;
         for (it = status.files.begin(); it != status.files.end(); ++it)
             {
                 ptree file;
@@ -401,7 +262,7 @@ void MsgPrinter::print_json(JobStatus2 const & status)
 
                 if (it->retries.empty())
                     {
-                        file.put("retries", 0);
+                        file.put("retries", it->nbFailures);
                     }
                 else
                     {
@@ -418,16 +279,6 @@ void MsgPrinter::print_json(JobStatus2 const & status)
     }
 
     jout.printArray("job", job);
-}
-
-void MsgPrinter::print_ostr_nana(JobStatus2::FileInfo const & f)
-{
-
-}
-
-void MsgPrinter::print_json(JobStatus2::FileInfo const & f)
-{
-
 }
 
 } /* namespace server */

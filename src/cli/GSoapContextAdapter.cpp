@@ -265,7 +265,7 @@ string GSoapContextAdapter::deleteFile (std::vector<std::string>& filesForDelete
 
 
 
-JobStatus2 GSoapContextAdapter::getTransferJobStatus (string jobId, bool archive)
+JobStatus GSoapContextAdapter::getTransferJobStatus (string jobId, bool archive)
 {
     tns3__JobRequest req;
 
@@ -283,7 +283,7 @@ JobStatus2 GSoapContextAdapter::getTransferJobStatus (string jobId, bool archive
     char time_buff[20];
     strftime(time_buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&submitTime));
 
-    return JobStatus2(
+    return JobStatus(
                *resp.getTransferJobStatusReturn->jobID,
                *resp.getTransferJobStatusReturn->jobStatus,
                *resp.getTransferJobStatusReturn->clientDN,
@@ -360,16 +360,16 @@ vector<JobStatus> GSoapContextAdapter::listRequests (vector<string> statuses, st
             char time_buff[20];
             strftime(time_buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&submitTime));
 
-            JobStatus status = JobStatus(
-                                   *gstat->jobID,
-                                   *gstat->jobStatus,
-                                   *gstat->clientDN,
-                                   *gstat->reason,
-                                   *gstat->voName,
-                                   time_buff,
-                                   gstat->numFiles,
-                                   gstat->priority
-                               );
+            JobStatus status (
+                   *gstat->jobID,
+                   *gstat->jobStatus,
+                   *gstat->clientDN,
+                   *gstat->reason,
+                   *gstat->voName,
+                   time_buff,
+                   gstat->numFiles,
+                   gstat->priority
+               );
             ret.push_back(status);
         }
 
@@ -382,7 +382,7 @@ void GSoapContextAdapter::listVoManagers(string vo, impltns__listVOManagersRespo
         throw gsoap_error(ctx);
 }
 
-JobStatus2 GSoapContextAdapter::getTransferJobSummary (string jobId, bool archive)
+JobStatus GSoapContextAdapter::getTransferJobSummary (string jobId, bool archive)
 {
     tns3__JobRequest req;
 
@@ -400,7 +400,7 @@ JobStatus2 GSoapContextAdapter::getTransferJobSummary (string jobId, bool archiv
     char time_buff[20];
     strftime(time_buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&submitTime));
 
-    JobStatus2::JobSummary summary (
+    JobStatus::JobSummary summary (
             resp.getTransferJobSummary2Return->numActive,
             resp.getTransferJobSummary2Return->numReady,
             resp.getTransferJobSummary2Return->numCanceled,
@@ -409,7 +409,7 @@ JobStatus2 GSoapContextAdapter::getTransferJobSummary (string jobId, bool archiv
             resp.getTransferJobSummary2Return->numFailed
         );
 
-    return JobStatus2(
+    return JobStatus(
                *resp.getTransferJobSummary2Return->jobStatus->jobID,
                *resp.getTransferJobSummary2Return->jobStatus->jobStatus,
                *resp.getTransferJobSummary2Return->jobStatus->clientDN,

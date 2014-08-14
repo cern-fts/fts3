@@ -25,8 +25,6 @@
 #include "rest/HttpRequest.h"
 #include "exception/bad_option.h"
 
-#include "common/JobStatusHandler.h"
-
 #include "exception/cli_exception.h"
 #include "JsonOutput.h"
 
@@ -40,7 +38,6 @@
 #include <boost/lambda/bind.hpp>
 
 using namespace fts3::cli;
-using namespace fts3::common;
 
 static bool isTransferFailed(const std::string& state)
 {
@@ -57,14 +54,14 @@ int main(int ac, char* av[])
     try
         {
             TransferStatusCli cli;
-            // create and initialize the command line utility
+            // create and initialise the command line utility
             cli.parse(ac, av);
             if (!cli.validate()) return 1;
 
             if (cli.rest())
                 {
-                    std::vector<std::string> jobIds = cli.getJobIds();
-                    std::vector<std::string>::iterator itr;
+                    std::vector<std::string> const jobIds = cli.getJobIds();
+                    std::vector<std::string>::const_iterator itr;
 
                     for (itr = jobIds.begin(); itr != jobIds.end(); ++itr)
                         {
@@ -119,13 +116,12 @@ int main(int ac, char* av[])
                                 throw bad_option("dump-failed", strerror(errno));
                         }
 
-                    JobStatus2 status = cli.isVerbose() ?
+                    JobStatus status = cli.isVerbose() ?
                             ctx.getTransferJobSummary(jobId, archive)
                             :
                             ctx.getTransferJobStatus(jobId, archive)
                             ;
 
-                    // TODO test!
                     // If a list is requested, or dumping the failed transfers,
                     // get the transfers
                     if (cli.list() || cli.dumpFailed())
@@ -142,45 +138,24 @@ int main(int ac, char* av[])
                                     if (cnt > 0 && resp._getFileStatusReturn)
                                         {
 
-                                            std::vector<tns3__FileTransferStatus * >& vect = resp._getFileStatusReturn->item;
-                                            std::vector<tns3__FileTransferStatus * >::iterator it;
-                                            std::vector<tns3__FileTransferRetry*>::const_iterator ri;
-
+                                            std::vector<tns3__FileTransferStatus * > const & vect = resp._getFileStatusReturn->item;
+                                            std::vector<tns3__FileTransferStatus * >::const_iterator it;
                                             // print the response
                                             for (it = vect.begin(); it < vect.end(); it++)
                                                 {
                                                     tns3__FileTransferStatus* stat = *it;
-                                                    status.addFile(*stat);
 
-//                                                    if (cli.list())
-//                                                        {
-//                                                            vector<string> values =
-//                                                                boost::assign::list_of
-//                                                                (*stat->sourceSURL)
-//                                                                (*stat->destSURL)
-//                                                                (*stat->transferFileState)
-//                                                                (lexical_cast<string>(stat->numFailures))
-//                                                                (*stat->reason)
-//                                                                (lexical_cast<string>(stat->duration))
-//                                                                ;
-//
-//                                                            vector<string> retries;
-//                                                            transform(
-//                                                                stat->retries.begin(),
-//                                                                stat->retries.end(),
-//                                                                inserter(retries, retries.begin()),
-//                                                                boost::lambda::bind(&tns3__FileTransferRetry::reason, lambda::_1)
-//                                                            );
-//
-//                                                            MsgPrinter::instance().file_list(values, retries);
-//                                                        }
-//
-//                                                    if (cli.dumpFailed() && isTransferFailed(*stat->transferFileState))
-//                                                        {
-//                                                            failedFiles << *stat->sourceSURL << " "
-//                                                                        << *stat->destSURL
-//                                                                        << std::endl;
-//                                                        }
+                                                    if (cli.list())
+                                                        {
+
+                                                            status.addFile(*stat);
+                                                        }
+                                                    else if (cli.dumpFailed() && isTransferFailed(*stat->transferFileState))
+                                                        {
+                                                            failedFiles << *stat->sourceSURL << " "
+                                                                        << *stat->destSURL
+                                                                        << std::endl;
+                                                        }
                                                 }
                                         }
 

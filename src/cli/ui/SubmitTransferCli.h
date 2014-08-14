@@ -27,7 +27,7 @@
 
 #include "SrcDestCli.h"
 #include "DelegationCli.h"
-#include "TransferTypes.h"
+#include "File.h"
 
 #include <vector>
 

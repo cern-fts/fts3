@@ -16,7 +16,6 @@ Requires: httpd
 Requires: mod_wsgi
 Requires: python
 Requires: python-decorator
-Requires: python-matplotlib
 
 Source0: https://grid-deployment.web.cern.ch/grid-deployment/dms/fts3/tar/%{name}-%{version}.tar.gz
 
@@ -84,6 +83,8 @@ install -m 644 httpd.conf.d/ftsmon.conf           %{buildroot}%{_sysconfdir}/htt
 %files selinux
 
 %changelog
+* Thu Aug 14 2014 Michal Simon <michal.simon@cern.ch> - 3.2.26.2-2
+  - Update for new upstream release
 * Mon May 12 2014 Michal Simon <michal.simon@cern.ch> - 3.2.26-1
   - Update for new upstream release
 * Tue Oct 08 2013 Alejandro Alvarez <aalvarez@cern.ch> - 3.1.27-1
