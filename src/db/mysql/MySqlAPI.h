@@ -364,6 +364,8 @@ public:
 
     virtual void setDestMaxActive(const std::string & destination_hostname, int maxActive);
 
+    virtual void setFixActive(const std::string & source, const std::string & destination, int active);
+
     virtual int getBufferOptimization();
 
     virtual void getTransferJobStatusDetailed(std::string job_id, std::vector<boost::tuple<std::string, std::string, int, std::string, std::string> >& files);

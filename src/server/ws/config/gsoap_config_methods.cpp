@@ -693,6 +693,49 @@ int fts3::implcfg__maxDstSeActive(soap* ctx, string se, int active, implcfg__max
     return SOAP_OK;
 }
 
+int fts3::implcfg__fixActivePerPair(soap* ctx, string source, string destination, int active, implcfg__fixActivePerPairResponse& resp)
+{
+    try
+        {
+            AuthorizationManager::getInstance().authorize(
+               ctx,
+               AuthorizationManager::CONFIG,
+               AuthorizationManager::dummy
+            );
+
+            CGsiAdapter cgsi(ctx);
+            string vo = cgsi.getClientVo();
+            string dn = cgsi.getClientDn();
+
+            DBSingleton::instance().getDBObjectInstance()->setFixActive(source, destination, active);
+
+            // prepare the command for audit
+            stringstream cmd;
+            cmd << dn;
+            cmd << " had set the fixed number of active between ";
+            cmd << source;
+            cmd << " and ";
+            cmd << destination;
+            cmd << " to ";
+            cmd << active;
+            DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd.str(), "fix-active-per-pair");
+        }
+    catch(Err& ex)
+        {
+
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+            soap_receiver_fault(ctx, ex.what(), "InvalidConfigurationException");
+
+            return SOAP_FAULT;
+        }
+    catch (...)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the fixActivePerPair failed"  << commit;
+            return SOAP_FAULT;
+        }
+    return SOAP_OK;
+}
+
 int fts3::implcfg__setSecPerMb(soap* ctx, int secPerMb, implcfg__setSecPerMbResponse& resp)
 {
     try

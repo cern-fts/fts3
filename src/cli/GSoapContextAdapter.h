@@ -339,6 +339,11 @@ public:
      */
     void setMaxSrcSeActive(string se, int active);
 
+    /**
+     * Remote call to fixActivePerPair
+     */
+    void setFixActivePerPair(string source, string destination, int active);
+
     std::string getSnapShot(string vo, string src, string dst);
 
     tns3__DetailedJobStatus* getDetailedJobStatus(string job_id);

@@ -3757,6 +3757,7 @@ bool MySqlAPI::updateOptimizer()
     bool lanTransferBool = false;
     double ema = 0.0;
     double submitted = 0.0;
+    std::string active_fixed;
 
     time_t now = getUTC(0);
     struct tm startTimeSt;
@@ -3775,6 +3776,12 @@ bool MySqlAPI::updateOptimizer()
                                            " select  distinct o.source_se, o.dest_se from t_optimize_active o INNER JOIN "
                                            " t_file f ON (o.source_se = f.source_se) where o.dest_se=f.dest_se and "
                                            " f.file_state  = 'SUBMITTED'  and f.job_finished is null ");
+
+            //is the number of actives fixed?
+            soci::statement stmt_fixed = (
+                                        sql.prepare << "SELECT fixed from t_optimize_active "
+                                        "WHERE source_se = :source AND dest_se = :dest LIMIT 1",
+                                        soci::use(source_hostname), soci::use(destin_hostname), soci::into(active_fixed));
 
             //snapshot of active transfers
             soci::statement stmt7 = (
@@ -3897,6 +3904,11 @@ bool MySqlAPI::updateOptimizer()
                     now = getUTC(0);
 
                     lanTransferBool = lanTransfer(source_hostname, destin_hostname);
+
+                    // first thing, check if the number of actives have been fixed for this pair
+                    stmt_fixed.execute(true);
+                    if (active_fixed == "on")
+                        continue;
 
                     // check current active transfers for a linkmaxActive
                     stmt7.execute(true);
@@ -10249,6 +10261,41 @@ void MySqlAPI::setDestMaxActive(const std::string & destination_hostname, int ma
                         }
                     sql.commit();
                 }
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+
+void MySqlAPI::setFixActive(const std::string & source, const std::string & destination, int active)
+{
+    soci::session sql(*connectionPool);
+    try
+        {
+            if (active > 0)
+                {
+                    sql << "INSERT INTO t_optimize_active (source_se, dest_se, active, fixed, ema, datetime) "
+                           "VALUES (:source, :dest, :active, 'on', 0, UTC_TIMESTAMP()) "
+                           "ON DUPLICATE KEY UPDATE "
+                           "  active = :active, fixed = 'on', datetime = UTC_TIMESTAMP()",
+                           soci::use(source, "source"), soci::use(destination, "dest"), soci::use(active, "active");
+                }
+            else
+                {
+                    sql << "INSERT INTO t_optimize_active (source_se, dest_se, active, fixed, ema, datetime) "
+                           "VALUES (:source, :dest, 2, 'off', 0, UTC_TIMESTAMP()) "
+                           "ON DUPLICATE KEY UPDATE "
+                           "  fixed = 'off', datetime = UTC_TIMESTAMP()",
+                           soci::use(source, "source"), soci::use(destination, "dest");
+                }
+            sql.commit();
         }
     catch (std::exception& e)
         {
