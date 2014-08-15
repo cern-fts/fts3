@@ -478,6 +478,8 @@ private:
 
     void cancelJobInternal(soci::session& sql, std::vector<std::string>& requestIDs);
 
+    bool getOauthCredentials(const std::string& user_dn, const std::string& cloud_name, OAuth& oauth);
+
     bool isDmJob(std::string const & job);
 
     void cancelDmJobs(std::vector<std::string> const & jobs);

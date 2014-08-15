@@ -81,4 +81,5 @@ public:
     std::string FILE_METADATA;
     std::string JOB_METADATA;
     std::string BRINGONLINE_TOKEN;
+    std::string USER_CREDENTIALS;
 };

@@ -824,7 +824,7 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                                                                  "       f.checksum, j.checksum_method, j.source_space_token, "
                                                                  "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                                                                  "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
-                                                                 "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params "
+                                                                 "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params, j.user_cred "
                                                                  " FROM t_job j INNER JOIN t_file f ON (j.job_id = f.job_id) WHERE  "
                                                                  "    f.file_state = 'SUBMITTED' AND "
                                                                  "    f.source_se = :source AND f.dest_se = :dest AND "
@@ -1220,7 +1220,7 @@ void MySqlAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::
                                                          "       f.checksum, j.checksum_method, j.source_space_token, "
                                                          "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                                                          "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
-                                                         "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params "
+                                                         "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params, j.user_cred "
                                                          "FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                                          "WHERE f.job_id = :jobId AND"
                                                          "    f.file_state = 'SUBMITTED' AND "
@@ -4794,7 +4794,7 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                                 {
 				     //reset
 				     countBeat = 0;
-				     
+
                                     //update heartbeat first
                                     updateHeartBeatInternal(sql, &index, &count1, &start, &end, service_name);
 
@@ -11898,11 +11898,9 @@ bool MySqlAPI::resetForRetryDelete(soci::session& sql, int file_id, const std::s
 bool MySqlAPI::isDmJob(std::string const & job)
 {
     soci::session sql(*connectionPool);
-
     try
         {
             int count = 0;
-
             sql <<
                     "SELECT COUNT(file_id) "
                     "FROM t_dm "
@@ -11910,7 +11908,6 @@ bool MySqlAPI::isDmJob(std::string const & job)
                     soci::use(job),
                     soci::into(count)
             ;
-
             return count > 0;
         }
     catch (std::exception& e)
@@ -11922,6 +11919,32 @@ bool MySqlAPI::isDmJob(std::string const & job)
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }
+
+
+bool MySqlAPI::getOauthCredentials(const std::string& user_dn, const std::string& cloud_name, OAuth& oauth)
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            sql << "SELECT app_key, app_secret, access_token, access_token_secret "
+                   "FROM t_cloudStorage cs, t_cloudStorageUser cu "
+                   "WHERE cu.user_dn=:user_dn AND cs.cloudStorage_name=:cs_name AND cs.cloudStorage_name = cu.cloudStorage_name",
+                   soci::use(user_dn), soci::use(cloud_name), soci::into(oauth);
+             if (!sql.got_data())
+                 return false;
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+    return true;
+}
+
 
 void MySqlAPI::cancelDmJobs(std::vector<std::string> const & jobs)
 {
@@ -12009,7 +12032,6 @@ void MySqlAPI::cancelDmJobs(std::vector<std::string> const & jobs)
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }
-
 
 // the class factories
 

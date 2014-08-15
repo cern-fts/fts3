@@ -52,6 +52,8 @@
 #include "LinkConfig.h"
 #include "ShareConfig.h"
 
+#include "OAuth.h"
+
 #include <utility>
 
 #include <boost/tuple/tuple.hpp>
@@ -454,6 +456,9 @@ public:
     virtual void checkJobOperation(std::vector<std::string>& jobs, std::vector< boost::tuple<std::string, std::string> >& ops) = 0;
 
     virtual bool isDmJob(std::string const & job) = 0;
+
+    // Cloud storage API
+    virtual bool getOauthCredentials(const std::string& user_dn, const std::string& cloud_name, OAuth& oauth) = 0;
 
     virtual void cancelDmJobs(std::vector<std::string> const & jobs) = 0;
 };

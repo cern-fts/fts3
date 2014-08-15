@@ -471,6 +471,8 @@ private:
 
     std::vector<struct message_state> getStateOfDeleteInternal(soci::session& sql, const std::string& jobId, int fileId);
 
+    bool getOauthCredentials(const std::string& user_dn, const std::string& cloud_name, OAuth& oauth);
+
     bool isDmJob(std::string const & job);
 
     void cancelDmJobs(std::vector<std::string> const & jobs);

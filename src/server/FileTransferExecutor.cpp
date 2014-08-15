@@ -26,6 +26,7 @@
 #include "ws/SingleTrStateInstance.h"
 
 #include "cred/cred-utility.h"
+#include "oauth.h"
 
 extern bool stopThreads;
 
@@ -60,6 +61,11 @@ string FileTransferExecutor::prepareMetadataString(std::string text)
     text = boost::replace_all_copy(text, " ", "?");
     text = boost::replace_all_copy(text, "\"", "\\\"");
     return text;
+}
+
+std::string FileTransferExecutor::generateOauthConfigFile(const std::string& dn, const std::string& cs_name)
+{
+    return fts3::generateOauthConfigFile(db, dn, cs_name);
 }
 
 void FileTransferExecutor::run(boost::any & ctx)
@@ -162,6 +168,10 @@ void FileTransferExecutor::run(boost::any & ctx)
                                 }
                         }
 
+                    // OAuth credentials
+                    std::string oauth_file = generateOauthConfigFile(tf.DN, tf.USER_CREDENTIALS);
+
+                    // Metadata
                     params.append(" -Y ");
                     params.append(prepareMetadataString(tf.DN));
 
@@ -202,6 +212,12 @@ void FileTransferExecutor::run(boost::any & ctx)
                         {
                             params.append(" -proxy ");
                             params.append(proxy);
+                        }
+
+                    if (oauth_file.length() > 0)
+                        {
+                            params.append(" -oauth ");
+                            params.append(oauth_file);
                         }
 
                     if (std::string(tf.CHECKSUM).length() > 0)   //checksum
