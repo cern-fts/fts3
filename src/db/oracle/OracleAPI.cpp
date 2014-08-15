@@ -3397,6 +3397,7 @@ bool OracleAPI::updateOptimizer()
     soci::indicator isNullRetry = soci::i_ok;
     soci::indicator isNullMaxActive = soci::i_ok;
     soci::indicator isNullRate = soci::i_ok;
+    soci::indicator isNullFixed = soci::i_ok;
     double retry = 0.0;   //latest from db
     double lastSuccessRate = 0.0;
     long long retrySet = 0;
@@ -3438,7 +3439,7 @@ bool OracleAPI::updateOptimizer()
             soci::statement stmt_fixed = (
                                         sql.prepare << "SELECT fixed from t_optimize_active "
                                         "WHERE source_se = :source AND dest_se = :dest",
-                                        soci::use(source_hostname), soci::use(destin_hostname), soci::into(active_fixed));
+                                        soci::use(source_hostname), soci::use(destin_hostname), soci::into(active_fixed, isNullFixed));
 
             //snapshot of active transfers
             soci::statement stmt7 = (
@@ -3567,7 +3568,7 @@ bool OracleAPI::updateOptimizer()
 
                     // first thing, check if the number of actives have been fixed for this pair
                     stmt_fixed.execute(true);
-                    if (active_fixed == "on")
+                    if (isNullFixed == soci::i_ok && active_fixed == "on")
                         continue;
 
                     // Weighted average
