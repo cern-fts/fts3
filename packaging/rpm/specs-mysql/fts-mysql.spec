@@ -65,6 +65,8 @@ make install DESTDIR=%{buildroot}
 %doc LICENSE
 
 %changelog
+* Fri Aug 15 2014 Michal Simon <michal.simon@cern.ch> - 3.2.26.2-1
+  - Update for new upstream release
 * Mon May 12 2014 Michal Simon <michal.simon@cern.ch> - 3.2.26-1
   - Update for new upstream release
 * Wed Aug 07 2013 Michal Simon <michal.simon@cern.ch> - 3.1.1-2
