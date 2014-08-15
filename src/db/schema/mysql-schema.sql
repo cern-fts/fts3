@@ -696,6 +696,7 @@ CREATE TABLE t_optimize_active (
   message      VARCHAR(512),
   datetime     TIMESTAMP  NULL DEFAULT NULL,
   ema           DOUBLE DEFAULT 0,
+  fixed         VARCHAR(3) CHECK (fixed in ('on', 'off')),
   CONSTRAINT t_optimize_active_pk PRIMARY KEY (source_se, dest_se)
 );
 

@@ -152,6 +152,11 @@ public:
     optional<std::tuple<string, string, int> > getBandwidthLimitation();
 
     /**
+     * Get the fixed number of actives for a pair
+     */
+    optional<std::tuple<string, string, int> > getActiveFixed();
+
+    /**
      * Get the udt protocol settings
      *
      * @return udl protocol setting for given SE
@@ -197,6 +202,9 @@ private:
     // parses parameters for max bandwidth
     void parseMaxBandwidth();
 
+    // parses active fixed parameters
+    void parseActiveFixed();
+
     /// JSON configurations specified by user
     vector<string> cfgs;
 
@@ -205,6 +213,9 @@ private:
 
     // Source, dest, limit
     optional<std::tuple<string, string, int> > bandwidth_limitation;
+
+    // source, dest, active
+    optional<std::tuple<string, string, int> > active_fixed;
 
     CfgParser::CfgType type;
 };

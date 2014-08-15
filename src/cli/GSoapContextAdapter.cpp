@@ -593,6 +593,13 @@ void GSoapContextAdapter::setMaxSrcSeActive(string se, int active)
         throw gsoap_error(ctx);
 }
 
+void GSoapContextAdapter::setFixActivePerPair(string source, string destination, int active)
+{
+    implcfg__fixActivePerPairResponse resp;
+    if (soap_call_implcfg__fixActivePerPair(ctx, endpoint.c_str(), 0, source, destination, active, resp))
+        throw gsoap_error(ctx);
+}
+
 std::string GSoapContextAdapter::getSnapShot(string vo, string src, string dst)
 {
     impltns__getSnapshotResponse resp;

@@ -865,6 +865,7 @@ CREATE TABLE t_optimize_active (
   message      VARCHAR2(512),
   datetime  TIMESTAMP WITH TIME ZONE,
   ema     	  NUMBER DEFAULT 0,
+  fixed       VARCHAR2(3) CHECK (fixed in ('on', 'off')),
   CONSTRAINT t_optimize_active_pk PRIMARY KEY (source_se, dest_se)
 );
 

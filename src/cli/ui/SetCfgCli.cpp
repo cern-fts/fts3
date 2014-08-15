@@ -109,6 +109,11 @@ SetCfgCli::SetCfgCli(bool spec)
                 "number of seconds per MB"
                 "\n(Example: --sec-per-mb $SEC_PER_MB)"
             )
+            (
+                "active-fixed", value<int>(),
+                "Fixed number of active transfer for a given pair (-1 means reset to optimizer)"
+                "\n(Example: --source $SE --destination $SE --active-fixed $NB_ACT"
+            )
             ;
         }
 
@@ -142,6 +147,9 @@ void SetCfgCli::parse(int ac, char* av[])
 
     if (vm.count("bring-online"))
         parseBringOnline();
+
+    if (vm.count("active-fixed"))
+        parseActiveFixed();
 
     // check JSON configurations
     vector<string>::iterator it;
@@ -180,6 +188,7 @@ bool SetCfgCli::validate()
             && !vm.count("max-se-dest-active")
             && !vm.count("global-timeout")
             && !vm.count("sec-per-mb")
+            && !vm.count("active-fixed")
        )
         {
             throw cli_exception("No parameters have been specified.");
@@ -196,6 +205,9 @@ bool SetCfgCli::validate()
                     "the number of active for source and destination has to be equal"
                 );
         }
+
+    if ((vm.count("active-fixed") || vm.count("sec-per-mb")) && (!vm.count("source") || !vm.count("destination")))
+        throw bad_option("source, destination", "missing source and destination pair");
 
     return true;
 }
@@ -374,6 +386,20 @@ void SetCfgCli::parseMaxBandwidth()
     bandwidth_limitation = make_optional(std::tuple<string, string, int>(source_se, dest_se, limit));
 }
 
+void SetCfgCli::parseActiveFixed()
+{
+    std::string source_se, dest_se;
+
+    if (!vm["source"].empty())
+            source_se = vm["source"].as<string>();
+    if (!vm["destination"].empty())
+        dest_se = vm["destination"].as<string>();
+
+    int active = vm["active-fixed"].as<int>();
+
+    active_fixed = make_optional(std::tuple<string, string, int>(source_se, dest_se, active));
+}
+
 std::vector< std::pair<std::string, int> > SetCfgCli::getBringOnline()
 {
     return bring_online;
@@ -382,6 +408,11 @@ std::vector< std::pair<std::string, int> > SetCfgCli::getBringOnline()
 optional<std::tuple<string, string, int> > SetCfgCli::getBandwidthLimitation()
 {
     return bandwidth_limitation;
+}
+
+optional<std::tuple<string, string, int> > SetCfgCli::getActiveFixed()
+{
+    return active_fixed;
 }
 
 optional< pair<string, int> > SetCfgCli::getMaxSeActive(string option)

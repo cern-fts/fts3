@@ -142,6 +142,16 @@ int main(int ac, char* av[])
                     return 0;
                 }
 
+            optional<std::tuple<std::string, std::string, int> > active_fixed = cli->getActiveFixed();
+            if (active_fixed)
+                {
+                    ctx.setFixActivePerPair(std::get<0>(*active_fixed),
+                                            std::get<1>(*active_fixed),
+                                            std::get<2>(*active_fixed));
+                    cout << "Done" << endl;
+                    return 0;
+                }
+
             config__Configuration *config = soap_new_config__Configuration(ctx, -1);
             config->cfg = cli->getConfigurations();
             if (config->cfg.empty()) return 0;
