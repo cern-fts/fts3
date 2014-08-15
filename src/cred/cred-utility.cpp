@@ -227,14 +227,14 @@ void get_proxy_lifetime(const std::string& filename, time_t *lifetime, time_t *v
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot Init Handle Attributes" << commit;
                 }
             // Init handle
-            result =  globus_gsi_cred_handle_init(&proxy_handle,handle_attrs);
+            result =  globus_gsi_cred_handle_init(&proxy_handle, handle_attrs);
             if(0 != result)
                 {
                     //throw RuntimeError("Cannot Init Handle");
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot Init Handle" << commit;
                 }
             // Load Proxy
-            result = globus_gsi_cred_read_proxy(proxy_handle,const_cast<char *>(filename.c_str()));
+            result = globus_gsi_cred_read_proxy(proxy_handle, const_cast<char *>(filename.c_str()));
             if(0 != result)
                 {
                     //throw RuntimeError("Cannot Load Proxy File");
@@ -253,7 +253,6 @@ void get_proxy_lifetime(const std::string& filename, time_t *lifetime, time_t *v
             globus_gsi_cred_get_cert(proxy_handle, &cert);
             STACK_OF(X509)* cert_chain = NULL;
             globus_gsi_cred_get_cert_chain(proxy_handle, &cert_chain);
-
 
             vomsdata voms_data;
             voms_data.SetVerificationType((verify_type)(VERIFY_NONE));
@@ -276,6 +275,10 @@ void get_proxy_lifetime(const std::string& filename, time_t *lifetime, time_t *v
                 {
                     *vo_lifetime = 0;
                 }
+
+            // Clean
+            X509_free(cert);
+            sk_X509_pop_free(cert_chain, X509_free);
         }
     catch(const std::exception& exc)
         {
