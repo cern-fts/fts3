@@ -65,6 +65,8 @@ make install DESTDIR=%{buildroot}
 %doc LICENSE
 
 %changelog
+* Fri Aug 15 2014 Michal Simon <michal.simon@cern.ch> - 3.2.27-1
+  - Update for new upstream release
 * Mon May 12 2014 Michal Simon <michal.simon@cern.ch> - 3.2.26-1
   - Update for new upstream release
 * Wed Aug 07 2013 Michal Simon <michal.simon@cern.ch> - 3.1.1-2
@@ -73,5 +75,5 @@ make install DESTDIR=%{buildroot}
 * Mon Jul 29 2013 Michal Simon <michal.simon@cern.ch> - 3.1.0-1
   - First EPEL release
   - devel package removed
-* Fri Jul 02 2013 Michail Salichos <michail.salichos@cern.ch> - 3.0.3-14
+* Tue Jul 02 2013 Michail Salichos <michail.salichos@cern.ch> - 3.0.3-14
   - mysql queries optimization
