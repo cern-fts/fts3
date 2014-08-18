@@ -47,6 +47,10 @@ static void print_stacktrace(int sig)
     fprintf(stderr, "Caught signal: %d\n", sig);
     fprintf(stderr, "Stack trace: \n");
     backtrace_symbols_fd(array, size, STDERR_FILENO);
+    // and then print out all the frames to stdout
+    fprintf(stdout, "Caught signal: %d\n", sig);
+    fprintf(stdout, "Stack trace: \n");
+    backtrace_symbols_fd(array, size, STDOUT_FILENO);
 }
 
 // Minimalistic logic inside a signal!
