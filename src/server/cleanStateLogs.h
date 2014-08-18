@@ -149,6 +149,15 @@ private:
                                 counter = 0;
                             }
                     }
+   		catch(std::exception& e)
+        	     {
+                        sleep(1); 
+                        if(waitTime == 86400) //reset
+                            waitTime = 0;
+
+                        counter = 0;		
+            		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot delete old files " << e.what() <<  commit;
+        	     }		    
                 catch(...)
                     {
                         sleep(1); //once a day
