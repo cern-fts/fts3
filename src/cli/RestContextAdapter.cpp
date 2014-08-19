@@ -36,7 +36,7 @@ void RestContextAdapter::getInterfaceDeatailes()
     schema += "." + parser.get("schema.patch");
 }
 
-std::vector<JobStatus> RestContextAdapter::listRequests (std::vector<std::string> const & statuses, std::string const & dn, std::string const & vo, std::string const & source, std::string const & destination)
+std::vector<JobStatus> RestContextAdapter::listRequests (std::vector<std::string> const & statuses, std::string const & dn, std::string const & vo, std::string const & /*source*/, std::string const & /*destination*/)
 {
     // prefix will be holding '?' at the first concatenation and then '&'
     char prefix = '?';

@@ -43,7 +43,7 @@ static void print_stacktrace(int sig)
     if (sig == SIGABRT || sig == SIGSEGV || sig ==  SIGILL || sig ==  SIGFPE || sig == SIGBUS || sig ==  SIGTRAP || sig ==  SIGSYS)
         {
             void *array[25];
-            size_t size = backtrace(array, 25);
+            int size = backtrace(array, 25);
 
             // print out all the frames to stderr
             fprintf(stderr, "Caught signal: %d\n", sig);
