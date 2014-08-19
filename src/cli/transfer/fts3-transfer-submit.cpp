@@ -53,8 +53,7 @@ int main(int ac, char* av[])
 
             // validate command line options, and return respective gSOAP context
             GSoapContextAdapter ctx (cli.getService());
-            ctx.printServiceDetails();
-            cli.printCliDeatailes();
+            cli.printApiDetails(ctx);
 
             std::string jobId("");
 

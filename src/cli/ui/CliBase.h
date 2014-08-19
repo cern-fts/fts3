@@ -25,7 +25,7 @@
 #ifndef CLIBASE_H_
 #define CLIBASE_H_
 
-#include "GSoapContextAdapter.h"
+#include "ServiceAdapter.h"
 #include "MsgPrinter.h"
 
 #include <boost/property_tree/ptree.hpp>
@@ -107,7 +107,7 @@ public:
     /**
      * If verbose additional info is printed
      */
-    void printCliDeatailes();
+    void printApiDetails(ServiceAdapter & ctx) const;
 
     /**
      * Prints help message if the -h option has been used.
@@ -130,7 +130,7 @@ public:
      *
      * @return true if -v option has been used
      */
-    bool isVerbose();
+    bool isVerbose() const;
 
     /**
      * Checks whether the -q option was used.
@@ -156,6 +156,11 @@ public:
     virtual string getUsageString(string tool);
 
 protected:
+
+    /**
+     * If verbose additional info is printed
+     */
+    void printCliDeatailes() const;
 
     /**
      * check if it's possible to use fts3 server config file to discover the endpoint

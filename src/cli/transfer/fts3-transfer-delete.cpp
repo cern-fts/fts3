@@ -61,8 +61,7 @@ int main(int ac, char* av[])
                 }
 
             GSoapContextAdapter ctx (cli.getService());
-            ctx.printServiceDetails();
-            cli.printCliDeatailes();
+            cli.printApiDetails(ctx);
 
             // delegate Proxy Certificate
             ProxyCertificateDelegator handler (

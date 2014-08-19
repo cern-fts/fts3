@@ -47,8 +47,7 @@ int main(int ac, char* av[])
 
             // validate command line options, and return respective gsoap context
             GSoapContextAdapter ctx (cli.getService());
-            ctx.printServiceDetails();
-            cli.printCliDeatailes();
+            cli.printApiDetails(ctx);
 
             ctx.prioritySet(
                 cli.getJobId(),

@@ -165,10 +165,18 @@ bool CliBase::validate()
     return true;
 }
 
-void CliBase::printCliDeatailes()
+void CliBase::printCliDeatailes() const
 {
     MsgPrinter::instance().print_info("# Client version", "client_version", version);
     MsgPrinter::instance().print_info("# Client interface version", "client_interface", interface);
+}
+
+void CliBase::printApiDetails(ServiceAdapter & ctx) const
+{
+    if (!isVerbose()) return;
+
+    ctx.printServiceDetails();
+    printCliDeatailes();
 }
 
 string CliBase::getUsageString(string tool)
@@ -212,7 +220,7 @@ bool CliBase::printVersion()
     return false;
 }
 
-bool CliBase::isVerbose()
+bool CliBase::isVerbose() const
 {
     return vm.count("verbose");
 }

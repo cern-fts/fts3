@@ -23,7 +23,10 @@
  */
 
 
+#include "ServiceAdapter.h"
 #include "GSoapContextAdapter.h"
+#include "RestContextAdapter.h"
+
 #include "ui/ListTransferCli.h"
 #include "rest/HttpRequest.h"
 #include "rest/ResponseParser.h"
@@ -35,6 +38,7 @@
 
 #include <algorithm>
 #include <sstream>
+#include <memory>
 
 using namespace fts3::cli;
 using namespace fts3::common;
@@ -52,65 +56,26 @@ int main(int ac, char* av[])
             cli.parse(ac, av);
             if (!cli.validate()) return 1;
 
+            std::string const endpoint = cli.getService();
+
+            std::unique_ptr<ServiceAdapter> ctx;
             if (cli.rest())
                 {
-                    std::vector<std::string> statuses = cli.getStatusArray();
-                    std::string dn = cli.getUserDn(), vo = cli.getVoName();
-
-                    std::string url = cli.getService() + "/jobs";
-
-                    // prefix will be holding '?' at the first concatenation and then '&'
-                    char prefix = '?';
-
-                    if (!dn.empty())
-                        {
-                            url += prefix;
-                            url += "user_dn=";
-                            url += dn;
-                            prefix = '&';
-                        }
-
-                    if (!vo.empty())
-                        {
-                            url += prefix;
-                            url += "vo_name=";
-                            url += vo;
-                            prefix = '&';
-                        }
-
-                    if (!statuses.empty())
-                        {
-                            url += prefix;
-                            url += "job_state=";
-                            url += *statuses.begin();
-                            prefix = '&';
-                        }
-
-                    std::string capath = cli.capath();
-                    std::string proxy = cli.proxy();
-
-                    std::stringstream ss;
-
-                    ss << "{\"jobs\":";
-                    HttpRequest http (url, capath, proxy, ss);
-                    http.get();
-                    ss << '}';
-
-                    ResponseParser parser(ss);
-                    std::vector<fts3::cli::JobStatus> stats = parser.getJobs("jobs");
-
-                    MsgPrinter::instance().print(stats);
-                    return 0;
+                    std::string const capath = cli.capath();
+                    std::string const proxy = cli.proxy();
+                    ctx.reset(new RestContextAdapter(endpoint, capath, proxy));
+                }
+            else
+                {
+                    ctx.reset(new GSoapContextAdapter(endpoint));
                 }
 
-            // validate command line options, and return respective gsoap context
-            GSoapContextAdapter ctx (cli.getService());
-            ctx.printServiceDetails();
-            cli.printCliDeatailes();
+            // print API details if verbose
+            cli.printApiDetails(*ctx.get());
 
             std::vector<std::string> array = cli.getStatusArray();
             std::vector<fts3::cli::JobStatus> statuses =
-                ctx.listRequests(array, cli.getUserDn(), cli.getVoName(), cli.source(), cli.destination());
+                ctx->listRequests(array, cli.getUserDn(), cli.getVoName(), cli.source(), cli.destination());
 
             MsgPrinter::instance().print(statuses);
         }

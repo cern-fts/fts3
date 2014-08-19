@@ -24,6 +24,8 @@
 #ifndef GSOAPCONTEXADAPTER_H_
 #define GSOAPCONTEXADAPTER_H_
 
+#include "ServiceAdapter.h"
+
 #include "JobStatus.h"
 #include "File.h"
 
@@ -49,7 +51,7 @@ namespace cli
  *
  * Provides all the functionalities of transfer and configuration web service
  */
-class GSoapContextAdapter
+class GSoapContextAdapter : public ServiceAdapter
 {
 
     struct Cleaner
@@ -79,13 +81,6 @@ public:
      * Deallocates GSoap context
      */
     virtual ~GSoapContextAdapter();
-
-    /**
-     * Prints out service details (like interface version, etc.) if verbose
-     *
-     * @param verbose : if true prints service details
-     */
-    void printServiceDetails();
 
     /**
      * Type cast operator.
@@ -149,7 +144,7 @@ public:
      * @param array statuses of interest
      * @param resp server response
      */
-    vector<JobStatus> listRequests (vector<string> statuses, string dn, string vo, string source, string destination);
+    std::vector<JobStatus> listRequests (std::vector<std::string> const & statuses, std::string const & dn, std::string const & vo, std::string const & source, std::string const & destination);
 
     /**
      * Remote call to listVOManagers
@@ -363,9 +358,6 @@ private:
     static vector<Cleaner> cleaners;
 
     ///
-    string endpoint;
-
-    ///
     soap* ctx;
 
     ///@{
@@ -376,17 +368,6 @@ private:
     long minor;
     long patch;
     ///@}
-
-    ///@{
-    /**
-     * general informations about the FTS3 service
-     */
-    string interface;
-    string version;
-    string schema;
-    string metadata;
-    ///@}
-
 };
 
 }

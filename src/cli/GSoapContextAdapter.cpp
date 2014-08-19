@@ -51,7 +51,7 @@ namespace cli
 vector<GSoapContextAdapter::Cleaner> GSoapContextAdapter::cleaners;
 
 GSoapContextAdapter::GSoapContextAdapter(string endpoint):
-    endpoint(endpoint), ctx(soap_new2(SOAP_IO_KEEPALIVE, SOAP_IO_KEEPALIVE)/*soap_new1(SOAP_ENC_MTOM)*/)
+    ServiceAdapter(endpoint), ctx(soap_new2(SOAP_IO_KEEPALIVE, SOAP_IO_KEEPALIVE))
 {
     this->major = 0;
     this->minor = 0;
@@ -67,7 +67,7 @@ GSoapContextAdapter::GSoapContextAdapter(string endpoint):
     soap_set_imode(ctx, SOAP_ENC_MTOM | SOAP_IO_CHUNK);
     soap_set_omode(ctx, SOAP_ENC_MTOM | SOAP_IO_CHUNK);
 
-    // initialize cgsi plugin
+    // Initialise CGSI plug-in
     if (endpoint.find("https") == 0)
         {
             if (soap_cgsi_init(ctx,  CGSI_OPT_DISABLE_NAME_CHECK | CGSI_OPT_SSL_COMPATIBLE)) throw gsoap_error(ctx);
@@ -107,17 +107,6 @@ void GSoapContextAdapter::clean()
 GSoapContextAdapter::~GSoapContextAdapter()
 {
     clean();
-}
-
-void GSoapContextAdapter::printServiceDetails()
-{
-    // if verbose print general info
-    getInterfaceDeatailes();
-    MsgPrinter::instance().print_info("# Using endpoint", "endpoint", endpoint);
-    MsgPrinter::instance().print_info("# Service version", "service_version", version);
-    MsgPrinter::instance().print_info("# Interface version", "service_interface", interface);
-    MsgPrinter::instance().print_info("# Schema version", "service_schema", schema);
-    MsgPrinter::instance().print_info("# Service features", "service_metadata", metadata);
 }
 
 void GSoapContextAdapter::getInterfaceDeatailes()
@@ -336,7 +325,7 @@ void GSoapContextAdapter::getRolesOf (string dn, impltns__getRolesOfResponse& re
         throw gsoap_error(ctx);
 }
 
-vector<JobStatus> GSoapContextAdapter::listRequests (vector<string> statuses, string dn, string vo, string source, string destination)
+std::vector<JobStatus> GSoapContextAdapter::listRequests (std::vector<std::string> const & statuses, std::string const & dn, std::string const & vo, std::string const & source, std::string const & destination)
 {
 
     impltns__ArrayOf_USCOREsoapenc_USCOREstring* array = soap_new_impltns__ArrayOf_USCOREsoapenc_USCOREstring(ctx, -1);
@@ -623,7 +612,7 @@ void GSoapContextAdapter::setInterfaceVersion(string interface)
 
     if (interface.empty()) return;
 
-    // set the seperator that will be used for tokenizing
+    // set the separator that will be used for tokenizing
     boost::char_separator<char> sep(".");
     boost::tokenizer< boost::char_separator<char> > tokens(interface, sep);
     boost::tokenizer< boost::char_separator<char> >::iterator it = tokens.begin();
