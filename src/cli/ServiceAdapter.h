@@ -25,7 +25,23 @@ public:
 
     void printServiceDetails();
 
+    /**
+     * Remote call to listRequests
+     * Internally is listRequests2
+     *
+     * @param dn user dn
+     * @param vo vo name
+     * @param array statuses of interest
+     * @param resp server response
+     */
     virtual std::vector<JobStatus> listRequests (std::vector<std::string> const & statuses, std::string const & dn, std::string const & vo, std::string const & source, std::string const & destination) = 0;
+
+    /**
+     * Remote call to cancel
+     *
+     * @param jobIds : list of job IDs
+     */
+    virtual std::vector< std::pair<std::string, std::string>  > cancel(std::vector<std::string> const & jobIds) = 0;
 
 protected:
 

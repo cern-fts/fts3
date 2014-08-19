@@ -76,5 +76,25 @@ std::vector<JobStatus> RestContextAdapter::listRequests (std::vector<std::string
     return parser.getJobs("jobs");
 }
 
+std::vector< std::pair<std::string, std::string> > RestContextAdapter::cancel(std::vector<std::string> const & jobIds)
+{
+    std::vector<std::string>::const_iterator itr;
+
+    std::vector< std::pair< std::string, std::string> > ret;
+
+    for (itr = jobIds.begin(); itr != jobIds.end(); ++itr)
+        {
+            std::stringstream ss;
+            std::string url = endpoint + "/jobs/" + *itr;
+            HttpRequest http (url, capath, proxy, ss);
+            http.del();
+
+            ResponseParser p(ss);
+            ret.push_back(std::make_pair(p.get("job_id"), p.get("job_state")));
+        }
+
+    return ret;
+}
+
 } /* namespace cli */
 } /* namespace fts3 */

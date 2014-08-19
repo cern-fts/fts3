@@ -30,6 +30,8 @@ public:
 
     std::vector<JobStatus> listRequests (std::vector<std::string> const & statuses, std::string const & dn, std::string const & vo, std::string const & source, std::string const & destination);
 
+    std::vector< std::pair<std::string, std::string>  > cancel(std::vector<std::string> const & jobIds);
+
 private:
 
     void getInterfaceDeatailes();

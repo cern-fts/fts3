@@ -22,8 +22,6 @@
  *      Author: Michal Simon
  */
 
-
-#include "ServiceAdapter.h"
 #include "GSoapContextAdapter.h"
 #include "RestContextAdapter.h"
 

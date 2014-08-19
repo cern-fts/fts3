@@ -284,7 +284,7 @@ JobStatus GSoapContextAdapter::getTransferJobStatus (string jobId, bool archive)
            );
 }
 
-vector< pair<string, string> > GSoapContextAdapter::cancel(vector<string> jobIds)
+std::vector< std::pair<std::string, std::string>  > GSoapContextAdapter::cancel(std::vector<std::string> const & jobIds)
 {
 
     impltns__ArrayOf_USCOREsoapenc_USCOREstring rqst;

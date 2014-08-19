@@ -23,6 +23,8 @@
  */
 
 #include "GSoapContextAdapter.h"
+#include "RestContextAdapter.h"
+
 #include "MsgPrinter.h"
 #include "ui/CancelCli.h"
 #include "rest/HttpRequest.h"
@@ -53,42 +55,32 @@ int main(int ac, char* av[])
     try
         {
             CancelCli cli;
-            // create and initialize the command line utility
+            // create and initialise the command line utility
             cli.parse(ac, av);
             if (!cli.validate()) return 1;
 
+            std::string const endpoint = cli.getService();
+
+            std::unique_ptr<ServiceAdapter> ctx;
             if (cli.rest())
                 {
-                    std::vector<std::string> jobIds = cli.getJobIds();
-                    vector<string>::iterator itr;
-
-                    std::vector< std::pair< std::string, std::string> > ret;
-
-                    for (itr = jobIds.begin(); itr != jobIds.end(); ++itr)
-                        {
-                            std::stringstream ss;
-                            std::string url = cli.getService() + "/jobs/" + *itr;
-                            HttpRequest http (url, cli.capath(), cli.proxy(), ss);
-                            http.del();
-
-                            ResponseParser p(ss);
-                            ret.push_back(std::make_pair(p.get("job_id"), p.get("job_state")));
-                        }
-
-                    MsgPrinter::instance().print(ret);
-
-                    return 0;
+                    std::string const capath = cli.capath();
+                    std::string const proxy = cli.proxy();
+                    ctx.reset(new RestContextAdapter(endpoint, capath, proxy));
+                }
+            else
+                {
+                    ctx.reset(new GSoapContextAdapter(endpoint));
                 }
 
-            // validate command line options, and return respective gsoap context
-            GSoapContextAdapter ctx (cli.getService());
-            cli.printApiDetails(ctx);
+            // print API details if verbose
+            cli.printApiDetails(*ctx.get());
 
             std::vector<std::string> jobs = cli.getJobIds();
 
             if (jobs.empty()) throw bad_option("jobid", "missing parameter");
 
-            std::vector< std::pair<std::string, std::string> > ret = ctx.cancel(jobs);
+            std::vector< std::pair<std::string, std::string> > ret = ctx->cancel(jobs);
             MsgPrinter::instance().print(ret);
         }
     catch(cli_exception const & ex)

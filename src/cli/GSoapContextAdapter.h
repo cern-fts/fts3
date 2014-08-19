@@ -133,7 +133,7 @@ public:
      *
      * @param jobIds list of job IDs
      */
-    vector< pair<string, string>  > cancel(vector<string> jobIds);
+    std::vector< std::pair<std::string, std::string>  > cancel(std::vector<std::string> const & jobIds);
 
     /**
      * Remote call to listRequests
