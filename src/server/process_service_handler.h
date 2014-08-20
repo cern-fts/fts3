@@ -246,6 +246,8 @@ protected:
                                     }
 
                                 TransferFiles tf = tfh.get(*it_vo);
+				if(tf.FILE_ID == 0)
+					continue;
 
                                 std::pair<std::string, std::string> proxy_key(tf.DN, tf.CRED_ID);
 
