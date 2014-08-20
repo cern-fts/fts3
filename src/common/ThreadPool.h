@@ -8,8 +8,6 @@
 #ifndef THREADPOOL_H_
 #define THREADPOOL_H_
 
-#include "ThreadSafeQueue.h"
-
 #include <boost/thread.hpp>
 #include <boost/ptr_container/ptr_deque.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
@@ -36,9 +34,8 @@ class ThreadPool
      * A helper class that retrieves subsequent tasks from the queue
      * and then executes them
      */
-    class ThreadPoolWorker
+    struct ThreadPoolWorker
     {
-
     public:
 
         /// constructor
@@ -59,7 +56,7 @@ class ThreadPool
                 }
         }
 
-    private:
+//    private:
         /// optional data, initialised by the 'init_context' parameter
         boost::any thread_context;
         /// reference to the thread pool object
@@ -94,7 +91,9 @@ public:
     }
 
     /**
-     * Execute a task
+     * Executes a task.
+     *
+     * Please note that the thread-pool takes ownership of the pointer!
      *
      * @param t : task that will be executed
      */
@@ -102,11 +101,11 @@ public:
     {
         {
             // lock the queue
-            boost::mutex::scoped_lock lock(qm);
+            boost::mutex::scoped_lock lock(mx);
             tasks.push_back(t);
         }
         // notify waiting threads
-        qv.notify_all();
+        cvar.notify_all();
     }
 
     /// interrupt all the threads belonging to this thread pool
@@ -121,11 +120,11 @@ public:
     {
         // lock the queue
         {
-            boost::mutex::scoped_lock lock(qm);
+            boost::mutex::scoped_lock lock(mx);
             join_flag = true;
         }
         // notify waiting threads
-        qv.notify_all();
+        cvar.notify_all();
         // join ...
         group.join_all();
     }
@@ -134,6 +133,31 @@ public:
     size_t size()
     {
         return group.size();
+    }
+
+    /**
+     * Executes a reduce operation on all thread contexts
+     *
+     * @param RET : return type of the operation
+     * @param OPERATION : functional object template
+     * @param op : functional object providing the reduce operation
+     *             (e.g. std::plus, std::minus, etc.)
+     * @return : the result of applying the operation to all contexts
+     *           (e.g. a sum if std::plus is passed as a parameter)
+     */
+    template<class RET, template<class> class OPERATION>
+    RET reduce(OPERATION<RET> op)
+    {
+        typename boost::ptr_vector<ThreadPoolWorker>::iterator it;
+        RET init = RET();
+
+        for (it = workers.begin(); it != workers.end(); ++it)
+        {
+            if (it->thread_context.empty()) continue;
+            init = op(init, boost::any_cast<RET>(it->thread_context));
+        }
+
+        return init;
     }
 
 private:
@@ -146,10 +170,10 @@ private:
     TASK* next()
     {
         // lock the queue
-        boost::mutex::scoped_lock lock(qm);
+        boost::mutex::scoped_lock lock(mx);
         // if the queue is empty wait until someone puts something inside
         // (unless the join flag is raised)
-        while (tasks.empty() && !join_flag) qv.wait(lock);
+        while (tasks.empty() && !join_flag) cvar.wait(lock);
         // take the first element from the queue
         typename boost::ptr_deque<TASK>::iterator it = tasks.begin();
         // if the queue is empty return null
@@ -161,10 +185,10 @@ private:
     /// group with worker threads
     boost::thread_group group;
     /// the mutex preventing access
-    boost::mutex qm;
+    boost::mutex mx;
     /// conditional variable preventing concurrent browsing and reconnecting
-    boost::condition_variable qv;
-    /// the queue itsef
+    boost::condition_variable cvar;
+    /// the queue itself
     boost::ptr_deque<TASK> tasks;
     /// pool of worker objects
     boost::ptr_vector<ThreadPoolWorker> workers;

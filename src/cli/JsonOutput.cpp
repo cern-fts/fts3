@@ -20,40 +20,24 @@ namespace fts3
 namespace cli
 {
 
-boost::scoped_ptr<JsonOutput> JsonOutput::instance;
-
-void JsonOutput::create(std::ostream& out)
+void JsonOutput::print(std::string const & path, std::string const & msg)
 {
-    instance.reset(new JsonOutput(out));
-}
-
-void JsonOutput::print(std::string path, std::string msg)
-{
-    if (instance.get())
-        {
-            instance->json_out.put(path, msg);
-        }
+    json_out.put(path, msg);
 }
 
 void JsonOutput::print(cli_exception const & ex)
 {
-    if (instance.get())
-        {
-            instance->json_out.push_back(
-                pt::ptree::value_type(
-                    ex.json_node(),
-                    ex.json_obj()
-                )
-            );
-        }
+    json_out.push_back(
+            pt::ptree::value_type(ex.json_node(), ex.json_obj())
+        );
 }
 
-void JsonOutput::printArray(std::string const path, std::map<std::string, std::string> const & object)
+void JsonOutput::print(std::exception const & ex)
 {
-    printArray(path, to_ptree(object));
+    print("error", ex.what());
 }
 
-void JsonOutput::printArray(std::string const path, std::string const value)
+void JsonOutput::printArray(std::string const & path, std::string const & value)
 {
     pt::ptree item;
     item.put("", value);
@@ -61,11 +45,9 @@ void JsonOutput::printArray(std::string const path, std::string const value)
     printArray(path, item);
 }
 
-void JsonOutput::printArray(std::string const path, pt::ptree const & obj)
+void JsonOutput::printArray(std::string const & path, pt::ptree const & obj)
 {
-    if (!instance.get()) return;
-
-    boost::optional<pt::ptree&> child = instance->json_out.get_child_optional(path);
+    boost::optional<pt::ptree&> child = json_out.get_child_optional(path);
 
     if (child.is_initialized())
         {
@@ -75,7 +57,7 @@ void JsonOutput::printArray(std::string const path, pt::ptree const & obj)
         {
             pt::ptree new_child;
             new_child.push_back(std::make_pair("", obj));
-            instance->json_out.put_child(path, new_child);
+            json_out.put_child(path, new_child);
         }
 }
 
@@ -91,22 +73,8 @@ JsonOutput::~JsonOutput()
             static const boost::regex exp("\"(null|true|false|[]|[0-9]+(\\.[0-9]+)?)\"");
             std::string str = boost::regex_replace(str_out.str(), exp, "$1");
             // and finally print it to the output
-            out << str;
+            (*out) << str;
         }
-}
-
-pt::ptree JsonOutput::to_ptree(std::map<std::string, std::string> const & values)
-{
-
-    pt::ptree pt;
-
-    std::map<std::string, std::string>::const_iterator it;
-    for (it = values.begin(); it != values.end(); ++it)
-        {
-            pt.put(it->first, it->second);
-        }
-
-    return pt;
 }
 
 } /* namespace cli */

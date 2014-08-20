@@ -142,7 +142,7 @@ public:
      *
      * @return SE name - value mapping
      */
-    map<string, int> getBringOnline();
+    std::vector< std::pair<std::string, int> > getBringOnline();
 
     /**
      * Get the bandwidth limitation
@@ -150,6 +150,11 @@ public:
      * @return SE name - value mapping
      */
     optional<std::tuple<string, string, int> > getBandwidthLimitation();
+
+    /**
+     * Get the fixed number of actives for a pair
+     */
+    optional<std::tuple<string, string, int> > getActiveFixed();
 
     /**
      * Get the udt protocol settings
@@ -197,14 +202,20 @@ private:
     // parses parameters for max bandwidth
     void parseMaxBandwidth();
 
+    // parses active fixed parameters
+    void parseActiveFixed();
+
     /// JSON configurations specified by user
     vector<string> cfgs;
 
-    /// SE name and the respective value of maximum concurrent files in staging process
-    map<string, int> bring_online;
+    /// SE name + VO name and the respective value of maximum concurrent files in staging process
+    std::vector< std::pair<std::string, int> > bring_online;
 
     // Source, dest, limit
     optional<std::tuple<string, string, int> > bandwidth_limitation;
+
+    // source, dest, active
+    optional<std::tuple<string, string, int> > active_fixed;
 
     CfgParser::CfgType type;
 };

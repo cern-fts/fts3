@@ -9,8 +9,7 @@
 #define TRANSFERHANDLER_H_
 
 #include <boost/thread.hpp>
-
-#include "common/ThreadSafeQueue.h"
+#include <boost/any.hpp>
 
 #include "db/generic/SingleDbInstance.h"
 
@@ -56,7 +55,7 @@ public:
      * @param infosys - information system host
      * @param ftsHostName - hostname of the machine hosting FTS3
      */
-    FileTransferExecutor(TransferFiles& tf, TransferFileHandler& tfh, bool monitoringMsg, string infosys, string ftsHostName);
+    FileTransferExecutor(TransferFiles& tf, TransferFileHandler& tfh, bool monitoringMsg, string infosys, string ftsHostName, string proxy);
 
     /**
      * Destructor.
@@ -68,13 +67,11 @@ public:
      *
      * @return 0 if the file was not scheduled, 1 otherwise
      */
-    int execute();
+    virtual void run(boost::any &);
 
 private:
 
-    std::string generateProxy(const std::string& dn, const std::string& dlg_id);
-
-    bool checkValidProxy(const std::string& filename, std::string& message);
+    std::string generateOauthConfigFile(const std::string& dn, const std::string& cs_name);
 
     /**
      * @return the metadata string
@@ -86,11 +83,12 @@ private:
 
     /// variables from process_service_handler
     TransferFiles tf;
-    TransferFileHandler& tfh;
+    TransferFileHandler const & tfh;
     bool monitoringMsg;
     string infosys;
     string ftsHostName;
     SiteName siteResolver;
+    string proxy;
 
     // DB interface
     GenericDbIfce* db;

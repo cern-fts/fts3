@@ -22,8 +22,8 @@
             
             <complexType name="BringOnlinePair">
             	<sequence>
-            		<element minOccurs="1" maxOccurs="1" name="first" type="xsd:string"/>
-            		<element minOccurs="1" maxOccurs="1" name="second" type="xsd:int"/>
+            		<element minOccurs="1" maxOccurs="1" name="se" type="xsd:string"/>
+            		<element minOccurs="1" maxOccurs="1" name="value" type="xsd:int"/>
             	</sequence>
             </complexType>
             
@@ -195,6 +195,14 @@
     
     <message name="maxDstSeActiveResponse"/>
     
+    <message name="fixActivePerPairRequest">
+        <part name="source" type="xsd:string"/>
+        <part name="dest" type="xsd:string"/>
+        <part name="active" type="xsd:int"/>
+    </message>
+    
+    <message name="fixActivePerPairResponse"/>
+    
     <message name="setGlobalTimeoutRequest">
         <part name="timeout" type="xsd:int"/>   
     </message>
@@ -331,6 +339,15 @@
         <operation name="maxDstSeActive" parameterOrder="maxDstSeActive">
             <input message="impl:maxDstSeActiveRequest" name="maxDstSeActiveRequest"/>
             <output message="impl:maxDstSeActiveResponse" name="maxDstSeActiveResponse"/>
+            <fault message="impl:AuthorizationException" name="AuthorizationException"/>
+            <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
+            <fault message="impl:InvalidArgumentException" name="InvalidArgumentException"/>
+            <fault message="impl:InternalException" name="InternalException"/>
+        </operation>
+        
+        <operation name="fixActivePerPair" parameterOrder="fixActivePerPair">
+            <input message="impl:fixActivePerPairRequest" name="fixActivePerPairRequest"/>
+            <output message="impl:fixActivePerPairResponse" name="fixActivePerPairResponse"/>
             <fault message="impl:AuthorizationException" name="AuthorizationException"/>
             <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
             <fault message="impl:InvalidArgumentException" name="InvalidArgumentException"/>
@@ -673,6 +690,34 @@
             </input>
             
             <output name="maxDstSeActiveResponse">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </output>
+            
+            <fault name="AuthorizationException">
+                <wsdlsoap:fault name="AuthorizationException" use="literal"/>
+            </fault>
+            
+            <fault name="ServiceBusyException">
+                <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
+            </fault>
+            
+            <fault name="InvalidArgumentException">
+                <wsdlsoap:fault name="InvalidArgumentException" use="literal"/>
+            </fault>
+            
+            <fault name="InternalException">
+                <wsdlsoap:fault name="InternalException" use="literal"/>
+            </fault>
+        </operation>
+
+      <operation name="fixActivePerPair">
+            <wsdlsoap:operation soapAction=""/>
+            
+            <input name="fixActivePerPairRequest">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </input>
+            
+            <output name="fixActivePerPairResponse">
                 <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
             </output>
             

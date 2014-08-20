@@ -25,14 +25,15 @@
 #ifndef MSGPRINTER_H_
 #define MSGPRINTER_H_
 
-#include "TransferTypes.h"
+#include "JobStatus.h"
+#include "JsonOutput.h"
+#include "exception/cli_exception.h"
 
 #include "ws-ifce/gsoap/gsoap_stubs.h"
 
 #include <string>
 #include <vector>
-#include <map>
-#include <iostream>
+#include <ostream>
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -49,38 +50,37 @@ class MsgPrinter
 
 public:
 
-    void delegation_local_expiration(long int h, long int m); //
-    void delegation_service_proxy(long int h, long int m); //
-    void delegation_msg(string msg); //
-    void delegation_request_duration(long int h, long int m); //
-    void delegation_request_retry(); //
-    void delegation_request_success(bool b); //
-    void delegation_request_error(string error); //
+    static MsgPrinter & instance()
+    {
+        static MsgPrinter printer;
+        return printer;
+    }
 
-    void endpoint(string endpoint); //
-    void service_version(string version); //
-    void service_interface(string interface); //
-    void service_schema(string schema); //
-    void service_metadata(string metadata); //
-    void client_version(string version); //
-    void client_interface(string interface); //
+    void setOutputStream(std::ostream & ostr)
+    {
+        this->ostr = &ostr;
+        jout.setOutputStream(ostr);
+    }
 
-
-    void version(string version); //
-
-    void error_msg(string msg); //
+    void print_info(std::string const & ostr_subject, std::string const & json_subject, long int h, long int m);
+    void print_info(std::string const & ostr_subject, std::string const & json_subject, std::string const & msg);
+    void print_info(std::string const & json_subject, std::string const & msg);
+    void print_info(std::string const & ostr_subject, std::string const & json_subject, bool flag);
 
     template<typename T>
     void print(std::vector<T> const & v);
     void print(std::string job_id, std::vector<tns3__DetailedFileStatus*> const & v);
 
-    void job_id(string job_id); //
-    void status(JobStatus js);
-    void job_summary(JobSummary js);
-    void file_list(vector<string> values, vector<string> retries);
+    void print(cli_exception const & ex);
+    void print(std::exception const & ex);
 
-    MsgPrinter(ostream& out = std::cout);
-    virtual ~MsgPrinter();
+    void print(std::string const & subject, std::string const & msg);
+    void print(std::string const & ostr_subject, std::string const & json_subject, std::string const & msg);
+
+    void print(JobStatus const & status);
+
+
+    virtual ~MsgPrinter() {}
 
     void setVerbose(bool verbose)
     {
@@ -95,20 +95,29 @@ public:
 
 private:
 
-    static void print_cout(std::pair<std::string, std::string> const & id_status);
-    static void print_json(std::pair<std::string, std::string> const & id_status);
+    MsgPrinter() : ostr(&std::cout), jout(std::cout), verbose(false), json(false) {}
+    MsgPrinter(MsgPrinter const &);
+    MsgPrinter & operator=(MsgPrinter const &);
 
-    static void print_cout(JobStatus const & j);
-    static void print_json(JobStatus const & j);
+    void print_ostr(std::pair<std::string, std::string> const & id_status);
+    void print_json(std::pair<std::string, std::string> const & id_status);
+
+    void print_ostr(JobStatus const & j, bool short_out);
+    void print_ostr(JobStatus const & j);
+    void print_json(JobStatus const & j);
 
     template<typename T>
-    static void print_cout() {}
+    void print_ostr() {}
 
     template<typename T>
-    static void print_json() {}
+    void print_json() {}
 
     ///
-    static bool verbose;
+    std::ostream * ostr;
+    ///
+    JsonOutput jout;
+    ///
+    bool verbose;
     ///
     bool json;
 };
@@ -119,23 +128,29 @@ void MsgPrinter::print(std::vector<T> const & v)
     if (v.empty())
         {
             if (json) print_json<T>();
-            else print_cout<T>();
+            else print_ostr<T>();
             return;
         }
 
-    void (*print)(T const &);
+    void (MsgPrinter::*print)(T const &);
 
-    if (json) print = print_json;
-    else print = print_cout;
+    if (json) print = &MsgPrinter::print_json;
+    else print = &MsgPrinter::print_ostr;
 
-    std::for_each(v.begin(), v.end(), print);
+    std::for_each(v.begin(), v.end(), boost::bind(print, this, _1));
 }
 
 template<>
-void MsgPrinter::print_cout<JobStatus>();
+inline void MsgPrinter::print_ostr<JobStatus>()
+{
+    (*ostr) << "No data have been found for the specified state(s) and/or user VO/VOMS roles." << std::endl;
+}
 
 template<>
-void MsgPrinter::print_json<JobStatus>();
+inline void MsgPrinter::print_json<JobStatus>()
+{
+    jout.print("job", "[]");
+}
 
 } /* namespace server */
 } /* namespace fts3 */

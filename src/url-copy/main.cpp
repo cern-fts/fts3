@@ -316,7 +316,7 @@ void abnormalTermination(const std::string& classification, const std::string&, 
     std::string moveFile = fileManagement.archive();
 
     reporter.sendLog(currentTransfer.jobId, currentTransfer.fileId, fileManagement._getLogArchivedFileFullPath(),
-                     UrlCopyOpts::getInstance().debug);
+                     UrlCopyOpts::getInstance().debugLevel);
 
     if (moveFile.length() != 0)
         {
@@ -365,7 +365,7 @@ void abnormalTermination(const std::string& classification, const std::string&, 
 
     cancelTransfer();
     sleep(1);
-    exit(1);
+    _exit(1);
 }
 
 void canceler()
@@ -763,6 +763,12 @@ int main(int argc, char **argv)
             gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "ENABLE_UDT", TRUE, NULL);
         }
 
+    // Enable IPv6
+    if (opts.enable_ipv6)
+        {
+            gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "IPV6", TRUE, NULL);
+        }
+
     if (!handle)
         {
             errorMessage = "Failed to create the gfal2 handle: ";
@@ -771,6 +777,17 @@ int main(int argc, char **argv)
                     errorMessage += "INIT " + std::string(handleError->message);
                     abnormalTermination("FAILED", errorMessage, "Error");
                 }
+        }
+
+    // Load OAuth credentials, if any
+    if (!opts.oauthFile.empty())
+        {
+            if (gfal2_load_opts_from_file(handle, opts.oauthFile.c_str(), &handleError) < 0)
+                {
+                    errorMessage = "OAUTH " + std::string(handleError->message);
+                    abnormalTermination("FAILED", errorMessage, "Error");
+                }
+            unlink(opts.oauthFile.c_str());
         }
 
 
@@ -827,7 +844,7 @@ int main(int argc, char **argv)
 
             if (!opts.logToStderr)
                 {
-                    int checkError = Logger::getInstance().redirectTo(fileManagement.getLogFilePath(), opts.debug);
+                    int checkError = Logger::getInstance().redirectTo(fileManagement.getLogFilePath(), opts.debugLevel);
                     if (checkError != 0)
                         {
                             std::string message = mapErrnoToString(checkError);
@@ -868,6 +885,9 @@ int main(int argc, char **argv)
                 logger.INFO() << "Bringonline token:" << currentTransfer.tokenBringOnline << std::endl;
                 logger.INFO() << "Multihop: " << opts.multihop << std::endl;
                 logger.INFO() << "UDT: " << opts.enable_udt << std::endl;
+                if (opts.strictCopy) {
+                    logger.INFO() << "Copy only transfer!" << std::endl;
+                }
 
                 //set to active only for reuse
                 if (opts.areTransfersOnFile())
@@ -908,11 +928,31 @@ int main(int argc, char **argv)
                     }
 
                 /*gfal2 debug logging*/
-                if (opts.debug == true)
+                if (opts.debugLevel)
                     {
-                        logger.INFO() << "Set the transfer to debug mode" << std::endl;
-                        gfal_set_verbose(GFAL_VERBOSE_TRACE | GFAL_VERBOSE_VERBOSE | GFAL_VERBOSE_TRACE_PLUGIN);
+                        logger.INFO() << "Set the transfer to debug level " << opts.debugLevel << std::endl;
+                        gfal_set_verbose(GFAL_VERBOSE_DEBUG | GFAL_VERBOSE_TRACE | GFAL_VERBOSE_VERBOSE | GFAL_VERBOSE_TRACE_PLUGIN);
                         gfal_log_set_handler((GLogFunc) log_func, NULL);
+
+                        if (opts.debugLevel >= 2)
+                            {
+                                setenv("CGSI_TRACE", "1", 1);
+                                setenv("GLOBUS_FTP_CLIENT_DEBUG_LEVEL", "1", 1);
+                                setenv("GLOBUS_FTP_CONTROL_DEBUG_LEVEL", "1", 1);
+                            }
+                        if (opts.debugLevel >= 3)
+                            {
+                                setenv("GLOBUS_GSI_AUTHZ_DEBUG_LEVEL", "1", 1);
+                                setenv("GLOBUS_CALLOUT_DEBUG_LEVEL", "1", 1);
+                                setenv("GLOBUS_GSI_CERT_UTILS_DEBUG_LEVEL", "1", 1);
+                                setenv("GLOBUS_GSI_CRED_DEBUG_LEVEL", "1", 1);
+                                setenv("GLOBUS_GSI_PROXY_DEBUG_LEVEL", "1", 1);
+                                setenv("GLOBUS_GSI_SYSCONFIG_DEBUG_LEVEL", "1", 1);
+                                setenv("GLOBUS_GSI_GSS_ASSIST_DEBUG_LEVEL", "1", 1);
+                                setenv("GLOBUS_GSSAPI_DEBUG_LEVEL", "1", 1);
+                                setenv("GLOBUS_NEXUS_DEBUG_LEVEL", "1", 1);
+                                setenv("GLOBUS_GIS_OPENSSL_ERROR_DEBUG_LEVEL", "1", 1);
+                            }
                     }
 
                 if (!opts.sourceTokenDescription.empty())
@@ -920,6 +960,9 @@ int main(int argc, char **argv)
 
                 if (!opts.destTokenDescription.empty())
                     gfalt_set_dst_spacetoken(params, opts.destTokenDescription.c_str(), NULL);
+
+                if (opts.strictCopy)
+                    gfalt_set_strict_copy_mode(params, TRUE, NULL);
 
                 gfalt_set_create_parent_dir(params, TRUE, NULL);
 
@@ -1017,10 +1060,14 @@ int main(int argc, char **argv)
                         logger.INFO() << "Overwrite is enabled" << std::endl;
                         gfalt_set_replace_existing_file(params, TRUE, NULL);
                     }
+                else if (opts.strictCopy)
+                    {
+                        logger.INFO() << "Overwrite is not enabled, but this is a copy-only transfer" << std::endl;
+                    }
                 else
                     {
                         struct stat statbufdestOver;
-                        //if overwrite is not enabled, check if  exists and stop the transfer if it does
+                        // if overwrite is not enabled, check if  exists and stop the transfer if it does
                         logger.INFO() << "Stat the dest surl to check if file already exists" << std::endl;
                         errorMessage = ""; //reset
                         if (gfal2_stat(handle, (currentTransfer.destUrl).c_str(), &statbufdestOver, &tmp_err) == 0)
@@ -1062,6 +1109,7 @@ int main(int argc, char **argv)
                 globalTimeout = experimentalTimeout + 3600;
                 logger.INFO() << "Resetting global timeout thread to " << globalTimeout << " seconds" << std::endl;
 
+		//Level 3
                 if( (!opts.manualConfig || opts.autoTunned) && opts.tcpBuffersize == 1)
                     {
                         int tcp_buffer_size = 4194304; //4MB
@@ -1093,7 +1141,7 @@ int main(int argc, char **argv)
                                     }
                             }
                     }
-                else
+                else //Level 1 or 2
                     {
                         //pass -1 to flag the need to reduce number of streams due to high latency
                         if(opts.nStreams == -1)
@@ -1147,7 +1195,7 @@ int main(int argc, char **argv)
 
 
                 logger.INFO() << "Transfer Starting" << std::endl;
-                reporter.sendLog(opts.jobId, currentTransfer.fileId, fileManagement.getLogFilePath(), opts.debug);
+                reporter.sendLog(opts.jobId, currentTransfer.fileId, fileManagement.getLogFilePath(), opts.debugLevel);
 
                 if (gfalt_copy_file(handle, params, (currentTransfer.sourceUrl).c_str(), (currentTransfer.destUrl).c_str(), &tmp_err) != 0)
                     {
@@ -1194,63 +1242,70 @@ int main(int argc, char **argv)
                 currentTransfer.transferredBytes = currentTransfer.fileSize;
                 msg_ifce::getInstance()->set_total_bytes_transfered(&tr_completed, currentTransfer.transferredBytes);
 
-                logger.INFO() << "DESTINATION Stat the dest surl start" << std::endl;
-                off_t dest_size;
-                errorCode = statWithRetries(handle, "DESTINATION", currentTransfer.destUrl, &dest_size, &errorMessage);
-                if (errorCode != 0)
+                if (!opts.strictCopy)
                     {
-                        logger.ERROR() << "DESTINATION Failed to get dest file size, errno:" << errorCode << ", "
-                                       << errorMessage << std::endl;
-                        errorMessage = "DESTINATION Failed to get dest file size: " + errorMessage;
-                        errorScope = DESTINATION;
-                        reasonClass = mapErrnoToString(errorCode);
-                        errorPhase = TRANSFER_FINALIZATION;
-                        retry = retryTransfer(errorCode, "DESTINATION", errorMessage);
-                        goto stop;
-                    }
+                        logger.INFO() << "DESTINATION Stat the dest surl start" << std::endl;
+                        off_t dest_size;
+                        errorCode = statWithRetries(handle, "DESTINATION", currentTransfer.destUrl, &dest_size, &errorMessage);
+                        if (errorCode != 0)
+                            {
+                                logger.ERROR() << "DESTINATION Failed to get dest file size, errno:" << errorCode << ", "
+                                               << errorMessage << std::endl;
+                                errorMessage = "DESTINATION Failed to get dest file size: " + errorMessage;
+                                errorScope = DESTINATION;
+                                reasonClass = mapErrnoToString(errorCode);
+                                errorPhase = TRANSFER_FINALIZATION;
+                                retry = retryTransfer(errorCode, "DESTINATION", errorMessage);
+                                goto stop;
+                            }
 
-                if (dest_size <= 0)
-                    {
-                        errorMessage = "DESTINATION file size is 0";
-                        logger.ERROR() << errorMessage << std::endl;
-                        errorScope = DESTINATION;
-                        reasonClass = mapErrnoToString(gfal_posix_code_error());
-                        errorPhase = TRANSFER_FINALIZATION;
-                        retry = true;
-                        goto stop;
-                    }
+                        if (dest_size <= 0)
+                            {
+                                errorMessage = "DESTINATION file size is 0";
+                                logger.ERROR() << errorMessage << std::endl;
+                                errorScope = DESTINATION;
+                                reasonClass = mapErrnoToString(gfal_posix_code_error());
+                                errorPhase = TRANSFER_FINALIZATION;
+                                retry = true;
+                                goto stop;
+                            }
 
-                if (currentTransfer.userFileSize != 0 && currentTransfer.userFileSize != dest_size)
-                    {
-                        std::stringstream error_;
-                        error_ << "DESTINATION User specified destination file size is " << currentTransfer.userFileSize << " but stat returned " << dest_size;
-                        errorMessage = error_.str();
-                        logger.ERROR() << errorMessage << std::endl;
-                        errorScope = DESTINATION;
-                        reasonClass = mapErrnoToString(gfal_posix_code_error());
-                        errorPhase = TRANSFER_FINALIZATION;
-                        retry = true;
-                        goto stop;
-                    }
+                        if (currentTransfer.userFileSize != 0 && currentTransfer.userFileSize != dest_size)
+                            {
+                                std::stringstream error_;
+                                error_ << "DESTINATION User specified destination file size is " << currentTransfer.userFileSize << " but stat returned " << dest_size;
+                                errorMessage = error_.str();
+                                logger.ERROR() << errorMessage << std::endl;
+                                errorScope = DESTINATION;
+                                reasonClass = mapErrnoToString(gfal_posix_code_error());
+                                errorPhase = TRANSFER_FINALIZATION;
+                                retry = true;
+                                goto stop;
+                            }
 
-                logger.INFO() << "DESTINATION  file size: " << dest_size << std::endl;
+                        logger.INFO() << "DESTINATION  file size: " << dest_size << std::endl;
 
-                //check source and dest file sizes
-                if (currentTransfer.fileSize == dest_size)
-                    {
-                        logger.INFO() << "DESTINATION Source and destination file size matching" << std::endl;
+                        //check source and dest file sizes
+                        if (currentTransfer.fileSize == dest_size)
+                            {
+                                logger.INFO() << "DESTINATION Source and destination file size matching" << std::endl;
+                            }
+                        else
+                            {
+                                errorMessage = "DESTINATION Source and destination file size mismatch ";
+                                errorMessage += boost::lexical_cast<std::string>(currentTransfer.fileSize);
+                                errorMessage += " <> ";
+                                errorMessage += boost::lexical_cast<std::string>(dest_size);
+                                logger.ERROR() << errorMessage << std::endl;
+                                errorScope = DESTINATION;
+                                reasonClass = mapErrnoToString(gfal_posix_code_error());
+                                errorPhase = TRANSFER_FINALIZATION;
+                                goto stop;
+                            }
                     }
                 else
                     {
-                        errorMessage = "DESTINATION Source and destination file size mismatch ";
-                        errorMessage += boost::lexical_cast<std::string>(currentTransfer.fileSize);
-                        errorMessage += " <> ";
-                        errorMessage += boost::lexical_cast<std::string>(dest_size);
-                        logger.ERROR() << errorMessage << std::endl;
-                        errorScope = DESTINATION;
-                        reasonClass = mapErrnoToString(gfal_posix_code_error());
-                        errorPhase = TRANSFER_FINALIZATION;
-                        goto stop;
+                        logger.INFO() << "Skipping destination file size check" << std::endl;
                     }
 
                 gfalt_set_user_data(params, NULL, NULL);
@@ -1318,7 +1373,7 @@ stop:
                             if (!archiveErr.empty())
                                 logger.ERROR() << "Could not archive: " << archiveErr << std::endl;
                             reporter.sendLog(opts.jobId, currentTransfer.fileId, fileManagement._getLogArchivedFileFullPath(),
-                                             opts.debug);
+                                             opts.debugLevel);
                             break; // exit the loop
                         }
                 }
@@ -1384,7 +1439,7 @@ stop:
             if (!archiveErr.empty())
                 logger.ERROR() << "Could not archive: " << archiveErr << std::endl;
             reporter.sendLog(opts.jobId, currentTransfer.fileId, fileManagement._getLogArchivedFileFullPath(),
-                             opts.debug);
+                             opts.debugLevel);
         }//end for reuse loop
 
     if (params)

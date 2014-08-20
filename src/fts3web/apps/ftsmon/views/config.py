@@ -123,6 +123,7 @@ def get_gfal2_config(http_request):
         config_files = os.listdir('/etc/gfal2.d')
     except:
         config_files = list()
+    config_files = filter(lambda c: c.endswith('.conf'), config_files)
 
     config = dict()
     for cfg in config_files:

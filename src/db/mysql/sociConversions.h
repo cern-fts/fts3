@@ -32,6 +32,7 @@
 #include <SeProtocolConfig.h>
 #include <ShareConfig.h>
 #include <TransferJobs.h>
+#include <OAuth.h>
 #include <soci.h>
 #include <time.h>
 
@@ -96,7 +97,7 @@ struct type_conversion<TransferJobs>
         job.AGENT_DN       = v.get<std::string>("agent_dn", "");
         job.SUBMIT_HOST    = v.get<std::string>("submit_host");
         job.USER_DN        = v.get<std::string>("user_dn");
-        job.USER_CRED      = v.get<std::string>("user_cred");
+        job.USER_CRED      = v.get<std::string>("user_cred", "");
         job.CRED_ID        = v.get<std::string>("cred_id");
         job.SPACE_TOKEN    = v.get<std::string>("space_token", "");
         job.STORAGE_CLASS  = v.get<std::string>("storage_class", "");
@@ -154,6 +155,7 @@ struct type_conversion<TransferFiles>
         file.DEST_SE = v.get<std::string>("dest_se", "");
         file.SELECTION_STRATEGY = v.get<std::string>("selection_strategy", "");
         file.INTERNAL_FILE_PARAMS = v.get<std::string>("internal_job_params", "");
+        file.USER_CREDENTIALS = v.get<std::string>("user_cred", "");
 
         // filesize and reason are NOT queried by any method that uses this
         // type
@@ -246,7 +248,14 @@ struct type_conversion<FileTransferStatus>
         struct tm aux_tm;
         transfer.fileId            = v.get<int>("file_id");
         transfer.sourceSURL        = v.get<std::string>("source_surl");
-        transfer.destSURL          = v.get<std::string>("dest_surl");
+        try
+            {
+                transfer.destSURL          = v.get<std::string>("dest_surl");
+            }
+        catch(...)
+            {
+                // ignore since DM operations (deletion) do not have destination
+            }
         transfer.transferFileState = v.get<std::string>("file_state");
         transfer.reason            = v.get<std::string>("reason", "");
         transfer.numFailures	   = v.get<int>("retry", 0);
@@ -371,6 +380,20 @@ struct type_conversion<FileRetry>
         struct tm aux_tm;
         aux_tm = v.get<tm>("datetime");
         retry.datetime = timegm(&aux_tm);
+    }
+};
+
+template<>
+struct type_conversion<OAuth>
+{
+    typedef values base_type;
+
+    static void from_base(values const& v, indicator, OAuth& oauth)
+    {
+        oauth.app_key      = v.get<std::string>("app_key");
+        oauth.app_secret   = v.get<std::string>("app_secret");
+        oauth.access_token = v.get<std::string>("access_token");
+        oauth.access_token_secret = v.get<std::string>("access_token_secret");
     }
 };
 

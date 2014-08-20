@@ -18,7 +18,7 @@
 
 using namespace fts3::cli;
 
-ResponseParser::ResponseParser(istream& stream)
+ResponseParser::ResponseParser(std::istream& stream)
 {
     try
         {
@@ -36,29 +36,31 @@ ResponseParser::~ResponseParser()
 
 }
 
-string ResponseParser::get(string const & path) const
+std::string ResponseParser::get(std::string const & path) const
 {
-    return response.get<string>(path);
+    return response.get<std::string>(path);
 }
 
-vector<JobStatus> ResponseParser::getJobs(string const & path) const
+std::vector<JobStatus> ResponseParser::getJobs(std::string const & path) const
 {
     ptree const & jobs = response.get_child(path);
 
-    vector<JobStatus> ret;
+    std::vector<JobStatus> ret;
     ptree::const_iterator it;
 
     for (it = jobs.begin(); it != jobs.end(); ++it)
         {
-            JobStatus j;
-            j.clientDn = it->second.get<string>("user_dn");
-            j.jobId = it->second.get<string>("job_id");
-            j.jobStatus = it->second.get<string>("job_state");
-            j.numFiles = -1;
-            j.priority = it->second.get<int>("priority");
-            j.reason = it->second.get<string>("reason");
-            j.submitTime = it->second.get<string>("submit_time");
-            j.voName = it->second.get<string>("vo_name");
+            JobStatus j(
+                    it->second.get<std::string>("job_id"),
+                    it->second.get<std::string>("job_state"),
+                    it->second.get<std::string>("user_dn"),
+                    it->second.get<std::string>("reason"),
+                    it->second.get<std::string>("vo_name"),
+                    it->second.get<std::string>("submit_time"),
+                    -1,
+                    it->second.get<int>("priority")
+                );
+
             ret.push_back(j);
         }
 
@@ -71,7 +73,7 @@ BOOST_AUTO_TEST_SUITE(ResponseParserTest)
 
 BOOST_AUTO_TEST_CASE (ResponseParser_get)
 {
-    stringstream resp;
+    std::stringstream resp;
 
     resp << "{\"job_state\": \"FAILED\"}";
 

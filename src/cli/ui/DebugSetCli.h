@@ -75,13 +75,13 @@ public:
     string getUsageString(string tool);
 
     /**
-     * Gets the debug mode.
+     * Gets the debug level.
      *
-     * @return true is the debug mode is on, false if the debud mode is off
+     * @return 0 if debug mode is off, an integer specifying the debug level otherwise
      */
-    bool getDebugMode()
+    unsigned getDebugLevel()
     {
-        return mode;
+        return level;
     }
 
     /**
@@ -106,8 +106,8 @@ public:
 
 private:
 
-    /// debug mode
-    bool mode;
+    /// debug level
+    unsigned level;
 
     /// source
     string source;

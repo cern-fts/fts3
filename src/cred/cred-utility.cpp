@@ -22,8 +22,10 @@
 #include "DelegCred.h"
 #include <boost/thread.hpp>
 #include "gridsite.h"
+#include "db/generic/DbUtils.h"
 #include <stdio.h>
 #include <time.h>
+#include <voms/voms_api.h>
 
 static boost::mutex qm;
 
@@ -199,17 +201,18 @@ std::string get_proxy_cert(const std::string& user_dn,
  *
  * Return the proxy lifetime. In case of other errors, returns -1
  */
-time_t get_proxy_lifetime(const std::string& filename) /*throw ()*/
+void get_proxy_lifetime(const std::string& filename, time_t *lifetime, time_t *vo_lifetime) /*throw ()*/
 {
 
-    time_t lifetime = (time_t)-1;
+    *lifetime = (time_t)-1;
+    *vo_lifetime = (time_t)-1;
 
     // Check that the file Exists
     int result = access(filename.c_str(), R_OK);
     if(0 != result)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Requested Proxy doesn't exist. A new one should be created. Reason is " << strerror(errno) << commit;
-            return lifetime;
+            return;
         }
     // Check if it's valid
     globus_gsi_cred_handle_t        proxy_handle = 0;
@@ -224,31 +227,64 @@ time_t get_proxy_lifetime(const std::string& filename) /*throw ()*/
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot Init Handle Attributes" << commit;
                 }
             // Init handle
-            result =  globus_gsi_cred_handle_init(&proxy_handle,handle_attrs);
+            result =  globus_gsi_cred_handle_init(&proxy_handle, handle_attrs);
             if(0 != result)
                 {
                     //throw RuntimeError("Cannot Init Handle");
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot Init Handle" << commit;
                 }
             // Load Proxy
-            result = globus_gsi_cred_read_proxy(proxy_handle,const_cast<char *>(filename.c_str()));
+            result = globus_gsi_cred_read_proxy(proxy_handle, const_cast<char *>(filename.c_str()));
             if(0 != result)
                 {
                     //throw RuntimeError("Cannot Load Proxy File");
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot Load Proxy File" << commit;
                 }
             // Get Lifetime (in seconds)
-            result = globus_gsi_cred_get_lifetime(proxy_handle,&lifetime);
+            result = globus_gsi_cred_get_lifetime(proxy_handle, lifetime);
             if(0 != result)
                 {
                     //throw RuntimeError("Cannot Get Proxy Lifetime");
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot Get Proxy Lifetime" << commit;
                 }
+
+            // Get VO extensions lifetime
+            X509* cert = NULL;
+            globus_gsi_cred_get_cert(proxy_handle, &cert);
+            STACK_OF(X509)* cert_chain = NULL;
+            globus_gsi_cred_get_cert_chain(proxy_handle, &cert_chain);
+
+            vomsdata voms_data;
+            voms_data.SetVerificationType((verify_type)(VERIFY_NONE));
+            voms_data.Retrieve(cert, cert_chain);
+            if (voms_data.data.size() > 0)
+                {
+                    *vo_lifetime = INT_MAX;
+                    for (size_t i = 0; i < voms_data.data.size(); ++i) {
+                        const voms &data = voms_data.data[i];
+                        struct tm tm_eol;
+                        strptime(data.date2.c_str(), "%Y%m%d%H%M%S%Z", &tm_eol);
+                        time_t vo_eol = timegm(&tm_eol);
+                        time_t utc_now = db::getUTC(0);
+                        time_t vo_remaining = vo_eol - utc_now;
+                        if (vo_remaining < *vo_lifetime)
+                            *vo_lifetime = vo_remaining;
+                    }
+                }
+            else
+                {
+                    *vo_lifetime = 0;
+                }
+
+            // Clean
+            X509_free(cert);
+            sk_X509_pop_free(cert_chain, X509_free);
         }
     catch(const std::exception& exc)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) <<" Cannot Check Proxy Validity. Reason is: " << exc.what() << commit;
-            lifetime = (time_t)-1;
+            *lifetime = (time_t)-1;
+            *vo_lifetime = (time_t)-1;
         }
     // Destroy handles
     if(0 != proxy_handle)
@@ -259,5 +295,4 @@ time_t get_proxy_lifetime(const std::string& filename) /*throw ()*/
         {
             globus_gsi_cred_handle_attrs_destroy(handle_attrs);
         }
-    return lifetime;
 }

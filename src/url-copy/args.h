@@ -17,14 +17,16 @@ public:
     bool monitoringMessages;
     bool autoTunned;
     bool manualConfig;
-    bool debug;
     bool overwrite;
     bool daemonize;
     bool logToStderr;
     bool reuse;
     bool multihop;
     bool enable_udt;
+    bool enable_ipv6;
     bool global_timeout;
+    bool strictCopy;
+    unsigned debugLevel;
 
     enum CompareChecksum
     {
@@ -59,6 +61,7 @@ public:
     int    	secPerMb;
     std::string user_dn;
     std::string alias;
+    std::string oauthFile;
 
     bool areTransfersOnFile() const
     {

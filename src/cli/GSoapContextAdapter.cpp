@@ -23,6 +23,7 @@
  */
 
 #include "GSoapContextAdapter.h"
+#include "MsgPrinter.h"
 
 #include "exception/cli_exception.h"
 #include "exception/gsoap_error.h"
@@ -50,7 +51,7 @@ namespace cli
 vector<GSoapContextAdapter::Cleaner> GSoapContextAdapter::cleaners;
 
 GSoapContextAdapter::GSoapContextAdapter(string endpoint):
-    endpoint(endpoint), ctx(soap_new2(SOAP_IO_KEEPALIVE, SOAP_IO_KEEPALIVE)/*soap_new1(SOAP_ENC_MTOM)*/)
+    ServiceAdapter(endpoint), ctx(soap_new2(SOAP_IO_KEEPALIVE, SOAP_IO_KEEPALIVE))
 {
     this->major = 0;
     this->minor = 0;
@@ -66,7 +67,7 @@ GSoapContextAdapter::GSoapContextAdapter(string endpoint):
     soap_set_imode(ctx, SOAP_ENC_MTOM | SOAP_IO_CHUNK);
     soap_set_omode(ctx, SOAP_ENC_MTOM | SOAP_IO_CHUNK);
 
-    // initialize cgsi plugin
+    // Initialise CGSI plug-in
     if (endpoint.find("https") == 0)
         {
             if (soap_cgsi_init(ctx,  CGSI_OPT_DISABLE_NAME_CHECK | CGSI_OPT_SSL_COMPATIBLE)) throw gsoap_error(ctx);
@@ -283,7 +284,7 @@ JobStatus GSoapContextAdapter::getTransferJobStatus (string jobId, bool archive)
            );
 }
 
-vector< pair<string, string> > GSoapContextAdapter::cancel(vector<string> jobIds)
+std::vector< std::pair<std::string, std::string>  > GSoapContextAdapter::cancel(std::vector<std::string> const & jobIds)
 {
 
     impltns__ArrayOf_USCOREsoapenc_USCOREstring rqst;
@@ -324,7 +325,7 @@ void GSoapContextAdapter::getRolesOf (string dn, impltns__getRolesOfResponse& re
         throw gsoap_error(ctx);
 }
 
-vector<JobStatus> GSoapContextAdapter::listRequests (vector<string> statuses, string dn, string vo, string source, string destination)
+std::vector<JobStatus> GSoapContextAdapter::listRequests (std::vector<std::string> const & statuses, std::string const & dn, std::string const & vo, std::string const & source, std::string const & destination)
 {
 
     impltns__ArrayOf_USCOREsoapenc_USCOREstring* array = soap_new_impltns__ArrayOf_USCOREsoapenc_USCOREstring(ctx, -1);
@@ -348,16 +349,16 @@ vector<JobStatus> GSoapContextAdapter::listRequests (vector<string> statuses, st
             char time_buff[20];
             strftime(time_buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&submitTime));
 
-            JobStatus status = JobStatus(
-                                   *gstat->jobID,
-                                   *gstat->jobStatus,
-                                   *gstat->clientDN,
-                                   *gstat->reason,
-                                   *gstat->voName,
-                                   time_buff,
-                                   gstat->numFiles,
-                                   gstat->priority
-                               );
+            JobStatus status (
+                   *gstat->jobID,
+                   *gstat->jobStatus,
+                   *gstat->clientDN,
+                   *gstat->reason,
+                   *gstat->voName,
+                   time_buff,
+                   gstat->numFiles,
+                   gstat->priority
+               );
             ret.push_back(status);
         }
 
@@ -370,7 +371,7 @@ void GSoapContextAdapter::listVoManagers(string vo, impltns__listVOManagersRespo
         throw gsoap_error(ctx);
 }
 
-JobSummary GSoapContextAdapter::getTransferJobSummary (string jobId, bool archive)
+JobStatus GSoapContextAdapter::getTransferJobSummary (string jobId, bool archive)
 {
     tns3__JobRequest req;
 
@@ -388,25 +389,25 @@ JobSummary GSoapContextAdapter::getTransferJobSummary (string jobId, bool archiv
     char time_buff[20];
     strftime(time_buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&submitTime));
 
-    JobStatus status = JobStatus(
-                           *resp.getTransferJobSummary2Return->jobStatus->jobID,
-                           *resp.getTransferJobSummary2Return->jobStatus->jobStatus,
-                           *resp.getTransferJobSummary2Return->jobStatus->clientDN,
-                           *resp.getTransferJobSummary2Return->jobStatus->reason,
-                           *resp.getTransferJobSummary2Return->jobStatus->voName,
-                           time_buff,
-                           resp.getTransferJobSummary2Return->jobStatus->numFiles,
-                           resp.getTransferJobSummary2Return->jobStatus->priority
-                       );
+    JobStatus::JobSummary summary (
+            resp.getTransferJobSummary2Return->numActive,
+            resp.getTransferJobSummary2Return->numReady,
+            resp.getTransferJobSummary2Return->numCanceled,
+            resp.getTransferJobSummary2Return->numFinished,
+            resp.getTransferJobSummary2Return->numSubmitted,
+            resp.getTransferJobSummary2Return->numFailed
+        );
 
-    return JobSummary (
-               status,
-               resp.getTransferJobSummary2Return->numActive,
-               resp.getTransferJobSummary2Return->numCanceled,
-               resp.getTransferJobSummary2Return->numFailed,
-               resp.getTransferJobSummary2Return->numFinished,
-               resp.getTransferJobSummary2Return->numSubmitted,
-               resp.getTransferJobSummary2Return->numReady
+    return JobStatus(
+               *resp.getTransferJobSummary2Return->jobStatus->jobID,
+               *resp.getTransferJobSummary2Return->jobStatus->jobStatus,
+               *resp.getTransferJobSummary2Return->jobStatus->clientDN,
+               *resp.getTransferJobSummary2Return->jobStatus->reason,
+               *resp.getTransferJobSummary2Return->jobStatus->voName,
+               time_buff,
+               resp.getTransferJobSummary2Return->jobStatus->numFiles,
+               resp.getTransferJobSummary2Return->jobStatus->priority,
+               summary
            );
 }
 
@@ -449,17 +450,17 @@ void GSoapContextAdapter::delConfiguration(config__Configuration *config, implcf
         throw gsoap_error(ctx);
 }
 
-void GSoapContextAdapter::setBringOnline(map<string, int>& pairs)
+void GSoapContextAdapter::setBringOnline(std::vector< std::pair<std::string, int> > const & triplets)
 {
 
     config__BringOnline bring_online;
 
-    map<string, int>::iterator it;
-    for (it = pairs.begin(); it != pairs.end(); it++)
+    std::vector< std::pair<std::string, int> >::const_iterator it;
+    for (it = triplets.begin(); it != triplets.end(); it++)
         {
             config__BringOnlinePair* pair = soap_new_config__BringOnlinePair(ctx, -1);
-            pair->first = it->first;
-            pair->second = it->second;
+            pair->se = it->first;
+            pair->value = it->second;
             bring_online.boElem.push_back(pair);
         }
 
@@ -488,10 +489,10 @@ void GSoapContextAdapter::getBandwidthLimit(implcfg__getBandwidthLimitResponse& 
         throw gsoap_error(ctx);
 }
 
-void GSoapContextAdapter::debugSet(string source, string destination, bool debug)
+void GSoapContextAdapter::debugSet(string source, string destination, unsigned level)
 {
-    impltns__debugSetResponse resp;
-    if (soap_call_impltns__debugSet(ctx, endpoint.c_str(), 0, source, destination, debug, resp))
+    impltns__debugLevelSetResponse resp;
+    if (soap_call_impltns__debugLevelSet(ctx, endpoint.c_str(), 0, source, destination, level, resp))
         throw gsoap_error(ctx);
 }
 
@@ -581,6 +582,13 @@ void GSoapContextAdapter::setMaxSrcSeActive(string se, int active)
         throw gsoap_error(ctx);
 }
 
+void GSoapContextAdapter::setFixActivePerPair(string source, string destination, int active)
+{
+    implcfg__fixActivePerPairResponse resp;
+    if (soap_call_implcfg__fixActivePerPair(ctx, endpoint.c_str(), 0, source, destination, active, resp))
+        throw gsoap_error(ctx);
+}
+
 std::string GSoapContextAdapter::getSnapShot(string vo, string src, string dst)
 {
     impltns__getSnapshotResponse resp;
@@ -604,7 +612,7 @@ void GSoapContextAdapter::setInterfaceVersion(string interface)
 
     if (interface.empty()) return;
 
-    // set the seperator that will be used for tokenizing
+    // set the separator that will be used for tokenizing
     boost::char_separator<char> sep(".");
     boost::tokenizer< boost::char_separator<char> > tokens(interface, sep);
     boost::tokenizer< boost::char_separator<char> >::iterator it = tokens.begin();

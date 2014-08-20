@@ -36,74 +36,60 @@
 #include "exception/cli_exception.h"
 #include "JsonOutput.h"
 
-using namespace boost;
-using namespace std;
 using namespace fts3::cli;
 
 /**
  * This is the entry point for the fts3-transfer-delete command line tool.
  */
 
-
-
-
 int main(int ac, char* av[])
 {
-    scoped_ptr<SrcDelCli> cli(new SrcDelCli);
-
     try
         {
-            // create and initialize the command line utility
-            cli->SrcDelCli::parse(ac,av);
+            SrcDelCli cli;
+            // create and initialise the command line utility
+            cli.parse(ac,av);
 
             // validate command line options, and return respective gsoap context
-            if (!cli->validate()) return 1;
+            if (!cli.validate()) return 1;
 
-
-            vector<string> vect =  cli->getFileName();
+            std::vector<std::string> vect =  cli.getFileName();
             if(vect.size() == 0)
                 {
                     std::cout << "You need to provide either a file name of a bulk deletion or a list of files to be deleted" << std::endl;
-                    exit(1);
+                    return 1;
                 }
 
-            GSoapContextAdapter& ctx = cli->getGSoapContext();
+            GSoapContextAdapter ctx (cli.getService());
+            cli.printApiDetails(ctx);
 
             // delegate Proxy Certificate
             ProxyCertificateDelegator handler (
-                cli->getService(),
+                cli.getService(),
                 "",
-                0,
-                cli->printer()
+                0
             );
 
             handler.delegate();
 
-            string resjobid = ctx.deleteFile(vect);
+            std::string resjobid = ctx.deleteFile(vect);
             std::cout << resjobid <<endl;
 
 
         }
     catch(cli_exception const & ex)
         {
-            if (cli->isJson()) JsonOutput::print(ex);
-            else std::cout << ex.what() << std::endl;
+            MsgPrinter::instance().print(ex);
             return 1;
         }
     catch(std::exception& ex)
         {
-            if (cli.get())
-                cli->printer().error_msg(ex.what());
-            else
-                std::cerr << ex.what() << std::endl;
+            MsgPrinter::instance().print(ex);
             return 1;
         }
     catch(...)
         {
-            if (cli.get())
-                cli->printer().error_msg("__Exception of unknown type!");
-            else
-                std::cerr << "~Exception of unknown type!" << std::endl;
+            MsgPrinter::instance().print("error", "exception of unknown type!");
             return 1;
         }
 

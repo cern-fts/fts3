@@ -25,7 +25,7 @@
 #include "RequestLister.h"
 #include "GSoapJobStatus.h"
 
-#include "db/generic/SingleDbInstance.h"
+
 
 #include "common/error.h"
 #include "common/logger.h"
@@ -37,7 +37,8 @@ using namespace fts3::common;
 
 RequestLister::RequestLister(::soap* soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates):
     soap(soap),
-    cgsi(soap)
+    cgsi(soap),
+    db(*DBSingleton::instance().getDBObjectInstance())
 {
 
     FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << cgsi.getClientDn() << " is listing transfer job requests" << commit;
@@ -50,7 +51,8 @@ RequestLister::RequestLister(::soap* soap, impltns__ArrayOf_USCOREsoapenc_USCORE
     dn(dn),
     vo(vo),
     src(src),
-    dst(dst)
+    dst(dst),
+    db(*DBSingleton::instance().getDBObjectInstance())
 {
 
     FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << cgsi.getClientDn() << " is listing transfer job requests" << commit;
@@ -78,12 +80,12 @@ impltns__ArrayOf_USCOREtns3_USCOREJobStatus* RequestLister::list(AuthorizationMa
 
     try
         {
-            DBSingleton::instance().getDBObjectInstance()->listRequests(jobs, inGivenStates, "", dn, vo, src, dst);
+            db.listRequests(jobs, inGivenStates, "", dn, vo, src, dst);
+            db.listRequestsDm(jobs, inGivenStates, "", dn, vo, src, dst);
             FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's statuses have been read from the database" << commit;
         }
     catch(Err& ex)
         {
-
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
             throw Err_Custom(std::string(__func__) + ": Caught exception " + ex.what());
         }

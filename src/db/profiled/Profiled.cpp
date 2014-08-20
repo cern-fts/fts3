@@ -45,12 +45,22 @@ void ProfiledDB::getTransferJobStatus(std::string requestID, bool archive, std::
     PROFILE_PREFIXED("DB::", db->getTransferJobStatus(requestID, archive, jobs));
 }
 
-
+void ProfiledDB::getDmJobStatus(std::string requestID, bool archive, std::vector<JobStatus*>& jobs)
+{
+    PROFILE_PREFIXED("DB::", db->getDmJobStatus(requestID, archive, jobs));
+}
 
 void ProfiledDB::getTransferFileStatus(std::string requestID, bool archive,
                                        unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files)
 {
     PROFILE_PREFIXED("DB::", db->getTransferFileStatus(requestID, archive, offset, limit, files));
+}
+
+
+void ProfiledDB::getDmFileStatus(std::string requestID, bool archive,
+                                       unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files)
+{
+    PROFILE_PREFIXED("DB::", db->getDmFileStatus(requestID, archive, offset, limit, files));
 }
 
 
@@ -60,6 +70,11 @@ void ProfiledDB::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::st
     PROFILE_PREFIXED("DB::", db->listRequests(jobs, inGivenStates, restrictToClientDN, forDN, VOname, src, dst));
 }
 
+void ProfiledDB::listRequestsDm(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
+                              std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst)
+{
+    PROFILE_PREFIXED("DB::", db->listRequestsDm(jobs, inGivenStates, restrictToClientDN, forDN, VOname, src, dst));
+}
 
 TransferJobs* ProfiledDB::getTransferJob(std::string jobId, bool archive)
 {
@@ -181,15 +196,15 @@ void ProfiledDB::deleteGrDPStorageElement(std::string delegationID, std::string 
 }
 
 
-bool ProfiledDB::getDebugMode(std::string source_hostname, std::string destin_hostname)
+unsigned ProfiledDB::getDebugLevel(std::string source_hostname, std::string destin_hostname)
 {
-    PROFILE_PREFIXED("DB::", return db->getDebugMode(source_hostname, destin_hostname));
+    PROFILE_PREFIXED("DB::", return db->getDebugLevel(source_hostname, destin_hostname));
 }
 
 
-void ProfiledDB::setDebugMode(std::string source_hostname, std::string destin_hostname, std::string mode)
+void ProfiledDB::setDebugLevel(std::string source_hostname, std::string destin_hostname, unsigned level)
 {
-    PROFILE_PREFIXED("DB::", db->setDebugMode(source_hostname, destin_hostname, mode));
+    PROFILE_PREFIXED("DB::", db->setDebugLevel(source_hostname, destin_hostname, level));
 }
 
 
@@ -237,19 +252,6 @@ int ProfiledDB::getSeOut(const std::string & source, const std::set<std::string>
 int ProfiledDB::getSeIn(const std::set<std::string> & source, const std::string & destination)
 {
     PROFILE_PREFIXED("DB::", return db->getSeIn(source, destination));
-}
-
-
-void ProfiledDB::setAllowed(const std::string & job_id, int file_id, const std::string & source_se, const std::string & dest,
-                            int nostreams, int timeout, int buffersize)
-{
-    PROFILE_PREFIXED("DB::", db->setAllowed(job_id, file_id, source_se, dest, nostreams, timeout, buffersize));
-}
-
-
-void ProfiledDB::setAllowedNoOptimize(const std::string & job_id, int file_id, const std::string & params)
-{
-    PROFILE_PREFIXED("DB::", db->setAllowedNoOptimize(job_id, file_id, params));
 }
 
 
@@ -818,6 +820,11 @@ bool ProfiledDB::isProtocolUDT(const std::string & source_hostname, const std::s
     PROFILE_PREFIXED("DB::", return db->isProtocolUDT(source_hostname, destination_hostname));
 }
 
+bool ProfiledDB::isProtocolIPv6(const std::string & source_hostname, const std::string & destination_hostname)
+{
+    PROFILE_PREFIXED("DB::", return db->isProtocolIPv6(source_hostname, destination_hostname));
+}
+
 int ProfiledDB::getStreamsOptimization(const std::string & source_hostname, const std::string & destination_hostname)
 {
     PROFILE_PREFIXED("DB::", return db->getStreamsOptimization(source_hostname, destination_hostname));
@@ -851,6 +858,11 @@ void ProfiledDB::setSourceMaxActive(const std::string & source_hostname, int max
 void ProfiledDB::setDestMaxActive(const std::string & destination_hostname, int maxActive)
 {
     PROFILE_PREFIXED("DB::", db->setDestMaxActive(destination_hostname,  maxActive));
+}
+
+void ProfiledDB::setFixActive(const std::string & source, const std::string & destination, int active)
+{
+    PROFILE_PREFIXED("DB::", db->setFixActive(source, destination, active));
 }
 
 int ProfiledDB::getBufferOptimization()
@@ -959,3 +971,18 @@ void ProfiledDB::checkJobOperation(std::vector<std::string>& jobs, std::vector< 
     PROFILE_PREFIXED("DB::", db->checkJobOperation(jobs, ops));
 }
 
+
+bool ProfiledDB::getOauthCredentials(const std::string& user_dn, const std::string& cloud_name, OAuth& oauth)
+{
+    PROFILE_PREFIXED("DB::", return db->getOauthCredentials(user_dn, cloud_name, oauth));
+}
+
+bool ProfiledDB::isDmJob(std::string const & job)
+{
+    PROFILE_PREFIXED("DB::", return db->isDmJob(job));
+}
+
+void ProfiledDB::cancelDmJobs(std::vector<std::string> const & jobs)
+{
+    PROFILE_PREFIXED("DB::", db->cancelDmJobs(jobs));
+}

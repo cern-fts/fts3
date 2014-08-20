@@ -23,6 +23,8 @@
  */
 
 #include "GSoapContextAdapter.h"
+#include "RestContextAdapter.h"
+
 #include "MsgPrinter.h"
 #include "ui/CancelCli.h"
 #include "rest/HttpRequest.h"
@@ -39,13 +41,9 @@
 #include <algorithm>
 #include <sstream>
 
-#include <boost/scoped_ptr.hpp>
-
 #include <boost/lambda/bind.hpp>
 #include <boost/lambda/lambda.hpp>
 
-using namespace boost;
-using namespace std;
 using namespace fts3::cli;
 using namespace fts3::common;
 
@@ -54,68 +52,50 @@ using namespace fts3::common;
  */
 int main(int ac, char* av[])
 {
-    JsonOutput::create();
-    scoped_ptr<CancelCli> cli(new CancelCli);
-
     try
         {
-            // create and initialize the command line utility
-            cli->parse(ac, av);
-            if (!cli->validate()) return 0;
+            CancelCli cli;
+            // create and initialise the command line utility
+            cli.parse(ac, av);
+            if (!cli.validate()) return 1;
 
-            if (cli->rest())
+            std::string const endpoint = cli.getService();
+
+            std::unique_ptr<ServiceAdapter> ctx;
+            if (cli.rest())
                 {
-                    vector<string> jobIds = cli->getJobIds();
-                    vector<string>::iterator itr;
-
-                    std::vector< std::pair< std::string, std::string> > ret;
-
-                    for (itr = jobIds.begin(); itr != jobIds.end(); ++itr)
-                        {
-                            std::stringstream ss;
-                            string url = cli->getService() + "/jobs/" + *itr;
-                            HttpRequest http (url, cli->capath(), cli->proxy(), ss);
-                            http.del();
-
-                            ResponseParser p(ss);
-                            ret.push_back(std::make_pair(p.get("job_id"), p.get("job_state")));
-                        }
-
-                    cli->printer().print(ret);
-
-                    return 0;
+                    std::string const capath = cli.capath();
+                    std::string const proxy = cli.proxy();
+                    ctx.reset(new RestContextAdapter(endpoint, capath, proxy));
+                }
+            else
+                {
+                    ctx.reset(new GSoapContextAdapter(endpoint));
                 }
 
-            // validate command line options, and return respective gsoap context
-            GSoapContextAdapter& ctx = cli->getGSoapContext();
+            // print API details if verbose
+            cli.printApiDetails(*ctx.get());
 
-            vector<string> jobs = cli->getJobIds();
+            std::vector<std::string> jobs = cli.getJobIds();
 
             if (jobs.empty()) throw bad_option("jobid", "missing parameter");
 
-            vector< pair<string, string> > ret = ctx.cancel(jobs);
-            cli->printer().print(ret);
+            std::vector< std::pair<std::string, std::string> > ret = ctx->cancel(jobs);
+            MsgPrinter::instance().print(ret);
         }
     catch(cli_exception const & ex)
         {
-            if (cli->isJson()) JsonOutput::print(ex);
-            else std::cout << ex.what() << std::endl;
+            MsgPrinter::instance().print(ex);
             return 1;
         }
     catch(std::exception& ex)
         {
-            if (cli.get())
-                cli->printer().error_msg(ex.what());
-            else
-                std::cerr << ex.what() << std::endl;
+            MsgPrinter::instance().print(ex);
             return 1;
         }
     catch(...)
         {
-            if (cli.get())
-                cli->printer().error_msg("Exception of unknown type!");
-            else
-                std::cerr << "Exception of unknown type!" << std::endl;
+            MsgPrinter::instance().print("error", "exception of unknown type!");
             return 1;
         }
 

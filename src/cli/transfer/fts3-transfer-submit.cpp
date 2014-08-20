@@ -19,19 +19,14 @@
 
 #include "GSoapContextAdapter.h"
 #include "ProxyCertificateDelegator.h"
+#include "File.h"
+
 #include "ui/SubmitTransferCli.h"
 #include "rest/HttpRequest.h"
 #include "common/JobStatusHandler.h"
-
-#include "TransferTypes.h"
-
 #include "exception/cli_exception.h"
-#include "JsonOutput.h"
 
-#include <boost/scoped_ptr.hpp>
 
-using namespace std;
-using namespace boost;
 using namespace fts3::cli;
 using namespace fts3::common;
 
@@ -40,40 +35,38 @@ using namespace fts3::common;
  */
 int main(int ac, char* av[])
 {
-    JsonOutput::create();
-    scoped_ptr<SubmitTransferCli> cli (new SubmitTransferCli);
-
     try
         {
-            cli->parse(ac, av);
-            if (!cli->validate()) return 1;
+            SubmitTransferCli cli;
+            cli.parse(ac, av);
+            if (!cli.validate()) return 1;
 
-            if (cli->rest())
+            if (cli.rest())
                 {
-                    string url = cli->getService() + "/jobs";
-                    string job = cli->getFileName();
+                    std::string url = cli.getService() + "/jobs";
+                    std::string job = cli.getFileName();
 
-                    HttpRequest http (url, cli->capath(), cli->proxy(), cout);
+                    HttpRequest http (url, cli.capath(), cli.proxy(), cout);
                     http.put(job);
                     return 0;
                 }
 
             // validate command line options, and return respective gSOAP context
-            GSoapContextAdapter& ctx = cli->getGSoapContext();
+            GSoapContextAdapter ctx (cli.getService());
+            cli.printApiDetails(ctx);
 
-            string jobId("");
+            std::string jobId("");
 
-            vector<File> files = cli->getFiles();
+            std::vector<File> files = cli.getFiles();
 
 
-            map<string, string> params = cli->getParams();
+            std::map<std::string, std::string> params = cli.getParams();
 
             // delegate Proxy Certificate
             ProxyCertificateDelegator handler (
-                cli->getService(),
-                cli->getDelegationId(),
-                cli->getExpirationTime(),
-                cli->printer()
+                cli.getService(),
+                cli.getDelegationId(),
+                cli.getExpirationTime()
             );
 
             handler.delegate();
@@ -84,43 +77,35 @@ int main(int ac, char* av[])
                         params
                     );
 
-            cli->printer().job_id(jobId);
+            MsgPrinter::instance().print("", "job_id", jobId);
 
             // check if the -b option has been used
-            if (cli->isBlocking())
+            if (cli.isBlocking())
                 {
-
-                    fts3::cli::JobStatus status;
+                    std::string status;
                     // wait until the transfer is ready
                     do
                         {
                             sleep(2);
-                            status = ctx.getTransferJobStatus(jobId, false);
+                            status = ctx.getTransferJobStatus(jobId, false).getStatus();
                         }
-                    while (!JobStatusHandler::getInstance().isTransferFinished(status.jobStatus));
+                    while (!JobStatusHandler::getInstance().isTransferFinished(status));
                 }
 
         }
     catch(cli_exception const & ex)
         {
-            if (cli->isJson()) JsonOutput::print(ex);
-            else std::cout << ex.what() << std::endl;
+            MsgPrinter::instance().print(ex);
             return 1;
         }
     catch(std::exception& ex)
         {
-            if (cli.get())
-                cli->printer().error_msg(ex.what());
-            else
-                std::cerr << ex.what() << std::endl;
+            MsgPrinter::instance().print(ex);
             return 1;
         }
     catch(...)
         {
-            if (cli.get())
-                cli->printer().error_msg("Exception of unknown type!");
-            else
-                std::cerr << "Exception of unknown type!" << std::endl;
+            MsgPrinter::instance().print("error", "exception of unknown type!");
             return 1;
         }
 

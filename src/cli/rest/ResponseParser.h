@@ -8,7 +8,7 @@
 #ifndef RESPONSEPARSER_H_
 #define RESPONSEPARSER_H_
 
-#include "TransferTypes.h"
+#include "JobStatus.h"
 
 #include <istream>
 #include <string>
@@ -21,7 +21,6 @@ namespace fts3
 namespace cli
 {
 
-using namespace std;
 using namespace boost::property_tree;
 
 class ResponseParser
@@ -29,13 +28,13 @@ class ResponseParser
 
 public:
 
-    ResponseParser(istream& stream);
+    ResponseParser(std::istream& stream);
 
     virtual ~ResponseParser();
 
-    string get(string const & path) const;
+    std::string get(std::string const & path) const;
 
-    vector<JobStatus> getJobs(string const & path) const;
+    std::vector<JobStatus> getJobs(std::string const & path) const;
 
 private:
     /// The object that contains the response

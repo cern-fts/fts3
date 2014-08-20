@@ -25,7 +25,7 @@
 #ifndef PYFILE_H_
 #define PYFILE_H_
 
-#include "TransferTypes.h"
+#include "File.h"
 
 #include <boost/python.hpp>
 

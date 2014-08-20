@@ -42,86 +42,86 @@ using namespace fts3::common;
  */
 int main(int ac, char* av[])
 {
-    unique_ptr<SetCfgCli> cli(new SetCfgCli);
-
     try
         {
+            SetCfgCli cli;
             // create and initialize the command line utility
-            cli->parse(ac, av);
-            if (!cli->validate()) return 0;
+            cli.parse(ac, av);
+            if (!cli.validate()) return 0;
 
             // validate command line options, and return respective gsoap context
-            GSoapContextAdapter& ctx = cli->getGSoapContext();
+            GSoapContextAdapter ctx (cli.getService());
+            cli.printApiDetails(ctx);
 
-            optional<std::tuple<string, string, string>> protocol = cli->getProtocol();
+            optional<std::tuple<string, string, string>> protocol = cli.getProtocol();
             if (protocol.is_initialized())
                 {
-                    string udt = std::get<0>(*protocol);
+                    string prot = std::get<0>(*protocol);
                     string se = std::get<1>(*protocol);
                     string state = std::get<2>(*protocol);
-                    ctx.setSeProtocol(udt, se, state);
+                    ctx.setSeProtocol(prot, se, state);
 
-                    cout << "Done, just applied: " << udt << " " << se << " " << state << endl;
+                    cout << "Done, just applied: " << prot << " " << se << " " << state << endl;
                     return 0;
                 }
 
-            optional< pair<string, int> > maxActivePerSe = cli->getMaxSrcSeActive();
+            optional< pair<string, int> > maxActivePerSe = cli.getMaxSrcSeActive();
             if (maxActivePerSe.is_initialized())
                 {
                     ctx.setMaxSrcSeActive(maxActivePerSe.get().first, maxActivePerSe.get().second);
                     cout << "Done, just applied: " << maxActivePerSe.get().first << " " << maxActivePerSe.get().second  << endl;
                 }
 
-            maxActivePerSe = cli->getMaxDstSeActive();
+            maxActivePerSe = cli.getMaxDstSeActive();
             if (maxActivePerSe.is_initialized())
                 {
                     ctx.setMaxDstSeActive(maxActivePerSe.get().first, maxActivePerSe.get().second);
                     cout << "Done, just applied: " << maxActivePerSe.get().first << " " << maxActivePerSe.get().second  << endl;
                 }
 
-            optional<bool> drain = cli->drain();
+            optional<bool> drain = cli.drain();
             if (drain.is_initialized())
                 {
                     ctx.doDrain(drain.get());
                     cout << "Done" << endl;
                 }
 
-            optional< pair<string, int> > retry = cli->retry();
+            optional< pair<string, int> > retry = cli.retry();
             if (retry.is_initialized())
                 {
                     ctx.retrySet(retry->first, retry->second);
                     cout << "Done" << endl;
                 }
 
-            optional<int> mode = cli->optimizer_mode();
+            optional<int> mode = cli.optimizer_mode();
             if (mode.is_initialized())
                 {
                     ctx.optimizerModeSet(*mode);
                     cout << "Done" << endl;
                 }
 
-            optional<int> secPerMb = cli->getSecPerMb();
+            optional<int> secPerMb = cli.getSecPerMb();
             if (secPerMb.is_initialized())
                 {
                     ctx.setSecPerMb(*secPerMb);
                     cout << "Done" << endl;
                 }
 
-            optional<int> globalTimeout = cli->getGlobalTimeout();
+            optional<int> globalTimeout = cli.getGlobalTimeout();
             if (globalTimeout.is_initialized())
                 {
                     ctx.setGlobalTimeout(*globalTimeout);
                     cout << "Done" << endl;
                 }
 
-            optional<unsigned> queueTimeout = cli->queueTimeout();
+            optional<unsigned> queueTimeout = cli.queueTimeout();
             if (queueTimeout.is_initialized())
                 {
                     ctx.queueTimeoutSet(*queueTimeout);
                     cout << "Done" << endl;
                 }
 
-            map<string, int> bring_online = cli->getBringOnline();
+            std::vector< std::pair<std::string, int> > bring_online = cli.getBringOnline();
             if (!bring_online.empty())
                 {
                     ctx.setBringOnline(bring_online);
@@ -130,7 +130,7 @@ int main(int ac, char* av[])
                     return 0;
                 }
 
-            optional<std::tuple<std::string, std::string, int> > bandwidth_limitation = cli->getBandwidthLimitation();
+            optional<std::tuple<std::string, std::string, int> > bandwidth_limitation = cli.getBandwidthLimitation();
             if (bandwidth_limitation)
                 {
                     ctx.setBandwidthLimit(std::get<0>(*bandwidth_limitation),
@@ -140,8 +140,18 @@ int main(int ac, char* av[])
                     return 0;
                 }
 
+            optional<std::tuple<std::string, std::string, int> > active_fixed = cli.getActiveFixed();
+            if (active_fixed)
+                {
+                    ctx.setFixActivePerPair(std::get<0>(*active_fixed),
+                                            std::get<1>(*active_fixed),
+                                            std::get<2>(*active_fixed));
+                    cout << "Done" << endl;
+                    return 0;
+                }
+
             config__Configuration *config = soap_new_config__Configuration(ctx, -1);
-            config->cfg = cli->getConfigurations();
+            config->cfg = cli.getConfigurations();
             if (config->cfg.empty()) return 0;
 
             implcfg__setConfigurationResponse resp;
@@ -153,22 +163,17 @@ int main(int ac, char* av[])
         }
     catch(cli_exception const & ex)
         {
-            cout << ex.what() << endl;
+            MsgPrinter::instance().print(ex);
             return 1;
         }
-    catch(Err& ex)
+    catch(std::exception& ex)
         {
-            cout << ex.what() << endl;
-            return 1;
-        }
-    catch(std::exception& e)
-        {
-            cerr << "error: " << e.what() << "\n";
+            MsgPrinter::instance().print(ex);
             return 1;
         }
     catch(...)
         {
-            cerr << "Exception of unknown type!\n";
+            MsgPrinter::instance().print("error", "exception of unknown type!");
             return 1;
         }
 

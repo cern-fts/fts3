@@ -16,8 +16,8 @@ function ErrorsCtrl($location, $scope, pairs, Errors)
 
 	$scope.applyFilters = function() {
 		var filter = $scope.filter;
-		filter['source_se'] = $location.search().source_se;
-		filter['dest_se'] = $location.search().dest_se;
+		filter['source_se'] = validString($location.search().source_se);
+		filter['dest_se'] = validString($location.search().dest_se);
 		$location.search(filter);
 		document.getElementById('filterDialog').style.display = 'none';
 	}
@@ -50,7 +50,7 @@ ErrorsCtrl.redirectTo = function(routeParams, path, search)
     if (search.source_se && search.dest_se)
         return '/errors/list?source_se=' + search.source_se + '&dest_se=' + search.dest_se + '&time_window=' + search.time_window;
     else
-        return '/errors/pairs?source_se=' + search.source_se + '&dest_se=' + search.dest_se + '&time_window=' + search.time_window;
+        return '/errors/pairs?source_se=' + validString(search.source_se) + '&dest_se=' + validString(search.dest_se) + '&time_window=' + validString(search.time_window);
 }
 
 

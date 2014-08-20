@@ -28,9 +28,6 @@
 #include "ui/DebugSetCli.h"
 #include "exception/cli_exception.h"
 
-#include <memory>
-
-using namespace std;
 using namespace fts3::cli;
 
 
@@ -39,38 +36,38 @@ using namespace fts3::cli;
  */
 int main(int ac, char* av[])
 {
-    unique_ptr<DebugSetCli> cli(new DebugSetCli);
-
     try
         {
+            DebugSetCli cli;
             // create and initialize the command line utility
-            cli->parse(ac, av);
-            if (!cli->validate()) return 0;
+            cli.parse(ac, av);
+            if (!cli.validate()) return 1;
 
             // validate command line options, and return respective gsoap context
-            GSoapContextAdapter& ctx = cli->getGSoapContext();
+            GSoapContextAdapter ctx (cli.getService());
+            cli.printApiDetails(ctx);
 
             // submit the job
             ctx.debugSet(
-                cli->getSource(),
-                cli->getDestination(),
-                cli->getDebugMode()
+                cli.getSource(),
+                cli.getDestination(),
+                cli.getDebugLevel()
             );
 
         }
     catch(cli_exception const & ex)
         {
-            cout << ex.what() << endl;
+            MsgPrinter::instance().print(ex);
             return 1;
         }
-    catch(std::exception& e)
+    catch(std::exception& ex)
         {
-            cerr << "error: " << e.what() << "\n";
+            MsgPrinter::instance().print(ex);
             return 1;
         }
     catch(...)
         {
-            cerr << "Exception of unknown type!\n";
+            MsgPrinter::instance().print("error", "exception of unknown type!");
             return 1;
         }
 

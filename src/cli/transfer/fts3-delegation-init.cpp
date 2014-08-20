@@ -25,10 +25,6 @@
 #include "JsonOutput.h"
 #include "exception/cli_exception.h"
 
-#include <boost/scoped_ptr.hpp>
-
-using namespace std;
-using namespace boost;
 using namespace fts3::cli;
 
 /**
@@ -36,24 +32,18 @@ using namespace fts3::cli;
  */
 int main(int ac, char* av[])
 {
-
-    scoped_ptr<DelegationCli> cli(new DelegationCli);
-
     try
         {
-            // create and initialize the command line utility
-            cli->parse(ac, av);
-            if (!cli->validate()) return 0;
-
-            // validate command line options, and return respective gSOAP context
-            cli->getGSoapContext();
+            DelegationCli cli;
+            // create and initialise the command line utility
+            cli.parse(ac, av);
+            if (!cli.validate()) return 1;
 
             // delegate Proxy Certificate
             ProxyCertificateDelegator handler (
-                cli->getService(),
-                cli->getDelegationId(),
-                cli->getExpirationTime(),
-                cli->printer()
+                cli.getService(),
+                cli.getDelegationId(),
+                cli.getExpirationTime()
             );
 
             handler.delegate();
@@ -61,24 +51,17 @@ int main(int ac, char* av[])
         }
     catch(cli_exception const & ex)
         {
-            if (cli->isJson()) JsonOutput::print(ex);
-            else std::cout << ex.what() << std::endl;
+            MsgPrinter::instance().print(ex);
             return 1;
         }
     catch(std::exception& ex)
         {
-            if (cli.get())
-                cli->printer().error_msg(ex.what());
-            else
-                std::cerr << ex.what() << std::endl;
+            MsgPrinter::instance().print(ex);
             return 1;
         }
     catch(...)
         {
-            if (cli.get())
-                cli->printer().error_msg("Exception of unknown type!");
-            else
-                std::cerr << "Exception of unknown type!" << std::endl;
+            MsgPrinter::instance().print("error", "exception of unknown type!");
             return 1;
         }
 

@@ -27,7 +27,7 @@
 
 #include "SrcDestCli.h"
 #include "DelegationCli.h"
-#include "TransferTypes.h"
+#include "File.h"
 
 #include <vector>
 
@@ -235,7 +235,7 @@ private:
     /**
      * checks if the provided url is valid
      */
-    static bool checkValidUrl(const std::string &uri, MsgPrinter& msgPrinter);
+    static bool checkValidUrl(const std::string &uri);
 
     /**
      * the name of the file containing bulk-job description

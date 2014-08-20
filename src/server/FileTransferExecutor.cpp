@@ -26,6 +26,7 @@
 #include "ws/SingleTrStateInstance.h"
 
 #include "cred/cred-utility.h"
+#include "oauth.h"
 
 extern bool stopThreads;
 
@@ -39,12 +40,13 @@ namespace server
 const string FileTransferExecutor::cmd = "fts_url_copy";
 
 
-FileTransferExecutor::FileTransferExecutor(TransferFiles& tf, TransferFileHandler& tfh, bool monitoringMsg, string infosys, string ftsHostName) :
+FileTransferExecutor::FileTransferExecutor(TransferFiles& tf, TransferFileHandler& tfh, bool monitoringMsg, string infosys, string ftsHostName, string proxy) :
     tf(tf),
     tfh(tfh),
     monitoringMsg(monitoringMsg),
     infosys(infosys),
     ftsHostName(ftsHostName),
+    proxy(proxy),
     db(DBSingleton::instance().getDBObjectInstance())
 {
 }
@@ -61,25 +63,19 @@ string FileTransferExecutor::prepareMetadataString(std::string text)
     return text;
 }
 
-std::string FileTransferExecutor::generateProxy(const std::string& dn, const std::string& dlg_id)
+std::string FileTransferExecutor::generateOauthConfigFile(const std::string& dn, const std::string& cs_name)
 {
-    boost::scoped_ptr<DelegCred> delegCredPtr(new DelegCred);
-    return delegCredPtr->getFileName(dn, dlg_id);
+    return fts3::generateOauthConfigFile(db, dn, cs_name);
 }
 
-bool FileTransferExecutor::checkValidProxy(const std::string& filename, std::string& message)
+void FileTransferExecutor::run(boost::any & ctx)
 {
-    boost::scoped_ptr<DelegCred> delegCredPtr(new DelegCred);
-    return delegCredPtr->isValidProxy(filename, message);
-}
+    if (ctx.empty()) ctx = 0;
 
-int FileTransferExecutor::execute()
-{
-    int scheduled = 0;
+    int & scheduled = boost::any_cast<int &>(ctx);
 
     //stop forking when a signal is received to avoid deadlocks
-    if (tf.FILE_ID == 0 || stopThreads)
-        return 0;
+    if (tf.FILE_ID == 0 || stopThreads) return;
 
     try
         {
@@ -88,7 +84,7 @@ int FileTransferExecutor::execute()
             string params;
 
             // if the pair was already checked and not scheduled skip it
-            if (notScheduled.count(make_pair(source_hostname, destin_hostname))) return scheduled;
+            if (notScheduled.count(make_pair(source_hostname, destin_hostname))) return;
 
             /*check if manual config exist for this pair and vo*/
 
@@ -102,6 +98,7 @@ int FileTransferExecutor::execute()
             int BufSize = 0;
             int StreamsperFile = 0;
             int Timeout = 0;
+            bool StrictCopy = false;
             bool manualProtocol = false;
 
             bool manualConfigExists = false;
@@ -113,6 +110,7 @@ int FileTransferExecutor::execute()
                     BufSize = (*p).tcp_buffer_size;
                     StreamsperFile = (*p).nostreams;
                     Timeout = (*p).urlcopy_tx_to;
+                    StrictCopy = (*p).strict_copy;
                     manualProtocol = true;
                 }
             else
@@ -144,7 +142,7 @@ int FileTransferExecutor::execute()
 
             if (scheduler.schedule())   /*SET TO READY STATE WHEN TRUE*/
                 {
-                    scheduled = 1;
+                    scheduled += 1;
 
                     //send SUBMITTED message
                     SingleTrStateInstance::instance().sendStateMessage(tf.JOB_ID, tf.FILE_ID);
@@ -170,28 +168,10 @@ int FileTransferExecutor::execute()
                                 }
                         }
 
-                    //get the proxy
-                    std::string proxy_file = generateProxy(tf.DN, tf.CRED_ID);
-                    std::string message;
-                    if(false == checkValidProxy(proxy_file, message))
-                        {
-                            if(!message.empty())
-                                {
-                                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << message  << commit;
-                                }
-                            proxy_file = get_proxy_cert(
-                                             tf.DN, // user_dn
-                                             tf.CRED_ID, // user_cred
-                                             tf.VO_NAME, // vo_name
-                                             "",
-                                             "", // assoc_service
-                                             "", // assoc_service_type
-                                             false,
-                                             ""
-                                         );
-                        }
+                    // OAuth credentials
+                    std::string oauth_file = generateOauthConfigFile(tf.DN, tf.USER_CREDENTIALS);
 
-
+                    // Metadata
                     params.append(" -Y ");
                     params.append(prepareMetadataString(tf.DN));
 
@@ -199,11 +179,18 @@ int FileTransferExecutor::execute()
                     string sourceSiteName = ""; //siteResolver.getSiteName(tf.SOURCE_SURL);
                     string destSiteName = ""; //siteResolver.getSiteName(tf.DEST_SURL);
 
-                    bool debug = db->getDebugMode(source_hostname, destin_hostname);
+                    unsigned debugLevel = db->getDebugLevel(source_hostname, destin_hostname);
 
-                    if (debug == true)
+                    if (StrictCopy)
                         {
-                            params.append(" -F ");
+                            params.append(" --strict-copy ");
+                        }
+
+                    if (debugLevel)
+                        {
+                            params.append(" -debug=");
+                            params.append(boost::lexical_cast<std::string>(debugLevel));
+                            params.append(" ");
                         }
 
                     if (manualConfigExists || manualProtocol)
@@ -221,10 +208,16 @@ int FileTransferExecutor::execute()
                             params.append(" -P ");
                         }
 
-                    if (proxy_file.length() > 0)
+                    if (proxy.length() > 0)
                         {
                             params.append(" -proxy ");
-                            params.append(proxy_file);
+                            params.append(proxy);
+                        }
+
+                    if (oauth_file.length() > 0)
+                        {
+                            params.append(" -oauth ");
+                            params.append(oauth_file);
                         }
 
                     if (std::string(tf.CHECKSUM).length() > 0)   //checksum
@@ -377,6 +370,13 @@ int FileTransferExecutor::execute()
                             params.append(" -U ");
                         }
 
+                    bool ipv6 = db->isProtocolIPv6(source_hostname, destin_hostname);
+
+                    if(ipv6)
+                        {
+                            params.append(" -X ");
+                        }
+
                     params.append(" -7 ");
                     params.append(ftsHostName);
 
@@ -437,8 +437,6 @@ int FileTransferExecutor::execute()
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Process thread exception unknown" <<  commit;
         }
-
-    return scheduled;
 }
 
 } /* namespace server */

@@ -46,11 +46,19 @@ public:
 
     void getTransferJobStatus(std::string requestID, bool archive, std::vector<JobStatus*>& jobs);
 
+    void getDmJobStatus(std::string requestID, bool archive, std::vector<JobStatus*>& jobs);
+
     void getTransferFileStatus(std::string requestID, bool archive,
+                               unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files);
+
+    void getDmFileStatus(std::string requestID, bool archive,
                                unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files);
 
     void listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
                       std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst);
+
+    void listRequestsDm(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
+                                  std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst);
 
     TransferJobs* getTransferJob(std::string jobId, bool archive);
 
@@ -93,9 +101,9 @@ public:
 
     void deleteGrDPStorageElement(std::string delegationID, std::string dn);
 
-    bool getDebugMode(std::string source_hostname, std::string destin_hostname);
+    unsigned getDebugLevel(std::string source_hostname, std::string destin_hostname);
 
-    void setDebugMode(std::string source_hostname, std::string destin_hostname, std::string mode);
+    void setDebugLevel(std::string source_hostname, std::string destin_hostname, unsigned level);
 
     void getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std::string & vos);
 
@@ -112,10 +120,6 @@ public:
     int getSeOut(const std::string & source, const std::set<std::string> & destination);
 
     int getSeIn(const std::set<std::string> & source, const std::string & destination);
-
-    void setAllowed(const std::string & job_id, int file_id, const std::string & source_se, const std::string & dest, int nostreams, int timeout, int buffersize);
-
-    void setAllowedNoOptimize(const std::string & job_id, int file_id, const std::string & params);
 
     bool terminateReuseProcess(const std::string & jobId, int pid, const std::string & message);
 
@@ -304,6 +308,8 @@ public:
 
     bool isProtocolUDT(const std::string & source_hostname, const std::string & destination_hostname);
 
+    bool isProtocolIPv6(const std::string & source_hostname, const std::string & destination_hostname);
+
     int getStreamsOptimization(const std::string & source_hostname, const std::string & destination_hostname);
 
     int getGlobalTimeout();
@@ -317,6 +323,8 @@ public:
     void setSourceMaxActive(const std::string & source_hostname, int maxActive);
 
     void setDestMaxActive(const std::string & destination_hostname, int maxActive);
+
+    void setFixActive(const std::string & source, const std::string & destination, int active);
 
     int getBufferOptimization();
 
@@ -365,6 +373,11 @@ public:
 
     void checkJobOperation(std::vector<std::string>& jobs, std::vector< boost::tuple<std::string, std::string> >& ops);
 
+    bool getOauthCredentials(const std::string& user_dn, const std::string& cloud_name, OAuth& oauth);
+
+    bool isDmJob(std::string const & job);
+
+    void cancelDmJobs(std::vector<std::string> const & jobs);
 };
 
 

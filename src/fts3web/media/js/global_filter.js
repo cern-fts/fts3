@@ -97,9 +97,9 @@ function mergeFilters(search, globals)
     if (typeof(search) == 'undefined')
         return globals;
     for (key in globals) {
-        if (!key in search || search[key] == null)
+        if (!key in search || search[key] == null || typeof search[key] == 'undefined')
             search[key] = globals[key];
-        else if (key in globals)
+        else if (key in search)
             globals[key] = search[key];
     }
 }
@@ -113,13 +113,12 @@ function hrefWithFilter(href, filter)
     var query = '?';
     for (key in filter) {
         var value = filter[key];
-        if (value == null)
+        if (value == null || typeof(value) == 'undefined')
             value = '';
         else
             value = encodeURIComponent(value);
         query += key + '=' + value + '&';
     }
-
     return href + query;
 }
 

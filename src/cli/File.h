@@ -28,7 +28,6 @@
 #include <string>
 #include <vector>
 #include <boost/optional/optional.hpp>
-#include <boost/tuple/tuple.hpp>
 
 namespace fts3
 {
@@ -72,84 +71,6 @@ struct File
     boost::optional<double> file_size;
     /// metadata
     boost::optional<std::string> metadata;
-};
-
-
-struct JobStatus
-{
-
-    JobStatus(): numFiles(0), priority(0) {};
-
-    JobStatus(std::string jobId, std::string jobStatus, std::string clientDn, std::string reason, std::string voName, std::string submitTime, int numFiles, int priority) :
-        jobId(jobId),
-        jobStatus(jobStatus),
-        clientDn(clientDn),
-        reason(reason),
-        voName(voName),
-        submitTime(submitTime),
-        numFiles(numFiles),
-        priority(priority)
-    {
-
-    };
-
-    JobStatus (const JobStatus& status) :
-        jobId(status.jobId),
-        jobStatus(status.jobStatus),
-        clientDn(status.clientDn),
-        reason(status.reason),
-        voName(status.voName),
-        submitTime(status.submitTime),
-        numFiles(status.numFiles),
-        priority(status.priority)
-    {
-
-    };
-
-    std::string jobId;
-    std::string jobStatus;
-    std::string clientDn;
-    std::string reason;
-    std::string voName;
-    std::string submitTime;
-    int numFiles;
-    int priority;
-};
-
-struct JobSummary
-{
-
-    JobSummary() {};
-
-    JobSummary(
-        JobStatus status,
-        int numActive,
-        int numCanceled,
-        int numFailed,
-        int numFinished,
-        int numSubmitted,
-        int numReady
-    ) :
-        status(status),
-        numActive(numActive),
-        numCanceled(numCanceled),
-        numFailed(numFailed),
-        numFinished(numFinished),
-        numSubmitted(numSubmitted),
-        numReady(numReady)
-    {
-    };
-
-    /// tns3__TransferJobSummary fields
-    JobStatus status;
-    int numActive;
-    int numCanceled;
-    int numFailed;
-    int numFinished;
-    int numSubmitted;
-
-    /// tns3__TransferJobSummary2 fields
-    int numReady;
 };
 
 }

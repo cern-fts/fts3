@@ -74,9 +74,15 @@ public:
 
     virtual void getTransferJobStatus(std::string requestID, bool archive, std::vector<JobStatus*>& jobs);
 
+    virtual void getDmJobStatus(std::string requestID, bool archive, std::vector<JobStatus*>& jobs);
+
     virtual void getTransferFileStatus(std::string requestID, bool archive, unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files);
 
+    virtual void getDmFileStatus(std::string requestID, bool archive, unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files);
+
     virtual void listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates, std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst);
+
+    virtual void listRequestsDm(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates, std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst);
 
     virtual TransferJobs* getTransferJob(std::string jobId, bool archive);
 
@@ -121,9 +127,9 @@ public:
 
     virtual void deleteGrDPStorageElement(std::string delegationID, std::string dn);
 
-    virtual bool getDebugMode(std::string source_hostname, std::string destin_hostname);
+    virtual unsigned getDebugLevel(std::string source_hostname, std::string destin_hostname);
 
-    virtual void setDebugMode(std::string source_hostname, std::string destin_hostname, std::string mode);
+    virtual void setDebugLevel(std::string source_hostname, std::string destin_hostname, unsigned level);
 
     virtual void auditConfiguration(const std::string & dn, const std::string & config, const std::string & action);
 
@@ -140,10 +146,6 @@ public:
     virtual int getSeIn(const std::set<std::string> & source, const std::string & destination);
 
     virtual int getCredits(const std::string & source_hostname, const std::string & destination_hostname);
-
-    virtual void setAllowed(const std::string & job_id, int file_id, const std::string & source_se, const std::string & dest, int nostreams, int timeout, int buffersize);
-
-    virtual void setAllowedNoOptimize(const std::string & job_id, int file_id, const std::string & params);
 
     virtual bool terminateReuseProcess(const std::string & jobId, int pid, const std::string & message);
 
@@ -346,6 +348,8 @@ public:
 
     virtual bool isProtocolUDT(const std::string & source_hostname, const std::string & destination_hostname);
 
+    virtual bool isProtocolIPv6(const std::string & source_hostname, const std::string & destination_hostname);
+
     virtual int getStreamsOptimization(const std::string & source_hostname, const std::string & destination_hostname);
 
     virtual int getGlobalTimeout();
@@ -359,6 +363,8 @@ public:
     virtual void setSourceMaxActive(const std::string & source_hostname, int maxActive);
 
     virtual void setDestMaxActive(const std::string & destination_hostname, int maxActive);
+
+    virtual void setFixActive(const std::string & source, const std::string & destination, int active);
 
     virtual int getBufferOptimization();
 
@@ -454,7 +460,7 @@ private:
 
     void updateOptimizerEvolution(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname, int active, double throughput, double successRate, int buffer, int bandwidth);
 
-    int getMaxActive(soci::session& sql, int active, int highDefault, const std::string & source_hostname, const std::string & destination_hostname);
+    int getMaxActive(soci::session& sql, int level, int highDefault, const std::string & source_hostname, const std::string & destination_hostname);
 
     std::vector<struct message_state> getStateOfTransferInternal(soci::session& sql, const std::string& jobId, int fileId);
 
@@ -465,4 +471,9 @@ private:
 
     std::vector<struct message_state> getStateOfDeleteInternal(soci::session& sql, const std::string& jobId, int fileId);
 
+    bool getOauthCredentials(const std::string& user_dn, const std::string& cloud_name, OAuth& oauth);
+
+    bool isDmJob(std::string const & job);
+
+    void cancelDmJobs(std::vector<std::string> const & jobs);
 };

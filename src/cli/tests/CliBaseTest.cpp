@@ -44,7 +44,7 @@ class CliBaseTester : public CliBase
 {
 
 public:
-    CliBaseTester() : CliBase(out) {}
+    CliBaseTester() {}
 
     // implement the pure vitual method
     string getUsageString(string tool)

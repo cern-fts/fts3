@@ -25,7 +25,7 @@
 #ifndef CLIBASE_H_
 #define CLIBASE_H_
 
-#include "GSoapContextAdapter.h"
+#include "ServiceAdapter.h"
 #include "MsgPrinter.h"
 
 #include <boost/property_tree/ptree.hpp>
@@ -74,15 +74,15 @@ public:
     /**
      * Default constructor.
      *
-     * Initializes service discovery parameters. Moreover creates the basic
+     * Initialises service discovery parameters. Moreover creates the basic
      * command line options, and marks them as visible.
      */
-    CliBase(ostream& out = std::cout);
+    CliBase();
 
     /**
      * Destructor
      */
-    virtual ~CliBase();
+    virtual ~CliBase() {}
 
     /**
      * Initializes the object with command line options.
@@ -105,12 +105,9 @@ public:
     virtual bool validate();
 
     /**
-     * If verbal additional info is printed
-     *
-     * @return GSoapContexAdapter instance, or null if all activities
-     * 				requested using program options have been done.
+     * If verbose additional info is printed
      */
-    GSoapContextAdapter& getGSoapContext();
+    void printApiDetails(ServiceAdapter & ctx) const;
 
     /**
      * Prints help message if the -h option has been used.
@@ -133,7 +130,7 @@ public:
      *
      * @return true if -v option has been used
      */
-    bool isVerbose();
+    bool isVerbose() const;
 
     /**
      * Checks whether the -q option was used.
@@ -158,12 +155,12 @@ public:
      */
     virtual string getUsageString(string tool);
 
-    MsgPrinter& printer()
-    {
-        return msgPrinter;
-    }
-
 protected:
+
+    /**
+     * If verbose additional info is printed
+     */
+    void printCliDeatailes() const;
 
     /**
      * check if it's possible to use fts3 server config file to discover the endpoint
@@ -234,11 +231,6 @@ protected:
      */
     string toolname;
 
-    /**
-     * gsoap context
-     */
-    GSoapContextAdapter* ctx;
-
 private:
 
     /**
@@ -259,9 +251,6 @@ private:
     string FTS3_IFC_VERSION;
     string FTS3_INTERFACE_VERSION;
     ///@}
-
-protected:
-    MsgPrinter msgPrinter;
 };
 
 }

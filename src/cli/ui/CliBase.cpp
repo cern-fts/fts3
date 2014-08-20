@@ -40,7 +40,7 @@ const string CliBase::error = "error";
 const string CliBase::result = "result";
 const string CliBase::parameter_error = "parameter_error";
 
-CliBase::CliBase(ostream& out): visible("Allowed options"), ctx(NULL), msgPrinter(out)
+CliBase::CliBase(): visible("Allowed options")
 {
 
     // add basic command line options
@@ -56,15 +56,6 @@ CliBase::CliBase(ostream& out): visible("Allowed options"), ctx(NULL), msgPrinte
     interface = version;
 }
 
-CliBase::~CliBase()
-{
-    if (ctx)
-        {
-            delete ctx;
-            ctx = NULL;
-        }
-}
-
 void CliBase::parse(int ac, char* av[])
 {
 
@@ -74,11 +65,11 @@ void CliBase::parse(int ac, char* av[])
             string str(av[i]);
             if (str == "-v")
                 {
-                    msgPrinter.setVerbose(true);
+                    MsgPrinter::instance().setVerbose(true);
                 }
             else if (str == "-j")
                 {
-                    msgPrinter.setJson(true);
+                MsgPrinter::instance().setJson(true);
                 }
         }
 
@@ -97,11 +88,11 @@ void CliBase::parse(int ac, char* av[])
     notify(vm);
 
     // check is the output is verbose
-    msgPrinter.setVerbose(
+    MsgPrinter::instance().setVerbose(
         vm.count("verbose")
     );
     // check if the output is in json format
-    msgPrinter.setJson(
+    MsgPrinter::instance().setJson(
         vm.count("json")
     );
 
@@ -174,25 +165,18 @@ bool CliBase::validate()
     return true;
 }
 
-GSoapContextAdapter& CliBase::getGSoapContext()
+void CliBase::printCliDeatailes() const
 {
-    // create and initialize gsoap context
-    ctx = new GSoapContextAdapter(endpoint);
+    MsgPrinter::instance().print_info("# Client version", "client_version", version);
+    MsgPrinter::instance().print_info("# Client interface version", "client_interface", interface);
+}
 
-    // if verbose print general info
-    if (isVerbose())
-        {
-            ctx->getInterfaceDeatailes();
-            msgPrinter.endpoint(ctx->getEndpoint());
-            msgPrinter.service_version(ctx->getVersion());
-            msgPrinter.service_interface(ctx->getInterface());
-            msgPrinter.service_schema(ctx->getSchema());
-            msgPrinter.service_metadata(ctx->getMetadata());
-            msgPrinter.client_version(version);
-            msgPrinter.client_interface(interface);
-        }
+void CliBase::printApiDetails(ServiceAdapter & ctx) const
+{
+    if (!isVerbose()) return;
 
-    return *ctx;
+    ctx.printServiceDetails();
+    printCliDeatailes();
 }
 
 string CliBase::getUsageString(string tool)
@@ -229,14 +213,14 @@ bool CliBase::printVersion()
     // check whether the -V option was used
     if (vm.count("version"))
         {
-            msgPrinter.version(version);
+        MsgPrinter::instance().print("client_version", version);
             return true;
         }
 
     return false;
 }
 
-bool CliBase::isVerbose()
+bool CliBase::isVerbose() const
 {
     return vm.count("verbose");
 }

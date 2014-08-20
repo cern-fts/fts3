@@ -38,7 +38,7 @@ class Cli:
 
         # If retry is not explicit, set it to 0
         if '--retry' not in extraArgs:
-            extraArgs += ['--retry', '0']
+            extraArgs += ['--retry', '-1']
 
         # Label the job
         caller = inspect.stack()[1][3]

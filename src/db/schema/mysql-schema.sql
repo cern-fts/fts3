@@ -81,6 +81,9 @@ CREATE TABLE t_optimize (
 --
 -- udt
   udt          VARCHAR(3) CHECK (udt in ('on', 'off')),
+--
+-- IPv6
+  ipv6         VARCHAR(3) CHECK (ipv6 in ('on', 'off')),
   
   CONSTRAINT t_optimize_pk PRIMARY KEY (auto_number)
 );
@@ -134,7 +137,10 @@ CREATE TABLE t_debug (
   dest_se      VARCHAR(150),
 --
 -- debug on/off
-  debug        VARCHAR(3) DEFAULT 'off'
+  debug        VARCHAR(3) DEFAULT 'off',
+--
+-- debug level
+  debug_level  INTEGER DEFAULT 1
 );
 
 
@@ -690,6 +696,7 @@ CREATE TABLE t_optimize_active (
   message      VARCHAR(512),
   datetime     TIMESTAMP  NULL DEFAULT NULL,
   ema           DOUBLE DEFAULT 0,
+  fixed         VARCHAR(3) CHECK (fixed in ('on', 'off')),
   CONSTRAINT t_optimize_active_pk PRIMARY KEY (source_se, dest_se)
 );
 
@@ -864,3 +871,24 @@ CREATE TABLE t_profiling_snapshot (
 
 CREATE INDEX t_prof_snapshot_total ON t_profiling_snapshot(total);
 
+
+--
+-- Tables for cloud support
+--
+CREATE TABLE t_cloudStorage (
+    cloudStorage_name VARCHAR(50) NOT NULL PRIMARY KEY,
+    app_key           VARCHAR(255),
+    app_secret        VARCHAR(255),
+    service_api_url   VARCHAR(1024)
+);
+
+CREATE TABLE t_cloudStorageUser (
+    user_dn              VARCHAR(700) NOT NULL,
+    cloudStorage_name    VARCHAR(36) NOT NULL,
+    access_token         VARCHAR(255),
+    access_token_secret  VARCHAR(255),
+    request_token        VARCHAR(255),
+    request_token_secret VARCHAR(255),
+    FOREIGN KEY (cloudStorage_name) REFERENCES t_cloudStorage(cloudStorage_name),
+    PRIMARY KEY (user_dn, cloudStorage_name)
+);

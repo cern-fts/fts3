@@ -28,7 +28,6 @@
 #include "TransferCliBase.h"
 #include "SrcDestCli.h"
 #include "TransferCliBase.h"
-#include "TransferTypes.h"
 
 #include <vector>
 

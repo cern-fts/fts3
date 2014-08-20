@@ -383,9 +383,19 @@
       <part name="destination" type="xsd:string"/>
       <part name="debug" type="xsd:boolean"/>
       
-   </message> 
+   </message>
    
    <message name="debugSetResponse"/>
+   
+  <message name="debugLevelSetRequest">
+   
+      <part name="source" type="xsd:string"/>
+      <part name="destination" type="xsd:string"/>
+      <part name="level" type="xsd:int"/>
+      
+   </message>
+   
+   <message name="debugLevelSetResponse"/>
    
    <message name="fileDeleteRequest">
    
@@ -840,6 +850,22 @@
          <input message="impl:debugSetRequest" name="debugSetRequest"/>
 
          <output message="impl:debugSetResponse" name="debugSetResponse"/>
+      
+         <fault message="impl:AuthorizationException" name="AuthorizationException"/>
+
+         <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
+
+         <fault message="impl:InvalidArgumentException" name="InvalidArgumentException"/>
+
+         <fault message="impl:InternalException" name="InternalException"/>
+         
+      </operation>
+      
+      <operation name="debugLevelSet" parameterOrder="debug">
+      
+         <input message="impl:debugLevelSetRequest" name="debugLevelSetRequest"/>
+
+         <output message="impl:debugLevelSetResponse" name="debugLevelSetResponse"/>
       
          <fault message="impl:AuthorizationException" name="AuthorizationException"/>
 
@@ -1485,6 +1511,48 @@
          </input>
 
          <output name="debugSetResponse">
+
+            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
+
+         </output>
+
+         <fault name="AuthorizationException">
+
+            <wsdlsoap:fault name="AuthorizationException" use="literal"/>
+
+         </fault>
+
+         <fault name="ServiceBusyException">
+
+            <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
+
+         </fault>
+
+         <fault name="InvalidArgumentException">
+
+            <wsdlsoap:fault name="InvalidArgumentException" use="literal"/>
+
+         </fault>
+
+         <fault name="InternalException">
+
+            <wsdlsoap:fault name="InternalException" use="literal"/>
+
+         </fault>
+
+      </operation>
+      
+	  <operation name="debugLevelSet">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <input name="debugLevelSetRequest">
+
+            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
+
+         </input>
+
+         <output name="debugLevelSetResponse">
 
             <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
 

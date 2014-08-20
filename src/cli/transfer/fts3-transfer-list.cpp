@@ -22,8 +22,9 @@
  *      Author: Michal Simon
  */
 
-
 #include "GSoapContextAdapter.h"
+#include "RestContextAdapter.h"
+
 #include "ui/ListTransferCli.h"
 #include "rest/HttpRequest.h"
 #include "rest/ResponseParser.h"
@@ -33,13 +34,10 @@
 #include "exception/cli_exception.h"
 #include "JsonOutput.h"
 
-#include <boost/scoped_ptr.hpp>
-
 #include <algorithm>
 #include <sstream>
+#include <memory>
 
-using namespace std;
-using namespace boost;
 using namespace fts3::cli;
 using namespace fts3::common;
 
@@ -49,95 +47,49 @@ using namespace fts3::common;
  */
 int main(int ac, char* av[])
 {
-    JsonOutput::create();
-    scoped_ptr<ListTransferCli> cli(new ListTransferCli);
-
     try
         {
+            ListTransferCli cli;
             // Initialise the command line utility
-            cli->parse(ac, av);
-            if (!cli->validate()) return 1;
+            cli.parse(ac, av);
+            if (!cli.validate()) return 1;
 
-            if (cli->rest())
+            std::string const endpoint = cli.getService();
+
+            std::unique_ptr<ServiceAdapter> ctx;
+            if (cli.rest())
                 {
-                    vector<string> statuses = cli->getStatusArray();
-                    string dn = cli->getUserDn(), vo = cli->getVoName();
-
-                    string url = cli->getService() + "/jobs";
-
-                    // prefix will be holding '?' at the first concatenation and then '&'
-                    char prefix = '?';
-
-                    if (!dn.empty())
-                        {
-                            url += prefix;
-                            url += "user_dn=";
-                            url += dn;
-                            prefix = '&';
-                        }
-
-                    if (!vo.empty())
-                        {
-                            url += prefix;
-                            url += "vo_name=";
-                            url += vo;
-                            prefix = '&';
-                        }
-
-                    if (!statuses.empty())
-                        {
-                            url += prefix;
-                            url += "job_state=";
-                            url += *statuses.begin();
-                            prefix = '&';
-                        }
-
-                    string capath = cli->capath();
-                    string proxy = cli->proxy();
-
-                    stringstream ss;
-
-                    ss << "{\"jobs\":";
-                    HttpRequest http (url, capath, proxy, ss);
-                    http.get();
-                    ss << '}';
-
-                    ResponseParser parser(ss);
-                    vector<fts3::cli::JobStatus> stats = parser.getJobs("jobs");
-
-                    cli->printer().print(stats);
-                    return 0;
+                    std::string const capath = cli.capath();
+                    std::string const proxy = cli.proxy();
+                    ctx.reset(new RestContextAdapter(endpoint, capath, proxy));
+                }
+            else
+                {
+                    ctx.reset(new GSoapContextAdapter(endpoint));
                 }
 
-            // validate command line options, and return respective gsoap context
-            GSoapContextAdapter& ctx = cli->getGSoapContext();
+            // print API details if verbose
+            cli.printApiDetails(*ctx.get());
 
-            vector<string> array = cli->getStatusArray();
-            vector<fts3::cli::JobStatus> statuses =
-                ctx.listRequests(array, cli->getUserDn(), cli->getVoName(), cli->source(), cli->destination());
+            std::vector<std::string> array = cli.getStatusArray();
+            std::vector<fts3::cli::JobStatus> statuses =
+                ctx->listRequests(array, cli.getUserDn(), cli.getVoName(), cli.source(), cli.destination());
 
-            cli->printer().print(statuses);
+            MsgPrinter::instance().print(statuses);
         }
     catch(cli_exception const & ex)
         {
-            if (cli->isJson()) JsonOutput::print(ex);
-            else std::cout << ex.what() << std::endl;
+            MsgPrinter::instance().print(ex);
             return 1;
         }
     catch(std::exception& ex)
         {
-            if (cli.get())
-                cli->printer().error_msg(ex.what());
-            else
-                std::cerr << ex.what() << std::endl;
+            MsgPrinter::instance().print(ex);
             return 1;
         }
     catch(...)
         {
-            if (cli.get())
-                cli->printer().error_msg("Exception of unknown type!");
-            else
-                std::cerr << "Exception of unknown type!" << std::endl;
+            MsgPrinter::instance().print("error", "exception of unknown type!");
             return 1;
         }
 

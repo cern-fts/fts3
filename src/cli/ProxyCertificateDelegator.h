@@ -58,7 +58,7 @@ public:
      * @param userRequestedDelegationExpTime - user specified delegation expire time
      * 											(0 means that the default value should be used)
      */
-    ProxyCertificateDelegator(string endpoint, string delegationId, long userRequestedDelegationExpTime, MsgPrinter& printer);
+    ProxyCertificateDelegator(string endpoint, string delegationId, long userRequestedDelegationExpTime);
 
     /**
      * Destructor
@@ -104,9 +104,6 @@ private:
 
     /// delegation context (a facade for the GSoap delegation client)
     glite_delegation_ctx *dctx;
-
-    /// the output printing facility
-    MsgPrinter& printer;
 };
 
 }

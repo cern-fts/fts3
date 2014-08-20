@@ -4,7 +4,7 @@
 %global selinux_variants mls targeted
 
 Name: fts
-Version: 3.2.26.2
+Version: 3.2.27
 Release: 1%{?dist}
 Summary: File Transfer Service V3
 Group: System Environment/Daemons
@@ -13,7 +13,7 @@ URL: https://svnweb.cern.ch/trac/fts3/wiki
 # The source for this package was pulled from upstream's vcs.  Use the
 # following commands to generate the tarball:
 #  svn export https://svn.cern.ch/reps/fts3/trunk fts3
-#  tar -czvf fts-3.2.25-2.tar.gz fts3
+#  tar -czvf fts-3.2.26-2.tar.gz fts3
 Source0: https://grid-deployment.web.cern.ch/grid-deployment/dms/fts3/tar/%{name}-%{version}.tar.gz
 Source1: fts.te
 Source2: fts.fc
@@ -284,22 +284,18 @@ exit 0
 # Messaging scriptlets
 %post msg
 /sbin/chkconfig --add fts-msg-bulk
-/sbin/chkconfig --add fts-msg-cron
 exit 0
 
 %preun msg
 if [ $1 -eq 0 ] ; then
     /sbin/service fts-msg-bulk stop >/dev/null 2>&1
     /sbin/chkconfig --del fts-msg-bulk
-    /sbin/service fts-msg-cron stop >/dev/null 2>&1
-    /sbin/chkconfig --del fts-msg-cron
 fi
 exit 0
 
 %postun msg
 if [ $1 -eq 0 ] ; then
     /sbin/service fts-msg-bulk condrestart >/dev/null 2>&1 || :
-    /sbin/service fts-msg-cron condrestart >/dev/null 2>&1 || :
 fi
 exit 0
 
@@ -374,13 +370,9 @@ fi
 
 %files msg
 %{_sbindir}/fts_msg_bulk
-%{_sbindir}/fts_msg_cron
 %attr(0755,root,root) %{_initddir}/fts-msg-bulk
-%attr(0755,root,root) %{_initddir}/fts-msg-cron
-%attr(0755,root,root) %{_sysconfdir}/cron.hourly/fts-msg-cron
 %config(noreplace) %attr(0644,fts3,root) %{_sysconfdir}/fts3/fts-msg-monitoring.conf
 %{_mandir}/man8/fts_msg_bulk.8.gz
-%{_mandir}/man8/fts_msg_cron.8.gz
 
 %files client
 %{_bindir}/fts-config-set
@@ -446,11 +438,11 @@ fi
 %{_datadir}/selinux/*/fts.pp
 
 %changelog
-* Tue Feb 04 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.26-1
+* Tue Feb 04 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.26-4
   - introduced dist back in the release
-* Tue Jan 14 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.25-3
+* Tue Jan 14 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.26-3
   - using cmake28
-* Mon Jan 13 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.25-2
+* Mon Jan 13 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.26-2
   - separated rpms for messaging and infosys subsystems
 * Mon Nov 18 2013 Alejandro Alvarez Ayllon <aalvarez@cern.ch> - 3.1.33-2
   - Added missing changelog entry

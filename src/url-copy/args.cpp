@@ -19,7 +19,7 @@ const option UrlCopyOpts::long_options[] =
     {"bringonline",       required_argument, 0, 'H'},
     {"reuse",             no_argument,       0, 'G'},
     {"multi-hop",         no_argument,       0, 'R'},
-    {"debug",             no_argument,       0, 'F'},
+    {"debug",             optional_argument, 0, 'F'},
     {"source-site",       required_argument, 0, 'D'},
     {"dest-site",         required_argument, 0, 'E'},
     {"vo",                required_argument, 0, 'C'},
@@ -40,19 +40,23 @@ const option UrlCopyOpts::long_options[] =
     {"proxy",             required_argument, 0, '5'},
     {"stderr",            no_argument,       0, '1'},
     {"udt",               no_argument,       0, 'U'},
+    {"ipv6",              no_argument,       0, 'X'},
     {"global-timeout",    no_argument,       0, 'Z'},
     {"sec-per-mb",    	  required_argument, 0, 'V'},
     {"user-dn",    	  required_argument, 0, 'Y'},
     {"alias",    	  required_argument, 0, '7'},
+    {"oauth",         required_argument, 0, '@'},
+    {"strict-copy",   no_argument,       0, 'S'},
     {0, 0, 0, 0}
 };
 
-const char UrlCopyOpts::short_options[] = "PONM:L:K:J:I:H:GRFD:E:C:z:A:t:a:b:c:de:f:h:ij:k:B:5:UZV:Y:7:";
-
+const char UrlCopyOpts::short_options[] = "PONM:L:K:J:I:H:GRFD:E:C:z:A:t:a:b:c:de:f:h:ij:k:B:5:UXZV:Y:7:@:S";
 
 UrlCopyOpts::UrlCopyOpts(): monitoringMessages(false), autoTunned(false),
-    manualConfig(false), debug(false), overwrite(false), daemonize(false),
-    logToStderr(false), reuse(false), multihop(false), enable_udt(false),global_timeout(false),
+    manualConfig(false), overwrite(false), daemonize(false),
+    logToStderr(false), reuse(false), multihop(false), enable_udt(false), enable_ipv6(false),
+    global_timeout(false), strictCopy(false),
+    debugLevel(0),
     compareChecksum(CHECKSUM_DONT_CHECK),
     fileId(0), userFileSize(0), bringOnline(-1), copyPinLifetime(-1),
     nStreams(DEFAULT_NOSTREAMS), tcpBuffersize(DEFAULT_BUFFSIZE),
@@ -137,7 +141,10 @@ int UrlCopyOpts::parse(int argc, char * const argv[])
                             multihop = true;
                             break;
                         case 'F':
-                            debug = true;
+                            if (optarg)
+                                debugLevel = boost::lexical_cast<unsigned>(optarg);
+                            else
+                                debugLevel = 1;
                             break;
                         case 'D':
                             sourceSiteName = optarg;
@@ -150,6 +157,9 @@ int UrlCopyOpts::parse(int argc, char * const argv[])
                             break;
                         case 'U':
                             enable_udt = true;
+                            break;
+                        case 'X':
+                            enable_ipv6 = true;
                             break;
                         case 'Z':
                             global_timeout = true;
@@ -216,6 +226,12 @@ int UrlCopyOpts::parse(int argc, char * const argv[])
                             break;
                         case '1':
                             logToStderr = true;
+                            break;
+                        case '@':
+                            oauthFile = optarg;
+                            break;
+                        case 'S':
+                            strictCopy = true;
                             break;
                         case '?':
                             errorMessage = usage(argv[0]);

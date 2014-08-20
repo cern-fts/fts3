@@ -24,7 +24,11 @@
 #ifndef GSOAPCONTEXADAPTER_H_
 #define GSOAPCONTEXADAPTER_H_
 
-#include "TransferTypes.h"
+#include "ServiceAdapter.h"
+
+#include "JobStatus.h"
+#include "File.h"
+
 #include "ws-ifce/gsoap/gsoap_stubs.h"
 
 #include <vector>
@@ -47,7 +51,7 @@ namespace cli
  *
  * Provides all the functionalities of transfer and configuration web service
  */
-class GSoapContextAdapter
+class GSoapContextAdapter : public ServiceAdapter
 {
 
     struct Cleaner
@@ -129,7 +133,7 @@ public:
      *
      * @param jobIds list of job IDs
      */
-    vector< pair<string, string>  > cancel(vector<string> jobIds);
+    std::vector< std::pair<std::string, std::string>  > cancel(std::vector<std::string> const & jobIds);
 
     /**
      * Remote call to listRequests
@@ -140,7 +144,7 @@ public:
      * @param array statuses of interest
      * @param resp server response
      */
-    vector<JobStatus> listRequests (vector<string> statuses, string dn, string vo, string source, string destination);
+    std::vector<JobStatus> listRequests (std::vector<std::string> const & statuses, std::string const & dn, std::string const & vo, std::string const & source, std::string const & destination);
 
     /**
      * Remote call to listVOManagers
@@ -159,7 +163,7 @@ public:
      *
      * @return an object containing job summary
      */
-    JobSummary getTransferJobSummary (string jobId, bool archive);
+    JobStatus getTransferJobSummary (string jobId, bool archive);
 
     /**
      * Remote call to getFileStatus
@@ -206,7 +210,7 @@ public:
      *
      * @param pairs - se name - max number staging files pairs
      */
-    void setBringOnline(map<string, int>& pairs);
+    void setBringOnline(std::vector< std::pair<std::string, int> > const &);
 
     string deleteFile (std::vector<std::string>& filesForDelete);
 
@@ -238,9 +242,9 @@ public:
      *
      * @param source - source se (or the single SE
      * @param destination - destination se (might be empty)
-     * @param debug - debug mode
+     * @param level - debug level
      */
-    void debugSet(string source, string destination, bool debug);
+    void debugSet(string source, string destination, unsigned level);
 
     /**
      * Remote call to blacklistDN
@@ -330,51 +334,28 @@ public:
      */
     void setMaxSrcSeActive(string se, int active);
 
+    /**
+     * Remote call to fixActivePerPair
+     */
+    void setFixActivePerPair(string source, string destination, int active);
+
     std::string getSnapShot(string vo, string src, string dst);
 
     tns3__DetailedJobStatus* getDetailedJobStatus(string job_id);
 
-    void getInterfaceDeatailes();
-
-    ///@{
-    /**
-     * A group of methods returning details about interface version of the FTS3 service
-     */
-    string getEndpoint()
-    {
-        return endpoint;
-    }
-
-    string getInterface()
-    {
-        return interface;
-    }
-
-    string getVersion()
+    std::string getVersion()
     {
         return version;
     }
 
-    string getSchema()
-    {
-        return schema;
-    }
-
-    string getMetadata()
-    {
-        return metadata;
-    }
-    ///@}
-
 private:
+
+    void getInterfaceDeatailes();
 
     void clean();
 
     static void signalCallback(int signum);
     static vector<Cleaner> cleaners;
-
-    ///
-    string endpoint;
 
     ///
     soap* ctx;
@@ -387,17 +368,6 @@ private:
     long minor;
     long patch;
     ///@}
-
-    ///@{
-    /**
-     * general informations about the FTS3 service
-     */
-    string interface;
-    string version;
-    string schema;
-    string metadata;
-    ///@}
-
 };
 
 }

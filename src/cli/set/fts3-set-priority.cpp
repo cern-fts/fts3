@@ -30,10 +30,6 @@
 #include <string>
 #include <vector>
 
-#include <boost/scoped_ptr.hpp>
-
-using namespace std;
-using namespace boost;
 using namespace fts3::cli;
 
 
@@ -42,36 +38,36 @@ using namespace fts3::cli;
  */
 int main(int ac, char* av[])
 {
-    scoped_ptr<PriorityCli> cli (new PriorityCli);
-
     try
         {
+            PriorityCli cli;
             // create and initialize the command line utility
-            cli->parse(ac, av);
-            if (!cli->validate()) return 0;
+            cli.parse(ac, av);
+            if (!cli.validate()) return 1;
 
             // validate command line options, and return respective gsoap context
-            GSoapContextAdapter& ctx = cli->getGSoapContext();
+            GSoapContextAdapter ctx (cli.getService());
+            cli.printApiDetails(ctx);
 
             ctx.prioritySet(
-                cli->getJobId(),
-                cli->getPriority()
+                cli.getJobId(),
+                cli.getPriority()
             );
 
         }
     catch(cli_exception const & ex)
         {
-            cout << ex.what() << endl;
+            MsgPrinter::instance().print(ex);
             return 1;
         }
-    catch(std::exception& e)
+    catch(std::exception& ex)
         {
-            cerr << "error: " << e.what() << "\n";
+            MsgPrinter::instance().print(ex);
             return 1;
         }
     catch(...)
         {
-            cerr << "Exception of unknown type!\n";
+            MsgPrinter::instance().print("error", "exception of unknown type!");
             return 1;
         }
 

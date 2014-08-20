@@ -49,21 +49,18 @@ using namespace fts3::common;
  */
 int main(int ac, char* av[])
 {
-
-    JsonOutput::create();
-    scoped_ptr<SnapshotCli> cli(new SnapshotCli);
-
     try
         {
+            SnapshotCli cli;
             // create and initialize the command line utility
-            cli->parse(ac, av);
-            if (!cli->validate()) return 0;
+            cli.parse(ac, av);
+            if (!cli.validate()) return 1;
 
             // validate command line options, and return respective gsoap context
-            GSoapContextAdapter& ctx = cli->getGSoapContext();
+            GSoapContextAdapter ctx (cli.getService());
+            cli.printApiDetails(ctx);
 
-
-            string src = cli->getSource(), dst = cli->getDestination(), vo = cli->getVo();
+            std::string src = cli.getSource(), dst = cli.getDestination(), vo = cli.getVo();
 
 
             std::string resp = ctx.getSnapShot(vo, src, dst);
@@ -75,23 +72,17 @@ int main(int ac, char* av[])
         }
     catch(cli_exception const & ex)
         {
-            std::cout << ex.what() << std::endl;
+            MsgPrinter::instance().print(ex);
             return 1;
         }
     catch(std::exception& ex)
         {
-            if (cli.get())
-                cli->printer().error_msg(ex.what());
-            else
-                std::cerr << ex.what() << std::endl;
+            MsgPrinter::instance().print(ex);
             return 1;
         }
     catch(...)
         {
-            if (cli.get())
-                cli->printer().error_msg("Exception of unknown type!");
-            else
-                std::cerr << "Exception of unknown type!" << std::endl;
+            MsgPrinter::instance().print("error", "exception of unknown type!");
             return 1;
         }
 

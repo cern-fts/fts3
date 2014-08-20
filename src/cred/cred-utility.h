@@ -41,7 +41,7 @@ std::string get_proxy_cert(
 /**
  * Return the proxy lifetime. In case of other errors, returns -1
  */
-time_t get_proxy_lifetime(const std::string& filename) /*throw ()*/;
+void get_proxy_lifetime(const std::string& filename, time_t *lifetime, time_t *vo_lifetime);
 
 
 

@@ -52,6 +52,8 @@
 #include "LinkConfig.h"
 #include "ShareConfig.h"
 
+#include "OAuth.h"
+
 #include <utility>
 
 #include <boost/tuple/tuple.hpp>
@@ -109,12 +111,21 @@ public:
 
     virtual void getTransferJobStatus(std::string requestID, bool archive, std::vector<JobStatus*>& jobs) = 0;
 
+    virtual void getDmJobStatus(std::string requestID, bool archive, std::vector<JobStatus*>& jobs) = 0;
+
     // If limit == 0, then all results
     virtual void getTransferFileStatus(std::string requestID, bool archive,
                                        unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files) = 0;
 
+    // If limit == 0, then all results
+    virtual void getDmFileStatus(std::string requestID, bool archive,
+                                       unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files) = 0;
+
     virtual void listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
                               std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst) = 0;
+
+    virtual void listRequestsDm(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
+                                  std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst) = 0;
 
     virtual TransferJobs* getTransferJob(std::string jobId, bool archive) = 0;
 
@@ -158,9 +169,9 @@ public:
 
     virtual void deleteGrDPStorageElement(std::string delegationID, std::string dn) = 0;
 
-    virtual bool getDebugMode(std::string source_hostname, std::string destin_hostname) = 0;
+    virtual unsigned getDebugLevel(std::string source_hostname, std::string destin_hostname) = 0;
 
-    virtual void setDebugMode(std::string source_hostname, std::string destin_hostname, std::string mode) = 0;
+    virtual void setDebugLevel(std::string source_hostname, std::string destin_hostname, unsigned level) = 0;
 
     virtual void getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std::string & vos) = 0;
 
@@ -177,10 +188,6 @@ public:
     virtual int getSeOut(const std::string & source, const std::set<std::string> & destination) = 0;
 
     virtual int getSeIn(const std::set<std::string> & source, const std::string & destination) = 0;
-
-    virtual void setAllowed(const std::string & job_id, int file_id, const std::string & source_se, const std::string & dest, int nostreams, int timeout, int buffersize) = 0;
-
-    virtual void setAllowedNoOptimize(const std::string & job_id, int file_id, const std::string & params) = 0;
 
     virtual bool terminateReuseProcess(const std::string & jobId, int pid, const std::string & message) = 0;
 
@@ -386,6 +393,8 @@ public:
 
     virtual bool isProtocolUDT(const std::string & source_hostname, const std::string & destination_hostname) = 0;
 
+    virtual bool isProtocolIPv6(const std::string & source_hostname, const std::string & destination_hostname) = 0;
+
     virtual int getStreamsOptimization(const std::string & source_hostname, const std::string & destination_hostname) = 0;
 
     virtual int getGlobalTimeout() = 0;
@@ -399,6 +408,8 @@ public:
     virtual void setSourceMaxActive(const std::string & source_hostname, int maxActive) = 0;
 
     virtual void setDestMaxActive(const std::string & destination_hostname, int maxActive) = 0;
+
+    virtual void setFixActive(const std::string & source, const std::string & destination, int active) = 0;
 
     virtual int getBufferOptimization() = 0;
 
@@ -444,5 +455,10 @@ public:
 
     virtual void checkJobOperation(std::vector<std::string>& jobs, std::vector< boost::tuple<std::string, std::string> >& ops) = 0;
 
+    virtual bool isDmJob(std::string const & job) = 0;
 
+    // Cloud storage API
+    virtual bool getOauthCredentials(const std::string& user_dn, const std::string& cloud_name, OAuth& oauth) = 0;
+
+    virtual void cancelDmJobs(std::vector<std::string> const & jobs) = 0;
 };

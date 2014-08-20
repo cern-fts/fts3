@@ -38,8 +38,8 @@ namespace cli
 class DelCfgCli : public SetCfgCli
 {
 public:
-    DelCfgCli();
-    virtual ~DelCfgCli();
+    DelCfgCli() : SetCfgCli(false) {}
+    virtual ~DelCfgCli() {}
 };
 
 } /* namespace cli */

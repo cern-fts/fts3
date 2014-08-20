@@ -25,11 +25,10 @@
 #ifndef JOB_H_
 #define JOB_H_
 
-#include "TransferTypes.h"
+#include "File.h"
 #include "python/PyFile.h"
 
 #include <boost/python.hpp>
-#include <boost/tuple/tuple.hpp>
 
 #include <string>
 #include <map>

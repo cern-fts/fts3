@@ -1,7 +1,7 @@
 Summary: FTS3 Web Application for monitoring
 Name: fts-monitoring
-Version: 3.2.26.2
-Release: 2%{?dist}
+Version: 3.2.27
+Release: 1%{?dist}
 URL: https://svnweb.cern.ch/trac/fts3
 License: ASL 2.0
 Group: Applications/Internet
@@ -83,7 +83,7 @@ install -m 644 httpd.conf.d/ftsmon.conf           %{buildroot}%{_sysconfdir}/htt
 %files selinux
 
 %changelog
-* Mon May 12 2014 Michal Simon <michal.simon@cern.ch> - 3.2.26.2-2
+* Thu Aug 14 2014 Michal Simon <michal.simon@cern.ch> - 3.2.26.2-2
   - Update for new upstream release
 * Mon May 12 2014 Michal Simon <michal.simon@cern.ch> - 3.2.26-1
   - Update for new upstream release
