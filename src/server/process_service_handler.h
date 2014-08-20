@@ -246,10 +246,10 @@ protected:
                                     }
 
                                 TransferFiles tf = tfh.get(*it_vo);
-				if(tf.FILE_ID == 0)
+				if(tf.FILE_ID == 0 || tf.DN.empty() || tf.DN == "" || tf.CRED_ID.empty() || tf.CRED_ID == "")
 					continue;
 
-                                std::pair<std::string, std::string> proxy_key(tf.DN, tf.CRED_ID);
+                                std::pair<std::string, std::string> proxy_key(tf.CRED_ID, tf.DN);
 
                                 if (proxies.find(proxy_key) == proxies.end())
                                     {
@@ -262,15 +262,9 @@ protected:
                                         std::string filename = delegCredPtr->getFileName(tf.DN, tf.CRED_ID);
                                         time_t lifetime, voms_lifetime;
                                         get_proxy_lifetime(filename, &lifetime, &voms_lifetime);
-
-                                        std::string message;
+                                       
                                         if (db_lifetime > lifetime)
                                             {
-                                                if (!message.empty())
-                                                    {
-                                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << message  << commit;
-                                                    }
-
                                                 filename = get_proxy_cert(
                                                                  tf.DN, // user_dn
                                                                  tf.CRED_ID, // user_cred
