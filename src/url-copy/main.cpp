@@ -1109,6 +1109,7 @@ int main(int argc, char **argv)
                 globalTimeout = experimentalTimeout + 3600;
                 logger.INFO() << "Resetting global timeout thread to " << globalTimeout << " seconds" << std::endl;
 
+		//Level 3
                 if( (!opts.manualConfig || opts.autoTunned) && opts.tcpBuffersize == 1)
                     {
                         int tcp_buffer_size = 4194304; //4MB
@@ -1140,7 +1141,7 @@ int main(int argc, char **argv)
                                     }
                             }
                     }
-                else
+                else //Level 1 or 2
                     {
                         //pass -1 to flag the need to reduce number of streams due to high latency
                         if(opts.nStreams == -1)

@@ -466,7 +466,7 @@ private:
 
     void updateOptimizerEvolution(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname, int active, double throughput, double successRate, int buffer, int bandwidth);
 
-    int getMaxActive(soci::session& sql, int active, int highDefault, const std::string & source_hostname, const std::string & destination_hostname);
+    int getMaxActive(soci::session& sql, int level, int highDefault, const std::string & source_hostname, const std::string & destination_hostname);
 
     std::vector<struct message_state> getStateOfTransferInternal(soci::session& sql, const std::string& jobId, int fileId);
 

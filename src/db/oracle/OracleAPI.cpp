@@ -3337,10 +3337,11 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
     return allowed;
 }
 
-int OracleAPI::getMaxActive(soci::session& sql, int /*active*/, int /*highDefault*/, const std::string & source_hostname, const std::string & destin_hostname)
+int OracleAPI::getMaxActive(soci::session& sql, int level, int /*highDefault*/, const std::string & source_hostname, const std::string & destin_hostname)
 {
     int maxActiveSource = 0;
     int maxActiveDest = 0;
+    int maxDefault = (level == 3)? MAX_ACTIVE_PER_LINK * 2: MAX_ACTIVE_PER_LINK;
 
     try
         {
@@ -3358,7 +3359,7 @@ int OracleAPI::getMaxActive(soci::session& sql, int /*active*/, int /*highDefaul
 
                     if(maxActiveDest == 0)
                         {
-                            return MAX_ACTIVE_PER_LINK;
+                            return maxDefault;
                         }
                     else
                         {
@@ -3378,7 +3379,7 @@ int OracleAPI::getMaxActive(soci::session& sql, int /*active*/, int /*highDefaul
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
-    return MAX_ACTIVE_PER_LINK;
+    return maxDefault;
 }
 
 bool OracleAPI::updateOptimizer()
@@ -3783,7 +3784,7 @@ bool OracleAPI::updateOptimizer()
                             int tempActive = active; //temp store current active
 
                             //make sure we do not increase beyond limits set
-                            int maxActiveLimit = getMaxActive(sql, maxActive, highDefault, source_hostname, destin_hostname);
+                            int maxActiveLimit = getMaxActive(sql, spawnActive, highDefault, source_hostname, destin_hostname);
 
                             //special case to increase active when dealing with LAN transfers of there is only one single/dest pair active
                             if( ratioSuccessFailure >= 96 && ((singleDest == 1 || lanTransferBool) || (spawnActive == 2 || spawnActive == 3)) && maxActive < maxActiveLimit)
@@ -9468,7 +9469,15 @@ int OracleAPI::getStreamsOptimization(const std::string & source_hostname, const
 
             if(sql.got_data() && streamsFound == -1)  //need to reduce num of streams, practically optimize
                 {
-                    return -1;
+            		std::string name;
+            		soci::indicator isNullName = soci::i_ok;
+
+            		sql << "SELECT name FROM t_se WHERE name = 'buffer'", soci::into(name, isNullName);
+
+            		if (sql.got_data() && name == "buffer")
+                	{
+                    		return -1; //buffer optimization
+                	}                   
                 }
         }
     catch (std::exception& e)
@@ -9777,16 +9786,12 @@ int OracleAPI::getBufferOptimization()
 
     try
         {
-            std::string name;
-            soci::indicator isNullName = soci::i_ok;
-
-            sql << "SELECT name FROM t_se WHERE name = 'buffer'", soci::into(name, isNullName);
-
-            if (sql.got_data())
-                {
-                    return 1; //buffer optimization
-                }
-            return 	0; //default
+            //get optimizer level
+            int level = getOptimizerDefaultMode(sql);
+	    if(level == 3)
+	    	return 1;
+	    else
+	        return 0;
         }
     catch (std::exception& e)
         {
