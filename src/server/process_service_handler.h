@@ -246,35 +246,45 @@ protected:
                                     }
 
                                 TransferFiles tf = tfh.get(*it_vo);
-				if(tf.FILE_ID == 0 || tf.DN.empty() || tf.DN == "" || tf.CRED_ID.empty() || tf.CRED_ID == "")
-					continue;
+
+                                if(tf.FILE_ID == 0 || tf.DN.empty() || tf.CRED_ID.empty()) continue;
 
                                 std::pair<std::string, std::string> proxy_key(tf.CRED_ID, tf.DN);
 
                                 if (proxies.find(proxy_key) == proxies.end())
                                     {
-                                        boost::scoped_ptr<Cred> cred (DBSingleton::instance().getDBObjectInstance()->
-                                                    findGrDPStorageElement(tf.CRED_ID, tf.DN)
-                                            );
-                                        time_t db_lifetime = cred->termination_time - time(NULL);
-
                                         boost::scoped_ptr<DelegCred> delegCredPtr(new DelegCred);
-                                        std::string filename = delegCredPtr->getFileName(tf.DN, tf.CRED_ID);
-                                        time_t lifetime, voms_lifetime;
-                                        get_proxy_lifetime(filename, &lifetime, &voms_lifetime);
-                                       
-                                        if (db_lifetime > lifetime)
+                                        std::string filename = delegCredPtr->getFileName(tf.DN, tf.CRED_ID), message;
+
+                                        if (!delegCredPtr->isValidProxy(filename, message))
                                             {
-                                                filename = get_proxy_cert(
-                                                                 tf.DN, // user_dn
-                                                                 tf.CRED_ID, // user_cred
-                                                                 tf.VO_NAME, // vo_name
-                                                                 "",
-                                                                 "", // assoc_service
-                                                                 "", // assoc_service_type
-                                                                 false,
-                                                                 ""
-                                                             );
+                                                if(!message.empty())
+                                                    {
+                                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << message  << commit;
+                                                    }
+                                                // check the proxy lifetime in DB
+                                                time_t db_lifetime = -1;
+                                                boost::scoped_ptr<Cred> cred (DBSingleton::instance().getDBObjectInstance()->
+                                                            findGrDPStorageElement(tf.CRED_ID, tf.DN)
+                                                    );
+                                                if (cred.get()) db_lifetime = cred->termination_time - time(NULL);
+                                                // check the proxy lifetime in filesystem
+                                                time_t lifetime, voms_lifetime;
+                                                get_proxy_lifetime(filename, &lifetime, &voms_lifetime);
+
+                                                if (db_lifetime > lifetime)
+                                                    {
+                                                        filename = get_proxy_cert(
+                                                                         tf.DN, // user_dn
+                                                                         tf.CRED_ID, // user_cred
+                                                                         tf.VO_NAME, // vo_name
+                                                                         "",
+                                                                         "", // assoc_service
+                                                                         "", // assoc_service_type
+                                                                         false,
+                                                                         ""
+                                                                     );
+                                                    }
                                             }
 
                                         proxies[proxy_key] = filename;
