@@ -308,10 +308,13 @@ exit 0
 
 #SELinux scriptlets
 %post server-selinux
-for selinuxvariant in %{selinux_variants}; do
-  /usr/sbin/semodule -s ${selinuxvariant} -i %{_datadir}/selinux/${selinuxvariant}/fts.pp &> /dev/null || :
-done
-/sbin/restorecon -R %{_var}/log/fts3 || :
+if [ $1 -eq 1 ] ; then
+	for selinuxvariant in %{selinux_variants}; do
+	  /usr/sbin/semodule -s ${selinuxvariant} -i %{_datadir}/selinux/${selinuxvariant}/fts.pp &> /dev/null || :
+	done
+	/sbin/restorecon -R %{_var}/log/fts3 || :
+fi
+exit 0
 
 %postun server-selinux
 if [ $1 -eq 0 ] ; then
