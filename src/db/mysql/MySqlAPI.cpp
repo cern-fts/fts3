@@ -8029,6 +8029,7 @@ void MySqlAPI::checkSanityState()
                                                         {
                                                             stmt3.execute(true); //set the job_state to finished if at least one finished
                                                         }
+						    break;
                                                 }
                                         }
 
@@ -8081,15 +8082,64 @@ void MySqlAPI::checkSanityState()
                                                         sql.prepare <<
                                                         " select  j.job_id from t_job j inner join t_file f on (j.job_id = f.job_id) where j.job_finished >= (UTC_TIMESTAMP() - interval '24' HOUR ) and f.file_state in ('SUBMITTED','ACTIVE')  "
                                                     );
+						    
+						    
 		    sql.begin();
                     for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
                         {
                             job_id = (*i2);
-                            stmt7.execute(true);				
+                            stmt7.execute(true);
                         }
 		    sql.commit();
 			
-			
+		    //multiple replicas with finished state	
+		    sql.begin();
+                    for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
+                        {
+			    //reset
+			    countMreplica = 0;
+                            countMindex = 0;
+			    
+                            job_id = (*i2);
+			    
+                           //check for m-replicas sanity
+                            stmt_m_replica.execute(true);
+			    
+                            //this is a m-replica job
+                            if(countMreplica > 1 && countMindex == 1)
+                                {
+                                    std::string job_state;
+                                    soci::rowset<soci::row> rsReplica = (
+                                                                            sql.prepare <<
+                                                                            " select distinct file_state from t_file where job_id=:job_id  ",
+                                                                            soci::use(job_id)
+                                                                        );
+
+                                    sql << "SELECT job_state from t_job where job_id=:job_id", soci::use(job_id), soci::into(job_state);
+
+                                    soci::rowset<soci::row>::const_iterator iRep;
+                                    for (iRep = rsReplica.begin(); iRep != rsReplica.end(); ++iRep)
+                                        {
+                                            std::string file_state = iRep->get<std::string>("file_state");                                            
+
+                                            if(file_state == "FINISHED") //if at least one is finished, reset the rest
+                                                {
+                                                    sql << "UPDATE t_file SET "
+                                                        "    file_state = 'NOT_USED', job_finished = NULL, finish_time = NULL, "
+                                                        "    reason = '' "
+                                                        "    WHERE file_state in ('ACTIVE','SUBMITTED') and job_id = :jobId", soci::use(job_id);
+
+                                                    if(job_state != "FINISHED")
+                                                        {
+                                                            stmt3.execute(true); //set the job_state to finished if at least one finished
+                                                        }
+                                                    break;
+                                                }
+                                        }                                   
+                                }                            
+                    }
+		    sql.commit();
+						
 			
                     //now check reverse sanity checks, JOB can't be FINISH,  FINISHEDDIRTY, FAILED is at least one tr is in STARTED/DELETE                  
                     soci::rowset<std::string> rs3 = (
