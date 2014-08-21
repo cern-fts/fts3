@@ -37,29 +37,33 @@ using namespace FTS3_COMMON_NAMESPACE;
 static sem_t semaphore;
 static sig_atomic_t raised_signal = 0;
 
+void *Panic::stack_backtrace[STACK_BACKTRACE_SIZE] = {0};
+int Panic::stack_backtrace_size = 0;
 
-static void print_stacktrace(int sig)
+
+static void get_backtrace(int sig)
 {
     if (sig == SIGABRT || sig == SIGSEGV || sig ==  SIGILL || sig ==  SIGFPE || sig == SIGBUS || sig ==  SIGTRAP || sig ==  SIGSYS)
         {
-            void *array[25];
-            int size = backtrace(array, 25);
+            Panic::stack_backtrace_size = backtrace(Panic::stack_backtrace, STACK_BACKTRACE_SIZE);
 
             // print out all the frames to stderr
             fprintf(stderr, "Caught signal: %d\n", sig);
             fprintf(stderr, "Stack trace: \n");
-            backtrace_symbols_fd(array, size, STDERR_FILENO);
+            backtrace_symbols_fd(Panic::stack_backtrace, Panic::stack_backtrace_size, STDERR_FILENO);
             // and then print out all the frames to stdout
             fprintf(stdout, "Caught signal: %d\n", sig);
             fprintf(stdout, "Stack trace: \n");
-            backtrace_symbols_fd(array, size, STDOUT_FILENO);
+            backtrace_symbols_fd(Panic::stack_backtrace, Panic::stack_backtrace_size, STDOUT_FILENO);
         }
 }
+
 
 // Minimalistic logic inside a signal!
 static void signal_handler(int signal)
 {
-    if (signal != raised_signal) print_stacktrace(signal);
+    if (signal != raised_signal)
+        get_backtrace(signal);
     raised_signal = signal;
     // From man sem_post
     // sem_post() is async-signal-safe: it may be safely called within a signal handler.
@@ -119,15 +123,12 @@ void Panic::setup_signal_handlers(void (*shutdown_callback)(int, void*), void* u
 }
 
 
-std::string Panic::stack_dump(void)
+std::string Panic::stack_dump(void* array[], int stack_size)
 {
     std::string stackTrace;
 
-    const int stack_size = 25;
-    void * array[stack_size]= {0};
-    int nSize = backtrace(array, stack_size);
-    char ** symbols = backtrace_symbols(array, nSize);
-    for (register int i = 0; i < nSize; ++i)
+    char ** symbols = backtrace_symbols(array, stack_size);
+    for (register int i = 0; i < stack_size; ++i)
         {
             if(symbols && symbols[i])
                 {
