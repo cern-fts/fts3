@@ -308,12 +308,6 @@ exit 0
 
 #SELinux scriptlets
 %post server-selinux
-
-# Reset the context set by fts-monitoring-selinux
-if [ $1 -eq 1 ]; then
-    semanage fcontext -d -t httpd_sys_content_t "/var/log/fts3(/.*)?" &> /dev/null
-fi
-
 for selinuxvariant in %{selinux_variants}; do
   /usr/sbin/semodule -s ${selinuxvariant} -i %{_datadir}/selinux/${selinuxvariant}/fts.pp &> /dev/null || :
 done
