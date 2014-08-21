@@ -8079,31 +8079,32 @@ void MySqlAPI::checkSanityState()
                     //special case for canceled
                     soci::rowset<std::string> rs2 = (
                                                         sql.prepare <<
-                                                        " select  job_id from t_job where job_finished > (UTC_TIMESTAMP() - interval '12' HOUR )  "
+                                                        " select  j.job_id from t_job j inner join t_file f on (j.job_id = f.job_id) where j.job_finished >= (UTC_TIMESTAMP() - interval '24' HOUR ) and f.file_state in ('SUBMITTED','ACTIVE')  "
                                                     );
-
+		    sql.begin();
                     for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
                         {
                             job_id = (*i2);
-                            numberOfFilesRevert = 0;
-                            numberOfFilesDelete = 0;
-
-                            stmt6.execute(true);
-                            stmtDel1.execute(true);
-
-                            if(numberOfFilesRevert > 0)
-                                {                    
-                                    sql.begin();
-                                    	stmt7.execute(true);
-				    sql.commit();
-                                }
-                            if(numberOfFilesDelete > 0)
-                                {
-				   sql.begin();
-                                    stmtDel2.execute(true);
-                                   sql.commit();
-                                }
+                            stmt7.execute(true);				
                         }
+		    sql.commit();
+			
+			
+			
+                    //now check reverse sanity checks, JOB can't be FINISH,  FINISHEDDIRTY, FAILED is at least one tr is in STARTED/DELETE                  
+                    soci::rowset<std::string> rs3 = (
+                                                        sql.prepare <<
+                                                        " select  j.job_id from t_job j inner join t_dm f on (j.job_id = f.job_id) where j.job_finished >= (UTC_TIMESTAMP() - interval '24' HOUR ) and f.file_state in ('STARTED','DELETE')  "
+                                                    );
+
+		    sql.begin();
+                    for (soci::rowset<std::string>::const_iterator i3 = rs3.begin(); i3 != rs3.end(); ++i3)
+                        {
+                            job_id = (*i3);
+                            stmtDel2.execute(true);                            
+                        }			
+   		    sql.commit();
+			
                     
                     //now check if a host has been offline for more than 120 min and set its transfers to failed
                     soci::rowset<std::string> rsCheckHosts = (
