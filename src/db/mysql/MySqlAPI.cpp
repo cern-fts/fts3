@@ -8082,7 +8082,6 @@ void MySqlAPI::checkSanityState()
                                                         " select  job_id from t_job where job_finished > (UTC_TIMESTAMP() - interval '12' HOUR )  "
                                                     );
 
-                    sql.begin();
                     for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
                         {
                             job_id = (*i2);
@@ -8093,16 +8092,19 @@ void MySqlAPI::checkSanityState()
                             stmtDel1.execute(true);
 
                             if(numberOfFilesRevert > 0)
-                                {
-                                    stmt7.execute(true);
+                                {                    
+                                    sql.begin();
+                                    	stmt7.execute(true);
+				    sql.commit();
                                 }
                             if(numberOfFilesDelete > 0)
                                 {
+				   sql.begin();
                                     stmtDel2.execute(true);
+                                   sql.commit();
                                 }
                         }
-                    sql.commit();
-
+                    
                     //now check if a host has been offline for more than 120 min and set its transfers to failed
                     soci::rowset<std::string> rsCheckHosts = (
                                 sql.prepare <<
