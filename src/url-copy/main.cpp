@@ -434,7 +434,7 @@ void shutdown_callback(int signum, void*)
         {
             if (propagated == false)
                 {
-	            std::string stackTrace = fts3::common::Panic::stack_dump();
+	            std::string stackTrace = fts3::common::Panic::stack_dump(fts3::common::Panic::stack_backtrace, fts3::common::Panic::stack_backtrace_size);
                     propagated = true;
                     logger.ERROR() << "TRANSFER process died: " << currentTransfer.jobId << std::endl;
                     logger.ERROR() << "Received signal: " << signum << std::endl;
@@ -577,6 +577,8 @@ int statWithRetries(gfal_context_t handle, const std::string& category, const st
     bool canBeRetried = false;
 
     int errorCode = 0;
+
+    statError->code = 12;
 
     errMsg->clear();
     for (int attempt = 0; attempt < 4; attempt++)

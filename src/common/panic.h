@@ -26,9 +26,14 @@ FTS3_COMMON_NAMESPACE_START
 namespace Panic
 {
 
+#define STACK_BACKTRACE_SIZE 25
+
+extern void* stack_backtrace[];
+extern int stack_backtrace_size;
+
 void setup_signal_handlers(void (*shutdown_callback)(int, void*), void* udata);
 
-std::string stack_dump(void);
+std::string stack_dump(void *stack[], int size);
 
 }
 

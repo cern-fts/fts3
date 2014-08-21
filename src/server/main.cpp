@@ -359,7 +359,7 @@ static void shutdown_callback(int signal, void*)
         case SIGTRAP:
         case SIGSYS:
             exit_status = -signal;
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Stack trace: \n" << Panic::stack_dump() << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Stack trace: \n" << Panic::stack_dump(Panic::stack_backtrace, Panic::stack_backtrace_size) << commit;
             break;
         default:
             break;
