@@ -106,7 +106,7 @@ SubmitTransferCli::~SubmitTransferCli()
 void SubmitTransferCli::parse(int ac, char* av[])
 {
 
-    // do the basic initialization
+    // do the basic initialisation
     CliBase::parse(ac, av);
 
     // check whether to use delegation

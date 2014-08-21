@@ -13,13 +13,11 @@
 
 using namespace fts3::cli;
 
-const string HttpRequest::PORT = "8446";
+const std::string HttpRequest::PORT = "8446";
 
-HttpRequest::HttpRequest(string const & url, string const & capath, string const & proxy, ostream& stream) :
+HttpRequest::HttpRequest(std::string const & url, std::string const & capath, std::string const & proxy, iostream& stream) :
     stream(stream),
-    curl(curl_easy_init()),
-    fd(0)
-
+    curl(curl_easy_init())
 {
     if (!curl) throw cli_exception("failed to initialise curl context (curl_easy_init)");
 
@@ -32,45 +30,42 @@ HttpRequest::HttpRequest(string const & url, string const & capath, string const
     curl_easy_setopt(curl, CURLOPT_CAPATH, capath.c_str());
     // our proxy again (the '-cacert' option)
     curl_easy_setopt(curl, CURLOPT_CAINFO, proxy.c_str());
-    // the callback function
+    // the write callback function
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
     // the stream the data will be written to
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &stream);
+    // the read callback function
+    curl_easy_setopt(curl, CURLOPT_READFUNCTION, read_data);
+    // the stream the data will be read from
+    curl_easy_setopt(curl, CURLOPT_READDATA, &stream);
 }
 
 HttpRequest::~HttpRequest()
 {
     // RAII fashion clean up
     if(curl) curl_easy_cleanup(curl);
-    if(fd) fclose(fd);
 }
 
-size_t HttpRequest::write_data(void *ptr, size_t size, size_t nmemb, ostream* ss)
+size_t HttpRequest::write_data(void *ptr, size_t size, size_t nmemb, ostream* ostr)
 {
+    // clear the stream if it reached EOF beforehand
+    if (!*ostr) ostr->clear();
     // calculate the size in bytes
     size_t realsize = size * nmemb;
-    // create a string from the received bytes
-    string str(static_cast<char*>(ptr), realsize);
     // write it to the stream
-    *ss << str;
+    ostr->write(static_cast<char*>(ptr), realsize);
 
     return realsize;
 }
 
-void HttpRequest::setPort(string& endpoint)
+size_t HttpRequest::read_data(void *ptr, size_t size, size_t nmemb, std::istream* istr)
 {
-    // look for the colon that separates the hostname from port
-    size_t found = endpoint.find_last_of(":");
+    // calculate the size in bytes
+    size_t realsize = size * nmemb;
+    // read from the stream
+    istr->read(static_cast<char*>(ptr), realsize);
 
-    // if the port was not specified just add it
-    if (found == string::npos)
-        {
-            endpoint += ":" + PORT;
-            return;
-        }
-
-    // otherwise replace the port
-    endpoint = endpoint.substr(0, found + 1) + PORT;
+    return istr->gcount();
 }
 
 void HttpRequest::request()
@@ -95,26 +90,17 @@ void HttpRequest::del()
     request();
 }
 
-void HttpRequest::put(string path)
+void HttpRequest::put()
 {
-    // close the file descriptor
-    if (fd) fclose(fd);
-
-    // open new one
-    fd = fopen(path.c_str(), "rb");
-    // check if we were able to do fopen
-    if(!fd) throw cli_exception("cannot open the file: " + path);
-
-    /* to get the file size */
-    struct stat file_info;
-    if(fstat(fileno(fd), &file_info) != 0) throw cli_exception("cannot determine the size of the file: " + path);
+    // get size of the data to put:
+    stream.seekg (0, stream.end);
+    std::streamoff size = stream.tellg();
+    stream.seekg (0, stream.beg);
 
     /* tell it to "upload" to the URL */
     curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
-    /* set where to read from (on Windows you need to use READFUNCTION too) */
-    curl_easy_setopt(curl, CURLOPT_READDATA, fd);
     /* and give the size of the upload (optional) */
-    curl_easy_setopt(curl, CURLOPT_INFILESIZE_LARGE, (curl_off_t)file_info.st_size);
+    curl_easy_setopt(curl, CURLOPT_INFILESIZE_LARGE, (curl_off_t)size);
 
     // do the request
     request();

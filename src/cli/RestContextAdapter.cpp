@@ -7,6 +7,7 @@
 
 #include "RestContextAdapter.h"
 
+#include "rest/RestSubmission.h"
 #include "rest/HttpRequest.h"
 #include "rest/ResponseParser.h"
 
@@ -94,6 +95,29 @@ std::vector< std::pair<std::string, std::string> > RestContextAdapter::cancel(st
         }
 
     return ret;
+}
+
+std::string RestContextAdapter::transferSubmit (std::vector<File> const & files, std::map<std::string, std::string> const & parameters)
+{
+    std::stringstream ss;
+    ss << RestSubmission(files, parameters);
+
+    std::string url = endpoint + "/jobs";
+    HttpRequest http (url, capath, proxy, ss);
+    http.put();
+
+    ResponseParser p(ss);
+    return p.get("job_id");
+}
+
+JobStatus RestContextAdapter::getTransferJobStatus (std::string const & jobId, bool archive)
+{
+
+}
+
+void RestContextAdapter::delegate(std::string const & delegationId, long expirationTime)
+{
+
 }
 
 } /* namespace cli */

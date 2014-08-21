@@ -9,10 +9,10 @@
 
 #include <sstream>
 
-#include <boost/regex.hpp>
-
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/optional.hpp>
+
+#include <boost/regex.hpp>
 
 namespace fts3
 {
@@ -68,12 +68,9 @@ JsonOutput::~JsonOutput()
             // first write the output to a 'stringstream'
             std::stringstream str_out;
             pt::write_json(str_out, json_out);
-            // then make sure all numbers and key words like true, false and null,
-            // and also empty arrays ('[]') are not between double quotes
-            static const boost::regex exp("\"(null|true|false|[]|[0-9]+(\\.[0-9]+)?)\"");
-            std::string str = boost::regex_replace(str_out.str(), exp, "$1");
-            // and finally print it to the output
-            (*out) << str;
+            // then make sure symbols like null and true/false are not in double quotes
+            static const boost::regex exp("\"(null|true|false|\\[\\]|[0-9]+(\\.[0-9]+)?)\"");
+            (*out) << boost::regex_replace(str_out.str(), exp, "$1");
         }
 }
 

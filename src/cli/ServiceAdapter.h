@@ -9,9 +9,11 @@
 #define SERVICEADAPTER_H_
 
 #include "JobStatus.h"
+#include "File.h"
 
 #include <string>
 #include <vector>
+#include <map>
 
 namespace fts3 {
 namespace cli {
@@ -42,6 +44,30 @@ public:
      * @param jobIds : list of job IDs
      */
     virtual std::vector< std::pair<std::string, std::string>  > cancel(std::vector<std::string> const & jobIds) = 0;
+
+    /**
+     * Remote call that will be transferSubmit2 or transferSubmit3
+     *
+     * @param elements - job elements to be executed
+     * @param parameters - parameters for the job that is being submitted
+     * @param checksum - flag indicating whether the checksum should be used
+     *  (if false transferSubmit2 is used, otherwise transferSubmit3 is used)
+     *
+     * @return the job ID
+     */
+    virtual std::string transferSubmit (std::vector<File> const & files, std::map<std::string, std::string> const & parameters) = 0;
+
+    /**
+     * Remote call to getTransferJobStatus
+     *
+     * @param jobId   the job id
+     * @param archive if true, the archive will be queried
+     *
+     * @return an object holding the job status
+     */
+    virtual JobStatus getTransferJobStatus (std::string const & jobId, bool archive) = 0;
+
+    virtual void delegate(std::string const & delegationId, long expirationTime) = 0;
 
 protected:
 

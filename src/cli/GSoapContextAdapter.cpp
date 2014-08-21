@@ -158,7 +158,7 @@ void GSoapContextAdapter::getInterfaceDeatailes()
         }
 }
 
-string GSoapContextAdapter::transferSubmit (vector<File> const & files, map<string, string> const & parameters)
+std::string GSoapContextAdapter::transferSubmit(std::vector<File> const & files, std::map<std::string, std::string> const & parameters)
 {
     // the transfer job
     tns3__TransferJob3 job;
@@ -237,6 +237,18 @@ string GSoapContextAdapter::transferSubmit (vector<File> const & files, map<stri
 }
 
 
+void GSoapContextAdapter::delegate(std::string const & delegationId, long expirationTime)
+{
+    // delegate Proxy Certificate
+    ProxyCertificateDelegator handler (
+        endpoint,
+        delegationId,
+        expirationTime
+    );
+
+    handler.delegate();
+}
+
 string GSoapContextAdapter::deleteFile (std::vector<std::string>& filesForDelete)
 {
     impltns__fileDeleteResponse resp;
@@ -254,7 +266,7 @@ string GSoapContextAdapter::deleteFile (std::vector<std::string>& filesForDelete
 
 
 
-JobStatus GSoapContextAdapter::getTransferJobStatus (string jobId, bool archive)
+JobStatus GSoapContextAdapter::getTransferJobStatus (std::string const & jobId, bool archive)
 {
     tns3__JobRequest req;
 

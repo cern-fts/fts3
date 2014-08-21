@@ -59,7 +59,7 @@ CliBase::CliBase(): visible("Allowed options")
 void CliBase::parse(int ac, char* av[])
 {
 
-    // set the output parameters (verbose and json) before the acctual parsing happens
+    // set the output parameters (verbose and json) before the actual parsing happens
     for (int i = 0; i < ac; i++)
         {
             string str(av[i]);
@@ -88,13 +88,9 @@ void CliBase::parse(int ac, char* av[])
     notify(vm);
 
     // check is the output is verbose
-    MsgPrinter::instance().setVerbose(
-        vm.count("verbose")
-    );
+    MsgPrinter::instance().setVerbose(vm.count("verbose"));
     // check if the output is in json format
-    MsgPrinter::instance().setJson(
-        vm.count("json")
-    );
+    MsgPrinter::instance().setJson(vm.count("json"));
 
     // check whether the -s option has been used
     if (vm.count("service"))
