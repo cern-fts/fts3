@@ -578,8 +578,6 @@ int statWithRetries(gfal_context_t handle, const std::string& category, const st
 
     int errorCode = 0;
 
-    statError->code = 12;
-
     errMsg->clear();
     for (int attempt = 0; attempt < 4; attempt++)
         {
