@@ -245,8 +245,13 @@ protected:
                                         return;
                                     }
 
-                                TransferFiles tf = tfh.get(*it_vo);
+                                boost::optional<TransferFiles> opt_tf = tfh.get(*it_vo);
+                                // if this VO has no more files to process just continue
+                                if (!opt_tf) continue;
 
+                                TransferFiles & tf = *opt_tf;
+
+                                // just to be sure
                                 if(tf.FILE_ID == 0 || tf.DN.empty() || tf.CRED_ID.empty()) continue;
 
                                 std::pair<std::string, std::string> proxy_key(tf.CRED_ID, tf.DN);

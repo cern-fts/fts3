@@ -101,16 +101,14 @@ TransferFileHandler::~TransferFileHandler()
         }
 }
 
-TransferFiles TransferFileHandler::get(string vo)
+optional<TransferFiles> TransferFileHandler::get(string vo)
 {
-    TransferFiles ret;
-
     // get the index of the next File in turn for the VO
     optional<FileIndex> index = getIndex(vo);
     // if the index exists return the file
     if (index) return getFile(*index);
 
-    return ret;
+    return optional<TransferFiles>();
 }
 
 optional< pair<string, string> > TransferFileHandler::getNextPair(string vo)
@@ -160,11 +158,9 @@ optional<FileIndex> TransferFileHandler::getIndex(string vo)
     return index;
 }
 
-TransferFiles TransferFileHandler::getFile(FileIndex index)
+optional<TransferFiles> TransferFileHandler::getFile(FileIndex index)
 {
-    // the return value
-    TransferFiles ret;
-
+    optional<TransferFiles> ret;
     // if there's no mapping for this index ..
     if (fileIndexToFiles.find(index) == fileIndexToFiles.end()) return ret;
 

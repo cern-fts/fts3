@@ -63,7 +63,7 @@ public:
     TransferFileHandler(map< string, list<TransferFiles> >& files);
     virtual ~TransferFileHandler();
 
-    TransferFiles get(string vo);
+    optional<TransferFiles> get(string vo);
 
     set<string>::iterator begin();
     set<string>::iterator end();
@@ -80,7 +80,7 @@ public:
 
 private:
 
-    TransferFiles getFile(FileIndex index);
+    optional<TransferFiles> getFile(FileIndex index);
 
     optional<FileIndex> getIndex(string vo);
 
