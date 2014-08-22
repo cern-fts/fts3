@@ -18,6 +18,8 @@
  */
 
 #include "GSoapContextAdapter.h"
+#include "RestContextAdapter.h"
+
 #include "JobStatus.h"
 #include "ui/TransferStatusCli.h"
 
@@ -58,28 +60,21 @@ int main(int ac, char* av[])
             cli.parse(ac, av);
             if (!cli.validate()) return 1;
 
+            std::string const endpoint = cli.getService();
+
+            std::unique_ptr<ServiceAdapter> ctx;
             if (cli.rest())
                 {
-                    std::vector<std::string> const jobIds = cli.getJobIds();
-                    std::vector<std::string>::const_iterator itr;
-
-                    for (itr = jobIds.begin(); itr != jobIds.end(); ++itr)
-                        {
-                            std::string url = cli.getService() + "/jobs/" + *itr;
-
-                            std::stringstream ss;
-                            HttpRequest http (url, cli.capath(), cli.proxy(), ss);
-                            http.get();
-                            ResponseParser respons(ss);
-
-                            std::cout << respons.get("job_state") << std::endl;
-                        }
-                    return 0;
+                    std::string const capath = cli.capath();
+                    std::string const proxy = cli.proxy();
+                    ctx.reset(new RestContextAdapter(endpoint, capath, proxy));
+                }
+            else
+                {
+                    ctx.reset(new GSoapContextAdapter(endpoint));
                 }
 
-            // validate command line options, and return respective gsoap context
-            GSoapContextAdapter ctx (cli.getService());
-            cli.printApiDetails(ctx);
+            cli.printApiDetails(*ctx.get());
 
             if (cli.p())
                 {
@@ -88,8 +83,8 @@ int main(int ac, char* av[])
 
                     for (it = ids.begin(); it != ids.end(); ++it)
                         {
-                            tns3__DetailedJobStatus* ptr = ctx.getDetailedJobStatus(*it);
-                            MsgPrinter::instance().print(*it, ptr->transferStatus);
+                            std::vector<DetailedFileStatus> vec = ctx->getDetailedJobStatus(*it);
+                            MsgPrinter::instance().print(*it, vec);
                         }
 
                     return 0;
@@ -116,9 +111,9 @@ int main(int ac, char* av[])
                         }
 
                     JobStatus status = cli.isVerbose() ?
-                            ctx.getTransferJobSummary(jobId, archive)
+                            ctx->getTransferJobSummary(jobId, archive)
                             :
-                            ctx.getTransferJobStatus(jobId, archive)
+                            ctx->getTransferJobStatus(jobId, archive)
                             ;
 
                     // If a list is requested, or dumping the failed transfers,
@@ -131,34 +126,25 @@ int main(int ac, char* av[])
                             do
                                 {
                                     // do the request
-                                    impltns__getFileStatusResponse resp;
-                                    cnt = ctx.getFileStatus(jobId, archive, offset, DEFAULT_LIMIT, cli.detailed(), resp);
+                                    std::vector<FileInfo> const vect =
+                                            ctx->getFileStatus(jobId, archive, offset, DEFAULT_LIMIT, cli.detailed());
 
-                                    if (cnt > 0 && resp._getFileStatusReturn)
+                                    cnt = vect.size();
+
+                                    std::vector<FileInfo>::const_iterator it;
+                                    for (it = vect.begin(); it < vect.end(); it++)
                                         {
-
-                                            std::vector<tns3__FileTransferStatus * > const & vect = resp._getFileStatusReturn->item;
-                                            std::vector<tns3__FileTransferStatus * >::const_iterator it;
-                                            // print the response
-                                            for (it = vect.begin(); it < vect.end(); it++)
+                                            if (cli.list())
                                                 {
-                                                    tns3__FileTransferStatus* stat = *it;
-
-                                                    if (cli.list())
-                                                        {
-
-                                                            status.addFile(*stat);
-                                                        }
-                                                    else if (cli.dumpFailed() && isTransferFailed(*stat->transferFileState))
-                                                        {
-                                                            failedFiles << *stat->sourceSURL << " "
-                                                                        << *stat->destSURL
-                                                                        << std::endl;
-                                                        }
+                                                    status.addFile(*it);
+                                                }
+                                            else if (cli.dumpFailed() && isTransferFailed(it->getState()))
+                                                {
+                                                    failedFiles << it->getSource() << " " << it->getDestination() << std::endl;
                                                 }
                                         }
 
-                                    offset += cnt;
+                                    offset += vect.size();
                                 }
                             while(cnt == DEFAULT_LIMIT);
                         }

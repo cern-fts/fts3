@@ -67,7 +67,43 @@ public:
      */
     virtual JobStatus getTransferJobStatus (std::string const & jobId, bool archive) = 0;
 
+    /**
+     * Remote call to getTransferJobSummary
+     * Internally it is getTransferJobSummary3
+     *
+     * @param jobId   id of the job
+     * @param archive if true, the archive will be queried
+     *
+     * @return an object containing job summary
+     */
+    virtual JobStatus getTransferJobSummary (std::string const & jobId, bool archive) = 0;
+
+    /**
+     * Remote call to getFileStatus
+     *
+     * @param jobId   id of the job
+     * @param archive if true, the archive will be queried
+     * @param offset  query starting from this offset (i.e. files 100 in advance)
+     * @param limit   query a limited number of files (i.e. only 50 results)
+     * @param retries get file retries
+     * @param resp server response
+     * @return The number of files returned
+     */
+    virtual std::vector<FileInfo> getFileStatus (std::string const & jobId, bool archive, int offset, int limit, bool retries) = 0;
+
+    /**
+     * Delegates a proxy certificate
+     *
+     * @param delegationId : delegation ID
+     * @param expirationTime : user defined expiration time
+     */
     virtual void delegate(std::string const & delegationId, long expirationTime) = 0;
+
+    /**
+     * @param jobId : job ID
+     * @return : vector containing detailed information about files in the given job (including file ID)
+     */
+    virtual std::vector<DetailedFileStatus> getDetailedJobStatus(std::string const & jobId) = 0;
 
 protected:
 

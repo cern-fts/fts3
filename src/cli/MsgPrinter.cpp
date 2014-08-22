@@ -114,7 +114,7 @@ void MsgPrinter::print(std::string const & subject, std::string const & msg)
     print(subject, subject, msg);
 }
 
-void MsgPrinter::print(std::string job_id, std::vector<tns3__DetailedFileStatus *> const & v)
+void MsgPrinter::print(std::string job_id, std::vector<DetailedFileStatus> const & v)
 {
     // make sure the vector is not empty
     if (v.empty()) return;
@@ -125,15 +125,14 @@ void MsgPrinter::print(std::string job_id, std::vector<tns3__DetailedFileStatus 
     // create array element
     pt::ptree array;
     // add each file status to array
-    std::vector<tns3__DetailedFileStatus *>::const_iterator it;
+    std::vector<DetailedFileStatus>::const_iterator it;
     for (it = v.begin(); it != v.end(); ++it)
         {
-            tns3__DetailedFileStatus& stat = **it;
             ptree item;
-            item.put("file_id", boost::lexical_cast<std::string>(stat.fileId));
-            item.put("state", stat.fileState);
-            item.put("source_surl", stat.sourceSurl);
-            item.put("dest_surl", stat.destSurl);
+            item.put("file_id", boost::lexical_cast<std::string>(it->fileId));
+            item.put("state", it->state);
+            item.put("source_surl", it->src);
+            item.put("dest_surl", it->dst);
             array.push_back(std::make_pair("", item));
         }
     // add the array to the JSON object
@@ -197,7 +196,7 @@ void MsgPrinter::print_ostr(JobStatus const & status, bool short_out)
                 }
         }
 
-    std::vector<JobStatus::FileInfo>::const_iterator it;
+    std::vector<FileInfo>::const_iterator it;
     for (it = status.files.begin(); it != status.files.end(); ++it)
         {
             (*ostr) << std::endl;
@@ -250,7 +249,7 @@ void MsgPrinter::print_json(JobStatus const & status)
     if (!status.files.empty())
     {
         ptree files;
-        std::vector<JobStatus::FileInfo>::const_iterator it;
+        std::vector<FileInfo>::const_iterator it;
         for (it = status.files.begin(); it != status.files.end(); ++it)
             {
                 ptree file;

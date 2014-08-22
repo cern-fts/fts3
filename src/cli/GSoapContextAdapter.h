@@ -172,7 +172,7 @@ public:
      *
      * @return an object containing job summary
      */
-    JobStatus getTransferJobSummary (string jobId, bool archive);
+    JobStatus getTransferJobSummary (std::string const & jobId, bool archive);
 
     /**
      * Remote call to getFileStatus
@@ -185,9 +185,7 @@ public:
      * @param resp server response
      * @return The number of files returned
      */
-    int getFileStatus (string jobId, bool archive, int offset, int limit,
-                       bool retries,
-                       impltns__getFileStatusResponse& resp);
+    std::vector<FileInfo> getFileStatus (std::string const & jobId, bool archive, int offset, int limit, bool retries);
 
     /**
      * Remote call to setConfiguration
@@ -350,7 +348,11 @@ public:
 
     std::string getSnapShot(string vo, string src, string dst);
 
-    tns3__DetailedJobStatus* getDetailedJobStatus(string job_id);
+    /**
+     * @param jobId : job ID
+     * @return : vector containing detailed information about files in the given job (including file ID)
+     */
+    std::vector<DetailedFileStatus> getDetailedJobStatus(std::string const & jobId);
 
     std::string getVersion()
     {

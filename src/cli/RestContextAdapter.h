@@ -36,6 +36,16 @@ public:
 
     JobStatus getTransferJobStatus (std::string const & jobId, bool archive);
 
+    JobStatus getTransferJobSummary (std::string const & jobId, bool archive);
+
+    std::vector<FileInfo> getFileStatus (std::string const & jobId, bool archive, int offset, int limit, bool retries);
+
+    /**
+     * @param jobId : job ID
+     * @return : vector containing detailed information about files in the given job (including file ID)
+     */
+    std::vector<DetailedFileStatus> getDetailedJobStatus(std::string const & jobId);
+
     void delegate(std::string const & delegationId, long expirationTime);
 
 private:
