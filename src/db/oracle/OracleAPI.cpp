@@ -3787,7 +3787,7 @@ bool OracleAPI::updateOptimizer()
                             int maxActiveLimit = getMaxActive(sql, spawnActive, highDefault, source_hostname, destin_hostname);
 
                             //special case to increase active when dealing with LAN transfers of there is only one single/dest pair active
-                            if( ratioSuccessFailure >= 96 && (singleDest == 1 || lanTransferBool || spawnActive > 1) && maxActive < maxActiveLimit)
+                            if( ratioSuccessFailure >= 96 && (singleDest == 1 || lanTransferBool) && maxActive < maxActiveLimit)
                                 {
                                     if(maxActive < 8)
                                         {
@@ -3796,6 +3796,8 @@ bool OracleAPI::updateOptimizer()
                                         }
                                     else
                                         {
+                                          if(spawnActive > 1)
+                                           {
                                             double percentage = activePercentageQueue(boost::lexical_cast<double>(maxActive),
                                                                 boost::lexical_cast<double>(submitted),
                                                                 boost::lexical_cast<double>(ratioSuccessFailure));
@@ -3805,6 +3807,7 @@ bool OracleAPI::updateOptimizer()
                                                     highDefault = boost::lexical_cast<int>(percentage);
                                                     maxActive = highDefault;
                                                 }
+                                           }
                                         }
                                 }
 
