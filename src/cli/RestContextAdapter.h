@@ -32,6 +32,22 @@ public:
 
     std::vector< std::pair<std::string, std::string>  > cancel(std::vector<std::string> const & jobIds);
 
+    std::string transferSubmit (std::vector<File> const & files, std::map<std::string, std::string> const & parameters);
+
+    JobStatus getTransferJobStatus (std::string const & jobId, bool archive);
+
+    JobStatus getTransferJobSummary (std::string const & jobId, bool archive);
+
+    std::vector<FileInfo> getFileStatus (std::string const & jobId, bool archive, int offset, int limit, bool retries);
+
+    /**
+     * @param jobId : job ID
+     * @return : vector containing detailed information about files in the given job (including file ID)
+     */
+    std::vector<DetailedFileStatus> getDetailedJobStatus(std::string const & jobId);
+
+    void delegate(std::string const & delegationId, long expirationTime);
+
 private:
 
     void getInterfaceDeatailes();

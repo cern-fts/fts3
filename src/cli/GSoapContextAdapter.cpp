@@ -41,6 +41,8 @@
 #include <fstream>
 
 #include <algorithm>
+#include <iterator>
+
 #include <boost/lambda/lambda.hpp>
 
 namespace fts3
@@ -158,7 +160,7 @@ void GSoapContextAdapter::getInterfaceDeatailes()
         }
 }
 
-string GSoapContextAdapter::transferSubmit (vector<File> const & files, map<string, string> const & parameters)
+std::string GSoapContextAdapter::transferSubmit(std::vector<File> const & files, std::map<std::string, std::string> const & parameters)
 {
     // the transfer job
     tns3__TransferJob3 job;
@@ -237,6 +239,18 @@ string GSoapContextAdapter::transferSubmit (vector<File> const & files, map<stri
 }
 
 
+void GSoapContextAdapter::delegate(std::string const & delegationId, long expirationTime)
+{
+    // delegate Proxy Certificate
+    ProxyCertificateDelegator handler (
+        endpoint,
+        delegationId,
+        expirationTime
+    );
+
+    handler.delegate();
+}
+
 string GSoapContextAdapter::deleteFile (std::vector<std::string>& filesForDelete)
 {
     impltns__fileDeleteResponse resp;
@@ -254,7 +268,7 @@ string GSoapContextAdapter::deleteFile (std::vector<std::string>& filesForDelete
 
 
 
-JobStatus GSoapContextAdapter::getTransferJobStatus (string jobId, bool archive)
+JobStatus GSoapContextAdapter::getTransferJobStatus (std::string const & jobId, bool archive)
 {
     tns3__JobRequest req;
 
@@ -371,7 +385,7 @@ void GSoapContextAdapter::listVoManagers(string vo, impltns__listVOManagersRespo
         throw gsoap_error(ctx);
 }
 
-JobStatus GSoapContextAdapter::getTransferJobSummary (string jobId, bool archive)
+JobStatus GSoapContextAdapter::getTransferJobSummary (std::string const & jobId, bool archive)
 {
     tns3__JobRequest req;
 
@@ -411,9 +425,7 @@ JobStatus GSoapContextAdapter::getTransferJobSummary (string jobId, bool archive
            );
 }
 
-int GSoapContextAdapter::getFileStatus (string jobId, bool archive, int offset, int limit,
-                                        bool retries,
-                                        impltns__getFileStatusResponse& resp)
+std::vector<FileInfo> GSoapContextAdapter::getFileStatus (std::string const & jobId, bool archive, int offset, int limit, bool retries)
 {
     tns3__FileRequest req;
 
@@ -423,13 +435,13 @@ int GSoapContextAdapter::getFileStatus (string jobId, bool archive, int offset, 
     req.limit   = limit;
     req.retries = retries;
 
-    impltns__getFileStatus3Response resp3;
-    if (soap_call_impltns__getFileStatus3(ctx, endpoint.c_str(), 0, &req, resp3))
+    impltns__getFileStatus3Response resp;
+    if (soap_call_impltns__getFileStatus3(ctx, endpoint.c_str(), 0, &req, resp))
         throw gsoap_error(ctx);
 
-    resp._getFileStatusReturn = resp3.getFileStatusReturn;
-
-    return static_cast<int>(resp._getFileStatusReturn->item.size());
+    std::vector<FileInfo> ret;
+    std::copy(resp.getFileStatusReturn->item.begin(), resp.getFileStatusReturn->item.end(), std::back_inserter(ret));
+    return ret;
 }
 
 void GSoapContextAdapter::setConfiguration (config__Configuration *config, implcfg__setConfigurationResponse& resp)
@@ -598,13 +610,16 @@ std::string GSoapContextAdapter::getSnapShot(string vo, string src, string dst)
     return resp._result;
 }
 
-tns3__DetailedJobStatus* GSoapContextAdapter::getDetailedJobStatus(string job_id)
+std::vector<DetailedFileStatus> GSoapContextAdapter::getDetailedJobStatus(std::string const & jobId)
 {
     impltns__detailedJobStatusResponse resp;
-    if (soap_call_impltns__detailedJobStatus(ctx, endpoint.c_str(), 0, job_id, resp))
+    if (soap_call_impltns__detailedJobStatus(ctx, endpoint.c_str(), 0, jobId, resp))
         throw gsoap_error(ctx);
 
-    return resp._detailedJobStatus;
+    std::vector<DetailedFileStatus> ret;
+    std::copy(resp._detailedJobStatus->transferStatus.begin(), resp._detailedJobStatus->transferStatus.end(), std::back_inserter(ret));
+
+    return ret;
 }
 
 void GSoapContextAdapter::setInterfaceVersion(string interface)

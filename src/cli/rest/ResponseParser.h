@@ -36,6 +36,10 @@ public:
 
     std::vector<JobStatus> getJobs(std::string const & path) const;
 
+    std::vector<FileInfo> getFiles(std::string const & path) const;
+
+    int getNb(std::string const & path, std::string const & state) const;
+
 private:
     /// The object that contains the response
     ptree response;

@@ -69,7 +69,7 @@ public:
 
     template<typename T>
     void print(std::vector<T> const & v);
-    void print(std::string job_id, std::vector<tns3__DetailedFileStatus*> const & v);
+    void print(std::string job_id, std::vector<DetailedFileStatus> const & v);
 
     void print(cli_exception const & ex);
     void print(std::exception const & ex);

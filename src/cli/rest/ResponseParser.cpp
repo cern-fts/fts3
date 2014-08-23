@@ -67,6 +67,36 @@ std::vector<JobStatus> ResponseParser::getJobs(std::string const & path) const
     return ret;
 }
 
+std::vector<FileInfo> ResponseParser::getFiles(std::string const & path) const
+{
+    ptree const & files = response.get_child(path);
+
+    std::vector<FileInfo> ret;
+    ptree::const_iterator it;
+
+    for (it = files.begin(); it != files.end(); ++it)
+        {
+            ret.push_back(FileInfo(it->second));
+        }
+
+    return ret;
+}
+
+int ResponseParser::getNb(std::string const & path, std::string const & state) const
+{
+    ptree const & files = response.get_child(path);
+
+    int ret = 0;
+    ptree::const_iterator it;
+
+    for (it = files.begin(); it != files.end(); ++it)
+        {
+            if (it->second.get<std::string>("file_state") == state) ++ret;
+        }
+
+    return ret;
+}
+
 #ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 BOOST_AUTO_TEST_SUITE( cli )
 BOOST_AUTO_TEST_SUITE(ResponseParserTest)

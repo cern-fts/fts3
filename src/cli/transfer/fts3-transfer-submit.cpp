@@ -18,7 +18,8 @@
  */
 
 #include "GSoapContextAdapter.h"
-#include "ProxyCertificateDelegator.h"
+#include "RestContextAdapter.h"
+
 #include "File.h"
 
 #include "ui/SubmitTransferCli.h"
@@ -26,6 +27,7 @@
 #include "common/JobStatusHandler.h"
 #include "exception/cli_exception.h"
 
+#include <memory>
 
 using namespace fts3::cli;
 using namespace fts3::common;
@@ -41,38 +43,30 @@ int main(int ac, char* av[])
             cli.parse(ac, av);
             if (!cli.validate()) return 1;
 
+            std::string const endpoint = cli.getService();
+
+            std::unique_ptr<ServiceAdapter> ctx;
             if (cli.rest())
                 {
-                    std::string url = cli.getService() + "/jobs";
-                    std::string job = cli.getFileName();
-
-                    HttpRequest http (url, cli.capath(), cli.proxy(), cout);
-                    http.put(job);
-                    return 0;
+                    std::string const capath = cli.capath();
+                    std::string const proxy = cli.proxy();
+                    ctx.reset(new RestContextAdapter(endpoint, capath, proxy));
+                }
+            else
+                {
+                    ctx.reset(new GSoapContextAdapter(endpoint));
                 }
 
-            // validate command line options, and return respective gSOAP context
-            GSoapContextAdapter ctx (cli.getService());
-            cli.printApiDetails(ctx);
+            cli.printApiDetails(*ctx.get());
 
-            std::string jobId("");
+            // delegate the credential if necessary
+            ctx->delegate(cli.getDelegationId(), cli.getExpirationTime());
 
+            std::string jobId;
             std::vector<File> files = cli.getFiles();
-
-
             std::map<std::string, std::string> params = cli.getParams();
-
-            // delegate Proxy Certificate
-            ProxyCertificateDelegator handler (
-                cli.getService(),
-                cli.getDelegationId(),
-                cli.getExpirationTime()
-            );
-
-            handler.delegate();
-
             // submit the job
-            jobId = ctx.transferSubmit (
+            jobId = ctx->transferSubmit (
                         files,
                         params
                     );
@@ -87,7 +81,7 @@ int main(int ac, char* av[])
                     do
                         {
                             sleep(2);
-                            status = ctx.getTransferJobStatus(jobId, false).getStatus();
+                            status = ctx->getTransferJobStatus(jobId, false).getStatus();
                         }
                     while (!JobStatusHandler::getInstance().isTransferFinished(status));
                 }

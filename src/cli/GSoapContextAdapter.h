@@ -28,6 +28,7 @@
 
 #include "JobStatus.h"
 #include "File.h"
+#include "ProxyCertificateDelegator.h"
 
 #include "ws-ifce/gsoap/gsoap_stubs.h"
 
@@ -102,7 +103,15 @@ public:
      *
      * @return the job ID
      */
-    string transferSubmit (vector<File> const & files, map<string, string> const & parameters);
+    std::string transferSubmit (std::vector<File> const & files, std::map<std::string, std::string> const & parameters);
+
+    /**
+     * Delegates the credential
+     *
+     * @param delegationId : delegation ID
+     * @param expirationTime : requested expiration time
+     */
+    void delegate(std::string const & delegationId, long expirationTime);
 
     /**
      * Remote call to getTransferJobStatus
@@ -112,7 +121,7 @@ public:
      *
      * @return an object holding the job status
      */
-    JobStatus getTransferJobStatus (string jobId, bool archive);
+    JobStatus getTransferJobStatus (std::string const & jobId, bool archive);
 
     /**
      * Remote call to getRoles
@@ -163,7 +172,7 @@ public:
      *
      * @return an object containing job summary
      */
-    JobStatus getTransferJobSummary (string jobId, bool archive);
+    JobStatus getTransferJobSummary (std::string const & jobId, bool archive);
 
     /**
      * Remote call to getFileStatus
@@ -176,9 +185,7 @@ public:
      * @param resp server response
      * @return The number of files returned
      */
-    int getFileStatus (string jobId, bool archive, int offset, int limit,
-                       bool retries,
-                       impltns__getFileStatusResponse& resp);
+    std::vector<FileInfo> getFileStatus (std::string const & jobId, bool archive, int offset, int limit, bool retries);
 
     /**
      * Remote call to setConfiguration
@@ -341,7 +348,11 @@ public:
 
     std::string getSnapShot(string vo, string src, string dst);
 
-    tns3__DetailedJobStatus* getDetailedJobStatus(string job_id);
+    /**
+     * @param jobId : job ID
+     * @return : vector containing detailed information about files in the given job (including file ID)
+     */
+    std::vector<DetailedFileStatus> getDetailedJobStatus(std::string const & jobId);
 
     std::string getVersion()
     {

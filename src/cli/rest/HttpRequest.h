@@ -39,38 +39,34 @@ namespace fts3
 namespace cli
 {
 
-using namespace std;
-
 class HttpRequest
 {
 
 public:
 
-    HttpRequest(string const & url, string const & capath, string const & proxy, ostream& stream);
+    HttpRequest(std::string const & url, std::string const & capath, std::string const & proxy, std::iostream& stream);
     virtual ~HttpRequest();
 
     void get();
 
     void del();
 
-    void put(string path);
+    void put();
 
 private:
 
     void request();
 
-    static size_t write_data(void *ptr, size_t size, size_t nmemb, ostream* ss);
+    static size_t write_data(void *ptr, size_t size, size_t nmemb, std::ostream* ostr);
 
-    void setPort(string& endpoint);
+    static size_t read_data(void *ptr, size_t size, size_t nmemb, std::istream* istr);
 
-    static const string PORT;
+    static const std::string PORT;
 
-    // the response is written to this string stream
-    ostream& stream;
+    // input/output stream for interactions with rest service
+    std::istream& stream;
     // curl context
     CURL *curl;
-    // file to be uploaded (in case of PUT)
-    FILE *fd;
 };
 
 } /* namespace cli  */

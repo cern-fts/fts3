@@ -7,11 +7,14 @@
 
 #include "RestContextAdapter.h"
 
+#include "rest/RestSubmission.h"
 #include "rest/HttpRequest.h"
 #include "rest/ResponseParser.h"
 
 #include <iostream>
 #include <sstream>
+
+#include <boost/lexical_cast.hpp>
 
 namespace fts3 {
 namespace cli {
@@ -89,11 +92,114 @@ std::vector< std::pair<std::string, std::string> > RestContextAdapter::cancel(st
             HttpRequest http (url, capath, proxy, ss);
             http.del();
 
-            ResponseParser p(ss);
-            ret.push_back(std::make_pair(p.get("job_id"), p.get("job_state")));
+            ResponseParser response(ss);
+            ret.push_back(std::make_pair(response.get("job_id"), response.get("job_state")));
         }
 
     return ret;
+}
+
+std::string RestContextAdapter::transferSubmit (std::vector<File> const & files, std::map<std::string, std::string> const & parameters)
+{
+    std::stringstream ss;
+    ss << RestSubmission(files, parameters);
+
+    std::string url = endpoint + "/jobs";
+    HttpRequest http (url, capath, proxy, ss);
+    http.put();
+
+    ResponseParser response(ss);
+    return response.get("job_id");
+}
+
+JobStatus RestContextAdapter::getTransferJobStatus (std::string const & jobId, bool archive)
+{
+    std::string url = endpoint + "/jobs/" + jobId;
+
+    std::stringstream ss;
+    HttpRequest http (url, capath, proxy, ss);
+    http.get();
+
+    ResponseParser response(ss);
+
+    return JobStatus(
+            response.get("job_id"),
+            response.get("job_state"),
+            response.get("user_dn"),
+            response.get("reason"),
+            response.get("vo_name"),
+            response.get("submit_time"),
+            -1, // this is never shown so we don't care
+            boost::lexical_cast<int>(response.get("priority"))
+        );
+}
+
+JobStatus RestContextAdapter::getTransferJobSummary (std::string const & jobId, bool archive)
+{
+    // first get the files
+    std::string url_files = endpoint + "/jobs/" + jobId + "/files";
+
+    std::stringstream ss_files;
+    ss_files << "{\"files\" :";
+    HttpRequest http_files (url_files, capath, proxy, ss_files);
+    http_files.get();
+    ss_files << '}';
+
+    ResponseParser response_files(ss_files);
+
+    JobStatus::JobSummary summary (
+            response_files.getNb("files", "ACTIVE"),
+            response_files.getNb("files", "READY"),
+            response_files.getNb("files", "CANCELED"),
+            response_files.getNb("files", "FINISHED"),
+            response_files.getNb("files", "SUBMITTED"),
+            response_files.getNb("files", "FAILED")
+        );
+
+    // than get the job itself
+    std::string url = endpoint + "/jobs/" + jobId;
+
+    std::stringstream ss;
+    HttpRequest http (url, capath, proxy, ss);
+    http.get();
+
+    ResponseParser response(ss);
+
+    return JobStatus(
+            response.get("job_id"),
+            response.get("job_state"),
+            response.get("user_dn"),
+            response.get("reason"),
+            response.get("vo_name"),
+            response.get("submit_time"),
+            response_files.getFiles("files").size(),
+            boost::lexical_cast<int>(response.get("priority")),
+            summary
+        );
+}
+
+std::vector<FileInfo> RestContextAdapter::getFileStatus (std::string const & jobId, bool archive, int offset, int limit, bool retries)
+{
+    std::string url = endpoint + "/jobs/" + jobId + "/files";
+
+    std::stringstream ss;
+    ss << "{\"files\" :";
+    HttpRequest http (url, capath, proxy, ss);
+    http.get();
+    ss << '}';
+
+    ResponseParser response(ss);
+    return response.getFiles("files");
+}
+
+void RestContextAdapter::delegate(std::string const & delegationId, long expirationTime)
+{
+
+}
+
+std::vector<DetailedFileStatus> RestContextAdapter::getDetailedJobStatus(std::string const & jobId)
+{
+
 }
 
 } /* namespace cli */
