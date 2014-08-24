@@ -168,6 +168,12 @@ void FileTransferExecutor::run(boost::any & ctx)
                                 }
                         }
 
+		    //very first params to be file_id and job_id
+		    params.append(" -a ");
+                    params.append(tf.JOB_ID);
+                    params.append(" -B ");
+                    params.append(lexical_cast<string >(tf.FILE_ID));	
+
                     // OAuth credentials
                     std::string oauth_file = generateOauthConfigFile(tf.DN, tf.USER_CREDENTIALS);
 
@@ -233,11 +239,7 @@ void FileTransferExecutor::run(boost::any & ctx)
                     params.append(" -b ");
                     params.append(tf.SOURCE_SURL);
                     params.append(" -c ");
-                    params.append(tf.DEST_SURL);
-                    params.append(" -a ");
-                    params.append(tf.JOB_ID);
-                    params.append(" -B ");
-                    params.append(lexical_cast<string >(tf.FILE_ID));
+                    params.append(tf.DEST_SURL);                    
                     params.append(" -C ");
                     params.append(tf.VO_NAME);
                     if (sourceSiteName.length() > 0)

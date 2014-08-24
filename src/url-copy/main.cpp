@@ -67,6 +67,11 @@ static std::string globalErrorMessage("");
 static std::vector<std::string> turlVector;
 static bool completeMsgSent = false;
 
+
+//make them global so as to catch unexpected exception before proper reading the arguments
+static std::string job_id;
+static std::string file_id;
+
 time_t globalTimeout;
 
 Transfer currentTransfer;
@@ -543,30 +548,28 @@ static void log_func(const gchar *, GLogLevelFlags, const gchar *message, gpoint
 
 void myunexpected()
 {
-    if (propagated == false)
-        {
-            propagated = true;
-            errorMessage = "Transfer unexpected handler called " + currentTransfer.jobId;
-            errorMessage += " Source: " + UrlCopyOpts::getInstance().sourceUrl;
-            errorMessage += " Dest: " + UrlCopyOpts::getInstance().destUrl;
+	    if(currentTransfer.jobId.empty())
+		currentTransfer.jobId = job_id;
+	    if(currentTransfer.fileId == 0)
+		currentTransfer.fileId = boost::lexical_cast<unsigned>(file_id);
+
+            errorMessage = "Transfer unexpected handler called: " + currentTransfer.jobId;           
             Logger::getInstance().ERROR() << errorMessage << std::endl;
 
-            abnormalTermination("FAILED", errorMessage, "Abort");
-        }
+            abnormalTermination("FAILED", errorMessage, "Abort"); 
 }
 
 void myterminate()
 {
-    if (propagated == false)
-        {
-            propagated = true;
-            errorMessage = "Transfer terminate handler called:" + currentTransfer.jobId;
-            errorMessage += " Source: " + UrlCopyOpts::getInstance().sourceUrl;
-            errorMessage += " Dest: " + UrlCopyOpts::getInstance().destUrl;
+	    if(currentTransfer.jobId.empty())
+		currentTransfer.jobId = job_id;
+	    if(currentTransfer.fileId == 0)
+		currentTransfer.fileId = boost::lexical_cast<unsigned>(file_id);
+
+            errorMessage = "Transfer terminate handler called: " + currentTransfer.jobId;          
             Logger::getInstance().ERROR() << errorMessage << std::endl;
 
             abnormalTermination("FAILED", errorMessage, "Abort");
-        }
 }
 
 
@@ -651,13 +654,17 @@ __attribute__((constructor)) void begin(void)
 
 int main(int argc, char **argv)
 {
+    //read directly from the arguments list just in case it dies so fast that the sleep in the parent won't caught it
+    job_id = argv[2];
+    file_id = argv[4];
+
+    set_terminate(myterminate);
+    set_unexpected(myunexpected);    
+
     Logger &logger = Logger::getInstance();
 
     // register signals handler
     fts3::common::Panic::setup_signal_handlers(shutdown_callback, NULL);
-
-    //set_terminate(myterminate);
-    //set_unexpected(myunexpected);
 
     UrlCopyOpts &opts = UrlCopyOpts::getInstance();
     if (opts.parse(argc, argv) < 0)
