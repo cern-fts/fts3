@@ -627,6 +627,17 @@ protected:
                                                 TransferFiles temp = *queueiter;
                                                 fileIds.insert(std::make_pair(temp.FILE_ID, temp.JOB_ID));
                                             }
+					    
+					/*these 3 must be the very first arguments, do not change, if more arguments needed just append in the end*/ 
+					/*START*/
+					params.append(" -a ");
+                                        params.append(job_id);
+					   
+  					if (multihop)
+                                            params.append(" --multi-hop ");
+                                        else
+                                            params.append(" -G ");
+					/*END*/					    
 
 
                                         debugLevel = DBSingleton::instance().getDBObjectInstance()->getDebugLevel(source_hostname, destin_hostname);
@@ -667,15 +678,8 @@ protected:
                                             {
                                                 params.append(" -oauth ");
                                                 params.append(oauth_file);
-                                            }
+                                            }                                      
 
-                                        if (multihop)
-                                            params.append(" --multi-hop ");
-                                        else
-                                            params.append(" -G ");
-
-                                        params.append(" -a ");
-                                        params.append(job_id);
                                         params.append(" -C ");
                                         params.append(vo_name);
                                         if (sourceSiteName.length() > 0)
@@ -692,10 +696,6 @@ protected:
                                             {
                                                 params.append(" -d ");
                                             }
-
-
-
-
 
                                         if (!manualConfigExists)
                                             {
