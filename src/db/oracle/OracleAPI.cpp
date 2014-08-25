@@ -8809,6 +8809,8 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
 
             if(vo_name.empty())
                 {
+                    result << "{\"snapshot\" : [";
+
                     voStmt.execute();
                     while (voStmt.fetch()) //distinct vo
                         {
@@ -8816,6 +8818,8 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                                 source_se = "";
                             if(dest_se_p.empty())
                                 dest_se = "";
+
+                            bool first = true;
 
                             pairsStmt.execute();
                             while (pairsStmt.fetch()) //distinct source_se / dest_se
@@ -8840,6 +8844,10 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                                     //if all of the above return 0 then continue
                                     if(active == 0 && nFinishedLastHour == 0 &&  nFailedLastHour == 0 && submitted == 0 && source_se_p.empty() && dest_se_p.empty())
                                         continue;
+
+
+                                    if (!first) result << "\n,\n";
+                                    first = false;
 
                                     result << "{\n";
 
@@ -8923,9 +8931,10 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                                     result <<   "\"\n";
 
                                     result << "}\n";
-                                    result << "\n,\n";
                                 }
                         }
+
+                    result << "]}";
                 }
             else
                 {
@@ -8934,6 +8943,10 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                         source_se = "";
                     if(dest_se_p.empty())
                         dest_se = "";
+
+                    result << "{\"snapshot\" : [";
+                    bool first = true;
+
 
                     pairsStmt.execute();
                     while (pairsStmt.fetch())
@@ -8959,6 +8972,9 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                             //if all of the above return 0 then continue
                             if(active == 0 && nFinishedLastHour == 0 &&  nFailedLastHour == 0 && submitted == 0 && source_se_p.empty() && dest_se_p.empty())
                                 continue;
+
+                            if (!first) result << "\n,\n";
+                            first = false;
 
                             result << "{\n";
 
@@ -9042,8 +9058,9 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
                             result <<   "\"\n";
 
                             result << "}\n";
-                            result << "\n,\n";
                         }
+
+                    result << "]}";
                 }
         }
     catch (std::exception& e)
