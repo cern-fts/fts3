@@ -654,12 +654,18 @@ __attribute__((constructor)) void begin(void)
 
 int main(int argc, char **argv)
 {
-    //read directly from the arguments list just in case it dies so fast that the sleep in the parent won't caught it
+    //read directly from the arguments list just in case it dies so fast that the sleep in the parent won't catch it
     job_id = argv[2];
-    file_id = argv[4];
+    
+    //make sure to skip file_id for multi-hop and reuse jobs
+    if(std::string(argv[3]) == "--multi-hop" || std::string(argv[3]) == "-G")
+    	file_id = "0";
+    else
+    	file_id = argv[4];
 
+    //catch any other unexpected exception, at least the transfer state will be propagated to the db
     set_terminate(myterminate);
-    set_unexpected(myunexpected);    
+    set_unexpected(myunexpected);     
 
     Logger &logger = Logger::getInstance();
 
