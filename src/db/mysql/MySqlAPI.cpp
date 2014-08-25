@@ -9580,7 +9580,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                                         }
                                     result <<   "\"\n";
                                     result << "}\n";
-                                    result << "\n\n";
+                                    result << "\n,\n";
 
                                 } //end distinct pair source_se / dest_se
                         } //end distinct vo
