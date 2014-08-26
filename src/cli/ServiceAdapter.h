@@ -10,6 +10,7 @@
 
 #include "JobStatus.h"
 #include "File.h"
+#include "Snapshot.h"
 
 #include <string>
 #include <vector>
@@ -104,6 +105,15 @@ public:
      * @return : vector containing detailed information about files in the given job (including file ID)
      */
     virtual std::vector<DetailedFileStatus> getDetailedJobStatus(std::string const & jobId) = 0;
+
+    /**
+     * @param vo : user VO name
+     * @param src : source SE
+     * @param dst : destination SE
+     *
+     * @return the snapshot
+     */
+    virtual std::vector<Snapshot> getSnapShot(std::string const & vo, std::string const & src, std::string const & dst) = 0;
 
 protected:
 

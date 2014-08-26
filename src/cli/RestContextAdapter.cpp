@@ -192,6 +192,43 @@ std::vector<FileInfo> RestContextAdapter::getFileStatus (std::string const & job
     return response.getFiles("files");
 }
 
+std::vector<Snapshot> RestContextAdapter::getSnapShot(std::string const & vo, std::string const & src, std::string const & dst)
+{
+    char prefix = '?';
+    std::string url = endpoint + "/snapshot";
+
+    if (!vo.empty())
+        {
+            url += prefix;
+            url += "vo_name=";
+            url += vo;
+            prefix = '&';
+        }
+
+    if (!dst.empty())
+        {
+            url += prefix;
+            url += "dest_se=";
+            url += dst;
+            prefix = '&';
+        }
+
+    if (!src.empty())
+        {
+            url += prefix;
+            url += "source_se=";
+            url += src;
+        }
+
+    std::stringstream ss;
+    ss << "{\"snapshot\":";
+    HttpRequest http (url, capath, proxy, ss);
+    http.get();
+    ss << '}';
+
+    return ResponseParser(ss).getSnapshot();
+}
+
 void RestContextAdapter::delegate(std::string const & delegationId, long expirationTime)
 {
 

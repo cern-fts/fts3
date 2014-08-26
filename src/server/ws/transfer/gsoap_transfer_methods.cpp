@@ -30,10 +30,8 @@
 #include "JobCancelHandler.h"
 #include "JobStatusGetter.h"
 
-//#include "ws/GSoapDelegationHandler.h"
 #include "ws/CGsiAdapter.h"
 #include "ws/AuthorizationManager.h"
-//#include "ws/InternalLogRetriever.h"
 
 #include "common/JobStatusHandler.h"
 

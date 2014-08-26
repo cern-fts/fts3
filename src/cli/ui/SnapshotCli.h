@@ -9,6 +9,7 @@
 #define SNAPSHOTCLI_H_
 
 #include "SrcDestCli.h"
+#include "TransferCliBase.h"
 
 namespace fts3
 {
@@ -18,7 +19,7 @@ namespace cli
 
 using namespace std;
 
-class SnapshotCli : public SrcDestCli
+class SnapshotCli : public SrcDestCli, public TransferCliBase
 {
 
 public:
