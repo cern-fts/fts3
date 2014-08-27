@@ -69,8 +69,8 @@ JsonOutput::~JsonOutput()
             std::stringstream str_out;
             pt::write_json(str_out, json_out);
             // then make sure symbols like null and true/false are not in double quotes
-            static const boost::regex exp("\"(null|true|false|\\[\\]|[0-9]+(\\.[0-9]+)?)\"");
-            (*out) << boost::regex_replace(str_out.str(), exp, "$1");
+            static const boost::regex exp(":\\s*\"(null|true|false|\\[\\]|[0-9]+(\\.[0-9]+)?)\"");
+            (*out) << boost::regex_replace(str_out.str(), exp, ": $1");
             // the use of regex should be reconsidered because it exposes us to 'static deinitialization order fiasco' !!!
         }
 }
