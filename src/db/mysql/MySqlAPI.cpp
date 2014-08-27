@@ -9447,6 +9447,8 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
 
             if(vo_name.empty())
                 {
+                    result << "{\"snapshot\" : [";
+
                     voStmt.execute();
                     while (voStmt.fetch()) //distinct vo
                         {
@@ -9454,6 +9456,8 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                                 source_se = "";
                             if(dest_se_p.empty())
                                 dest_se = "";
+
+                            bool first = true;
 
                             pairsStmt.execute();
                             while (pairsStmt.fetch()) //distinct source_se / dest_se
@@ -9480,6 +9484,9 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                                     //if all of the above return 0 then continue
                                     if(active == 0 && nFinishedLastHour == 0 &&  nFailedLastHour == 0 && submitted == 0 && source_se_p.empty() && dest_se_p.empty())
                                         continue;
+
+                                    if (!first) result << "\n,\n";
+                                    first = false;
 
                                     result << "{\n";
 
@@ -9580,10 +9587,10 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                                         }
                                     result <<   "\"\n";
                                     result << "}\n";
-                                    result << "\n\n";
-
                                 } //end distinct pair source_se / dest_se
                         } //end distinct vo
+
+                    result << "]}";
                 }//end vo empty
             else
                 {
@@ -9596,6 +9603,10 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                     soci::rowset<soci::row> rs = (
                                                      sql.prepare << querySeAll
                                                  );
+
+                    result << "{\"snapshot\" : [";
+
+                    bool first = true;
 
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                         {
@@ -9635,6 +9646,9 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                                     if(active == 0 && nFinishedLastHour == 0 &&  nFailedLastHour == 0 && submitted == 0 && source_se_p.empty() && dest_se_p.empty())
                                         continue;
 
+                                    if (!first) result << "\n,\n";
+                                    first = false;
+
                                     result << "{\n";
 
                                     result << std::fixed << "\"VO\":\"";
@@ -9735,9 +9749,10 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                                     result <<   "\"\n";
 
                                     result << "}\n";
-                                    result << "\n\n";
                                 }
                         }
+
+                    result << "]}";
                 }
         }
     catch (std::exception& e)

@@ -23,6 +23,8 @@
  */
 
 #include "GSoapContextAdapter.h"
+#include "RestContextAdapter.h"
+
 #include "MsgPrinter.h"
 #include "ui/SnapshotCli.h"
 
@@ -52,23 +54,31 @@ int main(int ac, char* av[])
     try
         {
             SnapshotCli cli;
-            // create and initialize the command line utility
+            // create and initialise the command line utility
             cli.parse(ac, av);
             if (!cli.validate()) return 1;
 
-            // validate command line options, and return respective gsoap context
-            GSoapContextAdapter ctx (cli.getService());
-            cli.printApiDetails(ctx);
+            std::string const endpoint = cli.getService();
+
+            std::unique_ptr<ServiceAdapter> ctx;
+            if (cli.rest())
+                {
+                    std::string const capath = cli.capath();
+                    std::string const proxy = cli.proxy();
+                    ctx.reset(new RestContextAdapter(endpoint, capath, proxy));
+                }
+            else
+                {
+                    ctx.reset(new GSoapContextAdapter(endpoint));
+                }
+
+            cli.printApiDetails(*ctx.get());
 
             std::string src = cli.getSource(), dst = cli.getDestination(), vo = cli.getVo();
 
+            std::vector<Snapshot> resp = ctx->getSnapShot(vo, src, dst);
 
-            std::string resp = ctx.getSnapShot(vo, src, dst);
-            if(!resp.empty())
-                std::cout << resp << std::endl;
-            else
-                std::cout << "{\"Message\":\"Nothing returned for the parameters provided\"}" << std::endl;
-
+            MsgPrinter::instance().print(resp);
         }
     catch(cli_exception const & ex)
         {

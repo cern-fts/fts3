@@ -27,6 +27,7 @@
 #include "ServiceAdapter.h"
 
 #include "JobStatus.h"
+#include "Snapshot.h"
 #include "File.h"
 #include "ProxyCertificateDelegator.h"
 
@@ -346,7 +347,14 @@ public:
      */
     void setFixActivePerPair(string source, string destination, int active);
 
-    std::string getSnapShot(string vo, string src, string dst);
+    /**
+     * @param vo : user VO name
+     * @param src : source SE
+     * @param dst : destination SE
+     *
+     * @return the snapshot
+     */
+    std::vector<Snapshot> getSnapShot(std::string const & vo, std::string const & src, std::string const & dst);
 
     /**
      * @param jobId : job ID

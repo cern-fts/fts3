@@ -31,6 +31,8 @@
 
 #include "ws-ifce/gsoap/fts3.nsmap"
 
+#include "rest/ResponseParser.h"
+
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
 
@@ -601,13 +603,13 @@ void GSoapContextAdapter::setFixActivePerPair(string source, string destination,
         throw gsoap_error(ctx);
 }
 
-std::string GSoapContextAdapter::getSnapShot(string vo, string src, string dst)
+std::vector<Snapshot> GSoapContextAdapter::getSnapShot(std::string const & vo, std::string const & src, std::string const & dst)
 {
     impltns__getSnapshotResponse resp;
     if (soap_call_impltns__getSnapshot(ctx, endpoint.c_str(), 0, vo, src, dst, resp))
         throw gsoap_error(ctx);
 
-    return resp._result;
+    return ResponseParser(resp._result).getSnapshot(false);
 }
 
 std::vector<DetailedFileStatus> GSoapContextAdapter::getDetailedJobStatus(std::string const & jobId)

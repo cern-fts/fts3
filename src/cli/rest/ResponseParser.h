@@ -9,9 +9,11 @@
 #define RESPONSEPARSER_H_
 
 #include "JobStatus.h"
+#include "Snapshot.h"
 
 #include <istream>
 #include <string>
+#include <vector>
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -21,7 +23,7 @@ namespace fts3
 namespace cli
 {
 
-using namespace boost::property_tree;
+namespace pt = boost::property_tree;
 
 class ResponseParser
 {
@@ -29,6 +31,7 @@ class ResponseParser
 public:
 
     ResponseParser(std::istream& stream);
+    ResponseParser(std::string const & json);
 
     virtual ~ResponseParser();
 
@@ -40,9 +43,15 @@ public:
 
     int getNb(std::string const & path, std::string const & state) const;
 
+    std::vector<Snapshot> getSnapshot(bool rest = true) const;
+
 private:
+
+    std::vector<Snapshot> get_snapshot_for_rest() const;
+    std::vector<Snapshot> get_snapshot_for_soap() const;
+
     /// The object that contains the response
-    ptree response;
+    pt::ptree response;
 };
 
 }

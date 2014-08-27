@@ -9,6 +9,8 @@
 #define RESTCONTEXTADAPTER_H_
 
 #include "ServiceAdapter.h"
+
+#include "Snapshot.h"
 #include "JobStatus.h"
 
 #include <string>
@@ -45,6 +47,15 @@ public:
      * @return : vector containing detailed information about files in the given job (including file ID)
      */
     std::vector<DetailedFileStatus> getDetailedJobStatus(std::string const & jobId);
+
+    /**
+     * @param vo : user VO name
+     * @param src : source SE
+     * @param dst : destination SE
+     *
+     * @return the snapshot
+     */
+    std::vector<Snapshot> getSnapShot(std::string const & vo, std::string const & src, std::string const & dst);
 
     void delegate(std::string const & delegationId, long expirationTime);
 
