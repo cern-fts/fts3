@@ -37,7 +37,7 @@ public:
 
     void print(pt::ptree & out) const;
 
-private:
+protected:
 
     std::string vo;
 
