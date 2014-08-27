@@ -73,7 +73,7 @@ long ProxyCertificateDelegator::isCertValid(std::string const & filename) const
     return time;
 }
 
-void ProxyCertificateDelegator::delegate() const
+void ProxyCertificateDelegator::delegate()
 {
     // the default is to delegate, but not renew
     bool renewDelegation = false, needDelegation = true;

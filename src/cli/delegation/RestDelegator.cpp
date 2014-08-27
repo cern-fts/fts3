@@ -18,7 +18,7 @@ namespace fts3
 namespace cli
 {
 
-boost::optional<time_t> RestDelegator::getExpirationTime() const
+boost::optional<time_t> RestDelegator::getExpirationTime()
 {
     if (delegationId.empty())
         {

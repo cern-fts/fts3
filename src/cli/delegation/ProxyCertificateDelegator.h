@@ -83,7 +83,7 @@ public:
      *
      * @return true if the operation was successful, false otherwise
      */
-    void delegate() const;
+    void delegate();
 
     /**
      * Checks the expiration date of the local proxy certificate
@@ -99,18 +99,16 @@ public:
 
 protected:
     /// delegation ID
-    std::string mutable delegationId;
-
+    std::string delegationId;
     /// FTS3 service endpoint
-    std::string endpoint;
-
+    std::string const endpoint;
     /// user defined proxy certificate expiration time
-    long userRequestedDelegationExpTime;
+    long const userRequestedDelegationExpTime;
 
 private:
 
     /// @return : expiration time of the credential on server, or uninitialised optional if credential does not exist
-    virtual boost::optional<time_t> getExpirationTime() const = 0;
+    virtual boost::optional<time_t> getExpirationTime() = 0;
 
     /**
      * Does the delegation (either using soap or rest, implementation specific)

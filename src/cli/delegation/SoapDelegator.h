@@ -40,7 +40,7 @@ public:
 private:
 
     /// @return : expiration time of the credential on server, or uninitialised optional if credential does not exist
-    boost::optional<time_t> getExpirationTime() const;
+    boost::optional<time_t> getExpirationTime();
 
     /**
      * Does the delegation (either using soap or rest, implementation specific)

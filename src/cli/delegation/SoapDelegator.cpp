@@ -12,7 +12,7 @@ namespace fts3
 namespace cli
 {
 
-boost::optional<time_t> SoapDelegator::getExpirationTime() const
+boost::optional<time_t> SoapDelegator::getExpirationTime()
 {
     // checking if there is already a delegated credential
     time_t expTime;

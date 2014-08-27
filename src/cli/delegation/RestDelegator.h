@@ -30,7 +30,7 @@ public:
 private:
 
     /// @return : expiration time of the credential on server, or uninitialised optional if credential does not exist
-    boost::optional<time_t> getExpirationTime() const;
+    boost::optional<time_t> getExpirationTime();
 
     /**
      * Does the delegation (either using soap or rest, implementation specific)
@@ -40,9 +40,9 @@ private:
      */
     void doDelegation(time_t requestProxyDelegationTime, bool renew) const;
 
-    std::string capath;
+    std::string const capath;
 
-    std::string proxy;
+    std::string const proxy;
 };
 
 } /* namespace cli */
