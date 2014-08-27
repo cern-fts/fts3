@@ -45,6 +45,8 @@ public:
 
     std::vector<Snapshot> getSnapshot(bool rest = true) const;
 
+    std::vector<DetailedFileStatus> getDetailedFiles(std::string const & path) const;
+
 private:
 
     std::vector<Snapshot> get_snapshot_for_rest() const;

@@ -240,6 +240,15 @@ void RestContextAdapter::delegate(std::string const & delegationId, long expirat
 
 std::vector<DetailedFileStatus> RestContextAdapter::getDetailedJobStatus(std::string const & jobId)
 {
+    std::string url = endpoint + "/jobs/" + jobId + "/files";
+
+    std::stringstream ss;
+    ss << "{\"files\" :";
+    HttpRequest http (url, capath, proxy, ss);
+    http.get();
+    ss << '}';
+
+    return ResponseParser(ss).getDetailedFiles("files");
 
 }
 

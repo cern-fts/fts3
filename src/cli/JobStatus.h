@@ -109,6 +109,13 @@ public:
 
     }
 
+    DetailedFileStatus(pt::ptree const & t) :
+        jobId(t.get<std::string>("job_id")), src(t.get<std::string>("source_surl")), dst(t.get<std::string>("dest_surl")),
+        fileId(t.get<int>("file_id")), state(t.get<std::string>("file_state"))
+    {
+
+    }
+
 private:
     std::string jobId;
     std::string src;

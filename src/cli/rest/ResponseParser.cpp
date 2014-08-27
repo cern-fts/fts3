@@ -98,6 +98,21 @@ std::vector<FileInfo> ResponseParser::getFiles(std::string const & path) const
     return ret;
 }
 
+std::vector<DetailedFileStatus> ResponseParser::getDetailedFiles(std::string const & path) const
+{
+    pt::ptree const & files = response.get_child(path);
+
+    std::vector<DetailedFileStatus> ret;
+    pt::ptree::const_iterator it;
+
+    for (it = files.begin(); it != files.end(); ++it)
+        {
+            ret.push_back(DetailedFileStatus(it->second));
+        }
+
+    return ret;
+}
+
 int ResponseParser::getNb(std::string const & path, std::string const & state) const
 {
     pt::ptree const & files = response.get_child(path);
