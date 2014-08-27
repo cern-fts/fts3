@@ -3964,14 +3964,14 @@ bool MySqlAPI::updateOptimizer()
                                 {
                                     //do nothing, it's a non recoverable error so do not consider it
                                 }
-                            else if ( (state.compare("FAILED") == 0 ||  state.compare("SUBMITTED") == 0) && retrySet > 0 && retryNum > 0)
+                            else if ( (state.compare("FAILED") == 0 ||  state.compare("SUBMITTED") == 0) && retryNum > 0)
                                 {
                                     nFailedLastHour+=1.0;
                                 }
-                            else if (state.compare("FAILED") == 0 && retrySet == 0)
+                            else if(state.compare("FAILED") == 0 && current_failures == 1)
                                 {
                                     nFailedLastHour+=1.0;
-                                }
+                                }				
                             else if (state.compare("FINISHED") == 0)
                                 {
                                     nFinishedLastHour+=1.0;

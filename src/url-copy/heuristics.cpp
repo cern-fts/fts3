@@ -21,8 +21,11 @@ bool retryTransfer(int errorNo, const std::string& category, const std::string& 
     found = message.find("end-of-file was reached");
     if (found!=std::string::npos)
         return true;
-
-
+    found = message.find("SRM_INTERNAL_ERROR");
+    if (found!=std::string::npos)
+        return true;	
+	
+	
     if (category == "SOURCE")
         {
             switch (errorNo)
