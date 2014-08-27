@@ -8,8 +8,9 @@
 #ifndef PYTHONPROXYDELEGATOR_H_
 #define PYTHONPROXYDELEGATOR_H_
 
-#include <ProxyCertificateDelegator.h>
-#include <MsgPrinter.h>
+#include "delegation/ProxyCertificateDelegator.h"
+#include "MsgPrinter.h"
+
 #include <sstream>
 
 #include <boost/python.hpp>
@@ -33,7 +34,7 @@ public:
 
 private:
     stringstream out;
-    ProxyCertificateDelegator delegator;
+    std::unique_ptr<ProxyCertificateDelegator> delegator;
 };
 
 }

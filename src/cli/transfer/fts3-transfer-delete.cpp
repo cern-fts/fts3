@@ -23,7 +23,6 @@
  */
 
 #include "GSoapContextAdapter.h"
-#include "ProxyCertificateDelegator.h"
 #include "MsgPrinter.h"
 #include "ui/SrcDelCli.h"
 #include <boost/scoped_ptr.hpp>
@@ -64,13 +63,7 @@ int main(int ac, char* av[])
             cli.printApiDetails(ctx);
 
             // delegate Proxy Certificate
-            ProxyCertificateDelegator handler (
-                cli.getService(),
-                "",
-                0
-            );
-
-            handler.delegate();
+            ctx.delegate("", 0);
 
             std::string resjobid = ctx.deleteFile(vect);
             std::cout << resjobid <<endl;

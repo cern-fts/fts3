@@ -24,6 +24,9 @@ set(fts_include_dir
     "${CMAKE_BINARY_DIR}/src/"
 )
 
+find_package (GLOBUS)
+include_directories (${GLOBUS_INCLUDE_DIRS})
+
 FIND_PACKAGE(PythonLibs REQUIRED)
 include_directories (${fts_include_dir} ${PYTHON_INCLUDE_PATH})
 include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/common/)
@@ -69,7 +72,7 @@ endif ()
 # ------------------------------------------------------------------------
 # Common CLI library
 
-file(GLOB fts_cli_common_sources "*.cpp" "ui/*.cpp" "rest/*.cpp" "exception/*.cpp")
+file(GLOB fts_cli_common_sources "*.cpp" "ui/*.cpp" "rest/*.cpp" "exception/*.cpp" "delegation/*.cpp")
 file(GLOB fts_cli_python_sources "python/*.cpp")
 
 add_library(fts_cli_common SHARED ${fts_cli_common_sources})

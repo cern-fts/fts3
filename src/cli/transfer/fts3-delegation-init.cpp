@@ -18,7 +18,10 @@
  */
 
 #include "GSoapContextAdapter.h"
-#include "ProxyCertificateDelegator.h"
+
+#include "delegation/ProxyCertificateDelegator.h"
+#include "delegation/SoapDelegator.h"
+#include "delegation/RestDelegator.h"
 
 #include "ui/DelegationCli.h"
 
@@ -39,14 +42,23 @@ int main(int ac, char* av[])
             cli.parse(ac, av);
             if (!cli.validate()) return 1;
 
-            // delegate Proxy Certificate
-            ProxyCertificateDelegator handler (
-                cli.getService(),
-                cli.getDelegationId(),
-                cli.getExpirationTime()
-            );
 
-            handler.delegate();
+
+            // delegate Proxy Certificate
+            std::unique_ptr<ProxyCertificateDelegator> handler;
+
+            if (cli.rest())
+                handler.reset(new RestDelegator(
+                        cli.getService(), cli.getDelegationId(), cli.getExpirationTime(), cli.capath(), cli.proxy()
+                    ));
+            else
+                handler.reset(new SoapDelegator(
+                        cli.getService(),
+                        cli.getDelegationId(),
+                        cli.getExpirationTime()
+                    ));
+
+            handler->delegate();
 
         }
     catch(cli_exception const & ex)

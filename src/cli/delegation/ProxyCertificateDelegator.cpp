@@ -40,28 +40,7 @@ namespace fts3
 namespace cli
 {
 
-
-ProxyCertificateDelegator::ProxyCertificateDelegator(string endpoint, string delegationId, long userRequestedDelegationExpTime):
-    delegationId(delegationId),
-    endpoint(endpoint),
-    userRequestedDelegationExpTime(userRequestedDelegationExpTime)
-{
-
-    dctx = glite_delegation_new(endpoint.c_str());
-    if (dctx == NULL)
-        {
-            throw cli_exception("delegation: could not initialise a delegation context");
-        }
-
-}
-
-ProxyCertificateDelegator::~ProxyCertificateDelegator()
-{
-
-    glite_delegation_free(dctx);
-}
-
-long ProxyCertificateDelegator::isCertValid(string filename)
+long ProxyCertificateDelegator::isCertValid(std::string const & filename) const
 {
 
     // find user proxy certificate
@@ -94,14 +73,13 @@ long ProxyCertificateDelegator::isCertValid(string filename)
     return time;
 }
 
-void ProxyCertificateDelegator::delegate()
+void ProxyCertificateDelegator::delegate() const
 {
-
     // the default is to delegate, but not renew
     bool renewDelegation = false, needDelegation = true;
 
     // get local proxy run time
-    time_t localProxyTimeLeft = isCertValid(string());
+    time_t localProxyTimeLeft = isCertValid(std::string());
     MsgPrinter::instance().print_info(
             "Remaining time for the local proxy is",
             "delegation.local_expiration_time",
@@ -109,14 +87,13 @@ void ProxyCertificateDelegator::delegate()
             (long int)((localProxyTimeLeft) % 3600 / 60)
         );
 
-    // checking if there is already a delegated credenial
-    time_t expTime;
-    int err = glite_delegation_info(dctx, delegationId.c_str(), &expTime);
+    // checking if there is already a delegated credential
+    boost::optional<time_t> expTime = getExpirationTime();
 
-    if (!err)     // there is already a delegated proxy on the server
+    if (expTime)     // there is already a delegated proxy on the server
         {
 
-            time_t timeLeftOnServer = expTime - time(0);
+            time_t timeLeftOnServer = *expTime - time(0);
             MsgPrinter::instance().print_info(
                     "Remaining time for the proxy on the server side is",
                     "delegation.service_expiration_time",
@@ -199,30 +176,7 @@ void ProxyCertificateDelegator::delegate()
                     (long int)((requestProxyDelegationTime) % 3600 / 60)
                 );
 
-            err = glite_delegation_delegate(
-                      dctx, delegationId.c_str(),
-                      (int)(requestProxyDelegationTime/60),
-                      renewDelegation
-                  );
-
-            if (err == -1)
-                {
-                    MsgPrinter::instance().print_info(
-                            "Credential has been successfully delegated to the service.",
-                            "delegation.succeed",
-                            false
-                        );
-                    string errMsg = glite_delegation_get_error(dctx);
-//        	printer.delegation_request_error(errMsg);
-
-//            // TODO don't use string value to discover the error (???) do we need retry? yes we do!
-                    if (errMsg.find("key values mismatch") != string::npos)
-                        {
-                            MsgPrinter::instance().print_info("Retrying!", "delegation.retry", true);
-                            return delegate();
-                        }
-                    throw cli_exception(errMsg);
-                }
+            doDelegation(requestProxyDelegationTime, renewDelegation);
 
             MsgPrinter::instance().print_info(
                     "Credential has been successfully delegated to the service.",

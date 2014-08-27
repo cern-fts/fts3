@@ -28,14 +28,13 @@
 #include "MsgPrinter.h"
 
 #include <string>
-#include <delegation-cli/delegation-simple.h>
+
+#include <boost/optional.hpp>
 
 namespace fts3
 {
 namespace cli
 {
-
-using namespace std;
 
 /**
  * The ProxyCertificateDelegator handles proxy certificate delegation
@@ -54,18 +53,24 @@ public:
      * Creates the delegation context.
      *
      * @param endpoint - the FTS3 service endpoint
-     * @param delegationId - delegation ID (empty string means that the default ID should be used)
+     * @param delegationId - delegation ID (empty std::string means that the default ID should be used)
      * @param userRequestedDelegationExpTime - user specified delegation expire time
      * 											(0 means that the default value should be used)
      */
-    ProxyCertificateDelegator(string endpoint, string delegationId, long userRequestedDelegationExpTime);
+    ProxyCertificateDelegator(std::string const & endpoint, std::string const & delegationId, long userRequestedDelegationExpTime) :
+        delegationId(delegationId),
+        endpoint(endpoint),
+        userRequestedDelegationExpTime(userRequestedDelegationExpTime)
+    {
+
+    }
 
     /**
      * Destructor
      *
      * Deallocates the delegation context
      */
-    virtual ~ProxyCertificateDelegator();
+    virtual ~ProxyCertificateDelegator() {}
 
     /**
      * Delegates the proxy certificate
@@ -78,32 +83,42 @@ public:
      *
      * @return true if the operation was successful, false otherwise
      */
-    void delegate();
+    void delegate() const;
 
     /**
      * Checks the expiration date of the local proxy certificate
      *
      * @param filename - the local proxy certificate (the default location is
-     * 						used if this string is empty
+     * 						used if this std::string is empty
      * @return expiration date of the proxy certificate
      */
-    long isCertValid(string filename);
+    long isCertValid(std::string const & filename) const;
 
     static const int REDELEGATION_TIME_LIMIT = 3600*6;
     static const int MAXIMUM_TIME_FOR_DELEGATION_REQUEST = 3600 * 24;
 
-private:
+protected:
     /// delegation ID
-    string delegationId;
+    std::string mutable delegationId;
 
     /// FTS3 service endpoint
-    string endpoint;
+    std::string endpoint;
 
     /// user defined proxy certificate expiration time
     long userRequestedDelegationExpTime;
 
-    /// delegation context (a facade for the GSoap delegation client)
-    glite_delegation_ctx *dctx;
+private:
+
+    /// @return : expiration time of the credential on server, or uninitialised optional if credential does not exist
+    virtual boost::optional<time_t> getExpirationTime() const = 0;
+
+    /**
+     * Does the delegation (either using soap or rest, implementation specific)
+     *
+     * @param requestProxyDelegationTime : expiration time requested for the proxy
+     * @param renew : renew flag
+     */
+    virtual void doDelegation(time_t requestProxyDelegationTime, bool renew) const = 0;
 };
 
 }
