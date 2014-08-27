@@ -29,7 +29,6 @@
 #include "JobStatus.h"
 #include "Snapshot.h"
 #include "File.h"
-#include "ProxyCertificateDelegator.h"
 
 #include "ws-ifce/gsoap/gsoap_stubs.h"
 

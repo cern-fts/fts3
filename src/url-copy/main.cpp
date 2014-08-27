@@ -754,6 +754,37 @@ int main(int argc, char **argv)
 
             abnormalTermination("FAILED", errorMessage, "Error");
         }
+	
+               /*gfal2 debug logging*/
+                if (opts.debugLevel)
+                    {
+                        logger.INFO() << "Set the transfer to debug level " << opts.debugLevel << std::endl;
+                        gfal_set_verbose(GFAL_VERBOSE_TRACE | GFAL_VERBOSE_VERBOSE | GFAL_VERBOSE_TRACE_PLUGIN);
+                        gfal_log_set_handler((GLogFunc) log_func, NULL);
+
+                        if (opts.debugLevel >= 2)
+                            {
+                                setenv("CGSI_TRACE", "1", 1);
+                                setenv("GLOBUS_FTP_CLIENT_DEBUG_LEVEL", "255", 1);
+                                setenv("GLOBUS_FTP_CONTROL_DEBUG_LEVEL", "10", 1);
+                            }
+                        if (opts.debugLevel >= 3)
+                            {
+                                setenv("CGSI_TRACE", "1", 1);
+                                setenv("GLOBUS_FTP_CLIENT_DEBUG_LEVEL", "255", 1);
+                                setenv("GLOBUS_FTP_CONTROL_DEBUG_LEVEL", "10", 1);			    
+                                setenv("GLOBUS_GSI_AUTHZ_DEBUG_LEVEL", "1", 1);
+                                setenv("GLOBUS_CALLOUT_DEBUG_LEVEL", "1", 1);
+                                setenv("GLOBUS_GSI_CERT_UTILS_DEBUG_LEVEL", "1", 1);
+                                setenv("GLOBUS_GSI_CRED_DEBUG_LEVEL", "1", 1);
+                                setenv("GLOBUS_GSI_PROXY_DEBUG_LEVEL", "1", 1);
+                                setenv("GLOBUS_GSI_SYSCONFIG_DEBUG_LEVEL", "1", 1);
+                                setenv("GLOBUS_GSI_GSS_ASSIST_DEBUG_LEVEL", "1", 1);
+                                setenv("GLOBUS_GSSAPI_DEBUG_LEVEL", "1", 1);
+                                setenv("GLOBUS_NEXUS_DEBUG_LEVEL", "1", 1);
+                                setenv("GLOBUS_GIS_OPENSSL_ERROR_DEBUG_LEVEL", "1", 1);
+                            }
+                    }	
 
 
     GError* handleError = NULL;
@@ -940,33 +971,6 @@ int main(int argc, char **argv)
                             }
                     }
 
-                /*gfal2 debug logging*/
-                if (opts.debugLevel)
-                    {
-                        logger.INFO() << "Set the transfer to debug level " << opts.debugLevel << std::endl;
-                        gfal_set_verbose(GFAL_VERBOSE_TRACE | GFAL_VERBOSE_VERBOSE | GFAL_VERBOSE_TRACE_PLUGIN);
-                        gfal_log_set_handler((GLogFunc) log_func, NULL);
-
-                        if (opts.debugLevel >= 2)
-                            {
-                                setenv("CGSI_TRACE", "1", 1);
-                                setenv("GLOBUS_FTP_CLIENT_DEBUG_LEVEL", "1", 1);
-                                setenv("GLOBUS_FTP_CONTROL_DEBUG_LEVEL", "1", 1);
-                            }
-                        if (opts.debugLevel >= 3)
-                            {
-                                setenv("GLOBUS_GSI_AUTHZ_DEBUG_LEVEL", "1", 1);
-                                setenv("GLOBUS_CALLOUT_DEBUG_LEVEL", "1", 1);
-                                setenv("GLOBUS_GSI_CERT_UTILS_DEBUG_LEVEL", "1", 1);
-                                setenv("GLOBUS_GSI_CRED_DEBUG_LEVEL", "1", 1);
-                                setenv("GLOBUS_GSI_PROXY_DEBUG_LEVEL", "1", 1);
-                                setenv("GLOBUS_GSI_SYSCONFIG_DEBUG_LEVEL", "1", 1);
-                                setenv("GLOBUS_GSI_GSS_ASSIST_DEBUG_LEVEL", "1", 1);
-                                setenv("GLOBUS_GSSAPI_DEBUG_LEVEL", "1", 1);
-                                setenv("GLOBUS_NEXUS_DEBUG_LEVEL", "1", 1);
-                                setenv("GLOBUS_GIS_OPENSSL_ERROR_DEBUG_LEVEL", "1", 1);
-                            }
-                    }
 
                 if (!opts.sourceTokenDescription.empty())
                     gfalt_set_src_spacetoken(params, opts.sourceTokenDescription.c_str(), NULL);

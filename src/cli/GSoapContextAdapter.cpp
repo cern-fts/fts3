@@ -25,6 +25,9 @@
 #include "GSoapContextAdapter.h"
 #include "MsgPrinter.h"
 
+#include "delegation/ProxyCertificateDelegator.h"
+#include "delegation/SoapDelegator.h"
+
 #include "exception/cli_exception.h"
 #include "exception/gsoap_error.h"
 
@@ -244,13 +247,8 @@ std::string GSoapContextAdapter::transferSubmit(std::vector<File> const & files,
 void GSoapContextAdapter::delegate(std::string const & delegationId, long expirationTime)
 {
     // delegate Proxy Certificate
-    ProxyCertificateDelegator handler (
-        endpoint,
-        delegationId,
-        expirationTime
-    );
-
-    handler.delegate();
+    SoapDelegator delegator(endpoint, delegationId, expirationTime);
+    delegator.delegate();
 }
 
 string GSoapContextAdapter::deleteFile (std::vector<std::string>& filesForDelete)

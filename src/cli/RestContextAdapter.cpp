@@ -11,6 +11,8 @@
 #include "rest/HttpRequest.h"
 #include "rest/ResponseParser.h"
 
+#include "delegation/RestDelegator.h"
+
 #include <iostream>
 #include <sstream>
 
@@ -231,7 +233,9 @@ std::vector<Snapshot> RestContextAdapter::getSnapShot(std::string const & vo, st
 
 void RestContextAdapter::delegate(std::string const & delegationId, long expirationTime)
 {
-
+    // delegate Proxy Certificate
+    RestDelegator delegator(endpoint, delegationId, expirationTime, capath, proxy);
+    delegator.delegate();
 }
 
 std::vector<DetailedFileStatus> RestContextAdapter::getDetailedJobStatus(std::string const & jobId)
