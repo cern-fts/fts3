@@ -64,6 +64,9 @@ public:
         typename TRAITS::ProcessServiceType processHandler;
         processHandler.executeTransfer_p();
 
+        typename TRAITS::ProcessServiceReuseType processReuseHandler;
+        processReuseHandler.executeTransfer_p();
+
         unsigned int port = theServerConfig().get<unsigned int>("Port");
         const std::string& ip = theServerConfig().get<std::string>("IP");
 

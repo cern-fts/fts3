@@ -26,6 +26,7 @@ limitations under the License. */
 #include "process_updater_service.h"
 #include "process_updater_db_service.h"
 #include "process_queue.h"
+#include "process_reuse.h"
 #include "cleanStateLogs.h"
 
 FTS3_SERVER_NAMESPACE_START
@@ -36,6 +37,7 @@ struct ServerTraits
 {
     typedef TransferWebService TransferWebServiceType;
     typedef ProcessService ProcessServiceType;
+    typedef ProcessServiceReuse ProcessServiceReuseType;
     typedef ProcessUpdaterService ProcessUpdaterServiceType;
     typedef ProcessUpdaterDBService ProcessUpdaterDBServiceType;
     typedef ProcessQueue ProcessQueueType;

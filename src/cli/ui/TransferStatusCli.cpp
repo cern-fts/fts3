@@ -56,7 +56,20 @@ bool TransferStatusCli::validate()
 
     if (getJobIds().empty()) throw bad_option("jobid", "missing parameter");
 
-    if (vm.count("p") && vm.size() > 3) throw bad_option("p", "this option cannot be used together with other options!");
+    if (vm.count("p") && vm.size() > 3)
+        {
+            variables_map::iterator it;
+            for (it = vm.begin(); it != vm.end(); ++it)
+                {
+                    if (it->first == "p") continue;
+
+                    if (it->first != "service" && it->first != "rest"
+                            && it->first != "capath" && it->first != "proxy" && it->first != "jobid")
+                        throw bad_option("p", "this option cannot be used together with '" + it->first + "'!");
+                }
+        }
+
+
 
     return true;
 }
