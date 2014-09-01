@@ -349,9 +349,6 @@ void abnormalTermination(const std::string& classification, const std::string&, 
         }
 
     //send a ping here in order to flag this transfer's state as terminal to store into t_turl
-
-
-
     if(turlVector.size() == 2) //make sure it has values
         {
             double throughputTurl = 0.0;
@@ -371,7 +368,7 @@ void abnormalTermination(const std::string& classification, const std::string&, 
                               turlVector[1],
                               "FAILED");
         }
-
+    
     cancelTransfer();
     sleep(1);
     _exit(1);

@@ -17,7 +17,7 @@ limitations under the License. */
 #include <execinfo.h>
 #include <semaphore.h>
 #include <signal.h>
-
+#include <iostream>
 #include <stdio.h>
 #include <string>
 #include <boost/thread.hpp>
@@ -43,7 +43,13 @@ int Panic::stack_backtrace_size = 0;
 
 static void get_backtrace(int sig)
 {
-    if (sig == SIGABRT || sig == SIGSEGV || sig ==  SIGILL || sig ==  SIGFPE || sig == SIGBUS || sig ==  SIGTRAP || sig ==  SIGSYS)
+    if (sig == SIGABRT || 
+    	sig == SIGSEGV || 
+	sig ==  SIGILL || 
+	sig ==  SIGFPE || 
+	sig == SIGBUS || 
+	sig ==  SIGTRAP || 
+	sig ==  SIGSYS)
         {
             Panic::stack_backtrace_size = backtrace(Panic::stack_backtrace, STACK_BACKTRACE_SIZE);
 
@@ -68,6 +74,19 @@ static void signal_handler(int signal)
     // From man sem_post
     // sem_post() is async-signal-safe: it may be safely called within a signal handler.
     sem_post(&semaphore);
+    
+    //special condition for ungraceful termination to avoid recurcive signals being received
+    if (signal == SIGABRT || 
+    	signal == SIGSEGV || 
+	signal ==  SIGILL || 
+	signal ==  SIGFPE || 
+	signal == SIGBUS || 
+	signal ==  SIGTRAP || 
+	signal ==  SIGSYS)
+        {    
+    		sleep(120);
+    		exit(0);
+    	}
 }
 
 // Thread that logs, waits and kills
