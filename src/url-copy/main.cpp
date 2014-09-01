@@ -66,6 +66,7 @@ static volatile bool terminalState = false;
 static std::string globalErrorMessage("");
 static std::vector<std::string> turlVector;
 static bool completeMsgSent = false;
+static bool inShutdown = false;
 
 
 //make them global so as to catch unexpected exception before proper reading the arguments
@@ -285,6 +286,9 @@ void abnormalTermination(const std::string& classification, const std::string&, 
 {
     terminalState = true;
 
+    //stop reporting progress
+    inShutdown = true;
+
     if(globalErrorMessage.length() > 0)
         {
             errorMessage += " " + globalErrorMessage;
@@ -401,12 +405,8 @@ void taskStatusUpdater(int time)
     //do not send url_copy heartbeat right after thread creation, wait a bit
     sleep(30);
 
-    while (time)
+    while (time && !inShutdown)
         {
-            Logger::getInstance().INFO() << "Sending back to the server url-copy is still alive : "
-                                         <<  currentTransfer.throughput << "  " <<  currentTransfer.transferredBytes
-                                         << std::endl;
-
             double throughputTurl = 0.0;
 
             if (currentTransfer.throughput > 0.0)
@@ -431,6 +431,9 @@ void taskStatusUpdater(int time)
 
 void shutdown_callback(int signum, void*)
 {
+    //stop reporting progress to the server if a signal is received
+    inShutdown = true;
+    
     Logger& logger = Logger::getInstance();
 
     logger.WARNING() << "Received signal " << signum << " (" << strsignal(signum) << ")" << std::endl;
@@ -1452,7 +1455,9 @@ stop:
                     msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
                 }
 
-            std::string archiveErr = fileManagement.archive();
+            inShutdown = true;
+            std::string archiveErr = fileManagement.archive();	    	    
+	    
             if (!archiveErr.empty())
                 logger.ERROR() << "Could not archive: " << archiveErr << std::endl;
             reporter.sendLog(opts.jobId, currentTransfer.fileId, fileManagement._getLogArchivedFileFullPath(),
@@ -1478,7 +1483,7 @@ stop:
 
     if (opts.areTransfersOnFile() && readFile.length() > 0)
         unlink(readFile.c_str());
-
+ 
     sleep(1);
     return EXIT_SUCCESS;
 }
