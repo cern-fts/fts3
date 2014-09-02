@@ -22,6 +22,7 @@ limitations under the License. */
 #include <iostream>
 #include <stdio.h>
 #include <time.h>
+#include <fcntl.h>
 
 
 FTS3_COMMON_NAMESPACE_START
@@ -70,7 +71,8 @@ public:
     /// Constructor
     GenericLogger () :
         LoggerBase(),
-        _actLogLevel (static_cast<int>(Traits::INFO))
+        _actLogLevel (static_cast<int>(Traits::INFO)),
+        nb_commits(0)
     {
         (*this) << Traits::initialLogLine();
         _commit();
@@ -145,11 +147,41 @@ public:
 
     /* ---------------------------------------------------------------------- */
 
+    /// When the disk is full, std::cerr fail bits are set
+    /// Afterwards, any attempt to write will fail even if space is recovered
+    /// So we clean here the fail bits to keep doing business as usual
+    void check_fd(void)
+    {
+        if (std::cerr.fail())
+            {
+                std::cerr.clear();
+                *this << logLevelStringRepresentation(Traits::WARNING) << timestamp() << _separator();
+                *this << "std::cerr fail bit cleared";
+            }
+        else
+            {
+                *this << logLevelStringRepresentation(Traits::INFO) << timestamp() << _separator();
+                *this << "std::cerr clear!";
+            }
+
+        std::cerr << std::endl;
+        std::cout << std::endl;
+    }
+
+
+    /* ---------------------------------------------------------------------- */
+
     /// Commits (writes) the actual log line.
     void _commit()
     {
         std::cout << std::endl;
         std::cerr << std::endl;
+        ++nb_commits;
+        if (nb_commits >= NB_COMMITS_BEFORE_CHECK)
+            {
+                nb_commits = 0;
+                check_fd();
+            }
     }
 
     /* ---------------------------------------------------------------------- */
@@ -207,8 +239,35 @@ public:
 
     /* ---------------------------------------------------------------------- */
 
+    int open(const std::string& path) throw()
+    {
+        int filedesc = ::open(path.c_str(), O_CREAT | O_WRONLY | O_APPEND, 0644);
+        if (filedesc != -1)   //if ok
+            {
+                close(filedesc);
+                FILE* freopenLogFile = freopen(path.c_str(), "a", stderr);
+                if (freopenLogFile == NULL)
+                    return -1;
+            }
+        else
+            {
+                return -1;
+            }
+        logPath = path;
+        return 0;
+    }
+
+    /* ---------------------------------------------------------------------- */
+
     /// Actual log level (see syslog).
     int _actLogLevel;
+
+    /// Remember the path!
+    std::string logPath;
+
+    /// Check file descriptor every X iterations
+    static const unsigned NB_COMMITS_BEFORE_CHECK = 1000;
+    unsigned nb_commits;
 };
 
 /// Stream modifier: writes actual system error into the log stream.
