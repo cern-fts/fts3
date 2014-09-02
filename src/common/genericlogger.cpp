@@ -77,7 +77,7 @@ const std::string& LoggerBase::_separator()
 struct Common__GenericLogger_TestTraits
 {
     /// Test log levels
-    enum {DEBUG, ERR, INFO};
+    enum {DEBUG, ERR, INFO, WARNING};
 
     /* --------------------------------------------------------------------- */
 
