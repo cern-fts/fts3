@@ -655,6 +655,68 @@ void OracleAPI::getVOPairs(std::vector< boost::tuple<std::string, std::string, s
         }
 }
 
+void OracleAPI::getVOPairsWithReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct)
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            soci::rowset<soci::row> rs = (
+                                             sql.prepare <<
+                                             " SELECT DISTINCT t_file.source_se, t_file.dest_se, t_file.vo_name "
+                                             " FROM t_file "
+                                             " INNER JOIN t_job ON t_file.job_id = t_job.job_id "
+                                             " WHERE "
+                                             "      file_state = 'SUBMITTED' AND "
+                                             "      (hashed_id >= :hStart AND hashed_id <= :hEnd) AND "
+                                             "      t_job.reuse_job = 'Y' ",
+                                             soci::use(hashSegment.start), soci::use(hashSegment.end)
+                                         );
+            for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+                {
+                    soci::row const& r = *i;
+                    std::string source_se = r.get<std::string>("SOURCE_SE","");
+                    std::string dest_se = r.get<std::string>("DEST_SE","");
+
+                    distinct.push_back(
+                        boost::tuple< std::string, std::string, std::string>(
+                            r.get<std::string>("SOURCE_SE",""),
+                            r.get<std::string>("DEST_SE",""),
+                            r.get<std::string>("VO_NAME","")
+                        )
+
+                    );
+
+                    long long int linkExists = 0;
+                    sql << "select count(*) from t_optimize_active where source_se=:source_se and dest_se=:dest_se and datetime >= (sys_extract_utc(systimestamp) - interval '5' MINUTE)",
+                        soci::use(source_se),
+                        soci::use(dest_se),
+                        soci::into(linkExists);
+                    if(linkExists == 0) //for some reason does not exist, add it
+                        {
+                            sql.begin();
+                            sql << " MERGE INTO t_optimize_active USING "
+                                "    (SELECT :source_se as source, :dest_se as dest FROM dual) Pair "
+                                " ON (t_optimize_active.source_se = Pair.source AND t_optimize_active.dest_se = Pair.dest) "
+                                " WHEN MATCHED THEN UPDATE SET datetime = sys_extract_utc(systimestamp) "
+                                " WHEN NOT MATCHED THEN INSERT (source_se, dest_se, datetime) VALUES (Pair.source, Pair.dest, sys_extract_utc(systimestamp) )",
+                                soci::use(source_se), soci::use(dest_se);
+                            sql.commit();
+                        }
+                }
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }
+}
+
 void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles> >& files)
 {
     soci::session sql(*connectionPool);
@@ -1023,7 +1085,7 @@ int OracleAPI::getBestNextReplica(soci::session& sql, const std::string & job_id
 }
 
 
-unsigned int OracleAPI::updateFileStatusReuse(TransferFiles& file, const std::string status)
+unsigned int OracleAPI::updateFileStatusReuse(TransferFiles const & file, const std::string status)
 {
     soci::session sql(*connectionPool);
 
@@ -1130,47 +1192,74 @@ unsigned int OracleAPI::updateFileStatus(TransferFiles& file, const std::string 
 }
 
 
-void OracleAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles> >& files)
+void OracleAPI::getByJobIdReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFiles> > > >& files)
 {
+    if(distinct.empty()) return;
+
     soci::session sql(*connectionPool);
 
     time_t now = time(NULL);
     struct tm tTime;
-    gmtime_r(&now, &tTime);
+    soci::indicator isNull;
 
     try
         {
-            for (std::vector<TransferJobs*>::const_iterator i = jobs.begin(); i != jobs.end(); ++i)
+            // Iterate through pairs, getting jobs IF the VO has not run out of credits
+            // AND there are pending file transfers within the job
+            std::vector< boost::tuple<std::string, std::string, std::string> >::iterator it;
+            for (it = distinct.begin(); it != distinct.end(); ++it)
                 {
-                    std::string jobId = (*i)->JOB_ID;
+                    boost::tuple<std::string, std::string, std::string>& triplet = *it;
+                    gmtime_r(&now, &tTime);
+                    std::string job;
 
-                    soci::rowset<TransferFiles> rs = (
-                                                         sql.prepare <<
-                                                         "SELECT "
-                                                         "       f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
-                                                         "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, "
-                                                         "       f.checksum, j.checksum_method, j.source_space_token, "
-                                                         "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
-                                                         "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
-                                                         "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params  "
-                                                         "FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
-                                                         "WHERE f.job_id = :jobId AND"
-                                                         "    f.file_state = 'SUBMITTED' AND "
-                                                         "    f.job_finished IS NULL AND "
-                                                         "    f.wait_timestamp IS NULL AND "
-                                                         "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
-                                                         "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) "
-                                                         "ORDER BY f.file_id ASC",
-                                                         soci::use(jobId),
-                                                         soci::use(tTime),
-                                                         soci::use(hashSegment.start), soci::use(hashSegment.end)
-                                                     );
+                    sql<<
+                         "select distinct job_id from ( "
+                         "  select j.job_id as job_id "
+                         "  from t_job j inner join t_file f on j.job_id = f.job_id "
+                         "  where j.source_se=:source_se and j.dest_se=:dest_se and "
+                         "      j.vo_name=:vo_name and (j.reuse_job IS NOT NULL AND j.reuse_job != 'N') and "
+                         "      j.job_state = 'SUBMITTED' and "
+                         "      (f.hashed_id >= :hStart and f.hashed_id <= :hEnd) and "
+                         "      f.wait_timestamp is null and "
+                         "      (f.retry_timestamp is null or f.retry_timestamp < :tTime) "
+                         "  order by j.priority DESC, j.submit_time "
+                         ") where rownum <= 1 ",
+                         soci::use(boost::get<0>(triplet)),
+                         soci::use(boost::get<1>(triplet)),
+                         soci::use(boost::get<2>(triplet)),
+                         soci::use(hashSegment.start),
+                         soci::use(hashSegment.end),
+                         soci::use(tTime),
+                         soci::into(job, isNull)
+                    ;
 
-
-                    for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
+                    if (isNull != soci::i_null)
                         {
-                            TransferFiles const& tfile = *ti;
-                            files[tfile.VO_NAME].push_back(tfile);
+                            soci::rowset<TransferFiles> rs =
+                                    (
+                                         sql.prepare <<
+                                         " SELECT  "
+                                         "       f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
+                                         "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, "
+                                         "       f.checksum, j.checksum_method, j.source_space_token, "
+                                         "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
+                                         "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, "
+                                         "       f.bringonline_token, f.source_se, f.dest_se, f.selection_strategy, "
+                                         "       j.internal_job_params, j.user_cred, j.reuse_job "
+                                         " FROM t_job j INNER JOIN t_file f ON (j.job_id = f.job_id) "
+                                         " WHERE j.job_id = :job_id ",
+                                         soci::use(job)
+                                     );
+
+                            std::list<TransferFiles> tf;
+                            for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
+                                {
+                                    tf.push_back(*ti);
+
+                                }
+                            if (!tf.empty())
+                                files[boost::get<2>(triplet)].push(std::make_pair(job, tf));
                         }
                 }
         }
@@ -1182,12 +1271,9 @@ void OracleAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std:
     catch (...)
         {
             files.clear();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
 }
-
-
-
 
 void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_tupple>& src_dest_pair,
                                const std::string & DN, const std::string & cred,

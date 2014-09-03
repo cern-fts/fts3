@@ -89,7 +89,7 @@ public:
 
     virtual void getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std::string & vos);
 
-    virtual void getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles> >& files);
+    virtual void getByJobIdReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFiles> > > >& files);
 
     virtual void getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles> >& files);
 
@@ -332,7 +332,7 @@ public:
 
     virtual void transferLogFileVector(std::map<int, struct message_log>& messagesLog);
 
-    unsigned int updateFileStatusReuse(TransferFiles& file, const std::string status);
+    unsigned int updateFileStatusReuse(TransferFiles const & file, const std::string status);
 
     void getCancelJob(std::vector<int>& requestIDs);
 
@@ -371,6 +371,8 @@ public:
     virtual void getTransferJobStatusDetailed(std::string job_id, std::vector<boost::tuple<std::string, std::string, int, std::string, std::string> >& files);
 
     virtual void getVOPairs(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct);
+
+    virtual void getVOPairsWithReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct);
 
 
 

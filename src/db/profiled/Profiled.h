@@ -62,7 +62,7 @@ public:
 
     TransferJobs* getTransferJob(std::string jobId, bool archive);
 
-    void getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles> >& files);
+    void getByJobIdReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFiles> > > >& files);
 
     void getByJobId( std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles> >& files);
 
@@ -292,7 +292,7 @@ public:
 
     void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end, std::string service_name);
 
-    unsigned int updateFileStatusReuse(TransferFiles& file, const std::string status);
+    unsigned int updateFileStatusReuse(TransferFiles const & file, const std::string status);
 
     void getCancelJob(std::vector<int>& requestIDs);
 
@@ -331,6 +331,8 @@ public:
     void getTransferJobStatusDetailed(std::string job_id, std::vector<boost::tuple<std::string, std::string, int, std::string, std::string> >& files);
 
     void getVOPairs(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct);
+
+    void getVOPairsWithReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct);
 
 
     //NEW deletions and staging API

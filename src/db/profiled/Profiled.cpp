@@ -82,9 +82,9 @@ TransferJobs* ProfiledDB::getTransferJob(std::string jobId, bool archive)
 }
 
 
-void ProfiledDB::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles> >& files)
+void ProfiledDB::getByJobIdReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFiles> > > >& files)
 {
-    PROFILE_PREFIXED("DB::", db->getByJobIdReuse(jobs, files));
+    PROFILE_PREFIXED("DB::", db->getByJobIdReuse(distinct, files));
 }
 
 void ProfiledDB::getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles> >& files)
@@ -780,7 +780,7 @@ void ProfiledDB::updateHeartBeat(unsigned* index, unsigned* count, unsigned* sta
     PROFILE_PREFIXED("DB::", db->updateHeartBeat(index, count, start, end, service_name));
 }
 
-unsigned int ProfiledDB::updateFileStatusReuse(TransferFiles& file, const std::string status)
+unsigned int ProfiledDB::updateFileStatusReuse(TransferFiles const & file, const std::string status)
 {
     PROFILE_PREFIXED("DB::", return db->updateFileStatusReuse(file, status));
 }
@@ -880,9 +880,10 @@ void ProfiledDB::getVOPairs(std::vector< boost::tuple<std::string, std::string, 
     PROFILE_PREFIXED("DB::", db->getVOPairs(distinct));
 }
 
-
-
-
+void ProfiledDB::getVOPairsWithReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct)
+{
+    PROFILE_PREFIXED("DB::", db->getVOPairsWithReuse(distinct));
+}
 
 //deletions
 void ProfiledDB::updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files)
