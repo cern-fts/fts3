@@ -28,12 +28,20 @@
 
 void logger::writeLog(std::string message, bool console)
 {
+    static int nb_commits = 0;
 
     if (console == true && message.length() > 0)
         {
             std::string timestapStr = timestamp();
             timestapStr.erase(timestapStr.end() - 1);
             std::cerr << "ERROR: " <<  timestapStr << " " <<  message << std::endl;
+
+            ++nb_commits;
+            if (nb_commits > 1000)
+                {
+                    nb_commits = 0;
+                    std::cerr.clear();
+                }
         }
 
     writeMsg(message);
@@ -41,7 +49,7 @@ void logger::writeLog(std::string message, bool console)
 
 
 /**
- * if looging messages to a file is enabled, append the message content(one line per message)
+ * if logging messages to a file is enabled, append the message content(one line per message)
  */
 
 void logger::writeMsg(std::string message)

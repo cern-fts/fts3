@@ -397,7 +397,7 @@ CREATE TABLE t_job (
 -- order to retrieve the appropriate user proxy to do the transfers
   user_cred            VARCHAR(255),
 --
--- The user's credential delegation id
+-- The user credential delegation id
   cred_id              VARCHAR(100),
 --
 -- Blob to store user capabilites and groups
@@ -524,7 +524,7 @@ CREATE TABLE t_file (
   dest_se              VARCHAR(150),  
 --
 -- The agent who is transferring the file. This is only valid when the file
--- is in 'Active' state
+-- is in Active state
   agent_dn         VARCHAR(255),
 --
 -- The error scope
