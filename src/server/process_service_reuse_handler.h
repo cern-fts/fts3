@@ -256,7 +256,7 @@ protected:
                          false,
                          "");
 
-        std::string oauth_file = fts3::generateOauthConfigFile(DBSingleton::instance().getDBObjectInstance(), dn, userCred);
+        std::string oauth_file = fts3::generateOauthConfigFile(DBSingleton::instance().getDBObjectInstance(), dn, vo, userCred);
 
         //send SUBMITTED message
         SingleTrStateInstance::instance().sendStateMessage(job_id, -1);

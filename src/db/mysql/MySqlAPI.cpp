@@ -3676,7 +3676,7 @@ int MySqlAPI::getMaxActive(soci::session& sql, int level, int /*highDefault*/, c
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
-	
+
     return maxDefault;
 }
 
@@ -4055,7 +4055,7 @@ bool MySqlAPI::updateOptimizer()
                             else if(state.compare("FAILED") == 0 && current_failures == 1)
                                 {
                                     nFailedLastHour+=1.0;
-                                }				
+                                }
                             else if (state.compare("FINISHED") == 0)
                                 {
                                     nFinishedLastHour+=1.0;
@@ -7407,7 +7407,7 @@ std::vector<struct message_state> MySqlAPI::getStateOfDeleteInternal(soci::sessi
                                              soci::use(fileId)
                                          );
 
-            bool show_user_dn = getUserDnVisibleInternal(sql);   
+            bool show_user_dn = getUserDnVisibleInternal(sql);
 
             soci::rowset<soci::row>::const_iterator it;
             struct tm aux_tm;
@@ -7449,12 +7449,12 @@ std::vector<struct message_state> MySqlAPI::getStateOfDeleteInternal(soci::sessi
                     ret.file_metadata = it->get<std::string>("file_metadata","");
                     ret.source_se = it->get<std::string>("source_se");
                     ret.dest_se = it->get<std::string>("dest_se", "");
-		    
+
  		    if(!show_user_dn)
-			ret.user_dn = std::string("");		    
-		    else		    
-                    	ret.user_dn = it->get<std::string>("user_dn","");		    		    
-		    
+			ret.user_dn = std::string("");
+		    else
+                    	ret.user_dn = it->get<std::string>("user_dn","");
+
                     ret.source_url = it->get<std::string>("source_surl","");
                     ret.dest_url = it->get<std::string>("dest_surl","");
 
@@ -7510,7 +7510,7 @@ std::vector<struct message_state> MySqlAPI::getStateOfTransferInternal(soci::ses
                                          );
 
 
-            bool show_user_dn = getUserDnVisibleInternal(sql);      
+            bool show_user_dn = getUserDnVisibleInternal(sql);
 
             soci::rowset<soci::row>::const_iterator it;
 
@@ -7552,13 +7552,13 @@ std::vector<struct message_state> MySqlAPI::getStateOfTransferInternal(soci::ses
                     ret.file_metadata = it->get<std::string>("file_metadata","");
                     ret.source_se = it->get<std::string>("source_se");
                     ret.dest_se = it->get<std::string>("dest_se");
-		    
+
 		    if(!show_user_dn)
-			ret.user_dn = std::string("");		    
-		    else		    
-                    	ret.user_dn = it->get<std::string>("user_dn","");                    
-		    
-		    
+			ret.user_dn = std::string("");
+		    else
+                    	ret.user_dn = it->get<std::string>("user_dn","");
+
+
                     ret.source_url = it->get<std::string>("source_surl","");
                     ret.dest_url = it->get<std::string>("dest_surl","");
 
@@ -8183,8 +8183,8 @@ void MySqlAPI::checkSanityState()
                                                         sql.prepare <<
                                                         " select  j.job_id from t_job j inner join t_file f on (j.job_id = f.job_id) where j.job_finished >= (UTC_TIMESTAMP() - interval '24' HOUR ) and f.file_state in ('SUBMITTED','ACTIVE')  "
                                                     );
-						    
-						    
+
+
 		    sql.begin();
                     for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
                         {
@@ -8192,20 +8192,20 @@ void MySqlAPI::checkSanityState()
                             stmt7.execute(true);
                         }
 		    sql.commit();
-			
-		    //multiple replicas with finished state	
+
+		    //multiple replicas with finished state
 		    sql.begin();
                     for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
                         {
 			    //reset
 			    countMreplica = 0;
                             countMindex = 0;
-			    
+
                             job_id = (*i2);
-			    
+
                            //check for m-replicas sanity
                             stmt_m_replica.execute(true);
-			    
+
                             //this is a m-replica job
                             if(countMreplica > 1 && countMindex == 1)
                                 {
@@ -8221,7 +8221,7 @@ void MySqlAPI::checkSanityState()
                                     soci::rowset<soci::row>::const_iterator iRep;
                                     for (iRep = rsReplica.begin(); iRep != rsReplica.end(); ++iRep)
                                         {
-                                            std::string file_state = iRep->get<std::string>("file_state");                                            
+                                            std::string file_state = iRep->get<std::string>("file_state");
 
                                             if(file_state == "FINISHED") //if at least one is finished, reset the rest
                                                 {
@@ -8236,13 +8236,13 @@ void MySqlAPI::checkSanityState()
                                                         }
                                                     break;
                                                 }
-                                        }                                   
-                                }                            
+                                        }
+                                }
                     }
 		    sql.commit();
-						
-			
-                    //now check reverse sanity checks, JOB can't be FINISH,  FINISHEDDIRTY, FAILED is at least one tr is in STARTED/DELETE                  
+
+
+                    //now check reverse sanity checks, JOB can't be FINISH,  FINISHEDDIRTY, FAILED is at least one tr is in STARTED/DELETE
                     soci::rowset<std::string> rs3 = (
                                                         sql.prepare <<
                                                         " select  j.job_id from t_job j inner join t_dm f on (j.job_id = f.job_id) where j.job_finished >= (UTC_TIMESTAMP() - interval '24' HOUR ) and f.file_state in ('STARTED','DELETE')  "
@@ -8252,11 +8252,11 @@ void MySqlAPI::checkSanityState()
                     for (soci::rowset<std::string>::const_iterator i3 = rs3.begin(); i3 != rs3.end(); ++i3)
                         {
                             job_id = (*i3);
-                            stmtDel2.execute(true);                            
-                        }			
+                            stmtDel2.execute(true);
+                        }
    		    sql.commit();
-			
-                    
+
+
                     //now check if a host has been offline for more than 120 min and set its transfers to failed
                     soci::rowset<std::string> rsCheckHosts = (
                                 sql.prepare <<
@@ -10194,7 +10194,7 @@ int MySqlAPI::getStreamsOptimization(const std::string & source_hostname, const 
             		if (sql.got_data() && name == "buffer")
                 	{
                     		return -1; //buffer optimization
-                	}                   
+                	}
                 }
         }
     catch (std::exception& e)
@@ -12097,7 +12097,8 @@ bool MySqlAPI::isDmJob(std::string const & job)
 }
 
 
-bool MySqlAPI::getOauthCredentials(const std::string& user_dn, const std::string& cloud_name, OAuth& oauth)
+bool MySqlAPI::getOauthCredentials(const std::string& user_dn,
+        const std::string& vo, const std::string& cloud_name, OAuth& oauth)
 {
     soci::session sql(*connectionPool);
 
@@ -12105,8 +12106,8 @@ bool MySqlAPI::getOauthCredentials(const std::string& user_dn, const std::string
         {
             sql << "SELECT app_key, app_secret, access_token, access_token_secret "
                    "FROM t_cloudStorage cs, t_cloudStorageUser cu "
-                   "WHERE cu.user_dn=:user_dn AND cs.cloudStorage_name=:cs_name AND cs.cloudStorage_name = cu.cloudStorage_name",
-                   soci::use(user_dn), soci::use(cloud_name), soci::into(oauth);
+                   "WHERE (cu.user_dn=:user_dn OR cu.vo_name=:vo) AND cs.cloudStorage_name=:cs_name AND cs.cloudStorage_name = cu.cloudStorage_name",
+                   soci::use(user_dn), soci::use(vo), soci::use(cloud_name), soci::into(oauth);
              if (!sql.got_data())
                  return false;
         }
@@ -12210,7 +12211,7 @@ void MySqlAPI::cancelDmJobs(std::vector<std::string> const & jobs)
 }
 
 bool MySqlAPI::getUserDnVisibleInternal(soci::session& sql)
-{   
+{
     std::string show_user_dn;
     soci::indicator isNullShow = soci::i_ok;
 
@@ -12229,11 +12230,11 @@ bool MySqlAPI::getUserDnVisibleInternal(soci::session& sql)
             else if(show_user_dn == "off")
 	        {
                     return false;
-		}		
+		}
             else
 	        {
                     return true;
-		}				
+		}
         }
     catch (std::exception& e)
         {
@@ -12243,14 +12244,14 @@ bool MySqlAPI::getUserDnVisibleInternal(soci::session& sql)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
-	
+
 	return true;
 }
 
 bool MySqlAPI::getUserDnVisible()
 {
     soci::session sql(*connectionPool);
-    
+
     try
         {
             return getUserDnVisibleInternal(sql);
@@ -12263,8 +12264,8 @@ bool MySqlAPI::getUserDnVisible()
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
-	
-	return true;    
+
+	return true;
 }
 
 // the class factories

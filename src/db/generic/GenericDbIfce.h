@@ -462,9 +462,11 @@ public:
     virtual bool isDmJob(std::string const & job) = 0;
 
     // Cloud storage API
-    virtual bool getOauthCredentials(const std::string& user_dn, const std::string& cloud_name, OAuth& oauth) = 0;
+    virtual bool getOauthCredentials(const std::string& user_dn,
+            const std::string& vo, const std::string& cloud_name,
+            OAuth& oauth) = 0;
 
     virtual void cancelDmJobs(std::vector<std::string> const & jobs) = 0;
-    
+
     virtual bool getUserDnVisible() = 0;
 };

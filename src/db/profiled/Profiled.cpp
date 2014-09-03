@@ -973,9 +973,10 @@ void ProfiledDB::checkJobOperation(std::vector<std::string>& jobs, std::vector< 
 }
 
 
-bool ProfiledDB::getOauthCredentials(const std::string& user_dn, const std::string& cloud_name, OAuth& oauth)
+bool ProfiledDB::getOauthCredentials(const std::string& user_dn,
+        const std::string& vo, const std::string& cloud_name, OAuth& oauth)
 {
-    PROFILE_PREFIXED("DB::", return db->getOauthCredentials(user_dn, cloud_name, oauth));
+    PROFILE_PREFIXED("DB::", return db->getOauthCredentials(user_dn, vo, cloud_name, oauth));
 }
 
 bool ProfiledDB::isDmJob(std::string const & job)

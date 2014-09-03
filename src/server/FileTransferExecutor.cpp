@@ -63,9 +63,10 @@ string FileTransferExecutor::prepareMetadataString(std::string text)
     return text;
 }
 
-std::string FileTransferExecutor::generateOauthConfigFile(const std::string& dn, const std::string& cs_name)
+std::string FileTransferExecutor::generateOauthConfigFile(const std::string& dn,
+        const std::string& vo, const std::string& cs_name)
 {
-    return fts3::generateOauthConfigFile(db, dn, cs_name);
+    return fts3::generateOauthConfigFile(db, dn, vo, cs_name);
 }
 
 void FileTransferExecutor::run(boost::any & ctx)
@@ -172,10 +173,10 @@ void FileTransferExecutor::run(boost::any & ctx)
 		    params.append(" -a ");
                     params.append(tf.JOB_ID);
                     params.append(" -B ");
-                    params.append(lexical_cast<string >(tf.FILE_ID));	
+                    params.append(lexical_cast<string >(tf.FILE_ID));
 
                     // OAuth credentials
-                    std::string oauth_file = generateOauthConfigFile(tf.DN, tf.USER_CREDENTIALS);
+                    std::string oauth_file = generateOauthConfigFile(tf.DN, tf.VO_NAME, tf.USER_CREDENTIALS);
 
                     // Metadata
                     params.append(" -Y ");
@@ -191,10 +192,10 @@ void FileTransferExecutor::run(boost::any & ctx)
                         {
                             params.append(" --strict-copy ");
                         }
-			
-			
-		    bool show_user_dn = db->getUserDnVisible();	
-		    
+
+
+		    bool show_user_dn = db->getUserDnVisible();
+
 		    if(!show_user_dn) //do not show it if false
 		        {
 			    params.append(" --hide-user-dn ");
@@ -247,7 +248,7 @@ void FileTransferExecutor::run(boost::any & ctx)
                     params.append(" -b ");
                     params.append(tf.SOURCE_SURL);
                     params.append(" -c ");
-                    params.append(tf.DEST_SURL);                    
+                    params.append(tf.DEST_SURL);
                     params.append(" -C ");
                     params.append(tf.VO_NAME);
                     if (sourceSiteName.length() > 0)

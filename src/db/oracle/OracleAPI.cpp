@@ -3706,7 +3706,7 @@ bool OracleAPI::updateOptimizer()
                             else if(state.compare("FAILED") == 0 && current_failures == 1)
                                 {
                                     nFailedLastHour+=1.0;
-                                }					                            
+                                }
                             else if (state.compare("FINISHED") == 0)
                                 {
                                     nFinishedLastHour+=1.0;
@@ -6895,8 +6895,8 @@ std::vector<struct message_state> OracleAPI::getStateOfDeleteInternal(soci::sess
 
             soci::rowset<soci::row>::const_iterator it;
             struct tm aux_tm;
-	    
-            bool show_user_dn = getUserDnVisibleInternal(sql);           
+
+            bool show_user_dn = getUserDnVisibleInternal(sql);
 
             for (it = rs.begin(); it != rs.end(); ++it)
                 {
@@ -6935,10 +6935,10 @@ std::vector<struct message_state> OracleAPI::getStateOfDeleteInternal(soci::sess
                     ret.file_metadata = it->get<std::string>("FILE_METADATA","");
                     ret.source_se = it->get<std::string>("SOURCE_SE");
                     ret.dest_se = it->get<std::string>("DEST_SE");
-		    
+
 		    if(!show_user_dn)
-			ret.user_dn = std::string("");		    
-		    else		    
+			ret.user_dn = std::string("");
+		    else
                     	ret.user_dn = it->get<std::string>("USER_DN","");
                     ret.source_url = it->get<std::string>("SOURCE_SURL","");
                     ret.dest_url = it->get<std::string>("DEST_SURL","");
@@ -6996,7 +6996,7 @@ std::vector<struct message_state> OracleAPI::getStateOfTransferInternal(soci::se
                                          );
 
 
-            bool show_user_dn = getUserDnVisibleInternal(sql);        
+            bool show_user_dn = getUserDnVisibleInternal(sql);
 
             soci::rowset<soci::row>::const_iterator it;
 
@@ -7033,12 +7033,12 @@ std::vector<struct message_state> OracleAPI::getStateOfTransferInternal(soci::se
                     ret.file_metadata = it->get<std::string>("FILE_METADATA","");
                     ret.source_se = it->get<std::string>("SOURCE_SE");
                     ret.dest_se = it->get<std::string>("DEST_SE");
-		    
+
 		    if(!show_user_dn)
-			ret.user_dn = std::string("");		    
-		    else		    
+			ret.user_dn = std::string("");
+		    else
                     	ret.user_dn = it->get<std::string>("USER_DN","");
-					    
+
                     ret.source_url = it->get<std::string>("SOURCE_SURL","");
                     ret.dest_url = it->get<std::string>("DEST_SURL","");
 
@@ -9596,7 +9596,7 @@ int OracleAPI::getStreamsOptimization(const std::string & source_hostname, const
             		if (sql.got_data() && name == "buffer")
                 	{
                     		return -1; //buffer optimization
-                	}                   
+                	}
                 }
         }
     catch (std::exception& e)
@@ -11484,7 +11484,9 @@ bool OracleAPI::resetForRetryDelete(soci::session& sql, int file_id, const std::
 }
 
 
-bool OracleAPI::getOauthCredentials(const std::string& /*user_dn*/, const std::string& /*cloud_name*/, OAuth& /*oauth*/)
+bool OracleAPI::getOauthCredentials(const std::string& /*user_dn*/,
+        const std::string& /*vo*/, const std::string& /*cloud_name*/,
+        OAuth& /*oauth*/)
 {
     return false;
 }
@@ -11608,7 +11610,7 @@ void OracleAPI::cancelDmJobs(std::vector<std::string> const & jobs)
 
 
 bool OracleAPI::getUserDnVisibleInternal(soci::session& sql)
-{   
+{
     std::string show_user_dn;
     soci::indicator isNullShow = soci::i_ok;
 
@@ -11627,11 +11629,11 @@ bool OracleAPI::getUserDnVisibleInternal(soci::session& sql)
             else if(show_user_dn == "off")
 	        {
                     return false;
-		}		
+		}
             else
 	        {
                     return true;
-		}				
+		}
         }
     catch (std::exception& e)
         {
@@ -11641,14 +11643,14 @@ bool OracleAPI::getUserDnVisibleInternal(soci::session& sql)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
-	
+
 	return true;
 }
 
 bool OracleAPI::getUserDnVisible()
 {
     soci::session sql(*connectionPool);
-    
+
     try
         {
             return getUserDnVisibleInternal(sql);
@@ -11661,8 +11663,8 @@ bool OracleAPI::getUserDnVisible()
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
-	
-	return true;    
+
+	return true;
 }
 
 
