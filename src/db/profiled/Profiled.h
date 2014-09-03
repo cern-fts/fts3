@@ -378,6 +378,8 @@ public:
     bool isDmJob(std::string const & job);
 
     void cancelDmJobs(std::vector<std::string> const & jobs);
+    
+    bool getUserDnVisible();    
 };
 
 

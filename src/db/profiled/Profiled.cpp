@@ -986,3 +986,8 @@ void ProfiledDB::cancelDmJobs(std::vector<std::string> const & jobs)
 {
     PROFILE_PREFIXED("DB::", db->cancelDmJobs(jobs));
 }
+
+bool ProfiledDB::getUserDnVisible()
+{
+    PROFILE_PREFIXED("DB::", return db->getUserDnVisible());
+}

@@ -191,6 +191,14 @@ void FileTransferExecutor::run(boost::any & ctx)
                         {
                             params.append(" --strict-copy ");
                         }
+			
+			
+		    bool show_user_dn = db->getUserDnVisible();	
+		    
+		    if(!show_user_dn) //do not show it if false
+		        {
+			    params.append(" --hide-user-dn ");
+			}
 
                     if (debugLevel)
                         {

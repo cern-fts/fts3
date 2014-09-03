@@ -409,6 +409,8 @@ public:
     virtual int getMaxStatingsPerEndpoint(const std::string & endpoint, const std::string & vo);
 
     virtual void checkJobOperation(std::vector<std::string>& jobs, std::vector< boost::tuple<std::string, std::string> >& ops);
+    
+    virtual bool getUserDnVisible();
 
 
 private:
@@ -483,4 +485,6 @@ private:
     bool isDmJob(std::string const & job);
 
     void cancelDmJobs(std::vector<std::string> const & jobs);
+    
+    bool getUserDnVisibleInternal(soci::session& sql);
 };

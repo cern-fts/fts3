@@ -461,4 +461,6 @@ public:
     virtual bool getOauthCredentials(const std::string& user_dn, const std::string& cloud_name, OAuth& oauth) = 0;
 
     virtual void cancelDmJobs(std::vector<std::string> const & jobs) = 0;
+    
+    virtual bool getUserDnVisible() = 0;
 };

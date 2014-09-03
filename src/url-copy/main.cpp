@@ -878,7 +878,11 @@ int main(int argc, char **argv)
             msg_ifce::getInstance()->set_block_size(&tr_completed, opts.blockSize);
             msg_ifce::getInstance()->set_srm_space_token_dest(&tr_completed, opts.destTokenDescription);
             msg_ifce::getInstance()->set_srm_space_token_source(&tr_completed, opts.sourceTokenDescription);
-            msg_ifce::getInstance()->set_user_dn(&tr_completed, replace_dn(opts.user_dn));
+	    
+	    if(opts.hide_user_dn)
+		msg_ifce::getInstance()->set_user_dn(&tr_completed, std::string(""));	    
+	    else
+            	msg_ifce::getInstance()->set_user_dn(&tr_completed, replace_dn(opts.user_dn));
 
             msg_ifce::getInstance()->set_file_metadata(&tr_completed, replaceMetadataString(currentTransfer.fileMetadata) );
             msg_ifce::getInstance()->set_job_metadata(&tr_completed, replaceMetadataString(opts.jobMetadata) );

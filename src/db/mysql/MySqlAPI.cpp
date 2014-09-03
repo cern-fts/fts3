@@ -7323,6 +7323,7 @@ std::vector<struct message_state> MySqlAPI::getStateOfDeleteInternal(soci::sessi
                                              soci::use(fileId)
                                          );
 
+            bool show_user_dn = getUserDnVisibleInternal(sql);   
 
             soci::rowset<soci::row>::const_iterator it;
             struct tm aux_tm;
@@ -7364,7 +7365,12 @@ std::vector<struct message_state> MySqlAPI::getStateOfDeleteInternal(soci::sessi
                     ret.file_metadata = it->get<std::string>("file_metadata","");
                     ret.source_se = it->get<std::string>("source_se");
                     ret.dest_se = it->get<std::string>("dest_se", "");
-                    ret.user_dn = it->get<std::string>("user_dn","");
+		    
+ 		    if(!show_user_dn)
+			ret.user_dn = std::string("");		    
+		    else		    
+                    	ret.user_dn = it->get<std::string>("user_dn","");		    		    
+		    
                     ret.source_url = it->get<std::string>("source_surl","");
                     ret.dest_url = it->get<std::string>("dest_surl","");
 
@@ -7420,6 +7426,8 @@ std::vector<struct message_state> MySqlAPI::getStateOfTransferInternal(soci::ses
                                          );
 
 
+            bool show_user_dn = getUserDnVisibleInternal(sql);      
+
             soci::rowset<soci::row>::const_iterator it;
 
             struct tm aux_tm;
@@ -7460,7 +7468,13 @@ std::vector<struct message_state> MySqlAPI::getStateOfTransferInternal(soci::ses
                     ret.file_metadata = it->get<std::string>("file_metadata","");
                     ret.source_se = it->get<std::string>("source_se");
                     ret.dest_se = it->get<std::string>("dest_se");
-                    ret.user_dn = it->get<std::string>("user_dn","");
+		    
+		    if(!show_user_dn)
+			ret.user_dn = std::string("");		    
+		    else		    
+                    	ret.user_dn = it->get<std::string>("user_dn","");                    
+		    
+		    
                     ret.source_url = it->get<std::string>("source_surl","");
                     ret.dest_url = it->get<std::string>("dest_surl","");
 
@@ -12109,6 +12123,64 @@ void MySqlAPI::cancelDmJobs(std::vector<std::string> const & jobs)
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
+}
+
+bool MySqlAPI::getUserDnVisibleInternal(soci::session& sql)
+{   
+    std::string show_user_dn;
+    soci::indicator isNullShow = soci::i_ok;
+
+    try
+        {
+            sql << "select show_user_dn from t_server_config", soci::into(show_user_dn, isNullShow);
+
+            if (isNullShow == soci::i_null)
+                {
+                    return true;
+                }
+            else if(show_user_dn == "on")
+	        {
+                    return true;
+		}
+            else if(show_user_dn == "off")
+	        {
+                    return false;
+		}		
+            else
+	        {
+                    return true;
+		}				
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+	
+	return true;
+}
+
+bool MySqlAPI::getUserDnVisible()
+{
+    soci::session sql(*connectionPool);
+    
+    try
+        {
+            return getUserDnVisibleInternal(sql);
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+	
+	return true;    
 }
 
 // the class factories
