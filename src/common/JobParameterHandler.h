@@ -100,6 +100,7 @@ public:
     static const std::string NOSTREAMS;
     static const std::string TIMEOUT;
     static const std::string STRICT_COPY;
+    static const std::string CREDENTIALS;
     ///@}
 
     /**

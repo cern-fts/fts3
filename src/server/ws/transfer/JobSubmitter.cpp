@@ -97,21 +97,6 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob *job, bool delegation) :
                     throw Err_Custom("The MyProxy password should not be provided if delegation is used");
                 }
         }
-    else
-        {
-            if (params.isParamSet(JobParameterHandler::DELEGATIONID))
-                {
-                    throw Err_Custom("The delegation ID should not be provided if MyProxy password mode is used");
-                }
-
-            if (!job->credential || job->credential->empty())
-                {
-                    throw Err_Custom("The MyProxy password is empty while submitting in MyProxy mode");
-                }
-
-            cred = *job->credential;
-        }
-
 
     // it is a plain old job
     PlainOldJob<tns3__TransferJobElement> poj(job->transferJobElements, initialState);
@@ -373,9 +358,9 @@ string JobSubmitter::submit()
                 id,
                 jobs,
                 dn,
-                cred,
+                params.get(JobParameterHandler::CREDENTIALS),
                 vo,
-                string(),
+                std::string(),
                 delegationId,
                 sourceSe,
                 destinationSe,
@@ -394,7 +379,7 @@ string JobSubmitter::submit()
                         id,
                         jobs,
                         dn,
-                        cred,
+                        params.get(JobParameterHandler::CREDENTIALS),
                         vo,
                         string(),
                         delegationId,
@@ -425,7 +410,7 @@ string JobSubmitter::submit()
                         id,
                         jobs,
                         dn,
-                        cred,
+                        params.get(JobParameterHandler::CREDENTIALS),
                         vo,
                         string(),
                         delegationId,

@@ -52,6 +52,7 @@ const std::string JobParameterHandler::BUFFER_SIZE = "buffer_size";
 const std::string JobParameterHandler::NOSTREAMS = "nostreams";
 const std::string JobParameterHandler::TIMEOUT = "timeout";
 const std::string JobParameterHandler::STRICT_COPY = "strict_copy";
+const std::string JobParameterHandler::CREDENTIALS = "credentials";
 
 JobParameterHandler::JobParameterHandler()
 {
