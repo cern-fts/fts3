@@ -32,6 +32,7 @@
 #include <SeProtocolConfig.h>
 #include <ShareConfig.h>
 #include <TransferJobs.h>
+#include <OAuth.h>
 #include <soci.h>
 #include <time.h>
 
@@ -202,6 +203,7 @@ struct type_conversion<TransferFiles>
         file.DEST_SE = v.get<std::string>("DEST_SE", "");
         file.SELECTION_STRATEGY = v.get<std::string>("SELECTION_STRATEGY", "");
         file.INTERNAL_FILE_PARAMS = v.get<std::string>("INTERNAL_JOB_PARAMS", "");
+        file.USER_CREDENTIALS = v.get<std::string>("USER_CRED", "");
 
         try
             {
@@ -414,6 +416,20 @@ struct type_conversion<FileRetry>
         retry.reason   = v.get<std::string>("REASON", "");
 
         retry.datetime = static_cast<int>(v.get<long long>("DATETIME"));
+    }
+};
+
+template<>
+struct type_conversion<OAuth>
+{
+    typedef values base_type;
+
+    static void from_base(values const& v, indicator, OAuth& oauth)
+    {
+        oauth.app_key      = v.get<std::string>("APP_KEY", "");
+        oauth.app_secret   = v.get<std::string>("APP_SECRET", "");
+        oauth.access_token = v.get<std::string>("ACCESS_TOKEN", "");
+        oauth.access_token_secret = v.get<std::string>("ACCESS_TOKEN_SECRET", "");
     }
 };
 

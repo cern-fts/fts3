@@ -951,5 +951,27 @@ CREATE TABLE t_profiling_snapshot (
 
 CREATE INDEX t_prof_snapshot_total ON t_profiling_snapshot(total);
 
+--
+-- Tables for cloud support
+--
+CREATE TABLE t_cloudStorage (
+    cloudStorage_name VARCHAR2(50) NOT NULL PRIMARY KEY,
+    app_key           VARCHAR2(255),
+    app_secret        VARCHAR2(255),
+    service_api_url   VARCHAR2(1024)
+);
+
+CREATE TABLE t_cloudStorageUser (
+    user_dn              VARCHAR2(700) NULL,
+    vo_name              VARCHAR2(100) NULL,
+    cloudStorage_name    VARCHAR2(36) NOT NULL,
+    access_token         VARCHAR2(255),
+    access_token_secret  VARCHAR2(255),
+    request_token        VARCHAR2(255),
+    request_token_secret VARCHAR2(255),
+    FOREIGN KEY (cloudStorage_name) REFERENCES t_cloudStorage(cloudStorage_name),
+    PRIMARY KEY (user_dn, vo_name, cloudStorage_name)
+);
+
 exit;
 

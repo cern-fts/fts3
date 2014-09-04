@@ -813,7 +813,7 @@ void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, s
                                                                  "       f.checksum, j.checksum_method, j.source_space_token, "
                                                                  "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                                                                  "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
-                                                                 "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params, j.reuse_job  "
+                                                                 "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params, j.reuse_job, j.user_cred  "
                                                                  " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) WHERE  "
                                                                  " j.vo_name = f.vo_name AND f.file_state = 'SUBMITTED' AND  "
                                                                  "    f.source_se = :source AND f.dest_se = :dest AND "
@@ -855,7 +855,7 @@ void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, s
                                         "       f.checksum, j.checksum_method, j.source_space_token, "
                                         "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                                         "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
-                                        "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params, j.reuse_job  "
+                                        "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params, j.reuse_job, j.user_cred  "
                                         " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) WHERE "
                                         " j.vo_name = f.vo_name AND f.file_state = 'SUBMITTED' AND  "
                                         "    f.source_se = :source AND f.dest_se = :dest AND "
@@ -11484,11 +11484,30 @@ bool OracleAPI::resetForRetryDelete(soci::session& sql, int file_id, const std::
 }
 
 
-bool OracleAPI::getOauthCredentials(const std::string& /*user_dn*/,
-        const std::string& /*vo*/, const std::string& /*cloud_name*/,
-        OAuth& /*oauth*/)
+bool OracleAPI::getOauthCredentials(const std::string& user_dn,
+        const std::string& vo, const std::string& cloud_name,
+        OAuth& oauth)
 {
-    return false;
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            sql << "SELECT app_key, app_secret, access_token, access_token_secret "
+                   "FROM t_cloudStorage cs, t_cloudStorageUser cu "
+                   "WHERE (cu.user_dn=:user_dn OR cu.vo_name=:vo) AND cs.cloudStorage_name=:cs_name AND cs.cloudStorage_name = cu.cloudStorage_name",
+                   soci::use(user_dn), soci::use(vo), soci::use(cloud_name), soci::into(oauth);
+             if (!sql.got_data())
+                 return false;
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+    return true;
 }
 
 

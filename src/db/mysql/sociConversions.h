@@ -398,10 +398,10 @@ struct type_conversion<OAuth>
 
     static void from_base(values const& v, indicator, OAuth& oauth)
     {
-        oauth.app_key      = v.get<std::string>("app_key");
-        oauth.app_secret   = v.get<std::string>("app_secret");
-        oauth.access_token = v.get<std::string>("access_token");
-        oauth.access_token_secret = v.get<std::string>("access_token_secret");
+        oauth.app_key      = v.get<std::string>("app_key", "");
+        oauth.app_secret   = v.get<std::string>("app_secret", "");
+        oauth.access_token = v.get<std::string>("access_token", "");
+        oauth.access_token_secret = v.get<std::string>("access_token_secret", "");
     }
 };
 
