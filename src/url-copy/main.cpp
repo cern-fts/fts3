@@ -368,7 +368,7 @@ void abnormalTermination(const std::string& classification, const std::string&, 
                               turlVector[1],
                               "FAILED");
         }
-    
+
     cancelTransfer();
     sleep(1);
     _exit(1);
@@ -430,7 +430,7 @@ void shutdown_callback(int signum, void*)
 {
     //stop reporting progress to the server if a signal is received
     inShutdown = true;
-    
+
     Logger& logger = Logger::getInstance();
 
     logger.WARNING() << "Received signal " << signum << " (" << strsignal(signum) << ")" << std::endl;
@@ -553,10 +553,10 @@ void myunexpected()
 	    if(currentTransfer.fileId == 0)
 		currentTransfer.fileId = boost::lexical_cast<unsigned>(file_id);
 
-            errorMessage = "Transfer unexpected handler called: " + currentTransfer.jobId;           
+            errorMessage = "Transfer unexpected handler called: " + currentTransfer.jobId;
             Logger::getInstance().ERROR() << errorMessage << std::endl;
 
-            abnormalTermination("FAILED", errorMessage, "Abort"); 
+            abnormalTermination("FAILED", errorMessage, "Abort");
 }
 
 void myterminate()
@@ -566,7 +566,7 @@ void myterminate()
 	    if(currentTransfer.fileId == 0)
 		currentTransfer.fileId = boost::lexical_cast<unsigned>(file_id);
 
-            errorMessage = "Transfer terminate handler called: " + currentTransfer.jobId;          
+            errorMessage = "Transfer terminate handler called: " + currentTransfer.jobId;
             Logger::getInstance().ERROR() << errorMessage << std::endl;
 
             abnormalTermination("FAILED", errorMessage, "Abort");
@@ -655,17 +655,20 @@ __attribute__((constructor)) void begin(void)
 int main(int argc, char **argv)
 {
     //read directly from the arguments list just in case it dies so fast that the sleep in the parent won't catch it
-    job_id = argv[2];
-    
+    if (argc > 2)
+        job_id = argv[2];
+
     //make sure to skip file_id for multi-hop and reuse jobs
-    if(std::string(argv[3]) == "--multi-hop" || std::string(argv[3]) == "-G")
-    	file_id = "0";
-    else
-    	file_id = argv[4];
+    if (argc > 4) {
+        if(std::string(argv[3]) == "--multi-hop" || std::string(argv[3]) == "-G")
+            file_id = "0";
+        else
+            file_id = argv[4];
+    }
 
     //catch any other unexpected exception, at least the transfer state will be propagated to the db
     set_terminate(myterminate);
-    set_unexpected(myunexpected);     
+    set_unexpected(myunexpected);
 
     Logger &logger = Logger::getInstance();
 
@@ -754,7 +757,7 @@ int main(int argc, char **argv)
 
             abnormalTermination("FAILED", errorMessage, "Error");
         }
-	
+
                /*gfal2 debug logging*/
                 if (opts.debugLevel)
                     {
@@ -772,7 +775,7 @@ int main(int argc, char **argv)
                             {
                                 setenv("CGSI_TRACE", "1", 1);
                                 setenv("GLOBUS_FTP_CLIENT_DEBUG_LEVEL", "255", 1);
-                                setenv("GLOBUS_FTP_CONTROL_DEBUG_LEVEL", "10", 1);			    
+                                setenv("GLOBUS_FTP_CONTROL_DEBUG_LEVEL", "10", 1);
                                 setenv("GLOBUS_GSI_AUTHZ_DEBUG_LEVEL", "1", 1);
                                 setenv("GLOBUS_CALLOUT_DEBUG_LEVEL", "1", 1);
                                 setenv("GLOBUS_GSI_CERT_UTILS_DEBUG_LEVEL", "1", 1);
@@ -784,7 +787,7 @@ int main(int argc, char **argv)
                                 setenv("GLOBUS_NEXUS_DEBUG_LEVEL", "1", 1);
                                 setenv("GLOBUS_GIS_OPENSSL_ERROR_DEBUG_LEVEL", "1", 1);
                             }
-                    }	
+                    }
 
 
     GError* handleError = NULL;
@@ -878,9 +881,9 @@ int main(int argc, char **argv)
             msg_ifce::getInstance()->set_block_size(&tr_completed, opts.blockSize);
             msg_ifce::getInstance()->set_srm_space_token_dest(&tr_completed, opts.destTokenDescription);
             msg_ifce::getInstance()->set_srm_space_token_source(&tr_completed, opts.sourceTokenDescription);
-	    
+
 	    if(opts.hide_user_dn)
-		msg_ifce::getInstance()->set_user_dn(&tr_completed, std::string(""));	    
+		msg_ifce::getInstance()->set_user_dn(&tr_completed, std::string(""));
 	    else
             	msg_ifce::getInstance()->set_user_dn(&tr_completed, replace_dn(opts.user_dn));
 
@@ -1457,8 +1460,8 @@ stop:
                 }
 
             inShutdown = true;
-            std::string archiveErr = fileManagement.archive();	    	    
-	    
+            std::string archiveErr = fileManagement.archive();
+
             if (!archiveErr.empty())
                 logger.ERROR() << "Could not archive: " << archiveErr << std::endl;
             reporter.sendLog(opts.jobId, currentTransfer.fileId, fileManagement._getLogArchivedFileFullPath(),
@@ -1484,7 +1487,7 @@ stop:
 
     if (opts.areTransfersOnFile() && readFile.length() > 0)
         unlink(readFile.c_str());
- 
+
     sleep(1);
     return EXIT_SUCCESS;
 }
