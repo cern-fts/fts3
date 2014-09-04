@@ -26,8 +26,7 @@ std::string fts3::generateOauthConfigFile(GenericDbIfce* db,
         const std::string& dn, const std::string& vo_name,
         const std::string& cs_name)
 {
-    OAuth oauth;
-    if (cs_name.empty() || !db->getOauthCredentials(dn, vo_name, cs_name, oauth))
+    if (cs_name.empty())
         return "";
 
     char oauth_path[] = "/tmp/fts-oauth-XXXXXX";
@@ -43,11 +42,15 @@ std::string fts3::generateOauthConfigFile(GenericDbIfce* db,
             std::string upper_cs_name = *i;
             boost::to_upper(upper_cs_name);
 
-            fprintf(f, "[%s]\n", upper_cs_name.c_str());
-            fprintf(f, "APP_KEY=%s\n", oauth.app_key.c_str());
-            fprintf(f, "APP_SECRET=%s\n", oauth.app_secret.c_str());
-            fprintf(f, "ACCESS_TOKEN=%s\n", oauth.access_token.c_str());
-            fprintf(f, "ACCESS_TOKEN_SECRET=%s\n", oauth.access_token_secret.c_str());
+            OAuth oauth;
+            if(db->getOauthCredentials(dn, vo_name, upper_cs_name, oauth))
+                {
+                    fprintf(f, "[%s]\n", upper_cs_name.c_str());
+                    fprintf(f, "APP_KEY=%s\n", oauth.app_key.c_str());
+                    fprintf(f, "APP_SECRET=%s\n", oauth.app_secret.c_str());
+                    fprintf(f, "ACCESS_TOKEN=%s\n", oauth.access_token.c_str());
+                    fprintf(f, "ACCESS_TOKEN_SECRET=%s\n", oauth.access_token_secret.c_str());
+                }
         }
 
     fclose(f);
