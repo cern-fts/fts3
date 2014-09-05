@@ -50,7 +50,7 @@ private:
                 try
                     {
                         db::DBSingleton::instance().getDBObjectInstance()->updateOptimizer();
-                        sleep(3);
+                        sleep(60);
                     }
                 catch(std::exception& e)
                     {
