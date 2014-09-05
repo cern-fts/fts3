@@ -86,8 +86,7 @@ TransferFileHandler::TransferFileHandler(map< string, list<TransferFiles> >& fil
     sourceToDestinations(getMapFromCache(files, SOURCE_TO_DESTINATIONS)),
     sourceToVos(getMapFromCache(files, SOURCE_TO_VOS)),
     destinationToSources(getMapFromCache(files, DESTINATION_TO_SOURCES)),
-    destinationToVos(getMapFromCache(files, DESTINATION_TO_VOS)),
-    db (DBSingleton::instance().getDBObjectInstance())
+    destinationToVos(getMapFromCache(files, DESTINATION_TO_VOS))
 {
     init_cache.clear();
 }

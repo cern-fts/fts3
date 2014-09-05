@@ -698,9 +698,9 @@ int fts3::implcfg__fixActivePerPair(soap* ctx, string source, string destination
     try
         {
             AuthorizationManager::getInstance().authorize(
-               ctx,
-               AuthorizationManager::CONFIG,
-               AuthorizationManager::dummy
+                ctx,
+                AuthorizationManager::CONFIG,
+                AuthorizationManager::dummy
             );
 
             CGsiAdapter cgsi(ctx);

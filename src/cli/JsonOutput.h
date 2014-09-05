@@ -52,7 +52,7 @@ public:
      */
     void setOutputStream(std::ostream & ostr)
     {
-       out = &ostr;
+        out = &ostr;
     }
 
     /**

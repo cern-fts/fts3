@@ -33,3 +33,5 @@ DROP TABLE IF EXISTS t_server_sanity;
 DROP TABLE IF EXISTS t_hosts;
 DROP TABLE IF EXISTS t_optimize_active;
 DROP TABLE IF EXISTS t_turl;
+DROP TABLE IF EXISTS t_cloudStorageUser;
+DROP TABLE IF EXISTS t_cloudStorage;

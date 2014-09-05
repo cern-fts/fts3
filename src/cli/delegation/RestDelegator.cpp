@@ -70,8 +70,8 @@ void RestDelegator::doDelegation(time_t requestProxyDelegationTime, bool renew) 
 
     char * certtxt;
     int ret = GRSTx509MakeProxyCert(
-            &certtxt, stderr, (char*)certreq.c_str(), localproxy, localproxy, (int)(requestProxyDelegationTime/60)
-        );
+                  &certtxt, stderr, (char*)certreq.c_str(), localproxy, localproxy, (int)(requestProxyDelegationTime/60)
+              );
 
     if (ret) throw cli_exception("GRSTx509MakeProxyCert call failed");
 

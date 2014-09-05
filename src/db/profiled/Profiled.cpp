@@ -58,7 +58,7 @@ void ProfiledDB::getTransferFileStatus(std::string requestID, bool archive,
 
 
 void ProfiledDB::getDmFileStatus(std::string requestID, bool archive,
-                                       unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files)
+                                 unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files)
 {
     PROFILE_PREFIXED("DB::", db->getDmFileStatus(requestID, archive, offset, limit, files));
 }
@@ -71,7 +71,7 @@ void ProfiledDB::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::st
 }
 
 void ProfiledDB::listRequestsDm(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
-                              std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst)
+                                std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst)
 {
     PROFILE_PREFIXED("DB::", db->listRequestsDm(jobs, inGivenStates, restrictToClientDN, forDN, VOname, src, dst));
 }
@@ -82,9 +82,9 @@ TransferJobs* ProfiledDB::getTransferJob(std::string jobId, bool archive)
 }
 
 
-void ProfiledDB::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles> >& files)
+void ProfiledDB::getByJobIdReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFiles> > > >& files)
 {
-    PROFILE_PREFIXED("DB::", db->getByJobIdReuse(jobs, files));
+    PROFILE_PREFIXED("DB::", db->getByJobIdReuse(distinct, files));
 }
 
 void ProfiledDB::getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles> >& files)
@@ -780,7 +780,7 @@ void ProfiledDB::updateHeartBeat(unsigned* index, unsigned* count, unsigned* sta
     PROFILE_PREFIXED("DB::", db->updateHeartBeat(index, count, start, end, service_name));
 }
 
-unsigned int ProfiledDB::updateFileStatusReuse(TransferFiles& file, const std::string status)
+unsigned int ProfiledDB::updateFileStatusReuse(TransferFiles const & file, const std::string status)
 {
     PROFILE_PREFIXED("DB::", return db->updateFileStatusReuse(file, status));
 }
@@ -880,9 +880,10 @@ void ProfiledDB::getVOPairs(std::vector< boost::tuple<std::string, std::string, 
     PROFILE_PREFIXED("DB::", db->getVOPairs(distinct));
 }
 
-
-
-
+void ProfiledDB::getVOPairsWithReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct)
+{
+    PROFILE_PREFIXED("DB::", db->getVOPairsWithReuse(distinct));
+}
 
 //deletions
 void ProfiledDB::updateDeletionsState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files)
@@ -972,9 +973,10 @@ void ProfiledDB::checkJobOperation(std::vector<std::string>& jobs, std::vector< 
 }
 
 
-bool ProfiledDB::getOauthCredentials(const std::string& user_dn, const std::string& cloud_name, OAuth& oauth)
+bool ProfiledDB::getOauthCredentials(const std::string& user_dn,
+                                     const std::string& vo, const std::string& cloud_name, OAuth& oauth)
 {
-    PROFILE_PREFIXED("DB::", return db->getOauthCredentials(user_dn, cloud_name, oauth));
+    PROFILE_PREFIXED("DB::", return db->getOauthCredentials(user_dn, vo, cloud_name, oauth));
 }
 
 bool ProfiledDB::isDmJob(std::string const & job)
@@ -985,4 +987,9 @@ bool ProfiledDB::isDmJob(std::string const & job)
 void ProfiledDB::cancelDmJobs(std::vector<std::string> const & jobs)
 {
     PROFILE_PREFIXED("DB::", db->cancelDmJobs(jobs));
+}
+
+bool ProfiledDB::getUserDnVisible()
+{
+    PROFILE_PREFIXED("DB::", return db->getUserDnVisible());
 }

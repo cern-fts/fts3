@@ -23,8 +23,10 @@
 
 #include <boost/property_tree/json_parser.hpp>
 
-namespace fts3 {
-namespace cli {
+namespace fts3
+{
+namespace cli
+{
 
 namespace pt = boost::property_tree;
 
@@ -136,8 +138,8 @@ public:
     JobStatus(std::string const & jobId, std::string const & status, std::string const & dn, std::string const & reason,
               std::string const & vo, std::string const & submitTime, int nbFiles, int priority,
               boost::optional<JobSummary> summary = boost::optional<JobSummary>()) :
-            jobId(jobId), status(status), dn(dn), reason(reason), vo (vo), submitTime(submitTime),
-            nbFiles(nbFiles), priority(priority), summary(summary)
+        jobId(jobId), status(status), dn(dn), reason(reason), vo (vo), submitTime(submitTime),
+        nbFiles(nbFiles), priority(priority), summary(summary)
     {
 
     }

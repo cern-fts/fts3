@@ -67,15 +67,15 @@ std::vector<JobStatus> ResponseParser::getJobs(std::string const & path) const
     for (it = jobs.begin(); it != jobs.end(); ++it)
         {
             JobStatus j(
-                    it->second.get<std::string>("job_id"),
-                    it->second.get<std::string>("job_state"),
-                    it->second.get<std::string>("user_dn"),
-                    it->second.get<std::string>("reason"),
-                    it->second.get<std::string>("vo_name"),
-                    it->second.get<std::string>("submit_time"),
-                    -1,
-                    it->second.get<int>("priority")
-                );
+                it->second.get<std::string>("job_id"),
+                it->second.get<std::string>("job_state"),
+                it->second.get<std::string>("user_dn"),
+                it->second.get<std::string>("reason"),
+                it->second.get<std::string>("vo_name"),
+                it->second.get<std::string>("submit_time"),
+                -1,
+                it->second.get<int>("priority")
+            );
 
             ret.push_back(j);
         }

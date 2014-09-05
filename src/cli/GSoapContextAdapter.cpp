@@ -364,15 +364,15 @@ std::vector<JobStatus> GSoapContextAdapter::listRequests (std::vector<std::strin
             strftime(time_buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&submitTime));
 
             JobStatus status (
-                   *gstat->jobID,
-                   *gstat->jobStatus,
-                   *gstat->clientDN,
-                   *gstat->reason,
-                   *gstat->voName,
-                   time_buff,
-                   gstat->numFiles,
-                   gstat->priority
-               );
+                *gstat->jobID,
+                *gstat->jobStatus,
+                *gstat->clientDN,
+                *gstat->reason,
+                *gstat->voName,
+                time_buff,
+                gstat->numFiles,
+                gstat->priority
+            );
             ret.push_back(status);
         }
 
@@ -404,13 +404,13 @@ JobStatus GSoapContextAdapter::getTransferJobSummary (std::string const & jobId,
     strftime(time_buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&submitTime));
 
     JobStatus::JobSummary summary (
-            resp.getTransferJobSummary2Return->numActive,
-            resp.getTransferJobSummary2Return->numReady,
-            resp.getTransferJobSummary2Return->numCanceled,
-            resp.getTransferJobSummary2Return->numFinished,
-            resp.getTransferJobSummary2Return->numSubmitted,
-            resp.getTransferJobSummary2Return->numFailed
-        );
+        resp.getTransferJobSummary2Return->numActive,
+        resp.getTransferJobSummary2Return->numReady,
+        resp.getTransferJobSummary2Return->numCanceled,
+        resp.getTransferJobSummary2Return->numFinished,
+        resp.getTransferJobSummary2Return->numSubmitted,
+        resp.getTransferJobSummary2Return->numFailed
+    );
 
     return JobStatus(
                *resp.getTransferJobSummary2Return->jobStatus->jobID,

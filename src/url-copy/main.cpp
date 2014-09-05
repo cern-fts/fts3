@@ -368,7 +368,7 @@ void abnormalTermination(const std::string& classification, const std::string&, 
                               turlVector[1],
                               "FAILED");
         }
-    
+
     cancelTransfer();
     sleep(1);
     _exit(1);
@@ -430,7 +430,7 @@ void shutdown_callback(int signum, void*)
 {
     //stop reporting progress to the server if a signal is received
     inShutdown = true;
-    
+
     Logger& logger = Logger::getInstance();
 
     logger.WARNING() << "Received signal " << signum << " (" << strsignal(signum) << ")" << std::endl;
@@ -439,7 +439,7 @@ void shutdown_callback(int signum, void*)
         {
             if (propagated == false)
                 {
-	            std::string stackTrace = fts3::common::Panic::stack_dump(fts3::common::Panic::stack_backtrace, fts3::common::Panic::stack_backtrace_size);
+                    std::string stackTrace = fts3::common::Panic::stack_dump(fts3::common::Panic::stack_backtrace, fts3::common::Panic::stack_backtrace_size);
                     propagated = true;
                     logger.ERROR() << "TRANSFER process died: " << currentTransfer.jobId << std::endl;
                     logger.ERROR() << "Received signal: " << signum << std::endl;
@@ -548,28 +548,28 @@ static void log_func(const gchar *, GLogLevelFlags, const gchar *message, gpoint
 
 void myunexpected()
 {
-	    if(currentTransfer.jobId.empty())
-		currentTransfer.jobId = job_id;
-	    if(currentTransfer.fileId == 0)
-		currentTransfer.fileId = boost::lexical_cast<unsigned>(file_id);
+    if(currentTransfer.jobId.empty())
+        currentTransfer.jobId = job_id;
+    if(currentTransfer.fileId == 0)
+        currentTransfer.fileId = boost::lexical_cast<unsigned>(file_id);
 
-            errorMessage = "Transfer unexpected handler called: " + currentTransfer.jobId;           
-            Logger::getInstance().ERROR() << errorMessage << std::endl;
+    errorMessage = "Transfer unexpected handler called: " + currentTransfer.jobId;
+    Logger::getInstance().ERROR() << errorMessage << std::endl;
 
-            abnormalTermination("FAILED", errorMessage, "Abort"); 
+    abnormalTermination("FAILED", errorMessage, "Abort");
 }
 
 void myterminate()
 {
-	    if(currentTransfer.jobId.empty())
-		currentTransfer.jobId = job_id;
-	    if(currentTransfer.fileId == 0)
-		currentTransfer.fileId = boost::lexical_cast<unsigned>(file_id);
+    if(currentTransfer.jobId.empty())
+        currentTransfer.jobId = job_id;
+    if(currentTransfer.fileId == 0)
+        currentTransfer.fileId = boost::lexical_cast<unsigned>(file_id);
 
-            errorMessage = "Transfer terminate handler called: " + currentTransfer.jobId;          
-            Logger::getInstance().ERROR() << errorMessage << std::endl;
+    errorMessage = "Transfer terminate handler called: " + currentTransfer.jobId;
+    Logger::getInstance().ERROR() << errorMessage << std::endl;
 
-            abnormalTermination("FAILED", errorMessage, "Abort");
+    abnormalTermination("FAILED", errorMessage, "Abort");
 }
 
 
@@ -655,17 +655,21 @@ __attribute__((constructor)) void begin(void)
 int main(int argc, char **argv)
 {
     //read directly from the arguments list just in case it dies so fast that the sleep in the parent won't catch it
-    job_id = argv[2];
-    
+    if (argc > 2)
+        job_id = argv[2];
+
     //make sure to skip file_id for multi-hop and reuse jobs
-    if(std::string(argv[3]) == "--multi-hop" || std::string(argv[3]) == "-G")
-    	file_id = "0";
-    else
-    	file_id = argv[4];
+    if (argc > 4)
+        {
+            if(std::string(argv[3]) == "--multi-hop" || std::string(argv[3]) == "-G")
+                file_id = "0";
+            else
+                file_id = argv[4];
+        }
 
     //catch any other unexpected exception, at least the transfer state will be propagated to the db
     set_terminate(myterminate);
-    set_unexpected(myunexpected);     
+    set_unexpected(myunexpected);
 
     Logger &logger = Logger::getInstance();
 
@@ -754,37 +758,37 @@ int main(int argc, char **argv)
 
             abnormalTermination("FAILED", errorMessage, "Error");
         }
-	
-               /*gfal2 debug logging*/
-                if (opts.debugLevel)
-                    {
-                        logger.INFO() << "Set the transfer to debug level " << opts.debugLevel << std::endl;
-                        gfal_set_verbose(GFAL_VERBOSE_TRACE | GFAL_VERBOSE_VERBOSE | GFAL_VERBOSE_TRACE_PLUGIN);
-                        gfal_log_set_handler((GLogFunc) log_func, NULL);
 
-                        if (opts.debugLevel >= 2)
-                            {
-                                setenv("CGSI_TRACE", "1", 1);
-                                setenv("GLOBUS_FTP_CLIENT_DEBUG_LEVEL", "255", 1);
-                                setenv("GLOBUS_FTP_CONTROL_DEBUG_LEVEL", "10", 1);
-                            }
-                        if (opts.debugLevel >= 3)
-                            {
-                                setenv("CGSI_TRACE", "1", 1);
-                                setenv("GLOBUS_FTP_CLIENT_DEBUG_LEVEL", "255", 1);
-                                setenv("GLOBUS_FTP_CONTROL_DEBUG_LEVEL", "10", 1);			    
-                                setenv("GLOBUS_GSI_AUTHZ_DEBUG_LEVEL", "1", 1);
-                                setenv("GLOBUS_CALLOUT_DEBUG_LEVEL", "1", 1);
-                                setenv("GLOBUS_GSI_CERT_UTILS_DEBUG_LEVEL", "1", 1);
-                                setenv("GLOBUS_GSI_CRED_DEBUG_LEVEL", "1", 1);
-                                setenv("GLOBUS_GSI_PROXY_DEBUG_LEVEL", "1", 1);
-                                setenv("GLOBUS_GSI_SYSCONFIG_DEBUG_LEVEL", "1", 1);
-                                setenv("GLOBUS_GSI_GSS_ASSIST_DEBUG_LEVEL", "1", 1);
-                                setenv("GLOBUS_GSSAPI_DEBUG_LEVEL", "1", 1);
-                                setenv("GLOBUS_NEXUS_DEBUG_LEVEL", "1", 1);
-                                setenv("GLOBUS_GIS_OPENSSL_ERROR_DEBUG_LEVEL", "1", 1);
-                            }
-                    }	
+    /*gfal2 debug logging*/
+    if (opts.debugLevel)
+        {
+            logger.INFO() << "Set the transfer to debug level " << opts.debugLevel << std::endl;
+            gfal_set_verbose(GFAL_VERBOSE_TRACE | GFAL_VERBOSE_VERBOSE | GFAL_VERBOSE_TRACE_PLUGIN);
+            gfal_log_set_handler((GLogFunc) log_func, NULL);
+
+            if (opts.debugLevel >= 2)
+                {
+                    setenv("CGSI_TRACE", "1", 1);
+                    setenv("GLOBUS_FTP_CLIENT_DEBUG_LEVEL", "255", 1);
+                    setenv("GLOBUS_FTP_CONTROL_DEBUG_LEVEL", "10", 1);
+                }
+            if (opts.debugLevel >= 3)
+                {
+                    setenv("CGSI_TRACE", "1", 1);
+                    setenv("GLOBUS_FTP_CLIENT_DEBUG_LEVEL", "255", 1);
+                    setenv("GLOBUS_FTP_CONTROL_DEBUG_LEVEL", "10", 1);
+                    setenv("GLOBUS_GSI_AUTHZ_DEBUG_LEVEL", "1", 1);
+                    setenv("GLOBUS_CALLOUT_DEBUG_LEVEL", "1", 1);
+                    setenv("GLOBUS_GSI_CERT_UTILS_DEBUG_LEVEL", "1", 1);
+                    setenv("GLOBUS_GSI_CRED_DEBUG_LEVEL", "1", 1);
+                    setenv("GLOBUS_GSI_PROXY_DEBUG_LEVEL", "1", 1);
+                    setenv("GLOBUS_GSI_SYSCONFIG_DEBUG_LEVEL", "1", 1);
+                    setenv("GLOBUS_GSI_GSS_ASSIST_DEBUG_LEVEL", "1", 1);
+                    setenv("GLOBUS_GSSAPI_DEBUG_LEVEL", "1", 1);
+                    setenv("GLOBUS_NEXUS_DEBUG_LEVEL", "1", 1);
+                    setenv("GLOBUS_GIS_OPENSSL_ERROR_DEBUG_LEVEL", "1", 1);
+                }
+        }
 
 
     GError* handleError = NULL;
@@ -878,7 +882,11 @@ int main(int argc, char **argv)
             msg_ifce::getInstance()->set_block_size(&tr_completed, opts.blockSize);
             msg_ifce::getInstance()->set_srm_space_token_dest(&tr_completed, opts.destTokenDescription);
             msg_ifce::getInstance()->set_srm_space_token_source(&tr_completed, opts.sourceTokenDescription);
-            msg_ifce::getInstance()->set_user_dn(&tr_completed, replace_dn(opts.user_dn));
+
+            if(opts.hide_user_dn)
+                msg_ifce::getInstance()->set_user_dn(&tr_completed, std::string(""));
+            else
+                msg_ifce::getInstance()->set_user_dn(&tr_completed, replace_dn(opts.user_dn));
 
             msg_ifce::getInstance()->set_file_metadata(&tr_completed, replaceMetadataString(currentTransfer.fileMetadata) );
             msg_ifce::getInstance()->set_job_metadata(&tr_completed, replaceMetadataString(opts.jobMetadata) );
@@ -929,9 +937,10 @@ int main(int argc, char **argv)
                 logger.INFO() << "Bringonline token:" << currentTransfer.tokenBringOnline << std::endl;
                 logger.INFO() << "Multihop: " << opts.multihop << std::endl;
                 logger.INFO() << "UDT: " << opts.enable_udt << std::endl;
-                if (opts.strictCopy) {
-                    logger.INFO() << "Copy only transfer!" << std::endl;
-                }
+                if (opts.strictCopy)
+                    {
+                        logger.INFO() << "Copy only transfer!" << std::endl;
+                    }
 
                 //set to active only for reuse
                 if (opts.areTransfersOnFile())
@@ -1126,11 +1135,11 @@ int main(int argc, char **argv)
                 globalTimeout = experimentalTimeout + 3600;
                 logger.INFO() << "Resetting global timeout thread to " << globalTimeout << " seconds" << std::endl;
 
-		//Level 3
-                if( (!opts.manualConfig || opts.autoTunned) && opts.tcpBuffersize == 1)
+                //tune streams based on levels
+                if( (!opts.manualConfig || opts.autoTunned) && opts.level == 3)
                     {
-                        int tcp_buffer_size = 4194304; //4MB
-                        int tcp_streams_max = 10;
+                        int tcp_buffer_size = 8388608; //8MB
+                        int tcp_streams_max = 16;
 
                         if( currentTransfer.fileSize <= tcp_buffer_size)
                             {
@@ -1158,25 +1167,20 @@ int main(int argc, char **argv)
                                     }
                             }
                     }
-                else //Level 1 or 2
+                else if( (!opts.manualConfig || opts.autoTunned) && opts.level == 2)
                     {
-                        //pass -1 to flag the need to reduce number of streams due to high latency
-                        if(opts.nStreams == -1)
-                            {
-                                opts.nStreams = 2;
-                                logger.INFO() << "Reducing tcp streams to 2 since low throughput obsverved due to high latency" << std::endl;
-                            }
-                        else
-                            {
-                                unsigned int experimentalNstreams = adjustStreamsBasedOnSize(currentTransfer.fileSize, opts.nStreams);
-                                if(!opts.manualConfig || opts.autoTunned || opts.nStreams==0)
-                                    {
-                                        if(true == lanTransfer(fileManagement.getSourceHostname(), fileManagement.getDestHostname()))
-                                            opts.nStreams = (experimentalNstreams * 2) > 16? 16: experimentalNstreams * 2;
-                                        else
-                                            opts.nStreams = experimentalNstreams;
-                                    }
-                            }
+                        gfalt_set_nbstreams(params, opts.nStreams, NULL);
+                        gfalt_set_tcp_buffer_size(params, opts.tcpBuffersize, NULL);
+                    }
+                else if( (!opts.manualConfig || opts.autoTunned) && opts.level == 1)
+                    {
+                        unsigned int experimentalNstreams = adjustStreamsBasedOnSize(currentTransfer.fileSize, opts.nStreams);
+                        opts.nStreams =  experimentalNstreams;
+                        gfalt_set_nbstreams(params, opts.nStreams, NULL);
+                        gfalt_set_tcp_buffer_size(params, opts.tcpBuffersize, NULL);
+                    }
+                else
+                    {
                         gfalt_set_nbstreams(params, opts.nStreams, NULL);
                         gfalt_set_tcp_buffer_size(params, opts.tcpBuffersize, NULL);
                     }
@@ -1453,8 +1457,8 @@ stop:
                 }
 
             inShutdown = true;
-            std::string archiveErr = fileManagement.archive();	    	    
-	    
+            std::string archiveErr = fileManagement.archive();
+
             if (!archiveErr.empty())
                 logger.ERROR() << "Could not archive: " << archiveErr << std::endl;
             reporter.sendLog(opts.jobId, currentTransfer.fileId, fileManagement._getLogArchivedFileFullPath(),
@@ -1480,7 +1484,7 @@ stop:
 
     if (opts.areTransfersOnFile() && readFile.length() > 0)
         unlink(readFile.c_str());
- 
+
     sleep(1);
     return EXIT_SUCCESS;
 }

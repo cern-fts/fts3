@@ -88,7 +88,7 @@ public:
 
     virtual void getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std::string & vos);
 
-    virtual void getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles> >& files);
+    virtual void getByJobIdReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFiles> > > >& files);
 
     virtual void getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles> >& files);
 
@@ -332,7 +332,7 @@ public:
 
     virtual void transferLogFileVector(std::map<int, struct message_log>& messagesLog);
 
-    unsigned int updateFileStatusReuse(TransferFiles& file, const std::string status);
+    unsigned int updateFileStatusReuse(TransferFiles const & file, const std::string status);
 
     void getCancelJob(std::vector<int>& requestIDs);
 
@@ -372,6 +372,8 @@ public:
 
     virtual void getVOPairs(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct);
 
+    virtual void getVOPairsWithReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct);
+
 
     //NEW deletions and staging API
     //deletions						 //file_id / state / reason
@@ -407,6 +409,8 @@ public:
     virtual int getMaxStatingsPerEndpoint(const std::string & endpoint, const std::string & vo);
 
     virtual void checkJobOperation(std::vector<std::string>& jobs, std::vector< boost::tuple<std::string, std::string> >& ops);
+
+    virtual bool getUserDnVisible();
 
 
 private:
@@ -471,9 +475,12 @@ private:
 
     std::vector<struct message_state> getStateOfDeleteInternal(soci::session& sql, const std::string& jobId, int fileId);
 
-    bool getOauthCredentials(const std::string& user_dn, const std::string& cloud_name, OAuth& oauth);
+    bool getOauthCredentials(const std::string& user_dn, const std::string& vo,
+                             const std::string& cloud_name, OAuth& oauth);
 
     bool isDmJob(std::string const & job);
 
     void cancelDmJobs(std::vector<std::string> const & jobs);
+
+    bool getUserDnVisibleInternal(soci::session& sql);
 };

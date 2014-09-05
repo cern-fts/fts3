@@ -23,9 +23,9 @@ bool retryTransfer(int errorNo, const std::string& category, const std::string& 
         return true;
     found = message.find("SRM_INTERNAL_ERROR");
     if (found!=std::string::npos)
-        return true;	
-	
-	
+        return true;
+
+
     if (category == "SOURCE")
         {
             switch (errorNo)

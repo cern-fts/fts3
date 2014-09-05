@@ -17,8 +17,10 @@
 
 #include <boost/property_tree/ptree.hpp>
 
-namespace fts3 {
-namespace cli {
+namespace fts3
+{
+namespace cli
+{
 
 namespace pt = boost::property_tree;
 

@@ -113,9 +113,6 @@ private:
     const map< string, set<string> > sourceToVos;
     const map< string, set<string> > destinationToSources;
     const map< string, set<string> > destinationToVos;
-
-    /// DB interface
-    GenericDbIfce* db;
 };
 
 } /* namespace cli */

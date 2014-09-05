@@ -52,17 +52,17 @@ public:
                                unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files);
 
     void getDmFileStatus(std::string requestID, bool archive,
-                               unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files);
+                         unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files);
 
     void listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
                       std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst);
 
     void listRequestsDm(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
-                                  std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst);
+                        std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst);
 
     TransferJobs* getTransferJob(std::string jobId, bool archive);
 
-    void getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles> >& files);
+    void getByJobIdReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFiles> > > >& files);
 
     void getByJobId( std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles> >& files);
 
@@ -292,7 +292,7 @@ public:
 
     void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end, std::string service_name);
 
-    unsigned int updateFileStatusReuse(TransferFiles& file, const std::string status);
+    unsigned int updateFileStatusReuse(TransferFiles const & file, const std::string status);
 
     void getCancelJob(std::vector<int>& requestIDs);
 
@@ -331,6 +331,8 @@ public:
     void getTransferJobStatusDetailed(std::string job_id, std::vector<boost::tuple<std::string, std::string, int, std::string, std::string> >& files);
 
     void getVOPairs(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct);
+
+    void getVOPairsWithReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct);
 
 
     //NEW deletions and staging API
@@ -373,11 +375,14 @@ public:
 
     void checkJobOperation(std::vector<std::string>& jobs, std::vector< boost::tuple<std::string, std::string> >& ops);
 
-    bool getOauthCredentials(const std::string& user_dn, const std::string& cloud_name, OAuth& oauth);
+    bool getOauthCredentials(const std::string& user_dn, const std::string& vo,
+                             const std::string& cloud_name, OAuth& oauth);
 
     bool isDmJob(std::string const & job);
 
     void cancelDmJobs(std::vector<std::string> const & jobs);
+
+    bool getUserDnVisible();
 };
 
 

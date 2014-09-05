@@ -14,17 +14,17 @@
 
 void DeletionContext::add(context_type const & ctx)
 {
-  /*
-    if(boost::get<copy_pin_lifetime>(ctx) > pinlifetime)
-        {
-            pinlifetime = boost::get<copy_pin_lifetime>(ctx);
-        }
+    /*
+      if(boost::get<copy_pin_lifetime>(ctx) > pinlifetime)
+          {
+              pinlifetime = boost::get<copy_pin_lifetime>(ctx);
+          }
 
-    if(boost::get<bring_online_timeout>(ctx) > bringonlineTimeout)
-        {
-            bringonlineTimeout = boost::get<bring_online_timeout>(ctx);
-        }
-  */
+      if(boost::get<bring_online_timeout>(ctx) > bringonlineTimeout)
+          {
+              bringonlineTimeout = boost::get<bring_online_timeout>(ctx);
+          }
+    */
     surls.insert(boost::get<source_url>(ctx));
 
     //if (delegationId.empty()) delegationId = boost::get<dlg_id>(ctx);

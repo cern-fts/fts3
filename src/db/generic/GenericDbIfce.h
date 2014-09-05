@@ -32,6 +32,8 @@
 #include <map>
 #include <set>
 #include <list>
+#include <queue>
+
 #include "JobStatus.h"
 #include "JobParameterHandler.h"
 #include "FileTransferStatus.h"
@@ -119,17 +121,17 @@ public:
 
     // If limit == 0, then all results
     virtual void getDmFileStatus(std::string requestID, bool archive,
-                                       unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files) = 0;
+                                 unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files) = 0;
 
     virtual void listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
                               std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst) = 0;
 
     virtual void listRequestsDm(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
-                                  std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst) = 0;
+                                std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst) = 0;
 
     virtual TransferJobs* getTransferJob(std::string jobId, bool archive) = 0;
 
-    virtual void getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles> >& files) = 0;
+    virtual void getByJobIdReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFiles> > > >& files) = 0;
 
     virtual void getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles> >& files) = 0;
 
@@ -377,7 +379,7 @@ public:
         service_name = std::string("");
     }
 
-    virtual unsigned int updateFileStatusReuse(TransferFiles& file, const std::string status) = 0;
+    virtual unsigned int updateFileStatusReuse(TransferFiles const & file, const std::string status) = 0;
 
     virtual void getCancelJob(std::vector<int>& requestIDs) = 0;
 
@@ -416,6 +418,8 @@ public:
     virtual void getTransferJobStatusDetailed(std::string job_id, std::vector<boost::tuple<std::string, std::string, int, std::string, std::string> >& files) = 0;
 
     virtual void getVOPairs(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct) = 0;
+
+    virtual void getVOPairsWithReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct) = 0;
 
 
     //NEW deletions and staging API
@@ -458,7 +462,11 @@ public:
     virtual bool isDmJob(std::string const & job) = 0;
 
     // Cloud storage API
-    virtual bool getOauthCredentials(const std::string& user_dn, const std::string& cloud_name, OAuth& oauth) = 0;
+    virtual bool getOauthCredentials(const std::string& user_dn,
+                                     const std::string& vo, const std::string& cloud_name,
+                                     OAuth& oauth) = 0;
 
     virtual void cancelDmJobs(std::vector<std::string> const & jobs) = 0;
+
+    virtual bool getUserDnVisible() = 0;
 };

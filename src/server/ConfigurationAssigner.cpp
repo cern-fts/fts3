@@ -42,7 +42,7 @@ using namespace fts3::common;
 
 using namespace boost::assign;
 
-ConfigurationAssigner::ConfigurationAssigner(TransferFiles& file) :
+ConfigurationAssigner::ConfigurationAssigner(TransferFiles const & file) :
     file(file),
     db (DBSingleton::instance().getDBObjectInstance()),
     assign_count(0)

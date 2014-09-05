@@ -156,6 +156,14 @@ struct type_conversion<TransferFiles>
         file.SELECTION_STRATEGY = v.get<std::string>("selection_strategy", "");
         file.INTERNAL_FILE_PARAMS = v.get<std::string>("internal_job_params", "");
         file.USER_CREDENTIALS = v.get<std::string>("user_cred", "");
+        try
+            {
+                file.REUSE_JOB = v.get<std::string>("reuse_job", "");
+            }
+        catch(...)
+            {
+                // optional
+            }
 
         // filesize and reason are NOT queried by any method that uses this
         // type
@@ -390,10 +398,10 @@ struct type_conversion<OAuth>
 
     static void from_base(values const& v, indicator, OAuth& oauth)
     {
-        oauth.app_key      = v.get<std::string>("app_key");
-        oauth.app_secret   = v.get<std::string>("app_secret");
-        oauth.access_token = v.get<std::string>("access_token");
-        oauth.access_token_secret = v.get<std::string>("access_token_secret");
+        oauth.app_key      = v.get<std::string>("app_key", "");
+        oauth.app_secret   = v.get<std::string>("app_secret", "");
+        oauth.access_token = v.get<std::string>("access_token", "");
+        oauth.access_token_secret = v.get<std::string>("access_token_secret", "");
     }
 };
 

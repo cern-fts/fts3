@@ -29,7 +29,8 @@ CREATE TABLE t_server_config (
   max_time_queue INTEGER default 0,
   global_timeout INTEGER default 0,
   sec_per_mb INTEGER default 0,
-  vo_name VARCHAR2(100)
+  vo_name VARCHAR2(100),
+  show_user_dn VARCHAR2(3) CHECK (show_user_dn in ('on', 'off'))
 );
 insert into t_server_config(retry,max_time_queue,global_timeout,sec_per_mb) values(0,0,0,0);
 
@@ -53,10 +54,10 @@ CREATE TABLE t_optimize (
    file_id	INTEGER NOT NULL,
 --
 -- source se
-   source_se	VARCHAR2(255),
+   source_se	VARCHAR2(150),
 --
 -- dest se
-   dest_se	VARCHAR2(255),
+   dest_se	VARCHAR2(150),
 --
 -- number of streams
    nostreams       	NUMBER default NULL,
@@ -91,8 +92,8 @@ CREATE TABLE t_optimize (
 --
 CREATE TABLE t_optimizer_evolution (
     datetime     TIMESTAMP WITH TIME ZONE,
-    source_se    VARCHAR(255),
-    dest_se      VARCHAR(255),
+    source_se    VARCHAR(150),
+    dest_se      VARCHAR(150),
     nostreams    NUMBER DEFAULT NULL,
     timeout      NUMBER DEFAULT NULL,
     active       NUMBER DEFAULT NULL,
@@ -129,10 +130,10 @@ CREATE TABLE t_config_audit (
 CREATE TABLE t_debug (
 --
 -- source hostname
-   source_se	VARCHAR2(255),
+   source_se	VARCHAR2(150),
 --
 -- dest hostanme
-   dest_se		VARCHAR2(255),
+   dest_se		VARCHAR2(150),
 --
 -- debug on/off
    debug		VARCHAR2(3) default 'off',
@@ -406,10 +407,10 @@ CREATE TABLE t_job (
   ,job_params       	VARCHAR2(255)
 --
 -- Source SE host name
-  ,source_se         VARCHAR2(255)
+  ,source_se         VARCHAR2(150)
 --
 -- Dest SE host name
-  ,dest_se           VARCHAR2(255)
+  ,dest_se           VARCHAR2(150)
 --
 -- the DN of the user starting the job - they are the only one
 -- who can sumbit/cancel
@@ -540,10 +541,10 @@ CREATE TABLE t_file (
   ,dest_surl		VARCHAR2(1100)
 --
 -- Source SE host name
-  ,source_se         VARCHAR2(255)
+  ,source_se         VARCHAR2(150)
 --
 -- Dest SE host name
-  ,dest_se           VARCHAR2(255)
+  ,dest_se           VARCHAR2(150)
 --
 -- The agent who is transferring the file. This is only valid when the file
 -- is in 'Active' state
@@ -857,10 +858,24 @@ CREATE TABLE t_hosts (
     CONSTRAINT t_hosts_pk PRIMARY KEY (hostname, service_name)
 );
 
+CREATE TABLE t_optimize_streams (
+  source_se    VARCHAR2(150) NOT NULL,
+  dest_se      VARCHAR2(150) NOT NULL,  
+  datetime     TIMESTAMP WITH TIME ZONE DEFAULT NULL,
+  nostreams    INTEGER NOT NULL, 
+  throughput   FLOAT DEFAULT NULL,
+  CONSTRAINT t_optimize_streams_pk PRIMARY KEY (source_se, dest_se, nostreams),
+  CONSTRAINT t_optimize_streams_fk FOREIGN KEY (source_se, dest_se) REFERENCES t_optimize_active (source_se, dest_se) ON DELETE CASCADE
+);
+
+CREATE INDEX t_optimize_streams_datetime ON t_optimize_streams(datetime);
+CREATE INDEX t_optimize_streams_throughput ON t_optimize_streams(throughput);
+
+
 
 CREATE TABLE t_optimize_active (
-  source_se    VARCHAR2(255) NOT NULL,
-  dest_se      VARCHAR2(255) NOT NULL,
+  source_se    VARCHAR2(150) NOT NULL,
+  dest_se      VARCHAR2(150) NOT NULL,
   active       INTEGER DEFAULT 2,
   message      VARCHAR2(512),
   datetime  TIMESTAMP WITH TIME ZONE,
@@ -868,6 +883,8 @@ CREATE TABLE t_optimize_active (
   fixed       VARCHAR2(3) CHECK (fixed in ('on', 'off')),
   CONSTRAINT t_optimize_active_pk PRIMARY KEY (source_se, dest_se)
 );
+
+
 
 --
 --
@@ -949,6 +966,28 @@ CREATE TABLE t_profiling_snapshot (
 );
 
 CREATE INDEX t_prof_snapshot_total ON t_profiling_snapshot(total);
+
+--
+-- Tables for cloud support
+--
+CREATE TABLE t_cloudStorage (
+    cloudStorage_name VARCHAR2(50) NOT NULL PRIMARY KEY,
+    app_key           VARCHAR2(255),
+    app_secret        VARCHAR2(255),
+    service_api_url   VARCHAR2(1024)
+);
+
+CREATE TABLE t_cloudStorageUser (
+    user_dn              VARCHAR2(700) NULL,
+    vo_name              VARCHAR2(100) NULL,
+    cloudStorage_name    VARCHAR2(36) NOT NULL,
+    access_token         VARCHAR2(255),
+    access_token_secret  VARCHAR2(255),
+    request_token        VARCHAR2(255),
+    request_token_secret VARCHAR2(255),
+    FOREIGN KEY (cloudStorage_name) REFERENCES t_cloudStorage(cloudStorage_name),
+    PRIMARY KEY (user_dn, vo_name, cloudStorage_name)
+);
 
 exit;
 

@@ -32,7 +32,8 @@ CREATE TABLE t_server_config (
   max_time_queue INTEGER DEFAULT 0,
   global_timeout INTEGER DEFAULT 0,
   sec_per_mb INTEGER DEFAULT 0,
-  vo_name VARCHAR(100)
+  vo_name VARCHAR(100),
+  show_user_dn VARCHAR(3) CHECK (show_user_dn in ('on', 'off'))
 );
 INSERT INTO t_server_config (retry,max_time_queue,global_timeout,sec_per_mb) values(0,0,0,0);
 
@@ -700,6 +701,18 @@ CREATE TABLE t_optimize_active (
   CONSTRAINT t_optimize_active_pk PRIMARY KEY (source_se, dest_se)
 );
 
+CREATE TABLE t_optimize_streams (
+  source_se    VARCHAR(150) NOT NULL,
+  dest_se      VARCHAR(150) NOT NULL,  
+  nostreams    INTEGER NOT NULL,   
+  datetime     TIMESTAMP  NULL DEFAULT NULL,
+  throughput      FLOAT DEFAULT NULL,
+  CONSTRAINT t_optimize_streams_pk PRIMARY KEY (source_se, dest_se, nostreams),
+  CONSTRAINT t_optimize_streams_fk FOREIGN KEY (source_se, dest_se) REFERENCES t_optimize_active (source_se, dest_se) ON DELETE CASCADE
+);
+
+CREATE INDEX t_optimize_streams_datetime ON t_optimize_streams(datetime);
+CREATE INDEX t_optimize_streams_throughput ON t_optimize_streams(throughput);
 
 -- 
 -- t_turl store the turls used for a given surl
@@ -883,12 +896,13 @@ CREATE TABLE t_cloudStorage (
 );
 
 CREATE TABLE t_cloudStorageUser (
-    user_dn              VARCHAR(700) NOT NULL,
+    user_dn              VARCHAR(700) NULL,
+    vo_name              VARCHAR(100) NULL,
     cloudStorage_name    VARCHAR(36) NOT NULL,
     access_token         VARCHAR(255),
     access_token_secret  VARCHAR(255),
     request_token        VARCHAR(255),
     request_token_secret VARCHAR(255),
     FOREIGN KEY (cloudStorage_name) REFERENCES t_cloudStorage(cloudStorage_name),
-    PRIMARY KEY (user_dn, cloudStorage_name)
+    PRIMARY KEY (user_dn, vo_name, cloudStorage_name)
 );

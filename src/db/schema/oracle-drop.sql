@@ -43,6 +43,8 @@ DROP TABLE t_profiling_snapshot;
 DROP TABLE t_server_sanity;
 DROP TABLE t_hosts;
 DROP TABLE t_optimize_active;
+DROP TABLE T_CLOUDSTORAGE;
+DROP TABLE T_CLOUDSTORAGEUSER;
 
 
 exit;

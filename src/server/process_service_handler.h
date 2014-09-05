@@ -181,27 +181,7 @@ protected:
         return u0.Protocol + "://" + u0.Host;
     }
 
-    void createJobFile(std::string job_id, std::vector<std::string>& files)
-    {
-        std::ofstream fout;
-        try
-            {
-                std::vector<std::string>::const_iterator iter;
-                std::string filename = "/var/lib/fts3/" + job_id;
-                fout.open(filename.c_str(), ios::out);
-                for (iter = files.begin(); iter != files.end(); ++iter)
-                    {
-                        fout << *iter << std::endl;
-                    }
-                fout.close();
-            }
-        catch(...)
-            {
-                fout.close();
-            }
-    }
-
-    void getFiles( std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles> >& voQueues)
+    void getFiles( std::vector< boost::tuple<std::string, std::string, std::string> >& distinct)
     {
         try
             {
@@ -209,6 +189,7 @@ protected:
                     return;
 
                 //now get files to be scheduled
+                std::map< std::string, std::list<TransferFiles> > voQueues;
                 DBSingleton::instance().getDBObjectInstance()->getByJobId(distinct, voQueues);
 
                 if(voQueues.empty())
@@ -266,8 +247,8 @@ protected:
                                                 // check the proxy lifetime in DB
                                                 time_t db_lifetime = -1;
                                                 boost::scoped_ptr<Cred> cred (DBSingleton::instance().getDBObjectInstance()->
-                                                            findGrDPStorageElement(tf.CRED_ID, tf.DN)
-                                                    );
+                                                                              findGrDPStorageElement(tf.CRED_ID, tf.DN)
+                                                                             );
                                                 if (cred.get()) db_lifetime = cred->termination_time - time(NULL);
                                                 // check the proxy lifetime in filesystem
                                                 time_t lifetime, voms_lifetime;
@@ -276,15 +257,15 @@ protected:
                                                 if (db_lifetime > lifetime)
                                                     {
                                                         filename = get_proxy_cert(
-                                                                         tf.DN, // user_dn
-                                                                         tf.CRED_ID, // user_cred
-                                                                         tf.VO_NAME, // vo_name
-                                                                         "",
-                                                                         "", // assoc_service
-                                                                         "", // assoc_service_type
-                                                                         false,
-                                                                         ""
-                                                                     );
+                                                                       tf.DN, // user_dn
+                                                                       tf.CRED_ID, // user_cred
+                                                                       tf.VO_NAME, // vo_name
+                                                                       "",
+                                                                       "", // assoc_service
+                                                                       "", // assoc_service_type
+                                                                       false,
+                                                                       ""
+                                                                   );
                                                     }
                                             }
 
@@ -324,24 +305,8 @@ protected:
     {
         try
             {
-                std::string params = std::string("");
-                std::string sourceSiteName("");
-                std::string destSiteName("");
-                std::string source_hostname("");
-                std::string destin_hostname("");
-                SeProtocolConfig protocol;
-                std::string proxy_file("");
-                std::string oauth_file("");
-                unsigned debugLevel = 0;
-
                 //get distinct source, dest, vo first
                 std::vector< boost::tuple<std::string, std::string, std::string> > distinct;
-                std::map< std::string, std::list<TransferFiles> > voQueues1;
-                std::map< std::string, std::list<TransferFiles> > voQueues2;
-                std::map< std::string, std::list<TransferFiles> > voQueues3;
-                std::map< std::string, std::list<TransferFiles> > voQueues4;
-                std::map< std::string, std::list<TransferFiles> > voQueues; //merged
-
                 boost::thread_group g;
 
                 try
@@ -403,22 +368,16 @@ protected:
 
                 //create threads only when needed
                 if(!split_11.empty())
-                    g.create_thread(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_11), boost::ref(voQueues1)));
+                    g.create_thread(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_11)));
                 if(!split_21.empty())
-                    g.create_thread(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_21), boost::ref(voQueues2)));
+                    g.create_thread(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_21)));
                 if(!split_12.empty())
-                    g.create_thread(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_12), boost::ref(voQueues3)));
+                    g.create_thread(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_12)));
                 if(!split_22.empty())
-                    g.create_thread(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_22), boost::ref(voQueues4)));
+                    g.create_thread(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_22)));
 
                 // wait for them
                 g.join_all();
-
-                voQueues1.clear();
-                voQueues2.clear();
-                voQueues3.clear();
-                voQueues4.clear();
-                voQueues.clear();
                 distinct.clear();
             }
         catch (std::exception& e)
@@ -436,9 +395,8 @@ protected:
     void executeTransfer_a()
     {
         static bool drainMode = false;
-        static int reuseExec = 0;
 
-        while (1)
+        while (true)
             {
                 retrieveRecords = time(0);
 
@@ -470,13 +428,11 @@ protected:
                     }
                 catch (std::exception& e)
                     {
-                        reuseExec = 0;
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler " << e.what() << commit;
                         sleep(2);
                     }
                 catch (...)
                     {
-                        reuseExec = 0;
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler!" << commit;
                         sleep(2);
                     }

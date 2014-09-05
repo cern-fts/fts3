@@ -20,7 +20,8 @@
 
 #include <string>
 
-struct OAuth {
+struct OAuth
+{
     std::string cloud_name;
     std::string app_key;
     std::string app_secret;

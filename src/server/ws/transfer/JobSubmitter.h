@@ -116,8 +116,6 @@ private:
     string vo;
     /// delegation ID
     string delegationId;
-    /// user password
-    string cred;
     /// copy lifetime pin
     int copyPinLifeTime;
 
