@@ -10168,7 +10168,10 @@ int MySqlAPI::getStreamsOptimization(const std::string & source_hostname, const 
                             sql << " SELECT nostreams FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se ORDER BY throughput DESC LIMIT 1 ",
                                 soci::use(source_hostname), soci::use(destination_hostname), soci::into(optimumNoStreams, isNullOptimumStreamsFound);
 
-                            return 	(int) optimumNoStreams;
+			    if(sql.got_data())
+                            	return 	(int) optimumNoStreams;
+			    else
+			        return 4;
                         }
                     else if(maxNoStreams < 16) //use the maximum sample taken so far
                         {
