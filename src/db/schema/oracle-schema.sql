@@ -868,6 +868,10 @@ CREATE TABLE t_optimize_streams (
   CONSTRAINT t_optimize_streams_fk FOREIGN KEY (source_se, dest_se) REFERENCES t_optimize_active (source_se, dest_se) ON DELETE CASCADE
 );
 
+CREATE INDEX t_optimize_streams_datetime ON t_optimize_streams(datetime);
+CREATE INDEX t_optimize_streams_throughput ON t_optimize_streams(throughput);
+
+
 
 CREATE TABLE t_optimize_active (
   source_se    VARCHAR2(150) NOT NULL,

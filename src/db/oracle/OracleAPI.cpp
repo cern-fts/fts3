@@ -3510,7 +3510,7 @@ bool OracleAPI::updateOptimizer()
     int minStreams = 1;
     int nostreams = 1;
     double throughput=0.0;
-    double maxThroughput = 0.0;  
+    double maxThroughput = 0.0;
 
 
     try
@@ -3582,9 +3582,9 @@ bool OracleAPI::updateOptimizer()
             //if not set, flag as 0
             if (isRetry == soci::i_null || retrySet == 0)
                 retrySet = 0;
-		
-		
-           /* Start of TCP streams optimization "zone" */
+
+
+            /* Start of TCP streams optimization "zone" */
             soci::statement stmt20 = (
                                          sql.prepare << "SELECT max(nostreams) FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se ",
                                          soci::use(source_hostname),
@@ -3599,17 +3599,6 @@ bool OracleAPI::updateOptimizer()
                                          soci::use(nostreams),
                                          soci::into(datetimeStreams, isNullDatetime));
 
-            soci::statement stmt22 = (
-                                         sql.prepare << " MERGE INTO t_optimize_streams USING " 
-							" (SELECT :source_se as source_se, :dest_se as dest_se, :nostreams as nostreams FROM dual) Streams ON "
-							" (t_optimize_streams.source_se=Streams.source_se AND t_optimize_streams.dest_se=Streams.dest _se) AND t_optimize_streams.nostreams=Streams.nostreams ) "
-                					" WHEN MATCHED THEN UPDATE SET t_optimize_streams.throughput = :throughput "
-                					" WHEN NOT MATCHED THEN INSERT (source_se, dest_se, nostreams, datetime, throughput) VALUES (Streams.source_se, Streams.dest_se, Streams.nostreams, sys_extract_utc(systimestamp), Streams.throughput)",
-                                         
-                                         soci::use(source_hostname),
-                                         soci::use(destin_hostname),
-                                         soci::use(nostreams),
-                                         soci::use(throughput));
 
             soci::statement stmt23 = (
                                          sql.prepare << "SELECT max(throughput) FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se ",
@@ -3621,7 +3610,7 @@ bool OracleAPI::updateOptimizer()
                                          sql.prepare << "DELETE FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se ",
                                          soci::use(source_hostname),
                                          soci::use(destin_hostname));
-		
+
 
 
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
@@ -3659,12 +3648,12 @@ bool OracleAPI::updateOptimizer()
                     lanTransferBool = false;
                     submitted = 0.0;
                     ema = 0.0;
-		    nostreams = 1;
+                    nostreams = 1;
                     isNullStreamsOptimization = soci::i_ok;
                     isNullDatetime = soci::i_ok;
                     maxThroughput = 0.0;
-		    
-                   // Weighted average
+
+                    // Weighted average
                     soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
                             "   SELECT filesize, throughput "
                             "   FROM t_file "
@@ -3684,7 +3673,7 @@ bool OracleAPI::updateOptimizer()
                     if (totalSize > 0)
                         throughput /= totalSize;
 
-                   /* apply streams optimization, no matter the level here since if it's switch to level 2 to have info ready*/
+                    /* apply streams optimization, no matter the level here since if it's switch to level 2 to have info ready*/
 
                     //get max streams
                     stmt20.execute(true);
@@ -3700,20 +3689,31 @@ bool OracleAPI::updateOptimizer()
 
                             if(nostreams < maxNoStreams) //haven't completed yet with 1-16 TCP streams range
                                 {
-                                    if(diff >= 3) //every 1h experiment with diff number of streams
+                                    if(diff >= 3600) //every 1h experiment with diff number of streams
                                         {
                                             nostreams += 1;
                                         }
                                     if(throughput > 0.0)
                                         {
                                             sql.begin();
-                                            stmt22.execute(true);
+                                                        sql << " MERGE INTO t_optimize_streams USING "
+							" (SELECT :source as source, :dest as dest, :streams as streams FROM dual) Pair "
+							" ON (t_optimize_streams.source_se = Pair.source AND t_optimize_streams.dest_se = Pair.dest AND t_optimize_streams.nostreams = Pair.streams) " 
+							" WHEN MATCHED THEN UPDATE SET throughput = :throughput "
+							" WHEN NOT MATCHED THEN INSERT (source_se, dest_se, nostreams, datetime, throughput) "
+							" VALUES (Pair.source, Pair.dest, Pair.streams, sys_extract_utc(systimestamp), :throughput)",
+                                                        soci::use(source_hostname),
+                                                        soci::use(destin_hostname),
+                                                        soci::use(nostreams),
+                                                        soci::use(throughput),
+                                                        soci::use(throughput);                                            
+
                                             sql.commit();
                                         }
                                 }
                             else //all samples taken, max is 16 streams
                                 {
-                                    if (diff >= 10) //restart from stream 1, half a day has passed, check throughput though
+                                    if (diff >= 43200) //restart from stream 1, half a day has passed, check throughput though
                                         {
                                             stmt23.execute(true); //get max throughput of all samples
 
@@ -3722,7 +3722,18 @@ bool OracleAPI::updateOptimizer()
                                                     nostreams = minStreams;
                                                     sql.begin();
                                                     stmt24.execute(true);	//delete all previous records for this pair
-                                                    stmt22.execute(true);	//start from the beginning
+						    
+                                                        sql << " MERGE INTO t_optimize_streams USING "
+							" (SELECT :source as source, :dest as dest, :streams as streams FROM dual) Pair "
+							" ON (t_optimize_streams.source_se = Pair.source AND t_optimize_streams.dest_se = Pair.dest AND t_optimize_streams.nostreams = Pair.streams) "
+							" WHEN MATCHED THEN UPDATE SET throughput = :throughput "
+							" WHEN NOT MATCHED THEN INSERT (source_se, dest_se, nostreams, datetime, throughput) "
+							" VALUES (Pair.source, Pair.dest, Pair.streams, sys_extract_utc(systimestamp), :throughput)",
+                                                        soci::use(source_hostname),
+                                                        soci::use(destin_hostname),
+                                                        soci::use(nostreams),
+                                                        soci::use(throughput),
+                                                        soci::use(throughput);
                                                     sql.commit();
                                                 }
                                         }
@@ -3733,11 +3744,21 @@ bool OracleAPI::updateOptimizer()
                             if(throughput > 0.0)
                                 {
                                     sql.begin();
-                                    stmt22.execute(true);
-                                    sql.commit();
+                                                        sql << " MERGE INTO t_optimize_streams USING "
+							" (SELECT :source as source, :dest as dest, :streams as streams FROM dual) Pair "
+							" ON (t_optimize_streams.source_se = Pair.source AND t_optimize_streams.dest_se = Pair.dest AND t_optimize_streams.nostreams = Pair.streams) "
+							" WHEN MATCHED THEN UPDATE SET throughput = :throughput "
+							" WHEN NOT MATCHED THEN INSERT (source_se, dest_se, nostreams, datetime, throughput) "
+							" VALUES (Pair.source, Pair.dest, Pair.streams, sys_extract_utc(systimestamp), :throughput)",
+                                                        soci::use(source_hostname),
+                                                        soci::use(destin_hostname),
+                                                        soci::use(nostreams),
+                                                        soci::use(throughput),
+                                                        soci::use(throughput);                                    
+				    sql.commit();
                                 }
-                        }		    		    
-                   
+                        }
+
 
                     lanTransferBool = lanTransfer(source_hostname, destin_hostname);
 
@@ -3746,7 +3767,7 @@ bool OracleAPI::updateOptimizer()
                     if (isNullFixed == soci::i_ok && active_fixed == "on")
                         continue;
 
- 
+
                     // Ratio of success
                     soci::rowset<soci::row> rs = (sql.prepare << "SELECT file_state, retry, current_failures FROM t_file "
                                                   "WHERE "
@@ -3796,7 +3817,7 @@ bool OracleAPI::updateOptimizer()
 
                     //check if there is any other source for a given dest
                     stmt18.execute(true);
-                    
+
                     // Max active transfers
                     stmt8.execute(true);
 
@@ -11470,31 +11491,31 @@ bool OracleAPI::resetForRetryDelete(soci::session& sql, int file_id, const std::
 
 
 bool OracleAPI::getOauthCredentials(const std::string& user_dn,
-	        const std::string& vo, const std::string& cloud_name,
-	        OAuth& oauth)
-	{
-	    soci::session sql(*connectionPool);
-	
-	    try
-	        {
-	            sql << "SELECT app_key, app_secret, access_token, access_token_secret "
-	                   "FROM t_cloudStorage cs, t_cloudStorageUser cu "
-	                   "WHERE (cu.user_dn=:user_dn OR cu.vo_name=:vo) AND cs.cloudStorage_name=:cs_name AND cs.cloudStorage_name = cu.cloudStorage_name",
-	                   soci::use(user_dn), soci::use(vo), soci::use(cloud_name), soci::into(oauth);
-	             if (!sql.got_data())
-	                 return false;
-	        }
-	    catch (std::exception& e)
-	        {
-	            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-	        }
-	    catch (...)
-	        {
-	            throw Err_Custom(std::string(__func__) + ": Caught exception " );
-	        }
-	    return true;
-	}
-	
+                                    const std::string& vo, const std::string& cloud_name,
+                                    OAuth& oauth)
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            sql << "SELECT app_key, app_secret, access_token, access_token_secret "
+                "FROM t_cloudStorage cs, t_cloudStorageUser cu "
+                "WHERE (cu.user_dn=:user_dn OR cu.vo_name=:vo) AND cs.cloudStorage_name=:cs_name AND cs.cloudStorage_name = cu.cloudStorage_name",
+                soci::use(user_dn), soci::use(vo), soci::use(cloud_name), soci::into(oauth);
+            if (!sql.got_data())
+                return false;
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+    return true;
+}
+
 
 bool OracleAPI::isDmJob(std::string const & job)
 {
