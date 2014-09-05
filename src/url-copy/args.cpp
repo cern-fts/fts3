@@ -45,18 +45,19 @@ const option UrlCopyOpts::long_options[] =
     {"sec-per-mb",    	  required_argument, 0, 'V'},
     {"user-dn",    	  required_argument, 0, 'Y'},
     {"alias",    	  required_argument, 0, '7'},
-    {"oauth",         required_argument, 0, '@'},
-    {"strict-copy",   no_argument,       0, 'S'},
-    {"hide-user-dn",   no_argument,       0, '8'},
+    {"oauth",             required_argument, 0, '@'},
+    {"strict-copy",       no_argument,       0, 'S'},
+    {"hide-user-dn",      no_argument,       0, '8'},
+    {"level",    	  required_argument, 0, '9'},
     {0, 0, 0, 0}
 };
 
-const char UrlCopyOpts::short_options[] = "PONM:L:K:J:I:H:GRFD:E:C:z:A:t:a:b:c:de:f:h:ij:k:B:5:UXZV:Y:7:@:S:8";
+const char UrlCopyOpts::short_options[] = "PONM:L:K:J:I:H:GRFD:E:C:z:A:t:a:b:c:de:f:h:ij:k:B:5:UXZV:Y:7:@:S:8:9:";
 
 UrlCopyOpts::UrlCopyOpts(): monitoringMessages(false), autoTunned(false),
     manualConfig(false), overwrite(false), daemonize(false),
     logToStderr(false), reuse(false), multihop(false), enable_udt(false), enable_ipv6(false),
-    global_timeout(false), strictCopy(false),hide_user_dn(false),
+    global_timeout(false), strictCopy(false),hide_user_dn(false), level(1),
     debugLevel(0),
     compareChecksum(CHECKSUM_DONT_CHECK),
     fileId(0), userFileSize(0), bringOnline(-1), copyPinLifetime(-1),
@@ -236,10 +237,13 @@ int UrlCopyOpts::parse(int argc, char * const argv[])
                             break;
                         case '8':
                             hide_user_dn = true;
-                            break;			    
+                            break;
                         case '?':
                             errorMessage = usage(argv[0]);
                             return -1;
+                        case '9':
+                            level = boost::lexical_cast<int>(optarg);
+                            break;
                         }
                 }
         }

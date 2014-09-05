@@ -260,16 +260,17 @@ void get_proxy_lifetime(const std::string& filename, time_t *lifetime, time_t *v
             if (voms_data.data.size() > 0)
                 {
                     *vo_lifetime = INT_MAX;
-                    for (size_t i = 0; i < voms_data.data.size(); ++i) {
-                        const voms &data = voms_data.data[i];
-                        struct tm tm_eol;
-                        strptime(data.date2.c_str(), "%Y%m%d%H%M%S%Z", &tm_eol);
-                        time_t vo_eol = timegm(&tm_eol);
-                        time_t utc_now = db::getUTC(0);
-                        time_t vo_remaining = vo_eol - utc_now;
-                        if (vo_remaining < *vo_lifetime)
-                            *vo_lifetime = vo_remaining;
-                    }
+                    for (size_t i = 0; i < voms_data.data.size(); ++i)
+                        {
+                            const voms &data = voms_data.data[i];
+                            struct tm tm_eol;
+                            strptime(data.date2.c_str(), "%Y%m%d%H%M%S%Z", &tm_eol);
+                            time_t vo_eol = timegm(&tm_eol);
+                            time_t utc_now = db::getUTC(0);
+                            time_t vo_remaining = vo_eol - utc_now;
+                            if (vo_remaining < *vo_lifetime)
+                                *vo_lifetime = vo_remaining;
+                        }
                 }
             else
                 {

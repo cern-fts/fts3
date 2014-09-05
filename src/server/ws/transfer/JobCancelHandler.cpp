@@ -135,9 +135,9 @@ std::string JobCancelHandler::get_state(std::string const & job, std::string con
     std::string const & status = job_ptr->JOB_STATE;
     // make sure the transfer-job is not in terminal state
     if (JobStatusHandler::getInstance().isTransferFinished(status))
-    {
-        return status;
-    }
+        {
+            return status;
+        }
 
     return CANCELED;
 }

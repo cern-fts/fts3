@@ -52,7 +52,7 @@ public:
     /**
      * Creates a new DeletionTask from another Gfal2Task
      *
-     * @param copy : a gfal2 task 
+     * @param copy : a gfal2 task
      */
     DeletionTask(Gfal2Task & copy) : Gfal2Task(copy) {}
 

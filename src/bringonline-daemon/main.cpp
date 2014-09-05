@@ -194,10 +194,11 @@ int DoServer(int argc, char** argv)
             if (logDir.length() > 0)
                 {
                     logDir += "/fts3bringonline.log";
-                    if (FTS3_COMMON_NAMESPACE::theLogger().open(logDir) != 0) {
-                        std::cerr << "BRINGONLINE  daemon failed to open log file, errno is:" << strerror(errno) << std::endl;
-                        return -1;
-                    }
+                    if (FTS3_COMMON_NAMESPACE::theLogger().open(logDir) != 0)
+                        {
+                            std::cerr << "BRINGONLINE  daemon failed to open log file, errno is:" << strerror(errno) << std::endl;
+                            return -1;
+                        }
                 }
 
             bool isDaemon = !FTS3_CONFIG_NAMESPACE::theServerConfig().get<bool> ("no-daemon");
@@ -239,12 +240,12 @@ int DoServer(int argc, char** argv)
             fts3::common::ThreadPool<Gfal2Task> threadpool(10);
             FetchStaging fs(threadpool);
             FetchCancelStaging fcs(threadpool);
-	    FetchDeletion fd(threadpool);
+            FetchDeletion fd(threadpool);
 
             boost::thread_group gr;
             gr.create_thread(boost::bind(&FetchStaging::fetch, fs));
             gr.create_thread(boost::bind(&FetchCancelStaging::fetch, fcs));
-	    gr.create_thread(boost::bind(&FetchDeletion::fetch, fd));
+            gr.create_thread(boost::bind(&FetchDeletion::fetch, fd));
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE daemon started..." << commit;
             gr.join_all();
         }

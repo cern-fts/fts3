@@ -701,6 +701,16 @@ CREATE TABLE t_optimize_active (
   CONSTRAINT t_optimize_active_pk PRIMARY KEY (source_se, dest_se)
 );
 
+CREATE TABLE t_optimize_streams (
+  source_se    VARCHAR(150) NOT NULL,
+  dest_se      VARCHAR(150) NOT NULL,  
+  nostreams    INTEGER NOT NULL,   
+  datetime     TIMESTAMP  NULL DEFAULT NULL,
+  throughput      FLOAT DEFAULT NULL,
+  CONSTRAINT t_optimize_streams_pk PRIMARY KEY (source_se, dest_se, nostreams),
+  CONSTRAINT t_optimize_streams_fk FOREIGN KEY (source_se, dest_se) REFERENCES t_optimize_active (source_se, dest_se) ON DELETE CASCADE
+);
+
 
 -- 
 -- t_turl store the turls used for a given surl

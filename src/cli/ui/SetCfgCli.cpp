@@ -391,7 +391,7 @@ void SetCfgCli::parseActiveFixed()
     std::string source_se, dest_se;
 
     if (!vm["source"].empty())
-            source_se = vm["source"].as<string>();
+        source_se = vm["source"].as<string>();
     if (!vm["destination"].empty())
         dest_se = vm["destination"].as<string>();
 

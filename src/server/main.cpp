@@ -421,10 +421,11 @@ int DoServer(int argc, char** argv)
             if (logDir.length() > 0)
                 {
                     logDir += "/fts3server.log";
-                    if (FTS3_COMMON_NAMESPACE::theLogger().open(logDir) != 0) {
-                        std::cerr << "fts3 server failed to open log file " << logDir << " error is:" << strerror(errno) << std::endl;
-                        return -1;
-                    }
+                    if (FTS3_COMMON_NAMESPACE::theLogger().open(logDir) != 0)
+                        {
+                            std::cerr << "fts3 server failed to open log file " << logDir << " error is:" << strerror(errno) << std::endl;
+                            return -1;
+                        }
                 }
 
             bool isDaemon = !FTS3_CONFIG_NAMESPACE::theServerConfig().get<bool> ("no-daemon");

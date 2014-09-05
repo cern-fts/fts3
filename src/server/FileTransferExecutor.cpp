@@ -103,6 +103,7 @@ void FileTransferExecutor::run(boost::any & ctx)
             bool manualProtocol = false;
 
             bool manualConfigExists = false;
+            int level = 1;
 
             optional<ProtocolResolver::protocol> p = ProtocolResolver::getUserDefinedProtocol(tf);
 
@@ -116,8 +117,11 @@ void FileTransferExecutor::run(boost::any & ctx)
                 }
             else
                 {
-                    BufSize = db->getBufferOptimization();
-                    StreamsperFile = db->getStreamsOptimization(source_hostname, destin_hostname);
+                    level = db->getBufferOptimization();
+                    if(level == 2)
+                        StreamsperFile = db->getStreamsOptimization(source_hostname, destin_hostname);
+                    else
+                        StreamsperFile = DEFAULT_NOSTREAMS;
                     Timeout = db->getGlobalTimeout();
                     if(Timeout == 0)
                         Timeout = DEFAULT_TIMEOUT;
@@ -169,8 +173,8 @@ void FileTransferExecutor::run(boost::any & ctx)
                                 }
                         }
 
-		    //very first params to be file_id and job_id
-		    params.append(" -a ");
+                    //very first params to be file_id and job_id
+                    params.append(" -a ");
                     params.append(tf.JOB_ID);
                     params.append(" -B ");
                     params.append(lexical_cast<string >(tf.FILE_ID));
@@ -194,12 +198,12 @@ void FileTransferExecutor::run(boost::any & ctx)
                         }
 
 
-		    bool show_user_dn = db->getUserDnVisible();
+                    bool show_user_dn = db->getUserDnVisible();
 
-		    if(!show_user_dn) //do not show it if false
-		        {
-			    params.append(" --hide-user-dn ");
-			}
+                    if(!show_user_dn) //do not show it if false
+                        {
+                            params.append(" --hide-user-dn ");
+                        }
 
                     if (debugLevel)
                         {
@@ -286,8 +290,8 @@ void FileTransferExecutor::run(boost::any & ctx)
 
                     if (!manualConfigExists)
                         {
-                            params.append(" -f ");
-                            params.append(lexical_cast<string >(BufSize));
+                            params.append(" --level ");
+                            params.append(lexical_cast<string >(level));
                         }
                     else
                         {

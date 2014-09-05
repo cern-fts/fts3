@@ -16,8 +16,10 @@
 #include <string>
 #include <vector>
 
-namespace fts3 {
-namespace cli {
+namespace fts3
+{
+namespace cli
+{
 
 class RestContextAdapter : public ServiceAdapter
 {

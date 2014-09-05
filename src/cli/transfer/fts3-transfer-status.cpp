@@ -111,10 +111,10 @@ int main(int ac, char* av[])
                         }
 
                     JobStatus status = cli.isVerbose() ?
-                            ctx->getTransferJobSummary(jobId, archive)
-                            :
-                            ctx->getTransferJobStatus(jobId, archive)
-                            ;
+                                       ctx->getTransferJobSummary(jobId, archive)
+                                       :
+                                       ctx->getTransferJobStatus(jobId, archive)
+                                       ;
 
                     // If a list is requested, or dumping the failed transfers,
                     // get the transfers
@@ -127,7 +127,7 @@ int main(int ac, char* av[])
                                 {
                                     // do the request
                                     std::vector<FileInfo> const vect =
-                                            ctx->getFileStatus(jobId, archive, offset, DEFAULT_LIMIT, cli.detailed());
+                                        ctx->getFileStatus(jobId, archive, offset, DEFAULT_LIMIT, cli.detailed());
 
                                     cnt = vect.size();
 

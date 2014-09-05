@@ -104,12 +104,12 @@ protected:
                     {
                         std::queue< std::pair<std::string, std::list<TransferFiles> > > & vo_jobs = vo_it->second;
                         if (!vo_jobs.empty())
-                        {
-                            empty = false; //< if we are here there are still some data
-                            std::pair< std::string, std::list<TransferFiles> > const job = vo_jobs.front();
-                            vo_jobs.pop();
-                            startUrlCopy(job.first, job.second);
-                        }
+                            {
+                                empty = false; //< if we are here there are still some data
+                                std::pair< std::string, std::list<TransferFiles> > const job = vo_jobs.front();
+                                vo_jobs.pop();
+                                startUrlCopy(job.first, job.second);
+                            }
                     }
             }
     }
@@ -147,6 +147,7 @@ protected:
         std::string bringonlineToken;
         std::map<int, std::string> fileIds;
         std::vector<std::string> urls;
+        int level = 1;
 
         std::list<TransferFiles>::const_iterator it;
         for (it = files.begin(); it != files.end(); ++it)
@@ -202,8 +203,12 @@ protected:
             }
         else
             {
-                BufSize = DBSingleton::instance().getDBObjectInstance()->getBufferOptimization();
-                StreamsperFile = DBSingleton::instance().getDBObjectInstance()->getStreamsOptimization(source_hostname, destin_hostname);
+                level  = DBSingleton::instance().getDBObjectInstance()->getBufferOptimization();
+                if(level == 2)
+                    StreamsperFile = DBSingleton::instance().getDBObjectInstance()->getStreamsOptimization(source_hostname, destin_hostname);
+                else
+                    StreamsperFile = DEFAULT_NOSTREAMS;
+
                 Timeout = DBSingleton::instance().getDBObjectInstance()->getGlobalTimeout();
                 if(Timeout == 0)
                     Timeout = DEFAULT_TIMEOUT;
@@ -247,14 +252,14 @@ protected:
             }
 
         std::string proxy_file = get_proxy_cert(
-                         dn, // user_dn
-                         cred_id, // user_cred
-                         vo, // vo_name
-                         "",
-                         "", // assoc_service
-                         "", // assoc_service_type
-                         false,
-                         "");
+                                     dn, // user_dn
+                                     cred_id, // user_cred
+                                     vo, // vo_name
+                                     "",
+                                     "", // assoc_service
+                                     "", // assoc_service_type
+                                     false,
+                                     "");
 
         std::string oauth_file = fts3::generateOauthConfigFile(DBSingleton::instance().getDBObjectInstance(), dn, vo, userCred);
 
@@ -353,8 +358,8 @@ protected:
 
         if (!manualConfigExists)
             {
-                params.append(" -f ");
-                params.append(lexical_cast<string >(BufSize));
+                params.append(" --level ");
+                params.append(lexical_cast<string >(level));
             }
         else
             {
@@ -1005,7 +1010,7 @@ protected:
                                 drainMode = false;
                             }
 
-                            executeUrlcopy();
+                        executeUrlcopy();
                     }
                 catch (std::exception& e)
                     {

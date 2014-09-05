@@ -17,8 +17,10 @@
 #include <sstream>
 #endif
 
-namespace fts3 {
-namespace cli {
+namespace fts3
+{
+namespace cli
+{
 
 using namespace fts3::common;
 
@@ -48,35 +50,35 @@ void RestSubmission::strip_values(std::string & json, std::string const & token)
     std::string::size_type pos = 0;
 
     while ( (pos = json.find(wanted, pos)) != std::string::npos)
-    {
-        // shift the position by the size of the wanted string
-        pos += wanted.size();
-        // get the substring after the wanted string
-        std::string sub = json.substr(pos);
-        // after trimming the right substring
-        // the first character should be a ':'
-        boost::algorithm::trim(sub);
-        if (sub[0] != ':') continue;
-        // then remove the ':' and following white-spaces
-        sub = sub.substr(1);
-        boost::algorithm::trim(sub);
-        // now the first character should be a quote
-        if (sub[0] != '"') continue;
-        // now find the closing quote
-        std::string::size_type end = sub.find("\"", 1);
-        if (end == std::string::npos) continue;
-        // get the current value
-        std::string value = sub.substr(0, end + 1);
-        pos = json.find(value, pos);
-        // and replace the current value with a one strip of the quotes
-        json.replace(pos, value.size(), value.substr(1, end - 1));
-    }
+        {
+            // shift the position by the size of the wanted string
+            pos += wanted.size();
+            // get the substring after the wanted string
+            std::string sub = json.substr(pos);
+            // after trimming the right substring
+            // the first character should be a ':'
+            boost::algorithm::trim(sub);
+            if (sub[0] != ':') continue;
+            // then remove the ':' and following white-spaces
+            sub = sub.substr(1);
+            boost::algorithm::trim(sub);
+            // now the first character should be a quote
+            if (sub[0] != '"') continue;
+            // now find the closing quote
+            std::string::size_type end = sub.find("\"", 1);
+            if (end == std::string::npos) continue;
+            // get the current value
+            std::string value = sub.substr(0, end + 1);
+            pos = json.find(value, pos);
+            // and replace the current value with a one strip of the quotes
+            json.replace(pos, value.size(), value.substr(1, end - 1));
+        }
 }
 
 std::string RestSubmission::strip_values(std::string const & json)
 {
     static std::string tokens[] =
-            {"filesize", "verify_checksum", "reuse", "bring_online", "copy_pin_lifetime", "overwrite", "multihop", "retry"};
+    {"filesize", "verify_checksum", "reuse", "bring_online", "copy_pin_lifetime", "overwrite", "multihop", "retry"};
     static int const size = 8;
 
     std::string ret = json;
@@ -95,26 +97,26 @@ std::ostream& operator<<(std::ostream& os, RestSubmission const & me)
     // prepare the files array
     std::vector<File>::const_iterator it;
     for (it = me.files.begin(); it != me.files.end(); ++it)
-    {
-        pt::ptree element, sources, destinations;
-        // add sources
-        RestSubmission::to_array(it->sources, sources);
-        element.push_back(std::make_pair("sources", sources));
-        // add destinations
-        RestSubmission::to_array(it->destinations, destinations);
-        element.push_back(std::make_pair("destinations", destinations));
-        // add metadata if provided
-        if (it->metadata)
-            element.put("metadata", *it->metadata);
-        // add file size if provided
-        if (it->file_size)
-            element.put("filesize", boost::lexical_cast<std::string>(*it->file_size));
-        // add checksum if provided
-        if (!it->checksums.empty())
-            element.put("checksum", *it->checksums.begin());
-        // add the element to files array
-        files.push_back(std::make_pair("", element));
-    }
+        {
+            pt::ptree element, sources, destinations;
+            // add sources
+            RestSubmission::to_array(it->sources, sources);
+            element.push_back(std::make_pair("sources", sources));
+            // add destinations
+            RestSubmission::to_array(it->destinations, destinations);
+            element.push_back(std::make_pair("destinations", destinations));
+            // add metadata if provided
+            if (it->metadata)
+                element.put("metadata", *it->metadata);
+            // add file size if provided
+            if (it->file_size)
+                element.put("filesize", boost::lexical_cast<std::string>(*it->file_size));
+            // add checksum if provided
+            if (!it->checksums.empty())
+                element.put("checksum", *it->checksums.begin());
+            // add the element to files array
+            files.push_back(std::make_pair("", element));
+        }
     // add files to the root
     root.push_back(std::make_pair("files", files));
 
@@ -187,112 +189,112 @@ BOOST_AUTO_TEST_SUITE( cli )
 BOOST_AUTO_TEST_SUITE(RestSubmissionTest)
 
 static std::string submit1 =
-"{"
-"  \"files\": ["
-"    {"
-"      \"sources\": [\"root://source/file\"],"
-"      \"destinations\": [\"root://dest/file\"]"
-"    }"
-"  ]"
-"}"
-;
+    "{"
+    "  \"files\": ["
+    "    {"
+    "      \"sources\": [\"root://source/file\"],"
+    "      \"destinations\": [\"root://dest/file\"]"
+    "    }"
+    "  ]"
+    "}"
+    ;
 
 static std::string submit2 =
-"{"
-"  \"files\": ["
-"    {"
-"      \"sources\": [\"root://source/file\"],"
-"      \"destinations\": [\"root://dest/file\"],"
-"      \"metadata\": \"User defined metadata\","
-"      \"filesize\": 1024,"
-"      \"checksum\": \"adler32:1234\""
-"    }"
-"  ]"
-"}"
-;
+    "{"
+    "  \"files\": ["
+    "    {"
+    "      \"sources\": [\"root://source/file\"],"
+    "      \"destinations\": [\"root://dest/file\"],"
+    "      \"metadata\": \"User defined metadata\","
+    "      \"filesize\": 1024,"
+    "      \"checksum\": \"adler32:1234\""
+    "    }"
+    "  ]"
+    "}"
+    ;
 
 static std::string submit3 =
-"{"
-"  \"files\": ["
-"    {"
-"      \"sources\": [\"root://source/file\"],"
-"      \"destinations\": [\"root://dest/file\"],"
-"      \"metadata\": \"User defined metadata\","
-"      \"filesize\": 1024,"
-"      \"checksum\": \"adler32:1234\""
-"    }"
-"  ],"
-"  \"params\": {"
-"    \"verify_checksum\": true,"
-"    \"retry\": 2"
-"  }"
-"}"
-;
+    "{"
+    "  \"files\": ["
+    "    {"
+    "      \"sources\": [\"root://source/file\"],"
+    "      \"destinations\": [\"root://dest/file\"],"
+    "      \"metadata\": \"User defined metadata\","
+    "      \"filesize\": 1024,"
+    "      \"checksum\": \"adler32:1234\""
+    "    }"
+    "  ],"
+    "  \"params\": {"
+    "    \"verify_checksum\": true,"
+    "    \"retry\": 2"
+    "  }"
+    "}"
+    ;
 
 static std::string submit4 =
-"{"
-"  \"files\": ["
-"    {"
-"      \"sources\": [\"root://source/file\", \"root://source2/file2\"],"
-"      \"destinations\": [\"root://dest/file\", \"root://dest2/file2\"]"
-"    }"
-"  ]"
-"}"
-;
+    "{"
+    "  \"files\": ["
+    "    {"
+    "      \"sources\": [\"root://source/file\", \"root://source2/file2\"],"
+    "      \"destinations\": [\"root://dest/file\", \"root://dest2/file2\"]"
+    "    }"
+    "  ]"
+    "}"
+    ;
 
 static std::string submit5 =
-"{"
-"  \"files\": ["
-"    {"
-"      \"sources\": [\"root://source/file\", \"root://source2/file2\"],"
-"      \"destinations\": [\"root://dest/file\", \"root://dest2/file2\"],"
-"      \"metadata\": \"with filesize\","
-"      \"filesize\": 1024,"
-"      \"checksum\": \"adler32:1234\""
-"    }"
-"  ],"
-"  \"params\": {"
-"    \"verify_checksum\": true,"
-"    \"reuse\": true,"
-"    \"spacetoken\": \"blablabla\","
-"    \"bring_online\": 24,"
-"    \"copy_pin_lifetime\": 108,"
-"    \"job_metadata\": \"retry two times\","
-"    \"source_spacetoken\": \"nanana\","
-"    \"overwrite\": true,"
-"    \"gridftp\": \"eeeeeeee\","
-"    \"multihop\": true,"
-"    \"retry\": 2"
-"  }"
-"}"
-;
+    "{"
+    "  \"files\": ["
+    "    {"
+    "      \"sources\": [\"root://source/file\", \"root://source2/file2\"],"
+    "      \"destinations\": [\"root://dest/file\", \"root://dest2/file2\"],"
+    "      \"metadata\": \"with filesize\","
+    "      \"filesize\": 1024,"
+    "      \"checksum\": \"adler32:1234\""
+    "    }"
+    "  ],"
+    "  \"params\": {"
+    "    \"verify_checksum\": true,"
+    "    \"reuse\": true,"
+    "    \"spacetoken\": \"blablabla\","
+    "    \"bring_online\": 24,"
+    "    \"copy_pin_lifetime\": 108,"
+    "    \"job_metadata\": \"retry two times\","
+    "    \"source_spacetoken\": \"nanana\","
+    "    \"overwrite\": true,"
+    "    \"gridftp\": \"eeeeeeee\","
+    "    \"multihop\": true,"
+    "    \"retry\": 2"
+    "  }"
+    "}"
+    ;
 
 static std::string submit5_quoted =
-"{"
-"  \"files\": ["
-"    {"
-"      \"sources\": [\"root://source/file\", \"root://source2/file2\"],"
-"      \"destinations\": [\"root://dest/file\", \"root://dest2/file2\"],"
-"      \"metadata\": \"with filesize\","
-"      \"filesize\": \"1024\","
-"      \"checksum\": \"adler32:1234\""
-"    }"
-"  ],"
-"  \"params\": {"
-"    \"verify_checksum\": \"true\","
-"    \"reuse\": \"true\","
-"    \"spacetoken\": \"blablabla\","
-"    \"bring_online\": \"24\","
-"    \"copy_pin_lifetime\": \"108\","
-"    \"job_metadata\": \"retry two times\","
-"    \"source_spacetoken\": \"nanana\","
-"    \"overwrite\": \"true\","
-"    \"gridftp\": \"eeeeeeee\","
-"    \"multihop\": \"true\","
-"    \"retry\": \"2\""
-"  }"
-"}"
-;
+    "{"
+    "  \"files\": ["
+    "    {"
+    "      \"sources\": [\"root://source/file\", \"root://source2/file2\"],"
+    "      \"destinations\": [\"root://dest/file\", \"root://dest2/file2\"],"
+    "      \"metadata\": \"with filesize\","
+    "      \"filesize\": \"1024\","
+    "      \"checksum\": \"adler32:1234\""
+    "    }"
+    "  ],"
+    "  \"params\": {"
+    "    \"verify_checksum\": \"true\","
+    "    \"reuse\": \"true\","
+    "    \"spacetoken\": \"blablabla\","
+    "    \"bring_online\": \"24\","
+    "    \"copy_pin_lifetime\": \"108\","
+    "    \"job_metadata\": \"retry two times\","
+    "    \"source_spacetoken\": \"nanana\","
+    "    \"overwrite\": \"true\","
+    "    \"gridftp\": \"eeeeeeee\","
+    "    \"multihop\": \"true\","
+    "    \"retry\": \"2\""
+    "  }"
+    "}"
+    ;
 
 struct RestSubmissionFixture : public RestSubmission
 {
@@ -318,7 +320,7 @@ struct RestSubmissionFixture : public RestSubmission
         std::vector<std::string> ret;
 
         pt::ptree::const_iterator it;
-            for (it = p.begin(); it != p.end(); ++it)
+        for (it = p.begin(); it != p.end(); ++it)
             {
                 ret.push_back(it->second.get_value<std::string>());
             }
@@ -341,17 +343,17 @@ struct RestSubmissionFixture : public RestSubmission
 
         pt::ptree::const_iterator it;
         for (it = files.begin(); it != files.end(); ++it)
-        {
-            File file;
-            file.sources = get_urls(it->second.get_child("sources"));
-            file.destinations = get_urls(it->second.get_child("destinations"));
-            file.metadata = it->second.get_optional<std::string>("metadata");
-            file.file_size = it->second.get_optional<double>("filesize");
-            boost::optional<std::string> checksum = it->second.get_optional<std::string>("checksum");
-            if (checksum) file.checksums.push_back(*checksum);
+            {
+                File file;
+                file.sources = get_urls(it->second.get_child("sources"));
+                file.destinations = get_urls(it->second.get_child("destinations"));
+                file.metadata = it->second.get_optional<std::string>("metadata");
+                file.file_size = it->second.get_optional<double>("filesize");
+                boost::optional<std::string> checksum = it->second.get_optional<std::string>("checksum");
+                if (checksum) file.checksums.push_back(*checksum);
 
-            ret.push_back(file);
-        }
+                ret.push_back(file);
+            }
 
         return ret;
     }

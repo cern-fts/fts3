@@ -54,10 +54,10 @@ CREATE TABLE t_optimize (
    file_id	INTEGER NOT NULL,
 --
 -- source se
-   source_se	VARCHAR2(255),
+   source_se	VARCHAR2(150),
 --
 -- dest se
-   dest_se	VARCHAR2(255),
+   dest_se	VARCHAR2(150),
 --
 -- number of streams
    nostreams       	NUMBER default NULL,
@@ -92,8 +92,8 @@ CREATE TABLE t_optimize (
 --
 CREATE TABLE t_optimizer_evolution (
     datetime     TIMESTAMP WITH TIME ZONE,
-    source_se    VARCHAR(255),
-    dest_se      VARCHAR(255),
+    source_se    VARCHAR(150),
+    dest_se      VARCHAR(150),
     nostreams    NUMBER DEFAULT NULL,
     timeout      NUMBER DEFAULT NULL,
     active       NUMBER DEFAULT NULL,
@@ -130,10 +130,10 @@ CREATE TABLE t_config_audit (
 CREATE TABLE t_debug (
 --
 -- source hostname
-   source_se	VARCHAR2(255),
+   source_se	VARCHAR2(150),
 --
 -- dest hostanme
-   dest_se		VARCHAR2(255),
+   dest_se		VARCHAR2(150),
 --
 -- debug on/off
    debug		VARCHAR2(3) default 'off',
@@ -407,10 +407,10 @@ CREATE TABLE t_job (
   ,job_params       	VARCHAR2(255)
 --
 -- Source SE host name
-  ,source_se         VARCHAR2(255)
+  ,source_se         VARCHAR2(150)
 --
 -- Dest SE host name
-  ,dest_se           VARCHAR2(255)
+  ,dest_se           VARCHAR2(150)
 --
 -- the DN of the user starting the job - they are the only one
 -- who can sumbit/cancel
@@ -541,10 +541,10 @@ CREATE TABLE t_file (
   ,dest_surl		VARCHAR2(1100)
 --
 -- Source SE host name
-  ,source_se         VARCHAR2(255)
+  ,source_se         VARCHAR2(150)
 --
 -- Dest SE host name
-  ,dest_se           VARCHAR2(255)
+  ,dest_se           VARCHAR2(150)
 --
 -- The agent who is transferring the file. This is only valid when the file
 -- is in 'Active' state
@@ -860,8 +860,8 @@ CREATE TABLE t_hosts (
 
 
 CREATE TABLE t_optimize_active (
-  source_se    VARCHAR2(255) NOT NULL,
-  dest_se      VARCHAR2(255) NOT NULL,
+  source_se    VARCHAR2(150) NOT NULL,
+  dest_se      VARCHAR2(150) NOT NULL,
   active       INTEGER DEFAULT 2,
   message      VARCHAR2(512),
   datetime  TIMESTAMP WITH TIME ZONE,
@@ -869,6 +869,17 @@ CREATE TABLE t_optimize_active (
   fixed       VARCHAR2(3) CHECK (fixed in ('on', 'off')),
   CONSTRAINT t_optimize_active_pk PRIMARY KEY (source_se, dest_se)
 );
+
+CREATE TABLE t_optimize_streams (
+  source_se    VARCHAR2(150) NOT NULL,
+  dest_se      VARCHAR2(150) NOT NULL,  
+  datetime     TIMESTAMP WITH TIME ZONE DEFAULT NULL,
+  nostreams    INTEGER NOT NULL, 
+  throughput   FLOAT DEFAULT NULL,
+  CONSTRAINT t_optimize_streams_pk PRIMARY KEY (source_se, dest_se, nostreams),
+  CONSTRAINT t_optimize_streams_fk FOREIGN KEY (source_se, dest_se) REFERENCES t_optimize_active (source_se, dest_se) ON DELETE CASCADE
+);
+
 
 --
 --

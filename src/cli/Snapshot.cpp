@@ -71,21 +71,21 @@ BOOST_AUTO_TEST_SUITE( cli )
 BOOST_AUTO_TEST_SUITE(SnapshotTest)
 
 static std::string const snapshot =
-"{"
-"   \"active\": 10,"
-"   \"avg_queued\": 100,"
-"   \"avg_throughput\": [ {\"15\": 15.1}, {\"5\": 5.3}, {\"30\": 30.2}, {\"60\": 60.4} ],"
-"   \"dest_se\": \"srm://dst.desy.de\","
-"   \"failed\": 5,"
-"   \"finished\": 10,"
-"   \"frequent_error\": [ {\"count\": 3}, {\"reason\": \"some error string\"} ],"
-"   \"max_active\": 20,"
-"   \"source_se\": \"srm://src.cern.ch\","
-"   \"submitted\": 30,"
-"   \"success_ratio\": 0.75,"
-"   \"vo_name\": \"dteam\""
-"}"
-;
+    "{"
+    "   \"active\": 10,"
+    "   \"avg_queued\": 100,"
+    "   \"avg_throughput\": [ {\"15\": 15.1}, {\"5\": 5.3}, {\"30\": 30.2}, {\"60\": 60.4} ],"
+    "   \"dest_se\": \"srm://dst.desy.de\","
+    "   \"failed\": 5,"
+    "   \"finished\": 10,"
+    "   \"frequent_error\": [ {\"count\": 3}, {\"reason\": \"some error string\"} ],"
+    "   \"max_active\": 20,"
+    "   \"source_se\": \"srm://src.cern.ch\","
+    "   \"submitted\": 30,"
+    "   \"success_ratio\": 0.75,"
+    "   \"vo_name\": \"dteam\""
+    "}"
+    ;
 
 static std::string to_string(pt::ptree const & out)
 {

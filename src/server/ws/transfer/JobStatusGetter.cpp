@@ -10,8 +10,10 @@
 #include "common/JobStatusHandler.h"
 #include "common/error.h"
 
-namespace fts3 {
-namespace ws {
+namespace fts3
+{
+namespace ws
+{
 
 template <>
 tns3__FileTransferStatus* JobStatusGetter::make_status<tns3__FileTransferStatus>()

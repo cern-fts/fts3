@@ -81,11 +81,11 @@ void ProxyCertificateDelegator::delegate()
     // get local proxy run time
     time_t localProxyTimeLeft = isCertValid(std::string());
     MsgPrinter::instance().print_info(
-            "Remaining time for the local proxy is",
-            "delegation.local_expiration_time",
-            (long int)((localProxyTimeLeft) / 3600),
-            (long int)((localProxyTimeLeft) % 3600 / 60)
-        );
+        "Remaining time for the local proxy is",
+        "delegation.local_expiration_time",
+        (long int)((localProxyTimeLeft) / 3600),
+        (long int)((localProxyTimeLeft) % 3600 / 60)
+    );
 
     // checking if there is already a delegated credential
     boost::optional<time_t> expTime = getExpirationTime();
@@ -95,19 +95,19 @@ void ProxyCertificateDelegator::delegate()
 
             time_t timeLeftOnServer = *expTime - time(0);
             MsgPrinter::instance().print_info(
-                    "Remaining time for the proxy on the server side is",
-                    "delegation.service_expiration_time",
-                    (long int)((timeLeftOnServer) / 3600),
-                    (long int)((timeLeftOnServer) % 3600 / 60)
-                );
+                "Remaining time for the proxy on the server side is",
+                "delegation.service_expiration_time",
+                (long int)((timeLeftOnServer) / 3600),
+                (long int)((timeLeftOnServer) % 3600 / 60)
+            );
 
             if (timeLeftOnServer > REDELEGATION_TIME_LIMIT)
                 {
                     // don;t bother redelegating
                     MsgPrinter::instance().print_info(
-                            "delegation.message",
-                            "Not bothering to do delegation, since the server already has a delegated credential for this user lasting longer than 4 hours."
-                        );
+                        "delegation.message",
+                        "Not bothering to do delegation, since the server already has a delegated credential for this user lasting longer than 4 hours."
+                    );
                     needDelegation = false;
                     renewDelegation = false;
                 }
@@ -118,9 +118,9 @@ void ProxyCertificateDelegator::delegate()
                         {
                             // we improve the situation (the new proxy will last longer)
                             MsgPrinter::instance().print_info(
-                                    "delegation.message",
-                                    "Will redo delegation since the credential on the server has left that 4 hours validity left."
-                                );
+                                "delegation.message",
+                                "Will redo delegation since the credential on the server has left that 4 hours validity left."
+                            );
                             needDelegation = true;
                             renewDelegation = true; // renew rather than put
                         }
@@ -128,9 +128,9 @@ void ProxyCertificateDelegator::delegate()
                         {
                             // we cannot improve the proxy on the server
                             MsgPrinter::instance().print_info(
-                                    "delegation.message",
-                                    "Delegated proxy on server has less than 6 hours left.\nBut the local proxy has less time left than the one on the server, so cannot be used to refresh it!"
-                                );
+                                "delegation.message",
+                                "Delegated proxy on server has less than 6 hours left.\nBut the local proxy has less time left than the one on the server, so cannot be used to refresh it!"
+                            );
                             needDelegation=false;
                         }
                 }
@@ -139,9 +139,9 @@ void ProxyCertificateDelegator::delegate()
         {
             // no proxy on server: do standard delegation
             MsgPrinter::instance().print_info(
-                    "delegation.message",
-                    "No proxy found on server. Requesting standard delegation."
-                );
+                "delegation.message",
+                "No proxy found on server. Requesting standard delegation."
+            );
             needDelegation = true;
             renewDelegation = false;
         }
@@ -170,19 +170,19 @@ void ProxyCertificateDelegator::delegate()
                 }
 
             MsgPrinter::instance().print_info(
-                    "Requesting delegated proxy for",
-                    "delegation.request_duration",
-                    (long int)((requestProxyDelegationTime) / 3600),
-                    (long int)((requestProxyDelegationTime) % 3600 / 60)
-                );
+                "Requesting delegated proxy for",
+                "delegation.request_duration",
+                (long int)((requestProxyDelegationTime) / 3600),
+                (long int)((requestProxyDelegationTime) % 3600 / 60)
+            );
 
             doDelegation(requestProxyDelegationTime, renewDelegation);
 
             MsgPrinter::instance().print_info(
-                    "Credential has been successfully delegated to the service.",
-                    "delegation.succeed",
-                    true
-                );
+                "Credential has been successfully delegated to the service.",
+                "delegation.succeed",
+                true
+            );
         }
 }
 

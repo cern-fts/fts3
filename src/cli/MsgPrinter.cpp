@@ -227,55 +227,55 @@ void MsgPrinter::print_json(JobStatus const & status)
     job.put("status", status.status);
 
     if (verbose)
-    {
-        job.put("dn", status.dn);
-        job.put("reason", status.reason.empty() ? "<None>": status.reason);
-        job.put("submision_time", status.submitTime);
-        job.put("file_count", boost::lexical_cast<std::string>(status.nbFiles));
-        job.put("priority", boost::lexical_cast<std::string>(status.priority));
-        job.put("vo", status.vo);
-
-        if (status.summary.is_initialized())
         {
-            job.put("summary.active", boost::lexical_cast<std::string>(std::get<0>(*status.summary)));
-            job.put("summary.ready", boost::lexical_cast<std::string>(std::get<1>(*status.summary)));
-            job.put("summary.canceled", boost::lexical_cast<std::string>(std::get<2>(*status.summary)));
-            job.put("summary.finished", boost::lexical_cast<std::string>(std::get<3>(*status.summary)));
-            job.put("summary.submitted", boost::lexical_cast<std::string>(std::get<4>(*status.summary)));
-            job.put("summary.failed", boost::lexical_cast<std::string>(std::get<5>(*status.summary)));
+            job.put("dn", status.dn);
+            job.put("reason", status.reason.empty() ? "<None>": status.reason);
+            job.put("submision_time", status.submitTime);
+            job.put("file_count", boost::lexical_cast<std::string>(status.nbFiles));
+            job.put("priority", boost::lexical_cast<std::string>(status.priority));
+            job.put("vo", status.vo);
+
+            if (status.summary.is_initialized())
+                {
+                    job.put("summary.active", boost::lexical_cast<std::string>(std::get<0>(*status.summary)));
+                    job.put("summary.ready", boost::lexical_cast<std::string>(std::get<1>(*status.summary)));
+                    job.put("summary.canceled", boost::lexical_cast<std::string>(std::get<2>(*status.summary)));
+                    job.put("summary.finished", boost::lexical_cast<std::string>(std::get<3>(*status.summary)));
+                    job.put("summary.submitted", boost::lexical_cast<std::string>(std::get<4>(*status.summary)));
+                    job.put("summary.failed", boost::lexical_cast<std::string>(std::get<5>(*status.summary)));
+                }
         }
-    }
 
     if (!status.files.empty())
-    {
-        ptree files;
-        std::vector<FileInfo>::const_iterator it;
-        for (it = status.files.begin(); it != status.files.end(); ++it)
-            {
-                ptree file;
-                file.put("source", it->src);
-                file.put("destination", it->dst);
-                file.put("state", it->state);
-                file.put("reason", it->reason);
-                file.put("duration", it->duration);
+        {
+            ptree files;
+            std::vector<FileInfo>::const_iterator it;
+            for (it = status.files.begin(); it != status.files.end(); ++it)
+                {
+                    ptree file;
+                    file.put("source", it->src);
+                    file.put("destination", it->dst);
+                    file.put("state", it->state);
+                    file.put("reason", it->reason);
+                    file.put("duration", it->duration);
 
-                if (it->retries.empty())
-                    {
-                        file.put("retries", it->nbFailures);
-                    }
-                else
-                    {
-                        ptree retriesArray;
-                        std::vector<std::string>::const_iterator i;
-                        for (i = it->retries.begin(); i != it->retries.end(); ++i)
-                            retriesArray.push_back(std::make_pair("", ptree(*i)));
-                        file.put_child("retries", retriesArray);
-                    }
-                files.push_back(std::make_pair("", file));
-            }
+                    if (it->retries.empty())
+                        {
+                            file.put("retries", it->nbFailures);
+                        }
+                    else
+                        {
+                            ptree retriesArray;
+                            std::vector<std::string>::const_iterator i;
+                            for (i = it->retries.begin(); i != it->retries.end(); ++i)
+                                retriesArray.push_back(std::make_pair("", ptree(*i)));
+                            file.put_child("retries", retriesArray);
+                        }
+                    files.push_back(std::make_pair("", file));
+                }
 
-        job.put_child("files", files);
-    }
+            job.put_child("files", files);
+        }
 
     jout.printArray("job", job);
 }

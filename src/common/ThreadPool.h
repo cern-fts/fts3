@@ -152,10 +152,10 @@ public:
         RET init = RET();
 
         for (it = workers.begin(); it != workers.end(); ++it)
-        {
-            if (it->thread_context.empty()) continue;
-            init = op(init, boost::any_cast<RET>(it->thread_context));
-        }
+            {
+                if (it->thread_context.empty()) continue;
+                init = op(init, boost::any_cast<RET>(it->thread_context));
+            }
 
         return init;
     }

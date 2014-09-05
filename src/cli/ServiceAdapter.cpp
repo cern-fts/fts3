@@ -9,8 +9,10 @@
 
 #include "MsgPrinter.h"
 
-namespace fts3 {
-namespace cli {
+namespace fts3
+{
+namespace cli
+{
 
 void ServiceAdapter::printServiceDetails()
 {

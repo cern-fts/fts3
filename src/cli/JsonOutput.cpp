@@ -28,8 +28,8 @@ void JsonOutput::print(std::string const & path, std::string const & msg)
 void JsonOutput::print(cli_exception const & ex)
 {
     json_out.push_back(
-            pt::ptree::value_type(ex.json_node(), ex.json_obj())
-        );
+        pt::ptree::value_type(ex.json_node(), ex.json_obj())
+    );
 }
 
 void JsonOutput::print(std::exception const & ex)

@@ -20,7 +20,7 @@
 
 
 /**
- * Fetches the deletion tasks from DB in a separate thread and puts 
+ * Fetches the deletion tasks from DB in a separate thread and puts
  */
 
 class FetchDeletion
@@ -51,8 +51,8 @@ private:
 
 inline static std::string generateProxy(const std::string& dn, const std::string& dlg_id)
 {
-  boost::scoped_ptr<DelegCred> delegCredPtr(new DelegCred);
-  return delegCredPtr->getFileName(dn, dlg_id);
+    boost::scoped_ptr<DelegCred> delegCredPtr(new DelegCred);
+    return delegCredPtr->getFileName(dn, dlg_id);
 }
 
 #endif /* FETCHDELETION_H_ */

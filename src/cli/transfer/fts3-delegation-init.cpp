@@ -49,14 +49,14 @@ int main(int ac, char* av[])
 
             if (cli.rest())
                 handler.reset(new RestDelegator(
-                        cli.getService(), cli.getDelegationId(), cli.getExpirationTime(), cli.capath(), cli.proxy()
-                    ));
+                                  cli.getService(), cli.getDelegationId(), cli.getExpirationTime(), cli.capath(), cli.proxy()
+                              ));
             else
                 handler.reset(new SoapDelegator(
-                        cli.getService(),
-                        cli.getDelegationId(),
-                        cli.getExpirationTime()
-                    ));
+                                  cli.getService(),
+                                  cli.getDelegationId(),
+                                  cli.getExpirationTime()
+                              ));
 
             handler->delegate();
 

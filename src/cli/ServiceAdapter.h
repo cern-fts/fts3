@@ -16,8 +16,10 @@
 #include <vector>
 #include <map>
 
-namespace fts3 {
-namespace cli {
+namespace fts3
+{
+namespace cli
+{
 
 class ServiceAdapter
 {

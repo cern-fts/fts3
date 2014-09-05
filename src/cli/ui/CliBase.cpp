@@ -69,7 +69,7 @@ void CliBase::parse(int ac, char* av[])
                 }
             else if (str == "-j")
                 {
-                MsgPrinter::instance().setJson(true);
+                    MsgPrinter::instance().setJson(true);
                 }
         }
 
@@ -209,7 +209,7 @@ bool CliBase::printVersion()
     // check whether the -V option was used
     if (vm.count("version"))
         {
-        MsgPrinter::instance().print("client_version", version);
+            MsgPrinter::instance().print("client_version", version);
             return true;
         }
 

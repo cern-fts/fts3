@@ -121,13 +121,13 @@ public:
 
     // If limit == 0, then all results
     virtual void getDmFileStatus(std::string requestID, bool archive,
-                                       unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files) = 0;
+                                 unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files) = 0;
 
     virtual void listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
                               std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst) = 0;
 
     virtual void listRequestsDm(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
-                                  std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst) = 0;
+                                std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst) = 0;
 
     virtual TransferJobs* getTransferJob(std::string jobId, bool archive) = 0;
 
@@ -463,8 +463,8 @@ public:
 
     // Cloud storage API
     virtual bool getOauthCredentials(const std::string& user_dn,
-            const std::string& vo, const std::string& cloud_name,
-            OAuth& oauth) = 0;
+                                     const std::string& vo, const std::string& cloud_name,
+                                     OAuth& oauth) = 0;
 
     virtual void cancelDmJobs(std::vector<std::string> const & jobs) = 0;
 

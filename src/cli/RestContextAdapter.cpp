@@ -18,8 +18,10 @@
 
 #include <boost/lexical_cast.hpp>
 
-namespace fts3 {
-namespace cli {
+namespace fts3
+{
+namespace cli
+{
 
 void RestContextAdapter::getInterfaceDeatailes()
 {
@@ -125,15 +127,15 @@ JobStatus RestContextAdapter::getTransferJobStatus (std::string const & jobId, b
     ResponseParser response(ss);
 
     return JobStatus(
-            response.get("job_id"),
-            response.get("job_state"),
-            response.get("user_dn"),
-            response.get("reason"),
-            response.get("vo_name"),
-            response.get("submit_time"),
-            -1, // this is never shown so we don't care
-            boost::lexical_cast<int>(response.get("priority"))
-        );
+               response.get("job_id"),
+               response.get("job_state"),
+               response.get("user_dn"),
+               response.get("reason"),
+               response.get("vo_name"),
+               response.get("submit_time"),
+               -1, // this is never shown so we don't care
+               boost::lexical_cast<int>(response.get("priority"))
+           );
 }
 
 JobStatus RestContextAdapter::getTransferJobSummary (std::string const & jobId, bool archive)
@@ -150,13 +152,13 @@ JobStatus RestContextAdapter::getTransferJobSummary (std::string const & jobId, 
     ResponseParser response_files(ss_files);
 
     JobStatus::JobSummary summary (
-            response_files.getNb("files", "ACTIVE"),
-            response_files.getNb("files", "READY"),
-            response_files.getNb("files", "CANCELED"),
-            response_files.getNb("files", "FINISHED"),
-            response_files.getNb("files", "SUBMITTED"),
-            response_files.getNb("files", "FAILED")
-        );
+        response_files.getNb("files", "ACTIVE"),
+        response_files.getNb("files", "READY"),
+        response_files.getNb("files", "CANCELED"),
+        response_files.getNb("files", "FINISHED"),
+        response_files.getNb("files", "SUBMITTED"),
+        response_files.getNb("files", "FAILED")
+    );
 
     // than get the job itself
     std::string url = endpoint + "/jobs/" + jobId;
@@ -168,16 +170,16 @@ JobStatus RestContextAdapter::getTransferJobSummary (std::string const & jobId, 
     ResponseParser response(ss);
 
     return JobStatus(
-            response.get("job_id"),
-            response.get("job_state"),
-            response.get("user_dn"),
-            response.get("reason"),
-            response.get("vo_name"),
-            response.get("submit_time"),
-            response_files.getFiles("files").size(),
-            boost::lexical_cast<int>(response.get("priority")),
-            summary
-        );
+               response.get("job_id"),
+               response.get("job_state"),
+               response.get("user_dn"),
+               response.get("reason"),
+               response.get("vo_name"),
+               response.get("submit_time"),
+               response_files.getFiles("files").size(),
+               boost::lexical_cast<int>(response.get("priority")),
+               summary
+           );
 }
 
 std::vector<FileInfo> RestContextAdapter::getFileStatus (std::string const & jobId, bool archive, int offset, int limit, bool retries)

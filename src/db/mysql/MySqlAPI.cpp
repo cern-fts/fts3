@@ -1296,25 +1296,25 @@ void MySqlAPI::getByJobIdReuse(std::vector< boost::tuple<std::string, std::strin
                         soci::use(hashSegment.end),
                         soci::use(tTime),
                         soci::into(job, isNull)
-                    ;
+                        ;
 
                     if (isNull != soci::i_null)
                         {
                             soci::rowset<TransferFiles> rs =
-                                    (
-                                         sql.prepare <<
-                                         " SELECT SQL_NO_CACHE "
-                                         "       f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
-                                         "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, "
-                                         "       f.checksum, j.checksum_method, j.source_space_token, "
-                                         "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
-                                         "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, "
-                                         "       f.bringonline_token, f.source_se, f.dest_se, f.selection_strategy, "
-                                         "       j.internal_job_params, j.user_cred, j.reuse_job "
-                                         " FROM t_job j INNER JOIN t_file f ON (j.job_id = f.job_id) "
-                                         " WHERE j.job_id = :job_id ",
-                                         soci::use(job)
-                                     );
+                                (
+                                    sql.prepare <<
+                                    " SELECT SQL_NO_CACHE "
+                                    "       f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
+                                    "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, "
+                                    "       f.checksum, j.checksum_method, j.source_space_token, "
+                                    "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
+                                    "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, "
+                                    "       f.bringonline_token, f.source_se, f.dest_se, f.selection_strategy, "
+                                    "       j.internal_job_params, j.user_cred, j.reuse_job "
+                                    " FROM t_job j INNER JOIN t_file f ON (j.job_id = f.job_id) "
+                                    " WHERE j.job_id = :job_id ",
+                                    soci::use(job)
+                                );
 
                             std::list<TransferFiles> tf;
                             for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
@@ -2760,9 +2760,9 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
 
                     // Update job_finished in files
                     sql << "UPDATE t_file SET "
-                           " job_finished = UTC_TIMESTAMP() "
-                           "WHERE job_id = :jobId AND job_finished IS NULL",
-                           soci::use(job_id, "jobId");
+                        " job_finished = UTC_TIMESTAMP() "
+                        "WHERE job_id = :jobId AND job_finished IS NULL",
+                        soci::use(job_id, "jobId");
                 }
             // Job not finished yet
             else
@@ -3846,8 +3846,14 @@ bool MySqlAPI::updateOptimizer()
     double submitted = 0.0;
     std::string active_fixed;
 
-    time_t now = getUTC(0);
-    struct tm startTimeSt;
+    struct tm datetimeStreams;
+    soci::indicator isNullStreamsOptimization = soci::i_ok;
+    soci::indicator isNullDatetime = soci::i_ok;
+    int maxNoStreams = 16;
+    int minStreams = 1;
+    int nostreams = 1;
+    double throughput=0.0;
+    double maxThroughput = 0.0;
 
 
     try
@@ -3866,9 +3872,9 @@ bool MySqlAPI::updateOptimizer()
 
             //is the number of actives fixed?
             soci::statement stmt_fixed = (
-                                        sql.prepare << "SELECT fixed from t_optimize_active "
-                                        "WHERE source_se = :source AND dest_se = :dest LIMIT 1",
-                                        soci::use(source_hostname), soci::use(destin_hostname), soci::into(active_fixed, isNullFixed));
+                                             sql.prepare << "SELECT fixed from t_optimize_active "
+                                             "WHERE source_se = :source AND dest_se = :dest LIMIT 1",
+                                             soci::use(source_hostname), soci::use(destin_hostname), soci::into(active_fixed, isNullFixed));
 
             //snapshot of active transfers
             soci::statement stmt7 = (
@@ -3894,41 +3900,6 @@ bool MySqlAPI::updateOptimizer()
                                          soci::use(active), soci::use(ema), soci::use(source_hostname), soci::use(destin_hostname));
 
 
-            soci::statement stmt12 = (
-                                         sql.prepare << " select datetime from t_optimize where  "
-                                         " source_se=:source_se and dest_se=:dest_se LIMIT 1 ",
-                                         soci::use(source_hostname), soci::use(destin_hostname), soci::into(startTimeSt, isNullStartTime));
-
-            soci::statement stmt13 = (
-                                         sql.prepare << "update t_optimize set nostreams=:nostreams where "
-                                         " source_se=:source and dest_se=:dest ",
-                                         soci::use(insertStreams),
-                                         soci::use(source_hostname),
-                                         soci::use(destin_hostname));
-
-            soci::statement stmt14 = (
-                                         sql.prepare << " select count(*) from t_optimize where "
-                                         " source_se=:source_se and dest_se=:dest_se ",
-                                         soci::use(source_hostname), soci::use(destin_hostname), soci::into(recordFound, isNullRecordsFound));
-
-            soci::statement stmt15 = (
-                                         sql.prepare << "insert into t_optimize (source_se, dest_se, nostreams, datetime, file_id) "
-                                         " VALUES (:source_se, :dest_se, :nostreams, UTC_TIMESTAMP(), 0)",
-                                         soci::use(source_hostname),
-                                         soci::use(destin_hostname),
-                                         soci::use(insertStreams));
-
-            soci::statement stmt16 = (
-                                         sql.prepare << "update t_optimize set datetime=UTC_TIMESTAMP() where "
-                                         " source_se=:source and dest_se=:dest ",
-                                         soci::use(source_hostname),
-                                         soci::use(destin_hostname));
-
-            soci::statement stmt17 = (
-                                         sql.prepare << " select nostreams from t_optimize where "
-                                         " source_se=:source_se and dest_se=:dest_se",
-                                         soci::use(source_hostname), soci::use(destin_hostname), soci::into(streamsCurrent, isNullStreamsCurrent));
-
             soci::statement stmt18 = (
                                          sql.prepare << " select count(distinct source_se) from t_file where "
                                          " file_state in ('ACTIVE','SUBMITTED') and "
@@ -3941,7 +3912,6 @@ bool MySqlAPI::updateOptimizer()
                                          "WHERE source_se = :source AND dest_se = :dest_se and file_state ='SUBMITTED' and job_finished is null ",
                                          soci::use(source_hostname),soci::use(destin_hostname), soci::into(submitted));
 
-
             //check if retry is set at global level
             sql <<
                 " SELECT retry "
@@ -3953,13 +3923,51 @@ bool MySqlAPI::updateOptimizer()
                 retrySet = 0;
 
 
+            /* Start of TCP streams optimization "zone" */
+            soci::statement stmt20 = (
+                                         sql.prepare << "SELECT max(nostreams) FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se ",
+                                         soci::use(source_hostname),
+                                         soci::use(destin_hostname),
+                                         soci::into(nostreams, isNullStreamsOptimization));
+
+            soci::statement stmt21 = (
+                                         sql.prepare << " SELECT max(datetime) FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se "
+                                         " AND nostreams = :nostreams ",
+                                         soci::use(source_hostname),
+                                         soci::use(destin_hostname),
+                                         soci::use(nostreams),
+                                         soci::into(datetimeStreams, isNullDatetime));
+
+            soci::statement stmt22 = (
+                                         sql.prepare << " INSERT INTO t_optimize_streams (source_se, dest_se, nostreams, datetime, throughput)"
+                                         " VALUES (:source_se, :dest_se, :nostreams, UTC_TIMESTAMP(), :throughput)"
+                                         " ON DUPLICATE KEY UPDATE throughput = :throughput",
+                                         soci::use(source_hostname),
+                                         soci::use(destin_hostname),
+                                         soci::use(nostreams),
+                                         soci::use(throughput),
+                                         soci::use(throughput)
+                                     );
+
+            soci::statement stmt23 = (
+                                         sql.prepare << "SELECT max(throughput) FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se ",
+                                         soci::use(source_hostname),
+                                         soci::use(destin_hostname),
+                                         soci::into(maxThroughput));
+
+            soci::statement stmt24 = (
+                                         sql.prepare << "DELETE FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se ",
+                                         soci::use(source_hostname),
+                                         soci::use(destin_hostname));
+
+
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
                     source_hostname = i->get<std::string>("source_se");
                     destin_hostname = i->get<std::string>("dest_se");
 
                     double nFailedLastHour=0.0, nFinishedLastHour=0.0;
-                    double throughput=0.0;
+                    throughput=0.0;
                     double filesize = 0.0;
                     double totalSize = 0.0;
                     retry = 0.0;   //latest from db
@@ -3988,23 +3996,10 @@ bool MySqlAPI::updateOptimizer()
                     lanTransferBool = false;
                     ema = 0.0;
                     submitted = 0.0;
-                    now = getUTC(0);
-
-                    lanTransferBool = lanTransfer(source_hostname, destin_hostname);
-
-                    // first thing, check if the number of actives have been fixed for this pair
-                    stmt_fixed.execute(true);
-                    if (isNullFixed == soci::i_ok && active_fixed == "on")
-                        continue;
-
-                    // check current active transfers for a linkmaxActive
-                    stmt7.execute(true);
-
-                    //get submitted for this link
-                    stmt19.execute(true);
-
-                    //check if there is any other source for a given dest
-                    stmt18.execute(true);
+                    nostreams = 1;
+                    isNullStreamsOptimization = soci::i_ok;
+                    isNullDatetime = soci::i_ok;
+                    maxThroughput = 0.0;
 
                     // Weighted average
                     soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
@@ -4026,6 +4021,79 @@ bool MySqlAPI::updateOptimizer()
                         {
                             throughput /= totalSize;
                         }
+
+
+                    /* apply streams optimization, no matter the level here since if it's switch to level 2 to have info ready*/
+
+                    //get max streams
+                    stmt20.execute(true);
+
+                    //get max datetime
+                    stmt21.execute(true);
+
+                    if (isNullStreamsOptimization == soci::i_ok) //there is at least one entry
+                        {
+                            time_t lastTime = timegm(&datetimeStreams); //from db
+                            time_t now = getUTC(0);
+                            double diff = difftime(now, lastTime);
+
+                            if(nostreams < maxNoStreams) //haven't completed yet with 1-16 TCP streams range
+                                {
+                                    if(diff >= 3600) //every 1h experiment with diff number of streams
+                                        {
+                                            nostreams += 1;
+                                        }
+                                    if(throughput > 0.0)
+                                        {
+                                            sql.begin();
+                                            stmt22.execute(true);
+                                            sql.commit();
+                                        }
+                                }
+                            else //all samples taken, max is 16 streams
+                                {
+                                    if (diff >= 43200) //restart from stream 1, half a day has passed, check throughput though
+                                        {
+                                            stmt23.execute(true); //get max throughput of all samples
+
+                                            if(throughput > 0.0 && (throughput < maxThroughput))
+                                                {
+                                                    nostreams = minStreams;
+                                                    sql.begin();
+                                                    stmt24.execute(true);	//delete all previous records for this pair
+                                                    stmt22.execute(true);	//start from the beginning
+                                                    sql.commit();
+                                                }
+                                        }
+                                }
+                        }
+                    else //it's NULL, no sample yet, insert the firsy record for this pair
+                        {
+                            if(throughput > 0.0)
+                                {
+                                    sql.begin();
+                                    stmt22.execute(true);
+                                    sql.commit();
+                                }
+                        }
+
+
+                    lanTransferBool = lanTransfer(source_hostname, destin_hostname);
+
+                    //check if the number of actives have been fixed for this pair
+                    stmt_fixed.execute(true);
+                    if (isNullFixed == soci::i_ok && active_fixed == "on")
+                        continue;
+
+                    // check current active transfers for a linkmaxActive
+                    stmt7.execute(true);
+
+                    //get submitted for this link
+                    stmt19.execute(true);
+
+                    //check if there is any other source for a given dest
+                    stmt18.execute(true);
+
 
                     // Ratio of success
                     soci::rowset<soci::row> rs = (sql.prepare << "SELECT file_state, retry, current_failures FROM t_file "
@@ -4068,97 +4136,6 @@ bool MySqlAPI::updateOptimizer()
                             ratioSuccessFailure = ceil(nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0));
                         }
 
-                    //optimize number of streams first
-                    //check if pair exists first
-                    stmt14.execute(true);
-
-                    if(recordFound == 0) //insert new pair
-                        {
-                            if(throughput != 0.0 && throughput < 1.0) //records found, optimize number of streams
-                                {
-                                    insertStreams = -1;
-                                    sql.begin();
-                                    stmt15.execute(true);
-                                    sql.commit();
-                                }
-                            else
-                                {
-                                    insertStreams = 4; //use auto-tuning, pair doesn't need optimization
-                                    sql.begin();
-                                    stmt15.execute(true);
-                                    sql.commit();
-                                }
-                        }
-                    else   //update existing pair
-                        {
-                            //check if 6h elapsed so as to experiment with auto-tune
-                            stmt12.execute(true);
-                            time_t startTime = timegm(&startTimeSt);
-                            double diff = 0.0;
-                            if(isNullStartTime != soci::i_null)
-                                {
-                                    diff = difftime(now, startTime);
-                                }
-
-                            //get current nostreams for this pair
-                            stmt17.execute(true);
-
-                            if(isNullStreamsCurrent == soci::i_null)  //if null, set to -1, shouldn't be but never know!
-                                {
-                                    streamsCurrent = -1;
-                                }
-
-                            if(throughput != 0.0 && throughput < 1.0) //records found, optimize number of streams by reducing them
-                                {
-                                    if(diff > 10000) //if elapsed, fall-back to auto-tune
-                                        {
-                                            insertStreams = 4;
-                                            sql.begin();
-                                            stmt13.execute(true);
-                                            stmt16.execute(true);
-                                            sql.commit();
-                                        }
-                                    else
-                                        {
-                                            insertStreams = -1;
-                                            sql.begin();
-                                            stmt13.execute(true);
-                                            sql.commit();
-                                        }
-                                }
-                            else if (throughput != 0.0 && throughput >= 1.0 && streamsCurrent == -1)
-                                {
-                                    if(diff > 10000) //if elapsed, fall-back to auto-tune
-                                        {
-                                            insertStreams = 4;
-                                            sql.begin();
-                                            stmt13.execute(true);
-                                            stmt16.execute(true);
-                                            sql.commit();
-                                        }
-                                    else
-                                        {
-                                            insertStreams = -1;
-                                            sql.begin();
-                                            stmt13.execute(true);
-                                            sql.commit();
-                                        }
-                                }
-                            else if (throughput != 0.0 && throughput >= 1.0 && streamsCurrent != -1) //auto-tune working fine
-                                {
-                                    insertStreams = 4;
-                                    sql.begin();
-                                    stmt13.execute(true);
-                                    sql.commit();
-                                }
-                            else
-                                {
-                                    insertStreams = 4;
-                                    sql.begin();
-                                    stmt13.execute(true);
-                                    sql.commit();
-                                }
-                        }
 
                     // Max active transfers
                     stmt8.execute(true);
@@ -4223,18 +4200,18 @@ bool MySqlAPI::updateOptimizer()
                                         }
                                     else
                                         {
-                                          if(spawnActive > 1)
-                                           {
-                                            double percentage = activePercentageQueue(boost::lexical_cast<double>(maxActive),
-                                                                boost::lexical_cast<double>(submitted),
-                                                                boost::lexical_cast<double>(ratioSuccessFailure));
-
-                                            if(maxActive < boost::lexical_cast<int>(percentage))
+                                            if(spawnActive > 1)
                                                 {
-                                                    highDefault = boost::lexical_cast<int>(percentage);
-                                                    maxActive = highDefault;
+                                                    double percentage = activePercentageQueue(boost::lexical_cast<double>(maxActive),
+                                                                        boost::lexical_cast<double>(submitted),
+                                                                        boost::lexical_cast<double>(ratioSuccessFailure));
+
+                                                    if(maxActive < boost::lexical_cast<int>(percentage))
+                                                        {
+                                                            highDefault = boost::lexical_cast<int>(percentage);
+                                                            maxActive = highDefault;
+                                                        }
                                                 }
-					    }
                                         }
                                 }
 
@@ -4878,12 +4855,12 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                         {
                             count++;
-			    countBeat++;
+                            countBeat++;
 
                             if(countBeat == 10000)
                                 {
-				     //reset
-				     countBeat = 0;
+                                    //reset
+                                    countBeat = 0;
 
                                     //update heartbeat first
                                     updateHeartBeatInternal(sql, &index, &count1, &start, &end, service_name);
@@ -7450,10 +7427,10 @@ std::vector<struct message_state> MySqlAPI::getStateOfDeleteInternal(soci::sessi
                     ret.source_se = it->get<std::string>("source_se");
                     ret.dest_se = it->get<std::string>("dest_se", "");
 
- 		    if(!show_user_dn)
-			ret.user_dn = std::string("");
-		    else
-                    	ret.user_dn = it->get<std::string>("user_dn","");
+                    if(!show_user_dn)
+                        ret.user_dn = std::string("");
+                    else
+                        ret.user_dn = it->get<std::string>("user_dn","");
 
                     ret.source_url = it->get<std::string>("source_surl","");
                     ret.dest_url = it->get<std::string>("dest_surl","");
@@ -7553,10 +7530,10 @@ std::vector<struct message_state> MySqlAPI::getStateOfTransferInternal(soci::ses
                     ret.source_se = it->get<std::string>("source_se");
                     ret.dest_se = it->get<std::string>("dest_se");
 
-		    if(!show_user_dn)
-			ret.user_dn = std::string("");
-		    else
-                    	ret.user_dn = it->get<std::string>("user_dn","");
+                    if(!show_user_dn)
+                        ret.user_dn = std::string("");
+                    else
+                        ret.user_dn = it->get<std::string>("user_dn","");
 
 
                     ret.source_url = it->get<std::string>("source_surl","");
@@ -8130,7 +8107,7 @@ void MySqlAPI::checkSanityState()
                                                         {
                                                             stmt3.execute(true); //set the job_state to finished if at least one finished
                                                         }
-						    break;
+                                                    break;
                                                 }
                                         }
 
@@ -8185,25 +8162,25 @@ void MySqlAPI::checkSanityState()
                                                     );
 
 
-		    sql.begin();
+                    sql.begin();
                     for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
                         {
                             job_id = (*i2);
                             stmt7.execute(true);
                         }
-		    sql.commit();
+                    sql.commit();
 
-		    //multiple replicas with finished state
-		    sql.begin();
+                    //multiple replicas with finished state
+                    sql.begin();
                     for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
                         {
-			    //reset
-			    countMreplica = 0;
+                            //reset
+                            countMreplica = 0;
                             countMindex = 0;
 
                             job_id = (*i2);
 
-                           //check for m-replicas sanity
+                            //check for m-replicas sanity
                             stmt_m_replica.execute(true);
 
                             //this is a m-replica job
@@ -8238,8 +8215,8 @@ void MySqlAPI::checkSanityState()
                                                 }
                                         }
                                 }
-                    }
-		    sql.commit();
+                        }
+                    sql.commit();
 
 
                     //now check reverse sanity checks, JOB can't be FINISH,  FINISHEDDIRTY, FAILED is at least one tr is in STARTED/DELETE
@@ -8248,13 +8225,13 @@ void MySqlAPI::checkSanityState()
                                                         " select  j.job_id from t_job j inner join t_dm f on (j.job_id = f.job_id) where j.job_finished >= (UTC_TIMESTAMP() - interval '24' HOUR ) and f.file_state in ('STARTED','DELETE')  "
                                                     );
 
-		    sql.begin();
+                    sql.begin();
                     for (soci::rowset<std::string>::const_iterator i3 = rs3.begin(); i3 != rs3.end(); ++i3)
                         {
                             job_id = (*i3);
                             stmtDel2.execute(true);
                         }
-   		    sql.commit();
+                    sql.commit();
 
 
                     //now check if a host has been offline for more than 120 min and set its transfers to failed
@@ -10174,27 +10151,37 @@ bool MySqlAPI::isProtocolIPv6(const std::string & source_hostname, const std::st
 int MySqlAPI::getStreamsOptimization(const std::string & source_hostname, const std::string & destination_hostname)
 {
     soci::session sql(*connectionPool);
+    long long int maxNoStreams = 0;
+    long long int optimumNoStreams = 0;
+    soci::indicator isNullMaxStreamsFound = soci::i_ok;
+    soci::indicator isNullOptimumStreamsFound = soci::i_ok;
 
     try
         {
-            long long int streamsFound = 0;
-            soci::indicator isNullStreamsFound = soci::i_ok;
+            sql << " SELECT max(nostreams) from t_optimize_streams where source_se=:source_se and dest_se=:dest_se ",
+                soci::use(source_hostname), soci::use(destination_hostname), soci::into(maxNoStreams, isNullMaxStreamsFound);
 
-            sql << " select nostreams from t_optimize where "
-                " source_se=:source_se and dest_se=:dest_se",
-                soci::use(source_hostname), soci::use(destination_hostname), soci::into(streamsFound, isNullStreamsFound);
-
-            if(sql.got_data() && streamsFound == -1)  //need to reduce num of streams, practically optimize
+            if(sql.got_data())
                 {
-            		std::string name;
-            		soci::indicator isNullName = soci::i_ok;
+                    if(maxNoStreams == 16) //this is the maximum, meaning taken all samples from 1-16 TCP strreams
+                        {
+                            sql << " SELECT nostreams FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se ORDER BY throughput DESC LIMIT 1 ",
+                                soci::use(source_hostname), soci::use(destination_hostname), soci::into(optimumNoStreams, isNullOptimumStreamsFound);
 
-            		sql << "SELECT name FROM t_se WHERE name = 'buffer'", soci::into(name, isNullName);
-
-            		if (sql.got_data() && name == "buffer")
-                	{
-                    		return -1; //buffer optimization
-                	}
+                            return 	(int) optimumNoStreams;
+                        }
+                    else if(maxNoStreams < 16) //use the maximum sample taken so far
+                        {
+                            return (int) maxNoStreams;
+                        }
+                    else //just in case
+                        {
+                            return 4;
+                        }
+                }
+            else  //it's NULL, no info yet stored, use default 1
+                {
+                    return 1;
                 }
         }
     catch (std::exception& e)
@@ -10462,18 +10449,18 @@ void MySqlAPI::setFixActive(const std::string & source, const std::string & dest
             if (active > 0)
                 {
                     sql << "INSERT INTO t_optimize_active (source_se, dest_se, active, fixed, ema, datetime) "
-                           "VALUES (:source, :dest, :active, 'on', 0, UTC_TIMESTAMP()) "
-                           "ON DUPLICATE KEY UPDATE "
-                           "  active = :active, fixed = 'on', datetime = UTC_TIMESTAMP()",
-                           soci::use(source, "source"), soci::use(destination, "dest"), soci::use(active, "active");
+                        "VALUES (:source, :dest, :active, 'on', 0, UTC_TIMESTAMP()) "
+                        "ON DUPLICATE KEY UPDATE "
+                        "  active = :active, fixed = 'on', datetime = UTC_TIMESTAMP()",
+                        soci::use(source, "source"), soci::use(destination, "dest"), soci::use(active, "active");
                 }
             else
                 {
                     sql << "INSERT INTO t_optimize_active (source_se, dest_se, active, fixed, ema, datetime) "
-                           "VALUES (:source, :dest, 2, 'off', 0, UTC_TIMESTAMP()) "
-                           "ON DUPLICATE KEY UPDATE "
-                           "  fixed = 'off', datetime = UTC_TIMESTAMP()",
-                           soci::use(source, "source"), soci::use(destination, "dest");
+                        "VALUES (:source, :dest, 2, 'off', 0, UTC_TIMESTAMP()) "
+                        "ON DUPLICATE KEY UPDATE "
+                        "  fixed = 'off', datetime = UTC_TIMESTAMP()",
+                        soci::use(source, "source"), soci::use(destination, "dest");
                 }
             sql.commit();
         }
@@ -10495,12 +10482,7 @@ int MySqlAPI::getBufferOptimization()
 
     try
         {
-            //get optimizer level
-            int level = getOptimizerDefaultMode(sql);
-	    if(level == 3)
-	    	return 1;
-	    else
-	        return 0;
+            return getOptimizerDefaultMode(sql);
         }
     catch (std::exception& e)
         {
@@ -10510,6 +10492,8 @@ int MySqlAPI::getBufferOptimization()
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
+
+    return 1; //default level
 }
 
 
@@ -12078,12 +12062,12 @@ bool MySqlAPI::isDmJob(std::string const & job)
         {
             int count = 0;
             sql <<
-                    "SELECT COUNT(file_id) "
-                    "FROM t_dm "
-                    "WHERE job_id = :jobId ",
-                    soci::use(job),
-                    soci::into(count)
-            ;
+                "SELECT COUNT(file_id) "
+                "FROM t_dm "
+                "WHERE job_id = :jobId ",
+                soci::use(job),
+                soci::into(count)
+                ;
             return count > 0;
         }
     catch (std::exception& e)
@@ -12098,18 +12082,18 @@ bool MySqlAPI::isDmJob(std::string const & job)
 
 
 bool MySqlAPI::getOauthCredentials(const std::string& user_dn,
-        const std::string& vo, const std::string& cloud_name, OAuth& oauth)
+                                   const std::string& vo, const std::string& cloud_name, OAuth& oauth)
 {
     soci::session sql(*connectionPool);
 
     try
         {
             sql << "SELECT app_key, app_secret, access_token, access_token_secret "
-                   "FROM t_cloudStorage cs, t_cloudStorageUser cu "
-                   "WHERE (cu.user_dn=:user_dn OR cu.vo_name=:vo) AND cs.cloudStorage_name=:cs_name AND cs.cloudStorage_name = cu.cloudStorage_name",
-                   soci::use(user_dn), soci::use(vo), soci::use(cloud_name), soci::into(oauth);
-             if (!sql.got_data())
-                 return false;
+                "FROM t_cloudStorage cs, t_cloudStorageUser cu "
+                "WHERE (cu.user_dn=:user_dn OR cu.vo_name=:vo) AND cs.cloudStorage_name=:cs_name AND cs.cloudStorage_name = cu.cloudStorage_name",
+                soci::use(user_dn), soci::use(vo), soci::use(cloud_name), soci::into(oauth);
+            if (!sql.got_data())
+                return false;
         }
     catch (std::exception& e)
         {
@@ -12224,17 +12208,17 @@ bool MySqlAPI::getUserDnVisibleInternal(soci::session& sql)
                     return true;
                 }
             else if(show_user_dn == "on")
-	        {
+                {
                     return true;
-		}
+                }
             else if(show_user_dn == "off")
-	        {
+                {
                     return false;
-		}
+                }
             else
-	        {
+                {
                     return true;
-		}
+                }
         }
     catch (std::exception& e)
         {
@@ -12245,7 +12229,7 @@ bool MySqlAPI::getUserDnVisibleInternal(soci::session& sql)
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 
-	return true;
+    return true;
 }
 
 bool MySqlAPI::getUserDnVisible()
@@ -12265,7 +12249,7 @@ bool MySqlAPI::getUserDnVisible()
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 
-	return true;
+    return true;
 }
 
 // the class factories

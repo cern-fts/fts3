@@ -58,7 +58,7 @@ void ProfiledDB::getTransferFileStatus(std::string requestID, bool archive,
 
 
 void ProfiledDB::getDmFileStatus(std::string requestID, bool archive,
-                                       unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files)
+                                 unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files)
 {
     PROFILE_PREFIXED("DB::", db->getDmFileStatus(requestID, archive, offset, limit, files));
 }
@@ -71,7 +71,7 @@ void ProfiledDB::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::st
 }
 
 void ProfiledDB::listRequestsDm(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
-                              std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst)
+                                std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst)
 {
     PROFILE_PREFIXED("DB::", db->listRequestsDm(jobs, inGivenStates, restrictToClientDN, forDN, VOname, src, dst));
 }
@@ -974,7 +974,7 @@ void ProfiledDB::checkJobOperation(std::vector<std::string>& jobs, std::vector< 
 
 
 bool ProfiledDB::getOauthCredentials(const std::string& user_dn,
-        const std::string& vo, const std::string& cloud_name, OAuth& oauth)
+                                     const std::string& vo, const std::string& cloud_name, OAuth& oauth)
 {
     PROFILE_PREFIXED("DB::", return db->getOauthCredentials(user_dn, vo, cloud_name, oauth));
 }

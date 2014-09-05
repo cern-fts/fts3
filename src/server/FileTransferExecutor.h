@@ -72,7 +72,7 @@ public:
 private:
 
     std::string generateOauthConfigFile(const std::string& dn,
-            const std::string& vo, const std::string& cs_name);
+                                        const std::string& vo, const std::string& cs_name);
 
     /**
      * @return the metadata string

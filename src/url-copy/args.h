@@ -28,6 +28,7 @@ public:
     bool strictCopy;
     unsigned debugLevel;
     bool hide_user_dn;
+    int level;
 
     enum CompareChecksum
     {

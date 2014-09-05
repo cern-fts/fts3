@@ -13,8 +13,10 @@
 
 #include <vector>
 
-namespace fts3 {
-namespace ws {
+namespace fts3
+{
+namespace ws
+{
 
 class JobStatusGetter
 {

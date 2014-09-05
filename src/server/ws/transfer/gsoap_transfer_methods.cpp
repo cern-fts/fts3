@@ -649,11 +649,11 @@ int fts3::impltns__cancel(soap *ctx, impltns__ArrayOf_USCOREsoapenc_USCOREstring
 {
     try
         {
-        if (request)
-            {
-                JobCancelHandler handler (ctx, request->item);
-                handler.cancel();
-            }
+            if (request)
+                {
+                    JobCancelHandler handler (ctx, request->item);
+                    handler.cancel();
+                }
         }
     catch(Err& ex)
         {
@@ -694,10 +694,10 @@ int fts3::impltns__cancel2(soap* ctx, impltns__ArrayOf_USCOREsoapenc_USCOREstrin
     try
         {
             if (request)
-            {
-                JobCancelHandler handler (ctx, request->item);
-                handler.cancel(resp);
-            }
+                {
+                    JobCancelHandler handler (ctx, request->item);
+                    handler.cancel(resp);
+                }
         }
     catch(Err& ex)
         {
