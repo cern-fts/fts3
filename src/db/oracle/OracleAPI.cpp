@@ -3689,7 +3689,7 @@ bool OracleAPI::updateOptimizer()
 
                             if(nostreams < maxNoStreams) //haven't completed yet with 1-16 TCP streams range
                                 {
-                                    if(diff >= 3600) //every 1h experiment with diff number of streams
+                                    if(diff >= 1800) //every half hour experiment with diff number of streams
                                         {
                                             nostreams += 1;
                                         }
