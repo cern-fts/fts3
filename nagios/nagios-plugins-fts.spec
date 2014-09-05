@@ -9,6 +9,7 @@ Version:    3.2.0
 Release:    1%{?dist}
 Summary:    Nagios probes to be run remotely agains FTS3 machines
 License:    ASL 2.0
+Group:      Applications/Internet
 URL:        https://svnweb.cern.ch/trac/fts3
 # The source of this package was pulled from upstream's vcs. Use the
 # following commands to generate the tarball:
