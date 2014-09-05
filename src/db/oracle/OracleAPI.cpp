@@ -3503,8 +3503,14 @@ bool OracleAPI::updateOptimizer()
     double submitted = 0.0;
     std::string active_fixed;
 
-    time_t now = getUTC(0);
-    struct tm startTimeSt;
+    struct tm datetimeStreams;
+    soci::indicator isNullStreamsOptimization = soci::i_ok;
+    soci::indicator isNullDatetime = soci::i_ok;
+    int maxNoStreams = 16;
+    int minStreams = 1;
+    int nostreams = 1;
+    double throughput=0.0;
+    double maxThroughput = 0.0;  
 
 
     try
@@ -3551,41 +3557,6 @@ bool OracleAPI::updateOptimizer()
                                          " source_se=:source and dest_se=:dest ",
                                          soci::use(active), soci::use(ema), soci::use(source_hostname), soci::use(destin_hostname));
 
-            soci::statement stmt12 = (
-                                         sql.prepare << " select datetime from t_optimize where  "
-                                         " source_se=:source_se and dest_se=:dest_se ",
-                                         soci::use(source_hostname), soci::use(destin_hostname), soci::into(startTimeSt, isNullStartTime));
-
-            soci::statement stmt13 = (
-                                         sql.prepare << "update t_optimize set nostreams=:nostreams where "
-                                         " source_se=:source and dest_se=:dest ",
-                                         soci::use(insertStreams),
-                                         soci::use(source_hostname),
-                                         soci::use(destin_hostname));
-
-            soci::statement stmt14 = (
-                                         sql.prepare << " select count(*) from t_optimize where "
-                                         " source_se=:source_se and dest_se=:dest_se ",
-                                         soci::use(source_hostname), soci::use(destin_hostname), soci::into(recordFound, isNullRecordsFound));
-
-            soci::statement stmt15 = (
-                                         sql.prepare << "insert into t_optimize (file_id, source_se, dest_se, nostreams, datetime) "
-                                         " VALUES (1, :source_se, :dest_se, :nostreams, sys_extract_utc(systimestamp))",
-                                         soci::use(source_hostname),
-                                         soci::use(destin_hostname),
-                                         soci::use(insertStreams));
-
-            soci::statement stmt16 = (
-                                         sql.prepare << "update t_optimize set datetime=sys_extract_utc(systimestamp) where "
-                                         " source_se=:source and dest_se=:dest ",
-                                         soci::use(source_hostname),
-                                         soci::use(destin_hostname));
-
-            soci::statement stmt17 = (
-                                         sql.prepare << " select nostreams from t_optimize where "
-                                         " source_se=:source_se and dest_se=:dest_se",
-                                         soci::use(source_hostname), soci::use(destin_hostname), soci::into(streamsCurrent, isNullStreamsCurrent));
-
 
             soci::statement stmt18 = (
                                          sql.prepare << " select count(distinct source_se) from t_file where "
@@ -3611,6 +3582,46 @@ bool OracleAPI::updateOptimizer()
             //if not set, flag as 0
             if (isRetry == soci::i_null || retrySet == 0)
                 retrySet = 0;
+		
+		
+           /* Start of TCP streams optimization "zone" */
+            soci::statement stmt20 = (
+                                         sql.prepare << "SELECT max(nostreams) FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se ",
+                                         soci::use(source_hostname),
+                                         soci::use(destin_hostname),
+                                         soci::into(nostreams, isNullStreamsOptimization));
+
+            soci::statement stmt21 = (
+                                         sql.prepare << " SELECT max(datetime) FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se "
+                                         " AND nostreams = :nostreams ",
+                                         soci::use(source_hostname),
+                                         soci::use(destin_hostname),
+                                         soci::use(nostreams),
+                                         soci::into(datetimeStreams, isNullDatetime));
+
+            soci::statement stmt22 = (
+                                         sql.prepare << " MERGE INTO t_optimize_streams USING " 
+							" (SELECT :source_se as source_se, :dest_se as dest_se, :nostreams as nostreams FROM dual) Streams ON "
+							" (t_optimize_streams.source_se=Streams.source_se AND t_optimize_streams.dest_se=Streams.dest _se) AND t_optimize_streams.nostreams=Streams.nostreams ) "
+                					" WHEN MATCHED THEN UPDATE SET t_optimize_streams.throughput = :throughput "
+                					" WHEN NOT MATCHED THEN INSERT (source_se, dest_se, nostreams, datetime, throughput) VALUES (Streams.source_se, Streams.dest_se, Streams.nostreams, sys_extract_utc(systimestamp), Streams.throughput)",
+                                         
+                                         soci::use(source_hostname),
+                                         soci::use(destin_hostname),
+                                         soci::use(nostreams),
+                                         soci::use(throughput));
+
+            soci::statement stmt23 = (
+                                         sql.prepare << "SELECT max(throughput) FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se ",
+                                         soci::use(source_hostname),
+                                         soci::use(destin_hostname),
+                                         soci::into(maxThroughput));
+
+            soci::statement stmt24 = (
+                                         sql.prepare << "DELETE FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se ",
+                                         soci::use(source_hostname),
+                                         soci::use(destin_hostname));
+		
 
 
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
@@ -3619,7 +3630,7 @@ bool OracleAPI::updateOptimizer()
                     destin_hostname = i->get<std::string>("DEST_SE");
 
                     double nFailedLastHour=0.0, nFinishedLastHour=0.0;
-                    double throughput=0.0;
+                    throughput=0.0;
                     double filesize = 0.0;
                     double totalSize = 0.0;
                     retry = 0.0;   //latest from db
@@ -3648,17 +3659,12 @@ bool OracleAPI::updateOptimizer()
                     lanTransferBool = false;
                     submitted = 0.0;
                     ema = 0.0;
-
-                    now = getUTC(0);
-
-                    lanTransferBool = lanTransfer(source_hostname, destin_hostname);
-
-                    // first thing, check if the number of actives have been fixed for this pair
-                    stmt_fixed.execute(true);
-                    if (isNullFixed == soci::i_ok && active_fixed == "on")
-                        continue;
-
-                    // Weighted average
+		    nostreams = 1;
+                    isNullStreamsOptimization = soci::i_ok;
+                    isNullDatetime = soci::i_ok;
+                    maxThroughput = 0.0;
+		    
+                   // Weighted average
                     soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
                             "   SELECT filesize, throughput "
                             "   FROM t_file "
@@ -3678,6 +3684,69 @@ bool OracleAPI::updateOptimizer()
                     if (totalSize > 0)
                         throughput /= totalSize;
 
+                   /* apply streams optimization, no matter the level here since if it's switch to level 2 to have info ready*/
+
+                    //get max streams
+                    stmt20.execute(true);
+
+                    //get max datetime
+                    stmt21.execute(true);
+
+                    if (isNullStreamsOptimization == soci::i_ok) //there is at least one entry
+                        {
+                            time_t lastTime = timegm(&datetimeStreams); //from db
+                            time_t now = getUTC(0);
+                            double diff = difftime(now, lastTime);
+
+                            if(nostreams < maxNoStreams) //haven't completed yet with 1-16 TCP streams range
+                                {
+                                    if(diff >= 3) //every 1h experiment with diff number of streams
+                                        {
+                                            nostreams += 1;
+                                        }
+                                    if(throughput > 0.0)
+                                        {
+                                            sql.begin();
+                                            stmt22.execute(true);
+                                            sql.commit();
+                                        }
+                                }
+                            else //all samples taken, max is 16 streams
+                                {
+                                    if (diff >= 10) //restart from stream 1, half a day has passed, check throughput though
+                                        {
+                                            stmt23.execute(true); //get max throughput of all samples
+
+                                            if(throughput > 0.0 && (throughput < maxThroughput))
+                                                {
+                                                    nostreams = minStreams;
+                                                    sql.begin();
+                                                    stmt24.execute(true);	//delete all previous records for this pair
+                                                    stmt22.execute(true);	//start from the beginning
+                                                    sql.commit();
+                                                }
+                                        }
+                                }
+                        }
+                    else //it's NULL, no sample yet, insert the firsy record for this pair
+                        {
+                            if(throughput > 0.0)
+                                {
+                                    sql.begin();
+                                    stmt22.execute(true);
+                                    sql.commit();
+                                }
+                        }		    		    
+                   
+
+                    lanTransferBool = lanTransfer(source_hostname, destin_hostname);
+
+                    // first thing, check if the number of actives have been fixed for this pair
+                    stmt_fixed.execute(true);
+                    if (isNullFixed == soci::i_ok && active_fixed == "on")
+                        continue;
+
+ 
                     // Ratio of success
                     soci::rowset<soci::row> rs = (sql.prepare << "SELECT file_state, retry, current_failures FROM t_file "
                                                   "WHERE "
@@ -3727,99 +3796,7 @@ bool OracleAPI::updateOptimizer()
 
                     //check if there is any other source for a given dest
                     stmt18.execute(true);
-
-                    //optimize number of streams first
-                    //check if pair exists first
-                    stmt14.execute(true);
-
-                    if(recordFound == 0) //insert new pair
-                        {
-                            if(throughput != 0.0 && throughput < 1.0) //records found, optimize number of streams
-                                {
-                                    insertStreams = -1;
-                                    sql.begin();
-                                    stmt15.execute(true);
-                                    sql.commit();
-                                }
-                            else
-                                {
-                                    insertStreams = 4; //use auto-tuning, pair doesn't need optimization
-                                    sql.begin();
-                                    stmt15.execute(true);
-                                    sql.commit();
-                                }
-                        }
-                    else   //update existing pair
-                        {
-                            //check if 6h elapsed so as to experiment with auto-tune
-                            stmt12.execute(true);
-                            time_t startTime = timegm(&startTimeSt);
-                            double diff = 0.0;
-                            if(isNullStartTime != soci::i_null)
-                                {
-                                    diff = difftime(now, startTime);
-                                }
-
-                            //get current nostreams for this pair
-                            stmt17.execute(true);
-
-                            if(isNullStreamsCurrent == soci::i_null)  //if null, set to -1, shouldn't be but never know!
-                                {
-                                    streamsCurrent = -1;
-                                }
-
-                            if(throughput != 0.0 && throughput < 1.0) //records found, optimize number of streams by reducing them
-                                {
-                                    if(diff > 10000) //if elapsed, fall-back to auto-tune
-                                        {
-                                            insertStreams = 4;
-                                            sql.begin();
-                                            stmt13.execute(true);
-                                            stmt16.execute(true);
-                                            sql.commit();
-                                        }
-                                    else
-                                        {
-                                            insertStreams = -1;
-                                            sql.begin();
-                                            stmt13.execute(true);
-                                            sql.commit();
-                                        }
-                                }
-                            else if (throughput != 0.0 && throughput >= 1.0 && streamsCurrent == -1)
-                                {
-                                    if(diff > 10000) //if elapsed, fall-back to auto-tune
-                                        {
-                                            insertStreams = 4;
-                                            sql.begin();
-                                            stmt13.execute(true);
-                                            stmt16.execute(true);
-                                            sql.commit();
-                                        }
-                                    else
-                                        {
-                                            insertStreams = -1;
-                                            sql.begin();
-                                            stmt13.execute(true);
-                                            sql.commit();
-                                        }
-                                }
-                            else if (throughput != 0.0 && throughput >= 1.0 && streamsCurrent != -1) //auto-tune working fine
-                                {
-                                    insertStreams = 4;
-                                    sql.begin();
-                                    stmt13.execute(true);
-                                    sql.commit();
-                                }
-                            else
-                                {
-                                    insertStreams = 4;
-                                    sql.begin();
-                                    stmt13.execute(true);
-                                    sql.commit();
-                                }
-                        }
-
+                    
                     // Max active transfers
                     stmt8.execute(true);
 
@@ -9576,27 +9553,37 @@ bool OracleAPI::isProtocolIPv6(const std::string & source_hostname, const std::s
 int OracleAPI::getStreamsOptimization(const std::string & source_hostname, const std::string & destination_hostname)
 {
     soci::session sql(*connectionPool);
+    long long int maxNoStreams = 0;
+    long long int optimumNoStreams = 0;
+    soci::indicator isNullMaxStreamsFound = soci::i_ok;
+    soci::indicator isNullOptimumStreamsFound = soci::i_ok;
 
     try
         {
-            long long int streamsFound = 0;
-            soci::indicator isNullStreamsFound = soci::i_ok;
+            sql << " SELECT max(nostreams) from t_optimize_streams where source_se=:source_se and dest_se=:dest_se ",
+                soci::use(source_hostname), soci::use(destination_hostname), soci::into(maxNoStreams, isNullMaxStreamsFound);
 
-            sql << " select nostreams from t_optimize where "
-                " source_se=:source_se and dest_se=:dest_se",
-                soci::use(source_hostname), soci::use(destination_hostname), soci::into(streamsFound, isNullStreamsFound);
-
-            if(sql.got_data() && streamsFound == -1)  //need to reduce num of streams, practically optimize
+            if(sql.got_data())
                 {
-                    std::string name;
-                    soci::indicator isNullName = soci::i_ok;
-
-                    sql << "SELECT name FROM t_se WHERE name = 'buffer'", soci::into(name, isNullName);
-
-                    if (sql.got_data() && name == "buffer")
+                    if(maxNoStreams == 16) //this is the maximum, meaning taken all samples from 1-16 TCP strreams
                         {
-                            return -1; //buffer optimization
+                            sql << " SELECT nostreams FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se ORDER BY throughput DESC LIMIT 1 ",
+                                soci::use(source_hostname), soci::use(destination_hostname), soci::into(optimumNoStreams, isNullOptimumStreamsFound);
+
+                            return 	(int) optimumNoStreams;
                         }
+                    else if(maxNoStreams < 16) //use the maximum sample taken so far
+                        {
+                            return (int) maxNoStreams;
+                        }
+                    else //just in case
+                        {
+                            return 4;
+                        }
+                }
+            else  //it's NULL, no info yet stored, use default 1
+                {
+                    return 1;
                 }
         }
     catch (std::exception& e)
@@ -9905,12 +9892,7 @@ int OracleAPI::getBufferOptimization()
 
     try
         {
-            //get optimizer level
-            int level = getOptimizerDefaultMode(sql);
-            if(level == 3)
-                return 1;
-            else
-                return 0;
+            return getOptimizerDefaultMode(sql);
         }
     catch (std::exception& e)
         {
@@ -9920,7 +9902,10 @@ int OracleAPI::getBufferOptimization()
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
+
+    return 1; //default level
 }
+
 
 void OracleAPI::getTransferJobStatusDetailed(std::string job_id, std::vector<boost::tuple<std::string, std::string, int, std::string, std::string> >& files)
 {
@@ -11563,7 +11548,7 @@ void OracleAPI::cancelDmJobs(std::vector<std::string> const & jobs)
             std::string queryStr = jobIdStmt.str();
             job_id = queryStr.substr(0, queryStr.length() - 1);
 
-            cancelStmt1 << "UPDATE t_job SET job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), cancel_job='Y' ";
+            cancelStmt1 << "UPDATE t_job SET job_state = 'CANCELED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), cancel_job='Y' ";
             cancelStmt1 << " ,reason = '";
             cancelStmt1 << reason;
             cancelStmt1 << "'";
@@ -11572,7 +11557,7 @@ void OracleAPI::cancelDmJobs(std::vector<std::string> const & jobs)
             cancelStmt1 << ")";
             cancelStmt1 << " AND job_state NOT IN ('CANCELED','FINISHEDDIRTY', 'FINISHED', 'FAILED')";
 
-            cancelStmt2 << "UPDATE t_dm SET file_state = 'CANCELED',  finish_time = UTC_TIMESTAMP() ";
+            cancelStmt2 << "UPDATE t_dm SET file_state = 'CANCELED',  finish_time = sys_extract_utc(systimestamp) ";
             cancelStmt2 << " ,reason = '";
             cancelStmt2 << reason;
             cancelStmt2 << "'";
