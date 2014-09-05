@@ -111,6 +111,12 @@
 
     <message name="DrainResponse"/>
 
+    <message name="ShowUserDnRequest">
+        <part name="show" type="xsd:boolean"/>
+    </message>
+
+    <message name="ShowUserDnResponse"/>
+
     <message name="RetryRequest">
         <part name="vo" type="xsd:string"/>
 		<part name="retry" type="xsd:int"/>
@@ -265,6 +271,14 @@
         <operation name="doDrain">
             <input message="impl:DrainRequest" name="DrainRequest"/>
             <output message="impl:DrainResponse" name="DrainResponse"/>
+            <fault message="impl:AuthorizationException" name="AuthorizationException"/>
+            <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
+            <fault message="impl:InternalException" name="InternalException"/>
+        </operation>
+        
+        <operation name="showUserDn">
+            <input message="impl:ShowUserDnRequest" name="ShowUserDnRequest"/>
+            <output message="impl:ShowUserDnResponse" name="ShowUserDnResponse"/>
             <fault message="impl:AuthorizationException" name="AuthorizationException"/>
             <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
             <fault message="impl:InternalException" name="InternalException"/>
@@ -465,6 +479,30 @@
             </input>
 
             <output name="DrainResponse">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </output>
+
+            <fault name="AuthorizationException">
+                <wsdlsoap:fault name="AuthorizationException" use="literal"/>
+            </fault>
+
+            <fault name="ServiceBusyException">
+                <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
+            </fault>
+
+            <fault name="InternalException">
+                <wsdlsoap:fault name="InternalException" use="literal"/>
+            </fault>
+        </operation>
+        
+        <operation name="showUserDn">
+            <wsdlsoap:operation soapAction=""/>
+
+            <input name="ShowUserDnRequest">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </input>
+
+            <output name="ShowUserDnResponse">
                 <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
             </output>
 

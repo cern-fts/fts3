@@ -283,6 +283,16 @@ public:
      */
     void doDrain(bool drain);
 
+
+    /**
+     * Remote call to showUserDn
+     *
+     * switches the show-user-DN mode
+     *
+     * @param  show - on/off
+     */
+    void showUserDn(bool show);
+
     /**
      * Remote call to prioritySet
      *

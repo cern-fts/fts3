@@ -531,6 +531,13 @@ void GSoapContextAdapter::doDrain(bool drain)
         throw gsoap_error(ctx);
 }
 
+void GSoapContextAdapter::showUserDn(bool show)
+{
+    implcfg__showUserDnResponse resp;
+    if (soap_call_implcfg__showUserDn(ctx, endpoint.c_str(), 0, show, resp))
+        throw gsoap_error(ctx);
+}
+
 void GSoapContextAdapter::prioritySet(string jobId, int priority)
 {
     impltns__prioritySetResponse resp;

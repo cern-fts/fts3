@@ -114,6 +114,11 @@ SetCfgCli::SetCfgCli(bool spec)
                 "Fixed number of active transfer for a given pair (-1 means reset to optimizer)"
                 "\n(Example: --source $SE --destination $SE --active-fixed $NB_ACT"
             )
+            (
+                "show-user-dn", value<std::string>(),
+                "If set to 'on' user DNs will included in monitoring messages"
+                "\n(Example: --show-user-dn on|off)"
+            )
             ;
         }
 
@@ -189,6 +194,7 @@ bool SetCfgCli::validate()
             && !vm.count("global-timeout")
             && !vm.count("sec-per-mb")
             && !vm.count("active-fixed")
+            && !vm.count("show-user-dn")
        )
         {
             throw cli_exception("No parameters have been specified.");
@@ -224,7 +230,6 @@ vector<string> SetCfgCli::getConfigurations()
 
 optional<bool> SetCfgCli::drain()
 {
-
     if (vm.count("drain"))
         {
             string const & value = vm["drain"].as<string>();
@@ -238,10 +243,27 @@ optional<bool> SetCfgCli::drain()
                     throw bad_option("drain", "You need specify which endpoint to drain, -s missing?");
                 }
 
-            return vm["drain"].as<string>() == "on";
+            return value == "on";
         }
 
     return optional<bool>();
+}
+
+optional<bool> SetCfgCli::showUserDn()
+{
+    if (vm.count("show-user-dn"))
+        {
+            string const & value = vm["show-user-dn"].as<string>();
+
+            if (value != "on" && value != "off")
+                {
+                    throw bad_option("show-user-dn", "may only take on/off values!");
+                }
+
+            return value == "on";
+        }
+
+    return boost::none;
 }
 
 optional< pair<string, int> > SetCfgCli::retry()

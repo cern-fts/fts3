@@ -6497,6 +6497,72 @@ void MySqlAPI::setRetry(int retry, const std::string & vo_name)
 }
 
 
+void MySqlAPI::setShowUserDn(bool show)
+{
+    soci::session sql(*connectionPool);
+    int count = 0;
+
+    try
+        {
+            sql << "select count(*) from t_server_config where show_user_dn is not NULL", soci::into(count);
+            if (!count)
+                {
+                    sql.begin();
+                    sql << "INSERT INTO t_server_config (show_user_dn) VALUES (:show) ",
+                        soci::use(std::string(show ? "on" : "off"));
+                    sql.commit();
+
+                }
+            else
+                {
+                    sql.begin();
+                    sql << "update t_server_config set show_user_dn = :show where show_user_dn is not NULL",
+                        soci::use(std::string(show ? "on" : "off"));
+                    sql.commit();
+                }
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+
+
+bool MySqlAPI::getShowUserDn()
+{
+    soci::session sql(*connectionPool);
+    std::string value;
+    soci::indicator isNull = soci::i_ok;
+
+    try
+        {
+            sql << "select show_user_dn from t_server_config where show_user_dn is not NULL", soci::into(value, isNull);
+
+            if (isNull != soci::i_null)
+                {
+                    return value == "on";
+                }
+            else
+                return false;
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+
 
 int MySqlAPI::getRetry(const std::string & jobId)
 {

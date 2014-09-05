@@ -255,6 +255,52 @@ int fts3::implcfg__doDrain(soap* ctx, bool drain, struct implcfg__doDrainRespons
 
 /* ---------------------------------------------------------------------- */
 
+int fts3::implcfg__showUserDn(soap* ctx, bool show, implcfg__showUserDnResponse& resp)
+{
+    try
+        {
+            // authorize
+            AuthorizationManager::getInstance().authorize(
+                ctx,
+                AuthorizationManager::CONFIG,
+                AuthorizationManager::dummy
+            );
+
+            // get user dn
+            CGsiAdapter cgsi(ctx);
+            string dn = cgsi.getClientDn();
+
+            // prepare the command for audit
+            stringstream cmd;
+            cmd << "fts-config-set --drain " << (show ? "on" : "off");
+
+            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Turning " << (show ? "on" : "off") << " the show-user-dn mode" << commit;
+
+            // TODO DB
+            DBSingleton::instance().getDBObjectInstance()->setShowUserDn(show);
+
+            // audit the operation
+            DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd.str(), "show-user-dn");
+        }
+    catch(Err& ex)
+        {
+
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+            soap_receiver_fault(ctx, ex.what(), "TransferException");
+
+            return SOAP_FAULT;
+        }
+    catch (...)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the drain mode cannot be set"  << commit;
+            return SOAP_FAULT;
+        }
+
+    return SOAP_OK;
+}
+
+/* ---------------------------------------------------------------------- */
+
 int fts3::implcfg__setRetry(soap* ctx, std::string vo, int retry, implcfg__setRetryResponse& _resp)
 {
 

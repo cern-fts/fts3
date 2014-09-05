@@ -389,6 +389,10 @@ public:
 
     virtual void setDrain(bool drain) = 0;
 
+    virtual void setShowUserDn(bool show) = 0;
+
+    virtual bool getShowUserDn() = 0;
+
     virtual void setBandwidthLimit(const std::string & source_hostname, const std::string & destination_hostname, int bandwidthLimit) = 0;
 
     virtual std::string getBandwidthLimit() = 0;

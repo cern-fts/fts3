@@ -112,28 +112,35 @@ public:
     /**
      * Checks the drain option
      *
-     * @return true if on was used and false if off was used, otherwise the optional is not initialized
+     * @return true if on was used and false if off was used, otherwise the optional is not initialised
      */
     optional<bool> drain();
 
     /**
+     * Checks the show-user-dn option
+     *
+     * @return true if on was used and false if off was used, otherwise the optional is not initialised
+     */
+    optional<bool> showUserDn();
+
+    /**
      * Check the retry option
      *
-     * @return the number of retries if it has been set, otherwise the optional is not initialized
+     * @return the number of retries if it has been set, otherwise the optional is not initialised
      */
     optional< pair<string, int> > retry();
 
     /**
      * Check the optimizer-mode option
      *
-     * @return the optimizer mode if it has been set, otherwise the optional is not initialized
+     * @return the optimizer mode if it has been set, otherwise the optional is not initialised
      */
     optional<int> optimizer_mode();
 
     /**
      * Check the queue timeout
      *
-     * @return the queue timeout if it has been set, otherwise the optional is not initialized
+     * @return the queue timeout if it has been set, otherwise the optional is not initialised
      */
     optional<unsigned> queueTimeout();
 
