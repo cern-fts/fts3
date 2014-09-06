@@ -97,13 +97,15 @@ inline bool is_mhop(std::list<job_element_tupple>& src_dest_pair)
 bool almost_equal(double x, double y, double epsilon)
 {
     double diff = x - y;
-    if (x != 0 && y != 0){
-        diff = diff/y; 
-    }
+    if (x != 0 && y != 0)
+        {
+            diff = diff/y;
+        }
 
-    if (diff < epsilon && -1.0*diff < epsilon){
-        return true;
-    }
+    if (diff < epsilon && -1.0*diff < epsilon)
+        {
+            return true;
+        }
     return false;
 }
 

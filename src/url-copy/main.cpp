@@ -237,7 +237,7 @@ static void call_perf(gfalt_transfer_status_t h, const char*, const char*, gpoin
                                          << ", elapsed:" << elapsed
                                          << std::endl;
             currentTransfer.throughput       = (double) avg;
-            currentTransfer.transferredBytes = trans;            
+            currentTransfer.transferredBytes = trans;
         }
 }
 

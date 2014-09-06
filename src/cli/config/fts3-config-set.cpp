@@ -89,8 +89,8 @@ int main(int ac, char* av[])
             optional<bool> showUserDn = cli.showUserDn();
             if (showUserDn)
                 {
-                ctx.showUserDn(*showUserDn);
-                cout << "Done" << endl;
+                    ctx.showUserDn(*showUserDn);
+                    cout << "Done" << endl;
                 }
 
             optional< pair<string, int> > retry = cli.retry();

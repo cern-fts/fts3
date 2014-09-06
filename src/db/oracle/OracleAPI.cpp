@@ -3526,23 +3526,7 @@ bool OracleAPI::updateOptimizer()
             soci::rowset<soci::row> rs = ( sql.prepare <<
                                            " select  distinct o.source_se, o.dest_se from t_optimize_active o INNER JOIN "
                                            " t_file f ON (o.source_se = f.source_se) where o.dest_se=f.dest_se and "
-                                           " f.file_state in ('ACTIVE','SUBMITTED') and f.job_finished is null ");
-
-	    //if there are no active or submitted due to the fact that submission rate is low and transfers terminate quickly, then check last min for finished
-            bool iseof = (rs.begin() == rs.end());
-            if(iseof)
-            {                        
-           		soci::rowset<soci::row> rs2 = ( sql.prepare <<
-                                           " select  distinct o.source_se, o.dest_se from " 
-					   " t_optimize_active o INNER JOIN t_file f ON (o.source_se = f.source_se) where "
-					   " o.dest_se=f.dest_se and f.file_state in ('FAILED','FINISHED') and f.job_finished >= (sys_extract_utc(systimestamp) - interval '1' minute) ");
-
-			iseof = (rs2.begin() == rs2.end());
-			if(iseof)
-				return false;
-			else
-				rs = rs2; //copy rowsets
-            }
+                                           " f.file_state = 'ACTIVE' and f.job_finished is null ");
 
             //is the number of actives fixed?
             soci::statement stmt_fixed = (
@@ -3712,17 +3696,17 @@ bool OracleAPI::updateOptimizer()
                                     if(throughput > 0.0)
                                         {
                                             sql.begin();
-                                                        sql << " MERGE INTO t_optimize_streams USING "
-							" (SELECT :source as source, :dest as dest, :streams as streams FROM dual) Pair "
-							" ON (t_optimize_streams.source_se = Pair.source AND t_optimize_streams.dest_se = Pair.dest AND t_optimize_streams.nostreams = Pair.streams) " 
-							" WHEN MATCHED THEN UPDATE SET throughput = :throughput "
-							" WHEN NOT MATCHED THEN INSERT (source_se, dest_se, nostreams, datetime, throughput) "
-							" VALUES (Pair.source, Pair.dest, Pair.streams, sys_extract_utc(systimestamp), :throughput)",
-                                                        soci::use(source_hostname),
-                                                        soci::use(destin_hostname),
-                                                        soci::use(nostreams),
-                                                        soci::use(throughput),
-                                                        soci::use(throughput);                                            
+                                            sql << " MERGE INTO t_optimize_streams USING "
+                                                " (SELECT :source as source, :dest as dest, :streams as streams FROM dual) Pair "
+                                                " ON (t_optimize_streams.source_se = Pair.source AND t_optimize_streams.dest_se = Pair.dest AND t_optimize_streams.nostreams = Pair.streams) "
+                                                " WHEN MATCHED THEN UPDATE SET throughput = :throughput "
+                                                " WHEN NOT MATCHED THEN INSERT (source_se, dest_se, nostreams, datetime, throughput) "
+                                                " VALUES (Pair.source, Pair.dest, Pair.streams, sys_extract_utc(systimestamp), :throughput)",
+                                                soci::use(source_hostname),
+                                                soci::use(destin_hostname),
+                                                soci::use(nostreams),
+                                                soci::use(throughput),
+                                                soci::use(throughput);
 
                                             sql.commit();
                                         }
@@ -3738,13 +3722,13 @@ bool OracleAPI::updateOptimizer()
                                                     nostreams = minStreams;
                                                     sql.begin();
                                                     stmt24.execute(true);	//delete all previous records for this pair
-						    
-                                                        sql << " MERGE INTO t_optimize_streams USING "
-							" (SELECT :source as source, :dest as dest, :streams as streams FROM dual) Pair "
-							" ON (t_optimize_streams.source_se = Pair.source AND t_optimize_streams.dest_se = Pair.dest AND t_optimize_streams.nostreams = Pair.streams) "
-							" WHEN MATCHED THEN UPDATE SET throughput = :throughput "
-							" WHEN NOT MATCHED THEN INSERT (source_se, dest_se, nostreams, datetime, throughput) "
-							" VALUES (Pair.source, Pair.dest, Pair.streams, sys_extract_utc(systimestamp), :throughput)",
+
+                                                    sql << " MERGE INTO t_optimize_streams USING "
+                                                        " (SELECT :source as source, :dest as dest, :streams as streams FROM dual) Pair "
+                                                        " ON (t_optimize_streams.source_se = Pair.source AND t_optimize_streams.dest_se = Pair.dest AND t_optimize_streams.nostreams = Pair.streams) "
+                                                        " WHEN MATCHED THEN UPDATE SET throughput = :throughput "
+                                                        " WHEN NOT MATCHED THEN INSERT (source_se, dest_se, nostreams, datetime, throughput) "
+                                                        " VALUES (Pair.source, Pair.dest, Pair.streams, sys_extract_utc(systimestamp), :throughput)",
                                                         soci::use(source_hostname),
                                                         soci::use(destin_hostname),
                                                         soci::use(nostreams),
@@ -3760,18 +3744,18 @@ bool OracleAPI::updateOptimizer()
                             if(throughput > 0.0)
                                 {
                                     sql.begin();
-                                                        sql << " MERGE INTO t_optimize_streams USING "
-							" (SELECT :source as source, :dest as dest, :streams as streams FROM dual) Pair "
-							" ON (t_optimize_streams.source_se = Pair.source AND t_optimize_streams.dest_se = Pair.dest AND t_optimize_streams.nostreams = Pair.streams) "
-							" WHEN MATCHED THEN UPDATE SET throughput = :throughput "
-							" WHEN NOT MATCHED THEN INSERT (source_se, dest_se, nostreams, datetime, throughput) "
-							" VALUES (Pair.source, Pair.dest, Pair.streams, sys_extract_utc(systimestamp), :throughput)",
-                                                        soci::use(source_hostname),
-                                                        soci::use(destin_hostname),
-                                                        soci::use(nostreams),
-                                                        soci::use(throughput),
-                                                        soci::use(throughput);                                    
-				    sql.commit();
+                                    sql << " MERGE INTO t_optimize_streams USING "
+                                        " (SELECT :source as source, :dest as dest, :streams as streams FROM dual) Pair "
+                                        " ON (t_optimize_streams.source_se = Pair.source AND t_optimize_streams.dest_se = Pair.dest AND t_optimize_streams.nostreams = Pair.streams) "
+                                        " WHEN MATCHED THEN UPDATE SET throughput = :throughput "
+                                        " WHEN NOT MATCHED THEN INSERT (source_se, dest_se, nostreams, datetime, throughput) "
+                                        " VALUES (Pair.source, Pair.dest, Pair.streams, sys_extract_utc(systimestamp), :throughput)",
+                                        soci::use(source_hostname),
+                                        soci::use(destin_hostname),
+                                        soci::use(nostreams),
+                                        soci::use(throughput),
+                                        soci::use(throughput);
+                                    sql.commit();
                                 }
                         }
 
@@ -9666,10 +9650,10 @@ int OracleAPI::getStreamsOptimization(const std::string & source_hostname, const
                             sql << " SELECT nostreams FROM (SELECT nostreams FROM t_optimize_streams   WHERE source_se=:source_se and dest_se=:dest_se ORDER BY throughput DESC) WHERE  rownum <= 1 ",
                                 soci::use(source_hostname), soci::use(destination_hostname), soci::into(optimumNoStreams, isNullOptimumStreamsFound);
 
-			    if(sql.got_data())
-                            	return 	(int) optimumNoStreams;
-			    else
-			        return defaultStreams;
+                            if(sql.got_data())
+                                return 	(int) optimumNoStreams;
+                            else
+                                return defaultStreams;
                         }
                     else if(maxNoStreams < 16) //use the maximum sample taken so far
                         {
