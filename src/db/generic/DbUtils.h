@@ -93,6 +93,19 @@ inline bool is_mhop(std::list<job_element_tupple>& src_dest_pair)
     return true;
 }
 
+//http://stackoverflow.com/questions/17333/most-effective-way-for-float-and-double-comparison
+bool almost_equal(double x, double y, double epsilon)
+{
+    double diff = x - y;
+    if (x != 0 && y != 0){
+        diff = diff/y; 
+    }
+
+    if (diff < epsilon && -1.0*diff < epsilon){
+        return true;
+    }
+    return false;
+}
 
 
 

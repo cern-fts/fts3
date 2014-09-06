@@ -812,7 +812,7 @@ void ProfiledDB::setShowUserDn(bool show)
 
 bool ProfiledDB::getShowUserDn()
 {
-    PROFILE_PREFIXED("DB::", db->getShowUserDn());
+    PROFILE_PREFIXED("DB::", return db->getShowUserDn());
 }
 
 void ProfiledDB::setBandwidthLimit(const std::string & source_hostname, const std::string & destination_hostname, int bandwidthLimit)

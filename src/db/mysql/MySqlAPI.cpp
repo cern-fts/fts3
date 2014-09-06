@@ -4052,13 +4052,13 @@ bool MySqlAPI::updateOptimizer()
                                 }
                             else //all samples taken, max is 16 streams
                                 {
-                                    if (diff >= 43200) //restart from stream 1, half a day has passed, check throughput though
+                                    if (diff >= 43200) //restart from stream 1, half a day has passed, compare throughput with previous sample
                                         {
                                             stmt23.execute(true); //get max throughput of all samples
 
-                                            if(throughput > 0.0 && (throughput < maxThroughput))
+                                            if(throughput > 0.0 &&  maxThroughput > 0.0 &&  !almost_equal(throughput, maxThroughput, 0.1) && throughput < maxThroughput)
                                                 {
-                                                    nostreams = minStreams;
+                                                    nostreams = minStreams;     //reset to the first in the range
                                                     sql.begin();
                                                     stmt24.execute(true);	//delete all previous records for this pair
                                                     stmt22.execute(true);	//start from the beginning

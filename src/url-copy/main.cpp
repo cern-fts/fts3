@@ -237,26 +237,7 @@ static void call_perf(gfalt_transfer_status_t h, const char*, const char*, gpoin
                                          << ", elapsed:" << elapsed
                                          << std::endl;
             currentTransfer.throughput       = (double) avg;
-            currentTransfer.transferredBytes = trans;
-
-            /*
-
-            double throughputTurl = 0.0;
-
-            if (avg > 0 && inst > 0)
-                {
-                    throughputTurl = convertKbToMb(currentTransfer.throughput);
-                    reporter.sendPing(currentTransfer.jobId,
-                                      currentTransfer.fileId,
-                                      throughputTurl,
-                                      currentTransfer.transferredBytes,
-                                      reporter.source_se,
-                                      reporter.dest_se,
-                                      "gsiftp:://fake",
-                                      "gsiftp:://fake",
-                                      "ACTIVE");
-                }
-             */
+            currentTransfer.transferredBytes = trans;            
         }
 }
 
@@ -698,7 +679,7 @@ int main(int argc, char **argv)
     try
         {
             /*send an update message back to the server to indicate it's alive*/
-            boost::thread btUpdater(taskStatusUpdater, 60);
+            boost::thread btUpdater(taskStatusUpdater, 30);
         }
     catch (std::exception& e)
         {
