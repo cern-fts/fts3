@@ -4050,7 +4050,7 @@ bool OracleAPI::updateOptimizer()
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
-    return allowed;
+    return true;
 }
 
 
