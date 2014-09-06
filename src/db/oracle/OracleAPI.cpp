@@ -3528,6 +3528,22 @@ bool OracleAPI::updateOptimizer()
                                            " t_file f ON (o.source_se = f.source_se) where o.dest_se=f.dest_se and "
                                            " f.file_state in ('ACTIVE','SUBMITTED') and f.job_finished is null ");
 
+	    //if there are no active or submitted due to the fact that submission rate is low and transfers terminate quickly, then check last min for finished
+            bool iseof = (rs.begin() == rs.end());
+            if(iseof)
+            {                        
+           		soci::rowset<soci::row> rs2 = ( sql.prepare <<
+                                           " select  distinct o.source_se, o.dest_se from " 
+					   " t_optimize_active o INNER JOIN t_file f ON (o.source_se = f.source_se) where "
+					   " o.dest_se=f.dest_se and f.file_state in ('FAILED','FINISHED') and f.job_finished >= (sys_extract_utc(systimestamp) - interval '1' minute) ");
+
+			iseof = (rs2.begin() == rs2.end());
+			if(iseof)
+				return false;
+			else
+				rs = rs2; //copy rowsets
+            }
+
             //is the number of actives fixed?
             soci::statement stmt_fixed = (
                                              sql.prepare << "SELECT fixed from t_optimize_active "
