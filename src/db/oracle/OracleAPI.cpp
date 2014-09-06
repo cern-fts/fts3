@@ -7692,7 +7692,7 @@ void OracleAPI::checkSanityState()
                                                                             sql << "UPDATE t_file SET "
                                                                                 "    file_state = 'SUBMITTED', job_finished = NULL, finish_time = NULL, "
                                                                                 "    reason = '' "
-                                                                                "    WHERE file_state = 'NOT_USED' and job_id = :jobId LIMIT 1", soci::use(job_id);
+                                                                                "    WHERE file_state = 'NOT_USED' and job_id = :jobId and ROWNUM = 1", soci::use(job_id);
                                                                             it2 = sanityVector.erase(it2);
                                                                             found = true;
                                                                         }
@@ -9634,6 +9634,7 @@ int OracleAPI::getStreamsOptimization(const std::string & source_hostname, const
     soci::session sql(*connectionPool);
     long long int maxNoStreams = 0;
     long long int optimumNoStreams = 0;
+    int defaultStreams = 4;
     soci::indicator isNullMaxStreamsFound = soci::i_ok;
     soci::indicator isNullOptimumStreamsFound = soci::i_ok;
 
@@ -9646,13 +9647,13 @@ int OracleAPI::getStreamsOptimization(const std::string & source_hostname, const
                 {
                     if(maxNoStreams == 16) //this is the maximum, meaning taken all samples from 1-16 TCP strreams
                         {
-                            sql << " SELECT nostreams FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se ORDER BY throughput DESC LIMIT 1 ",
+                            sql << " SELECT nostreams FROM (SELECT nostreams FROM t_optimize_streams   WHERE source_se=:source_se and dest_se=:dest_se ORDER BY throughput DESC) WHERE  rownum <= 1 ",
                                 soci::use(source_hostname), soci::use(destination_hostname), soci::into(optimumNoStreams, isNullOptimumStreamsFound);
 
 			    if(sql.got_data())
                             	return 	(int) optimumNoStreams;
 			    else
-			        return 4;
+			        return defaultStreams;
                         }
                     else if(maxNoStreams < 16) //use the maximum sample taken so far
                         {
@@ -9660,12 +9661,12 @@ int OracleAPI::getStreamsOptimization(const std::string & source_hostname, const
                         }
                     else //just in case
                         {
-                            return 4;
+                            return defaultStreams;
                         }
                 }
             else  //it's NULL, no info yet stored, use default 1
                 {
-                    return 1;
+                    return defaultStreams;
                 }
         }
     catch (std::exception& e)
@@ -9677,7 +9678,7 @@ int OracleAPI::getStreamsOptimization(const std::string & source_hostname, const
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
 
-    return 4;
+    return defaultStreams;
 }
 
 int OracleAPI::getGlobalTimeout()

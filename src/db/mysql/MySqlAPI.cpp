@@ -10219,6 +10219,7 @@ int MySqlAPI::getStreamsOptimization(const std::string & source_hostname, const 
     soci::session sql(*connectionPool);
     long long int maxNoStreams = 0;
     long long int optimumNoStreams = 0;
+    int defaultStreams = 4;
     soci::indicator isNullMaxStreamsFound = soci::i_ok;
     soci::indicator isNullOptimumStreamsFound = soci::i_ok;
 
@@ -10237,7 +10238,7 @@ int MySqlAPI::getStreamsOptimization(const std::string & source_hostname, const 
 			    if(sql.got_data())
                             	return 	(int) optimumNoStreams;
 			    else
-			        return 4;
+			        return defaultStreams;
                         }
                     else if(maxNoStreams < 16) //use the maximum sample taken so far
                         {
@@ -10245,12 +10246,12 @@ int MySqlAPI::getStreamsOptimization(const std::string & source_hostname, const 
                         }
                     else //just in case
                         {
-                            return 4;
+                            return defaultStreams;
                         }
                 }
             else  //it's NULL, no info yet stored, use default 1
                 {
-                    return 1;
+                    return defaultStreams;
                 }
         }
     catch (std::exception& e)
@@ -10262,7 +10263,7 @@ int MySqlAPI::getStreamsOptimization(const std::string & source_hostname, const 
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
 
-    return 4;
+    return defaultStreams;
 }
 
 int MySqlAPI::getGlobalTimeout()
