@@ -205,10 +205,15 @@ protected:
             {
                 level  = DBSingleton::instance().getDBObjectInstance()->getBufferOptimization();
                 if(level == 2)
+                {
                     StreamsperFile = DBSingleton::instance().getDBObjectInstance()->getStreamsOptimization(source_hostname, destin_hostname);
+		    if(StreamsperFile == 0)
+			StreamsperFile = DEFAULT_NOSTREAMS;
+                }
                 else
+                {
                     StreamsperFile = DEFAULT_NOSTREAMS;
-
+                }
                 Timeout = DBSingleton::instance().getDBObjectInstance()->getGlobalTimeout();
                 if(Timeout == 0)
                     Timeout = DEFAULT_TIMEOUT;

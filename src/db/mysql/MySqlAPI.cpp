@@ -3869,8 +3869,7 @@ bool MySqlAPI::updateOptimizer()
             soci::rowset<soci::row> rs = ( sql.prepare <<
                                            " select  distinct o.source_se, o.dest_se from t_optimize_active o INNER JOIN "
                                            " t_file f ON (o.source_se = f.source_se) where o.dest_se=f.dest_se and "
-                                           " f.file_state = 'ACTIVE'  and f.job_finished is null ");
-
+                                           " f.file_state in ('ACTIVE','SUBMITTED') and f.job_finished is NULL ");
 
 
             //is the number of actives fixed?
@@ -3982,6 +3981,8 @@ bool MySqlAPI::updateOptimizer()
 
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
+		    recordsFound = true;
+
                     source_hostname = i->get<std::string>("source_se");
                     destin_hostname = i->get<std::string>("dest_se");
 
@@ -4070,7 +4071,7 @@ bool MySqlAPI::updateOptimizer()
                                     if(throughput > 0.0)
                                         {
                                             sql.begin();
-                                            stmt22.execute(true);
+                                            	stmt22.execute(true);
                                             sql.commit();
                                         }
                                 }
@@ -4082,7 +4083,7 @@ bool MySqlAPI::updateOptimizer()
                                             nostreams = updateStream;
 
                                             sql.begin();
-                                            stmt28.execute(true);	//update stream currently used with new throughput and timestamp this time
+                                            	stmt28.execute(true);	//update stream currently used with new throughput and timestamp this time
                                             sql.commit();
                                         }
                                 }
@@ -4092,7 +4093,7 @@ bool MySqlAPI::updateOptimizer()
                             if(throughput > 0.0)
                                 {
                                     sql.begin();
-                                    stmt22.execute(true);
+                                    	stmt22.execute(true);
                                     sql.commit();
                                 }
                         }
@@ -4375,7 +4376,7 @@ bool MySqlAPI::updateOptimizer()
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
-    return true;
+    return recordsFound;
 }
 
 
