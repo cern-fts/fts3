@@ -3694,22 +3694,23 @@ bool OracleAPI::updateOptimizer()
                     //make sure that the current stream has been tested, throughput is not null and tested = 1
                     stmt26.execute(true);
 
-                    stmt23.execute(true);
-
-                    sql << " SELECT max(datetime) FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se ",
-                        soci::use(source_hostname),
-                        soci::use(destin_hostname),
-                        soci::into(datetimeStreams, isNullDatetime);
+                    stmt23.execute(true);                   
 
                     if (isNullStreamsOptimization == soci::i_ok) //there is at least one entry
                         {
-                            time_t lastTime = timegm(&datetimeStreams); //from db
-                            time_t now = getUTC(0);
-                            double diff = difftime(now, lastTime);
-
                             if(nostreams < maxNoStreams) //haven't completed yet with 1-16 TCP streams range
                                 {
-                                    if(diff >= 1800 && testedThroughput == 1 && maxThroughput > 0.0) //every 30min experiment with diff number of streams
+                                    sql << " SELECT max(datetime) FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se and nostreams = :nostreams ",
+                                        soci::use(source_hostname),
+                                        soci::use(destin_hostname),
+                                        soci::use(nostreams);
+                                    soci::into(datetimeStreams, isNullDatetime);
+
+                                    time_t lastTime = timegm(&datetimeStreams); //from db
+                                    time_t now = getUTC(0);
+                                    double diff = difftime(now, lastTime);
+
+                                    if(diff >= 900 && testedThroughput == 1 && maxThroughput > 0.0) //every 30min experiment with diff number of streams
                                         {
                                             nostreams += 1;
                                             throughput = 0.0;
@@ -3749,11 +3750,21 @@ bool OracleAPI::updateOptimizer()
                                 }
                             else //all samples taken, max is 16 streams
                                 {
-                                    if (diff >= 43000 && throughput > 0.0) //almost half a day has passed, compare throughput with max sample
-                                        {
-                                            stmt24.execute(true);	//get current stream used with max throughput
-                                            nostreams = updateStream;
+                                     stmt24.execute(true);	//get current stream used with max throughput
+                                    nostreams = updateStream;
 
+                                    sql << " SELECT max(datetime) FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se and nostreams = :nostreams ",
+                                        soci::use(source_hostname),
+                                        soci::use(destin_hostname),
+                                        soci::use(nostreams);
+                                    soci::into(datetimeStreams, isNullDatetime);
+
+                                    time_t lastTime = timegm(&datetimeStreams); //from db
+                                    time_t now = getUTC(0);
+                                    double diff = difftime(now, lastTime);
+
+                                    if (diff >= 36000 && throughput > 0.0) //almost half a day has passed, compare throughput with max sample
+                                        {
                                             sql.begin();
                                             stmt28.execute(true);	//update stream currently used with new throughput and timestamp this time
                                             sql.commit();
@@ -3762,9 +3773,6 @@ bool OracleAPI::updateOptimizer()
                                         {
                                             if(throughput > 0.0)
                                                 {
-                                                    stmt24.execute(true);	//get current stream used with max throughput
-                                                    nostreams = updateStream;
-
                                                     sql.begin();
                                                     sql << " MERGE INTO t_optimize_streams USING "
                                                         " (SELECT :source as source, :dest as dest, :streams as streams FROM dual) Pair "
@@ -9675,7 +9683,7 @@ int OracleAPI::getStreamsOptimization(const std::string & source_hostname, const
     soci::session sql(*connectionPool);
     long long int maxNoStreams = 0;
     long long int optimumNoStreams = 0;
-    int defaultStreams = 4;
+    int defaultStreams = 1;
     soci::indicator isNullMaxStreamsFound = soci::i_ok;
     soci::indicator isNullOptimumStreamsFound = soci::i_ok;
 
@@ -9692,12 +9700,22 @@ int OracleAPI::getStreamsOptimization(const std::string & source_hostname, const
                                 soci::use(source_hostname), soci::use(destination_hostname), soci::into(optimumNoStreams, isNullOptimumStreamsFound);
 
                             if(sql.got_data())
-                                return 	(int) optimumNoStreams;
+                                {
+                                    sql.begin();
+                                    sql << "update t_optimize_streams set tested = 1, datetime = sys_extract_utc(systimestamp) where source_se=:source and dest_se=:dest and tested = 0 and nostreams = :nostreams",
+                                        soci::use(source_hostname), soci::use(destination_hostname), soci::use(optimumNoStreams);
+                                    sql.commit();
+                                    return 	(int) optimumNoStreams;
+                                }
                             else
                                 return defaultStreams;
                         }
                     else if(maxNoStreams < 16) //use the maximum sample taken so far
                         {
+                            sql.begin();
+                            sql << "update t_optimize_streams set tested = 1, datetime = sys_extract_utc(systimestamp) where source_se=:source and dest_se=:dest and tested = 0 and nostreams = :nostreams",
+                                soci::use(source_hostname), soci::use(destination_hostname), soci::use(maxNoStreams);
+                            sql.commit();
                             return (int) maxNoStreams;
                         }
                     else //just in case
