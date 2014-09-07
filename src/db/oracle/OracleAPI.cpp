@@ -3700,11 +3700,11 @@ bool OracleAPI::updateOptimizer()
                         {
                             if(nostreams < maxNoStreams) //haven't completed yet with 1-16 TCP streams range
                                 {
-                                    sql << " SELECT max(datetime) FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se and nostreams = :nostreams ",
+                                    sql << " SELECT max(datetime) FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se and nostreams = :nostreams and tested = 1 and throughput is NOT NULL  ",
                                         soci::use(source_hostname),
                                         soci::use(destin_hostname),
-                                        soci::use(nostreams);
-                                    soci::into(datetimeStreams, isNullDatetime);
+                                        soci::use(nostreams),
+                                        soci::into(datetimeStreams, isNullDatetime);
 
                                     time_t lastTime = timegm(&datetimeStreams); //from db
                                     time_t now = getUTC(0);
@@ -3753,11 +3753,11 @@ bool OracleAPI::updateOptimizer()
                                      stmt24.execute(true);	//get current stream used with max throughput
                                     nostreams = updateStream;
 
-                                    sql << " SELECT max(datetime) FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se and nostreams = :nostreams ",
+                                    sql << " SELECT max(datetime) FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se and nostreams = :nostreams and tested = 1 and throughput is NOT NULL  ",
                                         soci::use(source_hostname),
                                         soci::use(destin_hostname),
-                                        soci::use(nostreams);
-                                    soci::into(datetimeStreams, isNullDatetime);
+                                        soci::use(nostreams),
+                                        soci::into(datetimeStreams, isNullDatetime);
 
                                     time_t lastTime = timegm(&datetimeStreams); //from db
                                     time_t now = getUTC(0);
