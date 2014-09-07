@@ -4260,7 +4260,7 @@ bool MySqlAPI::updateOptimizer()
                                         }
                                 }
 
-                            if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure >= 98)) && throughputEMA > thrStored && retry <= retryStored)
+                            if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure >= 98)) && (throughputEMA > thrStored || throughputEMA > 35) && retry <= retryStored)
                                 {
                                     if(maxActive > maxActiveLimit) // apply limit
                                         {
@@ -4290,7 +4290,7 @@ bool MySqlAPI::updateOptimizer()
                                             stmt10.execute(true);
                                         }
                                 }
-                            else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure >= 98)) && throughputEMA == thrStored && retry <= retryStored)
+                            else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure >= 97)) && throughputEMA == thrStored && retry <= retryStored)
                                 {
                                     if(maxActive > maxActiveLimit) // apply limit
                                         {
@@ -4332,7 +4332,7 @@ bool MySqlAPI::updateOptimizer()
                                                 }
                                         }
                                 }
-                            else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 95)) && throughputEMA < thrStored)
+                            else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 97)) && throughputEMA < thrStored)
                                 {
                                     if(retry > retryStored)
                                         {
@@ -4360,7 +4360,7 @@ bool MySqlAPI::updateOptimizer()
                                     ema = throughputEMA;
                                     stmt10.execute(true);
                                 }
-                            else if ( ratioSuccessFailure < 98)
+                            else if ( ratioSuccessFailure < 97)
                                 {
                                     if(ratioSuccessFailure > rateStored && ratioSuccessFailure > 90 && retry <= retryStored)
                                         {
