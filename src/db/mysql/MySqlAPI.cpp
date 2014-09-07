@@ -4015,7 +4015,7 @@ bool MySqlAPI::updateOptimizer()
                     maxThroughput = 0.0;
                     testedThroughput = 0;
                     updateStream = 0;
-                    struct tm datetimeStreams;                 
+                    struct tm datetimeStreams;
 
                     // Weighted average
                     soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
@@ -4038,89 +4038,90 @@ bool MySqlAPI::updateOptimizer()
                             throughput /= totalSize;
                         }
 
-
-                    /* apply streams optimization, no matter the level here since if it's switch to level 2 to have info ready*/
-
-                    //get max streams
-                    stmt20.execute(true);
-
-                    //make sure that the current stream has been tested, throughput is not null and tested = 1
-                    stmt26.execute(true);
-
-                    stmt23.execute(true);
-
-                    if (isNullStreamsOptimization == soci::i_ok) //there is at least one entry
+                    if(spawnActive == 2) //only executhe streams optimization when level/plan is 2
                         {
-                            if(nostreams < maxNoStreams) //haven't completed yet with 1-16 TCP streams range
+                            /* apply streams optimization, no matter the level here since if it's switch to level 2 to have info ready*/
+
+                            //get max streams
+                            stmt20.execute(true);
+
+                            //make sure that the current stream has been tested, throughput is not null and tested = 1
+                            stmt26.execute(true);
+
+                            stmt23.execute(true);
+
+                            if (isNullStreamsOptimization == soci::i_ok) //there is at least one entry
                                 {
-                                    sql << " SELECT max(datetime) FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se and nostreams = :nostreams  and tested = 1 and throughput is NOT NULL ",
-                                        soci::use(source_hostname),
-                                        soci::use(destin_hostname),
-                                        soci::use(nostreams),
-                                        soci::into(datetimeStreams);  				    
-
-                                    time_t lastTime = timegm(&datetimeStreams); //from db
-                                    time_t now = getUTC(0);
-                                    double diff = difftime(now, lastTime);					                                
-
-                                    if(diff >= 900 && testedThroughput == 1 && maxThroughput > 0.0) //every 15min experiment with diff number of streams
+                                    if(nostreams < maxNoStreams) //haven't completed yet with 1-16 TCP streams range
                                         {
-                                            nostreams += 1;
-                                            throughput = 0.0;
-                                            sql.begin();
-                                            stmt22.execute(true);
-                                            sql.commit();
-                                        }
-                                    else
-                                        {
-                                            if(throughput > 0.0)
+                                            sql << " SELECT max(datetime) FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se and nostreams = :nostreams  and tested = 1 and throughput is NOT NULL ",
+                                                soci::use(source_hostname),
+                                                soci::use(destin_hostname),
+                                                soci::use(nostreams),
+                                                soci::into(datetimeStreams);
+
+                                            time_t lastTime = timegm(&datetimeStreams); //from db
+                                            time_t now = getUTC(0);
+                                            double diff = difftime(now, lastTime);
+
+                                            if(diff >= 900 && testedThroughput == 1 && maxThroughput > 0.0) //every 15min experiment with diff number of streams
                                                 {
+                                                    nostreams += 1;
+                                                    throughput = 0.0;
                                                     sql.begin();
                                                     stmt22.execute(true);
                                                     sql.commit();
                                                 }
+                                            else
+                                                {
+                                                    if(throughput > 0.0)
+                                                        {
+                                                            sql.begin();
+                                                            stmt22.execute(true);
+                                                            sql.commit();
+                                                        }
+                                                }
                                         }
-                                }
-                            else //all samples taken, max is 16 streams
-                                {
-                                    stmt24.execute(true);	//get current stream used with max throughput
-                                    nostreams = updateStream;
-
-                                    sql << " SELECT max(datetime) FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se and nostreams = :nostreams  and tested = 1 and throughput is NOT NULL ",
-                                        soci::use(source_hostname),
-                                        soci::use(destin_hostname),
-                                        soci::use(nostreams),
-                                        soci::into(datetimeStreams, isNullDatetime);
-
-                                    time_t lastTime = timegm(&datetimeStreams); //from db
-                                    time_t now = getUTC(0);
-                                    double diff = difftime(now, lastTime);
-
-                                    if (diff >= 36000 && throughput > 0.0) //almost half a day has passed, compare throughput with max sample
+                                    else //all samples taken, max is 16 streams
                                         {
-                                            sql.begin();
-                                            stmt28.execute(true);	//update stream currently used with new throughput and timestamp this time
-                                            sql.commit();
-                                        }
-                                    else
-                                        {
-                                            if(throughput > 0.0)
+                                            stmt24.execute(true);	//get current stream used with max throughput
+                                            nostreams = updateStream;
+
+                                            sql << " SELECT max(datetime) FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se and nostreams = :nostreams  and tested = 1 and throughput is NOT NULL ",
+                                                soci::use(source_hostname),
+                                                soci::use(destin_hostname),
+                                                soci::use(nostreams),
+                                                soci::into(datetimeStreams, isNullDatetime);
+
+                                            time_t lastTime = timegm(&datetimeStreams); //from db
+                                            time_t now = getUTC(0);
+                                            double diff = difftime(now, lastTime);
+
+                                            if (diff >= 36000 && throughput > 0.0) //almost half a day has passed, compare throughput with max sample
                                                 {
                                                     sql.begin();
-                                                    stmt22.execute(true);
+                                                    stmt28.execute(true);	//update stream currently used with new throughput and timestamp this time
                                                     sql.commit();
+                                                }
+                                            else
+                                                {
+                                                    if(throughput > 0.0)
+                                                        {
+                                                            sql.begin();
+                                                            stmt22.execute(true);
+                                                            sql.commit();
+                                                        }
                                                 }
                                         }
                                 }
+                            else //it's NULL, no sample yet, insert the first record for this pair
+                                {
+                                    throughput = 0.0;
+                                    sql.begin();
+                                    stmt22.execute(true);
+                                    sql.commit();
+                                }
                         }
-                    else //it's NULL, no sample yet, insert the first record for this pair
-                        {
-                            throughput = 0.0;
-                            sql.begin();
-                            stmt22.execute(true);
-                            sql.commit();
-                        }
-
 
                     lanTransferBool = lanTransfer(source_hostname, destin_hostname);
 
