@@ -706,13 +706,15 @@ CREATE TABLE t_optimize_streams (
   dest_se      VARCHAR(150) NOT NULL,  
   nostreams    INTEGER NOT NULL,   
   datetime     TIMESTAMP  NULL DEFAULT NULL,
-  throughput      FLOAT DEFAULT NULL,
+  throughput   FLOAT DEFAULT NULL,
+  tested       INTEGER DEFAULT 0,
   CONSTRAINT t_optimize_streams_pk PRIMARY KEY (source_se, dest_se, nostreams),
   CONSTRAINT t_optimize_streams_fk FOREIGN KEY (source_se, dest_se) REFERENCES t_optimize_active (source_se, dest_se) ON DELETE CASCADE
 );
 
 CREATE INDEX t_optimize_streams_datetime ON t_optimize_streams(datetime);
 CREATE INDEX t_optimize_streams_throughput ON t_optimize_streams(throughput);
+CREATE INDEX t_optimize_streams_tested ON t_optimize_streams(tested);
 
 -- 
 -- t_turl store the turls used for a given surl

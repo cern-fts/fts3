@@ -366,6 +366,7 @@ protected:
                 std::vector< boost::tuple<std::string, std::string, std::string> > split_12(split_2.begin(), split_2.begin() + half_size3);
                 std::vector< boost::tuple<std::string, std::string, std::string> > split_22(split_2.begin() + half_size3, split_2.end());
 
+
                 //create threads only when needed
                 if(!split_11.empty())
                     g.create_thread(boost::bind(&ProcessServiceHandler::getFiles, this, boost::ref(split_11)));

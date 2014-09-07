@@ -119,15 +119,15 @@ void FileTransferExecutor::run(boost::any & ctx)
                 {
                     level = db->getBufferOptimization();
                     if(level == 2)
-                    {
-                        StreamsperFile = db->getStreamsOptimization(source_hostname, destin_hostname);
-			if(StreamsperFile == 0)
-				StreamsperFile = DEFAULT_NOSTREAMS;
-                    }
+                        {
+                            StreamsperFile = db->getStreamsOptimization(source_hostname, destin_hostname);
+                            if(StreamsperFile == 0)
+                                StreamsperFile = DEFAULT_NOSTREAMS;
+                        }
                     else
-                    {
-                        StreamsperFile = DEFAULT_NOSTREAMS;
-                    }
+                        {
+                            StreamsperFile = DEFAULT_NOSTREAMS;
+                        }
                     Timeout = db->getGlobalTimeout();
                     if(Timeout == 0)
                         Timeout = DEFAULT_TIMEOUT;

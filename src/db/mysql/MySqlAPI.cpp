@@ -3846,7 +3846,7 @@ bool MySqlAPI::updateOptimizer()
     double submitted = 0.0;
     std::string active_fixed;
 
-    struct tm datetimeStreams;
+
     soci::indicator isNullStreamsOptimization = soci::i_ok;
     soci::indicator isNullDatetime = soci::i_ok;
     int maxNoStreams = 16;
@@ -3932,18 +3932,10 @@ bool MySqlAPI::updateOptimizer()
                                          soci::use(destin_hostname),
                                          soci::into(nostreams, isNullStreamsOptimization));
 
-            soci::statement stmt21 = (
-                                         sql.prepare << " SELECT max(datetime) FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se "
-                                         " AND nostreams = :nostreams ",
-                                         soci::use(source_hostname),
-                                         soci::use(destin_hostname),
-                                         soci::use(nostreams),
-                                         soci::into(datetimeStreams, isNullDatetime));
-
             soci::statement stmt22 = (
-                                         sql.prepare << " INSERT INTO t_optimize_streams (source_se, dest_se, nostreams, datetime, throughput)"
-                                         " VALUES (:source_se, :dest_se, :nostreams, UTC_TIMESTAMP(), :throughput)"
-                                         " ON DUPLICATE KEY UPDATE throughput = :throughput",
+                                         sql.prepare << " INSERT INTO t_optimize_streams (source_se, dest_se, nostreams, datetime, throughput, tested)"
+                                         " VALUES (:source_se, :dest_se, :nostreams, UTC_TIMESTAMP(), :throughput, 0)"
+                                         " ON DUPLICATE KEY UPDATE throughput = IF (tested = 1, :throughput, throughput)",
                                          soci::use(source_hostname),
                                          soci::use(destin_hostname),
                                          soci::use(nostreams),
@@ -3952,27 +3944,27 @@ bool MySqlAPI::updateOptimizer()
                                      );
 
             soci::statement stmt23 = (
-                                         sql.prepare << "SELECT max(throughput) FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se ",
+                                         sql.prepare << "SELECT throughput FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se and tested=1 and nostreams = :nostreams and throughput is not NULL ",
                                          soci::use(source_hostname),
                                          soci::use(destin_hostname),
+                                         soci::use(nostreams),
                                          soci::into(maxThroughput));
 
             soci::statement stmt24 = (
-                                         sql.prepare << "SELECT nostreams FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se ORDER BY throughput DESC LIMIT 1 ",
+                                         sql.prepare << "SELECT nostreams FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se and tested=1 ORDER BY throughput DESC LIMIT 1 ",
                                          soci::use(source_hostname),
                                          soci::use(destin_hostname),
                                          soci::into(updateStream));
 
             soci::statement stmt26 = (
-                                         sql.prepare << "SELECT count(*) FROM t_optimize_streams  WHERE source_se=:source_se AND dest_se=:dest_se AND nostreams = :nostreams AND throughput IS NOT NULL   ",
+                                         sql.prepare << "SELECT tested FROM t_optimize_streams  WHERE source_se=:source_se AND dest_se=:dest_se AND throughput IS NOT NULL and tested = 1   ",
                                          soci::use(source_hostname),
                                          soci::use(destin_hostname),
-                                         soci::use(nostreams),
                                          soci::into(testedThroughput));
 
             soci::statement stmt28 = (
                                          sql.prepare << " UPDATE t_optimize_streams set throughput = :throughput, datetime = UTC_TIMESTAMP() "
-                                         " WHERE source_se=:source_se AND dest_se=:dest_se AND nostreams = :nostreams  ",
+                                         " WHERE source_se=:source_se AND dest_se=:dest_se AND nostreams = :nostreams and tested = 1  ",
                                          soci::use(throughput),
                                          soci::use(source_hostname),
                                          soci::use(destin_hostname),
@@ -3981,7 +3973,7 @@ bool MySqlAPI::updateOptimizer()
 
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
-		    recordsFound = true;
+                    recordsFound = true;
 
                     source_hostname = i->get<std::string>("source_se");
                     destin_hostname = i->get<std::string>("dest_se");
@@ -4023,6 +4015,7 @@ bool MySqlAPI::updateOptimizer()
                     maxThroughput = 0.0;
                     testedThroughput = 0;
                     updateStream = 0;
+                    struct tm datetimeStreams;
 
                     // Weighted average
                     soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
@@ -4051,8 +4044,15 @@ bool MySqlAPI::updateOptimizer()
                     //get max streams
                     stmt20.execute(true);
 
-                    //get max datetime
-                    stmt21.execute(true);
+                    //make sure that the current stream has been tested, throughput is not null and tested = 1
+                    stmt26.execute(true);
+
+                    stmt23.execute(true);
+
+                    sql << " SELECT max(datetime) FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se ",
+                        soci::use(source_hostname),
+                        soci::use(destin_hostname),
+                        soci::into(datetimeStreams, isNullDatetime);
 
                     if (isNullStreamsOptimization == soci::i_ok) //there is at least one entry
                         {
@@ -4060,42 +4060,57 @@ bool MySqlAPI::updateOptimizer()
                             time_t now = getUTC(0);
                             double diff = difftime(now, lastTime);
 
-                            stmt26.execute(true); //make sure that the current stream has been tested, throughput is not null
-
                             if(nostreams < maxNoStreams) //haven't completed yet with 1-16 TCP streams range
                                 {
-                                    if(diff >= 1800 && testedThroughput > 0) //every half hour experiment with diff number of streams,
+                                    if(diff >= 1800 && testedThroughput == 1 && maxThroughput > 0.0) //every 30min experiment with diff number of streams
                                         {
                                             nostreams += 1;
-                                        }
-                                    if(throughput > 0.0)
-                                        {
+                                            throughput = 0.0;
                                             sql.begin();
-                                            	stmt22.execute(true);
+                                            stmt22.execute(true);
                                             sql.commit();
+                                        }
+                                    else
+                                        {
+                                            if(throughput > 0.0)
+                                                {
+                                                    sql.begin();
+                                                    stmt22.execute(true);
+                                                    sql.commit();
+                                                }
                                         }
                                 }
                             else //all samples taken, max is 16 streams
                                 {
-                                    if (diff >= 43200 && throughput > 0.0) //half a day has passed, compare throughput with max sample
+                                    if (diff >= 43000 && throughput > 0.0) //almost half a day has passed, compare throughput with max sample
                                         {
                                             stmt24.execute(true);	//get current stream used with max throughput
                                             nostreams = updateStream;
 
                                             sql.begin();
-                                            	stmt28.execute(true);	//update stream currently used with new throughput and timestamp this time
+                                            stmt28.execute(true);	//update stream currently used with new throughput and timestamp this time
                                             sql.commit();
+                                        }
+                                    else
+                                        {
+                                            if(throughput > 0.0)
+                                                {
+                                                    stmt24.execute(true);	//get current stream used with max throughput
+                                                    nostreams = updateStream;
+
+                                                    sql.begin();
+                                                    stmt22.execute(true);
+                                                    sql.commit();
+                                                }
                                         }
                                 }
                         }
-                    else //it's NULL, no sample yet, insert the firsy record for this pair
+                    else //it's NULL, no sample yet, insert the first record for this pair
                         {
-                            if(throughput > 0.0)
-                                {
-                                    sql.begin();
-                                    	stmt22.execute(true);
-                                    sql.commit();
-                                }
+                            throughput = 0.0;
+                            sql.begin();
+                            stmt22.execute(true);
+                            sql.commit();
                         }
 
 
@@ -9347,7 +9362,7 @@ void MySqlAPI::updateOptimizerEvolution(soci::session& sql, const std::string & 
             try
                 {
                     //deadlock retry
-                    sleep(1);
+                    sleep(TIME_TO_SLEEP_BETWEEN_TRANSACTION_RETRIES);
                     if(throughput > 0 && successRate > 0)
                         {
                             double agrthroughput = 0.0;
@@ -9382,7 +9397,7 @@ void MySqlAPI::updateOptimizerEvolution(soci::session& sql, const std::string & 
             try
                 {
                     //deadlock retry
-                    sleep(1);
+                    sleep(TIME_TO_SLEEP_BETWEEN_TRANSACTION_RETRIES);
                     if(throughput > 0 && successRate > 0)
                         {
                             double agrthroughput = 0.0;
@@ -10240,7 +10255,7 @@ int MySqlAPI::getStreamsOptimization(const std::string & source_hostname, const 
     soci::session sql(*connectionPool);
     long long int maxNoStreams = 0;
     long long int optimumNoStreams = 0;
-    int defaultStreams = 4;
+    int defaultStreams = 1;
     soci::indicator isNullMaxStreamsFound = soci::i_ok;
     soci::indicator isNullOptimumStreamsFound = soci::i_ok;
 
@@ -10257,12 +10272,24 @@ int MySqlAPI::getStreamsOptimization(const std::string & source_hostname, const 
                                 soci::use(source_hostname), soci::use(destination_hostname), soci::into(optimumNoStreams, isNullOptimumStreamsFound);
 
                             if(sql.got_data())
-                                return 	(int) optimumNoStreams;
+                                {
+                                    sql.begin();
+                                    sql << "update t_optimize_streams set tested = 1 where source_se=:source and dest_se=:dest and tested = 0",
+                                        soci::use(source_hostname), soci::use(destination_hostname);
+                                    sql.commit();
+                                    return 	(int) optimumNoStreams;
+                                }
                             else
-                                return defaultStreams;
+                                {
+                                    return defaultStreams;
+                                }
                         }
                     else if(maxNoStreams < 16) //use the maximum sample taken so far
                         {
+                            sql.begin();
+                            sql << "update t_optimize_streams set tested = 1 where source_se=:source and dest_se=:dest and tested = 0",
+                                soci::use(source_hostname), soci::use(destination_hostname);
+                            sql.commit();
                             return (int) maxNoStreams;
                         }
                     else //just in case
