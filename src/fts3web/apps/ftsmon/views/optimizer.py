@@ -132,11 +132,6 @@ def get_optimizer_streams(http_request):
         streams = streams.filter(source_se=http_request.GET['source_se'])
     if http_request.GET.get('dest_se', None):
         streams = streams.filter(dest_se=http_request.GET['dest_se'])
-    try:
-        time_window = timedelta(hours=int(http_request.GET['time_window']))
-    except:
-        time_window = timedelta(minutes=30)
-    streams = streams.filter(datetime__gte=datetime.utcnow() - time_window)
 
     streams = streams.order_by('-datetime')
 
