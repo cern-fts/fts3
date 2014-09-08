@@ -105,8 +105,6 @@ public:
 
     void setDebugLevel(std::string source_hostname, std::string destin_hostname, unsigned level);
 
-    void getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std::string & vos);
-
     void auditConfiguration(const std::string & dn, const std::string & config, const std::string & action);
 
     void fetchOptimizationConfig2(OptimizerSample* ops, const std::string & source_hostname, const std::string & destin_hostname);

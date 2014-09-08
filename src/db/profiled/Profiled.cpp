@@ -208,12 +208,6 @@ void ProfiledDB::setDebugLevel(std::string source_hostname, std::string destin_h
 }
 
 
-void ProfiledDB::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std::string & vos)
-{
-    PROFILE_PREFIXED("DB::", db->getSubmittedJobsReuse(jobs, vos));
-}
-
-
 void ProfiledDB::auditConfiguration(const std::string & dn, const std::string & config, const std::string & action)
 {
     PROFILE_PREFIXED("DB::", db->auditConfiguration(dn, config, action));

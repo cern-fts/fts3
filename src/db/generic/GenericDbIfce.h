@@ -175,8 +175,6 @@ public:
 
     virtual void setDebugLevel(std::string source_hostname, std::string destin_hostname, unsigned level) = 0;
 
-    virtual void getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std::string & vos) = 0;
-
     virtual void auditConfiguration(const std::string & dn, const std::string & config, const std::string & action) = 0;
 
     virtual void fetchOptimizationConfig2(OptimizerSample* ops, const std::string & source_hostname, const std::string & destin_hostname) = 0;

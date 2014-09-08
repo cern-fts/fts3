@@ -1502,7 +1502,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
                         }
                     if (reuseFlag == "N" && mhop)
                         {
-                            hashedId = hashedId;   //for conviniency
+                            hashedId = hashedId;   //for convenience
                         }
                     else if (reuseFlag == "N" && !mreplica && !mhop)
                         {
@@ -3492,77 +3492,6 @@ void MySqlAPI::setDebugLevel(std::string source_hostname, std::string destin_hos
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }
-
-
-
-void MySqlAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std::string &)
-{
-    soci::session sql(*connectionPool);
-
-    try
-        {
-            soci::rowset<TransferJobs> rs = (sql.prepare << "SELECT "
-                                             "   j.job_id, "
-                                             "   j.job_state, "
-                                             "   j.vo_name,  "
-                                             "   j.priority,  "
-                                             "   j.source_se, "
-                                             "   j.dest_se,  "
-                                             "   j.agent_dn, "
-                                             "   j.submit_host, "
-                                             "   j.user_dn, "
-                                             "   j.user_cred, "
-                                             "   j.cred_id,  "
-                                             "   j.space_token, "
-                                             "   j.storage_class,  "
-                                             "   j.job_params, "
-                                             "   j.overwrite_flag, "
-                                             "   j.source_space_token, "
-                                             "   j.source_token_description,"
-                                             "   j.copy_pin_lifetime, "
-                                             "   j.checksum_method, "
-                                             "   j.bring_online, "
-                                             "   j.submit_time, "
-                                             "   j.reuse_job "
-                                             "   FROM t_job j LEFT JOIN t_file f ON (j.job_id = f.job_id) WHERE "
-                                             "   j.job_state = 'SUBMITTED' AND j.job_finished IS NULL AND "
-                                             "   j.cancel_job IS NULL AND "
-                                             "   (j.reuse_job IS NOT NULL AND j.reuse_job != 'N') AND " //Y or H
-                                             "   (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) "
-                                             "   ORDER BY j.priority DESC, j.submit_time LIMIT 1 ",
-                                             soci::use(hashSegment.start), soci::use(hashSegment.end));
-
-            for (soci::rowset<TransferJobs>::const_iterator i = rs.begin(); i != rs.end(); ++i)
-                {
-                    TransferJobs const& tjob = *i;
-                    jobs.push_back(new TransferJobs(tjob));
-                }
-        }
-    catch (std::exception& e)
-        {
-            std::vector<TransferJobs*>::iterator iter2;
-            for (iter2 = jobs.begin(); iter2 != jobs.end(); ++iter2)
-                {
-                    if(*iter2)
-                        delete *iter2;
-                }
-            jobs.clear();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-    catch (...)
-        {
-            std::vector<TransferJobs*>::iterator iter2;
-            for (iter2 = jobs.begin(); iter2 != jobs.end(); ++iter2)
-                {
-                    if(*iter2)
-                        delete *iter2;
-                }
-            jobs.clear();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }
-}
-
-
 
 
 

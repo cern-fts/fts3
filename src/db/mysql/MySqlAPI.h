@@ -87,8 +87,6 @@ public:
 
     virtual TransferJobs* getTransferJob(std::string jobId, bool archive);
 
-    virtual void getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std::string & vos);
-
     virtual void getByJobIdReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFiles> > > >& files);
 
     virtual void getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles> >& files);
