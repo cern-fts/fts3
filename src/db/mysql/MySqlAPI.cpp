@@ -6522,10 +6522,35 @@ void MySqlAPI::setRetry(int retry, const std::string & vo_name)
         {
             sql.begin();
 
-            sql << "DELETE FROM t_server_config where vo_name = :vo_name", soci::use(vo_name);
+            int count = 0;
 
-            sql << "INSERT INTO t_server_config(retry, vo_name) VALUES(:retry, :vo_name)",
-                soci::use(retry), soci::use(vo_name);
+            sql <<
+                " SELECT count(vo_name) "
+                " FROM t_server_config "
+                " WHERE vo_name = :vo_name ",
+                soci::use(vo_name), soci::into(count)
+                ;
+
+            if (count)
+                {
+                    sql <<
+                        " UPDATE t_server_config "
+                        " SET retry = :retry "
+                        " WHERE vo_name = :vo_name ",
+                        soci::use(retry),
+                        soci::use(vo_name)
+                        ;
+                }
+            else
+                {
+                    sql <<
+                        "INSERT INTO t_server_config (retry, vo_name) "
+                        "VALUES(:retry, :vo_name)",
+                        soci::use(retry),
+                        soci::use(vo_name);
+                        ;
+
+                }
 
             sql.commit();
         }
