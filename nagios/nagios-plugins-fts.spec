@@ -15,8 +15,9 @@ URL:        https://svnweb.cern.ch/trac/fts3
 # following commands to generate the tarball:
 # svn export http://svn.cern.ch/guest/fts3/trunk/nagios/ nagios-plugins-fts-3.2.0
 # tar -czvf nagios-plugins-fts-3.2.0.tar.gz nagios
-Source0:        %{name}-%{version}.tar.gz
-Buildroot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+Source0:   %{name}-%{version}.tar.gz
+Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+BuildArch: noarch
 
 %if %{?fedora}%{!?fedora:0} >= 18 || %{?rhel}%{!?rhel:0} >= 7
 BuildRequires:  cmake
@@ -27,6 +28,10 @@ BuildRequires:  cmake28
 Requires:   nagios%{?_isa}
 Requires:   python%{?_isa}
 Requires:   python-pycurl%{?_isa}
+
+%if %{?rhel}%{!?rhel:0} <= 5
+Requires:   python-simplejson%{?_isa}
+%endif
 
 %description
 This package provides the nagios probes for FTS3. Usually they are installed
