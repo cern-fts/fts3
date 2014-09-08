@@ -731,7 +731,7 @@ void MySqlAPI::getVOPairsWithReuse(std::vector< boost::tuple<std::string, std::s
                                            " WHERE "
                                            "      t_file.file_state = 'SUBMITTED' AND "
                                            "      (t_file.hashed_id >= :hStart AND t_file.hashed_id <= :hEnd) AND"
-                                           "      (t_job.reuse_job IS NOT NULL AND t_job.reuse_job != 'N') ",
+                                           "      t_job.reuse_job = 'Y' ",
                                            soci::use(hashSegment.start), soci::use(hashSegment.end)
                                           );
 
@@ -976,7 +976,122 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
 }
 
 
+static
+int freeSlotForPair(soci::session& sql, std::list<std::pair<std::string, std::string> >& visited,
+        const std::string& source_se, const std::string& dest_se)
+{
+    int count = 0;
+    int limit = 10;
 
+    // Manual configuration
+    sql << "SELECT COUNT(*) FROM t_link_config WHERE (source = :source OR source = '*') AND (destination = :dest OR destination = '*')",
+            soci::use(source_se), soci::use(dest_se), soci::into(count);
+    if (count == 0)
+        sql << "SELECT COUNT(*) FROM t_group_members WHERE (member=:source OR member=:dest)",
+        soci::use(source_se), soci::use(dest_se), soci::into(count);
+
+    // No luck? Ask the optimizer
+    if (count == 0)
+        {
+            int active = 0, max_active = 0;
+            soci::indicator is_active_null = soci::i_ok;
+
+            sql << "SELECT COUNT(*) FROM t_file WHERE source_se=:source_se AND dest_se=:dest_se AND file_state = 'ACTIVE' AND job_finished is NULL ",
+                soci::use(source_se), soci::use(dest_se), soci::into(active);
+
+            sql << "SELECT active FROM t_optimize_active WHERE source_se=:source_se AND dest_se=:dest_se",
+                soci::use(source_se), soci::use(dest_se), soci::into(max_active, is_active_null);
+
+            if (!is_active_null)
+                limit = (max_active - active);
+            if (limit <= 0)
+                return 0;
+        }
+
+    // This pair may have transfers already queued, so take them into account
+    std::list<std::pair<std::string, std::string> >::iterator i;
+    for (i = visited.begin(); i != visited.end(); ++i)
+        {
+            if (i->first == source_se && i->second == dest_se)
+                --limit;
+        }
+
+    return limit;
+}
+
+
+void MySqlAPI::getMultihopJobs(std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFiles> > > >& files)
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            time_t now = time(NULL);
+            struct tm tTime;
+            gmtime_r(&now, &tTime);
+
+            soci::rowset<soci::row> jobs_rs = (sql.prepare <<
+                                           " SELECT DISTINCT t_file.vo_name, t_file.job_id "
+                                           " FROM t_file "
+                                           " INNER JOIN t_job ON t_file.job_id = t_job.job_id "
+                                           " WHERE "
+                                           "      t_file.file_state = 'SUBMITTED' AND "
+                                           "      (t_file.hashed_id >= :hStart AND t_file.hashed_id <= :hEnd) AND"
+                                           "      t_job.reuse_job = 'H' AND "
+                                           "      t_file.wait_timestamp is null AND "
+                                           "      (t_file.retry_timestamp IS NULL OR t_file.retry_timestamp < :tTime) ",
+                                           soci::use(hashSegment.start), soci::use(hashSegment.end),
+                                           soci::use(tTime)
+                                          );
+
+            std::list<std::pair<std::string, std::string> > visited;
+
+            for (soci::rowset<soci::row>::iterator i = jobs_rs.begin(); i != jobs_rs.end(); ++i)
+                {
+                    std::string vo_name = i->get<std::string>("vo_name", "");
+                    std::string job_id = i->get<std::string>("job_id", "");
+
+                    soci::rowset<TransferFiles> rs =
+                      (
+                          sql.prepare <<
+                          " SELECT SQL_NO_CACHE "
+                          "       f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
+                          "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, "
+                          "       f.checksum, j.checksum_method, j.source_space_token, "
+                          "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
+                          "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, "
+                          "       f.bringonline_token, f.source_se, f.dest_se, f.selection_strategy, "
+                          "       j.internal_job_params, j.user_cred, j.reuse_job "
+                          " FROM t_job j INNER JOIN t_file f ON (j.job_id = f.job_id) "
+                          " WHERE j.job_id = :job_id ",
+                          soci::use(job_id)
+                      );
+
+                    std::list<TransferFiles> tf;
+                    for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
+                        {
+                            tf.push_back(*ti);
+                        }
+
+                    // Check link config only for the first pair, and, if there are slots, proceed
+                    if (!tf.empty() && freeSlotForPair(sql, visited, tf.front().SOURCE_SE, tf.front().DEST_SE) > 0)
+                        {
+                            files[vo_name].push(std::make_pair(job_id, tf));
+                            visited.push_back(std::make_pair(tf.front().SOURCE_SE, tf.front().DEST_SE));
+                        }
+                }
+        }
+    catch (std::exception& e)
+        {
+            files.clear();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            files.clear();
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }
+}
 
 
 
@@ -1256,7 +1371,9 @@ unsigned int MySqlAPI::updateFileStatus(TransferFiles& file, const std::string s
 }
 
 
-void MySqlAPI::getByJobIdReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFiles> > > >& files)
+void MySqlAPI::getByJobIdReuse(
+        std::vector<boost::tuple<std::string, std::string, std::string> >& distinct,
+        std::map<std::string, std::queue<std::pair<std::string, std::list<TransferFiles> > > >& files)
 {
     if(distinct.empty()) return;
 
@@ -1282,7 +1399,7 @@ void MySqlAPI::getByJobIdReuse(std::vector< boost::tuple<std::string, std::strin
                         "select distinct j.job_id "
                         "from t_job j inner join t_file f on j.job_id = f.job_id "
                         "where j.source_se=:source_se and j.dest_se=:dest_se and "
-                        "      j.vo_name=:vo_name and (j.reuse_job IS NOT NULL AND j.reuse_job != 'N') and "
+                        "      j.vo_name=:vo_name and j.reuse_job = 'Y' and "
                         "      j.job_state = 'SUBMITTED' and "
                         "      (f.hashed_id >= :hStart and f.hashed_id <= :hEnd) and "
                         "      f.wait_timestamp is null and "
@@ -3129,7 +3246,6 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
 bool MySqlAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs)
 {
     soci::session sql(*connectionPool);
-
 
     try
         {

@@ -912,6 +912,12 @@ void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, s
 
 
 
+void OracleAPI::getMultihopJobs(std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFiles> > > >& files)
+{
+
+}
+
+
 void OracleAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId)
 {
     //auto-pick and manuall replica logic must be added here

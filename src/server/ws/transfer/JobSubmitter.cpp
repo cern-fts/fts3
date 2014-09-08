@@ -324,6 +324,12 @@ string JobSubmitter::submit()
             params.set(JobParameterHandler::RETRY_DELAY, "0");
         }
 
+    if (params.get(JobParameterHandler::MULTIHOP) == "Y")
+        {
+            sourceSe = jobs.front().source_se;
+            destinationSe = jobs.back().dest_se;
+        }
+
     bool protocol =
         params.isParamSet(JobParameterHandler::TIMEOUT) ||
         params.isParamSet(JobParameterHandler::NOSTREAMS) ||

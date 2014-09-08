@@ -92,6 +92,10 @@ void ProfiledDB::getByJobId(std::vector< boost::tuple<std::string, std::string, 
     PROFILE_PREFIXED("DB::", db->getByJobId(distinct, files));
 }
 
+void ProfiledDB::getMultihopJobs(std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFiles> > > >& files)
+{
+    PROFILE_PREFIXED("DB::", db->getMultihopJobs(files));
+}
 
 void ProfiledDB::getSe(Se* &se, std::string seName)
 {
