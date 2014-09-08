@@ -19,7 +19,7 @@ from django.db import connection
 from django.db.models import Sum
 from django.http import Http404
 
-from ftsweb.models import OptimizerEvolution
+from ftsweb.models import OptimizerEvolution, OptimizerStreams
 from ftsweb.models import File, Job
 from jsonify import jsonify, jsonify_paged
 from util import paged
@@ -122,3 +122,22 @@ def get_optimizer_details(http_request):
         'evolution': paged(OptimizerAppendLimits(source_se, dest_se, optimizer), http_request),
         'throughput': vo_throughput
     }
+
+
+@jsonify
+def get_optimizer_streams(http_request):
+    streams = OptimizerStreams.objects
+
+    if http_request.GET.get('source_se', None):
+        streams = streams.filter(source_se=http_request.GET['source_se'])
+    if http_request.GET.get('dest_se', None):
+        streams = streams.filter(dest_se=http_request.GET['dest_se'])
+    try:
+        time_window = timedelta(hours=int(http_request.GET['time_window']))
+    except:
+        time_window = timedelta(minutes=30)
+    streams = streams.filter(datetime__gte=datetime.utcnow() - time_window)
+
+    streams = streams.order_by('-datetime')
+
+    return paged(streams, http_request)

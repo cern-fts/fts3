@@ -1,0 +1,38 @@
+<global-filter></global-filter>
+
+<h3>
+    Optimizer - Streams
+</h3>
+
+<pagination rotate="false"
+    page="streams.page" total-items="streams.count" items-per-page="streams.pageSize"
+    max-size="15" class="pagination" boundary-links="true"
+    on-select-page="pageChanged(page)"></pagination>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th style="width: 30%">Source</th>
+            <th style="width: 30%">Destination</th>
+            <th class="numeric">N.Streams</th>
+            <th class="numeric">Throughput</th>
+            <th class="numeric">Tested</th>
+            <th style="width: 20%">Timestamp</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr ng-repeat="s in streams.items" ng-class-odd="'odd'">
+            <td>{{ s.source_se }}</td>
+            <td>{{ s.dest_se }}</td>
+            <td class="numeric">{{ s.nostreams }}</td>
+            <td class="numeric"><span optional-number="s.throughput" suffix="MB/s" decimals="2"></span></td>
+            <td class="numeric">{{ s.tested }}</td>
+            <td>{{ s.datetime }}</td>
+        </tr>
+    </tbody>
+</table>
+
+<pagination rotate="false"
+    page="streams.page" total-items="streams.count" items-per-page="streams.pageSize"
+    max-size="15" class="pagination" boundary-links="true"
+    on-select-page="pageChanged(page)"></pagination>

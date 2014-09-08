@@ -295,16 +295,35 @@ class OptimizerEvolution(models.Model):
     datetime     = models.DateTimeField(primary_key = True)
     source_se    = models.CharField(max_length = 255)
     dest_se      = models.CharField(max_length = 255)
-    nostreams    = models.IntegerField()
+    #nostreams    = models.IntegerField()
     timeout      = models.IntegerField()
     active       = models.IntegerField()
     throughput   = models.FloatField()
     branch       = models.IntegerField(db_column = 'buffer')
     success      = models.FloatField(db_column = 'filesize')
-    agrthroughput = models.FloatField(db_column = 'filesize')
 
     class Meta:
         db_table = 't_optimizer_evolution'
+
+
+class OptimizerStreams(models.Model):
+    source_se  = models.CharField(max_length = 255)
+    dest_se    = models.CharField(max_length = 255)
+    nostreams  = models.IntegerField()
+    datetime   = models.DateTimeField(primary_key = True)
+    throughput = models.FloatField()
+    tested     = models.IntegerField()
+
+    def __eq__(self, other):
+        if type(self) != type(other):
+            return False
+
+        return self.source_se == other.source_se and \
+               self.dest_se   == other.dest_se and \
+               self.nostreams == other.nostreams
+
+    class Meta:
+        db_table = 't_optimize_streams'
 
 
 class ProfilingSnapshot(models.Model):

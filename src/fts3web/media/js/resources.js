@@ -31,6 +31,11 @@ angular.module('ftsmon.resources', ['ngResource'])
 		query: {method: 'GET', isArray: false}
 	})
 })
+.factory('OptimizerStreams', function($resource) {
+	return $resource('optimizer/streams', {}, {
+		query: {method: 'GET', isArray: false}
+	})
+})
 .factory('Errors', function($resource) {
 	return $resource('errors', {}, {
 		query: {method: 'GET', isArray: false}
