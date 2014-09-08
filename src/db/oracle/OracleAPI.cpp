@@ -2066,21 +2066,21 @@ void OracleAPI::getDmFileStatus(std::string requestID, bool archive, unsigned of
 
             if (archive)
                 {
-                    query = "SELECT t_dm_backup.file_id, t_dm_backup.source_surl, t_dm_backup.dest_surl, t_dm_backup.file_state, "
+                    query = "SELECT * FROM (SELECT t_dm_backup.file_id, t_dm_backup.source_surl, t_dm_backup.dest_surl, t_dm_backup.file_state, "
                             "       t_dm_backup.reason, t_dm_backup.start_time, t_dm_backup.finish_time, t_dm_backup.retry, t_dm_backup.tx_duration "
                             "FROM t_dm_backup WHERE t_dm_backup.job_id = :jobId ";
                 }
             else
                 {
-                    query = "SELECT t_dm.file_id, t_dm.source_surl, t_dm.dest_surl, t_dm.file_state, "
+                    query = "SELECT * FROM (SELECT t_dm.file_id, t_dm.source_surl, t_dm.dest_surl, t_dm.file_state, "
                             "       t_dm.reason, t_dm.start_time, t_dm.finish_time, t_dm.retry, t_dm.tx_duration "
                             "FROM t_dm WHERE t_dm.job_id = :jobId ";
                 }
 
             if (limit)
-                query += " LIMIT :offset,:limit";
+                query += " ) WHERE ROWNUM > :offset AND ROWNUM <= :offset + :limit";
             else
-                query += " LIMIT :offset,18446744073709551615";
+                query += " ) WHERE ROWNUM > :offset";
 
 
 
@@ -10072,7 +10072,7 @@ void OracleAPI::getTransferJobStatusDetailed(std::string job_id, std::vector<boo
                 {
                     std::string job_id = i->get<std::string>("JOB_ID");
                     std::string file_state = i->get<std::string>("FILE_STATE");
-                    int file_id = i->get<int>("FILE_ID");
+                    int file_id = i->get<long long>("FILE_ID");
                     std::string source_surl = i->get<std::string>("SOURCE_SURL");
                     std::string dest_surl = i->get<std::string>("DEST_SURL");
 
