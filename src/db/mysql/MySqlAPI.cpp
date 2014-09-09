@@ -4947,7 +4947,7 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                             count++;
                             countBeat++;
 
-                            if(countBeat == 10000)
+                            if(countBeat == 25000)
                                 {
                                     //reset
                                     countBeat = 0;
