@@ -9800,7 +9800,7 @@ int OracleAPI::getStreamsOptimization(const std::string & source_hostname, const
                 			soci::use(source_hostname), soci::use(destination_hostname), soci::into(maxNoStreams, isNullMaxStreamsFound);
 					
                             sql.begin();
-                            sql << "update IGNORE t_optimize_streams set tested = 1, datetime = UTC_TIMESTAMP() where source_se=:source and dest_se=:dest and tested = 0 and nostreams = :nostreams",
+                            sql << "update t_optimize_streams set tested = 1, datetime = sys_extract_utc(systimestamp) where source_se=:source and dest_se=:dest and tested = 0 and nostreams = :nostreams",
                                 soci::use(source_hostname), soci::use(destination_hostname), soci::use(maxNoStreams);
                             sql.commit();
                             return (int) maxNoStreams;
