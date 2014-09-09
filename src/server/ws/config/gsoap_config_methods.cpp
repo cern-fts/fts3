@@ -862,7 +862,7 @@ int fts3::implcfg__setGlobalTimeout(soap* ctx, int timeout, implcfg__setGlobalTi
     return SOAP_OK;
 }
 
-int fts3::implcfg__setS3Ceredential(soap* ctx, std::string accessKey, std::string secretKey, std::string vo, fts3::implcfg__setS3CeredentialResponse& resp)
+int fts3::implcfg__setS3Ceredential(soap* ctx, std::string accessKey, std::string secretKey, std::string vo, std::string storage, fts3::implcfg__setS3CeredentialResponse& resp)
 {
     try
         {
@@ -870,6 +870,11 @@ int fts3::implcfg__setS3Ceredential(soap* ctx, std::string accessKey, std::strin
             CGsiAdapter cgsi(ctx);
             if (!cgsi.isRoot()) throw Err_Custom("Only root is allowed to set S3 credentials!");
 
+            // make sure the host name is upper case
+            boost::to_upper(storage);
+            DBSingleton::instance().getDBObjectInstance()->setCloudStorageCredential(
+                    cgsi.getClientDn(), vo, storage, accessKey, secretKey
+                );
         }
     catch(Err& ex)
         {
