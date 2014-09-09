@@ -4957,9 +4957,7 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
 
                                     drain = getDrainInternal(sql);
                                     if(drain)
-                                        {
-                                            sql.commit();
-                                            sleep(15);
+                                        {                                                                                        
                                             return;
                                         }
                                 }
@@ -5010,6 +5008,7 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                     sql << "delete from t_file_retry_errors where datetime < (UTC_TIMESTAMP() - interval '7' DAY )";
                     sql.commit();
 
+		    /*
                     //delete from t_turl > 7 days old records
                     sql.begin();
                     sql << "delete from t_turl where datetime < (UTC_TIMESTAMP() - interval '7' DAY )";
@@ -5019,6 +5018,7 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                     sql << "update t_turl set finish=0 where finish > 100000000000";
                     sql << "update t_turl set fail=0 where fail > 100000000000";
                     sql.commit();
+		    */
                 }
 
             jobIdStmt.str(std::string());
@@ -5026,16 +5026,18 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
         }
     catch (std::exception& e)
         {
+            sql.rollback();
             jobIdStmt.str(std::string());
             jobIdStmt.clear();
-            sql.rollback();
+ 
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
+            sql.rollback();	
             jobIdStmt.str(std::string());
             jobIdStmt.clear();
-            sql.rollback();
+	    
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }
@@ -9394,7 +9396,7 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
                 }
 
 
-            //prevent more than on server to delete
+            //prevent running in more than on server
             if(hashSegment.start == 0)
             {
             	// Delete old entries
