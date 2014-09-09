@@ -9393,11 +9393,16 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
                     this->hashSegment.end   = *end;
                 }
 
-            // Delete old entries
-            sql.begin();
-            soci::statement stmt3 = (sql.prepare << "DELETE FROM t_hosts WHERE beat <= DATE_SUB(UTC_TIMESTAMP(), interval 1 week)");
-            stmt3.execute(true);
-            sql.commit();
+
+            //prevent more than on server to delete
+            if(hashSegment.start == 0)
+            {
+            	// Delete old entries
+            	sql.begin();
+            	soci::statement stmt3 = (sql.prepare << "DELETE FROM t_hosts WHERE beat <= DATE_SUB(UTC_TIMESTAMP(), interval 1 week)");
+            	stmt3.execute(true);
+            	sql.commit();
+            }
         }
     catch (std::exception& e)
         {
