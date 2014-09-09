@@ -21,6 +21,9 @@ config(function($routeProvider) {
         when('/optimizer/detailed',   {templateUrl: STATIC_ROOT + 'html/optimizer/detailed.html',
                                        controller:  OptimizerDetailedCtrl,
                                        resolve:     OptimizerDetailedCtrl.resolve}).
+        when('/optimizer/streams',    {templateUrl: STATIC_ROOT + 'html/optimizer/streams.html',
+                                       controller:  OptimizerStreamsCtrl,
+                                       resolve:     OptimizerStreamsCtrl.resolve}).
 
         when('/errors/',              {redirectTo:  ErrorsCtrl.redirectTo}).
         when('/errors/pairs',         {templateUrl: STATIC_ROOT + 'html/errors/pairs.html',

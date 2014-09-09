@@ -283,6 +283,16 @@ public:
      */
     void doDrain(bool drain);
 
+
+    /**
+     * Remote call to showUserDn
+     *
+     * switches the show-user-DN mode
+     *
+     * @param  show - on/off
+     */
+    void showUserDn(bool show);
+
     /**
      * Remote call to prioritySet
      *
@@ -345,6 +355,15 @@ public:
      * Remote call to fixActivePerPair
      */
     void setFixActivePerPair(string source, string destination, int active);
+
+    /**
+     * Remote call to setS3Ceredential
+     *
+     * @param accessKey : S3 access key
+     * @param secretKey : S3 secret key
+     * @param vo        : VO name
+     */
+    void setS3Credential(std::string const & accessKey, std::string const & secretKey, std::string const & vo, std::string const & storage);
 
     /**
      * @param vo : user VO name

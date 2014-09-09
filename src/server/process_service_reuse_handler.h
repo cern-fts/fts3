@@ -205,10 +205,15 @@ protected:
             {
                 level  = DBSingleton::instance().getDBObjectInstance()->getBufferOptimization();
                 if(level == 2)
-                    StreamsperFile = DBSingleton::instance().getDBObjectInstance()->getStreamsOptimization(source_hostname, destin_hostname);
+                    {
+                        StreamsperFile = DBSingleton::instance().getDBObjectInstance()->getStreamsOptimization(source_hostname, destin_hostname);
+                        if(StreamsperFile == 0)
+                            StreamsperFile = DEFAULT_NOSTREAMS;
+                    }
                 else
-                    StreamsperFile = DEFAULT_NOSTREAMS;
-
+                    {
+                        StreamsperFile = DEFAULT_NOSTREAMS;
+                    }
                 Timeout = DBSingleton::instance().getDBObjectInstance()->getGlobalTimeout();
                 if(Timeout == 0)
                     Timeout = DEFAULT_TIMEOUT;
@@ -224,7 +229,8 @@ protected:
             }
 
         FileTransferScheduler scheduler(representative, cfgs);
-        if (!scheduler.schedule()) return;   /*SET TO READY STATE WHEN TRUE*/
+        int currentActive = 0;
+        if (!scheduler.schedule(currentActive)) return;   /*SET TO READY STATE WHEN TRUE*/
 
         bool isAutoTuned = false;
         std::stringstream internalParams;
@@ -261,7 +267,7 @@ protected:
                                      false,
                                      "");
 
-        std::string oauth_file = fts3::generateOauthConfigFile(DBSingleton::instance().getDBObjectInstance(), dn, vo, userCred);
+        std::string oauth_file = fts3::generateOauthConfigFile(DBSingleton::instance().getDBObjectInstance(), representative);
 
         //send SUBMITTED message
         SingleTrStateInstance::instance().sendStateMessage(job_id, -1);
@@ -437,6 +443,9 @@ protected:
 
         params.append(" -Y ");
         params.append(prepareMetadataString(dn));
+
+        params.append(" -10 ");
+        params.append(lexical_cast<string >(currentActive));
 
 
         bool ready = DBSingleton::instance().getDBObjectInstance()->isFileReadyStateV(fileIds);

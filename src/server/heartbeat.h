@@ -115,7 +115,7 @@ private:
                                     {
                                         try
                                             {
-                                                sleep(1);
+                                                sleep(5);
                                                 db::DBSingleton::instance().getDBObjectInstance()->updateHeartBeat(&index, &count, &start, &end, serviceName);
                                                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Systole: host " << index << " out of " << count
                                                                                 << " [" << start << ':' << end << ']'
@@ -135,7 +135,7 @@ private:
                                     {
                                         try
                                             {
-                                                sleep(1);
+                                                sleep(5);
                                                 db::DBSingleton::instance().getDBObjectInstance()->updateHeartBeat(&index, &count, &start, &end, serviceName);
                                                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Systole: host " << index << " out of " << count
                                                                                 << " [" << start << ':' << end << ']'

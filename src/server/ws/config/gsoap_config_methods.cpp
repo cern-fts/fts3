@@ -255,6 +255,52 @@ int fts3::implcfg__doDrain(soap* ctx, bool drain, struct implcfg__doDrainRespons
 
 /* ---------------------------------------------------------------------- */
 
+int fts3::implcfg__showUserDn(soap* ctx, bool show, implcfg__showUserDnResponse& resp)
+{
+    try
+        {
+            // authorize
+            AuthorizationManager::getInstance().authorize(
+                ctx,
+                AuthorizationManager::CONFIG,
+                AuthorizationManager::dummy
+            );
+
+            // get user dn
+            CGsiAdapter cgsi(ctx);
+            string dn = cgsi.getClientDn();
+
+            // prepare the command for audit
+            stringstream cmd;
+            cmd << "fts-config-set --drain " << (show ? "on" : "off");
+
+            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Turning " << (show ? "on" : "off") << " the show-user-dn mode" << commit;
+
+            // TODO DB
+            DBSingleton::instance().getDBObjectInstance()->setShowUserDn(show);
+
+            // audit the operation
+            DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd.str(), "show-user-dn");
+        }
+    catch(Err& ex)
+        {
+
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+            soap_receiver_fault(ctx, ex.what(), "TransferException");
+
+            return SOAP_FAULT;
+        }
+    catch (...)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the drain mode cannot be set"  << commit;
+            return SOAP_FAULT;
+        }
+
+    return SOAP_OK;
+}
+
+/* ---------------------------------------------------------------------- */
+
 int fts3::implcfg__setRetry(soap* ctx, std::string vo, int retry, implcfg__setRetryResponse& _resp)
 {
 
@@ -798,6 +844,37 @@ int fts3::implcfg__setGlobalTimeout(soap* ctx, int timeout, implcfg__setGlobalTi
             cmd << dn;
             cmd << " had set the global timeout to " << timeout;
             DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd.str(), "global-timeout");
+        }
+    catch(Err& ex)
+        {
+
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+            soap_receiver_fault(ctx, ex.what(), "InvalidConfigurationException");
+
+            return SOAP_FAULT;
+        }
+    catch (...)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the setGlobalTimeout failed"  << commit;
+            return SOAP_FAULT;
+        }
+
+    return SOAP_OK;
+}
+
+int fts3::implcfg__setS3Ceredential(soap* ctx, std::string accessKey, std::string secretKey, std::string vo, std::string storage, fts3::implcfg__setS3CeredentialResponse& resp)
+{
+    try
+        {
+            // only Root is allowed to set S3 credentials
+            CGsiAdapter cgsi(ctx);
+            if (!cgsi.isRoot()) throw Err_Custom("Only root is allowed to set S3 credentials!");
+
+            // make sure the host name is upper case
+            boost::to_upper(storage);
+            DBSingleton::instance().getDBObjectInstance()->setCloudStorageCredential(
+                    cgsi.getClientDn(), vo, storage, accessKey, secretKey
+                );
         }
     catch(Err& ex)
         {

@@ -92,6 +92,10 @@ void ProfiledDB::getByJobId(std::vector< boost::tuple<std::string, std::string, 
     PROFILE_PREFIXED("DB::", db->getByJobId(distinct, files));
 }
 
+void ProfiledDB::getMultihopJobs(std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFiles> > > >& files)
+{
+    PROFILE_PREFIXED("DB::", db->getMultihopJobs(files));
+}
 
 void ProfiledDB::getSe(Se* &se, std::string seName)
 {
@@ -208,12 +212,6 @@ void ProfiledDB::setDebugLevel(std::string source_hostname, std::string destin_h
 }
 
 
-void ProfiledDB::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std::string & vos)
-{
-    PROFILE_PREFIXED("DB::", db->getSubmittedJobsReuse(jobs, vos));
-}
-
-
 void ProfiledDB::auditConfiguration(const std::string & dn, const std::string & config, const std::string & action)
 {
     PROFILE_PREFIXED("DB::", db->auditConfiguration(dn, config, action));
@@ -237,9 +235,9 @@ bool ProfiledDB::updateOptimizer()
     PROFILE_PREFIXED("DB::", return db->updateOptimizer());
 }
 
-bool ProfiledDB::isTrAllowed(const std::string & source_se, const std::string & dest)
+bool ProfiledDB::isTrAllowed(const std::string & source_se, const std::string & dest,int &currentActive)
 {
-    PROFILE_PREFIXED("DB::", return db->isTrAllowed(source_se, dest));
+    PROFILE_PREFIXED("DB::", return db->isTrAllowed(source_se, dest, currentActive));
 }
 
 
@@ -805,6 +803,16 @@ void ProfiledDB::setDrain(bool drain)
     PROFILE_PREFIXED("DB::", db->setDrain(drain));
 }
 
+void ProfiledDB::setShowUserDn(bool show)
+{
+    PROFILE_PREFIXED("DB::", db->setShowUserDn(show));
+}
+
+bool ProfiledDB::getShowUserDn()
+{
+    PROFILE_PREFIXED("DB::", return db->getShowUserDn());
+}
+
 void ProfiledDB::setBandwidthLimit(const std::string & source_hostname, const std::string & destination_hostname, int bandwidthLimit)
 {
     PROFILE_PREFIXED("DB::", db->setBandwidthLimit(source_hostname, destination_hostname, bandwidthLimit));
@@ -977,6 +985,11 @@ bool ProfiledDB::getOauthCredentials(const std::string& user_dn,
                                      const std::string& vo, const std::string& cloud_name, OAuth& oauth)
 {
     PROFILE_PREFIXED("DB::", return db->getOauthCredentials(user_dn, vo, cloud_name, oauth));
+}
+
+void ProfiledDB::setCloudStorageCredential(std::string const & dn, std::string const & vo, std::string const & storage, std::string const & accessKey, std::string const & secretKey)
+{
+    PROFILE_PREFIXED("DB::", return db->setCloudStorageCredential(dn, vo, storage, accessKey, secretKey));
 }
 
 bool ProfiledDB::isDmJob(std::string const & job)

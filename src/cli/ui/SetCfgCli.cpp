@@ -114,6 +114,16 @@ SetCfgCli::SetCfgCli(bool spec)
                 "Fixed number of active transfer for a given pair (-1 means reset to optimizer)"
                 "\n(Example: --source $SE --destination $SE --active-fixed $NB_ACT"
             )
+            (
+                "show-user-dn", value<std::string>(),
+                "If set to 'on' user DNs will included in monitoring messages"
+                "\n(Example: --show-user-dn on|off)"
+            )
+            (
+                "s3", value< vector<string> >()->multitoken(),
+                "Set the S3 credentials, requires: access-key, secret-key and VO name"
+                "\n(Example: --s3 $ACCESS_KEY $SECRET_KEY $VO_NAME $STORAGE_NAME)"
+            )
             ;
         }
 
@@ -176,6 +186,12 @@ bool SetCfgCli::validate()
 
     if(!CliBase::validate()) return false;
 
+    if (vm.count("s3"))
+        {
+            if (vm.size() != 1) throw bad_option("s3", "should be used only as a single option");
+            return true;
+        }
+
     if (getConfigurations().empty()
             && !vm.count("drain")
             && !vm.count("retry")
@@ -189,6 +205,7 @@ bool SetCfgCli::validate()
             && !vm.count("global-timeout")
             && !vm.count("sec-per-mb")
             && !vm.count("active-fixed")
+            && !vm.count("show-user-dn")
        )
         {
             throw cli_exception("No parameters have been specified.");
@@ -224,7 +241,6 @@ vector<string> SetCfgCli::getConfigurations()
 
 optional<bool> SetCfgCli::drain()
 {
-
     if (vm.count("drain"))
         {
             string const & value = vm["drain"].as<string>();
@@ -238,10 +254,27 @@ optional<bool> SetCfgCli::drain()
                     throw bad_option("drain", "You need specify which endpoint to drain, -s missing?");
                 }
 
-            return vm["drain"].as<string>() == "on";
+            return value == "on";
         }
 
     return optional<bool>();
+}
+
+optional<bool> SetCfgCli::showUserDn()
+{
+    if (vm.count("show-user-dn"))
+        {
+            string const & value = vm["show-user-dn"].as<string>();
+
+            if (value != "on" && value != "off")
+                {
+                    throw bad_option("show-user-dn", "may only take on/off values!");
+                }
+
+            return value == "on";
+        }
+
+    return boost::none;
 }
 
 optional< pair<string, int> > SetCfgCli::retry()
@@ -477,5 +510,16 @@ optional<int> SetCfgCli::getSecPerMb()
     if (sec == -1) sec = 0;
 
     return sec;
+}
+
+optional< std::tuple<std::string, std::string, std::string, std::string> > SetCfgCli::s3()
+{
+    if (!vm.count("s3")) return boost::none;
+
+    std::vector<std::string> const & v = vm["s3"].as< std::vector<std::string> >();
+
+    if (v.size() != 4) throw bad_option("s3", "3 parameters were expected: access-key, secret-key, VO name and storage name");
+
+    return std::make_tuple(v[0], v[1], v[2], v[3]);
 }
 

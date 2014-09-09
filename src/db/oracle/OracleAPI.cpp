@@ -911,6 +911,123 @@ void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, s
 }
 
 
+static
+int freeSlotForPair(soci::session& sql, std::list<std::pair<std::string, std::string> >& visited,
+                    const std::string& source_se, const std::string& dest_se)
+{
+    int count = 0;
+    int limit = 10;
+
+    // Manual configuration
+    sql << "SELECT COUNT(*) FROM t_link_config WHERE (source = :source OR source = '*') AND (destination = :dest OR destination = '*')",
+        soci::use(source_se), soci::use(dest_se), soci::into(count);
+    if (count == 0)
+        sql << "SELECT COUNT(*) FROM t_group_members WHERE (member=:source OR member=:dest)",
+            soci::use(source_se), soci::use(dest_se), soci::into(count);
+
+    // No luck? Ask the optimizer
+    if (count == 0)
+        {
+            int active = 0, max_active = 0;
+            soci::indicator is_active_null = soci::i_ok;
+
+            sql << "SELECT COUNT(*) FROM t_file WHERE source_se=:source_se AND dest_se=:dest_se AND file_state = 'ACTIVE' AND job_finished is NULL ",
+                soci::use(source_se), soci::use(dest_se), soci::into(active);
+
+            sql << "SELECT active FROM t_optimize_active WHERE source_se=:source_se AND dest_se=:dest_se",
+                soci::use(source_se), soci::use(dest_se), soci::into(max_active, is_active_null);
+
+            if (!is_active_null)
+                limit = (max_active - active);
+            if (limit <= 0)
+                return 0;
+        }
+
+    // This pair may have transfers already queued, so take them into account
+    std::list<std::pair<std::string, std::string> >::iterator i;
+    for (i = visited.begin(); i != visited.end(); ++i)
+        {
+            if (i->first == source_se && i->second == dest_se)
+                --limit;
+        }
+
+    return limit;
+}
+
+
+void OracleAPI::getMultihopJobs(std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFiles> > > >& files)
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            time_t now = time(NULL);
+            struct tm tTime;
+            gmtime_r(&now, &tTime);
+
+            soci::rowset<soci::row> jobs_rs = (sql.prepare <<
+                                               " SELECT DISTINCT t_file.vo_name, t_file.job_id "
+                                               " FROM t_file "
+                                               " INNER JOIN t_job ON t_file.job_id = t_job.job_id "
+                                               " WHERE "
+                                               "      t_file.file_state = 'SUBMITTED' AND "
+                                               "      (t_file.hashed_id >= :hStart AND t_file.hashed_id <= :hEnd) AND"
+                                               "      t_job.reuse_job = 'H' AND "
+                                               "      t_file.wait_timestamp is null AND "
+                                               "      (t_file.retry_timestamp IS NULL OR t_file.retry_timestamp < :tTime) ",
+                                               soci::use(hashSegment.start), soci::use(hashSegment.end),
+                                               soci::use(tTime)
+                                              );
+
+            std::list<std::pair<std::string, std::string> > visited;
+
+            for (soci::rowset<soci::row>::iterator i = jobs_rs.begin(); i != jobs_rs.end(); ++i)
+                {
+                    std::string vo_name = i->get<std::string>("VO_NAME", "");
+                    std::string job_id = i->get<std::string>("JOB_ID", "");
+
+                    soci::rowset<TransferFiles> rs =
+                        (
+                            sql.prepare <<
+                            " SELECT "
+                            "       f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
+                            "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, "
+                            "       f.checksum, j.checksum_method, j.source_space_token, "
+                            "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
+                            "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, "
+                            "       f.bringonline_token, f.source_se, f.dest_se, f.selection_strategy, "
+                            "       j.internal_job_params, j.user_cred, j.reuse_job "
+                            " FROM t_job j INNER JOIN t_file f ON (j.job_id = f.job_id) "
+                            " WHERE j.job_id = :job_id ",
+                            soci::use(job_id)
+                        );
+
+                    std::list<TransferFiles> tf;
+                    for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
+                        {
+                            tf.push_back(*ti);
+                        }
+
+                    // Check link config only for the first pair, and, if there are slots, proceed
+                    if (!tf.empty() && freeSlotForPair(sql, visited, tf.front().SOURCE_SE, tf.front().DEST_SE) > 0)
+                        {
+                            files[vo_name].push(std::make_pair(job_id, tf));
+                            visited.push_back(std::make_pair(tf.front().SOURCE_SE, tf.front().DEST_SE));
+                        }
+                }
+        }
+    catch (std::exception& e)
+        {
+            files.clear();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            files.clear();
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }
+}
+
 
 void OracleAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId)
 {
@@ -2066,21 +2183,21 @@ void OracleAPI::getDmFileStatus(std::string requestID, bool archive, unsigned of
 
             if (archive)
                 {
-                    query = "SELECT t_dm_backup.file_id, t_dm_backup.source_surl, t_dm_backup.dest_surl, t_dm_backup.file_state, "
+                    query = "SELECT * FROM (SELECT t_dm_backup.file_id, t_dm_backup.source_surl, t_dm_backup.dest_surl, t_dm_backup.file_state, "
                             "       t_dm_backup.reason, t_dm_backup.start_time, t_dm_backup.finish_time, t_dm_backup.retry, t_dm_backup.tx_duration "
                             "FROM t_dm_backup WHERE t_dm_backup.job_id = :jobId ";
                 }
             else
                 {
-                    query = "SELECT t_dm.file_id, t_dm.source_surl, t_dm.dest_surl, t_dm.file_state, "
+                    query = "SELECT * FROM (SELECT t_dm.file_id, t_dm.source_surl, t_dm.dest_surl, t_dm.file_state, "
                             "       t_dm.reason, t_dm.start_time, t_dm.finish_time, t_dm.retry, t_dm.tx_duration "
                             "FROM t_dm WHERE t_dm.job_id = :jobId ";
                 }
 
             if (limit)
-                query += " LIMIT :offset,:limit";
+                query += " ) WHERE ROWNUM > :offset AND ROWNUM <= :offset + :limit";
             else
-                query += " LIMIT :offset,18446744073709551615";
+                query += " ) WHERE ROWNUM > :offset";
 
 
 
@@ -3238,77 +3355,6 @@ void OracleAPI::setDebugLevel(std::string source_hostname, std::string destin_ho
 
 
 
-void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std::string &)
-{
-    soci::session sql(*connectionPool);
-
-    try
-        {
-            soci::rowset<TransferJobs> rs = (sql.prepare << " SELECT * FROM (SELECT "
-                                             "   j.job_id, "
-                                             "   j.job_state, "
-                                             "   j.vo_name,  "
-                                             "   j.priority,  "
-                                             "   j.source_se, "
-                                             "   j.dest_se,  "
-                                             "   j.agent_dn, "
-                                             "   j.submit_host, "
-                                             "   j.user_dn, "
-                                             "   j.user_cred, "
-                                             "   j.cred_id,  "
-                                             "   j.space_token, "
-                                             "   j.storage_class,  "
-                                             "   j.job_params, "
-                                             "   j.overwrite_flag, "
-                                             "   j.source_space_token, "
-                                             "   j.source_token_description,"
-                                             "   j.copy_pin_lifetime, "
-                                             "   j.checksum_method, "
-                                             "   j.bring_online, "
-                                             "   j.reuse_job, "
-                                             "   j.submit_time "
-                                             "   FROM t_job j LEFT JOIN t_file f ON (j.job_id = f.job_id) WHERE "
-                                             "    j.job_state = 'SUBMITTED' AND j.job_finished IS NULL AND "
-                                             "    j.cancel_job IS NULL AND "
-                                             "    (j.reuse_job IS NOT NULL AND j.reuse_job != 'N') AND "
-                                             "   (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) "
-                                             " ORDER BY j.priority DESC, SYS_EXTRACT_UTC(j.submit_time) "
-                                             ") WHERE ROWNUM <= 1",
-                                             soci::use(hashSegment.start), soci::use(hashSegment.end));
-
-            for (soci::rowset<TransferJobs>::const_iterator i = rs.begin(); i != rs.end(); ++i)
-                {
-                    TransferJobs const& tjob = *i;
-                    jobs.push_back(new TransferJobs(tjob));
-                }
-        }
-    catch (std::exception& e)
-        {
-            std::vector<TransferJobs*>::iterator iter2;
-            for (iter2 = jobs.begin(); iter2 != jobs.end(); ++iter2)
-                {
-                    if(*iter2)
-                        delete *iter2;
-                }
-            jobs.clear();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-    catch (...)
-        {
-            std::vector<TransferJobs*>::iterator iter2;
-            for (iter2 = jobs.begin(); iter2 != jobs.end(); ++iter2)
-                {
-                    if(*iter2)
-                        delete *iter2;
-                }
-            jobs.clear();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }
-}
-
-
-
-
 void OracleAPI::auditConfiguration(const std::string & dn, const std::string & config, const std::string & action)
 {
     soci::session sql(*connectionPool);
@@ -3375,7 +3421,7 @@ bool OracleAPI::isCredentialExpired(const std::string & dlg_id, const std::strin
     return !expired;
 }
 
-bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::string & destin_hostname)
+bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::string & destin_hostname, int &currentActive)
 {
     soci::session sql(*connectionPool);
 
@@ -3410,6 +3456,8 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
                 {
                     allowed = true;
                 }
+
+            currentActive = active;
 
         }
     catch (std::exception& e)
@@ -3476,7 +3524,7 @@ bool OracleAPI::updateOptimizer()
 
     soci::session sql(*connectionPool);
 
-    int allowed = false;
+    bool recordsFound = false;
     std::string source_hostname;
     std::string destin_hostname;
     int active = 0;
@@ -3502,15 +3550,15 @@ bool OracleAPI::updateOptimizer()
     double ema = 0.0;
     double submitted = 0.0;
     std::string active_fixed;
-
-    struct tm datetimeStreams;
     soci::indicator isNullStreamsOptimization = soci::i_ok;
     soci::indicator isNullDatetime = soci::i_ok;
     int maxNoStreams = 16;
-    int minStreams = 1;
     int nostreams = 1;
     double throughput=0.0;
     double maxThroughput = 0.0;
+    long long int testedThroughput = 0;
+    int updateStream = 0;
+    int allTested = 0;
 
 
     try
@@ -3526,7 +3574,7 @@ bool OracleAPI::updateOptimizer()
             soci::rowset<soci::row> rs = ( sql.prepare <<
                                            " select  distinct o.source_se, o.dest_se from t_optimize_active o INNER JOIN "
                                            " t_file f ON (o.source_se = f.source_se) where o.dest_se=f.dest_se and "
-                                           " f.file_state  = 'SUBMITTED' and f.job_finished is null ");
+                                           " f.file_state in ('ACTIVE','SUBMITTED') and f.job_finished is NULL ");
 
             //is the number of actives fixed?
             soci::statement stmt_fixed = (
@@ -3589,32 +3637,52 @@ bool OracleAPI::updateOptimizer()
                                          sql.prepare << "SELECT max(nostreams) FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se ",
                                          soci::use(source_hostname),
                                          soci::use(destin_hostname),
-                                         soci::into(nostreams, isNullStreamsOptimization));
-
-            soci::statement stmt21 = (
-                                         sql.prepare << " SELECT max(datetime) FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se "
-                                         " AND nostreams = :nostreams ",
-                                         soci::use(source_hostname),
-                                         soci::use(destin_hostname),
-                                         soci::use(nostreams),
-                                         soci::into(datetimeStreams, isNullDatetime));
+                                         soci::into(nostreams, isNullStreamsOptimization));            ;
 
 
             soci::statement stmt23 = (
-                                         sql.prepare << "SELECT max(throughput) FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se ",
+                                         sql.prepare << "SELECT throughput FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se and "
+					 		" tested=1 and nostreams = :nostreams and throughput is not NULL   and throughput > 0",
                                          soci::use(source_hostname),
                                          soci::use(destin_hostname),
+                                         soci::use(nostreams),
                                          soci::into(maxThroughput));
-
             soci::statement stmt24 = (
-                                         sql.prepare << "DELETE FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se ",
+                                         sql.prepare << "SELECT nostreams FROM (SELECT nostreams FROM t_optimize_streams   "
+					 		" WHERE source_se=:source_se and dest_se=:dest_se and tested=1 ORDER BY throughput DESC) WHERE  rownum <= 1 ",
                                          soci::use(source_hostname),
-                                         soci::use(destin_hostname));
+                                         soci::use(destin_hostname),
+                                         soci::into(updateStream));
+
+            soci::statement stmt26 = (
+                                         sql.prepare << "SELECT tested FROM t_optimize_streams  WHERE source_se=:source_se AND dest_se=:dest_se "
+					 		" AND throughput IS NOT NULL and throughput > 0 and tested = 1  ",
+                                         soci::use(source_hostname),
+                                         soci::use(destin_hostname),
+                                         soci::into(testedThroughput));
+
+            soci::statement stmt28 = (
+                                         sql.prepare << " UPDATE t_optimize_streams set throughput = :throughput, datetime = sys_extract_utc(systimestamp) "
+                                         " WHERE source_se=:source_se AND dest_se=:dest_se AND nostreams = :nostreams   and tested = 1   ",
+                                         soci::use(throughput),
+                                         soci::use(source_hostname),
+                                         soci::use(destin_hostname),
+                                         soci::use(nostreams));
+					 
+            soci::statement stmt29 = (
+                                         sql.prepare << " select count(*) from  t_optimize_streams where "
+					 		" source_se=:source_se AND dest_se=:dest_se AND tested = 1 and throughput IS NOT NULL  and throughput > 0",                                         
+                                         soci::use(source_hostname),
+                                         soci::use(destin_hostname),
+                                         soci::into(allTested));					 
 
 
 
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
+
+                    recordsFound = true;
+
                     source_hostname = i->get<std::string>("SOURCE_SE");
                     destin_hostname = i->get<std::string>("DEST_SE");
 
@@ -3652,6 +3720,11 @@ bool OracleAPI::updateOptimizer()
                     isNullStreamsOptimization = soci::i_ok;
                     isNullDatetime = soci::i_ok;
                     maxThroughput = 0.0;
+                    testedThroughput = 0;
+                    updateStream = 0;
+                    struct tm datetimeStreams;
+                    soci::indicator isNullStreamsdatetimeStreams = soci::i_ok;
+		    allTested = 0;
 
                     // Weighted average
                     soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
@@ -3673,62 +3746,52 @@ bool OracleAPI::updateOptimizer()
                     if (totalSize > 0)
                         throughput /= totalSize;
 
-                    /* apply streams optimization, no matter the level here since if it's switch to level 2 to have info ready*/
-
-                    //get max streams
-                    stmt20.execute(true);
-
-                    //get max datetime
-                    stmt21.execute(true);
-
-                    if (isNullStreamsOptimization == soci::i_ok) //there is at least one entry
+                    if(spawnActive == 2) //only executhe streams optimization when level/plan is 2
                         {
-                            time_t lastTime = timegm(&datetimeStreams); //from db
-                            time_t now = getUTC(0);
-                            double diff = difftime(now, lastTime);
 
-                            if(nostreams < maxNoStreams) //haven't completed yet with 1-16 TCP streams range
+                            /* apply streams optimization, no matter the level here since if it's switch to level 2 to have info ready*/
+
+                            //get max streams
+                            stmt20.execute(true);
+
+                            //make sure that the current stream has been tested, throughput is not null and tested = 1
+                            stmt26.execute(true);
+
+                            stmt23.execute(true);
+			    
+			    stmt29.execute(true);
+			    
+
+                            if (isNullStreamsOptimization == soci::i_ok) //there is at least one entry
                                 {
-                                    if(diff >= 3600) //every 1h experiment with diff number of streams
+                                    if(nostreams < maxNoStreams && allTested < maxNoStreams) //haven't completed yet with 1-16 TCP streams range
                                         {
-                                            nostreams += 1;
-                                        }
-                                    if(throughput > 0.0)
-                                        {
-                                            sql.begin();
-                                                        sql << " MERGE INTO t_optimize_streams USING "
-							" (SELECT :source as source, :dest as dest, :streams as streams FROM dual) Pair "
-							" ON (t_optimize_streams.source_se = Pair.source AND t_optimize_streams.dest_se = Pair.dest AND t_optimize_streams.nostreams = Pair.streams) " 
-							" WHEN MATCHED THEN UPDATE SET throughput = :throughput "
-							" WHEN NOT MATCHED THEN INSERT (source_se, dest_se, nostreams, datetime, throughput) "
-							" VALUES (Pair.source, Pair.dest, Pair.streams, sys_extract_utc(systimestamp), :throughput)",
-                                                        soci::use(source_hostname),
-                                                        soci::use(destin_hostname),
-                                                        soci::use(nostreams),
-                                                        soci::use(throughput),
-                                                        soci::use(throughput);                                            
+                                            sql << " SELECT max(datetime) FROM t_optimize_streams  WHERE source_se=:source_se and "
+					    	   " dest_se=:dest_se and nostreams = :nostreams and tested = 1 and throughput is NOT NULL and throughput > 0   ",
+                                                soci::use(source_hostname),
+                                                soci::use(destin_hostname),
+                                                soci::use(nostreams),
+                                                soci::into(datetimeStreams, isNullStreamsdatetimeStreams);
 
-                                            sql.commit();
-                                        }
-                                }
-                            else //all samples taken, max is 16 streams
-                                {
-                                    if (diff >= 43200) //restart from stream 1, half a day has passed, check throughput though
-                                        {
-                                            stmt23.execute(true); //get max throughput of all samples
+                                            bool timeIsOk = false;
+                                            if (isNullStreamsdatetimeStreams == soci::i_ok)
+                                                timeIsOk = true;
 
-                                            if(throughput > 0.0 && (throughput < maxThroughput))
+                                            time_t lastTime = timegm(&datetimeStreams); //from db
+                                            time_t now = getUTC(0);
+                                            double diff = difftime(now, lastTime);
+
+                                            if(timeIsOk && diff >= 900 && testedThroughput == 1 && maxThroughput > 0.0) //every 15min experiment with diff number of streams
                                                 {
-                                                    nostreams = minStreams;
+                                                    nostreams += 1;
+                                                    throughput = 0.0;
                                                     sql.begin();
-                                                    stmt24.execute(true);	//delete all previous records for this pair
-						    
-                                                        sql << " MERGE INTO t_optimize_streams USING "
-							" (SELECT :source as source, :dest as dest, :streams as streams FROM dual) Pair "
-							" ON (t_optimize_streams.source_se = Pair.source AND t_optimize_streams.dest_se = Pair.dest AND t_optimize_streams.nostreams = Pair.streams) "
-							" WHEN MATCHED THEN UPDATE SET throughput = :throughput "
-							" WHEN NOT MATCHED THEN INSERT (source_se, dest_se, nostreams, datetime, throughput) "
-							" VALUES (Pair.source, Pair.dest, Pair.streams, sys_extract_utc(systimestamp), :throughput)",
+                                                    sql << " MERGE INTO t_optimize_streams USING "
+                                                        " (SELECT :source as source, :dest as dest, :streams as streams FROM dual) Pair "
+                                                        " ON (t_optimize_streams.source_se = Pair.source AND t_optimize_streams.dest_se = Pair.dest AND t_optimize_streams.nostreams = Pair.streams) "
+                                                        " WHEN MATCHED THEN UPDATE SET throughput = :throughput where tested = 1 "
+                                                        " WHEN NOT MATCHED THEN INSERT (source_se, dest_se, nostreams, datetime, throughput, tested) "
+                                                        " VALUES (Pair.source, Pair.dest, Pair.streams, sys_extract_utc(systimestamp), :throughput, 0)",
                                                         soci::use(source_hostname),
                                                         soci::use(destin_hostname),
                                                         soci::use(nostreams),
@@ -3736,29 +3799,72 @@ bool OracleAPI::updateOptimizer()
                                                         soci::use(throughput);
                                                     sql.commit();
                                                 }
+                                            else
+                                                {
+                                                    if(throughput > 0.0)
+                                                        {
+                                                            sql.begin();
+                                                            sql << " MERGE INTO t_optimize_streams USING "
+                                                                " (SELECT :source as source, :dest as dest, :streams as streams FROM dual) Pair "
+                                                                " ON (t_optimize_streams.source_se = Pair.source AND t_optimize_streams.dest_se = Pair.dest AND t_optimize_streams.nostreams = Pair.streams) "
+                                                                " WHEN MATCHED THEN UPDATE SET throughput = :throughput where tested = 1 "
+                                                                " WHEN NOT MATCHED THEN INSERT (source_se, dest_se, nostreams, datetime, throughput, tested) "
+                                                                " VALUES (Pair.source, Pair.dest, Pair.streams, sys_extract_utc(systimestamp), :throughput, 0)",
+                                                                soci::use(source_hostname),
+                                                                soci::use(destin_hostname),
+                                                                soci::use(nostreams),
+                                                                soci::use(throughput),
+                                                                soci::use(throughput);
+                                                            sql.commit();
+                                                        }
+                                                }
+                                        }
+                                    else //all samples taken, max is 16 streams
+                                        {
+                                            stmt24.execute(true);	//get current stream used with max throughput
+                                            nostreams = updateStream;
+
+                                            sql << " SELECT max(datetime) FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se "
+					    	   " and nostreams = :nostreams and tested = 1 and throughput is NOT NULL and throughput > 0  ",
+                                                soci::use(source_hostname),
+                                                soci::use(destin_hostname),
+                                                soci::use(nostreams),
+                                                soci::into(datetimeStreams, isNullStreamsdatetimeStreams);
+
+                                            bool timeIsOk = false;
+                                            if (isNullStreamsdatetimeStreams == soci::i_ok)
+                                                timeIsOk = true;
+
+                                            time_t lastTime = timegm(&datetimeStreams); //from db
+                                            time_t now = getUTC(0);
+                                            double diff = difftime(now, lastTime);
+
+                                            if (timeIsOk && diff >= 36000 && throughput > 0.0) //almost half a day has passed, compare throughput with max sample
+                                                {
+                                                    sql.begin();
+                                                    stmt28.execute(true);	//update stream currently used with new throughput and timestamp this time
+                                                    sql.commit();
+                                                }                                           
                                         }
                                 }
-                        }
-                    else //it's NULL, no sample yet, insert the firsy record for this pair
-                        {
-                            if(throughput > 0.0)
+                            else //it's NULL, no sample yet, insert the first record for this pair
                                 {
+                                    throughput = 0.0;
                                     sql.begin();
-                                                        sql << " MERGE INTO t_optimize_streams USING "
-							" (SELECT :source as source, :dest as dest, :streams as streams FROM dual) Pair "
-							" ON (t_optimize_streams.source_se = Pair.source AND t_optimize_streams.dest_se = Pair.dest AND t_optimize_streams.nostreams = Pair.streams) "
-							" WHEN MATCHED THEN UPDATE SET throughput = :throughput "
-							" WHEN NOT MATCHED THEN INSERT (source_se, dest_se, nostreams, datetime, throughput) "
-							" VALUES (Pair.source, Pair.dest, Pair.streams, sys_extract_utc(systimestamp), :throughput)",
-                                                        soci::use(source_hostname),
-                                                        soci::use(destin_hostname),
-                                                        soci::use(nostreams),
-                                                        soci::use(throughput),
-                                                        soci::use(throughput);                                    
-				    sql.commit();
+                                    sql << " MERGE INTO t_optimize_streams USING "
+                                        " (SELECT :source as source, :dest as dest, :streams as streams FROM dual) Pair "
+                                        " ON (t_optimize_streams.source_se = Pair.source AND t_optimize_streams.dest_se = Pair.dest AND t_optimize_streams.nostreams = Pair.streams) "
+                                        " WHEN MATCHED THEN UPDATE SET throughput = :throughput where tested = 1 "
+                                        " WHEN NOT MATCHED THEN INSERT (source_se, dest_se, nostreams, datetime, throughput, tested) "
+                                        " VALUES (Pair.source, Pair.dest, Pair.streams, sys_extract_utc(systimestamp), :throughput, 0)",
+                                        soci::use(source_hostname),
+                                        soci::use(destin_hostname),
+                                        soci::use(nostreams),
+                                        soci::use(throughput),
+                                        soci::use(throughput);
+                                    sql.commit();
                                 }
                         }
-
 
                     lanTransferBool = lanTransfer(source_hostname, destin_hostname);
 
@@ -3895,7 +4001,7 @@ bool OracleAPI::updateOptimizer()
                                         }
                                 }
 
-                            if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure >= 98)) && throughputEMA > thrStored && retry <= retryStored)
+                            if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure >= 98)) && (throughputEMA > thrStored || throughputEMA > 35) && retry <= retryStored)
                                 {
                                     if(maxActive > maxActiveLimit) // apply limit
                                         {
@@ -3925,7 +4031,7 @@ bool OracleAPI::updateOptimizer()
                                             stmt10.execute(true);
                                         }
                                 }
-                            else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure >= 98)) && throughputEMA == thrStored && retry <= retryStored)
+                            else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure >= 97)) && throughputEMA == thrStored && retry <= retryStored)
                                 {
                                     if(maxActive > maxActiveLimit) // apply limit
                                         {
@@ -3967,7 +4073,7 @@ bool OracleAPI::updateOptimizer()
                                                 }
                                         }
                                 }
-                            else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 95)) && throughputEMA < thrStored)
+                            else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 97)) && throughputEMA < thrStored)
                                 {
                                     if(retry > retryStored)
                                         {
@@ -3995,7 +4101,7 @@ bool OracleAPI::updateOptimizer()
                                     ema = throughputEMA;
                                     stmt10.execute(true);
                                 }
-                            else if ( ratioSuccessFailure < 98)
+                            else if ( ratioSuccessFailure < 97)
                                 {
                                     if(ratioSuccessFailure > rateStored && ratioSuccessFailure > 90 && retry <= retryStored)
                                         {
@@ -4034,7 +4140,7 @@ bool OracleAPI::updateOptimizer()
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
-    return allowed;
+    return recordsFound;
 }
 
 
@@ -6102,6 +6208,70 @@ void OracleAPI::setSeProtocol(std::string protocol, std::string se, std::string 
         }
 }
 
+void OracleAPI::setShowUserDn(bool show)
+{
+    soci::session sql(*connectionPool);
+    int count = 0;
+
+    try
+        {
+            sql << "select count(*) from t_server_config where show_user_dn is not NULL", soci::into(count);
+            if (!count)
+                {
+                    sql.begin();
+                    sql << "INSERT INTO t_server_config (show_user_dn) VALUES (:show) ",
+                        soci::use(std::string(show ? "on" : "off"));
+                    sql.commit();
+
+                }
+            else
+                {
+                    sql.begin();
+                    sql << "update t_server_config set show_user_dn = :show where show_user_dn is not NULL",
+                        soci::use(std::string(show ? "on" : "off"));
+                    sql.commit();
+                }
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+
+bool OracleAPI::getShowUserDn()
+{
+    soci::session sql(*connectionPool);
+    std::string value;
+    soci::indicator isNull = soci::i_ok;
+
+    try
+        {
+            sql << "select show_user_dn from t_server_config where show_user_dn is not NULL", soci::into(value, isNull);
+
+            if (isNull != soci::i_null)
+                {
+                    return value == "on";
+                }
+            else
+                return false;
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
 
 void OracleAPI::setRetry(int retry, const std::string & vo_name)
 {
@@ -6111,10 +6281,35 @@ void OracleAPI::setRetry(int retry, const std::string & vo_name)
         {
             sql.begin();
 
-            sql << "DELETE FROM t_server_config where vo_name = :vo_name", soci::use(vo_name);
+            int count = 0;
 
-            sql << "INSERT INTO t_server_config(retry, vo_name) VALUES(:retry, :vo_name)",
-                soci::use(retry), soci::use(vo_name);
+            sql <<
+                " SELECT count(vo_name) "
+                " FROM t_server_config "
+                " WHERE vo_name = :vo_name ",
+                soci::use(vo_name), soci::into(count)
+                ;
+
+            if (count)
+                {
+                    sql <<
+                        " UPDATE t_server_config "
+                        " SET retry = :retry "
+                        " WHERE vo_name = :vo_name ",
+                        soci::use(retry),
+                        soci::use(vo_name)
+                        ;
+                }
+            else
+                {
+                    sql <<
+                        " INSERT INTO t_server_config (retry, vo_name) "
+                        " VALUES(:retry, :vo_name)",
+                        soci::use(retry),
+                        soci::use(vo_name);
+                    ;
+
+                }
 
             sql.commit();
         }
@@ -7628,7 +7823,7 @@ void OracleAPI::checkSanityState()
                                                                             sql << "UPDATE t_file SET "
                                                                                 "    file_state = 'SUBMITTED', job_finished = NULL, finish_time = NULL, "
                                                                                 "    reason = '' "
-                                                                                "    WHERE file_state = 'NOT_USED' and job_id = :jobId LIMIT 1", soci::use(job_id);
+                                                                                "    WHERE file_state = 'NOT_USED' and job_id = :jobId and ROWNUM = 1", soci::use(job_id);
                                                                             it2 = sanityVector.erase(it2);
                                                                             found = true;
                                                                         }
@@ -9170,12 +9365,6 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
         }
 }
 
-
-
-
-
-
-
 bool OracleAPI::getDrain()
 {
     soci::session sql(*connectionPool);
@@ -9571,56 +9760,72 @@ bool OracleAPI::isProtocolIPv6(const std::string & source_hostname, const std::s
     return false;
 }
 
+
 int OracleAPI::getStreamsOptimization(const std::string & source_hostname, const std::string & destination_hostname)
 {
     soci::session sql(*connectionPool);
     long long int maxNoStreams = 0;
     long long int optimumNoStreams = 0;
+    int defaultStreams = 1;
     soci::indicator isNullMaxStreamsFound = soci::i_ok;
     soci::indicator isNullOptimumStreamsFound = soci::i_ok;
+    int allTested = 0;
 
     try
         {
-            sql << " SELECT max(nostreams) from t_optimize_streams where source_se=:source_se and dest_se=:dest_se ",
-                soci::use(source_hostname), soci::use(destination_hostname), soci::into(maxNoStreams, isNullMaxStreamsFound);
+            sql << " SELECT count(*) from t_optimize_streams where source_se=:source_se "
+	    	   " and dest_se=:dest_se and tested = 1 and throughput is not NULL  and throughput > 0",
+                soci::use(source_hostname), soci::use(destination_hostname), soci::into(allTested);
 
             if(sql.got_data())
                 {
-                    if(maxNoStreams == 16) //this is the maximum, meaning taken all samples from 1-16 TCP strreams
+                    if(allTested == 16) //this is the maximum, meaning taken all samples from 1-16 TCP strreams
                         {
-                            sql << " SELECT nostreams FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se ORDER BY throughput DESC LIMIT 1 ",
+                            sql << " SELECT nostreams FROM (SELECT nostreams FROM t_optimize_streams   WHERE "
+			    	   " source_se=:source_se and dest_se=:dest_se ORDER BY throughput DESC) WHERE  rownum <= 1 ",
                                 soci::use(source_hostname), soci::use(destination_hostname), soci::into(optimumNoStreams, isNullOptimumStreamsFound);
 
-			    if(sql.got_data())
-                            	return 	(int) optimumNoStreams;
-			    else
-			        return 4;
+                            if(sql.got_data())
+                                {                                   
+                                    return (int) optimumNoStreams;
+                                }
+                            else
+                                {
+                                    return defaultStreams;
+                                }
                         }
-                    else if(maxNoStreams < 16) //use the maximum sample taken so far
+                    else 
                         {
+            		    sql << " SELECT max(nostreams) from t_optimize_streams where source_se=:source_se and dest_se=:dest_se ",
+                			soci::use(source_hostname), soci::use(destination_hostname), soci::into(maxNoStreams, isNullMaxStreamsFound);
+					
+                            sql.begin();
+                            sql << "update t_optimize_streams set tested = 1, datetime = sys_extract_utc(systimestamp) where source_se=:source and dest_se=:dest and tested = 0 and nostreams = :nostreams",
+                                soci::use(source_hostname), soci::use(destination_hostname), soci::use(maxNoStreams);
+                            sql.commit();
                             return (int) maxNoStreams;
-                        }
-                    else //just in case
-                        {
-                            return 4;
-                        }
+                        }                    
                 }
             else  //it's NULL, no info yet stored, use default 1
                 {
-                    return 1;
+                    return defaultStreams;
                 }
         }
     catch (std::exception& e)
         {
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
 
-    return 4;
+    return defaultStreams;
 }
+
+
 
 int OracleAPI::getGlobalTimeout()
 {
@@ -9949,7 +10154,7 @@ void OracleAPI::getTransferJobStatusDetailed(std::string job_id, std::vector<boo
                 {
                     std::string job_id = i->get<std::string>("JOB_ID");
                     std::string file_state = i->get<std::string>("FILE_STATE");
-                    int file_id = i->get<int>("FILE_ID");
+                    int file_id = i->get<long long>("FILE_ID");
                     std::string source_surl = i->get<std::string>("SOURCE_SURL");
                     std::string dest_surl = i->get<std::string>("DEST_SURL");
 
@@ -11519,6 +11724,77 @@ bool OracleAPI::getOauthCredentials(const std::string& user_dn,
     return true;
 }
 
+void OracleAPI::setCloudStorageCredential(std::string const & dn, std::string const & vo, std::string const & storage, std::string const & accessKey, std::string const & secretKey)
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            sql.begin();
+
+            int count = 0;
+
+            sql <<
+                " SELECT count(*) "
+                " FROM t_cloudStorageUser "
+                " WHERE user_dn = :dn and vo_name = :vo and cloudStorage_name = :storage ",
+                soci::use(dn),
+                soci::use(vo),
+                soci::use(storage),
+                soci::into(count)
+                ;
+
+            if (count)
+                {
+                    sql <<
+                        " UPDATE t_cloudStorageUser "
+                        " SET access_token = :accessKey, access_token_secret = :secretKey "
+                        " WHERE user_dn = :dn and vo_name = :vo and cloudStorage_name = :storage ",
+                        soci::use(accessKey),
+                        soci::use(secretKey),
+                        soci::use(dn),
+                        soci::use(vo),
+                        soci::use(storage)
+                        ;
+                }
+            else
+                {
+                    // first make sure that the corresponding object in t_cloudStorage exists
+                    sql <<
+                            " INSERT INTO t_cloudStorage (cloudStorage_name) "
+                            " SELECT :storage FROM dual "
+                            " WHERE NOT EXISTS ( "
+                            "   SELECT NULL FROM t_cloudStorage WHERE cloudStorage_name = :storage "
+                            " ) ",
+                            soci::use(storage),
+                            soci::use(storage)
+                            ;
+                    // then add the record
+                    sql <<
+                        "INSERT INTO t_cloudStorageUser (user_dn, vo_name, cloudStorage_name, access_token, access_token_secret) "
+                        "VALUES(:dn, :vo, :storage, :accessKey, :secretKey)",
+                        soci::use(dn),
+                        soci::use(vo),
+                        soci::use(storage),
+                        soci::use(accessKey),
+                        soci::use(secretKey)
+                        ;
+
+                }
+
+            sql.commit();
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
 
 bool OracleAPI::isDmJob(std::string const & job)
 {

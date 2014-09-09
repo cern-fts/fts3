@@ -531,6 +531,13 @@ void GSoapContextAdapter::doDrain(bool drain)
         throw gsoap_error(ctx);
 }
 
+void GSoapContextAdapter::showUserDn(bool show)
+{
+    implcfg__showUserDnResponse resp;
+    if (soap_call_implcfg__showUserDn(ctx, endpoint.c_str(), 0, show, resp))
+        throw gsoap_error(ctx);
+}
+
 void GSoapContextAdapter::prioritySet(string jobId, int priority)
 {
     impltns__prioritySetResponse resp;
@@ -598,6 +605,13 @@ void GSoapContextAdapter::setFixActivePerPair(string source, string destination,
 {
     implcfg__fixActivePerPairResponse resp;
     if (soap_call_implcfg__fixActivePerPair(ctx, endpoint.c_str(), 0, source, destination, active, resp))
+        throw gsoap_error(ctx);
+}
+
+void GSoapContextAdapter::setS3Credential(std::string const & accessKey, std::string const & secretKey, std::string const & vo, std::string const & storage)
+{
+    implcfg__setS3CeredentialResponse resp;
+    if (soap_call_implcfg__setS3Ceredential(ctx, endpoint.c_str(), 0, accessKey, secretKey, vo, storage, resp))
         throw gsoap_error(ctx);
 }
 

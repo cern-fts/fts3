@@ -66,6 +66,8 @@ public:
 
     void getByJobId( std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles> >& files);
 
+    void getMultihopJobs(std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFiles> > > >& files);
+
     void getSe(Se* &se, std::string seName);
 
     unsigned int updateFileStatus(TransferFiles& file, const std::string status);
@@ -105,8 +107,6 @@ public:
 
     void setDebugLevel(std::string source_hostname, std::string destin_hostname, unsigned level);
 
-    void getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std::string & vos);
-
     void auditConfiguration(const std::string & dn, const std::string & config, const std::string & action);
 
     void fetchOptimizationConfig2(OptimizerSample* ops, const std::string & source_hostname, const std::string & destin_hostname);
@@ -115,7 +115,7 @@ public:
 
     bool updateOptimizer();
 
-    bool isTrAllowed(const std::string & source_se, const std::string & dest);
+    bool isTrAllowed(const std::string & source_se, const std::string & dest, int &currentActive);
 
     int getSeOut(const std::string & source, const std::set<std::string> & destination);
 
@@ -302,6 +302,10 @@ public:
 
     void setDrain(bool drain);
 
+    void setShowUserDn(bool show);
+
+    bool getShowUserDn();
+
     void setBandwidthLimit(const std::string & source_hostname, const std::string & destination_hostname, int bandwidthLimit);
 
     std::string getBandwidthLimit();
@@ -377,6 +381,8 @@ public:
 
     bool getOauthCredentials(const std::string& user_dn, const std::string& vo,
                              const std::string& cloud_name, OAuth& oauth);
+
+    void setCloudStorageCredential(std::string const & dn, std::string const & vo, std::string const & storage, std::string const & accessKey, std::string const & secretKey);
 
     bool isDmJob(std::string const & job);
 

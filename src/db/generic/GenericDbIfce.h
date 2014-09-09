@@ -135,6 +135,8 @@ public:
 
     virtual void getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles> >& files) = 0;
 
+    virtual void getMultihopJobs(std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFiles> > > >& files) = 0;
+
     virtual void getSe(Se* &se, std::string seName) = 0;
 
     virtual unsigned int updateFileStatus(TransferFiles& file, const std::string status) = 0;
@@ -175,8 +177,6 @@ public:
 
     virtual void setDebugLevel(std::string source_hostname, std::string destin_hostname, unsigned level) = 0;
 
-    virtual void getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std::string & vos) = 0;
-
     virtual void auditConfiguration(const std::string & dn, const std::string & config, const std::string & action) = 0;
 
     virtual void fetchOptimizationConfig2(OptimizerSample* ops, const std::string & source_hostname, const std::string & destin_hostname) = 0;
@@ -185,7 +185,7 @@ public:
 
     virtual bool updateOptimizer() = 0;
 
-    virtual bool isTrAllowed(const std::string & source_se, const std::string & dest) = 0;
+    virtual bool isTrAllowed(const std::string & source_se, const std::string & dest, int &currentActive) = 0;
 
     virtual int getSeOut(const std::string & source, const std::set<std::string> & destination) = 0;
 
@@ -389,6 +389,10 @@ public:
 
     virtual void setDrain(bool drain) = 0;
 
+    virtual void setShowUserDn(bool show) = 0;
+
+    virtual bool getShowUserDn() = 0;
+
     virtual void setBandwidthLimit(const std::string & source_hostname, const std::string & destination_hostname, int bandwidthLimit) = 0;
 
     virtual std::string getBandwidthLimit() = 0;
@@ -465,6 +469,8 @@ public:
     virtual bool getOauthCredentials(const std::string& user_dn,
                                      const std::string& vo, const std::string& cloud_name,
                                      OAuth& oauth) = 0;
+
+    virtual void setCloudStorageCredential(std::string const & dn, std::string const & vo, std::string const & storage, std::string const & accessKey, std::string const & secretKey) = 0;
 
     virtual void cancelDmJobs(std::vector<std::string> const & jobs) = 0;
 
