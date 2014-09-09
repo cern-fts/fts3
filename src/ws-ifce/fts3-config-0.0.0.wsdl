@@ -148,6 +148,14 @@
 
     <message name="DelConfigurationResponse" />
 
+    <message name="SetS3CeredentialRequest">
+        <part name="accessKey" type="xsd:string"/>
+        <part name="secretKey" type="xsd:string"/>
+        <part name="vo" type="xsd:string"/>
+    </message>
+    
+    <message name="SetS3CeredentialResponse"/>
+
     <message name="GetConfigurationRequest">
 		<part name="vo" type="xsd:string"/>
 		<part name="name" type="xsd:string"/>
@@ -257,6 +265,14 @@
             <fault message="impl:AuthorizationException" name="AuthorizationException"/>
             <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
             <fault message="impl:InvalidConfigurationException" name="InvalidConfigurationException"/>
+            <fault message="impl:InternalException" name="InternalException"/>
+        </operation>
+
+        <operation name="setS3Ceredential">
+            <input message="impl:SetS3CeredentialRequest" name="SetS3CeredentialRequest"/>
+            <output message="impl:SetS3CeredentialResponse" name="SetS3CeredentialResponse"/>
+            <fault message="impl:AuthorizationException" name="AuthorizationException"/>
+            <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
             <fault message="impl:InternalException" name="InternalException"/>
         </operation>
 
@@ -440,6 +456,30 @@
 
             <fault name="InvalidConfigurationException">
                 <wsdlsoap:fault name="InvalidConfigurationException" use="literal"/>
+            </fault>
+
+            <fault name="InternalException">
+                <wsdlsoap:fault name="InternalException" use="literal"/>
+            </fault>
+        </operation>
+
+        <operation name="setS3Ceredential">
+            <wsdlsoap:operation soapAction=""/>
+
+            <input name="SetS3CeredentialRequest">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </input>
+
+            <output name="SetS3CeredentialResponse">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </output>
+
+            <fault name="AuthorizationException">
+                <wsdlsoap:fault name="AuthorizationException" use="literal"/>
+            </fault>
+
+            <fault name="ServiceBusyException">
+                <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
             </fault>
 
             <fault name="InternalException">

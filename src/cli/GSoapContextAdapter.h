@@ -357,6 +357,15 @@ public:
     void setFixActivePerPair(string source, string destination, int active);
 
     /**
+     * Remote call to setS3Ceredential
+     *
+     * @param accessKey : S3 access key
+     * @param secretKey : S3 secret key
+     * @param vo        : VO name
+     */
+    void setS3Credential(std::string const & accessKey, std::string const & secretKey, std::string const & vo);
+
+    /**
      * @param vo : user VO name
      * @param src : source SE
      * @param dst : destination SE
