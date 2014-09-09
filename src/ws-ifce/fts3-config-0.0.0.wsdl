@@ -152,6 +152,7 @@
         <part name="accessKey" type="xsd:string"/>
         <part name="secretKey" type="xsd:string"/>
         <part name="vo" type="xsd:string"/>
+        <part name="storage" type="xsd:string"/>
     </message>
     
     <message name="SetS3CeredentialResponse"/>
