@@ -63,12 +63,6 @@ string FileTransferExecutor::prepareMetadataString(std::string text)
     return text;
 }
 
-std::string FileTransferExecutor::generateOauthConfigFile(const std::string& dn,
-        const std::string& vo, const std::string& cs_name)
-{
-    return fts3::generateOauthConfigFile(db, dn, vo, cs_name);
-}
-
 void FileTransferExecutor::run(boost::any & ctx)
 {
     if (ctx.empty()) ctx = 0;
@@ -187,7 +181,7 @@ void FileTransferExecutor::run(boost::any & ctx)
                     params.append(lexical_cast<string >(tf.FILE_ID));
 
                     // OAuth credentials
-                    std::string oauth_file = generateOauthConfigFile(tf.DN, tf.VO_NAME, tf.USER_CREDENTIALS);
+                    std::string oauth_file = generateOauthConfigFile(db, tf);
 
                     // Metadata
                     params.append(" -Y ");
