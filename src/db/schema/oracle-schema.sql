@@ -858,6 +858,17 @@ CREATE TABLE t_hosts (
     CONSTRAINT t_hosts_pk PRIMARY KEY (hostname, service_name)
 );
 
+CREATE TABLE t_optimize_active (
+  source_se    VARCHAR2(150) NOT NULL,
+  dest_se      VARCHAR2(150) NOT NULL,
+  active       INTEGER DEFAULT 2,
+  message      VARCHAR2(512),
+  datetime  TIMESTAMP WITH TIME ZONE,
+  ema         NUMBER DEFAULT 0,
+  fixed       VARCHAR2(3) CHECK (fixed in ('on', 'off')),
+  CONSTRAINT t_optimize_active_pk PRIMARY KEY (source_se, dest_se)
+);
+
 CREATE TABLE t_optimize_streams (
   source_se    VARCHAR2(150) NOT NULL,
   dest_se      VARCHAR2(150) NOT NULL,  
@@ -872,21 +883,6 @@ CREATE TABLE t_optimize_streams (
 CREATE INDEX t_optimize_streams_datetime ON t_optimize_streams(datetime);
 CREATE INDEX t_optimize_streams_throughput ON t_optimize_streams(throughput);
 CREATE INDEX t_optimize_streams_tested ON t_optimize_streams(tested);
-
-
-
-CREATE TABLE t_optimize_active (
-  source_se    VARCHAR2(150) NOT NULL,
-  dest_se      VARCHAR2(150) NOT NULL,
-  active       INTEGER DEFAULT 2,
-  message      VARCHAR2(512),
-  datetime  TIMESTAMP WITH TIME ZONE,
-  ema     	  NUMBER DEFAULT 0,
-  fixed       VARCHAR2(3) CHECK (fixed in ('on', 'off')),
-  CONSTRAINT t_optimize_active_pk PRIMARY KEY (source_se, dest_se)
-);
-
-
 
 --
 --

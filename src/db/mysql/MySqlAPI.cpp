@@ -12324,6 +12324,78 @@ bool MySqlAPI::getOauthCredentials(const std::string& user_dn,
     return true;
 }
 
+void MySqlAPI::setCloudStorageCredential(std::string const & dn, std::string const & vo, std::string const & storage, std::string const & accessKey, std::string const & secretKey)
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            sql.begin();
+
+            int count = 0;
+
+            sql <<
+                " SELECT count(*) "
+                " FROM t_cloudStorageUser "
+                " WHERE user_dn = :dn and vo_name = :vo and cloudStorage_name = :storage ",
+                soci::use(dn),
+                soci::use(vo),
+                soci::use(storage),
+                soci::into(count)
+                ;
+
+            if (count)
+                {
+                    sql <<
+                        " UPDATE t_cloudStorageUser "
+                        " SET access_token = :accessKey, access_token_secret = :secretKey "
+                        " WHERE user_dn = :dn and vo_name = :vo and cloudStorage_name = :storage ",
+                        soci::use(accessKey),
+                        soci::use(secretKey),
+                        soci::use(dn),
+                        soci::use(vo),
+                        soci::use(storage)
+                        ;
+                }
+            else
+                {
+                    // first make sure that the corresponding object in t_cloudStorage exists
+                    sql <<
+                            " INSERT INTO t_cloudStorage (cloudStorage_name) "
+                            " SELECT * FROM (SELECT :storage) AS tmp "
+                            " WHERE NOT EXISTS ( "
+                            "   SELECT NULL FROM t_cloudStorage WHERE cloudStorage_name = :storage "
+                            " ) "
+                            " LIMIT 1",
+                            soci::use(storage),
+                            soci::use(storage)
+                            ;
+                    // then add the record
+                    sql <<
+                        "INSERT INTO t_cloudStorageUser (user_dn, vo_name, cloudStorage_name, access_token, access_token_secret) "
+                        "VALUES(:dn, :vo, :storage, :accessKey, :secretKey)",
+                        soci::use(dn),
+                        soci::use(vo),
+                        soci::use(storage),
+                        soci::use(accessKey),
+                        soci::use(secretKey)
+                        ;
+
+                }
+
+            sql.commit();
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
 
 void MySqlAPI::cancelDmJobs(std::vector<std::string> const & jobs)
 {

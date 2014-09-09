@@ -382,6 +382,8 @@ public:
     bool getOauthCredentials(const std::string& user_dn, const std::string& vo,
                              const std::string& cloud_name, OAuth& oauth);
 
+    void setCloudStorageCredential(std::string const & dn, std::string const & vo, std::string const & storage, std::string const & accessKey, std::string const & secretKey);
+
     bool isDmJob(std::string const & job);
 
     void cancelDmJobs(std::vector<std::string> const & jobs);
