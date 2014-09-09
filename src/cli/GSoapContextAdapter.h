@@ -363,7 +363,7 @@ public:
      * @param secretKey : S3 secret key
      * @param vo        : VO name
      */
-    void setS3Credential(std::string const & accessKey, std::string const & secretKey, std::string const & vo);
+    void setS3Credential(std::string const & accessKey, std::string const & secretKey, std::string const & vo, std::string const & storage);
 
     /**
      * @param vo : user VO name

@@ -122,7 +122,7 @@ SetCfgCli::SetCfgCli(bool spec)
             (
                 "s3", value< vector<string> >()->multitoken(),
                 "Set the S3 credentials, requires: access-key, secret-key and VO name"
-                "\n(Example: --s3 $ACCESS_KEY $SECRET_KEY $VO_NAME"
+                "\n(Example: --s3 $ACCESS_KEY $SECRET_KEY $VO_NAME $STORAGE_NAME)"
             )
             ;
         }
@@ -512,14 +512,14 @@ optional<int> SetCfgCli::getSecPerMb()
     return sec;
 }
 
-optional< std::tuple<std::string, std::string, std::string> > SetCfgCli::s3()
+optional< std::tuple<std::string, std::string, std::string, std::string> > SetCfgCli::s3()
 {
     if (!vm.count("s3")) return boost::none;
 
     std::vector<std::string> const & v = vm["s3"].as< std::vector<std::string> >();
 
-    if (v.size() != 3) throw bad_option("s3", "3 parameters were expected: access-key, secret-key and VO name");
+    if (v.size() != 4) throw bad_option("s3", "3 parameters were expected: access-key, secret-key, VO name and storage name");
 
-    return std::make_tuple(v[0], v[1], v[2]);
+    return std::make_tuple(v[0], v[1], v[2], v[3]);
 }
 

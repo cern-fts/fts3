@@ -201,7 +201,7 @@ public:
     /**
      * @return : tuple with S3 access key, secret key, and VO name if specified by the user
      */
-    optional< std::tuple<std::string, std::string, std::string> > s3();
+    optional< std::tuple<std::string, std::string, std::string, std::string> > s3();
 
 private:
     /// helper function for handling max source and destination active

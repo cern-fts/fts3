@@ -608,10 +608,10 @@ void GSoapContextAdapter::setFixActivePerPair(string source, string destination,
         throw gsoap_error(ctx);
 }
 
-void GSoapContextAdapter::setS3Credential(std::string const & accessKey, std::string const & secretKey, std::string const & vo)
+void GSoapContextAdapter::setS3Credential(std::string const & accessKey, std::string const & secretKey, std::string const & vo, std::string const & storage)
 {
     implcfg__setS3CeredentialResponse resp;
-    if (soap_call_implcfg__setS3Ceredential(ctx, endpoint.c_str(), 0, accessKey, secretKey, vo, resp))
+    if (soap_call_implcfg__setS3Ceredential(ctx, endpoint.c_str(), 0, accessKey, secretKey, vo, storage, resp))
         throw gsoap_error(ctx);
 }
 

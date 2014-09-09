@@ -53,11 +53,11 @@ int main(int ac, char* av[])
             GSoapContextAdapter ctx (cli.getService());
             cli.printApiDetails(ctx);
 
-            optional<std::tuple<std::string, std::string, std::string> > s3 = cli.s3();
+            optional<std::tuple<std::string, std::string, std::string, std::string> > s3 = cli.s3();
 
             if (s3)
             {
-                ctx.setS3Credential(std::get<0>(*s3), std::get<1>(*s3), std::get<2>(*s3));
+                ctx.setS3Credential(std::get<0>(*s3), std::get<1>(*s3), std::get<2>(*s3), std::get<3>(*s3));
                 cout << "Done" << endl;
             }
 
