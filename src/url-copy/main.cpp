@@ -875,15 +875,13 @@ int main(int argc, char **argv)
             if(opts.monitoringMessages)
                 msg_ifce::getInstance()->SendTransferStartMessage(&tr_completed);
 
-            if (!opts.logToStderr)
+
+            int checkError = Logger::getInstance().redirectTo(fileManagement.getLogFilePath(), opts.debugLevel);
+            if (checkError != 0)
                 {
-                    int checkError = Logger::getInstance().redirectTo(fileManagement.getLogFilePath(), opts.debugLevel);
-                    if (checkError != 0)
-                        {
-                            std::string message = mapErrnoToString(checkError);
-                            errorMessage = "INIT Failed to create transfer log file, error was: " + message;
-                            goto stop;
-                        }
+                    std::string message = mapErrnoToString(checkError);
+                    errorMessage = "INIT Failed to create transfer log file, error was: " + message;
+                    goto stop;
                 }
 
             //also reuse session when both url's are gsiftp
@@ -918,6 +916,8 @@ int main(int argc, char **argv)
                 logger.INFO() << "Bringonline token:" << currentTransfer.tokenBringOnline << std::endl;
                 logger.INFO() << "Multihop: " << opts.multihop << std::endl;
                 logger.INFO() << "UDT: " << opts.enable_udt << std::endl;
+                logger.INFO() << "Active: " << opts.active << std::endl;
+
                 if (opts.strictCopy)
                     {
                         logger.INFO() << "Copy only transfer!" << std::endl;

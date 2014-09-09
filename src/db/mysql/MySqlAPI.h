@@ -141,7 +141,7 @@ public:
 
     virtual bool updateOptimizer();
 
-    virtual bool isTrAllowed(const std::string & source_se, const std::string & dest);
+    virtual bool isTrAllowed(const std::string & source_se, const std::string & dest,int &currentActive);
 
     virtual int getSeOut(const std::string & source, const std::set<std::string> & destination);
 

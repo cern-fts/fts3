@@ -978,17 +978,17 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
 
 static
 int freeSlotForPair(soci::session& sql, std::list<std::pair<std::string, std::string> >& visited,
-        const std::string& source_se, const std::string& dest_se)
+                    const std::string& source_se, const std::string& dest_se)
 {
     int count = 0;
     int limit = 10;
 
     // Manual configuration
     sql << "SELECT COUNT(*) FROM t_link_config WHERE (source = :source OR source = '*') AND (destination = :dest OR destination = '*')",
-            soci::use(source_se), soci::use(dest_se), soci::into(count);
+        soci::use(source_se), soci::use(dest_se), soci::into(count);
     if (count == 0)
         sql << "SELECT COUNT(*) FROM t_group_members WHERE (member=:source OR member=:dest)",
-        soci::use(source_se), soci::use(dest_se), soci::into(count);
+            soci::use(source_se), soci::use(dest_se), soci::into(count);
 
     // No luck? Ask the optimizer
     if (count == 0)
@@ -1031,18 +1031,18 @@ void MySqlAPI::getMultihopJobs(std::map< std::string, std::queue< std::pair<std:
             gmtime_r(&now, &tTime);
 
             soci::rowset<soci::row> jobs_rs = (sql.prepare <<
-                                           " SELECT DISTINCT t_file.vo_name, t_file.job_id "
-                                           " FROM t_file "
-                                           " INNER JOIN t_job ON t_file.job_id = t_job.job_id "
-                                           " WHERE "
-                                           "      t_file.file_state = 'SUBMITTED' AND "
-                                           "      (t_file.hashed_id >= :hStart AND t_file.hashed_id <= :hEnd) AND"
-                                           "      t_job.reuse_job = 'H' AND "
-                                           "      t_file.wait_timestamp is null AND "
-                                           "      (t_file.retry_timestamp IS NULL OR t_file.retry_timestamp < :tTime) ",
-                                           soci::use(hashSegment.start), soci::use(hashSegment.end),
-                                           soci::use(tTime)
-                                          );
+                                               " SELECT DISTINCT t_file.vo_name, t_file.job_id "
+                                               " FROM t_file "
+                                               " INNER JOIN t_job ON t_file.job_id = t_job.job_id "
+                                               " WHERE "
+                                               "      t_file.file_state = 'SUBMITTED' AND "
+                                               "      (t_file.hashed_id >= :hStart AND t_file.hashed_id <= :hEnd) AND"
+                                               "      t_job.reuse_job = 'H' AND "
+                                               "      t_file.wait_timestamp is null AND "
+                                               "      (t_file.retry_timestamp IS NULL OR t_file.retry_timestamp < :tTime) ",
+                                               soci::use(hashSegment.start), soci::use(hashSegment.end),
+                                               soci::use(tTime)
+                                              );
 
             std::list<std::pair<std::string, std::string> > visited;
 
@@ -1052,20 +1052,20 @@ void MySqlAPI::getMultihopJobs(std::map< std::string, std::queue< std::pair<std:
                     std::string job_id = i->get<std::string>("job_id", "");
 
                     soci::rowset<TransferFiles> rs =
-                      (
-                          sql.prepare <<
-                          " SELECT SQL_NO_CACHE "
-                          "       f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
-                          "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, "
-                          "       f.checksum, j.checksum_method, j.source_space_token, "
-                          "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
-                          "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, "
-                          "       f.bringonline_token, f.source_se, f.dest_se, f.selection_strategy, "
-                          "       j.internal_job_params, j.user_cred, j.reuse_job "
-                          " FROM t_job j INNER JOIN t_file f ON (j.job_id = f.job_id) "
-                          " WHERE j.job_id = :job_id ",
-                          soci::use(job_id)
-                      );
+                        (
+                            sql.prepare <<
+                            " SELECT SQL_NO_CACHE "
+                            "       f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
+                            "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, "
+                            "       f.checksum, j.checksum_method, j.source_space_token, "
+                            "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
+                            "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, "
+                            "       f.bringonline_token, f.source_se, f.dest_se, f.selection_strategy, "
+                            "       j.internal_job_params, j.user_cred, j.reuse_job "
+                            " FROM t_job j INNER JOIN t_file f ON (j.job_id = f.job_id) "
+                            " WHERE j.job_id = :job_id ",
+                            soci::use(job_id)
+                        );
 
                     std::list<TransferFiles> tf;
                     for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
@@ -1372,8 +1372,8 @@ unsigned int MySqlAPI::updateFileStatus(TransferFiles& file, const std::string s
 
 
 void MySqlAPI::getByJobIdReuse(
-        std::vector<boost::tuple<std::string, std::string, std::string> >& distinct,
-        std::map<std::string, std::queue<std::pair<std::string, std::list<TransferFiles> > > >& files)
+    std::vector<boost::tuple<std::string, std::string, std::string> >& distinct,
+    std::map<std::string, std::queue<std::pair<std::string, std::list<TransferFiles> > > >& files)
 {
     if(distinct.empty()) return;
 
@@ -3725,7 +3725,7 @@ int MySqlAPI::getMaxActive(soci::session& sql, int level, int /*highDefault*/, c
     return maxDefault;
 }
 
-bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::string & destin_hostname)
+bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::string & destin_hostname, int &currentActive)
 {
     soci::session sql(*connectionPool);
 
@@ -3760,6 +3760,8 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
                 {
                     allowed = true;
                 }
+
+            currentActive = active;
         }
     catch (std::exception& e)
         {
@@ -4061,6 +4063,8 @@ bool MySqlAPI::updateOptimizer()
                     testedThroughput = 0;
                     updateStream = 0;
                     struct tm datetimeStreams;
+                    soci::indicator isNullStreamsdatetimeStreams = soci::i_ok;
+
 
                     // Weighted average
                     soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
@@ -4103,13 +4107,17 @@ bool MySqlAPI::updateOptimizer()
                                                 soci::use(source_hostname),
                                                 soci::use(destin_hostname),
                                                 soci::use(nostreams),
-                                                soci::into(datetimeStreams);
+                                                soci::into(datetimeStreams, isNullStreamsdatetimeStreams);
+
+                                            bool timeIsOk = false;
+                                            if (isNullStreamsdatetimeStreams == soci::i_ok)
+                                                timeIsOk = true;
 
                                             time_t lastTime = timegm(&datetimeStreams); //from db
                                             time_t now = getUTC(0);
                                             double diff = difftime(now, lastTime);
 
-                                            if(diff >= 900 && testedThroughput == 1 && maxThroughput > 0.0) //every 15min experiment with diff number of streams
+                                            if(timeIsOk && diff >= 900 && testedThroughput == 1 && maxThroughput > 0.0) //every 15min experiment with diff number of streams
                                                 {
                                                     nostreams += 1;
                                                     throughput = 0.0;
@@ -4136,13 +4144,17 @@ bool MySqlAPI::updateOptimizer()
                                                 soci::use(source_hostname),
                                                 soci::use(destin_hostname),
                                                 soci::use(nostreams),
-                                                soci::into(datetimeStreams, isNullDatetime);
+                                                soci::into(datetimeStreams, isNullStreamsdatetimeStreams);
+
+                                            bool timeIsOk = false;
+                                            if (isNullStreamsdatetimeStreams == soci::i_ok)
+                                                timeIsOk = true;
 
                                             time_t lastTime = timegm(&datetimeStreams); //from db
                                             time_t now = getUTC(0);
                                             double diff = difftime(now, lastTime);
 
-                                            if (diff >= 36000 && throughput > 0.0) //almost half a day has passed, compare throughput with max sample
+                                            if (timeIsOk && diff >= 36000 && throughput > 0.0) //almost half a day has passed, compare throughput with max sample
                                                 {
                                                     sql.begin();
                                                     stmt28.execute(true);	//update stream currently used with new throughput and timestamp this time
@@ -4957,7 +4969,7 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
 
                                     drain = getDrainInternal(sql);
                                     if(drain)
-                                        {                                                                                        
+                                        {
                                             return;
                                         }
                                 }
@@ -5008,17 +5020,17 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                     sql << "delete from t_file_retry_errors where datetime < (UTC_TIMESTAMP() - interval '7' DAY )";
                     sql.commit();
 
-		    /*
-                    //delete from t_turl > 7 days old records
-                    sql.begin();
-                    sql << "delete from t_turl where datetime < (UTC_TIMESTAMP() - interval '7' DAY )";
-                    sql.commit();
+                    /*
+                            //delete from t_turl > 7 days old records
+                            sql.begin();
+                            sql << "delete from t_turl where datetime < (UTC_TIMESTAMP() - interval '7' DAY )";
+                            sql.commit();
 
-                    sql.begin();
-                    sql << "update t_turl set finish=0 where finish > 100000000000";
-                    sql << "update t_turl set fail=0 where fail > 100000000000";
-                    sql.commit();
-		    */
+                            sql.begin();
+                            sql << "update t_turl set finish=0 where finish > 100000000000";
+                            sql << "update t_turl set fail=0 where fail > 100000000000";
+                            sql.commit();
+                    */
                 }
 
             jobIdStmt.str(std::string());
@@ -5029,15 +5041,15 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
             sql.rollback();
             jobIdStmt.str(std::string());
             jobIdStmt.clear();
- 
+
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            sql.rollback();	
+            sql.rollback();
             jobIdStmt.str(std::string());
             jobIdStmt.clear();
-	    
+
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }
@@ -6595,7 +6607,7 @@ void MySqlAPI::setRetry(int retry, const std::string & vo_name)
                         "VALUES(:retry, :vo_name)",
                         soci::use(retry),
                         soci::use(vo_name);
-                        ;
+                    ;
 
                 }
 
@@ -9398,13 +9410,13 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
 
             //prevent running in more than on server
             if(hashSegment.start == 0)
-            {
-            	// Delete old entries
-            	sql.begin();
-            	soci::statement stmt3 = (sql.prepare << "DELETE FROM t_hosts WHERE beat <= DATE_SUB(UTC_TIMESTAMP(), interval 1 week)");
-            	stmt3.execute(true);
-            	sql.commit();
-            }
+                {
+                    // Delete old entries
+                    sql.begin();
+                    soci::statement stmt3 = (sql.prepare << "DELETE FROM t_hosts WHERE beat <= DATE_SUB(UTC_TIMESTAMP(), interval 1 week)");
+                    stmt3.execute(true);
+                    sql.commit();
+                }
         }
     catch (std::exception& e)
         {

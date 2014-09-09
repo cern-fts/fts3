@@ -29,6 +29,7 @@ public:
     unsigned debugLevel;
     bool hide_user_dn;
     int level;
+    int active;
 
     enum CompareChecksum
     {

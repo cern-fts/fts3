@@ -151,7 +151,8 @@ void FileTransferExecutor::run(boost::any & ctx)
                 tfh.getSourcesVos(destin_hostname)
             );
 
-            if (scheduler.schedule())   /*SET TO READY STATE WHEN TRUE*/
+            int currentActive = 0;
+            if (scheduler.schedule(currentActive))   /*SET TO READY STATE WHEN TRUE*/
                 {
                     scheduled += 1;
 
@@ -400,6 +401,11 @@ void FileTransferExecutor::run(boost::any & ctx)
 
                     params.append(" -7 ");
                     params.append(ftsHostName);
+
+
+                    //pass the number of active transfers for this link to url_copy
+                    params.append(" -10 ");
+                    params.append(lexical_cast<string >(currentActive));
 
 
                     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd << " " << params << commit;

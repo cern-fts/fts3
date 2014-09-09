@@ -229,7 +229,8 @@ protected:
             }
 
         FileTransferScheduler scheduler(representative, cfgs);
-        if (!scheduler.schedule()) return;   /*SET TO READY STATE WHEN TRUE*/
+        int currentActive = 0;
+        if (!scheduler.schedule(currentActive)) return;   /*SET TO READY STATE WHEN TRUE*/
 
         bool isAutoTuned = false;
         std::stringstream internalParams;
@@ -442,6 +443,9 @@ protected:
 
         params.append(" -Y ");
         params.append(prepareMetadataString(dn));
+
+        params.append(" -10 ");
+        params.append(lexical_cast<string >(currentActive));
 
 
         bool ready = DBSingleton::instance().getDBObjectInstance()->isFileReadyStateV(fileIds);

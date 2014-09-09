@@ -115,7 +115,7 @@ public:
 
     bool updateOptimizer();
 
-    bool isTrAllowed(const std::string & source_se, const std::string & dest);
+    bool isTrAllowed(const std::string & source_se, const std::string & dest, int &currentActive);
 
     int getSeOut(const std::string & source, const std::set<std::string> & destination);
 

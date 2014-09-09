@@ -235,9 +235,9 @@ bool ProfiledDB::updateOptimizer()
     PROFILE_PREFIXED("DB::", return db->updateOptimizer());
 }
 
-bool ProfiledDB::isTrAllowed(const std::string & source_se, const std::string & dest)
+bool ProfiledDB::isTrAllowed(const std::string & source_se, const std::string & dest,int &currentActive)
 {
-    PROFILE_PREFIXED("DB::", return db->isTrAllowed(source_se, dest));
+    PROFILE_PREFIXED("DB::", return db->isTrAllowed(source_se, dest, currentActive));
 }
 
 
