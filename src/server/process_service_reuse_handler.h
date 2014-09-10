@@ -214,12 +214,17 @@ protected:
                     {
                         StreamsperFile = DEFAULT_NOSTREAMS;
                     }
+		    
                 Timeout = DBSingleton::instance().getDBObjectInstance()->getGlobalTimeout();
                 if(Timeout == 0)
+		{
                     Timeout = DEFAULT_TIMEOUT;
-                else
+                }
+		else
+		{
                     params.append(" -Z ");
-
+		    params.append(lexical_cast<string >(Timeout));
+		}
                 int secPerMB = DBSingleton::instance().getDBObjectInstance()->getSecPerMb();
                 if(secPerMB > 0)
                     {

@@ -124,9 +124,14 @@ void FileTransferExecutor::run(boost::any & ctx)
                         }
                     Timeout = db->getGlobalTimeout();
                     if(Timeout == 0)
+		    {
                         Timeout = DEFAULT_TIMEOUT;
+		    }
                     else
+		    {
                         params.append(" -Z ");
+			params.append(lexical_cast<string >(Timeout));
+		    }
 
                     int secPerMB = db->getSecPerMb();
                     if(secPerMB > 0)
