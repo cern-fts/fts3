@@ -203,6 +203,11 @@ public:
      */
     optional< std::tuple<std::string, std::string, std::string, std::string> > s3();
 
+    /**
+     * @return : tuple with dropbox app key, app secret, and service API URL if specified by the user
+     */
+    optional< std::tuple<std::string, std::string, std::string> > dropbox();
+
 private:
     /// helper function for handling max source and destination active
     optional< pair<string, int> > getMaxSeActive(string option);

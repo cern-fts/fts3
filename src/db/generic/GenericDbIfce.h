@@ -472,6 +472,8 @@ public:
 
     virtual void setCloudStorageCredential(std::string const & dn, std::string const & vo, std::string const & storage, std::string const & accessKey, std::string const & secretKey) = 0;
 
+    virtual void setCloudStorage(std::string const & storage, std::string const & appKey, std::string const & appSecret, std::string const & apiUrl) = 0;
+
     virtual void cancelDmJobs(std::vector<std::string> const & jobs) = 0;
 
     virtual bool getUserDnVisible() = 0;

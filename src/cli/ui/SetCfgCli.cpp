@@ -124,8 +124,13 @@ SetCfgCli::SetCfgCli(bool spec)
             )
             (
                 "s3", value< vector<string> >()->multitoken(),
-                "Set the S3 credentials, requires: access-key, secret-key and VO name"
+                "Set the S3 credentials, requires: access-key, secret-key, VO name and storage name"
                 "\n(Example: --s3 $ACCESS_KEY $SECRET_KEY $VO_NAME $STORAGE_NAME)"
+            )
+            (
+                "dropbox", value< vector<string> >()->multitoken(),
+                "Set the dropbox credentials, requires: app-key, app-secret and service API URL"
+                "\n(Example: --s3 $APP_KEY $APP_SECRET $API_URL)"
             )
             ;
         }
@@ -192,6 +197,12 @@ bool SetCfgCli::validate()
     if (vm.count("s3"))
         {
             if (vm.size() != 1) throw bad_option("s3", "should be used only as a single option");
+            return true;
+        }
+
+    if (vm.count("dropbox"))
+        {
+            if (vm.size() != 1) throw bad_option("dropbox", "should be used only as a single option");
             return true;
         }
 
@@ -521,8 +532,18 @@ optional< std::tuple<std::string, std::string, std::string, std::string> > SetCf
 
     std::vector<std::string> const & v = vm["s3"].as< std::vector<std::string> >();
 
-    if (v.size() != 4) throw bad_option("s3", "3 parameters were expected: access-key, secret-key, VO name and storage name");
+    if (v.size() != 4) throw bad_option("s3", "4 parameters were expected: access-key, secret-key, VO name and storage name");
 
     return std::make_tuple(v[0], v[1], v[2], v[3]);
 }
 
+optional< std::tuple<std::string, std::string, std::string> > SetCfgCli::dropbox()
+{
+    if (!vm.count("dropbox")) return boost::none;
+
+    std::vector<std::string> const & v = vm["dropbox"].as< std::vector<std::string> >();
+
+    if (v.size() != 3) throw bad_option("dropbox", "3 parameters were expected: app-key, app-secret and service API URL");
+
+    return std::make_tuple(v[0], v[1], v[2]);
+}
