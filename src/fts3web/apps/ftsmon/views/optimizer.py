@@ -124,15 +124,42 @@ def get_optimizer_details(http_request):
     }
 
 
+class AppendQuantile(object):
+    """
+    Compute the quantile for each stream
+    """
+
+    def __init__(self, streams, quantiles):
+        self.streams = streams
+        self.quantiles = quantiles
+        self.n_quantiles = len(self.quantiles)
+
+    def __len__(self):
+        return len(self.streams)
+
+    def __getitem__(self, index):
+        for s in self.streams[index]:
+            s.quantile = len(filter(lambda x: x < s.throughput, self.quantiles)) + 1
+            s.quantiles = self.n_quantiles
+            yield s
+
+
 @jsonify
 def get_optimizer_streams(http_request):
     streams = OptimizerStreams.objects
-
     if http_request.GET.get('source_se', None):
         streams = streams.filter(source_se=http_request.GET['source_se'])
     if http_request.GET.get('dest_se', None):
         streams = streams.filter(dest_se=http_request.GET['dest_se'])
+    streams = streams.order_by('-throughput')
 
-    streams = streams.order_by('-datetime')
+    # Compute quantiles
+    n_quantiles = 10
+    rows = sorted(map(lambda s: s.throughput, streams))
+    n_rows = len(rows)
+    quantiles = map(
+        lambda x: rows[int(x) - 1],
+        map(lambda y: n_rows * (float(y)/n_quantiles), range(1, n_quantiles + 1))
+    )
 
-    return paged(streams, http_request)
+    return paged(AppendQuantile(streams, quantiles), http_request)

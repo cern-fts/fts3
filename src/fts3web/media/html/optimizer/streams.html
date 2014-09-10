@@ -21,7 +21,7 @@
         </tr>
     </thead>
     <tbody>
-        <tr ng-repeat="s in streams.items" ng-class-odd="'odd'">
+        <tr ng-repeat="s in streams.items" ng-class-odd="'odd'" ng-style="quantileColor(s)">
             <td>{{ s.source_se }}</td>
             <td>{{ s.dest_se }}</td>
             <td class="numeric">{{ s.nostreams }}</td>
