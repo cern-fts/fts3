@@ -64,6 +64,9 @@ SetCfgCli::SetCfgCli(bool spec)
                 "optimizer-mode", value<int>(),
                 "Sets the optimizer mode (allowed values: 1, 2 or 3)"
                 "\n(Example: --optimizer-mode 1|2|3)"
+                "\nPlan 1: use file size to calculate the number of streams "		
+                "\nPlan 2: take samples for 15min from 1-16 streams and then every 12h "		
+                "\nPlan 3: set TCP buffer size to 8MB "						
             )
             (
                 "queue-timeout", value<int>(),
