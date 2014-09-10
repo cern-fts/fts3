@@ -403,7 +403,7 @@ void FileTransferExecutor::run(boost::any & ctx)
 
 
                     //pass the number of active transfers for this link to url_copy
-                    params.append(" -10 ");
+                    params.append(" -2 ");
                     params.append(lexical_cast<string >(currentActive));
 
 

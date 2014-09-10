@@ -49,11 +49,11 @@ const option UrlCopyOpts::long_options[] =
     {"strict-copy",       no_argument,       0, 'S'},
     {"hide-user-dn",      no_argument,       0, '8'},
     {"level",    	  required_argument, 0, '9'},
-    {"active",    	  required_argument, 0, '10'},
+    {"active",    	  required_argument, 0, '2'},
     {0, 0, 0, 0}
 };
 
-const char UrlCopyOpts::short_options[] = "PONM:L:K:J:I:H:GRFD:E:C:z:A:t:a:b:c:de:f:h:ij:k:B:5:UXZV:Y:7:@:S:8:9:10:";
+const char UrlCopyOpts::short_options[] = "PONM:L:K:J:I:H:GRFD:E:C:z:A:t:a:b:c:de:f:h:ij:k:B:5:UXZV:Y:7:@:S:8:9:2:";
 
 UrlCopyOpts::UrlCopyOpts(): monitoringMessages(false), autoTunned(false),
     manualConfig(false), overwrite(false), daemonize(false),
@@ -245,7 +245,7 @@ int UrlCopyOpts::parse(int argc, char * const argv[])
                         case '9':
                             level = boost::lexical_cast<int>(optarg);
                             break;
-                        case '10':
+                        case '2':
                             active = boost::lexical_cast<int>(optarg);
                             break;
                         }
