@@ -42,9 +42,11 @@ DROP TABLE t_profiling_info;
 DROP TABLE t_profiling_snapshot;
 DROP TABLE t_server_sanity;
 DROP TABLE t_hosts;
+DROP TABLE t_optimize_streams;
 DROP TABLE t_optimize_active;
-DROP TABLE T_CLOUDSTORAGE;
-DROP TABLE T_CLOUDSTORAGEUSER;
+DROP TABLE t_cloudstorageuser;
+DROP TABLE t_cloudstorage;
+
 
 
 exit;
