@@ -362,8 +362,18 @@ public:
      * @param accessKey : S3 access key
      * @param secretKey : S3 secret key
      * @param vo        : VO name
+     * @param storage   : storage name (e.g. s3://hostname.com)
      */
     void setS3Credential(std::string const & accessKey, std::string const & secretKey, std::string const & vo, std::string const & storage);
+
+    /**
+     * Remote call to setDropboxCeredential
+     *
+     * @param appKey    : S3 app key
+     * @param appSecret : S3 app secret
+     * @param apiUrl    : service API URL (usually https://www.dropbox.com/1)
+     */
+    void setDropboxCredential(std::string const & appKey, std::string const & appSecret, std::string const & apiUrl);
 
     /**
      * @param vo : user VO name

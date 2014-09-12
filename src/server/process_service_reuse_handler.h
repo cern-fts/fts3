@@ -449,7 +449,7 @@ protected:
         params.append(" -Y ");
         params.append(prepareMetadataString(dn));
 
-        params.append(" -10 ");
+        params.append(" -2 ");
         params.append(lexical_cast<string >(currentActive));
 
 

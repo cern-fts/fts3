@@ -12402,6 +12402,42 @@ void MySqlAPI::setCloudStorageCredential(std::string const & dn, std::string con
         }
 }
 
+void MySqlAPI::setCloudStorage(std::string const & storage, std::string const & appKey, std::string const & appSecret, std::string const & apiUrl)
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            sql.begin();
+
+            sql <<
+                    " INSERT INTO t_cloudStorage (cloudStorage_name, app_key, app_secret, service_api_url) "
+                    " VALUES (:storage, :appKey, :appSecret, :apiUrl) "
+                    " ON DUPLICATE KEY UPDATE "
+                    " app_key = :appKey, app_secret = :appSecret, service_api_url = :apiUrl",
+                    soci::use(storage),
+                    soci::use(appKey),
+                    soci::use(appSecret),
+                    soci::use(apiUrl),
+                    soci::use(appKey),
+                    soci::use(appSecret),
+                    soci::use(apiUrl)
+                    ;
+
+            sql.commit();
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+
 void MySqlAPI::cancelDmJobs(std::vector<std::string> const & jobs)
 {
     soci::session sql(*connectionPool);

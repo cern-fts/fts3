@@ -11796,6 +11796,47 @@ void OracleAPI::setCloudStorageCredential(std::string const & dn, std::string co
         }
 }
 
+void OracleAPI::setCloudStorage(std::string const & storage, std::string const & appKey, std::string const & appSecret, std::string const & apiUrl)
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            sql.begin();
+
+            sql <<
+                    " MERGE INTO t_cloudStorage c "
+                    " USING (SELECT :storage AS cloudStorage_name FROM dual) tmp "
+                    " ON (c.cloudStorage_name = tmp.cloudStorage_name) "
+                    " WHEN MATCHED THEN "
+                    "   UPDATE SET app_key = :appKey, app_secret = :appSecret, service_api_url = :apiUrl "
+                    " WHEN NOT MATCHED THEN "
+                    "   INSERT (cloudStorage_name, app_key, app_secret, service_api_url) "
+                    "   VALUES (:storage, :appKey, :appSecret, :apiUrl)",
+                    soci::use(storage),
+                    soci::use(appKey),
+                    soci::use(appSecret),
+                    soci::use(apiUrl),
+                    soci::use(storage),
+                    soci::use(appKey),
+                    soci::use(appSecret),
+                    soci::use(apiUrl)
+                    ;
+
+            sql.commit();
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+
 bool OracleAPI::isDmJob(std::string const & job)
 {
     soci::session sql(*connectionPool);

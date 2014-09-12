@@ -384,6 +384,8 @@ public:
 
     void setCloudStorageCredential(std::string const & dn, std::string const & vo, std::string const & storage, std::string const & accessKey, std::string const & secretKey);
 
+    void setCloudStorage(std::string const & storage, std::string const & appKey, std::string const & appSecret, std::string const & apiUrl);
+
     bool isDmJob(std::string const & job);
 
     void cancelDmJobs(std::vector<std::string> const & jobs);

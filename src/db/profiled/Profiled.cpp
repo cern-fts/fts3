@@ -992,6 +992,11 @@ void ProfiledDB::setCloudStorageCredential(std::string const & dn, std::string c
     PROFILE_PREFIXED("DB::", return db->setCloudStorageCredential(dn, vo, storage, accessKey, secretKey));
 }
 
+void ProfiledDB::setCloudStorage(std::string const & storage, std::string const & appKey, std::string const & appSecret, std::string const & apiUrl)
+{
+    PROFILE_PREFIXED("DB::", return db->setCloudStorage(storage, appKey, appSecret, apiUrl));
+}
+
 bool ProfiledDB::isDmJob(std::string const & job)
 {
     PROFILE_PREFIXED("DB::", return db->isDmJob(job));

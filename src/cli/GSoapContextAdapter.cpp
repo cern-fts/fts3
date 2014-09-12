@@ -615,6 +615,13 @@ void GSoapContextAdapter::setS3Credential(std::string const & accessKey, std::st
         throw gsoap_error(ctx);
 }
 
+void GSoapContextAdapter::setDropboxCredential(std::string const & appKey, std::string const & appSecret, std::string const & apiUrl)
+{
+    implcfg__setDropboxCeredentialResponse resp;
+    if (soap_call_implcfg__setDropboxCeredential(ctx, endpoint.c_str(), 0, appKey, appSecret, apiUrl, resp))
+        throw gsoap_error(ctx);
+}
+
 std::vector<Snapshot> GSoapContextAdapter::getSnapShot(std::string const & vo, std::string const & src, std::string const & dst)
 {
     impltns__getSnapshotResponse resp;

@@ -153,6 +153,9 @@ int ExecuteProcess::execProcessShell(std::string& forkMessage)
             // (and stdin, stdout and stderr)
             closeAllFilesExcept(pipefds[1]);
 
+            // Redirect stderr (points to the log)
+            freopen("/dev/null", "a", stderr);
+
             // Get parameter array
             list<string> argsHolder;
             size_t       argc;

@@ -157,9 +157,12 @@ def get_optimizer_streams(http_request):
     n_quantiles = 10
     rows = sorted(map(lambda s: s.throughput, streams))
     n_rows = len(rows)
-    quantiles = map(
-        lambda x: rows[int(x) - 1],
-        map(lambda y: n_rows * (float(y)/n_quantiles), range(1, n_quantiles + 1))
-    )
+    if n_rows:
+        quantiles = map(
+            lambda x: rows[int(x) - 1],
+            map(lambda y: n_rows * (float(y)/n_quantiles), range(1, n_quantiles + 1))
+        )
+    else:
+        quantiles = [0] * n_quantiles
 
     return paged(AppendQuantile(streams, quantiles), http_request)

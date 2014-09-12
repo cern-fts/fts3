@@ -862,7 +862,7 @@ int fts3::implcfg__setGlobalTimeout(soap* ctx, int timeout, implcfg__setGlobalTi
     return SOAP_OK;
 }
 
-int fts3::implcfg__setS3Ceredential(soap* ctx, std::string accessKey, std::string secretKey, std::string vo, std::string storage, fts3::implcfg__setS3CeredentialResponse& resp)
+int fts3::implcfg__setS3Ceredential(soap* ctx, std::string accessKey, std::string secretKey, std::string vo, std::string storage, implcfg__setS3CeredentialResponse& resp)
 {
     try
         {
@@ -875,6 +875,34 @@ int fts3::implcfg__setS3Ceredential(soap* ctx, std::string accessKey, std::strin
             DBSingleton::instance().getDBObjectInstance()->setCloudStorageCredential(
                     cgsi.getClientDn(), vo, storage, accessKey, secretKey
                 );
+        }
+    catch(Err& ex)
+        {
+
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+            soap_receiver_fault(ctx, ex.what(), "InvalidConfigurationException");
+
+            return SOAP_FAULT;
+        }
+    catch (...)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the setGlobalTimeout failed"  << commit;
+            return SOAP_FAULT;
+        }
+
+    return SOAP_OK;
+}
+
+int fts3::implcfg__setDropboxCeredential(soap* ctx, std::string appKey, std::string appSecret, std::string apiUrl, implcfg__setDropboxCeredentialResponse& resp)
+{
+    try
+        {
+            // only Root is allowed to set S3 credentials
+            CGsiAdapter cgsi(ctx);
+            if (!cgsi.isRoot()) throw Err_Custom("Only root is allowed to set S3 credentials!");
+
+            DBSingleton::instance().getDBObjectInstance()->setCloudStorage("dropbox", appKey, appSecret, apiUrl);
+
         }
     catch(Err& ex)
         {

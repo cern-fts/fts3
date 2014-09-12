@@ -157,6 +157,14 @@
     
     <message name="SetS3CeredentialResponse"/>
 
+    <message name="SetDropboxCeredentialRequest">
+        <part name="appKey" type="xsd:string"/>
+        <part name="appSecret" type="xsd:string"/>
+        <part name="apiUrl" type="xsd:string"/>
+    </message>
+    
+    <message name="SetDropboxCeredentialResponse"/>
+
     <message name="GetConfigurationRequest">
 		<part name="vo" type="xsd:string"/>
 		<part name="name" type="xsd:string"/>
@@ -272,6 +280,14 @@
         <operation name="setS3Ceredential">
             <input message="impl:SetS3CeredentialRequest" name="SetS3CeredentialRequest"/>
             <output message="impl:SetS3CeredentialResponse" name="SetS3CeredentialResponse"/>
+            <fault message="impl:AuthorizationException" name="AuthorizationException"/>
+            <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
+            <fault message="impl:InternalException" name="InternalException"/>
+        </operation>
+
+        <operation name="setDropboxCeredential">
+            <input message="impl:SetDropboxCeredentialRequest" name="SetDropboxCeredentialRequest"/>
+            <output message="impl:SetDropboxCeredentialResponse" name="SetDropboxCeredentialResponse"/>
             <fault message="impl:AuthorizationException" name="AuthorizationException"/>
             <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
             <fault message="impl:InternalException" name="InternalException"/>
@@ -487,6 +503,30 @@
                 <wsdlsoap:fault name="InternalException" use="literal"/>
             </fault>
         </operation>
+        
+        <operation name="setDropboxCeredential">
+            <wsdlsoap:operation soapAction=""/>
+
+            <input name="SetDropboxCeredentialRequest">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </input>
+
+            <output name="SetDropboxCeredentialResponse">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </output>
+
+            <fault name="AuthorizationException">
+                <wsdlsoap:fault name="AuthorizationException" use="literal"/>
+            </fault>
+
+            <fault name="ServiceBusyException">
+                <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
+            </fault>
+
+            <fault name="InternalException">
+                <wsdlsoap:fault name="InternalException" use="literal"/>
+            </fault>
+        </operation>        
 
         <operation name="getConfiguration">
             <wsdlsoap:operation soapAction=""/>
