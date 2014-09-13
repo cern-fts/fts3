@@ -55,17 +55,17 @@ int main(int ac, char* av[])
 
             optional<std::tuple<std::string, std::string, std::string, std::string> > s3 = cli.s3();
             if (s3)
-            {
-                ctx.setS3Credential(std::get<0>(*s3), std::get<1>(*s3), std::get<2>(*s3), std::get<3>(*s3));
-                cout << "Done" << endl;
-            }
+                {
+                    ctx.setS3Credential(std::get<0>(*s3), std::get<1>(*s3), std::get<2>(*s3), std::get<3>(*s3));
+                    cout << "Done" << endl;
+                }
 
             optional<std::tuple<std::string, std::string, std::string> > dropbox = cli.dropbox();
             if (dropbox)
-            {
-                ctx.setDropboxCredential(std::get<0>(*dropbox), std::get<1>(*dropbox), std::get<2>(*dropbox));
-                cout << "Done" << endl;
-            }
+                {
+                    ctx.setDropboxCredential(std::get<0>(*dropbox), std::get<1>(*dropbox), std::get<2>(*dropbox));
+                    cout << "Done" << endl;
+                }
 
             optional<std::tuple<string, string, string>> protocol = cli.getProtocol();
             if (protocol.is_initialized())

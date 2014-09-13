@@ -3991,7 +3991,7 @@ bool MySqlAPI::updateOptimizer()
 
             soci::statement stmt23 = (
                                          sql.prepare << "SELECT throughput FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se "
-					 		" and tested=1 and nostreams = :nostreams and throughput is not NULL  and throughput > 0",
+                                         " and tested=1 and nostreams = :nostreams and throughput is not NULL  and throughput > 0",
                                          soci::use(source_hostname),
                                          soci::use(destin_hostname),
                                          soci::use(nostreams),
@@ -3999,14 +3999,14 @@ bool MySqlAPI::updateOptimizer()
 
             soci::statement stmt24 = (
                                          sql.prepare << "SELECT nostreams FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se "
-					 		" and tested=1 ORDER BY throughput DESC LIMIT 1 ",
+                                         " and tested=1 ORDER BY throughput DESC LIMIT 1 ",
                                          soci::use(source_hostname),
                                          soci::use(destin_hostname),
                                          soci::into(updateStream));
 
             soci::statement stmt26 = (
                                          sql.prepare << "SELECT tested FROM t_optimize_streams  WHERE source_se=:source_se AND dest_se=:dest_se "
-					 		"AND throughput IS NOT NULL  and throughput > 0 and tested = 1   ",
+                                         "AND throughput IS NOT NULL  and throughput > 0 and tested = 1   ",
                                          soci::use(source_hostname),
                                          soci::use(destin_hostname),
                                          soci::into(testedThroughput));
@@ -4018,14 +4018,14 @@ bool MySqlAPI::updateOptimizer()
                                          soci::use(source_hostname),
                                          soci::use(destin_hostname),
                                          soci::use(nostreams));
-					        
-					 
+
+
             soci::statement stmt29 = (
                                          sql.prepare << " select count(*) from  t_optimize_streams where "
-					 		" source_se=:source_se AND dest_se=:dest_se AND tested = 1 and throughput IS NOT NULL  and throughput > 0",                                         
+                                         " source_se=:source_se AND dest_se=:dest_se AND tested = 1 and throughput IS NOT NULL  and throughput > 0",
                                          soci::use(source_hostname),
                                          soci::use(destin_hostname),
-                                         soci::into(allTested));						 				 
+                                         soci::into(allTested));
 
 
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
@@ -4074,7 +4074,7 @@ bool MySqlAPI::updateOptimizer()
                     updateStream = 0;
                     struct tm datetimeStreams;
                     soci::indicator isNullStreamsdatetimeStreams = soci::i_ok;
-		    allTested = 0;
+                    allTested = 0;
 
 
                     // Weighted average
@@ -4109,17 +4109,17 @@ bool MySqlAPI::updateOptimizer()
                             stmt26.execute(true);
 
                             stmt23.execute(true);
-			    
-			    
-			    stmt29.execute(true);
-			    
+
+
+                            stmt29.execute(true);
+
 
                             if (isNullStreamsOptimization == soci::i_ok) //there is at least one entry
                                 {
                                     if(nostreams <= maxNoStreams && allTested < maxNoStreams) //haven't completed yet with 1-16 TCP streams range
                                         {
                                             sql << " SELECT max(datetime) FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se and "
-					    	   " nostreams = :nostreams  and tested = 1 and throughput is NOT NULL and throughput > 0 ",
+                                                " nostreams = :nostreams  and tested = 1 and throughput is NOT NULL and throughput > 0 ",
                                                 soci::use(source_hostname),
                                                 soci::use(destin_hostname),
                                                 soci::use(nostreams),
@@ -4157,7 +4157,7 @@ bool MySqlAPI::updateOptimizer()
                                             nostreams = updateStream;
 
                                             sql << " SELECT max(datetime) FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se "
-					    	   " and nostreams = :nostreams  and tested = 1 and throughput is NOT NULL and throughput > 0 ",
+                                                " and nostreams = :nostreams  and tested = 1 and throughput is NOT NULL and throughput > 0 ",
                                                 soci::use(source_hostname),
                                                 soci::use(destin_hostname),
                                                 soci::use(nostreams),
@@ -4176,7 +4176,7 @@ bool MySqlAPI::updateOptimizer()
                                                     sql.begin();
                                                     stmt28.execute(true);	//update stream currently used with new throughput and timestamp this time
                                                     sql.commit();
-                                                }                                            
+                                                }
                                         }
                                 }
                             else //it's NULL, no sample yet, insert the first record for this pair
@@ -10369,7 +10369,7 @@ int MySqlAPI::getStreamsOptimization(const std::string & source_hostname, const 
     try
         {
             sql << " SELECT count(*) from t_optimize_streams where source_se=:source_se "
-	    	   " and dest_se=:dest_se and tested = 1 and throughput is not NULL  and throughput > 0",
+                " and dest_se=:dest_se and tested = 1 and throughput is not NULL  and throughput > 0",
                 soci::use(source_hostname), soci::use(destination_hostname), soci::into(allTested);
 
             if(sql.got_data())
@@ -10380,7 +10380,7 @@ int MySqlAPI::getStreamsOptimization(const std::string & source_hostname, const 
                                 soci::use(source_hostname), soci::use(destination_hostname), soci::into(optimumNoStreams, isNullOptimumStreamsFound);
 
                             if(sql.got_data())
-                                {                                   
+                                {
                                     return (int) optimumNoStreams;
                                 }
                             else
@@ -10388,17 +10388,17 @@ int MySqlAPI::getStreamsOptimization(const std::string & source_hostname, const 
                                     return defaultStreams;
                                 }
                         }
-                    else 
+                    else
                         {
-            		    sql << " SELECT max(nostreams) from t_optimize_streams where source_se=:source_se and dest_se=:dest_se ",
-                			soci::use(source_hostname), soci::use(destination_hostname), soci::into(maxNoStreams, isNullMaxStreamsFound);
-					
+                            sql << " SELECT max(nostreams) from t_optimize_streams where source_se=:source_se and dest_se=:dest_se ",
+                                soci::use(source_hostname), soci::use(destination_hostname), soci::into(maxNoStreams, isNullMaxStreamsFound);
+
                             sql.begin();
                             sql << "update IGNORE t_optimize_streams set tested = 1, datetime = UTC_TIMESTAMP() where source_se=:source and dest_se=:dest and tested = 0 and nostreams = :nostreams",
                                 soci::use(source_hostname), soci::use(destination_hostname), soci::use(maxNoStreams);
                             sql.commit();
                             return (int) maxNoStreams;
-                        }                    
+                        }
                 }
             else  //it's NULL, no info yet stored, use default 1
                 {
@@ -12366,15 +12366,15 @@ void MySqlAPI::setCloudStorageCredential(std::string const & dn, std::string con
                 {
                     // first make sure that the corresponding object in t_cloudStorage exists
                     sql <<
-                            " INSERT INTO t_cloudStorage (cloudStorage_name) "
-                            " SELECT * FROM (SELECT :storage) AS tmp "
-                            " WHERE NOT EXISTS ( "
-                            "   SELECT NULL FROM t_cloudStorage WHERE cloudStorage_name = :storage "
-                            " ) "
-                            " LIMIT 1",
-                            soci::use(storage),
-                            soci::use(storage)
-                            ;
+                        " INSERT INTO t_cloudStorage (cloudStorage_name) "
+                        " SELECT * FROM (SELECT :storage) AS tmp "
+                        " WHERE NOT EXISTS ( "
+                        "   SELECT NULL FROM t_cloudStorage WHERE cloudStorage_name = :storage "
+                        " ) "
+                        " LIMIT 1",
+                        soci::use(storage),
+                        soci::use(storage)
+                        ;
                     // then add the record
                     sql <<
                         "INSERT INTO t_cloudStorageUser (user_dn, vo_name, cloudStorage_name, access_token, access_token_secret) "
@@ -12411,18 +12411,18 @@ void MySqlAPI::setCloudStorage(std::string const & storage, std::string const & 
             sql.begin();
 
             sql <<
-                    " INSERT INTO t_cloudStorage (cloudStorage_name, app_key, app_secret, service_api_url) "
-                    " VALUES (:storage, :appKey, :appSecret, :apiUrl) "
-                    " ON DUPLICATE KEY UPDATE "
-                    " app_key = :appKey, app_secret = :appSecret, service_api_url = :apiUrl",
-                    soci::use(storage),
-                    soci::use(appKey),
-                    soci::use(appSecret),
-                    soci::use(apiUrl),
-                    soci::use(appKey),
-                    soci::use(appSecret),
-                    soci::use(apiUrl)
-                    ;
+                " INSERT INTO t_cloudStorage (cloudStorage_name, app_key, app_secret, service_api_url) "
+                " VALUES (:storage, :appKey, :appSecret, :apiUrl) "
+                " ON DUPLICATE KEY UPDATE "
+                " app_key = :appKey, app_secret = :appSecret, service_api_url = :apiUrl",
+                soci::use(storage),
+                soci::use(appKey),
+                soci::use(appSecret),
+                soci::use(apiUrl),
+                soci::use(appKey),
+                soci::use(appSecret),
+                soci::use(apiUrl)
+                ;
 
             sql.commit();
         }

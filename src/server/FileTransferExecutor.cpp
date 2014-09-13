@@ -88,59 +88,6 @@ void FileTransferExecutor::run(boost::any & ctx)
             ConfigurationAssigner cfgAssigner(tf);
             cfgAssigner.assign(cfgs);
 
-            SeProtocolConfig protocol;
-
-            int BufSize = 0;
-            int StreamsperFile = 0;
-            int Timeout = 0;
-            bool StrictCopy = false;
-            bool manualProtocol = false;
-
-            bool manualConfigExists = false;
-            int level = 1;
-
-            optional<ProtocolResolver::protocol> p = ProtocolResolver::getUserDefinedProtocol(tf);
-
-            if (p.is_initialized())
-                {
-                    BufSize = (*p).tcp_buffer_size;
-                    StreamsperFile = (*p).nostreams;
-                    Timeout = (*p).urlcopy_tx_to;
-                    StrictCopy = (*p).strict_copy;
-                    manualProtocol = true;
-                }
-            else
-                {
-                    level = db->getBufferOptimization();
-                    if(level == 2)
-                        {
-                            StreamsperFile = db->getStreamsOptimization(source_hostname, destin_hostname);
-                            if(StreamsperFile == 0)
-                                StreamsperFile = DEFAULT_NOSTREAMS;
-                        }
-                    else
-                        {
-                            StreamsperFile = DEFAULT_NOSTREAMS;
-                        }
-                    Timeout = db->getGlobalTimeout();
-                    if(Timeout == 0)
-		    {
-                        Timeout = DEFAULT_TIMEOUT;
-		    }
-                    else
-		    {
-                        params.append(" -Z ");
-			params.append(lexical_cast<string >(Timeout));
-		    }
-
-                    int secPerMB = db->getSecPerMb();
-                    if(secPerMB > 0)
-                        {
-                            params.append(" -V ");
-                            params.append(lexical_cast<string >(secPerMB));
-                        }
-                }
-
             FileTransferScheduler scheduler(
                 tf,
                 cfgs,
@@ -153,6 +100,60 @@ void FileTransferExecutor::run(boost::any & ctx)
             int currentActive = 0;
             if (scheduler.schedule(currentActive))   /*SET TO READY STATE WHEN TRUE*/
                 {
+                    SeProtocolConfig protocol;
+
+                    int BufSize = 0;
+                    int StreamsperFile = 0;
+                    int Timeout = 0;
+                    bool StrictCopy = false;
+                    bool manualProtocol = false;
+
+                    bool manualConfigExists = false;
+                    int level = 1;
+
+                    optional<ProtocolResolver::protocol> p = ProtocolResolver::getUserDefinedProtocol(tf);
+
+                    if (p.is_initialized())
+                        {
+                            BufSize = (*p).tcp_buffer_size;
+                            StreamsperFile = (*p).nostreams;
+                            Timeout = (*p).urlcopy_tx_to;
+                            StrictCopy = (*p).strict_copy;
+                            manualProtocol = true;
+                        }
+                    else
+                        {
+                            level = db->getBufferOptimization();
+                            if(level == 2)
+                                {
+                                    StreamsperFile = db->getStreamsOptimization(source_hostname, destin_hostname);
+                                    if(StreamsperFile == 0)
+                                        StreamsperFile = DEFAULT_NOSTREAMS;
+                                }
+                            else
+                                {
+                                    StreamsperFile = DEFAULT_NOSTREAMS;
+                                }
+
+                            Timeout = db->getGlobalTimeout();
+                            if(Timeout == 0)
+                                {
+                                    Timeout = DEFAULT_TIMEOUT;
+                                }
+                            else
+                                {
+                                    params.append(" -Z ");
+                                    params.append(lexical_cast<string >(Timeout));
+                                }
+
+                            int secPerMB = db->getSecPerMb();
+                            if(secPerMB > 0)
+                                {
+                                    params.append(" -V ");
+                                    params.append(lexical_cast<string >(secPerMB));
+                                }
+                        }
+
                     scheduled += 1;
 
                     //send SUBMITTED message
