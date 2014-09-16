@@ -184,14 +184,15 @@ def get_overview(http_request):
                     # Throughput
                     if triplet.get('active') > 0:
                         cursor.execute(
-                            "SELECT SUM(throughput) FROM t_file "
+                            "SELECT AVG(throughput) FROM t_file "
                             "WHERE source_se = %s AND dest_se=%s "
-                            "      AND vo_name=%s AND file_state='ACTIVE' AND throughput > 0",
-                            [source, dest, vo]
+                            "      AND vo_name=%s AND file_state='FINISHED' AND throughput > 0"
+                            "      AND job_finished > %s",
+                            [source, dest, vo, not_before]
                         )
-                        thr = cursor.fetchall()
-                        if len(thr) and thr[0][0]:
-                            triplet['current'] = thr[0][0]
+                        avg_thr = cursor.fetchall()
+                        if len(avg_thr) and avg_thr[0][0]:
+                            triplet['current'] = avg_thr[0][0] * triplet.get('active')
 
                     triplets[triplet_key] = triplet
 
