@@ -9,7 +9,8 @@
 #define BRINGONLINETASK_H_
 
 
-#include "StagingTask.h"
+#include "Gfal2Task.h"
+#include "context/StagingContext.h"
 
 #include "common/definitions.h"
 
@@ -31,20 +32,8 @@
  *
  * @see StagingTask
  */
-class BringOnlineTask : public StagingTask
+class BringOnlineTask : public Gfal2Task
 {
-
-    // typedefs for convenience
-    // vo, dn ,se, source_space_token
-    typedef std::tuple<std::string, std::string, std::string, std::string> key_type;
-
-    enum
-    {
-        vo,
-        dn,
-        se,
-        space_token
-    };
 
 public:
 
@@ -53,14 +42,20 @@ public:
      *
      * @param ctx : bring-online task details
      */
-    BringOnlineTask(StagingContext const & ctx): StagingTask(ctx) {}
+    BringOnlineTask(StagingContext const & ctx) : Gfal2Task("BRINGONLINE"), ctx(ctx)
+    {
+        // set up the space token
+        setSpaceToken(ctx.getSpaceToken());
+        // set the proxy certificate
+        setProxy(ctx);
+    }
 
     /**
      * Creates a new BringOnlineTask from another StagingTask
      *
      * @param copy : a staging task (stills the gfal2 context of this object)
      */
-    BringOnlineTask(StagingTask & copy) : StagingTask(copy) {}
+    BringOnlineTask(BringOnlineTask & copy) : Gfal2Task(copy), ctx(copy.ctx) {}
 
     /**
      * Destructor
@@ -71,6 +66,11 @@ public:
      * The routine is executed by the thread pool
      */
     virtual void run(boost::any const &);
+
+protected:
+
+    /// staging details
+    StagingContext ctx;
 };
 
 

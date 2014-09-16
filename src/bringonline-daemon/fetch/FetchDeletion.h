@@ -9,7 +9,7 @@
 #define FETCHDELETION_H_
 
 #include "common/ThreadPool.h"
-#include "Gfal2Task.h"
+#include "task/Gfal2Task.h"
 
 #include "cred/DelegCred.h"
 

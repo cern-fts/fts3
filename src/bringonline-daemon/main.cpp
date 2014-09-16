@@ -21,10 +21,10 @@ limitations under the License. */
 #include "config/serverconfig.h"
 #include "server.h"
 
-#include "Gfal2Task.h"
-#include "FetchStaging.h"
-#include "FetchCancelStaging.h"
-#include "FetchDeletion.h"
+#include "task/Gfal2Task.h"
+#include "fetch/FetchStaging.h"
+#include "fetch/FetchCancelStaging.h"
+#include "fetch/FetchDeletion.h"
 #include "StagingStateUpdater.h"
 
 #include <string>

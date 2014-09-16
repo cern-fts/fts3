@@ -26,8 +26,7 @@ include_directories (${GLIB2_INCLUDE_DIRS})
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-#set(fts_bringonline_SOURCES main.cpp BringOnlineTask.cpp PollTask.cpp StagingTask.cpp WaitingRoom.cpp)
-file(GLOB fts_bringonline_SOURCES "*.cpp")
+file(GLOB fts_bringonline_SOURCES "*.cpp" "task/*.cpp" "context/*.cpp" "fetch/*.cpp")
 
 add_executable(fts_bringonline ${fts_bringonline_SOURCES})
 add_dependencies(fts_bringonline fts_config)

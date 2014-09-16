@@ -11,7 +11,7 @@
 
 #include "Gfal2Task.h"
 
-#include "DeletionContext.h"
+#include "context/DeletionContext.h"
 
 #include "common/definitions.h"
 
@@ -29,17 +29,6 @@
 class DeletionTask : public Gfal2Task
 {
 
-    // typedefs for convenience
-    // vo, dn ,se, source_space_token
-    typedef std::tuple<std::string, std::string, std::string> key_type;
-
-    enum
-    {
-        vo,
-        dn,
-        se
-    };
-
 public:
 
     /**
@@ -47,14 +36,14 @@ public:
      *
      * @param ctx : deletion task details
      */
-    DeletionTask(std::pair<key_type, DeletionContext> const & ctx);
+    DeletionTask(DeletionContext const & ctx);
 
     /**
      * Creates a new DeletionTask from another Gfal2Task
      *
      * @param copy : a gfal2 task
      */
-    DeletionTask(Gfal2Task & copy) : Gfal2Task(copy) {}
+    DeletionTask(DeletionTask & copy) : Gfal2Task(copy), ctx(copy.ctx) {}
 
     /**
      * Destructor
@@ -68,11 +57,7 @@ public:
 
 private:
 
-    /**
-     * sets the proxy
-     */
-    void setProxy();
-    /// staging details
+    /// deletion details
     DeletionContext const ctx;
 
 };

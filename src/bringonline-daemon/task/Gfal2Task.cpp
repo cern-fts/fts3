@@ -1,16 +1,55 @@
 /*
- * StagingTask.cpp
+ * Gfal2Task.cpp
  *
- *  Created on: 25 Jun 2014
+ *  Created on: 7 Jul 2014
  *      Author: simonm
  */
 
-#include "StagingTask.h"
+#include "Gfal2Task.h"
 
-#include "common/error.h"
+#include "context/JobContext.h"
+
+std::string Gfal2Task::infosys;
 
 
-bool StagingTask::retryTransfer(int errorNo, const std::string& category, const std::string& message)
+void Gfal2Task::setProxy(JobContext const & ctx)
+{
+    GError *error = NULL;
+
+    //before any operation, check if the proxy is valid
+    std::string message;
+    bool isValid = ctx.checkValidProxy(message);
+    if(!isValid)
+        {
+//            state_update(ctx.jobs, "FAILED", message, false);
+            ctx.state_update("FAILED", message, false);
+            std::stringstream ss;
+            ss << gfal2_ctx.operation << " proxy certificate not valid: " << message;
+            throw Err_Custom(ss.str());
+        }
+
+    char* cert = const_cast<char*>(ctx.getProxy().c_str());
+
+    int status = gfal2_set_opt_string(gfal2_ctx, "X509", "CERT", cert, &error);
+    if (status < 0)
+        {
+            ctx.state_update("FAILED", error->message, false);
+            std::stringstream ss;
+            ss << gfal2_ctx.operation << " setting X509 CERT failed " << error->code << " " << error->message;
+            throw Err_Custom(ss.str());
+        }
+
+    status = gfal2_set_opt_string(gfal2_ctx, "X509", "KEY", cert, &error);
+    if (status < 0)
+        {
+            ctx.state_update("FAILED", error->message, false);
+            std::stringstream ss;
+            ss << gfal2_ctx.operation << " setting X509 KEY failed " << error->code << " " << error->message;
+            throw Err_Custom(ss.str());
+        }
+}
+
+bool Gfal2Task::doRetry(int errorNo, const std::string& category, const std::string& message)
 {
     bool retry = true;
 
@@ -96,38 +135,19 @@ bool StagingTask::retryTransfer(int errorNo, const std::string& category, const 
     return retry;
 }
 
-void StagingTask::setProxy()
+void Gfal2Task::setSpaceToken(std::string const & spaceToken)
 {
+    // set up the gfal2 context
     GError *error = NULL;
 
-    //before any operation, check if the proxy is valid
-    std::string message;
-    bool isValid = StagingContext::checkValidProxy(ctx.proxy, message);
-    if(!isValid)
+    if (!spaceToken.empty())
         {
-            state_update(ctx.jobs, "FAILED", message, false);
-            std::stringstream ss;
-            ss << "BRINGONLINE proxy certificate not valid: " << message;
-            throw Err_Custom(ss.str());
-        }
-
-    char* cert = const_cast<char*>(ctx.proxy.c_str());
-
-    int status = gfal2_set_opt_string(gfal2_ctx, "X509", "CERT", cert, &error);
-    if (status < 0)
-        {
-            state_update(ctx.jobs, "FAILED", error->message, false);
-            std::stringstream ss;
-            ss << "BRINGONLINE setting X509 CERT failed " << error->code << " " << error->message;
-            throw Err_Custom(ss.str());
-        }
-
-    status = gfal2_set_opt_string(gfal2_ctx, "X509", "KEY", cert, &error);
-    if (status < 0)
-        {
-            state_update(ctx.jobs, "FAILED", error->message, false);
-            std::stringstream ss;
-            ss << "BRINGONLINE setting X509 KEY failed " << error->code << " " << error->message;
-            throw Err_Custom(ss.str());
+            gfal2_set_opt_string(gfal2_ctx, "SRM PLUGIN", "SPACETOKENDESC", (char *) spaceToken.c_str(), &error);
+            if (error)
+                {
+                    std::stringstream ss;
+                    ss << gfal2_ctx.operation << " could not set the destination space token " << error->code << " " << error->message;
+                    throw Err_Custom(ss.str());
+                }
         }
 }

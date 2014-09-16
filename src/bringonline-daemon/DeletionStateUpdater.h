@@ -1,14 +1,9 @@
 /*
- * StagingStateUpdater.h
+ * DeletionStateUpdater.h
  *
- *  Created on: 30 Jun 2014
+ *  Created on: 15 Sep 2014
  *      Author: simonm
  */
-
-#ifndef STAGINGSTATEUPDATER_H_
-#define STAGINGSTATEUPDATER_H_
-
-#include "context/StagingContext.h"
 
 #include "db/generic/SingleDbInstance.h"
 
@@ -24,20 +19,21 @@ using namespace FTS3_COMMON_NAMESPACE;
 
 extern bool stopThreads;
 
+#ifndef DELETIONSTATEUPDATER_H_
+#define DELETIONSTATEUPDATER_H_
+
 /**
  * A utility for carrying out asynchronous state updates,
  * which are accumulated and than send to DB at the same time
  */
-class StagingStateUpdater
+class DeletionStateUpdater
 {
+
 public:
 
-    /**
-     * @retrun : reference to the singleton instance
-     */
-    static StagingStateUpdater & instance()
+    static DeletionStateUpdater & instance()
     {
-        static StagingStateUpdater instance;
+        static DeletionStateUpdater instance;
         return instance;
     }
 
@@ -69,22 +65,6 @@ public:
             }
     }
 
-    void operator()(std::map< std::string, std::vector<int> > const & jobs, std::string const & token)
-    {
-        try
-            {
-                db.updateBringOnlineToken(jobs, token);
-            }
-        catch(std::exception& ex)
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
-            }
-        catch(...)
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception while updating the bring-online token!" << commit;
-            }
-    }
-
     void recover()
     {
         std::vector<value_type> tmp;
@@ -97,24 +77,24 @@ public:
         recover(tmp);
     }
 
-    /// Destructor
-    virtual ~StagingStateUpdater() {}
+    virtual ~DeletionStateUpdater() {}
 
 private:
+
     // typedef for convenience
     typedef boost::tuple<int, std::string, std::string, std::string, bool> value_type;
 
     /// Default constructor
-    StagingStateUpdater() : t(run), db(*db::DBSingleton::instance().getDBObjectInstance()) {}
+    DeletionStateUpdater() : t(run), db(*db::DBSingleton::instance().getDBObjectInstance()) {}
     /// Copy constructor (not implemented)
-    StagingStateUpdater(StagingStateUpdater const &);
+    DeletionStateUpdater(DeletionStateUpdater const &);
     /// Assignment operator (not implemented)
-    StagingStateUpdater & operator=(StagingStateUpdater const &);
+    DeletionStateUpdater & operator=(DeletionStateUpdater const &);
 
     /// this rutine is executed in a separate thread
     static void run()
     {
-        StagingStateUpdater & me = instance();
+        DeletionStateUpdater & me = instance();
         // temporary vector for DB update
         std::vector<value_type> tmp;
 
@@ -136,7 +116,7 @@ private:
                         }
 
                         // run the DB query
-                        me.db.updateStagingState(tmp);
+                        me.db.updateDeletionsState(tmp);
                     }
                 catch(std::exception& ex)
                     {
@@ -173,9 +153,10 @@ private:
                 msg.transfer_message[sizeof(msg.transfer_message) -1] = '\0';
 
                 //store the states into fs to be restored in the next run
-                runProducerStaging(msg);
+                runProducerDeletions(msg);
             }
     }
+
 
     /// the worker thread
     boost::thread t;
@@ -187,4 +168,4 @@ private:
     GenericDbIfce& db;
 };
 
-#endif /* STAGINGSTATEUPDATER_H_ */
+#endif /* DELETIONSTATEUPDATER_H_ */

@@ -7,9 +7,9 @@
 
 #include "FetchStaging.h"
 
-#include "BringOnlineTask.h"
-#include "PollTask.h"
-#include "WaitingRoom.h"
+#include "task/BringOnlineTask.h"
+#include "task/PollTask.h"
+#include "task/WaitingRoom.h"
 
 #include "server/DrainMode.h"
 
@@ -53,6 +53,7 @@ void FetchStaging::fetch()
                         }
 
                     std::map<key_type, StagingContext> tasks;
+                    std::map<key_type, StagingContext>::iterator it_t;
 
                     std::vector<StagingContext::context_type> files;
                     db::DBSingleton::instance().getDBObjectInstance()->getFilesForStaging(files);
@@ -71,10 +72,13 @@ void FetchStaging::fetch()
                             std::string & vo = boost::get<StagingContext::vo>(*it_f);
                             std::string& space_token = boost::get<StagingContext::src_space_token>(*it_f);
 
-                            tasks[key_type(vo, dn, se, space_token)].add(*it_f);
+                            it_t = tasks.find(key_type(vo, dn, se, space_token));
+                            if (it_t == tasks.end())
+                                tasks.insert(std::make_pair(key_type(vo, dn, se, space_token), StagingContext(*it_f)));
+                            else
+                                it_t->second.add(*it_f);
                         }
 
-                    std::map<key_type, StagingContext>::const_iterator it_t;
                     for (it_t = tasks.begin(); it_t != tasks.end(); ++it_t)
                         {
                             try
@@ -123,14 +127,17 @@ void FetchStaging::recoverStartedTasks()
         }
 
     std::map<std::string, StagingContext> tasks;
+    std::map<std::string, StagingContext>::iterator it_t;
 
     for (it_f = files.begin(); it_f != files.end(); ++it_f)
         {
             std::string const & token = boost::get<9>(*it_f);
-            tasks[token].add(get_context(*it_f));
+            it_t = tasks.find(token);
+            if (it_t == tasks.end())
+                tasks.insert(std::make_pair(token, StagingContext(get_context(*it_f))));
+            else
+                it_t->second.add(get_context(*it_f));
         }
-
-    std::map<std::string, StagingContext>::const_iterator it_t;
 
     for (it_t = tasks.begin(); it_t != tasks.end(); ++it_t)
         {
