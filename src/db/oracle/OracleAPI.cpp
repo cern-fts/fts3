@@ -4006,7 +4006,7 @@ bool OracleAPI::updateOptimizer()
 
 
                             //special case to increase active when dealing with LAN transfers of there is only one single/dest pair active
-                            if( ratioSuccessFailure >= 97 && (singleDest == 1 || lanTransferBool || spawnActive > 1) && maxActive < 200)
+                            if( ratioSuccessFailure >= 97 && (singleDest == 1 || lanTransferBool || spawnActive > 1) && maxActive < 250)
                                 {
                                     if(maxActive < 8)
                                         {
@@ -4015,7 +4015,7 @@ bool OracleAPI::updateOptimizer()
                                         }
                                     else
                                         {
-                                            if(spawnActive > 1)
+                                            if(spawnActive > 1 && activeSource < maxActiveLimit && activeDestination < maxActiveLimit)
                                                 {
                                                     double percentage = activePercentageQueue(boost::lexical_cast<double>(maxActive),
                                                                         boost::lexical_cast<double>(submitted),
