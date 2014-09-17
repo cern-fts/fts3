@@ -3475,7 +3475,7 @@ int OracleAPI::getMaxActive(soci::session& sql, int level, int /*highDefault*/, 
 {
     int maxActiveSource = 0;
     int maxActiveDest = 0;
-    int maxDefault = (level == 3)? MAX_ACTIVE_PER_LINK * 2: MAX_ACTIVE_PER_LINK;
+    int maxDefault = 250;
 
     try
         {
@@ -3559,6 +3559,8 @@ bool OracleAPI::updateOptimizer()
     long long int testedThroughput = 0;
     int updateStream = 0;
     int allTested = 0;
+    int activeSource = 0;
+    int activeDestination = 0;
 
 
     try
@@ -3575,6 +3577,17 @@ bool OracleAPI::updateOptimizer()
                                            " select  distinct o.source_se, o.dest_se from t_optimize_active o INNER JOIN "
                                            " t_file f ON (o.source_se = f.source_se) where o.dest_se=f.dest_se and "
                                            " f.file_state in ('ACTIVE','SUBMITTED') and f.job_finished is NULL ");
+
+            soci::statement stmtActiveSource = (
+                                                   sql.prepare << "SELECT count(*) FROM t_file "
+                                                   "WHERE source_se = :source and file_state = 'ACTIVE' and job_finished is null ",
+                                                   soci::use(source_hostname), soci::into(activeSource));
+
+            soci::statement stmtActiveDest = (
+                                                 sql.prepare << "SELECT count(*) FROM t_file "
+                                                 "WHERE dest_se = :dest_se and file_state = 'ACTIVE' and job_finished is null ",
+                                                 soci::use(destin_hostname), soci::into(activeDestination));
+
 
             //is the number of actives fixed?
             soci::statement stmt_fixed = (
@@ -3725,6 +3738,8 @@ bool OracleAPI::updateOptimizer()
                     struct tm datetimeStreams;
                     soci::indicator isNullStreamsdatetimeStreams = soci::i_ok;
                     allTested = 0;
+                    activeSource = 0;
+                    activeDestination = 0;
 
                     // Weighted average
                     soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
@@ -3968,16 +3983,30 @@ bool OracleAPI::updateOptimizer()
                     //ratioSuccessFailure, rateStored, throughput, thrStored MUST never be zero
                     if(changed)
                         {
-                            sql.begin();
-
                             int pathFollowed = 0;
                             int tempActive = active; //temp store current active
 
-                            //make sure we do not increase beyond limits set
+                            //get current active for this source
+                            stmtActiveSource.execute(true);
+
+                            //get current active for this destination
+                            stmtActiveDest.execute(true);
+
+                            //make sure we do not increase beyond the limits set
                             int maxActiveLimit = getMaxActive(sql, spawnActive, highDefault, source_hostname, destin_hostname);
 
+                            if( (activeSource > maxActiveLimit || activeDestination > maxActiveLimit) && active > highDefault)
+                                {
+                                    updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, 11, bandwidthIn);
+
+                                    continue;
+                                }
+
+                            sql.begin();
+
+
                             //special case to increase active when dealing with LAN transfers of there is only one single/dest pair active
-                            if( ratioSuccessFailure >= 96 && (singleDest == 1 || lanTransferBool || spawnActive > 1) && maxActive < maxActiveLimit)
+                            if( ratioSuccessFailure >= 97 && (singleDest == 1 || lanTransferBool || spawnActive > 1) && maxActive < 200)
                                 {
                                     if(maxActive < 8)
                                         {
@@ -4003,74 +4032,56 @@ bool OracleAPI::updateOptimizer()
 
                             if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure >= 98)) && (throughputEMA > thrStored || throughputEMA > 35) && retry <= retryStored)
                                 {
-                                    if(maxActive > maxActiveLimit) // apply limit
+
+                                    if(singleDest == 1 || lanTransferBool)
                                         {
-                                            active = maxActiveLimit;
-                                            pathFollowed = 11;
-                                            ema = throughputEMA;
-                                            stmt10.execute(true);
+                                            active = maxActive + 1;
                                         }
                                     else
                                         {
-                                            if(singleDest == 1 || lanTransferBool)
-                                                {
-                                                    active = maxActive + 1;
-                                                }
-                                            else
-                                                {
-                                                    active = maxActive + 1;
-                                                }
+                                            active = maxActive + 1;
+                                        }
 
+                                    if(active > (tempActive + 7))
+                                        {
+                                            active = maxActive;
+                                        }
+
+                                    pathFollowed = 1;
+                                    ema = throughputEMA;
+                                    stmt10.execute(true);
+                                }
+                            else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure >= 97)) && throughputEMA == thrStored && retry <= retryStored)
+                                {
+
+                                    if(throughputSamples == 10) // spawn one every 10min
+                                        {
+                                            active = maxActive + 1;
                                             if(active > (tempActive + 7))
                                                 {
                                                     active = maxActive;
                                                 }
-
-                                            pathFollowed = 1;
                                             ema = throughputEMA;
+                                            pathFollowed = 2;
                                             stmt10.execute(true);
                                         }
-                                }
-                            else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure >= 97)) && throughputEMA == thrStored && retry <= retryStored)
-                                {
-                                    if(maxActive > maxActiveLimit) // apply limit
+                                    else if(throughputSamples == 8 && (singleDest == 1 || lanTransferBool))
                                         {
-                                            active = maxActiveLimit;
+                                            active = maxActive + 1;
+                                            if(active > (tempActive + 7))
+                                                {
+                                                    active = maxActive;
+                                                }
                                             ema = throughputEMA;
-                                            pathFollowed = 11;
+                                            pathFollowed = 2;
                                             stmt10.execute(true);
                                         }
                                     else
                                         {
-                                            if(throughputSamples == 10) // spawn one every 10min
-                                                {
-                                                    active = maxActive + 1;
-                                                    if(active > (tempActive + 7))
-                                                        {
-                                                            active = maxActive;
-                                                        }
-                                                    ema = throughputEMA;
-                                                    pathFollowed = 2;
-                                                    stmt10.execute(true);
-                                                }
-                                            else if(throughputSamples == 8 && (singleDest == 1 || lanTransferBool))
-                                                {
-                                                    active = maxActive + 1;
-                                                    if(active > (tempActive + 7))
-                                                        {
-                                                            active = maxActive;
-                                                        }
-                                                    ema = throughputEMA;
-                                                    pathFollowed = 2;
-                                                    stmt10.execute(true);
-                                                }
-                                            else
-                                                {
-                                                    active = maxActive;
-                                                    ema = throughputEMA;
-                                                    pathFollowed = 2;
-                                                    stmt10.execute(true);
-                                                }
+                                            active = maxActive;
+                                            ema = throughputEMA;
+                                            pathFollowed = 2;
+                                            stmt10.execute(true);
                                         }
                                 }
                             else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 97)) && throughputEMA < thrStored)
