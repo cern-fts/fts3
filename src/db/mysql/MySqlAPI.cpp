@@ -4330,7 +4330,7 @@ bool MySqlAPI::updateOptimizer()
                             sql.begin();
 
                             //special case to increase active when dealing with LAN transfers of there is only one single/dest pair active
-                            if( ratioSuccessFailure >= 97 && (singleDest == 1 || lanTransferBool || spawnActive > 1))
+                            if( ratioSuccessFailure >= 97 && (singleDest == 1 || lanTransferBool || spawnActive > 1) && maxActive < 200)
                                 {
                                     if(maxActive < 8)
                                         {
