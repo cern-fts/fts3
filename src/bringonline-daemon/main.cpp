@@ -25,7 +25,8 @@ limitations under the License. */
 #include "fetch/FetchStaging.h"
 #include "fetch/FetchCancelStaging.h"
 #include "fetch/FetchDeletion.h"
-#include "StagingStateUpdater.h"
+#include "state/StagingStateUpdater.h"
+#include "state/DeletionStateUpdater.h"
 
 #include <string>
 
@@ -62,6 +63,8 @@ int fts3_teardown_db_backend()
 void shutdown_callback(int signal, void*)
 {
     StagingStateUpdater::instance().recover();
+    DeletionStateUpdater::instance().recover();
+
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Caught signal " << signal
                                     << " (" << strsignal(signal) << ")" << commit;
@@ -272,6 +275,7 @@ __attribute__((constructor)) void begin(void)
     setuid(pw_uid);
     seteuid(pw_uid);
 }
+
 int main(int argc, char** argv)
 {
     if (fexists(hostcert) != 0)

@@ -9,7 +9,7 @@
 #define DELETIONCONTEXT_H_
 
 #include "JobContext.h"
-#include "DeletionStateUpdater.h"
+#include "state/DeletionStateUpdater.h"
 
 #include "cred/DelegCred.h"
 

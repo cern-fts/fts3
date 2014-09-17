@@ -1,14 +1,12 @@
 /*
- * StagingStateUpdater.h
+ * StateUpdater.h
  *
- *  Created on: 30 Jun 2014
+ *  Created on: 17 Sep 2014
  *      Author: simonm
  */
 
-#ifndef STAGINGSTATEUPDATER_H_
-#define STAGINGSTATEUPDATER_H_
-
-#include "context/StagingContext.h"
+#ifndef STATEUPDATER_H_
+#define STATEUPDATER_H_
 
 #include "db/generic/SingleDbInstance.h"
 
@@ -25,21 +23,22 @@ using namespace FTS3_COMMON_NAMESPACE;
 extern bool stopThreads;
 
 /**
- * A utility for carrying out asynchronous state updates,
+ * A base class for carrying out asynchronous state updates,
  * which are accumulated and than send to DB at the same time
  */
-class StagingStateUpdater
+class StateUpdater
 {
+
+protected:
+    // typedef for convenience
+    typedef boost::tuple<int, std::string, std::string, std::string, bool> value_type;
+    // pointer to GenericDbIfce member that updates state
+    typedef void (GenericDbIfce::* update_state_t)(std::vector<value_type> &);
+
 public:
 
-    /**
-     * @retrun : reference to the singleton instance
-     */
-    static StagingStateUpdater & instance()
-    {
-        static StagingStateUpdater instance;
-        return instance;
-    }
+    /// Constructor
+    StateUpdater() : db(*db::DBSingleton::instance().getDBObjectInstance()) {}
 
     /**
      * Functional call for making an asynchronous state update
@@ -69,22 +68,9 @@ public:
             }
     }
 
-    void operator()(std::map< std::string, std::vector<int> > const & jobs, std::string const & token)
-    {
-        try
-            {
-                db.updateBringOnlineToken(jobs, token);
-            }
-        catch(std::exception& ex)
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
-            }
-        catch(...)
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception while updating the bring-online token!" << commit;
-            }
-    }
-
+    /**
+     *
+     */
     void recover()
     {
         std::vector<value_type> tmp;
@@ -98,23 +84,13 @@ public:
     }
 
     /// Destructor
-    virtual ~StagingStateUpdater() {}
+    virtual ~StateUpdater() { }
 
-private:
-    // typedef for convenience
-    typedef boost::tuple<int, std::string, std::string, std::string, bool> value_type;
+protected:
 
-    /// Default constructor
-    StagingStateUpdater() : t(run), db(*db::DBSingleton::instance().getDBObjectInstance()) {}
-    /// Copy constructor (not implemented)
-    StagingStateUpdater(StagingStateUpdater const &);
-    /// Assignment operator (not implemented)
-    StagingStateUpdater & operator=(StagingStateUpdater const &);
-
-    /// this rutine is executed in a separate thread
-    static void run()
+    /// this routine is executed in a separate thread
+    void run_impl(update_state_t update_state)
     {
-        StagingStateUpdater & me = instance();
         // temporary vector for DB update
         std::vector<value_type> tmp;
 
@@ -128,30 +104,33 @@ private:
                         // critical section
                         {
                             // lock the vector
-                            boost::mutex::scoped_lock lock(me.m);
+                            boost::mutex::scoped_lock lock(m);
                             // if the vector is empty there is nothing to do
-                            if (me.updates.empty()) continue;
+                            if (updates.empty()) continue;
                             // swap the vectors in order to quickly release the lock
-                            me.updates.swap(tmp);
+                            updates.swap(tmp);
                         }
 
                         // run the DB query
-                        me.db.updateStagingState(tmp);
+                        (db.*update_state)(tmp);
                     }
                 catch(std::exception& ex)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
-                        me.recover(tmp);
+                        recover(tmp);
                     }
                 catch(...) //use catch-all, the state must be recovered no matter what
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Something went really bad, trying to recover!" << commit;
-                        me.recover(tmp);
+                        recover(tmp);
                     }
                 tmp.clear();
             }
     }
 
+    /**
+     *
+     */
     void recover(std::vector<value_type> const & recover)
     {
         message_bringonline msg;
@@ -177,8 +156,6 @@ private:
             }
     }
 
-    /// the worker thread
-    boost::thread t;
     /// a vector containing all the updates (to be send to DB)
     std::vector<value_type> updates;
     /// the mutex guarding the above vector
@@ -187,4 +164,4 @@ private:
     GenericDbIfce& db;
 };
 
-#endif /* STAGINGSTATEUPDATER_H_ */
+#endif /* STATEUPDATER_H_ */
