@@ -27,9 +27,9 @@ void DeletionTask::run(boost::any const &)
     if (status < 0)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "DELETION FAILED "
-                    << ctx.getLogMsg() << " "
-                    << error->code << " "
-                    << error->message  << commit;
+                                           << ctx.getLogMsg() << " "
+                                           << error->code << " "
+                                           << error->message  << commit;
 
             bool retry = doRetry(error->code, "SOURCE", std::string(error->message));
             ctx.state_update("FAILED", error->message, retry);
@@ -38,7 +38,7 @@ void DeletionTask::run(boost::any const &)
     else
         {
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DELETION FINISHED "
-                    << ctx.getLogMsg() <<  commit;
+                                            << ctx.getLogMsg() <<  commit;
             // No need to poll in this case!
             ctx.state_update("FINISHED", "", false);
         }
