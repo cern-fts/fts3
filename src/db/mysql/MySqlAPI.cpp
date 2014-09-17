@@ -2870,7 +2870,7 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
                                                 sql.prepare << "UPDATE t_job SET "
                                                 "    job_state = :state, job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
                                                 "    reason = :reason "
-                                                "WHERE job_id = :jobId  ",
+                                                "WHERE job_id = :jobId and job_state NOT IN ('FAILED','FINISHEDDIRTY','CANCELED','FINISHED')  ",
                                                 soci::use(state, "state"), soci::use(reason, "reason"),
                                                 soci::use(job_id, "jobId"));
                     stmt6.execute(true);
@@ -2889,7 +2889,7 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
                             soci::statement stmt8 = (
                                                         sql.prepare << "UPDATE t_job "
                                                         "SET job_state = :state "
-                                                        "WHERE job_id = :jobId ",
+                                                        "WHERE job_id = :jobId AND job_state NOT IN ('FINISHEDDIRTY','CANCELED','FINISHED','FAILED') ",
                                                         soci::use(status, "state"), soci::use(job_id, "jobId"));
                             stmt8.execute(true);
 
