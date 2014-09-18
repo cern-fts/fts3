@@ -47,7 +47,8 @@ public:
     PollTask(StagingContext const & ctx, std::string const & token) : BringOnlineTask(ctx), token(token), nPolls(0), wait_until(0)
     {
         boost::unique_lock<boost::shared_mutex> lock(mx);
-        active_tokens[token].insert(ctx.getSurls().begin(), ctx.getSurls().end());
+        std::set<std::string> surls = ctx.getSurls();
+        active_tokens[token].insert(surls.begin(), surls.end());
     }
 
     /**
@@ -58,7 +59,8 @@ public:
     PollTask(BringOnlineTask & copy, std::string const & token) : BringOnlineTask(copy), token(token), nPolls(0), wait_until()
     {
         boost::unique_lock<boost::shared_mutex> lock(mx);
-        active_tokens[token].insert(ctx.getSurls().begin(), ctx.getSurls().end());
+        std::set<std::string> surls = ctx.getSurls();
+        active_tokens[token].insert(surls.begin(), surls.end());
     }
 
     /**

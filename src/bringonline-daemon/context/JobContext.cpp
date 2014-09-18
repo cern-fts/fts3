@@ -25,8 +25,7 @@ JobContext::JobContext(std::string const & dn, std::string const & vo, std::stri
 
 void JobContext::add(std::string const & surl, std::string const & jobId, int fileId)
 {
-    surls.insert(surl);
-    jobs[jobId].push_back(fileId);
+    jobs[jobId].push_back(std::make_pair(fileId, surl));
 }
 
 std::string JobContext::generateProxy(std::string const & dn, std::string const & delegationId)
@@ -45,12 +44,16 @@ bool JobContext::checkValidProxy(std::string& message) const
 std::vector<char const *> JobContext::getUrls() const
 {
     std::vector<char const *> ret;
-    ret.reserve(surls.size());
 
-    std::set<std::string>::const_iterator it;
-    for (it = surls.begin(); it != surls.end(); ++it)
+    std::map< std::string, std::vector<std::pair<int, std::string> > >::const_iterator it_j;
+    std::vector<std::pair<int, std::string> >::const_iterator it_f;
+
+    for (it_j = jobs.begin(); it_j != jobs.end(); ++it_j)
         {
-            ret.push_back(it->c_str());
+            for (it_f = it_j->second.begin(); it_f != it_j->second.end(); ++it_f)
+                {
+                    ret.push_back(it_f->second.c_str());
+                }
         }
 
     return ret;
@@ -60,8 +63,8 @@ std::string JobContext::getLogMsg() const
 {
     std::stringstream ss;
 
-    std::map< std::string, std::vector<int> >::const_iterator it_j;
-    std::vector<int>::const_iterator it_f;
+    std::map< std::string, std::vector<std::pair<int, std::string> > >::const_iterator it_j;
+    std::vector< std::pair<int, std::string> >::const_iterator it_f;
 
     for (it_j = jobs.begin(); it_j != jobs.end(); ++it_j)
         {
@@ -69,12 +72,12 @@ std::string JobContext::getLogMsg() const
             it_f = it_j->second.begin();
             if (it_f == it_j->second.end()) continue;
             // create the message
-            ss << it_j->first << " (" << *it_f;
+            ss << it_j->first << " (" << it_f->first;
             ++it_f;
             // add subsequent file IDs
             for (; it_f != it_j->second.end(); ++it_f)
                 {
-                    ss << ", " << *it_f;
+                    ss << ", " << it_f->first;
                 }
             // add closing parenthesis
             ss << ") ";

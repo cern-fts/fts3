@@ -401,7 +401,7 @@ public:
     //staging						//file_id / state / reason / token
     virtual void updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files);
 
-    virtual void updateBringOnlineToken(std::map< std::string, std::vector<int> > const & jobs, std::string const & token);
+    virtual void updateBringOnlineToken(std::map< std::string, std::vector<std::pair<int, std::string> > > const & jobs, std::string const & token);
 
     //file_id / surl / proxy / pinlifetime / bringonlineTimeout
     virtual void getFilesForStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string> >& files);

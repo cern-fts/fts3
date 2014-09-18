@@ -36,7 +36,7 @@ public:
      *
      * @param jc : JobContext to be copied
      */
-    JobContext(JobContext const & jc) : surls(jc.surls), jobs(jc.jobs), proxy(jc.proxy), spaceToken(jc.spaceToken) {}
+    JobContext(JobContext const & jc) : jobs(jc.jobs), proxy(jc.proxy), spaceToken(jc.spaceToken) {}
 
     /**
      * Destructor
@@ -77,16 +77,20 @@ public:
     /**
      * @return : set of SURLs
      */
-    std::set<std::string> & getSurls()
+    std::set<std::string> getSurls() const
     {
-        return surls;
-    }
+        std::set<std::string> surls;
 
-    /**
-     * @return : set of SURLs
-     */
-    std::set<std::string> const & getSurls() const
-    {
+        std::map< std::string, std::vector<std::pair<int, std::string> > >::const_iterator it_j;
+        std::vector<std::pair<int, std::string> >::const_iterator it_f;
+        for (it_j = jobs.begin(); it_j != jobs.end(); ++it_j)
+            {
+                for (it_f = it_j->second.begin(); it_f != it_j->second.end(); ++it_f)
+                {
+                    surls.insert(it_f->second);
+                }
+            }
+
         return surls;
     }
 
@@ -120,10 +124,9 @@ private:
 
 protected:
 
-    /// set of SURLs
-    std::set<std::string> surls;
-    /// Job ID -> list of files mapping
-    std::map< std::string, std::vector<int> > jobs;
+    /// Job ID -> list of (file ID and SURL) mapping
+    std::map< std::string, std::vector<std::pair<int, std::string> > > jobs;
+
     /// proxy-certificate file name
     std::string proxy;
     /// space token

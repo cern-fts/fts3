@@ -81,9 +81,10 @@ bool PollTask::abort()
             }
         else
             {
+                std::set<std::string> surls = ctx.getSurls();
                 // otherwise check if some of the URLs should be aborted
                 std::set_difference(
-                    ctx.getSurls().begin(), ctx.getSurls().end(),
+                    surls.begin(), surls.end(),
                     it->second.begin(), it->second.end(),
                     std::inserter(remove, remove.end())
                 );

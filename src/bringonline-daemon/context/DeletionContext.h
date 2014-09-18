@@ -32,15 +32,7 @@ public:
     // vo_name, source_url, job_id, file_id, user_dn, cred_id
     typedef boost::tuple<std::string, std::string, std::string, int, std::string, std::string> context_type;
 
-    enum
-    {
-        vo_name,
-        source_url,
-        job_id,
-        file_id,
-        user_dn,
-        cred_id
-    };
+    enum {vo_name, source_url, job_id, file_id, user_dn, cred_id};
 
     DeletionContext(context_type const & ctx) :
         JobContext(boost::get<user_dn>(ctx), boost::get<vo_name>(ctx), boost::get<cred_id>(ctx))
@@ -59,6 +51,7 @@ public:
         static DeletionStateUpdater & state_update = DeletionStateUpdater::instance();
         state_update(jobs, state, reason, retry);
     }
+
 };
 
 #endif /* DELETIONCONTEXT_H_ */

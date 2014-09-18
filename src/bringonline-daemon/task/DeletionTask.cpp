@@ -19,6 +19,25 @@ DeletionTask::DeletionTask(DeletionContext const & ctx) : Gfal2Task("DELETION"),
 
 void DeletionTask::run(boost::any const &)
 {
+    run_srm();
+}
+
+void DeletionTask::run()
+{
+    GError *error = NULL;
+
+    std::vector<char const *> urls = ctx.getUrls();
+    std::vector<char const *>::const_iterator it;
+
+    int status = 0;
+    for (it = urls.begin(); it != urls.end(); ++it)
+        {
+            status = gfal2_unlink(gfal2_ctx, *it, &error);
+        }
+}
+
+void DeletionTask::run_srm()
+{
     GError *error = NULL;
 
     std::vector<char const *> urls = ctx.getUrls();
@@ -43,4 +62,3 @@ void DeletionTask::run(boost::any const &)
             ctx.state_update("FINISHED", "", false);
         }
 }
-

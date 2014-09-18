@@ -57,9 +57,18 @@ public:
 
 private:
 
+    /**
+     * if only SRM SURLs are in the context this routine will be executed
+     */
+    void run_srm();
+
+    /**
+     * if there are not only SRM SURLs in the contest this routine will be executed
+     */
+    void run();
+
     /// deletion details
     DeletionContext const ctx;
-
 };
 
 

@@ -448,7 +448,7 @@ public:
     virtual void updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files) = 0;
 
     //															//	job_id / file_id / token
-    virtual void updateBringOnlineToken(std::map< std::string, std::vector<int> > const & jobs, std::string const & token) = 0;
+    virtual void updateBringOnlineToken(std::map< std::string, std::vector<std::pair<int, std::string> > > const & jobs, std::string const & token) = 0;
 
     //vo / file_id / surl / proxy / pinlifetime / bringonlineTimeout / spacetoken / job_id
     virtual void getFilesForStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string> >& files) = 0;

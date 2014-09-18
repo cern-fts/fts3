@@ -10803,13 +10803,13 @@ void MySqlAPI::updateStagingState(std::vector< boost::tuple<int, std::string, st
         }
 }
 
-void MySqlAPI::updateBringOnlineToken(std::map< std::string, std::vector<int> > const & jobs, std::string const & token)
+void MySqlAPI::updateBringOnlineToken(std::map< std::string, std::vector<std::pair<int, std::string> > > const & jobs, std::string const & token)
 {
     soci::session sql(*connectionPool);
     try
         {
-            std::map< std::string, std::vector<int> >::const_iterator it_m;
-            std::vector<int>::const_iterator it_v;
+            std::map< std::string, std::vector<std::pair<int, std::string> > >::const_iterator it_m;
+            std::vector<std::pair<int, std::string> >::const_iterator it_v;
 
 
             sql.begin();
@@ -10818,12 +10818,12 @@ void MySqlAPI::updateBringOnlineToken(std::map< std::string, std::vector<int> > 
                     std::string const & job_id = it_m->first;
 
                     it_v = it_m->second.begin();
-                    std::string file_ids = "(" + boost::lexical_cast<std::string>(*it_v);
+                    std::string file_ids = "(" + boost::lexical_cast<std::string>(it_v->first);
                     ++it_v;
 
                     for (; it_v != it_m->second.end(); ++it_v)
                         {
-                            file_ids += ", " + boost::lexical_cast<std::string>(*it_v);
+                            file_ids += ", " + boost::lexical_cast<std::string>(it_v->first);
                         }
 
                     file_ids += ")";

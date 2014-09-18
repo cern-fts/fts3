@@ -63,10 +63,7 @@ private:
 
     static bool isSrmUrl(const std::string & url)
     {
-        if (url.compare(0, 6, "srm://") == 0)
-            return true;
-
-        return false;
+        return url.compare(0, 6, "srm://") == 0;
     }
 
     ThreadPool<Gfal2Task> & threadpool;

@@ -59,11 +59,6 @@ public:
 
     void add(context_type const & ctx);
 
-    std::map< std::string, std::vector<int> > const & getJobs() const
-    {
-        return jobs;
-    }
-
     void state_update(std::string const & state, std::string const & reason, bool retry) const
     {
         static StagingStateUpdater & state_update = StagingStateUpdater::instance();
