@@ -917,6 +917,7 @@ int main(int argc, char **argv)
                 logger.INFO() << "Multihop: " << opts.multihop << std::endl;
                 logger.INFO() << "UDT: " << opts.enable_udt << std::endl;
                 logger.INFO() << "Active: " << opts.active << std::endl;
+                logger.INFO() << "Debug level: " << opts.debugLevel << std::endl;
 
                 if (opts.strictCopy)
                     {
