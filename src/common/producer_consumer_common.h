@@ -80,6 +80,8 @@ int runProducerDeletions(struct message_bringonline &msg);
 int runConsumerStaging(std::vector<struct message_bringonline>& messages);
 int runProducerStaging(struct message_bringonline &msg);
 
+int runProducer(struct message_bringonline &msg, std::string const & operation);
+
 
 
 

@@ -62,19 +62,20 @@ void FetchStaging::fetch()
                     for (it_f = files.begin(); it_f != files.end(); ++it_f)
                         {
                             // make sure it is a srm SE
-                            std::string & url = boost::get<StagingContext::surl>(*it_f);
+                            std::string const & url = boost::get<StagingContext::surl>(*it_f);
                             if (!isSrmUrl(url)) continue;
                             // get the SE name
                             Uri uri = Uri::Parse(boost::get<StagingContext::surl>(*it_f));
                             std::string se = uri.Host;
                             // get the other values necessary for the key
-                            std::string & dn = boost::get<StagingContext::dn>(*it_f);
-                            std::string & vo = boost::get<StagingContext::vo>(*it_f);
-                            std::string& space_token = boost::get<StagingContext::src_space_token>(*it_f);
+                            std::string const & dn = boost::get<StagingContext::dn>(*it_f);
+                            std::string const & vo = boost::get<StagingContext::vo>(*it_f);
+                            std::string const & space_token = boost::get<StagingContext::src_space_token>(*it_f);
 
-                            it_t = tasks.find(key_type(vo, dn, se, space_token));
+                            key_type key(vo, dn, se, space_token);
+                            it_t = tasks.find(key);
                             if (it_t == tasks.end())
-                                tasks.insert(std::make_pair(key_type(vo, dn, se, space_token), StagingContext(*it_f)));
+                                tasks.insert(std::make_pair(key, StagingContext(*it_f)));
                             else
                                 it_t->second.add(*it_f);
                         }

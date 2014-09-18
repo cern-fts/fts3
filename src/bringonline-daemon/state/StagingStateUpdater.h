@@ -72,7 +72,7 @@ public:
 private:
 
     /// Default constructor
-    StagingStateUpdater() : t(run) {}
+    StagingStateUpdater() : StateUpdater("_staging"), t(run) {}
     /// Copy constructor (not implemented)
     StagingStateUpdater(StagingStateUpdater const &);
     /// Assignment operator (not implemented)

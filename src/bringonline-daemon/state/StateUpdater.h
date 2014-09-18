@@ -38,7 +38,7 @@ protected:
 public:
 
     /// Constructor
-    StateUpdater() : db(*db::DBSingleton::instance().getDBObjectInstance()) {}
+    StateUpdater(std::string const & operation) : db(*db::DBSingleton::instance().getDBObjectInstance()), operation(operation) {}
 
     /**
      * Functional call for making an asynchronous state update
@@ -152,7 +152,7 @@ protected:
                 msg.transfer_message[sizeof(msg.transfer_message) -1] = '\0';
 
                 //store the states into fs to be restored in the next run
-                runProducerStaging(msg);
+                runProducer(msg, operation);
             }
     }
 
@@ -162,6 +162,8 @@ protected:
     boost::mutex m;
     /// DB interface
     GenericDbIfce& db;
+    /// operation name ('_delete' or '_staging')
+    std::string const operation;
 };
 
 #endif /* STATEUPDATER_H_ */

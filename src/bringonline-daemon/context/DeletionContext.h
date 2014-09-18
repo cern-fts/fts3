@@ -43,7 +43,10 @@ public:
     };
 
     DeletionContext(context_type const & ctx) :
-        JobContext(boost::get<user_dn>(ctx), boost::get<vo_name>(ctx), boost::get<cred_id>(ctx)) {}
+        JobContext(boost::get<user_dn>(ctx), boost::get<vo_name>(ctx), boost::get<cred_id>(ctx))
+    {
+        add(ctx);
+    }
 
     DeletionContext(DeletionContext const & copy) : JobContext(copy) {}
 

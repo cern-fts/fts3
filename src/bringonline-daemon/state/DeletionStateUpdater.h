@@ -44,7 +44,7 @@ public:
 private:
 
     /// Default constructor
-    DeletionStateUpdater() : t(run) {}
+    DeletionStateUpdater() : StateUpdater("_delete"), t(run) {}
     /// Copy constructor (not implemented)
     DeletionStateUpdater(DeletionStateUpdater const &);
     /// Assignment operator (not implemented)
