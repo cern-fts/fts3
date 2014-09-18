@@ -768,6 +768,7 @@ int main(int argc, char **argv)
                     setenv("GLOBUS_GSSAPI_DEBUG_LEVEL", "1", 1);
                     setenv("GLOBUS_NEXUS_DEBUG_LEVEL", "1", 1);
                     setenv("GLOBUS_GIS_OPENSSL_ERROR_DEBUG_LEVEL", "1", 1);
+                    setenv("XRD_LOGLEVEL", "Dump", 1);
                 }
         }
 
