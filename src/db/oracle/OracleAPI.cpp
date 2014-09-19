@@ -505,7 +505,7 @@ std::map<std::string, long long> OracleAPI::getActivitiesInQueue(soci::session& 
 	
             soci::rowset<soci::row> rs = (
                                              sql.prepare <<
-                                             " SELECT activity, COUNT(DISTINCT f.job_id, file_index) AS count "
+                                             " SELECT activity, COUNT(DISTINCT f.job_id || f.file_index) AS count "
                                              " FROM t_job j, t_file f "
                                              " WHERE j.job_id = f.job_id AND j.vo_name = f.vo_name AND f.file_state = 'SUBMITTED' AND "
                                              "	f.source_se = :source AND f.dest_se = :dest AND "
@@ -520,8 +520,7 @@ std::map<std::string, long long> OracleAPI::getActivitiesInQueue(soci::session& 
                                              soci::use(dst),
                                              soci::use(vo),
                                              soci::use(tTime),
-                                             soci::use(hashSegment.start), soci::use(hashSegment.end),
-                                             soci::use(vo)
+                                             soci::use(hashSegment.start), soci::use(hashSegment.end)
                                          );
 
             soci::rowset<soci::row>::const_iterator it;
