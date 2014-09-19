@@ -528,12 +528,12 @@ std::map<std::string, long long> OracleAPI::getActivitiesInQueue(soci::session& 
                 {
                     if (it->get_indicator("ACTIVITY") == soci::i_null)
                         {
-                            ret["default"] = it->get<long long>("COUNT");
+                            ret["default"] = it->get<int>("COUNT");
                         }
                     else
                         {
                             std::string activityShare = it->get<std::string>("ACTIVITY");
-                            long long nFiles = it->get<long long>("COUNT");
+                            long long nFiles = it->get<int>("COUNT");
                             ret[activityShare.empty() ? "default" : activityShare] = nFiles;
                         }
                 }
