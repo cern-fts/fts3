@@ -549,6 +549,28 @@ std::map<std::string, long long> MySqlAPI::getActivitiesInQueue(soci::session& s
 
     try
         {
+		std::string activityInput;
+		std::string activityOutput;
+		int howMany = 0;
+		soci::statement st = (sql.prepare <<
+                	" SELECT distinct activity FROM t_file WHERE vo_name=:vo_name and source_se = :source_se AND "
+			" dest_se = :dest_se and file_state='SUBMITTED' and job_finished is null ",
+ 			soci::use(vo),
+                        soci::use(src),
+                        soci::use(dst),		
+                	soci::into(activityInput));
+			
+	st.execute();
+	while (st.fetch())
+	{
+	    activityOutput = activityInput;
+	    howMany++;
+	}
+			
+	//no reason to execute the expensive query below if for this link there are only 'default' or '' activity shares
+	if(howMany == 1 && (activityOutput == "default" || activityOutput == ""))
+		return ret;
+
             soci::rowset<soci::row> rs = (
                                              sql.prepare <<
                                              " SELECT SQL_NO_CACHE activity, COUNT(DISTINCT f.job_id, f.file_index) AS count "
@@ -590,6 +612,10 @@ std::map<std::string, long long> MySqlAPI::getActivitiesInQueue(soci::session& s
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+   catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }	
 
     return ret;
 }
@@ -1601,6 +1627,8 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
                     sourceSe = iter->source_se;
                     destSe = iter->dest_se;
                     activity = iter->activity;
+		    if(activity.empty())
+		    	activity = "default";
 
                     /*
                     	N = no reuse
@@ -4330,7 +4358,7 @@ bool MySqlAPI::updateOptimizer()
                             sql.begin();
 
                             //special case to increase active when dealing with LAN transfers of there is only one single/dest pair active
-                            if( ratioSuccessFailure >= 97 && (singleDest == 1 || lanTransferBool || spawnActive > 1) && maxActive < 250)
+                            if( ratioSuccessFailure >= 98 && (singleDest == 1 || lanTransferBool || spawnActive > 1) && maxActive <= 120)
                                 {
                                     if(maxActive < 8)
                                         {
@@ -4345,7 +4373,7 @@ bool MySqlAPI::updateOptimizer()
                                                                         boost::lexical_cast<double>(submitted),
                                                                         boost::lexical_cast<double>(ratioSuccessFailure));
 
-                                                    if(maxActive < boost::lexical_cast<int>(percentage))
+                                                    if(maxActive < boost::lexical_cast<int>(percentage) && boost::lexical_cast<int>(percentage) <= 120)
                                                         {
                                                             highDefault = boost::lexical_cast<int>(percentage);
                                                             maxActive = highDefault;
@@ -4378,7 +4406,7 @@ bool MySqlAPI::updateOptimizer()
                                 }
                             else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure >= 97)) && throughputEMA == thrStored && retry <= retryStored)
                                 {
-                                    if(throughputSamples == 10) // spawn one every 10min
+                                    if(throughputSamples == 10 && throughputEMA > 15) // spawn one every 10min
                                         {
                                             active = maxActive + 1;
                                             if(active > (tempActive + 7))
@@ -4389,7 +4417,7 @@ bool MySqlAPI::updateOptimizer()
                                             pathFollowed = 2;
                                             stmt10.execute(true);
                                         }
-                                    else if(throughputSamples == 8 && (singleDest == 1 || lanTransferBool))
+                                    else if(throughputSamples == 8 && (singleDest == 1 || lanTransferBool) && throughputEMA > 15)
                                         {
                                             active = maxActive + 1;
                                             if(active > (tempActive + 7))
