@@ -551,7 +551,7 @@ std::map<std::string, long long> OracleAPI::getActivitiesInQueue(soci::session& 
     return ret;
 }
 
-std::map<std::string, int> OracleAPI::getFilesNumPerActivity(soci::session& sql, std::string src, std::string dst, std::string vo, int filesNum)
+std::map<std::string, int> OracleAPI::getFilesNumPerActivity(soci::session& sql, std::string src, std::string dst, std::string vo, int filesNum, std::set<std::string> & default_activities)
 {
     std::map<std::string, int> activityFilesNum;
 
@@ -573,8 +573,20 @@ std::map<std::string, int> OracleAPI::getFilesNumPerActivity(soci::session& sql,
             std::map<std::string, long long>::iterator it;
             for (it = activitiesInQueue.begin(); it != activitiesInQueue.end(); it++)
                 {
-                    sum += activityShares[it->first];
+                    std::map<std::string, double>::iterator pos = activityShares.find(it->first);
+                    if (pos != activityShares.end() && it->first != "default")
+                    {
+                        sum += pos->second;
+                    }
+                    else
+                    {
+                        // if the activity has not been defined it falls to default
+                        default_activities.insert(it->first);
+                    }
                 }
+            // if default was used add it as well
+            if (!default_activities.empty())
+                sum += activityShares["default"];
 
             // assign slots to activities
             for (int i = 0; i < filesNum; i++)
@@ -590,15 +602,17 @@ std::map<std::string, int> OracleAPI::getFilesNumPerActivity(soci::session& sql,
                         {
                             // if there are no more files for this activity continue
                             if (it->second <= 0) continue;
+                            // get the activity name (if it was not defined use default)
+                            std::string activity_name = default_activities.count(it->first) ? "default" : it->first;
                             // calculate the interval
-                            interval += activityShares[it->first] / sum;
+                            interval += activityShares[activity_name] / sum;
                             // if the slot has been assigned to the given activity ...
                             if (r < interval)
                                 {
-                                    ++activityFilesNum[it->first];
+                                    ++activityFilesNum[activity_name];
                                     --it->second;
                                     // if there are no more files for the given ativity remove it from the sum
-                                    if (it->second == 0) sum -= activityShares[it->first];
+                                    if (it->second == 0) sum -= activityShares[activity_name];
                                     break;
                                 }
                         }
@@ -823,8 +837,9 @@ void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, s
                                 }
                         }
 
+                    std::set<std::string> default_activities;
                     std::map<std::string, int> activityFilesNum =
-                        getFilesNumPerActivity(sql, boost::get<0>(triplet), boost::get<1>(triplet), boost::get<2>(triplet), filesNum);
+                        getFilesNumPerActivity(sql, boost::get<0>(triplet), boost::get<1>(triplet), boost::get<2>(triplet), filesNum, default_activities);
 
                     if (activityFilesNum.empty())
                         {
@@ -865,6 +880,18 @@ void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, s
                         }
                     else
                         {
+                            // we are allways checking empty string
+                            std::string def_act = " (''";
+                            if (!default_activities.empty())
+                            {
+                                std::set<std::string>::const_iterator it_def;
+                                for (it_def = default_activities.begin(); it_def != default_activities.end(); ++it_def)
+                                    {
+                                        def_act += ", '" + *it_def + "'";
+                                    }
+                            }
+                            def_act += ") ";
+
                             std::map<std::string, int>::iterator it_act;
 
                             for (it_act = activityFilesNum.begin(); it_act != activityFilesNum.end(); ++it_act)
@@ -885,7 +912,7 @@ void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, s
                                         "    f.vo_name = :vo_name AND ";
                                     select +=
                                         it_act->first == "default" ?
-                                        "     (f.activity = :activity OR f.activity = '' OR f.activity IS NULL) AND "
+                                        "     (f.activity = :activity OR f.activity IS NULL OR f.activity IN " + def_act + ") AND "
                                         :
                                         "     f.activity = :activity AND ";
                                     select +=
@@ -5792,7 +5819,7 @@ void OracleAPI::addActivityConfig(std::string vo, std::string shares, bool activ
             const std::string act = active ? "on" : "off";
 
             sql << "INSERT INTO t_activity_share_config (vo, activity_share, active) "
-                "                    VALUES (:vo, :share, :active)",
+                "                    VALUES (:vo, :share_string, :state)",
                 soci::use(vo),
                 soci::use(shares),
                 soci::use(act)
@@ -5824,7 +5851,7 @@ void OracleAPI::updateActivityConfig(std::string vo, std::string shares, bool ac
 
             sql <<
                 " UPDATE t_activity_share_config "
-                " SET activity_share = :share, active = :active "
+                " SET activity_share = :share_string, active = :active "
                 " WHERE vo = :vo",
                 soci::use(shares),
                 soci::use(act),

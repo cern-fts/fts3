@@ -326,7 +326,7 @@ public:
 
     std::map<std::string, long long> getActivitiesInQueue(soci::session& sql, std::string src, std::string dst, std::string vo);
 
-    std::map<std::string, int> getFilesNumPerActivity(soci::session& sql, std::string src, std::string dst, std::string vo, int filesNum);
+    std::map<std::string, int> getFilesNumPerActivity(soci::session& sql, std::string src, std::string dst, std::string vo, int filesNum, std::set<std::string> & default_activities);
 
     virtual void updateFileTransferProgressVector(std::vector<struct message_updater>& messages);
 
