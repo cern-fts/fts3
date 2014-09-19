@@ -5819,7 +5819,7 @@ void OracleAPI::addActivityConfig(std::string vo, std::string shares, bool activ
             const std::string act = active ? "on" : "off";
 
             sql << "INSERT INTO t_activity_share_config (vo, activity_share, active) "
-                "                    VALUES (:vo, :share, :active)",
+                "                    VALUES (:vo, :share_string, :state)",
                 soci::use(vo),
                 soci::use(shares),
                 soci::use(act)
@@ -5851,7 +5851,7 @@ void OracleAPI::updateActivityConfig(std::string vo, std::string shares, bool ac
 
             sql <<
                 " UPDATE t_activity_share_config "
-                " SET activity_share = :share, active = :active "
+                " SET activity_share = :share_string, active = :active "
                 " WHERE vo = :vo",
                 soci::use(shares),
                 soci::use(act),
