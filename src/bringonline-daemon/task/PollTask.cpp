@@ -35,8 +35,8 @@ void PollTask::run(boost::any const &)
                                            << error->code << " "
                                            << error->message << commit;
 
-            bool retry = retryTransfer(error->code, "SOURCE", error->message);
-            state_update(ctx.jobs, "FAILED", error->message, retry);
+            bool retry = doRetry(error->code, "SOURCE", error->message);
+            ctx.state_update("FAILED", error->message, retry);
             g_clear_error(&error);
         }
     else if(status == 0)
@@ -56,7 +56,7 @@ void PollTask::run(boost::any const &)
                                             << ctx.getLogMsg()
                                             << token << commit;
 
-            state_update(ctx.jobs, "FINISHED", "", false);
+            ctx.state_update("FINISHED", "", false);
         }
 }
 
@@ -81,9 +81,10 @@ bool PollTask::abort()
             }
         else
             {
+                std::set<std::string> surls = ctx.getSurls();
                 // otherwise check if some of the URLs should be aborted
                 std::set_difference(
-                    ctx.surls.begin(), ctx.surls.end(),
+                    surls.begin(), surls.end(),
                     it->second.begin(), it->second.end(),
                     std::inserter(remove, remove.end())
                 );
@@ -96,7 +97,7 @@ bool PollTask::abort()
     // if only a subset of URLs should be aborted ...
     if (urls.empty())
         {
-            // adjust the size
+            // adjust the capacity
             urls.reserve(remove.size());
             // fill in with URLs
             std::set<std::string>::const_iterator it;
@@ -107,11 +108,11 @@ bool PollTask::abort()
             // make sure in the context are only those URLs that where not cancelled
             std::set<std::string> not_cancelled;
             std::set_difference(
-                ctx.surls.begin(), ctx.surls.end(),
+                ctx.getSurls().begin(), ctx.getSurls().end(),
                 remove.begin(), remove.end(),
                 std::inserter(not_cancelled, not_cancelled.end())
             );
-            ctx.surls.swap(not_cancelled);
+            ctx.getSurls().swap(not_cancelled);
         }
 
     GError * err;

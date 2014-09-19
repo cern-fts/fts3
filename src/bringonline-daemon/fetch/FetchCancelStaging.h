@@ -9,7 +9,7 @@
 #define FETCHCANCELSTAGING_H_
 
 #include "common/ThreadPool.h"
-#include "Gfal2Task.h"
+#include "task/Gfal2Task.h"
 
 #include <boost/tuple/tuple.hpp>
 

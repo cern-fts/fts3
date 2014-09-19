@@ -124,3 +124,8 @@ int runProducerStaging(struct message_bringonline &msg)
 {
     return writeMessage(&msg, sizeof(msg), STATUS_DM_DIR, "_staging");
 }
+
+int runProducer(struct message_bringonline &msg, std::string const & operation)
+{
+    return writeMessage(&msg, sizeof(msg), STATUS_DM_DIR, operation);
+}

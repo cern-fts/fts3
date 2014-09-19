@@ -9,8 +9,8 @@
 #define FETCHSTAGING_H_
 
 #include "common/ThreadPool.h"
-#include "Gfal2Task.h"
-#include "StagingContext.h"
+#include "task/Gfal2Task.h"
+#include "context/StagingContext.h"
 
 #include "cred/DelegCred.h"
 
@@ -63,16 +63,7 @@ private:
 
     static bool isSrmUrl(const std::string & url)
     {
-        if (url.compare(0, 6, "srm://") == 0)
-            return true;
-
-        return false;
-    }
-
-    static std::string generateProxy(const std::string& dn, const std::string& dlg_id)
-    {
-        boost::scoped_ptr<DelegCred> delegCredPtr(new DelegCred);
-        return delegCredPtr->getFileName(dn, dlg_id);
+        return url.compare(0, 6, "srm://") == 0;
     }
 
     ThreadPool<Gfal2Task> & threadpool;

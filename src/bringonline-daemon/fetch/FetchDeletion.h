@@ -9,7 +9,7 @@
 #define FETCHDELETION_H_
 
 #include "common/ThreadPool.h"
-#include "Gfal2Task.h"
+#include "task/Gfal2Task.h"
 
 #include "cred/DelegCred.h"
 
@@ -40,19 +40,8 @@ private:
     // vo, dn ,se
     typedef std::tuple<std::string, std::string, std::string> key_type;
 
-    //static bool isSrmUrl(const std::string & url);
-
-    static std::string generateProxy(const std::string& dn, const std::string& dlg_id);
-
     ThreadPool<Gfal2Task> & threadpool;
 
 };
-
-
-inline static std::string generateProxy(const std::string& dn, const std::string& dlg_id)
-{
-    boost::scoped_ptr<DelegCred> delegCredPtr(new DelegCred);
-    return delegCredPtr->getFileName(dn, dlg_id);
-}
 
 #endif /* FETCHDELETION_H_ */

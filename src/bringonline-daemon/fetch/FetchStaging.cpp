@@ -7,9 +7,9 @@
 
 #include "FetchStaging.h"
 
-#include "BringOnlineTask.h"
-#include "PollTask.h"
-#include "WaitingRoom.h"
+#include "task/BringOnlineTask.h"
+#include "task/PollTask.h"
+#include "task/WaitingRoom.h"
 
 #include "server/DrainMode.h"
 
@@ -53,6 +53,7 @@ void FetchStaging::fetch()
                         }
 
                     std::map<key_type, StagingContext> tasks;
+                    std::map<key_type, StagingContext>::iterator it_t;
 
                     std::vector<StagingContext::context_type> files;
                     db::DBSingleton::instance().getDBObjectInstance()->getFilesForStaging(files);
@@ -61,20 +62,24 @@ void FetchStaging::fetch()
                     for (it_f = files.begin(); it_f != files.end(); ++it_f)
                         {
                             // make sure it is a srm SE
-                            std::string & url = boost::get<StagingContext::surl>(*it_f);
+                            std::string const & url = boost::get<StagingContext::surl>(*it_f);
                             if (!isSrmUrl(url)) continue;
                             // get the SE name
                             Uri uri = Uri::Parse(boost::get<StagingContext::surl>(*it_f));
                             std::string se = uri.Host;
                             // get the other values necessary for the key
-                            std::string & dn = boost::get<StagingContext::dn>(*it_f);
-                            std::string & vo = boost::get<StagingContext::vo>(*it_f);
-                            std::string& space_token = boost::get<StagingContext::src_space_token>(*it_f);
+                            std::string const & dn = boost::get<StagingContext::dn>(*it_f);
+                            std::string const & vo = boost::get<StagingContext::vo>(*it_f);
+                            std::string const & space_token = boost::get<StagingContext::src_space_token>(*it_f);
 
-                            tasks[key_type(vo, dn, se, space_token)].add(*it_f);
+                            key_type key(vo, dn, se, space_token);
+                            it_t = tasks.find(key);
+                            if (it_t == tasks.end())
+                                tasks.insert(std::make_pair(key, StagingContext(*it_f)));
+                            else
+                                it_t->second.add(*it_f);
                         }
 
-                    std::map<key_type, StagingContext>::const_iterator it_t;
                     for (it_t = tasks.begin(); it_t != tasks.end(); ++it_t)
                         {
                             try
@@ -123,14 +128,17 @@ void FetchStaging::recoverStartedTasks()
         }
 
     std::map<std::string, StagingContext> tasks;
+    std::map<std::string, StagingContext>::iterator it_t;
 
     for (it_f = files.begin(); it_f != files.end(); ++it_f)
         {
             std::string const & token = boost::get<9>(*it_f);
-            tasks[token].add(get_context(*it_f));
+            it_t = tasks.find(token);
+            if (it_t == tasks.end())
+                tasks.insert(std::make_pair(token, StagingContext(get_context(*it_f))));
+            else
+                it_t->second.add(get_context(*it_f));
         }
-
-    std::map<std::string, StagingContext>::const_iterator it_t;
 
     for (it_t = tasks.begin(); it_t != tasks.end(); ++it_t)
         {

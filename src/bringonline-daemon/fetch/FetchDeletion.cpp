@@ -7,9 +7,8 @@
 
 #include "FetchDeletion.h"
 
-#include "DeletionTask.h"
-//#include "WaitingRoom.h"
-#include "DeletionContext.h"
+#include "task/DeletionTask.h"
+#include "context/DeletionContext.h"
 
 #include "server/DrainMode.h"
 #include "cred/cred-utility.h"
@@ -38,6 +37,7 @@ void FetchDeletion::fetch()
                         }
 
                     std::map<key_type, DeletionContext> tasks;
+                    std::map<key_type, DeletionContext>::iterator it_t;
 
                     std::vector<DeletionContext::context_type> files;
                     db::DBSingleton::instance().getDBObjectInstance()->getFilesForDeletion(files);
@@ -46,23 +46,27 @@ void FetchDeletion::fetch()
                     for (it_f = files.begin(); it_f != files.end(); ++it_f)
                         {
                             // make sure it is a srm SE
-                            std::string & url = boost::get<DeletionContext::source_url>(*it_f);
+                            std::string const & url = boost::get<DeletionContext::source_url>(*it_f);
                             // get the SE name
                             Uri uri = Uri::Parse(url);
                             std::string se = uri.Host;
                             // get the other values necessary for the key
-                            std::string & dn = boost::get<DeletionContext::user_dn>(*it_f);
-                            std::string & vo = boost::get<DeletionContext::vo_name>(*it_f);
+                            std::string const & dn = boost::get<DeletionContext::user_dn>(*it_f);
+                            std::string const & vo = boost::get<DeletionContext::vo_name>(*it_f);
 
-                            tasks[key_type(vo, dn, se)].add(*it_f);
+                            key_type key(vo, dn, se);
+                            it_t = tasks.find(key);
+                            if (it_t == tasks.end())
+                                tasks.insert(std::make_pair(key, DeletionContext(*it_f)));
+                            else
+                                it_t->second.add(*it_f);
                         }
 
-                    std::map<key_type, DeletionContext>::const_iterator it_t;
                     for (it_t = tasks.begin(); it_t != tasks.end(); ++it_t)
                         {
                             try
                                 {
-                                    threadpool.start(new DeletionTask(*it_t));
+                                    threadpool.start(new DeletionTask(it_t->second));
                                 }
                             catch(Err_Custom const & ex)
                                 {

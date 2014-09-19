@@ -16,12 +16,15 @@
 
 using namespace FTS3_COMMON_NAMESPACE;
 
+// forward declaration
+class JobContext;
+
 class Gfal2Task
 {
 public:
 
     /// Default constructor
-    Gfal2Task() : gfal2_ctx() {}
+    Gfal2Task(std::string const & operation) : gfal2_ctx(operation) {}
 
     /// Copy constructor
     Gfal2Task(Gfal2Task & copy) : gfal2_ctx(copy.gfal2_ctx) {}
@@ -44,6 +47,30 @@ public:
         Gfal2Task::infosys = infosys;
     }
 
+    /**
+     * Sets the proxy-certificate for the given gfal2 task
+     *
+     * @param ctx : job context containing proxy-certificate information
+     */
+    void setProxy(JobContext const & ctx);
+
+    /**
+     *  Sets the space token
+     *
+     *  @param spaceToken : space token
+     */
+    void setSpaceToken(std::string const & spaceToken);
+
+
+    /**
+     * checks if it makes sense to retry the failed job
+     *
+     * @param errorNo : error code
+     * @param category : error category
+     * @param message : error message
+     */
+    bool static doRetry(int errorNo, const std::string& category, const std::string& message);
+
 protected:
     /**
      * gfal2 context wrapper so we can benefit from RAII
@@ -51,7 +78,7 @@ protected:
     struct Gfal2CtxWrapper
     {
         /// Constructor
-        Gfal2CtxWrapper() : gfal2_ctx(0)
+        Gfal2CtxWrapper(std::string const & operation) : gfal2_ctx(0), operation(operation)
         {
             // Set up handle
             GError *error = NULL;
@@ -59,7 +86,7 @@ protected:
             if (!gfal2_ctx)
                 {
                     std::stringstream ss;
-                    ss << "BRINGONLINE bad initialization " << error->code << " " << error->message;
+                    ss << operation << " bad initialisation " << error->code << " " << error->message;
                     // the memory was not allocated so it is safe to throw
                     throw Err_Custom(ss.str());
                 }
@@ -79,7 +106,7 @@ protected:
             if (error)
                 {
                     std::stringstream ss;
-                    ss << "BRINGONLINE Could not set the protocol list " << error->code << " " << error->message;
+                    ss << operation << " could not set the protocol list " << error->code << " " << error->message;
                     throw Err_Custom(ss.str());
                 }
 
@@ -87,13 +114,13 @@ protected:
             if (error)
                 {
                     std::stringstream ss;
-                    ss << "BRINGONLINE Could not set the session reuse " << error->code << " " << error->message;
+                    ss << operation << " could not set the session reuse " << error->code << " " << error->message;
                     throw Err_Custom(ss.str());
                 }
         }
 
         /// Copy constructor, steals the pointer from the parameter!
-        Gfal2CtxWrapper(Gfal2CtxWrapper & copy) : gfal2_ctx(copy.gfal2_ctx)
+        Gfal2CtxWrapper(Gfal2CtxWrapper & copy) : gfal2_ctx(copy.gfal2_ctx), operation(copy.operation)
         {
             copy.gfal2_ctx = 0;
         }
@@ -110,15 +137,16 @@ protected:
             if(gfal2_ctx) gfal2_context_free(gfal2_ctx);
         }
 
-    private:
         /// the gfal2 context itself
         gfal2_context_t gfal2_ctx;
+        ///
+        std::string const operation;
     };
 
     /// the infosys used to create all gfal2 contexts
     static std::string infosys;
 
-    /// gfal2 context
+    /// the operation, e.g. 'DELETION', 'BRINGONLINE', etc.
     Gfal2CtxWrapper gfal2_ctx;
 };
 

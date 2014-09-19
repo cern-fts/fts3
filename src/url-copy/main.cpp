@@ -768,6 +768,7 @@ int main(int argc, char **argv)
                     setenv("GLOBUS_GSSAPI_DEBUG_LEVEL", "1", 1);
                     setenv("GLOBUS_NEXUS_DEBUG_LEVEL", "1", 1);
                     setenv("GLOBUS_GIS_OPENSSL_ERROR_DEBUG_LEVEL", "1", 1);
+                    setenv("XRD_LOGLEVEL", "Dump", 1);
                 }
         }
 
@@ -917,6 +918,7 @@ int main(int argc, char **argv)
                 logger.INFO() << "Multihop: " << opts.multihop << std::endl;
                 logger.INFO() << "UDT: " << opts.enable_udt << std::endl;
                 logger.INFO() << "Active: " << opts.active << std::endl;
+                logger.INFO() << "Debug level: " << opts.debugLevel << std::endl;
 
                 if (opts.strictCopy)
                     {

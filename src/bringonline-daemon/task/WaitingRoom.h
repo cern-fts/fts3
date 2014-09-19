@@ -8,7 +8,7 @@
 #ifndef WAITINGROOM_H_
 #define WAITINGROOM_H_
 
-#include "Gfal2Task.h"
+#include "task/Gfal2Task.h"
 
 #include "common/ThreadPool.h"
 

@@ -23,8 +23,8 @@ void BringOnlineTask::run(boost::any const &)
                      gfal2_ctx,
                      urls.size(),
                      &*urls.begin(),
-                     ctx.pinlifetime,
-                     ctx.bringonlineTimeout,
+                     ctx.getPinlifetime(),
+                     ctx.getBringonlineTimeout(),
                      token,
                      sizeof(token),
                      1,
@@ -37,8 +37,8 @@ void BringOnlineTask::run(boost::any const &)
                                            << ctx.getLogMsg() << " "
                                            << error->code << " " << error->message  << commit;
 
-            bool retry = retryTransfer(error->code, "SOURCE", std::string(error->message));
-            state_update(ctx.jobs, "FAILED", error->message, retry);
+            bool retry = doRetry(error->code, "SOURCE", std::string(error->message));
+            ctx.state_update("FAILED", error->message, retry);
             g_clear_error(&error);
         }
     else if (status == 0)
@@ -46,7 +46,7 @@ void BringOnlineTask::run(boost::any const &)
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE queued, got token " << token  << " "
                                             << ctx.getLogMsg() << commit;
 
-            state_update(ctx.jobs, token);
+            ctx.state_update(token);
             WaitingRoom<PollTask>::instance().add(new PollTask(*this, token));
         }
     else
@@ -54,7 +54,7 @@ void BringOnlineTask::run(boost::any const &)
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE FINISHED, got token " << token   << " "
                                             << ctx.getLogMsg() <<  commit;
             // No need to poll in this case!
-            state_update(ctx.jobs, "FINISHED", "", false);
+            ctx.state_update("FINISHED", "", false);
         }
 }
 
