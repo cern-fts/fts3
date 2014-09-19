@@ -86,9 +86,9 @@ public:
         for (it_j = jobs.begin(); it_j != jobs.end(); ++it_j)
             {
                 for (it_f = it_j->second.begin(); it_f != it_j->second.end(); ++it_f)
-                {
-                    surls.insert(it_f->second);
-                }
+                    {
+                        surls.insert(it_f->second);
+                    }
             }
 
         return surls;

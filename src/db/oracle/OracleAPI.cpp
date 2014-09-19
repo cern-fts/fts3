@@ -480,29 +480,29 @@ std::map<std::string, long long> OracleAPI::getActivitiesInQueue(soci::session& 
 
     try
         {
-		std::string activityInput;
-		std::string activityOutput;
-		int howMany = 0;
-		soci::statement st = (sql.prepare <<
-                	" SELECT distinct activity FROM t_file WHERE vo_name=:vo_name and source_se = :source_se AND "
-			" dest_se = :dest_se and file_state='SUBMITTED' and job_finished is null ",
- 			soci::use(vo),
-                        soci::use(src),
-                        soci::use(dst),		
-                	soci::into(activityInput));
-			
-	st.execute();
-	while (st.fetch())
-	{
-	    activityOutput = activityInput;
-	    howMany++;
-	}
-			
-	//no reason to execute the expensive query below if for this link there are only 'default' or '' activity shares
-	if(howMany == 1 && (activityOutput == "default" || activityOutput == ""))
-		return ret;	
-	
-	
+            std::string activityInput;
+            std::string activityOutput;
+            int howMany = 0;
+            soci::statement st = (sql.prepare <<
+                                  " SELECT distinct activity FROM t_file WHERE vo_name=:vo_name and source_se = :source_se AND "
+                                  " dest_se = :dest_se and file_state='SUBMITTED' and job_finished is null ",
+                                  soci::use(vo),
+                                  soci::use(src),
+                                  soci::use(dst),
+                                  soci::into(activityInput));
+
+            st.execute();
+            while (st.fetch())
+                {
+                    activityOutput = activityInput;
+                    howMany++;
+                }
+
+            //no reason to execute the expensive query below if for this link there are only 'default' or '' activity shares
+            if(howMany == 1 && (activityOutput == "default" || activityOutput == ""))
+                return ret;
+
+
             soci::rowset<soci::row> rs = (
                                              sql.prepare <<
                                              " SELECT activity, COUNT(DISTINCT f.job_id || f.file_index) AS count "
@@ -574,14 +574,14 @@ std::map<std::string, int> OracleAPI::getFilesNumPerActivity(soci::session& sql,
                 {
                     std::map<std::string, double>::iterator pos = activityShares.find(it->first);
                     if (pos != activityShares.end() && it->first != "default")
-                    {
-                        sum += pos->second;
-                    }
+                        {
+                            sum += pos->second;
+                        }
                     else
-                    {
-                        // if the activity has not been defined it falls to default
-                        default_activities.insert(it->first);
-                    }
+                        {
+                            // if the activity has not been defined it falls to default
+                            default_activities.insert(it->first);
+                        }
                 }
             // if default was used add it as well
             if (!default_activities.empty())
@@ -882,13 +882,13 @@ void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, s
                             // we are allways checking empty string
                             std::string def_act = " (''";
                             if (!default_activities.empty())
-                            {
-                                std::set<std::string>::const_iterator it_def;
-                                for (it_def = default_activities.begin(); it_def != default_activities.end(); ++it_def)
-                                    {
-                                        def_act += ", '" + *it_def + "'";
-                                    }
-                            }
+                                {
+                                    std::set<std::string>::const_iterator it_def;
+                                    for (it_def = default_activities.begin(); it_def != default_activities.end(); ++it_def)
+                                        {
+                                            def_act += ", '" + *it_def + "'";
+                                        }
+                                }
                             def_act += ") ";
 
                             std::map<std::string, int>::iterator it_act;
@@ -1585,8 +1585,8 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
                     sourceSe = iter->source_se;
                     destSe = iter->dest_se;
                     activity = iter->activity;
-		    if(activity.empty())
-		    	activity = "default";		    
+                    if(activity.empty())
+                        activity = "default";
 
                     /*
                      	N = no reuse
