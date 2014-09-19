@@ -4367,7 +4367,7 @@ bool MySqlAPI::updateOptimizer()
                                         }
                                     else
                                         {
-                                            if(spawnActive > 1 && activeSource < maxActiveLimit && activeDestination < maxActiveLimit)
+                                            if(spawnActive > 1 && activeSource < maxActiveLimit && activeDestination < maxActiveLimit && (throughputEMA > thrStored || throughputEMA > 25))
                                                 {
                                                     double percentage = activePercentageQueue(boost::lexical_cast<double>(maxActive),
                                                                         boost::lexical_cast<double>(submitted),
