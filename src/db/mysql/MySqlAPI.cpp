@@ -2931,8 +2931,6 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
 
             bool jobFinished = (numberOfFilesInJob == numberOfFilesTerminal);
 
-            sql.begin();
-
             if (jobFinished)
                 {
                     std::string state;
@@ -2963,6 +2961,14 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
                             reason = "Inconsistent internal state!";
                         }
 
+                    //re-execute here just in case
+                    stmt1.execute(true);
+
+                    if(currentState == state)
+                        return true;
+
+
+                    sql.begin();
                     // Update job
                     soci::statement stmt6 = (
                                                 sql.prepare << "UPDATE t_job SET "
@@ -2973,17 +2979,41 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
                                                 soci::use(job_id, "jobId"));
                     stmt6.execute(true);
 
-                    // Update job_finished in files
-                    sql << "UPDATE t_file SET "
-                        " job_finished = UTC_TIMESTAMP() "
-                        "WHERE job_id = :jobId AND job_finished IS NULL",
-                        soci::use(job_id, "jobId");
+                    sql.commit();
+
+                    sql.begin();
+
+                    int file_id = 0;
+                    // Update job_finished in files / do a select first to avoid deadlocks
+                    soci::statement stSanity = (sql.prepare << " SELECT file_id FROM t_file WHERE job_id = :job_id AND job_finished IS NULL ",
+                                                soci::use(job_id),
+                                                soci::into(file_id));
+
+                    stSanity.execute();
+                    while (stSanity.fetch())
+                        {
+                            sql << "UPDATE t_file SET "
+                                " job_finished = UTC_TIMESTAMP() "
+                                "WHERE file_id = :file_id AND job_id = :job_id AND job_finished IS NULL",
+                                soci::use(file_id);
+                            soci::use(job_id);
+                        }
+                    sql.commit();
                 }
             // Job not finished yet
             else
                 {
                     if (status == "ACTIVE" || status == "STAGING" || status == "SUBMITTED")
                         {
+                            //re-execute here just in case
+                            stmt1.execute(true);
+
+                            if(currentState == status)
+                                return true;
+
+
+                            sql.begin();
+
                             soci::statement stmt8 = (
                                                         sql.prepare << "UPDATE t_job "
                                                         "SET job_state = :state "
@@ -2991,10 +3021,9 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
                                                         soci::use(status, "state"), soci::use(job_id, "jobId"));
                             stmt8.execute(true);
 
+                            sql.commit();
                         }
                 }
-
-            sql.commit();
         }
     catch (std::exception& e)
         {
