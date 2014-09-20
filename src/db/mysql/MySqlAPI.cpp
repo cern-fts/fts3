@@ -2995,8 +2995,8 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
                             sql << "UPDATE t_file SET "
                                 " job_finished = UTC_TIMESTAMP() "
                                 "WHERE file_id = :file_id AND job_id = :job_id AND job_finished IS NULL",
-                                soci::use(file_id);
-                            soci::use(job_id);
+                                soci::use(file_id),
+                                soci::use(job_id);
                         }
                     sql.commit();
                 }
