@@ -321,6 +321,10 @@ protected:
 
                         if(!messages.empty())
                             {
+				executeUpdate(messages);
+				messages.clear();
+
+                                /*
                                 boost::thread_group g;
 
                                 std::size_t const half_size1 = messages.size() / 2;
@@ -348,7 +352,10 @@ protected:
                                 // wait for them
                                 g.join_all();
 
-                                messages.clear();
+			        messages.clear();
+                                */
+
+                                
                             }
 
                         //update log file path
