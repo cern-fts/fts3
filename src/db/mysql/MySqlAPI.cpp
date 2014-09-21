@@ -4514,7 +4514,7 @@ bool MySqlAPI::updateOptimizer()
                                 }
                             else if ( ratioSuccessFailure < 97)
                                 {
-                                    if(ratioSuccessFailure > rateStored && ratioSuccessFailure > 90 && retry <= retryStored)
+                                    if(ratioSuccessFailure > rateStored && ratioSuccessFailure == 96 && retry <= retryStored)
                                         {
                                             active = maxActive;
                                             pathFollowed = 7;
