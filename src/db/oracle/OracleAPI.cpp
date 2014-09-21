@@ -4054,46 +4054,26 @@ bool OracleAPI::updateOptimizer()
                                 }
 
                             sql.begin();
-
-
-                            //special case to increase active when dealing with LAN transfers of there is only one single/dest pair active
-                            if( ratioSuccessFailure >= 98 && (singleDest == 1 || lanTransferBool || spawnActive > 1) && maxActive <= 120)
+                           
+                             if( (ratioSuccessFailure == 100 || 
+				(ratioSuccessFailure >= rateStored && ratioSuccessFailure >= 97)) && 
+				(throughputEMA >= thrStored || throughputEMA >= 35) 
+				&& retry <= retryStored && maxActive <= 140)
                                 {
-                                    if(maxActive < 8)
+                                    if(singleDest == 1 || lanTransferBool || spawnActive > 1)
                                         {
-                                            highDefault = 8;
-                                            maxActive = highDefault;
+                                            active = maxActive + spawnActive;
                                         }
-                                    else
-                                        {
-                                            if(spawnActive > 1 && activeSource < maxActiveLimit && activeDestination < maxActiveLimit && (throughputEMA > thrStored || throughputEMA > 25))
-                                                {
-                                                    double percentage = activePercentageQueue(boost::lexical_cast<double>(maxActive),
-                                                                        boost::lexical_cast<double>(submitted),
-                                                                        boost::lexical_cast<double>(ratioSuccessFailure));
-
-                                                    if(maxActive < boost::lexical_cast<int>(percentage) && boost::lexical_cast<int>(percentage) <= 120)
-                                                        {
-                                                            highDefault = boost::lexical_cast<int>(percentage);
-                                                            maxActive = highDefault;
-                                                        }
-                                                }
-                                        }
-                                }
-
-                            if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure >= 98)) && (throughputEMA > thrStored || throughputEMA > 35) && retry <= retryStored)
-                                {
-
-                                    if(singleDest == 1 || lanTransferBool)
-                                        {
-                                            active = maxActive + 1;
-                                        }
+                                    else if (throughputSamples == 10 && ratioSuccessFailure >= 99)
+					{
+					    active = maxActive + 2;
+					}
                                     else
                                         {
                                             active = maxActive + 1;
                                         }
 
-                                    if(active > (tempActive + 7))
+                                    if(active > (tempActive + 5))
                                         {
                                             active = maxActive;
                                         }
@@ -4101,41 +4081,9 @@ bool OracleAPI::updateOptimizer()
                                     pathFollowed = 1;
                                     ema = throughputEMA;
                                     stmt10.execute(true);
-                                }
-                            else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure >= 97)) && throughputEMA == thrStored && retry <= retryStored)
-                                {
 
-                                    if(throughputSamples == 10 && throughputEMA > 15) // spawn one every 10min
-                                        {
-                                            active = maxActive + 1;
-                                            if(active > (tempActive + 7))
-                                                {
-                                                    active = maxActive;
-                                                }
-                                            ema = throughputEMA;
-                                            pathFollowed = 2;
-                                            stmt10.execute(true);
-                                        }
-                                    else if(throughputSamples == 8 && (singleDest == 1 || lanTransferBool) && throughputEMA > 15)
-                                        {
-                                            active = maxActive + 1;
-                                            if(active > (tempActive + 7))
-                                                {
-                                                    active = maxActive;
-                                                }
-                                            ema = throughputEMA;
-                                            pathFollowed = 2;
-                                            stmt10.execute(true);
-                                        }
-                                    else
-                                        {
-                                            active = maxActive;
-                                            ema = throughputEMA;
-                                            pathFollowed = 2;
-                                            stmt10.execute(true);
-                                        }
-                                }
-                            else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure > 97)) && throughputEMA < thrStored)
+                                }                            
+                            else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure >= 97)) && throughputEMA < thrStored)
                                 {
                                     if(retry > retryStored)
                                         {
@@ -4165,7 +4113,7 @@ bool OracleAPI::updateOptimizer()
                                 }
                             else if ( ratioSuccessFailure < 97)
                                 {
-                                    if(ratioSuccessFailure > rateStored && ratioSuccessFailure > 90 && retry <= retryStored)
+                                    if(ratioSuccessFailure > rateStored && ratioSuccessFailure == 96 && retry <= retryStored)
                                         {
                                             active = maxActive;
                                             pathFollowed = 7;
@@ -4178,6 +4126,7 @@ bool OracleAPI::updateOptimizer()
                                     ema = throughputEMA;
                                     stmt10.execute(true);
                                 }
+
                             else
                                 {
                                     active = maxActive;
