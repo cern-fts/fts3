@@ -3612,6 +3612,8 @@ bool OracleAPI::updateOptimizer()
     int allTested = 0;
     int activeSource = 0;
     int activeDestination = 0;
+    double avgDuration = 0.0; 
+    soci::indicator isNullAvg = soci::i_ok; 
 
 
     try
@@ -3645,6 +3647,12 @@ bool OracleAPI::updateOptimizer()
                                              sql.prepare << "SELECT fixed from t_optimize_active "
                                              "WHERE source_se = :source AND dest_se = :dest",
                                              soci::use(source_hostname), soci::use(destin_hostname), soci::into(active_fixed, isNullFixed));
+
+            soci::statement stmt_avg_duration = (
+                                             sql.prepare << "SELECT avg(tx_duration)  from t_file "
+                                             " WHERE source_se = :source AND dest_se = :dest and file_state='FINISHED' and tx_duration > 0 AND tx_duration is NOT NULL and "
+					     " job_finished > (sys_extract_utc(systimestamp) - interval '30' minute) LIMIT 1",
+                                             soci::use(source_hostname), soci::use(destin_hostname), soci::into(avgDuration, isNullAvg));
 
             //snapshot of active transfers
             soci::statement stmt7 = (
@@ -3791,6 +3799,8 @@ bool OracleAPI::updateOptimizer()
                     allTested = 0;
                     activeSource = 0;
                     activeDestination = 0;
+		    avgDuration = 0.0;
+		    isNullAvg = soci::i_ok;
 
                     // Weighted average
                     soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
@@ -4053,11 +4063,13 @@ bool OracleAPI::updateOptimizer()
                                     continue;
                                 }
 
+			    stmt_avg_duration.execute(true); 
+
                             sql.begin();
                            
                              if( (ratioSuccessFailure == 100 || 
-				(ratioSuccessFailure >= rateStored && ratioSuccessFailure >= 97)) && 
-				(throughputEMA >= thrStored || throughputEMA >= 35) 
+				(ratioSuccessFailure >= rateStored && ratioSuccessFailure >= 98)) && 
+				(throughputEMA >= thrStored || throughputEMA >= 50 || avgDuration <= 15) 
 				&& retry <= retryStored && maxActive <= 140)
                                 {
                                     if(singleDest == 1 || lanTransferBool || spawnActive > 1)
@@ -4083,7 +4095,7 @@ bool OracleAPI::updateOptimizer()
                                     stmt10.execute(true);
 
                                 }                            
-                            else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure >= 97)) && throughputEMA < thrStored)
+                            else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure >= 98)) && throughputEMA < thrStored)
                                 {
                                     if(retry > retryStored)
                                         {
