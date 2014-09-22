@@ -943,17 +943,20 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                                                                                          );
                             */
 
-                            soci::rowset<TransferFiles> rs = (sql.prepare << " select f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
+                            soci::rowset<TransferFiles> rs = (sql.prepare <<
+                                                              " SELECT f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
                                                               "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, "
                                                               "       f.checksum, j.checksum_method, j.source_space_token, "
                                                               "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                                                               "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
                                                               "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params, j.user_cred, j.reuse_job "
-                                                              " from t_file f, t_job j where f.job_id = j.job_id and  f.file_state = 'SUBMITTED' AND    "
-                                                              " f.source_se = :source_se AND f.dest_se = :dest_se AND  "
-                                                              " f.vo_name = :vo_name AND     f.wait_timestamp IS NULL AND     (f.retry_timestamp is NULL OR "
-                                                              " f.retry_timestamp < :tTime) "
-                                                              " AND     (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) and exists (select * from t_job y where y.job_id=j.job_id  "
+                                                              " FROM t_file f, t_job j "
+                                                              " WHERE f.job_id = j.job_id and  f.file_state = 'SUBMITTED' AND    "
+                                                              "     f.source_se = :source_se AND f.dest_se = :dest_se AND  "
+                                                              "     f.vo_name = :vo_name AND     f.wait_timestamp IS NULL AND "
+                                                              "     (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
+                                                              "     j.reuse_job = 'N' AND "
+                                                              "     (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) and exists (select * from t_job y where y.job_id=j.job_id  "
                                                               " ORDER BY y.priority DESC, y.submit_time) LIMIT :filesNum",
                                                               soci::use(boost::get<0>(triplet)),
                                                               soci::use(boost::get<1>(triplet)),
@@ -1025,7 +1028,7 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                                                          "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
                                                          "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params, j.user_cred, j.reuse_job "
                                                          " from t_file f, t_job j where f.job_id = j.job_id and  f.file_state = 'SUBMITTED' AND    "
-                                                         " f.source_se = :source_se AND f.dest_se = :dest_se AND  "
+                                                         " f.source_se = :source_se AND f.dest_se = :dest_se AND j.reuse_job = 'N' AND  "
                                                          " f.vo_name = :vo_name AND     f.wait_timestamp IS NULL AND     (f.retry_timestamp is NULL OR "
                                                          " f.retry_timestamp < :tTime) AND ";
                                     select +=
@@ -4066,7 +4069,7 @@ bool MySqlAPI::updateOptimizer()
                                              "WHERE source_se = :source AND dest_se = :dest LIMIT 1",
                                              soci::use(source_hostname), soci::use(destin_hostname), soci::into(active_fixed, isNullFixed));
 
-            
+
             soci::statement stmt_avg_duration = (
                                              sql.prepare << "SELECT avg(tx_duration)  from t_file "
                                              " WHERE source_se = :source AND dest_se = :dest and file_state='FINISHED' and tx_duration > 0 AND tx_duration is NOT NULL and "
@@ -4471,8 +4474,8 @@ bool MySqlAPI::updateOptimizer()
 
                             sql.begin();
 
-                            if( (ratioSuccessFailure == 100 || (ratioSuccessFailure >= rateStored && ratioSuccessFailure >= 98)) && 
-				(throughputEMA >= thrStored || throughputEMA >= 50 || avgDuration <= 15) 
+                            if( (ratioSuccessFailure == 100 || (ratioSuccessFailure >= rateStored && ratioSuccessFailure >= 98)) &&
+				(throughputEMA >= thrStored || throughputEMA >= 50 || avgDuration <= 15)
 				&& retry <= retryStored && maxActive <= 100)
                                 {
                                     if(singleDest == 1 || lanTransferBool || spawnActive > 1)
@@ -4497,7 +4500,7 @@ bool MySqlAPI::updateOptimizer()
                                     ema = throughputEMA;
                                     stmt10.execute(true);
 
-                                }                            
+                                }
                             else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure >= 98)) && throughputEMA < thrStored)
                                 {
                                     if(retry > retryStored)

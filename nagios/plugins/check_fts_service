@@ -1,14 +1,36 @@
 #!/usr/bin/env python
-from fts import Fts
 import getopt
 import os
+import pycurl
 import sys
+
+from StringIO import StringIO
+from xml.dom import minidom
 
 # Exit codes (NAGIOS compliant)
 EX_OK       = 0
 EX_WARNING  = 1
 EX_CRITICAL = 2
 EX_UNKNOWN  = 3
+
+# Message
+# Hardcoded to avoid dependencies
+SOAP_VERSION_REQUEST = """
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+    xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+    xmlns:ns0="http://schemas.xmlsoap.org/soap/encoding/"
+    xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/"
+    xmlns:ns2="http://glite.org/wsdl/services/org.glite.data.transfer.fts"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+    SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+   <SOAP-ENV:Header/>
+   <ns1:Body>
+      <ns2:getInterfaceVersion/>
+   </ns1:Body>
+</SOAP-ENV:Envelope>
+"""
 
 class FtsProbe:
     """
@@ -40,8 +62,6 @@ class FtsProbe:
                     self.port = int(arg)
                 elif opt == '--cert':
                     self.cert = arg
-                elif opt == '--key':
-                    self.key = arg
         except Exception, e:
             self.abortMsg = str(e)
 
@@ -59,7 +79,6 @@ Options:
     -H, --host Specifies the host to check
     -p, --port Specifies the FTS port. Default: 8443
         --cert X509 certificate to use
-        --key  X509 private key to use
 """ % (self.description, self.scriptName)
 
 
@@ -69,17 +88,39 @@ Options:
         elif self.abortMsg:
             return (EX_CRITICAL, self.abortMsg)
 
-        try:
-            if self.cert:
-                os.environ['X509_USER_CERT'] = self.cert
-            if self.key:
-                os.environ['X509_USER_KEY'] = self.key
+        curl = pycurl.Curl()
+        curl.setopt(pycurl.URL, "https://%s:%s" % (self.host, self.port))
+        curl.setopt(pycurl.CAPATH, '/etc/grid-security/certificates')
+        if self.cert:
+            curl.setopt(pycurl.CAINFO, self.cert)
+            curl.setopt(pycurl.SSLCERT, self.cert)
 
-            fts = Fts('https://%s:%d/' % (self.host, self.port))
+        curl.setopt(pycurl.POST, True)
+        curl.setopt(pycurl.HTTPHEADER, ['Content-Type: text/xml'])
+        curl.setopt(pycurl.POSTFIELDS, SOAP_VERSION_REQUEST)
+
+        buffer = StringIO()
+        curl.setopt(pycurl.WRITEFUNCTION, buffer.write)
+
+        try:
+            curl.perform()
         except Exception, e:
             return (EX_CRITICAL, str(e))
-
-        version = fts.getVersion()
+       
+        if curl.getinfo(pycurl.RESPONSE_CODE) != 200:
+            return (EX_CRITICAL, "Got %d" % curl.getinfo(pycurl.RESPONSE_CODE))
+ 
+        try:
+            doc = minidom.parseString(buffer.getvalue())
+            response = doc.getElementsByTagName('getInterfaceVersionReturn')[0]
+            version = None
+            for child in response.childNodes:
+                if child.nodeType == child.TEXT_NODE:
+                    version = child.data
+            if version is None:
+                raise Exception('Could not find the version')
+        except Exception, e:
+            return (EX_CRITICAL, "Response is malformed (%s)" % str(e))
 
         return (EX_OK, "FTS %s" % version)
 

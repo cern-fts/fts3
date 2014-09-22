@@ -1,9 +1,13 @@
 #!/usr/bin/env python
-import json
+try:
+    import json
+except:
+    import simplejson as json
 import getopt
 import os
 import pycurl
 import sys
+import time
 from datetime import datetime, timedelta
 from StringIO import StringIO
 
@@ -29,11 +33,12 @@ class FtsStalledTransfersProbe:
         self.monitoring = None
         self.warning    = timedelta(days = 2)
         self.critical   = timedelta(days = 7)
+        self.cert       = None
 
         # Process args
         try:
             opts, args = getopt.getopt(argv[1:], 'hH:m:w:c:',
-                                    ['help', 'host=', 'mon='])
+                                    ['help', 'host=', 'mon=', 'cert='])
             for opt, arg in opts:
                 if opt in ('-h', '--help'):
                     self.help = True
@@ -45,6 +50,8 @@ class FtsStalledTransfersProbe:
                     self.warning = timedelta(days = int(arg))
                 elif opt == '-c':
                     self.critical = timedelta(days = int(arg))
+                elif opt == '--cert':
+                    self.cert = arg
         except Exception, e:
             self.abortMsg = str(e)
 
@@ -52,9 +59,9 @@ class FtsStalledTransfersProbe:
             self.abortMsg = "-H OR -m must be specified"
 
         if not self.monitoring:
-            self.monitoring = "http://%s/fts3/ftsmon/transfers" % self.host
+            self.monitoring = "https://%s:8449/fts3/ftsmon/jobs" % self.host
         else:
-            self.monitoring = self.monitoring + '/transfers'
+            self.monitoring = self.monitoring + '/jobs'
 
     def usage(self):
         return \
@@ -65,7 +72,7 @@ Usage:
 
 Options:
     -H, --host Specifies the host to check
-    -m, --mon  Monitoring base url. i.e. http://fts3-pilot-mon.cern.ch/fts3/ftsmon
+    -m, --mon  Monitoring base url. i.e. https://fts3-pilot-mon.cern.ch:8449/fts3/ftsmon
     -w         Warning threshold.
     -c         Critical threshold.
 """ % (self.description, self.scriptName)
@@ -85,10 +92,17 @@ Options:
         curl.setopt(pycurl.CAPATH, '/etc/grid-security/certificates')
         curl.setopt(pycurl.URL, self.monitoring + '?state=SUBMITTED&orderby=submit_time&page=all')
 
+        if self.cert:
+            curl.setopt(pycurl.SSLCERT, self.cert)
+            curl.setopt(pycurl.CAINFO, self.cert)
+
         try:
             curl.perform()
         except Exception, e:
             return (EX_CRITICAL, str(e))
+
+        if curl.getinfo(pycurl.RESPONSE_CODE) != 200:
+            return (EX_CRITICAL, "Got %d" % curl.getinfo(curl.RESPONSE_CODE))
 
         try:
             response = json.loads(buffer.getvalue())
@@ -104,10 +118,8 @@ Options:
         oldest_time = datetime.utcnow()
         oldest = None
         for t in response['items']:
-            reference = datetime.strptime(t['job__submit_time'], '%Y-%m-%dT%H:%M:%S')
-            if t['start_time']:
-                reference = datetime.strptime(t['start_time'], '%Y-%m-%dT%H:%M:%S')
-
+            reference_struct = time.strptime(t['submit_time'], '%Y-%m-%dT%H:%M:%S')
+            reference = datetime.fromtimestamp(time.mktime(reference_struct))
             if reference < oldest_time:
                 oldest = t
                 oldest_time = reference
