@@ -1178,6 +1178,9 @@ int main(int argc, char **argv)
                 reporter.timeout = opts.timeout;
                 reporter.nostreams = opts.nStreams;
                 reporter.buffersize = opts.tcpBuffersize;
+		
+		//this sleep is needed to avoid deadlocks with the server when concurrently updating the same row
+		sleep(1);
                 reporter.sendMessage(currentTransfer.throughput, false,
                                      opts.jobId, currentTransfer.fileId,
                                      "UPDATE", "",
