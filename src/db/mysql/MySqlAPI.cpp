@@ -4473,7 +4473,7 @@ bool MySqlAPI::updateOptimizer()
 
                             if( (ratioSuccessFailure == 100 || (ratioSuccessFailure >= rateStored && ratioSuccessFailure >= 98)) && 
 				(throughputEMA >= thrStored || throughputEMA >= 50 || avgDuration <= 15) 
-				&& retry <= retryStored && maxActive <= 140)
+				&& retry <= retryStored && maxActive <= 100)
                                 {
                                     if(singleDest == 1 || lanTransferBool || spawnActive > 1)
                                         {
