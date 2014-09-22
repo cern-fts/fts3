@@ -43,20 +43,16 @@ struct File
     File () {}
 
     File (
-        std::vector<std::string> s,
-        std::vector<std::string> d,
-        std::vector<std::string> c = std::vector<std::string>(),
-        boost::optional<double> fs = boost::optional<double>(),
-        boost::optional<std::string> m = boost::optional<std::string>(),
-        boost::optional<std::string> ss = boost::optional<std::string>())
+        std::vector<std::string> const & s,
+        std::vector<std::string> const & d,
+        std::vector<std::string> const & c = std::vector<std::string>(),
+        boost::optional<double> const & fs = boost::none,
+        boost::optional<std::string> const & m = boost::none,
+        boost::optional<std::string> const & ss = boost::none,
+        boost::optional<std::string> const & a = boost::none
+       ) : sources(s), destinations(d), checksums(c), file_size(fs), metadata(m), selection_strategy(ss), activity(a)
     {
 
-        sources = s;
-        destinations = d;
-        checksums = c;
-        file_size = fs;
-        metadata = m;
-        selection_strategy = ss;
     }
 
     /// the source files (replicas)
@@ -71,6 +67,8 @@ struct File
     boost::optional<double> file_size;
     /// metadata
     boost::optional<std::string> metadata;
+    /// activity
+    boost::optional<std::string> activity;
 };
 
 }

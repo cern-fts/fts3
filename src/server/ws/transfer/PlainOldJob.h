@@ -277,6 +277,7 @@ job_element_tupple PlainOldJobBase<ELEMENT>::create_job_element(ITER const & it,
 
     job_element.state = initialState;
     job_element.fileIndex = fileIndex;
+    job_element.activity = "default";
 
     // if it is 1 to N transfer each one will have different file index
     if (type != N_TO_1) ++fileIndex;
