@@ -3651,7 +3651,7 @@ bool OracleAPI::updateOptimizer()
             soci::statement stmt_avg_duration = (
                                              sql.prepare << "SELECT avg(tx_duration)  from t_file "
                                              " WHERE source_se = :source AND dest_se = :dest and file_state='FINISHED' and tx_duration > 0 AND tx_duration is NOT NULL and "
-					     " job_finished > (sys_extract_utc(systimestamp) - interval '30' minute) LIMIT 1",
+					     " job_finished > (sys_extract_utc(systimestamp) - interval '30' minute) ",
                                              soci::use(source_hostname), soci::use(destin_hostname), soci::into(avgDuration, isNullAvg));
 
             //snapshot of active transfers
@@ -4070,7 +4070,7 @@ bool OracleAPI::updateOptimizer()
                              if( (ratioSuccessFailure == 100 || 
 				(ratioSuccessFailure >= rateStored && ratioSuccessFailure >= 98)) && 
 				(throughputEMA >= thrStored || throughputEMA >= 50 || avgDuration <= 15) 
-				&& retry <= retryStored && maxActive <= 140)
+				&& retry <= retryStored && maxActive <= 100)
                                 {
                                     if(singleDest == 1 || lanTransferBool || spawnActive > 1)
                                         {
