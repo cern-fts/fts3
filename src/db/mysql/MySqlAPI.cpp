@@ -573,7 +573,7 @@ std::map<std::string, long long> MySqlAPI::getActivitiesInQueue(soci::session& s
 
             soci::rowset<soci::row> rs = (
                                              sql.prepare <<
-                                             " SELECT SQL_NO_CACHE activity, COUNT(DISTINCT f.job_id, f.file_index) AS count "
+                                             " SELECT activity, COUNT(DISTINCT f.job_id, f.file_index) AS count "
                                              " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) WHERE "
                                              "  j.vo_name = f.vo_name AND f.file_state = 'SUBMITTED' AND "
                                              "	f.source_se = :source AND f.dest_se = :dest AND "
@@ -583,7 +583,7 @@ std::map<std::string, long long> MySqlAPI::getActivitiesInQueue(soci::session& s
                                              "	(f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
                                              "  j.job_state in ('ACTIVE','SUBMITTED') AND "
                                              "  (j.reuse_job = 'N' OR j.reuse_job IS NULL) "
-                                             " GROUP BY activity ORDER BY NULL ",
+                                             " GROUP BY activity ORDER BY NULL LIMIT 15 ",
                                              soci::use(src),
                                              soci::use(dst),
                                              soci::use(vo),
