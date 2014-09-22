@@ -37,6 +37,8 @@
 #include "queue_updater.h"
 #include "DbUtils.h"
 
+#include "common/JobStatusHandler.h"
+
 using namespace FTS3_COMMON_NAMESPACE;
 using namespace db;
 
@@ -2063,16 +2065,25 @@ void MySqlAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::stri
                                      std::bind2nd(std::equal_to<std::string>(), std::string("CANCELED")));
                     searchForCanceling = (i != inGivenStates.end());
 
+                    int countTerminal = 0, countInitial = 0;
                     std::string jobStatusesIn = "'" + inGivenStates[0] + "'";
                     for (unsigned i = 1; i < inGivenStates.size(); ++i)
                         {
+                            if (JobStatusHandler::getInstance().isTransferFinished(inGivenStates[0]))
+                                ++countTerminal;
+                            else
+                                ++countInitial;
+
                             jobStatusesIn += (",'" + inGivenStates[i] + "'");
                         }
                     query << "WHERE job_state IN (" << jobStatusesIn << ") ";
+                    if (countTerminal > 0 && countInitial == 0) query << " AND job_finished IS NOT NULL ";
+                    else if (countTerminal == 0 && countInitial > 0) query << " AND job_finished IS NULL ";
                 }
             else
                 {
-                    query << "WHERE 1 ";
+                    // if there are no parameters query by default for ACTIVE, SUBMITTED and READY
+                    query << "WHERE job_finished IS NULL ";
                 }
 
             if (!restrictToClientDN.empty())
