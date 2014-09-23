@@ -1,6 +1,11 @@
 <h2>Configuration status</h2>
 
 <h3>Server config</h3>
+
+<ul ng-show="server.optimizer_mode" style="list-style-type: none">
+    <li><b>Optimizer level:</b> {{ server.optimizer_mode }}</li>
+</ul>
+
 <table class="table">
     <thead>
         <tr>
@@ -9,7 +14,6 @@
             <th>Max. Time in queue</th>
             <th>Global timeout</th>
             <th>Seconds per MB</th>
-            <th>Optimizer level</th>
         </tr>
     </thead>
     <tbody>
@@ -26,7 +30,6 @@
             <td>{{ c.max_time_queue }}</td>
             <td>{{ c.global_timeout }}</td>
             <td>{{ c.sec_per_mb }}</td>
-            <td>{{ server.optimizer_mode }}</td>
         </tr>
     </tbody>
 </table>
