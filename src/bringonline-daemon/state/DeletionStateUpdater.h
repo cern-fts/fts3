@@ -41,6 +41,25 @@ public:
 
     virtual ~DeletionStateUpdater() {}
 
+    // make sure it is not hidden by the next one
+    using StateUpdater::operator();
+
+    /**
+     * Functional call for making an asynchronous state update
+     *
+     * @param job_id : job ID
+     * @param file_id : file ID
+     * @param state : the new state
+     * @param reason : reason for changing the state
+     * @param retry : true is the file requires retry, false otherwise
+     */
+    void operator()(std::string const & job_id, int file_id, std::string const & state, std::string const & reason, bool retry)
+    {
+        // lock the vector
+        boost::mutex::scoped_lock lock(m);
+        updates.push_back(value_type(file_id, state, reason, job_id, retry));
+    }
+
 private:
 
     /// Default constructor
