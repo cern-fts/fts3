@@ -50,7 +50,10 @@ SrcDelCli::SrcDelCli()
     // add commandline option specific for the fts3-transfer-delete
     specific.add_options()
     ("source-token,S", value<string>(), "The source space token or its description (for SRM 2.2 transfers).")
-    ("file,f", value<string>(&bulk_file), "Name of a configuration file.")
+    ("file,f", value<string>(&bulk_file), "Name of a the bulk submission file.")
+    ;
+    // add hidden options
+    hidden.add_options()
     ("Filename", value< vector<string> >(&allFilenames)->multitoken(), "Specify the FileName(s).")
     ;
     // add optional (that used without an option switch) command line option

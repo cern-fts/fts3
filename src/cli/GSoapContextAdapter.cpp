@@ -222,6 +222,16 @@ std::string GSoapContextAdapter::transferSubmit(std::vector<File> const & files,
                     element->selectionStrategy = 0;
                 }
 
+            if (f_it->activity)
+                {
+                    element->activity = soap_new_std__string(ctx, -1);
+                    *element->activity = *f_it->activity;
+                }
+            else
+                {
+                    element->activity = 0;
+                }
+
             // push the element into the result vector
             job.transferJobElements.push_back(element);
         }

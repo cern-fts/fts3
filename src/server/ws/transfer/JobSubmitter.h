@@ -140,7 +140,7 @@ private:
      * Extracts the activity name from file metadata
      * in case if there is no activity it returns 'default'
      */
-    string getActivity(string metadata);
+    string getActivity(std::string const * const activity);
 
     /**
      * Checks whether the right protocol has been used

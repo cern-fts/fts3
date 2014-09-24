@@ -3522,11 +3522,11 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
     return allowed;
 }
 
-int OracleAPI::getMaxActive(soci::session& sql, int level, int /*highDefault*/, const std::string & source_hostname, const std::string & destin_hostname)
+void OracleAPI::getMaxActive(soci::session& sql, int& source, int& destination, const std::string & source_hostname, const std::string & destination_hostname)
 {
     int maxActiveSource = 0;
     int maxActiveDest = 0;
-    int maxDefault = 250;
+    int maxDefault = MAX_ACTIVE_ENDPOINT_LINK;
 
     try
         {
@@ -3535,26 +3535,27 @@ int OracleAPI::getMaxActive(soci::session& sql, int level, int /*highDefault*/, 
                 soci::use(source_hostname),
                 soci::into(maxActiveSource);
 
-            if(maxActiveSource == 0)
+            if(sql.got_data())
                 {
-                    //check for dest
-                    sql << " select active from t_optimize where dest_se = :dest_se and active is not NULL ",
-                        soci::use(destin_hostname),
-                        soci::into(maxActiveDest);
+			source = maxActiveSource;	
+		}
+	    else
+	        {
+			source = maxDefault;
+		}
+		
+  	    sql << " select active from t_optimize where dest_se = :dest_se and active is not NULL ",
+                 soci::use(destination_hostname),
+                 soci::into(maxActiveDest);
 
-                    if(maxActiveDest == 0)
-                        {
-                            return maxDefault;
-                        }
-                    else
-                        {
-                            return maxActiveDest;
-                        }
-                }
-            else
+            if(sql.got_data())
                 {
-                    return maxActiveSource;
-                }
+			destination = maxActiveDest;	
+		}
+	    else
+	        {
+			destination = maxDefault;
+		}		
         }
     catch (std::exception& e)
         {
@@ -3564,7 +3565,7 @@ int OracleAPI::getMaxActive(soci::session& sql, int level, int /*highDefault*/, 
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
-    return maxDefault;
+  
 }
 
 bool OracleAPI::updateOptimizer()
@@ -3857,7 +3858,7 @@ bool OracleAPI::updateOptimizer()
                                             time_t now = getUTC(0);
                                             double diff = difftime(now, lastTime);
 
-                                            if(timeIsOk && diff >= 900 && testedThroughput == 1 && maxThroughput > 0.0) //every 15min experiment with diff number of streams
+                                            if(timeIsOk && diff >= STREAMS_UPDATE_SAMPLE && testedThroughput == 1 && maxThroughput > 0.0) //every 15min experiment with diff number of streams
                                                 {
                                                     nostreams += 1;
                                                     throughput = 0.0;
@@ -3915,7 +3916,7 @@ bool OracleAPI::updateOptimizer()
                                             time_t now = getUTC(0);
                                             double diff = difftime(now, lastTime);
 
-                                            if (timeIsOk && diff >= 36000 && throughput > 0.0) //almost half a day has passed, compare throughput with max sample
+                                            if (timeIsOk && diff >= STREAMS_UPDATE_MAX && throughput > 0.0) //almost half a day has passed, compare throughput with max sample
                                                 {
                                                     sql.begin();
                                                     stmt28.execute(true);	//update stream currently used with new throughput and timestamp this time
@@ -4015,7 +4016,7 @@ bool OracleAPI::updateOptimizer()
                         maxActive = highDefault;
 
                     //The smaller alpha becomes the longer moving average is. ( e.g. it becomes smoother, but less reactive to new samples )
-                    double throughputEMA = ceil(exponentialMovingAverage( throughput, 0.7, ema));
+                    double throughputEMA = ceil(exponentialMovingAverage( throughput, EMA, ema));
 
                     //only apply the logic below if any of these values changes
                     bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, rateStored, throughputEMA, thrStored, retry, retryStored, maxActive, activeStored, throughputSamples, thrSamplesStored);
@@ -4052,11 +4053,13 @@ bool OracleAPI::updateOptimizer()
 
                             //get current active for this destination
                             stmtActiveDest.execute(true);
+   			   
+			    //make sure we do not increase beyond the limits set
+			    int maxSource = 0;
+			    int maxDestination = 0;
+                            getMaxActive(sql, maxSource, maxDestination, source_hostname, destin_hostname);
 
-                            //make sure we do not increase beyond the limits set
-                            int maxActiveLimit = getMaxActive(sql, spawnActive, highDefault, source_hostname, destin_hostname);
-
-                            if( (activeSource > maxActiveLimit || activeDestination > maxActiveLimit) && active > highDefault)
+                            if( (activeSource > maxSource || maxDestination > maxDestination) && active > highDefault)
                                 {
                                     updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, 11, bandwidthIn);
 
@@ -4067,18 +4070,18 @@ bool OracleAPI::updateOptimizer()
 
                             sql.begin();
                            
-                             if( (ratioSuccessFailure == 100 || 
-				(ratioSuccessFailure >= rateStored && ratioSuccessFailure >= 98)) && 
-				(throughputEMA >= thrStored || throughputEMA >= 50 || avgDuration <= 15) 
-				&& retry <= retryStored && maxActive <= 100)
+                             if( (ratioSuccessFailure == MAX_SUCCESS_RATE || 
+				(ratioSuccessFailure >= rateStored && ratioSuccessFailure >= MED_SUCCESS_RATE)) && 
+				(throughputEMA >= thrStored || throughputEMA >= HIGH_THROUGHPUT || avgDuration <= AVG_TRANSFER_DURATION) 
+				&& retry <= retryStored && maxActive <= MAX_ACTIVE_PER_LINK)
                                 {
                                     if(singleDest == 1 || lanTransferBool || spawnActive > 1)
                                         {
                                             active = maxActive + spawnActive;
                                         }
-                                    else if (throughputSamples == 10 && ratioSuccessFailure >= 99)
+                                    else if (throughputSamples == 10 && ratioSuccessFailure >= MED_SUCCESS_RATE)
 					{
-					    active = maxActive + 2;
+					    active = maxActive + 1;
 					}
                                     else
                                         {
@@ -4095,7 +4098,9 @@ bool OracleAPI::updateOptimizer()
                                     stmt10.execute(true);
 
                                 }                            
-                            else if( (ratioSuccessFailure == 100 || (ratioSuccessFailure > rateStored && ratioSuccessFailure >= 98)) && throughputEMA < thrStored)
+                            else if( (ratioSuccessFailure == MAX_SUCCESS_RATE || 
+			    		(ratioSuccessFailure > rateStored && ratioSuccessFailure >= MED_SUCCESS_RATE)) && 
+					throughputEMA < thrStored)
                                 {
                                     if(retry > retryStored)
                                         {
@@ -4107,6 +4112,11 @@ bool OracleAPI::updateOptimizer()
                                             active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
                                             pathFollowed = 4;
                                         }
+				    else if (avgDuration > MAX_TRANSFER_DURATION)
+				        {
+				            active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
+                                            pathFollowed = 4;
+					}
                                     else
                                         {
                                             if(maxActive >= activeStored)
@@ -4123,9 +4133,9 @@ bool OracleAPI::updateOptimizer()
                                     ema = throughputEMA;
                                     stmt10.execute(true);
                                 }
-                            else if ( ratioSuccessFailure < 97)
+                            else if ( ratioSuccessFailure < LOW_SUCCESS_RATE)
                                 {
-                                    if(ratioSuccessFailure > rateStored && ratioSuccessFailure == 96 && retry <= retryStored)
+                                    if(ratioSuccessFailure > rateStored && ratioSuccessFailure == BASE_SUCCESS_RATE && retry <= retryStored)
                                         {
                                             active = maxActive;
                                             pathFollowed = 7;
@@ -8457,7 +8467,7 @@ int OracleAPI::getOptimizerDefaultMode(soci::session& sql)
 
 int OracleAPI::getOptimizerMode(soci::session& sql)
 {
-    int modeDefault = 2;
+    int modeDefault = MIN_ACTIVE;
     int mode = 0;
     soci::indicator ind = soci::i_ok;
 
@@ -8509,7 +8519,7 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
     soci::session sql(*connectionPool);
 
     //expressed in secs, default delay
-    const int default_retry_delay = 120;
+    const int default_retry_delay = DEFAULT_RETRY_DELAY;
     long long retry_delay = 0;
     std::string reuse_job;
     soci::indicator ind = soci::i_ok;

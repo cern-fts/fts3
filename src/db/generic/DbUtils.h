@@ -32,7 +32,20 @@ using namespace FTS3_CONFIG_NAMESPACE;
 namespace db
 {
 
-const int MAX_ACTIVE_PER_LINK = 70;
+const int MAX_ACTIVE_PER_LINK = 100;
+const int MAX_ACTIVE_ENDPOINT_LINK = 250;
+const int MIN_ACTIVE = 2;
+const int DEFAULT_RETRY_DELAY = 120;
+const int STREAMS_UPDATE_SAMPLE = 120;
+const int STREAMS_UPDATE_MAX = 36000;
+const double EMA = 0.7;
+const int MAX_SUCCESS_RATE = 100;
+const int MED_SUCCESS_RATE = 98;
+const int LOW_SUCCESS_RATE = 97;
+const int BASE_SUCCESS_RATE = 96;
+const int HIGH_THROUGHPUT = 50;
+const int AVG_TRANSFER_DURATION = 15;
+const int MAX_TRANSFER_DURATION = 3600;
 
 /*check if it's single source  / multiple destination replication job*/
 inline bool is_n_replication(std::list<job_element_tupple>& src_dest_pair)

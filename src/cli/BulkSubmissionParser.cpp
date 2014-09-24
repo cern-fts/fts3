@@ -44,6 +44,7 @@ const set<string> BulkSubmissionParser::file_tokens =
     ("checksums")
     ("filesize")
     ("metadata")
+    ("activity")
     ;
 
 BulkSubmissionParser::BulkSubmissionParser(istream& ifs)
@@ -186,6 +187,9 @@ void BulkSubmissionParser::parse_item(ptree& item)
     // handle metadata
 
     file.metadata = getMetadata(item);
+
+    // handle activity
+    file.activity = get<std::string>(item, "activity");
 
     // put the file into the job element vector
     files.push_back(file);

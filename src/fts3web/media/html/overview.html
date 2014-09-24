@@ -89,6 +89,9 @@
                 </a>
 			</td>
             <td class="numeric">
+                <span ng-show="o.active_fixed">
+                    <i class="icon-magnet" title="Number of active fixed"></i>
+                </span>
                 <a href="#/jobs?source_se={{o.source_se}}&dest_se={{o.dest_se}}&vo={{o.vo_name}}&with_file=ACTIVE&time_window={{globalFilter.time_window}}">
                     <span optional-number="o.active"></span>
                 </a>

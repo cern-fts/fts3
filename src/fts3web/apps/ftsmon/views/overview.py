@@ -17,11 +17,10 @@
 from datetime import datetime, timedelta
 from django.db import connection
 from django.db.models import Count, Avg
-import itertools
 import types
 import sys
 
-from ftsweb.models import File
+from ftsweb.models import File, OptimizeActive
 from jobs import setup_filters
 from jsonify import jsonify
 from util import get_order_by, paged
@@ -107,6 +106,16 @@ class OverviewExtended(object):
         else:
             return None
 
+    def _get_active_fixed(self, source, dest):
+        oa = OptimizeActive.objects.filter(source_se=source, dest_se=dest)
+        if len(oa):
+            if oa[0].fixed == 'on':
+                return True
+            else:
+                return False
+        else:
+            return False
+
     def __getitem__(self, indexes):
         if isinstance(indexes, types.SliceType):
             return_list = self.objects[indexes]
@@ -114,6 +123,7 @@ class OverviewExtended(object):
                 item['avg_duration'] = self._get_avg_duration(item['source_se'], item['dest_se'], item['vo_name'])
                 item['most_frequent_error'] = self._get_frequent_error(item['source_se'], item['dest_se'],
                                                                        item['vo_name'])
+                item['active_fixed'] = self._get_active_fixed(item['source_se'], item['dest_se'])
             return return_list
         else:
             return self.objects[indexes]

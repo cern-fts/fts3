@@ -120,6 +120,7 @@
      <element name="filesize" nillable="true" minOccurs="0" type="xsd:double"/>
      <element name="metadata" nillable="true" minOccurs="0" type="xsd:string"/>
      <element name="selectionStrategy" nillable="true" minOccurs="0" type="xsd:string"/>
+     <element name="activity" nillable="true" minOccurs="0" type="xsd:string"/>
     </sequence>
    </complexType>
    
