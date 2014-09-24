@@ -23,14 +23,14 @@
             <th style="width: 14%">Destination space token</th>
         </tr>
     </thead>
-    <tbody ng-repeat="job in jobs.items" ng-class-odd="'odd'" ng-class="classFromMetadata(job)">
+    <tbody data-ng-repeat="job in jobs.items" data-ng-class-odd="'odd'" data-ng-class="classFromMetadata(job)">
         <tr>
             <td>
-                <i class="icon-warning-sign" ng-show="job.diagnosis" tooltip="{{job.diagnosis}}"></i>
+                <i class="icon-warning-sign" data-ng-show="job.diagnosis" data-tooltip="{{job.diagnosis}}"></i>
                 <a href=#/job/{{job.job_id}}>{{job.job_id}}</a></td>
             <td>{{job.submit_time}}</td>
             <td class="status {{job.job_state}}">
-                <span class="active" ng-click="job.show=!job.show" title="Details">{{job.job_state}}</span>
+                <span class="active" data-ng-click="job.show=!job.show" title="Details">{{job.job_state}}</span>
             </td>
             <td>{{job.vo_name}}</td>
             <td class="hscroll">{{job.source_se}}</td>
@@ -39,12 +39,12 @@
             <td>{{job.priority}}</td>
             <td>{{job.space_token}}</td>
         </tr>
-        <tr style="background: #CCC" ng-show="job.show">
+        <tr style="background: #CCC" data-ng-show="job.show">
             <td colspan="8">
                 <dl>
                     <dt>File count</dt>
                     <dd>
-                        <span ng-repeat="(state, count) in job.files">{{count}} {{state}} </span>
+                        <span data-ng-repeat="(state, count) in job.files">{{count}} {{state}} </span>
                     </dd>
                     <dt>Job finished time<dt>
                     <dd>{{job.job_finished}}</dd>
@@ -61,35 +61,35 @@
 
 <!-- Modals -->
 <div id="filterDialog" class="modal" role="dialog" style="display: none">
-    <form ng-submit="applyFilters()" autocomplete="off">
+    <form data-ng-submit="applyFilters()" autocomplete="off">
 	    <div class="modal-header">
 	        <h3>Filters</h3>
 	    </div>
 	    <div class="modal-body">
-	        <label for="state">State:</label>
+	        <label>State:</label>
 		    <p class="btn-group">
-		        <button type="button" class="btn btn-info btn-small" ng-model="filter.state.submitted" btn-checkbox>SUBMITTED</button>
-		        <button type="button" class="btn btn-info btn-small" ng-model="filter.state.ready" btn-checkbox>READY</button>
-		        <button type="button" class="btn btn-primary btn-small" ng-model="filter.state.staging" btn-checkbox>STAGING</button>
-		        <button type="button" class="btn btn-primary btn-small" ng-model="filter.state.active" btn-checkbox>ACTIVE</button>
-                <button type="button" class="btn btn-primary btn-small" ng-model="filter.state.delete" btn-checkbox>DELETE</button>
+		        <button type="button" class="btn btn-info btn-small" data-ng-model="filter.state.submitted" data-btn-checkbox>SUBMITTED</button>
+		        <button type="button" class="btn btn-info btn-small" data-ng-model="filter.state.ready" data-btn-checkbox>READY</button>
+		        <button type="button" class="btn btn-primary btn-small" data-ng-model="filter.state.staging" data-btn-checkbox>STAGING</button>
+		        <button type="button" class="btn btn-primary btn-small" data-ng-model="filter.state.active" data-btn-checkbox>ACTIVE</button>
+                <button type="button" class="btn btn-primary btn-small" data-ng-model="filter.state.delete" data-btn-checkbox>DELETE</button>
 
 	            <br/>
-		        <button type="button" class="btn btn-danger  btn-small" ng-model="filter.state.canceled" btn-checkbox>CANCELED</button>
-		        <button type="button" class="btn btn-danger btn-small" ng-model="filter.state.failed" btn-checkbox>FAILED</button>
-		        <button type="button" class="btn btn-success btn-small" ng-model="filter.state.finished" btn-checkbox>FINISHED</button>
-		        <button type="button" class="btn btn-warning btn-small" ng-model="filter.state.finisheddirty" btn-checkbox>FINISHED DIRTY</button>
+		        <button type="button" class="btn btn-danger  btn-small" data-ng-model="filter.state.canceled" data-btn-checkbox>CANCELED</button>
+		        <button type="button" class="btn btn-danger btn-small" data-ng-model="filter.state.failed" data-btn-checkbox>FAILED</button>
+		        <button type="button" class="btn btn-success btn-small" data-ng-model="filter.state.finished" data-btn-checkbox>FINISHED</button>
+		        <button type="button" class="btn btn-warning btn-small" data-ng-model="filter.state.finisheddirty" data-btn-checkbox>FINISHED DIRTY</button>
 		    </p>
 
 			<label for="timewindow">Time window:</label>
-			<input type="number" placeholder="time window in hours" id="timewindow" ng-model="filter.time_window"/>
+			<input type="number" placeholder="time window in hours" id="timewindow" data-ng-model="filter.time_window"/>
 
 			<label for="diagnosis">Enable diagnosis mode</label>
-			<input type="checkbox" id="diagnosis" ng-model="filter.diagnosis"/>
+			<input type="checkbox" id="diagnosis" data-ng-model="filter.diagnosis"/>
 	    </div>
 	    <div class="modal-footer">
-	        <button class="btn btn-success" ng-click="applyFilters()">Apply</button>
-	        <button class="btn btn-danger" ng-click="cancelFilters()">Cancel</button>
+	        <a class="btn btn-success" data-ng-click="applyFilters()">Apply</a>
+	        <a class="btn btn-danger" data-ng-click="cancelFilters()">Cancel</a>
 	    </div>
     </form>
 

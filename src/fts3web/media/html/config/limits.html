@@ -9,25 +9,25 @@
     <thead>
         <tr>
             <th>
-                <span order-by="source_se">Source</span>
+                <span data-order-by="source_se">Source</span>
             </th>
             <th>
-                <span order-by="dest_se">Destination</span>
+                <span data-order-by="dest_se">Destination</span>
             </th>
             <th>
-                <span order-by="active">Max. Active</span>
+                <span data-order-by="active">Max. Active</span>
             </th>
             <th>
-                <span order-by="bandwidth">Max. Bandwidth</span>
+                <span data-order-by="bandwidth">Max. Bandwidth</span>
             </th>
         </tr>
     </thead>
-    <tbody ng-repeat="limit in limits.items" ng-class-odd="'odd'">
+    <tbody data-ng-repeat="limit in limits.items" data-ng-class-odd="'odd'">
         <tr>
             <td>{{ limit.source_se }}</td>
             <td>{{ limit.dest_se }}</td>
             <td>{{ limit.active }}</td>
-            <td><span optional-number="limit.bandwidth" digits="2" suffix="MB/s"></span></td>
+            <td><span data-optional-number="{{limit.bandwidth}}" data-digits="2" data-suffix="MB/s"></span></td>
         </tr>
     </tbody>
 </table>

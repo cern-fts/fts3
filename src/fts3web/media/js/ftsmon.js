@@ -1,11 +1,11 @@
-angular.module('ftsmon', ['ftsmon.resources', 'ftsmon.plots', 'ftsmon.global_filter', 'ui.bootstrap']).
+angular.module('ftsmon', ['ngRoute', 'ftsmon.resources', 'ftsmon.plots', 'ftsmon.global_filter', 'ui.bootstrap']).
 config(function($routeProvider) {
     $routeProvider.
         when('/',                     {templateUrl: STATIC_ROOT + 'html/overview.html',
                                        controller:  OverviewCtrl,
                                        resolve:     OverviewCtrl.resolve}).
         when('/jobs',                 {templateUrl: STATIC_ROOT + 'html/jobs/index.html',
-                                           controller:  JobListCtrl,
+                                       controller:  JobListCtrl,
                                            resolve:     JobListCtrl.resolve}).
         when('/job/:jobId',           {templateUrl: STATIC_ROOT + 'html/jobs/view.html',
                                        controller:  JobViewCtrl,
@@ -88,24 +88,26 @@ config(function($routeProvider) {
 .directive('log', function() {
     return {
         restrict: 'A',
-        scope: 'isolate',
+        scope: {
+            host: '=',
+            log: '='
+        },
         replace: true,
         template: '<a href="{{logUrl}}">{{log}}</a>',
         link: function(scope, element, attr) {
-            scope.log = scope.$eval(attr.log);
-            scope.logUrl = LOG_BASE_URL.replace('%(host)', scope.$eval(attr.host)) + scope.log;
+            scope.logUrl = LOG_BASE_URL.replace('%(host)', scope.host) + scope.log;
         }
     }
 })
 .directive('optionalNumber', function() {
     return {
         restrict: 'A',
-        scope: 'isolate',
         replace: false,
         template: '{{ value }} {{ suffix }}',
+        scope: {},
         link: function(scope, element, attr) {
             scope.decimals = scope.$eval(attr.decimals);
-            scope.$watch(attr.optionalNumber, function(val) {
+            attr.$observe('optionalNumber', function(val) {
                 scope.value = val;
                 if (scope.value == null || scope.value == undefined) {
                     scope.value = '-';
@@ -118,16 +120,17 @@ config(function($routeProvider) {
         }
     }
 })
-.directive('orderBy', ['$location', function($location) {
+.directive('orderBy', function($location) {
     return {
         restrict: 'A',
-        scope: 'isolate',
+        scope: {},
         replace: true,
         link: function(scope, element, attr) {
             var content = element.text();
             var field = attr.orderBy;
             var title = attr.title;
-            var orderedBy = $location.search().orderby;
+            var orderedBy = $location.$$search.orderby;
+
             if (!orderedBy)
                 orderedBy = '';
 
@@ -167,7 +170,7 @@ config(function($routeProvider) {
             element.replaceWith(replacement);
         }
     }
-}])
+})
 .run(function($rootScope, $location) {
     $rootScope.searchJob = function() {
         $rootScope.clearGlobalFilters();

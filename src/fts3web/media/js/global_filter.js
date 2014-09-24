@@ -57,9 +57,9 @@ angular.module('ftsmon.global_filter', [])
             }
 
             $scope.unique = {
-                vos:          Unique('vos'),
-                sources:      Unique('sources'),
-                destinations: Unique('destinations')
+                vos:          Unique.query({field: 'vos'}),
+                sources:      Unique.query({field: 'sources'}),
+                destinations: Unique.query({field: 'destinations'})
             }
         }
     };
@@ -67,7 +67,7 @@ angular.module('ftsmon.global_filter', [])
 .directive('applyGlobalFilter', function($rootScope) {
     return {
         restrict: 'A',
-        scope: 'isolate',
+        scope: {},
         link: function(scope, element, attrs) {
             var link = element[0];
             var href = link['href'];
@@ -77,20 +77,7 @@ angular.module('ftsmon.global_filter', [])
             });
         }
     }
-})
-.run(function($location, $rootScope) {
-    var wrapped = $location.search.bind($location);
-    $location.search = function(search, paramValue) {
-        if (typeof(search) != 'string')
-            mergeFilters(search, $rootScope.globalFilter);
-        return wrapped(search, paramValue);
-    }
-
-    $rootScope.clearGlobalFilters = function() {
-        $rootScope.globalFilter = {};
-    }
 });
-
 
 function mergeFilters(search, globals)
 {

@@ -28,13 +28,13 @@ def get_unique_activities(http_request):
 @jsonify
 def get_unique_sources(http_request):
     sources = Job.objects.values('source_se').distinct()
-    return [row['source_se'] for row in sources]
+    return filter(lambda h: h, map(lambda r: r['source_se'], sources))
 
 
 @jsonify
 def get_unique_destinations(http_request):
-    sources = Job.objects.values('dest_se').distinct()
-    return [row['dest_se'] for row in sources]
+    destinations = Job.objects.values('dest_se').distinct()
+    return filter(lambda h: h, map(lambda r: r['dest_se'], destinations))
 
 
 @jsonify

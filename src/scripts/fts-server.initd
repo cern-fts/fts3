@@ -34,6 +34,7 @@ export X509_USER_KEY=/etc/grid-security/fts3hostkey.pem
 
 start() {
     echo -n $"Starting $prog: "
+    sleep 1
     # if not running, start it up here, usually something like "daemon $exec"
     pgrep $prog
     retval=$?    
