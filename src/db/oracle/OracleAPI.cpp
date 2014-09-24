@@ -291,7 +291,7 @@ void OracleAPI::submitdelete(const std::string & jobId, const std::multimap<std:
                     sourceSurl = (*mapit).first;
                     sourceSE = (*mapit).second;
 
-                    pairStmt << "INTO t_file (vo_name, job_id, file_state, source_surl, source_se, hashed_id) VALUES ";
+                    pairStmt << "INTO t_dm (vo_name, job_id, file_state, source_surl, source_se, hashed_id) VALUES ";
                     pairStmt << "(";
                     pairStmt << "'";
                     pairStmt << voName;
@@ -7120,7 +7120,7 @@ std::vector<struct message_state> OracleAPI::getStateOfDeleteInternal(soci::sess
 
 
             soci::rowset<soci::row>::const_iterator it;
-            struct tm aux_tm;
+            time_t aux_time;
 
             bool show_user_dn = getUserDnVisibleInternal(sql);
 
@@ -7135,23 +7135,23 @@ std::vector<struct message_state> OracleAPI::getStateOfDeleteInternal(soci::sess
                     ret.file_state = it->get<std::string>("FILE_STATE");
                     if(ret.file_state == "SUBMITTED")
                         {
-                            aux_tm = it->get<struct tm>("SUBMIT_TIME");
-                            ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);
+                            aux_time = soci::getTimeT(*it, "SUBMIT_TIME");
+                            ret.timestamp = boost::lexical_cast<std::string>(aux_time * 1000);
                         }
                     else if(ret.file_state == "STAGING")
                         {
-                            aux_tm = it->get<struct tm>("SUBMIT_TIME");
-                            ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);
+                            aux_time = soci::getTimeT(*it, "SUBMIT_TIME");
+                            ret.timestamp = boost::lexical_cast<std::string>(aux_time * 1000);
                         }
                     else if(ret.file_state == "DELETE")
                         {
-                            aux_tm = it->get<struct tm>("SUBMIT_TIME");
-                            ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);
+                            aux_time = soci::getTimeT(*it, "SUBMIT_TIME");
+                            ret.timestamp = boost::lexical_cast<std::string>(aux_time * 1000);
                         }
                     else if(ret.file_state == "ACTIVE")
                         {
-                            aux_tm = it->get<struct tm>("START_TIME");
-                            ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);
+                            aux_time = soci::getTimeT(*it, "START_TIME");
+                            ret.timestamp = boost::lexical_cast<std::string>(aux_time * 1000);
                         }
                     else
                         {
@@ -7160,7 +7160,7 @@ std::vector<struct message_state> OracleAPI::getStateOfDeleteInternal(soci::sess
                     ret.retry_counter = static_cast<int>(it->get<double>("RETRY_COUNTER",0));
                     ret.file_metadata = it->get<std::string>("FILE_METADATA","");
                     ret.source_se = it->get<std::string>("SOURCE_SE");
-                    ret.dest_se = it->get<std::string>("DEST_SE");
+                    ret.dest_se = it->get<std::string>("DEST_SE", "");
 
                     if(!show_user_dn)
                         ret.user_dn = std::string("");
@@ -7925,7 +7925,7 @@ void OracleAPI::checkSanityState()
                                     );
                             for (soci::rowset<soci::row>::const_iterator iCheckHostsActive = rsCheckHostsActive.begin(); iCheckHostsActive != rsCheckHostsActive.end(); ++iCheckHostsActive)
                                 {
-                                    int file_id = iCheckHostsActive->get<int>("FILE_ID");
+                                    int file_id = static_cast<int>(iCheckHostsActive->get<long long>("FILE_ID"));
                                     std::string job_id = iCheckHostsActive->get<std::string>("JOB_ID");
                                     std::string errorMessage = "Transfer has been forced-canceled because host " + deadHost + " is offline and transfers still assigned to it";
 
@@ -10187,7 +10187,7 @@ void OracleAPI::getTransferJobStatusDetailed(std::string job_id, std::vector<boo
                 {
                     std::string job_id = i->get<std::string>("JOB_ID");
                     std::string file_state = i->get<std::string>("FILE_STATE");
-                    int file_id = i->get<long long>("FILE_ID");
+                    int file_id = static_cast<int>(i->get<long long>("FILE_ID"));
                     std::string source_surl = i->get<std::string>("SOURCE_SURL");
                     std::string dest_surl = i->get<std::string>("DEST_SURL");
 
@@ -10637,7 +10637,6 @@ void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::
                                                               soci::use(limit)
                                                           );
 
-                            std::vector< boost::tuple<int, std::string, std::string, std::string, bool> > filesState;
                             std::string initState = "STARTED";
                             std::string reason;
 
@@ -10646,7 +10645,7 @@ void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::
                                     soci::row const& row = *i3;
                                     std::string source_url = row.get<std::string>("SOURCE_SURL");
                                     std::string job_id = row.get<std::string>("JOB_ID");
-                                    int file_id = row.get<int>("FILE_ID");
+                                    int file_id = static_cast<int>(row.get<long long>("FILE_ID"));
                                     user_dn = row.get<std::string>("USER_DN");
                                     std::string cred_id = row.get<std::string>("CRED_ID");
 
@@ -10835,7 +10834,7 @@ void OracleAPI::getDeletionFilesForCanceling(std::vector< boost::tuple<int, std:
             for (soci::rowset<soci::row>::const_iterator i2 = rs.begin(); i2 != rs.end(); ++i2)
                 {
                     soci::row const& row = *i2;
-                    file_id = row.get<int>("FILE_ID",0);
+                    file_id = static_cast<int>(row.get<long long>("FILE_ID",0));
                     source_surl = row.get<std::string>("SOURCE_SURL","");
                     job_id = row.get<std::string>("JOB_ID","");
                     boost::tuple<int, std::string, std::string> record(file_id, job_id, source_surl);
@@ -11183,7 +11182,7 @@ void OracleAPI::getAlreadyStartedStaging(std::vector< boost::tuple<std::string, 
                     std::string vo_name = row.get<std::string>("VO_NAME");
                     std::string source_url = row.get<std::string>("SOURCE_SURL");
                     std::string job_id = row.get<std::string>("JOB_ID");
-                    int file_id = row.get<int>("FILE_ID");
+                    int file_id = static_cast<int>(row.get<long long>("FILE_ID"));
                     int copy_pin_lifetime = static_cast<int>(row.get<double>("COPY_PIN_LIFETIME"),0);
                     int bring_online = static_cast<int>(row.get<double>("BRING_ONLINE"),0);
                     std::string user_dn = row.get<std::string>("USER_DN");
@@ -11396,7 +11395,7 @@ void OracleAPI::getStagingFilesForCanceling(std::vector< boost::tuple<int, std::
             for (soci::rowset<soci::row>::const_iterator i2 = rs.begin(); i2 != rs.end(); ++i2)
                 {
                     soci::row const& row = *i2;
-                    file_id = row.get<int>("FILE_ID",0);
+                    file_id = static_cast<int>(row.get<long long>("FILE_ID",0));
                     source_surl = row.get<std::string>("SOURCE_SURL","");
                     token = row.get<std::string>("BRINGONLINE_TOKEN","");
                     boost::tuple<int, std::string, std::string> record(file_id, source_surl, token);
