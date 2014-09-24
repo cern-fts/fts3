@@ -131,6 +131,9 @@ bool Gfal2Task::doRetry(int errorNo, const std::string& category, const std::str
     found = message.find("System error in write into HDFS");
     if (found!=std::string::npos)
         retry = false;
+    found = message.find("globus_ftp_client: the server responded with an error 530"); // Authentication error
+    if (found!=std::string::npos)
+        retry = false;
 
     return retry;
 }
