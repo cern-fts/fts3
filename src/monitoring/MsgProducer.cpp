@@ -122,9 +122,15 @@ bool MsgProducer::sendMessage(std::string &temp)
                 }
             temp = temp.substr(2, temp.length()); //remove message prefix
             tempFTS = "\"endpnt\":\"" + FTSEndpoint + "\"";
-            find_and_replace(temp, "\"endpnt\":\"\"", tempFTS); //add FTS endpoint
+            find_and_replace(temp, "\"endpnt\":\"\"", tempFTS); //add FTS endpoint	    
+  	    // Read vo from json
+            ptree pt2;
+            std::istringstream is (temp);
+            read_json (is, pt2);
+            std::string vo = pt2.get<std::string> ("vo");	    	    
             temp += 4;
             TextMessage* message = session->createTextMessage(temp);
+	    message->setStringProperty("vo",vo);
             producer_transfer_completed->send(message);
             logger::writeLog(temp);
             delete message;
