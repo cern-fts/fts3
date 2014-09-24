@@ -41,7 +41,7 @@ const set<string> BulkSubmissionParser::file_tokens =
     ("sources")
     ("destinations")
     ("selection_strategy")
-    ("checksum")
+    ("checksums")
     ("filesize")
     ("metadata")
     ("activity")
@@ -75,12 +75,12 @@ void BulkSubmissionParser::parse()
     // check if the job is empty
     if (pt.empty()) throw cli_exception("The 'Files' elements of the transfer job are missing!");
     // check if there is more than one job in a single file
-    if (pt.size() > 2) throw cli_exception("Too many elements in the bulk submission file!");
+    if (pt.size() > 1) throw cli_exception("Too many elements in the bulk submission file!");
     // check if the 'Files' have been defined
-    optional<ptree&> v = pt.get_child_optional("files");
+    optional<ptree&> v = pt.get_child_optional("Files");
     if (!v.is_initialized()) throw cli_exception("The array of files does not exist!");
     // check if it's an array
-    if (!isArray(pt, "files")) throw cli_exception("The 'Files' element is not an array");
+    if (!isArray(pt, "Files")) throw cli_exception("The 'Files' element is not an array");
     ptree& root = v.get();
     // iterate over all the file in the job and check their format
     ptree::iterator it;
@@ -103,6 +103,7 @@ void BulkSubmissionParser::parse_item(ptree& item)
     optional< vector<string> > v_vec;
 
     // handle sources
+
     if (isArray(item, "sources"))
         {
             // check if 'sources' exists
@@ -122,6 +123,7 @@ void BulkSubmissionParser::parse_item(ptree& item)
         }
 
     // handle destinations
+
     if (isArray(item, "destinations"))
         {
             // check if 'destinations' exists
@@ -141,6 +143,7 @@ void BulkSubmissionParser::parse_item(ptree& item)
         }
 
     // handle selection_strategy
+
     file.selection_strategy = get<string>(item, "selection_strategy");
     if (file.selection_strategy.is_initialized())
         {
@@ -154,6 +157,7 @@ void BulkSubmissionParser::parse_item(ptree& item)
         }
 
     // handle checksums
+
     if (isArray(item, "checksums"))
         {
             v_vec = get< vector<string> >(item, "checksums");
@@ -174,10 +178,14 @@ void BulkSubmissionParser::parse_item(ptree& item)
                 }
         }
 
+
+
     // handle file size
+
     file.file_size = get<long>(item, "filesize");
 
     // handle metadata
+
     file.metadata = getMetadata(item);
 
     // handle activity
