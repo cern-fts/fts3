@@ -4475,7 +4475,7 @@ bool MySqlAPI::updateOptimizer()
 			    int maxDestination = 0;
                             getMaxActive(sql, maxSource, maxDestination, source_hostname, destin_hostname);
 
-                            if( (activeSource > maxSource || maxDestination > maxDestination) && active > highDefault)
+                            if( (activeSource > maxSource || activeDestination > maxDestination) && active > highDefault)
                                 {
                                     updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, 11, bandwidthIn);
 
