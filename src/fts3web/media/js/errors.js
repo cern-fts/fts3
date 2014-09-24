@@ -16,16 +16,16 @@ function ErrorsCtrl($location, $scope, pairs, Errors)
 
 	$scope.applyFilters = function() {
 		var filter = $scope.filter;
-		filter['source_se'] = validString($location.search().source_se);
-		filter['dest_se'] = validString($location.search().dest_se);
+		filter['source_se'] = validString($location.$$search.source_se);
+		filter['dest_se'] = validString($location.$$search.dest_se);
 		$location.search(filter);
 		document.getElementById('filterDialog').style.display = 'none';
 	}
 
 	$scope.filter = {
-		source_se: validString($location.search().source_se),
-		dest_se:   validString($location.search().dest_se),
-		reason:    validString($location.search().reason)
+		source_se: validString($location.$$search.source_se),
+		dest_se:   validString($location.$$search.dest_se),
+		reason:    validString($location.$$search.reason)
 	}
 
 	// On page change, reload
@@ -35,7 +35,7 @@ function ErrorsCtrl($location, $scope, pairs, Errors)
 
 	// Set timer to trigger autorefresh
 	$scope.autoRefresh = setInterval(function() {
-		var filter = $location.search();
+		var filter = $location.$$search;
 		filter.page = $scope.errors.page;
     	$scope.errors = Errors.query(filter);
 	}, REFRESH_INTERVAL);
@@ -60,11 +60,11 @@ ErrorsCtrl.resolve = {
 
     	var deferred = $q.defer();
 
-    	var page = $location.search().page;
+    	var page = $location.$$search.page;
     	if (!page || page < 1)
     		page = 1;
 
-    	Errors.query($location.search(),
+    	Errors.query($location.$$search,
   			  genericSuccessMethod(deferred, $rootScope),
 			  genericFailureMethod(deferred, $rootScope, $location));
 
@@ -76,10 +76,10 @@ ErrorsCtrl.resolve = {
 
 function ErrorsForPairCtrl($location, $scope, errors, ErrorsForPair)
 {
-	$scope.reason    = $location.search().reason;
+	$scope.reason    = $location.$$search.reason;
 	$scope.errors    = errors
-	$scope.source_se = $location.search().source_se;
-	$scope.dest_se   = $location.search().dest_se;
+	$scope.source_se = $location.$$search.source_se;
+	$scope.dest_se   = $location.$$search.dest_se;
 
 	// Filter
     $scope.showFilterDialog = function() {
@@ -96,9 +96,9 @@ function ErrorsForPairCtrl($location, $scope, errors, ErrorsForPair)
 	}
 
 	$scope.filter = {
-		source_se: validString($location.search().source_se),
-		dest_se:   validString($location.search().dest_se),
-		reason:    validString($location.search().reason)
+		source_se: validString($location.$$search.source_se),
+		dest_se:   validString($location.$$search.dest_se),
+		reason:    validString($location.$$search.reason)
 	}
 
 	// On page change, reload
@@ -115,11 +115,11 @@ ErrorsForPairCtrl.resolve = {
 
     	var deferred = $q.defer();
 
-    	var page = $location.search().page;
+    	var page = $location.$$search.page;
     	if (!page || page < 1)
     		page = 1;
 
-    	ErrorsForPair.query($location.search(),
+    	ErrorsForPair.query($location.$$search,
   			  genericSuccessMethod(deferred, $rootScope),
 			  function () {
 			      stopLoading($rootScope);

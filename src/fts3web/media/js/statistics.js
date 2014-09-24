@@ -4,12 +4,12 @@
 function StatsOverviewCtrl($routeParams, $location, $scope, stats, Statistics, Unique)
 {
 	$scope.stats = stats;
-	$scope.host = $location.search().hostname;
+	$scope.host = $location.$$search.hostname;
 
 	$scope.hostnames = Unique('hostnames')
 
 	$scope.filterHost = function(host) {
-		var filter = $location.search();
+		var filter = $location.$$search;
 		if (host)
 			filter.hostname = host;
 		else
@@ -20,7 +20,7 @@ function StatsOverviewCtrl($routeParams, $location, $scope, stats, Statistics, U
 
 	// Set timer to trigger autorefresh
 	$scope.autoRefresh = setInterval(function() {
-		var filter = $location.search();
+		var filter = $location.$$search;
     	$scope.stats = Statistics.query(filter);
 	}, REFRESH_INTERVAL);
 	$scope.$on('$destroy', function() {
@@ -35,7 +35,7 @@ StatsOverviewCtrl.resolve = {
 
     	var deferred = $q.defer();
 
-    	Statistics.query($location.search(),
+    	Statistics.query($location.$$search,
   			  genericSuccessMethod(deferred, $rootScope),
 			  genericFailureMethod(deferred, $rootScope, $location));
 
@@ -51,7 +51,7 @@ function StatsServersCtrl($location, $scope, servers, Servers)
 
 	// Set timer to trigger autorefresh
 	$scope.autoRefresh = setInterval(function() {
-		var filter = $location.search();
+		var filter = $location.$$search;
     	Servers.query(filter, function (updatedServers) {
             for(var server in updatedServers) {
             	if (server.toString().substring(0, 1) != '$')
@@ -72,7 +72,7 @@ StatsServersCtrl.resolve = {
 
     	var deferred = $q.defer();
 
-    	Servers.query($location.search(),
+    	Servers.query($location.$$search,
   			  genericSuccessMethod(deferred, $rootScope),
 			  genericFailureMethod(deferred, $rootScope, $location));
 
@@ -93,8 +93,8 @@ function StatsVosCtrl($location, $scope, vos, StatsVO, Unique)
 	}
 
 	$scope.filter = {
-		'source_se': validString($location.search().source_se),
-		'dest_se':   validString($location.search().dest_se),
+		'source_se': validString($location.$$search.source_se),
+		'dest_se':   validString($location.$$search.dest_se),
 	}
 
 	$scope.applyFilters = function() {
@@ -103,7 +103,7 @@ function StatsVosCtrl($location, $scope, vos, StatsVO, Unique)
 
 	// Set timer to trigger autorefresh
 	$scope.autoRefresh = setInterval(function() {
-		var filter = $location.search();
+		var filter = $location.$$search;
     	$scope.vos = StatsVO.query(filter);
 	}, REFRESH_INTERVAL);
 	$scope.$on('$destroy', function() {
@@ -118,7 +118,7 @@ StatsVosCtrl.resolve = {
 
     	var deferred = $q.defer();
 
-    	StatsVO.query($location.search(),
+    	StatsVO.query($location.$$search,
   			  genericSuccessMethod(deferred, $rootScope),
 			  genericFailureMethod(deferred, $rootScope, $location));
 
@@ -143,7 +143,7 @@ TransferVolumeCtrl.resolve = {
 
         var deferred = $q.defer();
 
-        TransferVolume.query($location.search(),
+        TransferVolume.query($location.$$search,
                 genericSuccessMethod(deferred, $rootScope),
                 genericFailureMethod(deferred, $rootScope, $location));
 
@@ -159,7 +159,7 @@ function StatsProfilingCtrl($location, $scope, profile, Profile)
 
 	// Set timer to trigger autorefresh
 	$scope.autoRefresh = setInterval(function() {
-		var filter = $location.search();
+		var filter = $location.$$search;
     	$scope.profile = Profile.query(filter);
 	}, REFRESH_INTERVAL);
 	$scope.$on('$destroy', function() {
@@ -174,7 +174,7 @@ StatsProfilingCtrl.resolve = {
 
     	var deferred = $q.defer();
 
-    	Profile.query($location.search(),
+    	Profile.query($location.$$search,
   			  genericSuccessMethod(deferred, $rootScope),
 			  genericFailureMethod(deferred, $rootScope, $location));
 
@@ -194,7 +194,7 @@ SlowQueriesCtrl.resolve = {
 
     	var deferred = $q.defer();
 
-    	SlowQueries.query($location.search(),
+    	SlowQueries.query($location.$$search,
   			  genericSuccessMethod(deferred, $rootScope),
 			  genericFailureMethod(deferred, $rootScope, $location));
 
@@ -223,7 +223,7 @@ TurlsCtrl.resolve = {
 
         var deferred = $q.defer();
 
-        Turls.query($location.search(),
+        Turls.query($location.$$search,
             genericSuccessMethod(deferred, $rootScope),
             genericFailureMethod(deferred, $rootScope, $location));
 

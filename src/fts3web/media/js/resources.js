@@ -86,18 +86,10 @@ angular.module('ftsmon.resources', ['ngResource'])
 		query: {method: 'GET', isArray: false}
 	})
 })
-.factory('Unique', function($q, $http) {
-	return function(field) {
-		var deferred = $q.defer();
-		$http({method: 'GET', url: 'unique/' + field})
-			.success(function(data) {
-				deferred.resolve(data);
-			})
-			.error(function(data) {
-				deferred.resolve([]);
-			});
-		return deferred.promise;
-	}
+.factory('Unique', function($resource) {
+	return $resource('unique/:field', {}, {
+		query: {method: 'GET', isArray: true}
+	})
 })
 .factory('ConfigServer', function($resource) {
 	return $resource('config/server', {}, {

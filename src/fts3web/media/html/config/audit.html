@@ -1,6 +1,6 @@
 <h2>
     Configuration audit
-    <button class="btn btn-mini btn-info" type="button" ng-click="showFilterDialog()">Filter</button>
+    <button class="btn btn-mini btn-info" type="button" data-ng-click="showFilterDialog()">Filter</button>
 </h2>
 
 <pagination rotate="false"
@@ -18,7 +18,7 @@
         </tr>
     </thead>
     <tbody>
-        <tr ng-repeat="c in config.items" ng-class-odd="'odd'" ng-class="c.action">
+        <tr data-ng-repeat="c in config.items" data-ng-class-odd="'odd'" data-ng-class="c.action">
             <td>{{c.action}}</td>
             <td>{{c.config}}</td>
             <td>{{c.datetime}}</td>
@@ -34,13 +34,13 @@
 
 <!-- Modals -->
 <div id="filterDialog" class="modal" role="dialog" style="display: none">
-    <form ng-submit="applyFilters(filter)" autocomplete="off">
+    <form data-ng-submit="applyFilters(filter)" autocomplete="off">
         <div class="modal-header">
             <h3>Filters</h3>
         </div>
         <div class="modal-body">
             <label for="action">Action:</label>
-            <select id="action" ng-model="filter.action">
+            <select id="action" data-ng-model="filter.action">
                 <option value="">-- All actions--</option>
                 <option>insert</option>
                 <option>update</option>
@@ -54,14 +54,14 @@
             </select>
 
             <label for="user">User:</label>
-            <input type="text" id="user" ng-model="filter.user"/>
+            <input type="text" id="user" data-ng-model="filter.user"/>
 
             <label for="contains">Contains:</label>
-            <input type="text" id="contains" ng-model="filter.contains"/>
+            <input type="text" id="contains" data-ng-model="filter.contains"/>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-success" ng-click="applyFilters(filter); filtersModal = false">Apply</button>
-            <button class="btn btn-danger" ng-click="filtersModal = false">Cancel</button>
+            <button class="btn btn-success" data-ng-click="applyFilters(filter); filtersModal = false">Apply</button>
+            <button class="btn btn-danger" data-ng-click="filtersModal = false">Cancel</button>
         </div>
     </form>
 </div>

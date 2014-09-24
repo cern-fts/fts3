@@ -1,24 +1,24 @@
 <div class="navbar sub-navbar">
     <div class="navbar-inner">
-        <form class="row-fluid" ng-submit="applyGlobalFilter()" autocomplete="off">
-            <div class="span2" ng-show="!disable_vo">
+        <form class="row-fluid" data-ng-submit="applyGlobalFilter()" autocomplete="off">
+            <div class="span2" data-ng-show="!disable_vo">
              <label for="global-vo"><i class="icon-group" title="VO"></i></label>
-             <select id="global-vo" ng-model="globalFilter.vo" ng-options="vo for vo in unique.vos" ng-change="applyGlobalFilter()">
+             <select id="global-vo" data-ng-model="globalFilter.vo" data-ng-options="vo for vo in unique.vos" data-ng-change="applyGlobalFilter()">
                 <option value="">- All -</option>
              </select>
             </div>
             <div class="span6">
-             <input id="global-source" type="text" ng-model="globalFilter.source_se" placeholder="Source storage"
-                    typeahead="source for source in unique.sources | safeFilter:$viewValue"
-                    typeahead-on-select="applyGlobalFilter()"/>
+             <input id="global-source" type="text" data-ng-model="globalFilter.source_se" placeholder="Source storage"
+                    data-typeahead="source for source in unique.sources | safeFilter:$viewValue"
+                    data-typeahead-on-select="applyGlobalFilter()"/>
              <i class="icon-arrow-right"></i>
-             <input id="global-destination"  type="text" ng-model="globalFilter.dest_se" placeholder="Destination storage"
+             <input id="global-destination"  type="text" data-ng-model="globalFilter.dest_se" placeholder="Destination storage"
                     typeahead="dest for dest in unique.destinations | safeFilter:$viewValue"
-                    typeahead-on-select="applyGlobalFilter()"/>
+                    data-typeahead-on-select="applyGlobalFilter()"/>
             </div>
             <div class="span2">
               <label for="global-timewindow"><i class="icon-time" title="Time window"></i></label>
-              <select id="global-timewindow" ng-model="globalFilter.time_window" ng-change="applyGlobalFilter()">
+              <select id="global-timewindow" data-ng-model="globalFilter.time_window" data-ng-change="applyGlobalFilter()">
                 <option value="1">1 hour</option>
                 <option value="12">12 hours</option>
                 <option value="24">1 day</option>
@@ -31,12 +31,12 @@
               </select>
             </div>
             <div class="span2">
-              <button class="btn btn-small btn-info" ng-click="applyGlobalFilter()">Apply</button>
-              <button class="btn btn-small" ng-click="resetGlobalFilter()">Reset</button>
-              <span class="btn btn-small" ng-show="isThereMoreFilters" class="btn btn-small" ng-click="moreFilters()">More filters</span>
+              <a class="btn btn-small btn-info" data-ng-click="applyGlobalFilter()">Apply</a>
+              <a class="btn btn-small" data-ng-click="resetGlobalFilter()">Reset</a>
+              <span class="btn btn-small" data-ng-show="isThereMoreFilters" data-ng-click="moreFilters()">More filters</span>
             </div>
         </form>
     </div>
 </div>
 
-<div class="navbar-spacer"/>
+<div class="navbar-spacer"></div>

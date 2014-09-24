@@ -4,8 +4,8 @@
 <h3>
     Showing {{overview.overview.startIndex}} to {{overview.overview.endIndex}}
     out of {{overview.overview.count}} from the last {{globalFilter.time_window || '1' }}
-    <span ng-show="globalFilter.time_window == 1 || !globalFilter.time_window">hour</span>
-    <span ng-show="globalFilter.time_window > 1">hours</span>
+    <span data-ng-show="globalFilter.time_window == 1 || !globalFilter.time_window">hour</span>
+    <span data-ng-show="globalFilter.time_window > 1">hours</span>
 </h3>
 
 <pagination rotate="false"
@@ -17,105 +17,105 @@
     <thead>
         <tr>
             <th>
-                <i class="icon-th-list" ng-click="filterBy({source_se: ''})"></i>
+                <i class="icon-th-list" data-ng-click="filterBy({source_se: ''})"></i>
                 Source
             </th>
             <th>
-                <i class="icon-th-list" ng-click="filterBy({dest_se: ''})"></i>
+                <i class="icon-th-list" data-ng-click="filterBy({dest_se: ''})"></i>
                 Destination
             </th>
             <th style="width: 6%">
-                <i class="icon-th-list" ng-click="filterBy({vo: ''})"></i>
+                <i class="icon-th-list" data-ng-click="filterBy({vo: ''})"></i>
                 VO
             </th>
             <th style="width: 6%" class="numeric">
-                <span order-by="submitted">Queued</span>
+                <span data-order-by="submitted">Queued</span>
             </th>
             <th style="width: 6%" class="numeric">
-                <span order-by="active">Active</span>
+                <span data-order-by="active">Active</span>
             </th>
             <th style="width: 6%" class="numeric">
-                <span order-by="finished">Finished</span>
+                <span data-order-by="finished">Finished</span>
             </th>
             <th style="width: 6%" class="numeric">
-                <span order-by="failed">Failed</span>
+                <span data-order-by="failed">Failed</span>
             </th>
             <th style="width: 6%" class="numeric">
-                <span order-by="canceled">Cancel</span>
+                <span data-order-by="canceled">Cancel</span>
             </th>
 
             <th style="width: 9%" class="numeric">
-                <span order-by="rate">Rate (last 1h)</span>
+                <span data-order-by="rate">Rate (last 1h)</span>
             </th>
             <th style="width: 9%" class="numeric">
-                <span title="VO Throughput" order-by="throughput">VO Thr.</span>
+                <span title="VO Throughput" data-order-by="throughput">VO Thr.</span>
             </th>
             <th style="width: 2%"></th>
         </tr>
     </thead>
-    <tbody ng-repeat="o in overview.overview.items" ng-class-odd="'odd'" class="overview" ng-class="pairState(o)">
+    <tbody data-ng-repeat="o in overview.overview.items" data-ng-class-odd="'odd'" class="overview" data-ng-class="pairState(o)">
         <tr>
 			<td>
-                <i class="icon-plus" ng-click="o.show = !o.show"></i>
-                <span class="filter-on-click" ng-click="filterBy({source_se: o.source_se})" title="Filter source SE">
+                <i class="icon-plus" data-ng-click="o.show = !o.show"></i>
+                <span class="filter-on-click" data-ng-click="filterBy({source_se: o.source_se})" title="Filter source SE">
                     {{ o.source_se }}
                 </span>
-                <span ng-show="o.limits.source">
+                <span data-ng-show="o.limits.source">
                     <i class="icon-upload" title="{{getLimitDescription(o.limits.source)}}"></i>
                 </span>
-                <span ng-show="o.udt">
+                <span data-ng-show="o.udt">
                     <i class="icon-udt" title="UDT Enabled"></i>
                 </span>
             </td>
 			<td>
-			    <span class="filter-on-click" ng-click="filterBy({dest_se: o.dest_se})" title="Filter destination SE">
+			    <span class="filter-on-click" data-ng-click="filterBy({dest_se: o.dest_se})" title="Filter destination SE">
                     {{ o.dest_se }}
 			    </span>
-                <span ng-show="o.limits.destination">
+                <span data-ng-show="o.limits.destination">
                     <i class="icon-download" title="{{getLimitDescription(o.limits.destination)}}"></i>
                 </span>
-                <span ng-show="o.udt">
+                <span data-ng-show="o.udt">
                     <i class="icon-udt" title="UDT Enabled"></i>
                 </span>
 			</td>
 			<td>
-                <span class="filter-on-click" ng-click="filterBy({vo: o.vo_name})" title="Filter VO">
+                <span class="filter-on-click" data-ng-click="filterBy({vo: o.vo_name})" title="Filter VO">
                     {{ o.vo_name }}
                 </span>
             </td>
 			<td class="numeric">
                 <a href="#/jobs?source_se={{o.source_se}}&dest_se={{o.dest_se}}&vo={{o.vo_name}}&with_file=SUBMITTED&time_window={{globalFilter.time_window}}">
-                    <span optional-number="o.submitted"></span>
+                    <span data-optional-number="{{o.submitted}}"></span>
                 </a>
 			</td>
             <td class="numeric">
-                <span ng-show="o.active_fixed">
+                <span data-ng-show="o.active_fixed">
                     <i class="icon-magnet" title="Number of active fixed"></i>
                 </span>
                 <a href="#/jobs?source_se={{o.source_se}}&dest_se={{o.dest_se}}&vo={{o.vo_name}}&with_file=ACTIVE&time_window={{globalFilter.time_window}}">
-                    <span optional-number="o.active"></span>
+                    <span data-optional-number="{{o.active}}" data-decimals="0"></span>
                 </a>
             </td>
             <td class="numeric">
                 <a href="#/jobs?source_se={{o.source_se}}&dest_se={{o.dest_se}}&vo={{o.vo_name}}&with_file=FINISHED&time_window={{globalFilter.time_window}}">
-                    <span optional-number="o.finished" decimals="0"></span>
+                    <span data-optional-number="{{o.finished}}" data-decimals="0"></span>
                 </a>
             </td>
             <td class="numeric">
                 <a href="#/jobs?source_se={{o.source_se}}&dest_se={{o.dest_se}}&vo={{o.vo_name}}&with_file=FAILED&time_window={{globalFilter.time_window}}">
-                    <span optional-number="o.failed" decimals="0"></span>
+                    <span data-optional-number="{{o.failed}}" data-decimals="0"></span>
                 </a>
             </td>
             <td class="numeric">
                 <a href="#/jobs?source_se={{o.source_se}}&dest_se={{o.dest_se}}&vo={{o.vo_name}}&with_file=CANCELED&time_window={{globalFilter.time_window}}">
-                    <span optional-number="o.canceled" decimals="0"></span>
+                    <span data-optional-number="{{o.canceled}}" data-decimals="0"></span>
                 </a>
             </td>
             <td class="numeric">
-                <span optional-number="o.rate" suffix="%" decimals="2"></span>
+                <span data-optional-number="{{o.rate}}" data-suffix="%" data-decimals="2"></span>
             </td>
             <td class="numeric">
-                <span optional-number="o.current" suffix="MB/s" decimals="2"></span>
+                <span data-optional-number="{{o.current}}" data-suffix="MB/s" data-decimals="2"></span>
             </td>
             <td>
                 <a href="#/optimizer/detailed?source={{o.source_se}}&destination={{o.dest_se}}&time_window={{globalFilter.time_window}}">
@@ -124,10 +124,10 @@
             </td>
         </tr>
         <tr>
-            <td colspan="11" style="background: #CCC" ng-show="o.show">
+            <td colspan="11" style="background: #CCC" data-ng-show="o.show">
                 <dl>
                     <dt>Average transfer duration</dt>
-                    <dd><span optional-number="o.avg_duration" suffix="seconds" decimals="2"></span></dd>
+                    <dd><span data-optional-number="{{o.avg_duration}}" data-suffix="seconds" data-decimals="2"></span></dd>
                     <dt>Most frequent error</dt>
                     <dd>{{o.most_frequent_error}}</dd>
                 </dl>
@@ -145,10 +145,10 @@
             <td class="numeric">{{overview.summary.failed}}</td>
             <td class="numeric">{{overview.summary.canceled}}</td>
             <td class="numeric">
-                <span optional-number="overview.summary.rate" suffix="%" decimals="2"></span>
+                <span data-optional-number="{{overview.summary.rate}}" data-suffix="%" data-decimals="2"></span>
             </td>
             <td class="numeric">
-                <span optional-number="overview.summary.current" suffix="MB/s" decimals="2"></span>
+                <span data-optional-number="{{overview.summary.current}}" data-suffix="MB/s" data-decimals="2"></span>
             </td>
             <td>&nbsp;</td>
         </tr>

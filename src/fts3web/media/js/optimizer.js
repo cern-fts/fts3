@@ -13,9 +13,9 @@ function OptimizerCtrl($location, $scope, optimizer, Optimizer)
     }
 
 	$scope.filter = {
-		source_se:   validString($location.search().source_se),
-		dest_se:     validString($location.search().dest_se),
-		time_window: parseInt($location.search().time_window)
+		source_se:   validString($location.$$search.source_se),
+		dest_se:     validString($location.$$search.dest_se),
+		time_window: parseInt($location.$$search.time_window)
 	}
 
 	$scope.applyFilters = function() {
@@ -30,7 +30,7 @@ function OptimizerCtrl($location, $scope, optimizer, Optimizer)
 
 	// Set timer to trigger autorefresh
 	$scope.autoRefresh = setInterval(function() {
-		var filter = $location.search();
+		var filter = $location.$$search;
 		filter.page = $scope.optimizer.page;
     	$scope.optimizer = Optimizer.query(filter);
 	}, REFRESH_INTERVAL);
@@ -46,7 +46,7 @@ OptimizerCtrl.resolve = {
 
     	var deferred = $q.defer();
 
-    	Optimizer.query($location.search(),
+    	Optimizer.query($location.$$search,
   			  genericSuccessMethod(deferred, $rootScope),
 			  genericFailureMethod(deferred, $rootScope, $location));
 
@@ -61,7 +61,7 @@ function OptimizerDetailedCtrl($location, $scope, optimizer, OptimizerDetailed)
 
 	// Set timer to trigger autorefresh
 	$scope.autoRefresh = setInterval(function() {
-		var filter = $location.search();
+		var filter = $location.$$search;
 		filter.page = $scope.optimizer.page;
     	$scope.optimizer = OptimizerDetailed.query(filter);
 	}, REFRESH_INTERVAL);
@@ -76,8 +76,8 @@ function OptimizerDetailedCtrl($location, $scope, optimizer, OptimizerDetailed)
 
 	// Set up filters
 	$scope.filter = {
-        source:      validString($location.search().source),
-        destination: validString($location.search().destination)
+        source:      validString($location.$$search.source),
+        destination: validString($location.$$search.destination)
 	}
 }
 
@@ -88,7 +88,7 @@ OptimizerDetailedCtrl.resolve = {
 
     	var deferred = $q.defer();
 
-    	OptimizerDetailed.query($location.search(),
+    	OptimizerDetailed.query($location.$$search,
             genericSuccessMethod(deferred, $rootScope),
             genericFailureMethod(deferred, $rootScope, $location));
 
@@ -133,8 +133,6 @@ function quantileColor(stream)
     var rgb = hsvToRgb(h, 1, 1);
     var color = 'rgba(' + Math.ceil(rgb[0]) + ',' + Math.ceil(rgb[1]) + ',' + Math.ceil(rgb[2]) + ', 0.8)';
 
-    console.log(color);
-
     return {'border-left': 'solid 10px ' + color};
 }
 
@@ -146,7 +144,7 @@ function OptimizerStreamsCtrl($location, $scope, streams, OptimizerStreams)
 
     // Set timer to trigger autorefresh
 	$scope.autoRefresh = setInterval(function() {
-		var filter = $location.search();
+		var filter = $location.$$search;
 		filter.page = $scope.optimizer.page;
     	$scope.streams = OptimizerStreams.query(filter);
 	}, REFRESH_INTERVAL);
@@ -167,7 +165,7 @@ OptimizerStreamsCtrl.resolve = {
 
         var deferred = $q.defer();
 
-        OptimizerStreams.query($location.search(),
+        OptimizerStreams.query($location.$$search,
             genericSuccessMethod(deferred, $rootScope),
 			genericFailureMethod(deferred, $rootScope, $location));
 

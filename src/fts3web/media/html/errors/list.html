@@ -2,7 +2,7 @@
 
 <h2>
     Errors for {{source_se}} → {{dest_se}}
-    <button class="btn btn-mini btn-info" type="button" ng-click="showFilterDialog()">Filter</button>
+    <button class="btn btn-mini btn-info" type="button" data-ng-click="showFilterDialog()">Filter</button>
 </h2>
 
 <div style="text-align: center">
@@ -23,7 +23,7 @@
         </tr>
     </thead>
     <tbody>
-        <tr ng-repeat="e in errors.errors.items" ng-class-odd="'odd'">
+        <tr data-ng-repeat="e in errors.errors.items" data-ng-class-odd="'odd'">
             <td>{{e.vo_name}}</td>
             <td>{{e.count}}</td>
             <td>
@@ -42,18 +42,17 @@
 
  <!-- Modals -->
 <div id="filterDialog" class="modal" role="dialog" style="display: none">
-    <form ng-submit="applyFilters()" autocomplete="off">
+    <form data-ng-submit="applyFilters()" autocomplete="off">
         <div class="modal-header">
             <h3>Reason contains</h3>
         </div>
         <div class="modal-body">
             <label for="reason">Reason:</label>
-            <input type="text" placeholder="Error reason" id="reason" ng-model="filter.reason"/>
+            <input type="text" placeholder="Error reason" id="reason" data-ng-model="filter.reason"/>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-success" ng-click="applyFilters()">Apply</button>
-            <button class="btn btn-danger" ng-click="cancelFilters()">Cancel</button>
+            <a class="btn btn-success" data-ng-click="applyFilters()">Apply</a>
+            <a class="btn btn-danger" data-ng-click="cancelFilters()">Cancel</a>
         </div>
     </form>
 </div>
-

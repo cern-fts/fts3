@@ -2,7 +2,7 @@
 
 <h3>Server config</h3>
 
-<ul ng-show="server.optimizer_mode" style="list-style-type: none">
+<ul data-ng-show="server.optimizer_mode" style="list-style-type: none">
     <li><b>Optimizer level:</b> {{ server.optimizer_mode }}</li>
 </ul>
 
@@ -17,12 +17,12 @@
         </tr>
     </thead>
     <tbody>
-        <tr ng-repeat="c in server.per_vo" ng-class-odd="'odd'">
+        <tr data-ng-repeat="c in server.per_vo" data-ng-class-odd="'odd'">
             <td>
-                <span ng-show="!c.vo_name">
+                <span data-ng-show="!c.vo_name">
                     *
                 </span>
-                <span ng-show="c.vo_name">
+                <span data-ng-show="c.vo_name">
                     {{ c.vo_name }}
                 </span>
             </td>
@@ -44,7 +44,7 @@
         </tr>
     </thead>
     <tbody>
-        <tr ng-repeat="d in debug" ng-class-odd="'odd'">
+        <tr data-ng-repeat="d in debug" data-ng-class-odd="'odd'">
             <td>{{ d.source_se }}</td>
             <td>{{ d.dest_se }}</td>
             <td>{{ d.debug }}</td>

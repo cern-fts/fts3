@@ -15,35 +15,35 @@ function TransfersCtrl($location, $scope, transfers, Transfers, Unique)
 
 	// Set timer to trigger autorefresh
 	$scope.autoRefresh = setInterval(function() {
-		var filter = $location.search();
+		var filter = $location.$$search;
 		filter.page = $scope.transfers.page;
     	$scope.transfers = Transfers.query(filter);
 	}, REFRESH_INTERVAL);
 	$scope.$on('$destroy', function() {
 		clearInterval($scope.autoRefresh);
 	});
-	
+
 	// Set up filters
 	$scope.filter = {
-		vo:          validString($location.search().vo),
-		source_se:   validString($location.search().source_se),
-		dest_se:     validString($location.search().dest_se),
-		source_surl: validString($location.search().source_surl),
-		dest_surl:   validString($location.search().dest_surl),
-		time_window: parseInt(validString($location.search().time_window)),
-		state:       statesFromString($location.search().state),
-		activity:    validString($location.search().activity),
-		hostname:    validString($location.search().hostname),
+		vo:          validString($location.$$search.vo),
+		source_se:   validString($location.$$search.source_se),
+		dest_se:     validString($location.$$search.dest_se),
+		source_surl: validString($location.$$search.source_surl),
+		dest_surl:   validString($location.$$search.dest_surl),
+		time_window: parseInt(validString($location.$$search.time_window)),
+		state:       statesFromString($location.$$search.state),
+		activity:    validString($location.$$search.activity),
+		hostname:    validString($location.$$search.hostname),
 	}
-	
+
     $scope.showFilterDialog = function() {
     	document.getElementById('filterDialog').style.display = 'block';
     }
-    
+
     $scope.cancelFilters = function() {
     	document.getElementById('filterDialog').style.display = 'none';
     }
-	
+
 	$scope.applyFilters = function() {
 		$location.search({
 			page:         1,
@@ -55,24 +55,24 @@ function TransfersCtrl($location, $scope, transfers, Transfers, Unique)
 			hostname:     validString($scope.filter.hostname),
 		});
 		document.getElementById('filterDialog').style.display = 'none';
-	}	
+	}
 }
 
 
 TransfersCtrl.resolve = {
 	transfers: function($rootScope, $location, $q, Transfers) {
 		loading($rootScope);
-		
+
 		var deferred = $q.defer();
-	
-		var page = $location.search().page;
+
+		var page = $location.$$search.page;
 		if (!page || page < 1)
 			page = 1;
-		
-		Transfers.query($location.search(),
+
+		Transfers.query($location.$$search,
   			            genericSuccessMethod(deferred, $rootScope),
 			            genericFailureMethod(deferred, $rootScope, $location));
-		
+
 		return deferred.promise;
 	}
 }

@@ -80,3 +80,7 @@ pre {
     height: 14px;
     background: url("../img/udt.png");
 }
+
+.pagination a {
+    cursor: pointer;
+}

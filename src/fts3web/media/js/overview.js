@@ -73,12 +73,12 @@ function OverviewCtrl($location, $scope, overview, Overview)
 
 	// Filter
 	$scope.filterBy = function(filter) {
-		$location.search(filter);
+		$location.search($.extend({}, $location.$$search, filter));
 	}
 
 	// Set timer to trigger autorefresh
 	$scope.autoRefresh = setInterval(function() {
-		var filter = $location.search();
+		var filter = $location.$$search;
 		filter.page = $scope.overview.page;
         Overview.query(filter, function(updatedOverview) {
             for(var i = 0; i < updatedOverview.overview.items.length; i++) {
@@ -99,11 +99,11 @@ OverviewCtrl.resolve = {
 
 		var deferred = $q.defer();
 
-		var page = $location.search().page;
+		var page = $location.$$search.page;
 		if (!page || page < 1)
 			page = 1;
 
-		Overview.query($location.search(),
+		Overview.query($location.$$search,
   			  genericSuccessMethod(deferred, $rootScope),
 			  genericFailureMethod(deferred, $rootScope, $location));
 
