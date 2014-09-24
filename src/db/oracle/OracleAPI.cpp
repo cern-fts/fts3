@@ -3949,15 +3949,30 @@ bool OracleAPI::updateOptimizer()
                     stmt_fixed.execute(true);
                     if (isNullFixed == soci::i_ok && active_fixed == "on")
                         continue;
+			
+		    //get the average transfer duration for this link
+		    stmt_avg_duration.execute(true);
+		    
+		    int calcutateTimeFrame = 0;
+		    if(avgDuration > 0 && avgDuration < 30)
+		    	calcutateTimeFrame  = 5;
+		    else if(avgDuration > 30 && avgDuration < 900)			    
+		    	calcutateTimeFrame  = 15;
+		    else
+		    	calcutateTimeFrame  = 30;			
 
 
                     // Ratio of success
                     soci::rowset<soci::row> rs = (sql.prepare << "SELECT file_state, retry, current_failures FROM t_file "
                                                   "WHERE "
                                                   "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                                                  "      (t_file.job_finished is NULL OR t_file.job_finished > (sys_extract_utc(systimestamp) - interval '1' minute)) AND "
+                                                  "      ( "
+						  "		(t_file.job_finished is NULL AND current_failures > 0)  OR "
+						  "		(t_file.job_finished > (sys_extract_utc(systimestamp) - interval :calcutateTimeFrame minute)) "
+						  "	) "
+						  "	AND "
                                                   "      file_state IN ('FAILED','FINISHED','SUBMITTED') ",
-                                                  soci::use(source_hostname), soci::use(destin_hostname));
+                                                  soci::use(source_hostname), soci::use(destin_hostname), soci::use(calcutateTimeFrame));
 
 
                     //we need to exclude non-recoverable errors so as not to count as failures and affect effiency
@@ -4066,14 +4081,9 @@ bool OracleAPI::updateOptimizer()
                                     continue;
                                 }
 
-			    stmt_avg_duration.execute(true); 
-
                             sql.begin();
                            
-                             if( (ratioSuccessFailure == MAX_SUCCESS_RATE || 
-				(ratioSuccessFailure >= rateStored && ratioSuccessFailure >= MED_SUCCESS_RATE)) && 
-				(throughputEMA >= thrStored || throughputEMA >= HIGH_THROUGHPUT || avgDuration <= AVG_TRANSFER_DURATION) 
-				&& retry <= retryStored && maxActive <= MAX_ACTIVE_PER_LINK)
+                         if( (ratioSuccessFailure == MAX_SUCCESS_RATE || ratioSuccessFailure > rateStored ) && throughputEMA > 0 &&  (throughputEMA > thrStored || (throughputEMA >= HIGH_THROUGHPUT && avgDuration <= AVG_TRANSFER_DURATION)) && retry <= retryStored && maxActive <= MAX_ACTIVE_PER_LINK)
                                 {
                                     if(singleDest == 1 || lanTransferBool || spawnActive > 1)
                                         {
@@ -4097,10 +4107,8 @@ bool OracleAPI::updateOptimizer()
                                     ema = throughputEMA;
                                     stmt10.execute(true);
 
-                                }                            
-                            else if( (ratioSuccessFailure == MAX_SUCCESS_RATE || 
-			    		(ratioSuccessFailure > rateStored && ratioSuccessFailure >= MED_SUCCESS_RATE)) && 
-					throughputEMA < thrStored)
+                                }
+                            else if( (ratioSuccessFailure == MAX_SUCCESS_RATE || ratioSuccessFailure > rateStored) && throughputEMA > 0 && throughputEMA < thrStored)
                                 {
                                     if(retry > retryStored)
                                         {
@@ -4116,7 +4124,7 @@ bool OracleAPI::updateOptimizer()
 				        {
 				            active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
                                             pathFollowed = 4;
-					}
+					}					
                                     else
                                         {
                                             if(maxActive >= activeStored)
@@ -4133,7 +4141,7 @@ bool OracleAPI::updateOptimizer()
                                     ema = throughputEMA;
                                     stmt10.execute(true);
                                 }
-                            else if ( ratioSuccessFailure < LOW_SUCCESS_RATE)
+                            else if (ratioSuccessFailure < LOW_SUCCESS_RATE)
                                 {
                                     if(ratioSuccessFailure > rateStored && ratioSuccessFailure == BASE_SUCCESS_RATE && retry <= retryStored)
                                         {
@@ -4148,7 +4156,6 @@ bool OracleAPI::updateOptimizer()
                                     ema = throughputEMA;
                                     stmt10.execute(true);
                                 }
-
                             else
                                 {
                                     active = maxActive;
@@ -4157,9 +4164,10 @@ bool OracleAPI::updateOptimizer()
                                     stmt10.execute(true);
                                 }
 
+                            sql.commit();
+
                             updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, pathFollowed, bandwidthIn);
 
-                            sql.commit();
                         }
                 } //end for
         } //end try

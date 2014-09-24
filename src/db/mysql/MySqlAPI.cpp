@@ -152,7 +152,6 @@ bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate
                                     throughputSamplesLocal = 0;
                                 }
 
-
                             if(rateLocal != rate || thrLocal != thr || retry != retryThr || throughputSamplesEqualLocal >= 0)
                                 {
                                     it = filesMemStore.erase(it);
@@ -4049,7 +4048,7 @@ bool MySqlAPI::updateOptimizer()
 
 
     try
-        {
+        {		
             //check optimizer level, minimum active per link
             int highDefault = getOptimizerMode(sql);
 
@@ -4189,12 +4188,12 @@ bool MySqlAPI::updateOptimizer()
                                          " source_se=:source_se AND dest_se=:dest_se AND tested = 1 and throughput IS NOT NULL  and throughput > 0",
                                          soci::use(source_hostname),
                                          soci::use(destin_hostname),
-                                         soci::into(allTested));
+                                         soci::into(allTested));					 
 
 
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
-                    recordsFound = true;
+                    recordsFound = true;		    
 
                     source_hostname = i->get<std::string>("source_se");
                     destin_hostname = i->get<std::string>("dest_se");
@@ -4243,7 +4242,6 @@ bool MySqlAPI::updateOptimizer()
                     activeDestination = 0;
 		    avgDuration = 0.0;
 		    isNullAvg = soci::i_ok;
-
 
                     // Weighted average
                     soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
@@ -4356,6 +4354,7 @@ bool MySqlAPI::updateOptimizer()
                                 }
                         }
 
+
                     lanTransferBool = lanTransfer(source_hostname, destin_hostname);
 
                     //check if the number of actives have been fixed for this pair
@@ -4371,16 +4370,30 @@ bool MySqlAPI::updateOptimizer()
 
                     //check if there is any other source for a given dest
                     stmt18.execute(true);
-
+		    
+		    //get the average transfer duration for this link
+		    stmt_avg_duration.execute(true);
+		    
+		    int calcutateTimeFrame = 0;
+		    if(avgDuration > 0 && avgDuration < 30)
+		    	calcutateTimeFrame  = 5;
+		    else if(avgDuration > 30 && avgDuration < 900)			    
+		    	calcutateTimeFrame  = 15;
+		    else
+		    	calcutateTimeFrame  = 30;	
+			
 
                     // Ratio of success
                     soci::rowset<soci::row> rs = (sql.prepare << "SELECT file_state, retry, current_failures FROM t_file "
                                                   "WHERE "
                                                   "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                                                  "      (t_file.job_finished is NULL OR t_file.job_finished > (UTC_TIMESTAMP() - interval '1' minute)) AND "
+                                                  "      ( "
+						  " (t_file.job_finished is NULL and current_failures > 0) OR "
+						  " (t_file.job_finished > (UTC_TIMESTAMP() - interval :calcutateTimeFrame minute)) "
+						  "      ) AND "
                                                   "      file_state IN ('FAILED','FINISHED','SUBMITTED') ",
-                                                  soci::use(source_hostname), soci::use(destin_hostname));
-
+                                                  soci::use(source_hostname), soci::use(destin_hostname), soci::use(calcutateTimeFrame));
+                    
 
                     //we need to exclude non-recoverable errors so as not to count as failures and affect effiency
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin();
@@ -4406,14 +4419,13 @@ bool MySqlAPI::updateOptimizer()
                                 {
                                     nFinishedLastHour+=1.0;
                                 }
-                        }
+                        }	
 
                     //round up efficiency
                     if(nFinishedLastHour > 0.0)
                         {
                             ratioSuccessFailure = ceil(nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0));
-                        }
-
+                        }		
 
                     // Max active transfers
                     stmt8.execute(true);
@@ -4480,16 +4492,11 @@ bool MySqlAPI::updateOptimizer()
                                     updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, 11, bandwidthIn);
 
                                     continue;
-                                }
+                                }			 
 
-			    //get the average transfer duration for this link
-			    stmt_avg_duration.execute(true);
+                            sql.begin();			    			 		    
 
-                            sql.begin();
-
-                            if( (ratioSuccessFailure == MAX_SUCCESS_RATE || (ratioSuccessFailure >= rateStored && ratioSuccessFailure >= MED_SUCCESS_RATE)) &&
-				(throughputEMA >= thrStored || throughputEMA >= HIGH_THROUGHPUT || avgDuration <= AVG_TRANSFER_DURATION)
-				&& retry <= retryStored && maxActive <= MAX_ACTIVE_PER_LINK)
+                            if( (ratioSuccessFailure == MAX_SUCCESS_RATE || ratioSuccessFailure > rateStored ) && throughputEMA > 0 &&  (throughputEMA > thrStored || (throughputEMA >= HIGH_THROUGHPUT && avgDuration <= AVG_TRANSFER_DURATION)) && retry <= retryStored && maxActive <= MAX_ACTIVE_PER_LINK)
                                 {
                                     if(singleDest == 1 || lanTransferBool || spawnActive > 1)
                                         {
@@ -4514,7 +4521,7 @@ bool MySqlAPI::updateOptimizer()
                                     stmt10.execute(true);
 
                                 }
-                            else if( (ratioSuccessFailure == MAX_SUCCESS_RATE || (ratioSuccessFailure > rateStored && ratioSuccessFailure >= MED_SUCCESS_RATE)) && throughputEMA < thrStored)
+                            else if( (ratioSuccessFailure == MAX_SUCCESS_RATE || ratioSuccessFailure > rateStored) && throughputEMA > 0 && throughputEMA < thrStored)
                                 {
                                     if(retry > retryStored)
                                         {
@@ -4547,7 +4554,7 @@ bool MySqlAPI::updateOptimizer()
                                     ema = throughputEMA;
                                     stmt10.execute(true);
                                 }
-                            else if ( ratioSuccessFailure < LOW_SUCCESS_RATE)
+                            else if (ratioSuccessFailure < LOW_SUCCESS_RATE)
                                 {
                                     if(ratioSuccessFailure > rateStored && ratioSuccessFailure == BASE_SUCCESS_RATE && retry <= retryStored)
                                         {
