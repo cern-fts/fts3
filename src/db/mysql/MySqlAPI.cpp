@@ -11603,7 +11603,30 @@ int MySqlAPI::getMaxDeletionsPerEndpoint(const std::string & endpoint, const std
         }
 }
 
+void MySqlAPI::revertDeletionToStarted()
+{
+    soci::session sql(*connectionPool);
 
+    try
+        {
+            sql <<
+                    " UPDATE t_dm SET file_state = 'DELETE', start_time = NULL "
+                    " WHERE file_state = 'STARTED' "
+                    "   AND (hashed_id >= :hStart AND hashed_id <= :hEnd)",
+                    soci::use(hashSegment.start), soci::use(hashSegment.end)
+                    ;
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
 
 //STAGING
 //need messaging, both for canceling and state transitions

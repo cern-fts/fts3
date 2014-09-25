@@ -10917,7 +10917,32 @@ int OracleAPI::getMaxDeletionsPerEndpoint(const std::string & endpoint, const st
         }
 }
 
+void OracleAPI::revertDeletionToStarted()
+{
+    soci::session sql(*connectionPool);
 
+    try
+        {
+            sql.begin();
+            sql <<
+                    " UPDATE t_dm SET file_state = 'DELETE', start_time = NULL "
+                    " WHERE file_state = 'STARTED' "
+                    "   AND (hashed_id >= :hStart AND hashed_id <= :hEnd)",
+                    soci::use(hashSegment.start), soci::use(hashSegment.end)
+                    ;
+            sql.commit();
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
 
 //STAGING
 //need messaging, both for canceling and state transitions

@@ -22,7 +22,18 @@ extern bool stopThreads;
 
 void FetchDeletion::fetch()
 {
-    //WaitingRoom<PollTask>::instance().attach(threadpool);
+    try
+        {
+            db::DBSingleton::instance().getDBObjectInstance()->revertDeletionToStarted();
+        }
+    catch (Err& e)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "DELETION " << e.what() << commit;
+        }
+    catch (...)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "DELETION Fatal error (unknown origin)" << commit;
+        }
 
     while (!stopThreads)
         {
@@ -43,7 +54,7 @@ void FetchDeletion::fetch()
                     db::DBSingleton::instance().getDBObjectInstance()->getFilesForDeletion(files);
 
                     std::vector<DeletionContext::context_type>::iterator it_f;
-                    for (it_f = files.begin(); it_f != files.end(); ++it_f)
+                    for (it_f = files.begin(); it_f != files.end() && !stopThreads; ++it_f)
                         {
                             // make sure it is a srm SE
                             std::string const & url = boost::get<DeletionContext::source_url>(*it_f);
@@ -62,7 +73,7 @@ void FetchDeletion::fetch()
                                 it_t->second.add(*it_f);
                         }
 
-                    for (it_t = tasks.begin(); it_t != tasks.end(); ++it_t)
+                    for (it_t = tasks.begin(); it_t != tasks.end() && !stopThreads; ++it_t)
                         {
                             try
                                 {
