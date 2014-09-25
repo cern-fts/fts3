@@ -197,7 +197,7 @@ def get_pervo(http_request):
         vo = row['vo_name']
         if vo not in per_vo:
             per_vo[vo] = {}
-        per_vo[vo][row['file_state']] = row['count']
+        per_vo[vo][row['file_state'].lower()] = row['count']
 
     # Non terminal, one by one
     # See ticket #1083
@@ -213,7 +213,7 @@ def get_pervo(http_request):
             vo = row['vo_name']
             if vo not in per_vo:
                 per_vo[vo] = {}
-            per_vo[vo][state] = row['count']
+            per_vo[vo][state.lower()] = row['count']
 
     return per_vo
 

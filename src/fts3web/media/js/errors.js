@@ -72,7 +72,17 @@ ErrorsCtrl.resolve = {
     }
 }
 
-
+function _countPerClassification(classification)
+{
+    var result = [];
+    for (phase in classification) {
+        if (phase[0] != '$') {
+            var value = classification[phase];
+            result.push({x: phase, y: [value]});
+        }
+    }
+    return result;
+}
 
 function ErrorsForPairCtrl($location, $scope, errors, ErrorsForPair)
 {
@@ -104,6 +114,22 @@ function ErrorsForPairCtrl($location, $scope, errors, ErrorsForPair)
 	// On page change, reload
 	$scope.pageChanged = function(newPage) {
 		$location.search('page', newPage);
+	};
+
+	// Generate plot
+	$scope.plots = {
+        phase: {
+            data: _countPerClassification($scope.errors.classification),
+            config: {
+                title: 'Error phase',
+                colors: ['#366DD8', '#D836BE', '#D8A136', '#36D850'],
+                labels: true,
+                legend: {
+                    display: true,
+                    position: 'right'
+                }
+            }
+        }
 	};
 }
 
