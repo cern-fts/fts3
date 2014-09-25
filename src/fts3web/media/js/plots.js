@@ -27,11 +27,11 @@ angular.module('ftsmon.plots', [])
                 scope.legend_count = 1;
             if (attr.suffix)
                 scope.suffix = attr.suffix;
-            
+
             // Set title and colors
             scope.title  = attr.title;
             if (attr.colors)
-                scope.colors = attr.colors; 
+                scope.colors = attr.colors;
         }
     };
 })
@@ -42,11 +42,11 @@ angular.module('ftsmon.plots', [])
         template: '<img ng-src="plot/lines?t={{title}}&ll={{label_left}}&l={{values_left}}&lr={{label_right}}&r={{values_right}}&x={{x_axis}}"></img>',
         link: function(scope, iterStartElement, attr) {
             var list = scope.$eval(attr.list);
-            
+
             scope.title = attr.title;
             scope.label_left = firstUpper(attr.yLeft);
             scope.label_right = firstUpper(attr.yRight);
-            
+
             scope.x_axis = '';
             scope.values_left = '';
             scope.values_right = '';
@@ -69,7 +69,7 @@ function plotPieArrayOfObjects(scope, list, labelAttr, valueAttr)
         labelStr += firstUpper(item[labelAttr]) + ',';
         valueStr += undefinedAsZero(item[valueAttr]) + ',';
     }
-    
+
     scope.labels = labelStr;
     scope.values = valueStr;
 }
@@ -82,13 +82,13 @@ function plotPieObject(scope, obj, labelsAttr)
         labelStr += firstUpper(label) + ',';
         valueStr += undefinedAsZero(obj[label]) + ',';
     }
-    
+
     scope.labels = labelStr;
     scope.values = valueStr;
 }
 
 function plotPieDictionary(scope, list, value)
-{    
+{
     var labelStr = '', valueStr = '';
     for (var i in list) {
         if (i[0] != '$') {
@@ -96,9 +96,9 @@ function plotPieDictionary(scope, list, value)
             valueStr += undefinedAsZero(list[i][value]) + ',';
         }
     }
-    
+
     scope.labels = labelStr;
-    scope.values = valueStr;    
+    scope.values = valueStr;
 }
 
 function plotPieKeyValue(scope, list)
@@ -110,7 +110,7 @@ function plotPieKeyValue(scope, list)
             valueStr += undefinedAsZero(list[key]) + ',';
         }
     }
-    
+
     scope.labels = labelStr;
-    scope.values = valueStr; 
+    scope.values = valueStr;
 }

@@ -1,12 +1,47 @@
 
 // Overview
+function _generateOverviewPlots(stats)
+{
+    var queueColors = ["#fae932", "#9ed5ff", "#006dcc", "#990099"];
+    var lastHourColors = ["#5bb75b", "#bd362f"];
+    return {
+        queue: {
+            data: [
+                {x: "submitted", y: [stats.lasthour.submitted]},
+                {x: "ready", y: [stats.lasthour.ready]},
+                {x: "active", y: [stats.lasthour.active]},
+                {x: "staging", y: [stats.lasthour.staging]},
+            ],
+            config: {
+                title: 'Queue',
+                legend: {position: 'right', display: true},
+                innerRadius: 50,
+                colors: queueColors,
+                labels: true
+            }
+	    },
+	    lasthour: {
+            data: [
+                {x: "finished", y: [stats.lasthour.finished]},
+                {x: "failed", y: [stats.lasthour.failed]},
+            ],
+            config: {
+                title: 'Last hour',
+                legend: {position: 'right', display: true},
+                innerRadius: 50,
+                colors: lastHourColors,
+                labels: true
+            }
+	    }
+    };
+}
 
 function StatsOverviewCtrl($routeParams, $location, $scope, stats, Statistics, Unique)
 {
 	$scope.stats = stats;
 	$scope.host = $location.$$search.hostname;
 
-	$scope.hostnames = Unique('hostnames')
+	$scope.hostnames = Unique.query({field: 'hostnames'});
 
 	$scope.filterHost = function(host) {
 		var filter = $location.$$search;
@@ -22,10 +57,13 @@ function StatsOverviewCtrl($routeParams, $location, $scope, stats, Statistics, U
 	$scope.autoRefresh = setInterval(function() {
 		var filter = $location.$$search;
     	$scope.stats = Statistics.query(filter);
+    	$scope.stats = _generateOverviewPlots($scope.host);
 	}, REFRESH_INTERVAL);
 	$scope.$on('$destroy', function() {
 		clearInterval($scope.autoRefresh);
 	});
+
+	$scope.plots = _generateOverviewPlots($scope.stats);
 }
 
 
@@ -45,6 +83,82 @@ StatsOverviewCtrl.resolve = {
 
 // Per server
 
+function _dataByState(servers, state)
+{
+    var points = [];
+    var total = 0;
+    for (server in servers) {
+        if (server[0] != '$') {
+            var value = undefinedAsZero(servers[server][state]);
+            total += value;
+            points.push({x: server, y: [value]});
+        }
+    }
+    if (value)
+        return points;
+    else
+        return null;
+}
+
+function _generateServerPlots(servers)
+{
+    var serverColors = [
+        '#366DD8', '#D836BE', '#D8A136', '#36D850', '#5036D8', '#D8366D', '#BED836', '#36D8A1', '#A136D8', '#D85036'
+    ];
+    return {
+        submit: {
+            data: _dataByState(servers, 'submissions'),
+            config: {
+                title: 'Submissions',
+                legend: {position: 'left', display: true},
+                innerRadius: 50,
+                colors: serverColors,
+                labels: true
+            }
+	    },
+        executed: {
+            data: _dataByState(servers, 'transfers'),
+            config: {
+                title: 'Executed',
+                legend: {position: 'left', display: true},
+                innerRadius: 50,
+                colors: serverColors,
+                labels: true
+            }
+        },
+        active: {
+            data: _dataByState(servers, 'active'),
+            config: {
+                title: 'Active',
+                legend: {position: 'left', display: true},
+                innerRadius: 50,
+                colors: serverColors,
+                labels: true
+            }
+        },
+        staging: {
+            data: _dataByState(servers, 'staging'),
+            config: {
+                title: 'Staging',
+                legend: {position: 'left', display: true},
+                innerRadius: 50,
+                colors: serverColors,
+                labels: true
+            }
+        },
+        started: {
+            data: _dataByState(servers, 'started'),
+            config: {
+                title: 'Staging started',
+                legend: {position: 'left', display: true},
+                innerRadius: 50,
+                colors: serverColors,
+                labels: true
+            }
+        }
+	};
+}
+
 function StatsServersCtrl($location, $scope, servers, Servers)
 {
 	$scope.servers = servers;
@@ -58,11 +172,14 @@ function StatsServersCtrl($location, $scope, servers, Servers)
             		updatedServers[server].show = $scope.servers[server].show;
             }
             $scope.servers = updatedServers;
+            $scope.plots = _generateServerPlots($scope.servers);
         });
 	}, REFRESH_INTERVAL);
 	$scope.$on('$destroy', function() {
 		clearInterval($scope.autoRefresh);
 	});
+
+	$scope.plots = _generateServerPlots($scope.servers);
 }
 
 
@@ -81,6 +198,35 @@ StatsServersCtrl.resolve = {
 }
 
 // Per VO
+function _generatePerVoPlots(vos)
+{
+    var perVoColors = [
+        '#366DD8', '#D836BE', '#D8A136', '#36D850', '#5036D8', '#D8366D', '#BED836', '#36D8A1', '#A136D8', '#D85036'
+    ];
+
+    return {
+        active: {
+            data: _dataByState(vos, 'active'),
+            config: {
+                title: 'Active',
+                legend: {position: 'left', display: true},
+                innerRadius: 50,
+                colors: perVoColors,
+                labels: true
+            }
+        },
+        submitted: {
+            data: _dataByState(vos, 'submitted'),
+            config: {
+                title: 'Submitted',
+                legend: {position: 'left', display: true},
+                innerRadius: 50,
+                colors: perVoColors,
+                labels: true
+            }
+        }
+    };
+}
 
 function StatsVosCtrl($location, $scope, vos, StatsVO, Unique)
 {
@@ -105,10 +251,13 @@ function StatsVosCtrl($location, $scope, vos, StatsVO, Unique)
 	$scope.autoRefresh = setInterval(function() {
 		var filter = $location.$$search;
     	$scope.vos = StatsVO.query(filter);
+    	$scope.plots = _generatePerVoPlots($scope.vos);
 	}, REFRESH_INTERVAL);
 	$scope.$on('$destroy', function() {
 		clearInterval($scope.autoRefresh);
 	});
+
+	$scope.plots = _generatePerVoPlots($scope.vos);
 }
 
 

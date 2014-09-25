@@ -2,15 +2,15 @@
     Statistics -
     <div class="dropdown">
 	    <a class="dropdown-toggle">
-	        <span ng-show="host">{{host}}</span>
-	        <span ng-show="!host">All</span>
+	        <span data-ng-show="host">{{host}}</span>
+	        <span data-ng-show="!host">All</span>
 	    </a>
 	    <ul class="dropdown-menu">
 	        <li>
-	           <a ng-click="filterHost(null)">All</a>
-	        </li> 
-	        <li ng-repeat="host in hostnames">
-	           <a ng-click="filterHost(host)">{{host}}</a>
+	           <a data-ng-click="filterHost(null)">All</a>
+	        </li>
+	        <li data-ng-repeat="host in hostnames">
+	           <a data-ng-click="filterHost(host)">{{host}}</a>
             </li>
 	    </ul>
     </div>
@@ -46,9 +46,10 @@
 			        </tr>
 			    </tbody>
 			</table>
-			<plot-pie title="Queue" list="stats.lasthour" labels="submitted,ready,active,staging" colors="fae932,9ed5ff,006dcc,990099"/>
+            <div data-ac-chart="'pie'" data-ac-data="plots.queue" data-ac-config="plots.queue.config" id="queue" class="chart">
+            </div>
 		</div>
-		
+
 		<div class="span6">
 			<h4>For the last hour</h4>
 			<table class="table">
@@ -73,8 +74,8 @@
 			        </tr>
 			    </tbody>
 			</table>
-			<plot-pie title="1h" list="stats.lasthour" labels="finished,failed" colors="5bb75b,bd362f"></plot-pie>
-			<p><b>Note: </b>Canceled transfers are not shown on the plot</p>
+            <div data-ac-chart="'pie'" data-ac-data="plots.lasthour" data-ac-config="plots.lasthour.config" id="lasthour" class="chart"></div>
+			<div><p><b>Note: </b>Canceled transfers are not shown on the plot</p></div>
 		</div>
 	</div>
 </div>

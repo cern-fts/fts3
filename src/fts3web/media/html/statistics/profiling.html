@@ -2,28 +2,28 @@
 
 {{profile.update}}
 
-<div ng-show="!profile.updated" class="hero-unit">
+<div data-ng-show="!profile.updated" class="hero-unit">
     <h3>No profiling data available</h3>
      <p>
          There is no profile information available. It has probably been disabled
      </p>
 </div>
 
-<div ng-show="profile.updated">
+<div data-ng-show="profile.updated">
     <h4>Last update: {{profile.updated}}</h4>
     <p>Updated every {{profile.period}} seconds.</p>
     <table class="table">
         <thead>
             <tr>
-                <th><span order-by="scope">Scope</span></th>
-                <th><span order-by="called">Called</span></th>
-                <th><span order-by="aggregate">Aggregate time</span></th>
-                <th><span order-by="average">Average time</span></th>
-                <th><span order-by="exceptions">Exceptions</span></th>
+                <th><span data-order-by="scope">Scope</span></th>
+                <th><span data-order-by="called">Called</span></th>
+                <th><span data-order-by="aggregate">Aggregate time</span></th>
+                <th><span data-order-by="average">Average time</span></th>
+                <th><span data-order-by="exceptions">Exceptions</span></th>
             </tr>
         </thead>
         <tbody>
-            <tr ng-repeat="p in profile.profiles" ng-class-odd="'odd'">
+            <tr data-ng-repeat="p in profile.profiles" data-ng-class-odd="'odd'">
                 <td>{{p.scope}}</td>
                 <td>{{p.cnt}}</td>
                 <td>{{p.total|number:2}}</td>

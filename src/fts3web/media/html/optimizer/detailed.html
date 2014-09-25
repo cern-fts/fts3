@@ -4,24 +4,38 @@
     Details for {{filter.source}} → {{filter.destination}}
 </h3>
 
+<style>
+    .line-plot {
+        width: 850px;
+        height: 300px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .x>.tick {
+        display: none;
+    }
+
+    .x>.tick:first-of-type {
+        display: block;
+    }
+
+    .x>.tick:last-of-type {
+        display: block;
+    }
+</style>
+
 
 <div class="row-fluid">
 	<div class="span6">
-	    <plot-lines title="Throughput evolution" list="optimizer.evolution.items"
-	        x="datetime"
-	        y-left="active"
-	        y-right="throughput"></plot-lines>
+        <div data-ac-chart="'line2axis'" data-ac-data="plots.throughput" data-ac-config="plots.throughput.config" id="throughput" class="line-plot">
+        </div>
 	</div>
 
 	<div class="span6">
-	    <plot-lines title="Success rate evolution" list="optimizer.evolution.items"
-	        x="datetime"
-	        y-left="active"
-	        y-right="success"></plot-lines>
+        <div data-ac-chart="'line2axis'" data-ac-data="plots.success" data-ac-config="plots.success.config" id="success" class="line-plot">
+        </div>
 	</div>
-</div>
-<div style="text-align: center">
-    <plot-pie title="Current throughput" list="optimizer.throughput" legend-count="1" suffix="MB/s"></plot-pie>
 </div>
 
 <pagination rotate="false"
@@ -40,31 +54,31 @@
         </tr>
     </thead>
     <tbody>
-        <tr ng-repeat="o in optimizer.evolution.items" ng-class-odd="'odd'" class="optimizer-branch-{{o.branch}}">
+        <tr data-ng-repeat="o in optimizer.evolution.items" data-ng-class-odd="'odd'" class="optimizer-branch-{{o.branch}}">
             <td>{{ o.datetime }}</td>
             <td class="numeric">{{ o.active }}</td>
             <td class="numeric">{{ o.success|number:2 }}%</td>
             <td class="numeric">{{ o.throughput|number:3 }} MB/s</td>
-            <td ng-switch on="o.branch">
-                <span ng-switch-when="1">Good link efficiency, current average throughput is larger than the preceding average throughput and retrials steady or decreasing</span>
-                <span ng-switch-when="2">Good link efficiency, throughput steady, retrials steady or decreasing</span>
-                <span ng-switch-when="3">Good link efficiency, current average throughput is smaller than the previous average throughput and retrials increasing</span>
-                <span ng-switch-when="4">Good link efficiency, throughput decreasing, not enough recent samples to decide</span>
-                <span ng-switch-when="5">Good link efficiency, throughput deterioration as caused by congestion due to too many transfer</span>
-                <span ng-switch-when="6">Good link efficiency, throughput decreasing, actives remain steady</span>
-                <span ng-switch-when="7">Bad link efficiency but improving, actives remain steady until the next sample to check</span>
-                <span ng-switch-when="8">Bad link efficiency</span>
-                <span ng-switch-when="9">Link efficiency ~99%</span>
-                <span ng-switch-when="10">
+            <td data-ng-switch data-on="o.branch">
+                <span data-ng-switch-when="1">Good link efficiency, current average throughput is larger than the preceding average throughput and retrials steady or decreasing</span>
+                <span data-ng-switch-when="2">Good link efficiency, throughput steady, retrials steady or decreasing</span>
+                <span data-ng-switch-when="3">Good link efficiency, current average throughput is smaller than the previous average throughput and retrials increasing</span>
+                <span data-ng-switch-when="4">Good link efficiency, throughput decreasing, not enough recent samples to decide</span>
+                <span data-ng-switch-when="5">Good link efficiency, throughput deterioration as caused by congestion due to too many transfer</span>
+                <span data-ng-switch-when="6">Good link efficiency, throughput decreasing, actives remain steady</span>
+                <span data-ng-switch-when="7">Bad link efficiency but improving, actives remain steady until the next sample to check</span>
+                <span data-ng-switch-when="8">Bad link efficiency</span>
+                <span data-ng-switch-when="9">Link efficiency ~99%</span>
+                <span data-ng-switch-when="10">
                     Bandwidth restriction are set to
-                    <span ng-show="o.bandwidth_limits.source">
+                    <span data-ng-show="o.bandwidth_limits.source">
                         {{ o.bandwidth_limits.source|number:2 }} MB/s on the source
                     </span>
-                    <span ng-show="o.bandwidth_limits.destination">
+                    <span data-ng-show="o.bandwidth_limits.destination">
                         {{ o.bandwidth_limits.destination|number:2 }} MB/s on the destination
                     </span>
                 </span>
-		<span ng-switch-when="11">Either source or destination reached the maximum number of active transfers configured or max per link allowed</span>
+		        <span data-ng-switch-when="11">Either source or destination reached the maximum number of active transfers configured or max per link allowed</span>
             </td>
         </tr>
     </tbody>
