@@ -109,7 +109,7 @@ config(function($routeProvider) {
             scope.decimals = scope.$eval(attr.decimals);
             attr.$observe('optionalNumber', function(val) {
                 scope.value = val;
-                if (scope.value == null || scope.value == undefined) {
+                if (scope.value == null || scope.value == undefined || scope.value == 0) {
                     scope.value = '-';
                 }
                 else {
