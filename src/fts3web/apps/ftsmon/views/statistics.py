@@ -235,7 +235,7 @@ class CalculateVolume(object):
                 dest_se=triplet['dest_se'],
                 vo_name=triplet['vo'],
                 file_state='FINISHED',
-                job_finished__lt=self.not_before
+                job_finished__gte=self.not_before
             ).aggregate(vol=Sum('filesize'))
             triplet['volume'] = pair_volume['vol']
             yield triplet
