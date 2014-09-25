@@ -21,11 +21,11 @@
         </tr>
     </thead>
     <tbody>
-        <tr ng-repeat="s in streams.items" ng-class-odd="'odd'" ng-style="quantileColor(s)">
+        <tr data-ng-repeat="s in streams.items" data-ng-class-odd="'odd'" data-ng-style="quantileColor(s)">
             <td>{{ s.source_se }}</td>
             <td>{{ s.dest_se }}</td>
             <td class="numeric">{{ s.nostreams }}</td>
-            <td class="numeric"><span optional-number="s.throughput" suffix="MB/s" decimals="2"></span></td>
+            <td class="numeric"><span data-optional-number="{{s.throughput}}" data-suffix="MB/s" data-decimals="2"></span></td>
             <td class="numeric">{{ s.tested }}</td>
             <td>{{ s.datetime }}</td>
         </tr>
