@@ -79,6 +79,45 @@ function OptimizerDetailedCtrl($location, $scope, optimizer, OptimizerDetailed)
         source:      validString($location.$$search.source),
         destination: validString($location.$$search.destination)
 	}
+
+	var throughputData = [];
+	var successData = [];
+	for (var i = 0; i < $scope.optimizer.evolution.items.length; ++i) {
+	    var label = $scope.optimizer.evolution.items[i].datetime;
+	    throughputData.push({
+	        x: label,
+	        y: [
+	            $scope.optimizer.evolution.items[i].active,
+	            $scope.optimizer.evolution.items[i].throughput
+	        ]
+	    });
+	    successData.push({
+	        x: label,
+	        y: [
+	            $scope.optimizer.evolution.items[i].active,
+	            $scope.optimizer.evolution.items[i].success,
+	        ]
+	    });
+	}
+
+	$scope.plots = {
+	    throughput: {
+	        series: ['Active', 'Throughput'],
+	        data: throughputData,
+	        config: {
+	            title: 'Throughput evolution',
+	            colors: ["#0000FF", "#00FF00"]
+	        }
+	    },
+	    success: {
+	        series: ['Active', 'Success'],
+	        data: successData,
+	        config: {
+	            title: 'Success rate evolution',
+	            colors: ["#0000FF", "#00FF00"]
+	        }
+	    }
+	};
 }
 
 

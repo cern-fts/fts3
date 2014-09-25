@@ -4,20 +4,37 @@
     Details for {{filter.source}} → {{filter.destination}}
 </h3>
 
+<style>
+    .line-plot {
+        width: 800px;
+        height: 300px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .x>.tick {
+        display: none;
+    }
+
+    .x>.tick:first-of-type {
+        display: block;
+    }
+
+    .x>.tick:last-of-type {
+        display: block;
+    }
+</style>
+
 
 <div class="row-fluid">
 	<div class="span6">
-	    <plot-lines title="Throughput evolution" list="optimizer.evolution.items"
-	        x="datetime"
-	        y-left="active"
-	        y-right="throughput"></plot-lines>
+        <div data-ac-chart="'line'" data-ac-data="plots.throughput" data-ac-config="plots.throughput.config" id="throughput" class="line-plot">
+        </div>
 	</div>
 
 	<div class="span6">
-	    <plot-lines title="Success rate evolution" list="optimizer.evolution.items"
-	        x="datetime"
-	        y-left="active"
-	        y-right="success"></plot-lines>
+        <div data-ac-chart="'line'" data-ac-data="plots.success" data-ac-config="plots.success.config" id="success" class="line-plot">
+        </div>
 	</div>
 </div>
 
@@ -61,7 +78,7 @@
                         {{ o.bandwidth_limits.destination|number:2 }} MB/s on the destination
                     </span>
                 </span>
-		<span data-ng-switch-when="11">Either source or destination reached the maximum number of active transfers configured or max per link allowed</span>
+		        <span data-ng-switch-when="11">Either source or destination reached the maximum number of active transfers configured or max per link allowed</span>
             </td>
         </tr>
     </tbody>
