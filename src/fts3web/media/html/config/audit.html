@@ -18,7 +18,7 @@
         </tr>
     </thead>
     <tbody>
-        <tr data-ng-repeat="c in config.items" data-ng-class-odd="'odd'" data-ng-class="c.action">
+        <tr data-ng-repeat="c in config.items track by $index" data-ng-class-odd="'odd'" data-ng-class="c.action">
             <td>{{c.action}}</td>
             <td>{{c.config}}</td>
             <td>{{c.datetime}}</td>

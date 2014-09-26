@@ -23,6 +23,19 @@ ACTIVE_STATES        = ['SUBMITTED', 'READY', 'ACTIVE', 'STAGING']
 FILE_TERMINAL_STATES = ['FINISHED', 'FAILED', 'CANCELED', 'NOT_USED']
 
 
+class DnField(models.CharField):
+
+    hide_dn = False
+
+    __metaclass__ = models.SubfieldBase
+
+    def to_python(self, value):
+        if DnField.hide_dn:
+            return 'DN DISPLAY DISABLED'
+        else:
+            return super(DnField, self).to_python(value)
+
+
 class JobBase(models.Model):
     job_id          = models.CharField(max_length = 36, primary_key = True)
     job_state       = models.CharField(max_length = 32)
@@ -31,7 +44,7 @@ class JobBase(models.Model):
     reuse_job       = models.CharField(max_length = 3)
     cancel_job      = models.CharField(max_length = 1)
     job_params      = models.CharField(max_length = 255)
-    user_dn         = models.CharField(max_length = 1024)
+    user_dn         = DnField(max_length = 1024)
     agent_dn        = models.CharField(max_length = 1024)
     user_cred       = models.CharField(max_length = 255)
     cred_id         = models.CharField(max_length = 100)
@@ -206,7 +219,7 @@ class  ConfigAudit(models.Model):
     # this from Django, we can live with this workaround until Django supports fully
     # composite primary keys
     datetime = models.DateTimeField(primary_key = True)
-    dn       = models.CharField(max_length = 1024)
+    dn       = DnField(max_length = 1024)
     config   = models.CharField(max_length = 4000)
     action   = models.CharField(max_length = 100)
 
