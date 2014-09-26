@@ -14,3 +14,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+import logging
+
+from django.db import connection
+from ftsweb.models import DnField
+
+
+# Hook a signal handler to enable/disable DN display
+def dn_disable_callback(sender, **kwargs):
+    log = logging.getLogger(__name__)
+    log.debug('Connection initiated')
+    cursor = connection.cursor()
+    cursor.execute('SELECT show_user_dn FROM t_server_config')
+    row = cursor.fetchone()
+    hide = (row is not None and row[0] is not None and row[0].lower() == 'off')
+    log.debug('Hide users\' dn: %s' % hide)
+    DnField.hide_dn = hide
+
+from django.db.backends.signals import connection_created
+connection_created.connect(dn_disable_callback)
