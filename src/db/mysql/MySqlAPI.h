@@ -396,7 +396,7 @@ public:
     virtual void setMaxDeletionsPerEndpoint(int maxDeletions, const std::string & endpoint, const std::string & vo);
     virtual int getMaxDeletionsPerEndpoint(const std::string & endpoint, const std::string & vo);
 
-
+    virtual void revertDeletionToStarted();
 
     //staging						//file_id / state / reason / token
     virtual void updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files);

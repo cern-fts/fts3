@@ -927,7 +927,10 @@ int ProfiledDB::getMaxDeletionsPerEndpoint(const std::string & endpoint, const s
     PROFILE_PREFIXED("DB::", return db->getMaxDeletionsPerEndpoint(endpoint, vo));
 }
 
-
+void ProfiledDB::revertDeletionToStarted()
+{
+    PROFILE_PREFIXED("DB::", return db->revertDeletionToStarted());
+}
 
 //staging						//file_id / state / reason / token
 void ProfiledDB::updateStagingState(std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files)

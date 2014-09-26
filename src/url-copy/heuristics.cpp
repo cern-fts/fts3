@@ -23,16 +23,16 @@ bool retryTransfer(int errorNo, const std::string& category, const std::string& 
         return true;
     found = message.find("end of file occurred");
     if (found!=std::string::npos)
-        return true;	
+        return true;
     found = message.find("SRM_INTERNAL_ERROR");
     if (found!=std::string::npos)
         return true;
     found = message.find("was forcefully killed");
     if (found!=std::string::npos)
-        return true;	
+        return true;
     found = message.find("operation timeout");
     if (found!=std::string::npos)
-        return true;		
+        return true;
 
 
     if (category == "SOURCE")
