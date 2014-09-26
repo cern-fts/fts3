@@ -3537,25 +3537,25 @@ void OracleAPI::getMaxActive(soci::session& sql, int& source, int& destination, 
 
             if(sql.got_data())
                 {
-			source = maxActiveSource;	
-		}
-	    else
-	        {
-			source = maxDefault;
-		}
-		
-  	    sql << " select active from t_optimize where dest_se = :dest_se and active is not NULL ",
-                 soci::use(destination_hostname),
-                 soci::into(maxActiveDest);
+                    source = maxActiveSource;
+                }
+            else
+                {
+                    source = maxDefault;
+                }
+
+            sql << " select active from t_optimize where dest_se = :dest_se and active is not NULL ",
+                soci::use(destination_hostname),
+                soci::into(maxActiveDest);
 
             if(sql.got_data())
                 {
-			destination = maxActiveDest;	
-		}
-	    else
-	        {
-			destination = maxDefault;
-		}		
+                    destination = maxActiveDest;
+                }
+            else
+                {
+                    destination = maxDefault;
+                }
         }
     catch (std::exception& e)
         {
@@ -3565,7 +3565,7 @@ void OracleAPI::getMaxActive(soci::session& sql, int& source, int& destination, 
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
-  
+
 }
 
 bool OracleAPI::updateOptimizer()
@@ -3613,8 +3613,8 @@ bool OracleAPI::updateOptimizer()
     int allTested = 0;
     int activeSource = 0;
     int activeDestination = 0;
-    double avgDuration = 0.0; 
-    soci::indicator isNullAvg = soci::i_ok; 
+    double avgDuration = 0.0;
+    soci::indicator isNullAvg = soci::i_ok;
 
 
     try
@@ -3650,10 +3650,10 @@ bool OracleAPI::updateOptimizer()
                                              soci::use(source_hostname), soci::use(destin_hostname), soci::into(active_fixed, isNullFixed));
 
             soci::statement stmt_avg_duration = (
-                                             sql.prepare << "SELECT avg(tx_duration)  from t_file "
-                                             " WHERE source_se = :source AND dest_se = :dest and file_state='FINISHED' and tx_duration > 0 AND tx_duration is NOT NULL and "
-					     " job_finished > (sys_extract_utc(systimestamp) - interval '30' minute) ",
-                                             soci::use(source_hostname), soci::use(destin_hostname), soci::into(avgDuration, isNullAvg));
+                                                    sql.prepare << "SELECT avg(tx_duration)  from t_file "
+                                                    " WHERE source_se = :source AND dest_se = :dest and file_state='FINISHED' and tx_duration > 0 AND tx_duration is NOT NULL and "
+                                                    " job_finished > (sys_extract_utc(systimestamp) - interval '30' minute) ",
+                                                    soci::use(source_hostname), soci::use(destin_hostname), soci::into(avgDuration, isNullAvg));
 
             //snapshot of active transfers
             soci::statement stmt7 = (
@@ -3800,8 +3800,8 @@ bool OracleAPI::updateOptimizer()
                     allTested = 0;
                     activeSource = 0;
                     activeDestination = 0;
-		    avgDuration = 0.0;
-		    isNullAvg = soci::i_ok;
+                    avgDuration = 0.0;
+                    isNullAvg = soci::i_ok;
 
                     // Weighted average
                     soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
@@ -3949,17 +3949,17 @@ bool OracleAPI::updateOptimizer()
                     stmt_fixed.execute(true);
                     if (isNullFixed == soci::i_ok && active_fixed == "on")
                         continue;
-			
-		    //get the average transfer duration for this link
-		    stmt_avg_duration.execute(true);
-		    
-		    int calcutateTimeFrame = 0;
-		    if(avgDuration > 0 && avgDuration < 30)
-		    	calcutateTimeFrame  = 5;
-		    else if(avgDuration > 30 && avgDuration < 900)			    
-		    	calcutateTimeFrame  = 15;
-		    else
-		    	calcutateTimeFrame  = 30;			
+
+                    //get the average transfer duration for this link
+                    stmt_avg_duration.execute(true);
+
+                    int calcutateTimeFrame = 0;
+                    if(avgDuration > 0 && avgDuration < 30)
+                        calcutateTimeFrame  = 5;
+                    else if(avgDuration > 30 && avgDuration < 900)
+                        calcutateTimeFrame  = 15;
+                    else
+                        calcutateTimeFrame  = 30;
 
 
                     // Ratio of success
@@ -3967,10 +3967,10 @@ bool OracleAPI::updateOptimizer()
                                                   "WHERE "
                                                   "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
                                                   "      ( "
-						  "		(t_file.job_finished is NULL AND current_failures > 0)  OR "
-						  "		(t_file.job_finished > (sys_extract_utc(systimestamp) - interval :calcutateTimeFrame minute)) "
-						  "	) "
-						  "	AND "
+                                                  "		(t_file.job_finished is NULL AND current_failures > 0)  OR "
+                                                  "		(t_file.job_finished > (sys_extract_utc(systimestamp) - interval :calcutateTimeFrame minute)) "
+                                                  "	) "
+                                                  "	AND "
                                                   "      file_state IN ('FAILED','FINISHED','SUBMITTED') ",
                                                   soci::use(source_hostname), soci::use(destin_hostname), soci::use(calcutateTimeFrame));
 
@@ -4068,10 +4068,10 @@ bool OracleAPI::updateOptimizer()
 
                             //get current active for this destination
                             stmtActiveDest.execute(true);
-   			   
-			    //make sure we do not increase beyond the limits set
-			    int maxSource = 0;
-			    int maxDestination = 0;
+
+                            //make sure we do not increase beyond the limits set
+                            int maxSource = 0;
+                            int maxDestination = 0;
                             getMaxActive(sql, maxSource, maxDestination, source_hostname, destin_hostname);
 
                             if( (activeSource > maxSource || activeDestination > maxDestination) && active > highDefault)
@@ -4082,18 +4082,22 @@ bool OracleAPI::updateOptimizer()
                                 }
 
                             sql.begin();
-                           
-                         if( (ratioSuccessFailure == MAX_SUCCESS_RATE || ratioSuccessFailure > rateStored ) && throughputEMA > 0 &&  (throughputEMA > thrStored || (throughputEMA >= HIGH_THROUGHPUT && avgDuration <= AVG_TRANSFER_DURATION)) && retry <= retryStored && maxActive <= MAX_ACTIVE_PER_LINK)
+
+                                             if( (ratioSuccessFailure == MAX_SUCCESS_RATE || (ratioSuccessFailure > rateStored && ratioSuccessFailure >= MED_SUCCESS_RATE )) && throughputEMA > 0 &&  retry <= retryStored)
                                 {
-                                    if(singleDest == 1 || lanTransferBool || spawnActive > 1)
+                                    if(throughputEMA > thrStored)
                                         {
-                                            active = maxActive + spawnActive;
+                                            active = maxActive + 1;
                                         }
-                                    else if (throughputSamples == 10 && ratioSuccessFailure >= MED_SUCCESS_RATE)
-					{
-					    active = maxActive + 1;
-					}
-                                    else
+                                    else if((throughputEMA >= HIGH_THROUGHPUT && avgDuration <= AVG_TRANSFER_DURATION))
+                                        {
+                                            active = maxActive + 1;
+                                        }
+                                    else if(throughputSamples == 10 && throughputEMA >= thrStored)
+                                        {
+                                            active = maxActive + 1;
+                                        }
+                                    else if( (singleDest == 1 || lanTransferBool || spawnActive > 1) && throughputEMA >= thrStored )
                                         {
                                             active = maxActive + 1;
                                         }
@@ -4108,7 +4112,7 @@ bool OracleAPI::updateOptimizer()
                                     stmt10.execute(true);
 
                                 }
-                            else if( (ratioSuccessFailure == MAX_SUCCESS_RATE || ratioSuccessFailure > rateStored) && throughputEMA > 0 && throughputEMA < thrStored)
+                            else if( (ratioSuccessFailure == MAX_SUCCESS_RATE || (ratioSuccessFailure > rateStored  && ratioSuccessFailure >= MED_SUCCESS_RATE)) && throughputEMA > 0 && throughputEMA < thrStored)
                                 {
                                     if(retry > retryStored)
                                         {
@@ -4120,11 +4124,11 @@ bool OracleAPI::updateOptimizer()
                                             active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
                                             pathFollowed = 4;
                                         }
-				    else if (avgDuration > MAX_TRANSFER_DURATION)
-				        {
-				            active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
+                                    else if (avgDuration > MAX_TRANSFER_DURATION)
+                                        {
+                                            active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
                                             pathFollowed = 4;
-					}					
+                                        }
                                     else
                                         {
                                             if(maxActive >= activeStored)
@@ -10925,11 +10929,11 @@ void OracleAPI::revertDeletionToStarted()
         {
             sql.begin();
             sql <<
-                    " UPDATE t_dm SET file_state = 'DELETE', start_time = NULL "
-                    " WHERE file_state = 'STARTED' "
-                    "   AND (hashed_id >= :hStart AND hashed_id <= :hEnd)",
-                    soci::use(hashSegment.start), soci::use(hashSegment.end)
-                    ;
+                " UPDATE t_dm SET file_state = 'DELETE', start_time = NULL "
+                " WHERE file_state = 'STARTED' "
+                "   AND (hashed_id >= :hStart AND hashed_id <= :hEnd)",
+                soci::use(hashSegment.start), soci::use(hashSegment.end)
+                ;
             sql.commit();
         }
     catch (std::exception& e)

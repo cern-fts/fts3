@@ -321,8 +321,8 @@ protected:
 
                         if(!messages.empty())
                             {
-				executeUpdate(messages);
-				messages.clear();
+                                executeUpdate(messages);
+                                messages.clear();
 
                                 /*
                                 boost::thread_group g;
@@ -352,10 +352,10 @@ protected:
                                 // wait for them
                                 g.join_all();
 
-			        messages.clear();
+                                messages.clear();
                                 */
 
-                                
+
                             }
 
                         //update log file path

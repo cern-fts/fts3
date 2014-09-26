@@ -415,9 +415,9 @@ void FileTransferExecutor::run(boost::any & ctx)
                     std::string forkMessage;
                     bool failed = false;
 
-		    //check again here if the server has stopped - just in case
-		    if(stopThreads)
-			return;
+                    //check again here if the server has stopped - just in case
+                    if(stopThreads)
+                        return;
 
                     if (-1 == pr.executeProcessShell(forkMessage))
                         {
