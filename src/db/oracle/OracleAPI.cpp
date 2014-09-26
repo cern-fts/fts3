@@ -4083,7 +4083,7 @@ bool OracleAPI::updateOptimizer()
 
                             sql.begin();
 
-                                             if( (ratioSuccessFailure == MAX_SUCCESS_RATE || (ratioSuccessFailure > rateStored && ratioSuccessFailure >= MED_SUCCESS_RATE )) && throughputEMA > 0 &&  retry <= retryStored)
+                            if( (ratioSuccessFailure == MAX_SUCCESS_RATE || (ratioSuccessFailure > rateStored && ratioSuccessFailure >= MED_SUCCESS_RATE )) && throughputEMA > 0 &&  retry <= retryStored)
                                 {
                                     if(throughputEMA > thrStored)
                                         {
@@ -4101,6 +4101,10 @@ bool OracleAPI::updateOptimizer()
                                         {
                                             active = maxActive + 1;
                                         }
+                                    else
+				        {
+					    active = maxActive;
+					}										
 
                                     if(active > (tempActive + 5))
                                         {

@@ -4514,6 +4514,10 @@ bool MySqlAPI::updateOptimizer()
                                         {
                                             active = maxActive + 1;
                                         }
+                                    else
+				        {
+					    active = maxActive;
+					}					
 
                                     if(active > (tempActive + 5))
                                         {
