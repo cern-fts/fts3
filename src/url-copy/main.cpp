@@ -897,8 +897,16 @@ int main(int argc, char **argv)
                 gfalt_set_user_data(params, NULL, NULL);
 
                 logger.INFO() << "Transfer accepted" << std::endl;
-                logger.INFO() << "Proxy:" << opts.proxy << std::endl;
-                logger.INFO() << "User DN:" << replace_dn(opts.user_dn) << std::endl;
+   	        if(opts.hide_user_dn)
+		{		
+                	logger.INFO() << "Proxy: Hidden" << std::endl;		
+                	logger.INFO() << "User DN Hidden:" << std::endl;
+		}
+		else
+		{
+                	logger.INFO() << "Proxy:" << opts.proxy << std::endl;		
+                	logger.INFO() << "User DN:" << replace_dn(opts.user_dn) << std::endl;		
+		}
                 logger.INFO() << "VO:" << opts.vo << std::endl; //a
                 logger.INFO() << "Job id:" << opts.jobId << std::endl;
                 logger.INFO() << "File id:" << currentTransfer.fileId << std::endl;
