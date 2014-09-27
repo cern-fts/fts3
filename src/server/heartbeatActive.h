@@ -49,11 +49,8 @@ private:
             {
                 try
                     {
-                        bool foundRecords = db::DBSingleton::instance().getDBObjectInstance()->updateOptimizer();
-                        if(!foundRecords) //if there were no records sleep less time to get results if possible
-                            sleep(30);
-                        else
-                            sleep(60);
+                        db::DBSingleton::instance().getDBObjectInstance()->updateOptimizer();
+                        sleep(60);
                     }
                 catch(std::exception& e)
                     {

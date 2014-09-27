@@ -127,7 +127,8 @@ bool almost_equal(double x, double y, double epsilon)
 /*borrowed from http://oroboro.com/irregular-ema/*/
 inline double exponentialMovingAverage( double sample, double alpha, double cur )
 {
-    cur = ( sample * alpha ) + (( 1-alpha) * cur );
+    if(sample > 0)
+    	cur = ( sample * alpha ) + (( 1-alpha) * cur );
     return cur;
 }
 
