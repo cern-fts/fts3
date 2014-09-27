@@ -4452,6 +4452,8 @@ bool MySqlAPI::updateOptimizer()
                     //check if bandwidth limitation exists, if exists and throughput exceeds the limit then do not proccess with auto-tuning
                     int bandwidthIn = 0;
                     bool bandwidth = bandwidthChecker(sql, source_hostname, destin_hostname, bandwidthIn);
+                            
+                    int pathFollowed = 0;
 
                     //make sure bandwidth is respected as also active should be no less than the minimum for each link
                     if(!bandwidth)
@@ -4464,33 +4466,39 @@ bool MySqlAPI::updateOptimizer()
 
                             sql.commit();
 
-                            updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, 10, bandwidthIn);
+                            updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, 0, bandwidthIn);
 
                             continue;
                         }
-
-
+			  
                     //ratioSuccessFailure, rateStored, throughput, thrStored MUST never be zero
                     if(changed)
                         {
-                            int pathFollowed = 0;
-                            int tempActive = active; //temp store current active
-
                             //get current active for this source
                             stmtActiveSource.execute(true);
 
                             //get current active for this destination
                             stmtActiveDest.execute(true);
 
-                            //make sure we do not increase beyond the limits set
+                            //make sure it doesn't grow beyond the limits
                             int maxSource = 0;
                             int maxDestination = 0;
                             getMaxActive(sql, maxSource, maxDestination, source_hostname, destin_hostname);
 
-                            if( (activeSource > maxSource || activeDestination > maxDestination) && active > highDefault)
+                            if( (activeSource > maxSource || activeDestination > maxDestination))
                                 {
-                                    updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, 11, bandwidthIn);
+                                    updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, 1, bandwidthIn);
 
+                                    continue;
+                                }
+
+                            //ensure minumin per link and do not overflow before taking sample
+                            if(active == maxActive)
+                                {
+					//do nothing for now
+                                }
+                            else
+                                {                                    
                                     continue;
                                 }
 
@@ -4501,30 +4509,29 @@ bool MySqlAPI::updateOptimizer()
                                     if(throughputEMA > thrStored)
                                         {
                                             active = maxActive + 1;
+                                            pathFollowed = 2;
                                         }
                                     else if((throughputEMA >= HIGH_THROUGHPUT && avgDuration <= AVG_TRANSFER_DURATION))
                                         {
                                             active = maxActive + 1;
+                                            pathFollowed = 3;
                                         }
                                     else if(throughputSamples == 10 && throughputEMA >= thrStored)
                                         {
                                             active = maxActive + 1;
+                                            pathFollowed = 4;
                                         }
-                                    else if( (singleDest == 1 || lanTransferBool || spawnActive > 1) && throughputEMA >= thrStored )
+                                    else if( (singleDest == 1 || lanTransferBool || spawnActive > 1) && (throughputEMA > thrStored || avgDuration <= AVG_TRANSFER_DURATION) )
                                         {
                                             active = maxActive + 1;
+                                            pathFollowed = 5;
                                         }
                                     else
-				        {
-					    active = maxActive;
-					}					
-
-                                    if(active > (tempActive + 5))
                                         {
                                             active = maxActive;
+                                            pathFollowed = 6;
                                         }
 
-                                    pathFollowed = 1;
                                     ema = throughputEMA;
                                     stmt10.execute(true);
 
@@ -4534,29 +4541,29 @@ bool MySqlAPI::updateOptimizer()
                                     if(retry > retryStored)
                                         {
                                             active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
-                                            pathFollowed = 3;
+                                            pathFollowed = 7;
                                         }
                                     else if(thrSamplesStored == 3)
                                         {
                                             active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
-                                            pathFollowed = 4;
+                                            pathFollowed = 8;
                                         }
                                     else if (avgDuration > MAX_TRANSFER_DURATION)
                                         {
                                             active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
-                                            pathFollowed = 4;
+                                            pathFollowed = 9;
                                         }
                                     else
                                         {
                                             if(maxActive >= activeStored)
                                                 {
                                                     active = ((maxActive - 1) < highDefault)? highDefault: (maxActive - 1);
-                                                    pathFollowed = 5;
+                                                    pathFollowed = 10;
                                                 }
                                             else
                                                 {
                                                     active = maxActive;
-                                                    pathFollowed = 6;
+                                                    pathFollowed = 11;
                                                 }
                                         }
                                     ema = throughputEMA;
@@ -4567,12 +4574,12 @@ bool MySqlAPI::updateOptimizer()
                                     if(ratioSuccessFailure > rateStored && ratioSuccessFailure == BASE_SUCCESS_RATE && retry <= retryStored)
                                         {
                                             active = maxActive;
-                                            pathFollowed = 7;
+                                            pathFollowed = 12;
                                         }
                                     else
                                         {
                                             active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
-                                            pathFollowed = 8;
+                                            pathFollowed = 13;
                                         }
                                     ema = throughputEMA;
                                     stmt10.execute(true);
@@ -4580,7 +4587,7 @@ bool MySqlAPI::updateOptimizer()
                             else
                                 {
                                     active = maxActive;
-                                    pathFollowed = 9;
+                                    pathFollowed = 14;
                                     ema = throughputEMA;
                                     stmt10.execute(true);
                                 }

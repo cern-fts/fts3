@@ -419,7 +419,10 @@ void FileTransferExecutor::run(boost::any & ctx)
                     if(stopThreads)
                         return;
 
-                    if (-1 == pr.executeProcessShell(forkMessage))
+		    struct message_updater msg;
+
+                    //check again if should be scheduled to reduce the possibility if starting more transfers than it should
+                    if ( scheduler.schedule(currentActive) && (-1 == pr.executeProcessShell(forkMessage)) )
                         {
                             if(forkMessage.empty())
                                 {
@@ -435,21 +438,27 @@ void FileTransferExecutor::run(boost::any & ctx)
                                     db->updateFileTransferStatus(0.0, tf.JOB_ID, tf.FILE_ID, "FAILED", "Transfer failed to fork, check fts3server.log for more details",(int) pr.getPid(), 0, 0, false);
                                     db->updateJobTransferStatus(tf.JOB_ID, "FAILED",0);
                                 }
+                            //send mon state
+                            SingleTrStateInstance::instance().sendStateMessage(tf.JOB_ID, tf.FILE_ID);
+                            strncpy(msg.job_id, std::string(tf.JOB_ID).c_str(), sizeof(msg.job_id));
+                            msg.job_id[sizeof(msg.job_id) - 1] = '\0';
+                            msg.file_id = tf.FILE_ID;
+                            msg.process_id = (int) pr.getPid();
+                            msg.timestamp = milliseconds_since_epoch();
                         }
                     else
                         {
                             db->updateFileTransferStatus(0.0, tf.JOB_ID, tf.FILE_ID, "ACTIVE", "",(int) pr.getPid(), 0, 0, false);
                             db->updateJobTransferStatus(tf.JOB_ID, "ACTIVE",0);
-                        }
 
-                    //send ACTIVE
-                    SingleTrStateInstance::instance().sendStateMessage(tf.JOB_ID, tf.FILE_ID);
-                    struct message_updater msg;
-                    strncpy(msg.job_id, std::string(tf.JOB_ID).c_str(), sizeof(msg.job_id));
-                    msg.job_id[sizeof(msg.job_id) - 1] = '\0';
-                    msg.file_id = tf.FILE_ID;
-                    msg.process_id = (int) pr.getPid();
-                    msg.timestamp = milliseconds_since_epoch();
+                            //send mon state
+                            SingleTrStateInstance::instance().sendStateMessage(tf.JOB_ID, tf.FILE_ID);                            
+                            strncpy(msg.job_id, std::string(tf.JOB_ID).c_str(), sizeof(msg.job_id));
+                            msg.job_id[sizeof(msg.job_id) - 1] = '\0';
+                            msg.file_id = tf.FILE_ID;
+                            msg.process_id = (int) pr.getPid();
+                            msg.timestamp = milliseconds_since_epoch();
+                        }
 
                     if(!failed) //only set watcher when the file has started
                         ThreadSafeList::get_instance().push_back(msg);
