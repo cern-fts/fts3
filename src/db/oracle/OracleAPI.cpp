@@ -4030,7 +4030,7 @@ bool OracleAPI::updateOptimizer()
                     if (isNullMaxActive == soci::i_null)
                         maxActive = highDefault;
 
-                   //The smaller alpha becomes the longer moving average is. ( e.g. it becomes smoother, but less reactive to new samples )
+                    //The smaller alpha becomes the longer moving average is. ( e.g. it becomes smoother, but less reactive to new samples )
                     double throughputEMA = ceil(exponentialMovingAverage( throughput, EMA, ema));
 
                     //only apply the logic below if any of these values changes
@@ -4041,7 +4041,7 @@ bool OracleAPI::updateOptimizer()
                     //check if bandwidth limitation exists, if exists and throughput exceeds the limit then do not proccess with auto-tuning
                     int bandwidthIn = 0;
                     bool bandwidth = bandwidthChecker(sql, source_hostname, destin_hostname, bandwidthIn);
-                            
+
                     int pathFollowed = 0;
 
                     //make sure bandwidth is respected as also active should be no less than the minimum for each link
@@ -4059,7 +4059,7 @@ bool OracleAPI::updateOptimizer()
 
                             continue;
                         }
-			  
+
                     //ratioSuccessFailure, rateStored, throughput, thrStored MUST never be zero
                     if(changed)
                         {
@@ -4084,10 +4084,10 @@ bool OracleAPI::updateOptimizer()
                             //ensure minumin per link and do not overflow before taking sample
                             if(active == maxActive)
                                 {
-					//do nothing for now
+                                    //do nothing for now
                                 }
                             else
-                                {                                    
+                                {
                                     continue;
                                 }
 

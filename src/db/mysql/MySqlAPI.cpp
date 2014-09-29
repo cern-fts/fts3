@@ -4452,7 +4452,7 @@ bool MySqlAPI::updateOptimizer()
                     //check if bandwidth limitation exists, if exists and throughput exceeds the limit then do not proccess with auto-tuning
                     int bandwidthIn = 0;
                     bool bandwidth = bandwidthChecker(sql, source_hostname, destin_hostname, bandwidthIn);
-                            
+
                     int pathFollowed = 0;
 
                     //make sure bandwidth is respected as also active should be no less than the minimum for each link
@@ -4470,7 +4470,7 @@ bool MySqlAPI::updateOptimizer()
 
                             continue;
                         }
-			  
+
                     //ratioSuccessFailure, rateStored, throughput, thrStored MUST never be zero
                     if(changed)
                         {
@@ -4495,10 +4495,10 @@ bool MySqlAPI::updateOptimizer()
                             //ensure minumin per link and do not overflow before taking sample
                             if(active == maxActive)
                                 {
-					//do nothing for now
+                                    //do nothing for now
                                 }
                             else
-                                {                                    
+                                {
                                     continue;
                                 }
 
