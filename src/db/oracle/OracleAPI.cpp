@@ -4076,7 +4076,7 @@ bool OracleAPI::updateOptimizer()
 
                             if( (activeSource > maxSource || activeDestination > maxDestination))
                                 {
-                                    updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, 1, bandwidthIn);
+                                    updateOptimizerEvolution(sql, source_hostname, destin_hostname, maxActive, throughput, ratioSuccessFailure, 1, bandwidthIn);
 
                                     continue;
                                 }
@@ -4088,6 +4088,7 @@ bool OracleAPI::updateOptimizer()
                                 }
                             else
                                 {
+				    updateOptimizerEvolution(sql, source_hostname, destin_hostname, maxActive, throughput, ratioSuccessFailure, 14, bandwidthIn);				
                                     continue;
                                 }
 
