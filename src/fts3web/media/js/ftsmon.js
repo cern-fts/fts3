@@ -173,7 +173,6 @@ config(function($routeProvider) {
 })
 .run(function($rootScope, $location) {
     $rootScope.searchJob = function() {
-        $rootScope.clearGlobalFilters();
         $location.path('/job/' + $rootScope.jobId).search({});
     }
 })
