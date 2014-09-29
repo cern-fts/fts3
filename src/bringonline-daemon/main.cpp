@@ -313,7 +313,6 @@ int main(int argc, char** argv)
                             {
                                 DoServer(argc, argv);
                             }
-                            pthread_exit(0);
                             return EXIT_SUCCESS;
                         }
                     else if (foundHelp != string::npos)
@@ -321,7 +320,6 @@ int main(int argc, char** argv)
                             {
                                 DoServer(argc, argv);
                             }
-                            pthread_exit(0);
                             return EXIT_SUCCESS;
                         }
                     else
