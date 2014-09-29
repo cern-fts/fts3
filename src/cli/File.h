@@ -50,7 +50,7 @@ struct File
         boost::optional<std::string> const & m = boost::none,
         boost::optional<std::string> const & ss = boost::none,
         boost::optional<std::string> const & a = boost::none
-    ) : sources(s), destinations(d), checksums(c), file_size(fs), metadata(m), selection_strategy(ss), activity(a)
+    ) : sources(s), destinations(d), selection_strategy(ss), checksums(c), file_size(fs), metadata(m), activity(a)
     {
 
     }
