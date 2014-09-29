@@ -954,7 +954,7 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                                                               " FROM t_file f, t_job j "
                                                               " WHERE f.job_id = j.job_id and  f.file_state = 'SUBMITTED' AND    "
                                                               "     f.source_se = :source_se AND f.dest_se = :dest_se AND  "
-                                                              "     j.vo_name = :vo_name AND     f.wait_timestamp IS NULL AND "
+                                                              "     f.vo_name = :vo_name AND     f.wait_timestamp IS NULL AND "
                                                               "     (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
                                                               "     j.reuse_job = 'N' AND "
                                                               "     (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) and exists (select * from t_job y where y.job_id=j.job_id  "
@@ -1030,7 +1030,7 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                                                          "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params, j.user_cred, j.reuse_job "
                                                          " from t_file f, t_job j where f.job_id = j.job_id and  f.file_state = 'SUBMITTED' AND    "
                                                          " f.source_se = :source_se AND f.dest_se = :dest_se AND j.reuse_job = 'N' AND  "
-                                                         " j.vo_name = :vo_name AND     f.wait_timestamp IS NULL AND     (f.retry_timestamp is NULL OR "
+                                                         " f.vo_name = :vo_name AND     f.wait_timestamp IS NULL AND     (f.retry_timestamp is NULL OR "
                                                          " f.retry_timestamp < :tTime) AND ";
                                     select +=
                                         it_act->first == "default" ?
@@ -1048,11 +1048,10 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                                                                          soci::use(boost::get<0>(triplet)),
                                                                          soci::use(boost::get<1>(triplet)),
                                                                          soci::use(boost::get<2>(triplet)),
+									 soci::use(tTime),
                                                                          soci::use(it_act->first),
-                                                                         soci::use(tTime),
-                                                                         soci::use(hashSegment.start), soci::use(hashSegment.end),
-                                                                         soci::use(it_act->second)
-                                                                     );
+									 soci::use(it_act->second),                                                                       
+                                                                         soci::use(hashSegment.start), soci::use(hashSegment.end));
 
                                     for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
                                         {
