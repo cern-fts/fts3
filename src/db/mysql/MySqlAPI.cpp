@@ -9505,6 +9505,8 @@ void MySqlAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start
 
 void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsigned* count, unsigned* start, unsigned* end, std::string service_name)
 {
+    int counter = 0;
+
     try
         {
             sql.begin();
@@ -9560,15 +9562,16 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
                     this->hashSegment.end   = *end;
                 }
 
-
+            counter++;
             //prevent running in more than on server
-            if(hashSegment.start == 0)
+            if(hashSegment.start == 0 && counter == 1000)
                 {
                     // Delete old entries
                     sql.begin();
                     soci::statement stmt3 = (sql.prepare << "DELETE FROM t_hosts WHERE beat <= DATE_SUB(UTC_TIMESTAMP(), interval 1 week)");
                     stmt3.execute(true);
                     sql.commit();
+		    counter = 0; //reset
                 }
         }
     catch (std::exception& e)
