@@ -86,11 +86,37 @@ public:
     impltns__ArrayOf_USCOREtns3_USCOREJobStatus* list(AuthorizationManager::Level lvl);
 
     /**
+     * Retrieves deletion job statuses from DB.
+     *
+     * The impltns__ArrayOf_USCOREtns3_USCOREJobStatus object is created using gSOAP
+     * memory-allocation utility, it will be garbage collected! If there is a need
+     * to delete it manually gSOAP dedicated functions should be used (in particular
+     * 'soap_unlink'!).
+     *
+     * @return impltns__ArrayOf_USCOREtns3_USCOREJobStatus object containing statuses of interest
+     */
+    impltns__ArrayOf_USCOREtns3_USCOREJobStatus* listDm(AuthorizationManager::Level lvl);
+
+    /**
      * Destructor
      */
     virtual ~RequestLister();
 
 private:
+
+    // pointer to GenericDbIfce member that queries jobs
+    typedef void (GenericDbIfce::* query_t)(std::vector<JobStatus*>&, std::vector<std::string>&, std::string, std::string, std::string, std::string, std::string);
+
+    /**
+     * implements jobs listing
+     *
+     * @param lvl : authorization level
+     * @param query : the DB API
+     *
+     * @return impltns__ArrayOf_USCOREtns3_USCOREJobStatus object containing statuses of interest
+     */
+    impltns__ArrayOf_USCOREtns3_USCOREJobStatus* list_impl(AuthorizationManager::Level lvl, query_t list);
+
     /**
      * Default constructor.
      *

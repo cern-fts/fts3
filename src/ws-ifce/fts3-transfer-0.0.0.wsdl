@@ -529,6 +529,34 @@
       <part name="destSe" type="xsd:string"/>
 
    </message>
+   
+   <message name="listRequests2Response">
+
+      <part name="listRequests2Return" type="impl:ArrayOf_tns3_JobStatus"/>
+
+   </message>
+   
+   <message name="listDeletionRequestsRequest">
+
+      <part name="inGivenStates" type="impl:ArrayOf_soapenc_string"/>
+
+      <part name="placeHolder" type="xsd:string"/>
+
+      <part name="forDN" type="xsd:string"/>
+
+      <part name="forVO" type="xsd:string"/>
+      
+      <part name="sourceSe" type="xsd:string"/>
+      
+      <part name="destSe" type="xsd:string"/>
+
+   </message>
+   
+   <message name="listDeletionRequestsResponse">
+
+      <part name="listRequests2Return" type="impl:ArrayOf_tns3_JobStatus"/>
+
+   </message>
 
    <message name="cancelRequest">
 
@@ -644,12 +672,6 @@
    <message name="getRolesResponse">
 
       <part name="getRolesReturn" type="tns3:Roles"/>
-
-   </message>
-
-   <message name="listRequests2Response">
-
-      <part name="listRequests2Return" type="impl:ArrayOf_tns3_JobStatus"/>
 
    </message>
 
@@ -973,6 +995,22 @@
          <fault message="impl:InternalException" name="InternalException"/>
 
       </operation>
+      
+      <operation name="listDeletionRequests" parameterOrder="inGivenStates forDN forVO">
+
+         <input message="impl:listDeletionRequestsRequest" name="listDeletionRequestsRequest"/>
+
+         <output message="impl:listDeletionRequestsResponse" name="listDeletionRequestsResponse"/>
+
+         <fault message="impl:AuthorizationException" name="AuthorizationException"/>
+
+         <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
+
+         <fault message="impl:InvalidArgumentException" name="InvalidArgumentException"/>
+
+         <fault message="impl:InternalException" name="InternalException"/>
+
+      </operation>      
 
       <!--  Deprecated. Use getFileStatus3 instead -->
       <operation name="getFileStatus" parameterOrder="requestID offset limit">
@@ -1836,6 +1874,48 @@
          </fault>
 
       </operation>
+      
+      <operation name="listDeletionRequests">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <input name="listDeletionRequestsRequest">
+
+            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
+
+         </input>
+
+         <output name="listDeletionRequestsResponse">
+
+            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
+
+         </output>
+
+         <fault name="AuthorizationException">
+
+            <wsdlsoap:fault name="AuthorizationException" use="literal"/>
+
+         </fault>
+
+         <fault name="ServiceBusyException">
+
+            <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
+
+         </fault>
+
+         <fault name="InvalidArgumentException">
+
+            <wsdlsoap:fault name="InvalidArgumentException" use="literal"/>
+
+         </fault>
+
+         <fault name="InternalException">
+
+            <wsdlsoap:fault name="InternalException" use="literal"/>
+
+         </fault>
+
+      </operation>      
 
       <!-- Deprecated -->
       <operation name="getFileStatus">

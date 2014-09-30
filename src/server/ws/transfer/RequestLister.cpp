@@ -66,7 +66,16 @@ RequestLister::~RequestLister()
 
 impltns__ArrayOf_USCOREtns3_USCOREJobStatus* RequestLister::list(AuthorizationManager::Level lvl)
 {
+    return list_impl(lvl, &GenericDbIfce::listRequests);
+}
 
+impltns__ArrayOf_USCOREtns3_USCOREJobStatus* RequestLister::listDm(AuthorizationManager::Level lvl)
+{
+    return list_impl(lvl, &GenericDbIfce::listRequestsDm);
+}
+
+impltns__ArrayOf_USCOREtns3_USCOREJobStatus* RequestLister::list_impl(AuthorizationManager::Level lvl, query_t list)
+{
     switch(lvl)
         {
         case AuthorizationManager::PRV:
@@ -80,8 +89,7 @@ impltns__ArrayOf_USCOREtns3_USCOREJobStatus* RequestLister::list(AuthorizationMa
 
     try
         {
-            db.listRequests(jobs, inGivenStates, "", dn, vo, src, dst);
-            db.listRequestsDm(jobs, inGivenStates, "", dn, vo, src, dst);
+            (db.*list)(jobs, inGivenStates, "", dn, vo, src, dst);
             FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's statuses have been read from the database" << commit;
         }
     catch(Err& ex)

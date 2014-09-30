@@ -89,6 +89,11 @@ public:
      *
      */
     string destination();
+
+    /**
+     * @return true if user requested a deletion query, false otherwise
+     */
+    bool deletion();
 };
 
 }

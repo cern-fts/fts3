@@ -156,6 +156,16 @@ public:
     std::vector<JobStatus> listRequests (std::vector<std::string> const & statuses, std::string const & dn, std::string const & vo, std::string const & source, std::string const & destination);
 
     /**
+     * Remote call to listDeletionRequests
+     *
+     * @param dn user dn
+     * @param vo vo name
+     * @param array statuses of interest
+     * @param resp server response
+     */
+    virtual std::vector<JobStatus> listDeletionRequests (std::vector<std::string> const & statuses, std::string const & dn, std::string const & vo, std::string const & source, std::string const & destination);
+
+    /**
      * Remote call to listVOManagers
      *
      * @param vo vo name

@@ -389,6 +389,45 @@ std::vector<JobStatus> GSoapContextAdapter::listRequests (std::vector<std::strin
     return ret;
 }
 
+std::vector<JobStatus> GSoapContextAdapter::listDeletionRequests (std::vector<std::string> const & statuses, std::string const & dn, std::string const & vo, std::string const & source, std::string const & destination)
+{
+    impltns__ArrayOf_USCOREsoapenc_USCOREstring* array = soap_new_impltns__ArrayOf_USCOREsoapenc_USCOREstring(ctx, -1);
+    array->item = statuses;
+
+    impltns__listDeletionRequestsResponse resp;
+    if (soap_call_impltns__listDeletionRequests(ctx, endpoint.c_str(), 0, array, "", dn, vo, source, destination, resp))
+        throw gsoap_error(ctx);
+
+    if (!resp._listRequests2Return)
+        throw cli_exception("The response from the server is empty!");
+
+    std::vector<JobStatus> ret;
+    std::vector<tns3__JobStatus*>::iterator it;
+
+    for (it = resp._listRequests2Return->item.begin(); it < resp._listRequests2Return->item.end(); it++)
+        {
+            tns3__JobStatus* gstat = *it;
+
+            long submitTime = gstat->submitTime / 1000;
+            char time_buff[20];
+            strftime(time_buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&submitTime));
+
+            JobStatus status (
+                *gstat->jobID,
+                *gstat->jobStatus,
+                *gstat->clientDN,
+                *gstat->reason,
+                *gstat->voName,
+                time_buff,
+                gstat->numFiles,
+                gstat->priority
+            );
+            ret.push_back(status);
+        }
+
+    return ret;
+}
+
 void GSoapContextAdapter::listVoManagers(string vo, impltns__listVOManagersResponse& resp)
 {
     if (soap_call_impltns__listVOManagers(ctx, endpoint.c_str(), 0, vo, resp))

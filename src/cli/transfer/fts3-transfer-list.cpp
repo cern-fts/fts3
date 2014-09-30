@@ -72,8 +72,12 @@ int main(int ac, char* av[])
             cli.printApiDetails(*ctx.get());
 
             std::vector<std::string> array = cli.getStatusArray();
-            std::vector<fts3::cli::JobStatus> statuses =
-                ctx->listRequests(array, cli.getUserDn(), cli.getVoName(), cli.source(), cli.destination());
+
+            std::vector<fts3::cli::JobStatus> statuses;
+            if (cli.deletion())
+                statuses = ctx->listDeletionRequests(array, cli.getUserDn(), cli.getVoName(), cli.source(), cli.destination());
+            else
+                statuses = ctx->listRequests(array, cli.getUserDn(), cli.getVoName(), cli.source(), cli.destination());
 
             MsgPrinter::instance().print(statuses);
         }
