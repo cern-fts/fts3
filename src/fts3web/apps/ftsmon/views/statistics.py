@@ -23,7 +23,8 @@ from django.db.utils import DatabaseError
 from ftsweb.models import Job, File, Host
 from ftsweb.models import ProfilingSnapshot, ProfilingInfo, Turl
 from ftsweb.models import ACTIVE_STATES, STATES
-from jsonify import jsonify, jsonify_paged
+from jsonify import jsonify, jsonify_paged, as_json
+from slsfy import slsfy
 from util import get_order_by, ordered_field
 import settings
 
@@ -113,7 +114,7 @@ def _get_host_service_and_segment():
     host_map = dict()
     for service in service_names:
         hosts = Host.objects.filter(service_name=service).values('hostname', 'beat', 'drain').order_by('hostname').all()
-        running = filter(lambda h: h['beat'] >= last_expected_beat, hosts)
+        running = map(lambda h: h['hostname'], filter(lambda h: h['beat'] >= last_expected_beat, hosts))
 
         running_count = len(running)
 
@@ -128,7 +129,7 @@ def _get_host_service_and_segment():
                 if hostname not in host_map:
                     host_map[hostname] = dict()
 
-                if hostname in [h['hostname'] for h in running]:
+                if hostname in running:
                     host_map[hostname][service] = {
                         'status': 'running',
                         'start': "%04X" % (segment_size * index),
@@ -159,7 +160,6 @@ def _get_host_service_and_segment():
     return host_map
 
 
-@jsonify
 def get_servers(http_request):
     segments = _get_host_service_and_segment()
     transfers = _get_transfer_and_submission_per_host(timedelta(hours=1))
@@ -176,7 +176,20 @@ def get_servers(http_request):
 
         servers[host]['services'] = segments[host]
 
-    return servers
+    format = http_request.GET.get('format', None)
+    if format == 'sls':
+        availability = list()
+        for host, v in servers.iteritems():
+            for service, status in v['services'].iteritems():
+                if service != 'fts_backup':
+                    if status['status'] == 'down':
+                        value = 0
+                    else:
+                        value = 100
+                    availability.append(("%s_%s" % (host, service), value))
+        return  slsfy(availability, id_tail='Server Info')
+    else:
+        return as_json(servers)
 
 
 @jsonify
