@@ -935,7 +935,7 @@ void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, s
                                                                          soci::use(tTime),
                                                                          soci::use(hashSegment.start), soci::use(hashSegment.end),
                                                                          soci::use(boost::get<2>(triplet)),
-                                                                         soci::use(it_act->second)
+									 soci::use(it_act->second)
                                                                      );
 
                                     for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)

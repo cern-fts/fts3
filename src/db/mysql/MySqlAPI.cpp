@@ -1049,9 +1049,10 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                                                                          soci::use(boost::get<1>(triplet)),
                                                                          soci::use(boost::get<2>(triplet)),
 									 soci::use(tTime),
-                                                                         soci::use(it_act->first),
-									 soci::use(it_act->second),                                                                       
-                                                                         soci::use(hashSegment.start), soci::use(hashSegment.end));
+                                                                         soci::use(it_act->first),                                                                       
+                                                                         soci::use(hashSegment.start), soci::use(hashSegment.end),
+									 soci::use(it_act->second)
+									 );
 
                                     for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
                                         {
