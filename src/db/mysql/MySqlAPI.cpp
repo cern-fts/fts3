@@ -8339,11 +8339,10 @@ void MySqlAPI::checkSanityState()
                                              "	and NOT EXISTS ( "
                                              "		select null "
                                              "		from t_file f2 "
-                                             "		where f2.job_id = :jobId "
+                                             "		where f1.job_id = f2.job_id "
                                              "			and f1.file_index = f2.file_index "
                                              "			and f2.file_state <> 'CANCELED' "
                                              " 	) ",
-                                             soci::use(job_id),
                                              soci::use(job_id),
                                              soci::into(allCanceled));
 
@@ -8354,11 +8353,10 @@ void MySqlAPI::checkSanityState()
                                               "	and NOT EXISTS ( "
                                               "		select null "
                                               "		from t_file f2 "
-                                              "		where f2.job_id = :jobId "
+                                              "		where f1.job_id = f2.job_id "
                                               "			and f1.file_index = f2.file_index "
                                               "			and f2.file_state NOT IN ('CANCELED', 'FAILED') "
                                               " 	) ",
-                                              soci::use(job_id),
                                               soci::use(job_id),
                                               soci::into(allFailed));
 
