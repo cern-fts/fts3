@@ -40,6 +40,7 @@ ListTransferCli::ListTransferCli(): VoNameCli(false)
     specific.add_options()
     ("source_se", value<string>(), "Restrict to specific source SE.")
     ("dest_se", value<string>(), "Restrict to specific destination SE.")
+    ("deletion", "Query for deletion jobs.")
     ;
 
     // all positional parameters go to state
@@ -68,7 +69,10 @@ vector<string> ListTransferCli::getStatusArray()
 
     if (array.empty())
         {
-            array.push_back(JobStatusHandler::FTS3_STATUS_SUBMITTED);
+            if (deletion())
+                array.push_back(JobStatusHandler::FTS3_STATUS_DELETE);
+            else
+                array.push_back(JobStatusHandler::FTS3_STATUS_SUBMITTED);
             array.push_back(JobStatusHandler::FTS3_STATUS_ACTIVE);
             array.push_back(JobStatusHandler::FTS3_STATUS_READY);
         }
@@ -94,4 +98,9 @@ string ListTransferCli::destination()
         }
 
     return string();
+}
+
+bool ListTransferCli::deletion()
+{
+    return vm.count("deletion");
 }

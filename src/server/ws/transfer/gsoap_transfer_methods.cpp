@@ -335,6 +335,33 @@ int fts3::impltns__listRequests2(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCO
     return SOAP_OK;
 }
 
+int fts3::impltns__listDeletionRequests(soap* ctx, impltns__ArrayOf_USCOREsoapenc_USCOREstring* inGivenStates, std::string placeHolder, std::string dn, std::string vo, std::string src, std::string dst, impltns__listDeletionRequestsResponse& resp)
+{
+    try
+        {
+            AuthorizationManager::Level lvl = AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER);
+            RequestLister lister(ctx, inGivenStates, dn, vo, src, dst);
+            resp._listRequests2Return = lister.listDm(lvl);
+
+        }
+    catch(Err& ex)
+        {
+
+            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "An exception has been caught: " << ex.what() << commit;
+            soap_receiver_fault(ctx, ex.what(), "TransferException");
+            return SOAP_FAULT;
+        }
+    catch(...)
+        {
+
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: listRequests2"  << commit;
+            soap_receiver_fault(ctx, "listRequests2", "TransferException");
+            return SOAP_FAULT;
+        }
+
+    return SOAP_OK;
+}
+
 /// Web service operation 'getFileStatus' (returns error code or SOAP_OK)
 int fts3::impltns__getFileStatus(soap *ctx, string requestID, int offset, int limit, impltns__getFileStatusResponse & resp)
 {

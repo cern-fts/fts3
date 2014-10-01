@@ -51,7 +51,7 @@ static bool isTransferFailed(const std::string& state)
  */
 int main(int ac, char* av[])
 {
-    static const int DEFAULT_LIMIT = 100;
+    static const int DEFAULT_LIMIT = 10000;
 
     try
         {

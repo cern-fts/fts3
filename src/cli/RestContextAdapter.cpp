@@ -83,6 +83,11 @@ std::vector<JobStatus> RestContextAdapter::listRequests (std::vector<std::string
     return parser.getJobs("jobs");
 }
 
+std::vector<JobStatus> RestContextAdapter::listDeletionRequests (std::vector<std::string> const & statuses, std::string const & dn, std::string const & vo, std::string const & source, std::string const & destination)
+{
+    return std::vector<JobStatus>(); // TODO
+}
+
 std::vector< std::pair<std::string, std::string> > RestContextAdapter::cancel(std::vector<std::string> const & jobIds)
 {
     std::vector<std::string>::const_iterator itr;

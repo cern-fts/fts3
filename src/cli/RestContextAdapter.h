@@ -34,6 +34,8 @@ public:
 
     std::vector<JobStatus> listRequests (std::vector<std::string> const & statuses, std::string const & dn, std::string const & vo, std::string const & source, std::string const & destination);
 
+    std::vector<JobStatus> listDeletionRequests (std::vector<std::string> const & statuses, std::string const & dn, std::string const & vo, std::string const & source, std::string const & destination);
+
     std::vector< std::pair<std::string, std::string>  > cancel(std::vector<std::string> const & jobIds);
 
     std::string transferSubmit (std::vector<File> const & files, std::map<std::string, std::string> const & parameters);

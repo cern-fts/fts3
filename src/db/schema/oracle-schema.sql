@@ -713,6 +713,12 @@ CREATE TABLE t_dm (
 -- user provided metadata
   ,file_metadata    VARCHAR2(1024)
 --
+-- activity name
+  activity   VARCHAR2(255) DEFAULT "default",  
+--
+-- dm token
+  dm_token VARCHAR2(255),
+--
 -- the timestamp that the file will be retried
   ,retry_timestamp          TIMESTAMP WITH TIME ZONE DEFAULT NULL
 --
