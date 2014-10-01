@@ -2288,6 +2288,9 @@ void MySqlAPI::getTransferFileStatus(std::string requestID, bool archive,
                                      unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files)
 {
     soci::session sql(*connectionPool);
+    
+    if(limit < 10000)
+    	limit = 10000;
 
     try
         {
