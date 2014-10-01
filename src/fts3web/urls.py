@@ -15,10 +15,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from django.conf.urls.defaults import patterns, include, url
+try:
+    from django.conf.urls.defaults import patterns, include, url
+except:
+    from django.conf.urls import patterns, include, url
 from django.views.generic.base import RedirectView
 
 urlpatterns = patterns('',
     url(r'^ftsmon/', include('ftsmon.urls')),
-    url(r'^$', RedirectView.as_view(url = 'ftsmon/'))    
+    url(r'^$', RedirectView.as_view(url = 'ftsmon/'))
 )
