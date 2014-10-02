@@ -7,7 +7,7 @@
 Name:       nagios-plugins-fts
 Version:    3.2.0
 Release:    1%{?dist}
-Summary:    Nagios probes to be run remotely agains FTS3 machines
+Summary:    Nagios probes to be run remotely against FTS3 machines
 License:    ASL 2.0
 Group:      Applications/Internet
 URL:        https://svnweb.cern.ch/trac/fts3
