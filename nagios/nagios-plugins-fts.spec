@@ -62,7 +62,7 @@ rm -rf %{buildroot}
 %files
 %defattr(-,root,root,-)
 %config(noreplace) %{_sysconfdir}/nagios/objects/fts3-template.cfg
-%{nagios_plugins_dir}/fts/check_fts_*
+%{nagios_plugins_dir}/fts
 %doc LICENSE README
 
 %changelog
