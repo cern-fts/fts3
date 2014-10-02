@@ -398,6 +398,15 @@ void msg_ifce::SendTransferFinishMessage(transfer_completed *tr_completed)
                 {
                     text.append(",\"$17$\":\"\"");
                 }
+		
+    	    text.append(",\"$18$\":\"");
+            text.append(tr_completed->retry);
+            text.append("\"");		
+	    
+    	    text.append(",\"$19$\":\"");
+            text.append(tr_completed->retry_max);
+            text.append("\"");			    
+		
 
             text.append("}");
 
@@ -716,6 +725,19 @@ void msg_ifce::set_job_metadata(transfer_completed* tr_completed, const std::str
         tr_completed->job_metadata = value;
 }
 
+
+void msg_ifce::set_retry(transfer_completed* tr_completed, const std::string & value)
+{
+   if (tr_completed)
+        tr_completed->retry = value;
+}
+
+
+void msg_ifce::set_retry_max(transfer_completed* tr_completed, const std::string & value)
+{
+   if (tr_completed)
+        tr_completed->retry_max = value;
+}
 
 std::string msg_ifce::getTimestamp()
 {

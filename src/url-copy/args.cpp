@@ -50,10 +50,12 @@ const option UrlCopyOpts::long_options[] =
     {"hide-user-dn",      no_argument,       0, '8'},
     {"level",    	  required_argument, 0, '9'},
     {"active",    	  required_argument, 0, '2'},
+    {"retry",    	  required_argument, 0, '3'},
+    {"retry_max",    	  required_argument, 0, '4'},        
     {0, 0, 0, 0}
 };
 
-const char UrlCopyOpts::short_options[] = "PONM:L:K:J:I:H:GRFD:E:C:z:A:t:a:b:c:de:f:h:ij:k:B:5:UXZV:Y:7:@:S:8:9:2:";
+const char UrlCopyOpts::short_options[] = "PONM:L:K:J:I:H:GRFD:E:C:z:A:t:a:b:c:de:f:h:ij:k:B:5:UXZV:Y:7:@:S:8:9:2:3:4:";
 
 UrlCopyOpts::UrlCopyOpts(): monitoringMessages(false), autoTunned(false),
     manualConfig(false), overwrite(false), daemonize(false),
@@ -63,7 +65,7 @@ UrlCopyOpts::UrlCopyOpts(): monitoringMessages(false), autoTunned(false),
     compareChecksum(CHECKSUM_DONT_CHECK),
     fileId(0), userFileSize(0), bringOnline(-1), copyPinLifetime(-1),
     nStreams(DEFAULT_NOSTREAMS), tcpBuffersize(DEFAULT_BUFFSIZE),
-    blockSize(0), timeout(DEFAULT_TIMEOUT), secPerMb(0)
+    blockSize(0), timeout(DEFAULT_TIMEOUT), secPerMb(0), retry(0), retry_max(0)
 {
 }
 
@@ -248,6 +250,12 @@ int UrlCopyOpts::parse(int argc, char * const argv[])
                         case '2':
                             active = boost::lexical_cast<int>(optarg);
                             break;
+                        case '3':
+                            retry = boost::lexical_cast<int>(optarg);
+                            break;
+                        case '4':
+                            retry_max = boost::lexical_cast<int>(optarg);
+                            break;			    
                         }
                 }
         }

@@ -65,6 +65,8 @@ public:
     std::string user_dn;
     std::string alias;
     std::string oauthFile;
+    int retry;
+    int retry_max;
 
     bool areTransfersOnFile() const
     {

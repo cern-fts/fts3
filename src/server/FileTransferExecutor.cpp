@@ -404,6 +404,31 @@ void FileTransferExecutor::run(boost::any & ctx)
                     //pass the number of active transfers for this link to url_copy
                     params.append(" -2 ");
                     params.append(lexical_cast<string >(currentActive));
+		    
+		    int retryTimes = db->getRetryTimes(tf.JOB_ID, tf.FILE_ID);
+		    if(retryTimes <=0 )
+		    {
+		     params.append(" -3 ");
+                     params.append(lexical_cast<string >(0));
+		    }
+		    else
+		    {
+			params.append(" -3 ");
+                        params.append(lexical_cast<string >(retryTimes));		    
+		    }		    
+		    		    
+		    
+		    int retry_max = db->getRetry(tf.JOB_ID);
+		    if(retry_max <=0 )
+		    {
+		     params.append(" -4 ");
+                     params.append(lexical_cast<string >(0));
+		    }
+		    else
+		    {
+			params.append(" -4 ");
+                        params.append(lexical_cast<string >(retry_max));		    
+		    }
 
 
                     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd << " " << params << commit;
