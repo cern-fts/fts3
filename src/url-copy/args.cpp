@@ -51,7 +51,7 @@ const option UrlCopyOpts::long_options[] =
     {"level",    	  required_argument, 0, '9'},
     {"active",    	  required_argument, 0, '2'},
     {"retry",    	  required_argument, 0, '3'},
-    {"retry_max",    	  required_argument, 0, '4'},        
+    {"retry_max",    	  required_argument, 0, '4'},
     {0, 0, 0, 0}
 };
 
@@ -255,7 +255,7 @@ int UrlCopyOpts::parse(int argc, char * const argv[])
                             break;
                         case '4':
                             retry_max = boost::lexical_cast<int>(optarg);
-                            break;			    
+                            break;
                         }
                 }
         }
