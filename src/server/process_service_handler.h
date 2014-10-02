@@ -302,7 +302,7 @@ protected:
     }
 
     void executeUrlcopy()
-    {
+    {        
         try
             {
                 //get distinct source, dest, vo first
@@ -349,8 +349,7 @@ protected:
                                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler!" << commit;
                             }
                     }
-
-
+               
                 if(distinct.empty())
                     return;
 
