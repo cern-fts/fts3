@@ -608,7 +608,7 @@ std::map<std::string, long long> OracleAPI::getActivitiesInQueue(soci::session& 
                                              "	(f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
                                              "	(f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
                                              "  j.job_state in ('ACTIVE','SUBMITTED') AND "
-                                             "  (j.reuse_job = 'N' OR j.reuse_job IS NULL) "
+                                             "  (j.reuse_job = 'N' OR j.reuse_job = 'R' OR j.reuse_job IS NULL) "
                                              " GROUP BY activity ",
                                              soci::use(src),
                                              soci::use(dst),
@@ -953,7 +953,7 @@ void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, s
                                                                  "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
                                                                  "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
                                                                  "    j.job_state in ('ACTIVE','SUBMITTED','STAGING') AND "
-                                                                 "    (j.reuse_job = 'N' OR j.reuse_job IS NULL) AND j.vo_name=:vo_name "
+                                                                 "    (j.reuse_job = 'N' OR j.reuse_job = 'R' OR j.reuse_job IS NULL) AND j.vo_name=:vo_name "
                                                                  "     ORDER BY j.priority DESC, j.submit_time) "
                                                                  " WHERE rn <= :filesNum ",
                                                                  soci::use(boost::get<0>(triplet)),
@@ -1183,13 +1183,11 @@ void OracleAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId
             std::string vo_name;
 
             //check if the file belongs to a multiple replica job
-            long long replicaJob = 0;
-            long long replicaJobCountAll = 0;
-            sql << "select count(*), count(distinct file_index) from t_file where job_id=:job_id",
-                soci::use(jobId), soci::into(replicaJobCountAll), soci::into(replicaJob);
+           std::string mreplica;           
+           sql << "select reuse_job from t_job where job_id=:job_id", soci::use(jobId), soci::into(mreplica); 
 
             //this is a m-replica job
-            if(replicaJobCountAll > 1 && replicaJob == 1)
+            if(mreplica == "R")
                 {
                     //check if it's auto or manual
                     sql << " select selection_strategy, vo_name from t_file where file_id = :file_id",
@@ -1581,6 +1579,9 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
 
     if(mhop) //since H is not passed when plain text submission (e.g. glite client) we need to set into DB
         reuseFlag = "H";
+	
+    if(mreplica)
+        reuseFlag = "R";	
 
 
     std::string initialState = bringOnline > 0 || copyPinLifeTime > 0 ? "STAGING" : "SUBMITTED";
@@ -1686,8 +1687,9 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
                      	N = no reuse
                      	Y = reuse
                      	H = multi-hop
+			R = replica 
                      */
-                    if (reuseFlag == "N" && mreplica)
+                     if (mreplica)
                         {
                             fileIndex = 0;
                             if(index == 0) //only the first file
@@ -1697,14 +1699,22 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
 
                             index++;
                         }
-                    if (reuseFlag == "N" && mhop)
+		    else if (mhop)	                    
                         {
-                            hashedId = hashedId;   //for conviniency
+                            hashedId = hashedId;   //for convenience
                         }
+		    else if(reuseFlag == "Y" && !mreplica && !mhop)
+		       {
+		    	    hashedId = getHashedId();
+		       }			
                     else if (reuseFlag == "N" && !mreplica && !mhop)
                         {
                             hashedId = getHashedId();
                         }
+		    else
+		        {
+		       	    hashedId = getHashedId();
+		        }	
 
                     //get distinct source_se / dest_se
                     Key p1 (sourceSe, destSe);
@@ -7686,12 +7696,11 @@ void OracleAPI::checkSanityState()
     unsigned int numberOfFilesRevert = 0;
     unsigned int numberOfFilesDelete = 0;
 
-    long long  countMreplica = 0;
-    long long  countMindex = 0;
 
     std::string canceledMessage = "Transfer canceled by the user";
     std::string failed = "One or more files failed. Please have a look at the details for more information";
     std::string job_id;
+    std::string mreplica;
 
     try
         {
@@ -7769,11 +7778,10 @@ void OracleAPI::checkSanityState()
                                               soci::into(allFailed));
 
 
-                    soci::statement stmt_m_replica = (sql.prepare << " select COUNT(*), COUNT(distinct file_index) from t_file where job_id=:job_id  ",
+                    soci::statement stmt_m_replica = (sql.prepare << " select reuse_job from t_job where job_id=:job_id  ",
                                                       soci::use(job_id),
-                                                      soci::into(countMreplica),
-                                                      soci::into(countMindex));
-
+                                                      soci::into(mreplica));
+						      
                     //this section is for deletion jobs
                     soci::statement stmtDel1 = (sql.prepare << "SELECT COUNT(*) FROM t_dm where job_id=:jobId AND file_state in ('DELETE','STARTED') ", soci::use(job_id), soci::into(numberOfFilesDelete));
 
@@ -7791,9 +7799,8 @@ void OracleAPI::checkSanityState()
                             allFinished = 0;
                             allCanceled = 0;
                             allFailed = 0;
-                            terminalState = 0;
-                            countMreplica = 0;
-                            countMindex = 0;
+                            terminalState = 0;                            
+			    mreplica = std::string("");
 
                             stmt1.execute(true);
 
@@ -7836,7 +7843,7 @@ void OracleAPI::checkSanityState()
                             //check for m-replicas sanity
                             stmt_m_replica.execute(true);
                             //this is a m-replica job
-                            if(countMreplica > 1 && countMindex == 1)
+                            if(mreplica == "R")
                                 {
                                     std::string job_state;
                                     soci::rowset<soci::row> rsReplica = (
