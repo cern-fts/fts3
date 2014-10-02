@@ -470,6 +470,100 @@ std::vector<std::string> OracleAPI::getAllActivityShareConf()
     return ret;
 }
 
+void OracleAPI::revertToSubmitted()
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            struct tm startTime;
+            int fileId=0;
+            std::string jobId, reuseJob;
+            time_t now2 = getUTC(0);
+
+            soci::indicator reuseInd = soci::i_ok;
+            soci::statement readyStmt = (sql.prepare << "SELECT f.start_time, f.file_id, f.job_id, j.reuse_job "
+                                         " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
+                                         " WHERE f.file_state = 'READY' and j.job_finished is null "
+                                         " AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) ",
+                                         soci::use(hashSegment.start), soci::use(hashSegment.end),
+                                         soci::into(startTime),
+                                         soci::into(fileId),
+                                         soci::into(jobId),
+                                         soci::into(reuseJob, reuseInd));
+
+            //check if the file belongs to a multiple replica job
+            long long replicaJob = 0;
+            long long replicaJobCountAll = 0;
+
+            sql.begin();
+            if (readyStmt.execute(true))
+                {
+                    do
+                        {
+                            //don't do anything to multiple replica jobs
+                            sql << "select count(*), count(distinct file_index) from t_file where job_id=:job_id",
+                                soci::use(jobId), soci::into(replicaJobCountAll), soci::into(replicaJob);
+
+                            //this is a m-replica job
+                            if(replicaJobCountAll > 1 && replicaJob == 1)
+                                continue;
+
+
+                            time_t startTimestamp = timegm(&startTime);
+                            double diff = difftime(now2, startTimestamp);
+
+                            if (diff > 200 && reuseJob != "Y")
+                                {
+                                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "The transfer with file id " << fileId << " seems to be stalled, restart it" << commit;
+
+                                    sql << "UPDATE t_file SET start_time=NULL, file_state = 'SUBMITTED', reason='', transferhost='',finish_time=NULL, job_finished=NULL "
+                                        "WHERE file_id = :fileId AND job_id= :jobId AND file_state = 'READY' ",
+                                        soci::use(fileId),soci::use(jobId);
+                                }
+                            else
+                                {
+                                    if(reuseJob == "Y")
+                                        {
+                                            int count = 0;
+                                            int terminateTime = 0;
+
+                                            sql << " SELECT COUNT(*) FROM t_file WHERE job_id = :jobId ", soci::use(jobId), soci::into(count);
+                                            if(count > 0)
+                                                terminateTime = count * 1000;
+
+                                            if(diff > terminateTime)
+                                                {
+                                                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "The transfer with file id (reuse) " << fileId << " seems to be stalled, restart it" << commit;
+
+                                                    sql << "UPDATE t_job SET job_state = 'SUBMITTED' where job_id = :jobId ", soci::use(jobId);
+
+                                                    sql << "UPDATE t_file SET start_time=NULL, file_state = 'SUBMITTED', reason='', transferhost='',finish_time=NULL, job_finished=NULL "
+                                                        "WHERE file_state = 'READY' AND "
+                                                        "      job_finished IS NULL AND file_id = :fileId",
+                                                        soci::use(fileId);
+                                                }
+                                        }
+                                }
+                        }
+                    while (readyStmt.fetch());
+                }
+            sql.commit();
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+
+
+
 std::map<std::string, long long> OracleAPI::getActivitiesInQueue(soci::session& sql, std::string src, std::string dst, std::string vo)
 {
     std::map<std::string, long long> ret;
@@ -4549,97 +4643,6 @@ void OracleAPI::setPidV(int pid, std::map<int, std::string>& pids)
 
 
 
-void OracleAPI::revertToSubmitted()
-{
-    soci::session sql(*connectionPool);
-
-    try
-        {
-            struct tm startTime;
-            int fileId=0;
-            std::string jobId, reuseJob;
-            time_t now2 = getUTC(0);
-
-            soci::indicator reuseInd = soci::i_ok;
-            soci::statement readyStmt = (sql.prepare << "SELECT f.start_time, f.file_id, f.job_id, j.reuse_job "
-                                         " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
-                                         " WHERE f.file_state = 'READY' and j.job_finished is null "
-                                         " AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) ",
-                                         soci::use(hashSegment.start), soci::use(hashSegment.end),
-                                         soci::into(startTime),
-                                         soci::into(fileId),
-                                         soci::into(jobId),
-                                         soci::into(reuseJob, reuseInd));
-
-            //check if the file belongs to a multiple replica job
-            long long replicaJob = 0;
-            long long replicaJobCountAll = 0;
-
-            sql.begin();
-            if (readyStmt.execute(true))
-                {
-                    do
-                        {
-                            //don't do anything to multiple replica jobs
-                            sql << "select count(*), count(distinct file_index) from t_file where job_id=:job_id",
-                                soci::use(jobId), soci::into(replicaJobCountAll), soci::into(replicaJob);
-
-                            //this is a m-replica job
-                            if(replicaJobCountAll > 1 && replicaJob == 1)
-                                continue;
-
-
-                            time_t startTimestamp = timegm(&startTime);
-                            double diff = difftime(now2, startTimestamp);
-
-                            if (diff > 200 && reuseJob != "Y")
-                                {
-                                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "The transfer with file id " << fileId << " seems to be stalled, restart it" << commit;
-
-                                    sql << "UPDATE t_file SET start_time=NULL, file_state = 'SUBMITTED', reason='', transferhost='',finish_time=NULL, job_finished=NULL "
-                                        "WHERE file_id = :fileId AND job_id= :jobId AND file_state = 'READY' ",
-                                        soci::use(fileId),soci::use(jobId);
-                                }
-                            else
-                                {
-                                    if(reuseJob == "Y")
-                                        {
-                                            int count = 0;
-                                            int terminateTime = 0;
-
-                                            sql << " SELECT COUNT(*) FROM t_file WHERE job_id = :jobId ", soci::use(jobId), soci::into(count);
-                                            if(count > 0)
-                                                terminateTime = count * 1000;
-
-                                            if(diff > terminateTime)
-                                                {
-                                                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "The transfer with file id (reuse) " << fileId << " seems to be stalled, restart it" << commit;
-
-                                                    sql << "UPDATE t_job SET job_state = 'SUBMITTED' where job_id = :jobId ", soci::use(jobId);
-
-                                                    sql << "UPDATE t_file SET start_time=NULL, file_state = 'SUBMITTED', reason='', transferhost='',finish_time=NULL, job_finished=NULL "
-                                                        "WHERE file_state = 'READY' AND "
-                                                        "      job_finished IS NULL AND file_id = :fileId",
-                                                        soci::use(fileId);
-                                                }
-                                        }
-                                }
-                        }
-                    while (readyStmt.fetch());
-                }
-            sql.commit();
-        }
-    catch (std::exception& e)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-    catch (...)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }
-}
 
 
 void OracleAPI::backup(long* nJobs, long* nFiles)
@@ -6452,6 +6455,9 @@ int OracleAPI::getRetryTimes(const std::string & jobId, int fileId)
         {
             sql << "SELECT retry FROM t_file WHERE file_id = :fileId AND job_id = :jobId ",
                 soci::use(fileId), soci::use(jobId), soci::into(nRetries, isNull);
+		
+           if(isNull == soci::i_null)		
+	    	return 0;		
         }
     catch (std::exception& e)
         {

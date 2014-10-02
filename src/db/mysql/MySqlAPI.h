@@ -498,4 +498,6 @@ private:
     void cancelDmJobs(std::vector<std::string> const & jobs);
 
     bool getUserDnVisibleInternal(soci::session& sql);
+
+    int getStreamsOptimizationInternal(soci::session& sql, const std::string & source_hostname, const std::string & destination_hostname);
 };

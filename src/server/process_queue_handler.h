@@ -120,21 +120,12 @@ public:
                         if(msg.retry==true && retry > 0 && std::string(msg.transfer_status).compare("FAILED") == 0 && msg.file_id > 0 && !job.empty())
                             {
                                 int retryTimes = DBSingleton::instance().getDBObjectInstance()->getRetryTimes(job, msg.file_id);
-                                if(retry == -1)  //unlimited times
-                                    {
-                                        DBSingleton::instance().getDBObjectInstance()
-                                        ->setRetryTransfer(job, msg.file_id, retryTimes+1, msg.transfer_message);
-                                        return;
-                                    }
-                                else
-                                    {
-                                        if(retryTimes <= retry-1 )
+                                if(retryTimes != -1 && retryTimes <= retry-1 )
                                             {
                                                 DBSingleton::instance().getDBObjectInstance()
                                                 ->setRetryTransfer(job, msg.file_id, retryTimes+1, msg.transfer_message);
                                                 return;
                                             }
-                                    }
                             }
                     }
                 catch (std::exception& e)
