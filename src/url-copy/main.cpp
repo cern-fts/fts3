@@ -864,9 +864,9 @@ int main(int argc, char **argv)
             msg_ifce::getInstance()->set_block_size(&tr_completed, opts.blockSize);
             msg_ifce::getInstance()->set_srm_space_token_dest(&tr_completed, opts.destTokenDescription);
             msg_ifce::getInstance()->set_srm_space_token_source(&tr_completed, opts.sourceTokenDescription);
-	    
+
             msg_ifce::getInstance()->set_retry(&tr_completed, boost::lexical_cast<std::string>(opts.retry));
-            msg_ifce::getInstance()->set_retry_max(&tr_completed, boost::lexical_cast<std::string>(opts.retry_max));	    	    
+            msg_ifce::getInstance()->set_retry_max(&tr_completed, boost::lexical_cast<std::string>(opts.retry_max));
 
             if(opts.hide_user_dn)
                 msg_ifce::getInstance()->set_user_dn(&tr_completed, std::string(""));

@@ -86,9 +86,9 @@ typedef struct
 
     std::string file_metadata;
     std::string job_metadata;
-    
+
     std::string retry;
-    std::string retry_max;    
+    std::string retry_max;
 
 } transfer_completed;
 
@@ -153,7 +153,7 @@ public:
 
     void set_file_metadata(transfer_completed* tr_completed, const std::string & value);
     void set_job_metadata(transfer_completed* tr_completed, const std::string & value);
-    
+
     void set_retry(transfer_completed* tr_completed, const std::string & value);
     void set_retry_max(transfer_completed* tr_completed, const std::string & value);
 

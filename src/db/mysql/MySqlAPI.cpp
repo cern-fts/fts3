@@ -710,6 +710,9 @@ void MySqlAPI::getVOPairs(std::vector< boost::tuple<std::string, std::string, st
     std::string dest_se;
     std::string vo_name;
 
+    std::vector<boost::tuple<std::string, std::string> > distinctSourceDest;
+    std::vector<std::string> distinctVO;
+
 
     try
         {
@@ -720,7 +723,7 @@ void MySqlAPI::getVOPairs(std::vector< boost::tuple<std::string, std::string, st
                                            " select distinct vo_name from t_job ");
 
             soci::statement stmt1 = (sql.prepare <<
-                                     "select file_id from t_file where source_se=:source_se and dest_se=:dest_se and vo_name=:vo_name and file_state='SUBMITTED' LIMIT 1",
+                                     "select file_id from t_file where source_se=:source_se and dest_se=:dest_se and vo_name=:vo_name LIMIT 1",
                                      soci::use(source_se), soci::use(dest_se),soci::use(vo_name), soci::into(file_id));
 
             for (soci::rowset<soci::row>::const_iterator i1 = rs1.begin(); i1 != rs1.end(); ++i1)
@@ -728,20 +731,35 @@ void MySqlAPI::getVOPairs(std::vector< boost::tuple<std::string, std::string, st
                     soci::row const& r1 = *i1;
                     source_se = r1.get<std::string>("source_se","");
                     dest_se = r1.get<std::string>("dest_se","");
+                    distinctSourceDest.push_back(boost::make_tuple(source_se, dest_se));
+                }
 
-                    for (soci::rowset<soci::row>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
+
+            for (soci::rowset<soci::row>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
+                {
+                    soci::row const& r2 = *i2;
+                    vo_name = r2.get<std::string>("vo_name","");
+                    distinctVO.push_back(vo_name);
+                }
+
+            for (std::vector<boost::tuple<std::string, std::string> >::const_iterator i = distinctSourceDest.begin(); i != distinctSourceDest.end(); ++i)
+                {
+                    boost::tuple<std::string, std::string> triplet = *i;
+                    source_se =  boost::get<0>(triplet);
+                    dest_se   = boost::get<1>(triplet);
+
+                    for (std::vector<std::string>::const_iterator j = distinctVO.begin(); j != distinctVO.end(); ++j)
                         {
-                            soci::row const& r2 = *i2;
-                            vo_name = r2.get<std::string>("vo_name","");
+                            vo_name = *j;
                             file_id = 0; //reset
                             stmt1.execute(true);
                             if(file_id > 0)
                                 {
                                     distinct.push_back(
                                         boost::tuple< std::string, std::string, std::string>(
-                                            r1.get<std::string>("source_se",""),
-                                            r1.get<std::string>("dest_se",""),
-                                            r2.get<std::string>("vo_name","")
+                                            source_se,
+                                            dest_se,
+                                            vo_name
                                         )
                                     );
 
@@ -1163,8 +1181,8 @@ void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId)
             std::string selection_strategy;
             std::string vo_name;
 
-            //check if the file belongs to a multiple replica job  
-	    std::string mreplica;          
+            //check if the file belongs to a multiple replica job
+            std::string mreplica;
             sql << "select reuse_job from t_job where job_id=:job_id",
                 soci::use(jobId), soci::into(mreplica);
 
@@ -1561,9 +1579,9 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
 
     if(mhop) //since H is not passed when plain text submission (e.g. glite client) we need to set into DB
         reuseFlag = "H";
-	
+
     if(mreplica)
-    	reuseFlag = "R";	
+        reuseFlag = "R";
 
     std::string initialState = bringOnline > 0 || copyPinLifeTime > 0 ? "STAGING" : "SUBMITTED";
     const int priority = 3;
@@ -1668,8 +1686,8 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
                     	N = no reuse
                     	Y = reuse
                     	H = multi-hop
-			R = replica
-                    */
+                    R = replica
+                                     */
                     if (mreplica)
                         {
                             fileIndex = 0;
@@ -1680,22 +1698,22 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
 
                             index++;
                         }
-		    else if (mhop)	                    
+                    else if (mhop)
                         {
                             hashedId = hashedId;   //for convenience
                         }
-		    else if(reuseFlag == "Y" && !mreplica && !mhop)
-		       {
-		    	    hashedId = getHashedId();
-		       }			
+                    else if(reuseFlag == "Y" && !mreplica && !mhop)
+                        {
+                            hashedId = getHashedId();
+                        }
                     else if (reuseFlag == "N" && !mreplica && !mhop)
                         {
                             hashedId = getHashedId();
                         }
-		    else
-		        {
-		       	    hashedId = getHashedId();
-		        }	
+                    else
+                        {
+                            hashedId = getHashedId();
+                        }
 
                     //get distinct source_se / dest_se
                     Key p1 (sourceSe, destSe);
@@ -2613,7 +2631,7 @@ void MySqlAPI::revertToSubmitted()
             time_t now2 = getUTC(0);
             int count = 0;
             int terminateTime = 0;
-	    std::string mreplica;
+            std::string mreplica;
 
 
             soci::indicator reuseInd = soci::i_ok;
@@ -2647,7 +2665,7 @@ void MySqlAPI::revertToSubmitted()
                 {
                     do
                         {
-			    std::string mreplica;
+                            std::string mreplica;
                             //don't do anything to multiple replica jobs
                             sql << "select reuse_job from t_job where job_id=:job_id",
                                 soci::use(jobId), soci::into(mreplica);
@@ -6872,8 +6890,8 @@ int MySqlAPI::getRetry(const std::string & jobId)
 
             //do not retry multiple replica jobs
             if(nRetries > 0)
-                {                    
-		    std::string mreplica;
+                {
+                    std::string mreplica;
                     sql << "select reuse_job from t_job where job_id=:job_id", soci::use(jobId), soci::into(mreplica);
                     if(mreplica == "R")
                         nRetries = 0;
@@ -6903,9 +6921,9 @@ int MySqlAPI::getRetryTimes(const std::string & jobId, int fileId)
         {
             sql << "SELECT retry FROM t_file WHERE file_id = :fileId AND job_id = :jobId ",
                 soci::use(fileId), soci::use(jobId), soci::into(nRetries, isNull);
-		
-            if(isNull == soci::i_null)		
-	    	return 0;
+
+            if(isNull == soci::i_null)
+                return 0;
         }
     catch (std::exception& e)
         {
@@ -8371,8 +8389,8 @@ void MySqlAPI::checkSanityState()
                             allFinished = 0;
                             allCanceled = 0;
                             allFailed = 0;
-                            terminalState = 0;                          
-			    mreplica = std::string("");
+                            terminalState = 0;
+                            mreplica = std::string("");
 
                             stmt1.execute(true);
 

@@ -1183,8 +1183,8 @@ void OracleAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId
             std::string vo_name;
 
             //check if the file belongs to a multiple replica job
-           std::string mreplica;           
-           sql << "select reuse_job from t_job where job_id=:job_id", soci::use(jobId), soci::into(mreplica); 
+            std::string mreplica;
+            sql << "select reuse_job from t_job where job_id=:job_id", soci::use(jobId), soci::into(mreplica);
 
             //this is a m-replica job
             if(mreplica == "R")
@@ -1579,9 +1579,9 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
 
     if(mhop) //since H is not passed when plain text submission (e.g. glite client) we need to set into DB
         reuseFlag = "H";
-	
+
     if(mreplica)
-        reuseFlag = "R";	
+        reuseFlag = "R";
 
 
     std::string initialState = bringOnline > 0 || copyPinLifeTime > 0 ? "STAGING" : "SUBMITTED";
@@ -1687,9 +1687,9 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
                      	N = no reuse
                      	Y = reuse
                      	H = multi-hop
-			R = replica 
-                     */
-                     if (mreplica)
+                    R = replica
+                                      */
+                    if (mreplica)
                         {
                             fileIndex = 0;
                             if(index == 0) //only the first file
@@ -1699,22 +1699,22 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
 
                             index++;
                         }
-		    else if (mhop)	                    
+                    else if (mhop)
                         {
                             hashedId = hashedId;   //for convenience
                         }
-		    else if(reuseFlag == "Y" && !mreplica && !mhop)
-		       {
-		    	    hashedId = getHashedId();
-		       }			
+                    else if(reuseFlag == "Y" && !mreplica && !mhop)
+                        {
+                            hashedId = getHashedId();
+                        }
                     else if (reuseFlag == "N" && !mreplica && !mhop)
                         {
                             hashedId = getHashedId();
                         }
-		    else
-		        {
-		       	    hashedId = getHashedId();
-		        }	
+                    else
+                        {
+                            hashedId = getHashedId();
+                        }
 
                     //get distinct source_se / dest_se
                     Key p1 (sourceSe, destSe);
@@ -6465,9 +6465,9 @@ int OracleAPI::getRetryTimes(const std::string & jobId, int fileId)
         {
             sql << "SELECT retry FROM t_file WHERE file_id = :fileId AND job_id = :jobId ",
                 soci::use(fileId), soci::use(jobId), soci::into(nRetries, isNull);
-		
-           if(isNull == soci::i_null)		
-	    	return 0;		
+
+            if(isNull == soci::i_null)
+                return 0;
         }
     catch (std::exception& e)
         {
@@ -7781,7 +7781,7 @@ void OracleAPI::checkSanityState()
                     soci::statement stmt_m_replica = (sql.prepare << " select reuse_job from t_job where job_id=:job_id  ",
                                                       soci::use(job_id),
                                                       soci::into(mreplica));
-						      
+
                     //this section is for deletion jobs
                     soci::statement stmtDel1 = (sql.prepare << "SELECT COUNT(*) FROM t_dm where job_id=:jobId AND file_state in ('DELETE','STARTED') ", soci::use(job_id), soci::into(numberOfFilesDelete));
 
@@ -7799,8 +7799,8 @@ void OracleAPI::checkSanityState()
                             allFinished = 0;
                             allCanceled = 0;
                             allFailed = 0;
-                            terminalState = 0;                            
-			    mreplica = std::string("");
+                            terminalState = 0;
+                            mreplica = std::string("");
 
                             stmt1.execute(true);
 
