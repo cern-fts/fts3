@@ -723,7 +723,7 @@ void MySqlAPI::getVOPairs(std::vector< boost::tuple<std::string, std::string, st
                                            " select distinct vo_name from t_job ");
 
             soci::statement stmt1 = (sql.prepare <<
-                                     "select file_id from t_file where source_se=:source_se and dest_se=:dest_se and vo_name=:vo_name LIMIT 1",
+                                     "select file_id from t_file where source_se=:source_se and dest_se=:dest_se and vo_name=:vo_name and file_state='SUBMITTED' LIMIT 1",
                                      soci::use(source_se), soci::use(dest_se),soci::use(vo_name), soci::into(file_id));
 
             for (soci::rowset<soci::row>::const_iterator i1 = rs1.begin(); i1 != rs1.end(); ++i1)
