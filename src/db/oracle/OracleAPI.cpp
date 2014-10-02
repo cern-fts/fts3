@@ -935,7 +935,7 @@ void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, s
                                                                          soci::use(tTime),
                                                                          soci::use(hashSegment.start), soci::use(hashSegment.end),
                                                                          soci::use(boost::get<2>(triplet)),
-									 soci::use(it_act->second)
+                                                                         soci::use(it_act->second)
                                                                      );
 
                                     for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
@@ -2154,10 +2154,10 @@ void OracleAPI::getTransferFileStatus(std::string requestID, bool archive,
                                       unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files)
 {
     soci::session sql(*connectionPool);
-    
+
     if(limit < 10000)
-    	limit = 10000;
-    
+        limit = 10000;
+
 
     try
         {
@@ -4092,7 +4092,7 @@ bool OracleAPI::updateOptimizer()
                                 }
                             else
                                 {
-				    updateOptimizerEvolution(sql, source_hostname, destin_hostname, maxActive, throughput, ratioSuccessFailure, 14, bandwidthIn);				
+                                    updateOptimizerEvolution(sql, source_hostname, destin_hostname, maxActive, throughput, ratioSuccessFailure, 14, bandwidthIn);
                                     continue;
                                 }
 

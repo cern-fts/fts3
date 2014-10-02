@@ -705,44 +705,59 @@ std::map<std::string, int> MySqlAPI::getFilesNumPerActivity(soci::session& sql, 
 void MySqlAPI::getVOPairs(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct)
 {
     soci::session sql(*connectionPool);
+    int file_id = 0;
+    std::string source_se;
+    std::string dest_se;
+    std::string vo_name;
+
 
     try
         {
+            soci::rowset<soci::row> rs1 = (sql.prepare <<
+                                           " select  distinct o.source_se, o.dest_se from t_optimize_active o INNER JOIN t_file f ON (o.source_se = f.source_se and  o.dest_se=f.dest_se) where f.file_state = 'SUBMITTED' and f.job_finished is NULL ");
+
             soci::rowset<soci::row> rs2 = (sql.prepare <<
-                                           " SELECT DISTINCT vo_name, source_se, dest_se "
-                                           " FROM t_file "
-                                           " WHERE "
-                                           "      file_state = 'SUBMITTED' AND "
-                                           "      (hashed_id >= :hStart AND hashed_id <= :hEnd)  ",
-                                           soci::use(hashSegment.start), soci::use(hashSegment.end)
-                                          );
+                                           " select distinct vo_name from t_job ");
 
-            for (soci::rowset<soci::row>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
+            soci::statement stmt1 = (sql.prepare <<
+                                     "select COALESCE(file_id, 0) from t_file where source_se=:source_se and dest_se=:dest_se and vo_name=:vo_name and file_state='SUBMITTED' AND (hashed_id >= :hashStart AND hashed_id <= :hashEnd) LIMIT 1",
+                                     soci::use(source_se), soci::use(dest_se),soci::use(vo_name), soci::use(hashSegment.start), soci::use(hashSegment.end), soci::into(file_id));
+
+            for (soci::rowset<soci::row>::const_iterator i1 = rs1.begin(); i1 != rs1.end(); ++i1)
                 {
-                    soci::row const& r = *i2;
-                    std::string source_se = r.get<std::string>("source_se","");
-                    std::string dest_se = r.get<std::string>("dest_se","");
+                    soci::row const& r1 = *i1;
+                    source_se = r1.get<std::string>("source_se","");
+                    dest_se = r1.get<std::string>("dest_se","");
 
-                    distinct.push_back(
-                        boost::tuple< std::string, std::string, std::string>(
-                            r.get<std::string>("source_se",""),
-                            r.get<std::string>("dest_se",""),
-                            r.get<std::string>("vo_name","")
-                        )
-
-                    );
-
-                    long long int linkExists = 0;
-                    sql << "select count(*) from t_optimize_active where source_se=:source_se and dest_se=:dest_se and datetime >= (UTC_TIMESTAMP() - interval '5' MINUTE)",
-                        soci::use(source_se),
-                        soci::use(dest_se),
-                        soci::into(linkExists);
-                    if(linkExists == 0) //for some reason does not exist, add it
+                    for (soci::rowset<soci::row>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
                         {
-                            sql.begin();
-                            sql << "INSERT INTO t_optimize_active (source_se, dest_se, active, ema, datetime) VALUES (:source_se, :dest_se, 2, 0, UTC_TIMESTAMP()) ON DUPLICATE KEY UPDATE source_se=:source_se, dest_se=:dest_se, datetime=UTC_TIMESTAMP()",
-                                soci::use(source_se), soci::use(dest_se),soci::use(source_se), soci::use(dest_se);
-                            sql.commit();
+                            soci::row const& r2 = *i2;
+                            vo_name = r2.get<std::string>("vo_name","");
+                            file_id = 0; //reset
+                            stmt1.execute(true);
+                            if(file_id > 0)
+                                {
+                                    distinct.push_back(
+                                        boost::tuple< std::string, std::string, std::string>(
+                                            r1.get<std::string>("source_se",""),
+                                            r1.get<std::string>("dest_se",""),
+                                            r2.get<std::string>("vo_name","")
+                                        )
+                                    );
+
+                                    long long int linkExists = 0;
+                                    sql << "select count(*) from t_optimize_active where source_se=:source_se and dest_se=:dest_se and datetime >= (UTC_TIMESTAMP() - interval '5' MINUTE)",
+                                        soci::use(source_se),
+                                        soci::use(dest_se),
+                                        soci::into(linkExists);
+                                    if(linkExists == 0) //for some reason does not exist, add it
+                                        {
+                                            sql.begin();
+                                            sql << "INSERT INTO t_optimize_active (source_se, dest_se, active, ema, datetime) VALUES (:source_se, :dest_se, 2, 0, UTC_TIMESTAMP()) ON DUPLICATE KEY UPDATE source_se=:source_se, dest_se=:dest_se, datetime=UTC_TIMESTAMP()",
+                                                soci::use(source_se), soci::use(dest_se),soci::use(source_se), soci::use(dest_se);
+                                            sql.commit();
+                                        }
+                                }
                         }
                 }
         }
@@ -914,36 +929,6 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
 
                     if (activityFilesNum.empty())
                         {
-
-                            /*
-                                                        soci::rowset<TransferFiles> rs = (
-                                                                                             sql.prepare <<
-                                                                                             " SELECT SQL_NO_CACHE "
-                                                                                             "       f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
-                                                                                             "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, "
-                                                                                             "       f.checksum, j.checksum_method, j.source_space_token, "
-                                                                                             "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
-                                                                                             "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
-                                                                                             "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params, j.user_cred, j.reuse_job "
-                                                                                             " FROM t_job j INNER JOIN t_file f ON (j.job_id = f.job_id) WHERE  "
-                                                                                             "    f.file_state = 'SUBMITTED' AND "
-                                                                                             "    f.source_se = :source AND f.dest_se = :dest AND "
-                                                                                             "    f.vo_name = :vo_name AND j.vo_name=:vo_name AND "
-                                                                                             "    f.wait_timestamp IS NULL AND "
-                                                                                             "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
-                                                                                             "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
-                                                                                             "     j.job_state in('ACTIVE','SUBMITTED','STAGING') AND j.reuse_job = 'N' "
-                                                                                             "     ORDER BY j.priority DESC, j.submit_time LIMIT :filesNum ",
-                                                                                             soci::use(boost::get<0>(triplet)),
-                                                                                             soci::use(boost::get<1>(triplet)),
-                                                                                             soci::use(boost::get<2>(triplet)),
-                                                                                             soci::use(boost::get<2>(triplet)),
-                                                                                             soci::use(tTime),
-                                                                                             soci::use(hashSegment.start), soci::use(hashSegment.end),
-                                                                                             soci::use(filesNum)
-                                                                                         );
-                            */
-
                             soci::rowset<TransferFiles> rs = (sql.prepare <<
                                                               " SELECT f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
                                                               "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, "
@@ -957,7 +942,8 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                                                               "     f.vo_name = :vo_name AND     f.wait_timestamp IS NULL AND "
                                                               "     (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
                                                               "     j.reuse_job = 'N' AND "
-                                                              "     (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) and exists (select * from t_job y where y.job_id=j.job_id  "
+                                                              "     (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) and  f.vo_name= j.vo_name and  and j.job_finished is null and "
+                                                              " exists (select * from t_job y where y.job_id=j.job_id  "
                                                               " ORDER BY y.priority DESC, y.submit_time) LIMIT :filesNum",
                                                               soci::use(boost::get<0>(triplet)),
                                                               soci::use(boost::get<1>(triplet)),
@@ -993,34 +979,6 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                             for (it_act = activityFilesNum.begin(); it_act != activityFilesNum.end(); ++it_act)
                                 {
                                     if (it_act->second == 0) continue;
-                                    /*
-                                                                        std::string select =
-                                                                            " SELECT SQL_NO_CACHE "
-                                                                            "       f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
-                                                                            "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, "
-                                                                            "       f.checksum, j.checksum_method, j.source_space_token, "
-                                                                            "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
-                                                                            "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
-                                                                            "       f.source_se, f.dest_se, f.selection_strategy, j.internal_job_params, j.user_cred, j.reuse_job  "
-                                                                            " FROM t_job j INNER JOIN t_file f ON (j.job_id = f.job_id) WHERE "
-                                                                            "    f.file_state = 'SUBMITTED' AND  "
-                                                                            "    f.source_se = :source AND f.dest_se = :dest AND "
-                                                                            "    f.vo_name = :vo_name AND j.vo_name = :vo_name AND ";
-                                                                        select +=
-                                                                            it_act->first == "default" ?
-                                                                            "	  (f.activity = :activity OR f.activity IS NULL OR f.activity IN " + def_act + ") AND "
-                                                                            :
-                                                                            "	  f.activity = :activity AND ";
-                                                                        select +=
-                                                                            "    f.wait_timestamp IS NULL AND "
-                                                                            "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
-                                                                            "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
-                                                                            "    j.job_state in('ACTIVE','SUBMITTED','STAGING') AND j.reuse_job = 'N'  "
-                                                                            "    O('','RDER BY j.priority DESC, j.submit_time LIMIT :filesNum"
-                                                                            ;
-
-                                    */
-
 
                                     std::string select = " select f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
                                                          "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, "
@@ -1038,7 +996,7 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                                         :
                                         "	  f.activity = :activity AND ";
                                     select +=
-                                        "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) and exists (select * from t_job y where y.job_id=j.job_id  "
+                                        "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) and f.vo_name= j.vo_name and j.job_finished is null and exists (select * from t_job y where y.job_id=j.job_id  "
                                         " ORDER BY y.priority DESC, y.submit_time) LIMIT :filesNum";
 
 
@@ -1048,11 +1006,11 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                                                                          soci::use(boost::get<0>(triplet)),
                                                                          soci::use(boost::get<1>(triplet)),
                                                                          soci::use(boost::get<2>(triplet)),
-									 soci::use(tTime),
-                                                                         soci::use(it_act->first),                                                                       
+                                                                         soci::use(tTime),
+                                                                         soci::use(it_act->first),
                                                                          soci::use(hashSegment.start), soci::use(hashSegment.end),
-									 soci::use(it_act->second)
-									 );
+                                                                         soci::use(it_act->second)
+                                                                     );
 
                                     for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
                                         {
@@ -2288,9 +2246,9 @@ void MySqlAPI::getTransferFileStatus(std::string requestID, bool archive,
                                      unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files)
 {
     soci::session sql(*connectionPool);
-    
+
     if(limit < 10000)
-    	limit = 10000;
+        limit = 10000;
 
     try
         {
@@ -4502,7 +4460,7 @@ bool MySqlAPI::updateOptimizer()
                                 }
                             else
                                 {
- 				    updateOptimizerEvolution(sql, source_hostname, destin_hostname, maxActive, throughput, ratioSuccessFailure, 14, bandwidthIn);
+                                    updateOptimizerEvolution(sql, source_hostname, destin_hostname, maxActive, throughput, ratioSuccessFailure, 14, bandwidthIn);
                                     continue;
                                 }
 
@@ -9572,7 +9530,7 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
                     soci::statement stmt3 = (sql.prepare << "DELETE FROM t_hosts WHERE beat <= DATE_SUB(UTC_TIMESTAMP(), interval 1 week)");
                     stmt3.execute(true);
                     sql.commit();
-		    counter = 0; //reset
+                    counter = 0; //reset
                 }
         }
     catch (std::exception& e)

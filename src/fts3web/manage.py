@@ -17,23 +17,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from django.core.management import execute_manager
-import imp
+from django.core.management import execute_from_command_line
 import os
+import sys
 
 # Set environment pointing to development ini file
 path = os.path.dirname(__file__)
 if 'FTS3WEB_CONFIG' not in os.environ:
     os.environ['FTS3WEB_CONFIG'] = path + "/etc/fts3web/fts3web.ini"
 
-try:
-    imp.find_module('settings') # Assumed to be in the same directory.
-except ImportError:
-    import sys
-    sys.stderr.write("Error: Can't find the file 'settings.py' in the directory containing %r. It appears you've customized things.\nYou'll have to run django-admin.py, passing it your settings module.\n" % __file__)
-    sys.exit(1)
-
-import settings
 
 if __name__ == "__main__":
-    execute_manager(settings)
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "settings")
+    execute_from_command_line(sys.argv)
