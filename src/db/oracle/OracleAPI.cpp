@@ -1579,9 +1579,12 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
 
     if(mhop) //since H is not passed when plain text submission (e.g. glite client) we need to set into DB
         reuseFlag = "H";
-
-    if(mreplica)
+    else if(mreplica)
         reuseFlag = "R";
+    else if (reuse == "Y")
+        reuseFlag = "Y"; //session reuse
+    else
+        reuseFlag = "N"; //plain job
 
 
     std::string initialState = bringOnline > 0 || copyPinLifeTime > 0 ? "STAGING" : "SUBMITTED";
@@ -1687,9 +1690,13 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
                      	N = no reuse
                      	Y = reuse
                      	H = multi-hop
-                    R = replica
-                                      */
-                    if (mreplica)
+                    	R = replica
+                   */
+		    if(bringOnline > 0 || copyPinLifeTime > 0)
+		        {
+			  hashedId = hashedId;   //for convenience	
+			}		   
+                    else if (mreplica)
                         {
                             fileIndex = 0;
                             if(index == 0) //only the first file
@@ -11302,7 +11309,7 @@ void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boos
                         {
                             sql <<
                                 " UPDATE t_file "
-                                " SET start_time = sys_extract_utc(systimestamp), transferhost=:thost, file_state='STARTED' "
+                                " SET start_time = sys_extract_utc(systimestamp), staging_start=sys_extract_utc(systimestamp), transferhost=:thost, file_state='STARTED' "
                                 " WHERE  "
                                 "	file_id= :fileId "
                                 "	AND file_state='STAGING'",
@@ -11325,7 +11332,7 @@ void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boos
                                 {
                                     sql <<
                                         " UPDATE t_file "
-                                        " SET job_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), reason = :reason, file_state = :fileState "
+                                        " SET job_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), staging_finished=sys_extract_utc(systimestamp), reason = :reason, file_state = :fileState "
                                         " WHERE "
                                         "	file_id = :fileId "
                                         "	AND file_state in ('STAGING','STARTED') ",
@@ -11360,7 +11367,7 @@ void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boos
                                 {
                                     sql <<
                                         " UPDATE t_file "
-                                        " SET job_finished=NULL, finish_time=NULL, start_time=NULL, transferhost=NULL, reason = '', file_state = :fileState "
+                                        " SET staging_finished=sys_extract_utc(systimestamp), job_finished=NULL, finish_time=NULL, start_time=NULL, transferhost=NULL, reason = '', file_state = :fileState "
                                         " WHERE "
                                         "	file_id = :fileId ",
                                         soci::use(dbState),
@@ -11371,7 +11378,7 @@ void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boos
                                 {
                                     sql <<
                                         " UPDATE t_file "
-                                        " SET job_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), reason = :reason, file_state = :fileState "
+                                        " SET job_finished=sys_extract_utc(systimestamp), staging_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), reason = :reason, file_state = :fileState "
                                         " WHERE "
                                         "	file_id = :fileId "
                                         "	AND file_state in ('STAGING','STARTED')",
@@ -11384,7 +11391,7 @@ void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boos
                                 {
                                     sql <<
                                         " UPDATE t_file "
-                                        " SET job_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), reason = :reason, file_state = :fileState "
+                                        " SET job_finished=sys_extract_utc(systimestamp), staging_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), reason = :reason, file_state = :fileState "
                                         " WHERE "
                                         "	file_id = :fileId "
                                         "	AND file_state in ('STAGING','STARTED')",
@@ -11662,13 +11669,17 @@ bool OracleAPI::resetForRetryStaging(soci::session& sql, int file_id, const std:
                                     time_t now = getUTC(retry_delay);
                                     struct tm tTime;
                                     gmtime_r(&now, &tTime);
+				    
+				    sql.begin();
 
-                                    sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'STAGING', start_time=NULL, transferHost=NULL, t_log_file=NULL,"
+                                    sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'STAGING', staging_start=NULL, start_time=NULL, transferHost=NULL, t_log_file=NULL,"
                                         " t_log_file_debug=NULL, throughput = 0, current_failures = 1 "
                                         " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
                                         soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
 
                                     willBeRetried = true;
+				    
+				    sql.commit();				    
                                 }
                             else
                                 {
@@ -11676,13 +11687,17 @@ bool OracleAPI::resetForRetryStaging(soci::session& sql, int file_id, const std:
                                     time_t now = getUTC(default_retry_delay);
                                     struct tm tTime;
                                     gmtime_r(&now, &tTime);
+				    
+				    sql.begin();				    
 
-                                    sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'STAGING', start_time=NULL, transferHost=NULL, "
+                                    sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'STAGING', staging_start=NULL, start_time=NULL, transferHost=NULL, "
                                         " t_log_file=NULL, t_log_file_debug=NULL, throughput = 0,  current_failures = 1 "
                                         " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
                                         soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
 
                                     willBeRetried = true;
+				    
+				    sql.commit();				    
                                 }
                         }
 
@@ -11690,10 +11705,12 @@ bool OracleAPI::resetForRetryStaging(soci::session& sql, int file_id, const std:
                 }
             catch (std::exception& e)
                 {
+		    sql.rollback();		
                     throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
                 }
             catch (...)
                 {
+		    sql.rollback();		
                     throw Err_Custom(std::string(__func__) + ": Caught exception " );
                 }
         }
@@ -11757,12 +11774,16 @@ bool OracleAPI::resetForRetryDelete(soci::session& sql, int file_id, const std::
                                     time_t now = getUTC(retry_delay);
                                     struct tm tTime;
                                     gmtime_r(&now, &tTime);
+				    
+               	    		    sql.begin();
 
                                     sql << "UPDATE t_dm SET retry_timestamp=:1, retry = :retry, file_state = 'DELETE', start_time=NULL, dmHost=NULL "
                                         " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','DELETE','FAILED','CANCELED')",
                                         soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
 
                                     willBeRetried = true;
+				    
+               	    		    sql.commit();				    
                                 }
                             else
                                 {
@@ -11770,12 +11791,16 @@ bool OracleAPI::resetForRetryDelete(soci::session& sql, int file_id, const std::
                                     time_t now = getUTC(default_retry_delay);
                                     struct tm tTime;
                                     gmtime_r(&now, &tTime);
+				    
+               	    		    sql.begin();				    
 
-                                    sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'DELETE', start_time=NULL, dmHost=NULL  "
+                                    sql << "UPDATE t_dm SET retry_timestamp=:1, retry = :retry, file_state = 'DELETE', start_time=NULL, dmHost=NULL  "
                                         " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
                                         soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
 
                                     willBeRetried = true;
+				    
+               	    		    sql.commit();				    
                                 }
                         }
 
@@ -11783,10 +11808,12 @@ bool OracleAPI::resetForRetryDelete(soci::session& sql, int file_id, const std::
                 }
             catch (std::exception& e)
                 {
+           	    sql.rollback();		
                     throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
                 }
             catch (...)
                 {
+           	    sql.rollback();				
                     throw Err_Custom(std::string(__func__) + ": Caught exception " );
                 }
         }
