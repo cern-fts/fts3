@@ -65,7 +65,7 @@ void FetchStaging::fetch()
                             std::string const & url = boost::get<StagingContext::surl>(*it_f);
                             if (!isSrmUrl(url)) continue;
                             // get the SE name
-                            Uri uri = Uri::Parse(boost::get<StagingContext::surl>(*it_f));
+                            Uri uri = Uri::Parse(url);
                             std::string se = uri.Host;
                             // get the other values necessary for the key
                             std::string const & dn = boost::get<StagingContext::dn>(*it_f);

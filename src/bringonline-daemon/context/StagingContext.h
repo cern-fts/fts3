@@ -46,7 +46,7 @@ public:
 
     StagingContext(context_type const & ctx) :
         JobContext(boost::get<dn>(ctx), boost::get<vo>(ctx), boost::get<dlg_id>(ctx), boost::get<src_space_token>(ctx)),
-        pinlifetime(), bringonlineTimeout()
+        pinlifetime(boost::get<copy_pin_lifetime>(ctx)), bringonlineTimeout(boost::get<bring_online_timeout>(ctx))
     {
         add(ctx);
     }
