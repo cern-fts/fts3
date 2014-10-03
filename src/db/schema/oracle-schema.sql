@@ -646,9 +646,6 @@ CREATE TABLE t_file (
 
 
 
---
--- t_dm stores the actual file transfers - one row per source/dest pair
---
 CREATE TABLE t_dm (
 -- file_id is a unique identifier for a (source, destination) pair with a
 -- job.  It is created automatically.
@@ -714,10 +711,10 @@ CREATE TABLE t_dm (
   ,file_metadata    VARCHAR2(1024)
 --
 -- activity name
-  activity   VARCHAR2(255) DEFAULT "default",  
+  ,activity   VARCHAR2(255) DEFAULT 'default'
 --
 -- dm token
-  dm_token VARCHAR2(255),
+  ,dm_token VARCHAR2(255)
 --
 -- the timestamp that the file will be retried
   ,retry_timestamp          TIMESTAMP WITH TIME ZONE DEFAULT NULL
@@ -731,10 +728,11 @@ CREATE TABLE t_dm (
   ,hashed_id       INTEGER DEFAULT 0
 --
 -- The VO that owns this job
-  ,vo_name              VARCHAR(100)  
+  ,vo_name              VARCHAR(100)
+--
+--
+  ,CONSTRAINT t_dm_fk FOREIGN KEY (job_id) REFERENCES t_job(job_id) ON DELETE CASCADE
 );
-
-
 
 
 
