@@ -164,6 +164,8 @@ Requires(postun): /usr/sbin/semodule, /sbin/restorecon, fts-server
 %description server-selinux
 This package setup the SELinux policies for the FTS3 server.
 
+
+
 %prep
 %setup -qc
 mkdir SELinux
@@ -441,6 +443,8 @@ fi
   - using cmake28
 * Mon Jan 13 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.26-2
   - separated rpms for messaging and infosys subsystems
+* Mon May 12 2014 Michal Simon <michal.simon@cern.ch> - 3.2.25-1
+  - Update for new upstream release
 * Mon Nov 18 2013 Alejandro Alvarez Ayllon <aalvarez@cern.ch> - 3.1.33-2
   - Added missing changelog entry
   - Fixed bogus date
