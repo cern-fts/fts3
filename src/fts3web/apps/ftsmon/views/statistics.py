@@ -35,9 +35,7 @@ def _get_count_per_state(age, hostname):
     not_before = datetime.utcnow() - age
     for state in STATES:
         query = File.objects
-        if state in ACTIVE_STATES:
-            query = query.filter(job_finished__isnull=True)
-        else:
+        if state not in ACTIVE_STATES:
             query = query.filter(job_finished__gte=not_before)
         if hostname:
             query = query.filter(transferHost=hostname)
@@ -215,7 +213,7 @@ def get_pervo(http_request):
     # Non terminal, one by one
     # See ticket #1083
     for state in ['ACTIVE', 'SUBMITTED']:
-        non_terminal = File.objects.values('vo_name').filter(Q(job_finished__isnull=True) & Q(file_state=state))
+        non_terminal = File.objects.values('vo_name').filter(Q(file_state=state))
         if http_request.GET.get('source_se', None):
             non_terminal = non_terminal.filter(source_se=http_request.GET['source_se'])
         if http_request.GET.get('dest_se', None):
