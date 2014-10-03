@@ -15,7 +15,7 @@ URL:        https://svnweb.cern.ch/trac/fts3
 # following commands to generate the tarball:
 # svn export http://svn.cern.ch/guest/fts3/trunk/nagios/ nagios-plugins-fts-3.2.0
 # tar -czvf nagios-plugins-fts-3.2.0.tar.gz nagios
-Source0:   %{name}-%{version}.tar.gz
+Source0:   https://grid-deployment.web.cern.ch/grid-deployment/dms/fts3/tar/%{name}-%{version}.tar.gz
 Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch: noarch
 
