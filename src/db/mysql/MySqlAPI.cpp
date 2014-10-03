@@ -12086,11 +12086,14 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost
 
                             if(dbState == "SUBMITTED")
                                 {
+				    unsigned hashedId = getHashedId();
+				    
                                     sql <<
                                         " UPDATE t_file "
-                                        " SET staging_finished=sys_extract_utc(systimestamp), job_finished=NULL, finish_time=NULL, start_time=NULL, transferhost=NULL, reason = '', file_state = :fileState "
+                                        " SET hashed_id = :hashed_id, staging_finished=sys_extract_utc(systimestamp), job_finished=NULL, finish_time=NULL, start_time=NULL, transferhost=NULL, reason = '', file_state = :fileState "
                                         " WHERE "
                                         "	file_id = :fileId ",
+					soci::use(hashedId),
                                         soci::use(dbState),
                                         soci::use(file_id)
                                         ;
