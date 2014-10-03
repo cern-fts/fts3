@@ -17,8 +17,12 @@ void BringOnlineTask::run(boost::any const &)
 {
     GError *error = NULL;
     char token[512] = {0};
-
     std::vector<char const *> urls = ctx.getUrls();
+
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE issuing bring-online for: " << urls.size() << " files, "
+            << "with copy-pin-lifetime: " << ctx.getPinlifetime() <<
+            " and bring-online-timeout: " << ctx.getBringonlineTimeout() << commit;
+
     int status = gfal2_bring_online_list(
                      gfal2_ctx,
                      urls.size(),
