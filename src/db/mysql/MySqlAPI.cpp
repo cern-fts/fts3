@@ -11854,6 +11854,12 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                                     int file_id = row.get<int>("file_id");
                                     int copy_pin_lifetime = row.get<int>("copy_pin_lifetime",0);
                                     int bring_online = row.get<int>("bring_online",0);
+				    
+				    if(copy_pin_lifetime > 0 && bring_online <= 0)
+				    	bring_online = 28800;
+				    else if (bring_online > 0 && copy_pin_lifetime <= 0)
+				    	copy_pin_lifetime = 28800;
+				    
                                     user_dn = row.get<std::string>("user_dn");
                                     std::string cred_id = row.get<std::string>("cred_id");
                                     std::string source_space_token = row.get<std::string>("source_space_token","");
@@ -11979,6 +11985,12 @@ void MySqlAPI::getAlreadyStartedStaging(std::vector< boost::tuple<std::string, s
                     int file_id = row.get<int>("file_id");
                     int copy_pin_lifetime = row.get<int>("copy_pin_lifetime",0);
                     int bring_online = row.get<int>("bring_online",0);
+		    
+		    if(copy_pin_lifetime > 0 && bring_online <= 0)
+			  	bring_online = 28800;
+		    else if (bring_online > 0 && copy_pin_lifetime <= 0)
+			   	copy_pin_lifetime = 28800;				    
+		    
                     std::string user_dn = row.get<std::string>("user_dn");
                     std::string cred_id = row.get<std::string>("cred_id");
                     std::string source_space_token = row.get<std::string>("source_space_token","");

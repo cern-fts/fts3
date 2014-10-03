@@ -11132,6 +11132,12 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
                                     int file_id = static_cast<int>(row.get<long long>("FILE_ID"));
                                     int copy_pin_lifetime = static_cast<int>(row.get<double>("COPY_PIN_LIFETIME", 0));
                                     int bring_online = static_cast<int>(row.get<double>("BRING_ONLINE",0));
+				    
+				    if(copy_pin_lifetime > 0 && bring_online <= 0)
+				    	bring_online = 28800;
+				    else if (bring_online > 0 && copy_pin_lifetime <= 0)
+				    	copy_pin_lifetime = 28800;
+				    				    
                                     user_dn = row.get<std::string>("USER_DN");
                                     std::string cred_id = row.get<std::string>("CRED_ID");
                                     std::string source_space_token = row.get<std::string>("SOURCE_SPACE_TOKEN","");
@@ -11257,6 +11263,12 @@ void OracleAPI::getAlreadyStartedStaging(std::vector< boost::tuple<std::string, 
                     int file_id = static_cast<int>(row.get<long long>("FILE_ID"));
                     int copy_pin_lifetime = static_cast<int>(row.get<double>("COPY_PIN_LIFETIME"),0);
                     int bring_online = static_cast<int>(row.get<double>("BRING_ONLINE"),0);
+
+		    if(copy_pin_lifetime > 0 && bring_online <= 0)
+		    	bring_online = 28800;
+		    else if (bring_online > 0 && copy_pin_lifetime <= 0)
+		    	copy_pin_lifetime = 28800;
+				    
                     std::string user_dn = row.get<std::string>("USER_DN");
                     std::string cred_id = row.get<std::string>("CRED_ID");
                     std::string source_space_token = row.get<std::string>("SOURCE_SPACE_TOKEN","");
