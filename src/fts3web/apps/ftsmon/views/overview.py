@@ -176,14 +176,25 @@ def get_overview(http_request):
                 triplet_key = (source, dest, vo)
                 triplet = triplets.get(triplet_key, dict())
 
-                # File count
+                # Terminal file count
                 cursor.execute(
                     "SELECT file_state, COUNT(file_state) FROM t_file "
                     "WHERE source_se = %%s AND dest_se = %%s AND vo_name = %%s"
-                    "      AND (job_finished > %s OR job_finished IS NULL) "
+                    "      AND job_finished > %s "
                     "      AND file_state <> 'NOT_USED' "
                     "GROUP BY file_state ORDER BY NULL" % _db_to_date(),
                     [source, dest, vo, not_before]
+                )
+                for row in cursor.fetchall():
+                    triplet[row[0].lower()] = row[1]
+
+                # Non terminal file count
+                cursor.execute(
+                    "SELECT file_state, COUNT(file_state) FROM t_file "
+                    "WHERE source_se = %s AND dest_se = %s AND vo_name = %s"
+                    "      AND file_state in ('ACTIVE', 'SUBMITTED') "
+                    "GROUP BY file_state ORDER BY NULL",
+                    [source, dest, vo]
                 )
                 for row in cursor.fetchall():
                     triplet[row[0].lower()] = row[1]
