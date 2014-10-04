@@ -282,7 +282,7 @@ public:
 
     virtual double getAvgThroughput(std::string source, std::string destination);
 
-    virtual void updateProtocol(const std::string& jobId, int fileId, int nostreams, int timeout, int buffersize, double filesize);
+    virtual void updateProtocol(std::vector<struct message>& tempProtocol);
 
     virtual void cancelFilesInTheQueue(const std::string& se, const std::string& vo, std::set<std::string>& jobs);
 

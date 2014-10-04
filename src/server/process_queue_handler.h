@@ -69,7 +69,7 @@ public:
         TRAITS::ActiveObjectType("ProcessQueueHandler", desc)
     {
         enableOptimization = theServerConfig().get<std::string > ("Optimizer");
-        messages.reserve(300);
+        messages.reserve(600);
     }
 
     /* ---------------------------------------------------------------------- */
@@ -95,32 +95,9 @@ public:
             {
                 std::string job = std::string(msg.job_id).substr(0, 36);
 
-                try
-                    {
-                        if(std::string(msg.transfer_status).compare("UPDATE") == 0)
-                            {
-                                DBSingleton::instance().getDBObjectInstance()->updateProtocol(job, msg.file_id,
-                                        static_cast<int> (msg.nostreams),
-                                        static_cast<int> (msg.timeout),
-                                        static_cast<int> (msg.buffersize),
-                                        msg.filesize);
-                                return;
-                            }
-                    }
-                catch (std::exception& e)
-                    {
-                        struct message msgTemp = msg;
-                        runProducerStatus( msgTemp);
-                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception when updateProtocol " << e.what() << commit;
-                        return;
-                    }
-                catch (...)
-                    {
-                        struct message msgTemp = msg;
-                        runProducerStatus( msgTemp);
-                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception when updateProtocol " << commit;
-                        return;
-                    }
+                //do not process the updates here, will be done separetely
+                if(std::string(msg.transfer_status).compare("UPDATE") == 0)
+                    return;
 
 
                 if (std::string(msg.transfer_status).compare("FINISHED") == 0 ||
@@ -246,7 +223,7 @@ protected:
                         msgUpdater.transferred = 0.0;
                         ThreadSafeList::get_instance().updateMsg(msgUpdater);
 
-                        if (iter->msg_errno == 0)
+                        if (iter->msg_errno == 0 && std::string((*iter).transfer_status).compare("UPDATE") != 0)
                             {
                                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job id:" << jobId
                                                                 << "\nFile id: " << (*iter).file_id
@@ -313,10 +290,8 @@ protected:
 
                         if(!messages.empty())
                             {
-                                executeUpdate(messages);
-                                messages.clear();
 
-                                /*
+                                //first update the STATUS
                                 boost::thread_group g;
 
                                 std::size_t const half_size1 = messages.size() / 2;
@@ -344,10 +319,11 @@ protected:
                                 // wait for them
                                 g.join_all();
 
+                                //now update the protocol
+                                DBSingleton::instance().getDBObjectInstance()->updateProtocol(messages);
+
+                                //finally clear store
                                 messages.clear();
-                                */
-
-
                             }
 
                         //update log file path
