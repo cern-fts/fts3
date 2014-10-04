@@ -2773,7 +2773,6 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
                 }
 
 
-
             soci::statement stmt(sql);
             std::ostringstream query;
 
@@ -8372,7 +8371,7 @@ void MySqlAPI::checkSanityState()
                     soci::statement stmt7 = (sql.prepare << "UPDATE t_file SET "
                                              "    file_state = 'FAILED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
                                              "    reason = 'Force failure due to file state inconsistency' "
-                                             "    WHERE file_state in ('ACTIVE','SUBMITTED','STAGING','STARTED') and job_id = :jobId", soci::use(job_id));
+                                             "    WHERE file_state in ('ACTIVE','SUBMITTED','STAGING','STARTED') and job_id = :jobId ", soci::use(job_id));
 
                     soci::statement stmt8 = (sql.prepare << " select count(*)  "
                                              " from t_file "
@@ -8554,7 +8553,7 @@ void MySqlAPI::checkSanityState()
                     //special case for canceled
                     soci::rowset<std::string> rs2 = (
                                                         sql.prepare <<
-                                                        " select  j.job_id from t_job j inner join t_file f on (j.job_id = f.job_id) where j.job_finished >= (UTC_TIMESTAMP() - interval '24' HOUR ) and f.file_state in ('SUBMITTED','ACTIVE')  "
+                                                        " select  j.job_id from t_job j inner join t_file f on (j.job_id = f.job_id) where j.job_finished >= (UTC_TIMESTAMP() - interval '12' HOUR ) and f.file_state in ('SUBMITTED','ACTIVE') "
                                                     );
 
 
@@ -8566,13 +8565,18 @@ void MySqlAPI::checkSanityState()
                         }
                     sql.commit();
 
+                   soci::rowset<std::string> rs444 = (
+                                                        sql.prepare <<
+                                                        " select  j.job_id from t_job j inner join t_file f on (j.job_id = f.job_id) where j.job_finished >= (UTC_TIMESTAMP() - interval '12' HOUR ) and job_state='FINISHED' and reuse_job='R' and f.file_state in ('SUBMITTED','ACTIVE') "
+                                                    );
+
                     //multiple replicas with finished state
                     sql.begin();
-                    for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
+                    for (soci::rowset<std::string>::const_iterator i444 = rs444.begin(); i444 != rs444.end(); ++i444)
                         {
                             mreplica = std::string("");
 
-                            job_id = (*i2);
+                            job_id = (*i444);
 
                             //check for m-replicas sanity
                             stmt_m_replica.execute(true);
