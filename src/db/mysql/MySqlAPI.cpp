@@ -8567,7 +8567,7 @@ void MySqlAPI::checkSanityState()
 
                    soci::rowset<std::string> rs444 = (
                                                         sql.prepare <<
-                                                        " select  j.job_id from t_job j inner join t_file f on (j.job_id = f.job_id) where j.job_finished >= (UTC_TIMESTAMP() - interval '12' HOUR ) and job_state='FINISHED' and reuse_job='R' and f.file_state in ('SUBMITTED','ACTIVE') "
+                                                        " select  j.job_id from t_job j inner join t_file f on (j.job_id = f.job_id) where j.job_finished >= (UTC_TIMESTAMP() - interval '12' HOUR ) and job_state='FINISHED' and reuse_job='R' "
                                                     );
 
                     //multiple replicas with finished state
