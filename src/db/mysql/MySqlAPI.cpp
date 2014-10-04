@@ -2957,6 +2957,7 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
             std::string currentState("");
             std::string reuseFlag;
             soci::indicator isNull = soci::i_ok;
+	    soci::indicator isNullFileId = soci::i_ok;
 
             if(job_id.empty())
                 {
@@ -2976,6 +2977,29 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
             if(currentState == status)
                 return true;
 
+            if(status == "ACTIVE" && reuseFlag == "N")
+            {
+			    sql.begin();
+
+                            soci::statement stmt8 = (
+                                                        sql.prepare << "UPDATE t_job "
+                                                        "SET job_state = :state "
+                                                        "WHERE job_id = :jobId AND job_state NOT IN ('ACTIVE','FINISHEDDIRTY','CANCELED','FINISHED','FAILED') ",
+                                                        soci::use(status, "state"), soci::use(job_id, "jobId"));
+                            stmt8.execute(true);
+
+                            sql.commit();
+
+			    return true;
+	    } 
+           else if ( (status == "FINISHED" || status == "FAILED") && reuseFlag == "N")
+           {
+                int file_id = 0;
+		sql <<  " SELECT file_id from t_file where job_id=:job_id and file_state='SUBMITTED' LIMIT 1 ", soci::use(job_id), soci::into(file_id, isNullFileId);
+                if(isNullFileId != soci::i_null && file_id > 0)
+			return true;
+	   }
+          
 
             sql << " SELECT COUNT(DISTINCT file_index) "
                 " FROM t_file "
