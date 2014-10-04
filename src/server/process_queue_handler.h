@@ -95,15 +95,33 @@ public:
             {
                 std::string job = std::string(msg.job_id).substr(0, 36);
 
-                if(std::string(msg.transfer_status).compare("UPDATE") == 0)
+                try
                     {
-                        DBSingleton::instance().getDBObjectInstance()->updateProtocol(job, msg.file_id,
-                                static_cast<int> (msg.nostreams),
-                                static_cast<int> (msg.timeout),
-                                static_cast<int> (msg.buffersize),
-                                msg.filesize);
+                        if(std::string(msg.transfer_status).compare("UPDATE") == 0)
+                            {
+                                DBSingleton::instance().getDBObjectInstance()->updateProtocol(job, msg.file_id,
+                                        static_cast<int> (msg.nostreams),
+                                        static_cast<int> (msg.timeout),
+                                        static_cast<int> (msg.buffersize),
+                                        msg.filesize);
+                                return;
+                            }
+                    }
+                catch (std::exception& e)
+                    {
+                        struct message msgTemp = msg;
+                        runProducerStatus( msgTemp);
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception when updateProtocol " << e.what() << commit;
                         return;
                     }
+                catch (...)
+                    {
+                        struct message msgTemp = msg;
+                        runProducerStatus( msgTemp);
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception when updateProtocol " << commit;
+                        return;
+                    }
+
 
                 if (std::string(msg.transfer_status).compare("FINISHED") == 0 ||
                         std::string(msg.transfer_status).compare("FAILED") == 0 ||
@@ -193,11 +211,11 @@ protected:
 
     void executeUpdate(std::vector<struct message>& messages)
     {
-        try
+        std::vector<struct message>::const_iterator iter;
+        struct message_updater msgUpdater;
+        for (iter = messages.begin(); iter != messages.end(); ++iter)
             {
-                std::vector<struct message>::const_iterator iter;
-                struct message_updater msgUpdater;
-                for (iter = messages.begin(); iter != messages.end(); ++iter)
+                try
                     {
                         if(stopThreads)
                             {
@@ -239,38 +257,21 @@ protected:
 
                                 updateDatabase((*iter));
                             }
-                    }//end for
-            }
-        catch (const fs::filesystem_error& e)
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Caught exception " << e.what() << commit;
-                std::vector<struct message>::const_iterator iterBreak;
-                for (iterBreak = messages.begin(); iterBreak != messages.end(); ++iterBreak)
-                    {
-                        struct message msgBreak = (*iterBreak);
-                        runProducerStatus( msgBreak);
                     }
-            }
-        catch (std::exception& ex)
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Caught exception " << ex.what() << commit;
-                std::vector<struct message>::const_iterator iterBreak;
-                for (iterBreak = messages.begin(); iterBreak != messages.end(); ++iterBreak)
+                catch (const fs::filesystem_error& e)
                     {
-                        struct message msgBreak = (*iterBreak);
-                        runProducerStatus( msgBreak);
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Caught exception " << e.what() << commit;
                     }
-            }
-        catch (...)
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Caught exception " << commit;
-                std::vector<struct message>::const_iterator iterBreak;
-                for (iterBreak = messages.begin(); iterBreak != messages.end(); ++iterBreak)
+                catch (std::exception& ex)
                     {
-                        struct message msgBreak = (*iterBreak);
-                        runProducerStatus( msgBreak);
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Caught exception " << ex.what() << commit;
                     }
-            }
+                catch (...)
+                    {
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Caught exception " << commit;
+                    }
+            }//end for
+
     }
 
 

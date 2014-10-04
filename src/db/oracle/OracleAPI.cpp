@@ -1691,11 +1691,11 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
                      	Y = reuse
                      	H = multi-hop
                     	R = replica
-                   */
-		    if(bringOnline > 0 || copyPinLifeTime > 0)
-		        {
-			  hashedId = hashedId;   //for convenience	
-			}		   
+                    */
+                    if(bringOnline > 0 || copyPinLifeTime > 0)
+                        {
+                            hashedId = hashedId;   //for convenience
+                        }
                     else if (mreplica)
                         {
                             fileIndex = 0;
@@ -11132,12 +11132,12 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
                                     int file_id = static_cast<int>(row.get<long long>("FILE_ID"));
                                     int copy_pin_lifetime = static_cast<int>(row.get<double>("COPY_PIN_LIFETIME", 0));
                                     int bring_online = static_cast<int>(row.get<double>("BRING_ONLINE",0));
-				    
-				    if(copy_pin_lifetime > 0 && bring_online <= 0)
-				    	bring_online = 28800;
-				    else if (bring_online > 0 && copy_pin_lifetime <= 0)
-				    	copy_pin_lifetime = 28800;
-				    				    
+
+                                    if(copy_pin_lifetime > 0 && bring_online <= 0)
+                                        bring_online = 28800;
+                                    else if (bring_online > 0 && copy_pin_lifetime <= 0)
+                                        copy_pin_lifetime = 28800;
+
                                     user_dn = row.get<std::string>("USER_DN");
                                     std::string cred_id = row.get<std::string>("CRED_ID");
                                     std::string source_space_token = row.get<std::string>("SOURCE_SPACE_TOKEN","");
@@ -11264,11 +11264,11 @@ void OracleAPI::getAlreadyStartedStaging(std::vector< boost::tuple<std::string, 
                     int copy_pin_lifetime = static_cast<int>(row.get<double>("COPY_PIN_LIFETIME"),0);
                     int bring_online = static_cast<int>(row.get<double>("BRING_ONLINE"),0);
 
-		    if(copy_pin_lifetime > 0 && bring_online <= 0)
-		    	bring_online = 28800;
-		    else if (bring_online > 0 && copy_pin_lifetime <= 0)
-		    	copy_pin_lifetime = 28800;
-				    
+                    if(copy_pin_lifetime > 0 && bring_online <= 0)
+                        bring_online = 28800;
+                    else if (bring_online > 0 && copy_pin_lifetime <= 0)
+                        copy_pin_lifetime = 28800;
+
                     std::string user_dn = row.get<std::string>("USER_DN");
                     std::string cred_id = row.get<std::string>("CRED_ID");
                     std::string source_space_token = row.get<std::string>("SOURCE_SPACE_TOKEN","");
@@ -11377,14 +11377,14 @@ void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boos
 
                             if(dbState == "SUBMITTED")
                                 {
-  				    unsigned hashedId = getHashedId();
-				
+                                    unsigned hashedId = getHashedId();
+
                                     sql <<
                                         " UPDATE t_file "
                                         " SET hashed_id = :hashed_id, staging_finished=sys_extract_utc(systimestamp), job_finished=NULL, finish_time=NULL, start_time=NULL, transferhost=NULL, reason = '', file_state = :fileState "
                                         " WHERE "
                                         "	file_id = :fileId ",
-					soci::use(hashedId),
+                                        soci::use(hashedId),
                                         soci::use(dbState),
                                         soci::use(file_id)
                                         ;
@@ -11684,8 +11684,8 @@ bool OracleAPI::resetForRetryStaging(soci::session& sql, int file_id, const std:
                                     time_t now = getUTC(retry_delay);
                                     struct tm tTime;
                                     gmtime_r(&now, &tTime);
-				    
-				    sql.begin();
+
+                                    sql.begin();
 
                                     sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'STAGING', staging_start=NULL, start_time=NULL, transferHost=NULL, t_log_file=NULL,"
                                         " t_log_file_debug=NULL, throughput = 0, current_failures = 1 "
@@ -11693,8 +11693,8 @@ bool OracleAPI::resetForRetryStaging(soci::session& sql, int file_id, const std:
                                         soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
 
                                     willBeRetried = true;
-				    
-				    sql.commit();				    
+
+                                    sql.commit();
                                 }
                             else
                                 {
@@ -11702,8 +11702,8 @@ bool OracleAPI::resetForRetryStaging(soci::session& sql, int file_id, const std:
                                     time_t now = getUTC(default_retry_delay);
                                     struct tm tTime;
                                     gmtime_r(&now, &tTime);
-				    
-				    sql.begin();				    
+
+                                    sql.begin();
 
                                     sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'STAGING', staging_start=NULL, start_time=NULL, transferHost=NULL, "
                                         " t_log_file=NULL, t_log_file_debug=NULL, throughput = 0,  current_failures = 1 "
@@ -11711,8 +11711,8 @@ bool OracleAPI::resetForRetryStaging(soci::session& sql, int file_id, const std:
                                         soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
 
                                     willBeRetried = true;
-				    
-				    sql.commit();				    
+
+                                    sql.commit();
                                 }
                         }
 
@@ -11720,12 +11720,12 @@ bool OracleAPI::resetForRetryStaging(soci::session& sql, int file_id, const std:
                 }
             catch (std::exception& e)
                 {
-		    sql.rollback();		
+                    sql.rollback();
                     throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
                 }
             catch (...)
                 {
-		    sql.rollback();		
+                    sql.rollback();
                     throw Err_Custom(std::string(__func__) + ": Caught exception " );
                 }
         }
@@ -11789,16 +11789,16 @@ bool OracleAPI::resetForRetryDelete(soci::session& sql, int file_id, const std::
                                     time_t now = getUTC(retry_delay);
                                     struct tm tTime;
                                     gmtime_r(&now, &tTime);
-				    
-               	    		    sql.begin();
+
+                                    sql.begin();
 
                                     sql << "UPDATE t_dm SET retry_timestamp=:1, retry = :retry, file_state = 'DELETE', start_time=NULL, dmHost=NULL "
                                         " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','DELETE','FAILED','CANCELED')",
                                         soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
 
                                     willBeRetried = true;
-				    
-               	    		    sql.commit();				    
+
+                                    sql.commit();
                                 }
                             else
                                 {
@@ -11806,16 +11806,16 @@ bool OracleAPI::resetForRetryDelete(soci::session& sql, int file_id, const std::
                                     time_t now = getUTC(default_retry_delay);
                                     struct tm tTime;
                                     gmtime_r(&now, &tTime);
-				    
-               	    		    sql.begin();				    
+
+                                    sql.begin();
 
                                     sql << "UPDATE t_dm SET retry_timestamp=:1, retry = :retry, file_state = 'DELETE', start_time=NULL, dmHost=NULL  "
                                         " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
                                         soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
 
                                     willBeRetried = true;
-				    
-               	    		    sql.commit();				    
+
+                                    sql.commit();
                                 }
                         }
 
@@ -11823,12 +11823,12 @@ bool OracleAPI::resetForRetryDelete(soci::session& sql, int file_id, const std::
                 }
             catch (std::exception& e)
                 {
-           	    sql.rollback();		
+                    sql.rollback();
                     throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
                 }
             catch (...)
                 {
-           	    sql.rollback();				
+                    sql.rollback();
                     throw Err_Custom(std::string(__func__) + ": Caught exception " );
                 }
         }
