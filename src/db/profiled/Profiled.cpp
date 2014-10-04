@@ -674,9 +674,9 @@ double ProfiledDB::getAvgThroughput(std::string source, std::string destination)
 }
 
 
-void ProfiledDB::updateProtocol(const std::string& jobId, int fileId, int nostreams, int timeout, int buffersize, double filesize)
+void ProfiledDB::updateProtocol(std::vector<struct message>& tempProtocol)
 {
-    PROFILE_PREFIXED("DB::", db->updateProtocol(jobId, fileId, nostreams, timeout, buffersize, filesize));
+    PROFILE_PREFIXED("DB::", db->updateProtocol(tempProtocol));
 }
 
 

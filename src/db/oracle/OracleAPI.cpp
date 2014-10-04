@@ -6823,24 +6823,42 @@ void OracleAPI::setMaxStageOp(const std::string& se, const std::string& vo, int 
         }
 }
 
-void OracleAPI::updateProtocol(const std::string& /*jobId*/, int fileId, int nostreams, int timeout, int buffersize, double filesize)
+void OracleAPI::updateProtocol(std::vector<struct message>& messages)
 {
+    soci::session sql(*connectionPool);
 
     std::stringstream internalParams;
-    soci::session sql(*connectionPool);
+    double filesize = 0;
+    int fileId = 0;
+    std::string params;
 
     try
         {
+            soci::statement stmt = (
+                                       sql.prepare << "UPDATE t_file set INTERNAL_FILE_PARAMS=:1, FILESIZE=:2 where file_id=:fileId ",
+                                       soci::use(params),
+                                       soci::use(filesize),
+                                       soci::use(fileId));
+
+
             sql.begin();
 
-            internalParams << "nostreams:" << nostreams << ",timeout:" << timeout << ",buffersize:" << buffersize;
+            std::vector<struct message>::const_iterator iter;
+            for (iter = messages.begin(); iter != messages.end(); ++iter)
+                {
+                    internalParams.str(std::string());
+                    internalParams.clear();
 
-            sql <<
-                " UPDATE t_file set INTERNAL_FILE_PARAMS=:1, FILESIZE=:2 where file_id=:fileId ",
-                soci::use(internalParams.str()),
-                soci::use(filesize),
-                soci::use(fileId);
-
+                    struct message msg = *iter;
+                    if(iter->msg_errno == 0 && std::string(msg.transfer_status).compare("UPDATE") == 0)
+                        {
+                            fileId = msg.file_id;
+                            filesize = msg.filesize;
+                            internalParams << "nostreams:" << static_cast<int> (msg.nostreams) << ",timeout:" << static_cast<int> (msg.timeout) << ",buffersize:" << static_cast<int> (msg.buffersize);
+                            params = internalParams.str();
+                            stmt.execute(true);
+                        }
+                }
             sql.commit();
 
         }

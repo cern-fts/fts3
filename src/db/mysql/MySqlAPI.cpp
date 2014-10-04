@@ -2977,44 +2977,44 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
             if(currentState == status)
                 return true;
 
-            
-                    sql << " SELECT COUNT(DISTINCT file_index) "
-                        " FROM t_file "
-                        " WHERE job_id = :job_id ",
-                        soci::use(job_id),
-                        soci::into(numberOfFilesInJob);
-              
 
-            
-                    sql << " SELECT COUNT(DISTINCT file_index) "
-                        " FROM t_file "
-                        " WHERE job_id = :jobId "
-                        " 	AND file_state <> 'CANCELED' ", // all the replicas have to be in CANCELED state in order to count a file as canceled
-                        soci::use(job_id),					// so if just one replica is in a different state it is enoght to count it as not canceled
-                        soci::into(numberOfFilesNotCanceled);               
+            sql << " SELECT COUNT(DISTINCT file_index) "
+                " FROM t_file "
+                " WHERE job_id = :job_id ",
+                soci::use(job_id),
+                soci::into(numberOfFilesInJob);
+
+
+
+            sql << " SELECT COUNT(DISTINCT file_index) "
+                " FROM t_file "
+                " WHERE job_id = :jobId "
+                " 	AND file_state <> 'CANCELED' ", // all the replicas have to be in CANCELED state in order to count a file as canceled
+                soci::use(job_id),					// so if just one replica is in a different state it is enoght to count it as not canceled
+                soci::into(numberOfFilesNotCanceled);
 
 
             // number of files that were canceled
             numberOfFilesCanceled = numberOfFilesInJob - numberOfFilesNotCanceled;
 
-          
-                    // number of files that were finished
-                    sql << " SELECT COUNT(DISTINCT file_index) "
-                        " FROM t_file "
-                        " WHERE job_id = :jobId "
-                        "	AND file_state = 'FINISHED' ", // at least one replica has to be in FINISH state in order to count the file as finished
-                        soci::use(job_id),
-                        soci::into(numberOfFilesFinished);
-             
-                    // number of files that were not canceled nor failed
-                    sql << " SELECT COUNT(DISTINCT file_index) "
-                        " FROM t_file "
-                        " WHERE job_id = :jobId "
-                        " 	AND file_state <> 'CANCELED' " // for not canceled files see above
-                        " 	AND file_state <> 'FAILED' ",  // all the replicas have to be either in CANCELED or FAILED state in order to count
-                        soci::use(job_id),				   // a files as failed so if just one replica is not in CANCEL neither in FAILED state
-                        soci::into(numberOfFilesNotCanceledNorFailed);
-              
+
+            // number of files that were finished
+            sql << " SELECT COUNT(DISTINCT file_index) "
+                " FROM t_file "
+                " WHERE job_id = :jobId "
+                "	AND file_state = 'FINISHED' ", // at least one replica has to be in FINISH state in order to count the file as finished
+                soci::use(job_id),
+                soci::into(numberOfFilesFinished);
+
+            // number of files that were not canceled nor failed
+            sql << " SELECT COUNT(DISTINCT file_index) "
+                " FROM t_file "
+                " WHERE job_id = :jobId "
+                " 	AND file_state <> 'CANCELED' " // for not canceled files see above
+                " 	AND file_state <> 'FAILED' ",  // all the replicas have to be either in CANCELED or FAILED state in order to count
+                soci::use(job_id),				   // a files as failed so if just one replica is not in CANCEL neither in FAILED state
+                soci::into(numberOfFilesNotCanceledNorFailed);
+
             // number of files that failed
             numberOfFilesFailed = numberOfFilesInJob - numberOfFilesNotCanceledNorFailed - numberOfFilesCanceled;
 
@@ -7276,23 +7276,44 @@ void MySqlAPI::setMaxStageOp(const std::string& se, const std::string& vo, int v
         }
 }
 
-void MySqlAPI::updateProtocol(const std::string& /*jobId*/, int fileId, int nostreams, int timeout, int buffersize, double filesize)
+void MySqlAPI::updateProtocol(std::vector<struct message>& messages)
 {
     soci::session sql(*connectionPool);
 
     std::stringstream internalParams;
-    internalParams << "nostreams:" << nostreams << ",timeout:" << timeout << ",buffersize:" << buffersize;
+    double filesize = 0;
+    int fileId = 0;
+    std::string params;
+
+    soci::statement stmt = (
+                               sql.prepare << "UPDATE t_file set INTERNAL_FILE_PARAMS=:1, FILESIZE=:2 where file_id=:fileId ",
+                               soci::use(params),
+                               soci::use(filesize),
+                               soci::use(fileId));
 
     try
         {
+
+
+
             sql.begin();
 
-            sql <<
-                " UPDATE t_file set INTERNAL_FILE_PARAMS=:1, FILESIZE=:2 where file_id=:fileId ",
-                soci::use(internalParams.str()),
-                soci::use(filesize),
-                soci::use(fileId);
+            std::vector<struct message>::const_iterator iter;
+            for (iter = messages.begin(); iter != messages.end(); ++iter)
+                {
+                    internalParams.str(std::string());
+                    internalParams.clear();
 
+                    struct message msg = *iter;
+                    if(iter->msg_errno == 0 && std::string(msg.transfer_status).compare("UPDATE") == 0)
+                        {
+                            fileId = msg.file_id;
+                            filesize = msg.filesize;
+                            internalParams << "nostreams:" << static_cast<int> (msg.nostreams) << ",timeout:" << static_cast<int> (msg.timeout) << ",buffersize:" << static_cast<int> (msg.buffersize);
+                            params = internalParams.str();
+                            stmt.execute(true);
+                        }
+                }
             sql.commit();
 
         }
@@ -7306,13 +7327,25 @@ void MySqlAPI::updateProtocol(const std::string& /*jobId*/, int fileId, int nost
                 {
                     sql.begin();
 
-                    sql <<
-                        " UPDATE t_file set INTERNAL_FILE_PARAMS=:1, FILESIZE=:2 where file_id=:fileId ",
-                        soci::use(internalParams.str()),
-                        soci::use(filesize),
-                        soci::use(fileId);
+                    std::vector<struct message>::const_iterator iter;
+                    for (iter = messages.begin(); iter != messages.end(); ++iter)
+                        {
+                            internalParams.str(std::string());
+                            internalParams.clear();
 
+                            struct message msg = *iter;
+                            if(iter->msg_errno == 0 && std::string(msg.transfer_status).compare("UPDATE") == 0)
+                                {
+
+                                    fileId = msg.file_id;
+                                    filesize = msg.filesize;
+                                    internalParams << "nostreams:" << static_cast<int> (msg.nostreams) << ",timeout:" << static_cast<int> (msg.timeout) << ",buffersize:" << static_cast<int> (msg.buffersize);
+                                    params = internalParams.str();
+                                    stmt.execute(true);
+                                }
+                        }
                     sql.commit();
+
                 }
             catch (std::exception& e)
                 {
@@ -7324,8 +7357,6 @@ void MySqlAPI::updateProtocol(const std::string& /*jobId*/, int fileId, int nost
                     sql.rollback();
                     throw Err_Custom(std::string(__func__) + ": Caught exception " );
                 }
-
-
         }
     catch (...)
         {
@@ -7337,13 +7368,25 @@ void MySqlAPI::updateProtocol(const std::string& /*jobId*/, int fileId, int nost
                 {
                     sql.begin();
 
-                    sql <<
-                        " UPDATE t_file set INTERNAL_FILE_PARAMS=:1, FILESIZE=:2 where file_id=:fileId ",
-                        soci::use(internalParams.str()),
-                        soci::use(filesize),
-                        soci::use(fileId);
+                    std::vector<struct message>::const_iterator iter;
+                    for (iter = messages.begin(); iter != messages.end(); ++iter)
+                        {
+                            internalParams.str(std::string());
+                            internalParams.clear();
 
+                            struct message msg = *iter;
+                            if(iter->msg_errno == 0 && std::string(msg.transfer_status).compare("UPDATE") == 0)
+                                {
+
+                                    fileId = msg.file_id;
+                                    filesize = msg.filesize;
+                                    internalParams << "nostreams:" << static_cast<int> (msg.nostreams) << ",timeout:" << static_cast<int> (msg.timeout) << ",buffersize:" << static_cast<int> (msg.buffersize);
+                                    params = internalParams.str();
+                                    stmt.execute(true);
+                                }
+                        }
                     sql.commit();
+
                 }
             catch (std::exception& e)
                 {
