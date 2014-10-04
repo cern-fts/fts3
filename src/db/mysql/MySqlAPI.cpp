@@ -1572,9 +1572,9 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
             throw Err_Custom("Session reuse (-r) can't be used with multiple replicas or multi-hop jobs!");
         }
 
-    if( (bringOnline > 0 || copyPinLifeTime > 0) && (mreplica || mhop))
+    if( (bringOnline > 0 || copyPinLifeTime > 0) && (mreplica || mhop || reuse == "Y"))
         {
-            throw Err_Custom("bringOnline or copyPinLifeTime can't be used with multiple replicas or multi-hop jobs!");
+            throw Err_Custom("bringOnline or copyPinLifeTime can't be used with multiple replicas or multi-hop jobs or Y flag (session reuse)!");
         }
 
     if(mhop) //since H is not passed when plain text submission (e.g. glite client) we need to set into DB
@@ -1691,10 +1691,10 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
                     	H = multi-hop
                     	R = replica
                     */
-		    if(bringOnline > 0 || copyPinLifeTime > 0)
-		        {
-			  hashedId = hashedId;   //for convenience	
-			}
+                    if(bringOnline > 0 || copyPinLifeTime > 0)
+                        {
+                            hashedId = hashedId;   //for convenience
+                        }
                     else if (mreplica)
                         {
                             fileIndex = 0;
@@ -2965,6 +2965,7 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
                         soci::use(pid),soci::use(hostname),soci::into(job_id);
                 }
 
+
             soci::statement stmt1 = (
                                         sql.prepare << " SELECT job_state, reuse_job from t_job  "
                                         " WHERE job_id = :job_id ",
@@ -2976,52 +2977,91 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
             if(currentState == status)
                 return true;
 
-            // total number of file in the job
-            soci::statement stmt2 = (
-                                        sql.prepare << " SELECT COUNT(DISTINCT file_index) "
-                                        " FROM t_file "
-                                        " WHERE job_id = :job_id ",
-                                        soci::use(job_id),
-                                        soci::into(numberOfFilesInJob));
-            stmt2.execute(true);
-
+            if(reuseFlag == "R")
+                {
+                    sql << " SELECT COUNT(DISTINCT file_index) "
+                        " FROM t_file "
+                        " WHERE job_id = :job_id ",
+                        soci::use(job_id),
+                        soci::into(numberOfFilesInJob);
+                }
+            else
+                {
+                    sql << " SELECT COUNT(*) "
+                        " FROM t_file "
+                        " WHERE job_id = :job_id ",
+                        soci::use(job_id),
+                        soci::into(numberOfFilesInJob);
+                }
 
             // number of files that were not canceled
-            soci::statement stmt3 = (
-                                        sql.prepare << " SELECT COUNT(DISTINCT file_index) "
-                                        " FROM t_file "
-                                        " WHERE job_id = :jobId "
-                                        " 	AND file_state <> 'CANCELED' ", // all the replicas have to be in CANCELED state in order to count a file as canceled
-                                        soci::use(job_id),					// so if just one replica is in a different state it is enoght to count it as not canceled
-                                        soci::into(numberOfFilesNotCanceled));
-            stmt3.execute(true);
+            if(reuseFlag == "R")
+                {
+                    sql << " SELECT COUNT(DISTINCT file_index) "
+                        " FROM t_file "
+                        " WHERE job_id = :jobId "
+                        " 	AND file_state <> 'CANCELED' ", // all the replicas have to be in CANCELED state in order to count a file as canceled
+                        soci::use(job_id),					// so if just one replica is in a different state it is enoght to count it as not canceled
+                        soci::into(numberOfFilesNotCanceled);
+                }
+            else
+                {
+                    sql << " SELECT COUNT(*) "
+                        " FROM t_file "
+                        " WHERE job_id = :jobId "
+                        " 	AND file_state <> 'CANCELED' ", // all the replicas have to be in CANCELED state in order to count a file as canceled
+                        soci::use(job_id),					// so if just one replica is in a different state it is enoght to count it as not canceled
+                        soci::into(numberOfFilesNotCanceled);
+                }
 
 
 
             // number of files that were canceled
             numberOfFilesCanceled = numberOfFilesInJob - numberOfFilesNotCanceled;
 
-            // number of files that were finished
-            soci::statement stmt4 = (
-                                        sql.prepare << " SELECT COUNT(DISTINCT file_index) "
-                                        " FROM t_file "
-                                        " WHERE job_id = :jobId "
-                                        "	AND file_state = 'FINISHED' ", // at least one replica has to be in FINISH state in order to count the file as finished
-                                        soci::use(job_id),
-                                        soci::into(numberOfFilesFinished));
-            stmt4.execute(true);
+            if(reuseFlag == "R")
+                {
+                    // number of files that were finished
+                    sql << " SELECT COUNT(DISTINCT file_index) "
+                        " FROM t_file "
+                        " WHERE job_id = :jobId "
+                        "	AND file_state = 'FINISHED' ", // at least one replica has to be in FINISH state in order to count the file as finished
+                        soci::use(job_id),
+                        soci::into(numberOfFilesFinished);
+                }
+            else
+                {
+                    // number of files that were finished
+                    sql << " SELECT COUNT(*) "
+                        " FROM t_file "
+                        " WHERE job_id = :jobId "
+                        "	AND file_state = 'FINISHED' ", // at least one replica has to be in FINISH state in order to count the file as finished
+                        soci::use(job_id),
+                        soci::into(numberOfFilesFinished);
+                }
 
-
-            // number of files that were not canceled nor failed
-            soci::statement stmt5 = (
-                                        sql.prepare << " SELECT COUNT(DISTINCT file_index) "
-                                        " FROM t_file "
-                                        " WHERE job_id = :jobId "
-                                        " 	AND file_state <> 'CANCELED' " // for not canceled files see above
-                                        " 	AND file_state <> 'FAILED' ",  // all the replicas have to be either in CANCELED or FAILED state in order to count
-                                        soci::use(job_id),				   // a files as failed so if just one replica is not in CANCEL neither in FAILED state
-                                        soci::into(numberOfFilesNotCanceledNorFailed));
-            stmt5.execute(true);
+            if(reuseFlag == "R")
+                {
+                    // number of files that were not canceled nor failed
+                    sql << " SELECT COUNT(DISTINCT file_index) "
+                        " FROM t_file "
+                        " WHERE job_id = :jobId "
+                        " 	AND file_state <> 'CANCELED' " // for not canceled files see above
+                        " 	AND file_state <> 'FAILED' ",  // all the replicas have to be either in CANCELED or FAILED state in order to count
+                        soci::use(job_id),				   // a files as failed so if just one replica is not in CANCEL neither in FAILED state
+                        soci::into(numberOfFilesNotCanceledNorFailed);
+                }
+            else
+                {
+                    // number of files that were not canceled nor failed
+                    sql << " SELECT COUNT(*) "
+                        " FROM t_file "
+                        " WHERE job_id = :jobId "
+                        " 	AND file_state <> 'CANCELED' " // for not canceled files see above
+                        " 	AND file_state <> 'FAILED' ",  // all the replicas have to be either in CANCELED or FAILED state in order to count
+                        soci::use(job_id),				   // a files as failed so if just one replica is not in CANCEL neither in FAILED state
+                        soci::into(numberOfFilesNotCanceledNorFailed);
+                }
 
             // number of files that failed
             numberOfFilesFailed = numberOfFilesInJob - numberOfFilesNotCanceledNorFailed - numberOfFilesCanceled;
@@ -11854,12 +11894,12 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                                     int file_id = row.get<int>("file_id");
                                     int copy_pin_lifetime = row.get<int>("copy_pin_lifetime",0);
                                     int bring_online = row.get<int>("bring_online",0);
-				    
-				    if(copy_pin_lifetime > 0 && bring_online <= 0)
-				    	bring_online = 28800;
-				    else if (bring_online > 0 && copy_pin_lifetime <= 0)
-				    	copy_pin_lifetime = 28800;
-				    
+
+                                    if(copy_pin_lifetime > 0 && bring_online <= 0)
+                                        bring_online = 28800;
+                                    else if (bring_online > 0 && copy_pin_lifetime <= 0)
+                                        copy_pin_lifetime = 28800;
+
                                     user_dn = row.get<std::string>("user_dn");
                                     std::string cred_id = row.get<std::string>("cred_id");
                                     std::string source_space_token = row.get<std::string>("source_space_token","");
@@ -11985,12 +12025,12 @@ void MySqlAPI::getAlreadyStartedStaging(std::vector< boost::tuple<std::string, s
                     int file_id = row.get<int>("file_id");
                     int copy_pin_lifetime = row.get<int>("copy_pin_lifetime",0);
                     int bring_online = row.get<int>("bring_online",0);
-		    
-		    if(copy_pin_lifetime > 0 && bring_online <= 0)
-			  	bring_online = 28800;
-		    else if (bring_online > 0 && copy_pin_lifetime <= 0)
-			   	copy_pin_lifetime = 28800;				    
-		    
+
+                    if(copy_pin_lifetime > 0 && bring_online <= 0)
+                        bring_online = 28800;
+                    else if (bring_online > 0 && copy_pin_lifetime <= 0)
+                        copy_pin_lifetime = 28800;
+
                     std::string user_dn = row.get<std::string>("user_dn");
                     std::string cred_id = row.get<std::string>("cred_id");
                     std::string source_space_token = row.get<std::string>("source_space_token","");
@@ -12098,14 +12138,14 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost
 
                             if(dbState == "SUBMITTED")
                                 {
-				    unsigned hashedId = getHashedId();
-				    
+                                    unsigned hashedId = getHashedId();
+
                                     sql <<
                                         " UPDATE t_file "
                                         " SET hashed_id = :hashed_id, staging_finished=sys_extract_utc(systimestamp), job_finished=NULL, finish_time=NULL, start_time=NULL, transferhost=NULL, reason = '', file_state = :fileState "
                                         " WHERE "
                                         "	file_id = :fileId ",
-					soci::use(hashedId),
+                                        soci::use(hashedId),
                                         soci::use(dbState),
                                         soci::use(file_id)
                                         ;
@@ -12403,8 +12443,8 @@ bool MySqlAPI::resetForRetryStaging(soci::session& sql, int file_id, const std::
                                     time_t now = getUTC(retry_delay);
                                     struct tm tTime;
                                     gmtime_r(&now, &tTime);
-				    
-				    sql.begin();
+
+                                    sql.begin();
 
                                     sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'STAGING', start_time=NULL, staging_start=NULL, transferHost=NULL, t_log_file=NULL,"
                                         " t_log_file_debug=NULL, throughput = 0, current_failures = 1 "
@@ -12412,8 +12452,8 @@ bool MySqlAPI::resetForRetryStaging(soci::session& sql, int file_id, const std::
                                         soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
 
                                     willBeRetried = true;
-				    
-				    sql.commit();				    
+
+                                    sql.commit();
                                 }
                             else
                                 {
@@ -12421,8 +12461,8 @@ bool MySqlAPI::resetForRetryStaging(soci::session& sql, int file_id, const std::
                                     time_t now = getUTC(default_retry_delay);
                                     struct tm tTime;
                                     gmtime_r(&now, &tTime);
-				    
-				    sql.begin();
+
+                                    sql.begin();
 
                                     sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'STAGING', staging_start=NULL, start_time=NULL, transferHost=NULL, "
                                         " t_log_file=NULL, t_log_file_debug=NULL, throughput = 0,  current_failures = 1 "
@@ -12430,19 +12470,19 @@ bool MySqlAPI::resetForRetryStaging(soci::session& sql, int file_id, const std::
                                         soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
 
                                     willBeRetried = true;
-				    
-				    sql.commit();
+
+                                    sql.commit();
                                 }
                         }
                 }
             catch (std::exception& e)
                 {
-		    sql.rollback();
+                    sql.rollback();
                     throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
                 }
             catch (...)
                 {
-		    sql.rollback();		
+                    sql.rollback();
                     throw Err_Custom(std::string(__func__) + ": Caught exception " );
                 }
         }
@@ -12505,16 +12545,16 @@ bool MySqlAPI::resetForRetryDelete(soci::session& sql, int file_id, const std::s
                                     time_t now = getUTC(retry_delay);
                                     struct tm tTime;
                                     gmtime_r(&now, &tTime);
-				    
-				    sql.begin();
+
+                                    sql.begin();
 
                                     sql << "UPDATE t_dm SET retry_timestamp=:1, retry = :retry, file_state = 'DELETE', start_time=NULL, dmHost=NULL "
                                         " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','DELETE','FAILED','CANCELED')",
                                         soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
 
                                     willBeRetried = true;
-				    
-				    sql.commit();				    
+
+                                    sql.commit();
                                 }
                             else
                                 {
@@ -12522,16 +12562,16 @@ bool MySqlAPI::resetForRetryDelete(soci::session& sql, int file_id, const std::s
                                     time_t now = getUTC(default_retry_delay);
                                     struct tm tTime;
                                     gmtime_r(&now, &tTime);
-				    
-				    sql.begin();				    
+
+                                    sql.begin();
 
                                     sql << "UPDATE t_dm SET retry_timestamp=:1, retry = :retry, file_state = 'DELETE', start_time=NULL, dmHost=NULL  "
                                         " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
                                         soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
 
                                     willBeRetried = true;
-				    
-				    sql.commit();				    
+
+                                    sql.commit();
                                 }
                         }
 
@@ -12539,12 +12579,12 @@ bool MySqlAPI::resetForRetryDelete(soci::session& sql, int file_id, const std::s
                 }
             catch (std::exception& e)
                 {
-		    sql.rollback();
+                    sql.rollback();
                     throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
                 }
             catch (...)
                 {
-		    sql.rollback();		
+                    sql.rollback();
                     throw Err_Custom(std::string(__func__) + ": Caught exception " );
                 }
         }
