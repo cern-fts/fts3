@@ -4587,13 +4587,6 @@ bool MySqlAPI::updateOptimizer()
                             int maxDestination = 0;
                             getMaxActive(sql, maxSource, maxDestination, source_hostname, destin_hostname);
 
-                            if( (activeSource > maxSource || activeDestination > maxDestination))
-                                {
-                                    updateOptimizerEvolution(sql, source_hostname, destin_hostname, maxActive, throughput, ratioSuccessFailure, 1, bandwidthIn);
-
-                                    continue;
-                                }
-
                             //ensure minumin per link and do not overflow before taking sample
                             if(active == maxActive)
                                 {
@@ -4604,6 +4597,29 @@ bool MySqlAPI::updateOptimizer()
                                     updateOptimizerEvolution(sql, source_hostname, destin_hostname, maxActive, throughput, ratioSuccessFailure, 14, bandwidthIn);
                                     continue;
                                 }
+
+                            if( (activeSource > maxSource || activeDestination > maxDestination))
+                                {
+                                    if(ratioSuccessFailure >= MED_SUCCESS_RATE )
+				    {
+                                    	updateOptimizerEvolution(sql, source_hostname, destin_hostname, maxActive, throughput, ratioSuccessFailure, 1, bandwidthIn);
+                                    	continue;
+				    }
+				    else
+				    {
+                                         sql.begin();
+					 active = ((maxActive - 2) < highDefault)? highDefault: (maxActive - 2);
+                                         pathFollowed = 13;
+                                         ema = throughputEMA;
+                                         stmt10.execute(true);
+				 	 sql.commit();
+
+				         updateOptimizerEvolution(sql, source_hostname, destin_hostname, maxActive, throughput, ratioSuccessFailure, 1, bandwidthIn);
+			                 continue;
+				    }
+                                }
+
+ 
 
                             sql.begin();
 
