@@ -7891,7 +7891,7 @@ void OracleAPI::checkSanityState()
                                     soci::rowset<soci::row>::const_iterator iRep;
                                     for (iRep = rsReplica.begin(); iRep != rsReplica.end(); ++iRep)
                                         {
-                                            std::string file_state = iRep->get<std::string>("file_state");
+                                            std::string file_state = iRep->get<std::string>("FILE_STATE");
                                             //long long countStates = iRep->get<long long>("COUNT(file_state)",0);
 
                                            if(job_state == "CANCELED")
@@ -7996,7 +7996,7 @@ void OracleAPI::checkSanityState()
                                     soci::rowset<soci::row>::const_iterator iRep;
                                     for (iRep = rsReplica.begin(); iRep != rsReplica.end(); ++iRep)
                                         {
-                                            std::string file_state = iRep->get<std::string>("file_state");
+                                            std::string file_state = iRep->get<std::string>("FILE_STATE");
 
                                             if(file_state == "FINISHED") //if at least one is finished, reset the rest
                                                 {
