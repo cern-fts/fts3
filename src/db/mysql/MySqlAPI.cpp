@@ -8471,7 +8471,7 @@ void MySqlAPI::checkSanityState()
 	                   sql << "select count(*), count(distinct file_index) from t_file where job_id=:job_id",
 	                	soci::use(job_id), soci::into(replicaJobCountAll), soci::into(replicaJob);		              
 
-                            if(numberOfFiles > 0 && mreplica != "R")
+                            if(numberOfFiles > 0 && (mreplica == "N" || mreplica == "Y" || mreplica == "H") )
                                 {
                                     stmt8.execute(true);
                                     stmt9.execute(true);
@@ -8508,6 +8508,10 @@ void MySqlAPI::checkSanityState()
                       
                             if(mreplica == "R" ||  (replicaJobCountAll > 1 && replicaJob == 1))
                                 {
+				    if(mreplica != "R")
+				    {
+					sql << "UPDATE t_job set reuse_job='R' where job_id=:job_id", soci::use(job_id);
+				    }
                                     std::string job_state;
                                     soci::rowset<soci::row> rsReplica = (
                                                                             sql.prepare <<
@@ -8522,6 +8526,14 @@ void MySqlAPI::checkSanityState()
                                         {
                                             std::string file_state = iRep->get<std::string>("file_state");
                                             //long long countStates = iRep->get<long long>("COUNT(file_state)",0);
+                                            if(job_state == "CANCELED")
+					    {
+                                                    sql << "UPDATE t_file SET "
+                                                        "    file_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+                                                        "    reason = 'Job canceled by the user' "
+                                                        "    WHERE file_state in ('ACTIVE','SUBMITTED') and job_id = :jobId", soci::use(job_id);
+						break;
+				            }
 
                                             if(file_state == "FINISHED") //if at least one is finished, reset the rest
                                                 {
