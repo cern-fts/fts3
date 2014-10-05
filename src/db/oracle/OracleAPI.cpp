@@ -1184,10 +1184,12 @@ void OracleAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId
 
             //check if the file belongs to a multiple replica job
             std::string mreplica;
-            sql << "select reuse_job from t_job where job_id=:job_id", soci::use(jobId), soci::into(mreplica);
+            std::string job_state;
+            sql << "select reuse_job, job_state from t_job where job_id=:job_id",
+                soci::use(jobId), soci::into(mreplica), soci::into(job_state);
 
             //this is a m-replica job
-            if(mreplica == "R")
+            if(mreplica == "R" && job_state != "CANCELED" && job_state != "FAILED")
                 {
                     //check if it's auto or manual
                     sql << " select selection_strategy, vo_name from t_file where file_id = :file_id",
