@@ -7737,11 +7737,11 @@ void OracleAPI::checkSanityState()
     unsigned int numberOfFilesRevert = 0;
     unsigned int numberOfFilesDelete = 0;
 
+    std::string mreplica;
 
     std::string canceledMessage = "Transfer canceled by the user";
     std::string failed = "One or more files failed. Please have a look at the details for more information";
     std::string job_id;
-    std::string mreplica;
 
     try
         {
@@ -7757,29 +7757,29 @@ void OracleAPI::checkSanityState()
                     soci::statement stmt2 = (sql.prepare << "UPDATE t_job SET "
                                              "    job_state = 'CANCELED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), "
                                              "    reason = :canceledMessage "
-                                             "    WHERE job_id = :jobId ", soci::use(canceledMessage), soci::use(job_id));
+                                             "    WHERE job_id = :jobId and  job_state <> 'CANCELED' ", soci::use(canceledMessage), soci::use(job_id));
 
                     soci::statement stmt3 = (sql.prepare << "UPDATE t_job SET "
                                              "    job_state = 'FINISHED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp) "
-                                             "    WHERE job_id = :jobId", soci::use(job_id));
+                                             "    WHERE job_id = :jobId and  job_state <> 'FINISHED'  ", soci::use(job_id));
 
                     soci::statement stmt4 = (sql.prepare << "UPDATE t_job SET "
                                              "    job_state = 'FAILED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), "
                                              "    reason = :failed "
-                                             "    WHERE job_id = :jobId", soci::use(failed), soci::use(job_id));
+                                             "    WHERE job_id = :jobId and  job_state <> 'FAILED' ", soci::use(failed), soci::use(job_id));
 
 
                     soci::statement stmt5 = (sql.prepare << "UPDATE t_job SET "
                                              "    job_state = 'FINISHEDDIRTY', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), "
                                              "    reason = :failed "
-                                             "    WHERE job_id = :jobId", soci::use(failed), soci::use(job_id));
+                                             "    WHERE job_id = :jobId and  job_state <> 'FINISHEDDIRTY'", soci::use(failed), soci::use(job_id));
 
                     soci::statement stmt6 = (sql.prepare << "SELECT COUNT(*) FROM t_file where job_id=:jobId AND file_state in ('ACTIVE','SUBMITTED','STAGING','STARTED') ", soci::use(job_id), soci::into(numberOfFilesRevert));
 
                     soci::statement stmt7 = (sql.prepare << "UPDATE t_file SET "
                                              "    file_state = 'FAILED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), "
                                              "    reason = 'Force failure due to file state inconsistency' "
-                                             "    WHERE file_state in ('ACTIVE','SUBMITTED','STAGING','STARTED') and job_id = :jobId", soci::use(job_id));
+                                             "    WHERE file_state in ('ACTIVE','SUBMITTED','STAGING','STARTED') and job_id = :jobId ", soci::use(job_id));
 
                     soci::statement stmt8 = (sql.prepare << " select count(*)  "
                                              " from t_file "
@@ -7791,30 +7791,14 @@ void OracleAPI::checkSanityState()
                     soci::statement stmt9 = (sql.prepare << " select count(distinct f1.file_index) "
                                              " from t_file f1 "
                                              " where f1.job_id = :jobId "
-                                             "	and f1.file_state = 'CANCELED' "
-                                             "	and NOT EXISTS ( "
-                                             "		select null "
-                                             "		from t_file f2 "
-                                             "		where f2.job_id = :jobId "
-                                             "			and f1.file_index = f2.file_index "
-                                             "			and f2.file_state <> 'CANCELED' "
-                                             " 	) ",
-                                             soci::use(job_id),
+                                             "	and f1.file_state = 'CANCELED' ",
                                              soci::use(job_id),
                                              soci::into(allCanceled));
 
                     soci::statement stmt10 = (sql.prepare << " select count(distinct f1.file_index) "
                                               " from t_file f1 "
                                               " where f1.job_id = :jobId "
-                                              "	and f1.file_state = 'FAILED' "
-                                              "	and NOT EXISTS ( "
-                                              "		select null "
-                                              "		from t_file f2 "
-                                              "		where f2.job_id = :jobId "
-                                              "			and f1.file_index = f2.file_index "
-                                              "			and f2.file_state NOT IN ('CANCELED', 'FAILED') "
-                                              " 	) ",
-                                              soci::use(job_id),
+                                              "	and f1.file_state = 'FAILED' ",
                                               soci::use(job_id),
                                               soci::into(allFailed));
 
@@ -7845,8 +7829,16 @@ void OracleAPI::checkSanityState()
 
                             stmt1.execute(true);
 
+			    //check for m-replicas job
+                            stmt_m_replica.execute(true);
 
-                            if(numberOfFiles > 0)
+                           //check if the file belongs to a multiple replica job
+	                   long long replicaJob = 0;
+	                   long long replicaJobCountAll = 0;
+	                   sql << "select count(*), count(distinct file_index) from t_file where job_id=:job_id",
+	                	soci::use(job_id), soci::into(replicaJobCountAll), soci::into(replicaJob);		              
+
+                            if(numberOfFiles > 0 && (mreplica == "N" || mreplica == "Y" || mreplica == "H") )
                                 {
                                     stmt8.execute(true);
                                     stmt9.execute(true);
@@ -7880,12 +7872,13 @@ void OracleAPI::checkSanityState()
                                                 }
                                         }
                                 }
-
-                            //check for m-replicas sanity
-                            stmt_m_replica.execute(true);
-                            //this is a m-replica job
-                            if(mreplica == "R")
+                      
+                            if(mreplica == "R" ||  (replicaJobCountAll > 1 && replicaJob == 1))
                                 {
+				    if(mreplica != "R")
+				    {
+					sql << "UPDATE t_job set reuse_job='R' where job_id=:job_id", soci::use(job_id);
+				    }
                                     std::string job_state;
                                     soci::rowset<soci::row> rsReplica = (
                                                                             sql.prepare <<
@@ -7898,7 +7891,17 @@ void OracleAPI::checkSanityState()
                                     soci::rowset<soci::row>::const_iterator iRep;
                                     for (iRep = rsReplica.begin(); iRep != rsReplica.end(); ++iRep)
                                         {
-                                            std::string file_state = iRep->get<std::string>("FILE_STATE");
+                                            std::string file_state = iRep->get<std::string>("file_state");
+                                            //long long countStates = iRep->get<long long>("COUNT(file_state)",0);
+
+                                           if(job_state == "CANCELED")
+					    {
+                                                    sql << "UPDATE t_file SET "
+                                                        "    file_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+                                                        "    reason = 'Job canceled by the user' "
+                                                        "    WHERE file_state in ('ACTIVE','SUBMITTED') and job_id = :jobId", soci::use(job_id);
+						break;
+				            }
 
                                             if(file_state == "FINISHED") //if at least one is finished, reset the rest
                                                 {
@@ -7911,6 +7914,7 @@ void OracleAPI::checkSanityState()
                                                         {
                                                             stmt3.execute(true); //set the job_state to finished if at least one finished
                                                         }
+                                                    break;
                                                 }
                                         }
 
@@ -7927,28 +7931,11 @@ void OracleAPI::checkSanityState()
                                                     sql << " SELECT count(*) from t_file where file_state = 'NOT_USED' and job_id = :job_id",
                                                         soci::use(job_id), soci::into(countNotUsed);
                                                     if(countNotUsed > 0)
-                                                        {
-                                                            bool found = false;
-                                                            std::vector<std::string>::iterator it2;
-                                                            for(it2 = sanityVector.begin(); it2 != sanityVector.end();)
-                                                                {
-                                                                    if(*it2 == job_id)
-                                                                        {
-                                                                            sql << "UPDATE t_file SET "
+                                                        {                                                           
+                                                            sql << "UPDATE t_file SET "
                                                                                 "    file_state = 'SUBMITTED', job_finished = NULL, finish_time = NULL, "
                                                                                 "    reason = '' "
-                                                                                "    WHERE file_state = 'NOT_USED' and job_id = :jobId and ROWNUM = 1", soci::use(job_id);
-                                                                            it2 = sanityVector.erase(it2);
-                                                                            found = true;
-                                                                        }
-                                                                    else
-                                                                        {
-                                                                            ++it2;
-                                                                        }
-                                                                }
-
-                                                            if(!found)
-                                                                sanityVector.push_back(job_id);
+                                                                                "    WHERE file_state = 'NOT_USED' and job_id = :jobId AND file_id = ( select min(file_id) from t_file where file_state = 'NOT_USED' and job_id=:job_id )", soci::use(job_id), soci::use(job_id);
                                                         }
                                                 }
                                         }
@@ -7961,36 +7948,96 @@ void OracleAPI::checkSanityState()
                     //special case for canceled
                     soci::rowset<std::string> rs2 = (
                                                         sql.prepare <<
-                                                        " select  job_id from t_job where job_finished > (sys_extract_utc(systimestamp) - interval '12' HOUR )  "
+                                                        " select  j.job_id from t_job j inner join t_file f on (j.job_id = f.job_id) where j.job_finished >= (sys_extract_utc(systimestamp) - interval '24' HOUR ) and f.file_state in ('SUBMITTED','ACTIVE') "
                                                     );
+
 
                     sql.begin();
                     for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
                         {
                             job_id = (*i2);
-                            numberOfFilesRevert = 0;
-                            numberOfFilesDelete = 0;
+                            stmt7.execute(true);
+                        }
+                    sql.commit();
 
-                            stmt6.execute(true);
-                            stmtDel1.execute(true);
+                   soci::rowset<std::string> rs444 = (
+                                                        sql.prepare <<
+                                                        " select  j.job_id from t_job j where j.job_finished >= (sys_extract_utc(systimestamp) - interval '24' HOUR ) and job_state='FINISHED' and reuse_job='R' "
+                                                    );
 
-                            if(numberOfFilesRevert > 0)
+                    //multiple replicas with finished state
+                    sql.begin();
+                    for (soci::rowset<std::string>::const_iterator i444 = rs444.begin(); i444 != rs444.end(); ++i444)
+                        {
+                            mreplica = std::string("");
+
+                            job_id = (*i444);
+
+                            //check for m-replicas sanity
+                            stmt_m_replica.execute(true);
+
+			   long long replicaJob = 0;
+	                   long long replicaJobCountAll = 0;
+	                   sql << "select count(*), count(distinct file_index) from t_file where job_id=:job_id",
+	                	soci::use(job_id), soci::into(replicaJobCountAll), soci::into(replicaJob);	
+
+                            //this is a m-replica job
+                            if(mreplica == "R" ||  (replicaJobCountAll > 1 && replicaJob == 1))
                                 {
-                                    stmt7.execute(true);
-                                }
-                            if(numberOfFilesDelete > 0)
-                                {
-                                    stmtDel2.execute(true);
+                                    std::string job_state;
+                                    soci::rowset<soci::row> rsReplica = (
+                                                                            sql.prepare <<
+                                                                            " select distinct file_state from t_file where job_id=:job_id  ",
+                                                                            soci::use(job_id)
+                                                                        );
+
+                                    sql << "SELECT job_state from t_job where job_id=:job_id", soci::use(job_id), soci::into(job_state);
+
+                                    soci::rowset<soci::row>::const_iterator iRep;
+                                    for (iRep = rsReplica.begin(); iRep != rsReplica.end(); ++iRep)
+                                        {
+                                            std::string file_state = iRep->get<std::string>("file_state");
+
+                                            if(file_state == "FINISHED") //if at least one is finished, reset the rest
+                                                {
+                                                    sql << "UPDATE t_file SET "
+                                                        "    file_state = 'NOT_USED', job_finished = NULL, finish_time = NULL, "
+                                                        "    reason = '' "
+                                                        "    WHERE file_state in ('ACTIVE','SUBMITTED') and job_id = :jobId", soci::use(job_id);
+
+                                                    if(job_state != "FINISHED")
+                                                        {
+                                                            stmt3.execute(true); //set the job_state to finished if at least one finished
+                                                        }
+                                                    break;
+                                                }
+                                        }
                                 }
                         }
                     sql.commit();
+
+
+                    //now check reverse sanity checks, JOB can't be FINISH,  FINISHEDDIRTY, FAILED is at least one tr is in STARTED/DELETE
+                    soci::rowset<std::string> rs3 = (
+                                                        sql.prepare <<
+                                                        " select  j.job_id from t_job j inner join t_dm f on (j.job_id = f.job_id) where j.job_finished >= (sys_extract_utc(systimestamp) - interval '24' HOUR ) and f.file_state in ('STARTED','DELETE')  "
+                                                    );
+
+                    sql.begin();
+                    for (soci::rowset<std::string>::const_iterator i3 = rs3.begin(); i3 != rs3.end(); ++i3)
+                        {
+                            job_id = (*i3);
+                            stmtDel2.execute(true);
+                        }
+                    sql.commit();
+
 
                     //now check if a host has been offline for more than 120 min and set its transfers to failed
                     soci::rowset<std::string> rsCheckHosts = (
                                 sql.prepare <<
                                 " SELECT hostname "
                                 " FROM t_hosts "
-                                " WHERE beat < (sys_extract_utc(systimestamp) - interval '59' minute) and service_name = 'fts_server' "
+                                " WHERE beat < (sys_extract_utc(systimestamp) - interval '120' MINUTE ) and service_name = 'fts_server' "
                             );
 
                     std::vector<struct message_state> files;
@@ -8006,8 +8053,8 @@ void OracleAPI::checkSanityState()
                                     );
                             for (soci::rowset<soci::row>::const_iterator iCheckHostsActive = rsCheckHostsActive.begin(); iCheckHostsActive != rsCheckHostsActive.end(); ++iCheckHostsActive)
                                 {
-                                    int file_id = static_cast<int>(iCheckHostsActive->get<long long>("FILE_ID"));
-                                    std::string job_id = iCheckHostsActive->get<std::string>("JOB_ID");
+                                    int file_id = iCheckHostsActive->get<int>("file_id");
+                                    std::string job_id = iCheckHostsActive->get<std::string>("job_id");
                                     std::string errorMessage = "Transfer has been forced-canceled because host " + deadHost + " is offline and transfers still assigned to it";
 
                                     updateFileTransferStatusInternal(sql, 0.0, job_id, file_id, "CANCELED", errorMessage, 0, 0, 0, false);
@@ -8028,10 +8075,6 @@ void OracleAPI::checkSanityState()
                                 }
                         }
                 }
-
-
-            if(sanityVector.size() == 10000) //clear the vector to avoid growing too much
-                sanityVector.clear();
         }
     catch (std::exception& e)
         {
