@@ -32,7 +32,7 @@ using namespace FTS3_CONFIG_NAMESPACE;
 namespace db
 {
 
-const int MAX_ACTIVE_PER_LINK = 100;
+const int MAX_ACTIVE_PER_LINK = 180;
 const int MAX_ACTIVE_ENDPOINT_LINK = 250;
 const int MIN_ACTIVE = 2;
 const int DEFAULT_RETRY_DELAY = 120;
