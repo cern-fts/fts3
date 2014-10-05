@@ -717,7 +717,7 @@ void MySqlAPI::getVOPairs(std::vector< boost::tuple<std::string, std::string, st
     try
         {
             soci::rowset<soci::row> rs1 = (sql.prepare <<
-                                           " select  distinct o.source_se, o.dest_se from t_optimize_active o INNER JOIN t_file f ON (o.source_se = f.source_se and  o.dest_se=f.dest_se) where f.file_state = 'SUBMITTED' and f.job_finished is NULL ");
+                                           " select  distinct o.source_se, o.dest_se from t_optimize_active o INNER JOIN t_file f ON (o.source_se = f.source_se and  o.dest_se=f.dest_se) where f.file_state = 'SUBMITTED' and f.job_finished is NULL AND (hashed_id >= :hashStart AND hashed_id <= :hashEnd)",soci::use(hashSegment.start), soci::use(hashSegment.end));
 
             soci::rowset<soci::row> rs2 = (sql.prepare <<
                                            " select distinct vo_name from t_job ");
