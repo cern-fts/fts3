@@ -8534,28 +8534,11 @@ void MySqlAPI::checkSanityState()
                                                     sql << " SELECT count(*) from t_file where file_state = 'NOT_USED' and job_id = :job_id",
                                                         soci::use(job_id), soci::into(countNotUsed);
                                                     if(countNotUsed > 0)
-                                                        {
-                                                            bool found = false;
-                                                            std::vector<std::string>::iterator it2;
-                                                            for(it2 = sanityVector.begin(); it2 != sanityVector.end();)
-                                                                {
-                                                                    if(*it2 == job_id)
-                                                                        {
-                                                                            sql << "UPDATE t_file SET "
+                                                        {                                                           
+                                                            sql << "UPDATE t_file SET "
                                                                                 "    file_state = 'SUBMITTED', job_finished = NULL, finish_time = NULL, "
                                                                                 "    reason = '' "
                                                                                 "    WHERE file_state = 'NOT_USED' and job_id = :jobId LIMIT 1", soci::use(job_id);
-                                                                            it2 = sanityVector.erase(it2);
-                                                                            found = true;
-                                                                        }
-                                                                    else
-                                                                        {
-                                                                            ++it2;
-                                                                        }
-                                                                }
-
-                                                            if(!found)
-                                                                sanityVector.push_back(job_id);
                                                         }
                                                 }
                                         }
@@ -8568,7 +8551,7 @@ void MySqlAPI::checkSanityState()
                     //special case for canceled
                     soci::rowset<std::string> rs2 = (
                                                         sql.prepare <<
-                                                        " select  j.job_id from t_job j inner join t_file f on (j.job_id = f.job_id) where j.job_finished >= (UTC_TIMESTAMP() - interval '12' HOUR ) and f.file_state in ('SUBMITTED','ACTIVE') "
+                                                        " select  j.job_id from t_job j inner join t_file f on (j.job_id = f.job_id) where j.job_finished >= (UTC_TIMESTAMP() - interval '24' HOUR ) and f.file_state in ('SUBMITTED','ACTIVE') "
                                                     );
 
 
@@ -8582,7 +8565,7 @@ void MySqlAPI::checkSanityState()
 
                    soci::rowset<std::string> rs444 = (
                                                         sql.prepare <<
-                                                        " select  j.job_id from t_job j where j.job_finished >= (UTC_TIMESTAMP() - interval '12' HOUR ) and job_state='FINISHED' and reuse_job='R' "
+                                                        " select  j.job_id from t_job j where j.job_finished >= (UTC_TIMESTAMP() - interval '24' HOUR ) and job_state='FINISHED' and reuse_job='R' "
                                                     );
 
                     //multiple replicas with finished state
@@ -8695,10 +8678,6 @@ void MySqlAPI::checkSanityState()
                                 }
                         }
                 }
-
-
-            if(sanityVector.size() == 10000) //clear the vector to avoid growing too much
-                sanityVector.clear();
         }
     catch (std::exception& e)
         {
