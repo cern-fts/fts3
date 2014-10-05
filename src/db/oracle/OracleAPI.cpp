@@ -4189,18 +4189,7 @@ bool OracleAPI::updateOptimizer()
                             int maxDestination = 0;
                             getMaxActive(sql, maxSource, maxDestination, source_hostname, destin_hostname);
 
-                            //ensure minumin per link and do not overflow before taking sample
-                            if(active == maxActive)
-                                {
-                                    //do nothing for now
-                                }
-                            else
-                                {
-                                    updateOptimizerEvolution(sql, source_hostname, destin_hostname, maxActive, throughput, ratioSuccessFailure, 14, bandwidthIn);
-                                    continue;
-                                }
-
-                            if( (activeSource > maxSource || activeDestination > maxDestination))
+                            if( activeSource > maxSource || activeDestination > maxDestination || maxActive >= MAX_ACTIVE_PER_LINK)
                                 {
                                     if(ratioSuccessFailure >= MED_SUCCESS_RATE )
 				    {
@@ -4221,7 +4210,16 @@ bool OracleAPI::updateOptimizer()
 				    }
                                 }
 
-  
+                            //ensure minumin per link and do not overflow before taking sample
+                            if(active == maxActive)
+                                {
+                                    //do nothing for now
+                                }
+                            else
+                                {
+                                    updateOptimizerEvolution(sql, source_hostname, destin_hostname, maxActive, throughput, ratioSuccessFailure, 14, bandwidthIn);
+                                    continue;
+                                }  
 
                             sql.begin();
 
