@@ -8373,22 +8373,22 @@ void MySqlAPI::checkSanityState()
                     soci::statement stmt2 = (sql.prepare << "UPDATE t_job SET "
                                              "    job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
                                              "    reason = :canceledMessage "
-                                             "    WHERE job_id = :jobId ", soci::use(canceledMessage), soci::use(job_id));
+                                             "    WHERE job_id = :jobId and  job_state <> 'CANCELED' ", soci::use(canceledMessage), soci::use(job_id));
 
                     soci::statement stmt3 = (sql.prepare << "UPDATE t_job SET "
                                              "    job_state = 'FINISHED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP() "
-                                             "    WHERE job_id = :jobId", soci::use(job_id));
+                                             "    WHERE job_id = :jobId and  job_state <> 'FINISHED'  ", soci::use(job_id));
 
                     soci::statement stmt4 = (sql.prepare << "UPDATE t_job SET "
                                              "    job_state = 'FAILED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
                                              "    reason = :failed "
-                                             "    WHERE job_id = :jobId", soci::use(failed), soci::use(job_id));
+                                             "    WHERE job_id = :jobId and  job_state <> 'FAILED' ", soci::use(failed), soci::use(job_id));
 
 
                     soci::statement stmt5 = (sql.prepare << "UPDATE t_job SET "
                                              "    job_state = 'FINISHEDDIRTY', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
                                              "    reason = :failed "
-                                             "    WHERE job_id = :jobId", soci::use(failed), soci::use(job_id));
+                                             "    WHERE job_id = :jobId and  job_state <> 'FINISHEDDIRTY'", soci::use(failed), soci::use(job_id));
 
                     soci::statement stmt6 = (sql.prepare << "SELECT COUNT(*) FROM t_file where job_id=:jobId AND file_state in ('ACTIVE','SUBMITTED','STAGING','STARTED') ", soci::use(job_id), soci::into(numberOfFilesRevert));
 
@@ -8407,28 +8407,14 @@ void MySqlAPI::checkSanityState()
                     soci::statement stmt9 = (sql.prepare << " select count(distinct f1.file_index) "
                                              " from t_file f1 "
                                              " where f1.job_id = :jobId "
-                                             "	and f1.file_state = 'CANCELED' "
-                                             "	and NOT EXISTS ( "
-                                             "		select null "
-                                             "		from t_file f2 "
-                                             "		where f1.job_id = f2.job_id "
-                                             "			and f1.file_index = f2.file_index "
-                                             "			and f2.file_state <> 'CANCELED' "
-                                             " 	) ",
+                                             "	and f1.file_state = 'CANCELED' ",
                                              soci::use(job_id),
                                              soci::into(allCanceled));
 
                     soci::statement stmt10 = (sql.prepare << " select count(distinct f1.file_index) "
                                               " from t_file f1 "
                                               " where f1.job_id = :jobId "
-                                              "	and f1.file_state = 'FAILED' "
-                                              "	and NOT EXISTS ( "
-                                              "		select null "
-                                              "		from t_file f2 "
-                                              "		where f1.job_id = f2.job_id "
-                                              "			and f1.file_index = f2.file_index "
-                                              "			and f2.file_state NOT IN ('CANCELED', 'FAILED') "
-                                              " 	) ",
+                                              "	and f1.file_state = 'FAILED' ",
                                               soci::use(job_id),
                                               soci::into(allFailed));
 
@@ -8459,8 +8445,16 @@ void MySqlAPI::checkSanityState()
 
                             stmt1.execute(true);
 
+			    //check for m-replicas job
+                            stmt_m_replica.execute(true);
 
-                            if(numberOfFiles > 0)
+                           //check if the file belongs to a multiple replica job
+	                   long long replicaJob = 0;
+	                   long long replicaJobCountAll = 0;
+	                   sql << "select count(*), count(distinct file_index) from t_file where job_id=:job_id",
+	                	soci::use(job_id), soci::into(replicaJobCountAll), soci::into(replicaJob);		              
+
+                            if(numberOfFiles > 0 && mreplica != "R")
                                 {
                                     stmt8.execute(true);
                                     stmt9.execute(true);
@@ -8494,11 +8488,8 @@ void MySqlAPI::checkSanityState()
                                                 }
                                         }
                                 }
-
-                            //check for m-replicas sanity
-                            stmt_m_replica.execute(true);
-                            //this is a m-replica job
-                            if(mreplica == "R")
+                      
+                            if(mreplica == "R" ||  (replicaJobCountAll > 1 && replicaJob == 1))
                                 {
                                     std::string job_state;
                                     soci::rowset<soci::row> rsReplica = (
@@ -8605,8 +8596,13 @@ void MySqlAPI::checkSanityState()
                             //check for m-replicas sanity
                             stmt_m_replica.execute(true);
 
+			   long long replicaJob = 0;
+	                   long long replicaJobCountAll = 0;
+	                   sql << "select count(*), count(distinct file_index) from t_file where job_id=:job_id",
+	                	soci::use(job_id), soci::into(replicaJobCountAll), soci::into(replicaJob);	
+
                             //this is a m-replica job
-                            if(mreplica == "R")
+                            if(mreplica == "R" ||  (replicaJobCountAll > 1 && replicaJob == 1))
                                 {
                                     std::string job_state;
                                     soci::rowset<soci::row> rsReplica = (
