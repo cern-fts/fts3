@@ -8053,8 +8053,8 @@ void OracleAPI::checkSanityState()
                                     );
                             for (soci::rowset<soci::row>::const_iterator iCheckHostsActive = rsCheckHostsActive.begin(); iCheckHostsActive != rsCheckHostsActive.end(); ++iCheckHostsActive)
                                 {
-                                    int file_id = iCheckHostsActive->get<int>("file_id");
-                                    std::string job_id = iCheckHostsActive->get<std::string>("job_id");
+                                    int file_id = iCheckHostsActive->get<int>("FILE_ID");
+                                    std::string job_id = iCheckHostsActive->get<std::string>("JOB_ID");
                                     std::string errorMessage = "Transfer has been forced-canceled because host " + deadHost + " is offline and transfers still assigned to it";
 
                                     updateFileTransferStatusInternal(sql, 0.0, job_id, file_id, "CANCELED", errorMessage, 0, 0, 0, false);
