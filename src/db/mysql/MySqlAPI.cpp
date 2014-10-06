@@ -2992,7 +2992,7 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
                             sql.commit();
 
 			    return true;
-	    } 
+	    }
            else if ( (status == "FINISHED" || status == "FAILED") && reuseFlag == "N")
            {
                 int file_id = 0;
@@ -3000,7 +3000,7 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
                 if(isNullFileId != soci::i_null && file_id > 0)
 			return true;
 	   }
-          
+
 
             sql << " SELECT COUNT(DISTINCT file_index) "
                 " FROM t_file "
@@ -8469,9 +8469,9 @@ void MySqlAPI::checkSanityState()
 	                   long long replicaJob = 0;
 	                   long long replicaJobCountAll = 0;
 	                   sql << "select count(*), count(distinct file_index) from t_file where job_id=:job_id",
-	                	soci::use(job_id), soci::into(replicaJobCountAll), soci::into(replicaJob);	
+	                	soci::use(job_id), soci::into(replicaJobCountAll), soci::into(replicaJob);
 
-	              
+
 
                             if(numberOfFiles > 0 && (mreplica == "N" || mreplica == "Y" || mreplica == "H") &&  !(replicaJobCountAll > 1 && replicaJob == 1))
                                 {
@@ -8507,7 +8507,7 @@ void MySqlAPI::checkSanityState()
                                                 }
                                         }
                                 }
-                      
+
                             if(mreplica == "R" ||  (replicaJobCountAll > 1 && replicaJob == 1))
                                 {
 				    if(mreplica != "R")
@@ -8565,7 +8565,7 @@ void MySqlAPI::checkSanityState()
                                                     sql << " SELECT count(*) from t_file where file_state = 'NOT_USED' and job_id = :job_id",
                                                         soci::use(job_id), soci::into(countNotUsed);
                                                     if(countNotUsed > 0)
-                                                        {                                                           
+                                                        {
                                                             sql << "UPDATE t_file SET "
                                                                                 "    file_state = 'SUBMITTED', job_finished = NULL, finish_time = NULL, "
                                                                                 "    reason = '' "
@@ -8613,7 +8613,7 @@ void MySqlAPI::checkSanityState()
 			   long long replicaJob = 0;
 	                   long long replicaJobCountAll = 0;
 	                   sql << "select count(*), count(distinct file_index) from t_file where job_id=:job_id",
-	                	soci::use(job_id), soci::into(replicaJobCountAll), soci::into(replicaJob);	
+	                	soci::use(job_id), soci::into(replicaJobCountAll), soci::into(replicaJob);
 
                             //this is a m-replica job
                             if(mreplica == "R" ||  (replicaJobCountAll > 1 && replicaJob == 1))
@@ -12171,7 +12171,7 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost
 
                                     sql <<
                                         " UPDATE t_file "
-                                        " SET hashed_id = :hashed_id, staging_finished=sys_extract_utc(systimestamp), job_finished=NULL, finish_time=NULL, start_time=NULL, transferhost=NULL, reason = '', file_state = :fileState "
+                                        " SET hashed_id = :hashed_id, staging_finished=UTC_TIMESTAMP(), job_finished=NULL, finish_time=NULL, start_time=NULL, transferhost=NULL, reason = '', file_state = :fileState "
                                         " WHERE "
                                         "	file_id = :fileId ",
                                         soci::use(hashedId),
