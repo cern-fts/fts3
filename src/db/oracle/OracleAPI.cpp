@@ -7838,7 +7838,7 @@ void OracleAPI::checkSanityState()
 	                   sql << "select count(*), count(distinct file_index) from t_file where job_id=:job_id",
 	                	soci::use(job_id), soci::into(replicaJobCountAll), soci::into(replicaJob);		              
 
-                            if(numberOfFiles > 0 && (mreplica == "N" || mreplica == "Y" || mreplica == "H") )
+                            if(numberOfFiles > 0 && (mreplica == "N" || mreplica == "Y" || mreplica == "H") &&  !(replicaJobCountAll > 1 && replicaJob == 1))
                                 {
                                     stmt8.execute(true);
                                     stmt9.execute(true);
