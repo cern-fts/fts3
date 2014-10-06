@@ -47,6 +47,9 @@ extern "C" {
 using boost::scoped_ptr;
 using namespace db;
 
+static boost::mutex qm_cred_service;
+
+
 namespace
 {
 const char * const TMP_DIRECTORY = "/tmp";
@@ -178,6 +181,8 @@ void CredService::get(
  */
 bool CredService::isValidProxy(const std::string& filename, std::string& message)
 {
+    //prevent ssl_library_init from getting called by multiple threads
+    boost::mutex::scoped_lock lock(qm_cred_service);
 
     // Check if it's valid
     time_t lifetime, voms_lifetime;
