@@ -91,12 +91,6 @@ class OverviewExtended(object):
     def __len__(self):
         return len(self.objects)
 
-    def _get_avg_duration(self, source, destination, vo):
-        avg_duration = File.objects.filter(source_se=source, dest_se=destination, vo_name=vo) \
-            .filter(job_finished__gte=self.not_before, file_state='FINISHED') \
-            .aggregate(Avg('tx_duration'))
-        return avg_duration['tx_duration__avg']
-
     def _get_frequent_error(self, source, destination, vo):
         reason = File.objects.filter(source_se=source, dest_se=destination, vo_name=vo) \
             .filter(job_finished__gte=self.not_before, file_state='FAILED') \
@@ -120,7 +114,6 @@ class OverviewExtended(object):
         if isinstance(indexes, types.SliceType):
             return_list = self.objects[indexes]
             for item in return_list:
-                item['avg_duration'] = self._get_avg_duration(item['source_se'], item['dest_se'], item['vo_name'])
                 item['most_frequent_error'] = self._get_frequent_error(item['source_se'], item['dest_se'],
                                                                        item['vo_name'])
                 item['active_fixed'] = self._get_active_fixed(item['source_se'], item['dest_se'])
@@ -205,15 +198,18 @@ def get_overview(http_request):
                     # Throughput
                     if triplet.get('active') > 0:
                         cursor.execute(
-                            "SELECT AVG(throughput) FROM t_file "
+                            "SELECT AVG(throughput), AVG(tx_duration) FROM t_file "
                             "WHERE source_se = %s AND dest_se=%s "
                             "      AND vo_name=%s AND file_state='FINISHED' AND throughput > 0"
                             "      AND job_finished > %s",
                             [source, dest, vo, not_before]
                         )
                         avg_thr = cursor.fetchall()
-                        if len(avg_thr) and avg_thr[0][0]:
-                            triplet['current'] = avg_thr[0][0] * triplet.get('active')
+                        if len(avg_thr):
+                            if avg_thr[0][0]:
+                                triplet['current'] = avg_thr[0][0] * triplet.get('active')
+                            if avg_thr[0][1]:
+                                triplet['avg_duration'] = avg_thr[0][1]
 
                     triplets[triplet_key] = triplet
 
