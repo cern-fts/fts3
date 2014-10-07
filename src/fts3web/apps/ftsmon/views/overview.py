@@ -91,12 +91,6 @@ class OverviewExtended(object):
     def __len__(self):
         return len(self.objects)
 
-    def _get_avg_duration(self, source, destination, vo):
-        avg_duration = File.objects.filter(source_se=source, dest_se=destination, vo_name=vo) \
-            .filter(job_finished__gte=self.not_before, file_state='FINISHED') \
-            .aggregate(Avg('tx_duration'))
-        return avg_duration['tx_duration__avg']
-
     def _get_frequent_error(self, source, destination, vo):
         reason = File.objects.filter(source_se=source, dest_se=destination, vo_name=vo) \
             .filter(job_finished__gte=self.not_before, file_state='FAILED') \
@@ -106,24 +100,12 @@ class OverviewExtended(object):
         else:
             return None
 
-    def _get_active_fixed(self, source, dest):
-        oa = OptimizeActive.objects.filter(source_se=source, dest_se=dest)
-        if len(oa):
-            if oa[0].fixed == 'on':
-                return True
-            else:
-                return False
-        else:
-            return False
-
     def __getitem__(self, indexes):
         if isinstance(indexes, types.SliceType):
             return_list = self.objects[indexes]
             for item in return_list:
-                item['avg_duration'] = self._get_avg_duration(item['source_se'], item['dest_se'], item['vo_name'])
                 item['most_frequent_error'] = self._get_frequent_error(item['source_se'], item['dest_se'],
                                                                        item['vo_name'])
-                item['active_fixed'] = self._get_active_fixed(item['source_se'], item['dest_se'])
             return return_list
         else:
             return self.objects[indexes]
@@ -147,7 +129,7 @@ def get_overview(http_request):
         all_vos = [row[0] for row in cursor.fetchall()]
 
     # Get all pairs first
-    pairs_query = "SELECT source_se, dest_se FROM t_optimize_active WHERE datetime >= %s " % _db_to_date()
+    pairs_query = "SELECT source_se, dest_se, fixed FROM t_optimize_active WHERE datetime >= %s " % _db_to_date()
     pairs_params = [not_before]
     if filters['source_se']:
         pairs_query += "  AND source_se = %s"
@@ -159,14 +141,14 @@ def get_overview(http_request):
     all_pairs = cursor.fetchall()
 
     triplets = {}
-    for (source, dest) in all_pairs:
+    for (source, dest, active_fixed) in all_pairs:
         for vo in all_vos:
             # Make sure the combination of source, dest and vo has actually been used
             cursor.execute(
                 _db_limit(
                     """SELECT file_id FROM t_file
                     WHERE source_se = %s AND dest_se = %s AND vo_name = %s
-                          AND file_state IN ('FAILED', 'FINISHED', 'CANCELED', 'SUBMITTED', 'ACTIVE')""",
+                          AND file_state IN ('FAILED', 'FINISHED', 'CANCELED', 'SUBMITTED', 'ACTIVE', 'STAGING', 'STARTED')""",
                     1
                 ),
                 [source, dest, vo]
@@ -192,7 +174,7 @@ def get_overview(http_request):
                 cursor.execute(
                     "SELECT file_state, COUNT(file_state) FROM t_file "
                     "WHERE source_se = %s AND dest_se = %s AND vo_name = %s"
-                    "      AND file_state in ('ACTIVE', 'SUBMITTED') "
+                    "      AND file_state in ('ACTIVE', 'SUBMITTED', 'STAGING', 'STARTED') "
                     "GROUP BY file_state ORDER BY NULL",
                     [source, dest, vo]
                 )
@@ -205,17 +187,22 @@ def get_overview(http_request):
                     # Throughput
                     if triplet.get('active') > 0:
                         cursor.execute(
-                            "SELECT AVG(throughput) FROM t_file "
+                            "SELECT AVG(throughput), AVG(tx_duration) FROM t_file "
                             "WHERE source_se = %s AND dest_se=%s "
                             "      AND vo_name=%s AND file_state='FINISHED' AND throughput > 0"
                             "      AND job_finished > %s",
                             [source, dest, vo, not_before]
                         )
                         avg_thr = cursor.fetchall()
-                        if len(avg_thr) and avg_thr[0][0]:
-                            triplet['current'] = avg_thr[0][0] * triplet.get('active')
+                        if len(avg_thr):
+                            if avg_thr[0][0]:
+                                triplet['current'] = avg_thr[0][0] * triplet.get('active')
+                            if avg_thr[0][1]:
+                                triplet['avg_duration'] = avg_thr[0][1]
 
                     triplets[triplet_key] = triplet
+                # Number of active fixed
+                triplet['active_fixed'] = bool(active_fixed)
 
     # Limitations
     limit_query = "SELECT source_se, dest_se, throughput, active FROM t_optimize WHERE throughput IS NOT NULL or active IS NOT NULL"
@@ -258,6 +245,10 @@ def get_overview(http_request):
         sorting_method = lambda o: (o.get('failed', 0), o.get('finished', 0))
     elif order_by == 'canceled':
         sorting_method = lambda o: (o.get('canceled', 0), o.get('finished', 0))
+    elif order_by == 'staging':
+        sorting_method = lambda o: (o.get('staging', 0), o.get('started', 0))
+    elif order_by == 'started':
+        sorting_method = lambda o: (o.get('started', 0), o.get('staging', 0))
     elif order_by == 'throughput':
         if order_desc:
             # NULL current first (so when reversing, they are last)
@@ -278,6 +269,8 @@ def get_overview(http_request):
         'failed': sum(map(lambda o: o.get('failed', 0), objs), 0),
         'canceled': sum(map(lambda o: o.get('canceled', 0), objs), 0),
         'current': sum(map(lambda o: o.get('current', 0), objs), 0),
+        'staging': sum(map(lambda o: o.get('staging', 0), objs), 0),
+        'started': sum(map(lambda o: o.get('started', 0), objs), 0),
     }
     if summary['finished'] > 0 or summary['failed'] > 0:
         summary['rate'] = (float(summary['finished']) / (summary['finished'] + summary['failed'])) * 100
