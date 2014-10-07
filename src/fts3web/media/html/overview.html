@@ -24,7 +24,7 @@
                 <i class="icon-th-list" data-ng-click="filterBy({dest_se: ''})"></i>
                 Destination
             </th>
-            <th style="width: 6%">
+            <th style="width: 4%">
                 <i class="icon-th-list" data-ng-click="filterBy({vo: ''})"></i>
                 VO
             </th>
@@ -33,6 +33,12 @@
             </th>
             <th style="width: 6%" class="numeric">
                 <span data-order-by="active">Active</span>
+            </th>
+            <th style="width: 6%" class="numeric">
+                <span data-order-by="staging">Staging</span>
+            </th>
+            <th style="width: 6%" class="numeric">
+                <span data-order-by="started">S.Active</span>
             </th>
             <th style="width: 6%" class="numeric">
                 <span data-order-by="finished">Finished</span>
@@ -44,10 +50,10 @@
                 <span data-order-by="canceled">Cancel</span>
             </th>
 
-            <th style="width: 9%" class="numeric">
+            <th style="width: 8%" class="numeric">
                 <span data-order-by="rate">Rate (last 1h)</span>
             </th>
-            <th style="width: 9%" class="numeric">
+            <th style="width: 8%" class="numeric">
                 <span title="VO Throughput" data-order-by="throughput">VO Thr.</span>
             </th>
             <th style="width: 2%"></th>
@@ -97,6 +103,16 @@
                 </a>
             </td>
             <td class="numeric">
+                <a href="#/jobs?source_se={{o.source_se}}&dest_se={{o.dest_se}}&vo={{o.vo_name}}&with_file=STAGING&time_window={{globalFilter.time_window}}">
+                    <span data-optional-number="{{o.staging}}" data-decimals="0"></span>
+                </a>
+            </td>
+            <td class="numeric">
+                <a href="#/jobs?source_se={{o.source_se}}&dest_se={{o.dest_se}}&vo={{o.vo_name}}&with_file=STARTED&time_window={{globalFilter.time_window}}">
+                    <span data-optional-number="{{o.started}}" data-decimals="0"></span>
+                </a>
+            </td>
+            <td class="numeric">
                 <a href="#/jobs?source_se={{o.source_se}}&dest_se={{o.dest_se}}&vo={{o.vo_name}}&with_file=FINISHED&time_window={{globalFilter.time_window}}">
                     <span data-optional-number="{{o.finished}}" data-decimals="0"></span>
                 </a>
@@ -124,7 +140,7 @@
             </td>
         </tr>
         <tr>
-            <td colspan="11" style="background: #CCC" data-ng-show="o.show">
+            <td colspan="13" style="background: #CCC" data-ng-show="o.show">
                 <dl>
                     <dt>Average transfer duration</dt>
                     <dd><span data-optional-number="{{o.avg_duration}}" data-suffix="seconds" data-decimals="2"></span></dd>
@@ -141,6 +157,8 @@
             <td>&nbsp;</td>
             <td class="numeric">{{overview.summary.submitted}}</td>
             <td class="numeric">{{overview.summary.active}}</td>
+            <td class="numeric">{{overview.summary.staging}}</td>
+            <td class="numeric">{{overview.summary.started}}</td>
             <td class="numeric">{{overview.summary.finished}}</td>
             <td class="numeric">{{overview.summary.failed}}</td>
             <td class="numeric">{{overview.summary.canceled}}</td>

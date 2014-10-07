@@ -192,7 +192,7 @@ def get_overview(http_request):
                 cursor.execute(
                     "SELECT file_state, COUNT(file_state) FROM t_file "
                     "WHERE source_se = %s AND dest_se = %s AND vo_name = %s"
-                    "      AND file_state in ('ACTIVE', 'SUBMITTED') "
+                    "      AND file_state in ('ACTIVE', 'SUBMITTED', 'STAGING', 'STARTED') "
                     "GROUP BY file_state ORDER BY NULL",
                     [source, dest, vo]
                 )
@@ -258,6 +258,10 @@ def get_overview(http_request):
         sorting_method = lambda o: (o.get('failed', 0), o.get('finished', 0))
     elif order_by == 'canceled':
         sorting_method = lambda o: (o.get('canceled', 0), o.get('finished', 0))
+    elif order_by == 'staging':
+        sorting_method = lambda o: (o.get('staging', 0), o.get('started', 0))
+    elif order_by == 'started':
+        sorting_method = lambda o: (o.get('started', 0), o.get('staging', 0))
     elif order_by == 'throughput':
         if order_desc:
             # NULL current first (so when reversing, they are last)
@@ -278,6 +282,8 @@ def get_overview(http_request):
         'failed': sum(map(lambda o: o.get('failed', 0), objs), 0),
         'canceled': sum(map(lambda o: o.get('canceled', 0), objs), 0),
         'current': sum(map(lambda o: o.get('current', 0), objs), 0),
+        'staging': sum(map(lambda o: o.get('staging', 0), objs), 0),
+        'started': sum(map(lambda o: o.get('started', 0), objs), 0),
     }
     if summary['finished'] > 0 or summary['failed'] > 0:
         summary['rate'] = (float(summary['finished']) / (summary['finished'] + summary['failed'])) * 100
