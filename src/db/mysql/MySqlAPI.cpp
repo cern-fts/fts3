@@ -2783,11 +2783,9 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
                     stmt.exchange(soci::use(tTime, "time1"));
                 }
 
-            if (transfer_status == "ACTIVE" || transfer_status == "READY")
-                {
-                    query << ", transferHost = :hostname";
-                    stmt.exchange(soci::use(hostname, "hostname"));
-                }
+            
+            query << ", transferHost = :hostname";
+            stmt.exchange(soci::use(hostname, "hostname"));            
 
             if (transfer_status == "FINISHED")
                 {
