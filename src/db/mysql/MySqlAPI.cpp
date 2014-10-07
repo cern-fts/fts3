@@ -9808,10 +9808,13 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
     if(!source_se_p.empty())
         {
             source_se = source_se_p;
+	    
+	    querySeAll += " and source_se = '" + source_se_p + "' ";
+	    
             if(!vo_name.empty())
                 {
                     querySe += " and source_se = '" + source_se + "'";
-                    queryVO += " and source_se = '" + source_se + "'";
+                    queryVO += " and source_se = '" + source_se + "'";		    
                 }
             else
                 {
@@ -9824,6 +9827,9 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
     if(!dest_se_p.empty())
         {
             destinEmpty = false;
+	    
+	    querySeAll += " and dest_se = '" + dest_se_p + "' ";
+	    
             if(sourceEmpty)
                 {
                     dest_se = dest_se_p;
@@ -9845,7 +9851,9 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                     queryVO += " AND dest_se = '" + dest_se + "'";
                 }
         }
-
+	
+	
+	
     try
         {
             soci::statement pairsStmt((sql.prepare << querySe, soci::into(source_se), soci::into(dest_se)));
@@ -10097,10 +10105,14 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                         source_se = "";
                     if(dest_se_p.empty())
                         dest_se = "";
+			
 
                     soci::rowset<soci::row> rs = (
                                                      sql.prepare << querySeAll
                                                  );
+						 
+						 
+						 
 
                     result << "{\"snapshot\" : [";
 
@@ -10111,6 +10123,8 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                             source_se_check = i->get<std::string>("source_se");
                             dest_se_check = i->get<std::string>("dest_se");
                             exists = 0; //reset
+			    
+			    
 
                             sql  << "select file_id from t_file where source_se= :source_se and dest_se=:dest_se and vo_name=:vo_name AND file_state IN ('FAILED', 'FINISHED', 'CANCELED', 'SUBMITTED', 'ACTIVE') LIMIT 1",
                                  soci::use(source_se_check),
