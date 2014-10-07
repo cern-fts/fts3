@@ -2268,8 +2268,6 @@ void MySqlAPI::getTransferFileStatus(std::string requestID, bool archive,
 {
     soci::session sql(*connectionPool);
 
-    if(limit < 10000)
-        limit = 10000;
 
     try
         {
@@ -2288,20 +2286,11 @@ void MySqlAPI::getTransferFileStatus(std::string requestID, bool archive,
                             "FROM t_file WHERE t_file.job_id = :jobId ";
                 }
 
-            if (limit)
-                query += " LIMIT :offset,:limit";
-            else
-                query += " LIMIT :offset,18446744073709551615";
-
-
 
             FileTransferStatus transfer;
             soci::statement stmt(sql);
             stmt.exchange(soci::into(transfer));
-            stmt.exchange(soci::use(requestID, "jobId"));
-            stmt.exchange(soci::use(offset, "offset"));
-            if (limit)
-                stmt.exchange(soci::use(limit, "limit"));
+            stmt.exchange(soci::use(requestID, "jobId"));            
 
             stmt.alloc();
             stmt.prepare(query);
