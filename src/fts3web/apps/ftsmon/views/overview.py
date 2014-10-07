@@ -100,23 +100,12 @@ class OverviewExtended(object):
         else:
             return None
 
-    def _get_active_fixed(self, source, dest):
-        oa = OptimizeActive.objects.filter(source_se=source, dest_se=dest)
-        if len(oa):
-            if oa[0].fixed == 'on':
-                return True
-            else:
-                return False
-        else:
-            return False
-
     def __getitem__(self, indexes):
         if isinstance(indexes, types.SliceType):
             return_list = self.objects[indexes]
             for item in return_list:
                 item['most_frequent_error'] = self._get_frequent_error(item['source_se'], item['dest_se'],
                                                                        item['vo_name'])
-                item['active_fixed'] = self._get_active_fixed(item['source_se'], item['dest_se'])
             return return_list
         else:
             return self.objects[indexes]
@@ -140,7 +129,7 @@ def get_overview(http_request):
         all_vos = [row[0] for row in cursor.fetchall()]
 
     # Get all pairs first
-    pairs_query = "SELECT source_se, dest_se FROM t_optimize_active WHERE datetime >= %s " % _db_to_date()
+    pairs_query = "SELECT source_se, dest_se, fixed FROM t_optimize_active WHERE datetime >= %s " % _db_to_date()
     pairs_params = [not_before]
     if filters['source_se']:
         pairs_query += "  AND source_se = %s"
@@ -152,7 +141,7 @@ def get_overview(http_request):
     all_pairs = cursor.fetchall()
 
     triplets = {}
-    for (source, dest) in all_pairs:
+    for (source, dest, active_fixed) in all_pairs:
         for vo in all_vos:
             # Make sure the combination of source, dest and vo has actually been used
             cursor.execute(
@@ -212,6 +201,8 @@ def get_overview(http_request):
                                 triplet['avg_duration'] = avg_thr[0][1]
 
                     triplets[triplet_key] = triplet
+                # Number of active fixed
+                triplet['active_fixed'] = bool(active_fixed)
 
     # Limitations
     limit_query = "SELECT source_se, dest_se, throughput, active FROM t_optimize WHERE throughput IS NOT NULL or active IS NOT NULL"
