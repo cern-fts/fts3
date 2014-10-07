@@ -295,8 +295,10 @@ void abnormalTermination(const std::string& classification, const std::string&, 
     reporter.timeout = UrlCopyOpts::getInstance().timeout;
     reporter.nostreams = UrlCopyOpts::getInstance().nStreams;
     reporter.buffersize = UrlCopyOpts::getInstance().tcpBuffersize;
-
-
+    
+    if(currentTransfer.fileId == 0 && boost::lexical_cast<int>(file_id) > 0)
+    	currentTransfer.fileId = boost::lexical_cast<int>(file_id);
+    
     reporter.sendTerminal(currentTransfer.throughput, retry,
                           currentTransfer.jobId, currentTransfer.fileId,
                           classification, errorMessage,
@@ -736,6 +738,8 @@ int main(int argc, char **argv)
     if (opts.areTransfersOnFile() && transferList.empty() == true)
         {
             errorMessage = "INIT Transfer " + currentTransfer.jobId + " contains no urls with session reuse/multihop enabled";
+	    
+	    retry = false;
 
             abnormalTermination("FAILED", errorMessage, "Error");
         }
@@ -779,6 +783,16 @@ int main(int argc, char **argv)
     handle = gfal_context_new(&handleError);
     params = gfalt_params_handle_new(NULL);
     gfalt_set_event_callback(params, event_logger, NULL);
+    
+    if (!handle)
+        {
+            errorMessage = "Failed to create the gfal2 handle: ";
+            if (handleError && handleError->message)
+                {
+                    errorMessage += "INIT " + std::string(handleError->message);
+                    abnormalTermination("FAILED", errorMessage, "Error");
+                }
+        }    
 
 
     //reuse session
@@ -799,15 +813,7 @@ int main(int argc, char **argv)
             gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "IPV6", TRUE, NULL);
         }
 
-    if (!handle)
-        {
-            errorMessage = "Failed to create the gfal2 handle: ";
-            if (handleError && handleError->message)
-                {
-                    errorMessage += "INIT " + std::string(handleError->message);
-                    abnormalTermination("FAILED", errorMessage, "Error");
-                }
-        }
+
 
     // Load OAuth credentials, if any
     if (!opts.oauthFile.empty())
