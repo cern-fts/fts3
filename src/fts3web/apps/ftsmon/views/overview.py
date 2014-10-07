@@ -148,7 +148,7 @@ def get_overview(http_request):
                 _db_limit(
                     """SELECT file_id FROM t_file
                     WHERE source_se = %s AND dest_se = %s AND vo_name = %s
-                          AND file_state IN ('FAILED', 'FINISHED', 'CANCELED', 'SUBMITTED', 'ACTIVE')""",
+                          AND file_state IN ('FAILED', 'FINISHED', 'CANCELED', 'SUBMITTED', 'ACTIVE', 'STAGING', 'STARTED')""",
                     1
                 ),
                 [source, dest, vo]
