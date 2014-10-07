@@ -761,20 +761,7 @@ void MySqlAPI::getVOPairs(std::vector< boost::tuple<std::string, std::string, st
                                             dest_se,
                                             vo_name
                                         )
-                                    );
-
-                                    long long int linkExists = 0;
-                                    sql << "select count(*) from t_optimize_active where source_se=:source_se and dest_se=:dest_se and datetime >= (UTC_TIMESTAMP() - interval '5' MINUTE)",
-                                        soci::use(source_se),
-                                        soci::use(dest_se),
-                                        soci::into(linkExists);
-                                    if(linkExists == 0) //for some reason does not exist, add it
-                                        {
-                                            sql.begin();
-                                            sql << "INSERT INTO t_optimize_active (source_se, dest_se, active, ema, datetime) VALUES (:source_se, :dest_se, 2, 0, UTC_TIMESTAMP()) ON DUPLICATE KEY UPDATE source_se=:source_se, dest_se=:dest_se, datetime=UTC_TIMESTAMP()",
-                                                soci::use(source_se), soci::use(dest_se),soci::use(source_se), soci::use(dest_se);
-                                            sql.commit();
-                                        }
+                                    );                                   
                                 }
                         }
                 }
