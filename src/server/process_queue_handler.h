@@ -136,7 +136,7 @@ public:
                         std::string(msg.transfer_message).find("Transfer process died") != string::npos ||
                         std::string(msg.transfer_message).find("because it was stalled") != string::npos ||
                         std::string(msg.transfer_message).find("canceled by the user") != string::npos ||
-			std::string(msg.transfer_message).find("undefined symbol") != string::npos ||
+                        std::string(msg.transfer_message).find("undefined symbol") != string::npos ||
                         std::string(msg.transfer_message).find("canceled because it was not responding") != string::npos ))
                     {
                         if(std::string(msg.job_id).length() == 0)

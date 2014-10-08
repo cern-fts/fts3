@@ -51,7 +51,7 @@ void BringOnlineTask::run(boost::any const &)
                                             << ctx.getLogMsg() << commit;
 
             ctx.state_update(token);
-            WaitingRoom<PollTask>::instance().add(new PollTask(*this, token));
+            WaitingRoom<PollTask>::instance().add(new PollTask(std::move(*this), token));
         }
     else
         {

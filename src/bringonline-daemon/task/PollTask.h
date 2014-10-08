@@ -56,7 +56,7 @@ public:
      *
      * @param copy : a staging task (stills the gfal2 context of this object)
      */
-    PollTask(BringOnlineTask & copy, std::string const & token) : BringOnlineTask(copy), token(token), nPolls(0), wait_until()
+    PollTask(BringOnlineTask && copy, std::string const & token) : BringOnlineTask(std::move(copy)), token(token), nPolls(0), wait_until()
     {
         boost::unique_lock<boost::shared_mutex> lock(mx);
         std::set<std::string> surls = ctx.getSurls();
@@ -64,9 +64,9 @@ public:
     }
 
     /**
-     * Copy constructor
+     * Move constructor
      */
-    PollTask(PollTask & copy) : BringOnlineTask(copy), token(copy.token), nPolls(copy.nPolls), wait_until(copy.wait_until) {}
+    PollTask(PollTask && copy) : BringOnlineTask(std::move(copy)), token(copy.token), nPolls(copy.nPolls), wait_until(copy.wait_until) {}
 
     /**
      * Destructor

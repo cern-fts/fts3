@@ -39,6 +39,13 @@ public:
     JobContext(JobContext const & jc) : jobs(jc.jobs), proxy(jc.proxy), spaceToken(jc.spaceToken) {}
 
     /**
+     * Move constructor
+     *
+     * @param jc : JobContext to be moved
+     */
+    JobContext(JobContext && jc) : jobs(std::move(jc.jobs)), proxy(std::move(jc.proxy)), spaceToken(std::move(jc.spaceToken)) {}
+
+    /**
      * Destructor
      */
     virtual ~JobContext() {}

@@ -51,11 +51,11 @@ public:
     }
 
     /**
-     * Creates a new BringOnlineTask from another StagingTask
+     * Creates a new BringOnlineTask from another BringOnlineTask
      *
      * @param copy : a staging task (stills the gfal2 context of this object)
      */
-    BringOnlineTask(BringOnlineTask & copy) : Gfal2Task(copy), ctx(copy.ctx) {}
+    BringOnlineTask(BringOnlineTask && copy) : Gfal2Task(std::move(copy)), ctx(std::move(copy.ctx)) {}
 
     /**
      * Destructor
