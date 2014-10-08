@@ -7776,7 +7776,7 @@ std::vector<struct message_state> MySqlAPI::getStateOfDeleteInternal(soci::sessi
                                              "	j.user_dn, j.submit_time, j.job_id, j.job_state, j.vo_name, "
                                              "	j.job_metadata, j.retry AS retry_max, f.file_id, "
                                              "	f.file_state, f.retry AS retry_counter, f.file_metadata, "
-                                             "	f.source_se, f.dest_se, f.start_time , f.source_surl, f.dest_surl"
+                                             "	f.source_se, f.start_time , f.source_surl "
                                              " FROM t_dm f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                              " WHERE "
                                              " 	j.job_id = :jobId ",
@@ -7789,7 +7789,7 @@ std::vector<struct message_state> MySqlAPI::getStateOfDeleteInternal(soci::sessi
                                              "	j.user_dn, j.submit_time, j.job_id, j.job_state, j.vo_name, "
                                              "	j.job_metadata, j.retry AS retry_max, f.file_id, "
                                              "	f.file_state, f.retry AS retry_counter, f.file_metadata, "
-                                             "	f.source_se, f.dest_se, f.start_time , f.source_surl, f.dest_surl"
+                                             "	f.source_se, f.start_time , f.source_surl "
                                              " FROM t_dm f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                              " WHERE "
                                              " 	j.job_id = :jobId "
@@ -7808,7 +7808,14 @@ std::vector<struct message_state> MySqlAPI::getStateOfDeleteInternal(soci::sessi
                     ret.job_id = it->get<std::string>("job_id");
                     ret.job_state = it->get<std::string>("job_state");
                     ret.vo_name = it->get<std::string>("vo_name");
-                    ret.job_metadata = it->get<std::string>("job_metadata","");
+		    
+		    soci::indicator isNull1 = it->get_indicator("job_metadata");
+		    if (isNull1 == soci::i_ok) 
+		    	ret.job_metadata = it->get<std::string>("job_metadata","");
+		    else	
+		    	ret.job_metadata = "";
+		    
+		    
                     ret.retry_max = it->get<int>("retry_max",0);
                     ret.file_id = it->get<int>("file_id");
                     ret.file_state = it->get<std::string>("file_state");
@@ -7829,17 +7836,33 @@ std::vector<struct message_state> MySqlAPI::getStateOfDeleteInternal(soci::sessi
                         }
                     else if(ret.file_state == "ACTIVE")
                         {
-                            aux_tm = it->get<struct tm>("start_time");
-                            ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);
+ 			    soci::indicator isNull3 = it->get_indicator("start_time");
+		    	    if (isNull3 == soci::i_ok) 
+			    {
+                                aux_tm = it->get<struct tm>("start_time");
+		    		ret.timestamp = boost::lexical_cast<std::string>(timegm(&aux_tm) * 1000);
+			    }
+		    	    else	
+			    {
+		    		ret.timestamp = "";			    
+			    }			    
                         }
                     else
                         {
                             ret.timestamp = getStrUTCTimestamp();
                         }
                     ret.retry_counter = it->get<int>("retry_counter",0);
-                    ret.file_metadata = it->get<std::string>("file_metadata","");
+		    
+		    soci::indicator isNull2 = it->get_indicator("file_metadata");		    
+		    if (isNull2 == soci::i_ok) 
+		    	ret.file_metadata = it->get<std::string>("file_metadata","");
+		    else	
+		    	ret.file_metadata = "";
+		                        
+		    
+		    
                     ret.source_se = it->get<std::string>("source_se");
-                    ret.dest_se = it->get<std::string>("dest_se", "");
+                    ret.dest_se = "";
 
                     if(!show_user_dn)
                         ret.user_dn = std::string("");
@@ -7847,7 +7870,7 @@ std::vector<struct message_state> MySqlAPI::getStateOfDeleteInternal(soci::sessi
                         ret.user_dn = it->get<std::string>("user_dn","");
 
                     ret.source_url = it->get<std::string>("source_surl","");
-                    ret.dest_url = it->get<std::string>("dest_surl","");
+                    ret.dest_url = "";
 
                     temp.push_back(ret);
                 }
