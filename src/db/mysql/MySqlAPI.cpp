@@ -4274,6 +4274,9 @@ bool MySqlAPI::updateOptimizer()
 
                     source_hostname = i->get<std::string>("source_se");
                     destin_hostname = i->get<std::string>("dest_se");
+		    
+		    sql << " UPDATE t_optimize_active set datetime = UTC_TIMESTAMP() WHERE source_se=:source_se and dest_se=:dest_se",
+		    	soci::use(source_hostname),soci::use(destin_hostname);
 
 
                     double nFailedLastHour=0.0, nFinishedLastHour=0.0;
@@ -11448,7 +11451,7 @@ void MySqlAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::s
 
                     soci::rowset<soci::row> rs = (
                                                      sql.prepare <<
-                                                     " SELECT distinct j.source_se, j.user_dn "
+                                                     " SELECT distinct f.source_se, j.user_dn "
                                                      " FROM t_dm f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                                      " WHERE "
                                                      "	f.file_state = 'DELETE' "

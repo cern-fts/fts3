@@ -3861,6 +3861,11 @@ bool OracleAPI::updateOptimizer()
 
                     source_hostname = i->get<std::string>("SOURCE_SE");
                     destin_hostname = i->get<std::string>("DEST_SE");
+		    
+		    
+		    sql << " UPDATE t_optimize_active set datetime = sys_extract_utc(systimestamp) WHERE source_se=:source_se and dest_se=:dest_se",
+		    	soci::use(source_hostname),soci::use(destin_hostname);
+					    
 
                     double nFailedLastHour=0.0, nFinishedLastHour=0.0;
                     throughput=0.0;
@@ -10733,7 +10738,7 @@ void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::
 
                     soci::rowset<soci::row> rs = (
                                                      sql.prepare <<
-                                                     " SELECT distinct j.source_se, j.user_dn "
+                                                     " SELECT distinct f.source_se, j.user_dn "
                                                      " FROM t_dm f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                                      " WHERE "
                                                      "	f.file_state = 'DELETE' "
