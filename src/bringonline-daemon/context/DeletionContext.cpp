@@ -19,7 +19,10 @@ void DeletionContext::add(context_type const & ctx)
     int fileId = boost::get<file_id>(ctx);
 
     if (surl.compare(0, 6, "srm://") == 0)
-        srm_jobs[jobId].push_back(std::make_pair(fileId, surl));
+        {
+            srm_jobs[jobId].push_back(std::make_pair(fileId, surl));
+            urlToIDs[surl] = std::make_pair(jobId, fileId);
+        }
     else
         add(surl, jobId, fileId);
 }

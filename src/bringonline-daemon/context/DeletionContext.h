@@ -50,7 +50,7 @@ public:
      *
      * @param copy : other DeletionContext instance
      */
-    DeletionContext(DeletionContext const & copy) : JobContext(copy), srm_jobs(copy.srm_jobs) {} 
+    DeletionContext(DeletionContext const & copy) : JobContext(copy), srm_jobs(copy.srm_jobs), urlToIDs(copy.urlToIDs) {}
    
 
     /**
@@ -58,7 +58,8 @@ public:
      *
      * @param copy : the context to be moved
      */
-    DeletionContext(DeletionContext && copy) : JobContext(std::move(copy)), srm_jobs(std::move(copy.srm_jobs)) {}
+    DeletionContext(DeletionContext && copy) :
+        JobContext(std::move(copy)), srm_jobs(std::move(copy.srm_jobs)), urlToIDs(std::move(copy.urlToIDs)) {}
 
     /**
      * Destructor
@@ -103,9 +104,19 @@ public:
         return jobs;
     }
 
+    std::pair<std::string, int> getIDs(std::string const & surl) const
+    {
+        std::pair<std::string, int> ret;
+        std::map< std::string, std::pair<std::string, int> >::const_iterator it = urlToIDs.find(surl);
+        if (it != urlToIDs.end()) ret = it->second;
+        return ret;
+    }
+
 private:
     /// Job ID -> list of (file ID and SURL) mapping
     std::map< std::string, std::vector<std::pair<int, std::string> > > srm_jobs;
+    /// URL -> (job_id, file_id)
+    std::map< std::string, std::pair<std::string, int> > urlToIDs;
 };
 
 #endif /* DELETIONCONTEXT_H_ */
