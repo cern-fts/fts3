@@ -12433,7 +12433,7 @@ bool MySqlAPI::resetForRetryStaging(soci::session& sql, int file_id, const std::
                             sql <<
                                 " SELECT retry "
                                 " FROM t_server_config where vo_name=:vo_name LIMIT 1",
-                                soci::use(vo_name), soci::into(nRetries)
+                                soci::use(vo_name), soci::into(nRetries, isNull)
                                 ;
                         }
                     else if (isNull != soci::i_null && nRetries <= 0)
@@ -12448,7 +12448,7 @@ bool MySqlAPI::resetForRetryStaging(soci::session& sql, int file_id, const std::
                         soci::use(file_id), soci::use(job_id), soci::into(nRetriesTimes, isNull2);
 
 
-                    if(nRetries > 0 && nRetriesTimes <= nRetries-1 )
+                    if(isNull != soci::i_null &&  isNull2 != soci::i_null  && nRetries > 0 && nRetriesTimes <= nRetries-1 )
                         {
                             //expressed in secs, default delay
                             const int default_retry_delay = 120;
@@ -12536,7 +12536,7 @@ bool MySqlAPI::resetForRetryDelete(soci::session& sql, int file_id, const std::s
                             sql <<
                                 " SELECT retry "
                                 " FROM t_server_config where vo_name=:vo_name LIMIT 1",
-                                soci::use(vo_name), soci::into(nRetries)
+                                soci::use(vo_name), soci::into(nRetries, isNull)
                                 ;
                         }
                     else if (isNull != soci::i_null && nRetries <= 0)
@@ -12551,7 +12551,7 @@ bool MySqlAPI::resetForRetryDelete(soci::session& sql, int file_id, const std::s
                         soci::use(file_id), soci::use(job_id), soci::into(nRetriesTimes, isNull2);
 
 
-                    if(nRetries > 0 && nRetriesTimes <= nRetries-1 )
+                    if(isNull != soci::i_null &&  isNull2 != soci::i_null  && nRetries > 0 && nRetriesTimes <= nRetries-1 )
                         {
                             //expressed in secs, default delay
                             const int default_retry_delay = 120;
