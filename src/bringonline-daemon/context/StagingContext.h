@@ -55,6 +55,10 @@ public:
         JobContext(copy),
         pinlifetime(copy.pinlifetime), bringonlineTimeout(copy.bringonlineTimeout) {}
 
+    StagingContext(StagingContext && copy) :
+        JobContext(std::move(copy)),
+        pinlifetime(copy.pinlifetime), bringonlineTimeout(copy.bringonlineTimeout) {}
+
     virtual ~StagingContext() {}
 
     void add(context_type const & ctx);
