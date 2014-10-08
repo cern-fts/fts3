@@ -27,23 +27,39 @@ void DeletionTask::run(boost::any const &)
 
 void DeletionTask::run_srm_impl()
 {
-    GError *error = NULL;
-
     std::vector<char const *> urls = ctx.getSrmUrls();
     // make sure there is work to do
     if (urls.empty()) return;
-    int status = gfal2_unlink_list(gfal2_ctx, urls.size(), &*urls.begin(), &error);
+    std::vector<GError*> error (urls.size(), NULL);
+    int status = gfal2_unlink_list(gfal2_ctx, urls.size(), &*urls.begin(), &*error.begin());
 
     if (status < 0)
         {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "DELETION FAILED "
-                                           << ctx.getLogMsg() << " "
-                                           << error->code << " "
-                                           << error->message  << commit;
+            for (int i = 0; i < urls.size(); ++i)
+                {
+                    std::pair<std::string, int> ids = ctx.getIDs(urls[i]);
 
-            bool retry = doRetry(error->code, "SOURCE", std::string(error->message));
-            ctx.state_update("FAILED", error->message, retry);
-            g_clear_error(&error);
+                    if (!error[i])
+                        {
+                            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DELETION FINISHED "
+                                                        << ids.first << " " << urls[i]
+                                                        << " (" << ids.second << ")"
+                                                        <<  commit;
+                            ctx.state_update(ids.first, ids.second, "FINISHED", "", false);
+                            continue;
+                        }
+
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "DELETION FAILED "
+                                                   << urls[i] << " "
+                                                   << error[i]->code << " "
+                                                   << error[i]->message << commit;
+
+                    bool retry = doRetry(error[i]->code, "SOURCE", std::string(error[i]->message));
+
+
+                    ctx.state_update(ids.first, ids.second, "FAILED", error[i]->message, retry);
+                    g_clear_error(&error[i]);
+                }
         }
     else
         {
