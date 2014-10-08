@@ -42,3 +42,19 @@ def slsfy(elements, id_tail, color_mapper=_color_mapper):
     e_timestamp.text = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     return HttpResponse(tostring(e_sls), mimetype='application/xml')
+
+def slsfy_error(message, id_tail):
+    """
+    Return an error message
+    """
+    e_sls = Element('serviceupdate')
+    e_id = SubElement(e_sls, 'id')
+    e_id.text = "%s %s" % (getattr(settings, 'SITE_NAME', 'FTS3'), id_tail)
+
+    e_availability_info = SubElement(e_sls, 'availabilityinfo')
+    e_subavailability = SubElement(e_availability_info, 'font', {'style': "color:red"})
+    e_subavailability.text = str(message)
+
+    SubElement(e_sls, 'availability').text = '0'
+
+    return HttpResponse(tostring(e_sls), mimetype='application/xml')

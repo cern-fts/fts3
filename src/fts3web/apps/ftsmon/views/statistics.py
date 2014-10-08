@@ -24,7 +24,7 @@ from ftsweb.models import Job, File, Host
 from ftsweb.models import ProfilingSnapshot, ProfilingInfo, Turl
 from ftsweb.models import ACTIVE_STATES, STATES
 from jsonify import jsonify, jsonify_paged, as_json
-from slsfy import slsfy
+from slsfy import slsfy, slsfy_error
 from util import get_order_by, ordered_field
 import settings
 
@@ -159,35 +159,41 @@ def _get_host_service_and_segment():
 
 
 def get_servers(http_request):
-    segments = _get_host_service_and_segment()
-    transfers = _get_transfer_and_submission_per_host(timedelta(hours=1))
-
-    hosts = segments.keys()
-
-    servers = dict()
-    for host in hosts:
-        servers[host] = dict()
-        if host in transfers:
-            servers[host].update(transfers.get(host))
-        else:
-            servers[host].update({'transfers': 0, 'active': 0, 'submissions': 0})
-
-        servers[host]['services'] = segments[host]
-
     format = http_request.GET.get('format', None)
-    if format == 'sls':
-        availability = list()
-        for host, v in servers.iteritems():
-            for service, status in v['services'].iteritems():
-                if service != 'fts_backup':
-                    if status['status'] == 'down':
-                        value = 0
-                    else:
-                        value = 100
-                    availability.append(("%s_%s" % (host, service), value))
-        return  slsfy(availability, id_tail='Server Info')
-    else:
-        return as_json(servers)
+    try:
+        segments = _get_host_service_and_segment()
+        transfers = _get_transfer_and_submission_per_host(timedelta(hours=1))
+
+        hosts = segments.keys()
+
+        servers = dict()
+        for host in hosts:
+            servers[host] = dict()
+            if host in transfers:
+                servers[host].update(transfers.get(host))
+            else:
+                servers[host].update({'transfers': 0, 'active': 0, 'submissions': 0})
+
+            servers[host]['services'] = segments[host]
+
+        if format == 'sls':
+            availability = list()
+            for host, v in servers.iteritems():
+                for service, status in v['services'].iteritems():
+                    if service != 'fts_backup':
+                        if status['status'] == 'down':
+                            value = 0
+                        else:
+                            value = 100
+                        availability.append(("%s_%s" % (host, service), value))
+            return  slsfy(availability, id_tail='Server Info')
+        else:
+            return as_json(servers)
+    except Exception, e:
+        if format == 'sls':
+            return slsfy_error(str(e), id_tail='Server Info')
+        else:
+            return as_json(dict(exception=str(e)))
 
 
 @jsonify
