@@ -26,8 +26,11 @@ public:
     /// Default constructor
     Gfal2Task(std::string const & operation) : gfal2_ctx(operation) {}
 
-    /// Copy constructor
-    Gfal2Task(Gfal2Task & copy) : gfal2_ctx(copy.gfal2_ctx) {}
+    /// Copy constructor (deleted)
+    Gfal2Task(Gfal2Task const & copy) = delete;
+
+    /// Move constructor
+    Gfal2Task(Gfal2Task && copy) : gfal2_ctx(std::move(copy.gfal2_ctx)) {}
 
     /**
      * The routine is executed by the thread pool
@@ -120,7 +123,7 @@ protected:
         }
 
         /// Copy constructor, steals the pointer from the parameter!
-        Gfal2CtxWrapper(Gfal2CtxWrapper & copy) : gfal2_ctx(copy.gfal2_ctx), operation(copy.operation)
+        Gfal2CtxWrapper(Gfal2CtxWrapper && copy) : gfal2_ctx(copy.gfal2_ctx), operation(copy.operation)
         {
             copy.gfal2_ctx = 0;
         }

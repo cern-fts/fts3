@@ -43,7 +43,7 @@ public:
      *
      * @param copy : a gfal2 task
      */
-    DeletionTask(DeletionTask & copy) : Gfal2Task(copy), ctx(copy.ctx) {}
+    DeletionTask(DeletionTask && copy) : Gfal2Task(std::move(copy)), ctx(copy.ctx) {}
 
     /**
      * Destructor
