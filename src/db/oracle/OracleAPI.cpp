@@ -10668,11 +10668,12 @@ void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::
                     int maxValueConfig = 0;
                     int currentDeleteActive = 0;
                     int limit = 0;
+		    soci::indicator isNull = soci::i_ok;
 
                     //check max configured
                     sql << 	"SELECT concurrent_ops from t_stage_req "
                         "WHERE vo_name=:vo_name and host = :endpoint and operation='delete' and concurrent_ops is NOT NULL ",
-                        soci::use(vo_name), soci::use(source_se), soci::into(maxValueConfig);
+                        soci::use(vo_name), soci::use(source_se), soci::into(maxValueConfig, isNull);
 
                     //check current staging
                     sql << 	"SELECT count(*) from t_dm "
@@ -10680,7 +10681,7 @@ void OracleAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::
                         soci::use(vo_name), soci::use(source_se), soci::into(currentDeleteActive);
 
 
-                    if(maxValueConfig > 0)
+                    if(isNull != soci::i_null && maxValueConfig > 0)
                         {
                             if(currentDeleteActive > 0)
                                 {
