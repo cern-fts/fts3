@@ -1,5 +1,5 @@
 Name: fts-oracle
-Version: 3.2.28
+Version: 3.2.29
 Release: 1%{?dist}
 Summary: File Transfer Service V3 oracle plug-in
 Group: Applications/Internet
