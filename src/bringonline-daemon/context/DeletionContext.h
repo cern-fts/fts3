@@ -50,7 +50,10 @@ public:
      *
      * @param copy : other DeletionContext instance
      */
-    DeletionContext(DeletionContext const & copy) : JobContext(copy), srm_jobs(copy.srm_jobs) {}
+    DeletionContext(DeletionContext const & copy) : JobContext(copy)
+    {
+        this->srm_jobs = copy.srm_jobs;
+    }
 
     /**
      * Move constructor
