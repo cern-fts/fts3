@@ -112,7 +112,6 @@ Group: System Environment/Daemons
 Requires: bdii
 Requires: fts-server%{?_isa} = %{version}-%{release}
 Requires: glue-schema
-Requires: glue-validator
 Requires(post): chkconfig
 Requires(preun): chkconfig
 Requires(postun): initscripts
