@@ -8384,7 +8384,7 @@ void MySqlAPI::checkSanityState()
                                                        " select job_id from t_job  where job_finished is null "
                                                    );
 
-                    soci::statement stmt1 = (sql.prepare << "SELECT COUNT(DISTINCT file_index) FROM t_file where job_id=:jobId ", soci::use(job_id), soci::into(numberOfFiles));
+                    soci::statement stmt1 = (sql.prepare << "SELECT COUNT(*) FROM t_file where job_id=:jobId ", soci::use(job_id), soci::into(numberOfFiles));
 
                     soci::statement stmt2 = (sql.prepare << "UPDATE t_job SET "
                                              "    job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
@@ -8420,14 +8420,14 @@ void MySqlAPI::checkSanityState()
                                              soci::use(job_id),
                                              soci::into(allFinished));
 
-                    soci::statement stmt9 = (sql.prepare << " select count(distinct f1.file_index) "
+                    soci::statement stmt9 = (sql.prepare << " select count(*) "
                                              " from t_file f1 "
                                              " where f1.job_id = :jobId "
                                              "	and f1.file_state = 'CANCELED' ",
                                              soci::use(job_id),
                                              soci::into(allCanceled));
 
-                    soci::statement stmt10 = (sql.prepare << " select count(distinct f1.file_index) "
+                    soci::statement stmt10 = (sql.prepare << " select count(*) "
                                               " from t_file f1 "
                                               " where f1.job_id = :jobId "
                                               "	and f1.file_state = 'FAILED' ",
@@ -8587,76 +8587,53 @@ void MySqlAPI::checkSanityState()
 
                     //now check reverse sanity checks, JOB can't be FINISH,  FINISHEDDIRTY, FAILED is at least one tr is in SUBMITTED, READY, ACTIVE
                     //special case for canceled
-                    soci::rowset<std::string> rs2 = (
-                                                        sql.prepare <<
-                                                        " select  j.job_id from t_job j inner join t_file f on (j.job_id = f.job_id) where j.job_finished >= (UTC_TIMESTAMP() - interval '24' HOUR ) and f.file_state in ('SUBMITTED','ACTIVE') "
-                                                    );
+                    soci::rowset<soci::row> rs2 = (
+                                                      sql.prepare <<
+                                                      " select  j.job_id, j.job_state, j.reuse_job from t_job j inner join t_file f on (j.job_id = f.job_id) where j.job_finished >= (UTC_TIMESTAMP() - interval '24' HOUR ) and f.file_state in ('SUBMITTED','ACTIVE') "
+                                                  );
+
 
 
                     sql.begin();
-                    for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
+                    for (soci::rowset<soci::row>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
                         {
-                            job_id = (*i2);
-                            stmt7.execute(true);
-                        }
-                    sql.commit();
-
-                    soci::rowset<std::string> rs444 = (
-                                                          sql.prepare <<
-                                                          " select  j.job_id from t_job j where j.job_finished >= (UTC_TIMESTAMP() - interval '24' HOUR ) and job_state='FINISHED' and reuse_job='R' "
-                                                      );
-
-                    //multiple replicas with finished state
-                    sql.begin();
-                    for (soci::rowset<std::string>::const_iterator i444 = rs444.begin(); i444 != rs444.end(); ++i444)
-                        {
-                            mreplica = std::string("");
-
-                            job_id = (*i444);
-
-                            //check for m-replicas sanity
-                            stmt_m_replica.execute(true);
-
-                            long long replicaJob = 0;
-                            long long replicaJobCountAll = 0;
-                            sql << "select count(*), count(distinct file_index) from t_file where job_id=:job_id",
-                                soci::use(job_id), soci::into(replicaJobCountAll), soci::into(replicaJob);
-
-                            //this is a m-replica job
-                            if(mreplica == "R" ||  (replicaJobCountAll > 1 && replicaJob == 1))
+                            try
                                 {
-                                    std::string job_state;
-                                    soci::rowset<soci::row> rsReplica = (
-                                                                            sql.prepare <<
-                                                                            " select distinct file_state from t_file where job_id=:job_id  ",
-                                                                            soci::use(job_id)
-                                                                        );
+                                    job_id = i2->get<std::string>("job_id");
+                                    std::string job_state = i2->get<std::string>("job_state");
+                                    std::string reuse_job = i2->get<std::string>("reuse_job");
+                                    mreplica = std::string("");
 
-                                    sql << "SELECT job_state from t_job where job_id=:job_id", soci::use(job_id), soci::into(job_state);
+                                    //check for m-replicas sanity
+                                    stmt_m_replica.execute(true);
 
-                                    soci::rowset<soci::row>::const_iterator iRep;
-                                    for (iRep = rsReplica.begin(); iRep != rsReplica.end(); ++iRep)
+                                    long long replicaJob = 0;
+                                    long long replicaJobCountAll = 0;
+                                    sql << "select count(*), count(distinct file_index) from t_file where job_id=:job_id",
+                                        soci::use(job_id), soci::into(replicaJobCountAll), soci::into(replicaJob);
+
+                                    if(mreplica == "R" ||  (replicaJobCountAll > 1 && replicaJob == 1))
                                         {
-                                            std::string file_state = iRep->get<std::string>("file_state");
-
-                                            if(file_state == "FINISHED") //if at least one is finished, reset the rest
+                                            int checkFinished = 0;
+                                            sql << "SELECT COUNT(*) from t_file where file_state='FINISHED' and job_id=:job_id", soci::use(job_id), soci::into(checkFinished);
+                                            if(checkFinished == 0)
                                                 {
                                                     sql << "UPDATE t_file SET "
-                                                        "    file_state = 'NOT_USED', job_finished = NULL, finish_time = NULL, "
-                                                        "    reason = '' "
+                                                        "    file_state = 'FAILED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+                                                        "    reason = 'File state inconsistencies, better force-fail' "
                                                         "    WHERE file_state in ('ACTIVE','SUBMITTED') and job_id = :jobId", soci::use(job_id);
-
-                                                    if(job_state != "FINISHED")
-                                                        {
-                                                            stmt3.execute(true); //set the job_state to finished if at least one finished
-                                                        }
-                                                    break;
                                                 }
                                         }
+                                    else
+                                        {
+                                            stmt7.execute(true);
+                                        }
+                                }
+                            catch(...)
+                                {
                                 }
                         }
                     sql.commit();
-
 
                     //now check reverse sanity checks, JOB can't be FINISH,  FINISHEDDIRTY, FAILED is at least one tr is in STARTED/DELETE
                     soci::rowset<std::string> rs3 = (

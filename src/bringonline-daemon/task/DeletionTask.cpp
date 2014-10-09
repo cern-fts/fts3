@@ -42,9 +42,9 @@ void DeletionTask::run_srm_impl()
                     if (!error[i])
                         {
                             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DELETION FINISHED "
-                                                        << ids.first << " " << urls[i]
-                                                        << " (" << ids.second << ")"
-                                                        <<  commit;
+                                                            << ids.first << " " << urls[i]
+                                                            << " (" << ids.second << ")"
+                                                            <<  commit;
                             ctx.state_update(ids.first, ids.second, "FINISHED", "", false);
                             continue;
                         }
