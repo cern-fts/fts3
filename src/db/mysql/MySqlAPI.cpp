@@ -540,13 +540,41 @@ std::vector<std::string> MySqlAPI::getAllActivityShareConf()
     return ret;
 }
 
-std::map<std::string, long long> MySqlAPI::getActivitiesInQueue(soci::session& sql, std::string src, std::string dst, std::string vo)
+std::map<std::string, long long> & MySqlAPI::getActivitiesInQueue(soci::session& sql, std::string src, std::string dst, std::string vo)
 {
-    std::map<std::string, long long> ret;
-
+    // the function has a state (becareful it is not thread save)
+    static std::map<std::string, long long> ret;
+    // initialy set the last update 20 minutes in the past
+    static time_t last = 0;
+    // current time
     time_t now = time(NULL);
     struct tm tTime;
     gmtime_r(&now, &tTime);
+
+    // if the data are no older than 15 minutes ...
+    if (!ret.empty() && difftime(now, last) / 60 < 15)
+        {
+            // if the data are so young we
+            // probably don't need to refresh
+            bool need_refresh = false;
+            // check the activities
+            std::map<std::string, long long>::const_iterator it;
+            for (it = ret.begin(); it != ret.end(); ++it)
+                // if the activity reached zero it is better to refresh
+                if (it->second == 0)
+                    {
+                        need_refresh = true;
+                        break;
+                    }
+            // if we don't need to refresh the data just return
+            if (!need_refresh) return ret;
+        }
+
+    // we are going to load the data from DB,
+    // so this will be the last modification time
+    last = now;
+    // clear the result (not modifying capacity hoping for better performance)
+    ret.clear();
 
     try
         {
@@ -634,8 +662,13 @@ std::map<std::string, int> MySqlAPI::getFilesNumPerActivity(soci::session& sql, 
             // if there is no configuration no assigment can be made
             if (activityShares.empty()) return activityFilesNum;
 
+            // the mutex guarding 'activitiesInQueue' (common for all calls)
+            static boost::mutex mtx;
+            // locking the mutex
+            boost::mutex::scoped_lock lock(mtx);
+
             // get the activities in the queue
-            std::map<std::string, long long> activitiesInQueue = getActivitiesInQueue(sql, src, dst, vo);
+            std::map<std::string, long long> & activitiesInQueue = getActivitiesInQueue(sql, src, dst, vo);
 
             // sum of all activity shares in the queue (needed for normalization)
             double sum = 0;
