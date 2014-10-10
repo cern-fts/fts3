@@ -967,7 +967,23 @@ void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, s
 
                             for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
                                 {
-                                    TransferFiles const& tfile = *ti;
+                                    TransferFiles& tfile = *ti;
+				    
+ 				   if(tfile.REUSE_JOB == "R")
+				    {
+				        int total = 0;
+				        int remain = 0;					
+				    	sql << " select count(*) as c1, "
+						" (select count(*) from t_file where file_state<>'NOT_USED' and  job_id=:job_id)"
+						" as c2 from t_file where job_id=:job_id", 
+						soci::use(tfile.JOB_ID), 
+						soci::use(tfile.JOB_ID), 
+						soci::into(total),
+						soci::into(remain);
+						
+					tfile.LAST_REPLICA = (total == remain)? 1: 0;
+				    }				    
+				    
                                     files[tfile.VO_NAME].push_back(tfile);
                                 }
                         }
@@ -1034,7 +1050,24 @@ void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, s
 
                                     for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
                                         {
-                                            TransferFiles const& tfile = *ti;
+                                            TransferFiles& tfile = *ti;
+					    
+ 				   if(tfile.REUSE_JOB == "R")
+				    {
+				        int total = 0;
+				        int remain = 0;					
+				    	sql << " select count(*) as c1, "
+						" (select count(*) from t_file where file_state<>'NOT_USED' and  job_id=:job_id)"
+						" as c2 from t_file where job_id=:job_id", 
+						soci::use(tfile.JOB_ID), 
+						soci::use(tfile.JOB_ID), 
+						soci::into(total),
+						soci::into(remain);
+						
+					tfile.LAST_REPLICA = (total == remain)? 1: 0;
+				    }				    
+				    					    
+					    
                                             files[tfile.VO_NAME].push_back(tfile);
                                         }
                                 }
@@ -7969,7 +8002,7 @@ void OracleAPI::checkSanityState()
                     //special case for canceled
                     soci::rowset<std::string> rs2 = (
                                                         sql.prepare <<
-                                                        " select  j.job_id from t_job j inner join t_file f on (j.job_id = f.job_id) where j.job_finished >= (sys_extract_utc(systimestamp) - interval '24' HOUR ) and f.file_state in ('SUBMITTED','ACTIVE') "
+                                                        " select  j.job_id from t_job j inner join t_file f on (j.job_id = f.job_id) where j.job_finished is not NULL and f.file_state in ('SUBMITTED','ACTIVE') "
                                                     );
 
 
@@ -7983,7 +8016,7 @@ void OracleAPI::checkSanityState()
 
                     soci::rowset<std::string> rs444 = (
                                                           sql.prepare <<
-                                                          " select  j.job_id from t_job j where j.job_finished >= (sys_extract_utc(systimestamp) - interval '24' HOUR ) and job_state='FINISHED' and reuse_job='R' "
+                                                          " select  j.job_id from t_job j where job_state='FINISHED' and reuse_job='R' "
                                                       );
 
                     //multiple replicas with finished state

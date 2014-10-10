@@ -994,7 +994,23 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
 
                             for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
                                 {
-                                    TransferFiles const& tfile = *ti;
+                                    TransferFiles& tfile = *ti;
+				    
+				    if(tfile.REUSE_JOB == "R")
+				    {
+				        int total = 0;
+				        int remain = 0;					
+				    	sql << " select count(*) as c1, "
+						" (select count(*) from t_file where file_state<>'NOT_USED' and  job_id=:job_id)"
+						" as c2 from t_file where job_id=:job_id", 
+						soci::use(tfile.JOB_ID), 
+						soci::use(tfile.JOB_ID), 
+						soci::into(total),
+						soci::into(remain);
+						
+					tfile.LAST_REPLICA = (total == remain)? 1: 0;
+				    }
+				    
                                     files[tfile.VO_NAME].push_back(tfile);
                                 }
                         }
@@ -1052,7 +1068,23 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
 
                                     for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
                                         {
-                                            TransferFiles const& tfile = *ti;
+                                            TransferFiles& tfile = *ti;
+					    
+				    if(tfile.REUSE_JOB == "R")
+				    {
+				        int total = 0;
+				        int remain = 0;					
+				    	sql << " select count(*) as c1, "
+						" (select count(*) from t_file where file_state<>'NOT_USED' and  job_id=:job_id)"
+						" as c2 from t_file where job_id=:job_id", 
+						soci::use(tfile.JOB_ID), 
+						soci::use(tfile.JOB_ID), 
+						soci::into(total),
+						soci::into(remain);
+						
+					tfile.LAST_REPLICA = (total == remain)? 1: 0;
+				    }
+				    
                                             files[tfile.VO_NAME].push_back(tfile);
                                         }
                                 }
@@ -8622,7 +8654,7 @@ void MySqlAPI::checkSanityState()
                     //special case for canceled
                     soci::rowset<soci::row> rs2 = (
                                                       sql.prepare <<
-                                                      " select  j.job_id, j.job_state, j.reuse_job from t_job j inner join t_file f on (j.job_id = f.job_id) where j.job_finished >= (UTC_TIMESTAMP() - interval '24' HOUR ) and f.file_state in ('SUBMITTED','ACTIVE') "
+                                                      " select  j.job_id, j.job_state, j.reuse_job from t_job j inner join t_file f on (j.job_id = f.job_id) where j.job_finished is not null and f.file_state in ('SUBMITTED','ACTIVE') "
                                                   );
 
 
@@ -8649,7 +8681,7 @@ void MySqlAPI::checkSanityState()
                                         {
                                             int checkFinished = 0;
                                             sql << "SELECT COUNT(*) from t_file where file_state='FINISHED' and job_id=:job_id", soci::use(job_id), soci::into(checkFinished);
-                                            if(checkFinished == 0)
+                                            if(checkFinished >= 1)
                                                 {
                                                     sql << "UPDATE t_file SET "
                                                         "    file_state = 'FAILED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "

@@ -89,6 +89,9 @@ typedef struct
 
     std::string retry;
     std::string retry_max;
+    
+    std::string job_m_replica;
+    std::string job_state;    
 
 } transfer_completed;
 
@@ -156,6 +159,9 @@ public:
 
     void set_retry(transfer_completed* tr_completed, const std::string & value);
     void set_retry_max(transfer_completed* tr_completed, const std::string & value);
+    
+    void set_job_state(transfer_completed* tr_completed, const std::string & value);
+    void set_job_m_replica(transfer_completed* tr_completed, const std::string & value);    
 
     static msg_ifce* getInstance();
     ~msg_ifce();

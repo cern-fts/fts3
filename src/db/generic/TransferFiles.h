@@ -36,7 +36,7 @@ class TransferFiles
 public:
 
 
-    TransferFiles():FILE_ID(0),FILE_INDEX(0),PIN_LIFETIME(0),BRINGONLINE(0),USER_FILESIZE(0.0)
+    TransferFiles():FILE_ID(0),FILE_INDEX(0),PIN_LIFETIME(0),BRINGONLINE(0),USER_FILESIZE(0.0), LAST_REPLICA(0)
     {
     }
 
@@ -83,4 +83,5 @@ public:
     std::string BRINGONLINE_TOKEN;
     std::string USER_CREDENTIALS;
     std::string REUSE_JOB;
+    int LAST_REPLICA;
 };

@@ -429,7 +429,23 @@ void FileTransferExecutor::run(boost::any & ctx)
                             params.append(" -4 ");
                             params.append(lexical_cast<string >(retry_max));
                         }
+			
+			
+ 		   if (tf.REUSE_JOB.length() > 0 && tf.REUSE_JOB == "R")
+                        {
+                            params.append(" -0 ");
+                            params.append("true");
+                        }
+		   else {
+                            params.append(" -0 ");
+                            params.append("false");		   
+		   	}
+		   				
+                   params.append(" -6 ");
+                   params.append(tf.LAST_REPLICA == 1? "true": "false");
+                      						
 
+ 		  
 
                     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd << " " << params << commit;
                     ExecuteProcess pr(cmd, params);
