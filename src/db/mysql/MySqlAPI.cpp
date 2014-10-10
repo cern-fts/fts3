@@ -8554,7 +8554,7 @@ void MySqlAPI::checkSanityState()
                                                 }
 
                                             //do some more sanity checks for m-replica jobs to avoid state incosistencies
-                                            if(job_state == "ACTIVE" || job_state == "READY")
+                                            if(job_state == "ACTIVE")
                                                 {
                                                     long long countSubmittedActiveReady = 0;
                                                     sql << " SELECT count(*) from t_file where file_state in ('ACTIVE','SUBMITTED') and job_id = :job_id",
@@ -8616,13 +8616,13 @@ void MySqlAPI::checkSanityState()
                                         {
                                             int checkFinished = 0;
                                             sql << "SELECT COUNT(*) from t_file where file_state='FINISHED' and job_id=:job_id", soci::use(job_id), soci::into(checkFinished);
-                                            if(checkFinished == 0)
+                                            if(checkFinished >= 1)
                                                 {
                                                     sql << "UPDATE t_file SET "
                                                         "    file_state = 'FAILED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
                                                         "    reason = 'File state inconsistencies, better force-fail' "
                                                         "    WHERE file_state in ('ACTIVE','SUBMITTED') and job_id = :jobId", soci::use(job_id);
-                                                }
+                                                }					   
                                         }
                                     else
                                         {
