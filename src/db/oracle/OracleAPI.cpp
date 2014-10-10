@@ -4182,7 +4182,7 @@ bool OracleAPI::updateOptimizer()
                             int maxDestination = 0;
                             getMaxActive(sql, maxSource, maxDestination, source_hostname, destin_hostname);
 
-                            if( activeSource > maxSource || activeDestination > maxDestination || maxActive >= MAX_ACTIVE_PER_LINK)
+                            if( activeSource >= maxSource || activeDestination >= maxDestination || maxActive >= MAX_ACTIVE_PER_LINK)
                                 {
                                     if(ratioSuccessFailure >= MED_SUCCESS_RATE )
                                         {
