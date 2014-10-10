@@ -8589,7 +8589,7 @@ void MySqlAPI::checkSanityState()
                     //special case for canceled
                     soci::rowset<soci::row> rs2 = (
                                                       sql.prepare <<
-                                                      " select  j.job_id, j.job_state, j.reuse_job from t_job j inner join t_file f on (j.job_id = f.job_id) where j.job_finished >= (UTC_TIMESTAMP() - interval '24' HOUR ) and f.file_state in ('SUBMITTED','ACTIVE') "
+                                                      " select  j.job_id, j.job_state, j.reuse_job from t_job j inner join t_file f on (j.job_id = f.job_id) where j.job_finished is not NULL and f.file_state in ('SUBMITTED','ACTIVE') "
                                                   );
 
 
