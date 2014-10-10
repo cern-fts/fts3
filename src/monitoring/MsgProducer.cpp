@@ -134,9 +134,6 @@ bool MsgProducer::sendMessage(std::string &temp)
             message->setStringProperty("vo",vo);
             producer_transfer_completed->send(message);
             logger::writeLog(temp);
-	    
-	    std::cout << temp << std::endl;
-	    
             delete message;
         }
     else if (temp.compare(0, 2, "SS") == 0)
