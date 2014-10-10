@@ -290,7 +290,10 @@ protected:
 
                         if(!messages.empty())
                             {
+			    
+			        executeUpdate(messages); 
 
+				/*/
                                 //first update the STATUS
                                 boost::thread_group g;
 
@@ -318,6 +321,7 @@ protected:
 
                                 // wait for them
                                 g.join_all();
+				*/
 
                                 //now update the protocol
                                 DBSingleton::instance().getDBObjectInstance()->updateProtocol(messages);
