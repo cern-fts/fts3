@@ -448,7 +448,6 @@ void shutdown_callback(int signum, void*)
 
     logger.WARNING() << "Received signal " << signum << " (" << strsignal(signum) << ")" << std::endl;
     
-    std::cout << "Received signal " << signum << " (" << strsignal(signum) << ")" << std::endl; 
 
     if (signum == SIGABRT || signum == SIGSEGV || signum ==  SIGILL || signum ==  SIGFPE || signum == SIGBUS || signum ==  SIGTRAP || signum ==  SIGSYS)
         {
