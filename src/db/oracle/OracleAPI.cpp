@@ -3586,7 +3586,7 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
 
     try
         {
-            int highDefault = getOptimizerMode(sql);
+            int highDefault = MIN_ACTIVE;
 
             soci::statement stmt1 = (
                                         sql.prepare << "SELECT active FROM t_optimize_active "
@@ -3723,7 +3723,7 @@ bool OracleAPI::updateOptimizer()
     try
         {
             //check optimizer level, minimum active per link
-            int highDefault = getOptimizerMode(sql);
+            int highDefault = MIN_ACTIVE;
 
 
             //based on the level, how many transfers will be spawned
