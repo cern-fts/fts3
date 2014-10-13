@@ -801,12 +801,10 @@ void MySqlAPI::getVOPairs(std::vector< boost::tuple<std::string, std::string, st
         }
     catch (std::exception& e)
         {
-            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
 
