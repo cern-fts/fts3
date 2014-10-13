@@ -30,6 +30,7 @@ def slsfy(elements, id_tail, color_mapper=_color_mapper):
         )
         e_subavailability.text = name.upper()
         e_subavailability.tail = "Availability: %d" % availability
+        SubElement(e_availability_info, 'br')
         availability_sum += availability
 
     e_availability = SubElement(e_sls, 'availability')
