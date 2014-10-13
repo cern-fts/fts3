@@ -202,7 +202,7 @@ def get_overview(http_request):
 
                     triplets[triplet_key] = triplet
                 # Number of active fixed
-                triplet['active_fixed'] = bool(active_fixed)
+                triplet['active_fixed'] = active_fixed is not None and active_fixed.lower == 'on'
 
     # Limitations
     limit_query = "SELECT source_se, dest_se, throughput, active FROM t_optimize WHERE throughput IS NOT NULL or active IS NOT NULL"
