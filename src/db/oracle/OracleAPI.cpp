@@ -973,15 +973,17 @@ void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, s
 				    {
 				        int total = 0;
 				        int remain = 0;
-				    	sql << " select count(*) as c1, "
-						" (select count(*) from t_file where file_state<>'NOT_USED' and  job_id=:job_id)"
-						" as c2 from t_file where job_id=:job_id",
+				    	sql <<
+                            " SELECT"
+                            "   (SELECT COUNT(*) FROM t_file WHERE job_id=:job_id) AS c1,"
+                            "   (SELECT COUNT(*) FROM t_file WHERE file_state<>'NOT_USED' AND job_id=:job_id) AS c2 "
+                            " FROM dual",
 						soci::use(tfile.JOB_ID),
 						soci::use(tfile.JOB_ID),
 						soci::into(total),
 						soci::into(remain);
 
-					tfile.LAST_REPLICA = (total == remain)? 1: 0;
+				    	tfile.LAST_REPLICA = (total == remain)? 1: 0;
 				    }
 
                                     files[tfile.VO_NAME].push_back(tfile);
