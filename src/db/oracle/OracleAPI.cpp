@@ -968,22 +968,22 @@ void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, s
                             for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
                                 {
                                     TransferFiles& tfile = *ti;
-				    
+
  				   if(tfile.REUSE_JOB == "R")
 				    {
 				        int total = 0;
-				        int remain = 0;					
+				        int remain = 0;
 				    	sql << " select count(*) as c1, "
 						" (select count(*) from t_file where file_state<>'NOT_USED' and  job_id=:job_id)"
-						" as c2 from t_file where job_id=:job_id", 
-						soci::use(tfile.JOB_ID), 
-						soci::use(tfile.JOB_ID), 
+						" as c2 from t_file where job_id=:job_id",
+						soci::use(tfile.JOB_ID),
+						soci::use(tfile.JOB_ID),
 						soci::into(total),
 						soci::into(remain);
-						
+
 					tfile.LAST_REPLICA = (total == remain)? 1: 0;
-				    }				    
-				    
+				    }
+
                                     files[tfile.VO_NAME].push_back(tfile);
                                 }
                         }
@@ -1051,23 +1051,23 @@ void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, s
                                     for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
                                         {
                                             TransferFiles& tfile = *ti;
-					    
+
  				   if(tfile.REUSE_JOB == "R")
 				    {
 				        int total = 0;
-				        int remain = 0;					
+				        int remain = 0;
 				    	sql << " select count(*) as c1, "
 						" (select count(*) from t_file where file_state<>'NOT_USED' and  job_id=:job_id)"
-						" as c2 from t_file where job_id=:job_id", 
-						soci::use(tfile.JOB_ID), 
-						soci::use(tfile.JOB_ID), 
+						" as c2 from t_file where job_id=:job_id",
+						soci::use(tfile.JOB_ID),
+						soci::use(tfile.JOB_ID),
 						soci::into(total),
 						soci::into(remain);
-						
+
 					tfile.LAST_REPLICA = (total == remain)? 1: 0;
-				    }				    
-				    					    
-					    
+				    }
+
+
                                             files[tfile.VO_NAME].push_back(tfile);
                                         }
                                 }
@@ -1174,7 +1174,8 @@ void OracleAPI::getMultihopJobs(std::map< std::string, std::queue< std::pair<std
                             "       f.bringonline_token, f.source_se, f.dest_se, f.selection_strategy, "
                             "       j.internal_job_params, j.user_cred, j.reuse_job "
                             " FROM t_job j INNER JOIN t_file f ON (j.job_id = f.job_id) "
-                            " WHERE j.job_id = :job_id ",
+                            " WHERE j.job_id = :job_id "
+                            " ORDER BY f.file_id ASC",
                             soci::use(job_id)
                         );
 
