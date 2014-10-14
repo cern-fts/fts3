@@ -1141,7 +1141,7 @@ void OracleAPI::getMultihopJobs(std::map< std::string, std::queue< std::pair<std
                             "       f.bringonline_token, f.source_se, f.dest_se, f.selection_strategy, "
                             "       j.internal_job_params, j.user_cred, j.reuse_job "
                             " FROM t_job j INNER JOIN t_file f ON (j.job_id = f.job_id) "
-                            " WHERE j.job_id = :job_id ",
+                            " WHERE j.job_id = :job_id ORDER BY f.file_id ASC ",
                             soci::use(job_id)
                         );
 
@@ -3813,7 +3813,7 @@ bool OracleAPI::updateOptimizer()
                                          sql.prepare << "SELECT max(nostreams) FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se ",
                                          soci::use(source_hostname),
                                          soci::use(destin_hostname),
-                                         soci::into(nostreams, isNullStreamsOptimization));            ;
+                                         soci::into(nostreams, isNullStreamsOptimization));
 
 
             soci::statement stmt23 = (
@@ -4071,15 +4071,16 @@ bool OracleAPI::updateOptimizer()
 
 
                     // Ratio of success
-                    soci::rowset<soci::row> rs = (sql.prepare << "SELECT file_state, retry, current_failures FROM t_file "
-                                                  "WHERE "
+                    soci::rowset<soci::row> rs = (sql.prepare <<
+                                                  " SELECT file_state, retry, current_failures "
+                                                  " FROM t_file "
+                                                  " WHERE "
                                                   "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
                                                   "      ( "
-                                                  "		(t_file.job_finished is NULL AND current_failures > 0)  OR "
-                                                  "		(t_file.job_finished > (sys_extract_utc(systimestamp) - interval :calcutateTimeFrame minute)) "
-                                                  "	) "
-                                                  "	AND "
-                                                  "      file_state IN ('FAILED','FINISHED','SUBMITTED') ",
+                                                  "		    (t_file.job_finished is NULL AND current_failures > 0)  OR "
+                                                  "		    (t_file.job_finished > (sys_extract_utc(systimestamp) - numtodsinterval(:calcutateTimeFrame, 'minute'))) "
+                                                  "	     ) "
+                                                  "	    AND file_state IN ('FAILED','FINISHED','SUBMITTED') ",
                                                   soci::use(source_hostname), soci::use(destin_hostname), soci::use(calcutateTimeFrame));
 
 

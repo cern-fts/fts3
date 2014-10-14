@@ -1126,7 +1126,7 @@ void MySqlAPI::getMultihopJobs(std::map< std::string, std::queue< std::pair<std:
                             "       f.bringonline_token, f.source_se, f.dest_se, f.selection_strategy, "
                             "       j.internal_job_params, j.user_cred, j.reuse_job "
                             " FROM t_job j INNER JOIN t_file f ON (j.job_id = f.job_id) "
-                            " WHERE j.job_id = :job_id ",
+                            " WHERE j.job_id = :job_id ORDER BY f.file_id ASC ",
                             soci::use(job_id)
                         );
 
