@@ -2310,22 +2310,31 @@ void OracleAPI::getTransferFileStatus(std::string requestID, bool archive,
 
             if (archive)
                 {
-                    query = "SELECT t_file_backup.file_id, t_file_backup.source_surl, t_file_backup.dest_surl, t_file_backup.file_state, "
-                            "       t_file_backup.reason, t_file_backup.start_time, t_file_backup.finish_time, t_file_backup.retry, t_file_backup.tx_duration "
+                    query = "SELECT * FROM (SELECT rownum as rn, t_file_backup.file_id, t_file_backup.source_surl, t_file_backup.dest_surl, t_file_backup.file_state, "
+                            "       t_file_backup.reason, t_file_backup.start_time, "
+                            "       t_file_backup.finish_time, t_file_backup.retry, t_file_backup.tx_duration "
                             "FROM t_file_backup WHERE t_file_backup.job_id = :jobId ";
                 }
             else
                 {
-                    query = "SELECT t_file.file_id, t_file.source_surl, t_file.dest_surl, t_file.file_state, "
+                    query = "SELECT * FROM (SELECT rownum as rn, t_file.file_id, t_file.source_surl, t_file.dest_surl, t_file.file_state, "
                             "       t_file.reason, t_file.start_time, t_file.finish_time, t_file.retry, t_file.tx_duration "
                             "FROM t_file WHERE t_file.job_id = :jobId ";
                 }
+
+            if (limit)
+                query += ") WHERE rn >= :offset AND rn <= :offset + :limit";
+            else
+                query += ") WHERE rn >= :offset";
 
 
             FileTransferStatus transfer;
             soci::statement stmt(sql);
             stmt.exchange(soci::into(transfer));
             stmt.exchange(soci::use(requestID, "jobId"));
+            stmt.exchange(soci::use(offset, "offset"));
+            if (limit)
+                stmt.exchange(soci::use(limit, "limit"));
 
             stmt.alloc();
             stmt.prepare(query);

@@ -7,8 +7,6 @@ include_directories (BEFORE ../../common)
 include_directories (/usr/include/soci)
 include_directories (.)
 
-
-
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(fts_db_oracle_SOURCES OracleAPI.cpp OracleMonitoring.cpp)
 
