@@ -201,6 +201,7 @@
      <element name="numWaiting" type="xsd:int"/>
      <element name="numCatalogFailed" type="xsd:int"/>
      <element name="numRestarted" type="xsd:int"/>
+     <element name="numStaging" type="xsd:int"/>
     </sequence>
    </complexType>
    
@@ -303,36 +304,8 @@
      <element name="item" type="tns3:FileTransferStatus2" minOccurs="0" maxOccurs="unbounded"/>
     </sequence>
    </complexType>
-
-    <!--<complexType name="ArrayOf_soapenc_string">
-    <complexContent>
-     <restriction base="soapenc:Array">
-      <attribute ref="soapenc:arrayType" wsdl:arrayType="xsd:string[]"/>
-     </restriction>
-    </complexContent>
-   </complexType>
-   <complexType name="ArrayOf_tns3_JobStatus">
-    <complexContent>
-     <restriction base="soapenc:Array">
-      <attribute ref="soapenc:arrayType" wsdl:arrayType="tns3:JobStatus[]"/>
-     </restriction>
-    </complexContent>
-   </complexType>
-   <complexType name="ArrayOf_tns3_FileTransferStatus">
-    <complexContent>
-     <restriction base="soapenc:Array">
-      <attribute ref="soapenc:arrayType" wsdl:arrayType="tns3:FileTransferStatus[]"/>
-     </restriction>
-    </complexContent>
-   </complexType>
-   <complexType name="ArrayOf_tns3_FileTransferStatus2">
-    <complexContent>
-     <restriction base="soapenc:Array">
-      <attribute ref="soapenc:arrayType" wsdl:arrayType="tns3:FileTransferStatus2[]"/>
-     </restriction>
-    </complexContent>
-   </complexType>-->
   </schema>
+
  </wsdl:types>
 
    <message name="getInterfaceVersionResponse">
