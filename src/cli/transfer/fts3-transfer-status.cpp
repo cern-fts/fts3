@@ -120,33 +120,21 @@ int main(int ac, char* av[])
                     // get the transfers
                     if (cli.list() || cli.dumpFailed())
                         {
-                            int offset = 0;
-                            int cnt = 0;
+                            std::vector<FileInfo> const vect =
+                                ctx->getFileStatus(jobId, archive, 0, DEFAULT_LIMIT, cli.detailed());
 
-                            do
+                            std::vector<FileInfo>::const_iterator it;
+                            for (it = vect.begin(); it < vect.end(); it++)
                                 {
-                                    // do the request
-                                    std::vector<FileInfo> const vect =
-                                        ctx->getFileStatus(jobId, archive, offset, DEFAULT_LIMIT, cli.detailed());
-
-                                    cnt = vect.size();
-
-                                    std::vector<FileInfo>::const_iterator it;
-                                    for (it = vect.begin(); it < vect.end(); it++)
+                                    if (cli.list())
                                         {
-                                            if (cli.list())
-                                                {
-                                                    status.addFile(*it);
-                                                }
-                                            else if (cli.dumpFailed() && isTransferFailed(it->getState()))
-                                                {
-                                                    failedFiles << it->getSource() << " " << it->getDestination() << std::endl;
-                                                }
+                                            status.addFile(*it);
                                         }
-
-                                    offset += vect.size();
+                                    else if (cli.dumpFailed() && isTransferFailed(it->getState()))
+                                        {
+                                            failedFiles << it->getSource() << " " << it->getDestination() << std::endl;
+                                        }
                                 }
-                            while(cnt == DEFAULT_LIMIT);
                         }
 
                     MsgPrinter::instance().print(status);
