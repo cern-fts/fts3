@@ -66,10 +66,12 @@ void FetchCancelStaging::fetch()
                 }
             catch (Err& e)
                 {
+                    sleep(2);
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE " << e.what() << commit;
                 }
             catch (...)
                 {
+                    sleep(2);
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Fatal error (unknown origin)" << commit;
                 }
         }

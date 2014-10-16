@@ -53,7 +53,7 @@ const option UrlCopyOpts::long_options[] =
     {"retry",    	  required_argument, 0, '3'},
     {"retry_max",    	  required_argument, 0, '4'},
     {"job_m_replica",     required_argument, 0, '0'},
-    {"last_replica",      required_argument, 0, '6'},    
+    {"last_replica",      required_argument, 0, '6'},
     {0, 0, 0, 0}
 };
 
@@ -260,10 +260,10 @@ int UrlCopyOpts::parse(int argc, char * const argv[])
                             break;
                         case '0':
                             job_m_replica = boost::lexical_cast<std::string>(optarg);
-                            break;			    
+                            break;
                         case '6':
                             last_replica = boost::lexical_cast<std::string>(optarg);
-                            break;			    			    
+                            break;
                         }
                 }
         }

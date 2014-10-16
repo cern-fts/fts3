@@ -430,7 +430,7 @@ private:
 
     void transferLogFileVectorInternal(soci::session& sql, std::map<int, struct message_log>& messagesLog);
 
-    bool resetForRetryStaging(soci::session& sql, int file_id, const std::string & job_id, bool retry);
+    bool resetForRetryStaging(soci::session& sql, int file_id, const std::string & job_id, bool retry, int& times);
 
     bool resetForRetryDelete(soci::session& sql, int file_id, const std::string & job_id, bool retry);
 

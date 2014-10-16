@@ -994,20 +994,20 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                                 {
                                     TransferFiles& tfile = *ti;
 
-				    if(tfile.REUSE_JOB == "R")
-				    {
-				        int total = 0;
-				        int remain = 0;
-				    	sql << " select count(*) as c1, "
-						" (select count(*) from t_file where file_state<>'NOT_USED' and  job_id=:job_id)"
-						" as c2 from t_file where job_id=:job_id",
-						soci::use(tfile.JOB_ID),
-						soci::use(tfile.JOB_ID),
-						soci::into(total),
-						soci::into(remain);
+                                    if(tfile.REUSE_JOB == "R")
+                                        {
+                                            int total = 0;
+                                            int remain = 0;
+                                            sql << " select count(*) as c1, "
+                                                " (select count(*) from t_file where file_state<>'NOT_USED' and  job_id=:job_id)"
+                                                " as c2 from t_file where job_id=:job_id",
+                                                soci::use(tfile.JOB_ID),
+                                                soci::use(tfile.JOB_ID),
+                                                soci::into(total),
+                                                soci::into(remain);
 
-					tfile.LAST_REPLICA = (total == remain)? 1: 0;
-				    }
+                                            tfile.LAST_REPLICA = (total == remain)? 1: 0;
+                                        }
 
                                     files[tfile.VO_NAME].push_back(tfile);
                                 }
@@ -1068,20 +1068,20 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                                         {
                                             TransferFiles& tfile = *ti;
 
-				    if(tfile.REUSE_JOB == "R")
-				    {
-				        int total = 0;
-				        int remain = 0;
-				    	sql << " select count(*) as c1, "
-						" (select count(*) from t_file where file_state<>'NOT_USED' and  job_id=:job_id)"
-						" as c2 from t_file where job_id=:job_id",
-						soci::use(tfile.JOB_ID),
-						soci::use(tfile.JOB_ID),
-						soci::into(total),
-						soci::into(remain);
+                                            if(tfile.REUSE_JOB == "R")
+                                                {
+                                                    int total = 0;
+                                                    int remain = 0;
+                                                    sql << " select count(*) as c1, "
+                                                        " (select count(*) from t_file where file_state<>'NOT_USED' and  job_id=:job_id)"
+                                                        " as c2 from t_file where job_id=:job_id",
+                                                        soci::use(tfile.JOB_ID),
+                                                        soci::use(tfile.JOB_ID),
+                                                        soci::into(total),
+                                                        soci::into(remain);
 
-					tfile.LAST_REPLICA = (total == remain)? 1: 0;
-				    }
+                                                    tfile.LAST_REPLICA = (total == remain)? 1: 0;
+                                                }
 
                                             files[tfile.VO_NAME].push_back(tfile);
                                         }
@@ -12196,9 +12196,20 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost
 
                             if(retry )
                                 {
-                                    shouldBeRetried = resetForRetryStaging(sql, file_id, job_id, retry);
+                                    int times = 0;
+                                    shouldBeRetried = resetForRetryStaging(sql, file_id, job_id, retry, times);
                                     if(shouldBeRetried)
-                                        continue;
+                                        {
+                                            if(times > 0)
+                                                {
+                                                    sql << "INSERT IGNORE INTO t_file_retry_errors "
+                                                        "    (file_id, attempt, datetime, reason) "
+                                                        "VALUES (:fileId, :attempt, UTC_TIMESTAMP(), :reason)",
+                                                        soci::use(file_id), soci::use(times), soci::use(reason);
+                                                }
+
+                                            continue;
+                                        }
                                 }
 
                             if (!retry || !shouldBeRetried)
@@ -12289,7 +12300,10 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost
                     job_id = boost::get<3>(tupleRecord);
                     retry = boost::get<4>(tupleRecord);
 
-                    updateJobTransferStatusInternal(sql, job_id, state, 0);
+                    if(state == "SUBMITTED")
+                        updateJobTransferStatusInternal(sql, job_id, "ACTIVE", 0);
+                    else
+                        updateJobTransferStatusInternal(sql, job_id, state, 0);
 
                     //send state message
                     filesMsg = getStateOfTransferInternal(sql, job_id, file_id);
@@ -12486,7 +12500,7 @@ void MySqlAPI::checkJobOperation(std::vector<std::string >& jobs, std::vector< b
 
 
 
-bool MySqlAPI::resetForRetryStaging(soci::session& sql, int file_id, const std::string & job_id, bool retry)
+bool MySqlAPI::resetForRetryStaging(soci::session& sql, int file_id, const std::string & job_id, bool retry, int& times)
 {
     bool willBeRetried = false;
 
@@ -12553,6 +12567,8 @@ bool MySqlAPI::resetForRetryStaging(soci::session& sql, int file_id, const std::
 
                                     willBeRetried = true;
 
+                                    times = nRetries + 1;
+
                                     sql.commit();
                                 }
                             else
@@ -12570,6 +12586,8 @@ bool MySqlAPI::resetForRetryStaging(soci::session& sql, int file_id, const std::
                                         soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
 
                                     willBeRetried = true;
+
+                                    times = nRetries + 1;
 
                                     sql.commit();
                                 }

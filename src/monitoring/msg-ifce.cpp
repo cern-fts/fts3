@@ -406,14 +406,14 @@ void msg_ifce::SendTransferFinishMessage(transfer_completed *tr_completed)
             text.append(",\"$19$\":\"");
             text.append(tr_completed->retry_max);
             text.append("\"");
-	    
+
             text.append(",\"$20$\":\"");
             text.append(tr_completed->job_m_replica);
             text.append("\"");
 
             text.append(",\"$21$\":\"");
             text.append(tr_completed->job_state);
-            text.append("\"");	    
+            text.append("\"");
 
 
             text.append("}");

@@ -153,10 +153,12 @@ void heartbeat(void)
                 }
             catch (std::exception& ex)
                 {
+                    sleep(2);
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
                 }
             catch (...)
                 {
+                    sleep(2);
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unhandled exception" << commit;
                 }
         }

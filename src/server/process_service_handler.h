@@ -325,12 +325,12 @@ protected:
                             }
                         catch (std::exception& e)
                             {
-		                distinct.clear();
+                                distinct.clear();
                                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler " << e.what() << commit;
                             }
                         catch (...)
                             {
-		                distinct.clear();
+                                distinct.clear();
                                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler!" << commit;
                             }
                     }
@@ -345,12 +345,12 @@ protected:
                             }
                         catch (std::exception& e)
                             {
-		                distinct.clear();
+                                distinct.clear();
                                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler " << e.what() << commit;
                             }
                         catch (...)
                             {
-		                distinct.clear();
+                                distinct.clear();
                                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler!" << commit;
                             }
                     }

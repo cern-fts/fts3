@@ -16,7 +16,7 @@ public:
     std::string fileMetadata;
     std::string tokenBringOnline;
     std::string job_m_replica;
-    std::string last_replica;    
+    std::string last_replica;
 
     UrlCopyOpts::CompareChecksum checksumMethod;
 
@@ -34,7 +34,7 @@ public:
     Transfer(): fileId(0), userFileSize(0), checksumMethod(UrlCopyOpts::CHECKSUM_STRICT),
         startTime(0), finishTime(0),
         fileSize(0), throughput(0.0), transferredBytes(0),job_m_replica("false"), last_replica("false")
-    {    
+    {
     }
 
     void setChecksum(const std::string& checksum)
@@ -79,8 +79,8 @@ public:
         t.userFileSize = boost::lexical_cast<long long>(strArray[4]);
         t.fileMetadata = strArray[5];
         t.tokenBringOnline = strArray[6];
-        t.job_m_replica = "false";	
-	t.last_replica = "false";		
+        t.job_m_replica = "false";
+        t.last_replica = "false";
         return t;
     }
 
@@ -96,9 +96,9 @@ public:
         t.userFileSize = boost::lexical_cast<long long>(opts.userFileSize);
         t.fileMetadata = opts.fileMetadata;
         t.tokenBringOnline = opts.tokenBringOnline;
-	t.job_m_replica = opts.job_m_replica;
-	t.last_replica = opts.last_replica;
-	
+        t.job_m_replica = opts.job_m_replica;
+        t.last_replica = opts.last_replica;
+
         return t;
     }
 
@@ -112,7 +112,7 @@ public:
         while (getline(infile, line, '\n'))
             {
                 Transfer t = Transfer::createFromString(jobId, line);
-		t.job_m_replica = "false";
+                t.job_m_replica = "false";
                 list->push_back(t);
             }
 

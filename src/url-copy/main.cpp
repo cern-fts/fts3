@@ -286,36 +286,36 @@ void abnormalTermination(std::string classification, std::string, std::string fi
     msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
     msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, finalState);
     msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
-    
+
     msg_ifce::getInstance()->set_job_m_replica(&tr_completed, currentTransfer.job_m_replica);
-    
+
     if(currentTransfer.job_m_replica == "true")
-    {
-        if(classification == "CANCELED")
-	{
-		msg_ifce::getInstance()->set_job_state(&tr_completed, "CANCELED");	
-        }		
-	else
-	{
-		 if(currentTransfer.last_replica == "true")
-      		 {
-			msg_ifce::getInstance()->set_job_state(&tr_completed, "FAILED");		 
-		 }
-		 else
-		 {
-			 msg_ifce::getInstance()->set_job_state(&tr_completed, "ACTIVE");		 
-		 }
-	}
-    }
+        {
+            if(classification == "CANCELED")
+                {
+                    msg_ifce::getInstance()->set_job_state(&tr_completed, "CANCELED");
+                }
+            else
+                {
+                    if(currentTransfer.last_replica == "true")
+                        {
+                            msg_ifce::getInstance()->set_job_state(&tr_completed, "FAILED");
+                        }
+                    else
+                        {
+                            msg_ifce::getInstance()->set_job_state(&tr_completed, "ACTIVE");
+                        }
+                }
+        }
     else
-    {
-    	msg_ifce::getInstance()->set_job_state(&tr_completed, "UNKNOWN");		 
-    }
-    
-    
+        {
+            msg_ifce::getInstance()->set_job_state(&tr_completed, "UNKNOWN");
+        }
+
+
     if(classification == "CANCELED")
-    	classification = "FAILED";
-      
+        classification = "FAILED";
+
     if(UrlCopyOpts::getInstance().monitoringMessages && !completeMsgSent)
         {
             completeMsgSent = true;
@@ -447,7 +447,7 @@ void shutdown_callback(int signum, void*)
     Logger& logger = Logger::getInstance();
 
     logger.WARNING() << "Received signal " << signum << " (" << strsignal(signum) << ")" << std::endl;
-    
+
 
     if (signum == SIGABRT || signum == SIGSEGV || signum ==  SIGILL || signum ==  SIGFPE || signum == SIGBUS || signum ==  SIGTRAP || signum ==  SIGSYS)
         {
@@ -638,8 +638,8 @@ void setRemainingTransfersToFailed(std::vector<Transfer>& transferList, unsigned
             msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, GENERAL_FAILURE);
             msg_ifce::getInstance()->set_failure_phase(&tr_completed, TRANSFER);
             msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, "Not executed because a previous hop failed");
-	    msg_ifce::getInstance()->set_job_state(&tr_completed, "UNKNOWN");	    	    
-	    
+            msg_ifce::getInstance()->set_job_state(&tr_completed, "UNKNOWN");
+
             if(UrlCopyOpts::getInstance().monitoringMessages)
                 msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
 
@@ -1294,7 +1294,7 @@ int main(int argc, char **argv)
                     {
                         logger.INFO() << "Transfer completed successfully" << std::endl;
                     }
-		    
+
 
 
                 currentTransfer.transferredBytes = currentTransfer.fileSize;
@@ -1387,20 +1387,20 @@ stop:
 
             if (errorMessage.length() > 0)
                 {
-		    msg_ifce::getInstance()->set_job_m_replica(&tr_completed, opts.job_m_replica);
-		    
-		    if(opts.job_m_replica == "true")
-		    {
-		    	if(opts.last_replica == "true")
-            	    		msg_ifce::getInstance()->set_job_state(&tr_completed, "FAILED");
-		    	else
-				msg_ifce::getInstance()->set_job_state(&tr_completed, "ACTIVE");
-		    }
-		    else
-		    {
-		    	msg_ifce::getInstance()->set_job_state(&tr_completed, "UNKNOWN");
-		    }
-		
+                    msg_ifce::getInstance()->set_job_m_replica(&tr_completed, opts.job_m_replica);
+
+                    if(opts.job_m_replica == "true")
+                        {
+                            if(opts.last_replica == "true")
+                                msg_ifce::getInstance()->set_job_state(&tr_completed, "FAILED");
+                            else
+                                msg_ifce::getInstance()->set_job_state(&tr_completed, "ACTIVE");
+                        }
+                    else
+                        {
+                            msg_ifce::getInstance()->set_job_state(&tr_completed, "UNKNOWN");
+                        }
+
                     msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Error");
                     reporter.timeout = opts.timeout;
                     reporter.nostreams = opts.nStreams;
@@ -1451,16 +1451,16 @@ stop:
                 }
             else
                 {
-		    msg_ifce::getInstance()->set_job_m_replica(&tr_completed, opts.job_m_replica);
-		    if(opts.job_m_replica == "true")
-		    {
-            	    	msg_ifce::getInstance()->set_job_state(&tr_completed, "FINISHED");		    	
-		    }
-		    else
-		    {
-            	    	msg_ifce::getInstance()->set_job_state(&tr_completed, "UNKNOWN");		    			    
-		    }
-		
+                    msg_ifce::getInstance()->set_job_m_replica(&tr_completed, opts.job_m_replica);
+                    if(opts.job_m_replica == "true")
+                        {
+                            msg_ifce::getInstance()->set_job_state(&tr_completed, "FINISHED");
+                        }
+                    else
+                        {
+                            msg_ifce::getInstance()->set_job_state(&tr_completed, "UNKNOWN");
+                        }
+
                     msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Ok");
                     reporter.timeout = opts.timeout;
                     reporter.nostreams = opts.nStreams;
