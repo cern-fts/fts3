@@ -31,7 +31,7 @@ void DeletionTask::run_srm_impl()
     // make sure there is work to do
     if (urls.empty()) return;
     std::vector<GError*> error (urls.size(), NULL);
-    int status = gfal2_unlink_list(gfal2_ctx, urls.size(), &*urls.begin(), &*error.begin());
+    int status = gfal2_unlink_list(gfal2_ctx, urls.size(), &*urls.begin(), &error.front());
 
     if (status < 0)
         {
@@ -39,25 +39,21 @@ void DeletionTask::run_srm_impl()
                 {
                     std::pair<std::string, int> ids = ctx.getIDs(urls[i]);
 
-                    if (!error[i])
+                    if (error[i])
                         {
-                            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DELETION FINISHED "
-                                                            << ids.first << " " << urls[i]
-                                                            << " (" << ids.second << ")"
-                                                            <<  commit;
-                            ctx.state_update(ids.first, ids.second, "FINISHED", "", false);
-                            continue;
+                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "DELETION FAILED " << urls[i] << ": "
+                                                           << error[i]->code << " " << error[i]->message
+                                                           << commit;
+
+                            bool retry = doRetry(error[i]->code, "SOURCE", std::string(error[i]->message));
+                            ctx.state_update(ids.first, ids.second, "FAILED", error[i]->message, retry);
                         }
-
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "DELETION FAILED "
-                                                   << urls[i] << " "
-                                                   << error[i]->code << " "
-                                                   << error[i]->message << commit;
-
-                    bool retry = doRetry(error[i]->code, "SOURCE", std::string(error[i]->message));
-
-
-                    ctx.state_update(ids.first, ids.second, "FAILED", error[i]->message, retry);
+                    else
+                        {
+                            FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "DELETION FAILED for " << urls[i]
+                                           << ": returned -1 but error was not set ";
+                            ctx.state_update(ids.first, ids.second, "FAILED", "Error not set by gfal2", false);
+                        }
                     g_clear_error(&error[i]);
                 }
         }

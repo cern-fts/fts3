@@ -53,11 +53,11 @@ public:
 
     StagingContext(StagingContext const & copy) :
         JobContext(copy),
-        pinlifetime(copy.pinlifetime), bringonlineTimeout(copy.bringonlineTimeout), urlToIDs(copy.urlToIDs) {}
+        pinlifetime(copy.pinlifetime), bringonlineTimeout(copy.bringonlineTimeout) {}
 
     StagingContext(StagingContext && copy) :
         JobContext(std::move(copy)),
-        pinlifetime(copy.pinlifetime), bringonlineTimeout(copy.bringonlineTimeout), urlToIDs(std::move(copy.urlToIDs)) {}
+        pinlifetime(copy.pinlifetime), bringonlineTimeout(copy.bringonlineTimeout) {}
 
     virtual ~StagingContext() {}
 
@@ -94,20 +94,10 @@ public:
         return pinlifetime;
     }
 
-    std::pair<std::string, int> getIDs(std::string const & surl) const
-    {
-        std::pair<std::string, int> ret;
-        std::map< std::string, std::pair<std::string, int> >::const_iterator it = urlToIDs.find(surl);
-        if (it != urlToIDs.end()) ret = it->second;
-        return ret;
-    }
-
 private:
 
     int pinlifetime;
     int bringonlineTimeout;
-
-    std::map< std::string, std::pair<std::string, int> > urlToIDs;
 };
 
 #endif /* STAGINGCONTEXT_H_ */

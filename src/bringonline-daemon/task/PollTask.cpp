@@ -27,29 +27,31 @@ void PollTask::run(boost::any const &)
 
     int status = gfal2_bring_online_poll_list(
             gfal2_ctx, static_cast<int>(urls.size()),
-            &*urls.begin(), token.c_str(), &*errors.begin());
+            &*urls.begin(), token.c_str(), &errors.front());
 
     if (status < 0)
         {
             for (size_t i = 0; i < urls.size(); ++i)
-            {
-                std::pair<std::string, int> ids = ctx.getIDs(urls[i]);
+                {
+                    std::pair<std::string, int> ids = ctx.getIDs(urls[i]);
 
-                if (errors[i]) {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE polling FAILED for " << urls[i] << ": "
-                                                   << errors[i]->code << " " << errors[i]->message
-                                                   << commit;
+                    if (errors[i])
+                        {
+                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE polling FAILED for " << urls[i] << ": "
+                                                           << errors[i]->code << " " << errors[i]->message
+                                                           << commit;
 
-                    bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
-                    ctx.state_update(ids.first, ids.second, "FAILED", errors[i]->message, retry);
+                            bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
+                            ctx.state_update(ids.first, ids.second, "FAILED", errors[i]->message, retry);
+                        }
+                    else
+                        {
+                            FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "BRINGONLINE FAILED for " << urls[i]
+                                           << ": returned -1 but error was not set ";
+                            ctx.state_update(ids.first, ids.second, "FAILED", "Error not set by gfal2", false);
+                        }
+                    g_clear_error(&errors[i]);
                 }
-                else {
-                    FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "BRINGONLINE FAILED for " << urls[i]
-                                   << ": returned -1 but error was not set ";
-                    ctx.state_update(ids.first, ids.second, "FAILED", "Error not set by gfal2", false);
-                }
-                g_clear_error(&errors[i]);
-            }
         }
     else if(status == 0)
         {

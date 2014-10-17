@@ -36,14 +36,15 @@ public:
      *
      * @param jc : JobContext to be copied
      */
-    JobContext(JobContext const & jc) : jobs(jc.jobs), proxy(jc.proxy), spaceToken(jc.spaceToken) {}
+    JobContext(JobContext const & jc) : jobs(jc.jobs), proxy(jc.proxy), spaceToken(jc.spaceToken), urlToIDs(jc.urlToIDs) {}
 
     /**
      * Move constructor
      *
      * @param jc : JobContext to be moved
      */
-    JobContext(JobContext && jc) : jobs(std::move(jc.jobs)), proxy(std::move(jc.proxy)), spaceToken(std::move(jc.spaceToken)) {}
+    JobContext(JobContext && jc) :
+        jobs(std::move(jc.jobs)), proxy(std::move(jc.proxy)), spaceToken(std::move(jc.spaceToken)), urlToIDs(std::move(jc.urlToIDs)) {}
 
     /**
      * Destructor
@@ -119,6 +120,17 @@ public:
 
     std::string getLogMsg() const;
 
+    /**
+     * Get job and file ID for the given SURL
+     */
+    std::pair<std::string, int> getIDs(std::string const & surl) const
+    {
+        std::pair<std::string, int> ret;
+        std::map< std::string, std::pair<std::string, int> >::const_iterator it = urlToIDs.find(surl);
+        if (it != urlToIDs.end()) ret = it->second;
+        return ret;
+    }
+
 private:
 
     /**
@@ -138,6 +150,8 @@ protected:
     std::string proxy;
     /// space token
     std::string spaceToken;
+    /// URL -> (job_id, file_id)
+    std::map< std::string, std::pair<std::string, int> > urlToIDs;
 };
 
 #endif /* JOBCONTEXT_H_ */
