@@ -26,7 +26,6 @@ class TestBringOnline(base.TestBase):
             state = self.client.poll(jobId)
             
             self.assertEqual('FINISHED', state, 'job.state')
-            
     
     def test_bring_online_only(self):
         """
@@ -41,6 +40,29 @@ class TestBringOnline(base.TestBase):
             state = self.client.poll(jobId)
             
             self.assertEqual('FINISHED', state, 'job.state')
+
+    def test_bringonline_multiple(self):
+        """
+        Regression test
+        Submit a bring online job with a file that exist and another that doesn't
+        """
+        for (src, dst) in self.transfers:
+            logging.info("Bring online only, finish dirty")
+            self.surl.create(src)
+            enoent = src + ".enoent"
+            jobId = self.client.submit([
+                {'sources': [enoent], 'destinations': [enoent]},
+                {'sources': [src], 'destinations': [src]}
+            ], ['--bring-online=120'])
+            logging.info("Got job id %s" % jobId)
+
+            state = self.client.poll(jobId)
+
+            self.assertEqual('FINISHEDDIRTY', state, 'job.state')
+
+            files = self.client.getFileInfo(jobId)
+            self.assertEqual('FAILED', files[(enoent, enoent)]['state'], 'enoent.state')
+            self.assertEqual('FINISHED', files[(src, src)]['state'], 'src.state')
 
 
 if __name__ == '__main__':

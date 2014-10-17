@@ -66,6 +66,17 @@ public:
             }
     }
 
+    /**
+     * Updates status per file
+     */
+    void operator()(std::string const & job_id, int file_id, std::string const & state, std::string const & reason, bool retry)
+    {
+        // lock the vector
+        boost::mutex::scoped_lock lock(m);
+        updates.push_back(value_type(file_id, state, reason, job_id, retry));
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "STAGING Update : " << file_id << "  " << state << "  " << reason << " " << job_id << " " << retry << commit;
+    }
+
     /// Destructor
     virtual ~StagingStateUpdater() {}
 

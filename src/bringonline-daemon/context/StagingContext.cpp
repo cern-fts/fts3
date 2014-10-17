@@ -24,7 +24,11 @@ void StagingContext::add(context_type const & ctx)
             bringonlineTimeout = boost::get<bring_online_timeout>(ctx);
         }
 
-    add(boost::get<surl>(ctx), boost::get<job_id>(ctx), boost::get<file_id>(ctx));
+    std::string url = boost::get<surl>(ctx);
+    std::string jobId = boost::get<job_id>(ctx);
+    int fileId =  boost::get<file_id>(ctx);
+    add(url, jobId, fileId);
+    urlToIDs[url] = std::make_pair(jobId, fileId);
 }
 
 
