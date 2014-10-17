@@ -10523,13 +10523,8 @@ void OracleAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< bo
                         }
                     else if(state == "FAILED")
                         {
-                            if(retry)
-                                {
-                                    bool shouldBeRetried = resetForRetryDelete(sql, file_id, job_id, retry);
-                                    if(shouldBeRetried)
-                                        continue;
-                                }
-                            else
+                            bool shouldBeRetried = resetForRetryDelete(sql, file_id, job_id, retry);
+                            if (!shouldBeRetried)
                                 {
                                     sql <<
                                         " UPDATE t_dm "
