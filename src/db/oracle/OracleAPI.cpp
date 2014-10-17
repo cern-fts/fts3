@@ -2018,10 +2018,13 @@ void OracleAPI::getDmJobStatus(std::string requestID, bool archive, std::vector<
                                              sql.prepare << statusQuery,
                                              soci::use(requestID, "jobId"));
 
+            int index = 0;
             for (soci::rowset<JobStatus>::iterator i = rs.begin(); i != rs.end(); ++i)
                 {
                     JobStatus& job = *i;
                     job.numFiles = numFiles;
+                    // make sure each deletion has different file index
+                    job.fileIndex = index++;
                     jobs.push_back(new JobStatus(job));
                 }
         }
