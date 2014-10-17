@@ -95,10 +95,12 @@ void FetchDeletion::fetch()
                 }
             catch (Err& e)
                 {
+                    sleep(2);
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "DELETION " << e.what() << commit;
                 }
             catch (...)
                 {
+                    sleep(2);
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "DELETION Fatal error (unknown origin)" << commit;
                 }
         }
