@@ -53,15 +53,24 @@ public:
 
     StagingContext(StagingContext const & copy) :
         JobContext(copy),
-        pinlifetime(copy.pinlifetime), bringonlineTimeout(copy.bringonlineTimeout) {}
+        pinlifetime(copy.pinlifetime), bringonlineTimeout(copy.bringonlineTimeout), urlToIDs(copy.urlToIDs) {}
 
     StagingContext(StagingContext && copy) :
         JobContext(std::move(copy)),
-        pinlifetime(copy.pinlifetime), bringonlineTimeout(copy.bringonlineTimeout) {}
+        pinlifetime(copy.pinlifetime), bringonlineTimeout(copy.bringonlineTimeout), urlToIDs(std::move(copy.urlToIDs)) {}
 
     virtual ~StagingContext() {}
 
     void add(context_type const & ctx);
+
+    /**
+     * Asynchronous update of a single transfer-file within a job
+     */
+    void state_update(std::string const & job_id, int file_id, std::string const & state, std::string const & reason, bool retry) const
+    {
+        static StagingStateUpdater & state_update = StagingStateUpdater::instance();
+        state_update(job_id, file_id, state, reason, retry);
+    }
 
     void state_update(std::string const & state, std::string const & reason, bool retry) const
     {
@@ -85,10 +94,20 @@ public:
         return pinlifetime;
     }
 
+    std::pair<std::string, int> getIDs(std::string const & surl) const
+    {
+        std::pair<std::string, int> ret;
+        std::map< std::string, std::pair<std::string, int> >::const_iterator it = urlToIDs.find(surl);
+        if (it != urlToIDs.end()) ret = it->second;
+        return ret;
+    }
+
 private:
 
     int pinlifetime;
     int bringonlineTimeout;
+
+    std::map< std::string, std::pair<std::string, int> > urlToIDs;
 };
 
 #endif /* STAGINGCONTEXT_H_ */
