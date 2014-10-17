@@ -85,7 +85,12 @@ void JobStatusGetter::file_status(std::vector<STATUS*> & ret)
                 }
             else
                 {
-                    status->duration = tmp->finish_time - tmp->start_time;
+                    if (tmp->finish_time > 0 && tmp->start_time > 0)
+                        status->duration = tmp->finish_time - tmp->start_time;
+                    else if(tmp->finish_time <= 0 && tmp->start_time > 0)
+                        status->duration = time(NULL) - tmp->start_time;
+                    else
+                        status->duration = 0;
                     status->numFailures = tmp->numFailures;
                 }
 
