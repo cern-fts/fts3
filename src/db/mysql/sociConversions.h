@@ -285,7 +285,7 @@ struct type_conversion<FileTransferStatus>
             }
         else
             {
-                transfer.finish_time = timeUTC();
+                transfer.finish_time = 0;
             }
     }
 };
