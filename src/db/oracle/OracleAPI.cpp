@@ -4233,7 +4233,7 @@ bool OracleAPI::updateOptimizer()
                                             active = maxActive + 1;
                                             pathFollowed = 2;
                                         }
-                                    else if((throughputEMA >= HIGH_THROUGHPUT && avgDuration <= AVG_TRANSFER_DURATION))
+                                    else if((throughputEMA >= HIGH_THROUGHPUT || avgDuration <= AVG_TRANSFER_DURATION))
                                         {
                                             active = maxActive + 1;
                                             pathFollowed = 3;
@@ -4243,7 +4243,7 @@ bool OracleAPI::updateOptimizer()
                                             active = maxActive + 1;
                                             pathFollowed = 4;
                                         }
-                                    else if( (singleDest == 1 || lanTransferBool || spawnActive > 1) && (throughputEMA > thrStored || avgDuration <= AVG_TRANSFER_DURATION) )
+                                    else if( (singleDest == 1 || lanTransferBool || spawnActive > 1) && (throughputEMA >= thrStored || avgDuration <= AVG_TRANSFER_DURATION) )
                                         {
                                             active = maxActive + 1;
                                             pathFollowed = 5;
