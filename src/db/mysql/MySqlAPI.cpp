@@ -4539,7 +4539,7 @@ bool MySqlAPI::updateOptimizer()
 
 
                     // Ratio of success
-                    soci::rowset<soci::row> rs = (sql.prepare << "SELECT file_state, retry, current_failures FROM t_file "
+                    soci::rowset<soci::row> rs = (sql.prepare << "SELECT file_state, retry, current_failures, reason FROM t_file "
                                                   "WHERE "
                                                   "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
                                                   "      ( "
@@ -4557,8 +4557,16 @@ bool MySqlAPI::updateOptimizer()
                             std::string state = i->get<std::string>("file_state", "");
                             int retryNum = i->get<int>("retry", 0);
                             int current_failures = i->get<int>("current_failures", 0);
+			    std::string reason = i->get<std::string>("reason", "");
 
-                            if(state.compare("FAILED") == 0 && current_failures == 0)
+			    //we do not want BringOnline errors to affect transfer success rate, exclude them
+			    bool exists = reason.find("BringOnline") != std::string::npos;
+
+                            if(state.compare("FAILED") == 0 && exists)
+                                {
+                                    //do nothing, it's a non recoverable error so do not consider it
+                                }
+                            else if(state.compare("FAILED") == 0 && current_failures == 0)
                                 {
                                     //do nothing, it's a non recoverable error so do not consider it
                                 }
