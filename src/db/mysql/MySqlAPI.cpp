@@ -4493,7 +4493,7 @@ bool MySqlAPI::updateOptimizer()
 			    std::string reason = i->get<std::string>("reason", "");
 
 			    //we do not want BringOnline errors to affect transfer success rate, exclude them
-			    bool exists = reason.find("BringOnline") != std::string::npos;
+			    bool exists = (reason.find("BringOnline") != std::string::npos);
 
                             if(state.compare("FAILED") == 0 && exists)
                                 {
