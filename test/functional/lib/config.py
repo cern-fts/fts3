@@ -38,7 +38,7 @@ StorageAreaPairs = [
         'gsiftp://dcdoor01.pic.es:2811/pnfs/pic.es/data/%(vo)s/'
     ),
     (
-        'srm://grid002.ft.uam.es:8443/srm/managerv2?SFN=/pnfs/ft.uam.es/data/%(vo)s/',
+        'srm://lxfsra04a04.cern.ch:8446/srm/managerv2?SFN=/dpm/cern.ch/home/%(vo)s/',
         'srm://storage01.lcg.cscs.ch:8443/srm/managerv2?SFN=/pnfs/lcg.cscs.ch/%(vo)s/'
     ),
 #    (

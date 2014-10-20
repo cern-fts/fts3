@@ -53,7 +53,44 @@ void PollTask::run(boost::any const &)
                     g_clear_error(&errors[i]);
                 }
         }
-    else if(status == 0)
+    // 0 = not all are terminal
+    // 1 = all are terminal
+    // So check the status for each individual file regardless, so we can start transferring before the
+    // whole staging job is finished
+    else
+        {
+            for (size_t i = 0; i < urls.size(); ++i)
+            {
+                std::pair<std::string, int> ids = ctx.getIDs(urls[i]);
+
+                if (errors[i] == NULL)
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE FINISHED for "
+                                                    << urls[i] << commit;
+                    ctx.state_update(ids.first, ids.second, "FINISHED", "", false);
+                    ctx.removeUrl(urls[i]);
+                }
+                else if (errors[i]->code == EAGAIN)
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE NOT FINISHED for " << urls[i]
+                                                    << commit;
+                }
+                else {
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE FAILED for " << urls[i] << ": "
+                                                   << errors[i]->code << " " << errors[i]->message
+                                                   << commit;
+
+                    bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
+                    ctx.state_update(ids.first, ids.second, "FAILED", errors[i]->message, retry);
+                    ctx.removeUrl(urls[i]);
+
+                }
+                g_clear_error(&errors[i]);
+            }
+        }
+
+    // If status was 0, not everything is terminal, so schedule a new poll
+    if(status == 0)
         {
             time_t interval = getPollInterval(++nPolls), now = time(NULL);
             wait_until = now + interval;
@@ -63,29 +100,6 @@ void PollTask::run(boost::any const &)
 
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE next attempt in " << interval << " seconds" << commit;
             WaitingRoom<PollTask>::instance().add(new PollTask(std::move(*this)));
-        }
-    else
-        {
-            for (size_t i = 0; i < urls.size(); ++i)
-            {
-                std::pair<std::string, int> ids = ctx.getIDs(urls[i]);
-
-                if (errors[i]) {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE FAILED for " << urls[i] << ": "
-                                                   << errors[i]->code << " " << errors[i]->message
-                                                   << commit;
-
-                    bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
-                    ctx.state_update(ids.first, ids.second, "FAILED", errors[i]->message, retry);
-                    g_clear_error(&errors[i]);
-                }
-                else {
-                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE FINISHED for "
-                                                    << urls[i] << " , got token " << token
-                                                    << commit;
-                    ctx.state_update(ids.first, ids.second, "FINISHED", "", false);
-                }
-            }
         }
 }
 

@@ -9,7 +9,9 @@
 
 #include "cred/DelegCred.h"
 #include "cred/cred-utility.h"
+#include "common/logger.h"
 
+#include <algorithm>
 #include <memory>
 #include <sstream>
 
@@ -58,6 +60,37 @@ std::vector<char const *> JobContext::getUrls() const
 
     return ret;
 }
+
+
+class FileUrlMatches {
+    std::string url;
+public:
+    FileUrlMatches(const std::string& url): url(url) {}
+
+    bool operator () (std::pair<int, std::string>& transfer) const {
+        return transfer.second == url;
+    }
+};
+
+
+void JobContext::removeUrl(const std::string& url)
+{
+    std::map< std::string, std::vector<std::pair<int, std::string> > >::iterator it_j;
+
+    FileUrlMatches url_compare(url);
+
+    for (it_j = jobs.begin(); it_j != jobs.end(); ++it_j)
+        {
+            it_j->second.erase(std::remove_if(it_j->second.begin(), it_j->second.end(), url_compare));
+        }
+
+    urlToIDs.erase(url);
+
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Removed " << url
+                                     << " from the watch list"
+                                     << fts3::common::commit;
+}
+
 
 std::string JobContext::getLogMsg() const
 {

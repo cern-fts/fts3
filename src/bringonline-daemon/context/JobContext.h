@@ -102,6 +102,8 @@ public:
         return surls;
     }
 
+    void removeUrl(const std::string& url);
+
     /**
      * @return : proxy-certificate file name
      */
