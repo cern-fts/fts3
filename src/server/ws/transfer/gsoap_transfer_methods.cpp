@@ -77,7 +77,7 @@ int fts3::impltns__fileDelete(soap* ctx, tns3__deleteFiles* fileNames,impltns__f
             string hostN;
             const regex fileUrlRegex("([a-zA-Z][a-zA-Z0-9+\.-]*://[a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
 
-            multimap<string, string> rulsHost;
+            map<string, string> rulsHost;
             vector<string>::iterator it;
 
             for (it = fileNames->delf.begin(); it != fileNames->delf.end(); ++it)

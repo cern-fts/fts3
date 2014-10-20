@@ -39,7 +39,7 @@ void BringOnlineTask::run(boost::any const &)
         {
             for (size_t i = 0; i < urls.size(); ++i)
                 {
-                    std::pair<std::string, int> ids = ctx.getIDs(urls[i]);
+                    auto ids = ctx.getIDs(urls[i]);
 
                     if (errors[i])
                         {
@@ -48,13 +48,15 @@ void BringOnlineTask::run(boost::any const &)
                                                            << commit;
 
                             bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
-                            ctx.state_update(ids.first, ids.second, "FAILED", errors[i]->message, retry);
+                            for (auto it = ids.begin(); it != ids.end(); ++it)
+                                ctx.state_update(it->first, it->second, "FAILED", errors[i]->message, retry);
                         }
                     else
                         {
                             FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "BRINGONLINE FAILED for " << urls[i]
                                            << ": returned -1 but error was not set ";
-                            ctx.state_update(ids.first, ids.second, "FAILED", "Error not set by gfal2", false);
+                            for (auto it = ids.begin(); it != ids.end(); ++it)
+                                ctx.state_update(it->first, it->second, "FAILED", "Error not set by gfal2", false);
                         }
                     g_clear_error(&errors[i]);
                 }
@@ -72,7 +74,7 @@ void BringOnlineTask::run(boost::any const &)
             // No need to poll
             for (size_t i = 0; i < urls.size(); ++i)
             {
-                std::pair<std::string, int> ids = ctx.getIDs(urls[i]);
+                auto ids = ctx.getIDs(urls[i]);
 
                 if (errors[i]) {
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE FAILED for " << urls[i] << ": "
@@ -80,14 +82,16 @@ void BringOnlineTask::run(boost::any const &)
                                                    << commit;
 
                     bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
-                    ctx.state_update(ids.first, ids.second, "FAILED", errors[i]->message, retry);
+                    for (auto it = ids.begin(); it != ids.end(); ++it)
+                        ctx.state_update(it->first, it->second, "FAILED", errors[i]->message, retry);
                     g_clear_error(&errors[i]);
                 }
                 else {
                     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE FINISHED for "
                                                     << urls[i] << " , got token " << token
                                                     << commit;
-                    ctx.state_update(ids.first, ids.second, "FINISHED", "", false);
+                    for (auto it = ids.begin(); it != ids.end(); ++it)
+                        ctx.state_update(it->first, it->second, "FINISHED", "", false);
                 }
             }
         }

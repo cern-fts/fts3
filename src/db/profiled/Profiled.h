@@ -374,7 +374,7 @@ public:
     void setMaxStagingPerEndpoint(int maxStaging, const std::string & endpoint, const std::string & vo);
     int getMaxStatingsPerEndpoint(const std::string & endpoint, const std::string & vo);
 
-    void submitdelete(const std::string & jobId, const std::multimap<std::string,std::string>& rulsHost,
+    void submitdelete(const std::string & jobId, const std::map<std::string,std::string>& rulsHost,
                       const std::string & DN, const std::string & voName, const std::string & credID);
 
     void checkJobOperation(std::vector<std::string>& jobs, std::vector< boost::tuple<std::string, std::string> >& ops);

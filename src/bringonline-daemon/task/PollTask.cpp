@@ -33,7 +33,7 @@ void PollTask::run(boost::any const &)
         {
             for (size_t i = 0; i < urls.size(); ++i)
                 {
-                    std::pair<std::string, int> ids = ctx.getIDs(urls[i]);
+                    auto ids = ctx.getIDs(urls[i]);
 
                     if (errors[i])
                         {
@@ -42,13 +42,15 @@ void PollTask::run(boost::any const &)
                                                            << commit;
 
                             bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
-                            ctx.state_update(ids.first, ids.second, "FAILED", errors[i]->message, retry);
+                            for (auto it = ids.begin(); it != ids.end(); ++it)
+                                ctx.state_update(it->first, it->second, "FAILED", errors[i]->message, retry);
                         }
                     else
                         {
                             FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "BRINGONLINE FAILED for " << urls[i]
                                            << ": returned -1 but error was not set ";
-                            ctx.state_update(ids.first, ids.second, "FAILED", "Error not set by gfal2", false);
+                            for (auto it = ids.begin(); it != ids.end(); ++it)
+                                ctx.state_update(it->first, it->second, "FAILED", "Error not set by gfal2", false);
                         }
                     g_clear_error(&errors[i]);
                 }
@@ -61,13 +63,14 @@ void PollTask::run(boost::any const &)
         {
             for (size_t i = 0; i < urls.size(); ++i)
             {
-                std::pair<std::string, int> ids = ctx.getIDs(urls[i]);
+                auto ids = ctx.getIDs(urls[i]);
 
                 if (errors[i] == NULL)
                 {
                     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE FINISHED for "
                                                     << urls[i] << commit;
-                    ctx.state_update(ids.first, ids.second, "FINISHED", "", false);
+                    for (auto it = ids.begin(); it != ids.end(); ++it)
+                        ctx.state_update(it->first, it->second, "FINISHED", "", false);
                     ctx.removeUrl(urls[i]);
                 }
                 else if (errors[i]->code == EAGAIN)
@@ -81,7 +84,8 @@ void PollTask::run(boost::any const &)
                                                    << commit;
 
                     bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
-                    ctx.state_update(ids.first, ids.second, "FAILED", errors[i]->message, retry);
+                    for (auto it = ids.begin(); it != ids.end() ; ++it)
+                        ctx.state_update(it->first, it->second, "FAILED", errors[i]->message, retry);
                     ctx.removeUrl(urls[i]);
 
                 }
@@ -166,7 +170,7 @@ bool PollTask::abort()
         {
             for (size_t i = 0; i < urls.size(); ++i)
             {
-                std::pair<std::string, int> ids = ctx.getIDs(urls[i]);
+                auto ids = ctx.getIDs(urls[i]);
 
                 if (errors[i]) {
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE abort FAILED for " << urls[i] << ": "
@@ -174,14 +178,16 @@ bool PollTask::abort()
                                                    << commit;
 
                     bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
-                    ctx.state_update(ids.first, ids.second, "FAILED", errors[i]->message, retry);
+                    for (auto it = ids.begin(); it != ids.end(); ++it)
+                        ctx.state_update(it->first, it->second, "FAILED", errors[i]->message, retry);
                     g_clear_error(&errors[i]);
                 }
                 else {
                     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE abort FAILED for "
                                                     << urls[i] << ", returned -1, but error not set " << token
                                                     << commit;
-                    ctx.state_update(ids.first, ids.second, "FAILED", "Error not set by gfal2", false);
+                    for (auto it = ids.begin(); it != ids.end(); ++it)
+                        ctx.state_update(it->first, it->second, "FAILED", "Error not set by gfal2", false);
                 }
             }
         }

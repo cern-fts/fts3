@@ -301,7 +301,7 @@ void MySqlAPI::init(std::string username, std::string password, std::string conn
 }
 
 
-void MySqlAPI::submitdelete(const std::string & jobId, const std::multimap<std::string,std::string>& rulsHost,
+void MySqlAPI::submitdelete(const std::string & jobId, const std::map<std::string,std::string>& rulsHost,
                             const std::string & userDN, const std::string & voName, const std::string & credID)
 {
     if (rulsHost.empty()) return;

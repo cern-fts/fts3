@@ -37,7 +37,7 @@ void DeletionTask::run_srm_impl()
         {
             for (int i = 0; i < urls.size(); ++i)
                 {
-                    std::pair<std::string, int> ids = ctx.getIDs(urls[i]);
+                    std::vector< std::pair<std::string, int> > const ids = ctx.getIDs(urls[i]);
 
                     if (error[i])
                         {
@@ -46,13 +46,15 @@ void DeletionTask::run_srm_impl()
                                                            << commit;
 
                             bool retry = doRetry(error[i]->code, "SOURCE", std::string(error[i]->message));
-                            ctx.state_update(ids.first, ids.second, "FAILED", error[i]->message, retry);
+                            for (auto it = ids.begin(); it != ids.end(); ++it)
+                                ctx.state_update(it->first, it->second, "FAILED", error[i]->message, retry);
                         }
                     else
                         {
                             FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "DELETION FAILED for " << urls[i]
                                            << ": returned -1 but error was not set ";
-                            ctx.state_update(ids.first, ids.second, "FAILED", "Error not set by gfal2", false);
+                            for (auto it = ids.begin(); it != ids.end(); ++it)
+                                ctx.state_update(it->first, it->second, "FAILED", "Error not set by gfal2", false);
                         }
                     g_clear_error(&error[i]);
                 }

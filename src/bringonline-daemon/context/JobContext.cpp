@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <memory>
 #include <sstream>
+#include <unordered_set>
 
 JobContext::JobContext(std::string const & dn, std::string const & vo, std::string const & delegationId, std::string const & spaceToken) : spaceToken(spaceToken)
 {
@@ -28,6 +29,7 @@ JobContext::JobContext(std::string const & dn, std::string const & vo, std::stri
 void JobContext::add(std::string const & surl, std::string const & jobId, int fileId)
 {
     jobs[jobId].push_back(std::make_pair(fileId, surl));
+    urlToIDs.insert({surl, {jobId, fileId}});
 }
 
 std::string JobContext::generateProxy(std::string const & dn, std::string const & delegationId)
@@ -49,12 +51,18 @@ std::vector<char const *> JobContext::getUrls() const
 
     std::map< std::string, std::vector<std::pair<int, std::string> > >::const_iterator it_j;
     std::vector<std::pair<int, std::string> >::const_iterator it_f;
+    // make sure only unique SURLs will be brought online / deleted
+    std::unordered_set<std::string> unique;
 
     for (it_j = jobs.begin(); it_j != jobs.end(); ++it_j)
         {
             for (it_f = it_j->second.begin(); it_f != it_j->second.end(); ++it_f)
                 {
-                    ret.push_back(it_f->second.c_str());
+                    if (unique.find(it_f->second) == unique.end())
+                        {
+                            unique.insert(it_f->second);
+                            ret.push_back(it_f->second.c_str());
+                        }
                 }
         }
 

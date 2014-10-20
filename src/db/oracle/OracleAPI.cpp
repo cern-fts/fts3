@@ -227,7 +227,7 @@ void OracleAPI::init(std::string username, std::string password, std::string con
 }
 
 
-void OracleAPI::submitdelete(const std::string & jobId, const std::multimap<std::string,std::string>& rulsHost,
+void OracleAPI::submitdelete(const std::string & jobId, const std::map<std::string,std::string>& rulsHost,
                              const std::string & userDN, const std::string & voName, const std::string & credID)
 {
     if (rulsHost.empty()) return;
