@@ -207,6 +207,9 @@ void MsgPrinter::print_ostr(JobStatus const & status, bool short_out)
             (*ostr) << "  Reason:      " << it->reason << std::endl;
             (*ostr) << "  Duration:    " << it->duration << std::endl;
 
+            if (it->staging_duration >= 0)
+                (*ostr) << "  Staging:     " << it->staging_duration << std::endl;
+
             if (it->retries.size() > 0)
                 {
                     (*ostr) << "  Retries: " << std::endl;
@@ -260,6 +263,9 @@ void MsgPrinter::print_json(JobStatus const & status)
                     file.put("state", it->state);
                     file.put("reason", it->reason);
                     file.put("duration", it->duration);
+
+                    if (it->staging_duration >= 0)
+                        file.put("staging", it->staging_duration);
 
                     if (it->retries.empty())
                         {

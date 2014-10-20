@@ -2329,13 +2329,15 @@ void MySqlAPI::getTransferFileStatus(std::string requestID, bool archive,
             if (archive)
                 {
                     query = "SELECT t_file_backup.file_id, t_file_backup.source_surl, t_file_backup.dest_surl, t_file_backup.file_state, "
-                            "       t_file_backup.reason, t_file_backup.start_time, t_file_backup.finish_time, t_file_backup.retry, t_file_backup.tx_duration "
+                            "       t_file_backup.reason, t_file_backup.start_time, t_file_backup.finish_time, t_file_backup.retry, t_file_backup.tx_duration,"
+                            "       t_file.staging_start, t_file.staging_finished "
                             "FROM t_file_backup WHERE t_file_backup.job_id = :jobId ";
                 }
             else
                 {
                     query = "SELECT t_file.file_id, t_file.source_surl, t_file.dest_surl, t_file.file_state, "
-                            "       t_file.reason, t_file.start_time, t_file.finish_time, t_file.retry, t_file.tx_duration "
+                            "       t_file.reason, t_file.start_time, t_file.finish_time, t_file.retry, t_file.tx_duration,"
+                            "       t_file.staging_start, t_file.staging_finished "
                             "FROM t_file WHERE t_file.job_id = :jobId ";
                 }
 

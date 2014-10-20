@@ -317,6 +317,8 @@ struct type_conversion<FileTransferStatus>
 
         transfer.start_time        = getTimeT(v, "START_TIME");
         transfer.finish_time       = getTimeT(v, "FINISH_TIME");
+        transfer.staging_start     = getTimeT(v, "STAGING_START");
+        transfer.staging_finished    = getTimeT(v, "STAGING_FINISHED");
     }
 };
 

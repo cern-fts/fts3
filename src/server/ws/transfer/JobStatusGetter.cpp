@@ -94,6 +94,14 @@ void JobStatusGetter::file_status(std::vector<STATUS*> & ret)
                     status->numFailures = tmp->numFailures;
                 }
 
+            status->staging = (int64_t*)soap_malloc(ctx, sizeof(int64_t));
+            if (tmp->staging_finished > 0 && tmp->staging_start > 0)
+                *status->staging = tmp->staging_finished - tmp->staging_start;
+            else if (tmp->staging_finished <= 0 && tmp->staging_start > 0)
+                *status->staging = time(NULL) - tmp->staging_start;
+            else
+                *status->staging = 0;
+
             // Retries only on request! This type of information exists only for transfer jobs
             if (retry && !dm_job)
                 {
