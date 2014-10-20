@@ -113,8 +113,8 @@ private:
      */
     static time_t getPollInterval(int nPolls)
     {
-        if (nPolls > 5)
-            return 180;
+        if (nPolls > 9)
+            return 600;
         else
             return (2 << nPolls);
     }
