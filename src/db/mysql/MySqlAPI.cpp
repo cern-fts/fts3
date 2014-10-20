@@ -10957,6 +10957,7 @@ void MySqlAPI::setFixActive(const std::string & source, const std::string & dest
     soci::session sql(*connectionPool);
     try
         {
+		sql.begin();
             if (active > 0)
                 {
                     sql << "INSERT INTO t_optimize_active (source_se, dest_se, active, fixed, ema, datetime) "
@@ -12281,6 +12282,7 @@ void MySqlAPI::getStagingFilesForCanceling(std::vector< boost::tuple<int, std::s
                                      "WHERE file_id = :file_id ", soci::use(file_id, "file_id"));
 
             // Cancel staging files
+	    sql.begin();
             for (soci::rowset<soci::row>::const_iterator i2 = rs.begin(); i2 != rs.end(); ++i2)
                 {
                     soci::row const& row = *i2;
@@ -12292,13 +12294,16 @@ void MySqlAPI::getStagingFilesForCanceling(std::vector< boost::tuple<int, std::s
 
                     stmt1.execute(true);
                 }
+		sql.commit();
         }
     catch (std::exception& e)
         {
+	sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
+	sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }
