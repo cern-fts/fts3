@@ -60,7 +60,7 @@ public:
 
     virtual void init(std::string username, std::string password, std::string connectString, int pooledConn);
 
-    virtual  void submitdelete(const std::string & jobId, const std::multimap<std::string,std::string>& rulsHost,
+    virtual  void submitdelete(const std::string & jobId, const std::map<std::string,std::string>& rulsHost,
                                const std::string & DN, const std::string & voName, const std::string & credID);
 
     /**
@@ -425,7 +425,7 @@ private:
 
     void updateHeartBeatInternal(soci::session& sql, unsigned* index, unsigned* count, unsigned* start, unsigned* end, std::string service_name);
 
-    bool resetForRetryStaging(soci::session& sql, int file_id, const std::string & job_id, bool retry);
+    bool resetForRetryStaging(soci::session& sql, int file_id, const std::string & job_id, bool retry, int& times);
 
     bool resetForRetryDelete(soci::session& sql, int file_id, const std::string & job_id, bool retry);
 

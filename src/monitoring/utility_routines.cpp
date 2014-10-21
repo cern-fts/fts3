@@ -49,6 +49,7 @@
 #include <netinet/in.h>
 #include "producer_consumer_common.h"
 #include "name_to_uid.h"
+#include "common/error.h"
 
 #define MILLI 36000000
 
@@ -758,7 +759,15 @@ bool get_mon_cfg_file()
                         ENABLELOG = false;
                 }
 
+            if (USERNAME == "replacethis" || PASSWORD == "replacethis" || CRONFQDN == "replacethis")
+                throw fts3::common::Err_Custom("Can not start with the default configuration");
+
             return true;
+        }
+    catch (const std::exception& e)
+        {
+            logger::writeLog(std::string("msg config file error: ") + e.what(), true);
+            return false;
         }
     catch (...)
         {

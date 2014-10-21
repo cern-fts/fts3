@@ -77,7 +77,7 @@ int fts3::impltns__fileDelete(soap* ctx, tns3__deleteFiles* fileNames,impltns__f
             string hostN;
             const regex fileUrlRegex("([a-zA-Z][a-zA-Z0-9+\.-]*://[a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
 
-            multimap<string, string> rulsHost;
+            map<string, string> rulsHost;
             vector<string>::iterator it;
 
             for (it = fileNames->delf.begin(); it != fileNames->delf.end(); ++it)
@@ -618,14 +618,14 @@ int fts3::impltns__getTransferJobSummary3(soap *ctx, fts3::tns3__JobRequest *req
         }
     catch(Err& ex)
         {
-            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "An exception has been caught: getTransferJobSummary " << commit;
-            soap_receiver_fault(ctx, "getTransferJobSummary", "TransferException");
+            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "An exception has been caught: " << ex.what() << commit;
+            soap_receiver_fault(ctx, ex.what(), "TransferException");
             return SOAP_FAULT;
         }
     catch(...)
         {
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "An exception has been caught: "  << commit;
-            soap_receiver_fault(ctx, "getTransferJobSummary", "TransferException");
+            soap_receiver_fault(ctx, "getTransferJobSummary3", "TransferException");
             return SOAP_FAULT;
         }
 

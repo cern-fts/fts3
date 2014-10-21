@@ -263,7 +263,7 @@ void taskTimerCanceler()
     exit(1);
 }
 
-void abnormalTermination(const std::string& classification, const std::string&, const std::string& finalState)
+void abnormalTermination(std::string classification, std::string, std::string finalState)
 {
     terminalState = true;
 
@@ -286,6 +286,36 @@ void abnormalTermination(const std::string& classification, const std::string&, 
     msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
     msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, finalState);
     msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
+
+    msg_ifce::getInstance()->set_job_m_replica(&tr_completed, currentTransfer.job_m_replica);
+
+    if(currentTransfer.job_m_replica == "true")
+        {
+            if(classification == "CANCELED")
+                {
+                    msg_ifce::getInstance()->set_job_state(&tr_completed, "CANCELED");
+                }
+            else
+                {
+                    if(currentTransfer.last_replica == "true")
+                        {
+                            msg_ifce::getInstance()->set_job_state(&tr_completed, "FAILED");
+                        }
+                    else
+                        {
+                            msg_ifce::getInstance()->set_job_state(&tr_completed, "ACTIVE");
+                        }
+                }
+        }
+    else
+        {
+            msg_ifce::getInstance()->set_job_state(&tr_completed, "UNKNOWN");
+        }
+
+
+    if(classification == "CANCELED")
+        classification = "FAILED";
+
     if(UrlCopyOpts::getInstance().monitoringMessages && !completeMsgSent)
         {
             completeMsgSent = true;
@@ -418,6 +448,7 @@ void shutdown_callback(int signum, void*)
 
     logger.WARNING() << "Received signal " << signum << " (" << strsignal(signum) << ")" << std::endl;
 
+
     if (signum == SIGABRT || signum == SIGSEGV || signum ==  SIGILL || signum ==  SIGFPE || signum == SIGBUS || signum ==  SIGTRAP || signum ==  SIGSYS)
         {
             if (propagated == false)
@@ -439,7 +470,7 @@ void shutdown_callback(int signum, void*)
                     propagated = true;
                     errorMessage = "TRANSFER " + currentTransfer.jobId + " canceled by the user";
                     logger.WARNING() << errorMessage << std::endl;
-                    abnormalTermination("FAILED", errorMessage, "Abort");
+                    abnormalTermination("CANCELED", errorMessage, "Abort");
                 }
         }
     else if (signum == SIGUSR1)
@@ -607,6 +638,8 @@ void setRemainingTransfersToFailed(std::vector<Transfer>& transferList, unsigned
             msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, GENERAL_FAILURE);
             msg_ifce::getInstance()->set_failure_phase(&tr_completed, TRANSFER);
             msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, "Not executed because a previous hop failed");
+            msg_ifce::getInstance()->set_job_state(&tr_completed, "UNKNOWN");
+
             if(UrlCopyOpts::getInstance().monitoringMessages)
                 msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
 
@@ -762,14 +795,14 @@ int main(int argc, char **argv)
                     setenv("CGSI_TRACE", "1", 1);
                     setenv("GLOBUS_FTP_CLIENT_DEBUG_LEVEL", "255", 1);
                     setenv("GLOBUS_FTP_CONTROL_DEBUG_LEVEL", "10", 1);
-                    setenv("GLOBUS_GSI_AUTHZ_DEBUG_LEVEL", "1", 1);
-                    setenv("GLOBUS_CALLOUT_DEBUG_LEVEL", "1", 1);
-                    setenv("GLOBUS_GSI_CERT_UTILS_DEBUG_LEVEL", "1", 1);
-                    setenv("GLOBUS_GSI_CRED_DEBUG_LEVEL", "1", 1);
-                    setenv("GLOBUS_GSI_PROXY_DEBUG_LEVEL", "1", 1);
+                    setenv("GLOBUS_GSI_AUTHZ_DEBUG_LEVEL", "2", 1);
+                    setenv("GLOBUS_CALLOUT_DEBUG_LEVEL", "5", 1);
+                    setenv("GLOBUS_GSI_CERT_UTILS_DEBUG_LEVEL", "5", 1);
+                    setenv("GLOBUS_GSI_CRED_DEBUG_LEVEL", "10", 1);
+                    setenv("GLOBUS_GSI_PROXY_DEBUG_LEVEL", "10", 1);
                     setenv("GLOBUS_GSI_SYSCONFIG_DEBUG_LEVEL", "1", 1);
-                    setenv("GLOBUS_GSI_GSS_ASSIST_DEBUG_LEVEL", "1", 1);
-                    setenv("GLOBUS_GSSAPI_DEBUG_LEVEL", "1", 1);
+                    setenv("GLOBUS_GSI_GSS_ASSIST_DEBUG_LEVEL", "5", 1);
+                    setenv("GLOBUS_GSSAPI_DEBUG_LEVEL", "5", 1);
                     setenv("GLOBUS_NEXUS_DEBUG_LEVEL", "1", 1);
                     setenv("GLOBUS_GIS_OPENSSL_ERROR_DEBUG_LEVEL", "1", 1);
                     setenv("XRD_LOGLEVEL", "Dump", 1);
@@ -1263,6 +1296,7 @@ int main(int argc, char **argv)
                     }
 
 
+
                 currentTransfer.transferredBytes = currentTransfer.fileSize;
                 msg_ifce::getInstance()->set_total_bytes_transfered(&tr_completed, currentTransfer.transferredBytes);
 
@@ -1353,6 +1387,20 @@ stop:
 
             if (errorMessage.length() > 0)
                 {
+                    msg_ifce::getInstance()->set_job_m_replica(&tr_completed, opts.job_m_replica);
+
+                    if(opts.job_m_replica == "true")
+                        {
+                            if(opts.last_replica == "true")
+                                msg_ifce::getInstance()->set_job_state(&tr_completed, "FAILED");
+                            else
+                                msg_ifce::getInstance()->set_job_state(&tr_completed, "ACTIVE");
+                        }
+                    else
+                        {
+                            msg_ifce::getInstance()->set_job_state(&tr_completed, "UNKNOWN");
+                        }
+
                     msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Error");
                     reporter.timeout = opts.timeout;
                     reporter.nostreams = opts.nStreams;
@@ -1403,6 +1451,16 @@ stop:
                 }
             else
                 {
+                    msg_ifce::getInstance()->set_job_m_replica(&tr_completed, opts.job_m_replica);
+                    if(opts.job_m_replica == "true")
+                        {
+                            msg_ifce::getInstance()->set_job_state(&tr_completed, "FINISHED");
+                        }
+                    else
+                        {
+                            msg_ifce::getInstance()->set_job_state(&tr_completed, "UNKNOWN");
+                        }
+
                     msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Ok");
                     reporter.timeout = opts.timeout;
                     reporter.nostreams = opts.nStreams;

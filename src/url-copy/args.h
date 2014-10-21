@@ -67,6 +67,8 @@ public:
     std::string oauthFile;
     int retry;
     int retry_max;
+    std::string job_m_replica;
+    std::string last_replica;
 
     bool areTransfersOnFile() const
     {

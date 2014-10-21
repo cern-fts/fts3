@@ -21,7 +21,7 @@ void DeletionContext::add(context_type const & ctx)
     if (surl.compare(0, 6, "srm://") == 0)
         {
             srm_jobs[jobId].push_back(std::make_pair(fileId, surl));
-            urlToIDs[surl] = std::make_pair(jobId, fileId);
+            urlToIDs.insert({surl, {jobId, fileId}});
         }
     else
         add(surl, jobId, fileId);

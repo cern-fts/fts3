@@ -39,7 +39,8 @@ public:
 
     FileInfo(tns3__FileTransferStatus const * f) :
         src(*f->sourceSURL), dst (*f->destSURL), state(*f->transferFileState),
-        reason(*f->reason), duration (f->duration), nbFailures(f->numFailures)
+        reason(*f->reason), duration (f->duration), nbFailures(f->numFailures),
+        staging_duration(-1)
     {
         std::transform(
             f->retries.begin(),
@@ -47,11 +48,15 @@ public:
             std::back_inserter(retries),
             boost::bind(&tns3__FileTransferRetry::reason, _1)
         );
+
+        if (f->staging)
+            staging_duration = *f->staging;
     }
 
     FileInfo(pt::ptree const & t) :
         src(t.get<std::string>("source_surl")), dst(t.get<std::string>("dest_surl")), state(t.get<std::string>("file_state")),
-        reason(t.get<std::string>("reason")), duration(0), nbFailures(t.get<int>("retry"))
+        reason(t.get<std::string>("reason")), duration(0), nbFailures(t.get<int>("retry")),
+        staging_duration(0)
     {
         pt::ptree const & r = t.get_child("retries");
 
@@ -72,6 +77,19 @@ public:
         time_t start = mktime(&time);
 
         duration = (long)difftime(finish, start);
+
+        std::string staging_start = t.get<std::string>("staging_start");
+        std::string staging_finished = t.get<std::string>("staging_finished");
+
+        if (strptime(staging_start.c_str(), "%Y-%m-%dT%H:%M:%S", &time) != NULL) {
+            time_t staging_start_time = mktime(&time);
+            time_t staging_finished_time = ::time(NULL);
+
+            if (strptime(staging_finished.c_str(), "%Y-%m-%dT%H:%M:%S", &time) != NULL)
+                staging_finished_time = mktime(&time);
+
+            staging_duration = staging_finished_time - staging_start_time;
+        }
     }
 
     std::string getState() const
@@ -97,6 +115,7 @@ private:
     long duration;
     int nbFailures;
     std::vector<std::string> retries;
+    long staging_duration;
 };
 
 class DetailedFileStatus

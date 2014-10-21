@@ -90,6 +90,7 @@ protected:
                 {
                     std::stringstream ss;
                     ss << operation << " bad initialisation " << error->code << " " << error->message;
+                    g_clear_error(&error);
                     // the memory was not allocated so it is safe to throw
                     throw Err_Custom(ss.str());
                 }
@@ -110,6 +111,7 @@ protected:
                 {
                     std::stringstream ss;
                     ss << operation << " could not set the protocol list " << error->code << " " << error->message;
+                    g_clear_error(&error);
                     throw Err_Custom(ss.str());
                 }
 
@@ -118,6 +120,7 @@ protected:
                 {
                     std::stringstream ss;
                     ss << operation << " could not set the session reuse " << error->code << " " << error->message;
+                    g_clear_error(&error);
                     throw Err_Custom(ss.str());
                 }
         }

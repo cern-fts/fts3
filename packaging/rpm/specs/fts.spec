@@ -4,7 +4,7 @@
 %global selinux_variants mls targeted
 
 Name: fts
-Version: 3.2.29
+Version: 3.2.30
 Release: 1%{?dist}
 Summary: File Transfer Service V3
 Group: System Environment/Daemons
@@ -112,7 +112,6 @@ Group: System Environment/Daemons
 Requires: bdii
 Requires: fts-server%{?_isa} = %{version}-%{release}
 Requires: glue-schema
-Requires: glue-validator
 Requires(post): chkconfig
 Requires(preun): chkconfig
 Requires(postun): initscripts

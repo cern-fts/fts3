@@ -35,7 +35,10 @@ class FileTransferStatus
 {
 public:
 
-    FileTransferStatus():numFailures(0),finish_time(time(NULL)),start_time(time(NULL)),fileId(0),duration(0)
+    FileTransferStatus() :
+            numFailures(0), finish_time(time(NULL)), start_time(time(NULL)),
+            staging_start(0), staging_finished(0),
+            fileId(0), duration(0)
     {
     }
 
@@ -52,11 +55,12 @@ public:
     std::string reason_class;
     time_t finish_time;
     time_t start_time;
+    time_t staging_start;
+    time_t staging_finished;
     std::string error_scope;
     std::string error_phase;
     int fileId;
     double duration;
-
 };
 
 

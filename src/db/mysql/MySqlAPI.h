@@ -61,7 +61,7 @@ public:
     virtual void init(std::string username, std::string password, std::string connectString, int pooledConn);
 
 
-    virtual  void submitdelete(const std::string & jobId, const std::multimap<std::string,std::string>& rulsHost,
+    virtual  void submitdelete(const std::string & jobId, const std::map<std::string,std::string>& rulsHost,
                                const std::string & DN, const std::string & voName, const std::string & credID);
 
     /**
@@ -324,7 +324,7 @@ public:
 
     virtual std::vector<std::string> getAllActivityShareConf();
 
-    std::map<std::string, long long> getActivitiesInQueue(soci::session& sql, std::string src, std::string dst, std::string vo);
+    std::map<std::string, long long> & getActivitiesInQueue(soci::session& sql, std::string src, std::string dst, std::string vo);
 
     std::map<std::string, int> getFilesNumPerActivity(soci::session& sql, std::string src, std::string dst, std::string vo, int filesNum, std::set<std::string> & default_activities);
 
@@ -430,7 +430,7 @@ private:
 
     void transferLogFileVectorInternal(soci::session& sql, std::map<int, struct message_log>& messagesLog);
 
-    bool resetForRetryStaging(soci::session& sql, int file_id, const std::string & job_id, bool retry);
+    bool resetForRetryStaging(soci::session& sql, int file_id, const std::string & job_id, bool retry, int& times);
 
     bool resetForRetryDelete(soci::session& sql, int file_id, const std::string & job_id, bool retry);
 

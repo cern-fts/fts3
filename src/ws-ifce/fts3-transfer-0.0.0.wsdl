@@ -154,6 +154,7 @@
      <element name="reason" nillable="true" type="xsd:string"/>
      <element name="reason_class" nillable="true" type="xsd:string"/>
      <element name="duration" type="xsd:long"/>
+     <element name="staging" type="xsd:long" nillable="true"/>
      <element name="retries" nillable="true" minOccurs="0" maxOccurs="unbounded" type="tns3:FileTransferRetry"/>
     </sequence>
    </complexType>

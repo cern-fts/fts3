@@ -65,7 +65,7 @@ void FetchDeletion::fetch()
                             std::string const & dn = boost::get<DeletionContext::user_dn>(*it_f);
                             std::string const & vo = boost::get<DeletionContext::vo_name>(*it_f);
 
-                            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DELETION To be deleted: " << dn << "  " << vo << "  " << url << commit;
+                            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DELETION To be deleted: \"" << dn << "\"  \"" << vo << "\"  " << url << commit;
 
                             key_type key(vo, dn, se);
                             it_t = tasks.find(key);

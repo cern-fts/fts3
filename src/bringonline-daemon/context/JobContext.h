@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <unordered_map>
 #include <map>
 
 /**
@@ -36,14 +37,15 @@ public:
      *
      * @param jc : JobContext to be copied
      */
-    JobContext(JobContext const & jc) : jobs(jc.jobs), proxy(jc.proxy), spaceToken(jc.spaceToken) {}
+    JobContext(JobContext const & jc) : jobs(jc.jobs), proxy(jc.proxy), spaceToken(jc.spaceToken), urlToIDs(jc.urlToIDs) {}
 
     /**
      * Move constructor
      *
      * @param jc : JobContext to be moved
      */
-    JobContext(JobContext && jc) : jobs(std::move(jc.jobs)), proxy(std::move(jc.proxy)), spaceToken(std::move(jc.spaceToken)) {}
+    JobContext(JobContext && jc) :
+        jobs(std::move(jc.jobs)), proxy(std::move(jc.proxy)), spaceToken(std::move(jc.spaceToken)), urlToIDs(std::move(jc.urlToIDs)) {}
 
     /**
      * Destructor
@@ -101,6 +103,8 @@ public:
         return surls;
     }
 
+    void removeUrl(const std::string& url);
+
     /**
      * @return : proxy-certificate file name
      */
@@ -118,6 +122,20 @@ public:
     }
 
     std::string getLogMsg() const;
+
+    /**
+     * Get job and file ID for the given SURL
+     */
+    std::vector< std::pair<std::string, int> > getIDs(std::string const & surl) const
+    {
+        std::vector< std::pair<std::string, int> > ret;
+        auto range = urlToIDs.equal_range(surl);
+        for (auto it = range.first; it != range.second; ++it)
+            {
+                ret.push_back(it->second);
+            }
+        return ret;
+    }
 
 private:
 
@@ -138,6 +156,8 @@ protected:
     std::string proxy;
     /// space token
     std::string spaceToken;
+    /// URL -> (job_id, file_id)
+    std::unordered_multimap< std::string, std::pair<std::string, int> > urlToIDs;
 };
 
 #endif /* JOBCONTEXT_H_ */

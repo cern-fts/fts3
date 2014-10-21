@@ -227,7 +227,7 @@ void OracleAPI::init(std::string username, std::string password, std::string con
 }
 
 
-void OracleAPI::submitdelete(const std::string & jobId, const std::multimap<std::string,std::string>& rulsHost,
+void OracleAPI::submitdelete(const std::string & jobId, const std::map<std::string,std::string>& rulsHost,
                              const std::string & userDN, const std::string & voName, const std::string & credID)
 {
     if (rulsHost.empty()) return;
@@ -967,7 +967,25 @@ void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, s
 
                             for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
                                 {
-                                    TransferFiles const& tfile = *ti;
+                                    TransferFiles& tfile = *ti;
+
+                                    if(tfile.REUSE_JOB == "R")
+                                        {
+                                            int total = 0;
+                                            int remain = 0;
+                                            sql <<
+                                                " SELECT"
+                                                "   (SELECT COUNT(*) FROM t_file WHERE job_id=:job_id) AS c1,"
+                                                "   (SELECT COUNT(*) FROM t_file WHERE file_state<>'NOT_USED' AND job_id=:job_id) AS c2 "
+                                                " FROM dual",
+                                                soci::use(tfile.JOB_ID),
+                                                soci::use(tfile.JOB_ID),
+                                                soci::into(total),
+                                                soci::into(remain);
+
+                                            tfile.LAST_REPLICA = (total == remain)? 1: 0;
+                                        }
+
                                     files[tfile.VO_NAME].push_back(tfile);
                                 }
                         }
@@ -1034,7 +1052,24 @@ void OracleAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, s
 
                                     for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
                                         {
-                                            TransferFiles const& tfile = *ti;
+                                            TransferFiles& tfile = *ti;
+
+                                            if(tfile.REUSE_JOB == "R")
+                                                {
+                                                    int total = 0;
+                                                    int remain = 0;
+                                                    sql << " select count(*) as c1, "
+                                                        " (select count(*) from t_file where file_state<>'NOT_USED' and  job_id=:job_id)"
+                                                        " as c2 from t_file where job_id=:job_id",
+                                                        soci::use(tfile.JOB_ID),
+                                                        soci::use(tfile.JOB_ID),
+                                                        soci::into(total),
+                                                        soci::into(remain);
+
+                                                    tfile.LAST_REPLICA = (total == remain)? 1: 0;
+                                                }
+
+
                                             files[tfile.VO_NAME].push_back(tfile);
                                         }
                                 }
@@ -1141,7 +1176,8 @@ void OracleAPI::getMultihopJobs(std::map< std::string, std::queue< std::pair<std
                             "       f.bringonline_token, f.source_se, f.dest_se, f.selection_strategy, "
                             "       j.internal_job_params, j.user_cred, j.reuse_job "
                             " FROM t_job j INNER JOIN t_file f ON (j.job_id = f.job_id) "
-                            " WHERE j.job_id = :job_id ORDER BY f.file_id ASC ",
+                            " WHERE j.job_id = :job_id "
+                            " ORDER BY f.file_id ASC",
                             soci::use(job_id)
                         );
 
@@ -1982,10 +2018,13 @@ void OracleAPI::getDmJobStatus(std::string requestID, bool archive, std::vector<
                                              sql.prepare << statusQuery,
                                              soci::use(requestID, "jobId"));
 
+            int index = 0;
             for (soci::rowset<JobStatus>::iterator i = rs.begin(); i != rs.end(); ++i)
                 {
                     JobStatus& job = *i;
                     job.numFiles = numFiles;
+                    // make sure each deletion has different file index
+                    job.fileIndex = index++;
                     jobs.push_back(new JobStatus(job));
                 }
         }
@@ -2276,13 +2315,15 @@ void OracleAPI::getTransferFileStatus(std::string requestID, bool archive,
                 {
                     query = "SELECT * FROM (SELECT rownum as rn, t_file_backup.file_id, t_file_backup.source_surl, t_file_backup.dest_surl, t_file_backup.file_state, "
                             "       t_file_backup.reason, t_file_backup.start_time, "
-                            "       t_file_backup.finish_time, t_file_backup.retry, t_file_backup.tx_duration "
+                            "       t_file_backup.finish_time, t_file_backup.retry, t_file_backup.tx_duration,"
+                            "       t_file.staging_start, t_file.staging_finished "
                             "FROM t_file_backup WHERE t_file_backup.job_id = :jobId ";
                 }
             else
                 {
                     query = "SELECT * FROM (SELECT rownum as rn, t_file.file_id, t_file.source_surl, t_file.dest_surl, t_file.file_state, "
-                            "       t_file.reason, t_file.start_time, t_file.finish_time, t_file.retry, t_file.tx_duration "
+                            "       t_file.reason, t_file.start_time, t_file.finish_time, t_file.retry, t_file.tx_duration, "
+                            "       t_file.staging_start, t_file.staging_finished "
                             "FROM t_file WHERE t_file.job_id = :jobId ";
                 }
 
@@ -3824,7 +3865,6 @@ bool OracleAPI::updateOptimizer()
                                          soci::use(destin_hostname),
                                          soci::into(nostreams, isNullStreamsOptimization));
 
-
             soci::statement stmt23 = (
                                          sql.prepare << "SELECT throughput FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se and "
                                          " tested=1 and nostreams = :nostreams and throughput is not NULL   and throughput > 0",
@@ -4079,7 +4119,7 @@ bool OracleAPI::updateOptimizer()
                         calcutateTimeFrame  = 30;
 
 
-                   // Ratio of success
+                    // Ratio of success
                     soci::rowset<soci::row> rs = (sql.prepare <<
                                                   " SELECT file_state, retry, current_failures, reason "
                                                   " FROM t_file "
@@ -7987,7 +8027,7 @@ void OracleAPI::checkSanityState()
                     //special case for canceled
                     soci::rowset<std::string> rs2 = (
                                                         sql.prepare <<
-                                                        " select  j.job_id from t_job j inner join t_file f on (j.job_id = f.job_id) where j.job_finished >= (sys_extract_utc(systimestamp) - interval '24' HOUR ) and f.file_state in ('SUBMITTED','ACTIVE') "
+                                                        " select  j.job_id from t_job j inner join t_file f on (j.job_id = f.job_id) where j.job_finished is not NULL and f.file_state in ('SUBMITTED','ACTIVE') "
                                                     );
 
 
@@ -8001,7 +8041,7 @@ void OracleAPI::checkSanityState()
 
                     soci::rowset<std::string> rs444 = (
                                                           sql.prepare <<
-                                                          " select  j.job_id from t_job j where j.job_finished >= (sys_extract_utc(systimestamp) - interval '24' HOUR ) and job_state='FINISHED' and reuse_job='R' "
+                                                          " select  j.job_id from t_job j where job_state='FINISHED' and reuse_job='R' "
                                                       );
 
                     //multiple replicas with finished state
@@ -10277,7 +10317,7 @@ void OracleAPI::setFixActive(const std::string & source, const std::string & des
     soci::session sql(*connectionPool);
     try
         {
-		sql.begin();
+	sql.begin();
             if (active > 0)
                 {
                     sql << " MERGE INTO t_optimize_active USING "
@@ -10494,13 +10534,8 @@ void OracleAPI::updateDeletionsStateInternal(soci::session& sql, std::vector< bo
                         }
                     else if(state == "FAILED")
                         {
-                            if(retry)
-                                {
-                                    bool shouldBeRetried = resetForRetryDelete(sql, file_id, job_id, retry);
-                                    if(shouldBeRetried)
-                                        continue;
-                                }
-                            else
+                            bool shouldBeRetried = resetForRetryDelete(sql, file_id, job_id, retry);
+                            if (!shouldBeRetried)
                                 {
                                     sql <<
                                         " UPDATE t_dm "
@@ -11453,9 +11488,20 @@ void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boos
 
                             if(retry)
                                 {
-                                    shouldBeRetried = resetForRetryStaging(sql, file_id, job_id, retry);
+                                    int times = 0;
+                                    shouldBeRetried = resetForRetryStaging(sql, file_id, job_id, retry, times);
                                     if(shouldBeRetried)
-                                        continue;
+                                        {
+                                            if(times > 0)
+                                                {
+                                                    sql << "INSERT /*+ IGNORE_ROW_ON_DUPKEY_INDEX (t_file_retry_errors, t_file_retry_errors_pk) */  INTO t_file_retry_errors "
+                                                        "    (file_id, attempt, datetime, reason) "
+                                                        "VALUES (:fileId, :attempt, sys_extract_utc(systimestamp), :reason)",
+                                                        soci::use(file_id), soci::use(times), soci::use(reason);
+                                                }
+
+                                            continue;
+                                        }
                                 }
 
                             if (!retry || !shouldBeRetried)
@@ -11501,7 +11547,8 @@ void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boos
                                         " UPDATE t_file "
                                         " SET hashed_id = :hashed_id, staging_finished=sys_extract_utc(systimestamp), job_finished=NULL, finish_time=NULL, start_time=NULL, transferhost=NULL, reason = '', file_state = :fileState "
                                         " WHERE "
-                                        "	file_id = :fileId ",
+                                        "	file_id = :fileId "
+                                        "   AND file_state in ('STAGING','STARTED')",
                                         soci::use(hashedId),
                                         soci::use(dbState),
                                         soci::use(file_id)
@@ -11546,7 +11593,10 @@ void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boos
                     job_id = boost::get<3>(tupleRecord);
                     retry = boost::get<4>(tupleRecord);
 
-                    updateJobTransferStatusInternal(sql, job_id, state,0);
+                    if(state == "SUBMITTED")
+                        updateJobTransferStatusInternal(sql, job_id, "ACTIVE",0);
+                    else
+                        updateJobTransferStatusInternal(sql, job_id, state,0);
 
                     //send state message
                     filesMsg = getStateOfTransferInternal(sql, job_id, file_id);
@@ -11597,7 +11647,7 @@ void OracleAPI::getStagingFilesForCanceling(std::vector< boost::tuple<int, std::
                                      "WHERE file_id = :file_id ", soci::use(file_id, "file_id"));
 
             // Cancel staging files
-	     sql.begin();
+	    sql.begin();
             for (soci::rowset<soci::row>::const_iterator i2 = rs.begin(); i2 != rs.end(); ++i2)
                 {
                     soci::row const& row = *i2;
@@ -11609,16 +11659,16 @@ void OracleAPI::getStagingFilesForCanceling(std::vector< boost::tuple<int, std::
 
                     stmt1.execute(true);
                 }
-   	     sql.commit();
+		sql.commit();
         }
     catch (std::exception& e)
         {
-     	    sql.rollback();
+	sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
- 	    sql.rollback();
+	sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }
@@ -11748,7 +11798,7 @@ void OracleAPI::checkJobOperation(std::vector<std::string >& jobs, std::vector< 
 }
 
 
-bool OracleAPI::resetForRetryStaging(soci::session& sql, int file_id, const std::string & job_id, bool retry)
+bool OracleAPI::resetForRetryStaging(soci::session& sql, int file_id, const std::string & job_id, bool retry, int& times)
 {
 
     bool willBeRetried = false;
@@ -11814,6 +11864,8 @@ bool OracleAPI::resetForRetryStaging(soci::session& sql, int file_id, const std:
                                         " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
                                         soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
 
+                                    times = nRetries+1;
+
                                     willBeRetried = true;
 
                                     sql.commit();
@@ -11831,6 +11883,8 @@ bool OracleAPI::resetForRetryStaging(soci::session& sql, int file_id, const std:
                                         " t_log_file=NULL, t_log_file_debug=NULL, throughput = 0,  current_failures = 1 "
                                         " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
                                         soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
+
+                                    times = nRetries+1;
 
                                     willBeRetried = true;
 

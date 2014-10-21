@@ -28,7 +28,6 @@ void StagingContext::add(context_type const & ctx)
     std::string jobId = boost::get<job_id>(ctx);
     int fileId =  boost::get<file_id>(ctx);
     add(url, jobId, fileId);
-    urlToIDs[url] = std::make_pair(jobId, fileId);
 }
 
 

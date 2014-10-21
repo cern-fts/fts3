@@ -303,10 +303,11 @@ protected:
 
     void executeUrlcopy()
     {
+        //get distinct source, dest, vo first
+        std::vector< boost::tuple<std::string, std::string, std::string> > distinct;
+
         try
             {
-                //get distinct source, dest, vo first
-                std::vector< boost::tuple<std::string, std::string, std::string> > distinct;
                 boost::thread_group g;
 
                 try
@@ -324,10 +325,12 @@ protected:
                             }
                         catch (std::exception& e)
                             {
+                                distinct.clear();
                                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler " << e.what() << commit;
                             }
                         catch (...)
                             {
+                                distinct.clear();
                                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler!" << commit;
                             }
                     }
@@ -342,10 +345,12 @@ protected:
                             }
                         catch (std::exception& e)
                             {
+                                distinct.clear();
                                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler " << e.what() << commit;
                             }
                         catch (...)
                             {
+                                distinct.clear();
                                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler!" << commit;
                             }
                     }
@@ -382,10 +387,12 @@ protected:
             }
         catch (std::exception& e)
             {
+                distinct.clear();
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler " << e.what() << commit;
             }
         catch (...)
             {
+                distinct.clear();
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler!" << commit;
             }
     }
