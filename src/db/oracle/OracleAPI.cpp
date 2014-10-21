@@ -11228,7 +11228,7 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
                                 }
                         }
 
-                    if(limit == 0)
+                    if(limit <= 0)
                         continue;
 
                     soci::rowset<soci::row> rs = (
