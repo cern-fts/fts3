@@ -512,18 +512,19 @@ void GSoapContextAdapter::delConfiguration(config__Configuration *config, implcf
         throw gsoap_error(ctx);
 }
 
-void GSoapContextAdapter::setBringOnline(std::vector< std::pair<std::string, int> > const & triplets)
+void GSoapContextAdapter::setBringOnline(std::vector< std::tuple<std::string, int, std::string> > const & triplets)
 {
 
     config__BringOnline bring_online;
 
-    std::vector< std::pair<std::string, int> >::const_iterator it;
+    std::vector< std::tuple<std::string, int, std::string> >::const_iterator it;
     for (it = triplets.begin(); it != triplets.end(); it++)
         {
-            config__BringOnlinePair* pair = soap_new_config__BringOnlinePair(ctx, -1);
-            pair->se = it->first;
-            pair->value = it->second;
-            bring_online.boElem.push_back(pair);
+            config__BringOnlineTriplet* t = soap_new_config__BringOnlineTriplet(ctx, -1);
+            t->se = std::get<0>(*it);
+            t->value = std::get<1>(*it);
+            t->vo = std::get<2>(*it);
+            bring_online.boElem.push_back(t);
         }
 
     implcfg__setBringOnlineResponse resp;

@@ -256,14 +256,7 @@ struct type_conversion<FileTransferStatus>
         struct tm aux_tm;
         transfer.fileId            = v.get<int>("file_id");
         transfer.sourceSURL        = v.get<std::string>("source_surl");
-        try
-            {
-                transfer.destSURL          = v.get<std::string>("dest_surl");
-            }
-        catch(...)
-            {
-                // ignore since DM operations (deletion) do not have destination
-            }
+        transfer.destSURL          = v.get<std::string>("dest_surl", "");
         transfer.transferFileState = v.get<std::string>("file_state");
         transfer.reason            = v.get<std::string>("reason", "");
         transfer.numFailures	   = v.get<int>("retry", 0);
@@ -289,7 +282,7 @@ struct type_conversion<FileTransferStatus>
             }
         if (v.get_indicator("staging_start") == soci::i_ok)
             {
-                aux_tm = v.get<struct tm>("start_time");
+                aux_tm = v.get<struct tm>("staging_start");
                 transfer.staging_start = timegm(&aux_tm);
             }
         else

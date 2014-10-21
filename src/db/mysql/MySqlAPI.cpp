@@ -7328,7 +7328,7 @@ void MySqlAPI::setMaxStageOp(const std::string& se, const std::string& vo, int v
             sql <<
                 " SELECT COUNT(*) "
                 " FROM t_stage_req "
-                " WHERE vo_name = :vo AND host = :se ",
+                " WHERE vo_name = :vo AND host = :se AND operation = 'staging' ",
                 soci::use(vo),
                 soci::use(se),
                 soci::into(exist)
@@ -7343,7 +7343,7 @@ void MySqlAPI::setMaxStageOp(const std::string& se, const std::string& vo, int v
                     sql <<
                         " UPDATE t_stage_req "
                         " SET concurrent_ops = :value "
-                        " WHERE vo_name = :vo AND host = :se ",
+                        " WHERE vo_name = :vo AND host = :se AND operation = 'staging' ",
                         soci::use(val),
                         soci::use(vo),
                         soci::use(se)
@@ -7354,8 +7354,8 @@ void MySqlAPI::setMaxStageOp(const std::string& se, const std::string& vo, int v
                     // otherwise insert
                     sql <<
                         " INSERT "
-                        " INTO t_stage_req (host, vo_name, concurrent_ops) "
-                        " VALUES (:se, :vo, :value)",
+                        " INTO t_stage_req (host, vo_name, concurrent_ops, operation) "
+                        " VALUES (:se, :vo, :value, 'staging')",
                         soci::use(se),
                         soci::use(vo),
                         soci::use(val)

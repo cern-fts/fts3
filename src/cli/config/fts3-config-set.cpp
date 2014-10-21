@@ -142,7 +142,7 @@ int main(int ac, char* av[])
                     cout << "Done" << endl;
                 }
 
-            std::vector< std::pair<std::string, int> > bring_online = cli.getBringOnline();
+            std::vector< std::tuple<std::string, int, std::string> > bring_online = cli.getBringOnline();
             if (!bring_online.empty())
                 {
                     ctx.setBringOnline(bring_online);
