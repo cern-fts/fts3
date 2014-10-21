@@ -482,7 +482,7 @@ std::map<std::string, double> MySqlAPI::getActivityShareConf(soci::session& sql,
             boost::tokenizer< boost::char_separator<char> > tokens(activity_share_str, sep);
             boost::tokenizer< boost::char_separator<char> >::iterator it;
 
-            static const boost::regex re("^\\s*\\{\\s*\"([a-zA-Z0-9\\.-]+)\"\\s*:\\s*(0\\.\\d+)\\s*\\}\\s*$");
+            static const boost::regex re("^\\s*\\{\\s*\"([ a-zA-Z0-9\\.-]+)\"\\s*:\\s*(0\\.\\d+)\\s*\\}\\s*$");
             static const int ACTIVITY_NAME = 1;
             static const int ACTIVITY_SHARE = 2;
 
