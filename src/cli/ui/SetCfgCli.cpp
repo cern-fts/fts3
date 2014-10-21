@@ -47,8 +47,8 @@ SetCfgCli::SetCfgCli(bool spec)
             specific.add_options()
             (
                 "bring-online", value< vector<string> >()->multitoken(),
-                "If this switch is used the user should provide SE_NAME VALUE triplets in order to set the maximum number of files that are staged concurrently for a given SE - VI."
-                "\n(Example: --bring-online $SE_NAME $VO_NAME $VALUE ...)"
+                "If this switch is used the user should provide SE_NAME VALUE pairs in order to set the maximum number of files that are staged concurrently for a given SE."
+                "\n(Example: --bring-online $SE_NAME $VALUE ...)"
             )
             (
                 "drain", value<string>(),
