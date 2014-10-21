@@ -475,17 +475,17 @@ int fts3::implcfg__setBringOnline(soap* ctx, config__BringOnline *bring_online, 
             string vo = cgsi.getClientVo();
             string dn = cgsi.getClientDn();
 
-            vector<config__BringOnlinePair*>& v = bring_online->boElem;
-            vector<config__BringOnlinePair*>::iterator it;
+            vector<config__BringOnlineTriplet*>& v = bring_online->boElem;
+            vector<config__BringOnlineTriplet*>::iterator it;
 
             for (it = v.begin(); it != v.end(); it++)
                 {
 
-                    config__BringOnlinePair* triplet = *it;
+                    config__BringOnlineTriplet* triplet = *it;
 
                     DBSingleton::instance().getDBObjectInstance()->setMaxStageOp(
                         triplet->se,
-                        vo,
+                        triplet->vo.empty() ? vo : triplet->vo,
                         triplet->value
                     );
 

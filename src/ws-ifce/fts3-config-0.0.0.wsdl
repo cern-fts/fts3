@@ -20,10 +20,11 @@
                 </sequence>
             </complexType>
             
-            <complexType name="BringOnlinePair">
+            <complexType name="BringOnlineTriplet">
             	<sequence>
             		<element minOccurs="1" maxOccurs="1" name="se" type="xsd:string"/>
             		<element minOccurs="1" maxOccurs="1" name="value" type="xsd:int"/>
+            		<element minOccurs="1" maxOccurs="1" name="vo" type="xsd:string"/>
             	</sequence>
             </complexType>
             
@@ -37,7 +38,7 @@
             
             <complexType name="BringOnline">
             	<sequence>
-            		<element maxOccurs="unbounded" name="boElem" type="config:BringOnlinePair"/>
+            		<element maxOccurs="unbounded" name="boElem" type="config:BringOnlineTriplet"/>
             	</sequence>
             </complexType>
             

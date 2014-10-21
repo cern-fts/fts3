@@ -47,8 +47,8 @@ SetCfgCli::SetCfgCli(bool spec)
             specific.add_options()
             (
                 "bring-online", value< vector<string> >()->multitoken(),
-                "If this switch is used the user should provide SE_NAME VALUE pairs in order to set the maximum number of files that are staged concurrently for a given SE."
-                "\n(Example: --bring-online $SE_NAME $VALUE ...)"
+                "If this switch is used the user should provide SE_NAME VALUE and optionally VO_NAME in order to set the maximum number of files that are staged concurrently for a given SE."
+                "\n(Example: --bring-online $SE_NAME $VALUE [$VO_NAME])"
             )
             (
                 "drain", value<string>(),
@@ -359,24 +359,29 @@ optional< std::tuple<string, string, string> > SetCfgCli::getProtocol()
 void SetCfgCli::parseBringOnline()
 {
     std::vector<std::string> const & vec = vm["bring-online"].as< std::vector<std::string> >();
-    if (vec.size() % 2) throw bad_option("bring-online", "consecutive 'SE_NAME VALUE' triplets were expected!");
+    if (vec.size() != 2 && vec.size() != 3) throw bad_option("bring-online", "wrong number of arguments!");
 
-    std::vector<std::string>::const_iterator first = vec.begin(), second;
+    std::vector<std::string>::const_iterator it = vec.begin();
 
-    while (first != vec.end())
+    std::string const & se = *it;
+
+    ++it;
+    int value;
+    try
         {
-            second = first + 1;
-
-            try
-                {
-                    bring_online.push_back(std::make_pair(*first, boost::lexical_cast<int>(*second)));
-                    first += 2;
-                }
-            catch(boost::bad_lexical_cast const & ex)
-                {
-                    throw bad_option("bring-online", "value: " + *second + " is not a correct integer (int) value!");
-                }
+            value = boost::lexical_cast<int>(*it);
         }
+    catch(boost::bad_lexical_cast const & ex)
+        {
+            throw bad_option("bring-online", "value: " + *it + " is not a correct integer (int) value!");
+        }
+
+
+    ++it;
+    std::string vo;
+    if (it != vec.end()) vo = *it;
+
+    bring_online.push_back(std::make_tuple(se, value, vo));
 }
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
@@ -447,7 +452,7 @@ void SetCfgCli::parseActiveFixed()
     active_fixed = make_optional(std::tuple<string, string, int>(source_se, dest_se, active));
 }
 
-std::vector< std::pair<std::string, int> > SetCfgCli::getBringOnline()
+std::vector< std::tuple<std::string, int, std::string> > SetCfgCli::getBringOnline()
 {
     return bring_online;
 }
