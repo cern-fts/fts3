@@ -39,8 +39,13 @@ std::string to_string(T t, std::ios_base & (*f)(std::ios_base&))
     return oss.str();
 }
 
-typedef struct
+struct transfer_completed
 {
+public:
+     transfer_completed():agent_fqdn(""), transfer_id(""), endpoint(""), source_srm_version(""), destination_srm_version(""), vo(""), source_url(""), dest_url(""), source_hostname(""), dest_hostname(""), source_site_name(""), dest_site_name(""),t_channel(""), timestamp_transfer_started(""), timestamp_transfer_completed(""), timestamp_checksum_source_started(""), timestamp_checksum_source_ended(""), timestamp_checksum_dest_started(""), timestamp_checksum_dest_ended(""), transfer_timeout(""), checksum_timeout(""), transfer_error_code(""), transfer_error_scope(""), transfer_error_message(""), failure_phase(""), transfer_error_category(""), final_transfer_state(""), total_bytes_transfered(""), number_of_streams(""), tcp_buffer_size(""), block_size(""), file_size(""), time_spent_in_srm_preparation_start(""), time_spent_in_srm_preparation_end(""), time_spent_in_srm_finalization_start(""), time_spent_in_srm_finalization_end(""), srm_space_token_source(""), srm_space_token_dest(""), tr_timestamp_start(""), tr_timestamp_complete(""), channel_type(""), user_dn(""), file_metadata(""), job_metadata(""), retry(""), retry_max(""), job_m_replica(""),job_state("") {}
+
+    ~transfer_completed(){}
+
     std::string agent_fqdn;
     std::string transfer_id;
     std::string endpoint;
@@ -83,17 +88,14 @@ typedef struct
     std::string tr_timestamp_complete;
     std::string channel_type;
     std::string user_dn;
-
     std::string file_metadata;
     std::string job_metadata;
-
     std::string retry;
     std::string retry_max;
-
     std::string job_m_replica;
     std::string job_state;
 
-} transfer_completed;
+};
 
 class msg_ifce
 {
