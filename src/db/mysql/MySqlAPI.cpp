@@ -11947,7 +11947,7 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                                 }
                         }
 
-                    if(limit == 0)
+                    if(limit <= 0)
                         continue;
 
                     soci::rowset<soci::row> rs = (
