@@ -89,17 +89,17 @@ class Cli:
         self._spawn(cmdArray)
     
     def delete(self, transfers):
-	deletion = tempfile.NamedTemporaryFile(delete = False, suffix = '.deletion')
-	deletion.write(transfers)
-	print str(transfers)
-	deletion.close()
-	
-	cmdArray = ['fts-transfer-delete',
+        deletion = tempfile.NamedTemporaryFile(delete = False, suffix = '.deletion')
+        deletion.write(transfers)
+        print str(transfers)
+        deletion.close()
+        
+        cmdArray = ['fts-transfer-delete',
                     '-s', config.Fts3Endpoint,
                     '-f', deletion.name]
-	jobId = self._spawn(cmdArray)
-	return jobId
-	
+        jobId = self._spawn(cmdArray)
+        return jobId
+        
     def getFileInfo(self, jobId, detailed = False):
         cmdArray = ['fts-transfer-status', '-s', config.Fts3Endpoint, 
                     '--json', '-l', jobId]
@@ -113,6 +113,7 @@ class Cli:
             src = f['source']
             dst = f['destination']
             pairDict[(src,dst)] = f
+        logging.debug(str(pairDict))
         return pairDict
 
 
