@@ -142,11 +142,20 @@ int main(int ac, char* av[])
                     cout << "Done" << endl;
                 }
 
-            std::vector< std::tuple<std::string, int, std::string> > bring_online = cli.getBringOnline();
-            if (!bring_online.empty())
+            boost::optional<std::tuple<std::string, int, std::string>> bring_online = cli.getBringOnline();
+            if (bring_online)
                 {
-                    ctx.setBringOnline(bring_online);
+                    ctx.setMaxOpt(*bring_online, "staging");
                     // if bring online was used normal config was not!
+                    cout << "Done" << endl;
+                    return 0;
+                }
+
+            boost::optional<std::tuple<std::string, int, std::string>> delete_opt = cli.getDelete();
+            if (delete_opt)
+                {
+                    ctx.setMaxOpt(*delete_opt, "delete");
+                    // if delete was used normal config was not!
                     cout << "Done" << endl;
                     return 0;
                 }

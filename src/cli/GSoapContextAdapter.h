@@ -225,9 +225,10 @@ public:
     /**
      * Remote call to setBringOnline
      *
-     * @param pairs - se name - max number staging files pairs
+     * @param triplet - se name, max number staging files, vo name
+     * @param operation - 'staging' or 'delete'
      */
-    void setBringOnline(std::vector< std::tuple<std::string, int, std::string> > const &);
+    void setMaxOpt(std::tuple<std::string, int, std::string> const &, std::string const&);
 
     string deleteFile (std::vector<std::string>& filesForDelete);
 

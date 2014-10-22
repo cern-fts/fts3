@@ -51,6 +51,11 @@ SetCfgCli::SetCfgCli(bool spec)
                 "\n(Example: --bring-online $SE_NAME $VALUE [$VO_NAME])"
             )
             (
+                "delete", value< vector<string> >()->multitoken(),
+                "If this switch is used the user should provide SE_NAME VALUE and optionally VO_NAME in order to set the maximum number of files that are deleted concurrently for a given SE."
+                "\n(Example: --delete $SE_NAME $VALUE [$VO_NAME])"
+            )
+            (
                 "drain", value<string>(),
                 "If set to 'on' drains the given endpoint."
                 "\n(Example: --drain on|off)"
@@ -164,7 +169,10 @@ void SetCfgCli::parse(int ac, char* av[])
         }
 
     if (vm.count("bring-online"))
-        parseBringOnline();
+        parseMaxOpt("bring-online");
+
+    if (vm.count("delete"))
+        parseMaxOpt("delete");
 
     if (vm.count("active-fixed"))
         parseActiveFixed();
@@ -211,6 +219,7 @@ bool SetCfgCli::validate()
             && !vm.count("retry")
             && !vm.count("queue-timeout")
             && !vm.count("bring-online")
+            && !vm.count("delete")
             && !vm.count("optimizer-mode")
             && !vm.count("max-bandwidth")
             && !vm.count("protocol")
@@ -356,15 +365,16 @@ optional< std::tuple<string, string, string> > SetCfgCli::getProtocol()
     return std::make_tuple(v[0], v[1], v[2]);
 }
 
-void SetCfgCli::parseBringOnline()
+void SetCfgCli::parseMaxOpt(std::string const & operation)
 {
-    std::vector<std::string> const & vec = vm["bring-online"].as< std::vector<std::string> >();
-    if (vec.size() != 2 && vec.size() != 3) throw bad_option("bring-online", "wrong number of arguments!");
-
+    std::vector<std::string> const & vec = vm[operation].as< std::vector<std::string> >();
+    // check the number of arguments
+    if (vec.size() != 2 && vec.size() != 3) throw bad_option(operation, "wrong number of arguments!");
+    // check arguments one after another
     std::vector<std::string>::const_iterator it = vec.begin();
-
+    // get SE name
     std::string const & se = *it;
-
+    // than get the value
     ++it;
     int value;
     try
@@ -375,13 +385,12 @@ void SetCfgCli::parseBringOnline()
         {
             throw bad_option("bring-online", "value: " + *it + " is not a correct integer (int) value!");
         }
-
-
+    // and than check if VO name was provided
     ++it;
     std::string vo;
     if (it != vec.end()) vo = *it;
-
-    bring_online.push_back(std::make_tuple(se, value, vo));
+    // set the parsed values for the given oepration
+    max_opt[operation] = std::make_tuple(se, value, vo);
 }
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
@@ -452,9 +461,16 @@ void SetCfgCli::parseActiveFixed()
     active_fixed = make_optional(std::tuple<string, string, int>(source_se, dest_se, active));
 }
 
-std::vector< std::tuple<std::string, int, std::string> > SetCfgCli::getBringOnline()
+boost::optional< std::tuple<std::string, int, std::string> > SetCfgCli::getBringOnline()
 {
-    return bring_online;
+    if (max_opt.find("bring-online") == max_opt.end()) return boost::none;
+    return max_opt["bring-online"];
+}
+
+boost::optional< std::tuple<std::string, int, std::string> > SetCfgCli::getDelete()
+{
+    if (max_opt.find("delete") == max_opt.end()) return boost::none;
+    return max_opt["delete"];
 }
 
 optional<std::tuple<string, string, int> > SetCfgCli::getBandwidthLimitation()

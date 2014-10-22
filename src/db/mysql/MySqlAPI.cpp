@@ -1763,7 +1763,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
                         }
                     else if(reuseFlag == "Y" && !mreplica && !mhop)
                         {
-                            hashedId = getHashedId();
+                            hashedId = hashedId;
                         }
                     else if (reuseFlag == "N" && !mreplica && !mhop)
                         {
@@ -7317,7 +7317,7 @@ void MySqlAPI::getCredentials(std::string & vo_name, const std::string & job_id,
         }
 }
 
-void MySqlAPI::setMaxStageOp(const std::string& se, const std::string& vo, int val)
+void MySqlAPI::setMaxStageOp(const std::string& se, const std::string& vo, int val, const std::string & opt)
 {
     soci::session sql(*connectionPool);
 
@@ -7328,9 +7328,10 @@ void MySqlAPI::setMaxStageOp(const std::string& se, const std::string& vo, int v
             sql <<
                 " SELECT COUNT(*) "
                 " FROM t_stage_req "
-                " WHERE vo_name = :vo AND host = :se AND operation = 'staging' ",
+                " WHERE vo_name = :vo AND host = :se AND operation = :opt ",
                 soci::use(vo),
                 soci::use(se),
+                soci::use(opt),
                 soci::into(exist)
                 ;
 
@@ -7343,10 +7344,11 @@ void MySqlAPI::setMaxStageOp(const std::string& se, const std::string& vo, int v
                     sql <<
                         " UPDATE t_stage_req "
                         " SET concurrent_ops = :value "
-                        " WHERE vo_name = :vo AND host = :se AND operation = 'staging' ",
+                        " WHERE vo_name = :vo AND host = :se AND operation = :opt ",
                         soci::use(val),
                         soci::use(vo),
-                        soci::use(se)
+                        soci::use(se),
+                        soci::use(opt)
                         ;
                 }
             else
@@ -7355,10 +7357,11 @@ void MySqlAPI::setMaxStageOp(const std::string& se, const std::string& vo, int v
                     sql <<
                         " INSERT "
                         " INTO t_stage_req (host, vo_name, concurrent_ops, operation) "
-                        " VALUES (:se, :vo, :value, 'staging')",
+                        " VALUES (:se, :vo, :value, :opt)",
                         soci::use(se),
                         soci::use(vo),
-                        soci::use(val)
+                        soci::use(val),
+                        soci::use(opt)
                         ;
                 }
 

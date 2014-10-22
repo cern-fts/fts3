@@ -512,21 +512,15 @@ void GSoapContextAdapter::delConfiguration(config__Configuration *config, implcf
         throw gsoap_error(ctx);
 }
 
-void GSoapContextAdapter::setBringOnline(std::vector< std::tuple<std::string, int, std::string> > const & triplets)
+void GSoapContextAdapter::setMaxOpt(std::tuple<std::string, int, std::string> const & triplet, std::string const & opt)
 {
-
     config__BringOnline bring_online;
-
-    std::vector< std::tuple<std::string, int, std::string> >::const_iterator it;
-    for (it = triplets.begin(); it != triplets.end(); it++)
-        {
-            config__BringOnlineTriplet* t = soap_new_config__BringOnlineTriplet(ctx, -1);
-            t->se = std::get<0>(*it);
-            t->value = std::get<1>(*it);
-            t->vo = std::get<2>(*it);
-            bring_online.boElem.push_back(t);
-        }
-
+    config__BringOnlineTriplet* t = soap_new_config__BringOnlineTriplet(ctx, -1);
+    t->se = std::get<0>(triplet);
+    t->value = std::get<1>(triplet);
+    t->vo = std::get<2>(triplet);
+    t->operation = opt;
+    bring_online.boElem.push_back(t);
     implcfg__setBringOnlineResponse resp;
     if (soap_call_implcfg__setBringOnline(ctx, endpoint.c_str(), 0, &bring_online, resp))
         throw gsoap_error(ctx);

@@ -656,9 +656,9 @@ void ProfiledDB::getCredentials(std::string & vo_name, const std::string & job_i
 }
 
 
-void ProfiledDB::setMaxStageOp(const std::string& se, const std::string& vo, int val)
+void ProfiledDB::setMaxStageOp(const std::string& se, const std::string& vo, int val, const std::string & opt)
 {
-    PROFILE_PREFIXED("DB::", db->setMaxStageOp(se, vo, val));
+    PROFILE_PREFIXED("DB::", db->setMaxStageOp(se, vo, val, opt));
 }
 
 

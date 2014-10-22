@@ -29,6 +29,8 @@
 
 #include <vector>
 #include <tuple>
+#include <unordered_map>
+
 #include <boost/optional.hpp>
 
 #include "common/CfgParser.h"
@@ -147,9 +149,16 @@ public:
     /**
      * Get the bring-online settings
      *
-     * @return SE name - value mapping
+     * @return SE name - value - vo mapping
      */
-    std::vector< std::tuple<std::string, int, std::string> > getBringOnline();
+    boost::optional< std::tuple<std::string, int, std::string> > getBringOnline();
+
+    /**
+     * Get the delete settings
+     *
+     * @return SE name - value - vo mapping
+     */
+    boost::optional< std::tuple<std::string, int, std::string> > getDelete();
 
     /**
      * Get the bandwidth limitation
@@ -212,8 +221,8 @@ private:
     /// helper function for handling max source and destination active
     optional< pair<string, int> > getMaxSeActive(string option);
 
-    /// parses the multiple parameters that were provided by the user and creates a SE name - value mapping
-    void parseBringOnline();
+    /// parses the --bring-online / --delete parameters
+    void parseMaxOpt(std::string const & operation);
 
     // parses parameters for max bandwidth
     void parseMaxBandwidth();
@@ -224,8 +233,8 @@ private:
     /// JSON configurations specified by user
     vector<string> cfgs;
 
-    /// SE name + VO name and the respective value of maximum concurrent files in staging process
-    std::vector< std::tuple<std::string, int, std::string> > bring_online;
+    /// maximum number of concurrent operations per SE and VO
+    std::unordered_map< std::string, std::tuple<std::string, int, std::string> > max_opt;
 
     // Source, dest, limit
     optional<std::tuple<string, string, int> > bandwidth_limitation;
