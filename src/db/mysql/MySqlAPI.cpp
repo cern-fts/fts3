@@ -1763,7 +1763,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
                         }
                     else if(reuseFlag == "Y" && !mreplica && !mhop)
                         {
-                            hashedId = getHashedId();
+                            hashedId = hashedId;
                         }
                     else if (reuseFlag == "N" && !mreplica && !mhop)
                         {

@@ -1259,7 +1259,7 @@ int main(int argc, char **argv)
                         if (tmp_err != NULL && tmp_err->message != NULL)
                             {
                                 logger.ERROR() <<  std::string(tmp_err->message) << std::endl;
-                                if (tmp_err->code == 110)
+                                if (tmp_err->code == ETIMEDOUT)
                                     {
                                         errorMessage = std::string(tmp_err->message);
                                         errorMessage += ", operation timeout";

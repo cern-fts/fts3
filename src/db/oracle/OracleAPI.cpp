@@ -1750,7 +1750,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
                         }
                     else if(reuseFlag == "Y" && !mreplica && !mhop)
                         {
-                            hashedId = getHashedId();
+                            hashedId = hashedId;
                         }
                     else if (reuseFlag == "N" && !mreplica && !mhop)
                         {
