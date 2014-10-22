@@ -25,6 +25,7 @@
             		<element minOccurs="1" maxOccurs="1" name="se" type="xsd:string"/>
             		<element minOccurs="1" maxOccurs="1" name="value" type="xsd:int"/>
             		<element minOccurs="1" maxOccurs="1" name="vo" type="xsd:string"/>
+            		<element minOccurs="1" maxOccurs="1" name="operation" type="xsd:string"/>
             	</sequence>
             </complexType>
             

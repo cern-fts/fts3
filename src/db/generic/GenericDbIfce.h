@@ -320,7 +320,7 @@ public:
 
     virtual void getCredentials(std::string & vo_name, const std::string & job_id, int file_id, std::string & dn, std::string & dlg_id) = 0;
 
-    virtual void setMaxStageOp(const std::string& se, const std::string& vo, int val) = 0;
+    virtual void setMaxStageOp(const std::string& se, const std::string& vo, int val, const std::string & opt) = 0;
 
     virtual double getSuccessRate(std::string source, std::string destination) = 0;
 

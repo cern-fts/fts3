@@ -486,14 +486,15 @@ int fts3::implcfg__setBringOnline(soap* ctx, config__BringOnline *bring_online, 
                     DBSingleton::instance().getDBObjectInstance()->setMaxStageOp(
                         triplet->se,
                         triplet->vo.empty() ? vo : triplet->vo,
-                        triplet->value
+                        triplet->value,
+                        triplet->operation
                     );
 
                     // log it
                     FTS3_COMMON_LOGGER_NEWLOG (INFO)
                             << "User: "
                             << dn
-                            << " had set the maximum number of concurrent staging operations for se : "
+                            << " had set the maximum number of concurrent " << triplet->operation << " operations for se : "
                             << triplet->se << " and vo : " << vo
                             << " to "
                             << triplet->value

@@ -6827,7 +6827,7 @@ void OracleAPI::getCredentials(std::string & vo_name, const std::string & job_id
         }
 }
 
-void OracleAPI::setMaxStageOp(const std::string& se, const std::string& vo, int val)
+void OracleAPI::setMaxStageOp(const std::string& se, const std::string& vo, int val, const std::string & opt)
 {
     soci::session sql(*connectionPool);
 
@@ -6838,9 +6838,10 @@ void OracleAPI::setMaxStageOp(const std::string& se, const std::string& vo, int 
             sql <<
                 " SELECT COUNT(*) "
                 " FROM t_stage_req "
-                " WHERE vo_name = :vo AND host = :se AND operation = 'staging' ",
+                " WHERE vo_name = :vo AND host = :se AND operation = :opt ",
                 soci::use(vo),
                 soci::use(se),
+                soci::use(opt),
                 soci::into(exist)
                 ;
 
@@ -6853,10 +6854,11 @@ void OracleAPI::setMaxStageOp(const std::string& se, const std::string& vo, int 
                     sql <<
                         " UPDATE t_stage_req "
                         " SET concurrent_ops = :value "
-                        " WHERE vo_name = :vo AND host = :se AND operation = 'staging' ",
+                        " WHERE vo_name = :vo AND host = :se AND operation = :opt ",
                         soci::use(val),
                         soci::use(vo),
-                        soci::use(se)
+                        soci::use(se),
+                        soci::use(opt)
                         ;
                 }
             else
@@ -6865,10 +6867,11 @@ void OracleAPI::setMaxStageOp(const std::string& se, const std::string& vo, int 
                     sql <<
                         " INSERT "
                         " INTO t_stage_req (host, vo_name, concurrent_ops, operation) "
-                        " VALUES (:se, :vo, :value, 'staging')",
+                        " VALUES (:se, :vo, :value, :opt)",
                         soci::use(se),
                         soci::use(vo),
-                        soci::use(val)
+                        soci::use(val),
+                        soci::use(opt)
                         ;
                 }
 
