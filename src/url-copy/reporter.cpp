@@ -100,6 +100,10 @@ void Reporter::sendMessage(double throughput, bool retry,
             strncpy(msg->transfer_message, trmsg.c_str(), sizeof(msg->transfer_message));
             msg->transfer_message[sizeof(msg->transfer_message) -1] = '\0';
         }
+    else
+        {
+            msg->transfer_message[0] = '\0';
+        }
 
     msg->process_id = (int) getpid();
     msg->timeInSecs = timeInSecs;

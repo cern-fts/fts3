@@ -862,6 +862,9 @@ int main(int argc, char **argv)
 
     for (register unsigned int ii = 0; ii < numberOfFiles; ii++)
         {
+            // New transfer, new message
+            tr_completed = transfer_completed();
+
             errorScope = std::string("");
             reasonClass = std::string("");
             errorPhase = std::string("");
