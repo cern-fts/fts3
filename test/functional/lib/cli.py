@@ -14,18 +14,22 @@ class Cli:
     
     def _spawn(self, cmdArray, canFail = False):
         logging.debug("Spawning %s" % ' '.join(cmdArray))
-        proc = subprocess.Popen(cmdArray, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        out = tempfile.NamedTemporaryFile()
+        err = tempfile.NamedTemporaryFile()
+        proc = subprocess.Popen(cmdArray, stdout = out, stderr = err)
         rcode = proc.wait()
+        out.seek(0)
+        err.seek(0)
         if rcode != 0:
             if canFail:
-                logging.warning(proc.stdout.read())
-                logging.warning(proc.stdout.read())
+                logging.warning(out.read())
+                logging.warning(err.read())
                 return ''
             else:
-                logging.error(proc.stdout.read())
-                logging.error(proc.stderr.read())
+                logging.error(out.read())
+                logging.error(err.read())
                 raise Exception("%s failed with exit code %d" % (cmdArray[0], rcode))
-        return proc.stdout.read().strip()
+        return out.read().strip()
 
 
     def submit(self, transfers, extraArgs = []):
