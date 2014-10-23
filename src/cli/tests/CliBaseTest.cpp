@@ -78,11 +78,9 @@ BOOST_AUTO_TEST_CASE (CliBase_short_options)
     cli->parse(ac, av);
 
     // all 5 parameters should be available in vm variable
-    BOOST_CHECK(cli->printHelp(string()));
+    BOOST_CHECK(cli->printHelp());
     BOOST_CHECK(cli->isQuite());
     BOOST_CHECK(cli->isVerbose());
-    BOOST_CHECK(cli->printVersion());
-
     // the endpoint shouldn't be empty since it's starting with http
     BOOST_CHECK(!cli->getService().empty());
 }
@@ -109,10 +107,9 @@ BOOST_AUTO_TEST_CASE (CliBase_long_options)
     cli->parse(ac, av);
 
     // all 5 parameters should be available in vm variable
-    BOOST_CHECK(cli->printHelp(string()));
+    BOOST_CHECK(cli->printHelp());
     BOOST_CHECK(cli->isQuite());
     BOOST_CHECK(cli->isVerbose());
-    BOOST_CHECK(cli->printVersion());
     // the endpoint should be empty since it's not starting with http, https, httpd
     BOOST_CHECK(!cli->getService().empty());
 }

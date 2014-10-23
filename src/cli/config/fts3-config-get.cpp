@@ -47,7 +47,8 @@ int main(int ac, char* av[])
             GetCfgCli cli;
             // create and initialise the command line utility
             cli.parse(ac, av);
-            if (!cli.validate()) return 1;
+            if (cli.printHelp()) return 0;
+            cli.validate();
 
             // validate command line options, and return respective gsoap context
             GSoapContextAdapter ctx (cli.getService());

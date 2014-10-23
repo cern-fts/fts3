@@ -52,7 +52,8 @@ int main(int ac, char* av[])
             ListTransferCli cli;
             // Initialise the command line utility
             cli.parse(ac, av);
-            if (!cli.validate()) return 1;
+            if (cli.printHelp()) return 0;
+            cli.validate();
 
             std::string const endpoint = cli.getService();
 

@@ -28,24 +28,30 @@
 
 using namespace fts3::cli;
 
-const string DebugSetCli::ON = "on";
-const string DebugSetCli::OFF = "off";
+namespace po = boost::program_options;
 
 DebugSetCli::DebugSetCli()
 {
-    level = 0;
-
+    // add commandline options specific for fts3-config-set
+    specific.add_options()
+    (
+        "source", po::value<std::string>(),
+        "Source SE."
+        "\n(Example: --source $SE_NAME)"
+    )
+    (
+        "destination", po::value<std::string>(),
+        "Destination SE."
+        "\n(Example: --destination $SE_NAME)"
+    )
+    ;
     // add hidden options
     hidden.add_options()
-    ("opt1", value<string>())
-    ("opt2", value<string>())
-    ("opt3", value<string>())
+    ("debug_level", po::value<unsigned>(&level))
     ;
-
     // add positional (those used without an option switch) command line options
-    p.add("opt1", 1);
-    p.add("opt2", 1);
-    p.add("opt3", 1);
+    p.add("debug_level", 1);
+
 }
 
 DebugSetCli::~DebugSetCli()
@@ -53,72 +59,26 @@ DebugSetCli::~DebugSetCli()
 
 }
 
-bool DebugSetCli::validate()
+void DebugSetCli::validate()
 {
-
-    // do the standard validation
-    if(!CliBase::validate()) return false;
-
-    vector<string> opts;
-
-    if (vm.count("opt1"))
+    if (vm.count("source"))
         {
-            opts.push_back(
-                vm["opt1"].as<string>()
-            );
+            source = vm["source"].as<std::string>();
         }
 
-    if (vm.count("opt2"))
+    if (vm.count("destination"))
         {
-            opts.push_back(
-                vm["opt2"].as<string>()
-            );
+            destination = vm["destination"].as<std::string>();
         }
 
-    if (vm.count("opt3"))
-        {
-            opts.push_back(
-                vm["opt3"].as<string>()
-            );
-        }
+    if (source.empty() && destination.empty()) throw cli_exception("At least source or destination has to be specified!");
 
-    // make sure that at least one SE and debug level were specified
-    if (opts.size() < 2)
-        {
-            throw cli_exception("SE name and debug mode has to be specified (on/off/integer)!");
-        }
+    if (!vm.count("debug_level")) throw bad_option("debug_level", "value missing");
 
-    // index of debug mode (the last parameter)
-    size_t mode_index = opts.size() - 1;
-    // value of debug mode
-    string mode_str = opts[mode_index];
-    // it should be either ON
-    if (mode_str == ON) level = 1;
-    // or OFF
-    else if (mode_str == OFF) level = 0;
-    // try integer
-    else
-        {
-            try
-                {
-                    level = boost::lexical_cast<int>(mode_str);
-                }
-            catch (...)
-                {
-                    throw cli_exception("Debug mode has to be specified (on/off)!");
-                }
-        }
-
-    // source is always the first one
-    source = opts[0];
-
-    // if mode is the second parameter the destination was not specified!
-    if (mode_index > 1) destination = opts[1];
-
-    return true;
+    if (level < 0 || level > 3) throw bad_option("debug_level", "takes following values: 0, 1, 2 or 3");
 }
 
-string DebugSetCli::getUsageString(string tool)
+std::string DebugSetCli::getUsageString(std::string tool)
 {
-    return "Usage: " + tool + " [options] (SE | SOURCE DESTINATION) LEVEL";
+    return "Usage: " + tool + " [options] LEVEL";
 }

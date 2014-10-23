@@ -65,11 +65,8 @@ SrcDelCli::~SrcDelCli()
 
 }
 
-bool SrcDelCli::validate(bool /*init*/)
+void SrcDelCli::validate(bool /*init*/)
 {
-    // do the standard validation
-    if(!CliBase::validate()) return false;
-
     // do the validation
     // In case of a user types an invalid expression...
     if (vm.count("file") && vm.count("Filename"))
@@ -79,11 +76,10 @@ bool SrcDelCli::validate(bool /*init*/)
         }
 
     // first check if the -f option was used, try to open the file with bulk-job description
-    ifstream ifs(bulk_file.c_str());
-
-    if(ifs)// -f option is used
+    if (vm.count("file"))
         {
-            if (vm.count("file"))
+            ifstream ifs(bulk_file.c_str());
+            if(ifs)// -f option is used
                 {
                     // Parse the file...
                     int lineCount = 0;
@@ -97,12 +93,10 @@ bool SrcDelCli::validate(bool /*init*/)
                         }
                     while(!ifs.eof());
                 }
-            else return false;
+            else throw bad_option("file", "does not exist");
         }
 
     std::for_each(allFilenames.begin(), allFilenames.end(), validateFileName);
-
-    return true;
 }
 
 void SrcDelCli::validateFileName(std::string const & url)

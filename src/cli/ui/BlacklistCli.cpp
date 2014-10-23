@@ -72,12 +72,8 @@ BlacklistCli::~BlacklistCli()
 
 }
 
-bool BlacklistCli::validate()
+void BlacklistCli::validate()
 {
-
-    // do the standard validation
-    if (!CliBase::validate()) return false;
-
     to_lower(mode);
 
     if (mode != ON && mode != OFF)
@@ -100,8 +96,6 @@ bool BlacklistCli::validate()
         {
             throw bad_option("allow-submit", "may not be used if status = 'CANCEL'");
         }
-
-    return true;
 }
 
 string BlacklistCli::getUsageString(string tool)
@@ -109,7 +103,7 @@ string BlacklistCli::getUsageString(string tool)
     return "Usage: " + tool + " [options] COMMAND NAME ON|OFF";
 }
 
-bool BlacklistCli::printHelp(string tool)
+bool BlacklistCli::printHelp()
 {
 
     // check whether the -h option was used
@@ -117,13 +111,13 @@ bool BlacklistCli::printHelp(string tool)
         {
 
             // remove the path to the executive
-            size_t pos = tool.find_last_of('/');
+            size_t pos = toolname.find_last_of('/');
             if( pos != string::npos)
                 {
-                    tool = tool.substr(pos + 1);
+                    toolname = toolname.substr(pos + 1);
                 }
             // print the usage guigelines
-            cout << endl << getUsageString(tool) << endl << endl;
+            cout << endl << getUsageString(toolname) << endl << endl;
 
             cout << "List of Commands:" << endl << endl;
             cout << "dn		Blacklist DN (user)" << endl;

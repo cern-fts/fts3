@@ -102,7 +102,7 @@ public:
      * 2. If -h or -V option were used respective informations are printed
      * 3. Additional check regarding server are performed
      */
-    virtual bool validate();
+    virtual void validate();
 
     /**
      * If verbose additional info is printed
@@ -116,14 +116,7 @@ public:
      *
      * @return true if the help message has been printed
      */
-    virtual bool printHelp(string tool);
-
-    /**
-     * Prints version if the -V option has been used.
-     *
-     * @return true if the version has been printed
-     */
-    bool printVersion();
+    virtual bool printHelp();
 
     /**
      * Checks whether the -v option was used.

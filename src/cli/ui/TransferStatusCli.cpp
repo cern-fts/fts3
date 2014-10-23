@@ -49,11 +49,8 @@ TransferStatusCli::~TransferStatusCli()
 {
 }
 
-bool TransferStatusCli::validate()
+void TransferStatusCli::validate()
 {
-
-    if (!CliBase::validate()) return false;
-
     if (getJobIds().empty()) throw bad_option("jobid", "missing parameter");
 
     if (vm.count("p") && vm.size() > 3)
@@ -68,10 +65,6 @@ bool TransferStatusCli::validate()
                         throw bad_option("p", "this option cannot be used together with '" + it->first + "'!");
                 }
         }
-
-
-
-    return true;
 }
 
 bool TransferStatusCli::list()
