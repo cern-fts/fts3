@@ -144,7 +144,7 @@ def get_overview(http_request):
         pairs_filter += " AND dest_se = %s "
 
     pairs_query = """
-    SELECT DISTINCT source_se, dest_se FROM t_file WHERE job_finished IS NULL AND file_state != 'NOT_USED' %s
+    SELECT DISTINCT source_se, dest_se FROM t_file WHERE file_state in ('SUBMITTED', 'ACTIVE', 'STAGING', 'STARTED') %s
     UNION
     SELECT DISTINCT source_se, dest_se FROM t_file WHERE job_finished >= %s %s
     """ % (pairs_filter, _db_to_date(), pairs_filter)
