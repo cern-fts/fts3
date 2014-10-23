@@ -246,6 +246,8 @@ def get_overview(http_request):
         total = failed + finished
         if total > 0:
             obj['rate'] = (finished * 100.0) / total
+        else:
+            obj['rate'] = None
         # Append limit, if any
         obj['limits'] =_get_pair_limits(limits, triplet[0], triplet[1])
         # Mark UDT-enabled
