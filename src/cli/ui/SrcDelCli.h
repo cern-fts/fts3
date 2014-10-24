@@ -77,7 +77,7 @@ public:
       * @return GSoapContexAdapter instance, or null if all activities
       * requested using program options have been done.
       */
-    bool validate(bool init = true);
+    void validate(bool init = true);
 
     ///
     static void validateFileName(std::string const & url);

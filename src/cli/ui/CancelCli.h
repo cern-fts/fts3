@@ -28,7 +28,7 @@ public:
     /**
      * parses the bulk submission file if necessary
      */
-    bool validate();
+    void validate();
 
     /**
      * Gets a vector with job IDs.

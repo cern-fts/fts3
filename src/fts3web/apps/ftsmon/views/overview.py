@@ -129,13 +129,6 @@ def get_overview(http_request):
 
     cursor = connection.cursor()
 
-    # Get all vos
-    if filters['vo']:
-        all_vos = [filters['vo']]
-    else:
-        cursor.execute("SELECT DISTINCT vo_name FROM t_job")
-        all_vos = [row[0] for row in cursor.fetchall()]
-
     # Get all pairs first
     pairs_filter = ""
     if filters['source_se']:
@@ -143,13 +136,12 @@ def get_overview(http_request):
     if filters['dest_se']:
         pairs_filter += " AND dest_se = %s "
 
-    pairs_query = """
-    SELECT DISTINCT source_se, dest_se FROM t_file WHERE file_state in ('SUBMITTED', 'ACTIVE', 'STAGING', 'STARTED') %s
+    triplet_query = """
+    SELECT source_se, dest_se, vo_name FROM t_file WHERE file_state in ('SUBMITTED', 'ACTIVE', 'STAGING', 'STARTED') %s
     UNION
-    SELECT DISTINCT source_se, dest_se FROM t_file WHERE job_finished >= %s %s
+    SELECT source_se, dest_se, vo_name FROM t_file WHERE job_finished >= %s AND file_state IN ('FINISHED', 'FAILED', 'CANCELED') %s
     """ % (pairs_filter, _db_to_date(), pairs_filter)
 
-    query_params = []
     se_params = []
     if filters['source_se']:
         se_params.append(filters['source_se'])
@@ -158,70 +150,57 @@ def get_overview(http_request):
 
     query_params = se_params + [not_before] + se_params
 
-    cursor.execute(pairs_query, query_params)
-    all_pairs = cursor.fetchall()
+    cursor.execute(triplet_query, query_params)
+    all_triplets = cursor.fetchall()
 
     triplets = {}
-    for (source, dest) in all_pairs:
-        for vo in all_vos:
-            # Make sure the combination of source, dest and vo has actually been used
+    for triplet_key in all_triplets:
+            source, dest, vo = triplet_key
+            triplet = triplets.get(triplet_key, dict())
+
+            # Terminal file count
             cursor.execute(
-                _db_limit(
-                    """SELECT file_id FROM t_file
-                    WHERE source_se = %s AND dest_se = %s AND vo_name = %s
-                          AND file_state IN ('FAILED', 'FINISHED', 'CANCELED', 'SUBMITTED', 'ACTIVE', 'STAGING', 'STARTED')""",
-                    1
-                ),
+                "SELECT file_state, COUNT(file_state) FROM t_file "
+                "WHERE source_se = %%s AND dest_se = %%s AND vo_name = %%s"
+                "      AND job_finished > %s "
+                "      AND file_state <> 'NOT_USED' "
+                "GROUP BY file_state ORDER BY NULL" % _db_to_date(),
+                [source, dest, vo, not_before]
+            )
+            for row in cursor.fetchall():
+                triplet[row[0].lower()] = row[1]
+
+            # Non terminal file count
+            cursor.execute(
+                "SELECT file_state, COUNT(file_state) FROM t_file "
+                "WHERE source_se = %s AND dest_se = %s AND vo_name = %s"
+                "      AND file_state in ('ACTIVE', 'SUBMITTED', 'STAGING', 'STARTED') "
+                "GROUP BY file_state ORDER BY NULL",
                 [source, dest, vo]
             )
-            triplet_exists = len(cursor.fetchall()) > 0
-            if triplet_exists:
-                triplet_key = (source, dest, vo)
-                triplet = triplets.get(triplet_key, dict())
+            for row in cursor.fetchall():
+                triplet[row[0].lower()] = row[1]
 
-                # Terminal file count
-                cursor.execute(
-                    "SELECT file_state, COUNT(file_state) FROM t_file "
-                    "WHERE source_se = %%s AND dest_se = %%s AND vo_name = %%s"
-                    "      AND job_finished > %s "
-                    "      AND file_state <> 'NOT_USED' "
-                    "GROUP BY file_state ORDER BY NULL" % _db_to_date(),
-                    [source, dest, vo, not_before]
-                )
-                for row in cursor.fetchall():
-                    triplet[row[0].lower()] = row[1]
+            # Total files
+            total_files = sum(triplet.values())
+            if total_files > 0:
+                # Throughput
+                if triplet.get('active') > 0:
+                    cursor.execute(
+                        "SELECT AVG(throughput), AVG(tx_duration) FROM t_file "
+                        "WHERE source_se = %s AND dest_se=%s "
+                        "      AND vo_name=%s AND file_state='FINISHED' AND throughput > 0"
+                        "      AND job_finished > %s",
+                        [source, dest, vo, not_before]
+                    )
+                    avg_thr = cursor.fetchall()
+                    if len(avg_thr):
+                        if avg_thr[0][0]:
+                            triplet['current'] = avg_thr[0][0] * triplet.get('active')
+                        if avg_thr[0][1]:
+                            triplet['avg_duration'] = avg_thr[0][1]
 
-                # Non terminal file count
-                cursor.execute(
-                    "SELECT file_state, COUNT(file_state) FROM t_file "
-                    "WHERE source_se = %s AND dest_se = %s AND vo_name = %s"
-                    "      AND file_state in ('ACTIVE', 'SUBMITTED', 'STAGING', 'STARTED') "
-                    "GROUP BY file_state ORDER BY NULL",
-                    [source, dest, vo]
-                )
-                for row in cursor.fetchall():
-                    triplet[row[0].lower()] = row[1]
-
-                # Total files
-                total_files = sum(triplet.values())
-                if total_files > 0:
-                    # Throughput
-                    if triplet.get('active') > 0:
-                        cursor.execute(
-                            "SELECT AVG(throughput), AVG(tx_duration) FROM t_file "
-                            "WHERE source_se = %s AND dest_se=%s "
-                            "      AND vo_name=%s AND file_state='FINISHED' AND throughput > 0"
-                            "      AND job_finished > %s",
-                            [source, dest, vo, not_before]
-                        )
-                        avg_thr = cursor.fetchall()
-                        if len(avg_thr):
-                            if avg_thr[0][0]:
-                                triplet['current'] = avg_thr[0][0] * triplet.get('active')
-                            if avg_thr[0][1]:
-                                triplet['avg_duration'] = avg_thr[0][1]
-
-                    triplets[triplet_key] = triplet
+                triplets[triplet_key] = triplet
 
     # Limitations
     limit_query = "SELECT source_se, dest_se, throughput, active FROM t_optimize WHERE throughput IS NOT NULL or active IS NOT NULL"
@@ -246,6 +225,8 @@ def get_overview(http_request):
         total = failed + finished
         if total > 0:
             obj['rate'] = (finished * 100.0) / total
+        else:
+            obj['rate'] = None
         # Append limit, if any
         obj['limits'] =_get_pair_limits(limits, triplet[0], triplet[1])
         # Mark UDT-enabled

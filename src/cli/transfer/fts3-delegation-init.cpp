@@ -40,9 +40,8 @@ int main(int ac, char* av[])
             DelegationCli cli;
             // create and initialise the command line utility
             cli.parse(ac, av);
-            if (!cli.validate()) return 1;
-
-
+            if (cli.printHelp()) return 0;
+            cli.validate();
 
             // delegate Proxy Certificate
             std::unique_ptr<ProxyCertificateDelegator> handler;

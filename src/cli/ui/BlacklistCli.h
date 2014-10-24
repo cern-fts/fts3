@@ -65,7 +65,7 @@ public:
      * @return GSoapContexAdapter instance, or null if all activities
      * 				requested using program options have been done.
      */
-    virtual bool validate();
+    virtual void validate();
 
     /**
      * Prints help message if the -h option has been used.
@@ -74,7 +74,7 @@ public:
      *
      * @return true if the help message has been printed
      */
-    virtual bool printHelp(string tool);
+    virtual bool printHelp();
 
     /**
      * Gives the instruction how to use the command line tool.

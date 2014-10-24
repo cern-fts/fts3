@@ -94,7 +94,7 @@ public:
      * @return GSoapContexAdapter instance, or null if all activities
      * 				requested using program options have been done.
      */
-    virtual bool validate();
+    virtual void validate();
 
     /**
      * Gives the instruction how to use the command line tool.

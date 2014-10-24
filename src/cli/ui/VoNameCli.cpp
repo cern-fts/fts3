@@ -55,11 +55,8 @@ VoNameCli::~VoNameCli()
 {
 }
 
-bool VoNameCli::validate()
+void VoNameCli::validate()
 {
-
-    if (!CliBase::validate()) return false;
-
     if (pos)
         {
             if (getVoName().empty())
@@ -67,8 +64,6 @@ bool VoNameCli::validate()
                     throw cli_exception("The VO name has to be specified");
                 }
         }
-
-    return true;
 }
 
 string VoNameCli::getUsageString(string tool)

@@ -48,18 +48,13 @@ PriorityCli::~PriorityCli()
 {
 }
 
-bool PriorityCli::validate()
+void PriorityCli::validate()
 {
-
-    // do the standard validation
-    if (!CliBase::validate()) return false;
 
     if (priority < 1 || priority > 5)
         {
             throw bad_option("priority", "has to take a value in range of 1 to 5");
         }
-
-    return true;
 }
 
 string PriorityCli::getUsageString(string tool)

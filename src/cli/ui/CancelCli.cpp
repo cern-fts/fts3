@@ -31,21 +31,14 @@ CancelCli::~CancelCli()
 
 }
 
-
-bool CancelCli::validate()
+void CancelCli::validate()
 {
-
-    // do the standard validation
-    if (!CliBase::validate()) return false;
-
     if (!vm.count("file") && !vm.count("jobid"))
         {
             throw bad_option("file", "Either the bulk file or job ID list may be used, can't use both!");
         }
 
     prepareJobIds();
-
-    return true;
 }
 
 void CancelCli::prepareJobIds()

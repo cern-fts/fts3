@@ -147,18 +147,13 @@ void CliBase::parse(int ac, char* av[])
         }
 }
 
-bool CliBase::validate()
+void CliBase::validate()
 {
-    // if applicable print help or version and exit, nothing else needs to be done
-    if (printHelp(toolname) || printVersion()) return false;
-
     // if endpoint could not be determined, we cannot do anything
     if (endpoint.empty())
         {
             throw bad_option("service", "failed to determine the endpoint");
         }
-
-    return true;
 }
 
 void CliBase::printCliDeatailes() const
@@ -180,7 +175,7 @@ string CliBase::getUsageString(string tool)
     return "Usage: " + tool + " [options]";
 }
 
-bool CliBase::printHelp(string tool)
+bool CliBase::printHelp()
 {
 
     // check whether the -h option was used
@@ -188,23 +183,17 @@ bool CliBase::printHelp(string tool)
         {
 
             // remove the path to the executive
-            size_t pos = tool.find_last_of('/');
+            size_t pos = toolname.find_last_of('/');
             if( pos != string::npos)
                 {
-                    tool = tool.substr(pos + 1);
+                    toolname = toolname.substr(pos + 1);
                 }
             // print the usage guigelines
-            cout << endl << getUsageString(tool) << endl << endl;
+            cout << endl << getUsageString(toolname) << endl << endl;
             // print the available options
             cout << visible << endl;
             return true;
         }
-
-    return false;
-}
-
-bool CliBase::printVersion()
-{
 
     // check whether the -V option was used
     if (vm.count("version"))

@@ -197,21 +197,19 @@ void SetCfgCli::parse(int ac, char* av[])
         }
 }
 
-bool SetCfgCli::validate()
+void SetCfgCli::validate()
 {
-
-    if(!CliBase::validate()) return false;
 
     if (vm.count("s3"))
         {
             if (vm.size() != 1) throw bad_option("s3", "should be used only as a single option");
-            return true;
+            return;
         }
 
     if (vm.count("dropbox"))
         {
             if (vm.size() != 1) throw bad_option("dropbox", "should be used only as a single option");
-            return true;
+            return;
         }
 
     if (getConfigurations().empty()
@@ -248,8 +246,6 @@ bool SetCfgCli::validate()
 
     if ((vm.count("active-fixed") || vm.count("sec-per-mb")) && (!vm.count("source") || !vm.count("destination")))
         throw bad_option("source, destination", "missing source and destination pair");
-
-    return true;
 }
 
 string SetCfgCli::getUsageString(string tool)

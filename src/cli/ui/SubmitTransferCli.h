@@ -107,7 +107,7 @@ public:
      * @return GSoapContexAdapter instance, or null if all activities
      * 				requested using program options have been done.
      */
-    bool validate();
+    void validate();
 
     /**
      * Creates job elements.
@@ -118,7 +118,7 @@ public:
      *
      * @return true is the internal vector containing job elements is not empty
      */
-    bool createJobElements();
+    void createJobElements();
 
     /**
      * Performs standard checks.
@@ -128,7 +128,7 @@ public:
      *  	- checks if the job is specified twice (using command line and bulk-job file)
      *  	- checks if used options are supported (e.g. checksum)
      */
-    bool performChecks();
+    void performChecks();
 
     /**
      * Gives the instruction how to use the command line tool.

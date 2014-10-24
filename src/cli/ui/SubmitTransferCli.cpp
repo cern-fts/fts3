@@ -117,19 +117,12 @@ void SubmitTransferCli::parse(int ac, char* av[])
         }
 }
 
-bool SubmitTransferCli::validate()
+void SubmitTransferCli::validate()
 {
-
-    // do the standard validation
-    if (!CliBase::validate()) return false;
-
     // perform standard checks in order to determine if the job was well specified
-    if (!performChecks()) return false;
-
+    performChecks();
     // prepare job elements
-    if (!createJobElements()) return false;
-
-    return true;
+    createJobElements();
 }
 
 optional<string> SubmitTransferCli::getMetadata()
@@ -155,7 +148,7 @@ bool SubmitTransferCli::checkValidUrl(const std::string &uri)
 }
 
 
-bool SubmitTransferCli::createJobElements()
+void SubmitTransferCli::createJobElements()
 {
 
     // first check if the -f option was used, try to open the file with bulk-job description
@@ -197,7 +190,7 @@ bool SubmitTransferCli::createJobElements()
                             if (it != tokens.end())
                                 {
                                     string s = *it;
-                                    if (!checkValidUrl(s)) return false;
+                                    if (!checkValidUrl(s)) throw bad_option("file", s + " is not valid URL");
                                     file.sources.push_back(s);
                                 }
                             else
@@ -209,7 +202,7 @@ bool SubmitTransferCli::createJobElements()
                             if (it != tokens.end())
                                 {
                                     string s = *it;
-                                    if (!checkValidUrl(s)) return false;
+                                    if (!checkValidUrl(s)) throw bad_option("file", s + " is not valid URL");
                                     file.destinations.push_back(s);
                                 }
                             else
@@ -276,8 +269,6 @@ bool SubmitTransferCli::createJobElements()
                     );
                 }
         }
-
-    return true;
 }
 
 vector<File> SubmitTransferCli::getFiles()
@@ -290,7 +281,7 @@ vector<File> SubmitTransferCli::getFiles()
     return files;
 }
 
-bool SubmitTransferCli::performChecks()
+void SubmitTransferCli::performChecks()
 {
     // in FTS3 delegation is supported by default
     delegate = true;
@@ -315,8 +306,6 @@ bool SubmitTransferCli::performChecks()
         {
             throw bad_option("file-metadata", "If a bulk submission has been used file metadata have to be specified inside the bulk file separately for each file and no using '--file-metadata' option!");
         }
-
-    return true;
 }
 
 string SubmitTransferCli::askForPassword()
@@ -363,7 +352,7 @@ map<string, string> SubmitTransferCli::getParams()
 
     // check if the parameters were set using CLI, and if yes set them
 
-    if (vm.count("compare-checksum"))
+    if (vm.count("compare-checksums"))
         {
             parameters[JobParameterHandler::CHECKSUM_METHOD] = "compare";
         }

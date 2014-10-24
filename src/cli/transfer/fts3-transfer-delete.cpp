@@ -50,7 +50,8 @@ int main(int ac, char* av[])
             cli.parse(ac,av);
 
             // validate command line options, and return respective gsoap context
-            if (!cli.validate()) return 1;
+            if (cli.printHelp()) return 0;
+            cli.validate();
 
             std::vector<std::string> vect =  cli.getFileName();
             if(vect.size() == 0)

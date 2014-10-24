@@ -25,7 +25,7 @@
 #ifndef DEBUGSETCLI_H_
 #define DEBUGSETCLI_H_
 
-#include "SrcDestCli.h"
+#include "CliBase.h"
 
 #include <string>
 #include <vector>
@@ -40,9 +40,6 @@ namespace cli
  */
 class DebugSetCli : public CliBase
 {
-
-    static const string ON;
-    static const string OFF;
 
 public:
 
@@ -65,14 +62,14 @@ public:
      * @return GSoapContexAdapter instance, or null if all activities
      * 				requested using program options have been done.
      */
-    virtual bool validate();
+    virtual void validate();
 
     /**
      * Gives the instruction how to use the command line tool.
      *
      * @return a string with instruction on how to use the tool
      */
-    string getUsageString(string tool);
+    std::string getUsageString(std::string tool);
 
     /**
      * Gets the debug level.
@@ -89,7 +86,7 @@ public:
      *
      * @return source string if it was given as a CLI option, or an empty string if not
      */
-    string getSource()
+    std::string getSource()
     {
         return source;
     }
@@ -99,7 +96,7 @@ public:
      *
      * @return destination string if it was given as a CLI option, or an empty string if not
      */
-    string getDestination()
+    std::string getDestination()
     {
         return destination;
     }
@@ -110,10 +107,10 @@ private:
     unsigned level;
 
     /// source
-    string source;
+    std::string source;
 
     // destination
-    string destination;
+    std::string destination;
 };
 
 }
