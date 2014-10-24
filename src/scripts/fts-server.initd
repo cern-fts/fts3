@@ -31,6 +31,7 @@ lockfile=/var/lock/subsys/fts-server
 export GLOBUS_THREAD_MODEL=pthread
 export X509_USER_CERT=/etc/grid-security/fts3hostcert.pem
 export X509_USER_KEY=/etc/grid-security/fts3hostkey.pem
+export GLOBUS_GSSAPI_FORCE_TLS=1
 
 start() {
     echo -n $"Starting $prog: "
