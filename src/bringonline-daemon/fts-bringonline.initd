@@ -29,6 +29,7 @@ prog=$(basename $exec)
 
 lockfile=/var/lock/subsys/fts-bringonline
 export GLOBUS_THREAD_MODEL=pthread
+export CGSI_TRACE=1
 
 start() {
     echo -n $"Starting $prog: "
