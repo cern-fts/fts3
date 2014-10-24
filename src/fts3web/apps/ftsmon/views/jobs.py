@@ -178,15 +178,19 @@ def get_job_details(http_request, job_id):
 
     try:
         job = Job.objects.get(job_id=job_id)
-        count = File.objects.filter(job=job_id)
+        count_files = File.objects.filter(job=job_id)
+        count_dm = DmFile.objects.filter(job=job_id)
     except Job.DoesNotExist:
         raise Http404
 
     if reason:
-        count = count.filter(reason=reason)
+        count_files = count_files.filter(reason=reason)
+        count_dm = count_dm.filter(reason=reason)
     if file_id:
-        count = count.filter(file_id=file_id)
-    count = count.values('file_state').annotate(count=Count('file_state'))
+        count_files = count_files.filter(file_id=file_id)
+        count_dm = count_dm.filter(file_id=file_id)
+    count_files = count_files.values('file_state').annotate(count=Count('file_state'))
+    count_dm = count_dm.values('file_state').annotate(count=Count('file_state'))
 
     # Set job duration
     if job.job_finished:
@@ -196,8 +200,10 @@ def get_job_details(http_request, job_id):
 
     # Count as dictionary
     state_count = {}
-    for st in count:
+    for st in count_files:
         state_count[st['file_state']] = st['count']
+    for st in count_dm:
+        state_count[st['file_state']] = st['count'] + state_count.get(st['file_state'], 0)
 
     return {'job': job, 'states': state_count}
 
