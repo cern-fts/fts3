@@ -131,22 +131,22 @@ def get_overview(http_request):
 
     # Get all pairs first
     pairs_filter = ""
+    se_params = []
     if filters['source_se']:
         pairs_filter += " AND source_se = %s "
+        se_params.append(filters['source_se'])
     if filters['dest_se']:
         pairs_filter += " AND dest_se = %s "
+        se_params.append(filters['dest_se'])
+    if filters['vo']:
+        pairs_filter += " AND vo_name = %s "
+        se_params.append(filters['vo'])
 
     triplet_query = """
     SELECT source_se, dest_se, vo_name FROM t_file WHERE file_state in ('SUBMITTED', 'ACTIVE', 'STAGING', 'STARTED') %s
     UNION
     SELECT source_se, dest_se, vo_name FROM t_file WHERE job_finished >= %s AND file_state IN ('FINISHED', 'FAILED', 'CANCELED') %s
     """ % (pairs_filter, _db_to_date(), pairs_filter)
-
-    se_params = []
-    if filters['source_se']:
-        se_params.append(filters['source_se'])
-    if filters['dest_se']:
-        se_params.append(filters['dest_se'])
 
     query_params = se_params + [not_before] + se_params
 
