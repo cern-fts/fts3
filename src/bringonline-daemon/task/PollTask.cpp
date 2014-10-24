@@ -35,7 +35,7 @@ void PollTask::run(boost::any const &)
                 {
                     auto ids = ctx.getIDs(urls[i]);
 
-                    if (errors[i])
+                    if (errors[i] && errors[i]->code != EOPNOTSUPP)
                         {
                             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE polling FAILED for " << urls[i] << ": "
                                                            << errors[i]->code << " " << errors[i]->message
@@ -44,6 +44,13 @@ void PollTask::run(boost::any const &)
                             bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
                             for (auto it = ids.begin(); it != ids.end(); ++it)
                                 ctx.state_update(it->first, it->second, "FAILED", errors[i]->message, retry);
+                        }
+                    else if (errors[i] && errors[i]->code == EOPNOTSUPP)
+                        {
+                            FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "BRINGONLINE FINISHED for " << urls[i]
+                                                            << ": not supported, keep going (" << errors[i]->message << ")" << commit;
+                            for (auto it = ids.begin(); it != ids.end(); ++it)
+                                ctx.state_update(it->first, it->second, "FINISHED", "", false);
                         }
                     else
                         {
@@ -77,6 +84,15 @@ void PollTask::run(boost::any const &)
                 {
                     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE NOT FINISHED for " << urls[i]
                                                     << commit;
+                }
+                else if (errors[i]->code == EOPNOTSUPP)
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE FINISHED for "
+                                                   << urls[i]
+                                                   << ": not supported, keep going (" << errors[i]->message << ")" << commit;
+                    for (auto it = ids.begin(); it != ids.end(); ++it)
+                        ctx.state_update(it->first, it->second, "FINISHED", "", false);
+                    ctx.removeUrl(urls[i]);
                 }
                 else {
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE FAILED for " << urls[i] << ": "
