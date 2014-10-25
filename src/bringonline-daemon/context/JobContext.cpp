@@ -83,6 +83,8 @@ public:
 
 void JobContext::removeUrl(const std::string& url)
 {
+    boost::mutex::scoped_lock lock(m);
+
     std::map< std::string, std::vector<std::pair<int, std::string> > >::iterator it_j;
 
     FileUrlMatches url_compare(url);
