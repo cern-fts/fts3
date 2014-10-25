@@ -96,15 +96,13 @@ void JobContext::removeUrl(const std::string& url)
 {
     boost::mutex::scoped_lock lock(m);
 
-    std::map< std::string, std::vector<std::pair<int, std::string> > >::iterator it_j;
-    std::vector<std::pair<int, std::string> >::iterator lastPosition;
+    std::map< std::string, std::vector<std::pair<int, std::string> > >::iterator it_j; 
 
     FileUrlMatches url_compare(url);
 
     for (it_j = jobs.begin(); it_j != jobs.end(); ++it_j)
         {
-	    lastPosition = std::remove_if(it_j->second.begin(), it_j->second.end(), url_compare);
-            it_j->second.erase(lastPosition, it_j->second.end());	    
+            it_j->second.erase(std::remove_if(it_j->second.begin(), it_j->second.end(), url_compare));	    
         }
 
     urlToIDs.erase(url);
