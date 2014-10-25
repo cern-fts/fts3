@@ -8780,6 +8780,31 @@ void MySqlAPI::checkSanityState()
                                         }
                                 }
                         }
+
+  			   //now check for stalled bringonline files
+                            soci::rowset<soci::row> rsStagingStarted = (
+                                        sql.prepare <<
+                                        " select  f.file_id, f.staging_start, j.bring_online, j.job_id from t_file f inner join t_job j on (f.job_id = j.job_id) where file_state = 'STARTED' "
+                                    );
+                            for (soci::rowset<soci::row>::const_iterator iStaging = rsStagingStarted.begin(); iStaging != rsStagingStarted.end(); ++iStaging)
+                                {
+                                    int file_id = iStaging->get<int>("file_id");    
+				    std::string job_id = iStaging->get<std::string>("job_id"); 
+				    int bring_online  = iStaging->get<int>("bring_online"); 
+				    struct tm start_time = iStaging->get<struct tm>("staging_start");
+        			    time_t start_time_t = timegm(&start_time);                               
+                                    std::string errorMessage = "Transfer has been forced-canceled because is has been in staging state beyond its bringonline timeout ";
+
+				    time_t now = getUTC(0);
+				    double diff = difftime(now, start_time_t);
+				    int diffInt =  boost::lexical_cast<int>(diff);
+
+				    if (diffInt > bring_online + 100)
+				    {
+                                    	updateFileTransferStatusInternal(sql, 0.0, job_id, file_id, "FAILED", errorMessage, 0, 0, 0, false);
+                                    	updateJobTransferStatusInternal(sql, job_id, "FAILED",0);
+				    }
+                                }		
                 }
         }
     catch (std::exception& e)
