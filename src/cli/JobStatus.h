@@ -81,15 +81,16 @@ public:
         std::string staging_start = t.get<std::string>("staging_start");
         std::string staging_finished = t.get<std::string>("staging_finished");
 
-        if (strptime(staging_start.c_str(), "%Y-%m-%dT%H:%M:%S", &time) != NULL) {
-            time_t staging_start_time = mktime(&time);
-            time_t staging_finished_time = ::time(NULL);
+        if (strptime(staging_start.c_str(), "%Y-%m-%dT%H:%M:%S", &time) != NULL)
+            {
+                time_t staging_start_time = mktime(&time);
+                time_t staging_finished_time = ::time(NULL);
 
-            if (strptime(staging_finished.c_str(), "%Y-%m-%dT%H:%M:%S", &time) != NULL)
-                staging_finished_time = mktime(&time);
+                if (strptime(staging_finished.c_str(), "%Y-%m-%dT%H:%M:%S", &time) != NULL)
+                    staging_finished_time = mktime(&time);
 
-            staging_duration = staging_finished_time - staging_start_time;
-        }
+                staging_duration = staging_finished_time - staging_start_time;
+            }
     }
 
     std::string getState() const

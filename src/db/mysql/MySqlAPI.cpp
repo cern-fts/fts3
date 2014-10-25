@@ -4559,10 +4559,10 @@ bool MySqlAPI::updateOptimizer()
                             std::string state = i->get<std::string>("file_state", "");
                             int retryNum = i->get<int>("retry", 0);
                             int current_failures = i->get<int>("current_failures", 0);
-			    std::string reason = i->get<std::string>("reason", "");
+                            std::string reason = i->get<std::string>("reason", "");
 
-			    //we do not want BringOnline errors to affect transfer success rate, exclude them
-			    bool exists = (reason.find("BringOnline") != std::string::npos);
+                            //we do not want BringOnline errors to affect transfer success rate, exclude them
+                            bool exists = (reason.find("BringOnline") != std::string::npos);
 
                             if(state.compare("FAILED") == 0 && exists)
                                 {
@@ -11030,7 +11030,7 @@ void MySqlAPI::setFixActive(const std::string & source, const std::string & dest
     soci::session sql(*connectionPool);
     try
         {
-	sql.begin();
+            sql.begin();
             if (active > 0)
                 {
                     sql << "INSERT INTO t_optimize_active (source_se, dest_se, active, fixed, ema, datetime) "
@@ -12020,10 +12020,10 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                                     files.push_back(record);
 
                                     boost::tuple<int, std::string, std::string, std::string, bool> recordState(file_id, initState, reason, job_id, false);
-				    if(!job_id.empty() && file_id > 0)
-                                    {
-                                    	filesState.push_back(recordState);
-                                    }
+                                    if(!job_id.empty() && file_id > 0)
+                                        {
+                                            filesState.push_back(recordState);
+                                        }
                                 }
                         }
                 }
@@ -12034,26 +12034,33 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                     std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >::iterator itFind;
                     for (itFind = filesState.begin(); itFind < filesState.end(); ++itFind)
                         {
-                            boost::tuple<int, std::string, std::string, std::string, bool>& tupleRecord = *itFind;
-                            int file_id = boost::get<0>(tupleRecord);
-                            std::string job_id = boost::get<3>(tupleRecord);
-
-                            //send state message
-                            std::vector<struct message_state> filesMsg;
-                            if(!job_id.empty() && file_id > 0)
-                            {
-                            filesMsg = getStateOfTransferInternal(sql, job_id, file_id);
-                            if(!filesMsg.empty())
+                            try
                                 {
-                                    std::vector<struct message_state>::iterator it;
-                                    for (it = filesMsg.begin(); it != filesMsg.end(); ++it)
+                                    boost::tuple<int, std::string, std::string, std::string, bool>& tupleRecord = *itFind;
+                                    int file_id = boost::get<0>(tupleRecord);
+                                    std::string job_id = boost::get<3>(tupleRecord);
+
+                                    //send state message
+                                    std::vector<struct message_state> filesMsg;
+                                    if(!job_id.empty() && file_id > 0)
                                         {
-                                            struct message_state tmp = (*it);
-                                            constructJSONMsg(&tmp);
+                                            filesMsg = getStateOfTransferInternal(sql, job_id, file_id);
+                                            if(!filesMsg.empty())
+                                                {
+                                                    std::vector<struct message_state>::iterator it;
+                                                    for (it = filesMsg.begin(); it != filesMsg.end(); ++it)
+                                                        {
+                                                            struct message_state tmp = (*it);
+                                                            constructJSONMsg(&tmp);
+                                                        }
+                                                }
+                                            filesMsg.clear();
                                         }
                                 }
-                            filesMsg.clear();
-                            }
+                            catch(...)
+                                {
+                                    //do not let the process die due to messaging
+                                }
                         }
 
                     try
@@ -12371,7 +12378,7 @@ void MySqlAPI::getStagingFilesForCanceling(std::vector< boost::tuple<int, std::s
                                      "WHERE file_id = :file_id ", soci::use(file_id, "file_id"));
 
             // Cancel staging files
-	    sql.begin();
+            sql.begin();
             for (soci::rowset<soci::row>::const_iterator i2 = rs.begin(); i2 != rs.end(); ++i2)
                 {
                     soci::row const& row = *i2;
@@ -12383,16 +12390,16 @@ void MySqlAPI::getStagingFilesForCanceling(std::vector< boost::tuple<int, std::s
 
                     stmt1.execute(true);
                 }
-		sql.commit();
+            sql.commit();
         }
     catch (std::exception& e)
         {
-	sql.rollback();
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-	sql.rollback();
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }

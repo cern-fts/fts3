@@ -52,7 +52,7 @@ void DeletionTask::run_srm_impl()
                     else
                         {
                             FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "DELETION FAILED for " << urls[i]
-                                           << ": returned -1 but error was not set ";
+                                                            << ": returned -1 but error was not set ";
                             for (auto it = ids.begin(); it != ids.end(); ++it)
                                 ctx.state_update(it->first, it->second, "FAILED", "Error not set by gfal2", false);
                         }

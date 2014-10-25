@@ -26,8 +26,8 @@ void PollTask::run(boost::any const &)
     std::vector<GError*> errors(urls.size(), NULL);
 
     int status = gfal2_bring_online_poll_list(
-            gfal2_ctx, static_cast<int>(urls.size()),
-            &*urls.begin(), token.c_str(), &errors.front());
+                     gfal2_ctx, static_cast<int>(urls.size()),
+                     &*urls.begin(), token.c_str(), &errors.front());
 
     if (status < 0)
         {
@@ -55,7 +55,7 @@ void PollTask::run(boost::any const &)
                     else
                         {
                             FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "BRINGONLINE FAILED for " << urls[i]
-                                           << ": returned -1 but error was not set ";
+                                                            << ": returned -1 but error was not set ";
                             for (auto it = ids.begin(); it != ids.end(); ++it)
                                 ctx.state_update(it->first, it->second, "FAILED", "Error not set by gfal2", false);
                         }
@@ -69,44 +69,45 @@ void PollTask::run(boost::any const &)
     else
         {
             for (size_t i = 0; i < urls.size(); ++i)
-            {
-                auto ids = ctx.getIDs(urls[i]);
-
-                if (errors[i] == NULL)
                 {
-                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE FINISHED for "
-                                                    << urls[i] << commit;
-                    for (auto it = ids.begin(); it != ids.end(); ++it)
-                        ctx.state_update(it->first, it->second, "FINISHED", "", false);
-                    ctx.removeUrl(urls[i]);
-                }
-                else if (errors[i]->code == EAGAIN)
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE NOT FINISHED for " << urls[i]
-                                                    << commit;
-                }
-                else if (errors[i]->code == EOPNOTSUPP)
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE FINISHED for "
-                                                   << urls[i]
-                                                   << ": not supported, keep going (" << errors[i]->message << ")" << commit;
-                    for (auto it = ids.begin(); it != ids.end(); ++it)
-                        ctx.state_update(it->first, it->second, "FINISHED", "", false);
-                    ctx.removeUrl(urls[i]);
-                }
-                else {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE FAILED for " << urls[i] << ": "
-                                                   << errors[i]->code << " " << errors[i]->message
-                                                   << commit;
+                    auto ids = ctx.getIDs(urls[i]);
 
-                    bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
-                    for (auto it = ids.begin(); it != ids.end() ; ++it)
-                        ctx.state_update(it->first, it->second, "FAILED", errors[i]->message, retry);
-                    ctx.removeUrl(urls[i]);
+                    if (errors[i] == NULL)
+                        {
+                            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE FINISHED for "
+                                                            << urls[i] << commit;
+                            for (auto it = ids.begin(); it != ids.end(); ++it)
+                                ctx.state_update(it->first, it->second, "FINISHED", "", false);
+                            ctx.removeUrl(urls[i]);
+                        }
+                    else if (errors[i]->code == EAGAIN)
+                        {
+                            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE NOT FINISHED for " << urls[i]
+                                                            << commit;
+                        }
+                    else if (errors[i]->code == EOPNOTSUPP)
+                        {
+                            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE FINISHED for "
+                                                            << urls[i]
+                                                            << ": not supported, keep going (" << errors[i]->message << ")" << commit;
+                            for (auto it = ids.begin(); it != ids.end(); ++it)
+                                ctx.state_update(it->first, it->second, "FINISHED", "", false);
+                            ctx.removeUrl(urls[i]);
+                        }
+                    else
+                        {
+                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE FAILED for " << urls[i] << ": "
+                                                           << errors[i]->code << " " << errors[i]->message
+                                                           << commit;
 
+                            bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
+                            for (auto it = ids.begin(); it != ids.end() ; ++it)
+                                ctx.state_update(it->first, it->second, "FAILED", errors[i]->message, retry);
+                            ctx.removeUrl(urls[i]);
+
+                        }
+                    g_clear_error(&errors[i]);
                 }
-                g_clear_error(&errors[i]);
-            }
         }
 
     // If status was 0, not everything is terminal, so schedule a new poll
@@ -180,32 +181,34 @@ bool PollTask::abort()
 
     std::vector<GError*> errors(urls.size(), NULL);
     int status = gfal2_abort_files(gfal2_ctx, static_cast<int>(urls.size()),
-            &*urls.begin(), token.c_str(), &*errors.begin());
+                                   &*urls.begin(), token.c_str(), &*errors.begin());
 
     if (status < 0)
         {
             for (size_t i = 0; i < urls.size(); ++i)
-            {
-                auto ids = ctx.getIDs(urls[i]);
+                {
+                    auto ids = ctx.getIDs(urls[i]);
 
-                if (errors[i]) {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE abort FAILED for " << urls[i] << ": "
-                                                   << errors[i]->code << " " << errors[i]->message
-                                                   << commit;
+                    if (errors[i])
+                        {
+                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE abort FAILED for " << urls[i] << ": "
+                                                           << errors[i]->code << " " << errors[i]->message
+                                                           << commit;
 
-                    bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
-                    for (auto it = ids.begin(); it != ids.end(); ++it)
-                        ctx.state_update(it->first, it->second, "FAILED", errors[i]->message, retry);
-                    g_clear_error(&errors[i]);
+                            bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
+                            for (auto it = ids.begin(); it != ids.end(); ++it)
+                                ctx.state_update(it->first, it->second, "FAILED", errors[i]->message, retry);
+                            g_clear_error(&errors[i]);
+                        }
+                    else
+                        {
+                            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE abort FAILED for "
+                                                            << urls[i] << ", returned -1, but error not set " << token
+                                                            << commit;
+                            for (auto it = ids.begin(); it != ids.end(); ++it)
+                                ctx.state_update(it->first, it->second, "FAILED", "Error not set by gfal2", false);
+                        }
                 }
-                else {
-                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE abort FAILED for "
-                                                    << urls[i] << ", returned -1, but error not set " << token
-                                                    << commit;
-                    for (auto it = ids.begin(); it != ids.end(); ++it)
-                        ctx.state_update(it->first, it->second, "FAILED", "Error not set by gfal2", false);
-                }
-            }
         }
 
     return aborted;
