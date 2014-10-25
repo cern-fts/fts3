@@ -70,12 +70,14 @@ std::vector<char const *> JobContext::getUrls() const
 }
 
 
-class FileUrlMatches {
+class FileUrlMatches
+{
     std::string url;
 public:
     FileUrlMatches(const std::string& url): url(url) {}
 
-    bool operator () (std::pair<int, std::string>& transfer) const {
+    bool operator () (std::pair<int, std::string>& transfer) const
+    {
         return transfer.second == url;
     }
 };

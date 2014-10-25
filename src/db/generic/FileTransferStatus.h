@@ -36,9 +36,9 @@ class FileTransferStatus
 public:
 
     FileTransferStatus() :
-            numFailures(0), finish_time(time(NULL)), start_time(time(NULL)),
-            staging_start(0), staging_finished(0),
-            fileId(0), duration(0)
+        numFailures(0), finish_time(time(NULL)), start_time(time(NULL)),
+        staging_start(0), staging_finished(0),
+        fileId(0), duration(0)
     {
     }
 
