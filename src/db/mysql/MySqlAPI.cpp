@@ -8799,7 +8799,7 @@ void MySqlAPI::checkSanityState()
 				    double diff = difftime(now, start_time_t);
 				    int diffInt =  boost::lexical_cast<int>(diff);
 
-				    if (diffInt > bring_online + 100)
+				    if (diffInt > (bring_online + 100))
 				    {
                                     	updateFileTransferStatusInternal(sql, 0.0, job_id, file_id, "FAILED", errorMessage, 0, 0, 0, false);
                                     	updateJobTransferStatusInternal(sql, job_id, "FAILED",0);
