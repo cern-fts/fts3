@@ -11301,7 +11301,10 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
                                     files.push_back(record);
 
                                     boost::tuple<int, std::string, std::string, std::string, bool> recordState(file_id, initState, reason, job_id, false);
-                                    filesState.push_back(recordState);
+				    if(!job_id.empty() && file_id > 0)
+				    {
+                                    	filesState.push_back(recordState);
+			            }
                                 }
                         }
                 }
@@ -11318,6 +11321,8 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
 
                             //send state message
                             std::vector<struct message_state> filesMsg;
+                            if(!job_id.empty() && file_id > 0)
+                            {
                             filesMsg = getStateOfTransferInternal(sql, job_id, file_id);
                             if(!filesMsg.empty())
                                 {
@@ -11329,6 +11334,7 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
                                         }
                                 }
                             filesMsg.clear();
+                            }
                         }
 
                     try

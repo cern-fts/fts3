@@ -13,6 +13,7 @@
 #include <set>
 #include <unordered_map>
 #include <map>
+#include <boost/thread.hpp>
 
 /**
  * Most generic Job (Deletion, Bring-online, etc.) context
@@ -146,6 +147,8 @@ private:
      * @param delegationId : delegation ID
      */
     static std::string generateProxy(std::string const & dn, std::string const & delegationId);
+
+    boost::mutex m;
 
 protected:
 
