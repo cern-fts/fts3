@@ -89,6 +89,8 @@ public:
      */
     std::set<std::string> getSurls() const
     {
+        boost::mutex::scoped_lock lock(m);
+
         std::set<std::string> surls;
 
         std::map< std::string, std::vector<std::pair<int, std::string> > >::const_iterator it_j;
@@ -129,6 +131,8 @@ public:
      */
     std::vector< std::pair<std::string, int> > getIDs(std::string const & surl) const
     {
+        boost::mutex::scoped_lock lock(m);
+
         std::vector< std::pair<std::string, int> > ret;
         auto range = urlToIDs.equal_range(surl);
         for (auto it = range.first; it != range.second; ++it)
@@ -148,7 +152,7 @@ private:
      */
     static std::string generateProxy(std::string const & dn, std::string const & delegationId);
 
-    boost::mutex m;
+    mutable boost::mutex m;
 
 protected:
 

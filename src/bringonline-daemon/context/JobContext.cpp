@@ -28,6 +28,8 @@ JobContext::JobContext(std::string const & dn, std::string const & vo, std::stri
 
 void JobContext::add(std::string const & surl, std::string const & jobId, int fileId)
 {
+    boost::mutex::scoped_lock lock(m);
+
     jobs[jobId].push_back(std::make_pair(fileId, surl));
     urlToIDs.insert({surl, {jobId, fileId}});
 }
@@ -47,6 +49,8 @@ bool JobContext::checkValidProxy(std::string& message) const
 
 std::vector<char const *> JobContext::getUrls() const
 {
+    boost::mutex::scoped_lock lock(m);
+
     std::vector<char const *> ret;
 
     std::map< std::string, std::vector<std::pair<int, std::string> > >::const_iterator it_j;
@@ -106,6 +110,8 @@ void JobContext::removeUrl(const std::string& url)
 
 std::string JobContext::getLogMsg() const
 {
+    boost::mutex::scoped_lock lock(m);
+
     std::stringstream ss;
 
     std::map< std::string, std::vector<std::pair<int, std::string> > >::const_iterator it_j;
