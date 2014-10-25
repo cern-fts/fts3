@@ -29,9 +29,12 @@ JobContext::JobContext(std::string const & dn, std::string const & vo, std::stri
 void JobContext::add(std::string const & surl, std::string const & jobId, int fileId)
 {
     boost::mutex::scoped_lock lock(m);
-
-    jobs[jobId].push_back(std::make_pair(fileId, surl));
-    urlToIDs.insert({surl, {jobId, fileId}});
+    
+    if(!surl.empty() && !jobId.empty() && fileId > 0)
+    {
+    	jobs[jobId].push_back(std::make_pair(fileId, surl));
+    	urlToIDs.insert({surl, {jobId, fileId}});
+    }
 }
 
 std::string JobContext::generateProxy(std::string const & dn, std::string const & delegationId)
