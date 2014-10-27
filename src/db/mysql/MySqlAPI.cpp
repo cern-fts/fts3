@@ -12157,7 +12157,7 @@ void MySqlAPI::getAlreadyStartedStaging(std::vector< boost::tuple<std::string, s
         {
             sql <<
                 " UPDATE t_file "
-                " SET start_time = NULL, staging_start=NULL, transferhost=NULL, file_state='STAGING' "
+                " SET start_time = NULL, staging_start=NULL, transferhost=NULL, agent_dn=NULL, file_state='STAGING' "
                 " WHERE  "
                 "   file_state='STARTED'"
                 "   AND (bringonline_token = '' OR bringonline_token IS NULL)"
@@ -12248,11 +12248,12 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost
                         {
                             sql <<
                                 " UPDATE t_file "
-                                " SET start_time = UTC_TIMESTAMP(),staging_start=UTC_TIMESTAMP(), transferhost=:thost, file_state='STARTED' "
+                                " SET start_time = UTC_TIMESTAMP(),staging_start=UTC_TIMESTAMP(), agent_dn=:thost, transferhost=:thost, file_state='STARTED' "
                                 " WHERE  "
                                 "	file_id= :fileId "
                                 "	AND file_state='STAGING'",
                                 soci::use(hostname),
+				soci::use(hostname),
                                 soci::use(file_id)
                                 ;
                         }
@@ -12319,7 +12320,7 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost
 
                                     sql <<
                                         " UPDATE t_file "
-                                        " SET hashed_id = :hashed_id, staging_finished=UTC_TIMESTAMP(), job_finished=NULL, finish_time=NULL, start_time=NULL, transferhost=NULL, reason = '', file_state = :fileState "
+                                        " SET hashed_id = :hashed_id, staging_finished=UTC_TIMESTAMP(), job_finished=NULL, finish_time=NULL, start_time=NULL, agent_dn=NULL, transferhost=NULL, reason = '', file_state = :fileState "
                                         " WHERE "
                                         "	file_id = :fileId "
                                         "   AND file_state in ('STAGING','STARTED')",
@@ -12631,7 +12632,7 @@ bool MySqlAPI::resetForRetryStaging(soci::session& sql, int file_id, const std::
 
                                     sql.begin();
 
-                                    sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'STAGING', start_time=NULL, staging_start=NULL, transferHost=NULL, t_log_file=NULL,"
+                                    sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'STAGING', start_time=NULL, staging_start=NULL, agent_dn=NULL, transferHost=NULL, t_log_file=NULL,"
                                         " t_log_file_debug=NULL, throughput = 0, current_failures = 1 "
                                         " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
                                         soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
@@ -12651,7 +12652,7 @@ bool MySqlAPI::resetForRetryStaging(soci::session& sql, int file_id, const std::
 
                                     sql.begin();
 
-                                    sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'STAGING', staging_start=NULL, start_time=NULL, transferHost=NULL, "
+                                    sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'STAGING', staging_start=NULL, start_time=NULL, agent_dn=NULL, transferHost=NULL, "
                                         " t_log_file=NULL, t_log_file_debug=NULL, throughput = 0,  current_failures = 1 "
                                         " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
                                         soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);

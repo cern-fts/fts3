@@ -8782,7 +8782,7 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
             //staging exception, if file failed with timeout and was staged before, reset it
             if(isNull != soci::i_null && !bringonline_token.empty() && found!=std::string::npos)
                 {
-                    sql << "update t_file set current_failures = 0, file_state='STAGING', internal_file_params=NULL, transferHost=NULL,start_time=NULL, pid=NULL, "
+                    sql << "update t_file set agent_dn=NULL, current_failures = 0, file_state='STAGING', internal_file_params=NULL, transferHost=NULL, start_time=NULL, pid=NULL, "
 		    	   " filesize=0 where file_id=:file_id and job_id=:job_id AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED') ",
                         soci::use(fileId),
                         soci::use(jobId);
@@ -11421,7 +11421,7 @@ void OracleAPI::getAlreadyStartedStaging(std::vector< boost::tuple<std::string, 
         {
             sql <<
                 " UPDATE t_file "
-                " SET start_time = NULL, staging_start=NULL, transferhost=NULL, file_state='STAGING' "
+                " SET start_time = NULL, staging_start=NULL, transferhost=NULL, file_state='STAGING', agent_dn=NULL "
                 " WHERE  "
                 "   file_state='STARTED'"
                 "   AND (bringonline_token = '' OR bringonline_token IS NULL)"
@@ -11513,11 +11513,12 @@ void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boos
                         {
                             sql <<
                                 " UPDATE t_file "
-                                " SET start_time = sys_extract_utc(systimestamp), staging_start=sys_extract_utc(systimestamp), transferhost=:thost, file_state='STARTED' "
+                                " SET start_time = sys_extract_utc(systimestamp), staging_start=sys_extract_utc(systimestamp), agent_dn=:thost, transferhost=:thost, file_state='STARTED' "
                                 " WHERE  "
                                 "	file_id= :fileId "
                                 "	AND file_state='STAGING'",
                                 soci::use(hostname),
+				soci::use(hostname),
                                 soci::use(file_id)
                                 ;
                         }
@@ -11584,7 +11585,7 @@ void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boos
 
                                     sql <<
                                         " UPDATE t_file "
-                                        " SET hashed_id = :hashed_id, staging_finished=sys_extract_utc(systimestamp), job_finished=NULL, finish_time=NULL, start_time=NULL, transferhost=NULL, reason = '', file_state = :fileState "
+                                        " SET hashed_id = :hashed_id, staging_finished=sys_extract_utc(systimestamp), job_finished=NULL, finish_time=NULL, start_time=NULL, agent_dn=NULL, transferhost=NULL, reason = '', file_state = :fileState "
                                         " WHERE "
                                         "	file_id = :fileId "
                                         "   AND file_state in ('STAGING','STARTED')",
