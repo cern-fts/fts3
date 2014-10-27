@@ -7974,7 +7974,7 @@ void OracleAPI::checkSanityState()
                                                     if(job_state == "CANCELED")
                                                         {
                                                             sql << "UPDATE t_file SET "
-                                                                "    file_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+                                                                "    file_state = 'CANCELED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), "
                                                                 "    reason = 'Job canceled by the user' "
                                                                 "    WHERE file_state in ('ACTIVE','SUBMITTED') and job_id = :jobId", soci::use(job_id);
                                                             break;
@@ -8722,13 +8722,12 @@ int OracleAPI::getOptimizerMode(soci::session& sql)
 
 void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retry, const std::string& reason)
 {
-    soci::session sql(*connectionPool);
-
     //expressed in secs, default delay
     const int default_retry_delay = DEFAULT_RETRY_DELAY;
-    long long retry_delay = 0;
+    int retry_delay = 0;
     std::string reuse_job;
     soci::indicator ind = soci::i_ok;
+    soci::indicator isNull = soci::i_ok;
 
     try
         {
@@ -8753,34 +8752,52 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
                 }
 
 
+            struct tm tTime;
             if (retry_delay > 0)
                 {
                     // update
-                    time_t now = getUTC(boost::lexical_cast<int>(retry_delay));
-                    struct tm tTime;
+                    time_t now = getUTC(retry_delay);
                     gmtime_r(&now, &tTime);
-
-                    sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'SUBMITTED', start_time=NULL, transferHost=NULL, t_log_file=NULL, t_log_file_debug=NULL, throughput = 0 "
-                        "WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
-                        soci::use(tTime), soci::use(retry), soci::use(fileId), soci::use(jobId);
                 }
             else
                 {
                     // update
                     time_t now = getUTC(default_retry_delay);
-                    struct tm tTime;
                     gmtime_r(&now, &tTime);
-
-                    sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'SUBMITTED', start_time=NULL, transferHost=NULL, t_log_file=NULL, t_log_file_debug=NULL, throughput = 0 "
-                        "WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
-                        soci::use(tTime), soci::use(retry), soci::use(fileId), soci::use(jobId);
                 }
 
-            // Keep log
+            std::string bringonline_token;
+
+            // query for the file state in DB
+            sql << "SELECT bringonline_token FROM t_file WHERE file_id=:fileId and job_id=:jobId",
+                soci::use(fileId),
+                soci::use(jobId),
+                soci::into(bringonline_token, isNull);
+
+            std::size_t found = reason.find("[SE][StatusOfGetRequest][ETIMEDOUT]");
+
+            //staging exception, if file failed with timeout and was staged before, reset it
+            if(isNull != soci::i_null && !bringonline_token.empty() && found!=std::string::npos)
+                {
+                    sql << "update t_file set current_failures = 0, file_state='STAGING', internal_file_params=NULL, transferHost=NULL,start_time=NULL, pid=NULL, "
+		    	   " filesize=0 where file_id=:file_id and job_id=:job_id AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED') ",
+                        soci::use(fileId),
+                        soci::use(jobId);
+                }
+            else
+                {
+                    sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'SUBMITTED', start_time=NULL, transferHost=NULL, t_log_file=NULL,"
+                        " t_log_file_debug=NULL, throughput = 0, current_failures = 1 "
+                        " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
+                        soci::use(tTime), soci::use(retry), soci::use(fileId), soci::use(jobId);
+
+                }
+         // Keep log
             sql << "INSERT /*+ IGNORE_ROW_ON_DUPKEY_INDEX (t_file_retry_errors, t_file_retry_errors_pk) */  INTO t_file_retry_errors "
                 "    (file_id, attempt, datetime, reason) "
                 "VALUES (:fileId, :attempt, sys_extract_utc(systimestamp), :reason)",
                 soci::use(fileId), soci::use(retry), soci::use(reason);
+
 
             sql.commit();
         }
@@ -8795,6 +8812,10 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
 }
+
+
+
+ 
 
 void OracleAPI::getTransferRetries(int fileId, std::vector<FileRetry*>& retries)
 {
