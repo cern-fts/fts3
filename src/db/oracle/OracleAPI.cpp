@@ -8724,7 +8724,7 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
 {
     //expressed in secs, default delay
     const int default_retry_delay = DEFAULT_RETRY_DELAY;
-    int retry_delay = 0;
+    long long retry_delay = 0;
     std::string reuse_job;
     soci::indicator ind = soci::i_ok;
     soci::indicator isNull = soci::i_ok;
