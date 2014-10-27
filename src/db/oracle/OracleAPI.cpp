@@ -11337,1033 +11337,1033 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
                                                 }
                                             filesMsg.clear();
                                         }
-                                    }
-                                    catch(...)
-                                        {
-                                            //do not let the process die due to messaging
-                                        }
-                                }
-
-                            try
-                                {
-                                    updateStagingStateInternal(sql, filesState);
-                                    filesState.clear();
                                 }
                             catch(...)
                                 {
-                                    //save state and restore afterwards
-                                    if(!filesState.empty())
+                                    //do not let the process die due to messaging
+                                }
+                        }
+
+                    try
+                        {
+                            updateStagingStateInternal(sql, filesState);
+                            filesState.clear();
+                        }
+                    catch(...)
+                        {
+                            //save state and restore afterwards
+                            if(!filesState.empty())
+                                {
+                                    std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >::iterator itFind;
+                                    struct message_bringonline msg;
+                                    for (itFind = filesState.begin(); itFind < filesState.end(); ++itFind)
                                         {
-                                            std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >::iterator itFind;
-                                            struct message_bringonline msg;
-                                            for (itFind = filesState.begin(); itFind < filesState.end(); ++itFind)
-                                                {
-                                                    boost::tuple<int, std::string, std::string, std::string, bool>& tupleRecord = *itFind;
-                                                    int file_id = boost::get<0>(tupleRecord);
-                                                    std::string transfer_status = boost::get<1>(tupleRecord);
-                                                    std::string transfer_message = boost::get<2>(tupleRecord);
-                                                    std::string job_id = boost::get<3>(tupleRecord);
+                                            boost::tuple<int, std::string, std::string, std::string, bool>& tupleRecord = *itFind;
+                                            int file_id = boost::get<0>(tupleRecord);
+                                            std::string transfer_status = boost::get<1>(tupleRecord);
+                                            std::string transfer_message = boost::get<2>(tupleRecord);
+                                            std::string job_id = boost::get<3>(tupleRecord);
 
-                                                    msg.file_id = file_id;
-                                                    strncpy(msg.job_id, job_id.c_str(), sizeof(msg.job_id));
-                                                    msg.job_id[sizeof(msg.job_id) -1] = '\0';
-                                                    strncpy(msg.transfer_status, transfer_status.c_str(), sizeof(msg.transfer_status));
-                                                    msg.transfer_status[sizeof(msg.transfer_status) -1] = '\0';
-                                                    strncpy(msg.transfer_message, transfer_message.c_str(), sizeof(msg.transfer_message));
-                                                    msg.transfer_message[sizeof(msg.transfer_message) -1] = '\0';
+                                            msg.file_id = file_id;
+                                            strncpy(msg.job_id, job_id.c_str(), sizeof(msg.job_id));
+                                            msg.job_id[sizeof(msg.job_id) -1] = '\0';
+                                            strncpy(msg.transfer_status, transfer_status.c_str(), sizeof(msg.transfer_status));
+                                            msg.transfer_status[sizeof(msg.transfer_status) -1] = '\0';
+                                            strncpy(msg.transfer_message, transfer_message.c_str(), sizeof(msg.transfer_message));
+                                            msg.transfer_message[sizeof(msg.transfer_message) -1] = '\0';
 
-                                                    //store the states into fs to be restored in the next run of this function
-                                                    runProducerStaging(msg);
-                                                }
+                                            //store the states into fs to be restored in the next run of this function
+                                            runProducerStaging(msg);
                                         }
                                 }
                         }
                 }
-            catch (std::exception& e)
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+
+void OracleAPI::getAlreadyStartedStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string, std::string> >& files)
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            sql <<
+                " UPDATE t_file "
+                " SET start_time = NULL, staging_start=NULL, transferhost=NULL, file_state='STAGING' "
+                " WHERE  "
+                "   file_state='STARTED'"
+                "   AND (bringonline_token = '' OR bringonline_token IS NULL)"
+                "   AND start_time IS NOT NULL "
+                "   AND staging_start IS NOT NULL "
+                "   AND (hashed_id >= :hStart AND hashed_id <= :hEnd)",
+                soci::use(hashSegment.start), soci::use(hashSegment.end)
+                ;
+
+            soci::rowset<soci::row> rs3 =
+                (
+                    sql.prepare <<
+                    " SELECT f.vo_name, f.source_surl, f.job_id, f.file_id, j.copy_pin_lifetime, j.bring_online, "
+                    " j.user_dn, j.cred_id, j.source_space_token, f.bringonline_token "
+                    " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
+                    " WHERE  "
+                    " (j.BRING_ONLINE >= 0 OR j.COPY_PIN_LIFETIME >= 0) "
+                    " AND f.start_time IS NOT NULL "
+                    " AND f.file_state = 'STARTED' "
+                    " AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd)"
+                    " AND j.job_finished is null ",
+                    soci::use(hashSegment.start), soci::use(hashSegment.end)
+                );
+
+            for (soci::rowset<soci::row>::const_iterator i3 = rs3.begin(); i3 != rs3.end(); ++i3)
                 {
-                    throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-                }
-            catch (...)
-                {
-                    throw Err_Custom(std::string(__func__) + ": Caught exception " );
+                    soci::row const& row = *i3;
+                    std::string vo_name = row.get<std::string>("VO_NAME");
+                    std::string source_url = row.get<std::string>("SOURCE_SURL");
+                    std::string job_id = row.get<std::string>("JOB_ID");
+                    int file_id = static_cast<int>(row.get<long long>("FILE_ID"));
+                    int copy_pin_lifetime = static_cast<int>(row.get<double>("COPY_PIN_LIFETIME"),0);
+                    int bring_online = static_cast<int>(row.get<double>("BRING_ONLINE"),0);
+
+                    if(copy_pin_lifetime > 0 && bring_online <= 0)
+                        bring_online = 28800;
+                    else if (bring_online > 0 && copy_pin_lifetime <= 0)
+                        copy_pin_lifetime = 28800;
+
+                    std::string user_dn = row.get<std::string>("USER_DN");
+                    std::string cred_id = row.get<std::string>("CRED_ID");
+                    std::string source_space_token = row.get<std::string>("SOURCE_SPACE_TOKEN","");
+
+                    std::string bringonline_token;
+                    soci::indicator isNull = row.get_indicator("BRINGONLINE_TOKEN");
+                    if (isNull == soci::i_ok) bringonline_token = row.get<std::string>("BRINGONLINE_TOKEN");
+
+                    boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string, std::string > record(vo_name, source_url,job_id, file_id, copy_pin_lifetime, bring_online, user_dn, cred_id , source_space_token, bringonline_token);
+                    files.push_back(record);
                 }
         }
-
-    void OracleAPI::getAlreadyStartedStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string, std::string> >& files)
-    {
-        soci::session sql(*connectionPool);
-
-        try
-            {
-                sql <<
-                    " UPDATE t_file "
-                    " SET start_time = NULL, staging_start=NULL, transferhost=NULL, file_state='STAGING' "
-                    " WHERE  "
-                    "   file_state='STARTED'"
-                    "   AND (bringonline_token = '' OR bringonline_token IS NULL)"
-                    "   AND start_time IS NOT NULL "
-                    "   AND staging_start IS NOT NULL "
-                    "   AND (hashed_id >= :hStart AND hashed_id <= :hEnd)",
-                    soci::use(hashSegment.start), soci::use(hashSegment.end)
-                    ;
-
-                soci::rowset<soci::row> rs3 =
-                    (
-                        sql.prepare <<
-                        " SELECT f.vo_name, f.source_surl, f.job_id, f.file_id, j.copy_pin_lifetime, j.bring_online, "
-                        " j.user_dn, j.cred_id, j.source_space_token, f.bringonline_token "
-                        " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
-                        " WHERE  "
-                        " (j.BRING_ONLINE >= 0 OR j.COPY_PIN_LIFETIME >= 0) "
-                        " AND f.start_time IS NOT NULL "
-                        " AND f.file_state = 'STARTED' "
-                        " AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd)"
-                        " AND j.job_finished is null ",
-                        soci::use(hashSegment.start), soci::use(hashSegment.end)
-                    );
-
-                for (soci::rowset<soci::row>::const_iterator i3 = rs3.begin(); i3 != rs3.end(); ++i3)
-                    {
-                        soci::row const& row = *i3;
-                        std::string vo_name = row.get<std::string>("VO_NAME");
-                        std::string source_url = row.get<std::string>("SOURCE_SURL");
-                        std::string job_id = row.get<std::string>("JOB_ID");
-                        int file_id = static_cast<int>(row.get<long long>("FILE_ID"));
-                        int copy_pin_lifetime = static_cast<int>(row.get<double>("COPY_PIN_LIFETIME"),0);
-                        int bring_online = static_cast<int>(row.get<double>("BRING_ONLINE"),0);
-
-                        if(copy_pin_lifetime > 0 && bring_online <= 0)
-                            bring_online = 28800;
-                        else if (bring_online > 0 && copy_pin_lifetime <= 0)
-                            copy_pin_lifetime = 28800;
-
-                        std::string user_dn = row.get<std::string>("USER_DN");
-                        std::string cred_id = row.get<std::string>("CRED_ID");
-                        std::string source_space_token = row.get<std::string>("SOURCE_SPACE_TOKEN","");
-
-                        std::string bringonline_token;
-                        soci::indicator isNull = row.get_indicator("BRINGONLINE_TOKEN");
-                        if (isNull == soci::i_ok) bringonline_token = row.get<std::string>("BRINGONLINE_TOKEN");
-
-                        boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string, std::string > record(vo_name, source_url,job_id, file_id, copy_pin_lifetime, bring_online, user_dn, cred_id , source_space_token, bringonline_token);
-                        files.push_back(record);
-                    }
-            }
-        catch (std::exception& e)
-            {
-                throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-            }
-        catch (...)
-            {
-                throw Err_Custom(std::string(__func__) + ": Caught exception " );
-            }
-    }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
 
 
 //file_id / state / reason / job_id
-    void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files)
-    {
-        int file_id = 0;
-        std::string state;
-        std::string reason;
-        std::string job_id;
-        bool retry = false;
-        std::vector<struct message_state> filesMsg;
+void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >& files)
+{
+    int file_id = 0;
+    std::string state;
+    std::string reason;
+    std::string job_id;
+    bool retry = false;
+    std::vector<struct message_state> filesMsg;
 
-        try
-            {
+    try
+        {
 
-                sql.begin();
+            sql.begin();
 
-                std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >::iterator itFind;
-                for (itFind = files.begin(); itFind < files.end(); ++itFind)
-                    {
-                        boost::tuple<int, std::string, std::string, std::string, bool>& tupleRecord = *itFind;
-                        file_id = boost::get<0>(tupleRecord);
-                        state = boost::get<1>(tupleRecord);
-                        reason = boost::get<2>(tupleRecord);
-                        job_id = boost::get<3>(tupleRecord);
-                        retry = boost::get<4>(tupleRecord);
+            std::vector< boost::tuple<int, std::string, std::string, std::string, bool> >::iterator itFind;
+            for (itFind = files.begin(); itFind < files.end(); ++itFind)
+                {
+                    boost::tuple<int, std::string, std::string, std::string, bool>& tupleRecord = *itFind;
+                    file_id = boost::get<0>(tupleRecord);
+                    state = boost::get<1>(tupleRecord);
+                    reason = boost::get<2>(tupleRecord);
+                    job_id = boost::get<3>(tupleRecord);
+                    retry = boost::get<4>(tupleRecord);
 
-                        if (state == "STARTED")
-                            {
-                                sql <<
-                                    " UPDATE t_file "
-                                    " SET start_time = sys_extract_utc(systimestamp), staging_start=sys_extract_utc(systimestamp), transferhost=:thost, file_state='STARTED' "
-                                    " WHERE  "
-                                    "	file_id= :fileId "
-                                    "	AND file_state='STAGING'",
-                                    soci::use(hostname),
-                                    soci::use(file_id)
-                                    ;
-                            }
-                        else if(state == "FAILED")
-                            {
-                                bool shouldBeRetried = retry;
+                    if (state == "STARTED")
+                        {
+                            sql <<
+                                " UPDATE t_file "
+                                " SET start_time = sys_extract_utc(systimestamp), staging_start=sys_extract_utc(systimestamp), transferhost=:thost, file_state='STARTED' "
+                                " WHERE  "
+                                "	file_id= :fileId "
+                                "	AND file_state='STAGING'",
+                                soci::use(hostname),
+                                soci::use(file_id)
+                                ;
+                        }
+                    else if(state == "FAILED")
+                        {
+                            bool shouldBeRetried = retry;
 
-                                if(retry)
-                                    {
-                                        int times = 0;
-                                        shouldBeRetried = resetForRetryStaging(sql, file_id, job_id, retry, times);
-                                        if(shouldBeRetried)
-                                            {
-                                                if(times > 0)
-                                                    {
-                                                        sql << "INSERT /*+ IGNORE_ROW_ON_DUPKEY_INDEX (t_file_retry_errors, t_file_retry_errors_pk) */  INTO t_file_retry_errors "
-                                                            "    (file_id, attempt, datetime, reason) "
-                                                            "VALUES (:fileId, :attempt, sys_extract_utc(systimestamp), :reason)",
-                                                            soci::use(file_id), soci::use(times), soci::use(reason);
-                                                    }
+                            if(retry)
+                                {
+                                    int times = 0;
+                                    shouldBeRetried = resetForRetryStaging(sql, file_id, job_id, retry, times);
+                                    if(shouldBeRetried)
+                                        {
+                                            if(times > 0)
+                                                {
+                                                    sql << "INSERT /*+ IGNORE_ROW_ON_DUPKEY_INDEX (t_file_retry_errors, t_file_retry_errors_pk) */  INTO t_file_retry_errors "
+                                                        "    (file_id, attempt, datetime, reason) "
+                                                        "VALUES (:fileId, :attempt, sys_extract_utc(systimestamp), :reason)",
+                                                        soci::use(file_id), soci::use(times), soci::use(reason);
+                                                }
 
-                                                continue;
-                                            }
-                                    }
+                                            continue;
+                                        }
+                                }
 
-                                if (!retry || !shouldBeRetried)
-                                    {
-                                        sql <<
-                                            " UPDATE t_file "
-                                            " SET job_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), staging_finished=sys_extract_utc(systimestamp), reason = :reason, file_state = :fileState "
-                                            " WHERE "
-                                            "	file_id = :fileId "
-                                            "	AND file_state in ('STAGING','STARTED') ",
-                                            soci::use(reason),
-                                            soci::use(state),
-                                            soci::use(file_id)
-                                            ;
-                                    }
-                            }
-                        else
-                            {
-                                std::string dbState;
-                                std::string dbReason;
-                                int stage_in_only = 0;
+                            if (!retry || !shouldBeRetried)
+                                {
+                                    sql <<
+                                        " UPDATE t_file "
+                                        " SET job_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), staging_finished=sys_extract_utc(systimestamp), reason = :reason, file_state = :fileState "
+                                        " WHERE "
+                                        "	file_id = :fileId "
+                                        "	AND file_state in ('STAGING','STARTED') ",
+                                        soci::use(reason),
+                                        soci::use(state),
+                                        soci::use(file_id)
+                                        ;
+                                }
+                        }
+                    else
+                        {
+                            std::string dbState;
+                            std::string dbReason;
+                            int stage_in_only = 0;
 
-                                sql << "select count(*) from t_file where file_id=:file_id and source_surl=dest_surl",
-                                    soci::use(file_id),
-                                    soci::into(stage_in_only);
+                            sql << "select count(*) from t_file where file_id=:file_id and source_surl=dest_surl",
+                                soci::use(file_id),
+                                soci::into(stage_in_only);
 
-                                if(stage_in_only == 0)  //stage-in and transfer
-                                    {
-                                        dbState = state == "FINISHED" ? "SUBMITTED" : state;
-                                        dbReason = state == "FINISHED" ? std::string() : reason;
-                                    }
-                                else //stage-in only
-                                    {
-                                        dbState = state == "FINISHED" ? "FINISHED" : state;
-                                        dbReason = state == "FINISHED" ? std::string() : reason;
-                                    }
+                            if(stage_in_only == 0)  //stage-in and transfer
+                                {
+                                    dbState = state == "FINISHED" ? "SUBMITTED" : state;
+                                    dbReason = state == "FINISHED" ? std::string() : reason;
+                                }
+                            else //stage-in only
+                                {
+                                    dbState = state == "FINISHED" ? "FINISHED" : state;
+                                    dbReason = state == "FINISHED" ? std::string() : reason;
+                                }
 
-                                if(dbState == "SUBMITTED")
-                                    {
-                                        unsigned hashedId = getHashedId();
+                            if(dbState == "SUBMITTED")
+                                {
+                                    unsigned hashedId = getHashedId();
 
-                                        sql <<
-                                            " UPDATE t_file "
-                                            " SET hashed_id = :hashed_id, staging_finished=sys_extract_utc(systimestamp), job_finished=NULL, finish_time=NULL, start_time=NULL, transferhost=NULL, reason = '', file_state = :fileState "
-                                            " WHERE "
-                                            "	file_id = :fileId "
-                                            "   AND file_state in ('STAGING','STARTED')",
-                                            soci::use(hashedId),
-                                            soci::use(dbState),
-                                            soci::use(file_id)
-                                            ;
-                                    }
-                                else if(dbState == "FINISHED")
-                                    {
-                                        sql <<
-                                            " UPDATE t_file "
-                                            " SET job_finished=sys_extract_utc(systimestamp), staging_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), reason = :reason, file_state = :fileState "
-                                            " WHERE "
-                                            "	file_id = :fileId "
-                                            "	AND file_state in ('STAGING','STARTED')",
-                                            soci::use(dbReason),
-                                            soci::use(dbState),
-                                            soci::use(file_id)
-                                            ;
-                                    }
-                                else
-                                    {
-                                        sql <<
-                                            " UPDATE t_file "
-                                            " SET job_finished=sys_extract_utc(systimestamp), staging_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), reason = :reason, file_state = :fileState "
-                                            " WHERE "
-                                            "	file_id = :fileId "
-                                            "	AND file_state in ('STAGING','STARTED')",
-                                            soci::use(dbReason),
-                                            soci::use(dbState),
-                                            soci::use(file_id)
-                                            ;
-                                    }
-                            }
-                    }
-                sql.commit();
+                                    sql <<
+                                        " UPDATE t_file "
+                                        " SET hashed_id = :hashed_id, staging_finished=sys_extract_utc(systimestamp), job_finished=NULL, finish_time=NULL, start_time=NULL, transferhost=NULL, reason = '', file_state = :fileState "
+                                        " WHERE "
+                                        "	file_id = :fileId "
+                                        "   AND file_state in ('STAGING','STARTED')",
+                                        soci::use(hashedId),
+                                        soci::use(dbState),
+                                        soci::use(file_id)
+                                        ;
+                                }
+                            else if(dbState == "FINISHED")
+                                {
+                                    sql <<
+                                        " UPDATE t_file "
+                                        " SET job_finished=sys_extract_utc(systimestamp), staging_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), reason = :reason, file_state = :fileState "
+                                        " WHERE "
+                                        "	file_id = :fileId "
+                                        "	AND file_state in ('STAGING','STARTED')",
+                                        soci::use(dbReason),
+                                        soci::use(dbState),
+                                        soci::use(file_id)
+                                        ;
+                                }
+                            else
+                                {
+                                    sql <<
+                                        " UPDATE t_file "
+                                        " SET job_finished=sys_extract_utc(systimestamp), staging_finished=sys_extract_utc(systimestamp), finish_time=sys_extract_utc(systimestamp), reason = :reason, file_state = :fileState "
+                                        " WHERE "
+                                        "	file_id = :fileId "
+                                        "	AND file_state in ('STAGING','STARTED')",
+                                        soci::use(dbReason),
+                                        soci::use(dbState),
+                                        soci::use(file_id)
+                                        ;
+                                }
+                        }
+                }
+            sql.commit();
 
-                for (itFind = files.begin(); itFind < files.end(); ++itFind)
-                    {
-                        boost::tuple<int, std::string, std::string, std::string, bool>& tupleRecord = *itFind;
-                        file_id = boost::get<0>(tupleRecord);
-                        state = boost::get<1>(tupleRecord);
-                        reason = boost::get<2>(tupleRecord);
-                        job_id = boost::get<3>(tupleRecord);
-                        retry = boost::get<4>(tupleRecord);
+            for (itFind = files.begin(); itFind < files.end(); ++itFind)
+                {
+                    boost::tuple<int, std::string, std::string, std::string, bool>& tupleRecord = *itFind;
+                    file_id = boost::get<0>(tupleRecord);
+                    state = boost::get<1>(tupleRecord);
+                    reason = boost::get<2>(tupleRecord);
+                    job_id = boost::get<3>(tupleRecord);
+                    retry = boost::get<4>(tupleRecord);
 
-                        if(state == "SUBMITTED")
-                            updateJobTransferStatusInternal(sql, job_id, "ACTIVE",0);
-                        else
-                            updateJobTransferStatusInternal(sql, job_id, state,0);
+                    if(state == "SUBMITTED")
+                        updateJobTransferStatusInternal(sql, job_id, "ACTIVE",0);
+                    else
+                        updateJobTransferStatusInternal(sql, job_id, state,0);
 
-                        //send state message
-                        filesMsg = getStateOfTransferInternal(sql, job_id, file_id);
-                        if(!filesMsg.empty())
-                            {
-                                std::vector<struct message_state>::iterator it;
-                                for (it = filesMsg.begin(); it != filesMsg.end(); ++it)
-                                    {
-                                        struct message_state tmp = (*it);
-                                        constructJSONMsg(&tmp);
-                                    }
-                            }
-                        filesMsg.clear();
+                    //send state message
+                    filesMsg = getStateOfTransferInternal(sql, job_id, file_id);
+                    if(!filesMsg.empty())
+                        {
+                            std::vector<struct message_state>::iterator it;
+                            for (it = filesMsg.begin(); it != filesMsg.end(); ++it)
+                                {
+                                    struct message_state tmp = (*it);
+                                    constructJSONMsg(&tmp);
+                                }
+                        }
+                    filesMsg.clear();
 
-                    }
-            }
-        catch (std::exception& e)
-            {
-                sql.rollback();
-                throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-            }
-        catch (...)
-            {
-                sql.rollback();
-                throw Err_Custom(std::string(__func__) + ": Caught exception " );
-            }
-    }
+                }
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
 
 
 
 
 //file_id / surl / token
-    void OracleAPI::getStagingFilesForCanceling(std::vector< boost::tuple<int, std::string, std::string> >& files)
-    {
-        soci::session sql(*connectionPool);
-        int file_id = 0;
-        std::string source_surl;
-        std::string token;
-
-        try
-            {
-                soci::rowset<soci::row> rs = (sql.prepare << " SELECT file_id, source_surl, bringonline_token from t_file WHERE "
-                                              "  file_state='CANCELED' and job_finished is NULL "
-                                              "  AND (hashed_id >= :hStart AND hashed_id <= :hEnd) AND staging_start is NOT NULL ",
-                                              soci::use(hashSegment.start), soci::use(hashSegment.end));
-
-                soci::statement stmt1 = (sql.prepare << "UPDATE t_file SET  job_finished = sys_extract_utc(systimestamp) "
-                                         "WHERE file_id = :file_id ", soci::use(file_id, "file_id"));
-
-                // Cancel staging files
-                sql.begin();
-                for (soci::rowset<soci::row>::const_iterator i2 = rs.begin(); i2 != rs.end(); ++i2)
-                    {
-                        soci::row const& row = *i2;
-                        file_id = static_cast<int>(row.get<long long>("FILE_ID",0));
-                        source_surl = row.get<std::string>("SOURCE_SURL","");
-                        token = row.get<std::string>("BRINGONLINE_TOKEN","");
-                        boost::tuple<int, std::string, std::string> record(file_id, source_surl, token);
-                        files.push_back(record);
-
-                        stmt1.execute(true);
-                    }
-                sql.commit();
-            }
-        catch (std::exception& e)
-            {
-                sql.rollback();
-                throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-            }
-        catch (...)
-            {
-                sql.rollback();
-                throw Err_Custom(std::string(__func__) + ": Caught exception " );
-            }
-    }
-
-    void OracleAPI::setMaxStagingPerEndpoint(int maxStaging, const std::string & endpoint, const std::string & vo)
-    {
-        soci::session sql(*connectionPool);
-
-        try
-            {
-                sql.begin();
-
-                sql << " DELETE from t_stage_req where operation='staging' and vo_name=:vo_name and host = :endpoint",
-                    soci::use(vo), soci::use(endpoint);
-
-                sql << 	" INSERT INTO concurrent_ops(vo_name, host, operation, concurrent_ops)  "
-                    " VALUES(:vo, :endpoint, 'staging', maxDeletions) ",
-                    soci::use(vo), soci::use(endpoint), soci::into(maxStaging);
-
-                sql.commit();
-            }
-        catch (std::exception& e)
-            {
-                sql.rollback();
-                throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-            }
-        catch (...)
-            {
-                sql.rollback();
-                throw Err_Custom(std::string(__func__) + ": Caught exception ");
-            }
-    }
-
-
-    int OracleAPI::getMaxStatingsPerEndpoint(const std::string & endpoint, const std::string & vo)
-    {
-        soci::session sql(*connectionPool);
-
-        try
-            {
-                int maxValue = 0;;
-
-                sql << 	"SELECT concurrent_ops from t_stage_req "
-                    "WHERE vo_name=:vo_name and host = :endpoint and operation='staging' and concurrent_ops is NOT NULL ",
-                    soci::use(vo), soci::use(endpoint), soci::into(maxValue);
-
-                if (sql.got_data())
-                    {
-                        return maxValue;
-                    }
-                return 0; //default
-            }
-        catch (std::exception& e)
-            {
-                throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
-            }
-        catch (...)
-            {
-                throw Err_Custom(std::string(__func__) + ": Caught exception " );
-            }
-    }
-
-
-    void OracleAPI::checkJobOperation(std::vector<std::string >& jobs, std::vector< boost::tuple<std::string, std::string> >& ops)
-    {
-        soci::session sql(*connectionPool);
-        std::string job_id;
-        std::string jobTransfer;
-        std::string jobStaging;
-        long long jobDelete = 0;
-
-        try
-            {
-                //ok
-                soci::statement stmtTransfer = (sql.prepare << " select job_id from t_job "
-                                                " where job_id=:job_id and "
-                                                " copy_pin_lifetime = -1 AND bring_online = -1 "
-                                                " AND ROWNUM=1 ", soci::use(job_id), soci::into(jobTransfer));
-
-                //ok
-                soci::statement stmtDelete   = (sql.prepare << " select file_id from t_dm where job_id=:job_id AND ROWNUM=1 ",
-                                                soci::use(job_id), soci::into(jobDelete));
-
-                //ok
-                soci::statement stmtStaging  = (sql.prepare << " select job_id from t_job "
-                                                " where job_id=:job_id and "
-                                                " (copy_pin_lifetime >= 0 OR bring_online >= 0)  "
-                                                " AND ROWNUM=1 ", soci::use(job_id), soci::into(jobStaging));
-
-                for (std::vector<std::string>::const_iterator i = jobs.begin(); i != jobs.end(); ++i)
-                    {
-                        job_id = *i;
-                        jobTransfer = std::string();
-                        jobStaging = std::string();
-                        jobDelete = 0;
-
-                        stmtTransfer.execute(true);
-                        if(sql.got_data() && !jobTransfer.empty())
-                            {
-                                ops.push_back(boost::make_tuple(job_id, "TRANSFER"));
-                                continue;
-                            }
-
-                        stmtDelete.execute(true);
-                        if(sql.got_data() && jobDelete > 0)
-                            {
-                                ops.push_back(boost::make_tuple(job_id, "DELETE"));
-                                continue;
-                            }
-
-                        stmtStaging.execute(true);
-                        if(sql.got_data() && !jobStaging.empty())
-                            {
-                                ops.push_back(boost::make_tuple(job_id, "STAGING"));
-                                continue;
-                            }
-                    }
-            }
-        catch (std::exception& e)
-            {
-                throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
-            }
-        catch (...)
-            {
-                throw Err_Custom(std::string(__func__) + ": Caught exception " );
-            }
-    }
-
-
-    bool OracleAPI::resetForRetryStaging(soci::session& sql, int file_id, const std::string & job_id, bool retry, int& times)
-    {
-
-        bool willBeRetried = false;
-
-        if(retry)
-            {
-
-                int nRetries = 0;
-                soci::indicator isNull = soci::i_ok;
-                std::string vo_name;
-                int retry_delay = 0;
-
-                try
-                    {
-                        sql <<
-                            " SELECT retry, vo_name, retry_delay "
-                            " FROM t_job "
-                            " WHERE job_id = :job_id ",
-                            soci::use(job_id),
-                            soci::into(nRetries, isNull),
-                            soci::into(vo_name),
-                            soci::into(retry_delay)
-                            ;
-
-
-                        if (isNull == soci::i_null || nRetries <= 0)
-                            {
-                                sql <<
-                                    " SELECT retry "
-                                    " FROM t_server_config where vo_name=:vo_name ",
-                                    soci::use(vo_name), soci::into(nRetries, isNull)
-                                    ;
-                            }
-                        else if (isNull != soci::i_null && nRetries <= 0)
-                            {
-                                nRetries = 0;
-                            }
-
-                        int nRetriesTimes = 0;
-                        soci::indicator isNull2 = soci::i_ok;
-
-                        sql << "SELECT retry FROM t_file WHERE file_id = :file_id AND job_id = :jobId ",
-                            soci::use(file_id), soci::use(job_id), soci::into(nRetriesTimes, isNull2);
-
-
-                        if(isNull != soci::i_null &&  isNull2 != soci::i_null  && nRetries > 0 && nRetriesTimes <= nRetries-1 )
-                            {
-                                //expressed in secs, default delay
-                                const int default_retry_delay = 120;
-
-
-                                if (retry_delay > 0)
-                                    {
-                                        // update
-                                        time_t now = getUTC(retry_delay);
-                                        struct tm tTime;
-                                        gmtime_r(&now, &tTime);
-
-                                        sql.begin();
-
-                                        sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'STAGING', staging_start=NULL, start_time=NULL, transferHost=NULL, t_log_file=NULL,"
-                                            " t_log_file_debug=NULL, throughput = 0, current_failures = 1 "
-                                            " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
-                                            soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
-
-                                        times = nRetries+1;
-
-                                        willBeRetried = true;
-
-                                        sql.commit();
-                                    }
-                                else
-                                    {
-                                        // update
-                                        time_t now = getUTC(default_retry_delay);
-                                        struct tm tTime;
-                                        gmtime_r(&now, &tTime);
-
-                                        sql.begin();
-
-                                        sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'STAGING', staging_start=NULL, start_time=NULL, transferHost=NULL, "
-                                            " t_log_file=NULL, t_log_file_debug=NULL, throughput = 0,  current_failures = 1 "
-                                            " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
-                                            soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
-
-                                        times = nRetries+1;
-
-                                        willBeRetried = true;
-
-                                        sql.commit();
-                                    }
-                            }
-
-
-                    }
-                catch (std::exception& e)
-                    {
-                        sql.rollback();
-                        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-                    }
-                catch (...)
-                    {
-                        sql.rollback();
-                        throw Err_Custom(std::string(__func__) + ": Caught exception " );
-                    }
-            }
-
-        return willBeRetried;
-    }
-
-
-    bool OracleAPI::resetForRetryDelete(soci::session& sql, int file_id, const std::string & job_id, bool retry)
-    {
-
-        bool willBeRetried = false;
-        if(retry)
-            {
-
-                int nRetries = 0;
-                int retry_delay = 0;
-                soci::indicator isNull = soci::i_ok;
-                std::string vo_name;
-
-                try
-                    {
-                        sql <<
-                            " SELECT retry, vo_name, retry_delay "
-                            " FROM t_job "
-                            " WHERE job_id = :job_id ",
-                            soci::use(job_id),
-                            soci::into(nRetries, isNull),
-                            soci::into(vo_name),
-                            soci::into(retry_delay)
-                            ;
-
-                        if (isNull == soci::i_null || nRetries <= 0)
-                            {
-                                sql <<
-                                    " SELECT retry "
-                                    " FROM t_server_config where vo_name=:vo_name ",
-                                    soci::use(vo_name), soci::into(nRetries, isNull)
-                                    ;
-                            }
-                        else if (isNull != soci::i_null && nRetries <= 0)
-                            {
-                                nRetries = 0;
-                            }
-
-                        int nRetriesTimes = 0;
-                        soci::indicator isNull2 = soci::i_ok;
-
-                        sql << "SELECT retry FROM t_dm WHERE file_id = :file_id AND job_id = :jobId ",
-                            soci::use(file_id), soci::use(job_id), soci::into(nRetriesTimes, isNull2);
-
-
-                        if(isNull != soci::i_null &&  isNull2 != soci::i_null  && nRetries > 0 && nRetriesTimes <= nRetries-1 )
-                            {
-                                //expressed in secs, default delay
-                                const int default_retry_delay = 120;
-
-                                if (retry_delay > 0)
-                                    {
-                                        // update
-                                        time_t now = getUTC(retry_delay);
-                                        struct tm tTime;
-                                        gmtime_r(&now, &tTime);
-
-                                        sql.begin();
-
-                                        sql << "UPDATE t_dm SET retry_timestamp=:1, retry = :retry, file_state = 'DELETE', start_time=NULL, dmHost=NULL "
-                                            " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','DELETE','FAILED','CANCELED')",
-                                            soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
-
-                                        willBeRetried = true;
-
-                                        sql.commit();
-                                    }
-                                else
-                                    {
-                                        // update
-                                        time_t now = getUTC(default_retry_delay);
-                                        struct tm tTime;
-                                        gmtime_r(&now, &tTime);
-
-                                        sql.begin();
-
-                                        sql << "UPDATE t_dm SET retry_timestamp=:1, retry = :retry, file_state = 'DELETE', start_time=NULL, dmHost=NULL  "
-                                            " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
-                                            soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
-
-                                        willBeRetried = true;
-
-                                        sql.commit();
-                                    }
-                            }
-
-
-                    }
-                catch (std::exception& e)
-                    {
-                        sql.rollback();
-                        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-                    }
-                catch (...)
-                    {
-                        sql.rollback();
-                        throw Err_Custom(std::string(__func__) + ": Caught exception " );
-                    }
-            }
-
-        return willBeRetried;
-    }
-
-
-    bool OracleAPI::getOauthCredentials(const std::string& user_dn,
-                                        const std::string& vo, const std::string& cloud_name,
-                                        OAuth& oauth)
-    {
-        soci::session sql(*connectionPool);
-
-        try
-            {
-                sql << "SELECT app_key, app_secret, access_token, access_token_secret "
-                    "FROM t_cloudStorage cs, t_cloudStorageUser cu "
-                    "WHERE (cu.user_dn=:user_dn OR cu.vo_name=:vo) AND cs.cloudStorage_name=:cs_name AND cs.cloudStorage_name = cu.cloudStorage_name",
-                    soci::use(user_dn), soci::use(vo), soci::use(cloud_name), soci::into(oauth);
-                if (!sql.got_data())
+void OracleAPI::getStagingFilesForCanceling(std::vector< boost::tuple<int, std::string, std::string> >& files)
+{
+    soci::session sql(*connectionPool);
+    int file_id = 0;
+    std::string source_surl;
+    std::string token;
+
+    try
+        {
+            soci::rowset<soci::row> rs = (sql.prepare << " SELECT file_id, source_surl, bringonline_token from t_file WHERE "
+                                          "  file_state='CANCELED' and job_finished is NULL "
+                                          "  AND (hashed_id >= :hStart AND hashed_id <= :hEnd) AND staging_start is NOT NULL ",
+                                          soci::use(hashSegment.start), soci::use(hashSegment.end));
+
+            soci::statement stmt1 = (sql.prepare << "UPDATE t_file SET  job_finished = sys_extract_utc(systimestamp) "
+                                     "WHERE file_id = :file_id ", soci::use(file_id, "file_id"));
+
+            // Cancel staging files
+            sql.begin();
+            for (soci::rowset<soci::row>::const_iterator i2 = rs.begin(); i2 != rs.end(); ++i2)
+                {
+                    soci::row const& row = *i2;
+                    file_id = static_cast<int>(row.get<long long>("FILE_ID",0));
+                    source_surl = row.get<std::string>("SOURCE_SURL","");
+                    token = row.get<std::string>("BRINGONLINE_TOKEN","");
+                    boost::tuple<int, std::string, std::string> record(file_id, source_surl, token);
+                    files.push_back(record);
+
+                    stmt1.execute(true);
+                }
+            sql.commit();
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+
+void OracleAPI::setMaxStagingPerEndpoint(int maxStaging, const std::string & endpoint, const std::string & vo)
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            sql.begin();
+
+            sql << " DELETE from t_stage_req where operation='staging' and vo_name=:vo_name and host = :endpoint",
+                soci::use(vo), soci::use(endpoint);
+
+            sql << 	" INSERT INTO concurrent_ops(vo_name, host, operation, concurrent_ops)  "
+                " VALUES(:vo, :endpoint, 'staging', maxDeletions) ",
+                soci::use(vo), soci::use(endpoint), soci::into(maxStaging);
+
+            sql.commit();
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }
+}
+
+
+int OracleAPI::getMaxStatingsPerEndpoint(const std::string & endpoint, const std::string & vo)
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            int maxValue = 0;;
+
+            sql << 	"SELECT concurrent_ops from t_stage_req "
+                "WHERE vo_name=:vo_name and host = :endpoint and operation='staging' and concurrent_ops is NOT NULL ",
+                soci::use(vo), soci::use(endpoint), soci::into(maxValue);
+
+            if (sql.got_data())
+                {
+                    return maxValue;
+                }
+            return 0; //default
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+
+
+void OracleAPI::checkJobOperation(std::vector<std::string >& jobs, std::vector< boost::tuple<std::string, std::string> >& ops)
+{
+    soci::session sql(*connectionPool);
+    std::string job_id;
+    std::string jobTransfer;
+    std::string jobStaging;
+    long long jobDelete = 0;
+
+    try
+        {
+            //ok
+            soci::statement stmtTransfer = (sql.prepare << " select job_id from t_job "
+                                            " where job_id=:job_id and "
+                                            " copy_pin_lifetime = -1 AND bring_online = -1 "
+                                            " AND ROWNUM=1 ", soci::use(job_id), soci::into(jobTransfer));
+
+            //ok
+            soci::statement stmtDelete   = (sql.prepare << " select file_id from t_dm where job_id=:job_id AND ROWNUM=1 ",
+                                            soci::use(job_id), soci::into(jobDelete));
+
+            //ok
+            soci::statement stmtStaging  = (sql.prepare << " select job_id from t_job "
+                                            " where job_id=:job_id and "
+                                            " (copy_pin_lifetime >= 0 OR bring_online >= 0)  "
+                                            " AND ROWNUM=1 ", soci::use(job_id), soci::into(jobStaging));
+
+            for (std::vector<std::string>::const_iterator i = jobs.begin(); i != jobs.end(); ++i)
+                {
+                    job_id = *i;
+                    jobTransfer = std::string();
+                    jobStaging = std::string();
+                    jobDelete = 0;
+
+                    stmtTransfer.execute(true);
+                    if(sql.got_data() && !jobTransfer.empty())
+                        {
+                            ops.push_back(boost::make_tuple(job_id, "TRANSFER"));
+                            continue;
+                        }
+
+                    stmtDelete.execute(true);
+                    if(sql.got_data() && jobDelete > 0)
+                        {
+                            ops.push_back(boost::make_tuple(job_id, "DELETE"));
+                            continue;
+                        }
+
+                    stmtStaging.execute(true);
+                    if(sql.got_data() && !jobStaging.empty())
+                        {
+                            ops.push_back(boost::make_tuple(job_id, "STAGING"));
+                            continue;
+                        }
+                }
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+
+
+bool OracleAPI::resetForRetryStaging(soci::session& sql, int file_id, const std::string & job_id, bool retry, int& times)
+{
+
+    bool willBeRetried = false;
+
+    if(retry)
+        {
+
+            int nRetries = 0;
+            soci::indicator isNull = soci::i_ok;
+            std::string vo_name;
+            int retry_delay = 0;
+
+            try
+                {
+                    sql <<
+                        " SELECT retry, vo_name, retry_delay "
+                        " FROM t_job "
+                        " WHERE job_id = :job_id ",
+                        soci::use(job_id),
+                        soci::into(nRetries, isNull),
+                        soci::into(vo_name),
+                        soci::into(retry_delay)
+                        ;
+
+
+                    if (isNull == soci::i_null || nRetries <= 0)
+                        {
+                            sql <<
+                                " SELECT retry "
+                                " FROM t_server_config where vo_name=:vo_name ",
+                                soci::use(vo_name), soci::into(nRetries, isNull)
+                                ;
+                        }
+                    else if (isNull != soci::i_null && nRetries <= 0)
+                        {
+                            nRetries = 0;
+                        }
+
+                    int nRetriesTimes = 0;
+                    soci::indicator isNull2 = soci::i_ok;
+
+                    sql << "SELECT retry FROM t_file WHERE file_id = :file_id AND job_id = :jobId ",
+                        soci::use(file_id), soci::use(job_id), soci::into(nRetriesTimes, isNull2);
+
+
+                    if(isNull != soci::i_null &&  isNull2 != soci::i_null  && nRetries > 0 && nRetriesTimes <= nRetries-1 )
+                        {
+                            //expressed in secs, default delay
+                            const int default_retry_delay = 120;
+
+
+                            if (retry_delay > 0)
+                                {
+                                    // update
+                                    time_t now = getUTC(retry_delay);
+                                    struct tm tTime;
+                                    gmtime_r(&now, &tTime);
+
+                                    sql.begin();
+
+                                    sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'STAGING', staging_start=NULL, start_time=NULL, transferHost=NULL, t_log_file=NULL,"
+                                        " t_log_file_debug=NULL, throughput = 0, current_failures = 1 "
+                                        " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
+                                        soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
+
+                                    times = nRetries+1;
+
+                                    willBeRetried = true;
+
+                                    sql.commit();
+                                }
+                            else
+                                {
+                                    // update
+                                    time_t now = getUTC(default_retry_delay);
+                                    struct tm tTime;
+                                    gmtime_r(&now, &tTime);
+
+                                    sql.begin();
+
+                                    sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'STAGING', staging_start=NULL, start_time=NULL, transferHost=NULL, "
+                                        " t_log_file=NULL, t_log_file_debug=NULL, throughput = 0,  current_failures = 1 "
+                                        " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
+                                        soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
+
+                                    times = nRetries+1;
+
+                                    willBeRetried = true;
+
+                                    sql.commit();
+                                }
+                        }
+
+
+                }
+            catch (std::exception& e)
+                {
+                    sql.rollback();
+                    throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+                }
+            catch (...)
+                {
+                    sql.rollback();
+                    throw Err_Custom(std::string(__func__) + ": Caught exception " );
+                }
+        }
+
+    return willBeRetried;
+}
+
+
+bool OracleAPI::resetForRetryDelete(soci::session& sql, int file_id, const std::string & job_id, bool retry)
+{
+
+    bool willBeRetried = false;
+    if(retry)
+        {
+
+            int nRetries = 0;
+            int retry_delay = 0;
+            soci::indicator isNull = soci::i_ok;
+            std::string vo_name;
+
+            try
+                {
+                    sql <<
+                        " SELECT retry, vo_name, retry_delay "
+                        " FROM t_job "
+                        " WHERE job_id = :job_id ",
+                        soci::use(job_id),
+                        soci::into(nRetries, isNull),
+                        soci::into(vo_name),
+                        soci::into(retry_delay)
+                        ;
+
+                    if (isNull == soci::i_null || nRetries <= 0)
+                        {
+                            sql <<
+                                " SELECT retry "
+                                " FROM t_server_config where vo_name=:vo_name ",
+                                soci::use(vo_name), soci::into(nRetries, isNull)
+                                ;
+                        }
+                    else if (isNull != soci::i_null && nRetries <= 0)
+                        {
+                            nRetries = 0;
+                        }
+
+                    int nRetriesTimes = 0;
+                    soci::indicator isNull2 = soci::i_ok;
+
+                    sql << "SELECT retry FROM t_dm WHERE file_id = :file_id AND job_id = :jobId ",
+                        soci::use(file_id), soci::use(job_id), soci::into(nRetriesTimes, isNull2);
+
+
+                    if(isNull != soci::i_null &&  isNull2 != soci::i_null  && nRetries > 0 && nRetriesTimes <= nRetries-1 )
+                        {
+                            //expressed in secs, default delay
+                            const int default_retry_delay = 120;
+
+                            if (retry_delay > 0)
+                                {
+                                    // update
+                                    time_t now = getUTC(retry_delay);
+                                    struct tm tTime;
+                                    gmtime_r(&now, &tTime);
+
+                                    sql.begin();
+
+                                    sql << "UPDATE t_dm SET retry_timestamp=:1, retry = :retry, file_state = 'DELETE', start_time=NULL, dmHost=NULL "
+                                        " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','DELETE','FAILED','CANCELED')",
+                                        soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
+
+                                    willBeRetried = true;
+
+                                    sql.commit();
+                                }
+                            else
+                                {
+                                    // update
+                                    time_t now = getUTC(default_retry_delay);
+                                    struct tm tTime;
+                                    gmtime_r(&now, &tTime);
+
+                                    sql.begin();
+
+                                    sql << "UPDATE t_dm SET retry_timestamp=:1, retry = :retry, file_state = 'DELETE', start_time=NULL, dmHost=NULL  "
+                                        " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
+                                        soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
+
+                                    willBeRetried = true;
+
+                                    sql.commit();
+                                }
+                        }
+
+
+                }
+            catch (std::exception& e)
+                {
+                    sql.rollback();
+                    throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+                }
+            catch (...)
+                {
+                    sql.rollback();
+                    throw Err_Custom(std::string(__func__) + ": Caught exception " );
+                }
+        }
+
+    return willBeRetried;
+}
+
+
+bool OracleAPI::getOauthCredentials(const std::string& user_dn,
+                                    const std::string& vo, const std::string& cloud_name,
+                                    OAuth& oauth)
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            sql << "SELECT app_key, app_secret, access_token, access_token_secret "
+                "FROM t_cloudStorage cs, t_cloudStorageUser cu "
+                "WHERE (cu.user_dn=:user_dn OR cu.vo_name=:vo) AND cs.cloudStorage_name=:cs_name AND cs.cloudStorage_name = cu.cloudStorage_name",
+                soci::use(user_dn), soci::use(vo), soci::use(cloud_name), soci::into(oauth);
+            if (!sql.got_data())
+                return false;
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+    return true;
+}
+
+void OracleAPI::setCloudStorageCredential(std::string const & dn, std::string const & vo, std::string const & storage, std::string const & accessKey, std::string const & secretKey)
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            sql.begin();
+
+            int count = 0;
+
+            sql <<
+                " SELECT count(*) "
+                " FROM t_cloudStorageUser "
+                " WHERE user_dn = :dn and vo_name = :vo and cloudStorage_name = :storage ",
+                soci::use(dn),
+                soci::use(vo),
+                soci::use(storage),
+                soci::into(count)
+                ;
+
+            if (count)
+                {
+                    sql <<
+                        " UPDATE t_cloudStorageUser "
+                        " SET access_token = :accessKey, access_token_secret = :secretKey "
+                        " WHERE user_dn = :dn and vo_name = :vo and cloudStorage_name = :storage ",
+                        soci::use(accessKey),
+                        soci::use(secretKey),
+                        soci::use(dn),
+                        soci::use(vo),
+                        soci::use(storage)
+                        ;
+                }
+            else
+                {
+                    // first make sure that the corresponding object in t_cloudStorage exists
+                    sql <<
+                        " INSERT INTO t_cloudStorage (cloudStorage_name) "
+                        " SELECT :storage FROM dual "
+                        " WHERE NOT EXISTS ( "
+                        "   SELECT NULL FROM t_cloudStorage WHERE cloudStorage_name = :storage "
+                        " ) ",
+                        soci::use(storage),
+                        soci::use(storage)
+                        ;
+                    // then add the record
+                    sql <<
+                        "INSERT INTO t_cloudStorageUser (user_dn, vo_name, cloudStorage_name, access_token, access_token_secret) "
+                        "VALUES(:dn, :vo, :storage, :accessKey, :secretKey)",
+                        soci::use(dn),
+                        soci::use(vo),
+                        soci::use(storage),
+                        soci::use(accessKey),
+                        soci::use(secretKey)
+                        ;
+
+                }
+
+            sql.commit();
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+
+void OracleAPI::setCloudStorage(std::string const & storage, std::string const & appKey, std::string const & appSecret, std::string const & apiUrl)
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            sql.begin();
+
+            sql <<
+                " MERGE INTO t_cloudStorage c "
+                " USING (SELECT :storage AS cloudStorage_name FROM dual) tmp "
+                " ON (c.cloudStorage_name = tmp.cloudStorage_name) "
+                " WHEN MATCHED THEN "
+                "   UPDATE SET app_key = :appKey, app_secret = :appSecret, service_api_url = :apiUrl "
+                " WHEN NOT MATCHED THEN "
+                "   INSERT (cloudStorage_name, app_key, app_secret, service_api_url) "
+                "   VALUES (:storage, :appKey, :appSecret, :apiUrl)",
+                soci::use(storage),
+                soci::use(appKey),
+                soci::use(appSecret),
+                soci::use(apiUrl),
+                soci::use(storage),
+                soci::use(appKey),
+                soci::use(appSecret),
+                soci::use(apiUrl)
+                ;
+
+            sql.commit();
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+
+bool OracleAPI::isDmJob(std::string const & job)
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            int count = 0;
+
+            sql <<
+                "SELECT COUNT(file_id) "
+                "FROM t_dm "
+                "WHERE job_id = :jobId ",
+                soci::use(job),
+                soci::into(count)
+                ;
+
+            return count > 0;
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+
+
+void OracleAPI::cancelDmJobs(std::vector<std::string> const & jobs)
+{
+    soci::session sql(*connectionPool);
+
+    const std::string reason = "Job canceled by the user";
+    std::string job_id;
+    std::ostringstream cancelStmt1;
+    std::ostringstream cancelStmt2;
+    std::ostringstream jobIdStmt;
+
+    try
+        {
+            for (std::vector<std::string>::const_iterator i = jobs.begin(); i != jobs.end(); ++i)
+                {
+                    job_id = (*i);
+                    jobIdStmt << "'";
+                    jobIdStmt << job_id;
+                    jobIdStmt << "',";
+                }
+
+            std::string queryStr = jobIdStmt.str();
+            job_id = queryStr.substr(0, queryStr.length() - 1);
+
+            cancelStmt1 << "UPDATE t_job SET job_state = 'CANCELED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), cancel_job='Y' ";
+            cancelStmt1 << " ,reason = '";
+            cancelStmt1 << reason;
+            cancelStmt1 << "'";
+            cancelStmt1 << " WHERE job_id IN (";
+            cancelStmt1 << job_id;
+            cancelStmt1 << ")";
+            cancelStmt1 << " AND job_state NOT IN ('CANCELED','FINISHEDDIRTY', 'FINISHED', 'FAILED')";
+
+            cancelStmt2 << "UPDATE t_dm SET file_state = 'CANCELED',  finish_time = sys_extract_utc(systimestamp) ";
+            cancelStmt2 << " ,reason = '";
+            cancelStmt2 << reason;
+            cancelStmt2 << "'";
+            cancelStmt2 << " WHERE job_id IN (";
+            cancelStmt2 << job_id;
+            cancelStmt2 << ")";
+            cancelStmt2 << " AND file_state NOT IN ('CANCELED','FINISHED','FAILED')";
+
+            soci::statement stmt1 = (sql.prepare << cancelStmt1.str());
+            soci::statement stmt2 = (sql.prepare << cancelStmt2.str());
+
+
+            sql.begin();
+            // Cancel job
+            stmt1.execute(true);
+
+            // Cancel files
+            stmt2.execute(true);
+            sql.commit();
+
+            jobIdStmt.str(std::string());
+            jobIdStmt.clear();
+            cancelStmt1.str(std::string());
+            cancelStmt1.clear();
+            cancelStmt2.str(std::string());
+            cancelStmt2.clear();
+
+        }
+    catch (std::exception& e)
+        {
+            jobIdStmt.str(std::string());
+            jobIdStmt.clear();
+            cancelStmt1.str(std::string());
+            cancelStmt1.clear();
+            cancelStmt2.str(std::string());
+            cancelStmt2.clear();
+
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            jobIdStmt.str(std::string());
+            jobIdStmt.clear();
+            cancelStmt1.str(std::string());
+            cancelStmt1.clear();
+            cancelStmt2.str(std::string());
+            cancelStmt2.clear();
+
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+
+
+bool OracleAPI::getUserDnVisibleInternal(soci::session& sql)
+{
+    std::string show_user_dn;
+    soci::indicator isNullShow = soci::i_ok;
+
+    try
+        {
+            sql << "select show_user_dn from t_server_config", soci::into(show_user_dn, isNullShow);
+
+            if (isNullShow == soci::i_null)
+                {
+                    return true;
+                }
+            else if(show_user_dn == "on")
+                {
+                    return true;
+                }
+            else if(show_user_dn == "off")
+                {
                     return false;
-            }
-        catch (std::exception& e)
-            {
-                throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-            }
-        catch (...)
-            {
-                throw Err_Custom(std::string(__func__) + ": Caught exception " );
-            }
-        return true;
-    }
+                }
+            else
+                {
+                    return true;
+                }
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
 
-    void OracleAPI::setCloudStorageCredential(std::string const & dn, std::string const & vo, std::string const & storage, std::string const & accessKey, std::string const & secretKey)
-    {
-        soci::session sql(*connectionPool);
+    return true;
+}
 
-        try
-            {
-                sql.begin();
+bool OracleAPI::getUserDnVisible()
+{
+    soci::session sql(*connectionPool);
 
-                int count = 0;
+    try
+        {
+            return getUserDnVisibleInternal(sql);
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
 
-                sql <<
-                    " SELECT count(*) "
-                    " FROM t_cloudStorageUser "
-                    " WHERE user_dn = :dn and vo_name = :vo and cloudStorage_name = :storage ",
-                    soci::use(dn),
-                    soci::use(vo),
-                    soci::use(storage),
-                    soci::into(count)
-                    ;
-
-                if (count)
-                    {
-                        sql <<
-                            " UPDATE t_cloudStorageUser "
-                            " SET access_token = :accessKey, access_token_secret = :secretKey "
-                            " WHERE user_dn = :dn and vo_name = :vo and cloudStorage_name = :storage ",
-                            soci::use(accessKey),
-                            soci::use(secretKey),
-                            soci::use(dn),
-                            soci::use(vo),
-                            soci::use(storage)
-                            ;
-                    }
-                else
-                    {
-                        // first make sure that the corresponding object in t_cloudStorage exists
-                        sql <<
-                            " INSERT INTO t_cloudStorage (cloudStorage_name) "
-                            " SELECT :storage FROM dual "
-                            " WHERE NOT EXISTS ( "
-                            "   SELECT NULL FROM t_cloudStorage WHERE cloudStorage_name = :storage "
-                            " ) ",
-                            soci::use(storage),
-                            soci::use(storage)
-                            ;
-                        // then add the record
-                        sql <<
-                            "INSERT INTO t_cloudStorageUser (user_dn, vo_name, cloudStorage_name, access_token, access_token_secret) "
-                            "VALUES(:dn, :vo, :storage, :accessKey, :secretKey)",
-                            soci::use(dn),
-                            soci::use(vo),
-                            soci::use(storage),
-                            soci::use(accessKey),
-                            soci::use(secretKey)
-                            ;
-
-                    }
-
-                sql.commit();
-            }
-        catch (std::exception& e)
-            {
-                sql.rollback();
-                throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-            }
-        catch (...)
-            {
-                sql.rollback();
-                throw Err_Custom(std::string(__func__) + ": Caught exception " );
-            }
-    }
-
-    void OracleAPI::setCloudStorage(std::string const & storage, std::string const & appKey, std::string const & appSecret, std::string const & apiUrl)
-    {
-        soci::session sql(*connectionPool);
-
-        try
-            {
-                sql.begin();
-
-                sql <<
-                    " MERGE INTO t_cloudStorage c "
-                    " USING (SELECT :storage AS cloudStorage_name FROM dual) tmp "
-                    " ON (c.cloudStorage_name = tmp.cloudStorage_name) "
-                    " WHEN MATCHED THEN "
-                    "   UPDATE SET app_key = :appKey, app_secret = :appSecret, service_api_url = :apiUrl "
-                    " WHEN NOT MATCHED THEN "
-                    "   INSERT (cloudStorage_name, app_key, app_secret, service_api_url) "
-                    "   VALUES (:storage, :appKey, :appSecret, :apiUrl)",
-                    soci::use(storage),
-                    soci::use(appKey),
-                    soci::use(appSecret),
-                    soci::use(apiUrl),
-                    soci::use(storage),
-                    soci::use(appKey),
-                    soci::use(appSecret),
-                    soci::use(apiUrl)
-                    ;
-
-                sql.commit();
-            }
-        catch (std::exception& e)
-            {
-                sql.rollback();
-                throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-            }
-        catch (...)
-            {
-                sql.rollback();
-                throw Err_Custom(std::string(__func__) + ": Caught exception " );
-            }
-    }
-
-    bool OracleAPI::isDmJob(std::string const & job)
-    {
-        soci::session sql(*connectionPool);
-
-        try
-            {
-                int count = 0;
-
-                sql <<
-                    "SELECT COUNT(file_id) "
-                    "FROM t_dm "
-                    "WHERE job_id = :jobId ",
-                    soci::use(job),
-                    soci::into(count)
-                    ;
-
-                return count > 0;
-            }
-        catch (std::exception& e)
-            {
-                throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
-            }
-        catch (...)
-            {
-                throw Err_Custom(std::string(__func__) + ": Caught exception " );
-            }
-    }
-
-
-    void OracleAPI::cancelDmJobs(std::vector<std::string> const & jobs)
-    {
-        soci::session sql(*connectionPool);
-
-        const std::string reason = "Job canceled by the user";
-        std::string job_id;
-        std::ostringstream cancelStmt1;
-        std::ostringstream cancelStmt2;
-        std::ostringstream jobIdStmt;
-
-        try
-            {
-                for (std::vector<std::string>::const_iterator i = jobs.begin(); i != jobs.end(); ++i)
-                    {
-                        job_id = (*i);
-                        jobIdStmt << "'";
-                        jobIdStmt << job_id;
-                        jobIdStmt << "',";
-                    }
-
-                std::string queryStr = jobIdStmt.str();
-                job_id = queryStr.substr(0, queryStr.length() - 1);
-
-                cancelStmt1 << "UPDATE t_job SET job_state = 'CANCELED', job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), cancel_job='Y' ";
-                cancelStmt1 << " ,reason = '";
-                cancelStmt1 << reason;
-                cancelStmt1 << "'";
-                cancelStmt1 << " WHERE job_id IN (";
-                cancelStmt1 << job_id;
-                cancelStmt1 << ")";
-                cancelStmt1 << " AND job_state NOT IN ('CANCELED','FINISHEDDIRTY', 'FINISHED', 'FAILED')";
-
-                cancelStmt2 << "UPDATE t_dm SET file_state = 'CANCELED',  finish_time = sys_extract_utc(systimestamp) ";
-                cancelStmt2 << " ,reason = '";
-                cancelStmt2 << reason;
-                cancelStmt2 << "'";
-                cancelStmt2 << " WHERE job_id IN (";
-                cancelStmt2 << job_id;
-                cancelStmt2 << ")";
-                cancelStmt2 << " AND file_state NOT IN ('CANCELED','FINISHED','FAILED')";
-
-                soci::statement stmt1 = (sql.prepare << cancelStmt1.str());
-                soci::statement stmt2 = (sql.prepare << cancelStmt2.str());
-
-
-                sql.begin();
-                // Cancel job
-                stmt1.execute(true);
-
-                // Cancel files
-                stmt2.execute(true);
-                sql.commit();
-
-                jobIdStmt.str(std::string());
-                jobIdStmt.clear();
-                cancelStmt1.str(std::string());
-                cancelStmt1.clear();
-                cancelStmt2.str(std::string());
-                cancelStmt2.clear();
-
-            }
-        catch (std::exception& e)
-            {
-                jobIdStmt.str(std::string());
-                jobIdStmt.clear();
-                cancelStmt1.str(std::string());
-                cancelStmt1.clear();
-                cancelStmt2.str(std::string());
-                cancelStmt2.clear();
-
-                sql.rollback();
-                throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-            }
-        catch (...)
-            {
-                jobIdStmt.str(std::string());
-                jobIdStmt.clear();
-                cancelStmt1.str(std::string());
-                cancelStmt1.clear();
-                cancelStmt2.str(std::string());
-                cancelStmt2.clear();
-
-                sql.rollback();
-                throw Err_Custom(std::string(__func__) + ": Caught exception " );
-            }
-    }
-
-
-    bool OracleAPI::getUserDnVisibleInternal(soci::session& sql)
-    {
-        std::string show_user_dn;
-        soci::indicator isNullShow = soci::i_ok;
-
-        try
-            {
-                sql << "select show_user_dn from t_server_config", soci::into(show_user_dn, isNullShow);
-
-                if (isNullShow == soci::i_null)
-                    {
-                        return true;
-                    }
-                else if(show_user_dn == "on")
-                    {
-                        return true;
-                    }
-                else if(show_user_dn == "off")
-                    {
-                        return false;
-                    }
-                else
-                    {
-                        return true;
-                    }
-            }
-        catch (std::exception& e)
-            {
-                throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-            }
-        catch (...)
-            {
-                throw Err_Custom(std::string(__func__) + ": Caught exception " );
-            }
-
-        return true;
-    }
-
-    bool OracleAPI::getUserDnVisible()
-    {
-        soci::session sql(*connectionPool);
-
-        try
-            {
-                return getUserDnVisibleInternal(sql);
-            }
-        catch (std::exception& e)
-            {
-                throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-            }
-        catch (...)
-            {
-                throw Err_Custom(std::string(__func__) + ": Caught exception " );
-            }
-
-        return true;
-    }
+    return true;
+}
 
 
 
 // the class factories
 
-    extern "C" GenericDbIfce* create()
-    {
-        return new OracleAPI;
-    }
+extern "C" GenericDbIfce* create()
+{
+    return new OracleAPI;
+}
 
-    extern "C" void destroy(GenericDbIfce* p)
-    {
-        if (p)
-            delete p;
-    }
+extern "C" void destroy(GenericDbIfce* p)
+{
+    if (p)
+        delete p;
+}
 
-    extern "C" MonitoringDbIfce* create_monitoring()
-    {
-        return new OracleMonitoring;
-    }
+extern "C" MonitoringDbIfce* create_monitoring()
+{
+    return new OracleMonitoring;
+}
 
-    extern "C" void destroy_monitoring(MonitoringDbIfce* p)
-    {
-        if (p)
-            delete p;
-    }
+extern "C" void destroy_monitoring(MonitoringDbIfce* p)
+{
+    if (p)
+        delete p;
+}

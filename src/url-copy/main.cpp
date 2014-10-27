@@ -971,7 +971,7 @@ int main(int argc, char **argv)
                 logger.INFO() << "Multihop: " << opts.multihop << std::endl;
                 logger.INFO() << "UDT: " << opts.enable_udt << std::endl;
                 logger.INFO() << "Active: " << opts.active << std::endl;
-                logger.INFO() << "Debug level: " << opts.debugLevel << std::endl;
+                logger.INFO() << "Debug level: " << opts.debugLevel << std::endl;                
 
                 if (opts.strictCopy)
                     {
@@ -1253,6 +1253,14 @@ int main(int argc, char **argv)
                         goto stop;
                     }
 
+                //it a token exists, then the file was earlier attempted to be brought online
+                //increase timeout to make sure it will be brought again ONLINE if it is NEARLINE
+                if(!std::string(currentTransfer.tokenBringOnline).empty())
+                    {
+                        gfal2_set_opt_integer(handle, "SRM PLUGIN", "OPERATION_TIMEOUT", 3600, NULL);
+                        logger.INFO() << "Increase SRM timeout to " <<  3600 << " to make sure the file for token " << currentTransfer.tokenBringOnline << " is still ONLINE" << std::endl;
+                    }
+
 
                 logger.INFO() << "Transfer Starting" << std::endl;
                 reporter.sendLog(opts.jobId, currentTransfer.fileId, fileManagement.getLogFilePath(), opts.debugLevel);
@@ -1375,7 +1383,7 @@ stop:
             msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
             msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
             msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
-            msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
+            msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);     
 
             double throughputTurl = 0.0;
 
