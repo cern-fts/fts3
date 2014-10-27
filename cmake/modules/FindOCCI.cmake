@@ -21,6 +21,7 @@ find_library(OCCI_LIBRARY
 	"/usr/lib"
 	"/usr/lib64/oracle/*/client/lib64"
 	"/usr/lib/oracle/*/client/lib"
+	"/usr/lib/oracle/*/client64/lib"
   PATH_SUFFIXES "oracle/*/client_1/lib"
 )
 
@@ -48,7 +49,7 @@ find_path(OCCI_INCLUDE_DIR
 	"/usr/local"
 	"/usr/include"
 	"/usr/include/oracle/*/client"
-	"/usr/include/oracle/*/client"
+	"/usr/include/oracle/*/client64"
   PATH_SUFFIXES "oracle/*/client_1/include"
 )
 
