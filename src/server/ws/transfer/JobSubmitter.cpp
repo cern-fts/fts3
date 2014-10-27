@@ -297,6 +297,13 @@ string JobSubmitter::submit()
         {
             params.set(JobParameterHandler::COPY_PIN_LIFETIME, "-1");
         }
+    else
+        {
+            // make sure that bring online has been used for SRM source
+            // (bring online is not supported for multiple source/destination submission)
+            if (params.get(JobParameterHandler::COPY_PIN_LIFETIME) != "-1" && !srm_source)
+                throw Err_Custom("The 'ping-lifetime' operation can be used only with source SEs that are using SRM protocol!");
+        }
 
     if (!params.isParamSet(JobParameterHandler::BRING_ONLINE))
         {
