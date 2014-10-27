@@ -8722,6 +8722,9 @@ int OracleAPI::getOptimizerMode(soci::session& sql)
 
 void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retry, const std::string& reason)
 {
+
+    soci::session sql(*connectionPool);
+
     //expressed in secs, default delay
     const int default_retry_delay = DEFAULT_RETRY_DELAY;
     long long retry_delay = 0;
