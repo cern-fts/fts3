@@ -83,6 +83,7 @@ void PollTask::run(boost::any const &)
                     else if (errors[i]->code == EAGAIN)
                         {
                             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE NOT FINISHED for " << urls[i]
+                                                            << ": " << errors[i]->message
                                                             << commit;
                         }
                     else if (errors[i]->code == EOPNOTSUPP)
