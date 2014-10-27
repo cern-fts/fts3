@@ -12028,7 +12028,7 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                                                               "	AND f.source_se = :source_se  "
                                                               " AND j.user_dn = :user_dn "
                                                               " AND j.vo_name = :vo_name "
-                                                              "	AND j.job_finished is null ORDER BY j.submit_time LIMIT :limit ",
+                                                              "	ORDER BY j.submit_time LIMIT :limit ",
                                                               soci::use(hashSegment.start), soci::use(hashSegment.end),
                                                               soci::use(source_se),
                                                               soci::use(user_dn),
