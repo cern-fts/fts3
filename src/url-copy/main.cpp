@@ -778,7 +778,7 @@ int main(int argc, char **argv)
         }
 
     /*gfal2 debug logging*/
-    if (opts.debugLevel)
+    if (opts.debugLevel > 0)
         {
             logger.INFO() << "Set the transfer to debug level " << opts.debugLevel << std::endl;
             gfal_set_verbose(GFAL_VERBOSE_TRACE | GFAL_VERBOSE_VERBOSE | GFAL_VERBOSE_TRACE_PLUGIN);

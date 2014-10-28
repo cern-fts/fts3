@@ -210,7 +210,7 @@ void FileTransferExecutor::run(boost::any & ctx)
                             params.append(" --hide-user-dn ");
                         }
 
-                    if (debugLevel)
+                    if (debugLevel > 0)
                         {
                             params.append(" -debug=");
                             params.append(boost::lexical_cast<std::string>(debugLevel));

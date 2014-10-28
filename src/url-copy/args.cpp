@@ -151,7 +151,7 @@ int UrlCopyOpts::parse(int argc, char * const argv[])
                             if (optarg)
                                 debugLevel = boost::lexical_cast<unsigned>(optarg);
                             else
-                                debugLevel = 1;
+                                debugLevel = 0;
                             break;
                         case 'D':
                             sourceSiteName = optarg;

@@ -26,6 +26,7 @@ DROP TABLE IF EXISTS t_config_audit;
 DROP TABLE IF EXISTS t_optimizer_evolution;
 DROP TABLE IF EXISTS t_optimize;
 DROP TABLE IF EXISTS t_optimize_mode;
+DROP TABLE IF EXISTS t_optimize_streams;
 DROP TABLE IF EXISTS t_server_config;
 DROP TABLE IF EXISTS t_profiling_info;
 DROP TABLE IF EXISTS t_profiling_snapshot;

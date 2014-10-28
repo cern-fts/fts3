@@ -294,7 +294,7 @@ protected:
         /*END*/
 
         unsigned debugLevel = DBSingleton::instance().getDBObjectInstance()->getDebugLevel(source_hostname, destin_hostname);
-        if (debugLevel)
+        if (debugLevel > 0)
             {
                 params.append(" -debug=");
                 params.append(boost::lexical_cast<std::string>(debugLevel));

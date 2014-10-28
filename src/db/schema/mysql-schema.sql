@@ -138,7 +138,7 @@ CREATE TABLE t_debug (
   dest_se      VARCHAR(150),
 --
 -- debug on/off
-  debug        VARCHAR(3) DEFAULT 'off',
+  debug        VARCHAR(3),
 --
 -- debug level
   debug_level  INTEGER DEFAULT 1
