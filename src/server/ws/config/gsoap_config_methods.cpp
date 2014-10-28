@@ -458,19 +458,6 @@ int fts3::implcfg__setBringOnline(soap* ctx, config__BringOnline *bring_online, 
                 AuthorizationManager::dummy
             );
 
-            try
-                {
-                    AuthorizationManager::getInstance().authorize(
-                        ctx,
-                        AuthorizationManager::DELEG,
-                        AuthorizationManager::dummy
-                    );
-                }
-            catch (Err& ex)
-                {
-                    throw Err_Custom("Authorization failed, a host certificate has been used to set max number of concurrent staging operations!");
-                }
-
             // get user VO and DN
             CGsiAdapter cgsi(ctx);
             string vo = cgsi.getClientVo();

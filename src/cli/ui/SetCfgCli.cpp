@@ -268,10 +268,6 @@ optional<bool> SetCfgCli::drain()
                 {
                     throw bad_option("drain", "drain may only take on/off values!");
                 }
-            else if(!vm.count("service"))
-                {
-                    throw bad_option("drain", "You need specify which endpoint to drain, -s missing?");
-                }
 
             return value == "on";
         }
