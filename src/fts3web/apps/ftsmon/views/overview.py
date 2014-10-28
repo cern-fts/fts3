@@ -142,19 +142,29 @@ def get_overview(http_request):
         pairs_filter += " AND vo_name = %s "
         se_params.append(filters['vo'])
 
-    triplet_query = """
-    SELECT source_se, dest_se, vo_name FROM t_file WHERE file_state in ('SUBMITTED', 'ACTIVE', 'STAGING', 'STARTED') %s
-    UNION
-    SELECT source_se, dest_se, vo_name FROM t_file WHERE job_finished >= %s AND file_state IN ('FINISHED', 'FAILED', 'CANCELED') %s
-    """ % (pairs_filter, _db_to_date(), pairs_filter)
 
-    query_params = se_params + [not_before] + se_params
-
-    cursor.execute(triplet_query, query_params)
-    all_triplets = cursor.fetchall()
+    def all_triplets():
+        seen = set()
+        # First, active
+        query = """
+        SELECT DISTINCT source_se, dest_se, vo_name FROM t_file WHERE file_state in ('SUBMITTED', 'ACTIVE', 'STAGING', 'STARTED') %s
+        """ % pairs_filter
+        cursor.execute(query, se_params)
+        for triplet in cursor:
+            seen.add(triplet)
+            yield triplet
+        # Then, terminal _making sure we do not repeat_
+        query = """
+        SELECT source_se, dest_se, vo_name FROM t_file WHERE job_finished >= %s AND file_state IN ('FINISHED', 'FAILED', 'CANCELED') %s
+        """ % (_db_to_date(), pairs_filter)
+        cursor.execute(query, [not_before] + se_params)
+        for triplet in cursor:
+            if triplet not in seen:
+                seen.add(triplet)
+                yield triplet
 
     triplets = {}
-    for triplet_key in all_triplets:
+    for triplet_key in all_triplets():
             source, dest, vo = triplet_key
             triplet = triplets.get(triplet_key, dict())
 
