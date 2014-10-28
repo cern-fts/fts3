@@ -8730,8 +8730,7 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
     long long retry_delay = 0;
     std::string reuse_job;
     soci::indicator ind = soci::i_ok;
-    soci::indicator isNull = soci::i_ok;
-
+    
     try
         {
             sql <<
@@ -8767,24 +8766,25 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
                     // update
                     time_t now = getUTC(default_retry_delay);
                     gmtime_r(&now, &tTime);
-                }
+                }		
 
-            std::string bringonline_token;
+	    int bring_online = -1;
+	    int copy_pin_lifetime = -1;
 
             // query for the file state in DB
-            sql << "SELECT bringonline_token FROM t_file WHERE file_id=:fileId and job_id=:jobId",
-                soci::use(fileId),
+            sql << "SELECT bring_online, copy_pin_lifetime FROM t_job WHERE job_id=:jobId",
                 soci::use(jobId),
-                soci::into(bringonline_token, isNull);
-
-            std::size_t found = reason.find("[SE][StatusOfGetRequest][ETIMEDOUT]");
+                soci::into(bring_online),
+                soci::into(copy_pin_lifetime);
+		
 
             //staging exception, if file failed with timeout and was staged before, reset it
-            if(isNull != soci::i_null && !bringonline_token.empty() && found!=std::string::npos)
+            if(bring_online > 0 || copy_pin_lifetime > 0)
                 {
-                    sql << "update t_file set agent_dn=NULL, current_failures = 0, file_state='STAGING', internal_file_params=NULL, transferHost=NULL, start_time=NULL, pid=NULL, "
+                    sql << "update t_file set retry = :retry, current_failures = 0, file_state='STAGING', internal_file_params=NULL, transferHost=NULL,start_time=NULL, pid=NULL, "
 		    	   " filesize=0 where file_id=:file_id and job_id=:job_id AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED') ",
-                        soci::use(fileId),
+			soci::use(retry),
+                        soci::use(fileId), 			
                         soci::use(jobId);
                 }
             else
@@ -8795,7 +8795,8 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
                         soci::use(tTime), soci::use(retry), soci::use(fileId), soci::use(jobId);
 
                 }
-         // Keep log
+		
+            // Keep log
             sql << "INSERT /*+ IGNORE_ROW_ON_DUPKEY_INDEX (t_file_retry_errors, t_file_retry_errors_pk) */  INTO t_file_retry_errors "
                 "    (file_id, attempt, datetime, reason) "
                 "VALUES (:fileId, :attempt, sys_extract_utc(systimestamp), :reason)",
@@ -8813,7 +8814,7 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
         {
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
-        }
+        }    
 }
 
 
@@ -11424,7 +11425,7 @@ void OracleAPI::getAlreadyStartedStaging(std::vector< boost::tuple<std::string, 
         {
             sql <<
                 " UPDATE t_file "
-                " SET start_time = NULL, staging_start=NULL, transferhost=NULL, file_state='STAGING', agent_dn=NULL "
+                " SET start_time = NULL, staging_start=NULL, transferhost=NULL, file_state='STAGING' "
                 " WHERE  "
                 "   file_state='STARTED'"
                 "   AND (bringonline_token = '' OR bringonline_token IS NULL)"
@@ -11588,7 +11589,7 @@ void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boos
 
                                     sql <<
                                         " UPDATE t_file "
-                                        " SET hashed_id = :hashed_id, staging_finished=sys_extract_utc(systimestamp), job_finished=NULL, finish_time=NULL, start_time=NULL, agent_dn=NULL, transferhost=NULL, reason = '', file_state = :fileState "
+                                        " SET hashed_id = :hashed_id, staging_finished=sys_extract_utc(systimestamp), job_finished=NULL, finish_time=NULL, start_time=NULL, transferhost=NULL, reason = '', file_state = :fileState "
                                         " WHERE "
                                         "	file_id = :fileId "
                                         "   AND file_state in ('STAGING','STARTED')",
