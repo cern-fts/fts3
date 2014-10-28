@@ -16,11 +16,11 @@
 # limitations under the License.
 from datetime import datetime, timedelta
 from django.db import connection
-from django.db.models import Count, Avg
+from django.db.models import Count
 import types
 import sys
 
-from ftsweb.models import File, OptimizeActive
+from ftsweb.models import Job, File, OptimizeActive
 from jobs import setup_filters
 from jsonify import jsonify
 from util import get_order_by, paged
@@ -107,6 +107,14 @@ class OverviewExtended(object):
             return oa.fixed is not None and oa.fixed.lower == 'on'
         return False
 
+    def _get_job_state_count(self, source, destination, vo):
+        states_count = Job.objects.filter(source_se=source, dest_se=destination, vo_name=vo, reuse_job__in=['Y', 'N'], job_state__in=['ACTIVE', 'SUBMITTED', 'STAGING'])\
+            .values('job_state').annotate(count=Count('job_state')).values('job_state', 'count')
+        states = dict()
+        for row in states_count:
+            states[row['job_state'].lower()] = row['count']
+        return states
+
     def __getitem__(self, indexes):
         if isinstance(indexes, types.SliceType):
             return_list = self.objects[indexes]
@@ -114,6 +122,7 @@ class OverviewExtended(object):
                 item['most_frequent_error'] = self._get_frequent_error(item['source_se'], item['dest_se'],
                                                                        item['vo_name'])
                 item['active_fixed'] = self._get_fixed(item['source_se'], item['dest_se'])
+                item['job_states'] = self._get_job_state_count(item['source_se'], item['dest_se'], item['vo_name'])
             return return_list
         else:
             return self.objects[indexes]
