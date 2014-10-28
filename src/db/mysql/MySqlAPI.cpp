@@ -12251,7 +12251,7 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost
                                 {
 				
                                     int times = 0;
-                                    shouldBeRetried = resetForRetryStaging(sql, file_id, job_id, true, times);
+                                    shouldBeRetried = resetForRetryStaging(sql, file_id, job_id, retry, times);
                                     if(shouldBeRetried)
                                         {
                                             if(times > 0)

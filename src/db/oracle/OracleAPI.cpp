@@ -11589,7 +11589,7 @@ void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boos
 
                                     sql <<
                                         " UPDATE t_file "
-                                        " SET hashed_id = :hashed_id, staging_finished=sys_extract_utc(systimestamp), job_finished=NULL, finish_time=NULL, start_time=NULL, transferhost=NULL, reason = '', file_state = :fileState "
+                                        " SET retry=0, hashed_id = :hashed_id, staging_finished=sys_extract_utc(systimestamp), job_finished=NULL, finish_time=NULL, start_time=NULL, transferhost=NULL, reason = '', file_state = :fileState "
                                         " WHERE "
                                         "	file_id = :fileId "
                                         "   AND file_state in ('STAGING','STARTED')",
@@ -11906,9 +11906,9 @@ bool OracleAPI::resetForRetryStaging(soci::session& sql, int file_id, const std:
                                     sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'STAGING', staging_start=NULL, start_time=NULL, transferHost=NULL, t_log_file=NULL,"
                                         " t_log_file_debug=NULL, throughput = 0, current_failures = 1 "
                                         " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
-                                        soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
+                                        soci::use(tTime), soci::use(nRetriesTimes+1), soci::use(file_id), soci::use(job_id);
 
-                                    times = nRetries+1;
+                                    times = nRetriesTimes+1;
 
                                     willBeRetried = true;
 
@@ -11926,9 +11926,9 @@ bool OracleAPI::resetForRetryStaging(soci::session& sql, int file_id, const std:
                                     sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'STAGING', staging_start=NULL, start_time=NULL, transferHost=NULL, "
                                         " t_log_file=NULL, t_log_file_debug=NULL, throughput = 0,  current_failures = 1 "
                                         " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
-                                        soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
+                                        soci::use(tTime), soci::use(nRetriesTimes+1), soci::use(file_id), soci::use(job_id);
 
-                                    times = nRetries+1;
+                                    times = nRetriesTimes+1;
 
                                     willBeRetried = true;
 
