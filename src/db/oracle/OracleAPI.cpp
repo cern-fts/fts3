@@ -9126,10 +9126,13 @@ void OracleAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, uns
                 }
 
             // Delete old entries
-            sql.begin();
-            soci::statement stmt3 = (sql.prepare << "DELETE FROM t_hosts WHERE beat <= (sys_extract_utc(systimestamp) - interval '7' day)");
-            stmt3.execute(true);
-            sql.commit();
+           if(hashSegment.start == 0)
+            {
+            	sql.begin();
+            	soci::statement stmt3 = (sql.prepare << "DELETE FROM t_hosts WHERE beat <= (sys_extract_utc(systimestamp) - interval '120' MINUTE)");
+            	stmt3.execute(true);
+            	sql.commit();
+            }
         }
     catch (std::exception& e)
         {
