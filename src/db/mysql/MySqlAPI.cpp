@@ -4237,7 +4237,7 @@ bool MySqlAPI::updateOptimizer()
 
             //sum of retried transfers per link
             soci::statement stmt9 = (
-                                        sql.prepare << "select sum(retry) from t_file WHERE source_se = :source AND dest_se = :dest_se and "
+                                        sql.prepare << "select sum(retry) from t_file WHERE source_se = :source AND dest_se = :dest_se and file_state in ('ACTIVE','SUBMITTED') AND "
                                         "job_finished is NULL order by start_time DESC LIMIT 50 ",
                                         soci::use(source_hostname),soci::use(destin_hostname), soci::into(retry, isNullRetry));
 
