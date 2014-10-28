@@ -3871,24 +3871,21 @@ void MySqlAPI::setDebugLevel(std::string source_hostname, std::string destin_hos
 
     try
         {
-            std::string mode = (level?"on":"off");
             sql.begin();
-
-            if (destin_hostname.length() == 0)
+            if (!source_hostname.empty())
                 {
                     sql << "DELETE FROM t_debug WHERE source_se = :source AND dest_se IS NULL",
                         soci::use(source_hostname);
-                    sql << "INSERT INTO t_debug (source_se, debug, debug_level) VALUES (:source, :debug, :level)",
-                        soci::use(source_hostname), soci::use(mode), soci::use(level);
+                    sql << "INSERT INTO t_debug (source_se, debug_level) VALUES (:source, :level)",
+                        soci::use(source_hostname), soci::use(level);
                 }
-            else
+            if (!destin_hostname.empty())
                 {
-                    sql << "DELETE FROM t_debug WHERE source_se = :source AND dest_se = :dest",
-                        soci::use(source_hostname), soci::use(destin_hostname);
-                    sql << "INSERT INTO t_debug (source_se, dest_se, debug, debug_level) VALUES (:source, :dest, :mode, :level)",
-                        soci::use(source_hostname), soci::use(destin_hostname), soci::use(mode), soci::use(level);
+                    sql << "DELETE FROM t_debug WHERE source_se IS NULL AND dest_se = :dest",
+                        soci::use(destin_hostname);
+                    sql << "INSERT INTO t_debug (dest_se, debug_level) VALUES (:dest, :level)",
+                        soci::use(destin_hostname), soci::use(level);
                 }
-
             sql.commit();
         }
     catch (std::exception& e)

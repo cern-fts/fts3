@@ -55,6 +55,8 @@ int main(int ac, char* av[])
                 cli.getDebugLevel()
             );
 
+            std::cout << "Done" << std::endl;
+
         }
     catch(cli_exception const & ex)
         {

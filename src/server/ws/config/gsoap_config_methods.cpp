@@ -20,6 +20,7 @@
 #include "ws-ifce/gsoap/gsoap_stubs.h"
 
 #include "ConfigurationHandler.h"
+#include "Blacklister.h"
 #include "ws/AuthorizationManager.h"
 #include "ws/CGsiAdapter.h"
 
@@ -922,3 +923,93 @@ int fts3::implcfg__setDropboxCeredential(soap* ctx, std::string appKey, std::str
     return SOAP_OK;
 }
 
+int fts3::impltns__debugLevelSet(struct soap* soap, string source, string destination, int level, struct impltns__debugLevelSetResponse &_resp)
+{
+//  FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'debugLevelSet' request" << commit;
+    try
+        {
+            CGsiAdapter cgsi(soap);
+            string dn = cgsi.getClientDn();
+
+            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is setting debug level to " << level
+                    << "for source: " << source << " and destination: " << destination << commit;
+
+            AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::CONFIG, AuthorizationManager::dummy);
+
+            if (!source.empty())
+                DBSingleton::instance().getDBObjectInstance()->setDebugLevel(source, std::string(), level);
+
+            if (!destination.empty())
+                DBSingleton::instance().getDBObjectInstance()->setDebugLevel(std::string(), destination, level);
+
+            string cmd = "fts3-debug-set ";
+            if (!source.empty()) cmd += " --source " + source;
+            if (!destination.empty()) cmd += " --destination " + destination;
+            cmd += " " + boost::lexical_cast<std::string>(level);
+            DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd, "debug");
+        }
+    catch(Err& ex)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+            soap_receiver_fault(soap, ex.what(), "TransferException");
+            return SOAP_FAULT;
+        }
+    catch (...)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown"  << commit;
+            return SOAP_FAULT;
+        }
+    return SOAP_OK;
+}
+
+int fts3::impltns__blacklistSe(struct soap* ctx, std::string name, std::string vo, std::string status, int timeout, bool blk, struct impltns__blacklistSeResponse &resp)
+{
+
+    try
+        {
+            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::CONFIG, AuthorizationManager::dummy);
+
+            Blacklister blacklister (ctx, name, vo, status, timeout, blk);
+            blacklister.executeRequest();
+        }
+    catch(Err& ex)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+            soap_receiver_fault(ctx, ex.what(), "TransferException");
+            return SOAP_FAULT;
+        }
+    catch (...)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown "  << commit;
+            return SOAP_FAULT;
+        }
+
+    return SOAP_OK;
+}
+
+int fts3::impltns__blacklistDn(soap* ctx, string subject, bool blk, string status, int timeout, impltns__blacklistDnResponse &resp)
+{
+
+    try
+        {
+
+            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::CONFIG, AuthorizationManager::dummy);
+
+            Blacklister blacklister(ctx, subject, status, timeout, blk);
+            blacklister.executeRequest();
+
+        }
+    catch(Err& ex)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+            soap_receiver_fault(ctx, ex.what(), "TransferException");
+            return SOAP_FAULT;
+        }
+    catch (...)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown"  << commit;
+            return SOAP_FAULT;
+        }
+
+    return SOAP_OK;
+}
