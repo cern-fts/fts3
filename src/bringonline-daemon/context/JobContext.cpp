@@ -31,12 +31,12 @@ void JobContext::add(std::string const & surl, std::string const & jobId, int fi
     boost::mutex::scoped_lock lock(m);
 
     bool isPresent = isPresentInJobs(surl);
-    
+
     if(!isPresent && !surl.empty() && !jobId.empty() && fileId > 0)
-    {
-    	jobs[jobId].push_back(std::make_pair(fileId, surl));
-    	urlToIDs.insert({surl, {jobId, fileId}});
-    }
+        {
+            jobs[jobId].push_back(std::make_pair(fileId, surl));
+            urlToIDs.insert({surl, {jobId, fileId}});
+        }
 }
 
 std::string JobContext::generateProxy(std::string const & dn, std::string const & delegationId)
@@ -96,15 +96,15 @@ void JobContext::removeUrl(const std::string& url)
 {
     boost::mutex::scoped_lock lock(m);
 
-    std::map< std::string, std::vector<std::pair<int, std::string> > >::iterator it_j; 
-    std::vector<std::pair<int, std::string> >::iterator lastPosition; 
+    std::map< std::string, std::vector<std::pair<int, std::string> > >::iterator it_j;
+    std::vector<std::pair<int, std::string> >::iterator lastPosition;
 
     FileUrlMatches url_compare(url);
 
     for (it_j = jobs.begin(); it_j != jobs.end(); ++it_j)
         {
-            lastPosition = std::remove_if(it_j->second.begin(), it_j->second.end(), url_compare);	
-	    it_j->second.erase(lastPosition, it_j->second.end());               
+            lastPosition = std::remove_if(it_j->second.begin(), it_j->second.end(), url_compare);
+            it_j->second.erase(lastPosition, it_j->second.end());
         }
 
     urlToIDs.erase(url);
@@ -113,6 +113,7 @@ void JobContext::removeUrl(const std::string& url)
                                      << " from the watch list"
                                      << fts3::common::commit;
 }
+
 
 
 std::string JobContext::getLogMsg() const

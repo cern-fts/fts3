@@ -142,6 +142,14 @@
         <tr>
             <td colspan="13" style="background: #CCC" data-ng-show="o.show">
                 <dl>
+                    <dt>Jobs</dt>
+                    <dd>
+                        <span data-ng-repeat="(state, count) in o.job_states">
+                            <a href="#/jobs?source_se={{o.source_se}}&dest_se={{o.dest_se}}&vo={{o.vo_name}}&state={{state|uppercase}}&time_window={{globalFilter.time_window}}">
+                                {{count}} {{state}}
+                            </a>
+                        </span>
+                    </dd>
                     <dt>Average transfer duration</dt>
                     <dd><span data-optional-number="{{o.avg_duration}}" data-suffix="seconds" data-decimals="2"></span></dd>
                     <dt>Most frequent error</dt>

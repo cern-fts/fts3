@@ -5204,7 +5204,7 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                             count++;
                             countBeat++;
 
-                            if(countBeat == 25000)
+                            if(countBeat == 1000)
                                 {
                                     //reset
                                     countBeat = 0;
@@ -5268,7 +5268,7 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                                     jobIdStmt.str(std::string());
                                     jobIdStmt.clear();
                                     sql.commit();
-                                    sleep(1); // give it sometime to breath
+                                    sleep(3); // give it sometime to breath
                                 }
                         }
 
@@ -5281,18 +5281,7 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                     sql.begin();
                     sql << "delete from t_file_retry_errors where datetime < (UTC_TIMESTAMP() - interval '7' DAY )";
                     sql.commit();
-
-                    /*
-                            //delete from t_turl > 7 days old records
-                            sql.begin();
-                            sql << "delete from t_turl where datetime < (UTC_TIMESTAMP() - interval '7' DAY )";
-                            sql.commit();
-
-                            sql.begin();
-                            sql << "update t_turl set finish=0 where finish > 100000000000";
-                            sql << "update t_turl set fail=0 where fail > 100000000000";
-                            sql.commit();
-                    */
+                    
                 }
 
             jobIdStmt.str(std::string());
@@ -8781,30 +8770,30 @@ void MySqlAPI::checkSanityState()
                                 }
                         }
 
-  			   //now check for stalled bringonline files
-                            soci::rowset<soci::row> rsStagingStarted = (
-                                        sql.prepare <<
-                                        " select  f.file_id, f.staging_start, j.bring_online, j.job_id from t_file f inner join t_job j on (f.job_id = j.job_id) where file_state = 'STARTED' "
-                                    );
-                            for (soci::rowset<soci::row>::const_iterator iStaging = rsStagingStarted.begin(); iStaging != rsStagingStarted.end(); ++iStaging)
+                    //now check for stalled bringonline files
+                    soci::rowset<soci::row> rsStagingStarted = (
+                                sql.prepare <<
+                                " select  f.file_id, f.staging_start, j.bring_online, j.job_id from t_file f inner join t_job j on (f.job_id = j.job_id) where file_state = 'STARTED' "
+                            );
+                    for (soci::rowset<soci::row>::const_iterator iStaging = rsStagingStarted.begin(); iStaging != rsStagingStarted.end(); ++iStaging)
+                        {
+                            int file_id = iStaging->get<int>("file_id");
+                            std::string job_id = iStaging->get<std::string>("job_id");
+                            int bring_online  = iStaging->get<int>("bring_online");
+                            struct tm start_time = iStaging->get<struct tm>("staging_start");
+                            time_t start_time_t = timegm(&start_time);
+                            std::string errorMessage = "Transfer has been forced-canceled because is has been in staging state beyond its bringonline timeout ";
+
+                            time_t now = getUTC(0);
+                            double diff = difftime(now, start_time_t);
+                            int diffInt =  boost::lexical_cast<int>(diff);
+
+                            if (diffInt > (bring_online + 100))
                                 {
-                                    int file_id = iStaging->get<int>("file_id");    
-				    std::string job_id = iStaging->get<std::string>("job_id"); 
-				    int bring_online  = iStaging->get<int>("bring_online"); 
-				    struct tm start_time = iStaging->get<struct tm>("staging_start");
-        			    time_t start_time_t = timegm(&start_time);                               
-                                    std::string errorMessage = "Transfer has been forced-canceled because is has been in staging state beyond its bringonline timeout ";
-
-				    time_t now = getUTC(0);
-				    double diff = difftime(now, start_time_t);
-				    int diffInt =  boost::lexical_cast<int>(diff);
-
-				    if (diffInt > (bring_online + 100))
-				    {
-                                    	updateFileTransferStatusInternal(sql, 0.0, job_id, file_id, "FAILED", errorMessage, 0, 0, 0, false);
-                                    	updateJobTransferStatusInternal(sql, job_id, "FAILED",0);
-				    }
-                                }		
+                                    updateFileTransferStatusInternal(sql, 0.0, job_id, file_id, "FAILED", errorMessage, 0, 0, 0, false);
+                                    updateJobTransferStatusInternal(sql, job_id, "FAILED",0);
+                                }
+                        }
                 }
         }
     catch (std::exception& e)
@@ -9314,7 +9303,7 @@ void MySqlAPI::setRetryTransferInternal(soci::session& sql, const std::string & 
     int retry_delay = 0;
     std::string reuse_job;
     soci::indicator ind = soci::i_ok;
-
+    
     try
         {
             sql <<
@@ -9338,31 +9327,48 @@ void MySqlAPI::setRetryTransferInternal(soci::session& sql, const std::string & 
                 }
 
 
+            struct tm tTime;
             if (retry_delay > 0)
                 {
                     // update
                     time_t now = getUTC(retry_delay);
-                    struct tm tTime;
                     gmtime_r(&now, &tTime);
-
-                    sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'SUBMITTED', start_time=NULL, transferHost=NULL, t_log_file=NULL,"
-                        " t_log_file_debug=NULL, throughput = 0, current_failures = 1 "
-                        " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
-                        soci::use(tTime), soci::use(retry), soci::use(fileId), soci::use(jobId);
                 }
             else
                 {
                     // update
                     time_t now = getUTC(default_retry_delay);
-                    struct tm tTime;
                     gmtime_r(&now, &tTime);
+                }		
 
-                    sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'SUBMITTED', start_time=NULL, transferHost=NULL, "
-                        " t_log_file=NULL, t_log_file_debug=NULL, throughput = 0,  current_failures = 1 "
+	    int bring_online = -1;
+	    int copy_pin_lifetime = -1;
+
+            // query for the file state in DB
+            sql << "SELECT bring_online, copy_pin_lifetime FROM t_job WHERE job_id=:jobId",
+                soci::use(jobId),
+                soci::into(bring_online),
+                soci::into(copy_pin_lifetime);
+		
+
+            //staging exception, if file failed with timeout and was staged before, reset it
+            if(bring_online > 0 || copy_pin_lifetime > 0)
+                {
+                    sql << "update t_file set retry = :retry, current_failures = 0, file_state='STAGING', internal_file_params=NULL, transferHost=NULL,start_time=NULL, pid=NULL, "
+		    	   " filesize=0 where file_id=:file_id and job_id=:job_id AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED') ",
+			soci::use(retry),
+                        soci::use(fileId), 			
+                        soci::use(jobId);
+                }
+            else
+                {
+                    sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'SUBMITTED', start_time=NULL, transferHost=NULL, t_log_file=NULL,"
+                        " t_log_file_debug=NULL, throughput = 0, current_failures = 1 "
                         " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
                         soci::use(tTime), soci::use(retry), soci::use(fileId), soci::use(jobId);
-                }
 
+                }
+		
             // Keep log
             sql << "INSERT IGNORE INTO t_file_retry_errors "
                 "    (file_id, attempt, datetime, reason) "
@@ -9682,8 +9688,6 @@ void MySqlAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start
 
 void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsigned* count, unsigned* start, unsigned* end, std::string service_name)
 {
-    int counter = 0;
-
     try
         {
             sql.begin();
@@ -9739,16 +9743,13 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
                     this->hashSegment.end   = *end;
                 }
 
-            counter++;
-            //prevent running in more than on server
-            if(hashSegment.start == 0 && counter == 1000)
+            if(hashSegment.start == 0)
                 {
                     // Delete old entries
                     sql.begin();
-                    soci::statement stmt3 = (sql.prepare << "DELETE FROM t_hosts WHERE beat <= DATE_SUB(UTC_TIMESTAMP(), interval 1 week)");
+                    soci::statement stmt3 = (sql.prepare << "DELETE FROM t_hosts WHERE beat <= DATE_SUB(UTC_TIMESTAMP(), interval 120 MINUTE)");
                     stmt3.execute(true);
-                    sql.commit();
-                    counter = 0; //reset
+                    sql.commit();                    
                 }
         }
     catch (std::exception& e)
@@ -12012,7 +12013,7 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                                                               "	AND f.source_se = :source_se  "
                                                               " AND j.user_dn = :user_dn "
                                                               " AND j.vo_name = :vo_name "
-                                                              "	AND j.job_finished is null ORDER BY j.submit_time LIMIT :limit ",
+                                                              "	ORDER BY j.submit_time LIMIT :limit ",
                                                               soci::use(hashSegment.start), soci::use(hashSegment.end),
                                                               soci::use(source_se),
                                                               soci::use(user_dn),
@@ -12212,6 +12213,7 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost
     std::string job_id;
     bool retry = false;
     std::vector<struct message_state> filesMsg;
+    
 
     try
         {
@@ -12232,11 +12234,12 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost
                         {
                             sql <<
                                 " UPDATE t_file "
-                                " SET start_time = UTC_TIMESTAMP(),staging_start=UTC_TIMESTAMP(), transferhost=:thost, file_state='STARTED' "
+                                " SET start_time = UTC_TIMESTAMP(),staging_start=UTC_TIMESTAMP(), agent_dn=:thost, transferhost=:thost, file_state='STARTED' "
                                 " WHERE  "
                                 "	file_id= :fileId "
                                 "	AND file_state='STAGING'",
                                 soci::use(hostname),
+				soci::use(hostname),
                                 soci::use(file_id)
                                 ;
                         }
@@ -12244,8 +12247,9 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost
                         {
                             bool shouldBeRetried = retry;
 
-                            if(retry )
+                            if(retry)
                                 {
+				
                                     int times = 0;
                                     shouldBeRetried = resetForRetryStaging(sql, file_id, job_id, retry, times);
                                     if(shouldBeRetried)
@@ -12303,7 +12307,7 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost
 
                                     sql <<
                                         " UPDATE t_file "
-                                        " SET hashed_id = :hashed_id, staging_finished=UTC_TIMESTAMP(), job_finished=NULL, finish_time=NULL, start_time=NULL, transferhost=NULL, reason = '', file_state = :fileState "
+                                        " SET retry=0, hashed_id = :hashed_id, staging_finished=UTC_TIMESTAMP(), job_finished=NULL, finish_time=NULL, start_time=NULL, transferhost=NULL, reason = '', file_state = :fileState "
                                         " WHERE "
                                         "	file_id = :fileId "
                                         "   AND file_state in ('STAGING','STARTED')",
@@ -12558,6 +12562,7 @@ void MySqlAPI::checkJobOperation(std::vector<std::string >& jobs, std::vector< b
 bool MySqlAPI::resetForRetryStaging(soci::session& sql, int file_id, const std::string & job_id, bool retry, int& times)
 {
     bool willBeRetried = false;
+    
 
     if(retry)
         {
@@ -12598,10 +12603,15 @@ bool MySqlAPI::resetForRetryStaging(soci::session& sql, int file_id, const std::
 
                     sql << "SELECT retry FROM t_file WHERE file_id = :file_id AND job_id = :jobId ",
                         soci::use(file_id), soci::use(job_id), soci::into(nRetriesTimes, isNull2);
+			
+
 
 
                     if(isNull != soci::i_null &&  isNull2 != soci::i_null  && nRetries > 0 && nRetriesTimes <= nRetries-1 )
                         {
+			
+
+			
                             //expressed in secs, default delay
                             const int default_retry_delay = 120;
 
@@ -12618,11 +12628,11 @@ bool MySqlAPI::resetForRetryStaging(soci::session& sql, int file_id, const std::
                                     sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'STAGING', start_time=NULL, staging_start=NULL, transferHost=NULL, t_log_file=NULL,"
                                         " t_log_file_debug=NULL, throughput = 0, current_failures = 1 "
                                         " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
-                                        soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
+                                        soci::use(tTime), soci::use(nRetriesTimes+1), soci::use(file_id), soci::use(job_id);
 
                                     willBeRetried = true;
 
-                                    times = nRetries + 1;
+                                    times = nRetriesTimes + 1;
 
                                     sql.commit();
                                 }
@@ -12638,11 +12648,11 @@ bool MySqlAPI::resetForRetryStaging(soci::session& sql, int file_id, const std::
                                     sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'STAGING', staging_start=NULL, start_time=NULL, transferHost=NULL, "
                                         " t_log_file=NULL, t_log_file_debug=NULL, throughput = 0,  current_failures = 1 "
                                         " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
-                                        soci::use(tTime), soci::use(nRetries+1), soci::use(file_id), soci::use(job_id);
+                                        soci::use(tTime), soci::use(nRetriesTimes+1), soci::use(file_id), soci::use(job_id);
 
                                     willBeRetried = true;
 
-                                    times = nRetries + 1;
+                                    times = nRetriesTimes + 1;
 
                                     sql.commit();
                                 }

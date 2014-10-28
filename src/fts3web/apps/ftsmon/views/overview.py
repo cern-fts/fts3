@@ -16,11 +16,11 @@
 # limitations under the License.
 from datetime import datetime, timedelta
 from django.db import connection
-from django.db.models import Count, Avg
+from django.db.models import Count
 import types
 import sys
 
-from ftsweb.models import File, OptimizeActive
+from ftsweb.models import Job, File, OptimizeActive
 from jobs import setup_filters
 from jsonify import jsonify
 from util import get_order_by, paged
@@ -107,6 +107,14 @@ class OverviewExtended(object):
             return oa.fixed is not None and oa.fixed.lower == 'on'
         return False
 
+    def _get_job_state_count(self, source, destination, vo):
+        states_count = Job.objects.filter(source_se=source, dest_se=destination, vo_name=vo, reuse_job__in=['Y', 'N'], job_state__in=['ACTIVE', 'SUBMITTED', 'STAGING'])\
+            .values('job_state').annotate(count=Count('job_state')).values('job_state', 'count')
+        states = dict()
+        for row in states_count:
+            states[row['job_state'].lower()] = row['count']
+        return states
+
     def __getitem__(self, indexes):
         if isinstance(indexes, types.SliceType):
             return_list = self.objects[indexes]
@@ -114,6 +122,7 @@ class OverviewExtended(object):
                 item['most_frequent_error'] = self._get_frequent_error(item['source_se'], item['dest_se'],
                                                                        item['vo_name'])
                 item['active_fixed'] = self._get_fixed(item['source_se'], item['dest_se'])
+                item['job_states'] = self._get_job_state_count(item['source_se'], item['dest_se'], item['vo_name'])
             return return_list
         else:
             return self.objects[indexes]
@@ -142,19 +151,29 @@ def get_overview(http_request):
         pairs_filter += " AND vo_name = %s "
         se_params.append(filters['vo'])
 
-    triplet_query = """
-    SELECT source_se, dest_se, vo_name FROM t_file WHERE file_state in ('SUBMITTED', 'ACTIVE', 'STAGING', 'STARTED') %s
-    UNION
-    SELECT source_se, dest_se, vo_name FROM t_file WHERE job_finished >= %s AND file_state IN ('FINISHED', 'FAILED', 'CANCELED') %s
-    """ % (pairs_filter, _db_to_date(), pairs_filter)
 
-    query_params = se_params + [not_before] + se_params
-
-    cursor.execute(triplet_query, query_params)
-    all_triplets = cursor.fetchall()
+    def all_triplets():
+        seen = set()
+        # First, active
+        query = """
+        SELECT DISTINCT source_se, dest_se, vo_name FROM t_file WHERE file_state in ('SUBMITTED', 'ACTIVE', 'STAGING', 'STARTED') %s
+        """ % pairs_filter
+        cursor.execute(query, se_params)
+        for triplet in cursor:
+            seen.add(triplet)
+            yield triplet
+        # Then, terminal _making sure we do not repeat_
+        query = """
+        SELECT source_se, dest_se, vo_name FROM t_file WHERE job_finished >= %s AND file_state IN ('FINISHED', 'FAILED', 'CANCELED') %s
+        """ % (_db_to_date(), pairs_filter)
+        cursor.execute(query, [not_before] + se_params)
+        for triplet in cursor:
+            if triplet not in seen:
+                seen.add(triplet)
+                yield triplet
 
     triplets = {}
-    for triplet_key in all_triplets:
+    for triplet_key in all_triplets():
             source, dest, vo = triplet_key
             triplet = triplets.get(triplet_key, dict())
 

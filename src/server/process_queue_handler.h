@@ -107,28 +107,32 @@ public:
                         ThreadSafeList::get_instance().removeFinishedTr(job, msg.file_id);
                     }
 
-                try
+                if(std::string(msg.transfer_status).compare("FAILED") == 0)
                     {
-                        //multiple replica files belonging to a job will not be retried
-                        int retry = DBSingleton::instance().getDBObjectInstance()->getRetry(job);
-                        if(msg.retry==true && retry > 0 && std::string(msg.transfer_status).compare("FAILED") == 0 && msg.file_id > 0 && !job.empty())
+                        try
                             {
-                                int retryTimes = DBSingleton::instance().getDBObjectInstance()->getRetryTimes(job, msg.file_id);
-                                if(retryTimes != -1 && retryTimes <= retry-1 )
+                                //multiple replica files belonging to a job will not be retried
+                                int retry = DBSingleton::instance().getDBObjectInstance()->getRetry(job);
+				
+                                if(msg.retry==true && retry > 0 && msg.file_id > 0 && !job.empty())
                                     {
-                                        DBSingleton::instance().getDBObjectInstance()
-                                        ->setRetryTransfer(job, msg.file_id, retryTimes+1, msg.transfer_message);
-                                        return;
+                                        int retryTimes = DBSingleton::instance().getDBObjectInstance()->getRetryTimes(job, msg.file_id);
+                                        if(retryTimes != -1 && retryTimes <= retry-1 )
+                                            {
+                                                DBSingleton::instance().getDBObjectInstance()
+                                                ->setRetryTransfer(job, msg.file_id, retryTimes+1, msg.transfer_message);
+                                                return;
+                                            }
                                     }
                             }
-                    }
-                catch (std::exception& e)
-                    {
-                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception when set retry " << e.what() << commit;
-                    }
-                catch (...)
-                    {
-                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception when set retry " << commit;
+                        catch (std::exception& e)
+                            {
+                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception when set retry " << e.what() << commit;
+                            }
+                        catch (...)
+                            {
+                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception when set retry " << commit;
+                            }
                     }
 
                 /*session reuse process died or terminated unexpected, must terminate all files of a given job*/

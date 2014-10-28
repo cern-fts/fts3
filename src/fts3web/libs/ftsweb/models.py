@@ -98,7 +98,7 @@ class FileBase(models.Model):
     transferHost = models.CharField(max_length = 255)
     source_surl  = models.CharField(max_length = 1100)
     dest_surl    = models.CharField(max_length = 1100)
-    agent_dn     = models.CharField(max_length = 1024)
+    stagingHost  = models.CharField(db_column = 'agent_dn', max_length = 1024)
     error_scope  = models.CharField(max_length = 32)
     error_phase  = models.CharField(max_length = 32)
     reason_class = models.CharField(max_length = 32)
