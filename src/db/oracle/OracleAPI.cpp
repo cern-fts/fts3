@@ -3473,37 +3473,22 @@ unsigned OracleAPI::getDebugLevel(std::string source_hostname, std::string desti
     soci::session sql(*connectionPool);
 
     try
-        {
-            std::string debug;
-            unsigned level;
+        {            
+            unsigned level = 0;
+	    soci::indicator isNull = soci::i_ok;
+
 
             sql <<
-                " SELECT debug, debug_level "
+                " SELECT debug_level "
                 " FROM t_debug "
-                " WHERE source_se = :source "
-                "	AND (dest_se = '' OR dest_se IS NULL) ",
+                " WHERE source_se = :source OR dest_se= :dest_se ",
                 soci::use(source_hostname),
-                soci::into(debug), soci::into(level)
+		soci::use(destin_hostname),
+                soci::into(level, isNull)
                 ;
-
-            if (debug == "on") return level;
-
-            sql <<
-                " SELECT debug, debug_level "
-                " FROM t_debug "
-                " WHERE source_se = :destin "
-                "	AND (dest_se = '' OR dest_se IS NULL) ",
-                soci::use(destin_hostname),
-                soci::into(debug), soci::into(level)
-                ;
-
-            if (debug == "on") return level;
-
-            sql << "SELECT debug, debug_level FROM t_debug WHERE source_se = :source AND dest_se = :dest",
-                soci::use(source_hostname), soci::use(destin_hostname),
-                soci::into(debug), soci::into(level);
-
-            if (debug == "on") return level;
+		
+		if(isNull != soci::i_null)
+			return level;
         }
     catch (std::exception& e)
         {
