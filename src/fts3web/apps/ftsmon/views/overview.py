@@ -108,8 +108,9 @@ class OverviewExtended(object):
         return False
 
     def _get_job_state_count(self, source, destination, vo):
-        states_count = Job.objects.filter(source_se=source, dest_se=destination, vo_name=vo, reuse_job__in=['Y', 'N'], job_state__in=['ACTIVE', 'SUBMITTED', 'STAGING'])\
-            .values('job_state').annotate(count=Count('job_state')).values('job_state', 'count')
+        states_count = Job.objects.filter(
+            source_se=source, dest_se=destination, vo_name=vo, reuse_job__in=['Y', 'N'], job_finished__isnull=True
+        ).values('job_state').annotate(count=Count('job_state')).values('job_state', 'count')
         states = dict()
         for row in states_count:
             states[row['job_state'].lower()] = row['count']
