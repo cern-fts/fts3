@@ -5279,7 +5279,7 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                             jobIdStmt << job_id;
                             jobIdStmt << "',";
 
-                            if(count == 300)
+                            if(count == 1000)
                                 {
                                     std::string queryStr = jobIdStmt.str();
                                     job_id = queryStr.substr(0, queryStr.length() - 1);
@@ -5304,7 +5304,7 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                                     jobIdStmt.str(std::string());
                                     jobIdStmt.clear();
                                     sql.commit();
-                                    sleep(3); // give it sometime to breath
+                                    sleep(1); // give it sometime to breath
                                 }
                         }
 
