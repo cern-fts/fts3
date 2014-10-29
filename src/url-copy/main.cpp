@@ -971,7 +971,7 @@ int main(int argc, char **argv)
                 logger.INFO() << "Multihop: " << opts.multihop << std::endl;
                 logger.INFO() << "UDT: " << opts.enable_udt << std::endl;
                 logger.INFO() << "Active: " << opts.active << std::endl;
-                logger.INFO() << "Debug level: " << opts.debugLevel << std::endl;                
+                logger.INFO() << "Debug level: " << opts.debugLevel << std::endl;
 
                 if (opts.strictCopy)
                     {
@@ -1042,6 +1042,11 @@ int main(int argc, char **argv)
                             {
                                 gfal2_set_opt_boolean(handle, "SRM PLUGIN", "ALLOW_EMPTY_SOURCE_CHECKSUM", TRUE, NULL);
                                 gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "SKIP_SOURCE_CHECKSUM", TRUE, NULL);
+                                gfal2_set_opt_string(handle, "XROOTD PLUGIN", "COPY_CHECKSUM_MODE", "target", NULL);
+                            }
+                        else
+                            {
+                            gfal2_set_opt_string(handle, "XROOTD PLUGIN", "COPY_CHECKSUM_MODE", "end2end", NULL);
                             }
 
                         if (!currentTransfer.checksumValue.empty() && currentTransfer.checksumValue != "x")   //user provided checksum
@@ -1383,7 +1388,7 @@ stop:
             msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
             msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
             msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
-            msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);     
+            msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
 
             double throughputTurl = 0.0;
 
