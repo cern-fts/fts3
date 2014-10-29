@@ -3968,26 +3968,42 @@ void MySqlAPI::getMaxActive(soci::session& sql, int& source, int& destination, c
                 soci::use(source_hostname),
                 soci::into(maxActiveSource);
 
-            if(sql.got_data())
-                {
-                    source = maxActiveSource;
-                }
-            else
+            if(!sql.got_data())
+	        {
+		  source = maxDefault;
+		}
+            else if(sql.got_data() && maxActiveSource == -1)
                 {
                     source = maxDefault;
+                }
+            else if(sql.got_data() && maxActiveSource == 0)
+	       {
+	    	    source = 0; //stop processing for this source endpoint
+	       }		
+            else
+                {
+                    source = maxActiveSource;
                 }
 
             sql << " select active from t_optimize where dest_se = :dest_se and active is not NULL ",
                 soci::use(destin_hostname),
                 soci::into(maxActiveDest);
 
-            if(sql.got_data())
-                {
-                    destination = maxActiveDest;
-                }
-            else
+            if(!sql.got_data())
+	        {
+		  destination = maxDefault;
+		}
+            else if(sql.got_data() && maxActiveDest == -1)
                 {
                     destination = maxDefault;
+                }
+            else if(sql.got_data() && maxActiveDest == 0)
+	       {
+	    	    destination = 0; //stop processing for this destination endpoint
+	       }		
+            else
+                {
+                    destination = maxActiveDest;
                 }
         }
     catch (std::exception& e)
@@ -4631,6 +4647,44 @@ bool MySqlAPI::updateOptimizer()
                             int maxSource = 0;
                             int maxDestination = 0;
                             getMaxActive(sql, maxSource, maxDestination, source_hostname, destin_hostname);
+			    
+			    //FTS3 admin requested to stop processing for this source or destination endpoints
+			    if(maxSource == 0 || maxDestination == 0)
+			    {
+			    	updateOptimizerEvolution(sql, source_hostname, destin_hostname, maxActive, throughput, ratioSuccessFailure, 1, bandwidthIn);
+                                continue;			    
+			    }			    
+			    else if(maxSource ==  MAX_ACTIVE_ENDPOINT_LINK && maxDestination == MAX_ACTIVE_ENDPOINT_LINK)
+			    {
+			    	//do nothing, use default for both
+			    }
+			    else if (maxSource !=  MAX_ACTIVE_ENDPOINT_LINK && maxDestination != MAX_ACTIVE_ENDPOINT_LINK) //both have been set
+			    {
+			    	if(maxSource > maxDestination)
+				{
+				   maxSource = 	maxDestination; //take the min
+				}
+				else if( maxDestination > maxSource)
+				{
+				   maxDestination = maxSource;
+				}
+				else
+				{
+				 //do nothing
+				}
+			    }
+			    else if(maxSource !=  MAX_ACTIVE_ENDPOINT_LINK && maxDestination == MAX_ACTIVE_ENDPOINT_LINK)
+			    {
+			    	maxDestination = maxSource;
+			    }
+			    else if(maxSource ==  MAX_ACTIVE_ENDPOINT_LINK && maxDestination != MAX_ACTIVE_ENDPOINT_LINK)
+			    {
+			    	maxSource = maxDestination;
+			    }
+			    else
+			    {
+			    	//do nothing, use default
+			    }
 
 
                             if( activeSource >= maxSource || activeDestination >= maxDestination || maxActive >= MAX_ACTIVE_PER_LINK)
