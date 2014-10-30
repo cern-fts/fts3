@@ -171,9 +171,11 @@ bool PollTask::abort()
                     urls.push_back(it->c_str());
                 }
             // make sure in the context are only those URLs that where not cancelled
+            std::set<std::string> surls = ctx.getSurls();
+
             std::set<std::string> not_cancelled;
             std::set_difference(
-                ctx.getSurls().begin(), ctx.getSurls().end(),
+                surls.begin(), surls.end(),
                 remove.begin(), remove.end(),
                 std::inserter(not_cancelled, not_cancelled.end())
             );
