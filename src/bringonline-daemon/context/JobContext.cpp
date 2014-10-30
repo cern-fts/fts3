@@ -28,15 +28,11 @@ JobContext::JobContext(std::string const & dn, std::string const & vo, std::stri
 
 void JobContext::add(std::string const & surl, std::string const & jobId, int fileId)
 {
-    boost::mutex::scoped_lock lock(m);
-
-    bool isPresent = isPresentInJobs(surl);
-
-    if(!isPresent && !surl.empty() && !jobId.empty() && fileId > 0)
+    if(!surl.empty() && !jobId.empty() && fileId > 0)
         {
             jobs[jobId].push_back(std::make_pair(fileId, surl));
             urlToIDs.insert({surl, {jobId, fileId}});
-        }
+         }
 }
 
 std::string JobContext::generateProxy(std::string const & dn, std::string const & delegationId)
@@ -51,11 +47,8 @@ bool JobContext::checkValidProxy(std::string& message) const
     return delegCredPtr->isValidProxy(proxy, message);
 }
 
-
-std::vector<char const *> JobContext::getUrls() const
+std::vector<char const *> JobContext::getUrls(std::map< std::string, std::vector<std::pair<int, std::string> > > const & jobs)
 {
-    boost::mutex::scoped_lock lock(m);
-
     std::vector<char const *> ret;
 
     std::map< std::string, std::vector<std::pair<int, std::string> > >::const_iterator it_j;
@@ -78,6 +71,11 @@ std::vector<char const *> JobContext::getUrls() const
     return ret;
 }
 
+std::vector<char const *> JobContext::getUrls() const
+{
+    return getUrls(jobs);
+}
+
 
 class FileUrlMatches
 {
@@ -94,8 +92,6 @@ public:
 
 void JobContext::removeUrl(const std::string& url)
 {
-    boost::mutex::scoped_lock lock(m);
-
     std::map< std::string, std::vector<std::pair<int, std::string> > >::iterator it_j;
     std::vector<std::pair<int, std::string> >::iterator lastPosition;
 
@@ -118,8 +114,6 @@ void JobContext::removeUrl(const std::string& url)
 
 std::string JobContext::getLogMsg() const
 {
-    boost::mutex::scoped_lock lock(m);
-
     std::stringstream ss;
 
     std::map< std::string, std::vector<std::pair<int, std::string> > >::const_iterator it_j;

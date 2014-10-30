@@ -11210,7 +11210,7 @@ void OracleAPI::revertDeletionToStarted()
 //WORKHORSE
 //alter table t_job add index t_staging_index(vo_name, source_se, dest_se, user_dn);
 //f.source_surl, f.job_id, f.file_id, j.copy_pin_lifetime, j.bring_online  , j.user_dn, j.cred_id, j.source_space_token
-void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string > >& files)
+void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string, time_t > >& files)
 {
     soci::session sql(*connectionPool);
     std::vector< boost::tuple<int, std::string, std::string, std::string, bool> > filesState;
@@ -11322,7 +11322,7 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
                             soci::rowset<soci::row> rs3 = (
                                                               sql.prepare <<
                                                               " SELECT * FROM (SELECT f.source_surl, f.job_id, f.file_id, j.copy_pin_lifetime, j.bring_online, "
-                                                              " j.user_dn, j.cred_id, j.source_space_token"
+                                                              " j.user_dn, j.cred_id, j.source_space_token, j.submit_time"
                                                               " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                                               " WHERE  "
                                                               " (j.BRING_ONLINE >= 0 OR j.COPY_PIN_LIFETIME >= 0) "
@@ -11351,6 +11351,7 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
                                     int file_id = static_cast<int>(row.get<long long>("FILE_ID"));
                                     int copy_pin_lifetime = static_cast<int>(row.get<double>("COPY_PIN_LIFETIME", 0));
                                     int bring_online = static_cast<int>(row.get<double>("BRING_ONLINE",0));
+                                    time_t submit_time = soci::getTimeT(row, "SUBMIT_TIME");
 
                                     if(copy_pin_lifetime > 0 && bring_online <= 0)
                                         bring_online = 28800;
@@ -11361,7 +11362,7 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
                                     std::string cred_id = row.get<std::string>("CRED_ID");
                                     std::string source_space_token = row.get<std::string>("SOURCE_SPACE_TOKEN","");
 
-                                    boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string > record(vo_name, source_url,job_id, file_id, copy_pin_lifetime, bring_online, user_dn, cred_id , source_space_token);
+                                    boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string, time_t > record(vo_name, source_url,job_id, file_id, copy_pin_lifetime, bring_online, user_dn, cred_id , source_space_token, submit_time);
                                     files.push_back(record);
 
                                     boost::tuple<int, std::string, std::string, std::string, bool> recordState(file_id, initState, reason, job_id, false);

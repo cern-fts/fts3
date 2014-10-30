@@ -404,7 +404,7 @@ public:
     virtual void updateBringOnlineToken(std::map< std::string, std::vector<std::pair<int, std::string> > > const & jobs, std::string const & token);
 
     //file_id / surl / proxy / pinlifetime / bringonlineTimeout
-    virtual void getFilesForStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string> >& files);
+    virtual void getFilesForStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string, time_t> >& files);
 
     virtual void getAlreadyStartedStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string, std::string> >& files);
 

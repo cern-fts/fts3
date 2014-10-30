@@ -11929,7 +11929,7 @@ void MySqlAPI::revertDeletionToStarted()
 //WORKHORSE
 //alter table t_job add index t_staging_index(vo_name, source_se, dest_se, user_dn);
 //f.source_surl, f.job_id, f.file_id, j.copy_pin_lifetime, j.bring_online  , j.user_dn, j.cred_id, j.source_space_token
-void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string > >& files)
+void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string, time_t > >& files)
 {
     soci::session sql(*connectionPool);
     std::vector< boost::tuple<int, std::string, std::string, std::string, bool> > filesState;
@@ -12042,26 +12042,24 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
 
                             soci::rowset<soci::row> rs3 = (
                                     sql.prepare <<
-                                    " SELECT f.source_surl, f.job_id, f.file_id, j.copy_pin_lifetime, j.bring_online,"
-                                    "   j.user_dn, j.cred_id, j.source_space_token "
-                                    " FROM t_file f, t_job j "
-                                    " WHERE f.job_id = j.job_id "
-                                    "   AND (j.BRING_ONLINE >= 0 OR j.COPY_PIN_LIFETIME >= 0) "
-                                    "   AND f.start_time IS NULL AND f.file_state = 'STAGING'"
-                                    "   AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) "
-                                    "   AND f.source_se = :source_se "
-                                    "   AND j.user_dn = :user_dn "
-                                    "   AND j.vo_name = :vo_name "
-                                    "   AND f.vo_name = j.vo_name "
-                                    "   AND f.job_finished IS NULL "
-                                    "   AND EXISTS (SELECT * FROM t_job y WHERE y.job_id = j.job_id ORDER BY y.submit_time) "
-                                    " LIMIT :limit",
+                                    " SELECT f.source_surl, f.job_id, f.file_id, j.copy_pin_lifetime, j.bring_online, "
+                                    " j.user_dn, j.cred_id, j.source_space_token, j.submit_time"
+                                    " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
+                                    " WHERE  "
+                                    " (j.BRING_ONLINE >= 0 OR j.COPY_PIN_LIFETIME >= 0) "
+                                    "	AND f.start_time IS NULL "
+                                    "	AND f.file_state = 'STAGING' "
+                                    " AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd)"
+                                    "	AND f.source_se = :source_se  "
+                                    " AND j.user_dn = :user_dn "
+                                    " AND j.vo_name = :vo_name "
+                                    "	ORDER BY j.submit_time LIMIT :limit ",
                                     soci::use(hashSegment.start), soci::use(hashSegment.end),
                                     soci::use(source_se),
                                     soci::use(user_dn),
                                     soci::use(vo_name),
                                     soci::use(limit)
-                            );
+                                );
 
                             std::string initState = "STARTED";
                             std::string reason;
@@ -12074,6 +12072,8 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                                     int file_id = row.get<int>("file_id");
                                     int copy_pin_lifetime = row.get<int>("copy_pin_lifetime",0);
                                     int bring_online = row.get<int>("bring_online",0);
+                                    struct tm aux_tm = row.get<struct tm>("submit_time");
+                                    time_t submit_time = timegm(&aux_tm);
 
                                     if(copy_pin_lifetime > 0 && bring_online <= 0)
                                         bring_online = 28800;
@@ -12084,7 +12084,7 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                                     std::string cred_id = row.get<std::string>("cred_id");
                                     std::string source_space_token = row.get<std::string>("source_space_token","");
 
-                                    boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string > record(vo_name, source_url,job_id, file_id, copy_pin_lifetime, bring_online, user_dn, cred_id , source_space_token);
+                                    boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string, time_t > record(vo_name, source_url,job_id, file_id, copy_pin_lifetime, bring_online, user_dn, cred_id , source_space_token, submit_time);
                                     files.push_back(record);
 
                                     boost::tuple<int, std::string, std::string, std::string, bool> recordState(file_id, initState, reason, job_id, false);

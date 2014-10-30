@@ -85,12 +85,16 @@ public:
     std::vector<char const *> getUrls() const;
 
     /**
+     * @param jobs : all the jobs in a given task
+     * @return : list of URLs
+     */
+    static std::vector<char const *> getUrls(std::map< std::string, std::vector<std::pair<int, std::string> > > const & jobs);
+
+    /**
      * @return : set of SURLs
      */
     std::set<std::string> getSurls() const
     {
-        boost::mutex::scoped_lock lock(m);
-
         std::set<std::string> surls;
 
         std::map< std::string, std::vector<std::pair<int, std::string> > >::const_iterator it_j;
@@ -104,22 +108,6 @@ public:
             }
 
         return surls;
-    }
-
-    bool isPresentInJobs(const std::string& url)
-    {
-        std::map< std::string, std::vector<std::pair<int, std::string> > >::const_iterator it_j;
-        std::vector<std::pair<int, std::string> >::const_iterator it_f;
-        for (it_j = jobs.begin(); it_j != jobs.end(); ++it_j)
-            {
-                for (it_f = it_j->second.begin(); it_f != it_j->second.end(); ++it_f)
-                    {
-                        const std::string temp = it_f->second;
-                        if(temp == url)
-                            return true;
-                    }
-            }
-        return false;
     }
 
     void removeUrl(const std::string& url);
@@ -147,8 +135,6 @@ public:
      */
     std::vector< std::pair<std::string, int> > getIDs(std::string const & surl) const
     {
-        boost::mutex::scoped_lock lock(m);
-
         std::vector< std::pair<std::string, int> > ret;
         auto range = urlToIDs.equal_range(surl);
         for (auto it = range.first; it != range.second; ++it)
@@ -167,8 +153,6 @@ private:
      * @param delegationId : delegation ID
      */
     static std::string generateProxy(std::string const & dn, std::string const & delegationId);
-
-    mutable boost::mutex m;
 
 protected:
 

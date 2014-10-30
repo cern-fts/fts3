@@ -20,14 +20,18 @@ std::unordered_map< std::string, std::set<std::string> > PollTask::active_tokens
 
 void PollTask::run(boost::any const &)
 {
-    if (abort()) return;
+    handle_canceled();
+    handle_timeout();
 
     std::vector<char const *> urls = ctx.getUrls();
+    // make sure there is work to be done
+    if (urls.empty()) return;
+
     std::vector<GError*> errors(urls.size(), NULL);
 
     int status = gfal2_bring_online_poll_list(
                      gfal2_ctx, static_cast<int>(urls.size()),
-                     &*urls.begin(), token.c_str(), &errors.front());
+                     urls.data(), token.c_str(), errors.data());
 
     if (status < 0)
         {
@@ -125,23 +129,19 @@ void PollTask::run(boost::any const &)
         }
 }
 
-bool PollTask::abort()
+void PollTask::handle_canceled()
 {
-    bool aborted = false;
-
     std::vector<char const *> urls;
     std::set<std::string> remove;
-    std::unordered_map< std::string, std::set<std::string> >::const_iterator it;
 
     // critical section
     {
         boost::shared_lock<boost::shared_mutex> lock(mx);
         // first check if the token is still active
-        it = active_tokens.find(token);
+        auto it = active_tokens.find(token);
         if (it == active_tokens.end())
             {
                 // if not abort all URLs
-                aborted = true;
                 urls = ctx.getUrls();
             }
         else
@@ -155,36 +155,59 @@ bool PollTask::abort()
                 );
             }
     }
-
-    // check if there is something to do first
-    if (urls.empty() && remove.empty()) return aborted;
-
-    // if only a subset of URLs should be aborted ...
-    if (urls.empty())
+    // check if the whole task has been cancelled
+    if (!urls.empty())
         {
-            // adjust the capacity
-            urls.reserve(remove.size());
-            // fill in with URLs
-            std::set<std::string>::const_iterator it;
-            for (it = remove.begin(); it != remove.end(); ++it)
-                {
-                    urls.push_back(it->c_str());
-                }
-            // make sure in the context are only those URLs that where not cancelled
-            std::set<std::string> surls = ctx.getSurls();
-
-            std::set<std::string> not_cancelled;
-            std::set_difference(
-                surls.begin(), surls.end(),
-                remove.begin(), remove.end(),
-                std::inserter(not_cancelled, not_cancelled.end())
-            );
-            ctx.getSurls().swap(not_cancelled);
+            ctx.clear();
+            abort(urls);
+            return;
         }
+    // check if there is something to do first
+    if (remove.empty()) return;
+    // make sure in the context are only those URLs that where not cancelled
+    ctx.remove(remove);
+    // if only a subset of URLs should be aborted ...
+    urls.reserve(remove.size());
+    // fill in with URLs
+    for (auto it = remove.begin(); it != remove.end(); ++it)
+        {
+            urls.push_back(it->c_str());
+        }
+    abort(urls);
+}
+
+void PollTask::handle_timeout()
+{
+    // get the files that timed-out
+    auto timeouted = ctx.get_timeouted();
+    // if there are non there's nothing to do
+    if (timeouted.empty()) return;
+    // update the state of files that timed-out
+    static StagingStateUpdater & state_update = StagingStateUpdater::instance();
+    state_update(timeouted, "FAILED", "bring-online timeout has been exceeded", true);
+    // get urls of files that timed-out
+    auto urls_abort = JobContext::getUrls(timeouted);
+    // get urls of the rest of files
+    auto surls = ctx.getSurls();
+    // if there are duplicates that did not timed-out they have to be removed
+    auto store = urls_abort.begin();
+    for (auto it = urls_abort.begin(); it != urls_abort.end(); ++it)
+    {
+        if (surls.count(*it)) continue;
+        *store = *it;
+        ++store;
+    }
+    urls_abort.resize(store - urls_abort.begin());
+    // abort respective urls that timed-out
+    abort(urls_abort);
+}
+
+void PollTask::abort(std::vector<char const *> const & urls)
+{
+    if (urls.empty()) return;
 
     std::vector<GError*> errors(urls.size(), NULL);
-    int status = gfal2_abort_files(gfal2_ctx, static_cast<int>(urls.size()),
-                                   &*urls.begin(), token.c_str(), &*errors.begin());
+    int status = gfal2_abort_files(gfal2_ctx, static_cast<int>(urls.size()), urls.data(), token.c_str(), errors.data());
 
     if (status < 0)
         {
@@ -213,8 +236,6 @@ bool PollTask::abort()
                         }
                 }
         }
-
-    return aborted;
 }
 
 void PollTask::cancel(std::unordered_map< std::string, std::set<std::string> > const & remove)
