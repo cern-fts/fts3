@@ -3823,7 +3823,7 @@ unsigned MySqlAPI::getDebugLevel(std::string source_hostname, std::string destin
     soci::session sql(*connectionPool);
 
     try
-        {            
+        {
             unsigned level = 0;
 	    soci::indicator isNull = soci::i_ok;
 
@@ -3836,7 +3836,7 @@ unsigned MySqlAPI::getDebugLevel(std::string source_hostname, std::string destin
 		soci::use(destin_hostname),
                 soci::into(level, isNull)
                 ;
-		
+
 		if(isNull != soci::i_null)
 			return level;
         }
@@ -3982,7 +3982,7 @@ void MySqlAPI::getMaxActive(soci::session& sql, int& source, int& destination, c
             else if(sql.got_data() && maxActiveSource == 0)
 	       {
 	    	    source = 0; //stop processing for this source endpoint
-	       }		
+	       }
             else
                 {
                     source = maxActiveSource;
@@ -4003,7 +4003,7 @@ void MySqlAPI::getMaxActive(soci::session& sql, int& source, int& destination, c
             else if(sql.got_data() && maxActiveDest == 0)
 	       {
 	    	    destination = 0; //stop processing for this destination endpoint
-	       }		
+	       }
             else
                 {
                     destination = maxActiveDest;
@@ -4650,13 +4650,13 @@ bool MySqlAPI::updateOptimizer()
                             int maxSource = 0;
                             int maxDestination = 0;
                             getMaxActive(sql, maxSource, maxDestination, source_hostname, destin_hostname);
-			    
+
 			    //FTS3 admin requested to stop processing for this source or destination endpoints
 			    if(maxSource == 0 || maxDestination == 0)
 			    {
 			    	updateOptimizerEvolution(sql, source_hostname, destin_hostname, maxActive, throughput, ratioSuccessFailure, 1, bandwidthIn);
-                                continue;			    
-			    }			    
+                                continue;
+			    }
 			    else if(maxSource ==  MAX_ACTIVE_ENDPOINT_LINK && maxDestination == MAX_ACTIVE_ENDPOINT_LINK)
 			    {
 			    	//do nothing, use default for both
@@ -5320,7 +5320,7 @@ void MySqlAPI::backup(long* nJobs, long* nFiles)
                     sql.begin();
                     sql << "delete from t_file_retry_errors where datetime < (UTC_TIMESTAMP() - interval '7' DAY )";
                     sql.commit();
-                    
+
                 }
 
             jobIdStmt.str(std::string());
@@ -9342,7 +9342,7 @@ void MySqlAPI::setRetryTransferInternal(soci::session& sql, const std::string & 
     int retry_delay = 0;
     std::string reuse_job;
     soci::indicator ind = soci::i_ok;
-    
+
     try
         {
             sql <<
@@ -9378,7 +9378,7 @@ void MySqlAPI::setRetryTransferInternal(soci::session& sql, const std::string & 
                     // update
                     time_t now = getUTC(default_retry_delay);
                     gmtime_r(&now, &tTime);
-                }		
+                }
 
 	    int bring_online = -1;
 	    int copy_pin_lifetime = -1;
@@ -9388,7 +9388,7 @@ void MySqlAPI::setRetryTransferInternal(soci::session& sql, const std::string & 
                 soci::use(jobId),
                 soci::into(bring_online),
                 soci::into(copy_pin_lifetime);
-		
+
 
             //staging exception, if file failed with timeout and was staged before, reset it
             if(bring_online > 0 || copy_pin_lifetime > 0)
@@ -9396,7 +9396,7 @@ void MySqlAPI::setRetryTransferInternal(soci::session& sql, const std::string & 
                     sql << "update t_file set retry = :retry, current_failures = 0, file_state='STAGING', internal_file_params=NULL, transferHost=NULL,start_time=NULL, pid=NULL, "
 		    	   " filesize=0 where file_id=:file_id and job_id=:job_id AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED') ",
 			soci::use(retry),
-                        soci::use(fileId), 			
+                        soci::use(fileId),
                         soci::use(jobId);
                 }
             else
@@ -9407,7 +9407,7 @@ void MySqlAPI::setRetryTransferInternal(soci::session& sql, const std::string & 
                         soci::use(tTime), soci::use(retry), soci::use(fileId), soci::use(jobId);
 
                 }
-		
+
             // Keep log
             sql << "INSERT IGNORE INTO t_file_retry_errors "
                 "    (file_id, attempt, datetime, reason) "
@@ -9788,7 +9788,7 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
                     sql.begin();
                     soci::statement stmt3 = (sql.prepare << "DELETE FROM t_hosts WHERE beat <= DATE_SUB(UTC_TIMESTAMP(), interval 120 MINUTE)");
                     stmt3.execute(true);
-                    sql.commit();                    
+                    sql.commit();
                 }
         }
     catch (std::exception& e)
@@ -12039,26 +12039,29 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                             source_se = row.get<std::string>("source_se");
                             std::string user_dn = row.get<std::string>("user_dn");
 
+
                             soci::rowset<soci::row> rs3 = (
-                                                              sql.prepare <<
-                                                              " SELECT f.source_surl, f.job_id, f.file_id, j.copy_pin_lifetime, j.bring_online, "
-                                                              " j.user_dn, j.cred_id, j.source_space_token"
-                                                              " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
-                                                              " WHERE  "
-                                                              " (j.BRING_ONLINE >= 0 OR j.COPY_PIN_LIFETIME >= 0) "
-                                                              "	AND f.start_time IS NULL "
-                                                              "	AND f.file_state = 'STAGING' "
-                                                              " AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd)"
-                                                              "	AND f.source_se = :source_se  "
-                                                              " AND j.user_dn = :user_dn "
-                                                              " AND j.vo_name = :vo_name "
-                                                              "	ORDER BY j.submit_time LIMIT :limit ",
-                                                              soci::use(hashSegment.start), soci::use(hashSegment.end),
-                                                              soci::use(source_se),
-                                                              soci::use(user_dn),
-                                                              soci::use(vo_name),
-                                                              soci::use(limit)
-                                                          );
+                                    sql.prepare <<
+                                    " SELECT f.source_surl, f.job_id, f.file_id, j.copy_pin_lifetime, j.bring_online,"
+                                    "   j.user_dn, j.cred_id, j.source_space_token "
+                                    " FROM t_file f, t_job j "
+                                    " WHERE f.job_id = j.job_id "
+                                    "   AND (j.BRING_ONLINE >= 0 OR j.COPY_PIN_LIFETIME >= 0) "
+                                    "   AND f.start_time IS NULL AND f.file_state = 'STAGING'"
+                                    "   AND (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) "
+                                    "   AND f.source_se = :source_se "
+                                    "   AND j.user_dn = :user_dn "
+                                    "   AND j.vo_name = :vo_name "
+                                    "   AND f.vo_name = j.vo_name "
+                                    "   AND f.job_finished IS NULL "
+                                    "   AND EXISTS (SELECT * FROM t_job y WHERE y.job_id = j.job_id ORDER BY y.submit_time) "
+                                    " LIMIT :limit",
+                                    soci::use(hashSegment.start), soci::use(hashSegment.end),
+                                    soci::use(source_se),
+                                    soci::use(user_dn),
+                                    soci::use(vo_name),
+                                    soci::use(limit)
+                            );
 
                             std::string initState = "STARTED";
                             std::string reason;
@@ -12252,7 +12255,7 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost
     std::string job_id;
     bool retry = false;
     std::vector<struct message_state> filesMsg;
-    
+
 
     try
         {
@@ -12288,7 +12291,7 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost
 
                             if(retry)
                                 {
-				
+
                                     int times = 0;
                                     shouldBeRetried = resetForRetryStaging(sql, file_id, job_id, retry, times);
                                     if(shouldBeRetried)
@@ -12601,7 +12604,7 @@ void MySqlAPI::checkJobOperation(std::vector<std::string >& jobs, std::vector< b
 bool MySqlAPI::resetForRetryStaging(soci::session& sql, int file_id, const std::string & job_id, bool retry, int& times)
 {
     bool willBeRetried = false;
-    
+
 
     if(retry)
         {
@@ -12642,15 +12645,15 @@ bool MySqlAPI::resetForRetryStaging(soci::session& sql, int file_id, const std::
 
                     sql << "SELECT retry FROM t_file WHERE file_id = :file_id AND job_id = :jobId ",
                         soci::use(file_id), soci::use(job_id), soci::into(nRetriesTimes, isNull2);
-			
+
 
 
 
                     if(isNull != soci::i_null &&  isNull2 != soci::i_null  && nRetries > 0 && nRetriesTimes <= nRetries-1 )
                         {
-			
 
-			
+
+
                             //expressed in secs, default delay
                             const int default_retry_delay = 120;
 
