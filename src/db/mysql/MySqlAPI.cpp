@@ -189,6 +189,9 @@ MySqlAPI::~MySqlAPI()
                     soci::session& sql = (*connectionPool).at(i);
                     sql << "select concat('KILL ',id,';') from information_schema.processlist where user=:username", soci::use(username_);
                 }
+
+        	delete connectionPool;
+		connectionPool = NULL;
         }
 }
 
