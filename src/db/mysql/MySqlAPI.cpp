@@ -981,7 +981,7 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                                                               "     f.vo_name = :vo_name AND     f.wait_timestamp IS NULL AND "
                                                               "     (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
                                                               "     (j.reuse_job = 'N' OR j.reuse_job = 'R') AND "
-                                                              "     (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) and  f.vo_name= j.vo_name and f.job_finished is null and "
+                                                              "     (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) and  f.job_finished is null and "
                                                               " exists (select * from t_job y where y.job_id=j.job_id  "
                                                               " ORDER BY y.priority DESC, y.submit_time) LIMIT :filesNum",
                                                               soci::use(boost::get<0>(triplet)),
@@ -1051,7 +1051,7 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                                         :
                                         "	  f.activity = :activity AND ";
                                     select +=
-                                        "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) and f.vo_name= j.vo_name and f.job_finished is null and exists (select * from t_job y where y.job_id=j.job_id  "
+                                        "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) and f.job_finished is null and exists (select * from t_job y where y.job_id=j.job_id  "
                                         " ORDER BY y.priority DESC, y.submit_time) LIMIT :filesNum";
 
 
