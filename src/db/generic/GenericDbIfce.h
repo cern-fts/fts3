@@ -451,7 +451,7 @@ public:
     virtual void updateBringOnlineToken(std::map< std::string, std::vector<std::pair<int, std::string> > > const & jobs, std::string const & token) = 0;
 
     //vo / file_id / surl / proxy / pinlifetime / bringonlineTimeout / spacetoken / job_id
-    virtual void getFilesForStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string, time_t> >& files) = 0;
+    virtual void getFilesForStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string> >& files) = 0;
 
     virtual void getAlreadyStartedStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string, std::string> >& files) = 0;
 

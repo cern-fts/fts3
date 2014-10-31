@@ -27,30 +27,12 @@ void StagingContext::add(context_type const & ctx)
     std::string url = boost::get<surl>(ctx);
     std::string jobId = boost::get<job_id>(ctx);
     int fileId =  boost::get<file_id>(ctx);
-    submit_time[std::make_pair(jobId, fileId)] = boost::get<timestamp>(ctx);
     add(url, jobId, fileId);
 }
 
-std::map< std::string, std::vector<std::pair<int, std::string> > > StagingContext::get_timeouted()
+bool StagingContext::is_timeouted()
 {
-    std::map< std::string, std::vector<std::pair<int, std::string> > > timeouted;
-    time_t now = time(0);
-
-    for (auto it_j = jobs.begin(); it_j != jobs.end(); ++it_j)
-    {
-        for (auto it = it_j->second.begin(); it != it_j->second.end(); ++it)
-        {
-            if (difftime(now, submit_time[std::make_pair(it_j->first, it->first)]) > bringonlineTimeout)
-                timeouted[it_j->first].push_back(*it);
-        }
-    }
-    // remove from jobs
-    for (auto it = timeouted.begin(); it != timeouted.end(); ++it)
-    {
-        jobs[it->first].erase(it->second.begin(), it->second.end());
-        if (jobs[it->first].empty()) jobs.erase(it->first);
-    }
-    return timeouted;
+    return difftime(time(0), start_time) > bringonlineTimeout;
 }
 
 void StagingContext::remove(std::set<std::string> const & urls)

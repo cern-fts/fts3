@@ -178,28 +178,15 @@ void PollTask::handle_canceled()
 
 void PollTask::handle_timeout()
 {
-    // get the files that timed-out
-    auto timeouted = ctx.get_timeouted();
-    // if there are non there's nothing to do
-    if (timeouted.empty()) return;
-    // update the state of files that timed-out
-    static StagingStateUpdater & state_update = StagingStateUpdater::instance();
-    state_update(timeouted, "FAILED", "bring-online timeout has been exceeded", true);
-    // get urls of files that timed-out
-    auto urls_abort = JobContext::getUrls(timeouted);
-    // get urls of the rest of files
-    auto surls = ctx.getSurls();
-    // if there are duplicates that did not timed-out they have to be removed
-    auto store = urls_abort.begin();
-    for (auto it = urls_abort.begin(); it != urls_abort.end(); ++it)
-    {
-        if (surls.count(*it)) continue;
-        *store = *it;
-        ++store;
-    }
-    urls_abort.resize(store - urls_abort.begin());
-    // abort respective urls that timed-out
-    abort(urls_abort);
+    // first check if bring-online timeout was exceeded
+    if (!ctx.is_timeouted()) return;
+    // set the state
+    ctx.state_update("FAILED", "bring-online timeout has been exceeded", true);
+    // get URLs
+    auto urls = ctx.getUrls();
+    ctx.clear();
+    // and abort the bring-online operation
+    abort(urls);
 }
 
 void PollTask::abort(std::vector<char const *> const & urls)

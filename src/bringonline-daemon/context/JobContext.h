@@ -85,12 +85,6 @@ public:
     std::vector<char const *> getUrls() const;
 
     /**
-     * @param jobs : all the jobs in a given task
-     * @return : list of URLs
-     */
-    static std::vector<char const *> getUrls(std::map< std::string, std::vector<std::pair<int, std::string> > > const & jobs);
-
-    /**
      * @return : set of SURLs
      */
     std::set<std::string> getSurls() const

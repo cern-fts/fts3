@@ -47,7 +47,7 @@ bool JobContext::checkValidProxy(std::string& message) const
     return delegCredPtr->isValidProxy(proxy, message);
 }
 
-std::vector<char const *> JobContext::getUrls(std::map< std::string, std::vector<std::pair<int, std::string> > > const & jobs)
+std::vector<char const *> JobContext::getUrls() const
 {
     std::vector<char const *> ret;
 
@@ -69,11 +69,6 @@ std::vector<char const *> JobContext::getUrls(std::map< std::string, std::vector
         }
 
     return ret;
-}
-
-std::vector<char const *> JobContext::getUrls() const
-{
-    return getUrls(jobs);
 }
 
 

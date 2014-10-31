@@ -29,7 +29,7 @@ public:
     using JobContext::add;
 
     // typedef for convenience
-    typedef boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string, time_t> context_type;
+    typedef boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string> context_type;
 
     enum
     {
@@ -50,15 +50,16 @@ public:
         pinlifetime(boost::get<copy_pin_lifetime>(ctx)), bringonlineTimeout(boost::get<bring_online_timeout>(ctx))
     {
         add(ctx);
+        start_time = time(0);
     }
 
     StagingContext(StagingContext const & copy) :
         JobContext(copy),
-        pinlifetime(copy.pinlifetime), bringonlineTimeout(copy.bringonlineTimeout), submit_time(copy.submit_time) {}
+        pinlifetime(copy.pinlifetime), bringonlineTimeout(copy.bringonlineTimeout), start_time(copy.start_time) {}
 
     StagingContext(StagingContext && copy) :
         JobContext(std::move(copy)),
-        pinlifetime(copy.pinlifetime), bringonlineTimeout(copy.bringonlineTimeout), submit_time(std::move(copy.submit_time)){}
+        pinlifetime(copy.pinlifetime), bringonlineTimeout(copy.bringonlineTimeout), start_time(copy.start_time){}
 
     virtual ~StagingContext() {}
 
@@ -95,7 +96,7 @@ public:
         return pinlifetime;
     }
 
-    std::map< std::string, std::vector<std::pair<int, std::string> > > get_timeouted();
+    bool is_timeouted();
 
     void remove(std::set<std::string> const &);
 
@@ -109,7 +110,7 @@ private:
     int pinlifetime;
     int bringonlineTimeout;
     /// (jobID, fileID) -> submission time
-    std::map<std::pair<std::string, int>, time_t> submit_time;
+    time_t start_time;
 };
 
 #endif /* STAGINGCONTEXT_H_ */
