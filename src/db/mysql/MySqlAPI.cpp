@@ -4219,7 +4219,7 @@ bool MySqlAPI::updateOptimizer()
 
             soci::statement stmtActiveSource = (
                                                    sql.prepare << "SELECT count(*) FROM t_file "
-                                                   "WHERE source_se = :source and file_state = 'ACTIVE' and job_finished is null ",
+                                                   "WHERE source_se = :source and file_state = 'ACTIVE'  ",
                                                    soci::use(source_hostname), soci::into(activeSource));
 
             soci::statement stmtActiveDest = (
