@@ -29,9 +29,7 @@ void PollTask::run(boost::any const &)
 
     std::vector<GError*> errors(urls.size(), NULL);
 
-    int status = gfal2_bring_online_poll_list(
-                     gfal2_ctx, static_cast<int>(urls.size()),
-                     urls.data(), token.c_str(), errors.data());
+    int status = gfal2_bring_online_poll_list(gfal2_ctx, static_cast<int>(urls.size()), urls.data(), token.c_str(), errors.data());
 
     if (status < 0)
         {

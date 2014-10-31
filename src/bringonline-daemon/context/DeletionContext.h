@@ -99,14 +99,14 @@ public:
     /**
      * @return : map with gsiftp jobs
      */
-    std::map< std::string, std::vector<std::pair<int, std::string> > > const & getGsiftpJobs() const
+    std::map< std::string, std::map<std::string, std::vector<int> > > const & getGsiftpJobs() const
     {
         return jobs;
     }
 
 private:
     /// Job ID -> list of (file ID and SURL) mapping
-    std::map< std::string, std::vector<std::pair<int, std::string> > > srm_jobs;
+    std::map< std::string, std::map<std::string, std::vector<int> > > srm_jobs;
 };
 
 #endif /* DELETIONCONTEXT_H_ */

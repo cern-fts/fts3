@@ -37,20 +37,7 @@ bool StagingContext::is_timeouted()
 
 void StagingContext::remove(std::set<std::string> const & urls)
 {
-    for (auto it = jobs.begin(); it != jobs.end();)
-        {
-            auto & files = it->second;
-            auto store = files.begin();
-            for (auto it_f = files.begin(); it_f != files.end(); ++it_f)
-            {
-                if (!urls.count(it_f->second))
-                {
-                    *store = *it_f;
-                    ++store;
-                }
-            }
-            files.resize(store - files.begin());
-            if (files.empty()) jobs.erase(it++);
-            else ++it;
-        }
+    for (auto it_j = jobs.begin(); it_j != jobs.end(); ++it_j)
+        for (auto it_u = urls.begin(); it_u != urls.end(); ++it_u)
+            it_j->second.erase(*it_u);
 }

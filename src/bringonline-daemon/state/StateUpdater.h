@@ -49,22 +49,18 @@ public:
      * @param reason : reason for changing the state
      * @param retry : true is the file requires retry, false otherwise
      */
-    void operator()(std::map< std::string, std::vector<std::pair<int, std::string> > > const & jobs, std::string const & state, std::string const & reason, bool retry)
+    void operator()(std::map< std::string, std::map<std::string, std::vector<int> > > const & jobs, std::string const & state, std::string const & reason, bool retry)
     {
         // lock the vector
         boost::mutex::scoped_lock lock(m);
-        // iterators
-        std::map< std::string, std::vector<std::pair<int, std::string> > >::const_iterator it_m;
-        std::vector<std::pair<int, std::string> >::const_iterator it_v;
         // iterate over jobs
-        for (it_m = jobs.begin(); it_m != jobs.end(); ++it_m)
+        for (auto it_j = jobs.begin(); it_j != jobs.end(); ++it_j)
             {
-                std::string const & job_id = it_m->first;
+                std::string const & job_id = it_j->first;
                 // iterate over files
-                for (it_v = it_m->second.begin(); it_v != it_m->second.end(); ++it_v)
-                    {
-                        updates.push_back(value_type(it_v->first, state, reason, job_id, retry));
-                    }
+                for (auto it_u = it_j->second.begin(); it_u != it_j->second.end(); ++it_u)
+                    for (auto it_f = it_u->second.begin(); it_f != it_u->second.end(); ++it_f)
+                        updates.push_back(value_type(*it_f, state, reason, job_id, retry));
             }
     }
 

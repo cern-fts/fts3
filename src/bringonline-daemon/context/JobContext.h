@@ -90,17 +90,9 @@ public:
     std::set<std::string> getSurls() const
     {
         std::set<std::string> surls;
-
-        std::map< std::string, std::vector<std::pair<int, std::string> > >::const_iterator it_j;
-        std::vector<std::pair<int, std::string> >::const_iterator it_f;
-        for (it_j = jobs.begin(); it_j != jobs.end(); ++it_j)
-            {
-                for (it_f = it_j->second.begin(); it_f != it_j->second.end(); ++it_f)
-                    {
-                        surls.insert(it_f->second);
-                    }
-            }
-
+        for (auto it_j = jobs.begin(); it_j != jobs.end(); ++it_j)
+            for (auto it_u = it_j->second.begin(); it_u != it_j->second.end(); ++it_u)
+                surls.insert(it_u->first);
         return surls;
     }
 
@@ -150,9 +142,8 @@ private:
 
 protected:
 
-    /// Job ID -> list of (file ID and SURL) mapping
-    std::map< std::string, std::vector<std::pair<int, std::string> > > jobs;
-
+    /// Job ID -> URL -> list of file IDs
+    std::map< std::string, std::map<std::string, std::vector<int> > > jobs;
     /// proxy-certificate file name
     std::string proxy;
     /// space token

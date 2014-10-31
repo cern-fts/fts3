@@ -938,7 +938,7 @@ void ProfiledDB::updateStagingState(std::vector< boost::tuple<int, std::string, 
     PROFILE_PREFIXED("DB::", db->updateStagingState(files));
 }
 
-void ProfiledDB::updateBringOnlineToken(std::map< std::string, std::vector<std::pair<int, std::string> > > const & jobs, std::string const & token)
+void ProfiledDB::updateBringOnlineToken(std::map< std::string, std::map<std::string, std::vector<int> > > const & jobs, std::string const & token)
 {
     PROFILE_PREFIXED("DB::", db->updateBringOnlineToken(jobs, token));
 }
