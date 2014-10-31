@@ -123,7 +123,7 @@ class OverviewExtended(object):
                 item['most_frequent_error'] = self._get_frequent_error(item['source_se'], item['dest_se'],
                                                                        item['vo_name'])
                 item['active_fixed'] = self._get_fixed(item['source_se'], item['dest_se'])
-                item['job_states'] = self._get_job_state_count(item['source_se'], item['dest_se'], item['vo_name'])
+                #item['job_states'] = self._get_job_state_count(item['source_se'], item['dest_se'], item['vo_name'])
             return return_list
         else:
             return self.objects[indexes]
