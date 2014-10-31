@@ -94,7 +94,7 @@ function _dataByState(servers, state)
             points.push({x: server, y: [value]});
         }
     }
-    if (value)
+    if (points)
         return points;
     else
         return null;
