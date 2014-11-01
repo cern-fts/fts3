@@ -4159,6 +4159,9 @@ bool MySqlAPI::updateOptimizer()
     if(hashSegment.start != 0)
         return false;
 
+
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Optimizer run since hashSegment.start is equal to " << hashSegment.start << commit;
+
     soci::session sql(*connectionPool);
 
     bool recordsFound = false;
