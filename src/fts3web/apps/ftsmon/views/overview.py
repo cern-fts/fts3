@@ -177,7 +177,7 @@ def get_overview(http_request):
     SELECT COUNT(file_state) as count, file_state, source_se, dest_se, vo_name
     FROM t_file
     WHERE file_state in ('SUBMITTED', 'ACTIVE', 'STAGING', 'STARTED') %s
-    GROUP BY file_state, source_se, dest_se, vo_name
+    GROUP BY file_state, source_se, dest_se, vo_name order by NULL
     """ % pairs_filter
     cursor.execute(query, se_params)
     for row in cursor.fetchall():
@@ -194,7 +194,7 @@ def get_overview(http_request):
     FROM t_file
     WHERE file_state in ('FINISHED', 'FAILED', 'CANCELED') %s
         AND job_finished > %s
-    GROUP BY file_state, source_se, dest_se, vo_name
+    GROUP BY file_state, source_se, dest_se, vo_name  order by NULL
     """ % (pairs_filter, _db_to_date())
     cursor.execute(query, se_params + [not_before])
     for row in cursor.fetchall():
