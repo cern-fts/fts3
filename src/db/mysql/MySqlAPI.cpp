@@ -4283,8 +4283,7 @@ bool MySqlAPI::updateOptimizer()
 
             //check if retry is set at global level
             sql <<
-                " SELECT retry "
-                " FROM t_server_config LIMIT 1",soci::into(retrySet, isRetry)
+                " select r.retry  from t_server_config r where r.retry > 0 and exists (select file_id from t_file where source_se = :source_se AND dest_se = :dest_se and vo_name=r.vo_name and file_state in ('ACTIVE','SUBMITTED') limit 1)",soci::use(source_hostname), soci::use(destin_hostname),soci::into(retrySet, isRetry)
                 ;
 
             //if not set, flag as 0
@@ -4545,7 +4544,10 @@ bool MySqlAPI::updateOptimizer()
 
 
                     // Ratio of success
-                    soci::rowset<soci::row> rs = (sql.prepare << "SELECT file_state, retry, current_failures, reason FROM t_file "
+                    soci::rowset<soci::row> rs = (retrySet > 0)
+						? 
+						(
+						  sql.prepare << "SELECT file_state, retry, current_failures, reason FROM t_file "
                                                   "WHERE "
                                                   "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
                                                   "      ( "
@@ -4553,8 +4555,16 @@ bool MySqlAPI::updateOptimizer()
                                                   " (t_file.job_finished > (UTC_TIMESTAMP() - interval :calcutateTimeFrame minute)) "
                                                   "      ) AND "
                                                   "      file_state IN ('FAILED','FINISHED','SUBMITTED') ",
-                                                  soci::use(source_hostname), soci::use(destin_hostname), soci::use(calcutateTimeFrame));
-
+                                                  soci::use(source_hostname), soci::use(destin_hostname), soci::use(calcutateTimeFrame)
+						)
+						:
+						(
+						  sql.prepare << "SELECT file_state, retry, current_failures, reason FROM t_file "
+                                                  " WHERE "
+                                                  "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
+                                                  "      t_file.job_finished > (UTC_TIMESTAMP() - interval :calcutateTimeFrame minute) ",
+                                                  soci::use(source_hostname), soci::use(destin_hostname), soci::use(calcutateTimeFrame)
+						);
 
                     //we need to exclude non-recoverable errors so as not to count as failures and affect effiency
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin();
