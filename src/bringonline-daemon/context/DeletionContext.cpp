@@ -20,8 +20,7 @@ void DeletionContext::add(context_type const & ctx)
 
     if (surl.compare(0, 6, "srm://") == 0)
         {
-            srm_jobs[jobId].push_back(std::make_pair(fileId, surl));
-            urlToIDs.insert({surl, {jobId, fileId}});
+            srm_jobs[jobId][surl].push_back(fileId);
         }
     else
         add(surl, jobId, fileId);
@@ -30,15 +29,11 @@ void DeletionContext::add(context_type const & ctx)
 std::vector<char const *> DeletionContext::getSrmUrls() const
 {
     std::vector<char const *> ret;
-
-    std::map< std::string, std::vector<std::pair<int, std::string> > >::const_iterator it_j;
-    std::vector<std::pair<int, std::string> >::const_iterator it_f;
-
-    for (it_j = srm_jobs.begin(); it_j != srm_jobs.end(); ++it_j)
+    for (auto it_j = srm_jobs.begin(); it_j != srm_jobs.end(); ++it_j)
         {
-            for (it_f = it_j->second.begin(); it_f != it_j->second.end(); ++it_f)
+            for (auto it_u = it_j->second.begin(); it_u != it_j->second.end(); ++it_u)
                 {
-                    ret.push_back(it_f->second.c_str());
+                    ret.push_back(it_u->first.c_str());
                 }
         }
 

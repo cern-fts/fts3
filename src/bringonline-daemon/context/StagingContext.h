@@ -41,7 +41,8 @@ public:
         bring_online_timeout,
         dn,
         dlg_id,
-        src_space_token
+        src_space_token,
+        timestamp
     };
 
     StagingContext(context_type const & ctx) :
@@ -49,15 +50,16 @@ public:
         pinlifetime(boost::get<copy_pin_lifetime>(ctx)), bringonlineTimeout(boost::get<bring_online_timeout>(ctx))
     {
         add(ctx);
+        start_time = time(0);
     }
 
     StagingContext(StagingContext const & copy) :
         JobContext(copy),
-        pinlifetime(copy.pinlifetime), bringonlineTimeout(copy.bringonlineTimeout) {}
+        pinlifetime(copy.pinlifetime), bringonlineTimeout(copy.bringonlineTimeout), start_time(copy.start_time) {}
 
     StagingContext(StagingContext && copy) :
         JobContext(std::move(copy)),
-        pinlifetime(copy.pinlifetime), bringonlineTimeout(copy.bringonlineTimeout) {}
+        pinlifetime(copy.pinlifetime), bringonlineTimeout(copy.bringonlineTimeout), start_time(copy.start_time){}
 
     virtual ~StagingContext() {}
 
@@ -94,10 +96,21 @@ public:
         return pinlifetime;
     }
 
+    bool is_timeouted();
+
+    void remove(std::set<std::string> const &);
+
+    void clear()
+    {
+        jobs.clear();
+    }
+
 private:
 
     int pinlifetime;
     int bringonlineTimeout;
+    /// (jobID, fileID) -> submission time
+    time_t start_time;
 };
 
 #endif /* STAGINGCONTEXT_H_ */

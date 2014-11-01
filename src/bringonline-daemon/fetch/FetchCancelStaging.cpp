@@ -43,11 +43,9 @@ void FetchCancelStaging::fetch()
                     std::vector< boost::tuple<int, std::string, std::string> > files;
                     db::DBSingleton::instance().getDBObjectInstance()->getStagingFilesForCanceling(files);
 
-                    std::vector< boost::tuple<int, std::string, std::string> >::const_iterator it;
-
                     std::unordered_map<std::string, std::set<std::string> > tokens;
 
-                    for (it = files.begin(); it != files.end(); ++it)
+                    for (auto it = files.begin(); it != files.end(); ++it)
                         {
                             std::string const & token = boost::get<2>(*it);
                             std::string const & url   = boost::get<1>(*it);

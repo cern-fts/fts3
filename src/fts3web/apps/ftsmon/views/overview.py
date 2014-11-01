@@ -84,9 +84,10 @@ class OverviewExtended(object):
     (i.e. paging)
     """
 
-    def __init__(self, not_before, objects):
+    def __init__(self, not_before, objects, cursor):
         self.objects = objects
         self.not_before = not_before
+        self.cursor = cursor
 
     def __len__(self):
         return len(self.objects)
@@ -101,11 +102,26 @@ class OverviewExtended(object):
             return None
 
     def _get_fixed(self, source, destination):
-        oa = OptimizeActive.objects.filter(source_se=source, dest_se=destination).all()
+        oa = OptimizeActive.objects.filter(source_se=source, dest_se=destination).values('fixed').all()
         if len(oa):
             oa = oa[0]
-            return oa.fixed is not None and oa.fixed.lower == 'on'
+            return oa['fixed'] is not None and oa['fixed'].lower == 'on'
         return False
+
+    def _get_average(self, source, destination, vo, active):
+        if active > 0:
+            query = """
+            SELECT AVG(throughput), AVG(tx_duration) FROM t_file
+            WHERE source_se = %s AND dest_se = %s AND vo_name = %s
+                AND file_state = 'FINISHED' AND throughput > 0
+                AND job_finished > """ + _db_to_date()
+            self.cursor.execute(query, [source, destination, vo, self.not_before])
+            result = self.cursor.fetchall()
+            if len(result):
+                avg_thr, avg_duration = result[0]
+                total_thr = avg_thr * active if avg_thr is not None else None
+                return total_thr, avg_duration
+        return None, None
 
     def _get_job_state_count(self, source, destination, vo):
         states_count = Job.objects.filter(
@@ -123,6 +139,7 @@ class OverviewExtended(object):
                 item['most_frequent_error'] = self._get_frequent_error(item['source_se'], item['dest_se'],
                                                                        item['vo_name'])
                 item['active_fixed'] = self._get_fixed(item['source_se'], item['dest_se'])
+                item['current'], item['avg_duration'] = self._get_average(item['source_se'], item['dest_se'], item['vo_name'], item.get('active', 0))
                 #item['job_states'] = self._get_job_state_count(item['source_se'], item['dest_se'], item['vo_name'])
             return return_list
         else:
@@ -152,75 +169,41 @@ def get_overview(http_request):
         pairs_filter += " AND vo_name = %s "
         se_params.append(filters['vo'])
 
+    # Result
+    triplets = dict()
 
-    def all_triplets():
-        seen = set()
-        # First, active
-        query = """
-        SELECT DISTINCT source_se, dest_se, vo_name FROM t_file WHERE file_state in ('SUBMITTED', 'ACTIVE', 'STAGING', 'STARTED') %s
-        """ % pairs_filter
-        cursor.execute(query, se_params)
-        for triplet in cursor:
-            seen.add(triplet)
-            yield triplet
-        # Then, terminal _making sure we do not repeat_
-        query = """
-        SELECT source_se, dest_se, vo_name FROM t_file WHERE job_finished >= %s AND file_state IN ('FINISHED', 'FAILED', 'CANCELED') %s
-        """ % (_db_to_date(), pairs_filter)
-        cursor.execute(query, [not_before] + se_params)
-        for triplet in cursor:
-            if triplet not in seen:
-                seen.add(triplet)
-                yield triplet
+    # Non terminal
+    query = """
+    SELECT COUNT(file_state) as count, file_state, source_se, dest_se, vo_name
+    FROM t_file
+    WHERE file_state in ('SUBMITTED', 'ACTIVE', 'STAGING', 'STARTED') %s
+    GROUP BY file_state, source_se, dest_se, vo_name
+    """ % pairs_filter
+    cursor.execute(query, se_params)
+    for row in cursor.fetchall():
+        triplet_key = (row[2], row[3], row[4])
+        triplet = triplets.get(triplet_key, dict())
 
-    triplets = {}
-    for triplet_key in all_triplets():
-            source, dest, vo = triplet_key
-            triplet = triplets.get(triplet_key, dict())
+        triplet[row[1].lower()] = row[0]
 
-            # Terminal file count
-            cursor.execute(
-                "SELECT file_state, COUNT(file_state) FROM t_file "
-                "WHERE source_se = %%s AND dest_se = %%s AND vo_name = %%s"
-                "      AND job_finished > %s "
-                "      AND file_state <> 'NOT_USED' "
-                "GROUP BY file_state ORDER BY NULL" % _db_to_date(),
-                [source, dest, vo, not_before]
-            )
-            for row in cursor.fetchall():
-                triplet[row[0].lower()] = row[1]
+        triplets[triplet_key] = triplet
 
-            # Non terminal file count
-            cursor.execute(
-                "SELECT file_state, COUNT(file_state) FROM t_file "
-                "WHERE source_se = %s AND dest_se = %s AND vo_name = %s"
-                "      AND file_state in ('ACTIVE', 'SUBMITTED', 'STAGING', 'STARTED') "
-                "GROUP BY file_state ORDER BY NULL",
-                [source, dest, vo]
-            )
-            for row in cursor.fetchall():
-                triplet[row[0].lower()] = row[1]
+    # Terminal
+    query = """
+    SELECT COUNT(file_state) as count, file_state, source_se, dest_se, vo_name
+    FROM t_file
+    WHERE file_state in ('FINISHED', 'FAILED', 'CANCELED') %s
+        AND job_finished > %s
+    GROUP BY file_state, source_se, dest_se, vo_name
+    """ % (pairs_filter, _db_to_date())
+    cursor.execute(query, se_params + [not_before])
+    for row in cursor.fetchall():
+        triplet_key = (row[2], row[3], row[4])
+        triplet = triplets.get(triplet_key, dict())
 
-            # Total files
-            total_files = sum(triplet.values())
-            if total_files > 0:
-                # Throughput
-                if triplet.get('active') > 0:
-                    cursor.execute(
-                        "SELECT AVG(throughput), AVG(tx_duration) FROM t_file "
-                        "WHERE source_se = %s AND dest_se=%s "
-                        "      AND vo_name=%s AND file_state='FINISHED' AND throughput > 0"
-                        "      AND job_finished > %s",
-                        [source, dest, vo, not_before]
-                    )
-                    avg_thr = cursor.fetchall()
-                    if len(avg_thr):
-                        if avg_thr[0][0]:
-                            triplet['current'] = avg_thr[0][0] * triplet.get('active')
-                        if avg_thr[0][1]:
-                            triplet['avg_duration'] = avg_thr[0][1]
+        triplet[row[1].lower()] = row[0]
 
-                triplets[triplet_key] = triplet
+        triplets[triplet_key] = triplet
 
     # Limitations
     limit_query = "SELECT source_se, dest_se, throughput, active FROM t_optimize WHERE throughput IS NOT NULL or active IS NOT NULL"
@@ -269,13 +252,6 @@ def get_overview(http_request):
         sorting_method = lambda o: (o.get('staging', 0), o.get('started', 0))
     elif order_by == 'started':
         sorting_method = lambda o: (o.get('started', 0), o.get('staging', 0))
-    elif order_by == 'throughput':
-        if order_desc:
-            # NULL current first (so when reversing, they are last)
-            sorting_method = lambda o: (o.get('current', None), o.get('active', 0))
-        else:
-             # NULL current last
-            sorting_method = lambda o: (o.get('current', sys.maxint), o.get('active', 0))
     elif order_by == 'rate':
         sorting_method = lambda o: (o.get('rate', 0), o.get('finished', 0))
     else:
@@ -298,7 +274,7 @@ def get_overview(http_request):
     # Return
     return {
         'overview': paged(
-            OverviewExtended(not_before, sorted(objs, key=sorting_method, reverse=order_desc)),
+            OverviewExtended(not_before, sorted(objs, key=sorting_method, reverse=order_desc), cursor=cursor),
             http_request
         ),
         'summary': summary

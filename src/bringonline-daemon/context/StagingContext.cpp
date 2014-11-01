@@ -30,4 +30,14 @@ void StagingContext::add(context_type const & ctx)
     add(url, jobId, fileId);
 }
 
+bool StagingContext::is_timeouted()
+{
+    return difftime(time(0), start_time) > bringonlineTimeout;
+}
 
+void StagingContext::remove(std::set<std::string> const & urls)
+{
+    for (auto it_j = jobs.begin(); it_j != jobs.end(); ++it_j)
+        for (auto it_u = urls.begin(); it_u != urls.end(); ++it_u)
+            it_j->second.erase(*it_u);
+}

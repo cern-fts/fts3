@@ -4219,7 +4219,7 @@ bool MySqlAPI::updateOptimizer()
 
             soci::statement stmtActiveSource = (
                                                    sql.prepare << "SELECT count(*) FROM t_file "
-                                                   "WHERE source_se = :source and file_state = 'ACTIVE' and job_finished is null ",
+                                                   "WHERE source_se = :source and file_state = 'ACTIVE'  ",
                                                    soci::use(source_hostname), soci::into(activeSource));
 
             soci::statement stmtActiveDest = (
@@ -8705,7 +8705,7 @@ void MySqlAPI::checkSanityState()
                     //special case for canceled
                     soci::rowset<soci::row> rs2 = (
                                                       sql.prepare <<
-                                                      " select  j.job_id, j.job_state, j.reuse_job from t_job j inner join t_file f on (j.job_id = f.job_id) where j.job_finished is not null and f.file_state in ('SUBMITTED','ACTIVE') "
+                                                      " select  j.job_id, j.job_state, j.reuse_job from t_job j inner join t_file f on (j.job_id = f.job_id) where j.job_state in ('FINISHED','FAILED','CANCELED','FINISHEDDIRTY')  and f.file_state in ('SUBMITTED','ACTIVE','STAGING','STARTED') "
                                                   );
 
 
@@ -11219,29 +11219,24 @@ void MySqlAPI::updateStagingState(std::vector< boost::tuple<int, std::string, st
         }
 }
 
-void MySqlAPI::updateBringOnlineToken(std::map< std::string, std::vector<std::pair<int, std::string> > > const & jobs, std::string const & token)
+void MySqlAPI::updateBringOnlineToken(std::map< std::string, std::map<std::string, std::vector<int> > > const & jobs, std::string const & token)
 {
     soci::session sql(*connectionPool);
     try
         {
-            std::map< std::string, std::vector<std::pair<int, std::string> > >::const_iterator it_m;
-            std::vector<std::pair<int, std::string> >::const_iterator it_v;
-
-
             sql.begin();
-            for (it_m = jobs.begin(); it_m != jobs.end(); ++it_m)
+            for (auto it_j = jobs.begin(); it_j != jobs.end(); ++it_j)
                 {
-                    std::string const & job_id = it_m->first;
-
-                    it_v = it_m->second.begin();
-                    std::string file_ids = "(" + boost::lexical_cast<std::string>(it_v->first);
-                    ++it_v;
-
-                    for (; it_v != it_m->second.end(); ++it_v)
+                    std::string const & job_id = it_j->first;
+                    std::string file_ids = "(";
+                    auto const & urls = it_j->second;
+                    for (auto it_u = urls.begin(); it_u != urls.end(); ++it_u)
                         {
-                            file_ids += ", " + boost::lexical_cast<std::string>(it_v->first);
+                            auto it_f = it_u->second.begin();
+                            file_ids += boost::lexical_cast<std::string>(*it_f);
+                            for(; it_f != it_u->second.end(); ++it_f)
+                                file_ids += ", " + boost::lexical_cast<std::string>(*it_f);
                         }
-
                     file_ids += ")";
 
                     std::stringstream query;

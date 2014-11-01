@@ -103,8 +103,14 @@ private:
     /// set of tokens (and respective URLs) for ongoing bring-online jobs
     static std::unordered_map< std::string, std::set<std::string> > active_tokens;
 
-    /// aborts the bring online operation
-    bool abort();
+    /// checks if the bring online task was cancelled and removes those URLs that were from the context
+    void handle_canceled();
+
+    /// checks if the bring online task timed-out and removes respective URLs from the context
+    void handle_timeout();
+
+    /// aborts the bring online operation for the given URLs
+    void abort(std::vector<char const *> const & urls);
 
     /**
      * Gets the interval after next polling should be done

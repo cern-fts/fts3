@@ -28,15 +28,11 @@ JobContext::JobContext(std::string const & dn, std::string const & vo, std::stri
 
 void JobContext::add(std::string const & surl, std::string const & jobId, int fileId)
 {
-    boost::mutex::scoped_lock lock(m);
-
-    bool isPresent = isPresentInJobs(surl);
-
-    if(!isPresent && !surl.empty() && !jobId.empty() && fileId > 0)
+    if(!surl.empty() && !jobId.empty() && fileId > 0)
         {
-            jobs[jobId].push_back(std::make_pair(fileId, surl));
+            jobs[jobId][surl].push_back(fileId);
             urlToIDs.insert({surl, {jobId, fileId}});
-        }
+         }
 }
 
 std::string JobContext::generateProxy(std::string const & dn, std::string const & delegationId)
@@ -51,60 +47,26 @@ bool JobContext::checkValidProxy(std::string& message) const
     return delegCredPtr->isValidProxy(proxy, message);
 }
 
-
 std::vector<char const *> JobContext::getUrls() const
 {
-    boost::mutex::scoped_lock lock(m);
-
     std::vector<char const *> ret;
-
-    std::map< std::string, std::vector<std::pair<int, std::string> > >::const_iterator it_j;
-    std::vector<std::pair<int, std::string> >::const_iterator it_f;
     // make sure only unique SURLs will be brought online / deleted
-    std::unordered_set<std::string> unique;
-
-    for (it_j = jobs.begin(); it_j != jobs.end(); ++it_j)
+    for (auto it_j = jobs.begin(); it_j != jobs.end(); ++it_j)
         {
-            for (it_f = it_j->second.begin(); it_f != it_j->second.end(); ++it_f)
+            auto const & urls = it_j->second;
+            for (auto it_u = urls.begin(); it_u != urls.end(); ++it_u)
                 {
-                    if (unique.find(it_f->second) == unique.end())
-                        {
-                            unique.insert(it_f->second);
-                            ret.push_back(it_f->second.c_str());
-                        }
+                    ret.push_back(it_u->first.c_str());
                 }
         }
-
     return ret;
 }
 
-
-class FileUrlMatches
-{
-    std::string url;
-public:
-    FileUrlMatches(const std::string& url): url(url) {}
-
-    bool operator () (std::pair<int, std::string>& transfer) const
-    {
-        return transfer.second == url;
-    }
-};
-
-
 void JobContext::removeUrl(const std::string& url)
 {
-    boost::mutex::scoped_lock lock(m);
-
-    std::map< std::string, std::vector<std::pair<int, std::string> > >::iterator it_j;
-    std::vector<std::pair<int, std::string> >::iterator lastPosition;
-
-    FileUrlMatches url_compare(url);
-
-    for (it_j = jobs.begin(); it_j != jobs.end(); ++it_j)
+    for (auto it_j = jobs.begin(); it_j != jobs.end(); ++it_j)
         {
-            lastPosition = std::remove_if(it_j->second.begin(), it_j->second.end(), url_compare);
-            it_j->second.erase(lastPosition, it_j->second.end());
+            it_j->second.erase(url);
         }
 
     urlToIDs.erase(url);
@@ -118,29 +80,16 @@ void JobContext::removeUrl(const std::string& url)
 
 std::string JobContext::getLogMsg() const
 {
-    boost::mutex::scoped_lock lock(m);
-
     std::stringstream ss;
-
-    std::map< std::string, std::vector<std::pair<int, std::string> > >::const_iterator it_j;
-    std::vector< std::pair<int, std::string> >::const_iterator it_f;
-
-    for (it_j = jobs.begin(); it_j != jobs.end(); ++it_j)
-        {
-            // get the first file ID
-            it_f = it_j->second.begin();
-            if (it_f == it_j->second.end()) continue;
-            // create the message
-            ss << it_j->first << " (" << it_f->first;
-            ++it_f;
-            // add subsequent file IDs
-            for (; it_f != it_j->second.end(); ++it_f)
-                {
-                    ss << ", " << it_f->first;
-                }
-            // add closing parenthesis
-            ss << ") ";
-        }
-
+    for (auto it_j = jobs.begin(); it_j != jobs.end(); ++it_j)
+    {
+        ss << it_j->first << " (";
+        for (auto it_u = it_j->second.begin(); it_u != it_j->second.end(); ++it_u)
+            for (auto it_f = it_u->second.begin(); it_f != it_u->second.end(); ++it_f)
+            {
+                ss << *it_f << ", ";
+            }
+        ss << "), ";
+    }
     return ss.str();
 }

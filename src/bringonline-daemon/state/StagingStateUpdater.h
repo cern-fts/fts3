@@ -50,7 +50,7 @@ public:
      * @param jobs : jobs with respective files
      * @param token : the token that will be stored in DB
      */
-    void operator()(std::map< std::string, std::vector<std::pair<int, std::string> > > const & jobs, std::string const & token)
+    void operator()(std::map< std::string, std::map<std::string, std::vector<int> > > const & jobs, std::string const & token)
     {
         try
             {

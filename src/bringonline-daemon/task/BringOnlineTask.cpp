@@ -26,13 +26,13 @@ void BringOnlineTask::run(boost::any const &)
     int status = gfal2_bring_online_list(
                      gfal2_ctx,
                      static_cast<int>(urls.size()),
-                     &*urls.begin(),
+                     urls.data(),
                      ctx.getPinlifetime(),
                      ctx.getBringonlineTimeout(),
                      token,
                      sizeof(token),
                      1,
-                     &errors.front()
+                     errors.data()
                  );
 
     if (status < 0)
