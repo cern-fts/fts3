@@ -12437,8 +12437,8 @@ void MySqlAPI::getStagingFilesForCanceling(std::vector< boost::tuple<int, std::s
         {
             soci::rowset<soci::row> rs = (sql.prepare << " SELECT file_id, source_surl, bringonline_token from t_file WHERE "
                                           "  file_state='CANCELED' and job_finished is NULL "
-                                          "  AND (hashed_id >= :hStart AND hashed_id <= :hEnd)  AND staging_start is NOT NULL ",
-                                          soci::use(hashSegment.start), soci::use(hashSegment.end));
+                                          "  AND transferHost = :hostname  AND staging_start is NOT NULL ",
+                                          soci::use(hostname));
 
             soci::statement stmt1 = (sql.prepare << "UPDATE t_file SET  job_finished = UTC_TIMESTAMP() "
                                      "WHERE file_id = :file_id ", soci::use(file_id, "file_id"));
