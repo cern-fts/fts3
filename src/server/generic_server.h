@@ -47,9 +47,6 @@ public:
         typename TRAITS::HeartBeatType heartBeatHandler;
         heartBeatHandler.beat();
 
-        typename TRAITS::HeartBeatTypeActive heartBeatHandlerActive;
-        heartBeatHandlerActive.beat();
-
         sleep(2);
 
         typename TRAITS::CleanLogsTypeActive cLeanLogsHandlerActive;
@@ -60,6 +57,9 @@ public:
 
         /*wait for status updates to be processed and then start sanity threads*/
         sleep(12);
+
+        typename TRAITS::HeartBeatTypeActive heartBeatHandlerActive;
+        heartBeatHandlerActive.beat();
 
         typename TRAITS::ProcessServiceType processHandler;
         processHandler.executeTransfer_p();
