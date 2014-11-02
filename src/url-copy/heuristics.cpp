@@ -15,6 +15,9 @@ bool retryTransfer(int errorNo, const std::string& category, const std::string& 
     std::size_t found = message.find("performance marker");
     if (found!=std::string::npos)
         return true;
+    found = message.find("Name or service not known");
+    if (found!=std::string::npos)
+        return false;
     found = message.find("Connection timed out");
     if (found!=std::string::npos)
         return true;
