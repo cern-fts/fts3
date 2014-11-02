@@ -4562,7 +4562,7 @@ bool MySqlAPI::updateOptimizer()
 						  sql.prepare << "SELECT file_state, retry, current_failures, reason FROM t_file "
                                                   " WHERE "
                                                   "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                                                  "      t_file.job_finished > (UTC_TIMESTAMP() - interval :calcutateTimeFrame minute) ",
+                                                  "      t_file.job_finished > (UTC_TIMESTAMP() - interval :calcutateTimeFrame minute) and file_state <> 'NOT_USED' ",
                                                   soci::use(source_hostname), soci::use(destin_hostname), soci::use(calcutateTimeFrame)
 						);
 
