@@ -8510,7 +8510,7 @@ void MySqlAPI::checkSanityState()
                 {
                     soci::rowset<std::string> rs = (
                                                        sql.prepare <<
-                                                       " select job_id from t_job  where job_finished is null "
+                                                       " select SQL_BUFFER_RESULT job_id from t_job  where job_finished is null "
                                                    );
 
                     soci::statement stmt1 = (sql.prepare << "SELECT COUNT(*) FROM t_file where job_id=:jobId ", soci::use(job_id), soci::into(numberOfFiles));
