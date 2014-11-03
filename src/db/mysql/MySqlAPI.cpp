@@ -748,19 +748,24 @@ void MySqlAPI::getVOPairs(std::vector< boost::tuple<std::string, std::string, st
 
     std::vector<boost::tuple<std::string, std::string> > distinctSourceDest;
     std::vector<std::string> distinctVO;
+    soci::indicator isNull = soci::i_ok;
 
 
     try
         {
-            soci::rowset<soci::row> rs1 = (sql.prepare <<
-                                           " select  distinct o.source_se, o.dest_se from t_optimize_active o INNER JOIN t_file f ON (o.source_se = f.source_se and  o.dest_se=f.dest_se) where f.file_state = 'SUBMITTED' and f.job_finished is NULL AND (hashed_id >= :hashStart AND hashed_id <= :hashEnd)",soci::use(hashSegment.start), soci::use(hashSegment.end));
+            soci::rowset<soci::row> rs1 = (sql.prepare << "select distinct  f.dest_se, f.source_se from t_file f where f.job_finished is NULL and  f.file_state = 'SUBMITTED'");
 
             soci::rowset<soci::row> rs2 = (sql.prepare <<
                                            " select distinct vo_name from t_job ");
 
             soci::statement stmt1 = (sql.prepare <<
                                      "select file_id from t_file where source_se=:source_se and dest_se=:dest_se and vo_name=:vo_name and file_state='SUBMITTED' AND (hashed_id >= :hashStart AND hashed_id <= :hashEnd) LIMIT 1",
-                                     soci::use(source_se), soci::use(dest_se),soci::use(vo_name), soci::use(hashSegment.start), soci::use(hashSegment.end), soci::into(file_id));
+                                     soci::use(source_se), 
+				     soci::use(dest_se),
+				     soci::use(vo_name), 
+				     soci::use(hashSegment.start), 
+				     soci::use(hashSegment.end), 
+				     soci::into(file_id, isNull));
 
             for (soci::rowset<soci::row>::const_iterator i1 = rs1.begin(); i1 != rs1.end(); ++i1)
                 {
@@ -789,7 +794,7 @@ void MySqlAPI::getVOPairs(std::vector< boost::tuple<std::string, std::string, st
                             vo_name = *j;
                             file_id = 0; //reset
                             stmt1.execute(true);
-                            if(file_id > 0)
+                            if(isNull != soci::i_null && file_id > 0)
                                 {
                                     distinct.push_back(
                                         boost::tuple< std::string, std::string, std::string>(
@@ -4203,6 +4208,7 @@ bool MySqlAPI::updateOptimizer()
     int activeDestination = 0;
     double avgDuration = 0.0;
     soci::indicator isNullAvg = soci::i_ok;
+    std::vector<std::string> checkDistinctSource;
 
 
     try
@@ -4268,12 +4274,6 @@ bool MySqlAPI::updateOptimizer()
                                          " source_se=:source and dest_se=:dest ",
                                          soci::use(active), soci::use(ema), soci::use(source_hostname), soci::use(destin_hostname));
 
-
-            soci::statement stmt18 = (
-                                         sql.prepare << " select count(distinct source_se) from t_file where "
-                                         " file_state in ('ACTIVE','SUBMITTED') and "
-                                         " dest_se=:dest ",
-                                         soci::use(destin_hostname), soci::into(singleDest));
 
             //snapshot of submitted transfers
             soci::statement stmt19 = (
@@ -4355,10 +4355,8 @@ bool MySqlAPI::updateOptimizer()
                     source_hostname = i->get<std::string>("source_se");
                     destin_hostname = i->get<std::string>("dest_se");
 
-                    sql << " UPDATE t_optimize_active set datetime = UTC_TIMESTAMP() WHERE source_se=:source_se and dest_se=:dest_se",
-                        soci::use(source_hostname),soci::use(destin_hostname);
-
-
+ 		    checkDistinctSource.push_back(source_hostname);
+		    
                     double nFailedLastHour=0.0, nFinishedLastHour=0.0;
                     throughput=0.0;
                     double filesize = 0.0;
@@ -4402,6 +4400,15 @@ bool MySqlAPI::updateOptimizer()
                     activeDestination = 0;
                     avgDuration = 0.0;
                     isNullAvg = soci::i_ok;
+		    
+ 		    std::vector<std::string>::const_iterator it;
+		    for(std::vector<std::string>::iterator it = checkDistinctSource.begin(); it != checkDistinctSource.end(); ++it) 
+		    {
+    			if(source_hostname == (*it))
+			{
+				singleDest++;	
+			}
+		    }		    
 
                     // Weighted average
                     soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
@@ -4528,8 +4535,6 @@ bool MySqlAPI::updateOptimizer()
                     //get submitted for this link
                     stmt19.execute(true);
 
-                    //check if there is any other source for a given dest
-                    stmt18.execute(true);
 
                     //get the average transfer duration for this link
                     stmt_avg_duration.execute(true);
@@ -4755,10 +4760,18 @@ bool MySqlAPI::updateOptimizer()
                                             active = maxActive + 1;
                                             pathFollowed = 4;
                                         }
-                                    else if( (singleDest == 1 || lanTransferBool || spawnActive > 1) && (throughputEMA >= thrStored || avgDuration <= AVG_TRANSFER_DURATION) )
+                                    else if( (singleDest == 1 || lanTransferBool) && (throughputEMA >= thrStored || avgDuration <= AVG_TRANSFER_DURATION) )
                                         {
-                                            active = maxActive + 1;
-                                            pathFollowed = 5;
+					    if(spawnActive > 1)
+					    {
+                                            	active = maxActive + 2;
+                                            	pathFollowed = 5;
+					    }
+					    else
+					    {
+                                            	active = maxActive + 1;
+                                            	pathFollowed = 5;					    
+					    }					    
                                         }
                                     else
                                         {
