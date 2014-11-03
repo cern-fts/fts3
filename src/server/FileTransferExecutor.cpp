@@ -98,7 +98,7 @@ void FileTransferExecutor::run(boost::any & ctx)
             );
 
             int currentActive = 0;
-            if (scheduler.schedule(currentActive))   /*SET TO READY STATE WHEN TRUE*/
+            if (scheduler.schedule(currentActive, false))   /*SET TO READY STATE WHEN TRUE*/
                 {
                     SeProtocolConfig protocol;
 
@@ -460,7 +460,7 @@ void FileTransferExecutor::run(boost::any & ctx)
                         return;
 
                     //check again just in case
-                    bool sch = scheduler.schedule(currentActive);
+                    bool sch = scheduler.schedule(currentActive, false);
                     if(sch)
                         {
                             scheduled += 1;
