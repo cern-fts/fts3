@@ -187,7 +187,7 @@ protected:
 
         FileTransferScheduler scheduler(representative, cfgs);
         int currentActive = 0;
-        if (!scheduler.schedule(currentActive, true)) return;   /*SET TO READY STATE WHEN TRUE*/
+        if (!scheduler.schedule(currentActive)) return;   /*SET TO READY STATE WHEN TRUE*/
 
         optional<ProtocolResolver::protocol> p = ProtocolResolver::getUserDefinedProtocol(representative);
 

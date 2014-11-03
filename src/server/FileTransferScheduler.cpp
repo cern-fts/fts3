@@ -113,11 +113,11 @@ FileTransferScheduler::~FileTransferScheduler()
 
 }
 
-bool FileTransferScheduler::schedule(int &currentActive, bool reuse)
+bool FileTransferScheduler::schedule(int &currentActive)
 {
     try
         {
-            if(cfgs.empty() && reuse)
+            if(cfgs.empty())
                 {
                     bool allowed = db->isTrAllowed(srcSeName, destSeName, currentActive);
                     if(allowed)
