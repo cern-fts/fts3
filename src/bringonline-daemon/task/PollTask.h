@@ -47,7 +47,7 @@ public:
     PollTask(StagingContext const & ctx, std::string const & token) : BringOnlineTask(ctx), token(token), nPolls(0), wait_until(0)
     {
         boost::unique_lock<boost::shared_mutex> lock(mx);
-        std::set<std::string> surls = ctx.getSurls();
+        auto surls = ctx.getSurls();
         active_tokens[token].insert(surls.begin(), surls.end());
     }
 
@@ -59,7 +59,7 @@ public:
     PollTask(BringOnlineTask && copy, std::string const & token) : BringOnlineTask(std::move(copy)), token(token), nPolls(0), wait_until()
     {
         boost::unique_lock<boost::shared_mutex> lock(mx);
-        std::set<std::string> surls = ctx.getSurls();
+        auto surls = ctx.getSurls();
         active_tokens[token].insert(surls.begin(), surls.end());
     }
 
@@ -95,13 +95,13 @@ public:
         active_tokens.erase(token);
     }
 
-    static void cancel(std::unordered_map< std::string, std::set<std::string> > const & remove);
+    static void cancel(std::unordered_map< std::string, std::set<std::pair<std::string, std::string> > > const & remove);
 
 private:
     /// prevents concurrent access to active_tokens
     static boost::shared_mutex mx;
     /// set of tokens (and respective URLs) for ongoing bring-online jobs
-    static std::unordered_map< std::string, std::set<std::string> > active_tokens;
+    static std::unordered_map< std::string, std::set<std::pair<std::string, std::string> > > active_tokens;
 
     /// checks if the bring online task was cancelled and removes those URLs that were from the context
     void handle_canceled();

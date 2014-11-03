@@ -16,7 +16,7 @@
 
 boost::shared_mutex PollTask::mx;
 
-std::unordered_map< std::string, std::set<std::string> > PollTask::active_tokens;
+std::unordered_map< std::string, std::set<std::pair<std::string, std::string> > > PollTask::active_tokens;
 
 void PollTask::run(boost::any const &)
 {
@@ -130,7 +130,7 @@ void PollTask::run(boost::any const &)
 void PollTask::handle_canceled()
 {
     std::vector<char const *> urls;
-    std::set<std::string> remove;
+    std::set<std::pair<std::string, std::string>> remove;
 
     // critical section
     {
@@ -144,7 +144,7 @@ void PollTask::handle_canceled()
             }
         else
             {
-                std::set<std::string> surls = ctx.getSurls();
+                auto surls = ctx.getSurls();
                 // otherwise check if some of the URLs should be aborted
                 std::set_difference(
                     surls.begin(), surls.end(),
@@ -162,15 +162,8 @@ void PollTask::handle_canceled()
         }
     // check if there is something to do first
     if (remove.empty()) return;
-    // make sure in the context are only those URLs that where not cancelled
-    ctx.remove(remove);
-    // if only a subset of URLs should be aborted ...
-    urls.reserve(remove.size());
-    // fill in with URLs
-    for (auto it = remove.begin(); it != remove.end(); ++it)
-        {
-            urls.push_back(it->c_str());
-        }
+    // get the urls for abortions (and remove them from task if necassary)
+    urls = ctx.for_abortion(remove);
     abort(urls);
 }
 
@@ -223,20 +216,17 @@ void PollTask::abort(std::vector<char const *> const & urls)
         }
 }
 
-void PollTask::cancel(std::unordered_map< std::string, std::set<std::string> > const & remove)
+void PollTask::cancel(std::unordered_map< std::string, std::set<std::pair<std::string, std::string> > > const & remove)
 {
     boost::unique_lock<boost::shared_mutex> lock(mx);
 
-    std::unordered_map< std::string, std::set<std::string> >::const_iterator r_it;
-    std::unordered_map< std::string, std::set<std::string> >::iterator at_it;
-
-    for (r_it = remove.begin(); r_it != remove.end(); ++r_it)
+    for (auto r_it = remove.begin(); r_it != remove.end(); ++r_it)
         {
             // check if the token is still in active tokens
-            at_it = active_tokens.find(r_it->first);
+            auto at_it = active_tokens.find(r_it->first);
             if (at_it == active_tokens.end()) continue;
 
-            std::set<std::string> result;
+            std::set<std::pair<std::string, std::string> > result;
             std::set_difference(
                 at_it->second.begin(), at_it->second.end(),
                 r_it->second.begin(), r_it->second.end(),

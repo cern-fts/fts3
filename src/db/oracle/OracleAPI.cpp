@@ -11704,16 +11704,17 @@ void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boos
 
 
 //file_id / surl / token
-void OracleAPI::getStagingFilesForCanceling(std::vector< boost::tuple<int, std::string, std::string> >& files)
+void OracleAPI::getStagingFilesForCanceling(std::vector< boost::tuple<std::string, int, std::string, std::string> >& files)
 {
     soci::session sql(*connectionPool);
     int file_id = 0;
     std::string source_surl;
     std::string token;
+    std::string job_id;
 
     try
         {
-            soci::rowset<soci::row> rs = (sql.prepare << " SELECT file_id, source_surl, bringonline_token from t_file WHERE "
+            soci::rowset<soci::row> rs = (sql.prepare << " SELECT job_id, file_id, source_surl, bringonline_token from t_file WHERE "
                                           "  file_state='CANCELED' and job_finished is NULL "
                                           "  AND (hashed_id >= :hStart AND hashed_id <= :hEnd) AND staging_start is NOT NULL ",
                                           soci::use(hashSegment.start), soci::use(hashSegment.end));
@@ -11726,10 +11727,11 @@ void OracleAPI::getStagingFilesForCanceling(std::vector< boost::tuple<int, std::
             for (soci::rowset<soci::row>::const_iterator i2 = rs.begin(); i2 != rs.end(); ++i2)
                 {
                     soci::row const& row = *i2;
+                    job_id  = row.get<std::string>("JOB_ID", "");
                     file_id = static_cast<int>(row.get<long long>("FILE_ID",0));
                     source_surl = row.get<std::string>("SOURCE_SURL","");
                     token = row.get<std::string>("BRINGONLINE_TOKEN","");
-                    boost::tuple<int, std::string, std::string> record(file_id, source_surl, token);
+                    boost::tuple<std::string, int, std::string, std::string> record(job_id, file_id, source_surl, token);
                     files.push_back(record);
 
                     stmt1.execute(true);

@@ -456,7 +456,7 @@ public:
     virtual void getAlreadyStartedStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string, std::string> >& files) = 0;
 
     //file_id / surl / token
-    virtual void getStagingFilesForCanceling(std::vector< boost::tuple<int, std::string, std::string> >& files) = 0;
+    virtual void getStagingFilesForCanceling(std::vector< boost::tuple<std::string, int, std::string, std::string> >& files) = 0;
 
     virtual void setMaxStagingPerEndpoint(int maxStaging, const std::string & endpoint, const std::string & vo) = 0;
     virtual int getMaxStatingsPerEndpoint(const std::string & endpoint, const std::string & vo) = 0;

@@ -12452,16 +12452,17 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost
 
 
 //file_id / surl / token
-void MySqlAPI::getStagingFilesForCanceling(std::vector< boost::tuple<int, std::string, std::string> >& files)
+void MySqlAPI::getStagingFilesForCanceling(std::vector< boost::tuple<std::string, int, std::string, std::string> >& files)
 {
     soci::session sql(*connectionPool);
     int file_id = 0;
     std::string source_surl;
     std::string token;
+    std::string job_id;
 
     try
         {
-            soci::rowset<soci::row> rs = (sql.prepare << " SELECT file_id, source_surl, bringonline_token from t_file WHERE "
+            soci::rowset<soci::row> rs = (sql.prepare << " SELECT job_id, file_id, source_surl, bringonline_token from t_file WHERE "
                                           "  file_state='CANCELED' and job_finished is NULL "
                                           "  AND transferHost = :hostname  AND staging_start is NOT NULL ",
                                           soci::use(hostname));
@@ -12474,10 +12475,11 @@ void MySqlAPI::getStagingFilesForCanceling(std::vector< boost::tuple<int, std::s
             for (soci::rowset<soci::row>::const_iterator i2 = rs.begin(); i2 != rs.end(); ++i2)
                 {
                     soci::row const& row = *i2;
+                    job_id  = row.get<std::string>("job_id", "");
                     file_id = row.get<int>("file_id",0);
                     source_surl = row.get<std::string>("source_surl","");
                     token = row.get<std::string>("bringonline_token","");
-                    boost::tuple<int, std::string, std::string> record(file_id, source_surl, token);
+                    boost::tuple<std::string, int, std::string, std::string> record(job_id, file_id, source_surl, token);
                     files.push_back(record);
 
                     stmt1.execute(true);

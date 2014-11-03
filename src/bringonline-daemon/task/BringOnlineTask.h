@@ -68,7 +68,6 @@ public:
     virtual void run(boost::any const &);
 
 protected:
-
     /// staging details
     StagingContext ctx;
 };
