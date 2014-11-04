@@ -100,11 +100,6 @@ public:
 
     std::vector<char const *> for_abortion(std::set<std::pair<std::string, std::string>> const &);
 
-    void clear()
-    {
-        jobs.clear();
-    }
-
 private:
 
     int pinlifetime;

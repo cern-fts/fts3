@@ -7,7 +7,7 @@
 
 #include "FetchCancelStaging.h"
 
-#include "task/PollTask.h"
+#include "task/BringOnlineTask.h"
 
 #include "server/DrainMode.h"
 
@@ -47,7 +47,7 @@ void FetchCancelStaging::fetch()
                         {
 
                             // do the cancellation
-                            PollTask::cancel(urls);
+                            BringOnlineTask::cancel(urls);
                         }
                     // sleep for 10 seconds
                     boost::this_thread::sleep(boost::posix_time::milliseconds(10000));

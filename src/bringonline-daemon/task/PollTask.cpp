@@ -14,14 +14,12 @@
 
 #include <gfal_api.h>
 
-boost::shared_mutex PollTask::mx;
-
-std::set<std::pair<std::string, std::string>> PollTask::active_urls;
-
 void PollTask::run(boost::any const &)
 {
+    // check if the bring-online timeout was exceeded
+    if (timeout_occurred()) return;
+    // handle cancelled jobs/files
     handle_canceled();
-    handle_timeout();
 
     std::vector<char const *> urls = ctx.getUrls();
     // make sure there is work to be done
@@ -149,17 +147,18 @@ void PollTask::handle_canceled()
     abort(urls);
 }
 
-void PollTask::handle_timeout()
+bool PollTask::timeout_occurred()
 {
     // first check if bring-online timeout was exceeded
-    if (!ctx.is_timeouted()) return;
+    if (!ctx.is_timeouted()) return false;
     // set the state
     ctx.state_update("FAILED", "bring-online timeout has been exceeded", true);
     // get URLs
     auto urls = ctx.getUrls();
-    ctx.clear();
     // and abort the bring-online operation
     abort(urls);
+    // confirm the timeout
+    return true;
 }
 
 void PollTask::abort(std::vector<char const *> const & urls)

@@ -13,6 +13,11 @@
 #include "common/logger.h"
 #include "common/error.h"
 
+boost::shared_mutex BringOnlineTask::mx;
+
+std::set<std::pair<std::string, std::string>> BringOnlineTask::active_urls;
+
+
 void BringOnlineTask::run(boost::any const &)
 {
     char token[512] = {0};

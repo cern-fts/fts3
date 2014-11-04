@@ -56,12 +56,8 @@ public:
      *
      * @param copy : a staging task (stills the gfal2 context of this object)
      */
-    PollTask(BringOnlineTask && copy, std::string const & token) : BringOnlineTask(std::move(copy)), token(token), nPolls(0), wait_until()
-    {
-        auto surls = ctx.getSurls();
-        boost::unique_lock<boost::shared_mutex> lock(mx);
-        active_urls.insert(surls.begin(), surls.end());
-    }
+    PollTask(BringOnlineTask && copy, std::string const & token) :
+        BringOnlineTask(std::move(copy)), token(token), nPolls(0), wait_until() {}
 
     /**
      * Move constructor
@@ -71,10 +67,7 @@ public:
     /**
      * Destructor
      */
-    virtual ~PollTask()
-    {
-        if (gfal2_ctx) cancel(ctx.getSurls());
-    }
+    virtual ~PollTask() {}
 
     /**
      * The routine is executed by the thread pool
@@ -89,31 +82,12 @@ public:
         return wait_until > now;
     }
 
-    static void cancel(std::set<std::pair<std::string, std::string> > const & urls)
-    {
-        if (urls.empty()) return;
-
-        boost::unique_lock<boost::shared_mutex> lock(mx);
-        auto begin = active_urls.lower_bound(*urls.begin());
-        auto end   = active_urls.upper_bound(*urls.rbegin());
-        for (auto it = begin; it != end;)
-            if (urls.count(*it))
-                active_urls.erase(it++);
-            else
-                ++it;
-    }
-
 private:
-    /// prevents concurrent access to active_tokens
-    static boost::shared_mutex mx;
-    /// set of tokens (and respective URLs) for ongoing bring-online jobs
-    static std::set<std::pair<std::string, std::string>> active_urls;
-
     /// checks if the bring online task was cancelled and removes those URLs that were from the context
     void handle_canceled();
 
     /// checks if the bring online task timed-out and removes respective URLs from the context
-    void handle_timeout();
+    bool timeout_occurred();
 
     /// aborts the bring online operation for the given URLs
     void abort(std::vector<char const *> const & urls);
