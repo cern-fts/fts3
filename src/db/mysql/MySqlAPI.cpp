@@ -12041,7 +12041,7 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
 
                     soci::rowset<soci::row> rs = (
                                                      sql.prepare <<
-                                                     " SELECT distinct j.source_se, j.user_dn "
+                                                     " SELECT distinct f.source_se, j.user_dn "
                                                      " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                                      " WHERE "
                                                      "	(j.BRING_ONLINE >= 0 OR j.COPY_PIN_LIFETIME >= 0) "
