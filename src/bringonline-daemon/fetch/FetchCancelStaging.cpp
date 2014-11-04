@@ -40,25 +40,14 @@ void FetchCancelStaging::fetch()
                             continue;
                         }
 
-                    std::vector< boost::tuple<std::string, int, std::string, std::string> > files;
-                    db::DBSingleton::instance().getDBObjectInstance()->getStagingFilesForCanceling(files);
+                    std::set<std::pair<std::string, std::string>> urls;
+                    db::DBSingleton::instance().getDBObjectInstance()->getStagingFilesForCanceling(urls);
 
-
-                    std::unordered_map< std::string, std::set<std::pair<std::string, std::string> > > tokens;
-                    for (auto it = files.begin(); it != files.end(); ++it)
-                        {
-                            std::string const & token = boost::get<3>(*it);
-                            std::string const & url   = boost::get<2>(*it);
-                            std::string const & job_id   = boost::get<0>(*it);
-
-                            tokens[token].insert({job_id, url});
-                        }
-
-                    if (!tokens.empty())
+                    if (!urls.empty())
                         {
 
                             // do the cancellation
-                            PollTask::cancel(tokens);
+                            PollTask::cancel(urls);
                         }
                     // sleep for 10 seconds
                     boost::this_thread::sleep(boost::posix_time::milliseconds(10000));

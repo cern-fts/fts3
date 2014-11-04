@@ -46,9 +46,9 @@ public:
      */
     PollTask(StagingContext const & ctx, std::string const & token) : BringOnlineTask(ctx), token(token), nPolls(0), wait_until(0)
     {
-        boost::unique_lock<boost::shared_mutex> lock(mx);
         auto surls = ctx.getSurls();
-        active_tokens[token].insert(surls.begin(), surls.end());
+        boost::unique_lock<boost::shared_mutex> lock(mx);
+        active_urls.insert(surls.begin(), surls.end());
     }
 
     /**
@@ -58,9 +58,9 @@ public:
      */
     PollTask(BringOnlineTask && copy, std::string const & token) : BringOnlineTask(std::move(copy)), token(token), nPolls(0), wait_until()
     {
-        boost::unique_lock<boost::shared_mutex> lock(mx);
         auto surls = ctx.getSurls();
-        active_tokens[token].insert(surls.begin(), surls.end());
+        boost::unique_lock<boost::shared_mutex> lock(mx);
+        active_urls.insert(surls.begin(), surls.end());
     }
 
     /**
@@ -73,7 +73,7 @@ public:
      */
     virtual ~PollTask()
     {
-        if (gfal2_ctx) cancel(token);
+        if (gfal2_ctx) cancel(ctx.getSurls());
     }
 
     /**
@@ -89,19 +89,25 @@ public:
         return wait_until > now;
     }
 
-    static void cancel(std::string const & token)
+    static void cancel(std::set<std::pair<std::string, std::string> > const & urls)
     {
-        boost::unique_lock<boost::shared_mutex> lock(mx);
-        active_tokens.erase(token);
-    }
+        if (urls.empty()) return;
 
-    static void cancel(std::unordered_map< std::string, std::set<std::pair<std::string, std::string> > > const & remove);
+        boost::unique_lock<boost::shared_mutex> lock(mx);
+        auto begin = active_urls.lower_bound(*urls.begin());
+        auto end   = active_urls.upper_bound(*urls.rbegin());
+        for (auto it = begin; it != end;)
+            if (urls.count(*it))
+                active_urls.erase(it++);
+            else
+                ++it;
+    }
 
 private:
     /// prevents concurrent access to active_tokens
     static boost::shared_mutex mx;
     /// set of tokens (and respective URLs) for ongoing bring-online jobs
-    static std::unordered_map< std::string, std::set<std::pair<std::string, std::string> > > active_tokens;
+    static std::set<std::pair<std::string, std::string>> active_urls;
 
     /// checks if the bring online task was cancelled and removes those URLs that were from the context
     void handle_canceled();

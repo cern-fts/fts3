@@ -11704,7 +11704,7 @@ void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boos
 
 
 //file_id / surl / token
-void OracleAPI::getStagingFilesForCanceling(std::vector< boost::tuple<std::string, int, std::string, std::string> >& files)
+void OracleAPI::getStagingFilesForCanceling(std::set< std::pair<std::string, std::string> >& files)
 {
     soci::session sql(*connectionPool);
     int file_id = 0;
@@ -11732,7 +11732,7 @@ void OracleAPI::getStagingFilesForCanceling(std::vector< boost::tuple<std::strin
                     source_surl = row.get<std::string>("SOURCE_SURL","");
                     token = row.get<std::string>("BRINGONLINE_TOKEN","");
                     boost::tuple<std::string, int, std::string, std::string> record(job_id, file_id, source_surl, token);
-                    files.push_back(record);
+                    files.insert({job_id, source_surl});
 
                     stmt1.execute(true);
                 }

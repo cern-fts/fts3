@@ -12452,7 +12452,7 @@ void MySqlAPI::updateStagingStateInternal(soci::session& sql, std::vector< boost
 
 
 //file_id / surl / token
-void MySqlAPI::getStagingFilesForCanceling(std::vector< boost::tuple<std::string, int, std::string, std::string> >& files)
+void MySqlAPI::getStagingFilesForCanceling(std::set< std::pair<std::string, std::string> >& files)
 {
     soci::session sql(*connectionPool);
     int file_id = 0;
@@ -12480,7 +12480,7 @@ void MySqlAPI::getStagingFilesForCanceling(std::vector< boost::tuple<std::string
                     source_surl = row.get<std::string>("source_surl","");
                     token = row.get<std::string>("bringonline_token","");
                     boost::tuple<std::string, int, std::string, std::string> record(job_id, file_id, source_surl, token);
-                    files.push_back(record);
+                    files.insert({job_id, source_surl});
 
                     stmt1.execute(true);
                 }

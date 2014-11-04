@@ -369,7 +369,7 @@ public:
 
 
     //file_id / surl / token
-    void getStagingFilesForCanceling(std::vector< boost::tuple<std::string, int, std::string, std::string> >& files);
+    void getStagingFilesForCanceling(std::set< std::pair<std::string, std::string> >& files);
 
     void setMaxStagingPerEndpoint(int maxStaging, const std::string & endpoint, const std::string & vo);
     int getMaxStatingsPerEndpoint(const std::string & endpoint, const std::string & vo);
