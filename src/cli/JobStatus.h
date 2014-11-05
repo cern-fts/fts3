@@ -153,7 +153,7 @@ class JobStatus
 
 public:
 
-    typedef std::tuple<int, int, int, int, int , int, int> JobSummary;
+    typedef std::tuple<int, int, int, int, int , int, int, int, int> JobSummary;
 
     JobStatus(std::string const & jobId, std::string const & status, std::string const & dn, std::string const & reason,
               std::string const & vo, std::string const & submitTime, int nbFiles, int priority,

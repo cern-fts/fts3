@@ -163,7 +163,9 @@ JobStatus RestContextAdapter::getTransferJobSummary (std::string const & jobId, 
         response_files.getNb("files", "FINISHED"),
         response_files.getNb("files", "SUBMITTED"),
         response_files.getNb("files", "FAILED"),
-        response_files.getNb("files", "STAGING")
+        response_files.getNb("files", "STAGING"),
+        response_files.getNb("files", "STARTED"),
+        response_files.getNb("files", "DELETE")
     );
 
     // than get the job itself

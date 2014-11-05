@@ -145,7 +145,8 @@ void JobStatusGetter::job_summary(SUMMARY * & ret, bool glite)
             count_ready(ret, handler.countInState(JobStatusHandler::FTS3_STATUS_READY, job_statuses));
             ret->numFailed = handler.countInState(JobStatusHandler::FTS3_STATUS_FAILED, job_statuses);
             ret->numStaging = handler.countInState(JobStatusHandler::FTS3_STATUS_STAGING, job_statuses);
-            ret->numStaging += handler.countInState(JobStatusHandler::FTS3_STATUS_STARTED, job_statuses);
+            ret->numStarted = handler.countInState(JobStatusHandler::FTS3_STATUS_STARTED, job_statuses);
+            ret->numDelete = handler.countInState(JobStatusHandler::FTS3_STATUS_DELETE, job_statuses);
         }
     else
         {

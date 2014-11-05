@@ -194,6 +194,8 @@ void MsgPrinter::print_ostr(JobStatus const & status, bool short_out)
                     (*ostr) << "\tSubmitted: " << std::get<4>(*status.summary) << std::endl;
                     (*ostr) << "\tFailed: " << std::get<5>(*status.summary) << std::endl;
                     (*ostr) << "\tStaging: " << std::get<6>(*status.summary) << std::endl;
+                    (*ostr) << "\tStarted: " << std::get<7>(*status.summary) << std::endl;
+                    (*ostr) << "\tDelete: " << std::get<8>(*status.summary) << std::endl;
                 }
         }
 
@@ -248,6 +250,8 @@ void MsgPrinter::print_json(JobStatus const & status)
                     job.put("summary.submitted", boost::lexical_cast<std::string>(std::get<4>(*status.summary)));
                     job.put("summary.failed", boost::lexical_cast<std::string>(std::get<5>(*status.summary)));
                     job.put("summary.staging", boost::lexical_cast<std::string>(std::get<6>(*status.summary)));
+                    job.put("summary.started", boost::lexical_cast<std::string>(std::get<7>(*status.summary)));
+                    job.put("summary.delete", boost::lexical_cast<std::string>(std::get<8>(*status.summary)));
                 }
         }
 

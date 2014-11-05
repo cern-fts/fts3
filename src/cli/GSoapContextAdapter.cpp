@@ -459,7 +459,9 @@ JobStatus GSoapContextAdapter::getTransferJobSummary (std::string const & jobId,
         resp.getTransferJobSummary2Return->numFinished,
         resp.getTransferJobSummary2Return->numSubmitted,
         resp.getTransferJobSummary2Return->numFailed,
-        resp.getTransferJobSummary2Return->numStaging
+        resp.getTransferJobSummary2Return->numStaging,
+        resp.getTransferJobSummary2Return->numStarted,
+        resp.getTransferJobSummary2Return->numDelete
     );
 
     return JobStatus(
