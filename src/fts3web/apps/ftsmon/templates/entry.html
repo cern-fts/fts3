@@ -22,7 +22,8 @@
         <header class="header">
             <div class="navbar navbar-fixed-top navbar-inverse">
                 <span class="brand">
-                    <img class="" src="{{STATIC_URL}}img/loader.gif" ng-show="loading">
+                    <img class="" src="{{STATIC_URL}}img/loader.gif" data-ng-show="loading">
+                    <span data-ng-show="!loading" data-ng-bind="lastRefresh" id="last-refresh-time"></span>
                 </span>
                 <div class="navbar-inner">
                     <div class="container">

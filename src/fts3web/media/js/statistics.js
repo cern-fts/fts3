@@ -19,8 +19,8 @@ function _generateOverviewPlots(stats)
                 colors: queueColors,
                 labels: true
             }
-	    },
-	    lasthour: {
+        },
+        lasthour: {
             data: [
                 {x: "finished", y: [stats.lasthour.finished]},
                 {x: "failed", y: [stats.lasthour.failed]},
@@ -32,53 +32,60 @@ function _generateOverviewPlots(stats)
                 colors: lastHourColors,
                 labels: true
             }
-	    }
+        }
     };
 }
 
-function StatsOverviewCtrl($routeParams, $location, $scope, stats, Statistics, Unique)
+function StatsOverviewCtrl($rootScope, $routeParams, $location, $scope, stats, Statistics, Unique)
 {
-	$scope.stats = stats;
-	$scope.host = $location.$$search.hostname;
+    $scope.stats = stats;
+    $scope.host = $location.$$search.hostname;
 
-	$scope.hostnames = Unique.query({field: 'hostnames'});
+    $scope.hostnames = Unique.query({field: 'hostnames'});
 
-	$scope.filterHost = function(host) {
-		var filter = $location.$$search;
-		if (host)
-			filter.hostname = host;
-		else
-			delete filter.hostname;
-		$location.search(filter);
-		$scope.host = host;
-	}
+    $scope.filterHost = function(host) {
+        var filter = $location.$$search;
+        if (host)
+            filter.hostname = host;
+        else
+            delete filter.hostname;
+        $location.search(filter);
+        $scope.host = host;
+    }
 
-	// Set timer to trigger autorefresh
-	$scope.autoRefresh = setInterval(function() {
-		var filter = $location.$$search;
-    	$scope.stats = Statistics.query(filter);
-    	$scope.stats = _generateOverviewPlots($scope.host);
-	}, REFRESH_INTERVAL);
-	$scope.$on('$destroy', function() {
-		clearInterval($scope.autoRefresh);
-	});
+    // Set timer to trigger autorefresh
+    $scope.autoRefresh = setInterval(function() {
+        var filter = $location.$$search;
+        loading($rootScope);
+        Statistics.query(filter,
+            function(updatedStats) {
+                $scope.stats = updatedStats;
+                $scope.plots = _generateOverviewPlots($scope.stats);
+                stopLoading($rootScope);
+            },
+            genericFailureMethod(null, $rootScope, $location)
+        );
+    }, REFRESH_INTERVAL);
+    $scope.$on('$destroy', function() {
+        clearInterval($scope.autoRefresh);
+    });
 
-	$scope.plots = _generateOverviewPlots($scope.stats);
+    $scope.plots = _generateOverviewPlots($scope.stats);
 }
 
 
 StatsOverviewCtrl.resolve = {
-	stats: function($route, $rootScope, $location, $q, Statistics) {
-    	loading($rootScope);
+    stats: function($route, $rootScope, $location, $q, Statistics) {
+        loading($rootScope);
 
-    	var deferred = $q.defer();
+        var deferred = $q.defer();
 
-    	Statistics.query($location.$$search,
-  			  genericSuccessMethod(deferred, $rootScope),
-			  genericFailureMethod(deferred, $rootScope, $location));
+        Statistics.query($location.$$search,
+              genericSuccessMethod(deferred, $rootScope),
+              genericFailureMethod(deferred, $rootScope, $location));
 
-    	return deferred.promise;
-	}
+        return deferred.promise;
+    }
 }
 
 // Per server
@@ -115,7 +122,7 @@ function _generateServerPlots(servers)
                 colors: serverColors,
                 labels: true
             }
-	    },
+        },
         executed: {
             data: _dataByState(servers, 'transfers'),
             config: {
@@ -156,45 +163,48 @@ function _generateServerPlots(servers)
                 labels: true
             }
         }
-	};
+    };
 }
 
-function StatsServersCtrl($location, $scope, servers, Servers)
+function StatsServersCtrl($rootScope, $location, $scope, servers, Servers)
 {
-	$scope.servers = servers;
+    $scope.servers = servers;
 
-	// Set timer to trigger autorefresh
-	$scope.autoRefresh = setInterval(function() {
-		var filter = $location.$$search;
-    	Servers.query(filter, function (updatedServers) {
+    // Set timer to trigger autorefresh
+    $scope.autoRefresh = setInterval(function() {
+        var filter = $location.$$search;
+        loading($rootScope);
+        Servers.query(filter, function (updatedServers) {
             for(var server in updatedServers) {
-            	if (server.toString().substring(0, 1) != '$')
-            		updatedServers[server].show = $scope.servers[server].show;
+                if (server.toString().substring(0, 1) != '$')
+                    updatedServers[server].show = $scope.servers[server].show;
             }
             $scope.servers = updatedServers;
             $scope.plots = _generateServerPlots($scope.servers);
-        });
-	}, REFRESH_INTERVAL);
-	$scope.$on('$destroy', function() {
-		clearInterval($scope.autoRefresh);
-	});
+            stopLoading($rootScope);
+        },
+        genericFailureMethod(null, $rootScope, $location));
+    }, REFRESH_INTERVAL);
+    $scope.$on('$destroy', function() {
+        clearInterval($scope.autoRefresh);
+    });
 
-	$scope.plots = _generateServerPlots($scope.servers);
+    $scope.plots = _generateServerPlots($scope.servers);
 }
 
 
 StatsServersCtrl.resolve = {
-	servers: function($rootScope, $location, $q, Servers) {
-    	loading($rootScope);
+    servers: function($rootScope, $location, $q, Servers) {
+        loading($rootScope);
 
-    	var deferred = $q.defer();
+        var deferred = $q.defer();
 
-    	Servers.query($location.$$search,
-  			  genericSuccessMethod(deferred, $rootScope),
-			  genericFailureMethod(deferred, $rootScope, $location));
+        Servers.query($location.$$search,
+              genericSuccessMethod(deferred, $rootScope),
+              genericFailureMethod(deferred, $rootScope, $location));
 
-    	return deferred.promise;
-	}
+        return deferred.promise;
+    }
 }
 
 // Per VO
@@ -228,51 +238,57 @@ function _generatePerVoPlots(vos)
     };
 }
 
-function StatsVosCtrl($location, $scope, vos, StatsVO, Unique)
+function StatsVosCtrl($rootScope, $location, $scope, vos, StatsVO, Unique)
 {
-	$scope.vos = vos;
+    $scope.vos = vos;
 
-	// Filter
-	$scope.unique = {
-		sources: Unique('sources'),
-		destinations: Unique('destinations')
-	}
+    // Filter
+    $scope.unique = {
+        sources: Unique('sources'),
+        destinations: Unique('destinations')
+    }
 
-	$scope.filter = {
-		'source_se': validString($location.$$search.source_se),
-		'dest_se':   validString($location.$$search.dest_se),
-	}
+    $scope.filter = {
+        'source_se': validString($location.$$search.source_se),
+        'dest_se':   validString($location.$$search.dest_se),
+    }
 
-	$scope.applyFilters = function() {
-		$location.search($scope.filter);
-	}
+    $scope.applyFilters = function() {
+        $location.search($scope.filter);
+    }
 
-	// Set timer to trigger autorefresh
-	$scope.autoRefresh = setInterval(function() {
-		var filter = $location.$$search;
-    	$scope.vos = StatsVO.query(filter);
-    	$scope.plots = _generatePerVoPlots($scope.vos);
-	}, REFRESH_INTERVAL);
-	$scope.$on('$destroy', function() {
-		clearInterval($scope.autoRefresh);
-	});
+    // Set timer to trigger autorefresh
+    $scope.autoRefresh = setInterval(function() {
+        var filter = $location.$$search;
+        loading($rootScope);
+        StatsVO.query(filter,
+        function(updatedVos) {
+            $scope.vos = updatedVos;
+            $scope.plots = _generatePerVoPlots($scope.vos);
+            stopLoading($rootScope);
+        },
+        genericFailureMethod(null, $rootScope, $location));
+    }, REFRESH_INTERVAL);
+    $scope.$on('$destroy', function() {
+        clearInterval($scope.autoRefresh);
+    });
 
-	$scope.plots = _generatePerVoPlots($scope.vos);
+    $scope.plots = _generatePerVoPlots($scope.vos);
 }
 
 
 StatsVosCtrl.resolve = {
-	vos: function($rootScope, $location, $q, StatsVO) {
-    	loading($rootScope);
+    vos: function($rootScope, $location, $q, StatsVO) {
+        loading($rootScope);
 
-    	var deferred = $q.defer();
+        var deferred = $q.defer();
 
-    	StatsVO.query($location.$$search,
-  			  genericSuccessMethod(deferred, $rootScope),
-			  genericFailureMethod(deferred, $rootScope, $location));
+        StatsVO.query($location.$$search,
+              genericSuccessMethod(deferred, $rootScope),
+              genericFailureMethod(deferred, $rootScope, $location));
 
-    	return deferred.promise;
-	}
+        return deferred.promise;
+    }
 }
 
 // Transfer volume
@@ -302,53 +318,58 @@ TransferVolumeCtrl.resolve = {
 
 // Profiling
 
-function StatsProfilingCtrl($location, $scope, profile, Profile)
+function StatsProfilingCtrl($rootScope, $location, $scope, profile, Profile)
 {
-	$scope.profile = profile;
+    $scope.profile = profile;
 
-	// Set timer to trigger autorefresh
-	$scope.autoRefresh = setInterval(function() {
-		var filter = $location.$$search;
-    	$scope.profile = Profile.query(filter);
-	}, REFRESH_INTERVAL);
-	$scope.$on('$destroy', function() {
-		clearInterval($scope.autoRefresh);
-	});
+    // Set timer to trigger autorefresh
+    $scope.autoRefresh = setInterval(function() {
+        loading($rootScope);
+        var filter = $location.$$search;
+        Profile.query(filter, function(updatedProfile) {
+            $scope.profile = updatedProfile;
+            stopLoading($rootScope);
+        },
+        genericFailureMethod(null, $rootScope, $location));
+    }, REFRESH_INTERVAL);
+    $scope.$on('$destroy', function() {
+        clearInterval($scope.autoRefresh);
+    });
 }
 
 
 StatsProfilingCtrl.resolve = {
-	profile: function($rootScope, $location, $q, Profile) {
-    	loading($rootScope);
+    profile: function($rootScope, $location, $q, Profile) {
+        loading($rootScope);
 
-    	var deferred = $q.defer();
+        var deferred = $q.defer();
 
-    	Profile.query($location.$$search,
-  			  genericSuccessMethod(deferred, $rootScope),
-			  genericFailureMethod(deferred, $rootScope, $location));
+        Profile.query($location.$$search,
+              genericSuccessMethod(deferred, $rootScope),
+              genericFailureMethod(deferred, $rootScope, $location));
 
-    	return deferred.promise;
-	}
+        return deferred.promise;
+    }
 }
 
 
 function SlowQueriesCtrl($location, $scope, slowQueries)
 {
-	$scope.slowQueries = slowQueries;
+    $scope.slowQueries = slowQueries;
 }
 
 SlowQueriesCtrl.resolve = {
-	slowQueries: function($rootScope, $location, $q, SlowQueries) {
-    	loading($rootScope);
+    slowQueries: function($rootScope, $location, $q, SlowQueries) {
+        loading($rootScope);
 
-    	var deferred = $q.defer();
+        var deferred = $q.defer();
 
-    	SlowQueries.query($location.$$search,
-  			  genericSuccessMethod(deferred, $rootScope),
-			  genericFailureMethod(deferred, $rootScope, $location));
+        SlowQueries.query($location.$$search,
+              genericSuccessMethod(deferred, $rootScope),
+              genericFailureMethod(deferred, $rootScope, $location));
 
-    	return deferred.promise;
-	}
+        return deferred.promise;
+    }
 }
 
 // TURLS
@@ -361,9 +382,9 @@ function TurlsCtrl($location, $scope, turls)
         $location.search('page', newPage);
     };
 
-	$scope.filterBy = function(filter) {
-		$location.search(filter);
-	}
+    $scope.filterBy = function(filter) {
+        $location.search(filter);
+    }
 }
 
 TurlsCtrl.resolve = {

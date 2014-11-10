@@ -8,7 +8,7 @@ function searchJob(jobList, jobId)
     return {show: false};
 }
 
-function JobListCtrl($location, $scope, jobs, Job)
+function JobListCtrl($rootScope, $location, $scope, jobs, Job)
 {
     // Jobs
     $scope.jobs = jobs;
@@ -20,6 +20,7 @@ function JobListCtrl($location, $scope, jobs, Job)
 
     // Set timer to trigger autorefresh
     $scope.autoRefresh = setInterval(function() {
+        loading($rootScope);
         var filter = $location.$$search;
         filter.page = $scope.jobs.page;
         Job.query(filter, function(updatedJobs) {
@@ -28,7 +29,9 @@ function JobListCtrl($location, $scope, jobs, Job)
                 job.show = searchJob($scope.jobs.items, job.job_id).show;
             }
             $scope.jobs = updatedJobs;
-        });
+            stopLoading($rootScope);
+        },
+        genericFailureMethod(null, $rootScope, $location));
     }, REFRESH_INTERVAL);
     $scope.$on('$destroy', function() {
         clearInterval($scope.autoRefresh);
@@ -98,7 +101,7 @@ JobListCtrl.resolve = {
 
 /** Job view
  */
-function JobViewCtrl($location, $scope, job, files, Job, Files)
+function JobViewCtrl($rootScope, $location, $scope, job, files, Job, Files)
 {
     var page = $location.$$search.page;
     if (!page)
@@ -149,6 +152,7 @@ function JobViewCtrl($location, $scope, job, files, Job, Files)
 
     // Reloading
     $scope.autoRefresh = setInterval(function() {
+        loading($rootScope);
         var filter   = $location.$$search;
         filter.jobId = $scope.job.job.job_id;
         Job.query(filter, function(updatedJob) {
@@ -160,7 +164,9 @@ function JobViewCtrl($location, $scope, job, files, Job, Files)
                 updatedFiles.files.items[i].show = $scope.files.files.items[i].show;
             }
             $scope.files = updatedFiles;
-        });
+            stopLoading($rootScope);
+        },
+        genericFailureMethod(null, $rootScope, $location));
     }, REFRESH_INTERVAL);
     $scope.$on('$destroy', function() {
         clearInterval($scope.autoRefresh);

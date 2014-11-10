@@ -224,8 +224,11 @@ function stopLoading($rootScope)
 {
     if (nLoading > 0)
         nLoading -= 1;
-    if (!nLoading)
+    if (!nLoading) {
         $rootScope.loading = false;
+        var now = new Date();
+        $rootScope.lastRefresh = "Generated at " + now.toLocaleTimeString();
+    }
 }
 
 /** Join states with commas */
@@ -330,7 +333,8 @@ function genericSuccessMethod(deferred, $rootScope) {
 
 function genericFailureMethod(deferred, $rootScope, $location) {
     return function (response) {
-        deferred.resolve(false);
+        if (deferred)
+            deferred.resolve(false);
         stopLoading($rootScope);
         if (response.status == 404)
             $location.path('/404');

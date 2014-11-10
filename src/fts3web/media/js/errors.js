@@ -1,47 +1,52 @@
 
 
-function ErrorsCtrl($location, $scope, pairs, Errors)
+function ErrorsCtrl($rootScope, $location, $scope, pairs, Errors)
 {
-	// Errors
-	$scope.pairs = pairs;
+    // Errors
+    $scope.pairs = pairs;
 
-	// Filter
+    // Filter
     $scope.showFilterDialog = function() {
-    	document.getElementById('filterDialog').style.display = 'block';
+        document.getElementById('filterDialog').style.display = 'block';
     }
 
     $scope.cancelFilters = function() {
-    	document.getElementById('filterDialog').style.display = 'none';
+        document.getElementById('filterDialog').style.display = 'none';
     }
 
-	$scope.applyFilters = function() {
-		var filter = $scope.filter;
-		filter['source_se'] = validString($location.$$search.source_se);
-		filter['dest_se'] = validString($location.$$search.dest_se);
-		$location.search(filter);
-		document.getElementById('filterDialog').style.display = 'none';
-	}
+    $scope.applyFilters = function() {
+        var filter = $scope.filter;
+        filter['source_se'] = validString($location.$$search.source_se);
+        filter['dest_se'] = validString($location.$$search.dest_se);
+        $location.search(filter);
+        document.getElementById('filterDialog').style.display = 'none';
+    }
 
-	$scope.filter = {
-		source_se: validString($location.$$search.source_se),
-		dest_se:   validString($location.$$search.dest_se),
-		reason:    validString($location.$$search.reason)
-	}
+    $scope.filter = {
+        source_se: validString($location.$$search.source_se),
+        dest_se:   validString($location.$$search.dest_se),
+        reason:    validString($location.$$search.reason)
+    }
 
-	// On page change, reload
-	$scope.pageChanged = function(newPage) {
-		$location.search('page', newPage);
-	};
+    // On page change, reload
+    $scope.pageChanged = function(newPage) {
+        $location.search('page', newPage);
+    };
 
-	// Set timer to trigger autorefresh
-	$scope.autoRefresh = setInterval(function() {
-		var filter = $location.$$search;
-		filter.page = $scope.errors.page;
-    	$scope.errors = Errors.query(filter);
-	}, REFRESH_INTERVAL);
-	$scope.$on('$destroy', function() {
-		clearInterval($scope.autoRefresh);
-	});
+    // Set timer to trigger autorefresh
+    $scope.autoRefresh = setInterval(function() {
+        loading($rootScope);
+        var filter = $location.$$search;
+        filter.page = $scope.pairs.page;
+        Errors.query(filter, function(updatedErrors) {
+            $scope.pairs = updatedErrors;
+            stopLoading($rootScope);
+        },
+        genericFailureMethod(null, $rootScope, $location));
+    }, REFRESH_INTERVAL);
+    $scope.$on('$destroy', function() {
+        clearInterval($scope.autoRefresh);
+    });
 }
 
 
@@ -55,20 +60,20 @@ ErrorsCtrl.redirectTo = function(routeParams, path, search)
 
 
 ErrorsCtrl.resolve = {
-	pairs: function($rootScope, $q, $location, Errors) {
-    	loading($rootScope);
+    pairs: function($rootScope, $q, $location, Errors) {
+        loading($rootScope);
 
-    	var deferred = $q.defer();
+        var deferred = $q.defer();
 
-    	var page = $location.$$search.page;
-    	if (!page || page < 1)
-    		page = 1;
+        var page = $location.$$search.page;
+        if (!page || page < 1)
+            page = 1;
 
-    	Errors.query($location.$$search,
-  			  genericSuccessMethod(deferred, $rootScope),
-			  genericFailureMethod(deferred, $rootScope, $location));
+        Errors.query($location.$$search,
+              genericSuccessMethod(deferred, $rootScope),
+              genericFailureMethod(deferred, $rootScope, $location));
 
-    	return deferred.promise;
+        return deferred.promise;
     }
 }
 
@@ -86,38 +91,38 @@ function _countPerClassification(classification)
 
 function ErrorsForPairCtrl($location, $scope, errors, ErrorsForPair)
 {
-	$scope.reason    = $location.$$search.reason;
-	$scope.errors    = errors
-	$scope.source_se = $location.$$search.source_se;
-	$scope.dest_se   = $location.$$search.dest_se;
+    $scope.reason    = $location.$$search.reason;
+    $scope.errors    = errors
+    $scope.source_se = $location.$$search.source_se;
+    $scope.dest_se   = $location.$$search.dest_se;
 
-	// Filter
+    // Filter
     $scope.showFilterDialog = function() {
-    	document.getElementById('filterDialog').style.display = 'block';
+        document.getElementById('filterDialog').style.display = 'block';
     }
 
     $scope.cancelFilters = function() {
-    	document.getElementById('filterDialog').style.display = 'none';
+        document.getElementById('filterDialog').style.display = 'none';
     }
 
-	$scope.applyFilters = function() {
-		$location.search($scope.filter);
-		$scope.filtersModal = false;
-	}
+    $scope.applyFilters = function() {
+        $location.search($scope.filter);
+        $scope.filtersModal = false;
+    }
 
-	$scope.filter = {
-		source_se: validString($location.$$search.source_se),
-		dest_se:   validString($location.$$search.dest_se),
-		reason:    validString($location.$$search.reason)
-	}
+    $scope.filter = {
+        source_se: validString($location.$$search.source_se),
+        dest_se:   validString($location.$$search.dest_se),
+        reason:    validString($location.$$search.reason)
+    }
 
-	// On page change, reload
-	$scope.pageChanged = function(newPage) {
-		$location.search('page', newPage);
-	};
+    // On page change, reload
+    $scope.pageChanged = function(newPage) {
+        $location.search('page', newPage);
+    };
 
-	// Generate plot
-	$scope.plots = {
+    // Generate plot
+    $scope.plots = {
         phase: {
             data: _countPerClassification($scope.errors.classification),
             config: {
@@ -130,28 +135,28 @@ function ErrorsForPairCtrl($location, $scope, errors, ErrorsForPair)
                 }
             }
         }
-	};
+    };
 }
 
 
 
 ErrorsForPairCtrl.resolve = {
     errors: function($rootScope, $q, $location, ErrorsForPair) {
-    	loading($rootScope);
+        loading($rootScope);
 
-    	var deferred = $q.defer();
+        var deferred = $q.defer();
 
-    	var page = $location.$$search.page;
-    	if (!page || page < 1)
-    		page = 1;
+        var page = $location.$$search.page;
+        if (!page || page < 1)
+            page = 1;
 
-    	ErrorsForPair.query($location.$$search,
-  			  genericSuccessMethod(deferred, $rootScope),
-			  function () {
-			      stopLoading($rootScope);
-			      $location.path('/errors/pairs');
-			  });
+        ErrorsForPair.query($location.$$search,
+              genericSuccessMethod(deferred, $rootScope),
+              function () {
+                  stopLoading($rootScope);
+                  $location.path('/errors/pairs');
+              });
 
-    	return deferred.promise;
+        return deferred.promise;
     }
 }
