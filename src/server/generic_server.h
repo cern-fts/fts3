@@ -61,9 +61,6 @@ public:
         typename TRAITS::HeartBeatTypeActive heartBeatHandlerActive;
         heartBeatHandlerActive.beat();
 
-        typename TRAITS::HeartBeatTypeActive heartBeatHandlerActive;
-        heartBeatHandlerActive.beat();
-
         typename TRAITS::ProcessServiceType processHandler;
         processHandler.executeTransfer_p();
 
