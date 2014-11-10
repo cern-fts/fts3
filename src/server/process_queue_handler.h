@@ -113,7 +113,7 @@ public:
                             {
                                 //multiple replica files belonging to a job will not be retried
                                 int retry = DBSingleton::instance().getDBObjectInstance()->getRetry(job);
-				
+
                                 if(msg.retry==true && retry > 0 && msg.file_id > 0 && !job.empty())
                                     {
                                         int retryTimes = DBSingleton::instance().getDBObjectInstance()->getRetryTimes(job, msg.file_id);

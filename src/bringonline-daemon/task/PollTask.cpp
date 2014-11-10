@@ -14,14 +14,12 @@
 
 #include <gfal_api.h>
 
-boost::shared_mutex PollTask::mx;
-
-std::unordered_map< std::string, std::set<std::string> > PollTask::active_tokens;
-
 void PollTask::run(boost::any const &)
 {
+    // check if the bring-online timeout was exceeded
+    if (timeout_occurred()) return;
+    // handle cancelled jobs/files
     handle_canceled();
-    handle_timeout();
 
     std::vector<char const *> urls = ctx.getUrls();
     // make sure there is work to be done
@@ -129,62 +127,38 @@ void PollTask::run(boost::any const &)
 
 void PollTask::handle_canceled()
 {
-    std::vector<char const *> urls;
-    std::set<std::string> remove;
-
+    std::set<std::pair<std::string, std::string>> remove;
     // critical section
     {
         boost::shared_lock<boost::shared_mutex> lock(mx);
-        // first check if the token is still active
-        auto it = active_tokens.find(token);
-        if (it == active_tokens.end())
-            {
-                // if not abort all URLs
-                urls = ctx.getUrls();
-            }
-        else
-            {
-                std::set<std::string> surls = ctx.getSurls();
-                // otherwise check if some of the URLs should be aborted
-                std::set_difference(
-                    surls.begin(), surls.end(),
-                    it->second.begin(), it->second.end(),
-                    std::inserter(remove, remove.end())
-                );
-            }
+        // get the URLs for the given task
+        auto surls = ctx.getSurls();
+        // check if some of the URLs should be aborted
+        std::set_difference(
+            surls.begin(), surls.end(),
+            active_urls.begin(), active_urls.end(),
+            std::inserter(remove, remove.end())
+        );
     }
-    // check if the whole task has been cancelled
-    if (!urls.empty())
-        {
-            ctx.clear();
-            abort(urls);
-            return;
-        }
     // check if there is something to do first
     if (remove.empty()) return;
-    // make sure in the context are only those URLs that where not cancelled
-    ctx.remove(remove);
-    // if only a subset of URLs should be aborted ...
-    urls.reserve(remove.size());
-    // fill in with URLs
-    for (auto it = remove.begin(); it != remove.end(); ++it)
-        {
-            urls.push_back(it->c_str());
-        }
+    // get the urls for abortions (and remove them from task if necassary)
+    auto urls = ctx.for_abortion(remove);
     abort(urls);
 }
 
-void PollTask::handle_timeout()
+bool PollTask::timeout_occurred()
 {
     // first check if bring-online timeout was exceeded
-    if (!ctx.is_timeouted()) return;
+    if (!ctx.is_timeouted()) return false;
     // set the state
     ctx.state_update("FAILED", "bring-online timeout has been exceeded", true);
     // get URLs
     auto urls = ctx.getUrls();
-    ctx.clear();
     // and abort the bring-online operation
     abort(urls);
+    // confirm the timeout
+    return true;
 }
 
 void PollTask::abort(std::vector<char const *> const & urls)
@@ -219,39 +193,6 @@ void PollTask::abort(std::vector<char const *> const & urls)
                             for (auto it = ids.begin(); it != ids.end(); ++it)
                                 ctx.state_update(it->first, it->second, "FAILED", "Error not set by gfal2", false);
                         }
-                }
-        }
-}
-
-void PollTask::cancel(std::unordered_map< std::string, std::set<std::string> > const & remove)
-{
-    boost::unique_lock<boost::shared_mutex> lock(mx);
-
-    std::unordered_map< std::string, std::set<std::string> >::const_iterator r_it;
-    std::unordered_map< std::string, std::set<std::string> >::iterator at_it;
-
-    for (r_it = remove.begin(); r_it != remove.end(); ++r_it)
-        {
-            // check if the token is still in active tokens
-            at_it = active_tokens.find(r_it->first);
-            if (at_it == active_tokens.end()) continue;
-
-            std::set<std::string> result;
-            std::set_difference(
-                at_it->second.begin(), at_it->second.end(),
-                r_it->second.begin(), r_it->second.end(),
-                std::inserter(result, result.end())
-            );
-
-            if (result.empty())
-                {
-                    // if there aren't any files left remove the token
-                    active_tokens.erase(at_it);
-                }
-            else
-                {
-                    // otherwise, swap to those that are left
-                    at_it->second.swap(result);
                 }
         }
 }

@@ -203,6 +203,8 @@
      <element name="numCatalogFailed" type="xsd:int"/>
      <element name="numRestarted" type="xsd:int"/>
      <element name="numStaging" type="xsd:int"/>
+     <element name="numStarted" type="xsd:int"/>
+     <element name="numDelete" type="xsd:int"/>
     </sequence>
    </complexType>
    

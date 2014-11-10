@@ -46,9 +46,9 @@ public:
      */
     PollTask(StagingContext const & ctx, std::string const & token) : BringOnlineTask(ctx), token(token), nPolls(0), wait_until(0)
     {
+        auto surls = ctx.getSurls();
         boost::unique_lock<boost::shared_mutex> lock(mx);
-        std::set<std::string> surls = ctx.getSurls();
-        active_tokens[token].insert(surls.begin(), surls.end());
+        active_urls.insert(surls.begin(), surls.end());
     }
 
     /**
@@ -56,12 +56,8 @@ public:
      *
      * @param copy : a staging task (stills the gfal2 context of this object)
      */
-    PollTask(BringOnlineTask && copy, std::string const & token) : BringOnlineTask(std::move(copy)), token(token), nPolls(0), wait_until()
-    {
-        boost::unique_lock<boost::shared_mutex> lock(mx);
-        std::set<std::string> surls = ctx.getSurls();
-        active_tokens[token].insert(surls.begin(), surls.end());
-    }
+    PollTask(BringOnlineTask && copy, std::string const & token) :
+        BringOnlineTask(std::move(copy)), token(token), nPolls(0), wait_until() {}
 
     /**
      * Move constructor
@@ -71,10 +67,7 @@ public:
     /**
      * Destructor
      */
-    virtual ~PollTask()
-    {
-        if (gfal2_ctx) cancel(token);
-    }
+    virtual ~PollTask() {}
 
     /**
      * The routine is executed by the thread pool
@@ -89,25 +82,12 @@ public:
         return wait_until > now;
     }
 
-    static void cancel(std::string const & token)
-    {
-        boost::unique_lock<boost::shared_mutex> lock(mx);
-        active_tokens.erase(token);
-    }
-
-    static void cancel(std::unordered_map< std::string, std::set<std::string> > const & remove);
-
 private:
-    /// prevents concurrent access to active_tokens
-    static boost::shared_mutex mx;
-    /// set of tokens (and respective URLs) for ongoing bring-online jobs
-    static std::unordered_map< std::string, std::set<std::string> > active_tokens;
-
     /// checks if the bring online task was cancelled and removes those URLs that were from the context
     void handle_canceled();
 
     /// checks if the bring online task timed-out and removes respective URLs from the context
-    void handle_timeout();
+    bool timeout_occurred();
 
     /// aborts the bring online operation for the given URLs
     void abort(std::vector<char const *> const & urls);

@@ -32,7 +32,7 @@ void JobContext::add(std::string const & surl, std::string const & jobId, int fi
         {
             jobs[jobId][surl].push_back(fileId);
             urlToIDs.insert({surl, {jobId, fileId}});
-         }
+        }
 }
 
 std::string JobContext::generateProxy(std::string const & dn, std::string const & delegationId)
@@ -82,14 +82,14 @@ std::string JobContext::getLogMsg() const
 {
     std::stringstream ss;
     for (auto it_j = jobs.begin(); it_j != jobs.end(); ++it_j)
-    {
-        ss << it_j->first << " (";
-        for (auto it_u = it_j->second.begin(); it_u != it_j->second.end(); ++it_u)
-            for (auto it_f = it_u->second.begin(); it_f != it_u->second.end(); ++it_f)
-            {
-                ss << *it_f << ", ";
-            }
-        ss << "), ";
-    }
+        {
+            ss << it_j->first << " (";
+            for (auto it_u = it_j->second.begin(); it_u != it_j->second.end(); ++it_u)
+                for (auto it_f = it_u->second.begin(); it_f != it_u->second.end(); ++it_f)
+                    {
+                        ss << *it_f << ", ";
+                    }
+            ss << "), ";
+        }
     return ss.str();
 }

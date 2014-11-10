@@ -6,6 +6,11 @@ html {
 	-moz-scrollbars-vertical;
 }
 
+#last-refresh-time {
+    font-size: 50%;
+    padding-left: 1em;
+}
+
 div[role="main"] {
     width: 90%;
     margin: auto;

@@ -56,7 +56,7 @@ function getLimitDescription(limit)
     return descr;
 }
 
-function OverviewCtrl($location, $scope, overview, Overview)
+function OverviewCtrl($rootScope, $location, $scope, overview, Overview)
 {
 	$scope.overview = overview;
 
@@ -80,11 +80,13 @@ function OverviewCtrl($location, $scope, overview, Overview)
 	$scope.autoRefresh = setInterval(function() {
 		var filter = $location.$$search;
 		filter.page = $scope.overview.page;
+		loading($rootScope);
         Overview.query(filter, function(updatedOverview) {
             for(var i = 0; i < updatedOverview.overview.items.length; i++) {
                 updatedOverview.overview.items[i].show = $scope.overview.overview.items[i].show;
             }
             $scope.overview = updatedOverview;
+            stopLoading($rootScope);
         });
 	}, REFRESH_INTERVAL);
 	$scope.$on('$destroy', function() {

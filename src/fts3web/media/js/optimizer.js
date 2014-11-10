@@ -1,142 +1,152 @@
 
-function OptimizerCtrl($location, $scope, optimizer, Optimizer)
+function OptimizerCtrl($rootScope, $location, $scope, optimizer, Optimizer)
 {
-	$scope.optimizer = optimizer;
+    $scope.optimizer = optimizer;
 
-	// Filter
+    // Filter
     $scope.showFilterDialog = function() {
-    	document.getElementById('filterDialog').style.display = 'block';
+        document.getElementById('filterDialog').style.display = 'block';
     }
 
     $scope.cancelFilters = function() {
-    	document.getElementById('filterDialog').style.display = 'none';
+        document.getElementById('filterDialog').style.display = 'none';
     }
 
-	$scope.filter = {
-		source_se:   validString($location.$$search.source_se),
-		dest_se:     validString($location.$$search.dest_se),
-		time_window: parseInt($location.$$search.time_window)
-	}
+    $scope.filter = {
+        source_se:   validString($location.$$search.source_se),
+        dest_se:     validString($location.$$search.dest_se),
+        time_window: parseInt($location.$$search.time_window)
+    }
 
-	$scope.applyFilters = function() {
-		$location.search($scope.filter);
-		document.getElementById('filterDialog').style.display = 'none';
-	}
+    $scope.applyFilters = function() {
+        $location.search($scope.filter);
+        document.getElementById('filterDialog').style.display = 'none';
+    }
 
-	// On page change, reload
-	$scope.pageChanged = function(newPage) {
-		$location.search('page', newPage);
-	};
+    // On page change, reload
+    $scope.pageChanged = function(newPage) {
+        $location.search('page', newPage);
+    };
 
-	// Set timer to trigger autorefresh
-	$scope.autoRefresh = setInterval(function() {
-		var filter = $location.$$search;
-		filter.page = $scope.optimizer.page;
-    	$scope.optimizer = Optimizer.query(filter);
-	}, REFRESH_INTERVAL);
-	$scope.$on('$destroy', function() {
-		clearInterval($scope.autoRefresh);
-	});
+    // Set timer to trigger autorefresh
+    $scope.autoRefresh = setInterval(function() {
+        loading($rootScope);
+        var filter = $location.$$search;
+        filter.page = $scope.optimizer.page;
+        Optimizer.query(filter, function(updatedOptimizer) {
+            $scope.optimizer = updatedOptimizer;
+            stopLoading($rootScope);
+        },
+        genericFailureMethod(null, $rootScope, $location));
+    }, REFRESH_INTERVAL);
+    $scope.$on('$destroy', function() {
+        clearInterval($scope.autoRefresh);
+    });
 }
 
 
 OptimizerCtrl.resolve = {
-	optimizer: function ($rootScope, $location, $route, $q, Optimizer) {
-    	loading($rootScope);
+    optimizer: function ($rootScope, $location, $route, $q, Optimizer) {
+        loading($rootScope);
 
-    	var deferred = $q.defer();
+        var deferred = $q.defer();
 
-    	Optimizer.query($location.$$search,
-  			  genericSuccessMethod(deferred, $rootScope),
-			  genericFailureMethod(deferred, $rootScope, $location));
+        Optimizer.query($location.$$search,
+              genericSuccessMethod(deferred, $rootScope),
+              genericFailureMethod(deferred, $rootScope, $location));
 
-    	return deferred.promise;
-	}
+        return deferred.promise;
+    }
 }
 
 
-function OptimizerDetailedCtrl($location, $scope, optimizer, OptimizerDetailed)
+function OptimizerDetailedCtrl($rootScope, $location, $scope, optimizer, OptimizerDetailed)
 {
-	$scope.optimizer = optimizer;
+    $scope.optimizer = optimizer;
 
-	// Set timer to trigger autorefresh
-	$scope.autoRefresh = setInterval(function() {
-		var filter = $location.$$search;
-		filter.page = $scope.optimizer.page;
-    	$scope.optimizer = OptimizerDetailed.query(filter);
-	}, REFRESH_INTERVAL);
-	$scope.$on('$destroy', function() {
-		clearInterval($scope.autoRefresh);
-	});
+    // Set timer to trigger autorefresh
+    $scope.autoRefresh = setInterval(function() {
+        loading($rootScope);
+        var filter = $location.$$search;
+        filter.page = $scope.optimizer.page;
+        OptimizerDetailed.query(filter, function(updatedOptimizer) {
+            $scope.optimizer = updatedOptimizer;
+            stopLoading($rootScope);
+        },
+        genericFailureMethod(null, $rootScope, $location));
+    }, REFRESH_INTERVAL);
+    $scope.$on('$destroy', function() {
+        clearInterval($scope.autoRefresh);
+    });
 
-	// Page
-	$scope.pageChanged = function(newPage) {
-		$location.search('page', newPage);
-	};
+    // Page
+    $scope.pageChanged = function(newPage) {
+        $location.search('page', newPage);
+    };
 
-	// Set up filters
-	$scope.filter = {
+    // Set up filters
+    $scope.filter = {
         source:      validString($location.$$search.source),
         destination: validString($location.$$search.destination)
-	}
+    }
 
-	var throughputData = [];
-	var successData = [];
-	for (var i = 0; i < $scope.optimizer.evolution.items.length; ++i) {
-	    var label = $scope.optimizer.evolution.items[i].datetime;
-	    throughputData.unshift({
-	        x: label,
-	        y: [
-	            $scope.optimizer.evolution.items[i].active,
-	            $scope.optimizer.evolution.items[i].throughput
-	        ]
-	    });
-	    successData.unshift({
-	        x: label,
-	        y: [
-	            $scope.optimizer.evolution.items[i].active,
-	            $scope.optimizer.evolution.items[i].success,
-	        ]
-	    });
-	}
+    var throughputData = [];
+    var successData = [];
+    for (var i = 0; i < $scope.optimizer.evolution.items.length; ++i) {
+        var label = $scope.optimizer.evolution.items[i].datetime;
+        throughputData.unshift({
+            x: label,
+            y: [
+                $scope.optimizer.evolution.items[i].active,
+                $scope.optimizer.evolution.items[i].throughput
+            ]
+        });
+        successData.unshift({
+            x: label,
+            y: [
+                $scope.optimizer.evolution.items[i].active,
+                $scope.optimizer.evolution.items[i].success,
+            ]
+        });
+    }
 
-	$scope.plots = {
-	    throughput: {
-	        series: ['Active', 'Throughput'],
-	        data: throughputData,
-	        config: {
-	            title: 'Throughput evolution',
-	            colors: ["#0000FF", "#00FF00"],
-	            doubleYAxis: true,
-	            labels: ['Active', 'Throughput']
-	        }
-	    },
-	    success: {
-	        series: ['Active', 'Success'],
-	        data: successData,
-	        config: {
-	            title: 'Success rate evolution',
-	            colors: ["#0000FF", "#00FF00"],
-	            doubleYAxis: true,
-	            labels: ['Active', 'Success']
-	        }
-	    }
-	};
+    $scope.plots = {
+        throughput: {
+            series: ['Active', 'Throughput'],
+            data: throughputData,
+            config: {
+                title: 'Throughput evolution',
+                colors: ["#0000FF", "#00FF00"],
+                doubleYAxis: true,
+                labels: ['Active', 'Throughput']
+            }
+        },
+        success: {
+            series: ['Active', 'Success'],
+            data: successData,
+            config: {
+                title: 'Success rate evolution',
+                colors: ["#0000FF", "#00FF00"],
+                doubleYAxis: true,
+                labels: ['Active', 'Success']
+            }
+        }
+    };
 }
 
 
 OptimizerDetailedCtrl.resolve = {
-	optimizer: function ($rootScope, $location, $route, $q, OptimizerDetailed) {
-    	loading($rootScope);
+    optimizer: function ($rootScope, $location, $route, $q, OptimizerDetailed) {
+        loading($rootScope);
 
-    	var deferred = $q.defer();
+        var deferred = $q.defer();
 
-    	OptimizerDetailed.query($location.$$search,
+        OptimizerDetailed.query($location.$$search,
             genericSuccessMethod(deferred, $rootScope),
             genericFailureMethod(deferred, $rootScope, $location));
 
-    	return deferred.promise;
-	}
+        return deferred.promise;
+    }
 }
 
 // From
@@ -180,25 +190,29 @@ function quantileColor(stream)
 }
 
 
-function OptimizerStreamsCtrl($location, $scope, streams, OptimizerStreams)
+function OptimizerStreamsCtrl($rootScope, $location, $scope, streams, OptimizerStreams)
 {
     $scope.streams = streams;
     $scope.quantileColor = quantileColor;
 
     // Set timer to trigger autorefresh
-	$scope.autoRefresh = setInterval(function() {
-		var filter = $location.$$search;
-		filter.page = $scope.optimizer.page;
-    	$scope.streams = OptimizerStreams.query(filter);
-	}, REFRESH_INTERVAL);
-	$scope.$on('$destroy', function() {
-		clearInterval($scope.autoRefresh);
-	});
+    $scope.autoRefresh = setInterval(function() {
+        var filter = $location.$$search;
+        filter.page = $scope.optimizer.page;
+        OptimizerStreams.query(filter, function(updatedStreams) {
+            $scope.streams = updatedStreams;
+            stopLoading($rootScope);
+        },
+        genericFailureMethod(null, $rootScope, $location));
+    }, REFRESH_INTERVAL);
+    $scope.$on('$destroy', function() {
+        clearInterval($scope.autoRefresh);
+    });
 
-	// Page
-	$scope.pageChanged = function(newPage) {
-		$location.search('page', newPage);
-	};
+    // Page
+    $scope.pageChanged = function(newPage) {
+        $location.search('page', newPage);
+    };
 }
 
 
@@ -210,7 +224,7 @@ OptimizerStreamsCtrl.resolve = {
 
         OptimizerStreams.query($location.$$search,
             genericSuccessMethod(deferred, $rootScope),
-			genericFailureMethod(deferred, $rootScope, $location));
+            genericFailureMethod(deferred, $rootScope, $location));
 
         return deferred.promise;
     }

@@ -1046,7 +1046,7 @@ int main(int argc, char **argv)
                             }
                         else
                             {
-                            gfal2_set_opt_string(handle, "XROOTD PLUGIN", "COPY_CHECKSUM_MODE", "end2end", NULL);
+                                gfal2_set_opt_string(handle, "XROOTD PLUGIN", "COPY_CHECKSUM_MODE", "end2end", NULL);
                             }
 
                         if (!currentTransfer.checksumValue.empty() && currentTransfer.checksumValue != "x")   //user provided checksum

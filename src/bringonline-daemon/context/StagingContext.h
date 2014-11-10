@@ -59,7 +59,7 @@ public:
 
     StagingContext(StagingContext && copy) :
         JobContext(std::move(copy)),
-        pinlifetime(copy.pinlifetime), bringonlineTimeout(copy.bringonlineTimeout), start_time(copy.start_time){}
+        pinlifetime(copy.pinlifetime), bringonlineTimeout(copy.bringonlineTimeout), start_time(copy.start_time) {}
 
     virtual ~StagingContext() {}
 
@@ -98,12 +98,7 @@ public:
 
     bool is_timeouted();
 
-    void remove(std::set<std::string> const &);
-
-    void clear()
-    {
-        jobs.clear();
-    }
+    std::vector<char const *> for_abortion(std::set<std::pair<std::string, std::string>> const &);
 
 private:
 

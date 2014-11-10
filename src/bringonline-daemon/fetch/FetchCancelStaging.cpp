@@ -7,7 +7,7 @@
 
 #include "FetchCancelStaging.h"
 
-#include "task/PollTask.h"
+#include "task/BringOnlineTask.h"
 
 #include "server/DrainMode.h"
 
@@ -40,23 +40,14 @@ void FetchCancelStaging::fetch()
                             continue;
                         }
 
-                    std::vector< boost::tuple<int, std::string, std::string> > files;
-                    db::DBSingleton::instance().getDBObjectInstance()->getStagingFilesForCanceling(files);
+                    std::set<std::pair<std::string, std::string>> urls;
+                    db::DBSingleton::instance().getDBObjectInstance()->getStagingFilesForCanceling(urls);
 
-                    std::unordered_map<std::string, std::set<std::string> > tokens;
-
-                    for (auto it = files.begin(); it != files.end(); ++it)
+                    if (!urls.empty())
                         {
-                            std::string const & token = boost::get<2>(*it);
-                            std::string const & url   = boost::get<1>(*it);
 
-                            tokens[token].insert(url);
-                        }
-
-                    if (!tokens.empty())
-                        {
                             // do the cancellation
-                            PollTask::cancel(tokens);
+                            BringOnlineTask::cancel(urls);
                         }
                     // sleep for 10 seconds
                     boost::this_thread::sleep(boost::posix_time::milliseconds(10000));

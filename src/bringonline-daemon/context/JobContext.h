@@ -87,12 +87,12 @@ public:
     /**
      * @return : set of SURLs
      */
-    std::set<std::string> getSurls() const
+    std::set<std::pair<std::string, std::string>> getSurls() const
     {
-        std::set<std::string> surls;
+        std::set<std::pair<std::string, std::string>> surls;
         for (auto it_j = jobs.begin(); it_j != jobs.end(); ++it_j)
             for (auto it_u = it_j->second.begin(); it_u != it_j->second.end(); ++it_u)
-                surls.insert(it_u->first);
+                surls.insert({it_j->first, it_u->first});
         return surls;
     }
 

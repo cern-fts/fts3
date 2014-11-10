@@ -19,7 +19,7 @@ from django.db import connection
 from django.db.models import Sum
 from django.http import Http404
 
-from ftsweb.models import OptimizerEvolution, OptimizerStreams
+from ftsweb.models import OptimizerEvolution, OptimizerStreams, OptimizeActive
 from ftsweb.models import File, Job
 from jsonify import jsonify, jsonify_paged
 from util import paged
@@ -27,23 +27,33 @@ from util import paged
 
 @jsonify_paged
 def get_optimizer_pairs(http_request):
-   # Query
-    pairs = OptimizerEvolution.objects.filter(throughput__isnull=False)\
+    # From the optimizer evolution
+    from_optimizer = OptimizerEvolution.objects.filter(throughput__isnull=False)\
         .values('source_se', 'dest_se')
 
     if http_request.GET.get('source_se', None):
-        pairs = pairs.filter(source_se=http_request.GET['source_se'])
+        from_optimizer = from_optimizer.filter(source_se=http_request.GET['source_se'])
     if http_request.GET.get('dest_se', None):
-        pairs = pairs.filter(dest_se=http_request.GET['dest_se'])
+        from_optimizer = from_optimizer.filter(dest_se=http_request.GET['dest_se'])
     try:
         time_window = timedelta(hours=int(http_request.GET['time_window']))
     except:
         time_window = timedelta(minutes=30)
 
     not_before = datetime.utcnow() - time_window
-    pairs = pairs.filter(datetime__gte=not_before)
+    from_optimizer = from_optimizer.filter(datetime__gte=not_before)
+    from_optimizer = from_optimizer.distinct()
 
-    return pairs.distinct()
+    # Append configured fixed active for convenience
+    from_fixed = OptimizeActive.objects
+    if http_request.GET.get('source_se', None):
+        from_fixed = from_fixed.filter(source_se=http_request.GET['source_se'])
+    if http_request.GET.get('dest_se', None):
+        from_fixed = from_fixed.filter(dest_se=http_request.GET['dest_se'])
+
+    from_fixed = from_fixed.values('source_se', 'dest_se', 'fixed').distinct()
+
+    return list(from_optimizer) + list(from_fixed)
 
 
 class OptimizerAppendLimits(object):
@@ -118,9 +128,16 @@ def get_optimizer_details(http_request):
         if throughput:
             vo_throughput[vo] = throughput
 
+    n_fixed = None
+    if len(optimizer) == 0:
+        fixed = OptimizeActive.objects.filter(source_se=source_se, dest_se=dest_se).values('fixed', 'active').all()
+        if len(fixed) and fixed[0]['fixed'].lower() == 'on':
+            n_fixed = fixed[0]['active']
+
     return {
         'evolution': paged(OptimizerAppendLimits(source_se, dest_se, optimizer), http_request),
-        'throughput': vo_throughput
+        'throughput': vo_throughput,
+        'fixed': n_fixed
     }
 
 

@@ -48,6 +48,10 @@ public:
         setSpaceToken(ctx.getSpaceToken());
         // set the proxy certificate
         setProxy(ctx);
+        // add urls to active
+        auto surls = ctx.getSurls();
+        boost::unique_lock<boost::shared_mutex> lock(mx);
+        active_urls.insert(surls.begin(), surls.end());
     }
 
     /**
@@ -60,17 +64,38 @@ public:
     /**
      * Destructor
      */
-    virtual ~BringOnlineTask() {}
+    virtual ~BringOnlineTask()
+    {
+        if (gfal2_ctx) cancel(ctx.getSurls());
+    }
 
     /**
      * The routine is executed by the thread pool
      */
     virtual void run(boost::any const &);
 
+    static void cancel(std::set<std::pair<std::string, std::string> > const & urls)
+    {
+        if (urls.empty()) return;
+
+        boost::unique_lock<boost::shared_mutex> lock(mx);
+        auto begin = active_urls.lower_bound(*urls.begin());
+        auto end   = active_urls.upper_bound(*urls.rbegin());
+        for (auto it = begin; it != end;)
+            if (urls.count(*it))
+                active_urls.erase(it++);
+            else
+                ++it;
+    }
+
 protected:
 
     /// staging details
     StagingContext ctx;
+    /// prevents concurrent access to active_tokens
+    static boost::shared_mutex mx;
+    /// set of tokens (and respective URLs) for ongoing bring-online jobs
+    static std::set<std::pair<std::string, std::string>> active_urls;
 };
 
 

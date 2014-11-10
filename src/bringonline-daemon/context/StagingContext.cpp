@@ -10,6 +10,7 @@
 #include "cred/cred-utility.h"
 
 #include <sstream>
+#include <unordered_set>
 
 
 void StagingContext::add(context_type const & ctx)
@@ -35,9 +36,31 @@ bool StagingContext::is_timeouted()
     return difftime(time(0), start_time) > bringonlineTimeout;
 }
 
-void StagingContext::remove(std::set<std::string> const & urls)
+std::vector<char const *> StagingContext::for_abortion(std::set<std::pair<std::string, std::string>> const & urls)
 {
+    // remove respective URLs from the task
+    for (auto it = urls.begin(); it != urls.end(); ++it)
+        {
+            jobs[it->first].erase(it->second);
+        }
+
+    std::unordered_set<std::string> not_canceled, unique;
     for (auto it_j = jobs.begin(); it_j != jobs.end(); ++it_j)
-        for (auto it_u = urls.begin(); it_u != urls.end(); ++it_u)
-            it_j->second.erase(*it_u);
+        {
+            auto const & urls = it_j->second;
+            for (auto it_u = urls.begin(); it_u != urls.end(); ++it_u)
+                {
+                    std::string const & url = it_u->first;
+                    not_canceled.insert(url);
+                }
+        }
+
+    std::vector<char const *> ret;
+    for (auto it = urls.begin(); it != urls.end(); ++it)
+        {
+            std::string const & url = it->second;
+            if (not_canceled.count(url) || unique.count(url)) continue;
+            ret.push_back(url.c_str());
+        }
+    return ret;
 }

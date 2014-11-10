@@ -80,16 +80,16 @@ public:
 
     static std::string timestamp()
     {
-        std::string timestapStr("");
+        std::string timestampStr("");
         char timebuf[128] = "";
         // Get Current Time
         time_t current;
         time(&current);
         struct tm local_tm;
         localtime_r(&current, &local_tm);
-        timestapStr = std::string(asctime_r(&local_tm, timebuf));
-        timestapStr.erase(timestapStr.end() - 1);
-        return timestapStr + " ";
+        strftime(timebuf, sizeof(timebuf), "%a %b %d %H:%M:%S %Y", &local_tm);
+        timestampStr = timebuf;
+        return timestampStr + " ";
     }
 
     static std::string logLevelStringRepresentation(int loglevel)
