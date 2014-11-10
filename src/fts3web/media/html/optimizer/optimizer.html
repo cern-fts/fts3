@@ -14,6 +14,7 @@
         <tr>
             <th style="width: 35%">Source</th>
             <th style="width: 35%">Destination</th>
+            <th style="width: 5%"></th>
         </tr>
     </thead>
     <tbody>
@@ -25,6 +26,9 @@
                 {{ o.source_se }}
             </td>
 			<td>{{ o.dest_se }}</td>
+            <td>
+                <span data-ng-show="o.fixed=='on'"><i class="icon-magnet" title="Fixed number of actives"></i></span>
+            </td>
        </tr>
     </tbody>
 </table>
