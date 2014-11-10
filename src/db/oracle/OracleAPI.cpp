@@ -11942,7 +11942,7 @@ bool OracleAPI::resetForRetryStaging(soci::session& sql, int file_id, const std:
 
                                     sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'STAGING', staging_start=NULL, start_time=NULL, transferHost=NULL, t_log_file=NULL,"
                                         " t_log_file_debug=NULL, throughput = 0, current_failures = 1 "
-                                        " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
+                                        " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','STAGING','FAILED','CANCELED')",
                                         soci::use(tTime), soci::use(nRetriesTimes+1), soci::use(file_id), soci::use(job_id);
 
                                     times = nRetriesTimes+1;
@@ -11962,7 +11962,7 @@ bool OracleAPI::resetForRetryStaging(soci::session& sql, int file_id, const std:
 
                                     sql << "UPDATE t_file SET retry_timestamp=:1, retry = :retry, file_state = 'STAGING', staging_start=NULL, start_time=NULL, transferHost=NULL, "
                                         " t_log_file=NULL, t_log_file_debug=NULL, throughput = 0,  current_failures = 1 "
-                                        " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
+                                        " WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','STAGING','FAILED','CANCELED')",
                                         soci::use(tTime), soci::use(nRetriesTimes+1), soci::use(file_id), soci::use(job_id);
 
                                     times = nRetriesTimes+1;
