@@ -3473,9 +3473,9 @@ unsigned OracleAPI::getDebugLevel(std::string source_hostname, std::string desti
     soci::session sql(*connectionPool);
 
     try
-        {            
+        {
             unsigned level = 0;
-	    soci::indicator isNull = soci::i_ok;
+            soci::indicator isNull = soci::i_ok;
 
 
             sql <<
@@ -3483,12 +3483,12 @@ unsigned OracleAPI::getDebugLevel(std::string source_hostname, std::string desti
                 " FROM t_debug "
                 " WHERE source_se = :source OR dest_se= :dest_se ",
                 soci::use(source_hostname),
-		soci::use(destin_hostname),
+                soci::use(destin_hostname),
                 soci::into(level, isNull)
                 ;
-		
-		if(isNull != soci::i_null)
-			return level;
+
+            if(isNull != soci::i_null)
+                return level;
         }
     catch (std::exception& e)
         {
@@ -3670,17 +3670,17 @@ void OracleAPI::getMaxActive(soci::session& sql, int& source, int& destination, 
                 soci::into(maxActiveSource);
 
             if(!sql.got_data())
-	        {
-		  source = maxDefault;
-		}
+                {
+                    source = maxDefault;
+                }
             else if(sql.got_data() && maxActiveSource == -1)
                 {
                     source = maxDefault;
                 }
             else if(sql.got_data() && maxActiveSource == 0)
-	       {
-	    	    source = 0; //stop processing for this source endpoint
-	       }		
+                {
+                    source = 0; //stop processing for this source endpoint
+                }
             else
                 {
                     source = maxActiveSource;
@@ -3691,17 +3691,17 @@ void OracleAPI::getMaxActive(soci::session& sql, int& source, int& destination, 
                 soci::into(maxActiveDest);
 
             if(!sql.got_data())
-	        {
-		  destination = maxDefault;
-		}
+                {
+                    destination = maxDefault;
+                }
             else if(sql.got_data() && maxActiveDest == -1)
                 {
                     destination = maxDefault;
                 }
             else if(sql.got_data() && maxActiveDest == 0)
-	       {
-	    	    destination = 0; //stop processing for this destination endpoint
-	       }		
+                {
+                    destination = 0; //stop processing for this destination endpoint
+                }
             else
                 {
                     destination = maxActiveDest;
@@ -4097,6 +4097,10 @@ bool OracleAPI::updateOptimizer()
                         }
 
                     lanTransferBool = lanTransfer(source_hostname, destin_hostname);
+		    if(lanTransferBool)
+		    {
+		    	highDefault = LAN_ACTIVE;
+		    }		    
 
                     // first thing, check if the number of actives have been fixed for this pair
                     stmt_fixed.execute(true);
@@ -4235,46 +4239,46 @@ bool OracleAPI::updateOptimizer()
                             int maxSource = 0;
                             int maxDestination = 0;
                             getMaxActive(sql, maxSource, maxDestination, source_hostname, destin_hostname);
-			    
-			    //FTS3 admin requested to stop processing for this source or destination endpoints
-			    if(maxSource == 0 || maxDestination == 0)
-			    {
-			    	updateOptimizerEvolution(sql, source_hostname, destin_hostname, maxActive, throughput, ratioSuccessFailure, 1, bandwidthIn);
-                                continue;			    
-			    }			    
-			    else if(maxSource ==  MAX_ACTIVE_ENDPOINT_LINK && maxDestination == MAX_ACTIVE_ENDPOINT_LINK)
-			    {
-			    	//do nothing, use default for both
-			    }
-			    else if (maxSource !=  MAX_ACTIVE_ENDPOINT_LINK && maxDestination != MAX_ACTIVE_ENDPOINT_LINK) //both have been set
-			    {
-			    	if(maxSource > maxDestination)
-				{
-				   maxSource = 	maxDestination; //take the min
-				}
-				else if( maxDestination > maxSource)
-				{
-				   maxDestination = maxSource;
-				}
-				else
-				{
-				 //do nothing
-				}
-			    }
-			    else if(maxSource !=  MAX_ACTIVE_ENDPOINT_LINK && maxDestination == MAX_ACTIVE_ENDPOINT_LINK)
-			    {
-			    	maxDestination = maxSource;
-			    }
-			    else if(maxSource ==  MAX_ACTIVE_ENDPOINT_LINK && maxDestination != MAX_ACTIVE_ENDPOINT_LINK)
-			    {
-			    	maxSource = maxDestination;
-			    }
-			    else
-			    {
-			    	//do nothing, use default
-			    }
 
-			    
+                            //FTS3 admin requested to stop processing for this source or destination endpoints
+                            if(maxSource == 0 || maxDestination == 0)
+                                {
+                                    updateOptimizerEvolution(sql, source_hostname, destin_hostname, maxActive, throughput, ratioSuccessFailure, 1, bandwidthIn);
+                                    continue;
+                                }
+                            else if(maxSource ==  MAX_ACTIVE_ENDPOINT_LINK && maxDestination == MAX_ACTIVE_ENDPOINT_LINK)
+                                {
+                                    //do nothing, use default for both
+                                }
+                            else if (maxSource !=  MAX_ACTIVE_ENDPOINT_LINK && maxDestination != MAX_ACTIVE_ENDPOINT_LINK) //both have been set
+                                {
+                                    if(maxSource > maxDestination)
+                                        {
+                                            maxSource = 	maxDestination; //take the min
+                                        }
+                                    else if( maxDestination > maxSource)
+                                        {
+                                            maxDestination = maxSource;
+                                        }
+                                    else
+                                        {
+                                            //do nothing
+                                        }
+                                }
+                            else if(maxSource !=  MAX_ACTIVE_ENDPOINT_LINK && maxDestination == MAX_ACTIVE_ENDPOINT_LINK)
+                                {
+                                    maxDestination = maxSource;
+                                }
+                            else if(maxSource ==  MAX_ACTIVE_ENDPOINT_LINK && maxDestination != MAX_ACTIVE_ENDPOINT_LINK)
+                                {
+                                    maxSource = maxDestination;
+                                }
+                            else
+                                {
+                                    //do nothing, use default
+                                }
+
+
 
                             if( activeSource >= maxSource || activeDestination >= maxDestination || maxActive >= MAX_ACTIVE_PER_LINK)
                                 {
@@ -8766,7 +8770,7 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
     long long retry_delay = 0;
     std::string reuse_job;
     soci::indicator ind = soci::i_ok;
-    
+
     try
         {
             sql <<
@@ -8802,25 +8806,25 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
                     // update
                     time_t now = getUTC(default_retry_delay);
                     gmtime_r(&now, &tTime);
-                }		
+                }
 
-	    int bring_online = -1;
-	    int copy_pin_lifetime = -1;
+            int bring_online = -1;
+            int copy_pin_lifetime = -1;
 
             // query for the file state in DB
             sql << "SELECT bring_online, copy_pin_lifetime FROM t_job WHERE job_id=:jobId",
                 soci::use(jobId),
                 soci::into(bring_online),
                 soci::into(copy_pin_lifetime);
-		
+
 
             //staging exception, if file failed with timeout and was staged before, reset it
             if(bring_online > 0 || copy_pin_lifetime > 0)
                 {
                     sql << "update t_file set retry = :retry, current_failures = 0, file_state='STAGING', internal_file_params=NULL, transferHost=NULL,start_time=NULL, pid=NULL, "
-		    	   " filesize=0 where file_id=:file_id and job_id=:job_id AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED') ",
-			soci::use(retry),
-                        soci::use(fileId), 			
+                        " filesize=0 where file_id=:file_id and job_id=:job_id AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED') ",
+                        soci::use(retry),
+                        soci::use(fileId),
                         soci::use(jobId);
                 }
             else
@@ -8831,7 +8835,7 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
                         soci::use(tTime), soci::use(retry), soci::use(fileId), soci::use(jobId);
 
                 }
-		
+
             // Keep log
             sql << "INSERT /*+ IGNORE_ROW_ON_DUPKEY_INDEX (t_file_retry_errors, t_file_retry_errors_pk) */  INTO t_file_retry_errors "
                 "    (file_id, attempt, datetime, reason) "
@@ -8850,12 +8854,12 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
         {
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
-        }    
+        }
 }
 
 
 
- 
+
 
 void OracleAPI::getTransferRetries(int fileId, std::vector<FileRetry*>& retries)
 {
@@ -9163,13 +9167,13 @@ void OracleAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, uns
                 }
 
             // Delete old entries
-           if(hashSegment.start == 0)
-            {
-            	sql.begin();
-            	soci::statement stmt3 = (sql.prepare << "DELETE FROM t_hosts WHERE beat <= (sys_extract_utc(systimestamp) - interval '120' MINUTE)");
-            	stmt3.execute(true);
-            	sql.commit();
-            }
+            if(hashSegment.start == 0)
+                {
+                    sql.begin();
+                    soci::statement stmt3 = (sql.prepare << "DELETE FROM t_hosts WHERE beat <= (sys_extract_utc(systimestamp) - interval '120' MINUTE)");
+                    stmt3.execute(true);
+                    sql.commit();
+                }
         }
     catch (std::exception& e)
         {
@@ -11553,7 +11557,7 @@ void OracleAPI::updateStagingStateInternal(soci::session& sql, std::vector< boos
                                 "	file_id= :fileId "
                                 "	AND file_state='STAGING'",
                                 soci::use(hostname),
-				soci::use(hostname),
+                                soci::use(hostname),
                                 soci::use(file_id)
                                 ;
                         }

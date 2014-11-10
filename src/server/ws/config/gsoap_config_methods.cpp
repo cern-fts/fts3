@@ -919,7 +919,7 @@ int fts3::impltns__debugLevelSet(struct soap* soap, string source, string destin
             string dn = cgsi.getClientDn();
 
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is setting debug level to " << level
-                    << "for source: " << source << " and destination: " << destination << commit;
+                                             << "for source: " << source << " and destination: " << destination << commit;
 
             AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::CONFIG, AuthorizationManager::dummy);
 

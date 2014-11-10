@@ -49,18 +49,18 @@ std::vector<char const *> StagingContext::for_abortion(std::set<std::pair<std::s
         {
             auto const & urls = it_j->second;
             for (auto it_u = urls.begin(); it_u != urls.end(); ++it_u)
-            {
-                std::string const & url = it_u->first;
-                not_canceled.insert(url);
-            }
+                {
+                    std::string const & url = it_u->first;
+                    not_canceled.insert(url);
+                }
         }
 
     std::vector<char const *> ret;
     for (auto it = urls.begin(); it != urls.end(); ++it)
-    {
-        std::string const & url = it->second;
-        if (not_canceled.count(url) || unique.count(url)) continue;
-        ret.push_back(url.c_str());
-    }
+        {
+            std::string const & url = it->second;
+            if (not_canceled.count(url) || unique.count(url)) continue;
+            ret.push_back(url.c_str());
+        }
     return ret;
 }

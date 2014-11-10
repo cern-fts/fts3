@@ -59,7 +59,7 @@ public:
 
     StagingContext(StagingContext && copy) :
         JobContext(std::move(copy)),
-        pinlifetime(copy.pinlifetime), bringonlineTimeout(copy.bringonlineTimeout), start_time(copy.start_time){}
+        pinlifetime(copy.pinlifetime), bringonlineTimeout(copy.bringonlineTimeout), start_time(copy.start_time) {}
 
     virtual ~StagingContext() {}
 

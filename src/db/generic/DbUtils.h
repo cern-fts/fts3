@@ -35,6 +35,7 @@ namespace db
 const int MAX_ACTIVE_PER_LINK = 80;
 const int MAX_ACTIVE_ENDPOINT_LINK = 50;
 const int MIN_ACTIVE = 2;
+const int LAN_ACTIVE = 20;
 const int DEFAULT_RETRY_DELAY = 120;
 const int STREAMS_UPDATE_SAMPLE = 120;
 const int STREAMS_UPDATE_MAX = 36000;
