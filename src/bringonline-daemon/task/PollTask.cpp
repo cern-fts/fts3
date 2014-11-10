@@ -142,7 +142,7 @@ void PollTask::handle_canceled()
     }
     // check if there is something to do first
     if (remove.empty()) return;
-    // get the urls for abortions (and remove them from task if necassary)
+    // get the urls for abortions
     auto urls = ctx.for_abortion(remove);
     abort(urls);
 }
@@ -151,17 +151,17 @@ bool PollTask::timeout_occurred()
 {
     // first check if bring-online timeout was exceeded
     if (!ctx.is_timeouted()) return false;
-    // set the state
-    ctx.state_update("FAILED", "bring-online timeout has been exceeded", true);
     // get URLs
     auto urls = ctx.getUrls();
     // and abort the bring-online operation
-    abort(urls);
+    abort(urls, false);
+    // set the state
+    ctx.state_update("FAILED", "bring-online timeout has been exceeded", true);
     // confirm the timeout
     return true;
 }
 
-void PollTask::abort(std::vector<char const *> const & urls)
+void PollTask::abort(std::vector<char const *> const & urls, bool report)
 {
     if (urls.empty()) return;
 
@@ -179,10 +179,12 @@ void PollTask::abort(std::vector<char const *> const & urls)
                             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE abort FAILED for " << urls[i] << ": "
                                                            << errors[i]->code << " " << errors[i]->message
                                                            << commit;
-
-                            bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
-                            for (auto it = ids.begin(); it != ids.end(); ++it)
-                                ctx.state_update(it->first, it->second, "FAILED", errors[i]->message, retry);
+                            if (report)
+                                {
+                                    bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
+                                    for (auto it = ids.begin(); it != ids.end(); ++it)
+                                        ctx.state_update(it->first, it->second, "FAILED", errors[i]->message, retry);
+                                }
                             g_clear_error(&errors[i]);
                         }
                     else
@@ -190,8 +192,9 @@ void PollTask::abort(std::vector<char const *> const & urls)
                             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE abort FAILED for "
                                                             << urls[i] << ", returned -1, but error not set " << token
                                                             << commit;
-                            for (auto it = ids.begin(); it != ids.end(); ++it)
-                                ctx.state_update(it->first, it->second, "FAILED", "Error not set by gfal2", false);
+                            if (report)
+                                for (auto it = ids.begin(); it != ids.end(); ++it)
+                                    ctx.state_update(it->first, it->second, "FAILED", "Error not set by gfal2", false);
                         }
                 }
         }
