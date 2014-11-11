@@ -21,12 +21,12 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/regex.hpp>
+#include <cstdlib>
 #include <map>
 #include <error.h>
 #include <logger.h>
 #include <soci/mysql/soci-mysql.h>
 #include <mysql/mysql.h>
-#include <random>
 #include <signal.h>
 #include <stdint.h>
 #include <sys/param.h>
@@ -48,18 +48,22 @@ using namespace db;
 
 static unsigned getHashedId(void)
 {
-    static __thread std::mt19937 *generator = NULL;
-    if (!generator)
-        {
-            generator = new std::mt19937(clock());
-        }
-#if __cplusplus <= 199711L
-    std::uniform_int<unsigned> distribution(0, UINT16_MAX);
-#else
-    std::uniform_int_distribution<unsigned> distribution(0, UINT16_MAX);
-#endif
+    static __thread struct random_data rand_data = {
+            NULL, NULL, NULL,
+            0, 0, 0,
+            NULL
+    };
+    static __thread char statbuf[16] = {0};
 
-    return distribution(*generator);
+    if (rand_data.fptr == NULL)
+        {
+            initstate_r(static_cast<unsigned>(time(NULL)), statbuf, sizeof(statbuf), &rand_data);
+        }
+
+    int value;
+    random_r(&rand_data, &value);
+
+    return value % UINT16_MAX;
 }
 
 
@@ -8861,10 +8865,10 @@ void MySqlAPI::checkSanityState()
                                 {
                                     updateFileTransferStatusInternal(sql, 0.0, job_id, file_id, "FAILED", errorMessage, 0, 0, 0, false);
                                     updateJobTransferStatusInternal(sql, job_id, "FAILED",0);
-				    
+
 				    sql.begin();
 				    	sql << " UPDATE t_file set staging_finished=UTC_TIMESTAMP() where file_id=:file_id", soci::use(file_id);
-				    sql.commit();				    
+				    sql.commit();
                                 }
                         }
                 }

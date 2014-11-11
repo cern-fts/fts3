@@ -33,25 +33,29 @@
 #include "sociConversions.h"
 #include "queue_updater.h"
 #include "DbUtils.h"
-#include <random>
+
 
 using namespace FTS3_COMMON_NAMESPACE;
 using namespace db;
 
 static unsigned getHashedId(void)
 {
-    static __thread std::mt19937 *generator = NULL;
-    if (!generator)
-        {
-            generator = new std::mt19937(clock());
-        }
-#if __cplusplus <= 199711L
-    std::uniform_int<unsigned> distribution(0, UINT16_MAX);
-#else
-    std::uniform_int_distribution<unsigned> distribution(0, UINT16_MAX);
-#endif
+    static __thread struct random_data rand_data = {
+            NULL, NULL, NULL,
+            0, 0, 0,
+            NULL
+    };
+    static __thread char statbuf[16] = {0};
 
-    return distribution(*generator);
+    if (rand_data.fptr == NULL)
+        {
+            initstate_r(static_cast<unsigned>(time(NULL)), statbuf, sizeof(statbuf), &rand_data);
+        }
+
+    int value;
+    random_r(&rand_data, &value);
+
+    return value % UINT16_MAX;
 }
 
 
@@ -4100,7 +4104,7 @@ bool OracleAPI::updateOptimizer()
 		    if(lanTransferBool)
 		    {
 		    	highDefault = LAN_ACTIVE;
-		    }		    
+		    }
 
                     // first thing, check if the number of actives have been fixed for this pair
                     stmt_fixed.execute(true);
