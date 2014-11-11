@@ -53,8 +53,67 @@
 #include "half_duplex.h"
 #include "utility_routines.h"
 #include "name_to_uid.h"
+#include <execinfo.h>
+#include "error.h"
+#include "logger.h"
+#include "Logger.h"
 
 using namespace std;
+
+int proc_find()
+{
+    DIR* dir=NULL;
+    struct dirent* ent=NULL;
+    char* endptr=NULL;
+    char buf[512]= {0};
+    unsigned count = 0;
+    const char* name = "fts_msg_bulk";
+
+    if (!(dir = opendir("/proc")))
+        {
+            return -1;
+        }
+
+
+    while((ent = readdir(dir)) != NULL)
+        {
+            /* if endptr is not a null character, the directory is not
+             * entirely numeric, so ignore it */
+            long lpid = strtol(ent->d_name, &endptr, 10);
+            if (*endptr != '\0')
+                {
+                    continue;
+                }
+
+            /* try to open the cmdline file */
+            snprintf(buf, sizeof(buf), "/proc/%ld/cmdline", lpid);
+            FILE* fp = fopen(buf, "r");
+
+            if (fp)
+                {
+                    if (fgets(buf, sizeof(buf), fp) != NULL)
+                        {
+                            /* check the first token in the file, the program name */
+                            char* first = NULL;
+                            first = strtok(buf, " ");
+
+                            if (first && strstr(first, name))
+                                {
+                                    fclose(fp);
+                                    fp = NULL;
+                                    ++count;
+                                    continue;
+                                }
+                        }
+                    if(fp)
+                        fclose(fp);
+                }
+
+        }
+    closedir(dir);
+    return count;
+}
+
 
 
 /*
@@ -64,6 +123,7 @@ using namespace std;
 
 void DoServer() throw()
 {
+    std::string errorMessage;
     try
         {
             activemq::library::ActiveMQCPP::initializeLibrary();
@@ -92,18 +152,42 @@ void DoServer() throw()
 
             activemq::library::ActiveMQCPP::shutdownLibrary();
         }
+    catch (CMSException& e)
+        {
+          errorMessage = "PROCESS_ERROR " + e.getStackTraceString();
+          logger::writeLog(errorMessage, true);	
+	  std::cerr << errorMessage << std::endl;
+	}	
     catch (const std::exception& e)
         {
-            std::cerr << "Exception caught: " << e.what() << std::endl;
+          errorMessage = "PROCESS_ERROR " + std::string(e.what());
+          logger::writeLog(errorMessage, true);	
+	  std::cerr << errorMessage << std::endl;
         }
     catch (...)
         {
-            std::cerr << "Unexpected exception! Aborting" << std::endl;
+         errorMessage = "PROCESS_ERROR Unknown exception";
+          logger::writeLog(errorMessage, true);	
+	  std::cerr << errorMessage << std::endl;
         }
 }
 
 int main(int argc,  char** /*argv*/)
 {
+    // Do not even try if already running
+    int n_running = proc_find();
+    if (n_running < 0)
+        {
+            std::cerr << "Could not check if FTS3 is already running" << std::endl;
+            return EXIT_FAILURE;
+        }
+    else if (n_running > 1)
+        {
+            std::cerr << "Only 1 instance of FTS3 messaging daemon can run at a time" << std::endl;
+            return EXIT_FAILURE;
+        }
+
+
     //switch to non-priviledged user to avoid reading the hostcert
     uid_t pw_uid = name_to_uid();
     setuid(pw_uid);
@@ -114,42 +198,8 @@ int main(int argc,  char** /*argv*/)
             DoServer();
         }
 
-    int d =  daemon(0,0);
-    if(d < 0)
-        std::cerr << "Can't set daemon, will continue attached to tty" << std::endl;
 
-    int result = fork();
-
-    if (result == 0)
-        {
-            DoServer();
-        }
-
-    if (result < 0)
-        {
-            exit(1);
-        }
-
-    for (;;)
-        {
-            int status = 0;
-            waitpid(-1, &status, 0);
-
-            if (!WIFSTOPPED(status))
-                {
-                    sleep(60);
-                    result = fork();
-                    if (result == 0)
-                        {
-                            DoServer();
-                        }
-                    if (result < 0)
-                        {
-                            exit(1);
-                        }
-                }
-            sleep(60);
-        }
-
+    DoServer();
+      
     return 0;
 }

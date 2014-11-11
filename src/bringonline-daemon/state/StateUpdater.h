@@ -130,13 +130,13 @@ protected:
     void recover(std::vector<value_type> const & recover)
     {
         if (!recover.empty())
-        // critical section
-        {
-            // lock the vector
-            boost::mutex::scoped_lock lock(m);
-            // put the items back
-            updates.insert(updates.end(), recover.begin(), recover.end());
-        }
+            // critical section
+            {
+                // lock the vector
+                boost::mutex::scoped_lock lock(m);
+                // put the items back
+                updates.insert(updates.end(), recover.begin(), recover.end());
+            }
 
         message_bringonline msg;
         std::vector<value_type>::const_iterator itFind;

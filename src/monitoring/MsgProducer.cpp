@@ -92,8 +92,6 @@ MsgProducer::MsgProducer()
 
 MsgProducer::~MsgProducer()
 {
-    cleanup();
-
 }
 
 bool MsgProducer::sendMessage(std::string &temp)
@@ -157,49 +155,75 @@ bool MsgProducer::sendMessage(std::string &temp)
 
 bool MsgProducer::getConnection()
 {
-    // Create a ConnectionFactory
-    std::unique_ptr<ConnectionFactory> connectionFactory(
-        ConnectionFactory::createCMSConnectionFactory(brokerURI));
-
-    // Create a Connection
-    if (true == getUSE_BROKER_CREDENTIALS())
-        connection = connectionFactory->createConnection(getUSERNAME(), getPASSWORD());
-    else
-        connection = connectionFactory->createConnection();
-
-    connection->setExceptionListener(this);
-    connection->start();
-
-    session = connection->createSession(Session::AUTO_ACKNOWLEDGE);
-
-    // Create the destination (Topic or Queue)
-    if (getTOPIC())
+    try
         {
-            destination_transfer_started = session->createTopic(startqueueName);
-            destination_transfer_completed = session->createTopic(completequeueName);
-            destination_transfer_state = session->createTopic(statequeueName);
+
+            // Create a ConnectionFactory
+            std::unique_ptr<ConnectionFactory> connectionFactory(
+                ConnectionFactory::createCMSConnectionFactory(brokerURI));
+
+            // Create a Connection
+            if (true == getUSE_BROKER_CREDENTIALS())
+                connection = connectionFactory->createConnection(getUSERNAME(), getPASSWORD());
+            else
+                connection = connectionFactory->createConnection();
+
+            connection->setExceptionListener(this);
+            connection->start();
+
+            session = connection->createSession(Session::AUTO_ACKNOWLEDGE);
+
+            // Create the destination (Topic or Queue)
+            if (getTOPIC())
+                {
+                    destination_transfer_started = session->createTopic(startqueueName);
+                    destination_transfer_completed = session->createTopic(completequeueName);
+                    destination_transfer_state = session->createTopic(statequeueName);
+                }
+            else
+                {
+                    destination_transfer_started = session->createQueue(startqueueName);
+                    destination_transfer_completed = session->createQueue(completequeueName);
+                    destination_transfer_state = session->createQueue(statequeueName);
+                }
+
+            int ttl = GetIntVal(getTTL());
+
+            // Create a message producer
+            producer_transfer_started = session->createProducer(destination_transfer_started);
+            producer_transfer_started->setDeliveryMode(DeliveryMode::PERSISTENT);
+            producer_transfer_started->setTimeToLive(ttl);
+
+            producer_transfer_completed = session->createProducer(destination_transfer_completed);
+            producer_transfer_completed->setDeliveryMode(DeliveryMode::PERSISTENT);
+            producer_transfer_completed->setTimeToLive(ttl);
+
+            producer_transfer_state = session->createProducer(destination_transfer_state);
+            producer_transfer_state->setDeliveryMode(DeliveryMode::PERSISTENT);
+            producer_transfer_state->setTimeToLive(ttl);
+	    
+	    
+            int d =  daemon(0,0);
+            if(d < 0)
+            {
+        	std::cerr << "Can't set daemon, will continue attached to tty" << std::endl;
+		return EXIT_FAILURE;
+    	    }
         }
-    else
+    catch (CMSException& e)
         {
-            destination_transfer_started = session->createQueue(startqueueName);
-            destination_transfer_completed = session->createQueue(completequeueName);
-            destination_transfer_state = session->createQueue(statequeueName);
+            errorMessage = "PROCESS_ERROR " + e.getStackTraceString();
+            logger::writeLog(errorMessage, true);
+            sleep(10);
+            return EXIT_FAILURE;
         }
-
-    int ttl = GetIntVal(getTTL());
-
-    // Create a message producer
-    producer_transfer_started = session->createProducer(destination_transfer_started);
-    producer_transfer_started->setDeliveryMode(DeliveryMode::PERSISTENT);
-    producer_transfer_started->setTimeToLive(ttl);
-
-    producer_transfer_completed = session->createProducer(destination_transfer_completed);
-    producer_transfer_completed->setDeliveryMode(DeliveryMode::PERSISTENT);
-    producer_transfer_completed->setTimeToLive(ttl);
-
-    producer_transfer_state = session->createProducer(destination_transfer_state);
-    producer_transfer_state->setDeliveryMode(DeliveryMode::PERSISTENT);
-    producer_transfer_state->setTimeToLive(ttl);
+    catch (...)
+        {
+            errorMessage = "PROCESS_ERROR Unhandled exception occured";
+            logger::writeLog(errorMessage, true);
+            sleep(10);
+            return EXIT_FAILURE;
+        }
 
     return true;
 }
@@ -239,7 +263,8 @@ void MsgProducer::readConfig()
 // registered as an ExceptionListener with the connection.
 void MsgProducer::onException( const CMSException& ex AMQCPP_UNUSED)
 {
-    logger::writeLog(ex.getStackTraceString(), true);
+    errorMessage = "PROCESS_ERROR " + ex.getStackTraceString();
+    logger::writeLog(errorMessage, true);
     stopThreads = true;
     std::queue<std::string> myQueue = concurrent_queue::getInstance()->the_queue;
     std::string ret;
@@ -277,7 +302,7 @@ void MsgProducer::run()
                             concurrent_queue::getInstance()->push(msgBk);
                             send_message(msgBk);
                         }
-                    errorMessage = e.getStackTraceString();
+                    errorMessage = "PROCESS_ERROR " + e.getStackTraceString();
                     logger::writeLog(errorMessage, true);
                     sleep(10);
                     exit(15);

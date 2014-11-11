@@ -48,10 +48,11 @@ using namespace db;
 
 static unsigned getHashedId(void)
 {
-    static __thread struct random_data rand_data = {
-            NULL, NULL, NULL,
-            0, 0, 0,
-            NULL
+    static __thread struct random_data rand_data =
+    {
+        NULL, NULL, NULL,
+        0, 0, 0,
+        NULL
     };
     static __thread char statbuf[16] = {0};
 
@@ -4527,10 +4528,10 @@ bool MySqlAPI::updateOptimizer()
 
 
                     lanTransferBool = lanTransfer(source_hostname, destin_hostname);
-		    if(lanTransferBool)
-		    {
-		    	highDefault = LAN_ACTIVE;
-		    }
+                    if(lanTransferBool)
+                        {
+                            highDefault = LAN_ACTIVE;
+                        }
 
                     //check if the number of actives have been fixed for this pair
                     stmt_fixed.execute(true);
@@ -8866,9 +8867,9 @@ void MySqlAPI::checkSanityState()
                                     updateFileTransferStatusInternal(sql, 0.0, job_id, file_id, "FAILED", errorMessage, 0, 0, 0, false);
                                     updateJobTransferStatusInternal(sql, job_id, "FAILED",0);
 
-				    sql.begin();
-				    	sql << " UPDATE t_file set staging_finished=UTC_TIMESTAMP() where file_id=:file_id", soci::use(file_id);
-				    sql.commit();
+                                    sql.begin();
+                                    sql << " UPDATE t_file set staging_finished=UTC_TIMESTAMP() where file_id=:file_id", soci::use(file_id);
+                                    sql.commit();
                                 }
                         }
                 }
