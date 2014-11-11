@@ -22,6 +22,7 @@
 #include <boost/algorithm/string/split.hpp>
 
 #include <common/parse_url.h>
+#include <common/error.h>
 
 
 static
@@ -94,6 +95,12 @@ std::string fts3::generateOauthConfigFile(GenericDbIfce* db, const TransferFiles
 
     char oauth_path[] = "/tmp/fts-oauth-XXXXXX";
     int fd = mkstemp(oauth_path);
+    if (fd < 0)
+        {
+            char err_descr[128];
+            strerror_r(errno, err_descr, sizeof(err_descr));
+            throw fts3::common::Err_Custom(std::string(__func__) + ": Can not open temporary file, " + err_descr);
+        }
     FILE* f = fdopen(fd, "w");
 
     // For each credential (i.e. DROPBOX;S3:s3.cern.ch)
