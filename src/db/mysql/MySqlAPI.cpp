@@ -60,7 +60,7 @@ static unsigned getHashedId(void)
             initstate_r(static_cast<unsigned>(time(NULL)), statbuf, sizeof(statbuf), &rand_data);
         }
 
-    int value;
+    int value = 0;
     random_r(&rand_data, &value);
 
     return value % UINT16_MAX;
