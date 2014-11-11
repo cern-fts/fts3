@@ -71,7 +71,6 @@ void BringOnlineTask::run(boost::any const &)
                             for (auto it = ids.begin(); it != ids.end(); ++it)
                                 ctx.state_update(it->first, it->second, "FAILED", "Error not set by gfal2", false);
                         }
-                    g_clear_error(&errors[i]);
                 }
         }
     else if (status == 0)
@@ -115,9 +114,10 @@ void BringOnlineTask::run(boost::any const &)
                             bool retry = doRetry(errors[i]->code, "SOURCE", std::string(errors[i]->message));
                             for (auto it = ids.begin(); it != ids.end(); ++it)
                                 ctx.state_update(it->first, it->second, "FAILED", errors[i]->message, retry);
-                            g_clear_error(&errors[i]);
                         }
                 }
         }
-}
 
+    for (size_t i = 0; i < urls.size(); ++i)
+        g_clear_error(&errors[i]);
+}
