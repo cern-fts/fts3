@@ -201,14 +201,7 @@ bool MsgProducer::getConnection()
             producer_transfer_state = session->createProducer(destination_transfer_state);
             producer_transfer_state->setDeliveryMode(DeliveryMode::PERSISTENT);
             producer_transfer_state->setTimeToLive(ttl);
-	    
-	    
-            int d =  daemon(0,0);
-            if(d < 0)
-            {
-        	std::cerr << "Can't set daemon, will continue attached to tty" << std::endl;
-		return EXIT_FAILURE;
-    	    }
+	    	    
         }
     catch (CMSException& e)
         {
