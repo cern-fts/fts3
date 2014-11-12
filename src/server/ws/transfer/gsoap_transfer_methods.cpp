@@ -377,7 +377,7 @@ int fts3::impltns__getFileStatus(soap *ctx, string requestID, int offset, int li
             resp._getFileStatusReturn = soap_new_impltns__ArrayOf_USCOREtns3_USCOREFileTransferStatus(ctx, -1);
             // fill the response
             JobStatusGetter getter (ctx, requestID, false, offset, limit, false);
-            getter.file_status<tns3__FileTransferStatus>(resp._getFileStatusReturn->item);
+            getter.file_status<tns3__FileTransferStatus>(resp._getFileStatusReturn->item, true);
 
         }
     catch(Err& ex)
@@ -483,7 +483,7 @@ int fts3::impltns__getTransferJobStatus(soap *ctx, string requestID,
             AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get());
 
             JobStatusGetter getter (ctx, requestID, false);
-            getter.job_status(resp._getTransferJobStatusReturn);
+            getter.job_status(resp._getTransferJobStatusReturn, true);
         }
     catch (Err& ex)
         {
@@ -579,7 +579,7 @@ int fts3::impltns__getTransferJobSummary2(soap *ctx, string requestID, impltns__
             AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get());
 
             JobStatusGetter getter(ctx, requestID, false);
-            getter.job_summary(resp._getTransferJobSummary2Return);
+            getter.job_summary(resp._getTransferJobSummary2Return, true);
 
         }
     catch(Err& ex)

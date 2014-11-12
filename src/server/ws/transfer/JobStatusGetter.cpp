@@ -39,11 +39,11 @@ tns3__TransferJobSummary2* JobStatusGetter::make_summary<tns3__TransferJobSummar
     return soap_new_tns3__TransferJobSummary2(ctx, -1);
 }
 
-template void JobStatusGetter::file_status<tns3__FileTransferStatus>(std::vector<tns3__FileTransferStatus*> & ret);
-template void JobStatusGetter::file_status<tns3__FileTransferStatus2>(std::vector<tns3__FileTransferStatus2*> & ret);
+template void JobStatusGetter::file_status<tns3__FileTransferStatus>(std::vector<tns3__FileTransferStatus*> &, bool);
+template void JobStatusGetter::file_status<tns3__FileTransferStatus2>(std::vector<tns3__FileTransferStatus2*> &, bool);
 
 template <typename STATUS>
-void JobStatusGetter::file_status(std::vector<STATUS*> & ret)
+void JobStatusGetter::file_status(std::vector<STATUS*> & ret, bool glite)
 {
     std::vector<FileTransferStatus*>::iterator it;
 
@@ -57,6 +57,7 @@ void JobStatusGetter::file_status(std::vector<STATUS*> & ret)
     for (it = file_statuses.begin(); it != file_statuses.end(); ++it)
         {
             FileTransferStatus* tmp = *it;
+            tmp->transferFileState = to_glite_state(tmp->transferFileState, glite);
 
             STATUS* status = make_status<STATUS>();
 
@@ -135,7 +136,7 @@ void JobStatusGetter::job_summary(SUMMARY * & ret, bool glite)
     if(!job_statuses.empty())
         {
             ret = make_summary<SUMMARY>();
-            ret->jobStatus = to_gsoap_status(**job_statuses.begin());
+            ret->jobStatus = to_gsoap_status(**job_statuses.begin(), glite);
 
             JobStatusHandler& handler = JobStatusHandler::getInstance();
             ret->numActive = handler.countInState(JobStatusHandler::FTS3_STATUS_ACTIVE, job_statuses);
@@ -144,9 +145,18 @@ void JobStatusGetter::job_summary(SUMMARY * & ret, bool glite)
             ret->numFinished = handler.countInState(JobStatusHandler::FTS3_STATUS_FINISHED, job_statuses);
             count_ready(ret, handler.countInState(JobStatusHandler::FTS3_STATUS_READY, job_statuses));
             ret->numFailed = handler.countInState(JobStatusHandler::FTS3_STATUS_FAILED, job_statuses);
-            ret->numStaging = handler.countInState(JobStatusHandler::FTS3_STATUS_STAGING, job_statuses);
-            ret->numStarted = handler.countInState(JobStatusHandler::FTS3_STATUS_STARTED, job_statuses);
-            ret->numDelete = handler.countInState(JobStatusHandler::FTS3_STATUS_DELETE, job_statuses);
+            if (glite)
+                {
+                    ret->numSubmitted += handler.countInState(JobStatusHandler::FTS3_STATUS_STAGING, job_statuses);
+                    ret->numSubmitted += handler.countInState(JobStatusHandler::FTS3_STATUS_DELETE, job_statuses);
+                    ret->numActive += handler.countInState(JobStatusHandler::FTS3_STATUS_STARTED, job_statuses);
+                }
+            else
+                {
+                    ret->numStaging = handler.countInState(JobStatusHandler::FTS3_STATUS_STAGING, job_statuses);
+                    ret->numStarted = handler.countInState(JobStatusHandler::FTS3_STATUS_STARTED, job_statuses);
+                    ret->numDelete = handler.countInState(JobStatusHandler::FTS3_STATUS_DELETE, job_statuses);
+                }
         }
     else
         {
@@ -156,7 +166,19 @@ void JobStatusGetter::job_summary(SUMMARY * & ret, bool glite)
         }
 }
 
-tns3__JobStatus * JobStatusGetter::to_gsoap_status(JobStatus const & job_status)
+std::string JobStatusGetter::to_glite_state(std::string const & state, bool glite)
+{
+    // if it is not for glite
+    if (!glite) return state;
+    // check if it is fts3 only state
+    if (state == "STARTED") return "ACTIVE";
+    if (state == "STAGING") return "SUBMITTED";
+    if (state == "DELETE") return "SUBMITTED";
+    // if not there's nothing to do
+    return state;
+}
+
+tns3__JobStatus * JobStatusGetter::to_gsoap_status(JobStatus const & job_status, bool glite)
 {
     tns3__JobStatus * status = soap_new_tns3__JobStatus(ctx, -1);
 
@@ -167,7 +189,7 @@ tns3__JobStatus * JobStatusGetter::to_gsoap_status(JobStatus const & job_status)
     *status->jobID = job_status.jobID;
 
     status->jobStatus = soap_new_std__string(ctx, -1);
-    *status->jobStatus = job_status.jobStatus;
+    *status->jobStatus = to_glite_state(job_status.jobStatus, glite);
 
     status->reason = soap_new_std__string(ctx, -1);
     *status->reason = job_status.reason;
@@ -183,7 +205,7 @@ tns3__JobStatus * JobStatusGetter::to_gsoap_status(JobStatus const & job_status)
     return status;
 }
 
-void JobStatusGetter::job_status(tns3__JobStatus * & status)
+void JobStatusGetter::job_status(tns3__JobStatus * & status, bool glite)
 {
     if (db.isDmJob(job))
         db.getDmJobStatus(job, archive, job_statuses);
@@ -192,7 +214,7 @@ void JobStatusGetter::job_status(tns3__JobStatus * & status)
 
     if(!job_statuses.empty())
         {
-            status = to_gsoap_status(**job_statuses.begin());
+            status = to_gsoap_status(**job_statuses.begin(), glite);
         }
     else
         {
