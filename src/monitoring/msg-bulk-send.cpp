@@ -196,8 +196,16 @@ int main(int argc,  char** /*argv*/)
     if(argc > 1) //if any param is provided stay attached to terminal
         {
             DoServer();
-        }
-
+        } 
+		
+	
+   int d =  daemon(0,0);
+   
+   if(d < 0)
+        {
+        	std::cerr << "Can't set daemon, will continue attached to tty" << std::endl;
+		return EXIT_FAILURE;
+    	}	
 
     DoServer();
       
