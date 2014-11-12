@@ -31,6 +31,7 @@ lockfile=/var/lock/subsys/fts-msg-bulk
 
 start() {
     echo -n $"Starting $prog: "
+    sleep 10
     # if not running, start it up here, usually something like "daemon $exec"
     if [ ! -f $lockfile ] ; then
     touch "$lockfile" && success || failure
