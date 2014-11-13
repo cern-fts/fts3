@@ -309,10 +309,10 @@ void MySqlAPI::init(std::string username, std::string password, std::string conn
 }
 
 
-void MySqlAPI::submitdelete(const std::string & jobId, const std::map<std::string,std::string>& rulsHost,
+void MySqlAPI::submitdelete(const std::string & jobId, const std::map<std::string,std::string>& urlsHost,
                             const std::string & userDN, const std::string & voName, const std::string & credID)
 {
-    if (rulsHost.empty()) return;
+    if (urlsHost.empty()) return;
 
     const std::string initialState = "DELETE";
     std::ostringstream pairStmt;
@@ -320,11 +320,11 @@ void MySqlAPI::submitdelete(const std::string & jobId, const std::map<std::strin
     soci::session sql(*connectionPool);
 
     // first check if the job conserns only one SE
-    std::string const & src_se = rulsHost.begin()->second;
+    std::string const & src_se = urlsHost.begin()->second;
     bool same_src_se = true;
 
     std::multimap<std::string,std::string>::const_iterator it;
-    for (it = rulsHost.begin(); it != rulsHost.end(); ++it)
+    for (it = urlsHost.begin(); it != urlsHost.end(); ++it)
         {
             same_src_se = it->second == src_se;
             if (!same_src_se) break;
@@ -362,38 +362,39 @@ void MySqlAPI::submitdelete(const std::string & jobId, const std::map<std::strin
                     insertJob.execute(true);
                 }
 
-            std::string sourceSurl;
-            std::string sourceSE;
+            // Insert all operations in a bulk manner
+            soci::statement insert_dm_stmt(sql);
+            std::ostringstream query;
+            unsigned index = 0;
 
-            pairStmt << std::fixed << "INSERT INTO t_dm (vo_name, job_id, file_state, source_surl, source_se, hashed_id) VALUES ";
-
-            for(std::multimap <std::string, std::string> ::const_iterator mapit = rulsHost.begin(); mapit != rulsHost.end(); ++mapit)
+            query << "INSERT INTO t_dm (vo_name, job_id, file_state, source_surl, source_se, hashed_id) VALUES ";
+            for(it = urlsHost.begin(); it != urlsHost.end(); ++it)
                 {
-                    sourceSurl = (*mapit).first;
-                    sourceSE = (*mapit).second;
+                    query << "(:vo_name" << index << ", "
+                          << " :job_id" << index << ", "
+                          << " :file_state" << index << ", "
+                          << " :surl" << index << ", "
+                          << " :se" << index << ", "
+                          << " :hash" << index << "),";
 
-                    pairStmt << "(";
-                    pairStmt << "'";
-                    pairStmt << voName;
-                    pairStmt << "',";
-                    pairStmt << "'";
-                    pairStmt << jobId;
-                    pairStmt << "',";
-                    pairStmt << "'";
-                    pairStmt << initialState;
-                    pairStmt << "',";
-                    pairStmt << "'";
-                    pairStmt << sourceSurl;
-                    pairStmt << "',";
-                    pairStmt << "'";
-                    pairStmt << sourceSE;
-                    pairStmt << "',";
-                    pairStmt << getHashedId();
-                    pairStmt << "),";
+                    insert_dm_stmt.exchange(soci::use(voName));
+                    insert_dm_stmt.exchange(soci::use(jobId));
+                    insert_dm_stmt.exchange(soci::use(initialState));
+                    insert_dm_stmt.exchange(soci::use(it->first));
+                    insert_dm_stmt.exchange(soci::use(it->second));
+                    insert_dm_stmt.exchange(soci::use(getHashedId()));
+
+                    ++index;
                 }
 
-            std::string queryStr = pairStmt.str();
-            sql << queryStr.substr(0, queryStr.length() - 1);
+            std::string queryStr = query.str();
+            // Remove trailing comma
+            queryStr = queryStr.substr(0, queryStr.length() - 1);
+
+            insert_dm_stmt.alloc();
+            insert_dm_stmt.prepare(queryStr);
+            insert_dm_stmt.define_and_bind();
+            insert_dm_stmt.execute(true);
 
             sql.commit();
         }
