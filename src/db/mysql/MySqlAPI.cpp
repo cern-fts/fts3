@@ -1681,8 +1681,8 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
     soci::session sql(*connectionPool);
 
     //multiple insert statements
-    std::ostringstream pairStmt;
-    std::ostringstream pairStmtSeBlaklisted;
+    std::ostringstream pairQuery;
+    std::ostringstream pairQuerySeBlaklisted;
 
     //we can no longer use mysql functions, so create UTC timestamp outside
     time_t now = time(NULL);
@@ -1715,41 +1715,38 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
 
             insertJob.execute(true);
 
-            std::string sourceSurl, destSurl, checksum, metadata, selectionStrategy, sourceSe, destSe, activity;
-            double filesize = 0.0;
-            unsigned hashedId = 0;
-            int fileIndex = 0, timeout = 0;
+            unsigned jobHashedId = 0;
+            int timeout = 0;
             typedef std::pair<std::string, std::string> Key;
             typedef std::map< Key , int> Mapa;
             Mapa mapa;
 
             //create the insertion statements here and populate values inside the loop
-            pairStmt << std::fixed << "INSERT INTO t_file (vo_name, job_id, file_state, source_surl, dest_surl,checksum, user_filesize, file_metadata, selection_strategy, file_index, source_se, dest_se, activity, hashed_id) VALUES ";
+            pairQuery << std::fixed <<
+                    "INSERT INTO t_file (vo_name, job_id, file_state, source_surl, dest_surl, checksum, user_filesize, "
+                    "   file_metadata, selection_strategy, file_index, source_se, dest_se, activity, hashed_id) VALUES ";
 
-            pairStmtSeBlaklisted << std::fixed << "INSERT INTO t_file (vo_name, job_id, file_state, source_surl, dest_surl, checksum, user_filesize, file_metadata, selection_strategy, file_index, source_se, dest_se, wait_timestamp, wait_timeout, activity, hashed_id) VALUES ";
+            pairQuerySeBlaklisted << std::fixed <<
+                    "INSERT INTO t_file (vo_name, job_id, file_state, source_surl, dest_surl, checksum, user_filesize, "
+                    "   file_metadata, selection_strategy, file_index, source_se, dest_se, wait_timestamp, wait_timeout, activity, hashed_id) VALUES ";
 
             // When reuse is enabled, we use the same random number for the whole job
             // This guarantees that the whole set belong to the same machine, but keeping
             // the load balance between hosts
-            hashedId = getHashedId();
+            jobHashedId = getHashedId();
 
-            std::list<job_element_tupple>::const_iterator iter;
+            std::list<job_element_tupple>::iterator iter;
             int index = 0;
+            int insert_index = 0;
+
+            soci::statement insert_file_stmt(sql);
 
             for (iter = src_dest_pair.begin(); iter != src_dest_pair.end(); ++iter)
                 {
-                    sourceSurl = iter->source;
-                    destSurl   = iter->destination;
-                    checksum   = iter->checksum;
-                    filesize   = iter->filesize;
-                    metadata   = iter->metadata;
-                    selectionStrategy = iter->selectionStrategy;
-                    fileIndex = iter->fileIndex;
-                    sourceSe = iter->source_se;
-                    destSe = iter->dest_se;
-                    activity = iter->activity;
-                    if(activity.empty())
-                        activity = "default";
+                    ++insert_index;
+
+                    if(iter->activity.empty())
+                        iter->activity = "default";
 
                     /*
                     	N = no reuse
@@ -1759,144 +1756,128 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
                     */
                     if(bringOnline > 0 || copyPinLifeTime > 0)
                         {
-                            hashedId = hashedId;   //for convenience
+                            iter->hashedId = jobHashedId;
+                            iter->state = "STAGING";
                         }
                     else if (mreplica)
                         {
-                            fileIndex = 0;
+                            iter->fileIndex = 0;
                             if(index == 0) //only the first file
-                                initialState = "SUBMITTED";
+                                iter->state = "SUBMITTED";
                             else
-                                initialState = "NOT_USED";
-
+                                iter->state = "NOT_USED";
                             index++;
                         }
                     else if (mhop)
                         {
-                            hashedId = hashedId;   //for convenience
+                            iter->hashedId = jobHashedId;
                         }
                     else if(reuseFlag == "Y" && !mreplica && !mhop)
                         {
-                            hashedId = hashedId;
+                            iter->hashedId = jobHashedId;
                         }
                     else if (reuseFlag == "N" && !mreplica && !mhop)
                         {
-                            hashedId = getHashedId();
+                            iter->hashedId = getHashedId();
                         }
                     else
                         {
-                            hashedId = getHashedId();
+                            iter->hashedId = getHashedId();
                         }
 
                     //get distinct source_se / dest_se
-                    Key p1 (sourceSe, destSe);
+                    Key p1 (iter->source_se, iter->dest_se);
                     mapa.insert(std::make_pair(p1, 0));
 
                     if (iter->wait_timeout.is_initialized())
                         {
-                            timeout = *iter->wait_timeout;
-                            pairStmtSeBlaklisted << "(";
-                            pairStmtSeBlaklisted << "'";
-                            pairStmtSeBlaklisted << voName;
-                            pairStmtSeBlaklisted << "',";
-                            pairStmtSeBlaklisted << "'";
-                            pairStmtSeBlaklisted << jobId;
-                            pairStmtSeBlaklisted << "',";
-                            pairStmtSeBlaklisted << "'";
-                            pairStmtSeBlaklisted << initialState;
-                            pairStmtSeBlaklisted << "',";
-                            pairStmtSeBlaklisted << "'";
-                            pairStmtSeBlaklisted << sourceSurl;
-                            pairStmtSeBlaklisted << "',";
-                            pairStmtSeBlaklisted << "'";
-                            pairStmtSeBlaklisted << destSurl;
-                            pairStmtSeBlaklisted << "',";
-                            pairStmtSeBlaklisted << "'";
-                            pairStmtSeBlaklisted << checksum;
-                            pairStmtSeBlaklisted << "',";
-                            pairStmtSeBlaklisted << filesize;
-                            pairStmtSeBlaklisted << ",";
-                            pairStmtSeBlaklisted << "'";
-                            pairStmtSeBlaklisted << metadata;
-                            pairStmtSeBlaklisted << "',";
-                            pairStmtSeBlaklisted << "'";
-                            pairStmtSeBlaklisted << selectionStrategy;
-                            pairStmtSeBlaklisted << "',";
-                            pairStmtSeBlaklisted << fileIndex;
-                            pairStmtSeBlaklisted << ",";
-                            pairStmtSeBlaklisted << "'";
-                            pairStmtSeBlaklisted << sourceSe;
-                            pairStmtSeBlaklisted << "',";
-                            pairStmtSeBlaklisted << "'";
-                            pairStmtSeBlaklisted << destSe;
-                            pairStmtSeBlaklisted << "',";
-                            pairStmtSeBlaklisted << "'";
-                            pairStmtSeBlaklisted << asctime(&tTime);
-                            pairStmtSeBlaklisted << "',";
-                            pairStmtSeBlaklisted << timeout;
-                            pairStmtSeBlaklisted << ",";
-                            pairStmtSeBlaklisted << "'";
-                            pairStmtSeBlaklisted << activity;
-                            pairStmtSeBlaklisted << "',";
-                            pairStmtSeBlaklisted << hashedId;
-                            pairStmtSeBlaklisted << "),";
+                            pairQuerySeBlaklisted << "("
+                                << ":voName" << insert_index << ", "
+                                << ":jobId" << insert_index << ", "
+                                << ":state" << insert_index << ", "
+                                << ":sourceSurl" << insert_index << ", "
+                                << ":destSurl" << insert_index << ", "
+                                << ":checksum" << insert_index << ", "
+                                << ":filesize" << insert_index << ", "
+                                << ":metadata" << insert_index << ", "
+                                << ":strategy" << insert_index << ", "
+                                << ":fileIndex" << insert_index << ", "
+                                << ":sourceSe" << insert_index << ", "
+                                << ":destSe" << insert_index << ", "
+                                << "UTC_TIMESTAMP(), "
+                                << ":waitTimeout" << insert_index << ", "
+                                << ":activity" << insert_index << ", "
+                                << ":hashId" << insert_index
+                                << "),";
+
+                                insert_file_stmt.exchange(soci::use(voName));
+                                insert_file_stmt.exchange(soci::use(jobId));
+                                insert_file_stmt.exchange(soci::use(iter->state));
+                                insert_file_stmt.exchange(soci::use(iter->source));
+                                insert_file_stmt.exchange(soci::use(iter->destination));
+                                insert_file_stmt.exchange(soci::use(iter->checksum));
+                                insert_file_stmt.exchange(soci::use(iter->filesize));
+                                insert_file_stmt.exchange(soci::use(iter->metadata));
+                                insert_file_stmt.exchange(soci::use(iter->selectionStrategy));
+                                insert_file_stmt.exchange(soci::use(iter->fileIndex));
+                                insert_file_stmt.exchange(soci::use(iter->source_se));
+                                insert_file_stmt.exchange(soci::use(iter->dest_se));
+                                insert_file_stmt.exchange(soci::use(iter->wait_timeout.get()));
+                                insert_file_stmt.exchange(soci::use(iter->activity));
+                                insert_file_stmt.exchange(soci::use(iter->hashedId));
                         }
                     else
                         {
-                            pairStmt << "(";
-                            pairStmt << "'";
-                            pairStmt << voName;
-                            pairStmt << "',";
-                            pairStmt << "'";
-                            pairStmt << jobId;
-                            pairStmt << "',";
-                            pairStmt << "'";
-                            pairStmt << initialState;
-                            pairStmt << "',";
-                            pairStmt << "'";
-                            pairStmt << sourceSurl;
-                            pairStmt << "',";
-                            pairStmt << "'";
-                            pairStmt << destSurl;
-                            pairStmt << "',";
-                            pairStmt << "'";
-                            pairStmt << checksum;
-                            pairStmt << "',";
-                            pairStmt << filesize;
-                            pairStmt << ",";
-                            pairStmt << "'";
-                            pairStmt << metadata;
-                            pairStmt << "',";
-                            pairStmt << "'";
-                            pairStmt << selectionStrategy;
-                            pairStmt << "',";
-                            pairStmt << fileIndex;
-                            pairStmt << ",";
-                            pairStmt << "'";
-                            pairStmt << sourceSe;
-                            pairStmt << "',";
-                            pairStmt << "'";
-                            pairStmt << destSe;
-                            pairStmt << "',";
-                            pairStmt << "'";
-                            pairStmt << activity;
-                            pairStmt << "',";
-                            pairStmt << hashedId;
-                            pairStmt << "),";
+                        pairQuery << "("
+                            << ":voName" << insert_index << ", "
+                            << ":jobId" << insert_index << ", "
+                            << ":state" << insert_index << ", "
+                            << ":sourceSurl" << insert_index << ", "
+                            << ":destSurl" << insert_index << ", "
+                            << ":checksum" << insert_index << ", "
+                            << ":filesize" << insert_index << ", "
+                            << ":metadata" << insert_index << ", "
+                            << ":strategy" << insert_index << ", "
+                            << ":fileIndex" << insert_index << ", "
+                            << ":sourceSe" << insert_index << ", "
+                            << ":destSe" << insert_index << ", "
+                            << ":activity" << insert_index << ", "
+                            << ":hashId" << insert_index
+                            << "),";
+
+                            insert_file_stmt.exchange(soci::use(voName));
+                            insert_file_stmt.exchange(soci::use(jobId));
+                            insert_file_stmt.exchange(soci::use(iter->state));
+                            insert_file_stmt.exchange(soci::use(iter->source));
+                            insert_file_stmt.exchange(soci::use(iter->destination));
+                            insert_file_stmt.exchange(soci::use(iter->checksum));
+                            insert_file_stmt.exchange(soci::use(iter->filesize));
+                            insert_file_stmt.exchange(soci::use(iter->metadata));
+                            insert_file_stmt.exchange(soci::use(iter->selectionStrategy));
+                            insert_file_stmt.exchange(soci::use(iter->fileIndex));
+                            insert_file_stmt.exchange(soci::use(iter->source_se));
+                            insert_file_stmt.exchange(soci::use(iter->dest_se));
+                            insert_file_stmt.exchange(soci::use(iter->activity));
+                            insert_file_stmt.exchange(soci::use(iter->hashedId));
                         }
                 }
 
+            std::string queryStr;
             if(timeout == 0)
                 {
-                    std::string queryStr = pairStmt.str();
-                    sql << queryStr.substr(0, queryStr.length() - 1);
+                    queryStr = pairQuery.str();
                 }
             else
                 {
-                    std::string queryStr = pairStmtSeBlaklisted.str();
-                    sql << queryStr.substr(0, queryStr.length() - 1);
+                    queryStr = pairQuerySeBlaklisted.str();
                 }
+            // Remove trailing ,
+            queryStr = queryStr.substr(0, queryStr.length() - 1);
 
+            insert_file_stmt.alloc();
+            insert_file_stmt.prepare(queryStr);
+            insert_file_stmt.define_and_bind();
+            insert_file_stmt.execute(true);
 
             std::map<Key , int>::const_iterator itr;
             for(itr = mapa.begin(); itr != mapa.end(); ++itr)
@@ -1904,31 +1885,20 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
                     Key p1 = (*itr).first;
                     std::string source_se = p1.first;
                     std::string dest_se = p1.second;
-                    sql << "INSERT INTO t_optimize_active (source_se, dest_se, active, ema, datetime) VALUES (:source_se, :dest_se, 2, 0, UTC_TIMESTAMP()) ON DUPLICATE KEY UPDATE source_se=:source_se, dest_se=:dest_se",
+                    sql << "INSERT INTO t_optimize_active (source_se, dest_se, active, ema, datetime) VALUES "
+                           "    (:source_se, :dest_se, 2, 0, UTC_TIMESTAMP()) ON DUPLICATE KEY UPDATE source_se=:source_se, dest_se=:dest_se",
                         soci::use(source_se), soci::use(dest_se),soci::use(source_se), soci::use(dest_se);
                 }
 
             sql.commit();
-            pairStmt.str(std::string());
-            pairStmt.clear();
-            pairStmtSeBlaklisted.str(std::string());
-            pairStmtSeBlaklisted.clear();
         }
     catch (std::exception& e)
         {
-            pairStmt.str(std::string());
-            pairStmt.clear();
-            pairStmtSeBlaklisted.str(std::string());
-            pairStmtSeBlaklisted.clear();
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
         }
     catch (...)
         {
-            pairStmt.str(std::string());
-            pairStmt.clear();
-            pairStmtSeBlaklisted.str(std::string());
-            pairStmtSeBlaklisted.clear();
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }

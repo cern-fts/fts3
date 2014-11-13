@@ -73,6 +73,7 @@
  **/
 struct job_element_tupple
 {
+    job_element_tupple(): filesize(0), fileIndex(0), hashedId(0) {}
     std::string source;
     std::string destination;
     std::string source_se;
@@ -85,6 +86,7 @@ struct job_element_tupple
     boost::optional<int> wait_timeout;
     std::string activity;
     std::string state;
+    unsigned hashedId;
 };
 
 class GenericDbIfce
