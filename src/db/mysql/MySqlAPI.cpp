@@ -3357,6 +3357,7 @@ void MySqlAPI::cancelJobInternal(soci::session& sql, std::vector<std::string>& r
             for (std::vector<std::string>::const_iterator i = requestIDs.begin(); i != requestIDs.end(); ++i)
                 {
                     job_id = (*i);
+                    std::replace( job_id.begin(), job_id.end(), '\'', '-');
                     jobIdStmt << "'";
                     jobIdStmt << job_id;
                     jobIdStmt << "',";
@@ -11735,6 +11736,7 @@ void MySqlAPI::cancelDeletion(std::vector<std::string>& files)
             for (std::vector<std::string>::const_iterator i = files.begin(); i != files.end(); ++i)
                 {
                     job_id = (*i);
+                    std::replace(job_id.begin(), job_id.end(), '\'', '-');
                     jobIdStmt << "'";
                     jobIdStmt << job_id;
                     jobIdStmt << "',";
@@ -12999,6 +13001,7 @@ void MySqlAPI::cancelDmJobs(std::vector<std::string> const & jobs)
             for (std::vector<std::string>::const_iterator i = jobs.begin(); i != jobs.end(); ++i)
                 {
                     job_id = (*i);
+                    std::replace(job_id.begin(), job_id.end(), '\'', '-');
                     jobIdStmt << "'";
                     jobIdStmt << job_id;
                     jobIdStmt << "',";
