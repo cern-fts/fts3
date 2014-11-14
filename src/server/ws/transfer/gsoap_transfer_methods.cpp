@@ -1027,6 +1027,4 @@ int fts3::impltns__detailedJobStatus(soap* ctx, std::string job_id, impltns__det
         }
 
     return SOAP_OK;
-
-    return SOAP_OK;
 }
