@@ -109,20 +109,23 @@ Options:
         except:
             return (EX_CRITICAL, 'Could not retrieve the status from the monitoring')
 
-        submittedCount = response['count']
-        if submittedCount == 0:
-            return (EX_OK, "No transfers in submitted state")
+        try:
+            submittedCount = response['count']
+            if submittedCount == 0:
+                return (EX_OK, "No transfers in submitted state")
 
-        # Pick the oldest, which is the one with the oldest submit time
-        # and (oldest start time or no start time)
-        oldest_time = datetime.utcnow()
-        oldest = None
-        for t in response['items']:
-            reference_struct = time.strptime(t['submit_time'], '%Y-%m-%dT%H:%M:%S')
-            reference = datetime.fromtimestamp(time.mktime(reference_struct))
-            if reference < oldest_time:
-                oldest = t
-                oldest_time = reference
+            # Pick the oldest, which is the one with the oldest submit time
+            # and (oldest start time or no start time)
+            oldest_time = datetime.utcnow()
+            oldest = None
+            for t in response['items']:
+                reference_struct = time.strptime(t['submit_time'], '%Y-%m-%dT%H:%M:%S')
+                reference = datetime.fromtimestamp(time.mktime(reference_struct))
+                if reference < oldest_time:
+                    oldest = t
+                    oldest_time = reference
+        except Exception, e:
+            return (EX_CRITICAL, 'Could not process the response from the server: %s' % str(e))
 
         # Check elapsed to the oldest
         now = datetime.utcnow()
