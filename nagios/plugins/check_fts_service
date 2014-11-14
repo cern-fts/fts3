@@ -62,6 +62,8 @@ class FtsProbe:
                     self.port = int(arg)
                 elif opt == '--cert':
                     self.cert = arg
+                elif opt == '--key':
+                    self.key = arg
         except Exception, e:
             self.abortMsg = str(e)
 
@@ -94,6 +96,8 @@ Options:
         if self.cert:
             curl.setopt(pycurl.CAINFO, self.cert)
             curl.setopt(pycurl.SSLCERT, self.cert)
+        if self.key:
+            curl.setopt(pycurl.SSLKEY, self.key)
 
         curl.setopt(pycurl.POST, True)
         curl.setopt(pycurl.HTTPHEADER, ['Content-Type: text/xml'])
