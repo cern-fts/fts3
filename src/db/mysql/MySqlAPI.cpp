@@ -10826,12 +10826,10 @@ int MySqlAPI::getStreamsOptimization(const std::string & source_hostname, const 
                 }
             catch (std::exception& e)
                 {
-                    sql.rollback();
                     throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
                 }
             catch (...)
                 {
-                    sql.rollback();
                     throw Err_Custom(std::string(__func__) + ": Caught exception ");
                 }
         }
@@ -10844,12 +10842,10 @@ int MySqlAPI::getStreamsOptimization(const std::string & source_hostname, const 
                 }
             catch (std::exception& e)
                 {
-                    sql.rollback();
                     throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
                 }
             catch (...)
                 {
-                    sql.rollback();
                     throw Err_Custom(std::string(__func__) + ": Caught exception ");
                 }
         }
