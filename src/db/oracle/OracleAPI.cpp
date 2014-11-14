@@ -1612,7 +1612,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
             throw Err_Custom("Session reuse (-r) can't be used with multiple replicas or multi-hop jobs!");
         }
 
-    if( (bringOnline > 0 || copyPinLifeTime > 0) && (mhop || reuse == "Y"))
+    if( (bringOnline > 0 || copyPinLifeTime > 0) && (mreplica || mhop || reuse == "Y"))
         {
             throw Err_Custom("bringOnline or copyPinLifeTime can't be used with multiple replicas or multi-hop jobs!");
         }

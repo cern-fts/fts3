@@ -1249,15 +1249,11 @@ void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId)
             //check if the file belongs to a multiple replica job
             std::string mreplica;
             std::string job_state;
-	    int bring_online = 0;
-	    int copy_pin_lifetime = 0;
-            sql << "select reuse_job, job_state, bring_online, copy_pin_lifetime from t_job where job_id=:job_id",
-                soci::use(jobId), soci::into(mreplica), soci::into(job_state), soci::into(bring_online), soci::into(copy_pin_lifetime);
-		
-	    	
+            sql << "select reuse_job, job_state from t_job where job_id=:job_id",
+                soci::use(jobId), soci::into(mreplica), soci::into(job_state);
 
-            //this is a m-replica job and no staging
-            if(mreplica == "R" && job_state != "CANCELED" && job_state != "FAILED" && bring_online == -1 && copy_pin_lifetime == -1)
+            //this is a m-replica job
+            if(mreplica == "R" && job_state != "CANCELED" && job_state != "FAILED")
                 {
                     //check if it's auto or manual
                     sql << " select selection_strategy, vo_name from t_file where file_id = :file_id",
@@ -1315,70 +1311,7 @@ void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId)
                                 " AND file_state = 'NOT_USED' LIMIT 1 ",
                                 soci::use(jobId);
                         }
-                } //this is a m-replica and staging job
-		else if(mreplica == "R" && job_state != "CANCELED" && job_state != "FAILED" && (bring_online > 0 || copy_pin_lifetime > 0))
-		{
-                   //check if it's auto or manual
-                    sql << " select selection_strategy, vo_name from t_file where file_id = :file_id",
-                        soci::use(fileId), soci::into(selection_strategy, ind), soci::into(vo_name);
-
-                    if (ind == soci::i_ok)
-                        {
-                            if(selection_strategy == "auto") //pick the "best-next replica to process"
-                                {
-                                    int bestFileId = getBestNextReplica(sql, jobId, vo_name);
-                                    if(bestFileId > 0) //use the one recommended
-                                        {
-                                            sql <<
-                                                " UPDATE t_file "
-                                                " SET file_state = 'SUBMITTED' "
-                                                " WHERE job_id = :jobId AND file_id = :file_id  "
-                                                " AND file_state = 'NOT_USED' ",
-                                                soci::use(jobId), soci::use(bestFileId);
-                                        }
-                                    else //something went wrong, use orderly fashion
-                                        {
-                                            sql <<
-                                                " UPDATE t_file "
-                                                " SET file_state = 'SUBMITTED' "
-                                                " WHERE job_id = :jobId "
-                                                " AND file_state = 'NOT_USED' LIMIT 1 ",
-                                                soci::use(jobId);
-                                        }
-                                }
-                            else if (selection_strategy == "orderly")
-                                {
-                                    sql <<
-                                        " UPDATE t_file "
-                                        " SET file_state = 'SUBMITTED' "
-                                        " WHERE job_id = :jobId "
-                                        " AND file_state = 'NOT_USED' LIMIT 1 ",
-                                        soci::use(jobId);
-                                }
-                            else
-                                {
-                                    sql <<
-                                        " UPDATE t_file "
-                                        " SET file_state = 'SUBMITTED' "
-                                        " WHERE job_id = :jobId "
-                                        " AND file_state = 'NOT_USED' LIMIT 1 ",
-                                        soci::use(jobId);
-                                }
-                        }
-                    else //it's NULL, default is orderly
-                        {
-                            sql <<
-                                " UPDATE t_file "
-                                " SET file_state = 'SUBMITTED' "
-                                " WHERE job_id = :jobId "
-                                " AND file_state = 'NOT_USED' LIMIT 1 ",
-                                soci::use(jobId);
-                        }		
-		}
-		else
-		{
-			//do nothing for now
-		}
+                }
         }
     catch (std::exception& e)
         {
@@ -1705,9 +1638,9 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
             throw Err_Custom("Session reuse (-r) can't be used with multiple replicas or multi-hop jobs!");
         }
 
-    if( (bringOnline > 0 || copyPinLifeTime > 0) && (mhop || reuse == "Y"))
+    if( (bringOnline > 0 || copyPinLifeTime > 0) && (mreplica || mhop || reuse == "Y"))
         {
-            throw Err_Custom("bringOnline or copyPinLifeTime can't be used with multi-hop jobs or Y flag (session reuse)!");
+            throw Err_Custom("bringOnline or copyPinLifeTime can't be used with multiple replicas or multi-hop jobs or Y flag (session reuse)!");
         }
 
     if(mhop) //since H is not passed when plain text submission (e.g. glite client) we need to set into DB
