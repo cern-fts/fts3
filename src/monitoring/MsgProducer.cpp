@@ -87,7 +87,7 @@ MsgProducer::MsgProducer()
     FTS3_CONFIG_NAMESPACE::theServerConfig().read(0, NULL);
     FTSEndpoint = FTS3_CONFIG_NAMESPACE::theServerConfig().get<std::string>("Alias");
     readConfig();
-    getConnection();
+    connected = false;
 }
 
 MsgProducer::~MsgProducer()
@@ -157,7 +157,6 @@ bool MsgProducer::getConnection()
 {
     try
         {
-
             // Create a ConnectionFactory
             std::unique_ptr<ConnectionFactory> connectionFactory(
                 ConnectionFactory::createCMSConnectionFactory(brokerURI));
@@ -168,7 +167,7 @@ bool MsgProducer::getConnection()
             else
                 connection = connectionFactory->createConnection();
 
-            connection->setExceptionListener(this);
+            //connection->setExceptionListener(this);
             connection->start();
 
             session = connection->createSession(Session::AUTO_ACKNOWLEDGE);
@@ -201,21 +200,23 @@ bool MsgProducer::getConnection()
             producer_transfer_state = session->createProducer(destination_transfer_state);
             producer_transfer_state->setDeliveryMode(DeliveryMode::PERSISTENT);
             producer_transfer_state->setTimeToLive(ttl);
+
+            connected = true;
 	    	    
         }
     catch (CMSException& e)
         {
             errorMessage = "PROCESS_ERROR " + e.getStackTraceString();
             logger::writeLog(errorMessage, true);
+            connected = false;           
             sleep(10);
-            return EXIT_FAILURE;
         }
     catch (...)
         {
             errorMessage = "PROCESS_ERROR Unhandled exception occured";
             logger::writeLog(errorMessage, true);
+            connected = false;	    
             sleep(10);
-            return EXIT_FAILURE;
         }
 
     return true;
@@ -267,20 +268,32 @@ void MsgProducer::onException( const CMSException& ex AMQCPP_UNUSED)
             myQueue.pop();
             send_message(ret);
         }
-    sleep(10);
-    exit(15); //force weird exit error code in order to restart
+    connected = false;    
+    sleep(5);
 }
 
 
 void MsgProducer::run()
 {
-
     std::string msg("");
     std::string msgBk("");
     while (stopThreads==false)
         {
             try
                 {
+                    if(!connected)
+                    {
+			cleanup();
+			getConnection();
+
+		        if(!connected)
+		        {
+				cleanup();
+				sleep(10);
+				continue;
+			}
+		    }
+
                     //send messages
                     msg = concurrent_queue::getInstance()->pop();
                     msgBk = msg;
@@ -295,10 +308,9 @@ void MsgProducer::run()
                             concurrent_queue::getInstance()->push(msgBk);
                             send_message(msgBk);
                         }
-                    errorMessage = "PROCESS_ERROR " + e.getStackTraceString();
+                    errorMessage = "PROCESS_ERROR 3" + e.getStackTraceString();
                     logger::writeLog(errorMessage, true);
-                    sleep(10);
-                    exit(15);
+                    sleep(2);                   
                 }
             catch (...)
                 {
@@ -307,9 +319,8 @@ void MsgProducer::run()
                             concurrent_queue::getInstance()->push(msgBk);
                             send_message(msgBk);
                         }
-                    logger::writeLog("Unhandled exception occured", true);
-                    sleep(10);
-                    exit(15);
+                    logger::writeLog("PROCESS_ERROR Unhandled exception occured", true);
+                    sleep(2);
                 }
         }
 }
