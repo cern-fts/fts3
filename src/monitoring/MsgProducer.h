@@ -80,4 +80,5 @@ public:
     virtual void run();
     void cleanup();
     virtual void onException( const CMSException& ex AMQCPP_UNUSED);
+    bool connected;
 };
