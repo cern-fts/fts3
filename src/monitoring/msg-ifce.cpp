@@ -372,9 +372,18 @@ void msg_ifce::SendTransferFinishMessage(transfer_completed *tr_completed)
             text.append(tr_completed->tr_timestamp_start);
             text.append("\"");
 
-            text.append(",\"$13$\":\"");
-            text.append(tr_completed->tr_timestamp_complete);
-            text.append("\"");
+            if(tr_completed->tr_timestamp_complete.empty() || tr_completed->tr_timestamp_complete.length() == 0)
+            {
+            	text.append(",\"$13$\":\"");
+            	text.append(_getTimestamp());
+            	text.append("\"");
+            }
+	    else
+            {
+            	text.append(",\"$13$\":\"");
+            	text.append(tr_completed->tr_timestamp_complete);
+            	text.append("\"");
+            }
 
             text.append(",\"$14$\":\"");
             text.append(tr_completed->channel_type);
