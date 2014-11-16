@@ -135,7 +135,16 @@ bool MsgProducer::sendMessage(std::string &temp)
             // Read vo from json
             ptree pt2;
             std::istringstream is (temp);
-            read_json (is, pt2);
+	    
+	    try{
+            	read_json (is, pt2);
+	    }
+	    catch(...)
+	    {
+	        std::string error_message = "MESSAGE_ERROR " + temp;
+	        logger::writeLog(error_message);
+	    	return true;
+	    }
             std::string vo = pt2.get<std::string> ("vo");
             temp += 4;
             TextMessage* message = session->createTextMessage(temp);
@@ -153,7 +162,16 @@ bool MsgProducer::sendMessage(std::string &temp)
             // Read vo from json
             ptree pt2;
             std::istringstream is (temp);
-            read_json (is, pt2);
+	    
+	    try{
+            	read_json (is, pt2);
+	    }
+	    catch(...)
+	    {
+	        std::string error_message = "MESSAGE_ERROR " + temp;
+	        logger::writeLog(error_message);
+	    	return true;
+	    }
             std::string vo = pt2.get<std::string> ("vo_name");
             temp += 4;
             TextMessage* message = session->createTextMessage(temp);
