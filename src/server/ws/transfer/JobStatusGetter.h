@@ -32,14 +32,14 @@ public:
 
     virtual ~JobStatusGetter();
 
-    void job_status(tns3__JobStatus * & ret);
+    void job_status(tns3__JobStatus * & ret, bool glite = false);
     tns3__JobStatus* handleStatusExceptionForGLite();
 
     template <typename SUMMARY>
     void job_summary(SUMMARY * & ret, bool glite = false);
 
     template <typename STATUS>
-    void file_status(std::vector<STATUS*> & statuses);
+    void file_status(std::vector<STATUS*> & statuses, bool glite = false);
 
 
 private:
@@ -67,8 +67,9 @@ private:
         summary->numReady = count;
     }
 
-    tns3__JobStatus * to_gsoap_status(JobStatus const & job_status);
+    tns3__JobStatus * to_gsoap_status(JobStatus const & job_status, bool glite = false);
 
+    std::string to_glite_state(std::string const & state, bool glite);
 
     soap * ctx;
     GenericDbIfce & db;
