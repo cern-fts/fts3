@@ -42,6 +42,13 @@ bool stopThreads = false;
 using namespace FTS3_COMMON_NAMESPACE;
 
 
+static std::string replaceMetadataString(std::string text)
+{   
+    text = boost::replace_all_copy(text, "\\\"","\"");
+    return text;
+}
+
+
 
 string started[] = {"agent_fqdn", "transfer_id", "endpnt", "timestamp", "src_srm_v", "dest_srm_v",
                     "vo", "src_url", "dst_url", "src_hostname", "dst_hostname", "src_site_name", "dst_site_name", "t_channel",
@@ -122,6 +129,9 @@ bool MsgProducer::sendMessage(std::string &temp)
             temp = temp.substr(2, temp.length()); //remove message prefix
             tempFTS = "\"endpnt\":\"" + FTSEndpoint + "\"";
             find_and_replace(temp, "\"endpnt\":\"\"", tempFTS); //add FTS endpoint
+	    
+	    temp = replaceMetadataString(temp);
+	    
             // Read vo from json
             ptree pt2;
             std::istringstream is (temp);
@@ -137,6 +147,9 @@ bool MsgProducer::sendMessage(std::string &temp)
     else if (temp.compare(0, 2, "SS") == 0)
         {
             temp = temp.substr(2, temp.length()); //remove message prefix
+	    
+	    temp = replaceMetadataString(temp);
+	    
             // Read vo from json
             ptree pt2;
             std::istringstream is (temp);

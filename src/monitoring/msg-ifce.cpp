@@ -155,9 +155,16 @@ void msg_ifce::SendTransferStartMessage(transfer_completed *tr_started)
 
             if(tr_started->file_metadata.length() > 0)
                 {
-                    text.append(",\"$r$\":");
-                    text.append(tr_started->file_metadata);
-                    text.append("");
+		    if(tr_started->file_metadata == "x")
+		    {
+		    	text.append(",\"$r$\":\"\"");
+		    }
+		    else
+		    {
+                    	text.append(",\"$r$\":");
+                    	text.append(tr_started->file_metadata);
+                    	text.append("");
+		    }
                 }
             else
                 {
