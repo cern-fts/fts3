@@ -386,9 +386,16 @@ void msg_ifce::SendTransferFinishMessage(transfer_completed *tr_completed)
 
             if(tr_completed->file_metadata.length() > 0)
                 {
-                    text.append(",\"$16$\":");
-                    text.append(tr_completed->file_metadata);
-                    text.append("");
+		    if(tr_completed->file_metadata == "x")
+		    {
+		    	text.append(",\"$16$\":\"\"");
+		    }
+                    else
+                    {
+                    	text.append(",\"$16$\":");
+                    	text.append(tr_completed->file_metadata);
+                    	text.append("");
+                    }
                 }
             else
                 {
