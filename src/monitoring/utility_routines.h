@@ -41,7 +41,12 @@ std::string _to_string(T t, std::ios_base & (*)(std::ios_base&))
     return oss.str();
 }
 
-
+inline std::string _getTimestamp()
+{
+    time_t msec_started = time(NULL) * 1000; //the number of milliseconds since the epoch.
+    std::string transfer_started_to_string = _to_string<long double>(msec_started, std::dec);
+    return transfer_started_to_string;
+}
 
 
 /*

@@ -92,12 +92,7 @@ static vector<std::string> recoveryVector(3, "");
 //store fts endpoint for usage in the message field
 static map<string, string> ftsendpoint;
 
-std::string _getTimestamp()
-{
-    time_t msec_started = time(NULL) * 1000; //the number of milliseconds since the epoch.
-    std::string transfer_started_to_string = _to_string<long double>(msec_started, std::dec);
-    return transfer_started_to_string;
-}
+
 
 std::string get_channel_(std::string tr_id)
 {
