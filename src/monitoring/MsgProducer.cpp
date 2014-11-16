@@ -287,8 +287,7 @@ void MsgProducer::run()
 			getConnection();
 
 		        if(!connected)
-		        {
-				cleanup();
+		        {				
 				sleep(10);
 				continue;
 			}
@@ -310,7 +309,8 @@ void MsgProducer::run()
                         }
                     errorMessage = "PROCESS_ERROR 3" + e.getStackTraceString();
                     logger::writeLog(errorMessage, true);
-                    sleep(2);                   
+		    connected = false;    
+                    sleep(5);                   
                 }
             catch (...)
                 {
@@ -320,7 +320,8 @@ void MsgProducer::run()
                             send_message(msgBk);
                         }
                     logger::writeLog("PROCESS_ERROR Unhandled exception occured", true);
-                    sleep(2);
+		    connected = false;    
+                    sleep(5);
                 }
         }
 }
