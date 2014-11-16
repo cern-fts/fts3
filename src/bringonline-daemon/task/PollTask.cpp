@@ -193,8 +193,10 @@ void PollTask::abort(std::vector<char const *> const & urls, bool report)
                                                             << urls[i] << ", returned -1, but error not set " << token
                                                             << commit;
                             if (report)
+                            {
                                 for (auto it = ids.begin(); it != ids.end(); ++it)
                                     ctx.state_update(it->first, it->second, "FAILED", "Error not set by gfal2", false);
+                            }
                         }
                 }
         }
