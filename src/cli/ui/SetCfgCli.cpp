@@ -46,22 +46,22 @@ SetCfgCli::SetCfgCli(bool spec)
             // add commandline options specific for fts3-config-set
             specific.add_options()
             (
-                "bring-online", value< vector<string> >()->multitoken(),
+                "bring-online", value< std::vector<std::string> >()->multitoken(),
                 "If this switch is used the user should provide SE_NAME VALUE and optionally VO_NAME in order to set the maximum number of files that are staged concurrently for a given SE."
                 "\n(Example: --bring-online $SE_NAME $VALUE [$VO_NAME])"
             )
             (
-                "delete", value< vector<string> >()->multitoken(),
+                "delete", value< std::vector<std::string> >()->multitoken(),
                 "If this switch is used the user should provide SE_NAME VALUE and optionally VO_NAME in order to set the maximum number of files that are deleted concurrently for a given SE."
                 "\n(Example: --delete $SE_NAME $VALUE [$VO_NAME])"
             )
             (
-                "drain", value<string>(),
+                "drain", value<std::string>(),
                 "If set to 'on' drains the given endpoint."
                 "\n(Example: --drain on|off)"
             )
             (
-                "retry", value< vector<string> >()->multitoken(),
+                "retry", value< std::vector<std::string> >()->multitoken(),
                 "Sets the number of retries of each individual file transfer for the given VO (the value should be greater or equal to -1)."
                 "\n(Example: --retry $VO $NB_RETRY)"
             )
@@ -78,12 +78,12 @@ SetCfgCli::SetCfgCli(bool spec)
                 "Sets the maximum time (in hours) transfer job is allowed to be in the queue (the value should be greater or equal to 0)."
                 "\n(Example: --queue-timeout $TIMEOUT)"
             )
-            (	"source", value<string>(),
+            (	"source", value<std::string>(),
                 "The source SE"
                 "\n(Example: --source $SE_NAME)"
             )
             (
-                "destination", value<string>(),
+                "destination", value<std::string>(),
                 "The destination SE"
                 "\n(Example: --destination $SE_NAME)"
             )
@@ -92,18 +92,18 @@ SetCfgCli::SetCfgCli(bool spec)
                 "The maximum bandwidth that can be used (in MB/s) for the given source or destination (see --source & --destination)"
                 "\n(Example: --max-bandwidth $LIMIT)"
             )
-            (	"protocol", value< vector<string> >()->multitoken(),
+            (	"protocol", value< std::vector<std::string> >()->multitoken(),
                 "Set protocol (UDT | IPv6) for given SE"
                 "\n(Example: --protocol udt $SE_NAME on|off)"
                 "\n(Example: --protocol ipv6 $SE_NAME on|off)"
             )
             (
-                "max-se-source-active", value< vector<string> >()->multitoken(),
+                "max-se-source-active", value< std::vector<std::string> >()->multitoken(),
                 "Maximum number of active transfers for given source SE (-1 means no limit)"
                 "\n(Example: --max-se-source-active $NB_ACT $SE_NAME)"
             )
             (
-                "max-se-dest-active", value< vector<string> >()->multitoken(),
+                "max-se-dest-active", value< std::vector<std::string> >()->multitoken(),
                 "Maximum number of active transfers for given destination SE (-1 means no limit)"
                 "\n(Example: --max-se-dest-active $NB_ACT $SE_NAME)"
             )
@@ -128,12 +128,12 @@ SetCfgCli::SetCfgCli(bool spec)
                 "\n(Example: --show-user-dn on|off)"
             )
             (
-                "s3", value< vector<string> >()->multitoken(),
+                "s3", value< std::vector<std::string> >()->multitoken(),
                 "Set the S3 credentials, requires: access-key, secret-key, VO name and storage name"
                 "\n(Example: --s3 $ACCESS_KEY $SECRET_KEY $VO_NAME $STORAGE_NAME)"
             )
             (
-                "dropbox", value< vector<string> >()->multitoken(),
+                "dropbox", value< std::vector<std::string> >()->multitoken(),
                 "Set the dropbox credentials, requires: app-key, app-secret and service API URL"
                 "\n(Example: --s3 $APP_KEY $APP_SECRET $API_URL)"
             )
@@ -142,7 +142,7 @@ SetCfgCli::SetCfgCli(bool spec)
 
     // add hidden options (not printed in help)
     hidden.add_options()
-    ("cfg", value< vector<string> >(), "Specify SE configuration.")
+    ("cfg", value< std::vector<std::string> >(), "Specify SE configuration.")
     ;
 
     // all positional parameters go to jobid
@@ -161,7 +161,7 @@ void SetCfgCli::parse(int ac, char* av[])
 
     if (vm.count("cfg"))
         {
-            cfgs = vm["cfg"].as< vector<string> >();
+            cfgs = vm["cfg"].as< std::vector<std::string> >();
         }
     else if(vm.count("max-bandwidth"))
         {
@@ -178,7 +178,7 @@ void SetCfgCli::parse(int ac, char* av[])
         parseActiveFixed();
 
     // check JSON configurations
-    vector<string>::iterator it;
+    std::vector<std::string>::iterator it;
     for (it = cfgs.begin(); it < cfgs.end(); it++)
         {
             trim(*it);
@@ -248,12 +248,12 @@ void SetCfgCli::validate()
         throw bad_option("source, destination", "missing source and destination pair");
 }
 
-string SetCfgCli::getUsageString(string tool)
+std::string SetCfgCli::getUsageString(std::string tool)
 {
     return "Usage: " + tool + " [options] CONFIG [CONFIG...]";
 }
 
-vector<string> SetCfgCli::getConfigurations()
+std::vector<std::string> SetCfgCli::getConfigurations()
 {
     return cfgs;
 }
@@ -262,7 +262,7 @@ optional<bool> SetCfgCli::drain()
 {
     if (vm.count("drain"))
         {
-            string const & value = vm["drain"].as<string>();
+        std::string const & value = vm["drain"].as<std::string>();
 
             if (value != "on" && value != "off")
                 {
@@ -279,7 +279,7 @@ optional<bool> SetCfgCli::showUserDn()
 {
     if (vm.count("show-user-dn"))
         {
-            string const & value = vm["show-user-dn"].as<string>();
+            std::string const & value = vm["show-user-dn"].as<std::string>();
 
             if (value != "on" && value != "off")
                 {
@@ -292,12 +292,12 @@ optional<bool> SetCfgCli::showUserDn()
     return boost::none;
 }
 
-optional< pair<string, int> > SetCfgCli::retry()
+optional< std::pair<std::string, int> > SetCfgCli::retry()
 {
     if (vm.count("retry"))
         {
             // get a reference to the options set by the user
-            vector<string> const & v = vm["retry"].as< vector<string> >();
+            std::vector<std::string> const & v = vm["retry"].as< std::vector<std::string> >();
             // make sure the number of parameters is correct
             if (v.size() != 2) throw bad_option("retry", "following parameters were expected: VO nb_of_retries");
 
@@ -313,7 +313,7 @@ optional< pair<string, int> > SetCfgCli::retry()
                 }
         }
 
-    return optional< pair<string, int> >();
+    return optional< std::pair<std::string, int> >();
 }
 
 optional<int> SetCfgCli::optimizer_mode()
@@ -345,12 +345,12 @@ optional<unsigned> SetCfgCli::queueTimeout()
     return optional<unsigned>();
 }
 
-optional< std::tuple<string, string, string> > SetCfgCli::getProtocol()
+optional< std::tuple<std::string, std::string, std::string> > SetCfgCli::getProtocol()
 {
     // check if the option was used
-    if (!vm.count("protocol")) return optional< std::tuple<string, string, string> >();
+    if (!vm.count("protocol")) return optional< std::tuple<std::string, std::string, std::string> >();
     // make sure it was used corretly
-    const vector<string>& v = vm["protocol"].as< vector<string> >();
+    const std::vector<std::string>& v = vm["protocol"].as< std::vector<std::string> >();
     if (v.size() != 3) throw bad_option("protocol", "'--protocol' takes following parameters: udt/ipv6 SE on/off");
     if (v[2] != "on" && v[2] != "off") throw bad_option("protocol", "'--protocol' can only be switched 'on' or 'off'");
 
@@ -430,13 +430,13 @@ void SetCfgCli::parseMaxBandwidth()
     std::string source_se, dest_se;
 
     if (!vm["source"].empty())
-        source_se = vm["source"].as<string>();
+        source_se = vm["source"].as<std::string>();
     if (!vm["destination"].empty())
-        dest_se = vm["destination"].as<string>();
+        dest_se = vm["destination"].as<std::string>();
 
     int limit = vm["max-bandwidth"].as<int>();
 
-    bandwidth_limitation = make_optional(std::tuple<string, string, int>(source_se, dest_se, limit));
+    bandwidth_limitation = make_optional(std::tuple<std::string, std::string, int>(source_se, dest_se, limit));
 }
 
 void SetCfgCli::parseActiveFixed()
@@ -444,13 +444,13 @@ void SetCfgCli::parseActiveFixed()
     std::string source_se, dest_se;
 
     if (!vm["source"].empty())
-        source_se = vm["source"].as<string>();
+        source_se = vm["source"].as<std::string>();
     if (!vm["destination"].empty())
-        dest_se = vm["destination"].as<string>();
+        dest_se = vm["destination"].as<std::string>();
 
     int active = vm["active-fixed"].as<int>();
 
-    active_fixed = make_optional(std::tuple<string, string, int>(source_se, dest_se, active));
+    active_fixed = make_optional(std::tuple<std::string, std::string, int>(source_se, dest_se, active));
 }
 
 boost::optional< std::tuple<std::string, int, std::string> > SetCfgCli::getBringOnline()
@@ -465,29 +465,29 @@ boost::optional< std::tuple<std::string, int, std::string> > SetCfgCli::getDelet
     return max_opt["delete"];
 }
 
-optional<std::tuple<string, string, int> > SetCfgCli::getBandwidthLimitation()
+optional<std::tuple<std::string, std::string, int> > SetCfgCli::getBandwidthLimitation()
 {
     return bandwidth_limitation;
 }
 
-optional<std::tuple<string, string, int> > SetCfgCli::getActiveFixed()
+optional<std::tuple<std::string, std::string, int> > SetCfgCli::getActiveFixed()
 {
     return active_fixed;
 }
 
-optional< pair<string, int> > SetCfgCli::getMaxSeActive(string option)
+optional< std::pair<std::string, int> > SetCfgCli::getMaxSeActive(std::string option)
 {
     if (!vm.count(option))
         {
-            return optional< pair<string, int> >();
+            return optional< std::pair<std::string, int> >();
         }
 
     // make sure it was used corretly
-    const vector<string>& v = vm[option].as< vector<string> >();
+    const std::vector<std::string>& v = vm[option].as< std::vector<std::string> >();
 
     if (v.size() != 2) throw bad_option(option, "'--" + option + "' takes following parameters: number_of_active SE");
 
-    string se = v[1];
+    std::string se = v[1];
 
     try
         {
@@ -495,7 +495,7 @@ optional< pair<string, int> > SetCfgCli::getMaxSeActive(string option)
 
             if (active < -1) throw bad_option("option", "values lower than -1 are not valid");
 
-            return make_pair(se, active);
+            return std::make_pair(se, active);
         }
     catch(bad_lexical_cast& ex)
         {
@@ -503,12 +503,12 @@ optional< pair<string, int> > SetCfgCli::getMaxSeActive(string option)
         }
 }
 
-optional< pair<string, int> > SetCfgCli::getMaxSrcSeActive()
+optional< std::pair<std::string, int> > SetCfgCli::getMaxSrcSeActive()
 {
     return getMaxSeActive("max-se-source-active");
 }
 
-optional< pair<string, int> > SetCfgCli::getMaxDstSeActive()
+optional< std::pair<std::string, int> > SetCfgCli::getMaxDstSeActive()
 {
     return getMaxSeActive("max-se-dest-active");
 }

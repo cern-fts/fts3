@@ -63,14 +63,14 @@ public:
      *
      * @return source string if it was given as a CLI option, or an empty string if not
      */
-    string getSource();
+    std::string getSource();
 
     /**
      * Gets the destination file name (string) for the job.
      *
      * @return destination string if it was given as a CLI option, or an empty string if not
      */
-    string getDestination();
+    std::string getDestination();
 };
 
 }

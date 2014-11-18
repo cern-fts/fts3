@@ -47,7 +47,6 @@ namespace cli
 
 using namespace fts3::common;
 
-using namespace std;
 using namespace boost;
 using namespace boost::property_tree;
 
@@ -56,7 +55,7 @@ class BulkSubmissionParser
 
 public:
 
-    BulkSubmissionParser(istream& ifs);
+    BulkSubmissionParser(std::istream& ifs);
     virtual ~BulkSubmissionParser();
 
     /**
@@ -64,7 +63,7 @@ public:
      *
      * @return vector of files that are being a part of a transfer job
      */
-    vector<File> getFiles();
+    std::vector<File> getFiles();
 
 private:
 
@@ -73,7 +72,7 @@ private:
      *
      * @return true if the node under the given path is an array, false otherwise
      */
-    bool isArray(ptree& item, string path);
+    bool isArray(ptree& item, std::string path);
 
     /**
      * Gets the value under the given path
@@ -83,14 +82,14 @@ private:
      * @return a value of the node if it exists, an uninitialized optional otherwise
      */
     template<typename T>
-    optional<T> get(ptree& item, string path);
+    optional<T> get(ptree& item, std::string path);
 
     /**
      * Gets the metadata
      *
      * @return a string representing the metadata, or an uninitialized optional if the metada have not been specified
      */
-    optional<string> getMetadata(ptree& item);
+    optional<std::string> getMetadata(ptree& item);
 
     /**
      * Parses the bulk submission file. If the file is not valid an exception is thrown.
@@ -113,14 +112,14 @@ private:
     ptree pt;
 
     /// the files that were described in the bulk submission file
-    vector<File> files;
+    std::vector<File> files;
 
     /// token that are allowed for a file description
-    static const set<string> file_tokens;
+    static const std::set<std::string> file_tokens;
 };
 
 template <typename T>
-optional<T> BulkSubmissionParser::get(ptree& item, string path)
+optional<T> BulkSubmissionParser::get(ptree& item, std::string path)
 {
     try
         {
@@ -141,29 +140,29 @@ optional<T> BulkSubmissionParser::get(ptree& item, string path)
 }
 
 template <>
-inline optional< vector<string> > BulkSubmissionParser::get< vector<string> >(ptree& item, string path)
+inline optional< std::vector<std::string> > BulkSubmissionParser::get< std::vector<std::string> >(ptree& item, std::string path)
 {
     // check if the value was specified
     optional<ptree&> value = item.get_child_optional(path);
     if (!value.is_initialized())
         {
             // the vector member was not specified in the configuration
-            return optional< vector<string> >();
+            return optional< std::vector<std::string> >();
         }
     ptree& array = value.get();
     // check if the node has a value,
     // accordingly to boost it should be empty if array syntax was used in JSON
-    string wrong = array.get_value<string>();
+    std::string wrong = array.get_value<std::string>();
     if (!wrong.empty())
         {
             throw cli_exception("Wrong value: '" + wrong + "'");
         }
     // iterate over the nodes
-    vector<string> ret;
+    std::vector<std::string> ret;
     ptree::iterator it;
     for (it = array.begin(); it != array.end(); it++)
         {
-            pair<string, ptree> v = *it;
+            std::pair<std::string, ptree> v = *it;
             // check if the node has a name,
             // accordingly to boost it should be empty if object weren't
             // members of the array (our case)
@@ -177,7 +176,7 @@ inline optional< vector<string> > BulkSubmissionParser::get< vector<string> >(pt
                     throw cli_exception("Unexpected object in array '" + path + "' (only a list of values was expected)");
                 }
             // put the value into the vector
-            ret.push_back(v.second.get_value<string>());
+            ret.push_back(v.second.get_value<std::string>());
         }
 
     return ret;

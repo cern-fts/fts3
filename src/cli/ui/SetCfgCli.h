@@ -101,7 +101,7 @@ public:
      *
      * @return a string with instruction on how to use the tool
      */
-    string getUsageString(string tool);
+    std::string getUsageString(std::string tool);
 
     /**
      * Gets a vector with SE configurations.
@@ -109,7 +109,7 @@ public:
      * @return if SE configurations were given as command line parameters a
      * 			vector containing the value names, otherwise an empty vector
      */
-    vector<string> getConfigurations();
+    std::vector<std::string> getConfigurations();
 
     /**
      * Checks the drain option
@@ -130,7 +130,7 @@ public:
      *
      * @return the number of retries if it has been set, otherwise the optional is not initialised
      */
-    optional< pair<string, int> > retry();
+    optional< std::pair<std::string, int> > retry();
 
     /**
      * Check the optimizer-mode option
@@ -165,33 +165,33 @@ public:
      *
      * @return SE name - value mapping
      */
-    optional<std::tuple<string, string, int> > getBandwidthLimitation();
+    optional<std::tuple<std::string, std::string, int> > getBandwidthLimitation();
 
     /**
      * Get the fixed number of actives for a pair
      */
-    optional<std::tuple<string, string, int> > getActiveFixed();
+    optional<std::tuple<std::string, std::string, int> > getActiveFixed();
 
     /**
      * Get the udt protocol settings
      *
      * @return udl protocol setting for given SE
      */
-    optional< std::tuple<string, string, string> > getProtocol();
+    optional< std::tuple<std::string, std::string, std::string> > getProtocol();
 
     /**
      * Gets the max number of active for given source SE
      *
      * @return SE name - max active pair if set by user, or not initialised optional otherwise
      */
-    optional< pair<string, int> > getMaxSrcSeActive();
+    optional< std::pair<std::string, int> > getMaxSrcSeActive();
 
     /**
      * Gets the max number of active for given destination SE
      *
      * @return SE name - max active pair if set by user, or not initialised optional otherwise
      */
-    optional< pair<string, int> > getMaxDstSeActive();
+    optional< std::pair<std::string, int> > getMaxDstSeActive();
 
     /**
      * Gets the global timeout settings
@@ -219,7 +219,7 @@ public:
 
 private:
     /// helper function for handling max source and destination active
-    optional< pair<string, int> > getMaxSeActive(string option);
+    optional< std::pair<std::string, int> > getMaxSeActive(std::string option);
 
     /// parses the --bring-online / --delete parameters
     void parseMaxOpt(std::string const & operation);
@@ -231,16 +231,16 @@ private:
     void parseActiveFixed();
 
     /// JSON configurations specified by user
-    vector<string> cfgs;
+    std::vector<std::string> cfgs;
 
     /// maximum number of concurrent operations per SE and VO
     std::unordered_map< std::string, std::tuple<std::string, int, std::string> > max_opt;
 
     // Source, dest, limit
-    optional<std::tuple<string, string, int> > bandwidth_limitation;
+    optional<std::tuple<std::string, std::string, int> > bandwidth_limitation;
 
     // source, dest, active
-    optional<std::tuple<string, string, int> > active_fixed;
+    optional<std::tuple<std::string, std::string, int> > active_fixed;
 
     CfgParser::CfgType type;
 };

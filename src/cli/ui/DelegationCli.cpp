@@ -16,7 +16,7 @@ DelegationCli::DelegationCli()
 {
     // add commandline options specific for fts3-transfer-submit
     specific.add_options()
-    ("id,I", value<string>(), "Delegation with ID as the delegation identifier.")
+    ("id,I", value<std::string>(), "Delegation with ID as the delegation identifier.")
     ("expire,e", value<long>(), "Expiration time of the delegation in minutes.")
     ;
 }
@@ -27,13 +27,13 @@ DelegationCli::~DelegationCli()
 }
 
 
-string DelegationCli::getDelegationId()
+std::string DelegationCli::getDelegationId()
 {
 
     // check if destination was passed via command line options
     if (vm.count("id"))
         {
-            return vm["id"].as<string>();
+            return vm["id"].as<std::string>();
         }
     return "";
 }

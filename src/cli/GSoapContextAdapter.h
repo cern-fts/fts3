@@ -36,7 +36,6 @@
 #include <map>
 #include <boost/property_tree/ptree.hpp>
 
-using namespace std;
 using namespace boost::property_tree;
 
 namespace fts3
@@ -74,7 +73,7 @@ public:
      *
      * Creates and initializes GSoap context
      */
-    GSoapContextAdapter(string endpoint);
+    GSoapContextAdapter(std::string endpoint);
 
     /**
      * Destructor
@@ -135,7 +134,7 @@ public:
      *
      * @param resp server response (roles)
      */
-    void getRolesOf (string dn, impltns__getRolesOfResponse& resp);
+    void getRolesOf (std::string dn, impltns__getRolesOfResponse& resp);
 
     /**
      * Remote call to cancel
@@ -171,7 +170,7 @@ public:
      * @param vo vo name
      * @param resp server response
      */
-    void listVoManagers (string vo, impltns__listVOManagersResponse& resp);
+    void listVoManagers (std::string vo, impltns__listVOManagersResponse& resp);
 
     /**
      * Remote call to getTransferJobSummary
@@ -212,7 +211,7 @@ public:
      * @param name - SE or SE group name that will be used to filter the response
      * @param resp - server response
      */
-    void getConfiguration (string src, string dest, string all, string name, implcfg__getConfigurationResponse& resp);
+    void getConfiguration (std::string src, std::string dest, std::string all, std::string name, implcfg__getConfigurationResponse& resp);
 
     /**
      * Remote call to delConfiguration
@@ -230,7 +229,7 @@ public:
      */
     void setMaxOpt(std::tuple<std::string, int, std::string> const &, std::string const&);
 
-    string deleteFile (std::vector<std::string>& filesForDelete);
+    std::string deleteFile (std::vector<std::string>& filesForDelete);
 
     /**
      * Remote call to setBandwidthLimit
@@ -250,7 +249,7 @@ public:
      *
      * @param interface - interface version of FTS3 service
      */
-    void setInterfaceVersion(string interface);
+    void setInterfaceVersion(std::string interface);
 
     /**
      * Remote call to debugSet
@@ -262,7 +261,7 @@ public:
      * @param destination - destination se (might be empty)
      * @param level - debug level
      */
-    void debugSet(string source, string destination, unsigned level);
+    void debugSet(std::string source, std::string destination, unsigned level);
 
     /**
      * Remote call to blacklistDN
@@ -272,7 +271,7 @@ public:
      * @param timeout - the timeout for the jobs already in queue
      * @param mode    - on/off
      */
-    void blacklistDn(string subject, string status, int timeout, bool mode);
+    void blacklistDn(std::string subject, std::string status, int timeout, bool mode);
 
     /**
      * Remote call to blacklistSe
@@ -283,7 +282,7 @@ public:
      * @param timeout - the timeout for the jobs already in queue
      * @param mode    - on/off
      */
-    void blacklistSe(string name, string vo, string status, int timeout, bool mode);
+    void blacklistSe(std::string name, std::string vo, std::string status, int timeout, bool mode);
 
     /**
      * Remote call to doDrain
@@ -312,7 +311,7 @@ public:
      * @param jobId - the id of the job
      * @param priority - the priority to be set
      */
-    void prioritySet(string jobId, int priority);
+    void prioritySet(std::string jobId, int priority);
 
     /**
      * Sets the protocol (UDT) for given SE
@@ -321,14 +320,14 @@ public:
      * @param se - the name of the SE in question
      * @param state - either 'on' or 'off'
      */
-    void setSeProtocol(string protocol, string se, string state);
+    void setSeProtocol(std::string protocol, std::string se, std::string state);
 
     /**
      * Remote call to retrySet
      *
      * @param retry - number of retries to be set
      */
-    void retrySet(string vo, int retry);
+    void retrySet(std::string vo, int retry);
 
     /**
      * Remote call to optimizerModeSet
@@ -355,17 +354,17 @@ public:
     /**
      * Remote call to setMaxDstSeActive
      */
-    void setMaxDstSeActive(string se, int active);
+    void setMaxDstSeActive(std::string se, int active);
 
     /**
      * Remote call to setMaxSrcSeActive
      */
-    void setMaxSrcSeActive(string se, int active);
+    void setMaxSrcSeActive(std::string se, int active);
 
     /**
      * Remote call to fixActivePerPair
      */
-    void setFixActivePerPair(string source, string destination, int active);
+    void setFixActivePerPair(std::string source, std::string destination, int active);
 
     /**
      * Remote call to setS3Ceredential
@@ -413,7 +412,7 @@ private:
     void clean();
 
     static void signalCallback(int signum);
-    static vector<Cleaner> cleaners;
+    static std::vector<Cleaner> cleaners;
 
     ///
     soap* ctx;

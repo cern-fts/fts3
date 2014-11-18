@@ -36,7 +36,7 @@ namespace cli
 
 using namespace boost::assign;
 
-const set<string> BulkSubmissionParser::file_tokens =
+const std::set<std::string> BulkSubmissionParser::file_tokens =
     list_of
     ("sources")
     ("destinations")
@@ -47,7 +47,7 @@ const set<string> BulkSubmissionParser::file_tokens =
     ("activity")
     ;
 
-BulkSubmissionParser::BulkSubmissionParser(istream& ifs)
+BulkSubmissionParser::BulkSubmissionParser(std::istream& ifs)
 {
 
     try
@@ -87,7 +87,7 @@ void BulkSubmissionParser::parse()
     for (it = root.begin(); it != root.end(); it++)
         {
             // validate the item in array
-            pair<string, ptree> p = *it;
+            std::pair<std::string, ptree> p = *it;
             ptree& item = p.second;
             validate(item);
             parse_item(item);
@@ -99,15 +99,15 @@ void BulkSubmissionParser::parse_item(ptree& item)
 
     File file;
 
-    optional<string> v_str;
-    optional< vector<string> > v_vec;
+    optional<std::string> v_str;
+    optional< std::vector<std::string> > v_vec;
 
     // handle sources
 
     if (isArray(item, "sources"))
         {
             // check if 'sources' exists
-            v_vec = get< vector<string> >(item, "sources");
+            v_vec = get< std::vector<std::string> >(item, "sources");
             // if no throw an exception (it is an mandatory field
             if (!v_vec.is_initialized()) throw cli_exception("A file item without 'sources'!");
             file.sources = v_vec.get();
@@ -116,7 +116,7 @@ void BulkSubmissionParser::parse_item(ptree& item)
     else
         {
             // check if 'sources' exists
-            v_str = get<string>(item, "sources");
+            v_str = get<std::string>(item, "sources");
             // if no throw an exception (it is an mandatory field
             if (!v_str.is_initialized()) throw cli_exception("A file item without 'sources'!");
             file.sources.push_back(v_str.get());
@@ -127,7 +127,7 @@ void BulkSubmissionParser::parse_item(ptree& item)
     if (isArray(item, "destinations"))
         {
             // check if 'destinations' exists
-            v_vec = get< vector<string> >(item, "destinations");
+            v_vec = get< std::vector<std::string> >(item, "destinations");
             // if no throw an exception (it is an mandatory field
             if (!v_vec.is_initialized()) throw cli_exception("A file item without 'destinations'!");
             file.destinations = v_vec.get();
@@ -136,7 +136,7 @@ void BulkSubmissionParser::parse_item(ptree& item)
     else
         {
             // check if 'destinations' exists
-            v_str = get<string>(item, "destinations");
+            v_str = get<std::string>(item, "destinations");
             // if no throw an exception (it is an mandatory field
             if (!v_str.is_initialized()) throw cli_exception("A file item without 'destinations'!");
             file.destinations.push_back(v_str.get());
@@ -144,11 +144,11 @@ void BulkSubmissionParser::parse_item(ptree& item)
 
     // handle selection_strategy
 
-    file.selection_strategy = get<string>(item, "selection_strategy");
+    file.selection_strategy = get<std::string>(item, "selection_strategy");
     if (file.selection_strategy.is_initialized())
         {
 
-            string selectionStrategy = file.selection_strategy.get();
+            std::string selectionStrategy = file.selection_strategy.get();
 
             if (selectionStrategy != "auto" && selectionStrategy != "orderly")
                 {
@@ -160,7 +160,7 @@ void BulkSubmissionParser::parse_item(ptree& item)
 
     if (isArray(item, "checksums"))
         {
-            v_vec = get< vector<string> >(item, "checksums");
+            v_vec = get< std::vector<std::string> >(item, "checksums");
             // if the checksums value was set ...
             if (v_vec.is_initialized())
                 {
@@ -170,7 +170,7 @@ void BulkSubmissionParser::parse_item(ptree& item)
     else
         {
             // check if checksum exists
-            v_str = get<string>(item, "checksums");
+            v_str = get<std::string>(item, "checksums");
             // if yes put it into the vector
             if (v_str.is_initialized())
                 {
@@ -202,12 +202,12 @@ void BulkSubmissionParser::validate(ptree& item)
     for (it = item.begin(); it != item.end(); it++)
         {
             // iterate over the nodes and check if there are in the expexted tokens set
-            pair<string, ptree> p = *it;
+            std::pair<std::string, ptree> p = *it;
             if (!file_tokens.count(p.first)) throw cli_exception("unexpected identifier: " + p.first);
         }
 }
 
-bool BulkSubmissionParser::isArray(ptree& item, string path)
+bool BulkSubmissionParser::isArray(ptree& item, std::string path)
 {
     // get the value for the given path
     optional<ptree&> value = item.get_child_optional(path);
@@ -218,31 +218,31 @@ bool BulkSubmissionParser::isArray(ptree& item, string path)
     ptree& array = value.get();
     // check if the node has a value,
     // accordingly to boost it should be empty if array syntax was used in JSON
-    if (!array.get_value<string>().empty()) return false;
+    if (!array.get_value<std::string>().empty()) return false;
     // if the checks have been passed successfuly it is an array
     return true;
 }
 
-optional<string> BulkSubmissionParser::getMetadata(ptree& item)
+optional<std::string> BulkSubmissionParser::getMetadata(ptree& item)
 {
     // get the value for the given path
     optional<ptree&> value = item.get_child_optional("metadata");
     // check if the value exists
-    if (!value.is_initialized()) return optional<string>();
+    if (!value.is_initialized()) return optional<std::string>();
     // the potential array
     ptree& metadata = value.get();
     // parse the metadata back to JSON
 
-    string str = metadata.get_value<string>();
+    std::string str = metadata.get_value<std::string>();
     if (!str.empty()) return str;
 
-    stringstream ss;
+    std::stringstream ss;
     write_json(ss, metadata);
     // return the string
     return ss.str();
 }
 
-vector<File> BulkSubmissionParser::getFiles()
+std::vector<File> BulkSubmissionParser::getFiles()
 {
     return files;
 }

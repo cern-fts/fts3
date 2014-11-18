@@ -42,14 +42,14 @@ DnCli::~DnCli()
 {
 }
 
-string DnCli::getUserDn()
+std::string DnCli::getUserDn()
 {
 
     if (vm.count("userdn"))
         {
-            return vm["userdn"].as<string>();
+            return vm["userdn"].as<std::string>();
         }
 
-    return string();
+    return std::string();
 }
 

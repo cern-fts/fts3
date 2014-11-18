@@ -59,7 +59,7 @@ public:
      *
      * @return user DN
      */
-    string getUserDn();
+    std::string getUserDn();
 };
 
 }

@@ -34,16 +34,16 @@ SrcDestCli::SrcDestCli(bool hide)
         {
             // add commandline hidden options for fts3-transfer-submit
             hidden.add_options()
-            ("source", value<string>(), "Specify source site name.")
-            ("destination", value<string>(), "Specify destination site name.")
+            ("source", value<std::string>(), "Specify source site name.")
+            ("destination", value<std::string>(), "Specify destination site name.")
             ;
         }
     else
         {
             // add commandline options specific for fts3-transfer-submit
             specific.add_options()
-            ("source", value<string>(), "Specify source site name.")
-            ("destination", value<string>(), "Specify destination site name.")
+            ("source", value<std::string>(), "Specify source site name.")
+            ("destination", value<std::string>(), "Specify destination site name.")
             ;
         }
 
@@ -57,24 +57,24 @@ SrcDestCli::~SrcDestCli()
 
 }
 
-string SrcDestCli::getSource()
+std::string SrcDestCli::getSource()
 {
 
     // check if source was passed via command line options
     if (vm.count("source"))
         {
-            return vm["source"].as<string>();
+            return vm["source"].as<std::string>();
         }
     return "";
 }
 
-string SrcDestCli::getDestination()
+std::string SrcDestCli::getDestination()
 {
 
     // check if destination was passed via command line options
     if (vm.count("destination"))
         {
-            return vm["destination"].as<string>();
+            return vm["destination"].as<std::string>();
         }
     return "";
 }
