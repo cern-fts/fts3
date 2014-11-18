@@ -1397,8 +1397,19 @@ stop:
                     throughputTurl = convertKbToMb(currentTransfer.throughput);
                 }
             else
-                {
-                    throughputTurl = convertBtoM(boost::lexical_cast<double>(currentTransfer.fileSize), 1);
+                {		    
+		    if(currentTransfer.finishTime > 0 && currentTransfer.startTime > 0)
+		    {
+		    	uint64_t totalTimeInSecs =  (currentTransfer.finishTime - currentTransfer.startTime) / 1000;
+		    	if(totalTimeInSecs <= 1)
+		    		totalTimeInSecs = 1;
+				
+                    	throughputTurl = convertBtoM(boost::lexical_cast<double>(currentTransfer.fileSize), boost::lexical_cast<int>(totalTimeInSecs));
+		    }
+		    else
+		    {
+		    	throughputTurl = convertBtoM(boost::lexical_cast<double>(currentTransfer.fileSize), 1);
+		    }
                 }
 
             if (errorMessage.length() > 0)
