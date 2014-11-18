@@ -15,7 +15,7 @@ using namespace fts3::cli;
 
 const std::string HttpRequest::PORT = "8446";
 
-HttpRequest::HttpRequest(std::string const & url, std::string const & capath, std::string const & proxy, iostream& stream) :
+HttpRequest::HttpRequest(std::string const & url, std::string const & capath, std::string const & proxy, std::iostream& stream) :
     stream(stream),
     curl(curl_easy_init())
 {
@@ -46,7 +46,7 @@ HttpRequest::~HttpRequest()
     if(curl) curl_easy_cleanup(curl);
 }
 
-size_t HttpRequest::write_data(void *ptr, size_t size, size_t nmemb, ostream* ostr)
+size_t HttpRequest::write_data(void *ptr, size_t size, size_t nmemb, std::ostream* ostr)
 {
     // clear the stream if it reached EOF beforehand
     if (!*ostr) ostr->clear();
