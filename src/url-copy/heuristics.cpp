@@ -139,6 +139,9 @@ bool retryTransfer(int errorNo, const std::string& category, const std::string& 
     found = message.find("System error in write into HDFS");
     if (found!=std::string::npos)
         retry = false;
+    found = message.find("File exists");
+    if (found!=std::string::npos)
+        retry = false;	
 
     return retry;
 }
