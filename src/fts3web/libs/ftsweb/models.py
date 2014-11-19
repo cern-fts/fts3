@@ -370,9 +370,9 @@ class Host(models.Model):
 
 
 class DebugConfig(models.Model):
-    source_se = models.CharField(primary_key = True)
-    dest_se   = models.CharField()
-    debug     = models.CharField()
+    source_se   = models.CharField(primary_key = True)
+    dest_se     = models.CharField()
+    debug_level = models.IntegerField()
 
     def __eq__(self, other):
         # Consider all entries different
