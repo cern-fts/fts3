@@ -33,7 +33,6 @@
 #include <vector>
 #include <memory>
 
-using namespace std;
 using namespace fts3::cli;
 using namespace fts3::common;
 
@@ -58,89 +57,89 @@ int main(int ac, char* av[])
             if (s3)
                 {
                     ctx.setS3Credential(std::get<0>(*s3), std::get<1>(*s3), std::get<2>(*s3), std::get<3>(*s3));
-                    cout << "Done" << endl;
+                    std::cout << "Done" << std::endl;
                 }
 
             optional<std::tuple<std::string, std::string, std::string> > dropbox = cli.dropbox();
             if (dropbox)
                 {
                     ctx.setDropboxCredential(std::get<0>(*dropbox), std::get<1>(*dropbox), std::get<2>(*dropbox));
-                    cout << "Done" << endl;
+                    std::cout << "Done" << std::endl;
                 }
 
-            optional<std::tuple<string, string, string>> protocol = cli.getProtocol();
+            optional<std::tuple<std::string, std::string, std::string>> protocol = cli.getProtocol();
             if (protocol.is_initialized())
                 {
-                    string prot = std::get<0>(*protocol);
-                    string se = std::get<1>(*protocol);
-                    string state = std::get<2>(*protocol);
+                    std::string prot = std::get<0>(*protocol);
+                    std::string se = std::get<1>(*protocol);
+                    std::string state = std::get<2>(*protocol);
                     ctx.setSeProtocol(prot, se, state);
 
-                    cout << "Done, just applied: " << prot << " " << se << " " << state << endl;
+                    std::cout << "Done, just applied: " << prot << " " << se << " " << state << std::endl;
                     return 0;
                 }
 
-            optional< pair<string, int> > maxActivePerSe = cli.getMaxSrcSeActive();
+            optional< std::pair<std::string, int> > maxActivePerSe = cli.getMaxSrcSeActive();
             if (maxActivePerSe.is_initialized())
                 {
                     ctx.setMaxSrcSeActive(maxActivePerSe.get().first, maxActivePerSe.get().second);
-                    cout << "Done, just applied: " << maxActivePerSe.get().first << " " << maxActivePerSe.get().second  << endl;
+                    std::cout << "Done, just applied: " << maxActivePerSe.get().first << " " << maxActivePerSe.get().second  << std::endl;
                 }
 
             maxActivePerSe = cli.getMaxDstSeActive();
             if (maxActivePerSe.is_initialized())
                 {
                     ctx.setMaxDstSeActive(maxActivePerSe.get().first, maxActivePerSe.get().second);
-                    cout << "Done, just applied: " << maxActivePerSe.get().first << " " << maxActivePerSe.get().second  << endl;
+                    std::cout << "Done, just applied: " << maxActivePerSe.get().first << " " << maxActivePerSe.get().second  << std::endl;
                 }
 
             optional<bool> drain = cli.drain();
             if (drain.is_initialized())
                 {
                     ctx.doDrain(drain.get());
-                    cout << "Done" << endl;
+                    std::cout << "Done" << std::endl;
                 }
 
             optional<bool> showUserDn = cli.showUserDn();
             if (showUserDn)
                 {
                     ctx.showUserDn(*showUserDn);
-                    cout << "Done" << endl;
+                    std::cout << "Done" << std::endl;
                 }
 
-            optional< pair<string, int> > retry = cli.retry();
+            optional< std::pair<std::string, int> > retry = cli.retry();
             if (retry.is_initialized())
                 {
                     ctx.retrySet(retry->first, retry->second);
-                    cout << "Done" << endl;
+                    std::cout << "Done" << std::endl;
                 }
 
             optional<int> mode = cli.optimizer_mode();
             if (mode.is_initialized())
                 {
                     ctx.optimizerModeSet(*mode);
-                    cout << "Done" << endl;
+                    std::cout << "Done" << std::endl;
                 }
 
             optional<int> secPerMb = cli.getSecPerMb();
             if (secPerMb.is_initialized())
                 {
                     ctx.setSecPerMb(*secPerMb);
-                    cout << "Done" << endl;
+                    std::cout << "Done" << std::endl;
                 }
 
             optional<int> globalTimeout = cli.getGlobalTimeout();
             if (globalTimeout.is_initialized())
                 {
                     ctx.setGlobalTimeout(*globalTimeout);
-                    cout << "Done" << endl;
+                    std::cout << "Done" << std::endl;
                 }
 
             optional<unsigned> queueTimeout = cli.queueTimeout();
             if (queueTimeout.is_initialized())
                 {
                     ctx.queueTimeoutSet(*queueTimeout);
-                    cout << "Done" << endl;
+                    std::cout << "Done" << std::endl;
                 }
 
             boost::optional<std::tuple<std::string, int, std::string>> bring_online = cli.getBringOnline();
@@ -148,7 +147,7 @@ int main(int ac, char* av[])
                 {
                     ctx.setMaxOpt(*bring_online, "staging");
                     // if bring online was used normal config was not!
-                    cout << "Done" << endl;
+                    std::cout << "Done" << std::endl;
                     return 0;
                 }
 
@@ -157,7 +156,7 @@ int main(int ac, char* av[])
                 {
                     ctx.setMaxOpt(*delete_opt, "delete");
                     // if delete was used normal config was not!
-                    cout << "Done" << endl;
+                    std::cout << "Done" << std::endl;
                     return 0;
                 }
 
@@ -167,7 +166,7 @@ int main(int ac, char* av[])
                     ctx.setBandwidthLimit(std::get<0>(*bandwidth_limitation),
                                           std::get<1>(*bandwidth_limitation),
                                           std::get<2>(*bandwidth_limitation));
-                    cout << "Done" << endl;
+                    std::cout << "Done" << std::endl;
                     return 0;
                 }
 
@@ -177,7 +176,7 @@ int main(int ac, char* av[])
                     ctx.setFixActivePerPair(std::get<0>(*active_fixed),
                                             std::get<1>(*active_fixed),
                                             std::get<2>(*active_fixed));
-                    cout << "Done" << endl;
+                    std::cout << "Done" << std::endl;
                     return 0;
                 }
 
@@ -188,7 +187,7 @@ int main(int ac, char* av[])
             implcfg__setConfigurationResponse resp;
             ctx.setConfiguration(config, resp);
 
-            cout << "Done" << endl;
+            std::cout << "Done" << std::endl;
 
 
         }

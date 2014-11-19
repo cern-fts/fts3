@@ -30,7 +30,7 @@ GetCfgCli::GetCfgCli() : SrcDestCli(true)
 {
 
     specific.add_options()
-    ("name,n", value<string>(), "Restrict to specific symbolic (configuration) name.")
+    ("name,n", value<std::string>(), "Restrict to specific symbolic (configuration) name.")
     ("all", "Get all the configurations (standalone and pairs) for the given SE.")
     ("vo", "Get activity share configuration for the given VO.")
     ("max-bandwidth", "Get bandwidth limitation for a given SE")
@@ -41,20 +41,20 @@ GetCfgCli::~GetCfgCli()
 {
 }
 
-string GetCfgCli::getUsageString(string tool)
+std::string GetCfgCli::getUsageString(std::string tool)
 {
     return "Usage: " + tool + " [options] [STANDALONE_CFG | SOURCE DESTINATION]";
 }
 
-string GetCfgCli::getName()
+std::string GetCfgCli::getName()
 {
 
     if (vm.count("name"))
         {
-            return vm["name"].as<string>();
+            return vm["name"].as<std::string>();
         }
 
-    return string();
+    return std::string();
 }
 
 bool GetCfgCli::all()

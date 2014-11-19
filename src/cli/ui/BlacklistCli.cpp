@@ -35,29 +35,29 @@ namespace cli
 
 using namespace boost::algorithm;
 
-const string BlacklistCli::ON = "on";
-const string BlacklistCli::OFF = "off";
+const std::string BlacklistCli::ON = "on";
+const std::string BlacklistCli::OFF = "off";
 
-const string BlacklistCli::SE = "se";
-const string BlacklistCli::DN = "dn";
+const std::string BlacklistCli::SE = "se";
+const std::string BlacklistCli::DN = "dn";
 
 BlacklistCli::BlacklistCli()
 {
 
     // add commandline options specific for fts3-set-blk
     hidden.add_options()
-    ("type", value<string>(&type), "Specify subject type (se/dn)")
-    ("subject", value<string>(&subject), "Subject name.")
-    ("mode", value<string>(&mode), "Mode, either: on or off")
+    ("type", value<std::string>(&type), "Specify subject type (se/dn)")
+    ("subject", value<std::string>(&subject), "Subject name.")
+    ("mode", value<std::string>(&mode), "Mode, either: on or off")
     ;
 
     specific.add_options()
-    ("status", value<string>(&status)->default_value("WAIT"), "Status of the jobs that are already in the queue (CANCEL or WAIT)")
+    ("status", value<std::string>(&status)->default_value("WAIT"), "Status of the jobs that are already in the queue (CANCEL or WAIT)")
     ("timeout", value<int>(&timeout)->default_value(0), "The timeout for the jobs that are already in the queue in case if 'WAIT' status (0 means the job wont timeout)")
     ;
 
     command_specific.add_options()
-    ("vo", value<string>(&vo), "The VO that is banned for the given SE")
+    ("vo", value<std::string>(&vo), "The VO that is banned for the given SE")
     ("allow-submit", "FTS will accept transfer jobs for the blacklisted SE (they wont be executed until the SE is blacklisted)")
     ;
 
@@ -98,7 +98,7 @@ void BlacklistCli::validate()
         }
 }
 
-string BlacklistCli::getUsageString(string tool)
+std::string BlacklistCli::getUsageString(std::string tool)
 {
     return "Usage: " + tool + " [options] COMMAND NAME ON|OFF";
 }
@@ -112,41 +112,41 @@ bool BlacklistCli::printHelp()
 
             // remove the path to the executive
             size_t pos = toolname.find_last_of('/');
-            if( pos != string::npos)
+            if( pos != std::string::npos)
                 {
                     toolname = toolname.substr(pos + 1);
                 }
             // print the usage guigelines
-            cout << endl << getUsageString(toolname) << endl << endl;
+            std::cout << std::endl << getUsageString(toolname) << std::endl << std::endl;
 
-            cout << "List of Commands:" << endl << endl;
-            cout << "dn		Blacklist DN (user)" << endl;
-            cout << "se [options]	Blacklist SE (to get further information use '-h')" << endl;
-            cout << endl << endl;
+            std::cout << "List of Commands:" << std::endl << std::endl;
+            std::cout << "dn		Blacklist DN (user)" << std::endl;
+            std::cout << "se [options]	Blacklist SE (to get further information use '-h')" << std::endl;
+            std::cout << std::endl << std::endl;
 
             // print the available options
-            cout << visible << endl << endl;
+            std::cout << visible << std::endl << std::endl;
 
             // print SE command options
             if (vm.count("type") && type == "se")
                 {
-                    cout << "SE options:" << endl << endl;
-                    cout << command_specific << endl;
+                    std::cout << "SE options:" << std::endl << std::endl;
+                    std::cout << command_specific << std::endl;
                 }
 
-            cout << "Examples: " << endl;
-            cout << "\t- To blacklist a SE:" << endl;
-            cout << "\t  fts-set-blacklist -s $FTSENDPOINT se $SE on" << endl;
-            cout << "\t- To blacklist a SE for given VO:" << endl;
-            cout << "\t  fts-set-blacklist -s $FTSENDPOINT se $SE on --vo $VO" << endl;
-            cout << "\t- To blacklist a SE but still accept transfer-jobs:" << endl;
-            cout << "\t  fts-set-blacklist -s $FTSENDPOINT se $SE on --allow-submit" << endl;
-            cout << "\t- To remove a SE from blacklist:" << endl;
-            cout << "\t  fts-set-blacklist -s $FTSENDPOINT se $SE off" << endl;
-            cout << "\t- To blacklist a DN:" << endl;
-            cout << "\t  fts-set-blacklist -s $FTSENDPOINT dn $DN on" << endl;
-            cout << "\t- To remove a DN from blacklist:" << endl;
-            cout << "\t  fts-set-blacklist -s $FTSENDPOINT dn $DN off" << endl;
+            std::cout << "Examples: " << std::endl;
+            std::cout << "\t- To blacklist a SE:" << std::endl;
+            std::cout << "\t  fts-set-blacklist -s $FTSENDPOINT se $SE on" << std::endl;
+            std::cout << "\t- To blacklist a SE for given VO:" << std::endl;
+            std::cout << "\t  fts-set-blacklist -s $FTSENDPOINT se $SE on --vo $VO" << std::endl;
+            std::cout << "\t- To blacklist a SE but still accept transfer-jobs:" << std::endl;
+            std::cout << "\t  fts-set-blacklist -s $FTSENDPOINT se $SE on --allow-submit" << std::endl;
+            std::cout << "\t- To remove a SE from blacklist:" << std::endl;
+            std::cout << "\t  fts-set-blacklist -s $FTSENDPOINT se $SE off" << std::endl;
+            std::cout << "\t- To blacklist a DN:" << std::endl;
+            std::cout << "\t  fts-set-blacklist -s $FTSENDPOINT dn $DN on" << std::endl;
+            std::cout << "\t- To remove a DN from blacklist:" << std::endl;
+            std::cout << "\t  fts-set-blacklist -s $FTSENDPOINT dn $DN off" << std::endl;
 
             return true;
         }

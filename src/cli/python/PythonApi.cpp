@@ -40,9 +40,8 @@ namespace cli
 {
 
 using namespace boost;
-using namespace std;
 
-PythonApi::PythonApi(py::str endpoint) : ctx(py::extract<string>(endpoint)) {}
+PythonApi::PythonApi(py::str endpoint) : ctx(py::extract<std::string>(endpoint)) {}
 
 PythonApi::~PythonApi()
 {
@@ -56,20 +55,20 @@ py::str PythonApi::submit(Job job)
 void PythonApi::cancel(py::str id)
 {
 
-    vector<string> c_ids;
-    c_ids.push_back(py::extract<string>(id));
+    std::vector<std::string> c_ids;
+    c_ids.push_back(py::extract<std::string>(id));
     ctx.cancel(c_ids);
 }
 
 void PythonApi::cancelAll(py::list ids)
 {
 
-    vector<string> c_ids;
+    std::vector<std::string> c_ids;
 
     boost::python::ssize_t size = len(ids);
     for (int i = 0; i < size; i++)
         {
-            c_ids.push_back(py::extract<string>(ids[i]));
+            c_ids.push_back(py::extract<std::string>(ids[i]));
         }
 
     ctx.cancel(c_ids);
@@ -77,7 +76,7 @@ void PythonApi::cancelAll(py::list ids)
 
 py::str PythonApi::getStatus(py::str id, bool archive)
 {
-    JobStatus s = ctx.getTransferJobStatus(py::extract<string>(id), archive);
+    JobStatus s = ctx.getTransferJobStatus(py::extract<std::string>(id), archive);
     return s.getStatus().c_str();
 }
 
@@ -90,7 +89,7 @@ void PythonApi::setPriority(py::str id, int priority)
 {
     if (priority < 1 || priority > 5) throw bad_option("priority", "The priority has to take a value in range of 1 to 5");
 
-    ctx.prioritySet(py::extract<string>(id), priority);
+    ctx.prioritySet(py::extract<std::string>(id), priority);
 }
 
 }

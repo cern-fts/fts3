@@ -31,7 +31,7 @@ JobIdCli::JobIdCli()
 
     // add hidden options (not printed in help)
     hidden.add_options()
-    ("jobid", value< vector<string> >()->multitoken(), "Specify job ID.")
+    ("jobid", value< std::vector<std::string> >()->multitoken(), "Specify job ID.")
     ;
 
     // all positional parameters go to jobid
@@ -43,19 +43,19 @@ JobIdCli::~JobIdCli()
 }
 
 
-string JobIdCli::getUsageString(string tool)
+std::string JobIdCli::getUsageString(std::string tool)
 {
     return "Usage: " + tool + " [options] JOBID [JOBID...]";
 }
 
-vector<string> JobIdCli::getJobIds()
+std::vector<std::string> JobIdCli::getJobIds()
 {
 
     // check whether jobid has been given as a parameter
     if (vm.count("jobid"))
         {
-            return vm["jobid"].as< vector<string> >();
+            return vm["jobid"].as< std::vector<std::string> >();
         }
 
-    return vector<string>();
+    return std::vector<std::string>();
 }

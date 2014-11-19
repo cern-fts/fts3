@@ -17,7 +17,7 @@ SnapshotCli::SnapshotCli() : SrcDestCli(false)
 {
 
     specific.add_options()
-    ("vo", value<string>(), "Specify VO name.")
+    ("vo", value<std::string>(), "Specify VO name.")
     ;
 }
 
@@ -26,12 +26,12 @@ SnapshotCli::~SnapshotCli()
 
 }
 
-string SnapshotCli::getVo()
+std::string SnapshotCli::getVo()
 {
     // check if vo was passed via command line options
     if (vm.count("vo"))
         {
-            return vm["vo"].as<string>();
+            return vm["vo"].as<std::string>();
         }
     return "";
 }

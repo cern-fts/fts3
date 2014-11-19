@@ -22,7 +22,7 @@ CancelCli::CancelCli()
 {
 
     specific.add_options()
-    ("file,f", value<string>(&bulk_file), "Name of a configuration file.")
+    ("file,f", value<std::string>(&bulk_file), "Name of a configuration file.")
     ;
 }
 
@@ -44,12 +44,12 @@ void CancelCli::validate()
 void CancelCli::prepareJobIds()
 {
     // first check if the -f option was used, try to open the file with bulk-job description
-    ifstream ifs(bulk_file.c_str());
+    std::ifstream ifs(bulk_file.c_str());
     if (ifs)
         {
             // Parse the file
             int lineCount = 0;
-            string line;
+            std::string line;
             // read and parse the lines one by one
             do
                 {
@@ -74,7 +74,7 @@ void CancelCli::prepareJobIds()
             // check whether jobid has been given as a parameter
             if (vm.count("jobid"))
                 {
-                    jobIds = vm["jobid"].as< vector<string> >();
+                    jobIds = vm["jobid"].as< std::vector<std::string> >();
                 }
         }
 }

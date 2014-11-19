@@ -39,9 +39,6 @@
 #include <stdexcept>
 
 using namespace fts3::cli;
-using namespace std;
-
-
 
 
 SrcDelCli::SrcDelCli()
@@ -49,12 +46,12 @@ SrcDelCli::SrcDelCli()
 
     // add commandline option specific for the fts3-transfer-delete
     specific.add_options()
-    ("source-token,S", value<string>(), "The source space token or its description (for SRM 2.2 transfers).")
-    ("file,f", value<string>(&bulk_file), "Name of a the bulk submission file.")
+    ("source-token,S", value<std::string>(), "The source space token or its description (for SRM 2.2 transfers).")
+    ("file,f", value<std::string>(&bulk_file), "Name of a the bulk submission file.")
     ;
     // add hidden options
     hidden.add_options()
-    ("Filename", value< vector<string> >(&allFilenames)->multitoken(), "Specify the FileName(s).")
+    ("Filename", value< std::vector<std::string> >(&allFilenames)->multitoken(), "Specify the FileName(s).")
     ;
     // add optional (that used without an option switch) command line option
     p.add("Filename", -1);
@@ -78,12 +75,12 @@ void SrcDelCli::validate(bool /*init*/)
     // first check if the -f option was used, try to open the file with bulk-job description
     if (vm.count("file"))
         {
-            ifstream ifs(bulk_file.c_str());
+        std::ifstream ifs(bulk_file.c_str());
             if(ifs)// -f option is used
                 {
                     // Parse the file...
                     int lineCount = 0;
-                    string line;
+                    std::string line;
                     do
                         {
                             lineCount++;
@@ -111,7 +108,7 @@ void SrcDelCli::validateFileName(std::string const & url)
         }
 }
 
-std::vector<string> SrcDelCli::getFileName()
+std::vector<std::string> SrcDelCli::getFileName()
 {
     return allFilenames;
 }

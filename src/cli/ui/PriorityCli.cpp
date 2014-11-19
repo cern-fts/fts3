@@ -35,7 +35,7 @@ PriorityCli::PriorityCli()
 {
     // add commandline options specific for fts3-set-blk
     hidden.add_options()
-    ("job_id", value<string>(&job_id), "Specify subject type (se/dn)")
+    ("job_id", value<std::string>(&job_id), "Specify subject type (se/dn)")
     ("priority", value<int>(&priority), "Subject name.")
     ;
 
@@ -57,7 +57,7 @@ void PriorityCli::validate()
         }
 }
 
-string PriorityCli::getUsageString(string tool)
+std::string PriorityCli::getUsageString(std::string tool)
 {
     return "Usage: " + tool + " [options] JOB_ID PRIORITY";
 }

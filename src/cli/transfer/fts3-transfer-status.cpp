@@ -106,7 +106,7 @@ int main(int ac, char* av[])
                     std::ofstream failedFiles;
                     if (cli.dumpFailed())
                         {
-                            failedFiles.open(jobId.c_str(), ios_base::out);
+                            failedFiles.open(jobId.c_str(), std::ios_base::out);
                             if (failedFiles.fail())
                                 throw bad_option("dump-failed", strerror(errno));
                         }

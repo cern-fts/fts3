@@ -25,7 +25,6 @@
 #include "DnCli.h"
 
 #include <iostream>
-using namespace std;
 
 using namespace fts3::cli;
 
@@ -34,7 +33,7 @@ DnCli::DnCli()
 
     // add fts3-transfer-status specific options
     specific.add_options()
-    ("userdn,u", value<string>(), "Restrict to specific user DN.")
+    ("userdn,u", value<std::string>(), "Restrict to specific user DN.")
     ;
 }
 

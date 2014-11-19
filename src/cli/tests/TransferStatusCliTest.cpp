@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE (TransferStatusCli_options)
 
     int ac = 2;
 
-    unique_ptr<TransferStatusCli> cli (new TransferStatusCli);
+    std::unique_ptr<TransferStatusCli> cli (new TransferStatusCli);
     cli->parse(ac, av);
 
     BOOST_CHECK(cli->list());

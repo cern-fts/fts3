@@ -35,8 +35,6 @@
 #include <iostream>
 #include <memory>
 
-using namespace std;
-
 using namespace fts3::cli;
 using namespace fts3::common;
 
@@ -48,15 +46,15 @@ BOOST_AUTO_TEST_CASE (SubmitTransferCli_bulk_submission)
 {
 
     // creat a tmeporary file with bulk-job description
-    fstream fs("/tmp/bulk", fstream::out);
+    std::fstream fs("/tmp/bulk", std::fstream::out);
     if (!fs)
         {
-            cout << "It was not possible to carry out the bulk-job test!" << endl;
+            std::cout << "It was not possible to carry out the bulk-job test!" << std::endl;
             return;
         }
 
-    fs << "srm://source1/file.in srm://destination1/file.out Alg:check1" << endl;
-    fs << "srm://source2/file.in srm://destination2/file.out" << endl;
+    fs << "srm://source1/file.in srm://destination1/file.out Alg:check1" << std::endl;
+    fs << "srm://source2/file.in srm://destination2/file.out" << std::endl;
 
     fs.flush();
     fs.close();
@@ -74,7 +72,7 @@ BOOST_AUTO_TEST_CASE (SubmitTransferCli_bulk_submission)
     // argument count
     int ac = 5;
 
-    unique_ptr<SubmitTransferCli> cli (new SubmitTransferCli);
+    std::unique_ptr<SubmitTransferCli> cli (new SubmitTransferCli);
     cli->parse(ac, av);
 
 
@@ -82,7 +80,7 @@ BOOST_AUTO_TEST_CASE (SubmitTransferCli_bulk_submission)
 
     BOOST_CHECK(cli->useCheckSum());
 
-    vector<File> files = cli->getFiles();
+    std::vector<File> files = cli->getFiles();
 
     BOOST_CHECK_EQUAL(files.size(), 2);
 
@@ -113,7 +111,7 @@ BOOST_AUTO_TEST_CASE (SubmitTransferCli_other_options)
     // argument count
     int ac = 8;
 
-    unique_ptr<SubmitTransferCli> cli (new SubmitTransferCli);
+    std::unique_ptr<SubmitTransferCli> cli (new SubmitTransferCli);
     cli->parse(ac, av);
     cli->validate();
 
@@ -135,7 +133,7 @@ BOOST_AUTO_TEST_CASE (SubmitTransferCli_submission_no_job)
     // argument count
     int ac = 3;
 
-    unique_ptr<SubmitTransferCli> cli (new SubmitTransferCli);
+    std::unique_ptr<SubmitTransferCli> cli (new SubmitTransferCli);
     cli->parse(ac, av);
     BOOST_CHECK_THROW(cli->validate(), cli_exception);
     BOOST_CHECK_THROW(cli->getFiles(), bad_option);
@@ -157,7 +155,7 @@ BOOST_AUTO_TEST_CASE (SubmitTransferCli_submission_no_checksum)
     // argument count
     int ac = 5;
 
-    unique_ptr<SubmitTransferCli> cli (new SubmitTransferCli);
+    std::unique_ptr<SubmitTransferCli> cli (new SubmitTransferCli);
     cli->parse(ac, av);
     cli->validate();
 
@@ -165,7 +163,7 @@ BOOST_AUTO_TEST_CASE (SubmitTransferCli_submission_no_checksum)
     BOOST_CHECK_EQUAL(cli->getDestination(), "srm://destination/file.out");
     BOOST_CHECK(!cli->useCheckSum());
 
-    vector<File> files = cli->getFiles();
+    std::vector<File> files = cli->getFiles();
 
     BOOST_CHECK_EQUAL(files.size(), 1);
     BOOST_CHECK_EQUAL(files[0].sources[0], "srm://source/file.in");
@@ -188,7 +186,7 @@ BOOST_AUTO_TEST_CASE (SubmitTransferCli_submission_with_checksum)
     // argument count
     int ac = 6;
 
-    unique_ptr<SubmitTransferCli> cli (new SubmitTransferCli);
+    std::unique_ptr<SubmitTransferCli> cli (new SubmitTransferCli);
     cli->parse(ac, av);
     cli->validate();
 
@@ -196,7 +194,7 @@ BOOST_AUTO_TEST_CASE (SubmitTransferCli_submission_with_checksum)
     BOOST_CHECK(cli->getDestination().compare("srm://destination/file.out") == 0);
     BOOST_CHECK(cli->useCheckSum());
 
-    vector<File> files = cli->getFiles();
+    std::vector<File> files = cli->getFiles();
 
     BOOST_CHECK_EQUAL(files.size(), 1);
     BOOST_CHECK_EQUAL(files[0].sources[0], "srm://source/file.in");
@@ -226,7 +224,7 @@ BOOST_FIXTURE_TEST_CASE (SubmitTransferCli_parameters, SubmitTransferCli)
     // argument count
     int ac = 15;
 
-    unique_ptr<SubmitTransferCli> cli (new SubmitTransferCli);
+    std::unique_ptr<SubmitTransferCli> cli (new SubmitTransferCli);
     cli->parse(ac, av);
 
     try
@@ -235,12 +233,12 @@ BOOST_FIXTURE_TEST_CASE (SubmitTransferCli_parameters, SubmitTransferCli)
         }
     catch(cli_exception & ex)
         {
-            string s1, s2;
+        std::string s1, s2;
             s1 = ex.what();
             s2 = ex.what();
         }
 
-    map<string, string> params = cli->getParams();
+    std::map<std::string, std::string> params = cli->getParams();
 
     BOOST_CHECK_EQUAL(params.at(JobParameterHandler::CHECKSUM_METHOD), "compare");
     BOOST_CHECK_EQUAL(params.at(JobParameterHandler::OVERWRITEFLAG), "Y");

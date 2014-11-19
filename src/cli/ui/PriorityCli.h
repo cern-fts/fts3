@@ -36,7 +36,6 @@ namespace cli
 {
 
 using namespace boost;
-using namespace std;
 
 class PriorityCli : public CliBase
 {
@@ -67,12 +66,12 @@ public:
      *
      * @return a string with instruction on how to use the tool
      */
-    string getUsageString(string tool);
+    std::string getUsageString(std::string tool);
 
     /**
      *
      */
-    string getJobId()
+    std::string getJobId()
     {
         return job_id;
     }
@@ -87,7 +86,7 @@ public:
 
 private:
     ///
-    string job_id;
+    std::string job_id;
     ///
     int priority;
 };

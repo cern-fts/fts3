@@ -17,8 +17,6 @@ namespace fts3
 namespace cli
 {
 
-using namespace std;
-
 class SnapshotCli : public SrcDestCli, public TransferCliBase
 {
 
@@ -27,7 +25,7 @@ public:
     SnapshotCli();
     virtual ~SnapshotCli();
 
-    string getVo();
+    std::string getVo();
 };
 
 } /* namespace cli */
