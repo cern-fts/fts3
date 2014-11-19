@@ -131,7 +131,7 @@ def get_optimizer_details(http_request):
     n_fixed = None
     if len(optimizer) == 0:
         fixed = OptimizeActive.objects.filter(source_se=source_se, dest_se=dest_se).values('fixed', 'active').all()
-        if len(fixed) and fixed[0]['fixed'].lower() == 'on':
+        if len(fixed) and fixed[0]['fixed'] is not None and fixed[0]['fixed'].lower() == 'on':
             n_fixed = fixed[0]['active']
 
     return {
