@@ -1363,6 +1363,7 @@ int main(int argc, char **argv)
                         if (currentTransfer.fileSize == dest_size)
                             {
                                 logger.INFO() << "DESTINATION Source and destination file size matching" << std::endl;
+				errorMessage = "";
                             }
                         else
                             {

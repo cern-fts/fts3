@@ -48,7 +48,7 @@ void FetchStaging::fetch()
                     if (DrainMode::getInstance())
                         {
                             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more checking stage-in files for this instance!" << commit;
-                            boost::this_thread::sleep(boost::posix_time::milliseconds(15000));
+                            boost::this_thread::sleep(boost::posix_time::milliseconds(60000));
                             continue;
                         }
 
