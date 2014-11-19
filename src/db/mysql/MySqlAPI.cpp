@@ -4377,6 +4377,7 @@ bool MySqlAPI::updateOptimizer()
                     activeDestination = 0;
                     avgDuration = 0.0;
                     isNullAvg = soci::i_ok;
+		    active_fixed = "off";
 
                     std::vector<std::string>::const_iterator it;
                     for(std::vector<std::string>::iterator it = checkDistinctSource.begin(); it != checkDistinctSource.end(); ++it)
