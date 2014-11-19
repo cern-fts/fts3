@@ -43,7 +43,6 @@ namespace fts3
 namespace cli
 {
 
-using namespace std;
 using namespace boost::property_tree;
 
 class MsgPrinter

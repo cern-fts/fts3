@@ -43,7 +43,6 @@ namespace cli
 
 using namespace boost::program_options;
 using namespace boost::property_tree;
-using namespace std;
 using namespace boost;
 
 /**
@@ -65,11 +64,11 @@ class CliBase
 public:
 
     ///
-    static const string error;
+    static const std::string error;
     ///
-    static const string result;
+    static const std::string result;
     ///
-    static const string parameter_error;
+    static const std::string parameter_error;
 
     /**
      * Default constructor.
@@ -137,7 +136,7 @@ public:
      *
      * @return FTS3 service string
      */
-    string getService();
+    std::string getService();
 
     /**
      * Pure virtual method, it aim is to give the instruction how to use the command line tool.
@@ -146,7 +145,7 @@ public:
      *
      * @return implementing class should return a string with instruction on how to use the tool
      */
-    virtual string getUsageString(string tool);
+    virtual std::string getUsageString(std::string tool);
 
 protected:
 
@@ -172,7 +171,7 @@ protected:
      *
      * @return FTS3 service string
      */
-    string discoverService();
+    std::string discoverService();
 
     /**
      * a map containing parsed options
@@ -217,32 +216,32 @@ protected:
     /**
      * the FTS3 service endpoint
      */
-    string endpoint;
+    std::string endpoint;
 
     /**
      * the name of the utility
      */
-    string toolname;
+    std::string toolname;
 
 private:
 
     /**
      *
      */
-    string getCliVersion();
+    std::string getCliVersion();
 
-    string version;
-    string interface;
+    std::string version;
+    std::string interface;
 
     ///@{
     /**
      * string values used for discovering the FTS3 service
      */
-    string FTS3_CA_SD_TYPE;
-    string FTS3_SD_ENV;
-    string FTS3_SD_TYPE;
-    string FTS3_IFC_VERSION;
-    string FTS3_INTERFACE_VERSION;
+    std::string FTS3_CA_SD_TYPE;
+    std::string FTS3_SD_ENV;
+    std::string FTS3_SD_TYPE;
+    std::string FTS3_IFC_VERSION;
+    std::string FTS3_INTERFACE_VERSION;
     ///@}
 };
 

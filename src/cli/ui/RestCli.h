@@ -46,12 +46,12 @@ public:
     /**
      * @return the path to the CA certificates
      */
-    string capath();
+    std::string capath();
 
     /**
      * @return the path to the proxy certificate
      */
-    string proxy();
+    std::string proxy();
 };
 
 } /* namespace cli   */

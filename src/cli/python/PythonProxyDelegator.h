@@ -33,7 +33,7 @@ public:
     long isCertValid(py::str filename);
 
 private:
-    stringstream out;
+    std::stringstream out;
     std::unique_ptr<ProxyCertificateDelegator> delegator;
 };
 

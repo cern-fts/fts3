@@ -55,9 +55,9 @@ namespace fts3
 namespace cli
 {
 
-vector<GSoapContextAdapter::Cleaner> GSoapContextAdapter::cleaners;
+std::vector<GSoapContextAdapter::Cleaner> GSoapContextAdapter::cleaners;
 
-GSoapContextAdapter::GSoapContextAdapter(string endpoint):
+GSoapContextAdapter::GSoapContextAdapter(std::string endpoint):
     ServiceAdapter(endpoint), ctx(soap_new2(SOAP_IO_KEEPALIVE, SOAP_IO_KEEPALIVE))
 {
     this->major = 0;
@@ -174,7 +174,7 @@ std::string GSoapContextAdapter::transferSubmit(std::vector<File> const & files,
     tns3__TransferJobElement3* element;
 
     // iterate over the internal vector containing job elements
-    vector<File>::const_iterator f_it;
+    std::vector<File>::const_iterator f_it;
     for (f_it = files.begin(); f_it < files.end(); f_it++)
         {
 
@@ -238,7 +238,7 @@ std::string GSoapContextAdapter::transferSubmit(std::vector<File> const & files,
 
 
     job.jobParams = soap_new_tns3__TransferParams(ctx, -1);
-    map<string, string>::const_iterator p_it;
+    std::map<std::string, std::string>::const_iterator p_it;
 
     for (p_it = parameters.begin(); p_it != parameters.end(); p_it++)
         {
@@ -261,12 +261,12 @@ void GSoapContextAdapter::delegate(std::string const & delegationId, long expira
     delegator.delegate();
 }
 
-string GSoapContextAdapter::deleteFile (std::vector<std::string>& filesForDelete)
+std::string GSoapContextAdapter::deleteFile (std::vector<std::string>& filesForDelete)
 {
     impltns__fileDeleteResponse resp;
     tns3__deleteFiles delFiles;
 
-    vector<string>::iterator it;
+    std::vector<std::string>::iterator it;
     for(it=filesForDelete.begin(); it != filesForDelete.end(); ++it)
         delFiles.delf.push_back(*it);
 
@@ -320,13 +320,13 @@ std::vector< std::pair<std::string, std::string>  > GSoapContextAdapter::cancel(
     if (soap_call_impltns__cancel2(ctx, endpoint.c_str(), 0, &rqst, resp))
         throw gsoap_error(ctx);
 
-    vector< pair<string, string> > ret;
+    std::vector< std::pair<std::string, std::string> > ret;
 
     if (resp._jobIDs && resp._status)
         {
             // zip two vectors
-            vector<string> &ids = resp._jobIDs->item, &stats = resp._status->item;
-            vector<string>::iterator itr_id = ids.begin(), itr_stat = stats.begin();
+            std::vector<std::string> &ids = resp._jobIDs->item, &stats = resp._status->item;
+            std::vector<std::string>::iterator itr_id = ids.begin(), itr_stat = stats.begin();
 
             for (; itr_id != ids.end() && itr_stat != stats.end(); ++itr_id, ++ itr_stat)
                 {
@@ -343,7 +343,7 @@ void GSoapContextAdapter::getRoles (impltns__getRolesResponse& resp)
         throw gsoap_error(ctx);
 }
 
-void GSoapContextAdapter::getRolesOf (string dn, impltns__getRolesOfResponse& resp)
+void GSoapContextAdapter::getRolesOf (std::string dn, impltns__getRolesOfResponse& resp)
 {
     if (soap_call_impltns__getRolesOf(ctx, endpoint.c_str(), 0, dn, resp))
         throw gsoap_error(ctx);
@@ -362,8 +362,8 @@ std::vector<JobStatus> GSoapContextAdapter::listRequests (std::vector<std::strin
     if (!resp._listRequests2Return)
         throw cli_exception("The response from the server is empty!");
 
-    vector<JobStatus> ret;
-    vector<tns3__JobStatus*>::iterator it;
+    std::vector<JobStatus> ret;
+    std::vector<tns3__JobStatus*>::iterator it;
 
     for (it = resp._listRequests2Return->item.begin(); it < resp._listRequests2Return->item.end(); it++)
         {
@@ -428,7 +428,7 @@ std::vector<JobStatus> GSoapContextAdapter::listDeletionRequests (std::vector<st
     return ret;
 }
 
-void GSoapContextAdapter::listVoManagers(string vo, impltns__listVOManagersResponse& resp)
+void GSoapContextAdapter::listVoManagers(std::string vo, impltns__listVOManagersResponse& resp)
 {
     if (soap_call_impltns__listVOManagers(ctx, endpoint.c_str(), 0, vo, resp))
         throw gsoap_error(ctx);
@@ -502,7 +502,7 @@ void GSoapContextAdapter::setConfiguration (config__Configuration *config, implc
         throw gsoap_error(ctx);
 }
 
-void GSoapContextAdapter::getConfiguration (string src, string dest, string all, string name, implcfg__getConfigurationResponse& resp)
+void GSoapContextAdapter::getConfiguration (std::string src, std::string dest, std::string all, std::string name, implcfg__getConfigurationResponse& resp)
 {
     if (soap_call_implcfg__getConfiguration(ctx, endpoint.c_str(), 0, all, name, src, dest, resp))
         throw gsoap_error(ctx);
@@ -548,14 +548,14 @@ void GSoapContextAdapter::getBandwidthLimit(implcfg__getBandwidthLimitResponse& 
         throw gsoap_error(ctx);
 }
 
-void GSoapContextAdapter::debugSet(string source, string destination, unsigned level)
+void GSoapContextAdapter::debugSet(std::string source, std::string destination, unsigned level)
 {
     impltns__debugLevelSetResponse resp;
     if (soap_call_impltns__debugLevelSet(ctx, endpoint.c_str(), 0, source, destination, level, resp))
         throw gsoap_error(ctx);
 }
 
-void GSoapContextAdapter::blacklistDn(string subject, string status, int timeout, bool mode)
+void GSoapContextAdapter::blacklistDn(std::string subject, std::string status, int timeout, bool mode)
 {
 
     impltns__blacklistDnResponse resp;
@@ -563,7 +563,7 @@ void GSoapContextAdapter::blacklistDn(string subject, string status, int timeout
         throw gsoap_error(ctx);
 }
 
-void GSoapContextAdapter::blacklistSe(string name, string vo, string status, int timeout, bool mode)
+void GSoapContextAdapter::blacklistSe(std::string name, std::string vo, std::string status, int timeout, bool mode)
 {
 
     impltns__blacklistSeResponse resp;
@@ -585,21 +585,21 @@ void GSoapContextAdapter::showUserDn(bool show)
         throw gsoap_error(ctx);
 }
 
-void GSoapContextAdapter::prioritySet(string jobId, int priority)
+void GSoapContextAdapter::prioritySet(std::string jobId, int priority)
 {
     impltns__prioritySetResponse resp;
     if (soap_call_impltns__prioritySet(ctx, endpoint.c_str(), 0, jobId, priority, resp))
         throw gsoap_error(ctx);
 }
 
-void GSoapContextAdapter::setSeProtocol(string protocol, string se, string state)
+void GSoapContextAdapter::setSeProtocol(std::string protocol, std::string se, std::string state)
 {
     implcfg__setSeProtocolResponse resp;
     if (soap_call_implcfg__setSeProtocol(ctx, endpoint.c_str(), 0, protocol, se, state, resp))
         throw gsoap_error(ctx);
 }
 
-void GSoapContextAdapter::retrySet(string vo, int retry)
+void GSoapContextAdapter::retrySet(std::string vo, int retry)
 {
     implcfg__setRetryResponse resp;
     if (soap_call_implcfg__setRetry(ctx, endpoint.c_str(), 0, vo, retry, resp))
@@ -634,21 +634,21 @@ void GSoapContextAdapter::setSecPerMb(int secPerMb)
         throw gsoap_error(ctx);
 }
 
-void GSoapContextAdapter::setMaxDstSeActive(string se, int active)
+void GSoapContextAdapter::setMaxDstSeActive(std::string se, int active)
 {
     implcfg__maxDstSeActiveResponse resp;
     if (soap_call_implcfg__maxDstSeActive(ctx, endpoint.c_str(), 0, se, active, resp))
         throw gsoap_error(ctx);
 }
 
-void GSoapContextAdapter::setMaxSrcSeActive(string se, int active)
+void GSoapContextAdapter::setMaxSrcSeActive(std::string se, int active)
 {
     implcfg__maxSrcSeActiveResponse resp;
     if (soap_call_implcfg__maxSrcSeActive(ctx, endpoint.c_str(), 0, se, active, resp))
         throw gsoap_error(ctx);
 }
 
-void GSoapContextAdapter::setFixActivePerPair(string source, string destination, int active)
+void GSoapContextAdapter::setFixActivePerPair(std::string source, std::string destination, int active)
 {
     implcfg__fixActivePerPairResponse resp;
     if (soap_call_implcfg__fixActivePerPair(ctx, endpoint.c_str(), 0, source, destination, active, resp))
@@ -690,7 +690,7 @@ std::vector<DetailedFileStatus> GSoapContextAdapter::getDetailedJobStatus(std::s
     return ret;
 }
 
-void GSoapContextAdapter::setInterfaceVersion(string interface)
+void GSoapContextAdapter::setInterfaceVersion(std::string interface)
 {
 
     if (interface.empty()) return;
@@ -702,7 +702,7 @@ void GSoapContextAdapter::setInterfaceVersion(string interface)
 
     if (it == tokens.end()) return;
 
-    string s = *it++;
+    std::string s = *it++;
     major = boost::lexical_cast<long>(s);
 
     if (it == tokens.end()) return;

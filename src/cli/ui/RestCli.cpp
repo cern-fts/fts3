@@ -16,8 +16,8 @@ RestCli::RestCli()
     // add fts3-transfer-status specific options
     specific.add_options()
     ("rest", "Use the RESTful interface.")
-    ("capath", value<string>(),  "Path to the GRID security certificates (e.g. /etc/grid-security/certificates).")
-    ("proxy", value<string>(),  "Path to the proxy certificate (e.g. /tmp/x509up_u500).")
+    ("capath", value<std::string>(),  "Path to the GRID security certificates (e.g. /etc/grid-security/certificates).")
+    ("proxy", value<std::string>(),  "Path to the proxy certificate (e.g. /tmp/x509up_u500).")
     ;
 }
 
@@ -32,21 +32,21 @@ bool RestCli::rest()
     return vm.count("rest");
 }
 
-string RestCli::capath()
+std::string RestCli::capath()
 {
     if (vm.count("capath"))
         {
-            return vm["capath"].as<string>();
+            return vm["capath"].as<std::string>();
         }
 
     throw bad_option("capath", "The CA certificates path has to be specified!");
 }
 
-string RestCli::proxy()
+std::string RestCli::proxy()
 {
     if (vm.count("proxy"))
         {
-            return vm["proxy"].as<string>();
+            return vm["proxy"].as<std::string>();
         }
 
     throw bad_option("proxy", "The path to the proxy certificate has to be specified!");

@@ -36,9 +36,9 @@
 
 using namespace fts3::cli;
 
-const string CliBase::error = "error";
-const string CliBase::result = "result";
-const string CliBase::parameter_error = "parameter_error";
+const std::string CliBase::error = "error";
+const std::string CliBase::result = "result";
+const std::string CliBase::parameter_error = "parameter_error";
 
 CliBase::CliBase(): visible("Allowed options")
 {
@@ -48,7 +48,7 @@ CliBase::CliBase(): visible("Allowed options")
     ("help,h", "Print this help text and exit.")
     ("quite,q", "Quiet operation.")
     ("verbose,v", "Be more verbose.")
-    ("service,s", value<string>(), "Use the transfer service at the specified URL.")
+    ("service,s", value<std::string>(), "Use the transfer service at the specified URL.")
     ("version,V", "Print the version number and exit.")
     ;
 
@@ -62,7 +62,7 @@ void CliBase::parse(int ac, char* av[])
     // set the output parameters (verbose and json) before the actual parsing happens
     for (int i = 0; i < ac; i++)
         {
-            string str(av[i]);
+            std::string str(av[i]);
             if (str == "-v")
                 {
                     MsgPrinter::instance().setVerbose(true);
@@ -95,7 +95,7 @@ void CliBase::parse(int ac, char* av[])
     // check whether the -s option has been used
     if (vm.count("service"))
         {
-            endpoint = vm["service"].as<string>();
+            endpoint = vm["service"].as<std::string>();
             // check if the endpoint has the right prefix
             if (endpoint.find("http") != 0 && endpoint.find("https") != 0 && endpoint.find("httpd") != 0)
                 {
@@ -108,13 +108,13 @@ void CliBase::parse(int ac, char* av[])
 
             if (useSrvConfig())
                 {
-                    fstream  cfg ("/etc/fts3/fts3config");
+                    std::fstream  cfg ("/etc/fts3/fts3config");
                     if (cfg.is_open())
                         {
 
-                            string ip;
-                            string port;
-                            string line;
+                            std::string ip;
+                            std::string port;
+                            std::string line;
 
                             do
                                 {
@@ -170,7 +170,7 @@ void CliBase::printApiDetails(ServiceAdapter & ctx) const
     printCliDeatailes();
 }
 
-string CliBase::getUsageString(string tool)
+std::string CliBase::getUsageString(std::string tool)
 {
     return "Usage: " + tool + " [options]";
 }
@@ -184,14 +184,14 @@ bool CliBase::printHelp()
 
             // remove the path to the executive
             size_t pos = toolname.find_last_of('/');
-            if( pos != string::npos)
+            if( pos != std::string::npos)
                 {
                     toolname = toolname.substr(pos + 1);
                 }
             // print the usage guigelines
-            cout << endl << getUsageString(toolname) << endl << endl;
+            std::cout << std::endl << getUsageString(toolname) << std::endl << std::endl;
             // print the available options
-            cout << visible << endl;
+            std::cout << visible << std::endl;
             return true;
         }
 
@@ -215,20 +215,18 @@ bool CliBase::isQuite()
     return vm.count("quite");
 }
 
-string CliBase::getService()
+std::string CliBase::getService()
 {
-
     return endpoint;
 }
 
-string CliBase::discoverService()
+std::string CliBase::discoverService()
 {
-    string tmp;
+    std::string tmp;
     return tmp;
 }
 
-string CliBase::getCliVersion()
+std::string CliBase::getCliVersion()
 {
-
     return VERSION;
 }

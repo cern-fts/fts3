@@ -79,14 +79,14 @@ public:
      *
      * @return a string with instruction on how to use the tool
      */
-    string getUsageString(string tool);
+    std::string getUsageString(std::string tool);
 
     /**
      * Gets the VO name.
      *
      * @return VO name if it was specified, empty string otherwise
      */
-    string getVoName();
+    std::string getVoName();
 
 private:
 

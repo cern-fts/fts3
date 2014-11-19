@@ -29,7 +29,7 @@ public:
      *
      * @return delegation ID string if it was given as a CLI option, or an empty string if not
      */
-    string getDelegationId();
+    std::string getDelegationId();
 
     /**
      * Gets user's set expiration time in seconds (long).

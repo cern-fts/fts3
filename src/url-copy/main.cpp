@@ -592,10 +592,9 @@ int statWithRetries(gfal_context_t handle, const std::string& category, const st
     struct stat statBuffer;
     GError* statError = NULL;
     bool canBeRetried = false;
-
     int errorCode = 0;
-
     errMsg->clear();
+
     for (int attempt = 0; attempt < 4; attempt++)
         {
             if (gfal2_stat(handle, url.c_str(), &statBuffer, &statError) < 0)
@@ -611,6 +610,7 @@ int statWithRetries(gfal_context_t handle, const std::string& category, const st
             else
                 {
                     *size = statBuffer.st_size;
+		    errMsg->clear();
                     return 0;
                 }
 
@@ -1363,6 +1363,7 @@ int main(int argc, char **argv)
                         if (currentTransfer.fileSize == dest_size)
                             {
                                 logger.INFO() << "DESTINATION Source and destination file size matching" << std::endl;
+				errorMessage = "";
                             }
                         else
                             {

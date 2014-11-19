@@ -73,7 +73,7 @@ void MsgPrinter::print_info(std::string const & ostr_subject, std::string const 
             return;
         }
 
-    jout.print(json_subject, lexical_cast<string>(h) + ":" + lexical_cast<string>(m));
+    jout.print(json_subject, lexical_cast<std::string>(h) + ":" + lexical_cast<std::string>(m));
 }
 
 void MsgPrinter::print_info(std::string const & ostr_subject, std::string const & json_subject, std::string const & msg)
