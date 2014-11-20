@@ -48,7 +48,7 @@ CliBase::CliBase(): visible("Allowed options")
     ("help,h", "Print this help text and exit.")
     ("quite,q", "Quiet operation.")
     ("verbose,v", "Be more verbose.")
-    ("service,s", value<std::string>(), "Use the transfer service at the specified URL.")
+    ("service,s", po::value<std::string>(), "Use the transfer service at the specified URL.")
     ("version,V", "Print the version number and exit.")
     ;
 
@@ -81,10 +81,10 @@ void CliBase::parse(int ac, char* av[])
     visible.add(basic).add(specific);
 
     // turn off guessing, so --source is not mistaken with --source-token
-    int style = command_line_style::default_style & ~command_line_style::allow_guessing;
+    int style = po::command_line_style::default_style & ~po::command_line_style::allow_guessing;
 
     // parse the options that have been used
-    store(command_line_parser(ac, av).options(all).positional(p).style(style).run(), vm);
+    po::store(po::command_line_parser(ac, av).options(all).positional(p).style(style).run(), vm);
     notify(vm);
 
     // check is the output is verbose

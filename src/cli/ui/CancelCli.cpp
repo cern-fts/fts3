@@ -16,13 +16,11 @@ namespace fts3
 namespace cli
 {
 
-using namespace boost;
-
 CancelCli::CancelCli()
 {
 
     specific.add_options()
-    ("file,f", value<std::string>(&bulk_file), "Name of a configuration file.")
+    ("file,f", po::value<std::string>(&bulk_file), "Name of a configuration file.")
     ;
 }
 
@@ -60,9 +58,9 @@ void CancelCli::prepareJobIds()
 
                     // regular expression for matching job ID
                     // job ID example: 11d24106-a24b-4d9f-9360-7c36c5176327
-                    static const regex re("^\\w+-\\w+-\\w+-\\w+-\\w+$");
-                    smatch what;
-                    if (!regex_match(line, what, re, match_extra)) throw bad_option("jobid", "Wrong job ID format: " + line);
+                    static const boost::regex re("^\\w+-\\w+-\\w+-\\w+-\\w+$");
+                    boost::smatch what;
+                    if (!boost::regex_match(line, what, re, boost::match_extra)) throw bad_option("jobid", "Wrong job ID format: " + line);
 
                     jobIds.push_back(line);
 

@@ -39,8 +39,6 @@ namespace fts3
 namespace cli
 {
 
-using namespace boost;
-
 PythonApi::PythonApi(py::str endpoint) : ctx(py::extract<std::string>(endpoint)) {}
 
 PythonApi::~PythonApi()

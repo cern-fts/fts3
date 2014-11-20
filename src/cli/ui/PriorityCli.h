@@ -35,8 +35,6 @@ namespace fts3
 namespace cli
 {
 
-using namespace boost;
-
 class PriorityCli : public CliBase
 {
 

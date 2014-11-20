@@ -34,7 +34,6 @@
 #include "unittest/testsuite.h"
 #endif
 
-using namespace boost::algorithm;
 using namespace fts3::cli;
 
 SetCfgCli::SetCfgCli(bool spec)
@@ -46,27 +45,27 @@ SetCfgCli::SetCfgCli(bool spec)
             // add commandline options specific for fts3-config-set
             specific.add_options()
             (
-                "bring-online", value< std::vector<std::string> >()->multitoken(),
+                "bring-online", po::value< std::vector<std::string> >()->multitoken(),
                 "If this switch is used the user should provide SE_NAME VALUE and optionally VO_NAME in order to set the maximum number of files that are staged concurrently for a given SE."
                 "\n(Example: --bring-online $SE_NAME $VALUE [$VO_NAME])"
             )
             (
-                "delete", value< std::vector<std::string> >()->multitoken(),
+                "delete", po::value< std::vector<std::string> >()->multitoken(),
                 "If this switch is used the user should provide SE_NAME VALUE and optionally VO_NAME in order to set the maximum number of files that are deleted concurrently for a given SE."
                 "\n(Example: --delete $SE_NAME $VALUE [$VO_NAME])"
             )
             (
-                "drain", value<std::string>(),
+                "drain", po::value<std::string>(),
                 "If set to 'on' drains the given endpoint."
                 "\n(Example: --drain on|off)"
             )
             (
-                "retry", value< std::vector<std::string> >()->multitoken(),
+                "retry", po::value< std::vector<std::string> >()->multitoken(),
                 "Sets the number of retries of each individual file transfer for the given VO (the value should be greater or equal to -1)."
                 "\n(Example: --retry $VO $NB_RETRY)"
             )
             (
-                "optimizer-mode", value<int>(),
+                "optimizer-mode", po::value<int>(),
                 "Sets the optimizer mode (allowed values: 1, 2 or 3)"
                 "\n(Example: --optimizer-mode 1|2|3)"
                 "\nPlan 1: use file size to calculate the number of streams "
@@ -74,66 +73,66 @@ SetCfgCli::SetCfgCli(bool spec)
                 "\nPlan 3: set TCP buffer size to 8MB "
             )
             (
-                "queue-timeout", value<int>(),
+                "queue-timeout", po::value<int>(),
                 "Sets the maximum time (in hours) transfer job is allowed to be in the queue (the value should be greater or equal to 0)."
                 "\n(Example: --queue-timeout $TIMEOUT)"
             )
-            (	"source", value<std::string>(),
+            (	"source", po::value<std::string>(),
                 "The source SE"
                 "\n(Example: --source $SE_NAME)"
             )
             (
-                "destination", value<std::string>(),
+                "destination", po::value<std::string>(),
                 "The destination SE"
                 "\n(Example: --destination $SE_NAME)"
             )
             (
-                "max-bandwidth", value<int>(),
+                "max-bandwidth", po::value<int>(),
                 "The maximum bandwidth that can be used (in MB/s) for the given source or destination (see --source & --destination)"
                 "\n(Example: --max-bandwidth $LIMIT)"
             )
-            (	"protocol", value< std::vector<std::string> >()->multitoken(),
+            (	"protocol", po::value< std::vector<std::string> >()->multitoken(),
                 "Set protocol (UDT | IPv6) for given SE"
                 "\n(Example: --protocol udt $SE_NAME on|off)"
                 "\n(Example: --protocol ipv6 $SE_NAME on|off)"
             )
             (
-                "max-se-source-active", value< std::vector<std::string> >()->multitoken(),
+                "max-se-source-active", po::value< std::vector<std::string> >()->multitoken(),
                 "Maximum number of active transfers for given source SE (-1 means no limit)"
                 "\n(Example: --max-se-source-active $NB_ACT $SE_NAME)"
             )
             (
-                "max-se-dest-active", value< std::vector<std::string> >()->multitoken(),
+                "max-se-dest-active", po::value< std::vector<std::string> >()->multitoken(),
                 "Maximum number of active transfers for given destination SE (-1 means no limit)"
                 "\n(Example: --max-se-dest-active $NB_ACT $SE_NAME)"
             )
             (
-                "global-timeout", value<int>(),
+                "global-timeout", po::value<int>(),
                 "Global transfer timeout"
                 "\n(Example: --global-timeout $TIMEOUT)"
             )
             (
-                "sec-per-mb", value<int>(),
+                "sec-per-mb", po::value<int>(),
                 "number of seconds per MB"
                 "\n(Example: --sec-per-mb $SEC_PER_MB)"
             )
             (
-                "active-fixed", value<int>(),
+                "active-fixed", po::value<int>(),
                 "Fixed number of active transfer for a given pair (-1 means reset to optimizer)"
                 "\n(Example: --source $SE --destination $SE --active-fixed $NB_ACT"
             )
             (
-                "show-user-dn", value<std::string>(),
+                "show-user-dn", po::value<std::string>(),
                 "If set to 'on' user DNs will included in monitoring messages"
                 "\n(Example: --show-user-dn on|off)"
             )
             (
-                "s3", value< std::vector<std::string> >()->multitoken(),
+                "s3", po::value< std::vector<std::string> >()->multitoken(),
                 "Set the S3 credentials, requires: access-key, secret-key, VO name and storage name"
                 "\n(Example: --s3 $ACCESS_KEY $SECRET_KEY $VO_NAME $STORAGE_NAME)"
             )
             (
-                "dropbox", value< std::vector<std::string> >()->multitoken(),
+                "dropbox", po::value< std::vector<std::string> >()->multitoken(),
                 "Set the dropbox credentials, requires: app-key, app-secret and service API URL"
                 "\n(Example: --s3 $APP_KEY $APP_SECRET $API_URL)"
             )
@@ -142,7 +141,7 @@ SetCfgCli::SetCfgCli(bool spec)
 
     // add hidden options (not printed in help)
     hidden.add_options()
-    ("cfg", value< std::vector<std::string> >(), "Specify SE configuration.")
+    ("cfg", po::value< std::vector<std::string> >(), "Specify SE configuration.")
     ;
 
     // all positional parameters go to jobid

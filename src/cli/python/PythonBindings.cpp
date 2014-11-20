@@ -35,7 +35,6 @@
 
 #include <exception>
 
-using namespace boost;
 using namespace fts3::common;
 
 void exceptTranslator(std::exception const& ex)

@@ -33,7 +33,7 @@ DnCli::DnCli()
 
     // add fts3-transfer-status specific options
     specific.add_options()
-    ("userdn,u", value<std::string>(), "Restrict to specific user DN.")
+    ("userdn,u", po::value<std::string>(), "Restrict to specific user DN.")
     ;
 }
 

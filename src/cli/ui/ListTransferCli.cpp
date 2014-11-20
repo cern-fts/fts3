@@ -33,13 +33,13 @@ ListTransferCli::ListTransferCli(): VoNameCli(false)
 
     // add hidden options (not printed in help)
     CliBase::hidden.add_options()
-    ("state", value< std::vector<std::string> >(), "Specify states for querying.")
+    ("state", po::value< std::vector<std::string> >(), "Specify states for querying.")
     ;
 
     // add fts3-transfer-list specific options
     specific.add_options()
-    ("source_se", value<std::string>(), "Restrict to specific source SE.")
-    ("dest_se", value<std::string>(), "Restrict to specific destination SE.")
+    ("source_se", po::value<std::string>(), "Restrict to specific source SE.")
+    ("dest_se", po::value<std::string>(), "Restrict to specific destination SE.")
     ("deletion", "Query for deletion jobs.")
     ;
 

@@ -44,9 +44,6 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
-using namespace boost::algorithm;
-using namespace boost;
-using namespace boost::assign;
 using namespace fts3::cli;
 using namespace fts3::common;
 
@@ -63,35 +60,35 @@ SubmitTransferCli::SubmitTransferCli()
     // add commandline options specific for fts3-transfer-submit
     specific.add_options()
     ("blocking,b", "Blocking mode, wait until the operation completes.")
-    ("file,f", value<std::string>(&bulk_file), "Name of a the bulk submission file.")
-    ("gparam,g", value<std::string>(), "Gridftp parameters.")
-    ("interval,i", value<int>(), "Interval between two poll operations in blocking mode.")
+    ("file,f", po::value<std::string>(&bulk_file), "Name of a the bulk submission file.")
+    ("gparam,g", po::value<std::string>(), "Gridftp parameters.")
+    ("interval,i", po::value<int>(), "Interval between two poll operations in blocking mode.")
 //			("myproxysrv,m", value<string>(), "MyProxy server to use.")
 //			("password,p", value<string>(), "MyProxy password to send with the job")
     ("overwrite,o", "Overwrite files.")
-    ("dest-token,t", value<std::string>(),  "The destination space token or its description (for SRM 2.2 transfers).")
-    ("source-token,S", value<std::string>(), "The source space token or its description (for SRM 2.2 transfers).")
+    ("dest-token,t", po::value<std::string>(),  "The destination space token or its description (for SRM 2.2 transfers).")
+    ("source-token,S", po::value<std::string>(), "The source space token or its description (for SRM 2.2 transfers).")
     ("compare-checksums,K", "Compare checksums between source and destination.")
-    ("copy-pin-lifetime", value<int>()->implicit_value(eight_hours)->default_value(-1), "Pin lifetime of the copy of the file (seconds), if the argument is not specified a default value of 28800 seconds (8 hours) is used.")
-    ("bring-online", value<int>()->implicit_value(eight_hours)->default_value(-1), "Bring online timeout expressed in seconds, if the argument is not specified a default value of 28800 seconds (8 hours) is used.")
+    ("copy-pin-lifetime", po::value<int>()->implicit_value(eight_hours)->default_value(-1), "Pin lifetime of the copy of the file (seconds), if the argument is not specified a default value of 28800 seconds (8 hours) is used.")
+    ("bring-online", po::value<int>()->implicit_value(eight_hours)->default_value(-1), "Bring online timeout expressed in seconds, if the argument is not specified a default value of 28800 seconds (8 hours) is used.")
     ("reuse,r", "enable session reuse for the transfer job")
     ("multi-hop,m", "enable multi-hopping")
-    ("job-metadata", value<std::string>(), "transfer-job metadata")
-    ("file-metadata", value<std::string>(), "file metadata")
-    ("file-size", value<double>(), "file size (in Bytes)")
+    ("job-metadata", po::value<std::string>(), "transfer-job metadata")
+    ("file-metadata", po::value<std::string>(), "file metadata")
+    ("file-size", po::value<double>(), "file size (in Bytes)")
     ("json-submission", "The bulk submission file will be expected in JSON format")
-    ("retry", value<int>(), "Number of retries. If 0, the server default will be used. If negative, there will be no retries.")
-    ("retry-delay", value<int>()->default_value(0), "Retry delay in seconds")
-    ("nostreams", value<int>(), "number of streams that will be used for the given transfer-job")
-    ("timeout", value<int>(), "timeout (expressed in seconds) that will be used for the given job")
-    ("buff-size", value<int>(), "buffer size (expressed in bytes) that will be used for the given transfer-job")
+    ("retry", po::value<int>(), "Number of retries. If 0, the server default will be used. If negative, there will be no retries.")
+    ("retry-delay", po::value<int>()->default_value(0), "Retry delay in seconds")
+    ("nostreams", po::value<int>(), "number of streams that will be used for the given transfer-job")
+    ("timeout", po::value<int>(), "timeout (expressed in seconds) that will be used for the given job")
+    ("buff-size", po::value<int>(), "buffer size (expressed in bytes) that will be used for the given transfer-job")
     ("strict-copy", "disable all checks, just copy the file")
-    ("credentials", value<std::string>(), "additional credentials for the transfer (i.e. S3)")
+    ("credentials", po::value<std::string>(), "additional credentials for the transfer (i.e. S3)")
     ;
 
     // add hidden options
     hidden.add_options()
-    ("checksum", value<std::string>(), "Specify checksum algorithm and value (ALGORITHM:1234af).")
+    ("checksum", po::value<std::string>(), "Specify checksum algorithm and value (ALGORITHM:1234af).")
     ;
 
     // add positional (those used without an option switch) command line options
@@ -125,14 +122,14 @@ void SubmitTransferCli::validate()
     createJobElements();
 }
 
-optional<std::string> SubmitTransferCli::getMetadata()
+boost::optional<std::string> SubmitTransferCli::getMetadata()
 {
 
     if (vm.count("job-metadata"))
         {
             return vm["job-metadata"].as<std::string>();
         }
-    return optional<std::string>();
+    return boost::optional<std::string>();
 }
 
 bool SubmitTransferCli::checkValidUrl(const std::string &uri)
@@ -170,7 +167,7 @@ void SubmitTransferCli::createJobElements()
                     int lineCount = 0;
                     std::string line;
                     // define the seperator characters (space) for tokenizing each line
-                    char_separator<char> sep(" ");
+                    boost::char_separator<char> sep(" ");
                     // read and parse the lines one by one
                     do
                         {
@@ -178,8 +175,8 @@ void SubmitTransferCli::createJobElements()
                             getline(ifs, line);
 
                             // split the line into tokens
-                            tokenizer< char_separator<char> > tokens(line, sep);
-                            tokenizer< char_separator<char> >::iterator it;
+                            boost::tokenizer< boost::char_separator<char> > tokens(line, sep);
+                            boost::tokenizer< boost::char_separator<char> >::iterator it;
 
                             // we are expecting up to 3 elements in each line
                             // source, destination and optionally the checksum
@@ -246,14 +243,14 @@ void SubmitTransferCli::createJobElements()
                 }
 
             // check if size of the file has been specified
-            optional<double> filesize;
+            boost::optional<double> filesize;
             if (vm.count("file-size"))
                 {
                     filesize = vm["file-size"].as<double>();
                 }
 
             // check if there are some file metadata
-            optional<std::string> file_metadata;
+            boost::optional<std::string> file_metadata;
             if (vm.count("file-metadata"))
                 {
                     file_metadata = vm["file-metadata"].as<std::string>();
@@ -265,7 +262,8 @@ void SubmitTransferCli::createJobElements()
                 {
 
                     files.push_back (
-                        File (list_of(getSource()), list_of(getDestination()), checksums, filesize, file_metadata)
+                        File (boost::assign::list_of(getSource()),
+                                boost::assign::list_of(getDestination()), checksums, filesize, file_metadata)
                     );
                 }
         }
@@ -386,14 +384,14 @@ std::map<std::string, std::string> SubmitTransferCli::getParams()
         {
             int val = vm["copy-pin-lifetime"].as<int>();
             if (val < -1) throw bad_option("copy-pin-lifetime", "The 'copy-pin-lifetime' value has to be positive!");
-            parameters[JobParameterHandler::COPY_PIN_LIFETIME] = lexical_cast<std::string>(val);
+            parameters[JobParameterHandler::COPY_PIN_LIFETIME] = boost::lexical_cast<std::string>(val);
         }
 
     if (vm.count("bring-online"))
         {
             int val = vm["bring-online"].as<int>();
             if (val < -1) throw bad_option("bring-online", "The 'bring-online' value has to be positive!");
-            parameters[JobParameterHandler::BRING_ONLINE] = lexical_cast<std::string>(val);
+            parameters[JobParameterHandler::BRING_ONLINE] = boost::lexical_cast<std::string>(val);
         }
 
     if (vm.count("reuse"))
@@ -416,32 +414,32 @@ std::map<std::string, std::string> SubmitTransferCli::getParams()
     if (vm.count("retry"))
         {
             int val = vm["retry"].as<int>();
-            parameters[JobParameterHandler::RETRY] = lexical_cast<std::string>(val);
+            parameters[JobParameterHandler::RETRY] = boost::lexical_cast<std::string>(val);
         }
 
     if (vm.count("retry-delay"))
         {
             int val = vm["retry-delay"].as<int>();
             if (val < 0) throw bad_option("retry-delay", "The 'retry-delay' value has to be positive!");
-            parameters[JobParameterHandler::RETRY_DELAY] = lexical_cast<std::string>(val);
+            parameters[JobParameterHandler::RETRY_DELAY] = boost::lexical_cast<std::string>(val);
         }
     if (vm.count("buff-size"))
         {
             int val = vm["buff-size"].as<int>();
             if (val <= 0) throw bad_option("buff-size", "The buffer size has to greater than 0!");
-            parameters[JobParameterHandler::BUFFER_SIZE] = lexical_cast<std::string>(val);
+            parameters[JobParameterHandler::BUFFER_SIZE] = boost::lexical_cast<std::string>(val);
         }
     if (vm.count("nostreams"))
         {
             int val = vm["nostreams"].as<int>();
             if (val <= 0) throw bad_option("nostreams", "The number of streams has to be greater than 0!");
-            parameters[JobParameterHandler::NOSTREAMS] = lexical_cast<std::string>(val);
+            parameters[JobParameterHandler::NOSTREAMS] = boost::lexical_cast<std::string>(val);
         }
     if (vm.count("timeout"))
         {
             int val = vm["timeout"].as<int>();
             if (val <= 0) throw bad_option("timeout", "The timeout has to be greater than 0!");
-            parameters[JobParameterHandler::TIMEOUT] = lexical_cast<std::string>(val);
+            parameters[JobParameterHandler::TIMEOUT] = boost::lexical_cast<std::string>(val);
         }
     if (vm.count("strict-copy"))
         {
@@ -479,7 +477,7 @@ std::string SubmitTransferCli::getFileName()
 
 void SubmitTransferCli::parseMetadata(std::string const & metadata)
 {
-    using namespace boost::property_tree;
+    namespace pt = boost::property_tree;
 
     // first check it is JSON
     if (metadata[0] != '{' || metadata[metadata.size() - 1] != '}') return;
@@ -487,13 +485,13 @@ void SubmitTransferCli::parseMetadata(std::string const & metadata)
     try
         {
             // JSON parsing
-            ptree pt;
+            pt::ptree pt;
             std::stringstream iostr;
             iostr << metadata;
-            read_json(iostr, pt);
+            pt::read_json(iostr, pt);
 
         }
-    catch(json_parser_error& ex)
+    catch(pt::json_parser_error& ex)
         {
             // handle errors in JSON format
             std::stringstream err;

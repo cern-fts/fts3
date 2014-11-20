@@ -17,7 +17,7 @@ SnapshotCli::SnapshotCli() : SrcDestCli(false)
 {
 
     specific.add_options()
-    ("vo", value<std::string>(), "Specify VO name.")
+    ("vo", po::value<std::string>(), "Specify VO name.")
     ;
 }
 

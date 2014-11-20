@@ -46,12 +46,12 @@ SrcDelCli::SrcDelCli()
 
     // add commandline option specific for the fts3-transfer-delete
     specific.add_options()
-    ("source-token,S", value<std::string>(), "The source space token or its description (for SRM 2.2 transfers).")
-    ("file,f", value<std::string>(&bulk_file), "Name of a the bulk submission file.")
+    ("source-token,S", po::value<std::string>(), "The source space token or its description (for SRM 2.2 transfers).")
+    ("file,f", po::value<std::string>(&bulk_file), "Name of a the bulk submission file.")
     ;
     // add hidden options
     hidden.add_options()
-    ("Filename", value< std::vector<std::string> >(&allFilenames)->multitoken(), "Specify the FileName(s).")
+    ("Filename", po::value< std::vector<std::string> >(&allFilenames)->multitoken(), "Specify the FileName(s).")
     ;
     // add optional (that used without an option switch) command line option
     p.add("Filename", -1);
@@ -98,11 +98,11 @@ void SrcDelCli::validate(bool /*init*/)
 
 void SrcDelCli::validateFileName(std::string const & url)
 {
-    static regex const fileUrlRegex("([a-zA-Z][a-zA-Z0-9+\\.-]*://[a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
+    static boost::regex const fileUrlRegex("([a-zA-Z][a-zA-Z0-9+\\.-]*://[a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
 
     // check the regular expression
-    smatch what;
-    if (!regex_match(url, what,fileUrlRegex, match_extra))
+    boost::smatch what;
+    if (!boost::regex_match(url, what,fileUrlRegex, boost::match_extra))
         {
             throw cli_exception("Wrong URL format: " + url);
         }

@@ -47,8 +47,7 @@ namespace cli
 
 using namespace fts3::common;
 
-using namespace boost;
-using namespace boost::property_tree;
+namespace pt = boost::property_tree;
 
 class BulkSubmissionParser
 {
@@ -72,7 +71,7 @@ private:
      *
      * @return true if the node under the given path is an array, false otherwise
      */
-    bool isArray(ptree& item, std::string path);
+    bool isArray(pt::ptree& item, std::string path);
 
     /**
      * Gets the value under the given path
@@ -82,14 +81,14 @@ private:
      * @return a value of the node if it exists, an uninitialized optional otherwise
      */
     template<typename T>
-    optional<T> get(ptree& item, std::string path);
+    boost::optional<T> get(pt::ptree& item, std::string path);
 
     /**
      * Gets the metadata
      *
      * @return a string representing the metadata, or an uninitialized optional if the metada have not been specified
      */
-    optional<std::string> getMetadata(ptree& item);
+    boost::optional<std::string> getMetadata(pt::ptree& item);
 
     /**
      * Parses the bulk submission file. If the file is not valid an exception is thrown.
@@ -101,15 +100,15 @@ private:
      *
      * @param item - the item from 'Files' array
      */
-    void parse_item(ptree& item);
+    void parse_item(pt::ptree& item);
 
     /**
      * Validates a single item in the bulk submission file. If the file is not valid an exception is thrown.
      */
-    void validate(ptree& item);
+    void validate(pt::ptree& item);
 
     /// the root of the JSON document
-    ptree pt;
+    pt::ptree pt;
 
     /// the files that were described in the bulk submission file
     std::vector<File> files;
@@ -119,7 +118,7 @@ private:
 };
 
 template <typename T>
-optional<T> BulkSubmissionParser::get(ptree& item, std::string path)
+boost::optional<T> BulkSubmissionParser::get(pt::ptree& item, std::string path)
 {
     try
         {
@@ -127,12 +126,12 @@ optional<T> BulkSubmissionParser::get(ptree& item, std::string path)
             return item.get_optional<T>(path);
             // in case of exception handle them: ...
         }
-    catch (ptree_bad_path& ex)
+    catch (pt::ptree_bad_path& ex)
         {
             // if the value does not exist throw an exception
             throw cli_exception("The " + path + " has to be specified!");
         }
-    catch (ptree_bad_data& ex)
+    catch (pt::ptree_bad_data& ex)
         {
             // if the type of the value is wrong throw an exception
             throw cli_exception("Wrong value type of " + path);
@@ -140,16 +139,16 @@ optional<T> BulkSubmissionParser::get(ptree& item, std::string path)
 }
 
 template <>
-inline optional< std::vector<std::string> > BulkSubmissionParser::get< std::vector<std::string> >(ptree& item, std::string path)
+inline boost::optional< std::vector<std::string> > BulkSubmissionParser::get< std::vector<std::string> >(pt::ptree& item, std::string path)
 {
     // check if the value was specified
-    optional<ptree&> value = item.get_child_optional(path);
+    boost::optional<pt::ptree&> value = item.get_child_optional(path);
     if (!value.is_initialized())
         {
             // the vector member was not specified in the configuration
-            return optional< std::vector<std::string> >();
+            return boost::optional< std::vector<std::string> >();
         }
-    ptree& array = value.get();
+    pt::ptree& array = value.get();
     // check if the node has a value,
     // accordingly to boost it should be empty if array syntax was used in JSON
     std::string wrong = array.get_value<std::string>();
@@ -159,10 +158,10 @@ inline optional< std::vector<std::string> > BulkSubmissionParser::get< std::vect
         }
     // iterate over the nodes
     std::vector<std::string> ret;
-    ptree::iterator it;
+    pt::ptree::iterator it;
     for (it = array.begin(); it != array.end(); it++)
         {
-            std::pair<std::string, ptree> v = *it;
+            std::pair<std::string, pt::ptree> v = *it;
             // check if the node has a name,
             // accordingly to boost it should be empty if object weren't
             // members of the array (our case)

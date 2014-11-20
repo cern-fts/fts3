@@ -35,7 +35,7 @@ VoNameCli::VoNameCli(bool pos): pos(pos)
         {
             // add hidden options (not printed in help)
             hidden.add_options()
-            ("voname", value<std::string>(), "Specify VO name.")
+            ("voname", po::value<std::string>(), "Specify VO name.")
             ;
 
             // the positional parameter goes to voname
@@ -46,7 +46,7 @@ VoNameCli::VoNameCli(bool pos): pos(pos)
         {
             // add fts3-transfer-status specific options
             specific.add_options()
-            ("voname,o", value<std::string>(), "Restrict to specific VO")
+            ("voname,o", po::value<std::string>(), "Restrict to specific VO")
             ;
         }
 }

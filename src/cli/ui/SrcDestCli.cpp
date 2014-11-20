@@ -34,16 +34,16 @@ SrcDestCli::SrcDestCli(bool hide)
         {
             // add commandline hidden options for fts3-transfer-submit
             hidden.add_options()
-            ("source", value<std::string>(), "Specify source site name.")
-            ("destination", value<std::string>(), "Specify destination site name.")
+            ("source", po::value<std::string>(), "Specify source site name.")
+            ("destination", po::value<std::string>(), "Specify destination site name.")
             ;
         }
     else
         {
             // add commandline options specific for fts3-transfer-submit
             specific.add_options()
-            ("source", value<std::string>(), "Specify source site name.")
-            ("destination", value<std::string>(), "Specify destination site name.")
+            ("source", po::value<std::string>(), "Specify source site name.")
+            ("destination", po::value<std::string>(), "Specify destination site name.")
             ;
         }
 

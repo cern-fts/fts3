@@ -30,7 +30,7 @@ GetCfgCli::GetCfgCli() : SrcDestCli(true)
 {
 
     specific.add_options()
-    ("name,n", value<std::string>(), "Restrict to specific symbolic (configuration) name.")
+    ("name,n", po::value<std::string>(), "Restrict to specific symbolic (configuration) name.")
     ("all", "Get all the configurations (standalone and pairs) for the given SE.")
     ("vo", "Get activity share configuration for the given VO.")
     ("max-bandwidth", "Get bandwidth limitation for a given SE")

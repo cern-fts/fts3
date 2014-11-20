@@ -33,8 +33,6 @@ namespace fts3
 namespace cli
 {
 
-using namespace boost::algorithm;
-
 const std::string BlacklistCli::ON = "on";
 const std::string BlacklistCli::OFF = "off";
 
@@ -46,18 +44,18 @@ BlacklistCli::BlacklistCli()
 
     // add commandline options specific for fts3-set-blk
     hidden.add_options()
-    ("type", value<std::string>(&type), "Specify subject type (se/dn)")
-    ("subject", value<std::string>(&subject), "Subject name.")
-    ("mode", value<std::string>(&mode), "Mode, either: on or off")
+    ("type", po::value<std::string>(&type), "Specify subject type (se/dn)")
+    ("subject", po::value<std::string>(&subject), "Subject name.")
+    ("mode", po::value<std::string>(&mode), "Mode, either: on or off")
     ;
 
     specific.add_options()
-    ("status", value<std::string>(&status)->default_value("WAIT"), "Status of the jobs that are already in the queue (CANCEL or WAIT)")
-    ("timeout", value<int>(&timeout)->default_value(0), "The timeout for the jobs that are already in the queue in case if 'WAIT' status (0 means the job wont timeout)")
+    ("status", po::value<std::string>(&status)->default_value("WAIT"), "Status of the jobs that are already in the queue (CANCEL or WAIT)")
+    ("timeout", po::value<int>(&timeout)->default_value(0), "The timeout for the jobs that are already in the queue in case if 'WAIT' status (0 means the job wont timeout)")
     ;
 
     command_specific.add_options()
-    ("vo", value<std::string>(&vo), "The VO that is banned for the given SE")
+    ("vo", po::value<std::string>(&vo), "The VO that is banned for the given SE")
     ("allow-submit", "FTS will accept transfer jobs for the blacklisted SE (they wont be executed until the SE is blacklisted)")
     ;
 
@@ -74,7 +72,7 @@ BlacklistCli::~BlacklistCli()
 
 void BlacklistCli::validate()
 {
-    to_lower(mode);
+    boost::algorithm::to_lower(mode);
 
     if (mode != ON && mode != OFF)
         {

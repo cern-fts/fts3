@@ -31,7 +31,7 @@ JobIdCli::JobIdCli()
 
     // add hidden options (not printed in help)
     hidden.add_options()
-    ("jobid", value< std::vector<std::string> >()->multitoken(), "Specify job ID.")
+    ("jobid", po::value< std::vector<std::string> >()->multitoken(), "Specify job ID.")
     ;
 
     // all positional parameters go to jobid

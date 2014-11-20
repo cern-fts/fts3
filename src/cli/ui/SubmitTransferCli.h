@@ -33,9 +33,6 @@
 
 #include <boost/optional.hpp>
 
-using namespace boost;
-
-
 namespace fts3
 {
 namespace cli
@@ -170,7 +167,7 @@ public:
      *
      * @return job's metadata if there were some, an uninitialized optional otherwise
      */
-    optional<std::string> getMetadata();
+    boost::optional<std::string> getMetadata();
 
     /**
      * Gets the value of delegation flag.
