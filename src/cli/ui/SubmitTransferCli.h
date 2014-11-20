@@ -33,10 +33,6 @@
 
 #include <boost/optional.hpp>
 
-using namespace std;
-using namespace boost;
-
-
 namespace fts3
 {
 namespace cli
@@ -135,7 +131,7 @@ public:
      *
      * @return a string with instruction on how to use the tool
      */
-    string getUsageString(string tool);
+    std::string getUsageString(std::string tool);
 
     /**
      * Gets the password (if set using -p option or by performChecks()
@@ -144,7 +140,7 @@ public:
      *
      * @see SubmitTransferCli::performChecks()
      */
-    string getPassword();
+    std::string getPassword();
 
     /**
      * Gets a vector containing string-string pairs.
@@ -153,7 +149,7 @@ public:
      *
      * @return a vector with key-value parameters
      */
-    map<string, string> getParams();
+    std::map<std::string, std::string> getParams();
 
     /**
      * Gets a vector containing job elements (files).
@@ -164,14 +160,14 @@ public:
      *
      * @see SubmitTransferCli::createJobElements()
      */
-    vector<File> getFiles();
+    std::vector<File> getFiles();
 
     /**
      * Gets job's metadata
      *
      * @return job's metadata if there were some, an uninitialized optional otherwise
      */
-    optional<string> getMetadata();
+    boost::optional<std::string> getMetadata();
 
     /**
      * Gets the value of delegation flag.
@@ -201,12 +197,12 @@ public:
     bool isBlocking();
 
 
-    int recognizeParameter(string str);
+    int recognizeParameter(std::string str);
 
     /**
      * gets the (bulk submission) file name
      */
-    string getFileName();
+    std::string getFileName();
 
 
 protected:
@@ -228,7 +224,7 @@ private:
      *
      * @return user password
      */
-    string askForPassword();
+    std::string askForPassword();
 
     static void parseMetadata(std::string const & metadata);
 
@@ -240,12 +236,12 @@ private:
     /**
      * the name of the file containing bulk-job description
      */
-    string bulk_file;
+    std::string bulk_file;
 
     /**
      * user password
      */
-    string password;
+    std::string password;
 
     /**
      * checksum flag, determines whether checksum is used
@@ -260,7 +256,7 @@ private:
     /**
      * transfer job elements (files)
      */
-    vector<File> files;
+    std::vector<File> files;
 
 };
 

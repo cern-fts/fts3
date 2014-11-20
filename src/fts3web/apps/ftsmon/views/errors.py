@@ -78,9 +78,11 @@ def get_errors_for_pair(http_request):
     # Count by error type
     classification = dict()
     for t in transfers:
-        reason = t['reason'].split()[0]
-        if reason.isupper():
-            classification[reason] = classification.get(reason, 0) + t['count']
+        words = t['reason'].split()
+        if len(words):
+            scope = words[0]
+            if scope.isupper():
+                classification[scope] = classification.get(scope, 0) + t['count']
 
     return {
         'errors': paged(transfers, http_request),

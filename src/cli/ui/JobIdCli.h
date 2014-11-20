@@ -30,8 +30,6 @@
 #include <vector>
 #include <string>
 
-using namespace std;
-
 namespace fts3
 {
 namespace cli
@@ -67,7 +65,7 @@ public:
      *
      * @return a string with instruction on how to use the tool
      */
-    string getUsageString(string tool);
+    std::string getUsageString(std::string tool);
 
     /**
      * Gets a vector with job IDs.
@@ -75,7 +73,7 @@ public:
      * @return if job IDs were given as command line parameters a
      * 			vector containing job IDs otherwise an empty vector
      */
-    vector<string> getJobIds();
+    std::vector<std::string> getJobIds();
 };
 
 }

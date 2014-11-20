@@ -41,7 +41,7 @@ namespace fts3
 namespace cli
 {
 
-using namespace boost;
+
 using namespace fts3::common;
 
 /**
@@ -116,35 +116,35 @@ public:
      *
      * @return true if on was used and false if off was used, otherwise the optional is not initialised
      */
-    optional<bool> drain();
+    boost::optional<bool> drain();
 
     /**
      * Checks the show-user-dn option
      *
      * @return true if on was used and false if off was used, otherwise the optional is not initialised
      */
-    optional<bool> showUserDn();
+    boost::optional<bool> showUserDn();
 
     /**
      * Check the retry option
      *
      * @return the number of retries if it has been set, otherwise the optional is not initialised
      */
-    optional< std::pair<std::string, int> > retry();
+    boost::optional< std::pair<std::string, int> > retry();
 
     /**
      * Check the optimizer-mode option
      *
      * @return the optimizer mode if it has been set, otherwise the optional is not initialised
      */
-    optional<int> optimizer_mode();
+    boost::optional<int> optimizer_mode();
 
     /**
      * Check the queue timeout
      *
      * @return the queue timeout if it has been set, otherwise the optional is not initialised
      */
-    optional<unsigned> queueTimeout();
+    boost::optional<unsigned> queueTimeout();
 
     /**
      * Get the bring-online settings
@@ -165,47 +165,47 @@ public:
      *
      * @return SE name - value mapping
      */
-    optional<std::tuple<std::string, std::string, int> > getBandwidthLimitation();
+    boost::optional<std::tuple<std::string, std::string, int> > getBandwidthLimitation();
 
     /**
      * Get the fixed number of actives for a pair
      */
-    optional<std::tuple<std::string, std::string, int> > getActiveFixed();
+    boost::optional<std::tuple<std::string, std::string, int> > getActiveFixed();
 
     /**
      * Get the udt protocol settings
      *
      * @return udl protocol setting for given SE
      */
-    optional< std::tuple<std::string, std::string, std::string> > getProtocol();
+    boost::optional< std::tuple<std::string, std::string, std::string> > getProtocol();
 
     /**
      * Gets the max number of active for given source SE
      *
      * @return SE name - max active pair if set by user, or not initialised optional otherwise
      */
-    optional< std::pair<std::string, int> > getMaxSrcSeActive();
+    boost::optional< std::pair<std::string, int> > getMaxSrcSeActive();
 
     /**
      * Gets the max number of active for given destination SE
      *
      * @return SE name - max active pair if set by user, or not initialised optional otherwise
      */
-    optional< std::pair<std::string, int> > getMaxDstSeActive();
+    boost::optional< std::pair<std::string, int> > getMaxDstSeActive();
 
     /**
      * Gets the global timeout settings
      *
      * @return global timeout, or an uninitialised optional
      */
-    optional<int> getGlobalTimeout();
+    boost::optional<int> getGlobalTimeout();
 
     /**
      * Gets seconds per MB
      *
      * @return seconds per MB, or an uninitialised optional
      */
-    optional<int> getSecPerMb();
+    boost::optional<int> getSecPerMb();
 
     /**
      * @return : tuple with S3 access key, secret key, and VO name if specified by the user
@@ -215,11 +215,11 @@ public:
     /**
      * @return : tuple with dropbox app key, app secret, and service API URL if specified by the user
      */
-    optional< std::tuple<std::string, std::string, std::string> > dropbox();
+    boost::optional< std::tuple<std::string, std::string, std::string> > dropbox();
 
 private:
     /// helper function for handling max source and destination active
-    optional< std::pair<std::string, int> > getMaxSeActive(std::string option);
+    boost::optional< std::pair<std::string, int> > getMaxSeActive(std::string option);
 
     /// parses the --bring-online / --delete parameters
     void parseMaxOpt(std::string const & operation);
@@ -237,10 +237,10 @@ private:
     std::unordered_map< std::string, std::tuple<std::string, int, std::string> > max_opt;
 
     // Source, dest, limit
-    optional<std::tuple<std::string, std::string, int> > bandwidth_limitation;
+    boost::optional<std::tuple<std::string, std::string, int> > bandwidth_limitation;
 
     // source, dest, active
-    optional<std::tuple<std::string, std::string, int> > active_fixed;
+    boost::optional<std::tuple<std::string, std::string, int> > active_fixed;
 
     CfgParser::CfgType type;
 };

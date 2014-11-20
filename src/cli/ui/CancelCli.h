@@ -36,7 +36,7 @@ public:
      * @return if job IDs were given as command line parameters a
      * 			vector containing job IDs otherwise an empty vector
      */
-    vector<string> getJobIds()
+    std::vector<std::string> getJobIds()
     {
         return jobIds;
     }
@@ -48,12 +48,12 @@ private:
     /**
      * the name of the file containing bulk-job description
      */
-    string bulk_file;
+    std::string bulk_file;
 
     /**
      * Job IDs
      */
-    vector<string> jobIds;
+    std::vector<std::string> jobIds;
 };
 
 } /* namespace cli */

@@ -31,9 +31,8 @@
 #include <sstream>
 
 using namespace fts3::cli;
-using namespace std;
 
-stringstream out; //> use this instead of std::cout
+std::stringstream out; //> use this instead of std::cout
 
 /*
  * Dummy class that inherits after abstract CliBase
@@ -47,7 +46,7 @@ public:
     CliBaseTester() {}
 
     // implement the pure vitual method
-    string getUsageString(string tool)
+    std::string getUsageString(std::string tool)
     {
         return tool;
     };
@@ -74,7 +73,7 @@ BOOST_AUTO_TEST_CASE (CliBase_short_options)
     // argument count
     int ac = 7;
 
-    unique_ptr<CliBaseTester> cli (new CliBaseTester);
+    std::unique_ptr<CliBaseTester> cli (new CliBaseTester);
     cli->parse(ac, av);
 
     // all 5 parameters should be available in vm variable
@@ -103,7 +102,7 @@ BOOST_AUTO_TEST_CASE (CliBase_long_options)
     // argument count
     int ac = 7;
 
-    unique_ptr<CliBaseTester> cli (new CliBaseTester);
+    std::unique_ptr<CliBaseTester> cli (new CliBaseTester);
     cli->parse(ac, av);
 
     // all 5 parameters should be available in vm variable

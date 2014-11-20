@@ -34,9 +34,6 @@
 
 #include <vector>
 #include <map>
-#include <boost/property_tree/ptree.hpp>
-
-using namespace boost::property_tree;
 
 namespace fts3
 {

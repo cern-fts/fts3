@@ -56,14 +56,14 @@ public:
      *
      * @return a string with instruction on how to use the tool
      */
-    string getUsageString(string tool);
+    std::string getUsageString(std::string tool);
 
     /**
      * Gets the SE name specified by user.
      *
      * return SE or SE group name if it was specified, otherwise an empty string
      */
-    string getName();
+    std::string getName();
 
     /**
      * Checks is all configurations for the given SE were requested

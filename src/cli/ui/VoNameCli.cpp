@@ -35,7 +35,7 @@ VoNameCli::VoNameCli(bool pos): pos(pos)
         {
             // add hidden options (not printed in help)
             hidden.add_options()
-            ("voname", value<string>(), "Specify VO name.")
+            ("voname", po::value<std::string>(), "Specify VO name.")
             ;
 
             // the positional parameter goes to voname
@@ -46,7 +46,7 @@ VoNameCli::VoNameCli(bool pos): pos(pos)
         {
             // add fts3-transfer-status specific options
             specific.add_options()
-            ("voname,o", value<string>(), "Restrict to specific VO")
+            ("voname,o", po::value<std::string>(), "Restrict to specific VO")
             ;
         }
 }
@@ -66,20 +66,20 @@ void VoNameCli::validate()
         }
 }
 
-string VoNameCli::getUsageString(string tool)
+std::string VoNameCli::getUsageString(std::string tool)
 {
     return "Usage: " + tool + " [options] VONAME";
 }
 
-string VoNameCli::getVoName()
+std::string VoNameCli::getVoName()
 {
 
     // check whether jobid has been given as a parameter
     if (vm.count("voname"))
         {
-            return vm["voname"].as<string>();
+            return vm["voname"].as<std::string>();
         }
 
-    return string();
+    return std::string();
 }
 
