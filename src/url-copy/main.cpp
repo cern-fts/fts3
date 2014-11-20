@@ -921,14 +921,16 @@ int main(int argc, char **argv)
             if(opts.monitoringMessages)
                 msg_ifce::getInstance()->SendTransferStartMessage(&tr_completed);
 
-
-            int checkError = Logger::getInstance().redirectTo(fileManagement.getLogFilePath(), opts.debugLevel);
-            if (checkError != 0)
+            if (!opts.logToStderr)
                 {
-                    std::string message = mapErrnoToString(checkError);
-                    errorMessage = "INIT Failed to create transfer log file, error was: " + message;
-                    goto stop;
-                }
+                    int checkError = Logger::getInstance().redirectTo(fileManagement.getLogFilePath(), opts.debugLevel);
+                    if (checkError != 0)
+                        {
+                            std::string message = mapErrnoToString(checkError);
+                            errorMessage = "INIT Failed to create transfer log file, error was: " + message;
+                            goto stop;
+                        }
+                 }
 
             //also reuse session when both url's are gsiftp
             if(true == bothGsiftp(currentTransfer.sourceUrl, currentTransfer.destUrl))
@@ -1398,13 +1400,13 @@ stop:
                     throughputTurl = convertKbToMb(currentTransfer.throughput);
                 }
             else
-                {		    
+                {
 		    if(currentTransfer.finishTime > 0 && currentTransfer.startTime > 0)
 		    {
 		    	uint64_t totalTimeInSecs =  (currentTransfer.finishTime - currentTransfer.startTime) / 1000;
 		    	if(totalTimeInSecs <= 1)
 		    		totalTimeInSecs = 1;
-				
+
                     	throughputTurl = convertBtoM(boost::lexical_cast<double>(currentTransfer.fileSize), boost::lexical_cast<int>(totalTimeInSecs));
 		    }
 		    else
