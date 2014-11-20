@@ -39,7 +39,6 @@
 
 FTS3_SERVER_NAMESPACE_START
 
-using namespace std;
 using namespace db;
 using namespace boost;
 
@@ -110,7 +109,7 @@ public:
      *
      * @param job_id - transfer job ID
      */
-    ProtocolResolver(TransferFiles const & file, vector< boost::shared_ptr<ShareConfig> >& cfgs);
+    ProtocolResolver(TransferFiles const & file, std::vector< boost::shared_ptr<ShareConfig> >& cfgs);
     ProtocolResolver(const fts3::server::ProtocolResolver&);
 
     /**
@@ -177,7 +176,7 @@ private:
      *
      * @return true if the entity is a group, false otherwise
      */
-    bool isGr(string name);
+    bool isGr(std::string name);
 
     /**
      * Gets the first object from the link sublist that was initialized.
@@ -186,7 +185,7 @@ private:
      *
      * @return first initialized object in the sublist, or an uninitialized object if non was found
      */
-    optional< pair<string, string> > getFirst(list<LinkType> l);
+    optional< std::pair<std::string, std::string> > getFirst(std::list<LinkType> l);
 
     /**
      * Gets the protocol parameters for the given link
@@ -195,7 +194,7 @@ private:
      *
      * @return an object containing protocol parameters
      */
-    optional<protocol> getProtocolCfg(optional< pair<string, string> > link);
+    optional<protocol> getProtocolCfg(optional< std::pair<std::string, std::string> > link);
 
     /**
      * Merges two sets of protocol parameters.
@@ -228,7 +227,7 @@ private:
     GenericDbIfce* db;
 
     /// array containing respective source-destination pairs (corresponds to the LinkType enumeration)
-    optional< pair<string, string> > link[8];
+    optional< std::pair<std::string, std::string> > link[8];
 
     /// stores the protocol parameters that have been resolved
     optional<protocol> prot;
@@ -236,7 +235,7 @@ private:
     // the transfer file
     TransferFiles const & file;
 
-    vector< boost::shared_ptr<ShareConfig> >& cfgs;
+    std::vector< boost::shared_ptr<ShareConfig> >& cfgs;
 
     /// -1 indicates that for the given protocol parameter the value obtained from auto-tuner should be used
     static const int automatic = -1;

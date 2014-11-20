@@ -28,10 +28,6 @@
 #include "common/monitorobject.h"
 #include "common/InstanceHolder.h"
 
-#include <boost/scoped_ptr.hpp>
-
-using namespace boost;
-
 namespace fts3
 {
 namespace common

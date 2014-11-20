@@ -30,26 +30,26 @@ namespace fts3
 namespace server
 {
 
-map< string, set<string> >& TransferFileHandler::getMapFromCache(map< string, list<TransferFiles> >& files, GET_MAP_OPTS opt)
+std::map< std::string, std::set<std::string> >& TransferFileHandler::getMapFromCache(std::map< std::string, std::list<TransferFiles> >& files, GET_MAP_OPTS opt)
 {
     if (init_cache.empty())
         {
             init_cache.resize(4); // there are four maps
 
-            map<string, list<TransferFiles> >::iterator it_v;
+            std::map<std::string, std::list<TransferFiles> >::iterator it_v;
 
-            map< string, set<FileIndex> > unique;
+            std::map< std::string, std::set<FileIndex> > unique;
 
             // iterate over all VOs
             for (it_v = files.begin(); it_v != files.end(); ++it_v)
                 {
                     // the vo name
-                    string vo = it_v->first;
+                std::string vo = it_v->first;
                     // unique vo names
                     vos.insert(vo);
                     // ref to the list of files (for the given VO)
-                    list<TransferFiles>& tfs = it_v->second;
-                    list<TransferFiles>::iterator it_tf;
+                    std::list<TransferFiles>& tfs = it_v->second;
+                    std::list<TransferFiles>::iterator it_tf;
                     // iterate over all files in a given VO
                     for (it_tf = tfs.begin(); it_tf != tfs.end(); ++it_tf)
                         {
@@ -82,7 +82,7 @@ map< string, set<string> >& TransferFileHandler::getMapFromCache(map< string, li
 }
 
 
-TransferFileHandler::TransferFileHandler(map< string, list<TransferFiles> >& files) :
+TransferFileHandler::TransferFileHandler(std::map< std::string, std::list<TransferFiles> >& files) :
     sourceToDestinations(getMapFromCache(files, SOURCE_TO_DESTINATIONS)),
     sourceToVos(getMapFromCache(files, SOURCE_TO_VOS)),
     destinationToSources(getMapFromCache(files, DESTINATION_TO_SOURCES)),
@@ -93,14 +93,14 @@ TransferFileHandler::TransferFileHandler(map< string, list<TransferFiles> >& fil
 
 TransferFileHandler::~TransferFileHandler()
 {
-    map< FileIndex, list<TransferFiles> >::iterator it;
+    std::map< FileIndex, std::list<TransferFiles> >::iterator it;
     for (it = fileIndexToFiles.begin(); it != fileIndexToFiles.end(); ++it)
         {
             freeList(it->second);
         }
 }
 
-optional<TransferFiles> TransferFileHandler::get(string vo)
+optional<TransferFiles> TransferFileHandler::get(std::string vo)
 {
     // get the index of the next File in turn for the VO
     optional<FileIndex> index = getIndex(vo);
@@ -110,16 +110,16 @@ optional<TransferFiles> TransferFileHandler::get(string vo)
     return optional<TransferFiles>();
 }
 
-optional< pair<string, string> > TransferFileHandler::getNextPair(string vo)
+optional< std::pair<std::string, std::string> > TransferFileHandler::getNextPair(std::string vo)
 {
     // if there are no pairs for the given VO ...
-    if (voToFileIndexes[vo].empty()) return optional< pair<string, string> >();
+    if (voToFileIndexes[vo].empty()) return optional< std::pair<std::string, std::string> >();
 
     // if it is the end wrap around
     if (nextPairForVo[vo] == voToFileIndexes[vo].end()) nextPairForVo[vo] = voToFileIndexes[vo].begin();
 
     // get the iterator
-    map< pair<string, string>, list<FileIndex> >::iterator ret = nextPairForVo[vo];
+    std::map< std::pair<std::string, std::string>, std::list<FileIndex> >::iterator ret = nextPairForVo[vo];
 
     // set the next pair
     nextPairForVo[vo]++;
@@ -127,15 +127,16 @@ optional< pair<string, string> > TransferFileHandler::getNextPair(string vo)
     return ret->first;
 }
 
-optional<FileIndex> TransferFileHandler::getIndex(string vo)
+optional<FileIndex> TransferFileHandler::getIndex(std::string vo)
 {
     // find the item
-    map<string, map< pair<string, string>, list<FileIndex> > >::iterator it = voToFileIndexes.find(vo);
+    std::map<std::string, std::map< std::pair<std::string, std::string>, std::list<FileIndex> > >::iterator it =
+            voToFileIndexes.find(vo);
 
     // if the VO has no mapping or no files are assigned to the VO ...
     if (it == voToFileIndexes.end() || it->second.empty()) return optional<FileIndex>();
 
-    optional< pair<string, string> > src_dst = getNextPair(vo);
+    optional< std::pair<std::string, std::string> > src_dst = getNextPair(vo);
 
     if (!src_dst.is_initialized()) return optional<FileIndex>();
 
@@ -174,17 +175,17 @@ optional<TransferFiles> TransferFileHandler::getFile(FileIndex index)
     return ret;
 }
 
-void TransferFileHandler::freeList(list<TransferFiles>& l)
+void TransferFileHandler::freeList(std::list<TransferFiles>& l)
 {
     l.clear();
 }
 
-set<string>::iterator TransferFileHandler::begin()
+std::set<std::string>::iterator TransferFileHandler::begin()
 {
     return vos.begin();
 }
 
-set<string>::iterator TransferFileHandler::end()
+std::set<std::string>::iterator TransferFileHandler::end()
 {
     return vos.end();
 }
@@ -194,57 +195,57 @@ bool TransferFileHandler::empty()
     return voToFileIndexes.empty();
 }
 
-const set<string> TransferFileHandler::getSources(string se) const
+const std::set<std::string> TransferFileHandler::getSources(std::string se) const
 {
-    map< string, set<string> >::const_iterator it = destinationToSources.find(se);
+    std::map< std::string, std::set<std::string> >::const_iterator it = destinationToSources.find(se);
     if (it != destinationToSources.end())
         {
             return it->second;
         }
 
-    return set<string>();
+    return std::set<std::string>();
 }
 
-const set<string> TransferFileHandler::getDestinations(string se) const
+const std::set<std::string> TransferFileHandler::getDestinations(std::string se) const
 {
-    map< string, set<string> >::const_iterator it = sourceToDestinations.find(se);
+    std::map< std::string, std::set<std::string> >::const_iterator it = sourceToDestinations.find(se);
     if (it != sourceToDestinations.end())
         {
             return it->second;
         }
 
-    return set<string>();
+    return std::set<std::string>();
 }
 
 
-const set<string> TransferFileHandler::getSourcesVos(string se) const
+const std::set<std::string> TransferFileHandler::getSourcesVos(std::string se) const
 {
-    map< string, set<string> >::const_iterator it = destinationToVos.find(se);
+    std::map< std::string, std::set<std::string> >::const_iterator it = destinationToVos.find(se);
     if (it != destinationToVos.end())
         {
             return it->second;
         }
 
-    return set<string>();
+    return std::set<std::string>();
 }
 
-const set<string> TransferFileHandler::getDestinationsVos(string se) const
+const std::set<std::string> TransferFileHandler::getDestinationsVos(std::string se) const
 {
-    map< string, set<string> >::const_iterator it = sourceToVos.find(se);
+    std::map< std::string, std::set<std::string> >::const_iterator it = sourceToVos.find(se);
     if (it != sourceToVos.end())
         {
             return it->second;
         }
 
-    return set<string>();
+    return std::set<std::string>();
 }
 
 int TransferFileHandler::size()
 {
     int sum = 0;
 
-    map< string, map< pair<string, string>, list<FileIndex> > >::iterator iout;
-    map< pair<string, string>, list<FileIndex> >::iterator iin;
+    std::map< std::string, std::map< std::pair<std::string, std::string>, std::list<FileIndex> > >::iterator iout;
+    std::map< std::pair<std::string, std::string>, std::list<FileIndex> >::iterator iin;
 
     for (iout = voToFileIndexes.begin(); iout != voToFileIndexes.end(); iout++)
         for (iin = iout->second.begin(); iin != iout->second.end(); iin++)

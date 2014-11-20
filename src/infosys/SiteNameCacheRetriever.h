@@ -39,9 +39,7 @@ namespace fts3
 namespace infosys
 {
 
-using namespace std;
-using namespace boost;
-using namespace boost::property_tree;
+//namespace pt = boost::property_tree;
 
 struct EndpointInfo
 {
@@ -59,7 +57,7 @@ public:
 
     virtual ~SiteNameCacheRetriever();
 
-    void get(map<string, EndpointInfo>& cache);
+    void get(std::map<std::string, EndpointInfo>& cache);
 
 private:
 
@@ -67,7 +65,7 @@ private:
     SiteNameCacheRetriever(SiteNameCacheRetriever const&);
     SiteNameCacheRetriever& operator=(SiteNameCacheRetriever const&);
 
-    void fromGlue1(map<string, EndpointInfo>& cache);
+    void fromGlue1(std::map<std::string, EndpointInfo>& cache);
     void fromGlue2(map<string, EndpointInfo>& cache);
 
     // glue1
@@ -78,7 +76,7 @@ private:
     static const char* ATTR_GLUE1_TYPE;
     static const char* ATTR_GLUE1_VERSION;
 
-    static const string FIND_SE_SITE_GLUE1;
+    static const std::string FIND_SE_SITE_GLUE1;
     static const char* FIND_SE_SITE_ATTR_GLUE1[];
 
     // glue2
@@ -88,10 +86,10 @@ private:
     static const char* ATTR_GLUE2_TYPE;
     static const char* ATTR_GLUE2_VERSION;
 
-    static const string FIND_SE_FK_GLUE2;
+    static const std::string FIND_SE_FK_GLUE2;
     static const char* FIND_SE_FK_ATTR_GLUE2[];
 
-    static const string FIND_FK_SITE_GLUE2(string fk);
+    static const std::string FIND_FK_SITE_GLUE2(std::string fk);
     static const char* FIND_FK_SITE_ATTR_GLUE2[];
 
 };

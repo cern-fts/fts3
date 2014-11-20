@@ -28,8 +28,6 @@
 
 #include <boost/scoped_ptr.hpp>
 
-using namespace boost;
-
 namespace fts3
 {
 namespace common
@@ -96,7 +94,7 @@ protected:
     /**
      * The single instance
      */
-    static scoped_ptr<T> instance;
+    static boost::scoped_ptr<T> instance;
 
 private:
     /**
@@ -116,7 +114,7 @@ private:
 
 // initialize single instance pointer with 0
 template<typename T>
-scoped_ptr<T> InstanceHolder<T>::instance;
+boost::scoped_ptr<T> InstanceHolder<T>::instance;
 
 }
 }

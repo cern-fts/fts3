@@ -71,7 +71,7 @@ void MsgPrinter::print_info(std::string const & ostr_subject, std::string const 
             return;
         }
 
-    jout.print(json_subject, lexical_cast<std::string>(h) + ":" + lexical_cast<std::string>(m));
+    jout.print(json_subject, boost::lexical_cast<std::string>(h) + ":" + boost::lexical_cast<std::string>(m));
 }
 
 void MsgPrinter::print_info(std::string const & ostr_subject, std::string const & json_subject, std::string const & msg)
@@ -213,7 +213,7 @@ void MsgPrinter::print_ostr(JobStatus const & status, bool short_out)
             if (it->retries.size() > 0)
                 {
                     (*ostr) << "  Retries: " << std::endl;
-                    std::for_each(it->retries.begin(), it->retries.end(), (*ostr) << ("    " + lambda::_1) << '\n');
+                    std::for_each(it->retries.begin(), it->retries.end(), (*ostr) << ("    " + boost::lambda::_1) << '\n');
                 }
             else
                 {

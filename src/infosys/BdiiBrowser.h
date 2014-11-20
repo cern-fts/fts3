@@ -48,8 +48,6 @@ namespace fts3
 namespace infosys
 {
 
-using namespace std;
-using namespace boost;
 using namespace common;
 using namespace config;
 
@@ -228,7 +226,7 @@ private:
     int querying;
 
     /// the mutex preventing concurrent browsing and reconnecting
-    shared_mutex qm;
+    boost::shared_mutex qm;
 
     /// conditional variable preventing concurrent browsing and reconnecting
 //    condition_variable qv;
@@ -327,7 +325,7 @@ list< map<string, R> > BdiiBrowser::browse(string base, string query, const char
 
     // used shared lock - many concurrent reads are allowed
     {
-        shared_lock<shared_mutex> lock(qm);
+        boost::shared_lock<boost::shared_mutex> lock(qm);
         rc = ldap_search_ext_s(ld, base.c_str(), LDAP_SCOPE_SUBTREE, query.c_str(), const_cast<char**>(attr), 0, 0, 0, &timeout, 0, &reply);
     }
 

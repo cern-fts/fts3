@@ -47,9 +47,9 @@ const char* SiteNameRetriever::ATTR_GLUE1_HOSTINGORG = "GlueServiceHostingOrgani
 const char* SiteNameRetriever::ATTR_GLUE2_SERVICE = "GLUE2ServiceID";
 const char* SiteNameRetriever::ATTR_GLUE2_SITE = "GLUE2ServiceAdminDomainForeignKey";
 
-const string SiteNameRetriever::FIND_SE_SITE_GLUE2(string se)
+const std::string SiteNameRetriever::FIND_SE_SITE_GLUE2(std::string se)
 {
-    stringstream ss;
+    std::stringstream ss;
     ss << "(&";
     ss << "(" << BdiiBrowser::ATTR_OC << "=" << BdiiBrowser::CLASS_SERVICE_GLUE2 << ")";
     ss << "(" << ATTR_GLUE2_SERVICE << "=*" << se << "*)";
@@ -59,9 +59,9 @@ const string SiteNameRetriever::FIND_SE_SITE_GLUE2(string se)
 }
 const char* SiteNameRetriever::FIND_SE_SITE_ATTR_GLUE2[] = {ATTR_GLUE2_SITE, 0};
 
-const string SiteNameRetriever::FIND_SE_SITE_GLUE1(string se)
+const std::string SiteNameRetriever::FIND_SE_SITE_GLUE1(std::string se)
 {
-    stringstream ss;
+    std::stringstream ss;
     ss << "(&";
     ss << "(" << BdiiBrowser::ATTR_OC << "=" << BdiiBrowser::CLASS_SERVICE_GLUE1 << ")";
     ss << "(|(" << ATTR_GLUE1_SERVICE << "=*" << se << "*)";
@@ -76,13 +76,13 @@ SiteNameRetriever::~SiteNameRetriever()
 
 }
 
-string SiteNameRetriever::getFromBdii(string se)
+std::string SiteNameRetriever::getFromBdii(std::string se)
 {
 
     BdiiBrowser& bdii = BdiiBrowser::getInstance();
 
     // first check glue2
-    list< map<string, list<string> > > rs = bdii.browse< list<string> >(
+    std::list< std::map<std::string, std::list<std::string> > > rs = bdii.browse< std::list<std::string> >(
             BdiiBrowser::GLUE2,
             FIND_SE_SITE_GLUE2(se),
             FIND_SE_SITE_ATTR_GLUE2
@@ -92,13 +92,13 @@ string SiteNameRetriever::getFromBdii(string se)
         {
             if (!rs.front()[ATTR_GLUE2_SITE].empty())
                 {
-                    string str =  rs.front()[ATTR_GLUE2_SITE].front();
+                    std::string str =  rs.front()[ATTR_GLUE2_SITE].front();
                     return str;
                 }
         }
 
     // then check glue1
-    rs = bdii.browse< list<string> >(
+    rs = bdii.browse< std::list<std::string> >(
              BdiiBrowser::GLUE1,
              FIND_SE_SITE_GLUE1(se),
              FIND_SE_SITE_ATTR_GLUE1
@@ -110,11 +110,11 @@ string SiteNameRetriever::getFromBdii(string se)
                 {
                     FTS3_COMMON_LOGGER_NEWLOG (ERR) << "SE: " << se << " has not been found in the BDII" << commit;
                 }
-            return string();
+            return std::string();
         }
 
-    list<string> values = rs.front()[ATTR_GLUE1_LINK];
-    string site = BdiiBrowser::parseForeingKey(values, ATTR_GLUE1_SITE);
+    std::list<std::string> values = rs.front()[ATTR_GLUE1_LINK];
+    std::string site = BdiiBrowser::parseForeingKey(values, ATTR_GLUE1_SITE);
 
     if (site.empty() && !rs.front()[ATTR_GLUE1_HOSTINGORG].empty())
         {
@@ -124,23 +124,23 @@ string SiteNameRetriever::getFromBdii(string se)
     return site;
 }
 
-string SiteNameRetriever::getSiteName(string se)
+std::string SiteNameRetriever::getSiteName(std::string se)
 {
     // check if the infosys has been activated in the fts3config file
     bool active = theServerConfig().get<bool>("Infosys");
-    if (!active) return string();
+    if (!active) return std::string();
 
     // lock the cache
     mutex::scoped_lock lock(m);
 
     // check if the se is in cache
-    map<string, string>::iterator it = seToSite.find(se);
+    std::map<std::string, std::string>::iterator it = seToSite.find(se);
     if (it != seToSite.end())
         {
             return it->second;
         }
 
-    string site;
+    std::string site;
 
 #ifndef WITHOUT_PUGI
     // check in BDII cache
