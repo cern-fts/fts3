@@ -9404,7 +9404,7 @@ void MySqlAPI::setRetryTransferInternal(soci::session& sql, const std::string & 
             if(bring_online > 0 || copy_pin_lifetime > 0)
                 {
                     sql << "update t_file set retry = :retry, current_failures = 0, file_state='STAGING', internal_file_params=NULL, transferHost=NULL,start_time=NULL, pid=NULL, "
-                        " filesize=0 where file_id=:file_id and job_id=:job_id AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED') ",
+                        " filesize=0, staging_start=NULL, staging_finished=NULL where file_id=:file_id and job_id=:job_id AND file_state NOT IN ('FINISHED','STAGING','SUBMITTED','FAILED','CANCELED') ",
                         soci::use(retry),
                         soci::use(fileId),
                         soci::use(jobId);
