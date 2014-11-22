@@ -4010,26 +4010,28 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
     int active = 0;
     bool allowed = false;
     soci::indicator isNull = soci::i_ok;
+    soci::indicator isNullFixed = soci::i_ok;
     int maxSource = 0;
     int maxDestination = 0;
     int activeSource = 0;
     int activeDestination = 0;
+    std::string active_fixed;
 
     try
         {
             int highDefault = MIN_ACTIVE;
 
             soci::statement stmt1 = (
-                                        sql.prepare << "SELECT active FROM t_optimize_active "
-                                        "WHERE source_se = :source AND dest_se = :dest_se ",
-                                        soci::use(source_hostname),soci::use(destin_hostname), soci::into(maxActive, isNull));
+                                        sql.prepare << "SELECT active, fixed FROM t_optimize_active "
+                                        "WHERE source_se = :source AND dest_se = :dest_se LIMIT 1 ",
+                                        soci::use(source_hostname),soci::use(destin_hostname), soci::into(maxActive, isNull), soci::into(active_fixed, isNullFixed));
             stmt1.execute(true);
 
             soci::statement stmt2 = (
                                         sql.prepare << "SELECT count(*) FROM t_file "
                                         "WHERE source_se = :source AND dest_se = :dest_se and file_state = 'ACTIVE' and job_finished is NULL ",
                                         soci::use(source_hostname),soci::use(destin_hostname), soci::into(active));
-            stmt2.execute(true);
+            stmt2.execute(true);  	   
 
             if (isNull != soci::i_null)
                 {
@@ -4041,6 +4043,10 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
                 {
                     allowed = true;
                 }
+
+             //stop here to respect fixed for a given link
+             if (isNullFixed == soci::i_ok && active_fixed == "on")
+                        return allowed;
 
              //make sure it doesn't grow beyond the limits
              getMaxActive(sql, maxSource, maxDestination, source_hostname, destin_hostname);
