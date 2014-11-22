@@ -3911,6 +3911,7 @@ bool OracleAPI::updateOptimizer()
                     avgDuration = 0.0;
                     isNullAvg = soci::i_ok;
 		    active_fixed = "off";
+		    highDefault = MIN_ACTIVE;
 
                     // Weighted average
                     soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<

@@ -4324,15 +4324,19 @@ bool MySqlAPI::updateOptimizer()
                                          soci::use(destin_hostname),
                                          soci::into(allTested));
 
+            //check first for distinct sources
+            for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+                {
+			checkDistinctSource.push_back(i->get<std::string>("source_se"));
+                }
 
+	    //now apply optimization logic
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
                     recordsFound = true;
 
                     source_hostname = i->get<std::string>("source_se");
-                    destin_hostname = i->get<std::string>("dest_se");
-
-                    checkDistinctSource.push_back(source_hostname);
+                    destin_hostname = i->get<std::string>("dest_se");                    
 
                     double nFailedLastHour=0.0, nFinishedLastHour=0.0;
                     throughput=0.0;
@@ -4378,6 +4382,7 @@ bool MySqlAPI::updateOptimizer()
                     avgDuration = 0.0;
                     isNullAvg = soci::i_ok;
 		    active_fixed = "off";
+		    highDefault = MIN_ACTIVE;
 
                     std::vector<std::string>::const_iterator it;
                     for(std::vector<std::string>::iterator it = checkDistinctSource.begin(); it != checkDistinctSource.end(); ++it)
