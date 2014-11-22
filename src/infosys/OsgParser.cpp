@@ -34,16 +34,16 @@ namespace infosys
 using namespace config;
 
 
-const string OsgParser::NAME_PROPERTY = "Name";
-const string OsgParser::ACTIVE_PROPERTY = "Active";
-const string OsgParser::DISABLE_PROPERTY = "Disable";
+const std::string OsgParser::NAME_PROPERTY = "Name";
+const std::string OsgParser::ACTIVE_PROPERTY = "Active";
+const std::string OsgParser::DISABLE_PROPERTY = "Disable";
 
-const string OsgParser::STR_TRUE = "True";
+const std::string OsgParser::STR_TRUE = "True";
 
 
-const string OsgParser::myosg_path = "/var/lib/fts3/osg.xml";
+const std::string OsgParser::myosg_path = "/var/lib/fts3/osg.xml";
 
-OsgParser::OsgParser(string path)
+OsgParser::OsgParser(std::string path)
 {
 
     doc.load_file(path.c_str());
@@ -57,10 +57,10 @@ OsgParser::~OsgParser()
 bool OsgParser::isInUse()
 {
 
-    static const string myosg_str = "myosg";
+    static const std::string myosg_str = "myosg";
 
-    vector<string> providers = theServerConfig().get< vector<string> >("InfoProviders");
-    vector<string>::iterator it;
+    vector<std::string> providers = theServerConfig().get< vector<std::string> >("InfoProviders");
+    vector<std::string>::iterator it;
 
     for (it = providers.begin(); it != providers.end(); ++it)
         {
@@ -70,18 +70,18 @@ bool OsgParser::isInUse()
     return false;
 }
 
-string OsgParser::get(string fqdn, string property)
+std::string OsgParser::get(std::string fqdn, std::string property)
 {
 
-    // if not on the list containing info providers return an empty string
-    if (!isInUse()) return string();
+    // if not on the list containing info providers return an empty std::string
+    if (!isInUse()) return std::string();
 
-    // if the MyOSG was set to 'flase' return an empty string
-    if (!theServerConfig().get<bool>("MyOSG")) return string();
+    // if the MyOSG was set to 'flase' return an empty std::string
+    if (!theServerConfig().get<bool>("MyOSG")) return std::string();
 
     // look for the resource name (assume that the user has provided a fqdn)
     xpath_node node = doc.select_single_node(xpath_fqdn(fqdn).c_str());
-    string val = node.node().child_value(property.c_str());
+    std::string val = node.node().child_value(property.c_str());
 
     if (!val.empty()) return val;
 
@@ -90,38 +90,38 @@ string OsgParser::get(string fqdn, string property)
     return node.node().child_value(property.c_str());
 }
 
-string OsgParser::getSiteName(string fqdn)
+std::string OsgParser::getSiteName(std::string fqdn)
 {
 
     return get(fqdn, NAME_PROPERTY);
 }
 
-optional<bool> OsgParser::isActive(string fqdn)
+boost::optional<bool> OsgParser::isActive(std::string fqdn)
 {
-    string val = get(fqdn, ACTIVE_PROPERTY);
-    if (val.empty()) return optional<bool>();
+    std::string val = get(fqdn, ACTIVE_PROPERTY);
+    if (val.empty()) return boost::optional<bool>();
     return val == STR_TRUE;
 }
 
-optional<bool> OsgParser::isDisabled(string fqdn)
+boost::optional<bool> OsgParser::isDisabled(std::string fqdn)
 {
-    string val = get(fqdn, DISABLE_PROPERTY);
-    if (val.empty()) return optional<bool>();
+    std::string val = get(fqdn, DISABLE_PROPERTY);
+    if (val.empty()) return boost::optional<bool>();
     return val == STR_TRUE;
 }
 
-string OsgParser::xpath_fqdn(string fqdn)
+std::string OsgParser::xpath_fqdn(std::string fqdn)
 {
-    static const string xpath_fqdn = "/ResourceSummary/ResourceGroup/Resources/Resource[FQDN='";
-    static const string xpath_end = "']";
+    static const std::string xpath_fqdn = "/ResourceSummary/ResourceGroup/Resources/Resource[FQDN='";
+    static const std::string xpath_end = "']";
 
     return xpath_fqdn + fqdn + xpath_end;
 }
 
-string OsgParser::xpath_fqdn_alias(string alias)
+std::string OsgParser::xpath_fqdn_alias(std::string alias)
 {
-    static const string xpath_fqdn = "/ResourceSummary/ResourceGroup/Resources/Resource[FQDNAliases/FQDNAlias='";
-    static const string xpath_end = "']";
+    static const std::string xpath_fqdn = "/ResourceSummary/ResourceGroup/Resources/Resource[FQDNAliases/FQDNAlias='";
+    static const std::string xpath_end = "']";
 
     return xpath_fqdn + alias + xpath_end;
 }

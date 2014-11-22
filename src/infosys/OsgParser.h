@@ -36,8 +36,6 @@ namespace fts3
 namespace infosys
 {
 
-using namespace std;
-using namespace boost;
 using namespace pugi;
 
 using namespace fts3::common;
@@ -68,7 +66,7 @@ public:
      *
      * @return the site name
      */
-    string getSiteName(string fqdn);
+    std::string getSiteName(std::string fqdn);
 
     /**
      * Checks is the given SE is active
@@ -77,7 +75,7 @@ public:
      *
      * @return true if the SE is active, false otherwise
      */
-    optional<bool> isActive(string fqdn);
+    boost::optional<bool> isActive(std::string fqdn);
 
     /**
      * Checks is the given SE is disabled
@@ -86,14 +84,14 @@ public:
      *
      * @return true if the SE is disabled, false otherwise
      */
-    optional<bool> isDisabled(string fqdn);
+    boost::optional<bool> isDisabled(std::string fqdn);
 
 private:
 
     /**
      * Constructor
      */
-    OsgParser(string path = myosg_path);
+    OsgParser(std::string path = myosg_path);
 
     /// not implemented
     OsgParser(OsgParser const&);
@@ -109,7 +107,7 @@ private:
      *
      * @return the value of the property
      */
-    string get(string fqdn, string property);
+    std::string get(std::string fqdn, std::string property);
 
     /**
      * Checks in fts3config if MyOSG is in use
@@ -119,25 +117,25 @@ private:
     bool isInUse();
 
     /// name property node
-    static const string NAME_PROPERTY;
+    static const std::string NAME_PROPERTY;
     /// active property node
-    static const string ACTIVE_PROPERTY;
+    static const std::string ACTIVE_PROPERTY;
     /// disabled property node
-    static const string DISABLE_PROPERTY;
+    static const std::string DISABLE_PROPERTY;
 
-    /// 'true' string
-    static const string STR_TRUE;
+    /// 'true' std::string
+    static const std::string STR_TRUE;
 
     /// the xml document that is being parsed
     xml_document doc;
 
     /// xpath for the given SE name
-    static string xpath_fqdn(string fqdn);
+    static std::string xpath_fqdn(std::string fqdn);
     /// xpath in case the SE name is an alias
-    static string xpath_fqdn_alias(string alias);
+    static std::string xpath_fqdn_alias(std::string alias);
 
     /// default path to MyOSG file
-    static const string myosg_path;
+    static const std::string myosg_path;
 };
 
 } /* namespace cli */

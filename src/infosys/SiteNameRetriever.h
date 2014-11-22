@@ -44,9 +44,6 @@ namespace fts3
 namespace infosys
 {
 
-using namespace std;
-using namespace boost;
-
 /**
  *
  */
@@ -59,7 +56,7 @@ public:
 
     virtual ~SiteNameRetriever();
 
-    string getSiteName(string se);
+    std::string getSiteName(std::string se);
 
 private:
 
@@ -74,20 +71,20 @@ private:
     static const char* ATTR_GLUE1_SITE;
     static const char* ATTR_GLUE1_HOSTINGORG;
 
-    static const string FIND_SE_SITE_GLUE1(string se);
+    static const std::string FIND_SE_SITE_GLUE1(std::string se);
     static const char* FIND_SE_SITE_ATTR_GLUE1[];
 
     // glue2 attribute
     static const char* ATTR_GLUE2_SERVICE;
     static const char* ATTR_GLUE2_SITE;
 
-    static const string FIND_SE_SITE_GLUE2(string se);
+    static const std::string FIND_SE_SITE_GLUE2(std::string se);
     static const char* FIND_SE_SITE_ATTR_GLUE2[];
 
-    string getFromBdii(string se);
+    std::string getFromBdii(std::string se);
 
     mutex m;
-    map<string, string> seToSite;
+    std::map<std::string, std::string> seToSite;
 };
 
 } /* namespace infosys */

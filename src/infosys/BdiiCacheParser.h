@@ -31,8 +31,6 @@
 
 #include <pugixml.hpp>
 
-using namespace std;
-using namespace boost;
 using namespace pugi;
 
 using namespace fts3::common;
@@ -61,14 +59,14 @@ public:
      *
      * @return the site name
      */
-    string getSiteName(string se);
+    std::string getSiteName(std::string se);
 
 private:
 
     /**
      * Constructor
      */
-    BdiiCacheParser(string path = bdii_cache_path);
+    BdiiCacheParser(std::string path = bdii_cache_path);
 
     /// not implemented
     BdiiCacheParser(BdiiCacheParser const&);
@@ -76,13 +74,13 @@ private:
     /// not implemented
     BdiiCacheParser& operator=(BdiiCacheParser const&);
 
-    static string xpath_entry(string se);
+    static std::string xpath_entry(std::string se);
 
     /// the xml document that is being parsed
     xml_document doc;
 
     /// default path to BDII cache
-    static const string bdii_cache_path;
+    static const std::string bdii_cache_path;
 };
 
 } /* namespace infosys */

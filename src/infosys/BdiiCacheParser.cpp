@@ -33,7 +33,7 @@ namespace infosys
 
 using namespace config;
 
-const string BdiiCacheParser::bdii_cache_path = "/var/lib/fts3/bdii_cache.xml";
+const std::string BdiiCacheParser::bdii_cache_path = "/var/lib/fts3/bdii_cache.xml";
 
 BdiiCacheParser::BdiiCacheParser(string path)
 {
@@ -46,16 +46,16 @@ BdiiCacheParser::~BdiiCacheParser()
 
 }
 
-string BdiiCacheParser::getSiteName(string se)
+std::string BdiiCacheParser::getSiteName(std::string se)
 {
     xpath_node node = doc.select_single_node(xpath_entry(se).c_str());
     return node.node().child_value("sitename");
 }
 
-string BdiiCacheParser::xpath_entry(string se)
+std::string BdiiCacheParser::xpath_entry(std::string se)
 {
-    static const string xpath_begin = "/entry[endpoint='";
-    static const string xpath_end = "']";
+    static const std::string xpath_begin = "/entry[endpoint='";
+    static const std::string xpath_end = "']";
 
     return xpath_begin + se + xpath_end;
 }

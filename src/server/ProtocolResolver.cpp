@@ -40,24 +40,24 @@ using namespace fts3::ws;
 using namespace fts3::common;
 using namespace boost::assign;
 
-ProtocolResolver::ProtocolResolver(TransferFiles const & file, vector< boost::shared_ptr<ShareConfig> >& cfgs) :
+ProtocolResolver::ProtocolResolver(TransferFiles const & file, std::vector< boost::shared_ptr<ShareConfig> >& cfgs) :
     db(DBSingleton::instance().getDBObjectInstance()),
     file(file),
     cfgs(cfgs),
     auto_tuned(false)
 {
 
-    vector< boost::shared_ptr<ShareConfig> >::iterator it;
+    std::vector< boost::shared_ptr<ShareConfig> >::iterator it;
 
     // loop over the assigned configurations
     for (it = cfgs.begin(); it != cfgs.end(); ++it)
         {
 
             // get the source and destination
-            string source = (*it)->source;
-            string destination = (*it)->destination;
+            std::string source = (*it)->source;
+            std::string destination = (*it)->destination;
             // create source-destination pair
-            pair<string, string> entry = make_pair(source, destination);
+            std::pair<std::string, std::string> entry = std::make_pair(source, destination);
 
             // check if it is default configuration for destination SE
             if (destination == Configuration::wildcard && source == Configuration::any)
@@ -116,17 +116,17 @@ ProtocolResolver::~ProtocolResolver()
 
 }
 
-bool ProtocolResolver::isGr(string name)
+bool ProtocolResolver::isGr(std::string name)
 {
     return db->checkGroupExists(name);
 }
 
-optional<ProtocolResolver::protocol> ProtocolResolver::getProtocolCfg(optional< pair<string, string> > link)
+optional<ProtocolResolver::protocol> ProtocolResolver::getProtocolCfg(optional< std::pair<std::string, std::string> > link)
 {
     if (!link) return optional<protocol>();
 
-    string source = (*link).first;
-    string destination = (*link).second;
+    std::string source = (*link).first;
+    std::string destination = (*link).second;
 
     boost::shared_ptr<LinkConfig> cfg (
         db->getLinkConfig(source, destination)
@@ -156,12 +156,12 @@ optional<ProtocolResolver::protocol> ProtocolResolver::getUserDefinedProtocol(Tr
 {
     if (file.INTERNAL_FILE_PARAMS.empty()) return optional<protocol>();
 
-    vector<string> params;
+    std::vector<std::string> params;
     split(params, file.INTERNAL_FILE_PARAMS, is_any_of(","));
 
     protocol ret;
 
-    for (vector<string>::const_iterator i = params.begin(); i != params.end(); ++i)
+    for (std::vector<std::string>::const_iterator i = params.begin(); i != params.end(); ++i)
         {
             if (starts_with(*i, "nostreams:"))
                 {
@@ -241,7 +241,7 @@ optional<ProtocolResolver::protocol> ProtocolResolver::merge(optional<protocol> 
     return ret;
 }
 
-optional< pair<string, string> > ProtocolResolver::getFirst(list<LinkType> l)
+optional< std::pair<std::string, std::string> > ProtocolResolver::getFirst(list<LinkType> l)
 {
     // look for the first link
     list<LinkType>::iterator it;
@@ -251,7 +251,7 @@ optional< pair<string, string> > ProtocolResolver::getFirst(list<LinkType> l)
             if (link[*it]) return link[*it];
         }
     // if nothing was found return empty link
-    return optional< pair<string, string> >();
+    return optional< std::pair<std::string, std::string> >();
 }
 
 bool ProtocolResolver::resolve()
@@ -269,11 +269,11 @@ bool ProtocolResolver::resolve()
     if (prot.is_initialized()) return true;
 
     // get the first existing standalone source link from the list
-    optional< pair<string, string> > source_link = getFirst(
+    optional< std::pair<std::string, std::string> > source_link = getFirst(
                 list_of (SOURCE_SE) (SOURCE_GROUP) (SOURCE_WILDCARD)
             );
     // get the first existing standalone destination link from the list
-    optional< pair<string, string> > destination_link = getFirst(
+    optional< std::pair<std::string, std::string> > destination_link = getFirst(
                 list_of (DESTINATION_SE) (DESTINATION_GROUP) (DESTINATION_WILDCARD)
             );
 
@@ -290,8 +290,8 @@ ProtocolResolver::protocol ProtocolResolver::autotune()
 {
     protocol ret;
 
-    string source = file.SOURCE_SE;
-    string destination = file.DEST_SE;
+    std::string source = file.SOURCE_SE;
+    std::string destination = file.DEST_SE;
 
     OptimizerSample opt_config;
     DBSingleton::instance().getDBObjectInstance()->fetchOptimizationConfig2(&opt_config, source, destination);

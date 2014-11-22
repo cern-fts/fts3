@@ -50,7 +50,6 @@
 #include "DynamicLibraryManager.h"
 #include "MonitoringDbIfce.h"
 
-using namespace std;
 using namespace FTS3_COMMON_NAMESPACE;
 namespace db
 {
