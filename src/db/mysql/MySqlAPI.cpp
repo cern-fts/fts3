@@ -4010,6 +4010,10 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
     int active = 0;
     bool allowed = false;
     soci::indicator isNull = soci::i_ok;
+    int maxSource = 0;
+    int maxDestination = 0;
+    int activeSource = 0;
+    int activeDestination = 0;
 
     try
         {
@@ -4038,6 +4042,24 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
                     allowed = true;
                 }
 
+             //make sure it doesn't grow beyond the limits
+             getMaxActive(sql, maxSource, maxDestination, source_hostname, destin_hostname);
+
+             //admin requested to stop processing for this source or destination endpoint
+             if(maxSource == 0 || maxDestination == 0)
+               {
+        	  return false;           
+               }
+
+              sql << "SELECT count(*) from t_file where source_se=:source and file_state='ACTIVE' ", soci::use(source_hostname), soci::into(activeSource);
+              sql << "SELECT count(*) from t_file where dest_se=:dest and file_state='ACTIVE' ", soci::use(destin_hostname), soci::into(activeDestination);
+
+              if( activeSource >= maxSource || activeDestination >= maxDestination || maxActive >= MAX_ACTIVE_PER_LINK)
+    	        {
+		  allowed = false;      
+		} 
+
+            //keep track of active for this link in url_copy          
             currentActive = active;
         }
     catch (std::exception& e)
@@ -4202,6 +4224,13 @@ bool MySqlAPI::updateOptimizer()
                                            " t_file f ON (o.source_se = f.source_se) where o.dest_se=f.dest_se and "
                                            " f.file_state in ('ACTIVE','SUBMITTED') and f.job_finished is NULL ");
 
+           //fetch the records from db for distinct links, must be run again for some reason
+            soci::rowset<soci::row> rs_again = ( sql.prepare <<
+                                           " select  distinct o.source_se, o.dest_se from t_optimize_active o INNER JOIN "
+                                           " t_file f ON (o.source_se = f.source_se) where o.dest_se=f.dest_se and "
+                                           " f.file_state in ('ACTIVE','SUBMITTED') and f.job_finished is NULL ");
+
+
 
             soci::statement stmtActiveSource = (
                                                    sql.prepare << "SELECT count(*) FROM t_file "
@@ -4325,7 +4354,7 @@ bool MySqlAPI::updateOptimizer()
                                          soci::into(allTested));
 
             //check first for distinct sources
-            for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+            for (soci::rowset<soci::row>::const_iterator i = rs_again.begin(); i != rs_again.end(); ++i)
                 {
 			checkDistinctSource.push_back(i->get<std::string>("source_se"));
                 }
