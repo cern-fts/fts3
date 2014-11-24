@@ -34,6 +34,11 @@ struct Uri
 public:
     std::string QueryString, Path, Protocol, Host, Port;
 
+    std::string getSeName(void)
+    {
+        return Protocol + "://" + Host;
+    }
+
     static Uri Parse(const std::string &uri)
     {
         Uri result;
