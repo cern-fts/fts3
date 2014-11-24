@@ -14,8 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License. */
 
 #include "parse_url.h"
-#include <libsoup/soup-uri.h>
 
+// Yep, really...
+#if SOUP_VERSION_MAJOR == 2 && SOUP_VERSION_MINOR <= 2
+extern "C" {
+#endif
+#include <libsoup/soup-uri.h>
+#if SOUP_VERSION_MAJOR == 2 && SOUP_VERSION_MINOR <= 2
+}
+#endif
 
 static std::string strptr2str(const char* ptr)
 {
@@ -29,6 +36,22 @@ static std::string strptr2str(const char* ptr)
 Uri Uri::Parse(const std::string &uri)
 {
     Uri u0;
+
+/* Sadly, we need to do some preprocessor here because the Soup version in EL5 is 2.2
+ * and it doesn't work quite the same
+ */
+#if SOUP_VERSION_MAJOR == 2 && SOUP_VERSION_MINOR <= 2
+    SoupUri* soupUri = soup_uri_new(uri.c_str());
+
+    u0.Protocol = strptr2str(g_quark_to_string(soupUri->protocol));
+    u0.Host = strptr2str(soupUri->host);
+    u0.Port = soupUri->port;
+    u0.Path = strptr2str(soupUri->path);
+    u0.QueryString = strptr2str(soupUri->query);
+
+    soup_uri_free(soupUri);
+/** For EL6 or greater */
+#else
     SoupURI* soupUri = soup_uri_new(uri.c_str());
 
     u0.Protocol = strptr2str(soup_uri_get_scheme(soupUri));
@@ -38,5 +61,7 @@ Uri Uri::Parse(const std::string &uri)
     u0.QueryString = strptr2str(soup_uri_get_query(soupUri));
 
     soup_uri_free(soupUri);
+#endif
+
     return u0;
 }
