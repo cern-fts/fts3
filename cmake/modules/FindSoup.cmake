@@ -1,6 +1,6 @@
 INCLUDE(FindPkgConfig)
 
-PKG_SEARCH_MODULE(SOUP "REQUIRED" libsoup-2.4)
+PKG_SEARCH_MODULE(SOUP "REQUIRED" libsoup-2.4 libsoup-2.2)
 
 IF(SOUP_FOUND)
   MESSAGE(STATUS "Found libsoup")
