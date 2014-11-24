@@ -48,11 +48,10 @@ endif ()
 
 
 add_library(fts_common SHARED ${fts_common_sources})
-target_link_libraries(fts_common ${Boost_LIBRARIES} ${LIBUUID_LIBRARIES}  -lpthread )
+target_link_libraries(fts_common ${Boost_LIBRARIES} ${LIBUUID_LIBRARIES}  -lpthread ${SOUP_LIBRARIES})
 if (ORACLEBUILD STREQUAL "OFF")
 target_link_libraries(fts_common ${OPENSSL_LIBRARIES})
 target_link_libraries(fts_common ${LIBUUID_LIBRARIES})
-target_link_libraries(fts_common ${LIBSOUP_LIBRARIES})
 endif ()
 
 
