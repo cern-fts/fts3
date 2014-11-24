@@ -31,7 +31,6 @@
 #include <memory>
 
 using namespace fts3::cli;
-using namespace std;
 
 BOOST_AUTO_TEST_SUITE( cli )
 BOOST_AUTO_TEST_SUITE(VONameCliTest)
@@ -48,7 +47,7 @@ BOOST_AUTO_TEST_CASE (VONameCli_options)
 
     int ac = 2;
 
-    unique_ptr<VoNameCli> cli(new VoNameCli);
+    std::unique_ptr<VoNameCli> cli(new VoNameCli);
     cli->parse(ac, av);
 
     BOOST_CHECK(cli->getVoName() == "voname");

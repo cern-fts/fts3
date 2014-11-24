@@ -33,18 +33,16 @@ namespace fts3
 namespace cli
 {
 
-using namespace std;
-
 class BlacklistCli : public CliBase
 {
 
 public:
 
-    static const string ON;
-    static const string OFF;
+    static const std::string ON;
+    static const std::string OFF;
 
-    static const string SE;
-    static const string DN;
+    static const std::string SE;
+    static const std::string DN;
 
     /**
      * Default Constructor.
@@ -81,7 +79,7 @@ public:
      *
      * @return a string with instruction on how to use the tool
      */
-    string getUsageString(string tool);
+    std::string getUsageString(std::string tool);
 
     /**
      * Gets the debug mode.
@@ -93,22 +91,22 @@ public:
         return mode == ON;
     }
 
-    string getSubjectName()
+    std::string getSubjectName()
     {
         return subject;
     }
 
-    string getSubjectType()
+    std::string getSubjectType()
     {
         return type;
     }
 
-    string getVo()
+    std::string getVo()
     {
         return vo;
     }
 
-    string getStatus()
+    std::string getStatus()
     {
         if (vm.count("allow-submit"))
             {
@@ -126,17 +124,17 @@ public:
 private:
 
     /// blacklist mode, either ON or OFF
-    string mode;
+    std::string mode;
 
     /// the DN or SE that is the subject of blacklisting
-    string subject;
+    std::string subject;
 
     /// type of the subject, either SE or DN
-    string type;
+    std::string type;
 
-    string vo;
+    std::string vo;
 
-    string status;
+    std::string status;
 
     int timeout;
 };

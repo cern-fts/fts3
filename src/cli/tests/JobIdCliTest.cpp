@@ -31,7 +31,6 @@
 #include <string>
 #include <vector>
 
-using namespace std;
 using namespace fts3::cli;
 
 BOOST_AUTO_TEST_SUITE( cli )
@@ -53,11 +52,11 @@ BOOST_AUTO_TEST_CASE (JobIDCli_Test)
 
     int ac = 6;
 
-    unique_ptr<JobIdCli> cli (new JobIdCli);
+    std::unique_ptr<JobIdCli> cli (new JobIdCli);
     cli->parse(ac, av);
     cli->validate();
 
-    const vector<string> ids = cli->getJobIds();
+    const std::vector<std::string> ids = cli->getJobIds();
 
     // the vector should have 3 elements
     BOOST_CHECK(ids.size() == 3);

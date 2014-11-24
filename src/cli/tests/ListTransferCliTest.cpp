@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE (ListTransferCli_vo_short_option)
     // argument count
     int ac = 5;
 
-    unique_ptr<ListTransferCli> cli (new ListTransferCli);
+    std::unique_ptr<ListTransferCli> cli (new ListTransferCli);
     cli->parse(ac, av);
     BOOST_CHECK_EQUAL(cli->getVoName(), "vo");
 }
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE (ListTransferCli_vo_long_option)
     // argument count
     int ac = 5;
 
-    unique_ptr<ListTransferCli> cli (new ListTransferCli);
+    std::unique_ptr<ListTransferCli> cli (new ListTransferCli);
     cli->parse(ac, av);
 
     BOOST_CHECK(cli->getVoName() == "vo");
@@ -95,11 +95,11 @@ BOOST_AUTO_TEST_CASE (ListTransferCli_Status)
     // argument count
     int ac = 9;
 
-    unique_ptr<ListTransferCli> cli (new ListTransferCli);
+    std::unique_ptr<ListTransferCli> cli (new ListTransferCli);
     cli->parse(ac, av);
     cli->validate();
 
-    const vector<string>& statuses = cli->getStatusArray();
+    const std::vector<std::string>& statuses = cli->getStatusArray();
     BOOST_CHECK(statuses.size() == 6);
     BOOST_CHECK(statuses[0] == "status1");
     BOOST_CHECK(statuses[1] == "status2");

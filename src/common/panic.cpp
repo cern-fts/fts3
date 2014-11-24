@@ -92,7 +92,10 @@ static void signal_handler(int signal)
 // Thread that logs, waits and kills
 static void signal_watchdog(void (*shutdown_callback)(int, void*), void* udata)
 {
-    sem_wait(&semaphore);
+    int r = 0;
+    do {
+        r = sem_wait(&semaphore);
+    } while (r < 0); // Semaphore may return spuriously with errno = EINTR
     shutdown_callback(raised_signal, udata);
 }
 

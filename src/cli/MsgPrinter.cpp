@@ -43,8 +43,6 @@ namespace fts3
 namespace cli
 {
 
-using namespace boost;
-using namespace boost::assign;
 using namespace fts3::common;
 
 void MsgPrinter::print_info(std::string const & ostr_subject, std::string const & json_subject, bool flag)
@@ -73,7 +71,7 @@ void MsgPrinter::print_info(std::string const & ostr_subject, std::string const 
             return;
         }
 
-    jout.print(json_subject, lexical_cast<std::string>(h) + ":" + lexical_cast<std::string>(m));
+    jout.print(json_subject, boost::lexical_cast<std::string>(h) + ":" + boost::lexical_cast<std::string>(m));
 }
 
 void MsgPrinter::print_info(std::string const & ostr_subject, std::string const & json_subject, std::string const & msg)
@@ -119,7 +117,7 @@ void MsgPrinter::print(std::string job_id, std::vector<DetailedFileStatus> const
     // make sure the vector is not empty
     if (v.empty()) return;
     // create the JSON object
-    ptree object;
+    pt::ptree object;
     // add job ID
     object.put("job_id", job_id);
     // create array element
@@ -128,7 +126,7 @@ void MsgPrinter::print(std::string job_id, std::vector<DetailedFileStatus> const
     std::vector<DetailedFileStatus>::const_iterator it;
     for (it = v.begin(); it != v.end(); ++it)
         {
-            ptree item;
+            pt::ptree item;
             item.put("file_id", boost::lexical_cast<std::string>(it->fileId));
             item.put("state", it->state);
             item.put("source_surl", it->src);
@@ -215,7 +213,7 @@ void MsgPrinter::print_ostr(JobStatus const & status, bool short_out)
             if (it->retries.size() > 0)
                 {
                     (*ostr) << "  Retries: " << std::endl;
-                    std::for_each(it->retries.begin(), it->retries.end(), (*ostr) << ("    " + lambda::_1) << '\n');
+                    std::for_each(it->retries.begin(), it->retries.end(), (*ostr) << ("    " + boost::lambda::_1) << '\n');
                 }
             else
                 {
@@ -228,7 +226,7 @@ void MsgPrinter::print_ostr(JobStatus const & status, bool short_out)
 
 void MsgPrinter::print_json(JobStatus const & status)
 {
-    ptree job;
+    pt::ptree job;
     job.put("job_id", status.jobId);
     job.put("status", status.status);
 
@@ -257,11 +255,11 @@ void MsgPrinter::print_json(JobStatus const & status)
 
     if (!status.files.empty())
         {
-            ptree files;
+            pt::ptree files;
             std::vector<FileInfo>::const_iterator it;
             for (it = status.files.begin(); it != status.files.end(); ++it)
                 {
-                    ptree file;
+                    pt::ptree file;
                     file.put("source", it->src);
                     file.put("destination", it->dst);
                     file.put("state", it->state);
@@ -277,10 +275,10 @@ void MsgPrinter::print_json(JobStatus const & status)
                         }
                     else
                         {
-                            ptree retriesArray;
+                            pt::ptree retriesArray;
                             std::vector<std::string>::const_iterator i;
                             for (i = it->retries.begin(); i != it->retries.end(); ++i)
-                                retriesArray.push_back(std::make_pair("", ptree(*i)));
+                                retriesArray.push_back(std::make_pair("", pt::ptree(*i)));
                             file.put_child("retries", retriesArray);
                         }
                     files.push_back(std::make_pair("", file));
@@ -299,7 +297,7 @@ void MsgPrinter::print_ostr(Snapshot const & snapshot)
 
 void MsgPrinter::print_json(Snapshot const & snapshot)
 {
-    ptree out;
+    pt::ptree out;
     snapshot.print(out);
     jout.printArray("snapshot", out);
 }

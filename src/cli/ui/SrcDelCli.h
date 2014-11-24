@@ -31,8 +31,6 @@
 
 #include <vector>
 
-using namespace std;
-
 namespace fts3
 {
 namespace cli
@@ -65,7 +63,7 @@ public:
     /*
      * 	Gets the file name (string) for the job.
      */
-    std::vector<string> getFileName();
+    std::vector<std::string> getFileName();
 
     /**
       * Validates command line options
@@ -85,12 +83,12 @@ public:
     /**
      * the name of the file containing bulk-job description
      */
-    string bulk_file;
+    std::string bulk_file;
 
     /**
      * 	all the url's (files for deletion) which included in the file
      */
-    vector<string> allFilenames;
+    std::vector<std::string> allFilenames;
 };
 
 

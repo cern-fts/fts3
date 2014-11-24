@@ -41,11 +41,10 @@ namespace fts3
 namespace server
 {
 
-using namespace std;
 using namespace boost;
 using namespace db;
 
-typedef pair<string, int> FileIndex;
+typedef std::pair<std::string, int> FileIndex;
 
 class TransferFileHandler
 {
@@ -60,59 +59,59 @@ class TransferFileHandler
 
 public:
 
-    TransferFileHandler(map< string, list<TransferFiles> >& files);
+    TransferFileHandler(std::map< std::string, std::list<TransferFiles> >& files);
     virtual ~TransferFileHandler();
 
-    optional<TransferFiles> get(string vo);
+    optional<TransferFiles> get(std::string vo);
 
-    set<string>::iterator begin();
-    set<string>::iterator end();
+    std::set<std::string>::iterator begin();
+    std::set<std::string>::iterator end();
 
     bool empty();
 
     int size();
 
-    const set<string> getSources(string se) const;
-    const set<string> getDestinations(string se) const;
+    const std::set<std::string> getSources(std::string se) const;
+    const std::set<std::string> getDestinations(std::string se) const;
 
-    const set<string> getSourcesVos(string se) const;
-    const set<string> getDestinationsVos(string se) const;
+    const std::set<std::string> getSourcesVos(std::string se) const;
+    const std::set<std::string> getDestinationsVos(std::string se) const;
 
 private:
 
     optional<TransferFiles> getFile(FileIndex index);
 
-    optional<FileIndex> getIndex(string vo);
+    optional<FileIndex> getIndex(std::string vo);
 
-    optional< pair<string, string> > getNextPair(string vo);
+    optional< std::pair<std::string, std::string> > getNextPair(std::string vo);
 
-    map< string, set<string> >& getMapFromCache(map< string, list<TransferFiles> >& files, GET_MAP_OPTS opt);
+    std::map< std::string, std::set<std::string> >& getMapFromCache(std::map< std::string, std::list<TransferFiles> >& files, GET_MAP_OPTS opt);
 
     // maps file indexes to file replicas
-    map< FileIndex, list<TransferFiles> > fileIndexToFiles;
+    std::map< FileIndex, std::list<TransferFiles> > fileIndexToFiles;
 
     // maps VOs to file indexes
     // file indexes are organized in map: source-destination pair is mapped to file indexes
-    map< string, map< pair<string, string>, list<FileIndex> > > voToFileIndexes;
+    std::map< std::string, std::map< std::pair<std::string, std::string>, std::list<FileIndex> > > voToFileIndexes;
 
-    set<string> vos;
+    std::set<std::string> vos;
 
-    void freeList(list<TransferFiles>& l);
+    void freeList(std::list<TransferFiles>& l);
 
     /// mutex that ensures thread safety
     mutex m;
 
     /// next pair in given VO queue
-    map< string, map< pair<string, string>, list<FileIndex> >::iterator > nextPairForVo;
+    std::map< std::string, std::map< std::pair<std::string, std::string>, std::list<FileIndex> >::iterator > nextPairForVo;
 
     /// cache for the following maps
-    vector< map< string, set<string> > > init_cache;
+    std::vector< std::map< std::string, std::set<std::string> > > init_cache;
 
     /// outgoing/incoming transfers/vo for a given SE
-    const map< string, set<string> > sourceToDestinations;
-    const map< string, set<string> > sourceToVos;
-    const map< string, set<string> > destinationToSources;
-    const map< string, set<string> > destinationToVos;
+    const std::map< std::string, std::set<std::string> > sourceToDestinations;
+    const std::map< std::string, std::set<std::string> > sourceToVos;
+    const std::map< std::string, std::set<std::string> > destinationToSources;
+    const std::map< std::string, std::set<std::string> > destinationToVos;
 };
 
 } /* namespace cli */

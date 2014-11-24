@@ -34,10 +34,8 @@ namespace fts3
 namespace cli
 {
 
-using namespace boost::assign;
-
 const std::set<std::string> BulkSubmissionParser::file_tokens =
-    list_of
+    boost::assign::list_of
     ("sources")
     ("destinations")
     ("selection_strategy")
@@ -56,7 +54,7 @@ BulkSubmissionParser::BulkSubmissionParser(std::istream& ifs)
             read_json(ifs, pt);
 
         }
-    catch(json_parser_error& ex)
+    catch(pt::json_parser_error& ex)
         {
             // handle errors in JSON format
             throw cli_exception(ex.message());
@@ -77,30 +75,30 @@ void BulkSubmissionParser::parse()
     // check if there is more than one job in a single file
     if (pt.size() > 1) throw cli_exception("Too many elements in the bulk submission file!");
     // check if the 'Files' have been defined
-    optional<ptree&> v = pt.get_child_optional("Files");
+    boost::optional<pt::ptree&> v = pt.get_child_optional("Files");
     if (!v.is_initialized()) throw cli_exception("The array of files does not exist!");
     // check if it's an array
     if (!isArray(pt, "Files")) throw cli_exception("The 'Files' element is not an array");
-    ptree& root = v.get();
+    pt::ptree& root = v.get();
     // iterate over all the file in the job and check their format
-    ptree::iterator it;
+    pt::ptree::iterator it;
     for (it = root.begin(); it != root.end(); it++)
         {
             // validate the item in array
-            std::pair<std::string, ptree> p = *it;
-            ptree& item = p.second;
+            std::pair<std::string, pt::ptree> p = *it;
+            pt::ptree& item = p.second;
             validate(item);
             parse_item(item);
         }
 }
 
-void BulkSubmissionParser::parse_item(ptree& item)
+void BulkSubmissionParser::parse_item(pt::ptree& item)
 {
 
     File file;
 
-    optional<std::string> v_str;
-    optional< std::vector<std::string> > v_vec;
+    boost::optional<std::string> v_str;
+    boost::optional< std::vector<std::string> > v_vec;
 
     // handle sources
 
@@ -195,27 +193,27 @@ void BulkSubmissionParser::parse_item(ptree& item)
     files.push_back(file);
 }
 
-void BulkSubmissionParser::validate(ptree& item)
+void BulkSubmissionParser::validate(pt::ptree& item)
 {
     // just validate the main tokens
-    ptree::iterator it;
+    pt::ptree::iterator it;
     for (it = item.begin(); it != item.end(); it++)
         {
             // iterate over the nodes and check if there are in the expexted tokens set
-            std::pair<std::string, ptree> p = *it;
+            std::pair<std::string, pt::ptree> p = *it;
             if (!file_tokens.count(p.first)) throw cli_exception("unexpected identifier: " + p.first);
         }
 }
 
-bool BulkSubmissionParser::isArray(ptree& item, std::string path)
+bool BulkSubmissionParser::isArray(pt::ptree& item, std::string path)
 {
     // get the value for the given path
-    optional<ptree&> value = item.get_child_optional(path);
+    boost::optional<pt::ptree&> value = item.get_child_optional(path);
     // check if the value exists
     // if no it's not an array
     if (!value.is_initialized()) return false;
     // the potential array
-    ptree& array = value.get();
+    pt::ptree& array = value.get();
     // check if the node has a value,
     // accordingly to boost it should be empty if array syntax was used in JSON
     if (!array.get_value<std::string>().empty()) return false;
@@ -223,14 +221,14 @@ bool BulkSubmissionParser::isArray(ptree& item, std::string path)
     return true;
 }
 
-optional<std::string> BulkSubmissionParser::getMetadata(ptree& item)
+boost::optional<std::string> BulkSubmissionParser::getMetadata(pt::ptree& item)
 {
     // get the value for the given path
-    optional<ptree&> value = item.get_child_optional("metadata");
+    boost::optional<pt::ptree&> value = item.get_child_optional("metadata");
     // check if the value exists
-    if (!value.is_initialized()) return optional<std::string>();
+    if (!value.is_initialized()) return boost::optional<std::string>();
     // the potential array
-    ptree& metadata = value.get();
+    pt::ptree& metadata = value.get();
     // parse the metadata back to JSON
 
     std::string str = metadata.get_value<std::string>();

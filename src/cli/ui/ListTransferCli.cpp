@@ -33,13 +33,13 @@ ListTransferCli::ListTransferCli(): VoNameCli(false)
 
     // add hidden options (not printed in help)
     CliBase::hidden.add_options()
-    ("state", value< vector<string> >(), "Specify states for querying.")
+    ("state", po::value< std::vector<std::string> >(), "Specify states for querying.")
     ;
 
     // add fts3-transfer-list specific options
     specific.add_options()
-    ("source_se", value<string>(), "Restrict to specific source SE.")
-    ("dest_se", value<string>(), "Restrict to specific destination SE.")
+    ("source_se", po::value<std::string>(), "Restrict to specific source SE.")
+    ("dest_se", po::value<std::string>(), "Restrict to specific destination SE.")
     ("deletion", "Query for deletion jobs.")
     ;
 
@@ -51,20 +51,20 @@ ListTransferCli::~ListTransferCli()
 {
 }
 
-string ListTransferCli::getUsageString(string tool)
+std::string ListTransferCli::getUsageString(std::string tool)
 {
 
     return "Usage: " + tool + " [options] [STATE...]";
 }
 
-vector<string> ListTransferCli::getStatusArray()
+std::vector<std::string> ListTransferCli::getStatusArray()
 {
 
-    vector<string> array;
+    std::vector<std::string> array;
 
     if (CliBase::vm.count("state"))
         {
-            array = CliBase::vm["state"].as< vector<string> >();
+            array = CliBase::vm["state"].as< std::vector<std::string> >();
         }
 
     if (array.empty())
@@ -80,24 +80,24 @@ vector<string> ListTransferCli::getStatusArray()
     return array;
 }
 
-string ListTransferCli::source()
+std::string ListTransferCli::source()
 {
     if (vm.count("source_se"))
         {
-            return vm["source_se"].as<string>();
+            return vm["source_se"].as<std::string>();
         }
 
-    return string();
+    return std::string();
 }
 
-string ListTransferCli::destination()
+std::string ListTransferCli::destination()
 {
     if (vm.count("dest_se"))
         {
-            return vm["dest_se"].as<string>();
+            return vm["dest_se"].as<std::string>();
         }
 
-    return string();
+    return std::string();
 }
 
 bool ListTransferCli::deletion()

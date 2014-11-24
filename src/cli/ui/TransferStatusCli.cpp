@@ -55,7 +55,7 @@ void TransferStatusCli::validate()
 
     if (vm.count("p") && vm.size() > 3)
         {
-            variables_map::iterator it;
+            po::variables_map::iterator it;
             for (it = vm.begin(); it != vm.end(); ++it)
                 {
                     if (it->first == "p") continue;

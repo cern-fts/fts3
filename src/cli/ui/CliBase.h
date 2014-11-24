@@ -41,9 +41,7 @@ namespace fts3
 namespace cli
 {
 
-using namespace boost::program_options;
-using namespace boost::property_tree;
-using namespace boost;
+namespace po = boost::program_options;
 
 /**
  * CliBase is a base class for developing FTS3 command line tools.
@@ -176,42 +174,42 @@ protected:
     /**
      * a map containing parsed options
      */
-    variables_map vm;
+    po::variables_map vm;
 
     /**
      * basic command line options provided by CliBase
      */
-    options_description basic;
+    po::options_description basic;
 
     /**
      * command line options that are printed if -h option has been used
      */
-    options_description visible;
+    po::options_description visible;
 
     /**
      * all command line options, inheriting class should add its options to 'cli_option'
      */
-    options_description all;
+    po::options_description all;
 
     /**
      * command line parameters that are passed without any switch option e.g. -p
      */
-    positional_options_description p;
+    po::positional_options_description p;
 
     /**
      * command line options specific for fts3-transfer-status
      */
-    options_description specific;
+    po::options_description specific;
 
     /**
      * hidden command line options (not printed in help)
      */
-    options_description hidden;
+    po::options_description hidden;
 
     /**
      * command line option specific for a command
      */
-    options_description command_specific;
+    po::options_description command_specific;
 
     /**
      * the FTS3 service endpoint

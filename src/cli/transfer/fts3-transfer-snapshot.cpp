@@ -41,8 +41,6 @@
 
 #include <boost/property_tree/json_parser.hpp>
 
-using namespace boost;
-using namespace std;
 using namespace fts3::cli;
 using namespace fts3::common;
 

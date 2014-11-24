@@ -4010,22 +4010,30 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
     int active = 0;
     bool allowed = false;
     soci::indicator isNull = soci::i_ok;
+    soci::indicator isNullFixed = soci::i_ok;
+    int maxSource = 0;
+    int maxDestination = 0;
+    int activeSource = 0;
+    int activeDestination = 0;
+    std::string active_fixed;
+    soci::indicator isNull1 = soci::i_ok;
+    soci::indicator isNull2 = soci::i_ok;
 
     try
         {
             int highDefault = MIN_ACTIVE;
 
             soci::statement stmt1 = (
-                                        sql.prepare << "SELECT active FROM t_optimize_active "
-                                        "WHERE source_se = :source AND dest_se = :dest_se ",
-                                        soci::use(source_hostname),soci::use(destin_hostname), soci::into(maxActive, isNull));
+                                        sql.prepare << "SELECT active, fixed FROM t_optimize_active "
+                                        "WHERE source_se = :source AND dest_se = :dest_se LIMIT 1 ",
+                                        soci::use(source_hostname),soci::use(destin_hostname), soci::into(maxActive, isNull), soci::into(active_fixed, isNullFixed));
             stmt1.execute(true);
 
             soci::statement stmt2 = (
                                         sql.prepare << "SELECT count(*) FROM t_file "
                                         "WHERE source_se = :source AND dest_se = :dest_se and file_state = 'ACTIVE' and job_finished is NULL ",
                                         soci::use(source_hostname),soci::use(destin_hostname), soci::into(active));
-            stmt2.execute(true);
+            stmt2.execute(true);  	   
 
             if (isNull != soci::i_null)
                 {
@@ -4038,6 +4046,33 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
                     allowed = true;
                 }
 
+             //stop here to respect fixed for a given link
+             if (isNullFixed == soci::i_ok && active_fixed == "on")
+                        return allowed;
+
+             //make sure it doesn't grow beyond the limits
+             getMaxActive(sql, maxSource, maxDestination, source_hostname, destin_hostname);
+
+             //admin requested to stop processing for this source or destination endpoint
+             if(maxSource == 0 || maxDestination == 0)
+               {
+        	  return false;           
+               }
+
+              sql << "SELECT SUM(source_se=:source) AS f1, SUM(dest_se=:dest) AS f2 FROM t_file WHERE file_state='ACTIVE' and (source_se=:source OR dest_se=:dest) ",
+		soci::use(source_hostname), 
+		soci::use(destin_hostname),
+		soci::use(source_hostname), 
+		soci::use(destin_hostname), 
+		soci::into(activeSource, isNull1), 
+		soci::into(activeDestination, isNull2);
+
+              if( (isNull1 == soci::i_ok && activeSource >= maxSource) || (isNull2 == soci::i_ok && activeDestination >= maxDestination) || maxActive >= MAX_ACTIVE_PER_LINK)
+    	        {
+		  allowed = false;      
+		} 
+
+            //keep track of active for this link in url_copy          
             currentActive = active;
         }
     catch (std::exception& e)
@@ -4202,6 +4237,13 @@ bool MySqlAPI::updateOptimizer()
                                            " t_file f ON (o.source_se = f.source_se) where o.dest_se=f.dest_se and "
                                            " f.file_state in ('ACTIVE','SUBMITTED') and f.job_finished is NULL ");
 
+           //fetch the records from db for distinct links, must be run again for some reason
+            soci::rowset<soci::row> rs_again = ( sql.prepare <<
+                                           " select  distinct o.source_se, o.dest_se from t_optimize_active o INNER JOIN "
+                                           " t_file f ON (o.source_se = f.source_se) where o.dest_se=f.dest_se and "
+                                           " f.file_state in ('ACTIVE','SUBMITTED') and f.job_finished is NULL ");
+
+
 
             soci::statement stmtActiveSource = (
                                                    sql.prepare << "SELECT count(*) FROM t_file "
@@ -4324,15 +4366,19 @@ bool MySqlAPI::updateOptimizer()
                                          soci::use(destin_hostname),
                                          soci::into(allTested));
 
+            //check first for distinct sources
+            for (soci::rowset<soci::row>::const_iterator i = rs_again.begin(); i != rs_again.end(); ++i)
+                {
+			checkDistinctSource.push_back(i->get<std::string>("source_se"));
+                }
 
+	    //now apply optimization logic
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
                     recordsFound = true;
 
                     source_hostname = i->get<std::string>("source_se");
-                    destin_hostname = i->get<std::string>("dest_se");
-
-                    checkDistinctSource.push_back(source_hostname);
+                    destin_hostname = i->get<std::string>("dest_se");                    
 
                     double nFailedLastHour=0.0, nFinishedLastHour=0.0;
                     throughput=0.0;
@@ -4378,6 +4424,7 @@ bool MySqlAPI::updateOptimizer()
                     avgDuration = 0.0;
                     isNullAvg = soci::i_ok;
 		    active_fixed = "off";
+		    highDefault = MIN_ACTIVE;
 
                     std::vector<std::string>::const_iterator it;
                     for(std::vector<std::string>::iterator it = checkDistinctSource.begin(); it != checkDistinctSource.end(); ++it)
@@ -8833,7 +8880,7 @@ void MySqlAPI::checkSanityState()
                             double diff = difftime(now, start_time_t);
                             int diffInt =  boost::lexical_cast<int>(diff);
 
-                            if (diffInt > (bring_online + 100))
+                            if (diffInt > (bring_online + 800))
                                 {
                                     updateFileTransferStatusInternal(sql, 0.0, job_id, file_id, "FAILED", errorMessage, 0, 0, 0, false);
                                     updateJobTransferStatusInternal(sql, job_id, "FAILED",0);
@@ -9404,7 +9451,7 @@ void MySqlAPI::setRetryTransferInternal(soci::session& sql, const std::string & 
             if(bring_online > 0 || copy_pin_lifetime > 0)
                 {
                     sql << "update t_file set retry = :retry, current_failures = 0, file_state='STAGING', internal_file_params=NULL, transferHost=NULL,start_time=NULL, pid=NULL, "
-                        " filesize=0 where file_id=:file_id and job_id=:job_id AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED') ",
+                        " filesize=0, staging_start=NULL, staging_finished=NULL where file_id=:file_id and job_id=:job_id AND file_state NOT IN ('FINISHED','STAGING','SUBMITTED','FAILED','CANCELED') ",
                         soci::use(retry),
                         soci::use(fileId),
                         soci::use(jobId);

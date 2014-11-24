@@ -16,13 +16,11 @@ namespace fts3
 namespace cli
 {
 
-using namespace boost;
-
 CancelCli::CancelCli()
 {
 
     specific.add_options()
-    ("file,f", value<string>(&bulk_file), "Name of a configuration file.")
+    ("file,f", po::value<std::string>(&bulk_file), "Name of a configuration file.")
     ;
 }
 
@@ -44,12 +42,12 @@ void CancelCli::validate()
 void CancelCli::prepareJobIds()
 {
     // first check if the -f option was used, try to open the file with bulk-job description
-    ifstream ifs(bulk_file.c_str());
+    std::ifstream ifs(bulk_file.c_str());
     if (ifs)
         {
             // Parse the file
             int lineCount = 0;
-            string line;
+            std::string line;
             // read and parse the lines one by one
             do
                 {
@@ -60,9 +58,9 @@ void CancelCli::prepareJobIds()
 
                     // regular expression for matching job ID
                     // job ID example: 11d24106-a24b-4d9f-9360-7c36c5176327
-                    static const regex re("^\\w+-\\w+-\\w+-\\w+-\\w+$");
-                    smatch what;
-                    if (!regex_match(line, what, re, match_extra)) throw bad_option("jobid", "Wrong job ID format: " + line);
+                    static const boost::regex re("^\\w+-\\w+-\\w+-\\w+-\\w+$");
+                    boost::smatch what;
+                    if (!boost::regex_match(line, what, re, boost::match_extra)) throw bad_option("jobid", "Wrong job ID format: " + line);
 
                     jobIds.push_back(line);
 
@@ -74,7 +72,7 @@ void CancelCli::prepareJobIds()
             // check whether jobid has been given as a parameter
             if (vm.count("jobid"))
                 {
-                    jobIds = vm["jobid"].as< vector<string> >();
+                    jobIds = vm["jobid"].as< std::vector<std::string> >();
                 }
         }
 }

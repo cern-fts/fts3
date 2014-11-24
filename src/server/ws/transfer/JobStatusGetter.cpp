@@ -233,12 +233,12 @@ tns3__JobStatus* JobStatusGetter::handleStatusExceptionForGLite()
     // and at the begining of it we attache backspaces in order to erase 'Unknown transfer state '
 
     // the string that should be erased
-    string replace = "Unknown transfer state ";
+    std::string replace = "Unknown transfer state ";
 
     // backspace
     const char bs = 8;
     // error message
-    string msg = "getTransferJobStatus: RequestID <" + job + "> was not found";
+    std::string msg = "getTransferJobStatus: RequestID <" + job + "> was not found";
 
     // add backspaces at the begining of the error message
     for (int i = 0; i < replace.size(); i++)

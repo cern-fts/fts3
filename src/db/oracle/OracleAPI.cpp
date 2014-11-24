@@ -3911,6 +3911,7 @@ bool OracleAPI::updateOptimizer()
                     avgDuration = 0.0;
                     isNullAvg = soci::i_ok;
 		    active_fixed = "off";
+		    highDefault = MIN_ACTIVE;
 
                     // Weighted average
                     soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
@@ -8778,7 +8779,7 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
             if(bring_online > 0 || copy_pin_lifetime > 0)
                 {
                     sql << "update t_file set retry = :retry, current_failures = 0, file_state='STAGING', internal_file_params=NULL, transferHost=NULL,start_time=NULL, pid=NULL, "
-                        " filesize=0 where file_id=:file_id and job_id=:job_id AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED') ",
+                        " filesize=0, staging_start=NULL, staging_finished=NULL where file_id=:file_id and job_id=:job_id AND file_state NOT IN ('STAGING','FINISHED','SUBMITTED','FAILED','CANCELED') ",
                         soci::use(retry),
                         soci::use(fileId),
                         soci::use(jobId);

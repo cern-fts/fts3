@@ -16,8 +16,8 @@ RestCli::RestCli()
     // add fts3-transfer-status specific options
     specific.add_options()
     ("rest", "Use the RESTful interface.")
-    ("capath", value<std::string>(),  "Path to the GRID security certificates (e.g. /etc/grid-security/certificates).")
-    ("proxy", value<std::string>(),  "Path to the proxy certificate (e.g. /tmp/x509up_u500).")
+    ("capath", po::value<std::string>(),  "Path to the GRID security certificates (e.g. /etc/grid-security/certificates).")
+    ("proxy", po::value<std::string>(),  "Path to the proxy certificate (e.g. /tmp/x509up_u500).")
     ;
 }
 

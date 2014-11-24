@@ -67,7 +67,7 @@ int main(int ac, char* av[])
             ctx.delegate("", 0);
 
             std::string resjobid = ctx.deleteFile(vect);
-            std::cout << resjobid <<endl;
+            std::cout << resjobid << std::endl;
 
 
         }

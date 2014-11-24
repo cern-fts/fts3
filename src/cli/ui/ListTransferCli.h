@@ -63,7 +63,7 @@ public:
      *
      * @return a string with instruction on how to use the tool
      */
-    string getUsageString(string tool);
+    std::string getUsageString(std::string tool);
 
     /**
      * Gets a pointer to impl__ArrayOf_USCOREsoapenc_USCOREstring object.
@@ -78,17 +78,17 @@ public:
      *
      * @return  impl__ArrayOf_USCOREsoapenc_USCOREstring
      */
-    vector<string> getStatusArray();
+    std::vector<std::string> getStatusArray();
 
     /**
      *
      */
-    string source();
+    std::string source();
 
     /**
      *
      */
-    string destination();
+    std::string destination();
 
     /**
      * @return true if user requested a deletion query, false otherwise

@@ -28,8 +28,6 @@
 #include "CliBase.h"
 #include <string>
 
-using namespace std;
-
 namespace fts3
 {
 namespace cli
