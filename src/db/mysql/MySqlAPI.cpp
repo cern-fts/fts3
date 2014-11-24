@@ -4016,6 +4016,8 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
     int activeSource = 0;
     int activeDestination = 0;
     std::string active_fixed;
+    soci::indicator isNull1 = soci::i_ok;
+    soci::indicator isNull2 = soci::i_ok;
 
     try
         {
@@ -4057,10 +4059,15 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
         	  return false;           
                }
 
-              sql << "SELECT count(*) from t_file where source_se=:source and file_state='ACTIVE' ", soci::use(source_hostname), soci::into(activeSource);
-              sql << "SELECT count(*) from t_file where dest_se=:dest and file_state='ACTIVE' ", soci::use(destin_hostname), soci::into(activeDestination);
+              sql << "SELECT SUM(source_se=:source) AS f1, SUM(dest_se=:dest) AS f2 FROM t_file WHERE file_state='ACTIVE' and (source_se=:source OR dest_se=:dest) ",
+		soci::use(source_hostname), 
+		soci::use(destin_hostname),
+		soci::use(source_hostname), 
+		soci::use(destin_hostname), 
+		soci::into(activeSource, isNull1), 
+		soci::into(activeDestination, isNull2);
 
-              if( activeSource >= maxSource || activeDestination >= maxDestination || maxActive >= MAX_ACTIVE_PER_LINK)
+              if( (isNull1 == soci::i_ok && activeSource >= maxSource) || (isNull2 == soci::i_ok && activeDestination >= maxDestination) || maxActive >= MAX_ACTIVE_PER_LINK)
     	        {
 		  allowed = false;      
 		} 
