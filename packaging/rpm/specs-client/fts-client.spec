@@ -39,6 +39,7 @@ BuildRequires:  gridsite-devel
 BuildRequires:  gsoap-devel
 BuildRequires:  is-interface-devel
 BuildRequires:  openldap-devel
+BuildRequires:  libsoup-devel%{?_isa}
 Requires(pre):  shadow-utils
 
 %description
