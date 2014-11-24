@@ -1856,6 +1856,8 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
             insert_file_stmt.define_and_bind();
             insert_file_stmt.execute(true);
 
+            sql.commit();
+
         }
     catch (std::exception& e)
         {
