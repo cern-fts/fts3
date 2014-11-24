@@ -45,6 +45,7 @@ BuildRequires:  gridsite-devel
 BuildRequires:  gsoap-devel
 BuildRequires:  is-interface-devel
 BuildRequires:  libcurl-devel
+BuildRequires:  libsoup-devel
 BuildRequires:  openldap-devel
 BuildRequires:  pugixml-devel
 BuildRequires:  python2-devel

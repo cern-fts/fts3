@@ -33,23 +33,26 @@ FILE(GLOB SSL_CPP "StaticSslLocking*")
 find_package(LibUuid REQUIRED)
 include_directories(${LIBUUID_INCLUDE_DIRS})
 
+# Find libsoup
+find_package(Soup REQUIRED)
+add_definitions(${SOUP_CFLAGS})
+
+# Find boost
+find_package(Boost COMPONENTS regex iostreams system thread)
+
+# Sources
 file(GLOB fts_common_sources "*.cpp")
 if (ORACLEBUILD STREQUAL "ON")
 list(REMOVE_ITEM fts_common_sources ${SSL_CPP})
 endif ()
 
 
-# Find libuuid
-find_package(LibUuid REQUIRED)
-include_directories(${LIBUUID_INCLUDE_DIRS})
-
-find_package(Boost COMPONENTS regex iostreams system thread)
-
 add_library(fts_common SHARED ${fts_common_sources})
 target_link_libraries(fts_common ${Boost_LIBRARIES} ${LIBUUID_LIBRARIES}  -lpthread )
 if (ORACLEBUILD STREQUAL "OFF")
 target_link_libraries(fts_common ${OPENSSL_LIBRARIES})
 target_link_libraries(fts_common ${LIBUUID_LIBRARIES})
+target_link_libraries(fts_common ${LIBSOUP_LIBRARIES})
 endif ()
 
 

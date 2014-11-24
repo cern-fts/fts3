@@ -14,62 +14,29 @@ See the License for the specific language governing permissions and
 limitations under the License. */
 
 #include "parse_url.h"
+#include <libsoup/soup-uri.h>
 
-void parse_url(const char *url,
-               char **scheme, char **host, int *port, char **path)
+
+static std::string strptr2str(const char* ptr)
 {
-    char *p=NULL, *q=NULL;
-
-    *scheme = *host = *path = 0;
-    *port = -1;
-
-    for(p = (char *)url; *p; p++)
-        if(*p == ':' || *p == '/')
-            break;
-
-    if(p > url && *p == ':')
-        {
-            *scheme = (char*) malloc((size_t) (p - url + 1));
-            strncpy(*scheme, url, (size_t) (p - url));
-            (*scheme)[p - url] = '\0';
-            url = p+1;
-        }
-
-    if(url[0] == '/' && url[1] == '/')
-        {
-            url += 2;
-
-            for(p = (char *)url; *p; p++)
-                if(*p == '/')
-                    break;
-
-            /* Does it have a port number? */
-
-            for(q = p-1; q >= url; q--)
-                if(!isdigit(*q))
-                    break;
-
-            if(q < p-1 && *q == ':')
-                *port = atoi(q+1);
-            else
-                q = p;
-
-            *host = (char*) malloc((size_t) (q - url + 1));
-            strncpy(*host, url, (size_t) (q - url));
-            (*host)[q - url] = '\0';
-            url = p;
-        }
-
-    if(*url)
-        *path = strdup(url);
+    if (ptr)
+        return std::string(ptr);
     else
-        *path = strdup("/");
-
-    for(p=*path; *p; p++)
-        if(*p == '\\')
-            {
-                *p = '/';
-            }
+        return std::string();
 }
 
 
+Uri Uri::Parse(const std::string &uri)
+{
+    Uri u0;
+    SoupURI* soupUri = soup_uri_new(uri.c_str());
+
+    u0.Protocol = strptr2str(soup_uri_get_scheme(soupUri));
+    u0.Host = strptr2str(soup_uri_get_host(soupUri));
+    u0.Port = soup_uri_get_port(soupUri);
+    u0.Path = strptr2str(soup_uri_get_path(soupUri));
+    u0.QueryString = strptr2str(soup_uri_get_query(soupUri));
+
+    soup_uri_free(soupUri);
+    return u0;
+}

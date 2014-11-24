@@ -96,10 +96,6 @@ static std::string replaceMetadataString(std::string text)
 
 static std::vector<std::string> turlList(std::string str)
 {
-    char *base_scheme = NULL;
-    char *base_host = NULL;
-    char *base_path = NULL;
-    int base_port = 0;
     std::string source_turl;
     std::string destination_turl;
     std::vector<std::string> turl;
@@ -129,48 +125,27 @@ static std::vector<std::string> turlList(std::string str)
     //source
     if(!source_turl.empty() && source_turl.length() > 4)
         {
-            parse_url(source_turl.c_str(), &base_scheme, &base_host, &base_port, &base_path);
-            if(base_scheme && base_host)
+            Uri src_uri = Uri::Parse(source_turl);
+
+            if(src_uri.Protocol.length() && src_uri.Host.length())
                 {
-                    shost = std::string(base_scheme) + "://" + std::string(base_host);
+                    shost = src_uri.getSeName();
                     trim(shost);
                     turl.push_back(shost);
-                }
-
-            if (base_scheme)
-                {
-                    free(base_scheme);
-                    base_scheme = NULL;
-                }
-            if (base_host)
-                {
-                    free(base_host);
-                    base_host = NULL;
-                }
-            if (base_path)
-                {
-                    free(base_path);
-                    base_path = NULL;
                 }
         }
 
     //destination
     if(!destination_turl.empty() && destination_turl.length() > 4)
         {
-            parse_url(destination_turl.c_str(), &base_scheme, &base_host, &base_port, &base_path);
-            if(base_scheme && base_host)
+            Uri dst_uri = Uri::Parse(destination_turl);
+
+            if(dst_uri.Protocol.length() && dst_uri.Host.length())
                 {
-                    shost = std::string(base_scheme) + "://" + std::string(base_host);
+                    shost = dst_uri.getSeName();
                     trim(shost);
                     turl.push_back(shost);
                 }
-
-            if (base_scheme)
-                free(base_scheme);
-            if (base_host)
-                free(base_host);
-            if (base_path)
-                free(base_path);
         }
 
     return turl;

@@ -49,8 +49,7 @@ set(fts_url_copy_SOURCES args.cpp
                          ${PROJECT_SOURCE_DIR}/src/common/name_to_uid.cpp
                          ${PROJECT_SOURCE_DIR}/src/common/producer.cpp
                          ${PROJECT_SOURCE_DIR}/src/common/consumer.cpp
-                         ${PROJECT_SOURCE_DIR}/src/common/uuid_generator.cpp
-                         ${PROJECT_SOURCE_DIR}/src/common/parse_url.cpp)
+                         ${PROJECT_SOURCE_DIR}/src/common/uuid_generator.cpp)
 add_executable (fts_url_copy ${fts_url_copy_SOURCES})
 add_dependencies(fts_url_copy fts_msg_ifce)
 if(FTS3_COMPILE_WITH_UNITTEST_NEW)

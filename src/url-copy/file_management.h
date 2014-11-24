@@ -94,9 +94,9 @@ private:
     std::string dhostFile;
     std::string dateArch;
     std::string arcFileName;
-    char *base_scheme;
+    /*char *base_scheme;
     char *base_host;
     char *base_path;
-    int base_port;
+    int base_port;*/
     bool castor;
 };

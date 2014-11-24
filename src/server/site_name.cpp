@@ -40,27 +40,16 @@ SiteName::~SiteName()
 
 std::string SiteName::getSiteName(std::string& hostname)
 {
+    Uri uri = Uri::Parse(hostname);
 
-    std::string se;
-    char *base_scheme = NULL;
-    char *base_host = NULL;
-    char *base_path = NULL;
-    int base_port = 0;
-    parse_url(hostname.c_str(), &base_scheme, &base_host, &base_port, &base_path);
-    if(base_host) se = std::string(base_host);
-
-    if(base_scheme) free(base_scheme);
-    if(base_host)   free(base_host);
-    if(base_path)   free(base_path);
-
-    std::string site =  SiteNameRetriever::getInstance().getSiteName(se);
-    if(site.length() == 0)
+    if(uri.Host.length()) {
+        std::string site =  SiteNameRetriever::getInstance().getSiteName(uri.Host);
+        if(site.length() > 0 && site != "null")
+            return site;
+        else
+            return std::string();
+    }
+    else {
         return std::string("");
-    else if(site.length() > 0 && site != "null")
-        return site;
-    else
-        return std::string("");
-
+    }
 }
-
-
