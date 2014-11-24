@@ -153,9 +153,7 @@ void FileTransferExecutor::run(boost::any & ctx)
                                     params.append(lexical_cast<string >(secPerMB));
                                 }
                         }
-
-                    //send SUBMITTED message
-                    SingleTrStateInstance::instance().sendStateMessage(tf.JOB_ID, tf.FILE_ID);
+                  
                     bool isAutoTuned = false;
 
                     if (!cfgs.empty())
@@ -460,9 +458,12 @@ void FileTransferExecutor::run(boost::any & ctx)
                         return;
 
                     //check again just in case
-                    bool sch = scheduler.schedule(currentActive);
-                    if(sch)
-                        {
+                    //bool sch = scheduler.schedule(currentActive);
+                    //if(sch)
+                        //{
+			    //send SUBMITTED message
+	                    SingleTrStateInstance::instance().sendStateMessage(tf.JOB_ID, tf.FILE_ID);
+
                             scheduled += 1;
                             if (-1 == pr.executeProcessShell(forkMessage))
                                 {
@@ -498,7 +499,7 @@ void FileTransferExecutor::run(boost::any & ctx)
 
                             if(!failed) //only set watcher when the file has started
                                 ThreadSafeList::get_instance().push_back(msg);
-                        }
+                       // }
 
                     params.clear();
                 }
