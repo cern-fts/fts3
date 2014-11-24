@@ -57,6 +57,14 @@ namespace cli
 
 std::vector<GSoapContextAdapter::Cleaner> GSoapContextAdapter::cleaners;
 
+static std::string strFromStrPtr(const std::string* ptr)
+{
+    if (ptr)
+        return *ptr;
+    else
+        return std::string();
+}
+
 GSoapContextAdapter::GSoapContextAdapter(std::string endpoint):
     ServiceAdapter(endpoint), ctx(soap_new2(SOAP_IO_KEEPALIVE, SOAP_IO_KEEPALIVE))
 {
@@ -297,11 +305,11 @@ JobStatus GSoapContextAdapter::getTransferJobStatus (std::string const & jobId, 
     strftime(time_buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&submitTime));
 
     return JobStatus(
-               *resp.getTransferJobStatusReturn->jobID,
-               *resp.getTransferJobStatusReturn->jobStatus,
-               *resp.getTransferJobStatusReturn->clientDN,
-               *resp.getTransferJobStatusReturn->reason,
-               *resp.getTransferJobStatusReturn->voName,
+               strFromStrPtr(resp.getTransferJobStatusReturn->jobID),
+               strFromStrPtr(resp.getTransferJobStatusReturn->jobStatus),
+               strFromStrPtr(resp.getTransferJobStatusReturn->clientDN),
+               strFromStrPtr(resp.getTransferJobStatusReturn->reason),
+               strFromStrPtr(resp.getTransferJobStatusReturn->voName),
                time_buff,
                resp.getTransferJobStatusReturn->numFiles,
                resp.getTransferJobStatusReturn->priority
@@ -465,11 +473,11 @@ JobStatus GSoapContextAdapter::getTransferJobSummary (std::string const & jobId,
     );
 
     return JobStatus(
-               *resp.getTransferJobSummary2Return->jobStatus->jobID,
-               *resp.getTransferJobSummary2Return->jobStatus->jobStatus,
-               *resp.getTransferJobSummary2Return->jobStatus->clientDN,
-               *resp.getTransferJobSummary2Return->jobStatus->reason,
-               *resp.getTransferJobSummary2Return->jobStatus->voName,
+               strFromStrPtr(resp.getTransferJobSummary2Return->jobStatus->jobID),
+               strFromStrPtr(resp.getTransferJobSummary2Return->jobStatus->jobStatus),
+               strFromStrPtr(resp.getTransferJobSummary2Return->jobStatus->clientDN),
+               strFromStrPtr(resp.getTransferJobSummary2Return->jobStatus->reason),
+               strFromStrPtr(resp.getTransferJobSummary2Return->jobStatus->voName),
                time_buff,
                resp.getTransferJobSummary2Return->jobStatus->numFiles,
                resp.getTransferJobSummary2Return->jobStatus->priority,

@@ -218,7 +218,7 @@ void JobStatusGetter::job_status(tns3__JobStatus * & status, bool glite)
         }
     else
         {
-            // throw Err_Custom("requestID <" + requestID + "> was not found");
+            if (!glite) throw Err_Custom("requestID <" + job + "> was not found");
             status = handleStatusExceptionForGLite();
         }
 }
