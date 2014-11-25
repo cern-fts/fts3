@@ -3807,19 +3807,20 @@ unsigned MySqlAPI::getDebugLevel(std::string source_hostname, std::string destin
     try
         {
             unsigned level = 0;
-            soci::indicator isNull = soci::i_ok;
+	    
+	    if(source_hostname.empty() || destin_hostname.empty())
+	    	return 0;
+		
+            soci::statement stmt = (
+                                        sql.prepare << " SELECT debug_level "
+                			" FROM t_debug "
+                			" WHERE source_se = :source OR dest_se= :dest_se and debug_level is NOT NULL LIMIT 1 ",
+                				soci::use(source_hostname),
+                				soci::use(destin_hostname),
+                				soci::into(level));
+            stmt.execute(true);		           
 
-
-            sql <<
-                " SELECT debug_level "
-                " FROM t_debug "
-                " WHERE source_se = :source OR dest_se= :dest_se ",
-                soci::use(source_hostname),
-                soci::use(destin_hostname),
-                soci::into(level, isNull)
-                ;
-
-            if(isNull != soci::i_null)
+            if(sql.got_data())
                 return level;
         }
     catch (std::exception& e)

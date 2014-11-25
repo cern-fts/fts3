@@ -42,25 +42,30 @@ Uri Uri::Parse(const std::string &uri)
  */
 #if SOUP_VERSION_MAJOR == 2 && SOUP_VERSION_MINOR <= 2
     SoupUri* soupUri = soup_uri_new(uri.c_str());
+    if(soupUri)
+    {
+    	u0.Protocol = strptr2str(g_quark_to_string(soupUri->protocol));
+    	u0.Host = strptr2str(soupUri->host);
+    	u0.Port = soupUri->port;
+    	u0.Path = strptr2str(soupUri->path);
+    	u0.QueryString = strptr2str(soupUri->query);
 
-    u0.Protocol = strptr2str(g_quark_to_string(soupUri->protocol));
-    u0.Host = strptr2str(soupUri->host);
-    u0.Port = soupUri->port;
-    u0.Path = strptr2str(soupUri->path);
-    u0.QueryString = strptr2str(soupUri->query);
-
-    soup_uri_free(soupUri);
+    	soup_uri_free(soupUri);
+    }
 /** For EL6 or greater */
 #else
     SoupURI* soupUri = soup_uri_new(uri.c_str());
 
-    u0.Protocol = strptr2str(soup_uri_get_scheme(soupUri));
-    u0.Host = strptr2str(soup_uri_get_host(soupUri));
-    u0.Port = soup_uri_get_port(soupUri);
-    u0.Path = strptr2str(soup_uri_get_path(soupUri));
-    u0.QueryString = strptr2str(soup_uri_get_query(soupUri));
+    if(soupUri)
+    {
+    	u0.Protocol = strptr2str(soup_uri_get_scheme(soupUri));
+    	u0.Host = strptr2str(soup_uri_get_host(soupUri));
+    	u0.Port = soup_uri_get_port(soupUri);
+    	u0.Path = strptr2str(soup_uri_get_path(soupUri));
+    	u0.QueryString = strptr2str(soup_uri_get_query(soupUri));
 
-    soup_uri_free(soupUri);
+    	soup_uri_free(soupUri);
+    }
 #endif
 
     return u0;
