@@ -83,7 +83,7 @@ int fts3::impltns__fileDelete(soap* ctx, tns3__deleteFiles* fileNames,impltns__f
 
                     //checks the url validation...
                     Uri u0 = Uri::Parse(*it);
-                    if(!(u0.Host.length() != 0 && u0.Protocol.length() != 0 && u0.Path.length() != 0))
+                    if(!(u0.Host.length() != 0 && u0.Protocol.length() != 0 && u0.Path.length() != 0 && u0.Protocol.compare("file") != 0))
                         {
                             string errMsg2 = "Something is not right with uri: " + (*it);
                             throw Err_Custom(errMsg2);
