@@ -96,7 +96,7 @@ void FileManagement::setSourceUrl(std::string& source_url)
 void FileManagement::setDestUrl(std::string& dest_url)
 {
     this->dest_url = dest_url;
-    Uri uri = Uri::Parse(source_url);
+    Uri uri = Uri::Parse(dest_url);
     if(uri.Protocol.length() && uri.Host.length())
         {
             dhost = uri.getSeName();
