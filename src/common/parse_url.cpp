@@ -14,22 +14,30 @@ See the License for the specific language governing permissions and
 limitations under the License. */
 
 #include "parse_url.h"
+#include <boost/regex.hpp>
 
-// Yep, really...
-#if SOUP_VERSION_MAJOR == 2 && SOUP_VERSION_MINOR <= 2
-extern "C" {
-#endif
-#include <libsoup/soup-uri.h>
-#if SOUP_VERSION_MAJOR == 2 && SOUP_VERSION_MINOR <= 2
-}
-#endif
+// From http://www.ietf.org/rfc/rfc2396.txt
+// Appendix B
+#define URI_REGEX "^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\\?([^#]*))?(#(.*))?"
 
-static std::string strptr2str(const char* ptr)
+static boost::regex uri_regex(URI_REGEX);
+
+static void extractPort(Uri& u0)
 {
-    if (ptr)
-        return std::string(ptr);
-    else
-        return std::string();
+    size_t bracket_close_i = u0.Host.rfind(']'); // Account for IPv6 in the host name
+    size_t colon_i = u0.Host.rfind(':');
+
+    // No port
+    if (colon_i == std::string::npos)
+        return;
+
+    // IPv6 without port
+    if (bracket_close_i != std::string::npos && bracket_close_i > colon_i)
+        return;
+
+    std::string port_str = u0.Host.substr(colon_i + 1);
+    u0.Host = u0.Host.substr(0, colon_i);
+    u0.Port = atoi(port_str.c_str());
 }
 
 
@@ -37,36 +45,16 @@ Uri Uri::Parse(const std::string &uri)
 {
     Uri u0;
 
-/* Sadly, we need to do some preprocessor here because the Soup version in EL5 is 2.2
- * and it doesn't work quite the same
- */
-#if SOUP_VERSION_MAJOR == 2 && SOUP_VERSION_MINOR <= 2
-    SoupUri* soupUri = soup_uri_new(uri.c_str());
-    if(soupUri)
-    {
-    	u0.Protocol = strptr2str(g_quark_to_string(soupUri->protocol));
-    	u0.Host = strptr2str(soupUri->host);
-    	u0.Port = soupUri->port;
-    	u0.Path = strptr2str(soupUri->path);
-    	u0.QueryString = strptr2str(soupUri->query);
+    boost::smatch matches;
+    if (boost::regex_match(uri, matches, uri_regex, boost::match_posix)) {
+        u0.Protocol = matches[2];
+        u0.Host = matches[4];
+        u0.Path = matches[5];
+        u0.QueryString = matches[7];
 
-    	soup_uri_free(soupUri);
+        // Port is put into Host, so extract it
+        extractPort(u0);
     }
-/** For EL6 or greater */
-#else
-    SoupURI* soupUri = soup_uri_new(uri.c_str());
-
-    if(soupUri)
-    {
-    	u0.Protocol = strptr2str(soup_uri_get_scheme(soupUri));
-    	u0.Host = strptr2str(soup_uri_get_host(soupUri));
-    	u0.Port = soup_uri_get_port(soupUri);
-    	u0.Path = strptr2str(soup_uri_get_path(soupUri));
-    	u0.QueryString = strptr2str(soup_uri_get_query(soupUri));
-
-    	soup_uri_free(soupUri);
-    }
-#endif
 
     return u0;
 }
