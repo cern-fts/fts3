@@ -14,22 +14,18 @@ class Cli:
     
     def _spawn(self, cmdArray, canFail = False):
         logging.debug("Spawning %s" % ' '.join(cmdArray))
-        out = tempfile.NamedTemporaryFile()
-        err = tempfile.NamedTemporaryFile()
-        proc = subprocess.Popen(cmdArray, stdout = out, stderr = err)
+        proc = subprocess.Popen(cmdArray, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
         rcode = proc.wait()
-        out.seek(0)
-        err.seek(0)
         if rcode != 0:
             if canFail:
-                logging.warning(out.read())
-                logging.warning(err.read())
+                logging.warning(proc.stdout.read())
+                logging.warning(proc.stdout.read())
                 return ''
             else:
-                logging.error(out.read())
-                logging.error(err.read())
+                logging.error(proc.stdout.read())
+                logging.error(proc.stderr.read())
                 raise Exception("%s failed with exit code %d" % (cmdArray[0], rcode))
-        return out.read().strip()
+        return proc.stdout.read().strip()
 
 
     def submit(self, transfers, extraArgs = []):
@@ -93,17 +89,17 @@ class Cli:
         self._spawn(cmdArray)
     
     def delete(self, transfers):
-        deletion = tempfile.NamedTemporaryFile(delete = False, suffix = '.deletion')
-        deletion.write(transfers)
-        print str(transfers)
-        deletion.close()
-        
-        cmdArray = ['fts-transfer-delete',
+	deletion = tempfile.NamedTemporaryFile(delete = False, suffix = '.deletion')
+	deletion.write(transfers)
+	print str(transfers)
+	deletion.close()
+	
+	cmdArray = ['fts-transfer-delete',
                     '-s', config.Fts3Endpoint,
                     '-f', deletion.name]
-        jobId = self._spawn(cmdArray)
-        return jobId
-        
+	jobId = self._spawn(cmdArray)
+	return jobId
+	
     def getFileInfo(self, jobId, detailed = False):
         cmdArray = ['fts-transfer-status', '-s', config.Fts3Endpoint, 
                     '--json', '-l', jobId]
@@ -117,7 +113,6 @@ class Cli:
             src = f['source']
             dst = f['destination']
             pairDict[(src,dst)] = f
-        logging.debug(str(pairDict))
         return pairDict
 
 

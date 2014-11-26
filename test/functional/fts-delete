@@ -8,30 +8,30 @@ from lib import base, storage, fts3, config, surl
 
 class TestDelete(base.TestBase):
 
-        def setUp(self):
+	def setUp(self):
             self.transfers = []
 
             for (srcSa, dstSa) in storage.getStoragePairs():
-                srcSurl = self.surl.generate(srcSa)
-                dstSurl = self.surl.generate(dstSa)
-                self.transfers.extend((srcSurl, dstSurl))
-            return self.transfers
+            	srcSurl = self.surl.generate(srcSa)
+            	dstSurl = self.surl.generate(dstSa)
+            	self.transfers.extend((srcSurl, dstSurl))
+	    return self.transfers
 
 
-        def test_delete(self):
-                """
-                Deleting a file must succeed
-                """
-                for transfers in self.transfers:
-                        logging.info("Transfer deleting %s" % (transfers))
-                        self.surl.create(transfers)
-                        jobId = self.client.delete(transfers)
-                        logging.info("Got job id %s" % jobId)
-                        state = self.client.poll(jobId)
-                        logging.info("Finished with %s" % state)
-                        self.assertEqual('FINISHED', state, 'job.state')
-                        self.gctx = gfal2.creat_context()
-                        self.assertRaises(Exception, self.gctx.stat, jobId)
+	def test_delete(self):
+		"""
+		Deleting a file must succeed
+		"""
+		for transfers in self.transfers:
+			logging.info("Transfer deleting %s" % (transfers))
+        	        self.surl.create(transfers)
+			jobId = self.client.delete(transfers)
+	                logging.info("Got job id %s" % jobId)
+	       	        state = self.client.poll(jobId)
+	                logging.info("Finished with %s" % state)
+        	        self.assertEqual('FINISHED', state, 'job.state')
+			self.gctx = gfal2.creat_context()
+			self.assertRaises(Exception, self.gctx.stat, jobId)
 
 
         def test_deleteFailed(self):
@@ -60,7 +60,7 @@ class TestDelete(base.TestBase):
                 myresult.append(transfers)
                 transfers = str('\n'.join(myresult))
                 logging.info("Transfer deleting %s" % (transfers))
-                jobId = self.client.delete(transfers)
+		jobId = self.client.delete(transfers)
                 logging.info("Got job id %s" % jobId)
                 state = self.client.poll(jobId)
                 logging.info("Finished with %s" % state)
@@ -70,5 +70,5 @@ class TestDelete(base.TestBase):
 
 
 if __name__ == '__main__':
-        import sys
-        sys.exit(TestDelete().run())
+	import sys
+	sys.exit(TestDelete().run())

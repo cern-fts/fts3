@@ -7,10 +7,10 @@
 #
 import subprocess
 import sys
-import time, surl
+import time
 from optparse import OptionParser
 from creater import Creater, loadList
-import tempfile
+
 
 def log(msg):
   print >>sys.stderr, "[LOG]", msg
@@ -34,37 +34,24 @@ class Bully:
     if (self.logger):
       self.logger(msg)
 
-  def setUp(self):
-    creater = Creater(self.parallel, self.sources)
-    self.transfers = []
-    for src in creater():
-      src = self.surl.generate(src)
-      self.transfers.extend(src)
-    return self.transfers
-
-
   def _spawn(self, cmdArray, canFail = False):
     log("Spawning %s" % ' '.join(cmdArray))
     proc = subprocess.Popen(cmdArray, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
     rcode = proc.wait()
     if rcode != 0:
       if canFail:
-        #log.warning(proc.stdout.read())
-        #log.warning(proc.stdout.read())
+        log.warning(proc.stdout.read())
+        log.warning(proc.stdout.read())
         return ''
       else:
-        #log.error(proc.stdout.read())
-        #log.error(proc.stderr.read())
+        log.error(proc.stdout.read())
+        log.error(proc.stderr.read())
         raise Exception("%s failed with exit code %d" % (cmdArray[0], rcode))
     return proc.stdout.read().strip()
 
 
   def delete(self, src):
-    deletion = tempfile.NamedTemporaryFile(delete = False, suffix = '.deletion')
-    deletion.write(src)
-    deletion.close()
-
-    cmdArray = ['fts-transfer-delete', '-s', self.endpoint, '-f', deletion.name]
+    cmdArray = ['fts-transfer-delete', '-s', self.endpoint, src]
     jobId = []
     jobId = self._spawn(cmdArray)
     return str(jobId)
@@ -103,26 +90,15 @@ class Bully:
 
     for i in xrange(self.iterations):
       self.log("Iteration %d" % i)
-      transfers= []
+      procs = []
 
       for src in creater:
         self.log("Spawning transfer '%s'" % src)
-        self.surl   = surl.Surl()
-	my =  src.split()
-	for i in my:
-	  self.surl.create(i)
-	result = str('\n'.join(my))
-	print ("START THE TIMER")
-	jobId = self.delete(result)
-        start = time.time()
-	log("Got job id %s" % jobId)
+        jobId = self.delete(src)
+        log("Got job id %s" % jobId)
         state = self.poll(jobId)
-  	log("Finished with %s" % state)
-        end = time.time()
-	print ("END THE TIMER")
-	print ("_______________________________________________________")
-	print end - start
-	n += 1
+	log("Finished with %s" % state)
+        n += 1
 
     return n 
 

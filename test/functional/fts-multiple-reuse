@@ -79,42 +79,7 @@ class TestMultipleReuse(base.TestBase):
                     self.assertEqual('FAILED', files[(src, dst)]['state'], label)
                 i += 1
 
-    def test_multipleWithReuseDirty2(self):
-        """
-        Same as before, but let the first fail. Error message should not
-        affect other transfers
-        """
-        for t in self.transfers:
-            logging.info("Transfer multiple files with reuse, first does not exist")
-            files = []
-            created = []
-            index = 0
-            for (src, dst) in t:
-                logging.info("%s => %s" % (src, dst))
-                if index > 0:
-                    self.surl.create(src)
-                    created.append(src)
-                files.append({'sources': [src], 'destinations': [dst]})
-                index += 1
-
-            jobId = self.client.submit(files, ['-r'])
-            logging.info("Got job id %s" % jobId)
-            state = self.client.poll(jobId)
-            logging.info("Job %s finished with %s" % (jobId, state))
-            self.assertEqual('FINISHEDDIRTY', state, 'job.state')
-
-            files = self.client.getFileInfo(jobId)
-            i = 0 
-            for (src, dst) in files.keys():
-                label = 'job.files[' + str(i) + ']'
-                if src in created:
-                    self.assertEqual('FINISHED', files[(src, dst)]['state'], label + '.state')
-                    self.assertEqual('', files[(src, dst)]['reason'], label + '.reason')
-                else:
-                    self.assertEqual('FAILED', files[(src, dst)]['state'], label + '.state')
-                    self.assertEqual('SOURCE Failed to get source file', files[(src, dst)]['reason'][:32], label + '.reason')
-                i += 1
-
+        
 
 if __name__ == '__main__':
     import sys

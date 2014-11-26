@@ -4,19 +4,14 @@
 .SH NAME
 fts-set-debug
 .SH SYNOPSIS
-fts-set-debug [options] LEVEL
+fts-set-debug [options] MODE SOURCE DEST
 .SH DESCRIPTION
-fts-set-debug is a tool for setting the debug mode to one of the possible levels: 0, 1, 2 or 3 for a source SE, destination SE or a SE pair.  
+fts-set-debug is a tool for switching the debug mode on/off in a single SE or SE pair, accepted values for MODE are 'on' and 'off', to set a single SE to debug mode just specify the SOURCE  
 .SH OPTIONS
   -h [ --help ]         Print this help text and exit.
   -q [ --quite ]        Quiet operation.
   -v [ --verbose ]      Be more verbose.
   -s [ --service ] arg  Use the transfer service at the specified URL.
   -V [ --version ]      Print the version number and exit.
-
-  --source arg          Source SE.
-                        (Example: --source $SE_NAME)
-  --destination arg     Destination SE.
-                        (Example: --destination $SE_NAME)
 .SH SEE ALSO
 https://svnweb.cern.ch/trac/fts3/wiki/UserGuide
