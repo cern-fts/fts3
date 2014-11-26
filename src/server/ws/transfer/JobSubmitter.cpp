@@ -71,7 +71,7 @@ const string JobSubmitter::srm_protocol = "srm";
 static void checkValidUrl(const std::string &uri)
 {
     Uri u0 = Uri::Parse(uri);
-    bool ok = u0.Host.length() != 0 && u0.Protocol.length() != 0 && u0.Path.length() != 0;
+    bool ok = u0.Host.length() != 0 && u0.Protocol.length() != 0 && u0.Path.length() != 0 && u0.Protocol.compare("file") != 0;
     if (!ok)
         {
             std::string errMsg = "Not valid uri format, check submitted uri's";
