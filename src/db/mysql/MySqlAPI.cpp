@@ -759,7 +759,7 @@ void MySqlAPI::getVOPairs(std::vector< boost::tuple<std::string, std::string, st
 
     try
         {
-            soci::rowset<soci::row> rs1 = (sql.prepare << "select distinct  f.dest_se, f.source_se from t_file f where f.job_finished is NULL and  f.file_state = 'SUBMITTED'");
+            soci::rowset<soci::row> rs1 = (sql.prepare << "select distinct  f.dest_se, f.source_se from t_file f where f.file_state = 'SUBMITTED'");
 
             soci::rowset<soci::row> rs2 = (sql.prepare <<
                                            " select distinct vo_name from t_job ");
