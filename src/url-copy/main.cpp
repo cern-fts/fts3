@@ -1494,6 +1494,7 @@ stop:
                         }
                     turlVector.clear();
 
+		    /*Do not remove it, just in case we need it in the future
                     if (opts.bringOnline > 0)
                         {
                             logger.INFO() << "Token will be unpinned: " << currentTransfer.tokenBringOnline << std::endl;
@@ -1509,6 +1510,7 @@ stop:
                                     logger.INFO() << "Token unpinned: " << currentTransfer.tokenBringOnline << std::endl;
                                 }
                         }
+		     */
                 }
 
 
