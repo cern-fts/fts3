@@ -753,27 +753,13 @@ void MySqlAPI::getVOPairs(std::vector< boost::tuple<std::string, std::string, st
     std::string vo_name;
 
     std::vector<boost::tuple<std::string, std::string> > distinctSourceDest;
-    std::vector<std::string> distinctVO;
     soci::indicator isNull = soci::i_ok;
-    std::string query_distinct = "select distinct  f.dest_se, f.source_se from t_file f where f.file_state = 'SUBMITTED' AND f.job_finished is NULL ";
         
     try
         {
-            soci::rowset<soci::row> rs1 = (sql.prepare << query_distinct);
+           soci::rowset<soci::row> rs1 = (sql.prepare << "select f.vo_name, f.source_se, f.dest_se from t_file f where f.file_state = 'SUBMITTED'  group by f.vo_name, f.source_se, f.dest_se order by null");
 
-            for (soci::rowset<soci::row>::const_iterator i1 = rs1.begin(); i1 != rs1.end(); ++i1)
-                {
-                    soci::row const& r1 = *i1;
-                    source_se = r1.get<std::string>("source_se","");
-                    dest_se = r1.get<std::string>("dest_se","");
-                    distinctSourceDest.push_back(boost::make_tuple(source_se, dest_se));
-                }
-		
-        
-            soci::rowset<soci::row> rs2 = (sql.prepare <<
-                                           " select distinct vo_name from t_job ");
-
-            soci::statement stmt1 = (sql.prepare <<
+           soci::statement stmt1 = (sql.prepare <<
                                      "select file_id from t_file where source_se=:source_se and dest_se=:dest_se and vo_name=:vo_name and file_state='SUBMITTED' AND (hashed_id >= :hashStart AND hashed_id <= :hashEnd) LIMIT 1",
                                      soci::use(source_se),
                                      soci::use(dest_se),
@@ -781,37 +767,26 @@ void MySqlAPI::getVOPairs(std::vector< boost::tuple<std::string, std::string, st
                                      soci::use(hashSegment.start),
                                      soci::use(hashSegment.end),
                                      soci::into(file_id, isNull));	   
-
-
-            for (soci::rowset<soci::row>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
+ 
+            for (soci::rowset<soci::row>::const_iterator i1 = rs1.begin(); i1 != rs1.end(); ++i1)
                 {
-                    soci::row const& r2 = *i2;
-                    vo_name = r2.get<std::string>("vo_name","");
-                    distinctVO.push_back(vo_name);
-                }
-
-            for (std::vector<boost::tuple<std::string, std::string> >::const_iterator i = distinctSourceDest.begin(); i != distinctSourceDest.end(); ++i)
-                {
-                    boost::tuple<std::string, std::string> triplet = *i;
-                    source_se =  boost::get<0>(triplet);
-                    dest_se   = boost::get<1>(triplet);
-
-                    for (std::vector<std::string>::const_iterator j = distinctVO.begin(); j != distinctVO.end(); ++j)
-                        {
-                            vo_name = *j;
-                            file_id = 0; //reset
-                            stmt1.execute(true);
-                            if(isNull != soci::i_null && file_id > 0)
-                                {
-                                    distinct.push_back(
+                    soci::row const& r1 = *i1;
+		    vo_name = r1.get<std::string>("vo_name","");
+                    source_se = r1.get<std::string>("source_se","");
+                    dest_se = r1.get<std::string>("dest_se","");
+		    
+ 	            file_id = 0; //reset
+                    stmt1.execute(true);
+		    if(isNull != soci::i_null && file_id > 0)
+		    {
+			distinct.push_back(
                                         boost::tuple< std::string, std::string, std::string>(
                                             source_se,
                                             dest_se,
                                             vo_name
                                         )
-                                    );
-                                }
-                        }
+                                    );		    
+		    }
                 }
         }
     catch (std::exception& e)
