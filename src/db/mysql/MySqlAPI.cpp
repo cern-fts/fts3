@@ -18,6 +18,7 @@
  *
  */
 
+#include <sys/time.h>
 #include <boost/lexical_cast.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/regex.hpp>
@@ -44,6 +45,16 @@ using namespace db;
 
 #define TIME_TO_SLEEP_BETWEEN_TRANSACTION_RETRIES 1
 
+
+static double elapsed_secs = 0;
+
+static double get_time()
+{
+    struct timeval t;
+    gettimeofday(&t, NULL);
+    double d = double(t.tv_sec);
+    return d;
+}
 
 
 static unsigned getHashedId(void)
@@ -755,12 +766,31 @@ void MySqlAPI::getVOPairs(std::vector< boost::tuple<std::string, std::string, st
     std::vector<boost::tuple<std::string, std::string> > distinctSourceDest;
     std::vector<std::string> distinctVO;
     soci::indicator isNull = soci::i_ok;
-
-
+    std::string query_distinct = "select distinct  f.dest_se, f.source_se from t_file f where f.file_state = 'SUBMITTED'";
+        
     try
         {
-            soci::rowset<soci::row> rs1 = (sql.prepare << "select distinct  f.dest_se, f.source_se from t_file f where f.file_state = 'SUBMITTED'");
+	    if(elapsed_secs > 2)
+	    {
+	    	query_distinct += " AND f.job_finished is NULL ";
+	    }
+	
+	    double time_start = get_time();	    
+	    
+            soci::rowset<soci::row> rs1 = (sql.prepare << query_distinct);
 
+            for (soci::rowset<soci::row>::const_iterator i1 = rs1.begin(); i1 != rs1.end(); ++i1)
+                {
+                    soci::row const& r1 = *i1;
+                    source_se = r1.get<std::string>("source_se","");
+                    dest_se = r1.get<std::string>("dest_se","");
+                    distinctSourceDest.push_back(boost::make_tuple(source_se, dest_se));
+                }
+		
+            double time_end = get_time();
+	    	
+	    elapsed_secs = time_end - time_start;
+	    
             soci::rowset<soci::row> rs2 = (sql.prepare <<
                                            " select distinct vo_name from t_job ");
 
@@ -771,15 +801,7 @@ void MySqlAPI::getVOPairs(std::vector< boost::tuple<std::string, std::string, st
                                      soci::use(vo_name),
                                      soci::use(hashSegment.start),
                                      soci::use(hashSegment.end),
-                                     soci::into(file_id, isNull));
-
-            for (soci::rowset<soci::row>::const_iterator i1 = rs1.begin(); i1 != rs1.end(); ++i1)
-                {
-                    soci::row const& r1 = *i1;
-                    source_se = r1.get<std::string>("source_se","");
-                    dest_se = r1.get<std::string>("dest_se","");
-                    distinctSourceDest.push_back(boost::make_tuple(source_se, dest_se));
-                }
+                                     soci::into(file_id, isNull));	   
 
 
             for (soci::rowset<soci::row>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
