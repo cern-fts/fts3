@@ -5029,6 +5029,8 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                                     timeout = extractTimeout(params);
                                     if(timeout == 0)
                                         timeout = 7200;
+				    else
+				        timeout += 3600;					
                                 }
                             else
                                 {
