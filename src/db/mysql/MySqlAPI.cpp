@@ -4044,7 +4044,7 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
 		soci::into(activeSource, isNull1), 
 		soci::into(activeDestination, isNull2);
 
-              if( (isNull1 == soci::i_ok && activeSource >= maxSource) || (isNull2 == soci::i_ok && activeDestination >= maxDestination) || maxActive >= MAX_ACTIVE_PER_LINK)
+              if( (isNull1 != soci::i_null && activeSource >= maxSource) || (isNull2 != soci::i_null && activeDestination >= maxDestination) || maxActive >= MAX_ACTIVE_PER_LINK)
     	        {
 		  allowed = false;      
 		} 
