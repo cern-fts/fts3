@@ -4024,7 +4024,7 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
                 }
 
              //stop here to respect fixed for a given link
-             if (isNullFixed == soci::i_ok && active_fixed == "on")
+             if (isNullFixed != soci::i_null && active_fixed == "on")
                         return allowed;
 
              //make sure it doesn't grow beyond the limits
