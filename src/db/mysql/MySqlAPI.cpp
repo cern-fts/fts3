@@ -4638,6 +4638,8 @@ bool MySqlAPI::updateOptimizer()
                     bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, rateStored, throughputEMA, thrStored, retry, retryStored, maxActive, activeStored, throughputSamples, thrSamplesStored);
                     if(!changed && retry > 0)
                         changed = true;
+		    else if(ratioSuccessFailure == 0)
+		        changed = true;
 
                     //check if bandwidth limitation exists, if exists and throughput exceeds the limit then do not proccess with auto-tuning
                     int bandwidthIn = 0;
