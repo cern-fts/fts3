@@ -14,62 +14,47 @@ See the License for the specific language governing permissions and
 limitations under the License. */
 
 #include "parse_url.h"
+#include <boost/regex.hpp>
 
-void parse_url(const char *url,
-               char **scheme, char **host, int *port, char **path)
+// From http://www.ietf.org/rfc/rfc2396.txt
+// Appendix B
+#define URI_REGEX "^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\\?([^#]*))?(#(.*))?"
+
+static boost::regex uri_regex(URI_REGEX);
+
+static void extractPort(Uri& u0)
 {
-    char *p=NULL, *q=NULL;
+    size_t bracket_close_i = u0.Host.rfind(']'); // Account for IPv6 in the host name
+    size_t colon_i = u0.Host.rfind(':');
 
-    *scheme = *host = *path = 0;
-    *port = -1;
+    // No port
+    if (colon_i == std::string::npos)
+        return;
 
-    for(p = (char *)url; *p; p++)
-        if(*p == ':' || *p == '/')
-            break;
+    // IPv6 without port
+    if (bracket_close_i != std::string::npos && bracket_close_i > colon_i)
+        return;
 
-    if(p > url && *p == ':')
-        {
-            *scheme = (char*) malloc((size_t) (p - url + 1));
-            strncpy(*scheme, url, (size_t) (p - url));
-            (*scheme)[p - url] = '\0';
-            url = p+1;
-        }
-
-    if(url[0] == '/' && url[1] == '/')
-        {
-            url += 2;
-
-            for(p = (char *)url; *p; p++)
-                if(*p == '/')
-                    break;
-
-            /* Does it have a port number? */
-
-            for(q = p-1; q >= url; q--)
-                if(!isdigit(*q))
-                    break;
-
-            if(q < p-1 && *q == ':')
-                *port = atoi(q+1);
-            else
-                q = p;
-
-            *host = (char*) malloc((size_t) (q - url + 1));
-            strncpy(*host, url, (size_t) (q - url));
-            (*host)[q - url] = '\0';
-            url = p;
-        }
-
-    if(*url)
-        *path = strdup(url);
-    else
-        *path = strdup("/");
-
-    for(p=*path; *p; p++)
-        if(*p == '\\')
-            {
-                *p = '/';
-            }
+    std::string port_str = u0.Host.substr(colon_i + 1);
+    u0.Host = u0.Host.substr(0, colon_i);
+    u0.Port = atoi(port_str.c_str());
 }
 
 
+Uri Uri::Parse(const std::string &uri)
+{
+    Uri u0;
+
+    boost::smatch matches;
+    if (boost::regex_match(uri, matches, uri_regex, boost::match_posix)) {
+        u0.Protocol = matches[2];
+        u0.Host = matches[4];
+        u0.Path = matches[5];
+        u0.QueryString = matches[7];
+
+        // Port is put into Host, so extract it
+        extractPort(u0);
+    }
+
+    return u0;
+}

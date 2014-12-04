@@ -74,7 +74,6 @@ int fts3::impltns__fileDelete(soap* ctx, tns3__deleteFiles* fileNames,impltns__f
             string dn = cgsi.getClientDn();
 
             string hostN;
-            const regex fileUrlRegex("([a-zA-Z][a-zA-Z0-9+\.-]*://[a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
 
             map<string, string> rulsHost;
             vector<string>::iterator it;
@@ -89,17 +88,8 @@ int fts3::impltns__fileDelete(soap* ctx, tns3__deleteFiles* fileNames,impltns__f
                             string errMsg2 = "Something is not right with uri: " + (*it);
                             throw Err_Custom(errMsg2);
                         }
-                    smatch what;
-                    if (regex_match(*it, what,fileUrlRegex, match_extra))
-                        {
-                            // indexes are shifted by 1 because at index 0 is the whole string
-                            hostN =  string(what[1]);
-                        }
-                    else
-                        {
-                            string errMsg = "Can't extract hostname from url: " + (*it);
-                            throw Err_Custom(errMsg);
-                        }
+
+                    hostN = u0.getSeName();
 
                     // correlates the file url with its' hostname
                     rulsHost.insert(pair<string, string>((*it),hostN));

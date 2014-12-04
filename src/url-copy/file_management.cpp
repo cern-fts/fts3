@@ -31,13 +31,14 @@ limitations under the License. */
 #include <sys/dir.h>
 #include <errno.h>
 #include <fstream>
+#include <string.h>
 
 
 using namespace std;
 
 
 
-FileManagement::FileManagement() :file_id(0), logFileName("/var/log/fts3/"), base_scheme(NULL), base_host(NULL), base_path(NULL), base_port(0), castor(false)
+FileManagement::FileManagement() :file_id(0), logFileName("/var/log/fts3/"), castor(false)
 {
     try
         {
@@ -78,47 +79,34 @@ std::string FileManagement::getLogFilePath()
 void FileManagement::setSourceUrl(std::string& source_url)
 {
     this->source_url = source_url;
-    //source
-    parse_url(source_url.c_str(), &base_scheme, &base_host, &base_port, &base_path);
-    if(base_scheme && base_host)
+    Uri uri = Uri::Parse(source_url);
+
+    if(uri.Protocol.length() && uri.Host.length())
         {
-            shost = std::string(base_scheme) + "://" + std::string(base_host);
-            shostFile = std::string(base_host);
+            shost = uri.getSeName();
+            shostFile = uri.Host;
         }
     else
         {
             shost = std::string("invalid") + "://" + std::string("invalid");
             shostFile = std::string("invalid");
         }
-    if (base_scheme)
-        free(base_scheme);
-    if (base_host)
-        free(base_host);
-    if (base_path)
-        free(base_path);
 }
 
 void FileManagement::setDestUrl(std::string& dest_url)
 {
     this->dest_url = dest_url;
-    //dest
-    parse_url(dest_url.c_str(), &base_scheme, &base_host, &base_port, &base_path);
-    if(base_scheme && base_host)
+    Uri uri = Uri::Parse(dest_url);
+    if(uri.Protocol.length() && uri.Host.length())
         {
-            dhost = std::string(base_scheme) + "://" + std::string(base_host);
-            dhostFile = std::string(base_host);
+            dhost = uri.getSeName();
+            dhostFile = uri.Host;
         }
     else
         {
             dhost = std::string("invalid") + "://" + std::string("invalid");
             dhostFile = std::string("invalid");
         }
-    if (base_scheme)
-        free(base_scheme);
-    if (base_host)
-        free(base_host);
-    if (base_path)
-        free(base_path);
 }
 
 void FileManagement::setFileId(unsigned file_id)

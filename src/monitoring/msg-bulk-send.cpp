@@ -60,6 +60,9 @@
 
 using namespace std;
 
+const char* config_file = "/etc/fts3/fts-msg-monitoring.conf";
+int requiredMode = R_OK;
+
 int proc_find()
 {
     DIR* dir=NULL;
@@ -187,11 +190,18 @@ int main(int argc,  char** /*argv*/)
             return EXIT_FAILURE;
         }
 
-
     //switch to non-priviledged user to avoid reading the hostcert
     uid_t pw_uid = name_to_uid();
     setuid(pw_uid);
     seteuid(pw_uid);
+
+    //check of the file is readable
+    if (access(config_file, requiredMode) != 0)
+       {
+
+            std::cerr << "Not enough permissions on " << config_file << " to read" << std::endl;
+            return EXIT_FAILURE;
+       }
 
     if(argc > 1) //if any param is provided stay attached to terminal
         {

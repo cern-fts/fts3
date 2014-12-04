@@ -64,11 +64,9 @@ using namespace boost;
 using namespace boost::assign;
 
 
-const regex JobSubmitter::fileUrlRegex("([a-zA-Z][a-zA-Z0-9+\.-]*://[a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
-
 const string JobSubmitter::srm_protocol = "srm";
 
-static void checkValidUrl(const std::string &uri)
+static Uri checkValidUrl(const std::string &uri)
 {
     Uri u0 = Uri::Parse(uri);
     bool ok = u0.Host.length() != 0 && u0.Protocol.length() != 0 && u0.Path.length() != 0 && u0.Protocol.compare("file") != 0;
@@ -77,6 +75,7 @@ static void checkValidUrl(const std::string &uri)
             std::string errMsg = "Not valid uri format, check submitted uri's";
             throw Err_Custom(errMsg);
         }
+    return u0;
 }
 
 JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob *job, bool delegation) :
@@ -474,20 +473,7 @@ void JobSubmitter::checkProtocol(string file, bool source)
 
 string JobSubmitter::fileUrlToSeName(string url, bool source)
 {
-    checkValidUrl(url);
-    //checkProtocol(url, source);
-
-    smatch what;
-    if (regex_match(url, what, fileUrlRegex, match_extra))
-        {
-            // indexes are shifted by 1 because at index 0 is the whole string
-            return string(what[1]);
-
-        }
-    else
-        {
-            string errMsg = "Can't extract hostname from url: " + url;
-            throw Err_Custom(errMsg);
-        }
+    Uri u0 = checkValidUrl(url);
+    return u0.getSeName();
 }
 
