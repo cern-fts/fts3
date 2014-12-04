@@ -113,8 +113,8 @@ class OverviewExtended(object):
             query = """
             SELECT AVG(throughput), AVG(tx_duration) FROM t_file
             WHERE source_se = %s AND dest_se = %s AND vo_name = %s
-                AND file_state = 'FINISHED' AND throughput > 0
-                AND job_finished > """ + _db_to_date()
+                AND file_state in ('ACTIVE','FINISHED') AND throughput > 0
+                AND (job_finished is NULL OR job_finished > """ + _db_to_date() + ")"
             self.cursor.execute(query, [source, destination, vo, self.not_before])
             result = self.cursor.fetchall()
             if len(result):
