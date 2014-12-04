@@ -4631,6 +4631,7 @@ bool MySqlAPI::updateOptimizer()
                     if (isNullMaxActive == soci::i_null)
                         maxActive = highDefault;
 
+
                     //The smaller alpha becomes the longer moving average is. ( e.g. it becomes smoother, but less reactive to new samples )
                     double throughputEMA = ceil(exponentialMovingAverage( throughput, EMA, ema));
 
@@ -4640,6 +4641,7 @@ bool MySqlAPI::updateOptimizer()
                         changed = true;
 		    else if(ratioSuccessFailure == 0)
 		        changed = true;
+			
 
                     //check if bandwidth limitation exists, if exists and throughput exceeds the limit then do not proccess with auto-tuning
                     int bandwidthIn = 0;
@@ -4748,42 +4750,42 @@ bool MySqlAPI::updateOptimizer()
                                     updateOptimizerEvolution(sql, source_hostname, destin_hostname, maxActive, throughput, ratioSuccessFailure, 14, bandwidthIn);
                                     continue;
                                 }
-
+				
                             sql.begin();
 
                             if( (ratioSuccessFailure == MAX_SUCCESS_RATE || (ratioSuccessFailure > rateStored && ratioSuccessFailure >= MED_SUCCESS_RATE )) && throughputEMA > 0 &&  retry <= retryStored)
                                 {
                                     if(throughputEMA > thrStored)
                                         {
-                                            active = maxActive + 1;
+                                            active = ((maxActive + 1) < highDefault)? highDefault: (maxActive + 1);
                                             pathFollowed = 2;
                                         }
                                     else if((throughputEMA >= HIGH_THROUGHPUT || avgDuration <= AVG_TRANSFER_DURATION))
                                         {
-                                            active = maxActive + 1;
+                                            active = ((maxActive + 1) < highDefault)? highDefault: (maxActive + 1);
                                             pathFollowed = 3;
                                         }
                                     else if(throughputSamples == 10 && throughputEMA >= thrStored)
                                         {
-                                            active = maxActive + 1;
+                                            active = ((maxActive + 1) < highDefault)? highDefault: (maxActive + 1);
                                             pathFollowed = 4;
                                         }
                                     else if( (singleDest == 1 || lanTransferBool) && (throughputEMA >= thrStored || avgDuration <= AVG_TRANSFER_DURATION) )
                                         {
                                             if(spawnActive > 1)
                                                 {
-                                                    active = maxActive + 2;
+                                            active = ((maxActive + 2) < highDefault)? highDefault: (maxActive + 2);
                                                     pathFollowed = 5;
                                                 }
                                             else
                                                 {
-                                                    active = maxActive + 1;
+                                            active = ((maxActive + 1) < highDefault)? highDefault: (maxActive + 1);
                                                     pathFollowed = 5;
                                                 }
                                         }
                                     else
                                         {
-                                            active = maxActive;
+                                            active = ((maxActive) < highDefault)? highDefault: (maxActive);
                                             pathFollowed = 6;
                                         }
 
@@ -4817,7 +4819,7 @@ bool MySqlAPI::updateOptimizer()
                                                 }
                                             else
                                                 {
-                                                    active = maxActive;
+                                                    active = ((maxActive) < highDefault)? highDefault: (maxActive);
                                                     pathFollowed = 11;
                                                 }
                                         }
@@ -4828,7 +4830,7 @@ bool MySqlAPI::updateOptimizer()
                                 {
                                     if(ratioSuccessFailure > rateStored && ratioSuccessFailure == BASE_SUCCESS_RATE && retry <= retryStored)
                                         {
-                                            active = maxActive;
+                                            active = ((maxActive) < highDefault)? highDefault: (maxActive);
                                             pathFollowed = 12;
                                         }
                                     else
@@ -4841,13 +4843,14 @@ bool MySqlAPI::updateOptimizer()
                                 }
                             else
                                 {
-                                    active = maxActive;
+                                    active = ((maxActive) < highDefault)? highDefault: (maxActive);
                                     pathFollowed = 14;
                                     ema = throughputEMA;
                                     stmt10.execute(true);
                                 }
 
                             sql.commit();
+
 
                             updateOptimizerEvolution(sql, source_hostname, destin_hostname, active, throughput, ratioSuccessFailure, pathFollowed, bandwidthIn);
 
