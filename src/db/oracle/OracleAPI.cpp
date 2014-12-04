@@ -4246,6 +4246,13 @@ bool OracleAPI::updateOptimizer()
                                 {
                                     if(ratioSuccessFailure >= MED_SUCCESS_RATE )
                                         {
+ 					    sql.begin();
+                                            active = maxActive;
+                                            pathFollowed = 13;
+                                            ema = throughputEMA;
+                                            stmt10.execute(true);
+                                            sql.commit();
+
                                             updateOptimizerEvolution(sql, source_hostname, destin_hostname, maxActive, throughput, ratioSuccessFailure, 1, bandwidthIn);
                                             continue;
                                         }
