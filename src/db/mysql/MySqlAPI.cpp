@@ -37,6 +37,9 @@
 #include "sociConversions.h"
 #include "queue_updater.h"
 #include "DbUtils.h"
+#include <random>
+#include <stdint.h>
+#include <unistd.h>
 
 #include "common/JobStatusHandler.h"
 
@@ -56,7 +59,7 @@ static unsigned getHashedId(void)
     };
     static __thread char statbuf[16] = {0};
 
-    if (rand_data.fptr == NULL)
+    if (rand_data.state == NULL)
         {
             initstate_r(static_cast<unsigned>(time(NULL)), statbuf, sizeof(statbuf), &rand_data);
         }
@@ -1716,6 +1719,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
             int insert_index = 0;
 
             soci::statement insert_file_stmt(sql);
+	    
 
             for (iter = src_dest_pair.begin(); iter != src_dest_pair.end(); ++iter)
                 {
@@ -1738,6 +1742,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
                     else if (mreplica)
                         {
                             iter->fileIndex = 0;
+			    iter->hashedId = jobHashedId;
                             if(index == 0) //only the first file
                                 iter->state = "SUBMITTED";
                             else
@@ -1760,6 +1765,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
                         {
                             iter->hashedId = getHashedId();
                         }
+			
 
                     //get distinct source_se / dest_se
                     Key p1 (iter->source_se, iter->dest_se);

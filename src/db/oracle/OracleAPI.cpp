@@ -48,7 +48,7 @@ static unsigned getHashedId(void)
     };
     static __thread char statbuf[16] = {0};
 
-    if (rand_data.fptr == NULL)
+    if (rand_data.state == NULL)
         {
             initstate_r(static_cast<unsigned>(time(NULL)), statbuf, sizeof(statbuf), &rand_data);
         }
@@ -1734,6 +1734,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
                     else if (mreplica)
                         {
                             iter->fileIndex = 0;
+			    iter->hashedId = jobHashedId;
                             if(index == 0) //only the first file
                                 iter->state = "SUBMITTED";
                             else
