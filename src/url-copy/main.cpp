@@ -1178,8 +1178,14 @@ int main(int argc, char **argv)
                 globalTimeout = experimentalTimeout + 3600;
                 logger.INFO() << "Resetting global timeout thread to " << globalTimeout << " seconds" << std::endl;
 
-                //tune streams based on levels
-                if( (!opts.manualConfig || opts.autoTunned) && opts.level == 3)
+                //tune streams based on levels and/or session reuse
+		if (!opts.multihop && opts.reuse)
+		    {
+		    	opts.nStreams = 1;
+			gfalt_set_nbstreams(params, opts.nStreams, NULL);
+                        gfalt_set_tcp_buffer_size(params, 0, NULL);
+                    }
+                else if( (!opts.manualConfig || opts.autoTunned) && opts.level == 3)
                     {
                         int tcp_buffer_size = 8388608; //8MB
                         int tcp_streams_max = 16;
@@ -1262,7 +1268,7 @@ int main(int argc, char **argv)
 
                 //it a token exists, then the file was earlier attempted to be brought online
                 //increase timeout to make sure it will be brought again ONLINE if it is NEARLINE
-                if(!std::string(currentTransfer.tokenBringOnline).empty())
+                if(!std::string(currentTransfer.tokenBringOnline).empty() && std::string(currentTransfer.tokenBringOnline) != "x")
                     {
                         gfal2_set_opt_integer(handle, "SRM PLUGIN", "OPERATION_TIMEOUT", 3600, NULL);
                         logger.INFO() << "Increase SRM timeout to " <<  3600 << " to make sure the file for token " << currentTransfer.tokenBringOnline << " is still ONLINE" << std::endl;
