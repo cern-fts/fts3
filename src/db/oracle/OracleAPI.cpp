@@ -4162,6 +4162,8 @@ bool OracleAPI::updateOptimizer()
                     bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, rateStored, throughputEMA, thrStored, retry, retryStored, maxActive, activeStored, throughputSamples, thrSamplesStored);
                     if(!changed && retry > 0)
                         changed = true;
+		    else if(ratioSuccessFailure == 0) 
+ 			changed = true; 			
 
                     //check if bandwidth limitation exists, if exists and throughput exceeds the limit then do not proccess with auto-tuning
                     int bandwidthIn = 0;
@@ -4549,6 +4551,8 @@ void OracleAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                                     timeout = extractTimeout(params);
                                     if(timeout == 0)
                                         timeout = 7200;
+				    else
+				     	timeout += 3600;	
                                 }
                             else
                                 {
