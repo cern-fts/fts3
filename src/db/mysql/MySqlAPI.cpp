@@ -10539,15 +10539,27 @@ void MySqlAPI::setDrain(bool drain)
 {
 
     soci::session sql(*connectionPool);
+    unsigned index=0, count1=0, start=0, end=0;
+    std::string service_name = "fts_server";
 
     try
         {
-            sql.begin();
             if(drain == true)
-                sql << " update t_hosts set drain=1 where hostname = :hostname ",soci::use(hostname);
-            else
-                sql << " update t_hosts set drain=0 where hostname = :hostname ",soci::use(hostname);
-            sql.commit();
+            {
+            	sql.begin();
+                	sql << " update t_hosts set drain=1 where hostname = :hostname ",soci::use(hostname);
+            	sql.commit();
+            }
+           else
+           {
+	    	//update heartbeat first to avoid overlapping of hash range when moving out of draining mode
+   	    	updateHeartBeatInternal(sql, &index, &count1, &start, &end, service_name);
+	    	sleep(2);
+
+            	sql.begin();
+                	sql << " update t_hosts set drain=0 where hostname = :hostname ",soci::use(hostname);
+            	sql.commit();
+            }
         }
     catch (std::exception& e)
         {
