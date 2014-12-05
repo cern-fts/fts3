@@ -3865,10 +3865,10 @@ bool OracleAPI::updateOptimizer()
                     source_hostname = i->get<std::string>("SOURCE_SE");
                     destin_hostname = i->get<std::string>("DEST_SE");
 
-
+                    sql.begin();
                     sql << " UPDATE t_optimize_active set datetime = sys_extract_utc(systimestamp) WHERE source_se=:source_se and dest_se=:dest_se",
                         soci::use(source_hostname),soci::use(destin_hostname);
-
+                    sql.commit();
 
                     double nFailedLastHour=0.0, nFinishedLastHour=0.0;
                     throughput=0.0;

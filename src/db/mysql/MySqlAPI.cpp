@@ -4361,7 +4361,13 @@ bool MySqlAPI::updateOptimizer()
                     recordsFound = true;
 
                     source_hostname = i->get<std::string>("source_se");
-                    destin_hostname = i->get<std::string>("dest_se");                    
+                    destin_hostname = i->get<std::string>("dest_se");   
+		    
+		    
+                    sql.begin();
+                    sql << " UPDATE t_optimize_active set datetime = UTC_TIMESTAMP() WHERE source_se=:source_se and dest_se=:dest_se",
+                        soci::use(source_hostname),soci::use(destin_hostname);
+                    sql.commit();		                     
 
                     double nFailedLastHour=0.0, nFinishedLastHour=0.0;
                     throughput=0.0;
