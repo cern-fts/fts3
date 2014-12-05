@@ -18,9 +18,9 @@ from datetime import datetime, timedelta
 from django.db import connection
 from django.db.models import Count
 import types
-import sys
 
 from ftsweb.models import Job, File, OptimizeActive
+from authn import require_certificate
 from jobs import setup_filters
 from jsonify import jsonify
 from util import get_order_by, paged
@@ -146,6 +146,7 @@ class OverviewExtended(object):
             return self.objects[indexes]
 
 
+@require_certificate
 @jsonify
 def get_overview(http_request):
     filters = setup_filters(http_request)

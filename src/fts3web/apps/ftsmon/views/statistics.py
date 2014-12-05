@@ -23,6 +23,7 @@ from django.db.utils import DatabaseError
 from ftsweb.models import Job, File, Host
 from ftsweb.models import ProfilingSnapshot, ProfilingInfo, Turl
 from ftsweb.models import ACTIVE_STATES, STATES
+from authn import require_certificate
 from jsonify import jsonify, jsonify_paged, as_json
 from slsfy import slsfy, slsfy_error
 from util import get_order_by, ordered_field
@@ -90,6 +91,7 @@ def _get_retried_stats(timewindow, hostname):
     return retried
 
 
+@require_certificate
 @jsonify
 def get_overview(http_request):
     hostname = http_request.GET.get('hostname', None)
@@ -158,6 +160,7 @@ def _get_host_service_and_segment():
     return host_map
 
 
+# This one does not require certificate, so the Service Level can be still queried
 def get_servers(http_request):
     format = http_request.GET.get('format', None)
     try:
@@ -196,6 +199,7 @@ def get_servers(http_request):
             return as_json(dict(exception=str(e)))
 
 
+@require_certificate
 @jsonify
 def get_pervo(http_request):
     not_before = datetime.utcnow() - timedelta(minutes=30)
@@ -258,6 +262,7 @@ class CalculateVolume(object):
             yield triplet
 
 
+@require_certificate
 @jsonify_paged
 def get_transfer_volume(http_request):
     try:
@@ -293,6 +298,7 @@ def get_transfer_volume(http_request):
     return CalculateVolume(triplets, not_before)
 
 
+@require_certificate
 @jsonify_paged
 def get_turls(http_request):
     try:
@@ -320,6 +326,7 @@ def get_turls(http_request):
     return turls.all()
 
 
+@require_certificate
 @jsonify
 def get_profiling(http_request):
     profiling = {}
@@ -372,6 +379,7 @@ def _slow_entry_to_dict(queries):
         }
 
 
+@require_certificate
 @jsonify
 def get_slow_queries(http_request):
     engine = settings.DATABASES['default']['ENGINE']
