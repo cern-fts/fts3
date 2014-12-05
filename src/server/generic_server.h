@@ -42,12 +42,10 @@ public:
         typename TRAITS::ProcessQueueType queueHandler;
         queueHandler.executeTransfer_p();
 
-        sleep(6);
-
         typename TRAITS::HeartBeatType heartBeatHandler;
         heartBeatHandler.beat();
 
-        sleep(2);
+        sleep(8);
 
         typename TRAITS::CleanLogsTypeActive cLeanLogsHandlerActive;
         cLeanLogsHandlerActive.beat();
