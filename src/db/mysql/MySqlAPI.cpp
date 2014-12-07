@@ -1217,8 +1217,6 @@ void MySqlAPI::getMultihopJobs(std::map< std::string, std::queue< std::pair<std:
 
 void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId)
 {
-    //auto-pick and manuall replica logic must be added here
-
     try
         {
             soci::indicator ind = soci::i_ok;

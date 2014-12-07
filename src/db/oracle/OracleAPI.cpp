@@ -4103,9 +4103,10 @@ bool OracleAPI::updateOptimizer()
                             std::string reason = i->get<std::string>("REASON", "");
 
                             //we do not want BringOnline errors to affect transfer success rate, exclude them
-                            bool exists = (reason.find("BringOnline") != std::string::npos);
+                            bool exists1 = (reason.find("BringOnline") != std::string::npos);
+			    bool exists2 = (reason.find("bring-online") != std::string::npos);
 
-                            if(state.compare("FAILED") == 0 && exists)
+                            if(state.compare("FAILED") == 0 && (exists1 || exists2) )
                                 {
                                     //do nothing, it's a non recoverable error so do not consider it
                                 }
@@ -9693,15 +9694,27 @@ void OracleAPI::setDrain(bool drain)
 {
 
     soci::session sql(*connectionPool);
+    unsigned index=0, count1=0, start=0, end=0;
+    std::string service_name = "fts_server";
 
     try
         {
-            sql.begin();
             if(drain == true)
-                sql << " update t_hosts set drain=1 where hostname = :hostname ",soci::use(hostname);
-            else
-                sql << " update t_hosts set drain=0 where hostname = :hostname ",soci::use(hostname);
-            sql.commit();
+            {
+            	sql.begin();
+                	sql << " update t_hosts set drain=1 where hostname = :hostname ",soci::use(hostname);
+            	sql.commit();
+            }
+           else
+           {
+	    	//update heartbeat first to avoid overlapping of hash range when moving out of draining mode
+   	    	updateHeartBeatInternal(sql, &index, &count1, &start, &end, service_name);
+	    	sleep(2);
+
+            	sql.begin();
+                	sql << " update t_hosts set drain=0 where hostname = :hostname ",soci::use(hostname);
+            	sql.commit();
+            }
         }
     catch (std::exception& e)
         {
@@ -11429,6 +11442,7 @@ void OracleAPI::getAlreadyStartedStaging(std::vector< boost::tuple<std::string, 
 
     try
         {
+	    sql.begin();
             sql <<
                 " UPDATE t_file "
                 " SET start_time = NULL, staging_start=NULL, transferhost=NULL, file_state='STAGING' "
@@ -11440,6 +11454,7 @@ void OracleAPI::getAlreadyStartedStaging(std::vector< boost::tuple<std::string, 
                 "   AND (hashed_id >= :hStart AND hashed_id <= :hEnd)",
                 soci::use(hashSegment.start), soci::use(hashSegment.end)
                 ;
+	     sql.commit();
 
             soci::rowset<soci::row> rs3 =
                 (
@@ -11485,10 +11500,12 @@ void OracleAPI::getAlreadyStartedStaging(std::vector< boost::tuple<std::string, 
         }
     catch (std::exception& e)
         {
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
+            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }
