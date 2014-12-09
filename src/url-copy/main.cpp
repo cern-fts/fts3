@@ -964,8 +964,6 @@ int main(int argc, char **argv)
                                              opts.jobId, currentTransfer.fileId,
                                              "ACTIVE", "", 0,
                                              currentTransfer.fileSize);
-
-                        sleep(1); //add a sleep of 1sec for reuse only in order to give time for ACTIVE state to be sent back to the server
                     }
 
                 if ( (access(opts.proxy.c_str(), F_OK) != 0) || (access(opts.proxy.c_str(), R_OK) != 0))
