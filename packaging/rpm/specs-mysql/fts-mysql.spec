@@ -1,5 +1,5 @@
 Name: fts-mysql
-Version: 3.2.30
+Version: 3.2.32
 Release: 1%{?dist}
 Summary: File Transfer Service V3 mysql plug-in
 Group: Applications/Internet
@@ -65,7 +65,7 @@ make install DESTDIR=%{buildroot}
 %doc LICENSE
 
 %changelog
-* Fri Aug 15 2014 Michal Simon <michal.simon@cern.ch> - 3.2.30-1
+* Fri Aug 15 2014 Michal Simon <michal.simon@cern.ch> - 3.2.31-1
   - Update for new upstream release
 * Mon May 12 2014 Michal Simon <michal.simon@cern.ch> - 3.2.26-1
   - Update for new upstream release
