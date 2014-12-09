@@ -1,0 +1,57 @@
+#!/usr/bin/env python
+# meta: proxy=true
+# meta: preconfig=../FTS3-config
+import itertools
+import logging
+from lib import base 
+
+
+class TestBigJob(base.TestBase):
+
+    def setUp(self):
+        self.client.setConfig({
+          'symbolic_name' : 'mock-example-link',
+          'source_se' : 'mock://example.com',
+          'destination_se': 'mock://example.com',
+          'share': [{'public': 100}],
+          'protocol': [{'nostreams' : 12}, {'urlcopy_tx_to' : 3600}],
+          'active': True
+        })
+
+    def tearDown(self):
+        pass
+
+    def _submit(self, n):
+        base = 'mock://example.com/file.%04d?time=0'
+        transfers = map(
+            lambda i: {'sources': [base % i], 'destinations': [base % i + '.dst']},
+            xrange(n)
+        )
+
+        logging.info("Submitting a job with %d files" % n)
+        jobId = self.client.submit(transfers, ['-o'])
+        logging.info("Got job id %s" % jobId)
+
+        state = self.client.poll(jobId)
+        logging.info("Finished with %s" % state)
+
+        files = self.client.getFileInfo(jobId)
+
+        self.assertEqual(n, len(files))
+
+    def _makeTest(n):
+      def wrap(self):
+        self._submit(n)
+      wrap.__doc__ = "\nSubmit a job with %d files\n" % n
+      return wrap
+
+    test_100 = _makeTest(100)
+    test_500 = _makeTest(500)
+    test_1K  = _makeTest(1000)
+
+
+if __name__ == '__main__':
+    import sys
+
+    sys.exit(TestBigJob().run())
+

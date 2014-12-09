@@ -20,10 +20,12 @@ from django.db.models import Q
 from ftsweb.models import ConfigAudit
 from ftsweb.models import LinkConfig, ShareConfig
 from ftsweb.models import DebugConfig, Optimize
+from authn import require_certificate
 from jsonify import jsonify, jsonify_paged
 from util import get_order_by, ordered_field
 
 
+@require_certificate
 @jsonify_paged
 def get_audit(http_request):
     ca = ConfigAudit.objects
@@ -38,6 +40,7 @@ def get_audit(http_request):
     return ca.order_by('-datetime')
 
 
+@require_certificate
 @jsonify
 def get_server_config(http_request):
     config = dict()
@@ -81,6 +84,7 @@ class AppendShares:
             yield link
 
 
+@require_certificate
 @jsonify_paged
 def get_link_config(http_request):
     links = LinkConfig.objects
@@ -93,11 +97,13 @@ def get_link_config(http_request):
     return AppendShares(links.all())
 
 
+@require_certificate
 @jsonify
 def get_debug_config(http_request):
     return DebugConfig.objects.order_by('source_se', 'dest_se').all()
 
 
+@require_certificate
 @jsonify_paged
 def get_limit_config(http_request):
     max_cfg = Optimize.objects.filter(Q(active__isnull=False) | Q(bandwidth__isnull=False))
@@ -117,6 +123,7 @@ def get_limit_config(http_request):
     return max_cfg
 
 
+@require_certificate
 @jsonify
 def get_gfal2_config(http_request):
     try:

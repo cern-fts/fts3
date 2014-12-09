@@ -21,10 +21,12 @@ from django.http import Http404
 
 from ftsweb.models import OptimizerEvolution, OptimizerStreams, OptimizeActive
 from ftsweb.models import File, Job
+from authn import require_certificate
 from jsonify import jsonify, jsonify_paged
 from util import paged
 
 
+@require_certificate
 @jsonify_paged
 def get_optimizer_pairs(http_request):
     # From the optimizer evolution
@@ -101,6 +103,7 @@ class OptimizerAppendLimits(object):
             return result[0][0]
 
 
+@require_certificate
 @jsonify
 def get_optimizer_details(http_request):
     source_se = str(http_request.GET.get('source', None))
@@ -161,6 +164,7 @@ class AppendQuantile(object):
             yield s
 
 
+@require_certificate
 @jsonify
 def get_optimizer_streams(http_request):
     streams = OptimizerStreams.objects

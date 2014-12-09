@@ -18,10 +18,12 @@ from datetime import datetime, timedelta
 from django.db.models import Count
 from django.http import Http404
 from ftsweb.models import File
+from authn import require_certificate
 from jsonify import jsonify, jsonify_paged
 from util import paged
 
 
+@require_certificate
 @jsonify_paged
 def get_errors(http_request):
     try:
@@ -48,6 +50,7 @@ def get_errors(http_request):
     return list(errors.all())
 
 
+@require_certificate
 @jsonify
 def get_errors_for_pair(http_request):
     source_se = http_request.GET.get('source_se', None)
