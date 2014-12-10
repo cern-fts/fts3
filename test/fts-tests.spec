@@ -1,5 +1,5 @@
 Name:    fts-tests
-Version: 3.2.30.1
+Version: 3.2.31
 Release: 1%{?dist}
 Summary: Testing package for FTS3
 Group:   Application/Internet
@@ -16,6 +16,7 @@ Requires: gfal2-python
 Requires: gfal2-plugin-srm
 Requires: gfal2-plugin-gridftp
 Requires: gfal2-plugin-http
+Requires: gfal2-plugin-file
 Requires: python
 Requires: voms-clients
 
