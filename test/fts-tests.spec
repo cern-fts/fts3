@@ -16,6 +16,7 @@ Requires: gfal2-python
 Requires: gfal2-plugin-srm
 Requires: gfal2-plugin-gridftp
 Requires: gfal2-plugin-http
+Requires: gfal2-plugin-file
 Requires: python
 Requires: voms-clients
 
