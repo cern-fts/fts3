@@ -11280,6 +11280,15 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
 
                     if(limit <= 0)
                         continue;
+			
+		    //now check for max concurrent active requests, must no exceed 200
+		    long long countActiveRequests = 0;
+                    sql << " select count(distinct bringonline_token) from t_file where "
+			   " vo_name=:vo_name and file_state='STARTED' and source_se=:source_se and bringonline_token is not NULL ",
+                             soci::use(vo_name), soci::use(source_se), soci::into(countActiveRequests);                                                
+						 						 
+                    if(countActiveRequests > 200)
+                        continue;			
 
                     soci::rowset<soci::row> rs = (
                                                      sql.prepare <<
