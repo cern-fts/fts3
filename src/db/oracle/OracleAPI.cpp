@@ -11288,7 +11288,37 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
                              soci::use(vo_name), soci::use(source_se), soci::into(countActiveRequests);                                                
 						 						 
                     if(countActiveRequests > 200)
-                        continue;			
+                        continue;
+			
+                   //now make sure there are enough files to put in a single request
+		   int countQueuedFiles = 0;
+		   sql << " SELECT count(*) from t_file where vo_name=:vo_name and source_se=:source_se and file_state='STAGING' ",
+		   	  soci::use(vo_name), soci::use(source_se), soci::into(countQueuedFiles); 
+
+			  
+                   if(countQueuedFiles < 2000)
+		   {
+		   	std::map<std::string, int>::iterator itQueue = queuedStagingFiles.find(source_se);
+			if(itQueue != queuedStagingFiles.end())
+			{
+			        int counter = itQueue->second;				
+				
+				if(counter < 30)
+				{
+					queuedStagingFiles[source_se] = counter + 1;	
+					continue;
+				}
+				else
+				{
+					 queuedStagingFiles.erase (itQueue);
+				}				
+			}
+			else
+			{
+		   		queuedStagingFiles[source_se] = 1;
+				continue;
+			}
+                   }						
 
                     soci::rowset<soci::row> rs = (
                                                      sql.prepare <<

@@ -424,7 +424,7 @@ private:
     soci::connection_pool* connectionPool;
     std::string           hostname;
     std::string username_;
-    std::vector<std::string> sanityVector;
+    std::map<std::string, int> queuedStagingFiles;
 
     void updateHeartBeatInternal(soci::session& sql, unsigned* index, unsigned* count, unsigned* start, unsigned* end, std::string service_name);
 

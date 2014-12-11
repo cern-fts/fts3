@@ -96,7 +96,7 @@ void FetchStaging::fetch()
                                 }
                         }
 
-                    boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+                    boost::this_thread::sleep(boost::posix_time::milliseconds(10000)); //10 secs interval
                 }
             catch (Err& e)
                 {

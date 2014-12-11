@@ -1222,6 +1222,8 @@ void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId)
             soci::indicator ind = soci::i_ok;
             std::string selection_strategy;
             std::string vo_name;
+            int nextReplica = 0;
+	    soci::indicator indNull = soci::i_ok;
 
             //check if the file belongs to a multiple replica job
             std::string mreplica;
@@ -1235,8 +1237,11 @@ void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId)
                     //check if it's auto or manual
                     sql << " select selection_strategy, vo_name from t_file where file_id = :file_id",
                         soci::use(fileId), soci::into(selection_strategy, ind), soci::into(vo_name);
+			
+  		    sql << "select min(file_id) from t_file where file_state = 'NOT_USED' and job_id=:job_id ",
+			soci::use(jobId), soci::into(nextReplica, indNull);			
 
-                    if (ind == soci::i_ok)
+                    if (ind != soci::i_null)
                         {
                             if(selection_strategy == "auto") //pick the "best-next replica to process"
                                 {
@@ -1251,42 +1256,54 @@ void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId)
                                                 soci::use(jobId), soci::use(bestFileId);
                                         }
                                     else //something went wrong, use orderly fashion
-                                        {
-                                            sql <<
-                                                " UPDATE t_file "
-                                                " SET file_state = 'SUBMITTED' "
-                                                " WHERE job_id = :jobId "
-                                                " AND file_state = 'NOT_USED' LIMIT 1 ",
-                                                soci::use(jobId);
+                                        {					  					    
+					    if(indNull != soci::i_null)
+					    {
+                                            	sql <<
+                                                	" UPDATE t_file "
+                                                	" SET file_state = 'SUBMITTED' "
+                                                	" WHERE job_id = :jobId "
+                                                	" AND file_state = 'NOT_USED' and file_id=:file_id ",
+                                                	soci::use(jobId), soci::use(nextReplica);
+					    }
                                         }
                                 }
                             else if (selection_strategy == "orderly")
                                 {
-                                    sql <<
-                                        " UPDATE t_file "
-                                        " SET file_state = 'SUBMITTED' "
-                                        " WHERE job_id = :jobId "
-                                        " AND file_state = 'NOT_USED' LIMIT 1 ",
-                                        soci::use(jobId);
+					    if(indNull != soci::i_null)
+					    {
+                                            	sql <<
+                                                	" UPDATE t_file "
+                                                	" SET file_state = 'SUBMITTED' "
+                                                	" WHERE job_id = :jobId "
+                                                	" AND file_state = 'NOT_USED' and file_id=:file_id ",
+                                                	soci::use(jobId), soci::use(nextReplica);
+					    }
                                 }
                             else
                                 {
-                                    sql <<
-                                        " UPDATE t_file "
-                                        " SET file_state = 'SUBMITTED' "
-                                        " WHERE job_id = :jobId "
-                                        " AND file_state = 'NOT_USED' LIMIT 1 ",
-                                        soci::use(jobId);
+					    if(indNull != soci::i_null)
+					    {
+                                            	sql <<
+                                                	" UPDATE t_file "
+                                                	" SET file_state = 'SUBMITTED' "
+                                                	" WHERE job_id = :jobId "
+                                                	" AND file_state = 'NOT_USED' and file_id=:file_id ",
+                                                	soci::use(jobId), soci::use(nextReplica);
+					    }
                                 }
                         }
                     else //it's NULL, default is orderly
                         {
-                            sql <<
-                                " UPDATE t_file "
-                                " SET file_state = 'SUBMITTED' "
-                                " WHERE job_id = :jobId "
-                                " AND file_state = 'NOT_USED' LIMIT 1 ",
-                                soci::use(jobId);
+					    if(indNull != soci::i_null)
+					    {
+                                            	sql <<
+                                                	" UPDATE t_file "
+                                                	" SET file_state = 'SUBMITTED' "
+                                                	" WHERE job_id = :jobId "
+                                                	" AND file_state = 'NOT_USED' and file_id=:file_id ",
+                                                	soci::use(jobId), soci::use(nextReplica);
+					    }
                         }
                 }
         }
@@ -2992,6 +3009,9 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
 
             if(currentState == status)
                 return true;
+		
+            if(currentState == "STAGING" && status == "STARTED")
+                return true;		
 
             if(status == "ACTIVE" && reuseFlag == "N")
                 {
@@ -11999,7 +12019,7 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
     soci::session sql(*connectionPool);
     std::vector< boost::tuple<int, std::string, std::string, std::string, bool> > filesState;
     std::vector<struct message_bringonline> messages;
-
+    
     try
         {
             int exitCode = runConsumerStaging(messages);
@@ -12081,20 +12101,50 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                         }
 
                     if(limit <= 0)
-                        continue;
-			
+                        continue;						
 			
 		    //now check for max concurrent active requests, must no exceed 200
 		    int countActiveRequests = 0;
                     sql << " select count(distinct bringonline_token) from t_file where "
 			   " vo_name=:vo_name and file_state='STARTED' and source_se=:source_se and bringonline_token is not NULL ",
                              soci::use(vo_name), soci::use(source_se), soci::into(countActiveRequests);                                                
-						 						 
+					
+					
                     if(countActiveRequests > 200)
                         continue;
-		    
-		    	
+			
+			
+                   //now make sure there are enough files to put in a single request
+		   int countQueuedFiles = 0;
+		   sql << " SELECT count(*) from t_file where vo_name=:vo_name and source_se=:source_se and file_state='STAGING' ",
+		   	  soci::use(vo_name), soci::use(source_se), soci::into(countQueuedFiles); 
 
+			  
+                   if(countQueuedFiles < 2000)
+		   {
+		   	std::map<std::string, int>::iterator itQueue = queuedStagingFiles.find(source_se);
+			if(itQueue != queuedStagingFiles.end())
+			{
+			        int counter = itQueue->second;				
+				
+				if(counter < 30)
+				{
+					queuedStagingFiles[source_se] = counter + 1;	
+					continue;
+				}
+				else
+				{
+					 queuedStagingFiles.erase (itQueue);
+				}				
+			}
+			else
+			{
+		   		queuedStagingFiles[source_se] = 1;
+				continue;
+			}
+                   }
+		   			
+		    
                     soci::rowset<soci::row> rs = (
                                                      sql.prepare <<
                                                      " SELECT distinct f.source_se, j.user_dn "
