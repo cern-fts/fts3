@@ -10281,7 +10281,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                                     //round up efficiency
                                     if(nFinishedLastHour > 0)
                                         {
-                                            ratioSuccessFailure = ceil((double)nFinishedLastHour/((double)nFinishedLastHour + (double)nFailedLastHour) * (100.0));
+                                            ratioSuccessFailure = (double)nFinishedLastHour/((double)nFinishedLastHour + (double)nFailedLastHour) * (100.0);
                                         }
 
                                     result <<   "\"Link efficiency (last hour)\":\"";
@@ -10448,7 +10448,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
                                     //round up efficiency
                                     if(nFinishedLastHour > 0)
                                         {
-                                            ratioSuccessFailure = ceil((double)nFinishedLastHour/((double)nFinishedLastHour + (double)nFailedLastHour) * (100.0));
+                                            ratioSuccessFailure = (double)nFinishedLastHour/((double)nFinishedLastHour + (double)nFailedLastHour) * (100.0);
                                         }
 
                                     result <<   "\"Link efficiency (last hour)\":\"";
