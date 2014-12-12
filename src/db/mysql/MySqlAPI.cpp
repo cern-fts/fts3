@@ -12071,14 +12071,13 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                         "WHERE vo_name=:vo_name and host = :endpoint and operation='staging' and concurrent_ops is NOT NULL ",
                         soci::use(vo_name), soci::use(source_se), soci::into(maxValueConfig);
 
-                    //check current staging
-                    sql << 	"SELECT count(*) from t_file "
-                        "WHERE vo_name=:vo_name and source_se = :endpoint and file_state='STARTED' and job_finished is NULL ",
-                        soci::use(vo_name), soci::use(source_se), soci::into(currentStagingActive);
-
-
                     if(maxValueConfig > 0)
                         {
+			    //check current staging
+                    	    sql << 	"SELECT count(*) from t_file "
+                        		"WHERE vo_name=:vo_name and source_se = :endpoint and file_state='STARTED' and job_finished is NULL ",
+                        		soci::use(vo_name), soci::use(source_se), soci::into(currentStagingActive);
+					
                             if(currentStagingActive > 0)
                                 {
                                     limit = maxValueConfig - currentStagingActive;
@@ -12087,21 +12086,10 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                                 {
                                     limit = maxValueConfig;
                                 }
-                        }
-                    else
-                        {
-                            if(currentStagingActive > 0)
-                                {
-                                    limit = 2000 - currentStagingActive;
-                                }
-                            else
-                                {
-                                    limit = 2000;
-                                }
-                        }
-
-                    if(limit <= 0)
-                        continue;						
+				
+				if(limit <= 0)
+                        		continue;	
+                        }                   
 			
 		    //now check for max concurrent active requests, must no exceed 200
 		    int countActiveRequests = 0;
