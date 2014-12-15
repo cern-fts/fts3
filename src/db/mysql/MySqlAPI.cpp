@@ -8294,7 +8294,7 @@ void MySqlAPI::setFilesToWaiting(const std::string& se, const std::string& vo, i
                         " SET wait_timestamp = UTC_TIMESTAMP(), wait_timeout = :timeout "
                         " WHERE (source_se = :src OR dest_se = :dest) "
                         "	AND file_state IN ('ACTIVE','SUBMITTED', 'NOT_USED') "
-                        "	AND (wait_timestamp IS NULL OR wait_timeout IS NULL) ",
+                        "	AND (wait_timestamp IS NULL OR wait_timeout IS NULL) AND job_finished is NULL ",
                         soci::use(timeout),
                         soci::use(se),
                         soci::use(se)
@@ -8311,7 +8311,7 @@ void MySqlAPI::setFilesToWaiting(const std::string& se, const std::string& vo, i
                         "	AND j.vo_name = :vo "
                         "	AND f.file_state IN ('ACTIVE','SUBMITTED', 'NOT_USED') "
                         "	AND f.job_id = j.job_id "
-                        "	AND (f.wait_timestamp IS NULL OR f.wait_timeout IS NULL) ",
+                        "	AND (f.wait_timestamp IS NULL OR f.wait_timeout IS NULL) AND job_finished is NULL ",
                         soci::use(timeout),
                         soci::use(se),
                         soci::use(se),
