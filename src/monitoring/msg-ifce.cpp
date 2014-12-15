@@ -155,16 +155,16 @@ void msg_ifce::SendTransferStartMessage(transfer_completed *tr_started)
 
             if(tr_started->file_metadata.length() > 0)
                 {
-		    if(tr_started->file_metadata == "x")
-		    {
-		    	text.append(",\"$r$\":\"\"");
-		    }
-		    else
-		    {
-                    	text.append(",\"$r$\":");
-                    	text.append(tr_started->file_metadata);
-                    	text.append("");
-		    }
+                    if(tr_started->file_metadata == "x")
+                        {
+                            text.append(",\"$r$\":\"\"");
+                        }
+                    else
+                        {
+                            text.append(",\"$r$\":");
+                            text.append(tr_started->file_metadata);
+                            text.append("");
+                        }
                 }
             else
                 {
@@ -373,17 +373,17 @@ void msg_ifce::SendTransferFinishMessage(transfer_completed *tr_completed)
             text.append("\"");
 
             if(tr_completed->tr_timestamp_complete.empty() || tr_completed->tr_timestamp_complete.length() == 0)
-            {
-            	text.append(",\"$13$\":\"");
-            	text.append(_getTimestamp());
-            	text.append("\"");
-            }
-	    else
-            {
-            	text.append(",\"$13$\":\"");
-            	text.append(tr_completed->tr_timestamp_complete);
-            	text.append("\"");
-            }
+                {
+                    text.append(",\"$13$\":\"");
+                    text.append(_getTimestamp());
+                    text.append("\"");
+                }
+            else
+                {
+                    text.append(",\"$13$\":\"");
+                    text.append(tr_completed->tr_timestamp_complete);
+                    text.append("\"");
+                }
 
             text.append(",\"$14$\":\"");
             text.append(tr_completed->channel_type);
@@ -395,16 +395,16 @@ void msg_ifce::SendTransferFinishMessage(transfer_completed *tr_completed)
 
             if(tr_completed->file_metadata.length() > 0)
                 {
-		    if(tr_completed->file_metadata == "x")
-		    {
-		    	text.append(",\"$16$\":\"\"");
-		    }
+                    if(tr_completed->file_metadata == "x")
+                        {
+                            text.append(",\"$16$\":\"\"");
+                        }
                     else
-                    {
-                    	text.append(",\"$16$\":");
-                    	text.append(tr_completed->file_metadata);
-                    	text.append("");
-                    }
+                        {
+                            text.append(",\"$16$\":");
+                            text.append(tr_completed->file_metadata);
+                            text.append("");
+                        }
                 }
             else
                 {

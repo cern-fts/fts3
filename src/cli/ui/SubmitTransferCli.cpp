@@ -186,7 +186,7 @@ void SubmitTransferCli::createJobElements()
                             it = tokens.begin();
                             if (it != tokens.end())
                                 {
-                                std::string s = *it;
+                                    std::string s = *it;
                                     if (!checkValidUrl(s)) throw bad_option("file", s + " is not valid URL");
                                     file.sources.push_back(s);
                                 }
@@ -214,7 +214,7 @@ void SubmitTransferCli::createJobElements()
                             it++;
                             if (it != tokens.end())
                                 {
-                                std::string checksum_str = *it;
+                                    std::string checksum_str = *it;
 
                                     checksum = true;
                                     file.checksums.push_back(checksum_str);
@@ -263,7 +263,7 @@ void SubmitTransferCli::createJobElements()
 
                     files.push_back (
                         File (boost::assign::list_of(getSource()),
-                                boost::assign::list_of(getDestination()), checksums, filesize, file_metadata)
+                              boost::assign::list_of(getDestination()), checksums, filesize, file_metadata)
                     );
                 }
         }

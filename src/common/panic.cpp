@@ -93,9 +93,11 @@ static void signal_handler(int signal)
 static void signal_watchdog(void (*shutdown_callback)(int, void*), void* udata)
 {
     int r = 0;
-    do {
-        r = sem_wait(&semaphore);
-    } while (r < 0); // Semaphore may return spuriously with errno = EINTR
+    do
+        {
+            r = sem_wait(&semaphore);
+        }
+    while (r < 0);   // Semaphore may return spuriously with errno = EINTR
     shutdown_callback(raised_signal, udata);
 }
 

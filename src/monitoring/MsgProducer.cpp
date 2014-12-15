@@ -43,7 +43,7 @@ using namespace FTS3_COMMON_NAMESPACE;
 
 
 static std::string replaceMetadataString(std::string text)
-{   
+{
     text = boost::replace_all_copy(text, "\\\"","\"");
     return text;
 }
@@ -129,22 +129,23 @@ bool MsgProducer::sendMessage(std::string &temp)
             temp = temp.substr(2, temp.length()); //remove message prefix
             tempFTS = "\"endpnt\":\"" + FTSEndpoint + "\"";
             find_and_replace(temp, "\"endpnt\":\"\"", tempFTS); //add FTS endpoint
-	    
-	    temp = replaceMetadataString(temp);
-	    
+
+            temp = replaceMetadataString(temp);
+
             // Read vo from json
             ptree pt2;
             std::istringstream is (temp);
-	    
-	    try{
-            	read_json (is, pt2);
-	    }
-	    catch(...)
-	    {
-	        std::string error_message = "MESSAGE_ERROR " + temp;
-	        logger::writeLog(error_message);
-	    	return true;
-	    }
+
+            try
+                {
+                    read_json (is, pt2);
+                }
+            catch(...)
+                {
+                    std::string error_message = "MESSAGE_ERROR " + temp;
+                    logger::writeLog(error_message);
+                    return true;
+                }
             std::string vo = pt2.get<std::string> ("vo");
             temp += 4;
             TextMessage* message = session->createTextMessage(temp);
@@ -156,22 +157,23 @@ bool MsgProducer::sendMessage(std::string &temp)
     else if (temp.compare(0, 2, "SS") == 0)
         {
             temp = temp.substr(2, temp.length()); //remove message prefix
-	    
-	    temp = replaceMetadataString(temp);
-	    
+
+            temp = replaceMetadataString(temp);
+
             // Read vo from json
             ptree pt2;
             std::istringstream is (temp);
-	    
-	    try{
-            	read_json (is, pt2);
-	    }
-	    catch(...)
-	    {
-	        std::string error_message = "MESSAGE_ERROR " + temp;
-	        logger::writeLog(error_message);
-	    	return true;
-	    }
+
+            try
+                {
+                    read_json (is, pt2);
+                }
+            catch(...)
+                {
+                    std::string error_message = "MESSAGE_ERROR " + temp;
+                    logger::writeLog(error_message);
+                    return true;
+                }
             std::string vo = pt2.get<std::string> ("vo_name");
             temp += 4;
             TextMessage* message = session->createTextMessage(temp);
@@ -233,20 +235,20 @@ bool MsgProducer::getConnection()
             producer_transfer_state->setTimeToLive(ttl);
 
             connected = true;
-	    	    
+
         }
     catch (CMSException& e)
         {
             errorMessage = "PROCESS_ERROR " + e.getStackTraceString();
             logger::writeLog(errorMessage, true);
-            connected = false;           
+            connected = false;
             sleep(10);
         }
     catch (...)
         {
             errorMessage = "PROCESS_ERROR Unhandled exception occured";
             logger::writeLog(errorMessage, true);
-            connected = false;	    
+            connected = false;
             sleep(10);
         }
 
@@ -299,7 +301,7 @@ void MsgProducer::onException( const CMSException& ex AMQCPP_UNUSED)
             myQueue.pop();
             send_message(ret);
         }
-    connected = false;    
+    connected = false;
     sleep(5);
 }
 
@@ -313,16 +315,16 @@ void MsgProducer::run()
             try
                 {
                     if(!connected)
-                    {
-			cleanup();
-			getConnection();
+                        {
+                            cleanup();
+                            getConnection();
 
-		        if(!connected)
-		        {				
-				sleep(10);
-				continue;
-			}
-		    }
+                            if(!connected)
+                                {
+                                    sleep(10);
+                                    continue;
+                                }
+                        }
 
                     //send messages
                     msg = concurrent_queue::getInstance()->pop();
@@ -340,8 +342,8 @@ void MsgProducer::run()
                         }
                     errorMessage = "PROCESS_ERROR 3" + e.getStackTraceString();
                     logger::writeLog(errorMessage, true);
-		    connected = false;    
-                    sleep(5);                   
+                    connected = false;
+                    sleep(5);
                 }
             catch (...)
                 {
@@ -351,7 +353,7 @@ void MsgProducer::run()
                             send_message(msgBk);
                         }
                     logger::writeLog("PROCESS_ERROR Unhandled exception occured", true);
-		    connected = false;    
+                    connected = false;
                     sleep(5);
                 }
         }

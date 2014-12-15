@@ -1734,7 +1734,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
                     else if (mreplica)
                         {
                             iter->fileIndex = 0;
-			    iter->hashedId = jobHashedId;
+                            iter->hashedId = jobHashedId;
                             if(index == 0) //only the first file
                                 iter->state = "SUBMITTED";
                             else
@@ -1765,64 +1765,64 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
                     if (iter->wait_timeout.is_initialized())
                         {
                             pairQuerySeBlaklisted
-                                << " INTO t_file (vo_name, job_id, file_state, source_surl, dest_surl,"
-                                   "    checksum, user_filesize, file_metadata, selection_strategy, file_index, "
-                                   "    source_se, dest_se, wait_timestamp, wait_timeout, activity, hashed_id) VALUES ("
-                                << ":voName" << insert_index << ", "
-                                << ":jobId" << insert_index << ", "
-                                << ":state" << insert_index << ", "
-                                << ":sourceSurl" << insert_index << ", "
-                                << ":destSurl" << insert_index << ", "
-                                << ":checksum" << insert_index << ", "
-                                << ":filesize" << insert_index << ", "
-                                << ":metadata" << insert_index << ", "
-                                << ":strategy" << insert_index << ", "
-                                << ":fileIndex" << insert_index << ", "
-                                << ":sourceSe" << insert_index << ", "
-                                << ":destSe" << insert_index << ", "
-                                << "sys_extract_utc(systimestamp), "
-                                << ":waitTimeout" << insert_index << ", "
-                                << ":activity" << insert_index << ", "
-                                << ":hashId" << insert_index
-                                << ") ";
+                                    << " INTO t_file (vo_name, job_id, file_state, source_surl, dest_surl,"
+                                    "    checksum, user_filesize, file_metadata, selection_strategy, file_index, "
+                                    "    source_se, dest_se, wait_timestamp, wait_timeout, activity, hashed_id) VALUES ("
+                                    << ":voName" << insert_index << ", "
+                                    << ":jobId" << insert_index << ", "
+                                    << ":state" << insert_index << ", "
+                                    << ":sourceSurl" << insert_index << ", "
+                                    << ":destSurl" << insert_index << ", "
+                                    << ":checksum" << insert_index << ", "
+                                    << ":filesize" << insert_index << ", "
+                                    << ":metadata" << insert_index << ", "
+                                    << ":strategy" << insert_index << ", "
+                                    << ":fileIndex" << insert_index << ", "
+                                    << ":sourceSe" << insert_index << ", "
+                                    << ":destSe" << insert_index << ", "
+                                    << "sys_extract_utc(systimestamp), "
+                                    << ":waitTimeout" << insert_index << ", "
+                                    << ":activity" << insert_index << ", "
+                                    << ":hashId" << insert_index
+                                    << ") ";
 
-                                insert_file_stmt.exchange(soci::use(voName));
-                                insert_file_stmt.exchange(soci::use(jobId));
-                                insert_file_stmt.exchange(soci::use(iter->state));
-                                insert_file_stmt.exchange(soci::use(iter->source));
-                                insert_file_stmt.exchange(soci::use(iter->destination));
-                                insert_file_stmt.exchange(soci::use(iter->checksum));
-                                insert_file_stmt.exchange(soci::use(iter->filesize));
-                                insert_file_stmt.exchange(soci::use(iter->metadata));
-                                insert_file_stmt.exchange(soci::use(iter->selectionStrategy));
-                                insert_file_stmt.exchange(soci::use(iter->fileIndex));
-                                insert_file_stmt.exchange(soci::use(iter->source_se));
-                                insert_file_stmt.exchange(soci::use(iter->dest_se));
-                                insert_file_stmt.exchange(soci::use(iter->wait_timeout.get()));
-                                insert_file_stmt.exchange(soci::use(iter->activity));
-                                insert_file_stmt.exchange(soci::use(iter->hashedId));
+                            insert_file_stmt.exchange(soci::use(voName));
+                            insert_file_stmt.exchange(soci::use(jobId));
+                            insert_file_stmt.exchange(soci::use(iter->state));
+                            insert_file_stmt.exchange(soci::use(iter->source));
+                            insert_file_stmt.exchange(soci::use(iter->destination));
+                            insert_file_stmt.exchange(soci::use(iter->checksum));
+                            insert_file_stmt.exchange(soci::use(iter->filesize));
+                            insert_file_stmt.exchange(soci::use(iter->metadata));
+                            insert_file_stmt.exchange(soci::use(iter->selectionStrategy));
+                            insert_file_stmt.exchange(soci::use(iter->fileIndex));
+                            insert_file_stmt.exchange(soci::use(iter->source_se));
+                            insert_file_stmt.exchange(soci::use(iter->dest_se));
+                            insert_file_stmt.exchange(soci::use(iter->wait_timeout.get()));
+                            insert_file_stmt.exchange(soci::use(iter->activity));
+                            insert_file_stmt.exchange(soci::use(iter->hashedId));
                         }
                     else
                         {
-                        pairQuery
-                            << " INTO t_file (vo_name, job_id, file_state, source_surl, dest_surl,"
-                               "    checksum, user_filesize, file_metadata, selection_strategy, file_index, "
-                               "    source_se, dest_se, activity, hashed_id) VALUES ("
-                            << ":voName" << insert_index << ", "
-                            << ":jobId" << insert_index << ", "
-                            << ":state" << insert_index << ", "
-                            << ":sourceSurl" << insert_index << ", "
-                            << ":destSurl" << insert_index << ", "
-                            << ":checksum" << insert_index << ", "
-                            << ":filesize" << insert_index << ", "
-                            << ":metadata" << insert_index << ", "
-                            << ":strategy" << insert_index << ", "
-                            << ":fileIndex" << insert_index << ", "
-                            << ":sourceSe" << insert_index << ", "
-                            << ":destSe" << insert_index << ", "
-                            << ":activity" << insert_index << ", "
-                            << ":hashId" << insert_index
-                            << ") ";
+                            pairQuery
+                                    << " INTO t_file (vo_name, job_id, file_state, source_surl, dest_surl,"
+                                    "    checksum, user_filesize, file_metadata, selection_strategy, file_index, "
+                                    "    source_se, dest_se, activity, hashed_id) VALUES ("
+                                    << ":voName" << insert_index << ", "
+                                    << ":jobId" << insert_index << ", "
+                                    << ":state" << insert_index << ", "
+                                    << ":sourceSurl" << insert_index << ", "
+                                    << ":destSurl" << insert_index << ", "
+                                    << ":checksum" << insert_index << ", "
+                                    << ":filesize" << insert_index << ", "
+                                    << ":metadata" << insert_index << ", "
+                                    << ":strategy" << insert_index << ", "
+                                    << ":fileIndex" << insert_index << ", "
+                                    << ":sourceSe" << insert_index << ", "
+                                    << ":destSe" << insert_index << ", "
+                                    << ":activity" << insert_index << ", "
+                                    << ":hashId" << insert_index
+                                    << ") ";
 
                             insert_file_stmt.exchange(soci::use(voName));
                             insert_file_stmt.exchange(soci::use(jobId));
@@ -3913,8 +3913,8 @@ bool OracleAPI::updateOptimizer()
                     activeDestination = 0;
                     avgDuration = 0.0;
                     isNullAvg = soci::i_ok;
-		    active_fixed = "off";
-		    highDefault = MIN_ACTIVE;
+                    active_fixed = "off";
+                    highDefault = MIN_ACTIVE;
 
                     // Weighted average
                     soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
@@ -4104,7 +4104,7 @@ bool OracleAPI::updateOptimizer()
 
                             //we do not want BringOnline errors to affect transfer success rate, exclude them
                             bool exists1 = (reason.find("BringOnline") != std::string::npos);
-			    bool exists2 = (reason.find("bring-online") != std::string::npos);
+                            bool exists2 = (reason.find("bring-online") != std::string::npos);
 
                             if(state.compare("FAILED") == 0 && (exists1 || exists2) )
                                 {
@@ -4164,8 +4164,8 @@ bool OracleAPI::updateOptimizer()
                     bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, rateStored, throughputEMA, thrStored, retry, retryStored, maxActive, activeStored, throughputSamples, thrSamplesStored);
                     if(!changed && retry > 0)
                         changed = true;
-		    else if(ratioSuccessFailure == 0) 
- 			changed = true; 			
+                    else if(ratioSuccessFailure == 0)
+                        changed = true;
 
                     //check if bandwidth limitation exists, if exists and throughput exceeds the limit then do not proccess with auto-tuning
                     int bandwidthIn = 0;
@@ -4247,7 +4247,7 @@ bool OracleAPI::updateOptimizer()
                                 {
                                     if(ratioSuccessFailure >= MED_SUCCESS_RATE )
                                         {
- 					    sql.begin();
+                                            sql.begin();
                                             active = maxActive;
                                             pathFollowed = 13;
                                             ema = throughputEMA;
@@ -4560,8 +4560,8 @@ void OracleAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                                     timeout = extractTimeout(params);
                                     if(timeout == 0)
                                         timeout = 7200;
-				    else
-				     	timeout += 3600;	
+                                    else
+                                        timeout += 3600;
                                 }
                             else
                                 {
@@ -9700,21 +9700,21 @@ void OracleAPI::setDrain(bool drain)
     try
         {
             if(drain == true)
-            {
-            	sql.begin();
-                	sql << " update t_hosts set drain=1 where hostname = :hostname ",soci::use(hostname);
-            	sql.commit();
-            }
-           else
-           {
-	    	//update heartbeat first to avoid overlapping of hash range when moving out of draining mode
-   	    	updateHeartBeatInternal(sql, &index, &count1, &start, &end, service_name);
-	    	sleep(2);
+                {
+                    sql.begin();
+                    sql << " update t_hosts set drain=1 where hostname = :hostname ",soci::use(hostname);
+                    sql.commit();
+                }
+            else
+                {
+                    //update heartbeat first to avoid overlapping of hash range when moving out of draining mode
+                    updateHeartBeatInternal(sql, &index, &count1, &start, &end, service_name);
+                    sleep(2);
 
-            	sql.begin();
-                	sql << " update t_hosts set drain=0 where hostname = :hostname ",soci::use(hostname);
-            	sql.commit();
-            }
+                    sql.begin();
+                    sql << " update t_hosts set drain=0 where hostname = :hostname ",soci::use(hostname);
+                    sql.commit();
+                }
         }
     catch (std::exception& e)
         {
@@ -11251,11 +11251,11 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
 
                     if(maxValueConfig > 0)
                         {
-			    //check current staging
-                    	    sql << 	"SELECT count(*) from t_file "
-                        		"WHERE vo_name=:vo_name and source_se = :endpoint and file_state='STARTED' and job_finished is NULL ",
-                        		soci::use(vo_name), soci::use(source_se), soci::into(currentStagingActive);
-					
+                            //check current staging
+                            sql << 	"SELECT count(*) from t_file "
+                                "WHERE vo_name=:vo_name and source_se = :endpoint and file_state='STARTED' and job_finished is NULL ",
+                                soci::use(vo_name), soci::use(source_se), soci::into(currentStagingActive);
+
                             if(currentStagingActive > 0)
                                 {
                                     limit = maxValueConfig - currentStagingActive;
@@ -11264,49 +11264,49 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
                                 {
                                     limit = maxValueConfig;
                                 }
-				
-				if(limit <= 0)
-                        		continue;	
-                        }                   
-			
-		    //now check for max concurrent active requests, must no exceed 200
-		    long long countActiveRequests = 0;
+
+                            if(limit <= 0)
+                                continue;
+                        }
+
+                    //now check for max concurrent active requests, must no exceed 200
+                    long long countActiveRequests = 0;
                     sql << " select count(distinct bringonline_token) from t_file where "
-			   " vo_name=:vo_name and file_state='STARTED' and source_se=:source_se and bringonline_token is not NULL ",
-                             soci::use(vo_name), soci::use(source_se), soci::into(countActiveRequests);                                                
-						 						 
+                        " vo_name=:vo_name and file_state='STARTED' and source_se=:source_se and bringonline_token is not NULL ",
+                        soci::use(vo_name), soci::use(source_se), soci::into(countActiveRequests);
+
                     if(countActiveRequests > 200)
                         continue;
-			
-                   //now make sure there are enough files to put in a single request
-		   int countQueuedFiles = 0;
-		   sql << " SELECT count(*) from t_file where vo_name=:vo_name and source_se=:source_se and file_state='STAGING' ",
-		   	  soci::use(vo_name), soci::use(source_se), soci::into(countQueuedFiles); 
 
-			  
-                   if(countQueuedFiles < 2000)
-		   {
-		   	std::map<std::string, int>::iterator itQueue = queuedStagingFiles.find(source_se);
-			if(itQueue != queuedStagingFiles.end())
-			{
-			        int counter = itQueue->second;				
-				
-				if(counter < 30)
-				{
-					queuedStagingFiles[source_se] = counter + 1;	
-					continue;
-				}
-				else
-				{
-					 queuedStagingFiles.erase (itQueue);
-				}				
-			}
-			else
-			{
-		   		queuedStagingFiles[source_se] = 1;
-				continue;
-			}
-                   }						
+                    //now make sure there are enough files to put in a single request
+                    int countQueuedFiles = 0;
+                    sql << " SELECT count(*) from t_file where vo_name=:vo_name and source_se=:source_se and file_state='STAGING' ",
+                        soci::use(vo_name), soci::use(source_se), soci::into(countQueuedFiles);
+
+
+                    if(countQueuedFiles < 2000)
+                        {
+                            std::map<std::string, int>::iterator itQueue = queuedStagingFiles.find(source_se);
+                            if(itQueue != queuedStagingFiles.end())
+                                {
+                                    int counter = itQueue->second;
+
+                                    if(counter < 30)
+                                        {
+                                            queuedStagingFiles[source_se] = counter + 1;
+                                            continue;
+                                        }
+                                    else
+                                        {
+                                            queuedStagingFiles.erase (itQueue);
+                                        }
+                                }
+                            else
+                                {
+                                    queuedStagingFiles[source_se] = 1;
+                                    continue;
+                                }
+                        }
 
                     soci::rowset<soci::row> rs = (
                                                      sql.prepare <<
@@ -11469,7 +11469,7 @@ void OracleAPI::getAlreadyStartedStaging(std::vector< boost::tuple<std::string, 
 
     try
         {
-	    sql.begin();
+            sql.begin();
             sql <<
                 " UPDATE t_file "
                 " SET start_time = NULL, staging_start=NULL, transferhost=NULL, file_state='STAGING' "
@@ -11481,7 +11481,7 @@ void OracleAPI::getAlreadyStartedStaging(std::vector< boost::tuple<std::string, 
                 "   AND (hashed_id >= :hStart AND hashed_id <= :hEnd)",
                 soci::use(hashSegment.start), soci::use(hashSegment.end)
                 ;
-	     sql.commit();
+            sql.commit();
 
             soci::rowset<soci::row> rs3 =
                 (

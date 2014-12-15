@@ -118,10 +118,10 @@ void SiteNameCacheRetriever::fromGlue1(std::map<std::string, EndpointInfo>& cach
     // browse for se names and respective site names
     time_t start = time(0);
     std::list< std::map<std::string, std::list<std::string> > > rs = bdii.browse< std::list<std::string> >(
-            BdiiBrowser::GLUE1,
-            FIND_SE_SITE_GLUE1,
-            FIND_SE_SITE_ATTR_GLUE1
-                                            );
+                BdiiBrowser::GLUE1,
+                FIND_SE_SITE_GLUE1,
+                FIND_SE_SITE_ATTR_GLUE1
+            );
     time_t stop = time(0);
     if (stop - start > 30)
         FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Querying BDII took more than 30s!" << commit;
@@ -157,10 +157,10 @@ void SiteNameCacheRetriever::fromGlue2(std::map<std::string, EndpointInfo>& cach
     // browse for se names and foreign keys that are pointing to the site name
     time_t start = time(0);
     std::list< std::map<std::string, std::list<std::string> > > rs = bdii.browse< std::list<std::string> >(
-            BdiiBrowser::GLUE2,
-            FIND_SE_FK_GLUE2,
-            FIND_SE_FK_ATTR_GLUE2
-                                            );
+                BdiiBrowser::GLUE2,
+                FIND_SE_FK_GLUE2,
+                FIND_SE_FK_ATTR_GLUE2
+            );
     time_t stop = time(0);
     // log a warning if browsing BDII takes more than 30s
     if (stop - start > 30)

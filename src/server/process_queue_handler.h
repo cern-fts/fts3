@@ -295,7 +295,7 @@ protected:
                         if(!messages.empty())
                             {
 
-                                executeUpdate(messages);                                
+                                executeUpdate(messages);
 
                                 //now update the protocol
                                 DBSingleton::instance().getDBObjectInstance()->updateProtocol(messages);

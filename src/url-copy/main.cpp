@@ -585,7 +585,7 @@ int statWithRetries(gfal_context_t handle, const std::string& category, const st
             else
                 {
                     *size = statBuffer.st_size;
-		    errMsg->clear();
+                    errMsg->clear();
                     return 0;
                 }
 
@@ -905,7 +905,7 @@ int main(int argc, char **argv)
                             errorMessage = "INIT Failed to create transfer log file, error was: " + message;
                             goto stop;
                         }
-                 }
+                }
 
             //also reuse session when both url's are gsiftp
             if(true == bothGsiftp(currentTransfer.sourceUrl, currentTransfer.destUrl))
@@ -1152,10 +1152,10 @@ int main(int argc, char **argv)
                 logger.INFO() << "Resetting global timeout thread to " << globalTimeout << " seconds" << std::endl;
 
                 //tune streams based on levels and/or session reuse
-		if (!opts.multihop && opts.reuse)
-		    {
-		    	opts.nStreams = 1;
-			gfalt_set_nbstreams(params, opts.nStreams, NULL);
+                if (!opts.multihop && opts.reuse)
+                    {
+                        opts.nStreams = 1;
+                        gfalt_set_nbstreams(params, opts.nStreams, NULL);
                         gfalt_set_tcp_buffer_size(params, 0, NULL);
                     }
                 else if( (!opts.manualConfig || opts.autoTunned) && opts.level == 3)
@@ -1342,7 +1342,7 @@ int main(int argc, char **argv)
                         if (currentTransfer.fileSize == dest_size)
                             {
                                 logger.INFO() << "DESTINATION Source and destination file size matching" << std::endl;
-				errorMessage = "";
+                                errorMessage = "";
                             }
                         else
                             {
@@ -1378,18 +1378,18 @@ stop:
                 }
             else
                 {
-		    if(currentTransfer.finishTime > 0 && currentTransfer.startTime > 0)
-		    {
-		    	uint64_t totalTimeInSecs =  (currentTransfer.finishTime - currentTransfer.startTime) / 1000;
-		    	if(totalTimeInSecs <= 1)
-		    		totalTimeInSecs = 1;
+                    if(currentTransfer.finishTime > 0 && currentTransfer.startTime > 0)
+                        {
+                            uint64_t totalTimeInSecs =  (currentTransfer.finishTime - currentTransfer.startTime) / 1000;
+                            if(totalTimeInSecs <= 1)
+                                totalTimeInSecs = 1;
 
-                    	throughputTurl = convertBtoM(boost::lexical_cast<double>(currentTransfer.fileSize), boost::lexical_cast<int>(totalTimeInSecs));
-		    }
-		    else
-		    {
-		    	throughputTurl = convertBtoM(boost::lexical_cast<double>(currentTransfer.fileSize), 1);
-		    }
+                            throughputTurl = convertBtoM(boost::lexical_cast<double>(currentTransfer.fileSize), boost::lexical_cast<int>(totalTimeInSecs));
+                        }
+                    else
+                        {
+                            throughputTurl = convertBtoM(boost::lexical_cast<double>(currentTransfer.fileSize), 1);
+                        }
                 }
 
             if (errorMessage.length() > 0)
@@ -1496,23 +1496,23 @@ stop:
                         }
                     turlVector.clear();
 
-		    /*Do not remove it, just in case we need it in the future
-                    if (opts.bringOnline > 0)
-                        {
-                            logger.INFO() << "Token will be unpinned: " << currentTransfer.tokenBringOnline << std::endl;
-                            if(gfal2_release_file(handle, (currentTransfer.sourceUrl).c_str(), (currentTransfer.tokenBringOnline).c_str(), &tmp_err) < 0)
+                    /*Do not remove it, just in case we need it in the future
+                            if (opts.bringOnline > 0)
                                 {
-                                    if (tmp_err && tmp_err->message)
+                                    logger.INFO() << "Token will be unpinned: " << currentTransfer.tokenBringOnline << std::endl;
+                                    if(gfal2_release_file(handle, (currentTransfer.sourceUrl).c_str(), (currentTransfer.tokenBringOnline).c_str(), &tmp_err) < 0)
                                         {
-                                            logger.WARNING() << "SOURCE Failed unpinning the file: " << std::string(tmp_err->message) << std::endl;
+                                            if (tmp_err && tmp_err->message)
+                                                {
+                                                    logger.WARNING() << "SOURCE Failed unpinning the file: " << std::string(tmp_err->message) << std::endl;
+                                                }
+                                        }
+                                    else
+                                        {
+                                            logger.INFO() << "Token unpinned: " << currentTransfer.tokenBringOnline << std::endl;
                                         }
                                 }
-                            else
-                                {
-                                    logger.INFO() << "Token unpinned: " << currentTransfer.tokenBringOnline << std::endl;
-                                }
-                        }
-		     */
+                     */
                 }
 
 

@@ -141,7 +141,7 @@ bool retryTransfer(int errorNo, const std::string& category, const std::string& 
         retry = false;
     found = message.find("File exists");
     if (found!=std::string::npos)
-        retry = false;	
+        retry = false;
 
     return retry;
 }
