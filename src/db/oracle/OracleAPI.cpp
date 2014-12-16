@@ -5126,12 +5126,12 @@ void OracleAPI::unblacklistSe(std::string se)
             sql <<
                 " UPDATE t_file f SET f.wait_timestamp = NULL, f.wait_timeout = NULL "
                 " WHERE (f.source_se = :src OR f.dest_se = :dest) "
-                "   AND f.file_state IN ('ACTIVE','SUBMITTED') "
+                "   AND f.file_state IN ('ACTIVE','SUBMITTED') and f.job_finished is NULL "
                 "   AND NOT EXISTS ( "
                 "       SELECT NULL "
-                "       FROM t_bad_dns, t_job "
-                "       WHERE t_job.job_id = f.job_id and t_bad_dns.dn = t_job.user_dn AND "
-                "             (t_bad_dns.status = 'WAIT' OR t_bad_dns.status = 'WAIT_AS')"
+                "       FROM t_bad_ses "
+                "       WHERE (se = f.source_se OR se = f.dest_se) AND "
+                "             (status = 'WAIT' OR status = 'WAIT_AS')"
                 "   )",
                 soci::use(se),
                 soci::use(se)
@@ -5172,9 +5172,8 @@ void OracleAPI::unblacklistDn(std::string dn)
                 "         WHERE t_job.user_dn = :dn "
                 "         AND t_file.file_state in ('ACTIVE','SUBMITTED') "
                 "         AND NOT EXISTS (SELECT NULL "
-                "                         FROM t_bad_ses "
-                "                         WHERE (se = t_file.source_se OR se = t_file.dest_se) AND "
-                "                                STATUS = 'WAIT')"
+                "                         FROM t_bad_dns "
+                "                         WHERE dn = t_job.user_dn AND (status = 'WAIT' OR status = 'WAIT_AS') )"
                 " ) SET wait_timestamp = NULL, wait_timeout = NULL",
                 soci::use(dn, "dn")
                 ;

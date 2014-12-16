@@ -5665,13 +5665,13 @@ void MySqlAPI::unblacklistSe(std::string se)
                 ;
             // set to null pending fields in respective files
             sql <<
-                " UPDATE t_file f, t_job j SET f.wait_timestamp = NULL, f.wait_timeout = NULL "
-                " WHERE f.job_id = j.job_id AND (f.source_se = :src OR f.dest_se = :dest) "
-                "	AND f.file_state IN ('ACTIVE','SUBMITTED') "
+                " UPDATE t_file f SET f.wait_timestamp = NULL, f.wait_timeout = NULL "
+                " WHERE (f.source_se = :src OR f.dest_se = :dest) "
+                "	AND f.file_state IN ('ACTIVE','SUBMITTED') and f.job_finished is NULL "
                 "	AND NOT EXISTS ( "
                 "		SELECT NULL "
-                "		FROM t_bad_dns "
-                "		WHERE dn = j.user_dn AND (status = 'WAIT' OR status = 'WAIT_AS')"
+                "		FROM t_bad_ses "
+                "		WHERE (se = f.source_se OR se = f.dest_se)  AND (status = 'WAIT' OR status = 'WAIT_AS')"
                 "	)",
                 soci::use(se),
                 soci::use(se)
@@ -5705,15 +5705,17 @@ void MySqlAPI::unblacklistDn(std::string dn)
             sql << "DELETE FROM t_bad_dns WHERE dn = :dn",
                 soci::use(dn)
                 ;
+
+
             // set to null pending fields in respective files
             sql <<
                 " UPDATE t_file f, t_job j SET f.wait_timestamp = NULL, f.wait_timeout = NULL "
                 " WHERE f.job_id = j.job_id AND j.user_dn = :dn "
-                "	AND f.file_state IN ('ACTIVE','SUBMITTED') "
+                "	AND f.file_state IN ('ACTIVE','SUBMITTED') and f.job_finished is NULL "
                 "	AND NOT EXISTS ( "
                 "		SELECT NULL "
-                "		FROM t_bad_ses "
-                "		WHERE (se = f.source_se OR se = f.dest_se) AND status = 'WAIT' "
+                "		FROM t_bad_dns "
+                "		WHERE dn = j.user_dn AND (status = 'WAIT' OR status = 'WAIT_AS') "
                 "	)",
                 soci::use(dn)
                 ;
@@ -8312,6 +8314,7 @@ void MySqlAPI::setFilesToWaiting(const std::string& se, const std::string& vo, i
                                 " WHERE (source_se = :src OR dest_se = :dest) "
                                 "	AND file_state IN ('ACTIVE','SUBMITTED', 'NOT_USED') "
                                 "	and file_id=:file_id ",
+			        soci::use(timeout),
                                 soci::use(se),
                                 soci::use(se),
                                 soci::use(file_id)
@@ -8337,20 +8340,18 @@ void MySqlAPI::setFilesToWaiting(const std::string& se, const std::string& vo, i
 
                     for (it = rs.begin(); it != rs.end(); ++it)
                         {
-                            file_id = it->get<int>("file_id");
+                              file_id = it->get<int>("file_id");
 
-                            sql <<
-                                " UPDATE t_file f, t_job j "
-                                " SET f.wait_timestamp = UTC_TIMESTAMP(), f.wait_timeout = :timeout "
-                                " WHERE (f.source_se = :src OR f.dest_se = :dest) "
-                                "	AND j.vo_name = :vo "
-                                "	AND f.file_state IN ('ACTIVE','SUBMITTED', 'NOT_USED') "
-                                "	AND f.job_id = j.job_id "
-                                "	AND (f.wait_timestamp IS NULL OR f.wait_timeout IS NULL) AND job_finished is NULL and file_id=:file_id ",
-                                soci::use(timeout),
+                              sql <<
+                                " UPDATE t_file "
+                                " SET wait_timestamp = UTC_TIMESTAMP(), wait_timeout = :timeout "
+                                " WHERE (source_se = :src OR dest_se = :dest) and vo_name=:vo_name "
+                                "	AND file_state IN ('ACTIVE','SUBMITTED', 'NOT_USED') "
+                                "	and file_id=:file_id ",
+			        soci::use(timeout),
                                 soci::use(se),
                                 soci::use(se),
-                                soci::use(vo),
+			        soci::use(vo),
                                 soci::use(file_id)
                                 ;
                         }
