@@ -1682,7 +1682,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
     time_t now = time(NULL);
     struct tm tTime;
     gmtime_r(&now, &tTime);
-
+       
     try
         {
             sql.begin();
@@ -1710,16 +1710,10 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
             insertJob.execute(true);
 
             unsigned jobHashedId = 0;
-            int timeout = 0;
             typedef std::pair<std::string, std::string> Key;
             typedef std::map< Key , int> Mapa;
             Mapa mapa;
-
-            //create the insertion statements here and populate values inside the loop
-            pairQuery << std::fixed <<
-                      "INSERT INTO t_file (vo_name, job_id, file_state, source_surl, dest_surl, checksum, user_filesize, "
-                      "   file_metadata, selection_strategy, file_index, source_se, dest_se, activity, hashed_id) VALUES ";
-
+          
             pairQuerySeBlaklisted << std::fixed <<
                                   "INSERT INTO t_file (vo_name, job_id, file_state, source_surl, dest_surl, checksum, user_filesize, "
                                   "   file_metadata, selection_strategy, file_index, source_se, dest_se, wait_timestamp, wait_timeout, activity, hashed_id) VALUES ";
@@ -1785,6 +1779,8 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
                     //get distinct source_se / dest_se
                     Key p1 (iter->source_se, iter->dest_se);
                     mapa.insert(std::make_pair(p1, 0));
+		    
+		    
 
                     if (iter->wait_timeout.is_initialized())
                         {
@@ -1801,7 +1797,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
                                                   << ":fileIndex" << insert_index << ", "
                                                   << ":sourceSe" << insert_index << ", "
                                                   << ":destSe" << insert_index << ", "
-                                                  << "UTC_TIMESTAMP(), "
+                                                  << ":wait_timestamp" << insert_index << ", "
                                                   << ":waitTimeout" << insert_index << ", "
                                                   << ":activity" << insert_index << ", "
                                                   << ":hashId" << insert_index
@@ -1819,28 +1815,31 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
                             insert_file_stmt.exchange(soci::use(iter->fileIndex));
                             insert_file_stmt.exchange(soci::use(iter->source_se));
                             insert_file_stmt.exchange(soci::use(iter->dest_se));
+			    insert_file_stmt.exchange(soci::use(tTime));
                             insert_file_stmt.exchange(soci::use(iter->wait_timeout.get()));
                             insert_file_stmt.exchange(soci::use(iter->activity));
                             insert_file_stmt.exchange(soci::use(iter->hashedId));
                         }
                     else
                         {
-                            pairQuery << "("
-                                      << ":voName" << insert_index << ", "
-                                      << ":jobId" << insert_index << ", "
-                                      << ":state" << insert_index << ", "
-                                      << ":sourceSurl" << insert_index << ", "
-                                      << ":destSurl" << insert_index << ", "
-                                      << ":checksum" << insert_index << ", "
-                                      << ":filesize" << insert_index << ", "
-                                      << ":metadata" << insert_index << ", "
-                                      << ":strategy" << insert_index << ", "
-                                      << ":fileIndex" << insert_index << ", "
-                                      << ":sourceSe" << insert_index << ", "
-                                      << ":destSe" << insert_index << ", "
-                                      << ":activity" << insert_index << ", "
-                                      << ":hashId" << insert_index
-                                      << "),";
+                            pairQuerySeBlaklisted << "("
+                                                  << ":voName" << insert_index << ", "
+                                                  << ":jobId" << insert_index << ", "
+                                                  << ":state" << insert_index << ", "
+                                                  << ":sourceSurl" << insert_index << ", "
+                                                  << ":destSurl" << insert_index << ", "
+                                                  << ":checksum" << insert_index << ", "
+                                                  << ":filesize" << insert_index << ", "
+                                                  << ":metadata" << insert_index << ", "
+                                                  << ":strategy" << insert_index << ", "
+                                                  << ":fileIndex" << insert_index << ", "
+                                                  << ":sourceSe" << insert_index << ", "
+                                                  << ":destSe" << insert_index << ", "
+                                                  << "NULL" << ", "
+                                                  << "NULL" << ", "
+                                                  << ":activity" << insert_index << ", "
+                                                  << ":hashId" << insert_index
+                                                  << "),";
 
                             insert_file_stmt.exchange(soci::use(voName));
                             insert_file_stmt.exchange(soci::use(jobId));
@@ -1853,21 +1852,14 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
                             insert_file_stmt.exchange(soci::use(iter->selectionStrategy));
                             insert_file_stmt.exchange(soci::use(iter->fileIndex));
                             insert_file_stmt.exchange(soci::use(iter->source_se));
-                            insert_file_stmt.exchange(soci::use(iter->dest_se));
+                            insert_file_stmt.exchange(soci::use(iter->dest_se));			   
                             insert_file_stmt.exchange(soci::use(iter->activity));
                             insert_file_stmt.exchange(soci::use(iter->hashedId));
                         }
                 }
 
-            std::string queryStr;
-            if(timeout == 0)
-                {
-                    queryStr = pairQuery.str();
-                }
-            else
-                {
-                    queryStr = pairQuerySeBlaklisted.str();
-                }
+            std::string queryStr = pairQuerySeBlaklisted.str();
+	    
             // Remove trailing ,
             queryStr = queryStr.substr(0, queryStr.length() - 1);
 

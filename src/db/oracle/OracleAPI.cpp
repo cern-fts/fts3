@@ -1804,10 +1804,10 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
                         }
                     else
                         {
-                            pairQuery
+                            pairQuerySeBlaklisted
                                     << " INTO t_file (vo_name, job_id, file_state, source_surl, dest_surl,"
                                     "    checksum, user_filesize, file_metadata, selection_strategy, file_index, "
-                                    "    source_se, dest_se, activity, hashed_id) VALUES ("
+                                    "    source_se, dest_se, wait_timestamp, wait_timeout, activity, hashed_id) VALUES ("
                                     << ":voName" << insert_index << ", "
                                     << ":jobId" << insert_index << ", "
                                     << ":state" << insert_index << ", "
@@ -1820,6 +1820,8 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
                                     << ":fileIndex" << insert_index << ", "
                                     << ":sourceSe" << insert_index << ", "
                                     << ":destSe" << insert_index << ", "
+	   		            << "NULL" << ", "
+                                    << "NULL" << ", "
                                     << ":activity" << insert_index << ", "
                                     << ":hashId" << insert_index
                                     << ") ";
@@ -1841,15 +1843,8 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
                         }
                 }
 
-            std::string queryStr;
-            if(timeout == 0)
-                {
-                    queryStr = pairQuery.str();
-                }
-            else
-                {
-                    queryStr = pairQuerySeBlaklisted.str();
-                }
+            std::string queryStr = pairQuerySeBlaklisted.str();
+
             queryStr += " SELECT * FROM dual ";
 
             insert_file_stmt.alloc();
