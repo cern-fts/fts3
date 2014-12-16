@@ -12127,6 +12127,10 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                             if(limit <= 0)
                                 continue;
                         }
+                    else
+                        {
+                            limit = MAX_STAGING_BULK_SIZE; // Use a sensible default
+                        }
 
                     //now check for max concurrent active requests, must no exceed 200
                     int countActiveRequests = 0;
