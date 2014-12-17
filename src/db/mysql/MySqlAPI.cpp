@@ -12172,7 +12172,7 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                         soci::use(vo_name), soci::use(source_se), soci::into(countQueuedFiles);
 
 
-                    if(countQueuedFiles < 4000)
+                    if(countQueuedFiles < 10000)
                         {
                             std::map<std::string, int>::iterator itQueue = queuedStagingFiles.find(source_se);
                             if(itQueue != queuedStagingFiles.end())
