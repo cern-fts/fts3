@@ -3567,10 +3567,20 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
     int active = 0;
     bool allowed = false;
     soci::indicator isNull = soci::i_ok;
+    int max_per_se = 0;
+    int max_per_link = 0;;
 
     try
         {
             int highDefault = MIN_ACTIVE;
+	    
+            sql << "select max_per_se, max_per_link from t_server_config", soci::into(max_per_se), soci::into(max_per_link);
+	    
+	    if(max_per_link > 0)
+	    	MAX_ACTIVE_PER_LINK = max_per_link;
+	    if(max_per_se > 0)	
+	    	MAX_ACTIVE_ENDPOINT_LINK = max_per_se;
+	    
 
             soci::statement stmt1 = (
                                         sql.prepare << "SELECT active FROM t_optimize_active "
@@ -3613,10 +3623,20 @@ void OracleAPI::getMaxActive(soci::session& sql, int& source, int& destination, 
 {
     int maxActiveSource = 0;
     int maxActiveDest = 0;
-    int maxDefault = MAX_ACTIVE_ENDPOINT_LINK;
-
+    int max_per_se = 0;
+    int max_per_link = 0;
+    
     try
         {
+   	    sql << "select max_per_se, max_per_link from t_server_config", soci::into(max_per_se), soci::into(max_per_link);
+	    
+	    if(max_per_link > 0)
+	    	MAX_ACTIVE_PER_LINK = max_per_link;
+	    if(max_per_se > 0)	
+	    	MAX_ACTIVE_ENDPOINT_LINK = max_per_se;
+		
+            int maxDefault = MAX_ACTIVE_ENDPOINT_LINK;	
+	    
             //check for source
             sql << " select active from t_optimize where source_se = :source_se and active is not NULL ",
                 soci::use(source_hostname),
@@ -3717,6 +3737,8 @@ bool OracleAPI::updateOptimizer()
     int activeDestination = 0;
     double avgDuration = 0.0;
     soci::indicator isNullAvg = soci::i_ok;
+    int max_per_se = 0;
+    int max_per_link = 0;    
 
 
     try
@@ -3849,7 +3871,13 @@ bool OracleAPI::updateOptimizer()
                                          soci::use(source_hostname),
                                          soci::use(destin_hostname),
                                          soci::into(allTested));
-
+					 
+            sql << "select max_per_se, max_per_link from t_server_config", soci::into(max_per_se), soci::into(max_per_link);
+	    
+	    if(max_per_link > 0)
+	    	MAX_ACTIVE_PER_LINK = max_per_link;
+	    if(max_per_se > 0)	
+	    	MAX_ACTIVE_ENDPOINT_LINK = max_per_se;			            					 
 
 
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
