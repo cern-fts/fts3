@@ -141,6 +141,11 @@ public:
     std::vector< std::pair<std::string, std::string>  > cancel(std::vector<std::string> const & jobIds);
 
     /**
+     * Remote call to cancelAll
+     */
+    boost::tuple<int, int> cancelAll(const std::string& vo);
+
+    /**
      * Remote call to listRequests
      * Internally is listRequests2
      *

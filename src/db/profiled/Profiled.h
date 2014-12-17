@@ -87,6 +87,8 @@ public:
 
     void cancelJob(std::vector<std::string>& requestIDs);
 
+    void cancelAllJobs(const std::string& voName, std::vector<std::string>& canceledJobs);
+
     bool insertGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs);
 
     void updateGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs);

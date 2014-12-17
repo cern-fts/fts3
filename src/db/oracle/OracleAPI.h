@@ -109,6 +109,8 @@ public:
 
     virtual void cancelJob(std::vector<std::string>& requestIDs);
 
+    virtual void cancelAllJobs(const std::string& voName, std::vector<std::string>& canceledJobs);
+
 
     /*t_credential API*/
     virtual bool insertGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs);

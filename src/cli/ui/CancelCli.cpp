@@ -21,6 +21,8 @@ CancelCli::CancelCli()
 
     specific.add_options()
     ("file,f", po::value<std::string>(&bulk_file), "Name of a configuration file.")
+    ("cancel-all", "Cancel all running jobs.")
+    ("voname", po::value<std::string>(&vo_name), "Restrict the cancellation to a given VO (applies only to --cancel-all)")
     ;
 }
 
@@ -31,13 +33,26 @@ CancelCli::~CancelCli()
 
 void CancelCli::validate()
 {
-    if (!vm.count("file") && !vm.count("jobid"))
+    if (!vm.count("file") && !vm.count("jobid") && !vm.count("cancel-all"))
         {
-            throw bad_option("file", "Either the bulk file or job ID list may be used, can't use both!");
+            throw bad_option("file", "Either the bulk file, the job ID list or --cancel-all may be used");
         }
 
     prepareJobIds();
 }
+
+
+bool CancelCli::cancelAll()
+{
+    return vm.count("cancel-all") > 0;
+}
+
+
+std::string CancelCli::getVoName()
+{
+    return vo_name;
+}
+
 
 void CancelCli::prepareJobIds()
 {

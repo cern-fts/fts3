@@ -15,12 +15,15 @@ fts-transfer-cancel is a tool that allows canceling transfer-jobs. The user has 
   -V [ --version ]      Print the version number and exit.
   -j [ --json ]         The output should be printed in JSON format
 
-  -u [ --userdn ] arg   Restrict to specific user DN.
-  -o [ --voname ] arg   Restrict to specific VO
   --rest                Use the RESTful interface.
   --capath arg          Path to the GRID security certificates (e.g. 
                         /etc/grid-security/certificates).
   --proxy arg           Path to the proxy certificate (e.g. /tmp/x509up_u500).
+  -f [ --file ] arg     Name of a configuration file.
+  
+  --cancel-all          Cancel all running jobs.
+  --voname              Restrict the cancellation to a given VO.
+                        Applies only to --cancel-all
 
 .SH SEE ALSO
 https://svnweb.cern.ch/trac/fts3/wiki/UserGuide

@@ -59,6 +59,11 @@ public:
     virtual std::vector< std::pair<std::string, std::string>  > cancel(std::vector<std::string> const & jobIds) = 0;
 
     /**
+     * Remote call to cancelAll
+     */
+    virtual boost::tuple<int, int> cancelAll(const std::string& vo) = 0;
+
+    /**
      * Remote call that will be transferSubmit2 or transferSubmit3
      *
      * @param elements - job elements to be executed

@@ -58,7 +58,10 @@ public:
     /**
      * Puts given message in the given node of JSON output
      */
-    void print(std::string const & path, std::string const & msg);
+    template <typename T>
+    void print(std::string const & path, T const & msg) {
+        json_out.put(path, msg);
+    }
 
     /**
      * Puts the CLI exception into respective node of JSON output

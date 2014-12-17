@@ -1682,7 +1682,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
     time_t now = time(NULL);
     struct tm tTime;
     gmtime_r(&now, &tTime);
-       
+
     try
         {
             sql.begin();
@@ -1713,7 +1713,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
             typedef std::pair<std::string, std::string> Key;
             typedef std::map< Key , int> Mapa;
             Mapa mapa;
-          
+
             pairQuerySeBlaklisted << std::fixed <<
                                   "INSERT INTO t_file (vo_name, job_id, file_state, source_surl, dest_surl, checksum, user_filesize, "
                                   "   file_metadata, selection_strategy, file_index, source_se, dest_se, wait_timestamp, wait_timeout, activity, hashed_id) VALUES ";
@@ -1779,8 +1779,8 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
                     //get distinct source_se / dest_se
                     Key p1 (iter->source_se, iter->dest_se);
                     mapa.insert(std::make_pair(p1, 0));
-		    
-		    
+
+
 
                     if (iter->wait_timeout.is_initialized())
                         {
@@ -1815,7 +1815,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
                             insert_file_stmt.exchange(soci::use(iter->fileIndex));
                             insert_file_stmt.exchange(soci::use(iter->source_se));
                             insert_file_stmt.exchange(soci::use(iter->dest_se));
-			    insert_file_stmt.exchange(soci::use(tTime));
+                            insert_file_stmt.exchange(soci::use(tTime));
                             insert_file_stmt.exchange(soci::use(iter->wait_timeout.get()));
                             insert_file_stmt.exchange(soci::use(iter->activity));
                             insert_file_stmt.exchange(soci::use(iter->hashedId));
@@ -1852,14 +1852,14 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
                             insert_file_stmt.exchange(soci::use(iter->selectionStrategy));
                             insert_file_stmt.exchange(soci::use(iter->fileIndex));
                             insert_file_stmt.exchange(soci::use(iter->source_se));
-                            insert_file_stmt.exchange(soci::use(iter->dest_se));			   
+                            insert_file_stmt.exchange(soci::use(iter->dest_se));
                             insert_file_stmt.exchange(soci::use(iter->activity));
                             insert_file_stmt.exchange(soci::use(iter->hashedId));
                         }
                 }
 
             std::string queryStr = pairQuerySeBlaklisted.str();
-	    
+
             // Remove trailing ,
             queryStr = queryStr.substr(0, queryStr.length() - 1);
 
@@ -3464,6 +3464,104 @@ void MySqlAPI::cancelJob(std::vector<std::string>& requestIDs)
         }
 }
 
+
+void MySqlAPI::cancelAllJobs(const std::string& voName, std::vector<std::string>& canceledJobs)
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            std::string jobId;
+            std::ostringstream selectQuery, jobQuery, fileQuery, dmQuery;
+            sql.begin();
+
+            // First recover the jobs ids that will be canceled
+            soci::statement getIdsStmt(sql);
+
+            selectQuery << "SELECT job_id FROM t_job "
+                     " WHERE job_state NOT IN ('CANCELED','FINISHEDDIRTY', 'FINISHED', 'FAILED') AND job_finished IS NULL";
+            if (!voName.empty()) {
+                selectQuery << " AND vo_name = :vo_name";
+                getIdsStmt.exchange(soci::use(voName));
+            }
+
+            getIdsStmt.exchange(soci::into(jobId));
+            getIdsStmt.alloc();
+            getIdsStmt.prepare(selectQuery.str());
+            getIdsStmt.define_and_bind();
+
+            if (getIdsStmt.execute(true))
+                {
+                    do {
+                        canceledJobs.push_back(jobId);
+                    } while (getIdsStmt.fetch());
+                }
+
+            // Bulk cancel jobs
+            soci::statement cancelJobsStmt(sql);
+
+            jobQuery << "UPDATE t_job "
+                        "SET job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(),"
+                        "        finish_time = UTC_TIMESTAMP(), cancel_job='Y',"
+                        "        reason='Jobs canceled by the site admin' "
+                        "WHERE job_state NOT IN ('CANCELED','FINISHEDDIRTY', 'FINISHED', 'FAILED') AND job_finished IS NULL";
+            if (!voName.empty()) {
+                jobQuery << " AND vo_name = :vo_name";
+                cancelJobsStmt.exchange(soci::use(voName));
+            }
+
+            cancelJobsStmt.alloc();
+            cancelJobsStmt.prepare(jobQuery.str());
+            cancelJobsStmt.define_and_bind();
+            cancelJobsStmt.execute(true);
+
+            // Bulk cancel files
+            soci::statement cancelFilesStmt(sql);
+
+            fileQuery << "UPDATE t_file "
+                         "SET file_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), "
+                         "    finish_time = UTC_TIMESTAMP(), reason='Jobs canceled by the site admin' "
+                         "WHERE file_state NOT IN ('CANCELED','FINISHED', 'FAILED') AND job_finished IS NULL";
+            if (!voName.empty()) {
+                fileQuery << " AND vo_name = :vo_name";
+                cancelFilesStmt.exchange(soci::use(voName));
+            }
+
+            cancelFilesStmt.alloc();
+            cancelFilesStmt.prepare(fileQuery.str());
+            cancelFilesStmt.define_and_bind();
+            cancelFilesStmt.execute(true);
+
+            // Bulk cancel namespace operations
+            soci::statement cancelDmStmt(sql);
+
+            dmQuery << "UPDATE t_dm "
+                         "SET file_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), "
+                         "    finish_time = UTC_TIMESTAMP(), reason='Jobs canceled by the site admin' "
+                         "WHERE file_state NOT IN ('CANCELED','FINISHED', 'FAILED') AND job_finished IS NULL";
+            if (!voName.empty()) {
+                dmQuery << " AND vo_name = :vo_name";
+                cancelDmStmt.exchange(soci::use(voName));
+            }
+
+            cancelDmStmt.alloc();
+            cancelDmStmt.prepare(dmQuery.str());
+            cancelDmStmt.define_and_bind();
+            cancelDmStmt.execute(true);
+
+            sql.commit();
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
 
 
 void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)

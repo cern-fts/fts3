@@ -133,7 +133,7 @@ void SingleTrStateInstance::sendStateMessage(  const std::string&  vo_name, cons
 }
 
 
-void SingleTrStateInstance::constructJSONMsg(struct message_state* state)
+void SingleTrStateInstance::constructJSONMsg(const struct message_state* state)
 {
 
     if(!monitoringMessages)

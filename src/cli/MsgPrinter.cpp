@@ -97,6 +97,16 @@ void MsgPrinter::print_json(std::pair<std::string, std::string> const & id_statu
     jout.printArray("job", m);
 }
 
+void MsgPrinter::print_ostr(std::pair<std::string, int> const & keyval)
+{
+    (*ostr) << keyval.first << ": " << keyval.second << std::endl;
+}
+
+void MsgPrinter::print_json(std::pair<std::string, int> const & keyval)
+{
+    jout.print(keyval.first, keyval.second);
+}
+
 void MsgPrinter::print(std::string const & ostr_subject, std::string const & json_subject, std::string const & msg)
 {
     if (!json)

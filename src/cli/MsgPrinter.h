@@ -102,6 +102,9 @@ private:
     void print_ostr(std::pair<std::string, std::string> const & id_status);
     void print_json(std::pair<std::string, std::string> const & id_status);
 
+    void print_ostr(std::pair<std::string, int> const & keyval);
+    void print_json(std::pair<std::string, int> const & keyval);
+
     void print_ostr(JobStatus const & j, bool short_out);
     void print_ostr(JobStatus const & j);
     void print_json(JobStatus const & j);

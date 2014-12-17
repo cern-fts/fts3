@@ -366,12 +366,10 @@
       
 
    <message name="blacklistDnRequest">
-   
       <part name="name" type="xsd:string"/>
       <part name="blk" type="xsd:boolean"/>
       <part name="status" type="xsd:string"/>
       <part name="timeout" type="xsd:int"/>
-      
    </message> 
    
    <message name="blacklistDnResponse"/>
@@ -482,6 +480,15 @@
    <message name="cancel2Response">  
       <part name="jobIDs" type="impl:ArrayOf_soapenc_string"/>
       <part name="status" type="impl:ArrayOf_soapenc_string"/>
+   </message>
+   
+   <message name="cancelAllRequest">
+      <part name="voName" type="xsd:string"/>
+   </message>
+   
+   <message name="cancelAllResponse">
+      <part name="jobCount" type="xsd:int"/>
+      <part name="fileCount" type="xsd:int"/>
    </message>
 
    <message name="CannotCancelException">
@@ -848,6 +855,15 @@
          <fault message="impl:AuthorizationException" name="AuthorizationException"/>
          <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
          <fault message="impl:NotExistsException" name="NotExistsException"/>
+         <fault message="impl:InternalException" name="InternalException"/>
+      </operation>
+      
+      <operation name="cancelAll" parameterOrder="requestIDs">
+         <input message="impl:cancelAllRequest" name="cancelAllRequest"/>
+         <output message="impl:cancelAllResponse" name="cancelAllResponse"/>
+         <fault message="impl:CannotCancelException" name="CannotCancelException"/>
+         <fault message="impl:AuthorizationException" name="AuthorizationException"/>
+         <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
          <fault message="impl:InternalException" name="InternalException"/>
       </operation>
 
@@ -1471,6 +1487,28 @@
          </fault>
          <fault name="NotExistsException">
             <wsdlsoap:fault name="NotExistsException" use="literal"/>
+         </fault>
+         <fault name="InternalException">
+            <wsdlsoap:fault name="InternalException" use="literal"/>
+         </fault>
+      </operation>
+      
+      <operation name="cancelAll">
+         <wsdlsoap:operation soapAction=""/>
+         <input name="cancelAllRequest">
+            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
+         </input>
+         <output name="cancelAllResponse">
+            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
+         </output>
+         <fault name="CannotCancelException">
+            <wsdlsoap:fault name="CannotCancelException" use="literal"/>
+         </fault>
+         <fault name="AuthorizationException">
+            <wsdlsoap:fault name="AuthorizationException" use="literal"/>
+         </fault>
+         <fault name="ServiceBusyException">
+            <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
          </fault>
          <fault name="InternalException">
             <wsdlsoap:fault name="InternalException" use="literal"/>
