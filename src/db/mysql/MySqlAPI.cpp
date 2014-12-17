@@ -4388,9 +4388,7 @@ bool MySqlAPI::updateOptimizer()
 	    	MAX_ACTIVE_PER_LINK = max_per_link;
 	    if(max_per_se > 0)	
 	    	MAX_ACTIVE_ENDPOINT_LINK = max_per_se;
-		
-	    
-	    std::cout << MAX_ACTIVE_PER_LINK << "         " <<  MAX_ACTIVE_ENDPOINT_LINK << std::endl;			
+			    
 
             //check first for distinct sources
             for (soci::rowset<soci::row>::const_iterator i = rs_again.begin(); i != rs_again.end(); ++i)
