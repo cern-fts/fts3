@@ -12172,7 +12172,7 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                         soci::use(vo_name), soci::use(source_se), soci::into(countQueuedFiles);
 
 
-                    if(countQueuedFiles < 2000)
+                    if(countQueuedFiles < 4000)
                         {
                             std::map<std::string, int>::iterator itQueue = queuedStagingFiles.find(source_se);
                             if(itQueue != queuedStagingFiles.end())
@@ -12234,7 +12234,7 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                                                               "   AND f.vo_name = j.vo_name "
                                                               "   AND f.job_finished IS NULL "
                                                               "   AND EXISTS (SELECT * FROM t_job y WHERE y.job_id = j.job_id ORDER BY y.submit_time) "
-                                                              " LIMIT :limit",
+                                                              " order by f.file_id LIMIT :limit",
                                                               soci::use(hashSegment.start), soci::use(hashSegment.end),
                                                               soci::use(source_se),
                                                               soci::use(user_dn),
