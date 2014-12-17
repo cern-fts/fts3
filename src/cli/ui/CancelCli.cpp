@@ -21,7 +21,7 @@ CancelCli::CancelCli()
 
     specific.add_options()
     ("file,f", po::value<std::string>(&bulk_file), "Name of a configuration file.")
-    ("cancel-all", "Cancel all running jobs.")
+    ("cancel-all", "Cancel all queued and running jobs.")
     ("voname", po::value<std::string>(&vo_name), "Restrict the cancellation to a given VO (applies only to --cancel-all)")
     ;
 }
