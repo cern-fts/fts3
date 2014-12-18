@@ -236,6 +236,8 @@ public:
 
     void setMaxTimeInQueue(int afterXHours);
 
+    void setGlobalLimits(const int* maxActivePerLink, const int* maxActivePerSe);
+
     void setToFailOldQueuedJobs(std::vector<std::string>& jobs);
 
     std::vector< std::pair<std::string, std::string> > getPairsForSe(std::string se);

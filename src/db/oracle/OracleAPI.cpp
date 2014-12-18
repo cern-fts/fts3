@@ -3671,14 +3671,14 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
     try
         {
             int highDefault = MIN_ACTIVE;
-	    
+
             sql << "select max_per_se, max_per_link from t_server_config", soci::into(max_per_se), soci::into(max_per_link);
-	    
+
 	    if(max_per_link > 0)
 	    	MAX_ACTIVE_PER_LINK = max_per_link;
-	    if(max_per_se > 0)	
+	    if(max_per_se > 0)
 	    	MAX_ACTIVE_ENDPOINT_LINK = max_per_se;
-	    
+
 
             soci::statement stmt1 = (
                                         sql.prepare << "SELECT active FROM t_optimize_active "
@@ -3723,18 +3723,18 @@ void OracleAPI::getMaxActive(soci::session& sql, int& source, int& destination, 
     int maxActiveDest = 0;
     int max_per_se = 0;
     int max_per_link = 0;
-    
+
     try
         {
    	    sql << "select max_per_se, max_per_link from t_server_config", soci::into(max_per_se), soci::into(max_per_link);
-	    
+
 	    if(max_per_link > 0)
 	    	MAX_ACTIVE_PER_LINK = max_per_link;
-	    if(max_per_se > 0)	
+	    if(max_per_se > 0)
 	    	MAX_ACTIVE_ENDPOINT_LINK = max_per_se;
-		
-            int maxDefault = MAX_ACTIVE_ENDPOINT_LINK;	
-	    
+
+            int maxDefault = MAX_ACTIVE_ENDPOINT_LINK;
+
             //check for source
             sql << " select active from t_optimize where source_se = :source_se and active is not NULL ",
                 soci::use(source_hostname),
@@ -3836,7 +3836,7 @@ bool OracleAPI::updateOptimizer()
     double avgDuration = 0.0;
     soci::indicator isNullAvg = soci::i_ok;
     int max_per_se = 0;
-    int max_per_link = 0;    
+    int max_per_link = 0;
 
 
     try
@@ -3969,13 +3969,13 @@ bool OracleAPI::updateOptimizer()
                                          soci::use(source_hostname),
                                          soci::use(destin_hostname),
                                          soci::into(allTested));
-					 
+
             sql << "select max_per_se, max_per_link from t_server_config", soci::into(max_per_se), soci::into(max_per_link);
-	    
+
 	    if(max_per_link > 0)
 	    	MAX_ACTIVE_PER_LINK = max_per_link;
-	    if(max_per_se > 0)	
-	    	MAX_ACTIVE_ENDPOINT_LINK = max_per_se;			            					 
+	    if(max_per_se > 0)
+	    	MAX_ACTIVE_ENDPOINT_LINK = max_per_se;
 
 
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
@@ -6739,6 +6739,37 @@ void OracleAPI::setMaxTimeInQueue(int afterXHours)
         }
 }
 
+
+void OracleAPI::setGlobalLimits(const int* maxActivePerLink, const int* maxActivePerSe)
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            sql.begin();
+
+            if (maxActivePerLink) {
+                sql << "UPDATE t_server_config SET max_per_link = :maxLink",
+                        soci::use(*maxActivePerLink);
+            }
+            if (maxActivePerSe) {
+                sql << "UPDATE t_server_config SET max_per_se = :maxSe",
+                        soci::use(*maxActivePerSe);
+            }
+
+            sql.commit();
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
 
 
 void OracleAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)

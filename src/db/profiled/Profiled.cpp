@@ -613,6 +613,10 @@ void ProfiledDB::setMaxTimeInQueue(int afterXHours)
     PROFILE_PREFIXED("DB::", db->setMaxTimeInQueue(afterXHours));
 }
 
+void ProfiledDB::setGlobalLimits(const int* maxActivePerLink, const int* maxActivePerSe)
+{
+    PROFILE_PREFIXED("DB::", db->setGlobalLimits(maxActivePerLink, maxActivePerSe));
+}
 
 void ProfiledDB::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
 {

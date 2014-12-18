@@ -135,6 +135,13 @@ int main(int ac, char* av[])
                     std::cout << "Done" << std::endl;
                 }
 
+            tuple<optional<int>, optional<int> > globalLimits = cli.getGlobalLimits();
+            if (globalLimits.get<0>().is_initialized() || globalLimits.get<1>().is_initialized())
+                {
+                    ctx.setGlobalLimits(globalLimits.get<0>(), globalLimits.get<1>());
+                    std::cout << "Done" << std::endl;
+                }
+
             optional<unsigned> queueTimeout = cli.queueTimeout();
             if (queueTimeout.is_initialized())
                 {

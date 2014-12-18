@@ -647,6 +647,24 @@ void GSoapContextAdapter::setGlobalTimeout(int timeout)
         throw gsoap_error(ctx);
 }
 
+void GSoapContextAdapter::setGlobalLimits(boost::optional<int> maxActivePerLink, boost::optional<int> maxActivePerSe)
+{
+    implcfg__setGlobalLimitsResponse resp;
+    config__GlobalLimits req;
+
+    if (maxActivePerLink.is_initialized())
+        req.maxActivePerLink = &(*maxActivePerLink);
+    else
+        req.maxActivePerLink = NULL;
+    if (maxActivePerSe.is_initialized())
+        req.maxActivePerSe = &(*maxActivePerSe);
+    else
+        req.maxActivePerSe = NULL;
+
+    if (soap_call_implcfg__setGlobalLimits(ctx, endpoint.c_str(), 0, &req, resp))
+        throw gsoap_error(ctx);
+}
+
 void GSoapContextAdapter::setSecPerMb(int secPerMb)
 {
     implcfg__setSecPerMbResponse resp;

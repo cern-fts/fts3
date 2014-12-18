@@ -48,6 +48,13 @@
                     <element maxOccurs="unbounded" name="blElem" type="config:BandwidthLimitPair"/>
                 </sequence>
             </complexType>
+            
+            <complexType name="GlobalLimits">
+                <sequence>
+                    <element minOccurs="0" maxOccurs="1" name="maxActivePerLink" type="xsd:int"/>
+                    <element minOccurs="0" maxOccurs="1" name="maxActivePerSe" type="xsd:int"/>
+                </sequence>
+            </complexType>
 
             <complexType name="ConfigurationException">
                 <sequence>
@@ -194,6 +201,13 @@
     
     <message name="GetBandwidthLimitResponse">
         <part name="limit" type="xsd:string"/>
+    </message>
+    
+    <message name="setGlobalLimitsRequest">
+        <part name="limits" type="config:GlobalLimits"/>
+    </message>
+    
+    <message name="setGlobalLimitsResponse">
     </message>
     
     <message name="setSeProtocolRequest">
@@ -419,7 +433,16 @@
             <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
             <fault message="impl:InvalidArgumentException" name="InvalidArgumentException"/>
             <fault message="impl:InternalException" name="InternalException"/>
-        </operation>                                 
+        </operation>       
+        
+        <operation name="setGlobalLimits" parameterOrder="globalLimits">
+            <input message="impl:setGlobalLimitsRequest" name="setGlobalLimitsRequest"/>
+            <output message="impl:setGlobalLimitsResponse" name="setGlobalLimitsResponse"/>
+            <fault message="impl:AuthorizationException" name="AuthorizationException"/>
+            <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
+            <fault message="impl:InvalidArgumentException" name="InvalidArgumentException"/>
+            <fault message="impl:InternalException" name="InternalException"/>
+        </operation>          
     </portType>
 
     <binding name="SoapBinding" type="impl:Config">
@@ -650,7 +673,6 @@
             </fault>
         </operation>
 
-        
         <operation name="setQueueTimeout">
             <wsdlsoap:operation soapAction=""/>
 
@@ -831,7 +853,7 @@
             </fault>
         </operation>
 
-      <operation name="fixActivePerPair">
+        <operation name="fixActivePerPair">
             <wsdlsoap:operation soapAction=""/>
             
             <input name="fixActivePerPairRequest">
@@ -913,7 +935,29 @@
             <fault name="InternalException">
                 <wsdlsoap:fault name="InternalException" use="literal"/>
             </fault>
-        </operation>            
+        </operation>
+
+        <operation name="setGlobalLimits">
+            <wsdlsoap:operation soapAction=""/>
+            <input name="setGlobalLimitsRequest">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </input>
+            <output name="setGlobalLimitsResponse">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </output>
+            <fault name="AuthorizationException">
+                <wsdlsoap:fault name="AuthorizationException" use="literal"/>
+            </fault>
+            <fault name="ServiceBusyException">
+                <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
+            </fault>
+            <fault name="InvalidArgumentException">
+                <wsdlsoap:fault name="InvalidArgumentException" use="literal"/>
+            </fault>
+            <fault name="InternalException">
+                <wsdlsoap:fault name="InternalException" use="literal"/>
+            </fault>
+        </operation>  
         
     </binding>
 

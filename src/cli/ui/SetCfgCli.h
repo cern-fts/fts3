@@ -201,6 +201,11 @@ public:
     boost::optional<int> getGlobalTimeout();
 
     /**
+     * Gets the global limits for link and storage
+     */
+    boost::tuple<boost::optional<int>, boost::optional<int>> getGlobalLimits();
+
+    /**
      * Gets seconds per MB
      *
      * @return seconds per MB, or an uninitialised optional

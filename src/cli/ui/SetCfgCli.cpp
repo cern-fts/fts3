@@ -112,6 +112,16 @@ SetCfgCli::SetCfgCli(bool spec)
                 "\n(Example: --global-timeout $TIMEOUT)"
             )
             (
+                "max-per-link", po::value<int>(),
+                "Global limit per link"
+                "\n(Example: --max-per-link $MAXACTIVE)"
+            )
+            (
+                "max-per-se", po::value<int>(),
+                "Global active limit per storage element"
+                "\n(Example: --max-per-se $MAXACTIVE)"
+            )
+            (
                 "sec-per-mb", po::value<int>(),
                 "number of seconds per MB"
                 "\n(Example: --sec-per-mb $SEC_PER_MB)"
@@ -223,6 +233,8 @@ void SetCfgCli::validate()
             && !vm.count("max-se-source-active")
             && !vm.count("max-se-dest-active")
             && !vm.count("global-timeout")
+            && !vm.count("max-per-link")
+            && !vm.count("max-per-se")
             && !vm.count("sec-per-mb")
             && !vm.count("active-fixed")
             && !vm.count("show-user-dn")
@@ -523,6 +535,18 @@ optional<int> SetCfgCli::getGlobalTimeout()
     if (timeout == -1) timeout = 0;
 
     return timeout;
+}
+
+tuple<optional<int>, optional<int>> SetCfgCli::getGlobalLimits()
+{
+    optional<int> maxPerLink, maxPerSe;
+
+    if (vm.count("max-per-link"))
+        maxPerLink = vm["max-per-link"].as<int>();
+    if (vm.count("max-per-se"))
+        maxPerSe = vm["max-per-se"].as<int>();
+
+    return tuple<optional<int>, optional<int> > (maxPerLink, maxPerSe);
 }
 
 optional<int> SetCfgCli::getSecPerMb()
