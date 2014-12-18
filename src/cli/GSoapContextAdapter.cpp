@@ -695,15 +695,15 @@ void GSoapContextAdapter::setFixActivePerPair(std::string source, std::string de
 
 void GSoapContextAdapter::setS3Credential(std::string const & accessKey, std::string const & secretKey, std::string const & vo, std::string const & storage)
 {
-    implcfg__setS3CeredentialResponse resp;
-    if (soap_call_implcfg__setS3Ceredential(ctx, endpoint.c_str(), 0, accessKey, secretKey, vo, storage, resp))
+    implcfg__setS3CredentialResponse resp;
+    if (soap_call_implcfg__setS3Credential(ctx, endpoint.c_str(), 0, accessKey, secretKey, vo, storage, resp))
         throw gsoap_error(ctx);
 }
 
 void GSoapContextAdapter::setDropboxCredential(std::string const & appKey, std::string const & appSecret, std::string const & apiUrl)
 {
-    implcfg__setDropboxCeredentialResponse resp;
-    if (soap_call_implcfg__setDropboxCeredential(ctx, endpoint.c_str(), 0, appKey, appSecret, apiUrl, resp))
+    implcfg__setDropboxCredentialResponse resp;
+    if (soap_call_implcfg__setDropboxCredential(ctx, endpoint.c_str(), 0, appKey, appSecret, apiUrl, resp))
         throw gsoap_error(ctx);
 }
 

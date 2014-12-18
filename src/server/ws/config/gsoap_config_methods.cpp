@@ -898,7 +898,7 @@ int fts3::implcfg__setGlobalLimits(soap* ctx, fts3::config__GlobalLimits* limits
     return SOAP_OK;
 }
 
-int fts3::implcfg__setS3Ceredential(soap* ctx, std::string accessKey, std::string secretKey, std::string vo, std::string storage, implcfg__setS3CeredentialResponse& resp)
+int fts3::implcfg__setS3Credential(soap* ctx, std::string accessKey, std::string secretKey, std::string vo, std::string storage, implcfg__setS3CredentialResponse& resp)
 {
     try
         {
@@ -929,7 +929,7 @@ int fts3::implcfg__setS3Ceredential(soap* ctx, std::string accessKey, std::strin
     return SOAP_OK;
 }
 
-int fts3::implcfg__setDropboxCeredential(soap* ctx, std::string appKey, std::string appSecret, std::string apiUrl, implcfg__setDropboxCeredentialResponse& resp)
+int fts3::implcfg__setDropboxCredential(soap* ctx, std::string appKey, std::string appSecret, std::string apiUrl, implcfg__setDropboxCredentialResponse& resp)
 {
     try
         {

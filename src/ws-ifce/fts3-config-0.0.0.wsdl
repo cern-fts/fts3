@@ -157,22 +157,22 @@
 
     <message name="DelConfigurationResponse" />
 
-    <message name="SetS3CeredentialRequest">
+    <message name="SetS3CredentialRequest">
         <part name="accessKey" type="xsd:string"/>
         <part name="secretKey" type="xsd:string"/>
         <part name="vo" type="xsd:string"/>
         <part name="storage" type="xsd:string"/>
     </message>
     
-    <message name="SetS3CeredentialResponse"/>
+    <message name="SetS3CredentialResponse"/>
 
-    <message name="SetDropboxCeredentialRequest">
+    <message name="SetDropboxCredentialRequest">
         <part name="appKey" type="xsd:string"/>
         <part name="appSecret" type="xsd:string"/>
         <part name="apiUrl" type="xsd:string"/>
     </message>
     
-    <message name="SetDropboxCeredentialResponse"/>
+    <message name="SetDropboxCredentialResponse"/>
 
     <message name="GetConfigurationRequest">
 		<part name="vo" type="xsd:string"/>
@@ -293,17 +293,17 @@
             <fault message="impl:InternalException" name="InternalException"/>
         </operation>
 
-        <operation name="setS3Ceredential">
-            <input message="impl:SetS3CeredentialRequest" name="SetS3CeredentialRequest"/>
-            <output message="impl:SetS3CeredentialResponse" name="SetS3CeredentialResponse"/>
+        <operation name="setS3Credential">
+            <input message="impl:SetS3CredentialRequest" name="SetS3CredentialRequest"/>
+            <output message="impl:SetS3CredentialResponse" name="SetS3CredentialResponse"/>
             <fault message="impl:AuthorizationException" name="AuthorizationException"/>
             <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
             <fault message="impl:InternalException" name="InternalException"/>
         </operation>
 
-        <operation name="setDropboxCeredential">
-            <input message="impl:SetDropboxCeredentialRequest" name="SetDropboxCeredentialRequest"/>
-            <output message="impl:SetDropboxCeredentialResponse" name="SetDropboxCeredentialResponse"/>
+        <operation name="setDropboxCredential">
+            <input message="impl:SetDropboxCredentialRequest" name="SetDropboxCredentialRequest"/>
+            <output message="impl:SetDropboxCredentialResponse" name="SetDropboxCredentialResponse"/>
             <fault message="impl:AuthorizationException" name="AuthorizationException"/>
             <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
             <fault message="impl:InternalException" name="InternalException"/>
@@ -505,14 +505,14 @@
             </fault>
         </operation>
 
-        <operation name="setS3Ceredential">
+        <operation name="setS3Credential">
             <wsdlsoap:operation soapAction=""/>
 
-            <input name="SetS3CeredentialRequest">
+            <input name="SetS3CredentialRequest">
                 <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
             </input>
 
-            <output name="SetS3CeredentialResponse">
+            <output name="SetS3CredentialResponse">
                 <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
             </output>
 
@@ -529,14 +529,14 @@
             </fault>
         </operation>
         
-        <operation name="setDropboxCeredential">
+        <operation name="setDropboxCredential">
             <wsdlsoap:operation soapAction=""/>
 
-            <input name="SetDropboxCeredentialRequest">
+            <input name="SetDropboxCredentialRequest">
                 <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
             </input>
 
-            <output name="SetDropboxCeredentialResponse">
+            <output name="SetDropboxCredentialResponse">
                 <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
             </output>
 
