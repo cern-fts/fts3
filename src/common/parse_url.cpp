@@ -46,15 +46,16 @@ Uri Uri::Parse(const std::string &uri)
     Uri u0;
 
     boost::smatch matches;
-    if (boost::regex_match(uri, matches, uri_regex, boost::match_posix)) {
-        u0.Protocol = matches[2];
-        u0.Host = matches[4];
-        u0.Path = matches[5];
-        u0.QueryString = matches[7];
+    if (boost::regex_match(uri, matches, uri_regex, boost::match_posix))
+        {
+            u0.Protocol = matches[2];
+            u0.Host = matches[4];
+            u0.Path = matches[5];
+            u0.QueryString = matches[7];
 
-        // Port is put into Host, so extract it
-        extractPort(u0);
-    }
+            // Port is put into Host, so extract it
+            extractPort(u0);
+        }
 
     return u0;
 }

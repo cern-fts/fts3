@@ -345,6 +345,18 @@ std::vector< std::pair<std::string, std::string>  > GSoapContextAdapter::cancel(
     return ret;
 }
 
+
+boost::tuple<int, int> GSoapContextAdapter::cancelAll(const std::string& vo)
+{
+    impltns__cancelAllResponse resp;
+
+    if (soap_call_impltns__cancelAll(ctx, endpoint.c_str(), 0, vo, resp))
+        throw gsoap_error(ctx);
+
+    return boost::tuple<int, int>(resp._jobCount, resp._fileCount);
+}
+
+
 void GSoapContextAdapter::getRoles (impltns__getRolesResponse& resp)
 {
     if (soap_call_impltns__getRoles(ctx, endpoint.c_str(), 0, resp))

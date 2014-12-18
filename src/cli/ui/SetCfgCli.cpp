@@ -261,7 +261,7 @@ optional<bool> SetCfgCli::drain()
 {
     if (vm.count("drain"))
         {
-        std::string const & value = vm["drain"].as<std::string>();
+            std::string const & value = vm["drain"].as<std::string>();
 
             if (value != "on" && value != "off")
                 {

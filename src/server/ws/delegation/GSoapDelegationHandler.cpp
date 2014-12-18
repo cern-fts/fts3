@@ -70,19 +70,19 @@ string GSoapDelegationHandler::makeDelegationId()
 
     EVP_MD_CTX *ctx =  EVP_MD_CTX_create();
     if(ctx == NULL)
-	return NULL;
+        return NULL;
 
     if(1 != EVP_DigestInit_ex(ctx, m, NULL))
-    {
-        EVP_MD_CTX_destroy(ctx);
-	return NULL;
-    }
+        {
+            EVP_MD_CTX_destroy(ctx);
+            return NULL;
+        }
     // use DN
     if(1 != EVP_DigestUpdate(ctx, dn.c_str(), dn.size()))
-    {
-	EVP_MD_CTX_destroy(ctx);
-	return NULL;
-    }
+        {
+            EVP_MD_CTX_destroy(ctx);
+            return NULL;
+        }
 
     // use last voms attribute if available!
     if (!attrs.empty())
@@ -91,21 +91,21 @@ string GSoapDelegationHandler::makeDelegationId()
                 {
                     const void *d = fqan->c_str();
                     if(d)
-                    {
-                        if(1 != EVP_DigestUpdate(ctx, d, fqan->size()))
                         {
-				EVP_MD_CTX_destroy(ctx);
-				return NULL;
+                            if(1 != EVP_DigestUpdate(ctx, d, fqan->size()))
+                                {
+                                    EVP_MD_CTX_destroy(ctx);
+                                    return NULL;
+                                }
                         }
-                    }
                 }
         }
 
     if(1 != EVP_DigestFinal_ex(ctx, hash_delegation_id, &delegation_id_len))
-    {
-	EVP_MD_CTX_destroy(ctx);
-	return NULL;
-    }
+        {
+            EVP_MD_CTX_destroy(ctx);
+            return NULL;
+        }
 
     for (int i = 0; i < 8; i++)
         sprintf(&delegation_id[i*2], "%02x", hash_delegation_id[i]);

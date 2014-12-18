@@ -20,10 +20,6 @@ namespace fts3
 namespace cli
 {
 
-void JsonOutput::print(std::string const & path, std::string const & msg)
-{
-    json_out.put(path, msg);
-}
 
 void JsonOutput::print(cli_exception const & ex)
 {

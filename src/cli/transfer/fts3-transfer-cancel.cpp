@@ -77,12 +77,34 @@ int main(int ac, char* av[])
             // print API details if verbose
             cli.printApiDetails(*ctx.get());
 
-            std::vector<std::string> jobs = cli.getJobIds();
+            if (!cli.cancelAll()) {
+                std::vector<std::string> jobs = cli.getJobIds();
 
-            if (jobs.empty()) throw bad_option("jobid", "missing parameter");
+                if (jobs.empty()) throw bad_option("jobid", "missing parameter");
 
-            std::vector< std::pair<std::string, std::string> > ret = ctx->cancel(jobs);
-            MsgPrinter::instance().print(ret);
+                std::vector< std::pair<std::string, std::string> > ret = ctx->cancel(jobs);
+                MsgPrinter::instance().print(ret);
+            }
+            else {
+                std::cerr << "Do you really want to cancel all transfer?" << std::endl;
+                std::cerr << "Type 'yes': ";
+
+                std::string answer;
+                std::cin >> answer;
+
+                if (answer == "yes") {
+                    boost::tuple<int, int> cancelCount = ctx->cancelAll(cli.getVoName());
+                    std::vector<std::pair<std::string, int> > result;
+                    int canceledJobs = boost::get<0>(cancelCount);
+                    int canceledFiles = boost::get<1>(cancelCount);
+                    result.push_back(std::make_pair(std::string("jobs"), canceledJobs)); 
+                    result.push_back(std::make_pair(std::string("files"), canceledFiles)); 
+                    MsgPrinter::instance().print(result);
+                }
+                else {
+                    std::cout << "Abort!" << std::endl;
+                }
+            }
         }
     catch(cli_exception const & ex)
         {

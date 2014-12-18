@@ -75,7 +75,7 @@ void SrcDelCli::validate(bool /*init*/)
     // first check if the -f option was used, try to open the file with bulk-job description
     if (vm.count("file"))
         {
-        std::ifstream ifs(bulk_file.c_str());
+            std::ifstream ifs(bulk_file.c_str());
             if(ifs)// -f option is used
                 {
                     // Parse the file...

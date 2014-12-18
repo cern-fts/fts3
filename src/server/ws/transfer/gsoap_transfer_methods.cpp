@@ -730,6 +730,56 @@ int fts3::impltns__cancel2(soap* ctx, impltns__ArrayOf_USCOREsoapenc_USCOREstrin
     return SOAP_OK;
 }
 
+int fts3::impltns__cancelAll(soap* ctx, std::string voName, impltns__cancelAllResponse &resp)
+{
+    try
+        {
+            CGsiAdapter cgsi(ctx);
+            if (!cgsi.isRoot())
+                throw Err_Custom("This operation can only be done with the host certificate");
+
+            resp._jobCount = 0;
+            resp._fileCount = 0;
+
+            FTS3_COMMON_LOGGER_NEWLOG (WARNING) << "DN: '" << cgsi.getClientDn() << "' is cancelling all jobs" << commit;
+
+            // Cancel all jobs, recover their job ids
+            std::vector<std::string> canceledJobs;
+            DBSingleton::instance().getDBObjectInstance()->cancelAllJobs(voName, canceledJobs);
+
+            resp._jobCount = canceledJobs.size();
+
+            // Send the messages to the message queue
+            std::vector<std::string>::const_iterator i;
+            for (i = canceledJobs.begin(); i != canceledJobs.end(); ++i) {
+                std::vector<struct message_state> states;
+                states = DBSingleton::instance().getDBObjectInstance()->getStateOfTransfer(*i, -1);
+
+                resp._fileCount += states.size();
+
+                std::vector<struct message_state>::const_iterator j;
+                for (j = states.begin(); j != states.end(); ++j) {
+                    SingleTrStateInstance::instance().constructJSONMsg(&(*j));
+
+                    FTS3_COMMON_LOGGER_NEWLOG (INFO) << *i << " " << j->file_id << " canceled" << commit;
+                }
+            }
+        }
+    catch(Err& ex)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+            soap_receiver_fault(ctx, ex.what(), 0);
+            return SOAP_FAULT;
+        }
+    catch (...)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, job can't be cancelled "  << commit;
+            return SOAP_FAULT;
+        }
+
+    return SOAP_OK;
+}
+
 /// Web service operation 'setJobPriority' (returns error code or SOAP_OK)
 int fts3::impltns__setJobPriority(soap *ctx, string requestID, int priority, impltns__setJobPriorityResponse &resp)
 {

@@ -157,21 +157,21 @@ void DoServer() throw()
         }
     catch (CMSException& e)
         {
-          errorMessage = "PROCESS_ERROR " + e.getStackTraceString();
-          logger::writeLog(errorMessage, true);	
-	  std::cerr << errorMessage << std::endl;
-	}	
+            errorMessage = "PROCESS_ERROR " + e.getStackTraceString();
+            logger::writeLog(errorMessage, true);
+            std::cerr << errorMessage << std::endl;
+        }
     catch (const std::exception& e)
         {
-          errorMessage = "PROCESS_ERROR " + std::string(e.what());
-          logger::writeLog(errorMessage, true);	
-	  std::cerr << errorMessage << std::endl;
+            errorMessage = "PROCESS_ERROR " + std::string(e.what());
+            logger::writeLog(errorMessage, true);
+            std::cerr << errorMessage << std::endl;
         }
     catch (...)
         {
-         errorMessage = "PROCESS_ERROR Unknown exception";
-          logger::writeLog(errorMessage, true);	
-	  std::cerr << errorMessage << std::endl;
+            errorMessage = "PROCESS_ERROR Unknown exception";
+            logger::writeLog(errorMessage, true);
+            std::cerr << errorMessage << std::endl;
         }
 }
 
@@ -197,27 +197,27 @@ int main(int argc,  char** /*argv*/)
 
     //check of the file is readable
     if (access(config_file, requiredMode) != 0)
-       {
+        {
 
             std::cerr << "Not enough permissions on " << config_file << " to read" << std::endl;
             return EXIT_FAILURE;
-       }
+        }
 
     if(argc > 1) //if any param is provided stay attached to terminal
         {
             DoServer();
-        } 
-		
-	
-   int d =  daemon(0,0);
-   
-   if(d < 0)
+        }
+
+
+    int d =  daemon(0,0);
+
+    if(d < 0)
         {
-        	std::cerr << "Can't set daemon, will continue attached to tty" << std::endl;
-		return EXIT_FAILURE;
-    	}	
+            std::cerr << "Can't set daemon, will continue attached to tty" << std::endl;
+            return EXIT_FAILURE;
+        }
 
     DoServer();
-      
+
     return 0;
 }

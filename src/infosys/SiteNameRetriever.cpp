@@ -83,10 +83,10 @@ std::string SiteNameRetriever::getFromBdii(std::string se)
 
     // first check glue2
     std::list< std::map<std::string, std::list<std::string> > > rs = bdii.browse< std::list<std::string> >(
-            BdiiBrowser::GLUE2,
-            FIND_SE_SITE_GLUE2(se),
-            FIND_SE_SITE_ATTR_GLUE2
-                                            );
+                BdiiBrowser::GLUE2,
+                FIND_SE_SITE_GLUE2(se),
+                FIND_SE_SITE_ATTR_GLUE2
+            );
 
     if (!rs.empty())
         {

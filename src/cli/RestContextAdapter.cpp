@@ -108,6 +108,13 @@ std::vector< std::pair<std::string, std::string> > RestContextAdapter::cancel(st
     return ret;
 }
 
+
+boost::tuple<int, int>  RestContextAdapter::cancelAll(const std::string& vo)
+{
+    throw cli_exception("Not implemented");
+}
+
+
 std::string RestContextAdapter::transferSubmit (std::vector<File> const & files, std::map<std::string, std::string> const & parameters)
 {
     std::stringstream ss;

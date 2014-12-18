@@ -41,6 +41,10 @@ public:
         return jobIds;
     }
 
+    bool cancelAll();
+
+    std::string getVoName();
+
 private:
 
     void prepareJobIds();
@@ -49,6 +53,11 @@ private:
      * the name of the file containing bulk-job description
      */
     std::string bulk_file;
+
+    /**
+     * The vo filter for cancel-all
+     */
+    std::string vo_name;
 
     /**
      * Job IDs

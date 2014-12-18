@@ -42,14 +42,16 @@ std::string SiteName::getSiteName(std::string& hostname)
 {
     Uri uri = Uri::Parse(hostname);
 
-    if(uri.Host.length()) {
-        std::string site =  SiteNameRetriever::getInstance().getSiteName(uri.Host);
-        if(site.length() > 0 && site != "null")
-            return site;
-        else
-            return std::string();
-    }
-    else {
-        return std::string("");
-    }
+    if(uri.Host.length())
+        {
+            std::string site =  SiteNameRetriever::getInstance().getSiteName(uri.Host);
+            if(site.length() > 0 && site != "null")
+                return site;
+            else
+                return std::string();
+        }
+    else
+        {
+            return std::string("");
+        }
 }

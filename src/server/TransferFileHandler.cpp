@@ -44,7 +44,7 @@ std::map< std::string, std::set<std::string> >& TransferFileHandler::getMapFromC
             for (it_v = files.begin(); it_v != files.end(); ++it_v)
                 {
                     // the vo name
-                std::string vo = it_v->first;
+                    std::string vo = it_v->first;
                     // unique vo names
                     vos.insert(vo);
                     // ref to the list of files (for the given VO)
@@ -131,7 +131,7 @@ optional<FileIndex> TransferFileHandler::getIndex(std::string vo)
 {
     // find the item
     std::map<std::string, std::map< std::pair<std::string, std::string>, std::list<FileIndex> > >::iterator it =
-            voToFileIndexes.find(vo);
+        voToFileIndexes.find(vo);
 
     // if the VO has no mapping or no files are assigned to the VO ...
     if (it == voToFileIndexes.end() || it->second.empty()) return optional<FileIndex>();

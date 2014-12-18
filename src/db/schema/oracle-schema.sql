@@ -30,7 +30,9 @@ CREATE TABLE t_server_config (
   global_timeout INTEGER default 0,
   sec_per_mb INTEGER default 0,
   vo_name VARCHAR2(100),
-  show_user_dn VARCHAR2(3) CHECK (show_user_dn in ('on', 'off'))
+  show_user_dn VARCHAR2(3) CHECK (show_user_dn in ('on', 'off')),
+  max_per_se INTEGER default 0,
+  max_per_link INTEGER default 0  
 );
 insert into t_server_config(retry,max_time_queue,global_timeout,sec_per_mb) values(0,0,0,0);
 

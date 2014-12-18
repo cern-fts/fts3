@@ -233,7 +233,7 @@ BOOST_FIXTURE_TEST_CASE (SubmitTransferCli_parameters, SubmitTransferCli)
         }
     catch(cli_exception & ex)
         {
-        std::string s1, s2;
+            std::string s1, s2;
             s1 = ex.what();
             s2 = ex.what();
         }
