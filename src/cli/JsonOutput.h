@@ -59,7 +59,8 @@ public:
      * Puts given message in the given node of JSON output
      */
     template <typename T>
-    void print(std::string const & path, T const & msg) {
+    void print(std::string const & path, T const & msg)
+    {
         json_out.put(path, msg);
     }
 

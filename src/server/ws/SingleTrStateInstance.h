@@ -59,7 +59,7 @@ public:
     void sendStateMessage(const std::string& jobId, int fileId);
 
     void sendStateMessage(const std::string&  vo_name, const std::string&  source_se, const std::string&  dest_se, const std::string&  job_id, int file_id, const std::string&
-                            job_state, const std::string&  file_state, int retry_counter, int retry_max, const std::string&  job_metadata, const std::string&  file_metadata);
+                          job_state, const std::string&  file_state, int retry_counter, int retry_max, const std::string&  job_metadata, const std::string&  file_metadata);
 
 
     void constructJSONMsg(const struct message_state* state);

@@ -3479,11 +3479,12 @@ void MySqlAPI::cancelAllJobs(const std::string& voName, std::vector<std::string>
             soci::statement getIdsStmt(sql);
 
             selectQuery << "SELECT job_id FROM t_job "
-                     " WHERE job_state NOT IN ('CANCELED','FINISHEDDIRTY', 'FINISHED', 'FAILED') AND job_finished IS NULL";
-            if (!voName.empty()) {
-                selectQuery << " AND vo_name = :vo_name";
-                getIdsStmt.exchange(soci::use(voName));
-            }
+                        " WHERE job_state NOT IN ('CANCELED','FINISHEDDIRTY', 'FINISHED', 'FAILED') AND job_finished IS NULL";
+            if (!voName.empty())
+                {
+                    selectQuery << " AND vo_name = :vo_name";
+                    getIdsStmt.exchange(soci::use(voName));
+                }
 
             getIdsStmt.exchange(soci::into(jobId));
             getIdsStmt.alloc();
@@ -3492,23 +3493,26 @@ void MySqlAPI::cancelAllJobs(const std::string& voName, std::vector<std::string>
 
             if (getIdsStmt.execute(true))
                 {
-                    do {
-                        canceledJobs.push_back(jobId);
-                    } while (getIdsStmt.fetch());
+                    do
+                        {
+                            canceledJobs.push_back(jobId);
+                        }
+                    while (getIdsStmt.fetch());
                 }
 
             // Bulk cancel jobs
             soci::statement cancelJobsStmt(sql);
 
             jobQuery << "UPDATE t_job "
-                        "SET job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(),"
-                        "        finish_time = UTC_TIMESTAMP(), cancel_job='Y',"
-                        "        reason='Jobs canceled by the site admin' "
-                        "WHERE job_state NOT IN ('CANCELED','FINISHEDDIRTY', 'FINISHED', 'FAILED') AND job_finished IS NULL";
-            if (!voName.empty()) {
-                jobQuery << " AND vo_name = :vo_name";
-                cancelJobsStmt.exchange(soci::use(voName));
-            }
+                     "SET job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(),"
+                     "        finish_time = UTC_TIMESTAMP(), cancel_job='Y',"
+                     "        reason='Jobs canceled by the site admin' "
+                     "WHERE job_state NOT IN ('CANCELED','FINISHEDDIRTY', 'FINISHED', 'FAILED') AND job_finished IS NULL";
+            if (!voName.empty())
+                {
+                    jobQuery << " AND vo_name = :vo_name";
+                    cancelJobsStmt.exchange(soci::use(voName));
+                }
 
             cancelJobsStmt.alloc();
             cancelJobsStmt.prepare(jobQuery.str());
@@ -3519,13 +3523,14 @@ void MySqlAPI::cancelAllJobs(const std::string& voName, std::vector<std::string>
             soci::statement cancelFilesStmt(sql);
 
             fileQuery << "UPDATE t_file "
-                         "SET file_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), "
-                         "    finish_time = UTC_TIMESTAMP(), reason='Jobs canceled by the site admin' "
-                         "WHERE file_state NOT IN ('CANCELED','FINISHED', 'FAILED') AND job_finished IS NULL";
-            if (!voName.empty()) {
-                fileQuery << " AND vo_name = :vo_name";
-                cancelFilesStmt.exchange(soci::use(voName));
-            }
+                      "SET file_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), "
+                      "    finish_time = UTC_TIMESTAMP(), reason='Jobs canceled by the site admin' "
+                      "WHERE file_state NOT IN ('CANCELED','FINISHED', 'FAILED') AND job_finished IS NULL";
+            if (!voName.empty())
+                {
+                    fileQuery << " AND vo_name = :vo_name";
+                    cancelFilesStmt.exchange(soci::use(voName));
+                }
 
             cancelFilesStmt.alloc();
             cancelFilesStmt.prepare(fileQuery.str());
@@ -3536,13 +3541,14 @@ void MySqlAPI::cancelAllJobs(const std::string& voName, std::vector<std::string>
             soci::statement cancelDmStmt(sql);
 
             dmQuery << "UPDATE t_dm "
-                         "SET file_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), "
-                         "    finish_time = UTC_TIMESTAMP(), reason='Jobs canceled by the site admin' "
-                         "WHERE file_state NOT IN ('CANCELED','FINISHED', 'FAILED') AND job_finished IS NULL";
-            if (!voName.empty()) {
-                dmQuery << " AND vo_name = :vo_name";
-                cancelDmStmt.exchange(soci::use(voName));
-            }
+                    "SET file_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), "
+                    "    finish_time = UTC_TIMESTAMP(), reason='Jobs canceled by the site admin' "
+                    "WHERE file_state NOT IN ('CANCELED','FINISHED', 'FAILED') AND job_finished IS NULL";
+            if (!voName.empty())
+                {
+                    dmQuery << " AND vo_name = :vo_name";
+                    cancelDmStmt.exchange(soci::use(voName));
+                }
 
             cancelDmStmt.alloc();
             cancelDmStmt.prepare(dmQuery.str());
@@ -4040,12 +4046,12 @@ void MySqlAPI::getMaxActive(soci::session& sql, int& source, int& destination, c
 
     try
         {
-   	    sql << "select max_per_se, max_per_link from t_server_config", soci::into(max_per_se), soci::into(max_per_link);
+            sql << "select max_per_se, max_per_link from t_server_config", soci::into(max_per_se), soci::into(max_per_link);
 
-	    if(max_per_link > 0)
-	    	MAX_ACTIVE_PER_LINK = max_per_link;
-	    if(max_per_se > 0)
-	    	MAX_ACTIVE_ENDPOINT_LINK = max_per_se;
+            if(max_per_link > 0)
+                MAX_ACTIVE_PER_LINK = max_per_link;
+            if(max_per_se > 0)
+                MAX_ACTIVE_ENDPOINT_LINK = max_per_se;
 
             int maxDefault = MAX_ACTIVE_ENDPOINT_LINK;
 
@@ -4128,10 +4134,10 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
 
             sql << "select max_per_se, max_per_link from t_server_config", soci::into(max_per_se), soci::into(max_per_link);
 
-	    if(max_per_link > 0)
-	    	MAX_ACTIVE_PER_LINK = max_per_link;
-	    if(max_per_se > 0)
-	    	MAX_ACTIVE_ENDPOINT_LINK = max_per_se;
+            if(max_per_link > 0)
+                MAX_ACTIVE_PER_LINK = max_per_link;
+            if(max_per_se > 0)
+                MAX_ACTIVE_ENDPOINT_LINK = max_per_se;
 
 
             soci::statement stmt1 = (
@@ -4482,10 +4488,10 @@ bool MySqlAPI::updateOptimizer()
 
             sql << "select max_per_se, max_per_link from t_server_config", soci::into(max_per_se), soci::into(max_per_link);
 
-	    if(max_per_link > 0)
-	    	MAX_ACTIVE_PER_LINK = max_per_link;
-	    if(max_per_se > 0)
-	    	MAX_ACTIVE_ENDPOINT_LINK = max_per_se;
+            if(max_per_link > 0)
+                MAX_ACTIVE_PER_LINK = max_per_link;
+            if(max_per_se > 0)
+                MAX_ACTIVE_ENDPOINT_LINK = max_per_se;
 
 
             //check first for distinct sources
@@ -7321,19 +7327,42 @@ void MySqlAPI::setMaxTimeInQueue(int afterXHours)
 void MySqlAPI::setGlobalLimits(const int* maxActivePerLink, const int* maxActivePerSe)
 {
     soci::session sql(*connectionPool);
+    int existsLink = 0;
+    int existsSe = 0;
 
     try
         {
+            sql << "select max_per_link from t_server_config", soci::into(existsLink);
+            sql << "select max_per_se from t_server_config", soci::into(existsSe);
+
             sql.begin();
 
-            if (maxActivePerLink) {
-                sql << "UPDATE t_server_config SET max_per_link = :maxLink",
-                        soci::use(*maxActivePerLink);
-            }
-            if (maxActivePerSe) {
-                sql << "UPDATE t_server_config SET max_per_se = :maxSe",
-                        soci::use(*maxActivePerSe);
-            }
+            if (maxActivePerLink)
+                {
+                    if(existsLink > 0)
+                        {
+                            sql << "UPDATE t_server_config SET max_per_link = :maxLink",
+                                soci::use(*maxActivePerLink);
+                        }
+                    else
+                        {
+                            sql << "INSERT into t_server_config(max_per_link) VALUES(:maxLink)",
+                                soci::use(*maxActivePerLink);
+                        }
+                }
+            if (maxActivePerSe)
+                {
+                    if(existsSe > 0)
+                        {
+                            sql << "UPDATE t_server_config SET max_per_se = :maxSe",
+                                soci::use(*maxActivePerSe);
+                        }
+                    else
+                        {
+                            sql << "INSERT into t_server_config(max_per_se) VALUES(:maxSe)",
+                                soci::use(*maxActivePerSe);
+                        }
+                }
 
             sql.commit();
         }
@@ -8465,7 +8494,7 @@ void MySqlAPI::setFilesToWaiting(const std::string& se, const std::string& vo, i
                                 " WHERE (source_se = :src OR dest_se = :dest) "
                                 "	AND file_state IN ('ACTIVE','SUBMITTED', 'NOT_USED') "
                                 "	and file_id=:file_id ",
-			        soci::use(timeout),
+                                soci::use(timeout),
                                 soci::use(se),
                                 soci::use(se),
                                 soci::use(file_id)
@@ -8491,18 +8520,18 @@ void MySqlAPI::setFilesToWaiting(const std::string& se, const std::string& vo, i
 
                     for (it = rs.begin(); it != rs.end(); ++it)
                         {
-                              file_id = it->get<int>("file_id");
+                            file_id = it->get<int>("file_id");
 
-                              sql <<
+                            sql <<
                                 " UPDATE t_file "
                                 " SET wait_timestamp = UTC_TIMESTAMP(), wait_timeout = :timeout "
                                 " WHERE (source_se = :src OR dest_se = :dest) and vo_name=:vo_name "
                                 "	AND file_state IN ('ACTIVE','SUBMITTED', 'NOT_USED') "
                                 "	and file_id=:file_id ",
-			        soci::use(timeout),
+                                soci::use(timeout),
                                 soci::use(se),
                                 soci::use(se),
-			        soci::use(vo),
+                                soci::use(vo),
                                 soci::use(file_id)
                                 ;
                         }
@@ -12361,7 +12390,6 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                                                               "   AND j.vo_name = :vo_name "
                                                               "   AND f.vo_name = j.vo_name "
                                                               "   AND f.job_finished IS NULL "
-                                                              "   AND EXISTS (SELECT * FROM t_job y WHERE y.job_id = j.job_id ORDER BY y.submit_time) "
                                                               " order by f.file_id LIMIT :limit",
                                                               soci::use(hashSegment.start), soci::use(hashSegment.end),
                                                               soci::use(source_se),
