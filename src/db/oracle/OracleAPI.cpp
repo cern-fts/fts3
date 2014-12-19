@@ -4931,7 +4931,7 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
                             jobIdStmt << job_id;
                             jobIdStmt << "',";
 
-                            if(count == 1000)
+                            if(count == 5000)
                                 {
                                     std::string queryStr = jobIdStmt.str();
                                     job_id = queryStr.substr(0, queryStr.length() - 1);
@@ -4968,17 +4968,7 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
                     //delete from t_file_retry_errors > 7 days old records
                     sql.begin();
                     sql << "delete from t_file_retry_errors where datetime < (systimestamp - interval '7' DAY )";
-                    sql.commit();
-
-                    //delete from t_turl > 7 days old records
-                    sql.begin();
-                    sql << "delete from t_turl where datetime < (systimestamp - interval '7' DAY )";
-                    sql.commit();
-
-                    sql.begin();
-                    sql << "update t_turl set finish=0 where finish > 100000000000";
-                    sql << "update t_turl set fail=0 where fail > 100000000000";
-                    sql.commit();
+                    sql.commit();                    
                 }
 
             jobIdStmt.str(std::string());
