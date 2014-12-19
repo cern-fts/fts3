@@ -809,6 +809,12 @@ void MySqlAPI::getVOPairsWithReuse(std::vector< boost::tuple<std::string, std::s
 
     try
         {
+	     int howMany = 0;
+	    //check first if exists, it does a full scan but it's fast
+	    sql << "select count(*) from t_job where reuse_job = 'Y' LIMIT 1", soci::into(howMany);
+	    if(howMany == 0)
+	    	return;
+		
             soci::rowset<soci::row> rs2 = (sql.prepare <<
                                            " SELECT DISTINCT t_file.vo_name, t_file.source_se, t_file.dest_se "
                                            " FROM t_file "
@@ -1148,6 +1154,12 @@ void MySqlAPI::getMultihopJobs(std::map< std::string, std::queue< std::pair<std:
             time_t now = time(NULL);
             struct tm tTime;
             gmtime_r(&now, &tTime);
+	    
+	    int howMany = 0;
+	    //check first if exists, it does a full scan but it's fast
+	    sql << "select count(*) from t_job where reuse_job = 'H' LIMIT 1", soci::into(howMany);
+	    if(howMany == 0)
+	    	return;	    
 
             soci::rowset<soci::row> jobs_rs = (sql.prepare <<
                                                " SELECT DISTINCT t_file.vo_name, t_file.job_id "
