@@ -260,6 +260,8 @@ public:
 
     virtual int getMaxTimeInQueue();
 
+    virtual void setGlobalLimits(const int* maxActivePerLink, const int* maxActivePerSe);
+
     virtual void setMaxTimeInQueue(int afterXHours);
 
     virtual void setToFailOldQueuedJobs(std::vector<std::string>& jobs);

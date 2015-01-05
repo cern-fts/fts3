@@ -1691,7 +1691,6 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
             insertJob.execute(true);
 
             // Insert src/dest pair
-            int timeout = 0;
             unsigned jobHashedId = 0;
             typedef std::pair<std::string, std::string> Key;
             typedef std::map< Key , int> Mapa;
@@ -1820,7 +1819,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
                                     << ":fileIndex" << insert_index << ", "
                                     << ":sourceSe" << insert_index << ", "
                                     << ":destSe" << insert_index << ", "
-	   		            << "NULL" << ", "
+                                    << "NULL" << ", "
                                     << "NULL" << ", "
                                     << ":activity" << insert_index << ", "
                                     << ":hashId" << insert_index
@@ -3105,11 +3104,12 @@ void OracleAPI::cancelAllJobs(const std::string& voName, std::vector<std::string
             soci::statement getIdsStmt(sql);
 
             selectQuery << "SELECT job_id FROM t_job "
-                     " WHERE job_state NOT IN ('CANCELED','FINISHEDDIRTY', 'FINISHED', 'FAILED') AND job_finished IS NULL";
-            if (!voName.empty()) {
-                selectQuery << " AND vo_name = :vo_name";
-                getIdsStmt.exchange(soci::use(voName));
-            }
+                        " WHERE job_state NOT IN ('CANCELED','FINISHEDDIRTY', 'FINISHED', 'FAILED') AND job_finished IS NULL";
+            if (!voName.empty())
+                {
+                    selectQuery << " AND vo_name = :vo_name";
+                    getIdsStmt.exchange(soci::use(voName));
+                }
 
             getIdsStmt.exchange(soci::into(jobId));
             getIdsStmt.alloc();
@@ -3118,23 +3118,26 @@ void OracleAPI::cancelAllJobs(const std::string& voName, std::vector<std::string
 
             if (getIdsStmt.execute(true))
                 {
-                    do {
-                        canceledJobs.push_back(jobId);
-                    } while (getIdsStmt.fetch());
+                    do
+                        {
+                            canceledJobs.push_back(jobId);
+                        }
+                    while (getIdsStmt.fetch());
                 }
 
             // Bulk cancel jobs
             soci::statement cancelJobsStmt(sql);
 
             jobQuery << "UPDATE t_job "
-                        "SET job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(),"
-                        "        finish_time = UTC_TIMESTAMP(), cancel_job='Y',"
-                        "        reason='Jobs canceled by the site admin' "
-                        "WHERE job_state NOT IN ('CANCELED','FINISHEDDIRTY', 'FINISHED', 'FAILED') AND job_finished IS NULL";
-            if (!voName.empty()) {
-                jobQuery << " AND vo_name = :vo_name";
-                cancelJobsStmt.exchange(soci::use(voName));
-            }
+                     "SET job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(),"
+                     "        finish_time = UTC_TIMESTAMP(), cancel_job='Y',"
+                     "        reason='Jobs canceled by the site admin' "
+                     "WHERE job_state NOT IN ('CANCELED','FINISHEDDIRTY', 'FINISHED', 'FAILED') AND job_finished IS NULL";
+            if (!voName.empty())
+                {
+                    jobQuery << " AND vo_name = :vo_name";
+                    cancelJobsStmt.exchange(soci::use(voName));
+                }
 
             cancelJobsStmt.alloc();
             cancelJobsStmt.prepare(jobQuery.str());
@@ -3145,13 +3148,14 @@ void OracleAPI::cancelAllJobs(const std::string& voName, std::vector<std::string
             soci::statement cancelFilesStmt(sql);
 
             fileQuery << "UPDATE t_file "
-                         "SET file_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), "
-                         "    finish_time = UTC_TIMESTAMP(), reason='Jobs canceled by the site admin' "
-                         "WHERE file_state NOT IN ('CANCELED','FINISHED', 'FAILED') AND job_finished IS NULL";
-            if (!voName.empty()) {
-                fileQuery << " AND vo_name = :vo_name";
-                cancelFilesStmt.exchange(soci::use(voName));
-            }
+                      "SET file_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), "
+                      "    finish_time = UTC_TIMESTAMP(), reason='Jobs canceled by the site admin' "
+                      "WHERE file_state NOT IN ('CANCELED','FINISHED', 'FAILED') AND job_finished IS NULL";
+            if (!voName.empty())
+                {
+                    fileQuery << " AND vo_name = :vo_name";
+                    cancelFilesStmt.exchange(soci::use(voName));
+                }
 
             cancelFilesStmt.alloc();
             cancelFilesStmt.prepare(fileQuery.str());
@@ -3162,13 +3166,14 @@ void OracleAPI::cancelAllJobs(const std::string& voName, std::vector<std::string
             soci::statement cancelDmStmt(sql);
 
             dmQuery << "UPDATE t_dm "
-                         "SET file_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), "
-                         "    finish_time = UTC_TIMESTAMP(), reason='Jobs canceled by the site admin' "
-                         "WHERE file_state NOT IN ('CANCELED','FINISHED', 'FAILED') AND job_finished IS NULL";
-            if (!voName.empty()) {
-                dmQuery << " AND vo_name = :vo_name";
-                cancelDmStmt.exchange(soci::use(voName));
-            }
+                    "SET file_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), "
+                    "    finish_time = UTC_TIMESTAMP(), reason='Jobs canceled by the site admin' "
+                    "WHERE file_state NOT IN ('CANCELED','FINISHED', 'FAILED') AND job_finished IS NULL";
+            if (!voName.empty())
+                {
+                    dmQuery << " AND vo_name = :vo_name";
+                    cancelDmStmt.exchange(soci::use(voName));
+                }
 
             cancelDmStmt.alloc();
             cancelDmStmt.prepare(dmQuery.str());
@@ -3671,14 +3676,14 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
     try
         {
             int highDefault = MIN_ACTIVE;
-	    
+
             sql << "select max_per_se, max_per_link from t_server_config", soci::into(max_per_se), soci::into(max_per_link);
-	    
-	    if(max_per_link > 0)
-	    	MAX_ACTIVE_PER_LINK = max_per_link;
-	    if(max_per_se > 0)	
-	    	MAX_ACTIVE_ENDPOINT_LINK = max_per_se;
-	    
+
+            if(max_per_link > 0)
+                MAX_ACTIVE_PER_LINK = max_per_link;
+            if(max_per_se > 0)
+                MAX_ACTIVE_ENDPOINT_LINK = max_per_se;
+
 
             soci::statement stmt1 = (
                                         sql.prepare << "SELECT active FROM t_optimize_active "
@@ -3723,18 +3728,18 @@ void OracleAPI::getMaxActive(soci::session& sql, int& source, int& destination, 
     int maxActiveDest = 0;
     int max_per_se = 0;
     int max_per_link = 0;
-    
+
     try
         {
-   	    sql << "select max_per_se, max_per_link from t_server_config", soci::into(max_per_se), soci::into(max_per_link);
-	    
-	    if(max_per_link > 0)
-	    	MAX_ACTIVE_PER_LINK = max_per_link;
-	    if(max_per_se > 0)	
-	    	MAX_ACTIVE_ENDPOINT_LINK = max_per_se;
-		
-            int maxDefault = MAX_ACTIVE_ENDPOINT_LINK;	
-	    
+            sql << "select max_per_se, max_per_link from t_server_config", soci::into(max_per_se), soci::into(max_per_link);
+
+            if(max_per_link > 0)
+                MAX_ACTIVE_PER_LINK = max_per_link;
+            if(max_per_se > 0)
+                MAX_ACTIVE_ENDPOINT_LINK = max_per_se;
+
+            int maxDefault = MAX_ACTIVE_ENDPOINT_LINK;
+
             //check for source
             sql << " select active from t_optimize where source_se = :source_se and active is not NULL ",
                 soci::use(source_hostname),
@@ -3836,7 +3841,7 @@ bool OracleAPI::updateOptimizer()
     double avgDuration = 0.0;
     soci::indicator isNullAvg = soci::i_ok;
     int max_per_se = 0;
-    int max_per_link = 0;    
+    int max_per_link = 0;
 
 
     try
@@ -3969,13 +3974,13 @@ bool OracleAPI::updateOptimizer()
                                          soci::use(source_hostname),
                                          soci::use(destin_hostname),
                                          soci::into(allTested));
-					 
+
             sql << "select max_per_se, max_per_link from t_server_config", soci::into(max_per_se), soci::into(max_per_link);
-	    
-	    if(max_per_link > 0)
-	    	MAX_ACTIVE_PER_LINK = max_per_link;
-	    if(max_per_se > 0)	
-	    	MAX_ACTIVE_ENDPOINT_LINK = max_per_se;			            					 
+
+            if(max_per_link > 0)
+                MAX_ACTIVE_PER_LINK = max_per_link;
+            if(max_per_se > 0)
+                MAX_ACTIVE_ENDPOINT_LINK = max_per_se;
 
 
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
@@ -4926,7 +4931,7 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
                             jobIdStmt << job_id;
                             jobIdStmt << "',";
 
-                            if(count == 1000)
+                            if(count == 5000)
                                 {
                                     std::string queryStr = jobIdStmt.str();
                                     job_id = queryStr.substr(0, queryStr.length() - 1);
@@ -4963,17 +4968,7 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
                     //delete from t_file_retry_errors > 7 days old records
                     sql.begin();
                     sql << "delete from t_file_retry_errors where datetime < (systimestamp - interval '7' DAY )";
-                    sql.commit();
-
-                    //delete from t_turl > 7 days old records
-                    sql.begin();
-                    sql << "delete from t_turl where datetime < (systimestamp - interval '7' DAY )";
-                    sql.commit();
-
-                    sql.begin();
-                    sql << "update t_turl set finish=0 where finish > 100000000000";
-                    sql << "update t_turl set fail=0 where fail > 100000000000";
-                    sql.commit();
+                    sql.commit();                    
                 }
 
             jobIdStmt.str(std::string());
@@ -6629,7 +6624,7 @@ int OracleAPI::getRetry(const std::string & jobId)
                         soci::use(vo_name), soci::into(nRetries)
                         ;
                 }
-            else if (nRetries < 0)
+            else if (nRetries <= 0)
                 {
                     nRetries = -1;
                 }
@@ -6739,6 +6734,60 @@ void OracleAPI::setMaxTimeInQueue(int afterXHours)
         }
 }
 
+
+void OracleAPI::setGlobalLimits(const int* maxActivePerLink, const int* maxActivePerSe)
+{
+    soci::session sql(*connectionPool);
+    int existsLink = 0;
+    int existsSe = 0;
+
+    try
+        {
+            sql << "select max_per_link from t_server_config", soci::into(existsLink);
+            sql << "select max_per_se from t_server_config", soci::into(existsSe);
+
+            sql.begin();
+
+            if (maxActivePerLink)
+                {
+                    if(existsLink > 0)
+                        {
+                            sql << "UPDATE t_server_config SET max_per_link = :maxLink",
+                                soci::use(*maxActivePerLink);
+                        }
+                    else
+                        {
+                            sql << "INSERT into t_server_config(max_per_link) VALUES(:maxLink)",
+                                soci::use(*maxActivePerLink);
+                        }
+                }
+            if (maxActivePerSe)
+                {
+                    if(existsSe > 0)
+                        {
+                            sql << "UPDATE t_server_config SET max_per_se = :maxSe",
+                                soci::use(*maxActivePerSe);
+                        }
+                    else
+                        {
+                            sql << "INSERT into t_server_config(max_per_se) VALUES(:maxSe)",
+                                soci::use(*maxActivePerSe);
+                        }
+                }
+
+            sql.commit();
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
 
 
 void OracleAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
@@ -8910,8 +8959,10 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
                 soci::into(copy_pin_lifetime);
 
 
+	    bool exists = (reason.find("ETIMEDOUT") != std::string::npos);
+
             //staging exception, if file failed with timeout and was staged before, reset it
-            if(bring_online > 0 || copy_pin_lifetime > 0)
+            if( (bring_online > 0 || copy_pin_lifetime > 0) && exists)
                 {
                     sql << "update t_file set retry = :retry, current_failures = 0, file_state='STAGING', internal_file_params=NULL, transferHost=NULL,start_time=NULL, pid=NULL, "
                         " filesize=0, staging_start=NULL, staging_finished=NULL where file_id=:file_id and job_id=:job_id AND file_state NOT IN ('STAGING','FINISHED','SUBMITTED','FAILED','CANCELED') ",

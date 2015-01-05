@@ -751,19 +751,21 @@ int fts3::impltns__cancelAll(soap* ctx, std::string voName, impltns__cancelAllRe
 
             // Send the messages to the message queue
             std::vector<std::string>::const_iterator i;
-            for (i = canceledJobs.begin(); i != canceledJobs.end(); ++i) {
-                std::vector<struct message_state> states;
-                states = DBSingleton::instance().getDBObjectInstance()->getStateOfTransfer(*i, -1);
+            for (i = canceledJobs.begin(); i != canceledJobs.end(); ++i)
+                {
+                    std::vector<struct message_state> states;
+                    states = DBSingleton::instance().getDBObjectInstance()->getStateOfTransfer(*i, -1);
 
-                resp._fileCount += states.size();
+                    resp._fileCount += states.size();
 
-                std::vector<struct message_state>::const_iterator j;
-                for (j = states.begin(); j != states.end(); ++j) {
-                    SingleTrStateInstance::instance().constructJSONMsg(&(*j));
+                    std::vector<struct message_state>::const_iterator j;
+                    for (j = states.begin(); j != states.end(); ++j)
+                        {
+                            SingleTrStateInstance::instance().constructJSONMsg(&(*j));
 
-                    FTS3_COMMON_LOGGER_NEWLOG (INFO) << *i << " " << j->file_id << " canceled" << commit;
+                            FTS3_COMMON_LOGGER_NEWLOG (INFO) << *i << " " << j->file_id << " canceled" << commit;
+                        }
                 }
-            }
         }
     catch(Err& ex)
         {

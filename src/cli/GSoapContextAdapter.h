@@ -349,6 +349,11 @@ public:
     void setGlobalTimeout(int timeout);
 
     /**
+     * Remote call to setGlobalLimits
+     */
+    void setGlobalLimits(boost::optional<int> maxActivePerLink, boost::optional<int> maxActivePerSe);
+
+    /**
      * Remote call to setSecPerMb
      */
     void setSecPerMb(int secPerMb);

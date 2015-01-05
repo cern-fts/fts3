@@ -305,6 +305,10 @@ public:
 
     virtual void setMaxTimeInQueue(int afterXHours) = 0;
 
+    // If NULL, it will not be modified
+    virtual void setGlobalLimits(const int* maxActivePerLink, const int* maxActivePerSe) = 0;
+
+
     virtual void setToFailOldQueuedJobs(std::vector<std::string>& jobs) = 0;
 
     virtual std::vector< std::pair<std::string, std::string> > getPairsForSe(std::string se) = 0;

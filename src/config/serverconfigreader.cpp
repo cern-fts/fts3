@@ -50,6 +50,7 @@ po::options_description ServerConfigReader::_defineGenericOptions()
     ("help,h", "Display this help page")
     ("version,v", "Display server version")
     ("no-daemon,n", "Do not daemonize")
+    ("rush,r", "Start and stop faster. Not for use in production!")
 
     (
         "configfile,f",

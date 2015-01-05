@@ -117,7 +117,7 @@ public:
                                 if(msg.retry==true && retry > 0 && msg.file_id > 0 && !job.empty())
                                     {
                                         int retryTimes = DBSingleton::instance().getDBObjectInstance()->getRetryTimes(job, msg.file_id);
-                                        if(retryTimes != -1 && retryTimes <= retry-1 )
+                                        if( retryTimes <= retry-1 )
                                             {
                                                 DBSingleton::instance().getDBObjectInstance()
                                                 ->setRetryTransfer(job, msg.file_id, retryTimes+1, msg.transfer_message);

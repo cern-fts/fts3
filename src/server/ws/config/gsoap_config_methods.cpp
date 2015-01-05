@@ -851,7 +851,54 @@ int fts3::implcfg__setGlobalTimeout(soap* ctx, int timeout, implcfg__setGlobalTi
     return SOAP_OK;
 }
 
-int fts3::implcfg__setS3Ceredential(soap* ctx, std::string accessKey, std::string secretKey, std::string vo, std::string storage, implcfg__setS3CeredentialResponse& resp)
+int fts3::implcfg__setGlobalLimits(soap* ctx, fts3::config__GlobalLimits* limits, fts3::implcfg__setGlobalLimitsResponse&)
+{
+    try
+        {
+            // Authorise
+            AuthorizationManager::getInstance().authorize(
+                ctx,
+                AuthorizationManager::CONFIG,
+                AuthorizationManager::dummy
+            );
+
+            CGsiAdapter cgsi(ctx);
+            string vo = cgsi.getClientVo();
+            string dn = cgsi.getClientDn();
+
+            DBSingleton::instance().getDBObjectInstance()->setGlobalLimits(limits->maxActivePerLink, limits->maxActivePerSe);
+
+            // prepare the command for audit
+            stringstream cmd;
+            cmd << dn << " had set the global ";
+            if (limits->maxActivePerLink)
+                cmd << "active limit per link to " << *limits->maxActivePerLink;
+            if (limits->maxActivePerLink && limits->maxActivePerSe)
+                cmd << " and ";
+            if (limits->maxActivePerSe)
+                cmd <<  "active limit per se to " <<  *limits->maxActivePerSe;
+
+            DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd.str(), "global-limits");
+            FTS3_COMMON_LOGGER_NEWLOG (INFO) << cmd.str() << commit;
+        }
+    catch(Err& ex)
+        {
+
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+            soap_receiver_fault(ctx, ex.what(), "InvalidConfigurationException");
+
+            return SOAP_FAULT;
+        }
+    catch (...)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the setGlobalTimeout failed"  << commit;
+            return SOAP_FAULT;
+        }
+
+    return SOAP_OK;
+}
+
+int fts3::implcfg__setS3Credential(soap* ctx, std::string accessKey, std::string secretKey, std::string vo, std::string storage, implcfg__setS3CredentialResponse& resp)
 {
     try
         {
@@ -882,7 +929,7 @@ int fts3::implcfg__setS3Ceredential(soap* ctx, std::string accessKey, std::strin
     return SOAP_OK;
 }
 
-int fts3::implcfg__setDropboxCeredential(soap* ctx, std::string appKey, std::string appSecret, std::string apiUrl, implcfg__setDropboxCeredentialResponse& resp)
+int fts3::implcfg__setDropboxCredential(soap* ctx, std::string appKey, std::string appSecret, std::string apiUrl, implcfg__setDropboxCredentialResponse& resp)
 {
     try
         {

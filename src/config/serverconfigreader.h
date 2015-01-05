@@ -105,6 +105,9 @@ protected:
         bool isNoDaemon = _vm.count ("no-daemon");
         _vars["no-daemon"] = isNoDaemon ? "true" : "false";
 
+        bool rushMode = _vm.count("rush");
+        _vars["rush"] = rushMode ? "true" : "false";
+
         DEPENDENCIES::processVariables(*this);
     }
 

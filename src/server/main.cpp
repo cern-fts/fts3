@@ -366,13 +366,17 @@ static void shutdown_callback(int signal, void*)
         }
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopping" << commit;
-    sleep(15);
+
+    if (!theServerConfig().get<bool> ("rush"))
+        sleep(15);
+
     try
         {
             theServer().stop();
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS db connections closing" << commit;
             db::DBSingleton::tearDown();
-            sleep(10);
+            if (!theServerConfig().get<bool> ("rush"))
+                sleep(10);
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS db connections closed" << commit;
         }
     catch(...)

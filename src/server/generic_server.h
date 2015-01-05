@@ -45,7 +45,8 @@ public:
         typename TRAITS::HeartBeatType heartBeatHandler;
         heartBeatHandler.beat();
 
-        sleep(8);
+        if (!theServerConfig().get<bool> ("rush"))
+            sleep(8);
 
         typename TRAITS::CleanLogsTypeActive cLeanLogsHandlerActive;
         cLeanLogsHandlerActive.beat();
@@ -54,7 +55,8 @@ public:
         processUpdaterDBHandler.executeTransfer_p();
 
         /*wait for status updates to be processed and then start sanity threads*/
-        sleep(12);
+        if (!theServerConfig().get<bool> ("rush"))
+            sleep(12);
 
         typename TRAITS::HeartBeatTypeActive heartBeatHandlerActive;
         heartBeatHandlerActive.beat();
