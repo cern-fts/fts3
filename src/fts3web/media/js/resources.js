@@ -103,7 +103,7 @@ angular.module('ftsmon.resources', ['ngResource'])
 })
 .factory('ConfigDebug', function($resource) {
 	return $resource('config/debug', {}, {
-		query: {method: 'GET', isArray: true}
+		query: {method: 'GET', isArray: false}
 	})
 })
 .factory('ConfigLimits', function($resource) {
@@ -113,6 +113,16 @@ angular.module('ftsmon.resources', ['ngResource'])
 })
 .factory('ConfigGfal2', function($resource) {
 	return $resource('config/gfal2', {}, {
+		query: {method: 'GET', isArray: false}
+	})
+})
+.factory('ConfigActivities', function($resource) {
+	return $resource('config/activities', {}, {
+		query: {method: 'GET', isArray: false}
+	})
+})
+.factory('ActivePerActivity', function($resource) {
+	return $resource('config/activities/:vo', {}, {
 		query: {method: 'GET', isArray: false}
 	})
 })

@@ -14,12 +14,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import json
 import os
 from django.db import connection
-from django.db.models import Q
+from django.db.models import Q, Count
 from ftsweb.models import ConfigAudit
 from ftsweb.models import LinkConfig, ShareConfig
 from ftsweb.models import DebugConfig, Optimize
+from ftsweb.models import ActivityShare, File
 from authn import require_certificate
 from jsonify import jsonify, jsonify_paged
 from util import get_order_by, ordered_field
@@ -98,9 +100,9 @@ def get_link_config(http_request):
 
 
 @require_certificate
-@jsonify
+@jsonify_paged
 def get_debug_config(http_request):
-    return DebugConfig.objects.order_by('source_se', 'dest_se').all()
+    return DebugConfig.objects.order_by('source_se', 'dest_se')
 
 
 @require_certificate
@@ -138,3 +140,30 @@ def get_gfal2_config(http_request):
         config[cfg_path] = open(cfg_path).read()
 
     return config
+
+
+@require_certificate
+@jsonify
+def get_activities(http_request):
+    rows = ActivityShare.objects.all()
+    per_vo = dict()
+    for row in rows:
+        share = per_vo.get(row.vo, dict())
+        for entry in json.loads(row.activity_share):
+            for share_name, share_value in entry.iteritems():
+                share[share_name] = share_value
+        per_vo[row.vo] = share
+    return per_vo
+
+
+@require_certificate
+@jsonify
+def get_actives_per_activity(http_request, vo):
+    active = File.objects.filter(vo_name = vo, job_finished__isnull=True).exclude(file_state='NOT_USED')\
+            .values('activity', 'file_state').annotate(count=Count('activity')).values('activity', 'file_state', 'count')
+    grouped = dict()
+    for row in active:
+        activity = grouped.get(row['activity'], dict())
+        activity[row['file_state']] = row['count']
+        grouped[row['activity']] = activity
+    return grouped
