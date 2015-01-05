@@ -414,7 +414,7 @@ std::map<std::string, double> OracleAPI::getActivityShareConf(soci::session& sql
             boost::tokenizer< boost::char_separator<char> > tokens(activity_share_str, sep);
             boost::tokenizer< boost::char_separator<char> >::iterator it;
 
-            static const boost::regex re("^\\s*\\{\\s*\"([ a-zA-Z0-9\\.-]+)\"\\s*:\\s*(0\\.\\d+)\\s*\\}\\s*$");
+            static const boost::regex re("^\\s*\\{\\s*\"([ a-zA-Z0-9\\.-]+)\"\\s*:\\s*((0\\.)?\\d+)\\s*\\}\\s*$");
             static const int ACTIVITY_NAME = 1;
             static const int ACTIVITY_SHARE = 2;
 
@@ -4968,7 +4968,7 @@ void OracleAPI::backup(long* nJobs, long* nFiles)
                     //delete from t_file_retry_errors > 7 days old records
                     sql.begin();
                     sql << "delete from t_file_retry_errors where datetime < (systimestamp - interval '7' DAY )";
-                    sql.commit();                    
+                    sql.commit();
                 }
 
             jobIdStmt.str(std::string());
