@@ -1237,15 +1237,7 @@ int main(int argc, char **argv)
                         goto stop;
                     }
 
-                //it a token exists, then the file was earlier attempted to be brought online
-                //increase timeout to make sure it will be brought again ONLINE if it is NEARLINE
-                if(!std::string(currentTransfer.tokenBringOnline).empty() && std::string(currentTransfer.tokenBringOnline) != "x")
-                    {
-                        gfal2_set_opt_integer(handle, "SRM PLUGIN", "OPERATION_TIMEOUT", 3600, NULL);
-                        logger.INFO() << "Increase SRM timeout to " <<  3600 << " to make sure the file for token " << currentTransfer.tokenBringOnline << " is still ONLINE" << std::endl;
-                    }
-
-
+                
                 logger.INFO() << "Transfer Starting" << std::endl;
                 reporter.sendLog(opts.jobId, currentTransfer.fileId, fileManagement.getLogFilePath(), opts.debugLevel);
 

@@ -6624,7 +6624,7 @@ int OracleAPI::getRetry(const std::string & jobId)
                         soci::use(vo_name), soci::into(nRetries)
                         ;
                 }
-            else if (nRetries < 0)
+            else if (nRetries <= 0)
                 {
                     nRetries = -1;
                 }
@@ -8959,8 +8959,10 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
                 soci::into(copy_pin_lifetime);
 
 
+	    bool exists = (reason.find("ETIMEDOUT") != std::string::npos);
+
             //staging exception, if file failed with timeout and was staged before, reset it
-            if(bring_online > 0 || copy_pin_lifetime > 0)
+            if( (bring_online > 0 || copy_pin_lifetime > 0) && exists)
                 {
                     sql << "update t_file set retry = :retry, current_failures = 0, file_state='STAGING', internal_file_params=NULL, transferHost=NULL,start_time=NULL, pid=NULL, "
                         " filesize=0, staging_start=NULL, staging_finished=NULL where file_id=:file_id and job_id=:job_id AND file_state NOT IN ('STAGING','FINISHED','SUBMITTED','FAILED','CANCELED') ",

@@ -7226,7 +7226,7 @@ int MySqlAPI::getRetry(const std::string & jobId)
                         soci::use(vo_name), soci::into(nRetries)
                         ;
                 }
-            else if (nRetries < 0)
+            else if (nRetries <= 0)
                 {
                     nRetries = -1;
                 }
@@ -7237,7 +7237,7 @@ int MySqlAPI::getRetry(const std::string & jobId)
                 {
                     std::string mreplica;
                     sql << "select reuse_job from t_job where job_id=:job_id", soci::use(jobId), soci::into(mreplica);
-                    if(mreplica == "R")
+                    if(mreplica == "R" || mreplica == "H")
                         nRetries = 0;
                 }
         }
@@ -9696,10 +9696,12 @@ void MySqlAPI::setRetryTransferInternal(soci::session& sql, const std::string & 
                 soci::use(jobId),
                 soci::into(bring_online),
                 soci::into(copy_pin_lifetime);
-
+		
+            
+	    bool exists = (reason.find("ETIMEDOUT") != std::string::npos);		
 
             //staging exception, if file failed with timeout and was staged before, reset it
-            if(bring_online > 0 || copy_pin_lifetime > 0)
+            if( (bring_online > 0 || copy_pin_lifetime > 0) && exists)
                 {
                     sql << "update t_file set retry = :retry, current_failures = 0, file_state='STAGING', internal_file_params=NULL, transferHost=NULL,start_time=NULL, pid=NULL, "
                         " filesize=0, staging_start=NULL, staging_finished=NULL where file_id=:file_id and job_id=:job_id AND file_state NOT IN ('FINISHED','STAGING','SUBMITTED','FAILED','CANCELED') ",
