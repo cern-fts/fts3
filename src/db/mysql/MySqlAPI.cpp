@@ -494,7 +494,7 @@ std::map<std::string, double> MySqlAPI::getActivityShareConf(soci::session& sql,
             boost::tokenizer< boost::char_separator<char> > tokens(activity_share_str, sep);
             boost::tokenizer< boost::char_separator<char> >::iterator it;
 
-            static const boost::regex re("^\\s*\\{\\s*\"([ a-zA-Z0-9\\.-]+)\"\\s*:\\s*(0\\.\\d+)\\s*\\}\\s*$");
+            static const boost::regex re("^\\s*\\{\\s*\"([ a-zA-Z0-9\\.-]+)\"\\s*:\\s*((0\\.)?\\d+)\\s*\\}\\s*$");
             static const int ACTIVITY_NAME = 1;
             static const int ACTIVITY_SHARE = 2;
 
@@ -814,7 +814,7 @@ void MySqlAPI::getVOPairsWithReuse(std::vector< boost::tuple<std::string, std::s
 	    sql << "select count(*) from t_job where reuse_job = 'Y' LIMIT 1", soci::into(howMany);
 	    if(howMany == 0)
 	    	return;
-		
+
             soci::rowset<soci::row> rs2 = (sql.prepare <<
                                            " SELECT DISTINCT t_file.vo_name, t_file.source_se, t_file.dest_se "
                                            " FROM t_file "
@@ -1154,12 +1154,12 @@ void MySqlAPI::getMultihopJobs(std::map< std::string, std::queue< std::pair<std:
             time_t now = time(NULL);
             struct tm tTime;
             gmtime_r(&now, &tTime);
-	    
+
 	    int howMany = 0;
 	    //check first if exists, it does a full scan but it's fast
 	    sql << "select count(*) from t_job where reuse_job = 'H' LIMIT 1", soci::into(howMany);
 	    if(howMany == 0)
-	    	return;	    
+	    	return;
 
             soci::rowset<soci::row> jobs_rs = (sql.prepare <<
                                                " SELECT DISTINCT t_file.vo_name, t_file.job_id "
@@ -9696,9 +9696,9 @@ void MySqlAPI::setRetryTransferInternal(soci::session& sql, const std::string & 
                 soci::use(jobId),
                 soci::into(bring_online),
                 soci::into(copy_pin_lifetime);
-		
-            
-	    bool exists = (reason.find("ETIMEDOUT") != std::string::npos);		
+
+
+	    bool exists = (reason.find("ETIMEDOUT") != std::string::npos);
 
             //staging exception, if file failed with timeout and was staged before, reset it
             if( (bring_online > 0 || copy_pin_lifetime > 0) && exists)
