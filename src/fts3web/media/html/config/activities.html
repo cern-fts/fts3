@@ -1,5 +1,4 @@
-<h1>Activity shares</h1>
-
+<h2>Activity shares</h2>
 
 <table class="table">
     <thead>
@@ -11,7 +10,11 @@
     </thead>
     <tbody data-ng-repeat="(vo, shares) in activities" data-ng-class-odd="'odd'" >
         <tr data-ng-repeat="(share_name, share_val) in shares | slice:0:0">
-            <td rowspan="{{ shares | objlength }}" style="vertical-align: middle">{{ vo }}</td>
+            <td rowspan="{{ shares | objlength }}" style="vertical-align: middle">
+                <a href="#/config/activities/{{ vo }}">
+                    {{ vo }}
+                </a>
+            </td>
             <td>{{ share_name }}</td>
             <td>{{ share_val }}</td>
         </tr>

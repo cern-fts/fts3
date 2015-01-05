@@ -121,4 +121,9 @@ angular.module('ftsmon.resources', ['ngResource'])
 		query: {method: 'GET', isArray: false}
 	})
 })
+.factory('ActivePerActivity', function($resource) {
+	return $resource('config/activities/:vo', {}, {
+		query: {method: 'GET', isArray: false}
+	})
+})
 ;

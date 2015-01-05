@@ -17,11 +17,11 @@
 import json
 import os
 from django.db import connection
-from django.db.models import Q
+from django.db.models import Q, Count
 from ftsweb.models import ConfigAudit
 from ftsweb.models import LinkConfig, ShareConfig
 from ftsweb.models import DebugConfig, Optimize
-from ftsweb.models import ActivityShare
+from ftsweb.models import ActivityShare, File
 from authn import require_certificate
 from jsonify import jsonify, jsonify_paged
 from util import get_order_by, ordered_field
@@ -154,3 +154,16 @@ def get_activities(http_request):
                 share[share_name] = share_value
         per_vo[row.vo] = share
     return per_vo
+
+
+@require_certificate
+@jsonify
+def get_actives_per_activity(http_request, vo):
+    active = File.objects.filter(vo_name = vo, job_finished__isnull=True).exclude(file_state='NOT_USED')\
+            .values('activity', 'file_state').annotate(count=Count('activity')).values('activity', 'file_state', 'count')
+    grouped = dict()
+    for row in active:
+        activity = grouped.get(row['activity'], dict())
+        activity[row['file_state']] = row['count']
+        grouped[row['activity']] = activity
+    return grouped

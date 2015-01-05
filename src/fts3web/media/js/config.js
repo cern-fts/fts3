@@ -181,3 +181,71 @@ ActivitiesCtrl.resolve = {
         return deferred.promise;
     }
 }
+
+
+/// Active per vo activities
+function _plotDataFromCount(activeCount, key)
+{
+    var points = [];
+    var total = 0;
+    for (var activity in activeCount) {
+        if (activity[0] != '$') {
+            var value = undefinedAsZero(activeCount[activity][key]);
+            total += value;
+            points.push({x: activity, y: [value]});
+        }
+    }
+    if (points)
+        return points;
+    else
+        return null;
+}
+
+function VoActivePerActivitiesCtrl($location, $scope, $route, activeCount) {
+    $scope.vo = $route.current.params.vo;
+    $scope.activeCount = activeCount;
+
+    var colors = [
+        '#366DD8', '#D836BE', '#D8A136', '#36D850', '#5036D8', '#D8366D', '#BED836', '#36D8A1', '#A136D8', '#D85036'
+    ];
+    $scope.plots = {
+        submittedCount: {
+            data: _plotDataFromCount(activeCount, 'SUBMITTED'),
+            config: {
+                title: 'Submitted per activity',
+                legend: {position: 'left', display: true},
+                innerRadius: 50,
+                colors: colors,
+                labels: true
+            }
+        },
+        activeCount: {
+            data: _plotDataFromCount(activeCount, 'ACTIVE'),
+            config: {
+                title: 'Actives per activity',
+                legend: {position: 'left', display: true},
+                innerRadius: 50,
+                colors: colors,
+                labels: true
+            }
+        }
+    }
+}
+
+VoActivePerActivitiesCtrl.resolve = {
+    activeCount: function($rootScope, $location, $route, $q, ActivePerActivity) {
+        loading($rootScope);
+
+        var deferred = $q.defer();
+
+        var filter = {
+            vo: $route.current.params.vo
+        };
+
+        ActivePerActivity.query(filter,
+            genericSuccessMethod(deferred, $rootScope),
+            genericFailureMethod(deferred, $rootScope, $location));
+
+        return deferred.promise;
+    }
+}

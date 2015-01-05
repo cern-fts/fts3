@@ -51,6 +51,9 @@ config(function($routeProvider) {
         when('/config/activities',    {templateUrl: STATIC_ROOT + 'html/config/activities.html',
                                        controller:  ActivitiesCtrl,
                                        resolve:     ActivitiesCtrl.resolve}).
+        when('/config/activities/:vo',{templateUrl: STATIC_ROOT + 'html/config/vo_activities.html',
+                                       controller:  VoActivePerActivitiesCtrl,
+                                       resolve:     VoActivePerActivitiesCtrl.resolve}).
 
         when('/statistics/overview',  {templateUrl: STATIC_ROOT + 'html/statistics/overview.html',
                                        controller:  StatsOverviewCtrl,
