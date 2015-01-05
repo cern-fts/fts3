@@ -116,4 +116,9 @@ angular.module('ftsmon.resources', ['ngResource'])
 		query: {method: 'GET', isArray: false}
 	})
 })
+.factory('ConfigActivities', function($resource) {
+	return $resource('config/activities', {}, {
+		query: {method: 'GET', isArray: false}
+	})
+})
 ;

@@ -162,3 +162,22 @@ Gfal2Ctrl.resolve = {
         return deferred.promise;
     }
 }
+
+/// Activities
+function ActivitiesCtrl($location, $scope, activities) {
+    $scope.activities = activities;
+}
+
+ActivitiesCtrl.resolve = {
+    activities: function($rootScope, $location, $q, ConfigActivities) {
+        loading($rootScope);
+
+        var deferred = $q.defer();
+
+        ConfigActivities.query($location.search(),
+            genericSuccessMethod(deferred, $rootScope),
+            genericFailureMethod(deferred, $rootScope, $location));
+
+        return deferred.promise;
+    }
+}

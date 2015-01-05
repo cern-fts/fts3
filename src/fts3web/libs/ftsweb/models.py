@@ -402,3 +402,12 @@ class Turl(models.Model):
 
     class Meta:
         db_table = 't_turl'
+
+
+class ActivityShare(models.Model):
+    vo             = models.CharField(primary_key=True)
+    activity_share = models.TextField()
+    active         = models.CharField()
+
+    class Meta:
+        db_table = 't_activity_share_config'

@@ -14,12 +14,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import json
 import os
 from django.db import connection
 from django.db.models import Q
 from ftsweb.models import ConfigAudit
 from ftsweb.models import LinkConfig, ShareConfig
 from ftsweb.models import DebugConfig, Optimize
+from ftsweb.models import ActivityShare
 from authn import require_certificate
 from jsonify import jsonify, jsonify_paged
 from util import get_order_by, ordered_field
@@ -138,3 +140,17 @@ def get_gfal2_config(http_request):
         config[cfg_path] = open(cfg_path).read()
 
     return config
+
+
+@require_certificate
+@jsonify
+def get_activities(http_request):
+    rows = ActivityShare.objects.all()
+    per_vo = dict()
+    for row in rows:
+        share = per_vo.get(row.vo, dict())
+        for entry in json.loads(row.activity_share):
+            for share_name, share_value in entry.iteritems():
+                share[share_name] = share_value
+        per_vo[row.vo] = share
+    return per_vo

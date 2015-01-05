@@ -48,6 +48,9 @@ config(function($routeProvider) {
         when('/config/gfal2',         {templateUrl: STATIC_ROOT + 'html/config/gfal2.html',
                                        controller:  Gfal2Ctrl,
                                        resolve:     Gfal2Ctrl.resolve}).
+        when('/config/activities',    {templateUrl: STATIC_ROOT + 'html/config/activities.html',
+                                       controller:  ActivitiesCtrl,
+                                       resolve:     ActivitiesCtrl.resolve}).
 
         when('/statistics/overview',  {templateUrl: STATIC_ROOT + 'html/statistics/overview.html',
                                        controller:  StatsOverviewCtrl,
@@ -84,6 +87,29 @@ config(function($routeProvider) {
 		hex = value.toString(16);
 		return ("0000".substr(0, 4 - hex.length) + hex).toUpperCase();
 	};
+})
+.filter('slice', function() {
+    return function(arr, start, end) {
+        if (typeof(end) == 'undefined')
+            end = 999;
+
+        var sliced = {};
+        var i = 0;
+        for (var k in arr) {
+            if (i >= start && i <= end)
+                sliced[k] = arr[k];
+            i++;
+        }
+        return sliced;
+    }
+})
+.filter('objlength', function() {
+    return function(obj) {
+        var i = 0;
+        for (var k in obj)
+            i++;
+        return i;
+    }
 })
 .directive('log', function() {
     return {
