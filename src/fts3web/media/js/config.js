@@ -65,8 +65,8 @@ function ConfigStatusCtrl($location, $scope, server, debug)
     $scope.debug = debug;
 
     // On page change, reload
-    $scope.pageChanged = function(newPage) {
-        $location.search('page', newPage);
+    $scope.debugPageChanged = function(newPage) {
+        $location.search('debug_page', newPage);
     };
 }
 
@@ -88,7 +88,7 @@ ConfigStatusCtrl.resolve = {
 
         var deferred = $q.defer();
 
-        ConfigDebug.query(
+        ConfigDebug.query({"page": $location.search().debug_page},
               genericSuccessMethod(deferred, $rootScope),
               genericFailureMethod(deferred, $rootScope, $location));
 

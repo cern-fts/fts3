@@ -103,7 +103,7 @@ angular.module('ftsmon.resources', ['ngResource'])
 })
 .factory('ConfigDebug', function($resource) {
 	return $resource('config/debug', {}, {
-		query: {method: 'GET', isArray: true}
+		query: {method: 'GET', isArray: false}
 	})
 })
 .factory('ConfigLimits', function($resource) {

@@ -98,9 +98,9 @@ def get_link_config(http_request):
 
 
 @require_certificate
-@jsonify
+@jsonify_paged
 def get_debug_config(http_request):
-    return DebugConfig.objects.order_by('source_se', 'dest_se').all()
+    return DebugConfig.objects.order_by('source_se', 'dest_se')
 
 
 @require_certificate
