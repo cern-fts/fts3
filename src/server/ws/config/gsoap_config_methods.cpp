@@ -72,6 +72,9 @@ int fts3::implcfg__setConfiguration(soap* soap, config__Configuration *_configur
                         AuthorizationManager::dummy
                     );
                     handler.add();
+
+                    // Audit
+                    DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, *it, "set-config");
                 }
         }
     catch(Err& ex)
@@ -189,6 +192,9 @@ int fts3::implcfg__delConfiguration(soap* soap, config__Configuration *_configur
                         AuthorizationManager::dummy
                     );
                     handler.del();
+
+                    // Audit
+                    DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, *it, "del-config");
                 }
 
         }
@@ -477,6 +483,18 @@ int fts3::implcfg__setBringOnline(soap* ctx, config__BringOnline *bring_online, 
                         triplet->value,
                         triplet->operation
                     );
+
+                    // Audit
+                    stringstream cmd;
+                    cmd << "fts-config-set --" << triplet->operation
+                        << " " << triplet->se
+                        << " " << triplet->value;
+                    if (triplet->vo.empty())
+                        cmd << " " << vo;
+                    else
+                        cmd << " " << triplet->vo;
+
+                    DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd.str(), "max-ops");
 
                     // log it
                     FTS3_COMMON_LOGGER_NEWLOG (INFO)
