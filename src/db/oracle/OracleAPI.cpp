@@ -3677,7 +3677,11 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
         {
             int highDefault = MIN_ACTIVE;
 
-            sql << "select max_per_se, max_per_link from t_server_config", soci::into(max_per_se), soci::into(max_per_link);
+            sql << "SELECT max_per_se, max_per_link "
+                   "FROM t_server_config "
+                   "WHERE vo_name IS NULL OR vo_name = '*'",
+                   soci::into(max_per_se), soci::into(max_per_link);
+
 
             if(max_per_link > 0)
                 MAX_ACTIVE_PER_LINK = max_per_link;
@@ -3731,7 +3735,10 @@ void OracleAPI::getMaxActive(soci::session& sql, int& source, int& destination, 
 
     try
         {
-            sql << "select max_per_se, max_per_link from t_server_config", soci::into(max_per_se), soci::into(max_per_link);
+            sql << "SELECT max_per_se, max_per_link "
+                   "FROM t_server_config "
+                   "WHERE vo_name IS NULL OR vo_name = '*'",
+                   soci::into(max_per_se), soci::into(max_per_link);
 
             if(max_per_link > 0)
                 MAX_ACTIVE_PER_LINK = max_per_link;
@@ -6486,11 +6493,11 @@ void OracleAPI::setShowUserDn(bool show)
 
     try
         {
-            sql << "select count(*) from t_server_config where show_user_dn is not NULL", soci::into(count);
+            sql << "SELECT count(*) FROM t_server_config WHERE vo_name IS NULL or vo_name = '*'", soci::into(count);
             if (!count)
                 {
                     sql.begin();
-                    sql << "INSERT INTO t_server_config (show_user_dn) VALUES (:show) ",
+                    sql << "INSERT INTO t_server_config (show_user_dn, vo_name) VALUES (:show, '*')",
                         soci::use(std::string(show ? "on" : "off"));
                     sql.commit();
 
@@ -6498,7 +6505,7 @@ void OracleAPI::setShowUserDn(bool show)
             else
                 {
                     sql.begin();
-                    sql << "update t_server_config set show_user_dn = :show where show_user_dn is not NULL",
+                    sql << "UPDATE t_server_config SET show_user_dn = :show WHERE show_user_dn IS NOT NULL",
                         soci::use(std::string(show ? "on" : "off"));
                     sql.commit();
                 }
@@ -6689,7 +6696,7 @@ int OracleAPI::getMaxTimeInQueue()
         {
             soci::indicator isNull = soci::i_ok;
 
-            sql << "SELECT max_time_queue FROM (SELECT rownum as rn, max_time_queue FROM t_server_config) WHERE rn = 1",
+            sql << "SELECT max_time_queue FROM (SELECT rownum as rn, max_time_queue FROM t_server_config WHERE vo_name IS NULL OR vo_name = '*') WHERE rn = 1",
                 soci::into(maxTime, isNull);
 
             //just in case soci it is reseting the value to NULL
@@ -6743,8 +6750,8 @@ void OracleAPI::setGlobalLimits(const int* maxActivePerLink, const int* maxActiv
 
     try
         {
-            sql << "select max_per_link from t_server_config", soci::into(existsLink);
-            sql << "select max_per_se from t_server_config", soci::into(existsSe);
+            sql << "SELECT max_per_link FROM t_server_config WHERE vo_name IS NULL or vo_name = '*'", soci::into(existsLink);
+            sql << "SELECT max_per_se FROM t_server_config WHERE vo_name IS NULL or vo_name = '*'", soci::into(existsSe);
 
             sql.begin();
 
@@ -6757,7 +6764,7 @@ void OracleAPI::setGlobalLimits(const int* maxActivePerLink, const int* maxActiv
                         }
                     else
                         {
-                            sql << "INSERT into t_server_config(max_per_link) VALUES(:maxLink)",
+                            sql << "INSERT into t_server_config(max_per_link, vo_name) VALUES(:maxLink, '*')",
                                 soci::use(*maxActivePerLink);
                         }
                 }
@@ -6770,7 +6777,7 @@ void OracleAPI::setGlobalLimits(const int* maxActivePerLink, const int* maxActiv
                         }
                     else
                         {
-                            sql << "INSERT into t_server_config(max_per_se) VALUES(:maxSe)",
+                            sql << "INSERT into t_server_config(max_per_se, vo_name) VALUES(:maxSe, '*')",
                                 soci::use(*maxActivePerSe);
                         }
                 }
@@ -10298,7 +10305,7 @@ int OracleAPI::getGlobalTimeout()
         {
             soci::indicator isNullTimeout = soci::i_ok;
 
-            sql << " select global_timeout from t_server_config ", soci::into(timeout, isNullTimeout);
+            sql << "SELECT global_timeout FROM t_server_config WHERE vo_name IS NULL OR vo_name = '*'", soci::into(timeout, isNullTimeout);
 
             if(sql.got_data() && timeout > 0)
                 {
@@ -10326,12 +10333,12 @@ void OracleAPI::setGlobalTimeout(int timeout)
 
     try
         {
-            sql << "select global_timeout from t_server_config", soci::into(timeoutLocal, isNullTimeout);
+            sql << "SELECT global_timeout FROM t_server_config WHERE vo_name IS NULL or vo_name = '*'", soci::into(timeoutLocal, isNullTimeout);
             if (!sql.got_data())
                 {
                     sql.begin();
 
-                    sql << "INSERT INTO t_server_config (global_timeout) VALUES (:timeout) ",
+                    sql << "INSERT INTO t_server_config (global_timeout, vo_name) VALUES (:timeout, '*') ",
                         soci::use(timeout);
 
                     sql.commit();
@@ -10341,7 +10348,7 @@ void OracleAPI::setGlobalTimeout(int timeout)
                 {
                     sql.begin();
 
-                    sql << "update t_server_config set global_timeout = :timeout",
+                    sql << "UPDATE t_server_config SET global_timeout = :timeout",
                         soci::use(timeout);
 
                     sql.commit();
@@ -10369,7 +10376,7 @@ int OracleAPI::getSecPerMb()
         {
             soci::indicator isNullSeconds = soci::i_ok;
 
-            sql << " select sec_per_mb from t_server_config ", soci::into(seconds, isNullSeconds);
+            sql << "SELECT sec_per_mb FROM t_server_config WHERE vo_name IS NULL OR vo_name = '*'", soci::into(seconds, isNullSeconds);
 
             if(sql.got_data() && seconds > 0)
                 {
@@ -10397,12 +10404,12 @@ void OracleAPI::setSecPerMb(int seconds)
 
     try
         {
-            sql << "select sec_per_mb from t_server_config", soci::into(secondsLocal, isNullSeconds);
+            sql << "SELECT sec_per_mb FROM t_server_config WHERE vo_name IS NULL OR vo_name = '*'", soci::into(secondsLocal, isNullSeconds);
             if (!sql.got_data())
                 {
                     sql.begin();
 
-                    sql << "INSERT INTO t_server_config (sec_per_mb) VALUES (:seconds) ",
+                    sql << "INSERT INTO t_server_config (sec_per_mb, vo_name) VALUES (:seconds, '*') ",
                         soci::use(seconds);
 
                     sql.commit();
@@ -10412,7 +10419,7 @@ void OracleAPI::setSecPerMb(int seconds)
                 {
                     sql.begin();
 
-                    sql << "update t_server_config set sec_per_mb = :seconds",
+                    sql << "UPDATE t_server_config SET sec_per_mb = :seconds",
                         soci::use(seconds);
 
                     sql.commit();
@@ -12099,7 +12106,7 @@ bool OracleAPI::resetForRetryStaging(soci::session& sql, int file_id, const std:
                         {
                             sql <<
                                 " SELECT retry "
-                                " FROM t_server_config where vo_name=:vo_name ",
+                                " FROM t_server_config WHERE vo_name=:vo_name ",
                                 soci::use(vo_name), soci::into(nRetries, isNull)
                                 ;
                         }
