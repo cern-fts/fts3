@@ -143,8 +143,7 @@ bool MsgProducer::sendMessage(std::string &temp)
             catch(...)
                 {
                     std::string error_message = "MESSAGE_ERROR " + temp;
-                    logger::writeLog(error_message);
-                    return true;
+                    logger::writeLog(error_message);                    
                 }
             std::string vo = pt2.get<std::string> ("vo");
             temp += 4;
@@ -171,8 +170,7 @@ bool MsgProducer::sendMessage(std::string &temp)
             catch(...)
                 {
                     std::string error_message = "MESSAGE_ERROR " + temp;
-                    logger::writeLog(error_message);
-                    return true;
+                    logger::writeLog(error_message);                    
                 }
             std::string vo = pt2.get<std::string> ("vo_name");
             temp += 4;
