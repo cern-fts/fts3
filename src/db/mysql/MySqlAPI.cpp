@@ -11080,7 +11080,7 @@ int MySqlAPI::getStreamsOptimizationInternal(soci::session& sql, const std::stri
         {
 
 	     sql << "SELECT global_tcp_stream from t_server_config where (vo_name IS NULL OR vo_name = '*') and  global_tcp_stream > 0", 
-	     	soci::into(global_tcp_stream, isNullGlobalStreams);
+	     	soci::into(global_tcp_stream);
 	     if(sql.got_data() && global_tcp_stream > 0)
 	     {
 		return global_tcp_stream;			     	
