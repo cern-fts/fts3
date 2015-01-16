@@ -888,6 +888,12 @@ CREATE TABLE t_profiling_snapshot (
 
 CREATE INDEX t_prof_snapshot_total ON t_profiling_snapshot(total);
 
+-- Used to grant permissions on a per-dn basis
+CREATE TABLE t_authz_dn (
+    dn         VARCHAR(255) NOT NULL,
+    operation  VARCHAR(64) NOT NULL,
+    CONSTRAINT t_authz_dn_pk PRIMARY KEY (dn, operation)
+);
 
 --
 -- Tables for cloud support
