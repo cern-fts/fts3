@@ -35,7 +35,8 @@ CREATE TABLE t_server_config (
   vo_name VARCHAR(100),
   show_user_dn VARCHAR(3) CHECK (show_user_dn in ('on', 'off')),
   max_per_se INTEGER DEFAULT 0,
-  max_per_link INTEGER DEFAULT 0  
+  max_per_link INTEGER DEFAULT 0,
+  global_tcp_stream INTEGER DEFAULT 0
 );
 INSERT INTO t_server_config (retry,max_time_queue,global_timeout,sec_per_mb) values(0,0,0,0);
 
