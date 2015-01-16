@@ -11073,10 +11073,19 @@ int MySqlAPI::getStreamsOptimizationInternal(soci::session& sql, const std::stri
     int defaultStreams = 1;
     soci::indicator isNullMaxStreamsFound = soci::i_ok;
     soci::indicator isNullOptimumStreamsFound = soci::i_ok;
+    soci::indicator isNullGlobalStreams = soci::i_ok;
     int allTested = 0;
+    int global_tcp_stream = 0;
 
     try
         {
+	     sql << "SELECT global_tcp_stream from t_server_config where (vo_name IS NULL OR vo_name = '*') and  global_tcp_stream > 0", 
+	     	soci::into(global_tcp_stream, isNullGlobalStreams);
+	     if(sql.got_data() && global_tcp_stream > 0)
+	     {
+		return global_tcp_stream;			     	
+	     }	
+	
             sql << " SELECT count(*) from t_optimize_streams where source_se=:source_se "
                 " and dest_se=:dest_se and tested = 1 and throughput is not NULL  and throughput > 0",
                 soci::use(source_hostname), soci::use(destination_hostname), soci::into(allTested);
