@@ -50,7 +50,7 @@ public:
      *
      * @param copy : other DeletionContext instance
      */
-    DeletionContext(DeletionContext const & copy) : JobContext(copy), srm_jobs(copy.srm_jobs) {}
+    DeletionContext(DeletionContext const & copy) : JobContext(copy) {}
 
 
     /**
@@ -59,7 +59,7 @@ public:
      * @param copy : the context to be moved
      */
     DeletionContext(DeletionContext && copy) :
-        JobContext(std::move(copy)), srm_jobs(std::move(copy.srm_jobs)) {}
+        JobContext(std::move(copy)) {}
 
     /**
      * Destructor
@@ -88,25 +88,8 @@ public:
     void state_update(std::string const & state, std::string const & reason, bool retry) const
     {
         static DeletionStateUpdater & state_update = DeletionStateUpdater::instance();
-        state_update(srm_jobs, state, reason, retry);
+        state_update(jobs, state, reason, retry);
     }
-
-    /**
-     * @return : list of SRM URLs
-     */
-    std::vector<char const *> getSrmUrls() const;
-
-    /**
-     * @return : map with gsiftp jobs
-     */
-    std::map< std::string, std::map<std::string, std::vector<int> > > const & getGsiftpJobs() const
-    {
-        return jobs;
-    }
-
-private:
-    /// Job ID -> list of (file ID and SURL) mapping
-    std::map< std::string, std::map<std::string, std::vector<int> > > srm_jobs;
 };
 
 #endif /* DELETIONCONTEXT_H_ */

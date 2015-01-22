@@ -154,7 +154,7 @@ class DeletionBully:
         """
         log.info("Preparing destination base SURL")
         try:
-            self.gfal2.access(self.base_surl, os.F_OK)
+            stat = self.gfal2.stat(self.base_surl)
         except gfal2.GError, e:
             if e.code == errno.ENOENT:
                 log.debug("Creating %s" % base_surl)
