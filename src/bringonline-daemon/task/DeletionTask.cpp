@@ -30,6 +30,9 @@ void DeletionTask::run_impl()
     // make sure there is work to do
     if (urls.empty()) return;
     std::vector<GError*> error (urls.size(), NULL);
+
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DELETION Bulk of " << urls.size() << " files" << commit;
+
     int status = gfal2_unlink_list(gfal2_ctx, (int)urls.size(), urls.data(), error.data());
 
     if (status < 0)
@@ -50,7 +53,7 @@ void DeletionTask::run_impl()
                         }
                     else
                         {
-                            FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "DELETION FINISHED for " << urls[i] << commit;
+                            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DELETION FINISHED for " << urls[i] << commit;
                             for (auto it = ids.begin(); it != ids.end(); ++it)
                                 ctx.state_update(it->first, it->second, "FINISHED", "", false);
                         }
