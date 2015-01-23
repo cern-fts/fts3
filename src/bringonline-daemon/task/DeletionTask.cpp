@@ -50,10 +50,9 @@ void DeletionTask::run_impl()
                         }
                     else
                         {
-                            FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "DELETION FAILED for " << urls[i]
-                                                            << ": returned -1 but error was not set ";
+                            FTS3_COMMON_LOGGER_NEWLOG(CRIT) << "DELETION FINISHED for " << urls[i] << commit;
                             for (auto it = ids.begin(); it != ids.end(); ++it)
-                                ctx.state_update(it->first, it->second, "FAILED", "Error not set by gfal2", false);
+                                ctx.state_update(it->first, it->second, "FINISHED", "", false);
                         }
                     g_clear_error(&error[i]);
                 }

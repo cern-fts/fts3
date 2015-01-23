@@ -75,7 +75,7 @@ class DeletionBully:
         Poll the job_id until it finishes
         """
         state = self.get_job_state(job_id)
-        remaining = 600
+        remaining = 1000
         JobTerminalStates = ['FINISHED', 'FAILED', 'CANCELED', 'FINISHEDDIRTY']
         while state not in JobTerminalStates:
             log.debug("%s %s" % (job_id, state))
@@ -93,7 +93,7 @@ class DeletionBully:
         Cancel the job with the given job ID
         """
         cmd_array = ['fts-transfer-cancel', '-s', self.endpoint, job_id]
-        self.delete(cmd_array)
+        self._spawn(cmd_array)
 
     def populate_base_surl(self, file_list):
         """
