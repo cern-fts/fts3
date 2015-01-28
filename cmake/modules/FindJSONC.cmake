@@ -1,8 +1,8 @@
 # Find json-c
 
 find_library(JSONC_LIBRARIES
-    NAMES json
-    HINTS /usr/lib /usr/lib64 /lib /lib64
+    NAMES json-c json
+    HINTS /lib /lib64 /usr/lib /usr/lib64 
     DOC "json-c library"
 )
 
