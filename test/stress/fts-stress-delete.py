@@ -102,8 +102,11 @@ class DeletionBully:
         file_list.seek(0)
         log.info("Populating directory")
         for surl in file_list:
-            log.debug("Creating %s" % surl)
-            self.gfal2.filecopy("file://etc/hosts", surl.strip())
+            log.debug("Creating %s" % surl.strip())
+            try:
+                self.gfal2.filecopy("file://etc/hosts", surl.strip())
+            except gfal2.GError, e:
+                log.warn(str(e))
 
     def run_test(self):
         """
@@ -125,6 +128,8 @@ class DeletionBully:
         acc_time = 0
         for round in xrange(self.iterations):
             log.info("Round %d/%d" % (round + 1, self.iterations))
+
+            self.gfal2 = gfal2.creat_context()
 
             # Create first
             if self.create_files:
@@ -175,7 +180,10 @@ class DeletionBully:
             for name in remainings:
                 surl = self.base_surl + name
                 log.debug("Unlinking %s" % surl)
-                self.gfal2.unlink(surl)
+                try:
+                    self.gfal2.unlink(surl)
+                except gfal2.GError, e:
+                    log.warn(str(e))
         else:
             log.debug("Destination base SURL empty")
         log.debug("Rmdir %s" % self.base_surl)
