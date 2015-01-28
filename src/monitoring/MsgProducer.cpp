@@ -101,7 +101,7 @@ MsgProducer::~MsgProducer()
 }
 
 
-static std::string _getVoFromMessage(const std::string& msg)
+static std::string _getVoFromMessage(const std::string& msg, const char* key)
 {
     enum json_tokener_error error;
     json_object * jobj = json_tokener_parse_verbose(msg.c_str(), &error);
@@ -110,7 +110,7 @@ static std::string _getVoFromMessage(const std::string& msg)
     }
 
     struct json_object *vo_name_obj = NULL;
-    if (!json_object_object_get_ex(jobj, "vo_name", &vo_name_obj)) {
+    if (!json_object_object_get_ex(jobj, key, &vo_name_obj)) {
         json_object_put(jobj);
         throw Err_System("Could not find vo_name in the message");
     }
@@ -155,7 +155,7 @@ bool MsgProducer::sendMessage(std::string &temp)
 
             std::string vo;
             try {
-                 vo = _getVoFromMessage(temp);
+                 vo = _getVoFromMessage(temp, "vo");
             }
             catch (const std::exception& e) {
                 std::ostringstream error_message;
@@ -178,7 +178,7 @@ bool MsgProducer::sendMessage(std::string &temp)
 
             std::string vo;
             try {
-                vo = _getVoFromMessage(temp);
+                vo = _getVoFromMessage(temp, "vo_name");
             }
             catch (const std::exception& e) {
                 std::ostringstream error_message;
