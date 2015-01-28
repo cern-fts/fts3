@@ -4,7 +4,7 @@
 %global selinux_variants mls targeted
 
 Name: fts
-Version: 3.2.31
+Version: 3.2.32
 Release: 1%{?dist}
 Summary: File Transfer Service V3
 Group: System Environment/Daemons
@@ -44,6 +44,7 @@ BuildRequires:  globus-gsi-credential-devel
 BuildRequires:  gridsite-devel
 BuildRequires:  gsoap-devel
 BuildRequires:  is-interface-devel
+BuildRequires:  json-c-devel
 BuildRequires:  libcurl-devel
 BuildRequires:  openldap-devel
 BuildRequires:  pugixml-devel
