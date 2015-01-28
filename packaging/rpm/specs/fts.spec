@@ -124,7 +124,7 @@ FTS infosys integration
 %package msg
 Summary: File Transfer Service version 3 messaging integration
 Group: System Environment/Daemons
-Requires: fts-server%{?_isa} = %{version}-%{release}
+Requires: fts-server%{?_isa}
 
 %description msg
 FTS messaging integration
