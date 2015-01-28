@@ -56,10 +56,6 @@ public:
     virtual void run(boost::any const &);
 
 private:
-
-    /// implementation of run routine for SRM jobs
-    void run_srm_impl();
-
     /// implementation of run routine for not SRM jobs
     void run_impl();
 

@@ -22,7 +22,7 @@ include_directories (${PROJECT_SOURCE_DIR}/src/config/)
 include_directories (.)
 
 # We include directly the sources from common to avoid pulling
-# lots of dependencies to url_copy, increasing its size
+# lots of dependencies to the messaging, increasing its size
 set(fts_msg_ifce_SOURCES
     msg-ifce.cpp
     utility_routines.cpp
@@ -37,19 +37,21 @@ add_dependencies(fts_msg_ifce fts_common)
 
 set_target_properties(fts_msg_ifce	 	PROPERTIES
 						LIBRARY_OUTPUT_DIRECTORY
-${PROJECT_BINARY_DIR}/src/monitoring
+                        ${PROJECT_BINARY_DIR}/src/monitoring
 						VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
 						SOVERSION ${VERSION_MAJOR}
 						CLEAN_DIRECT_OUTPUT 1)
 
 SET(fts_include_dir "${PROJECT_SOURCE_DIR}/src/")
 
-include_directories (${ACTIVEMQCPP_INCLUDE_DIR})
+find_package (Boost COMPONENTS filesystem thread system)
+find_package (JSONC REQUIRED)
 
+include_directories (${ACTIVEMQCPP_INCLUDE_DIR})
 include_directories (${PROJECT_SOURCE_DIR}/src/common/)
 include_directories (${fts_include_dir})
+include_directories (${JSONC_INCLUDE_DIRS})
 
-find_package (Boost COMPONENTS filesystem thread system)
 
 set(fts_msg_bulk_SOURCES utility_routines.cpp msg-bulk-send.cpp MsgPipe.cpp MsgProducer.cpp Logger.cpp)
 
@@ -58,7 +60,9 @@ add_dependencies(fts_msg_bulk fts_common fts_config)
 if(FTS3_COMPILE_WITH_UNITTEST_NEW)
 	target_link_libraries(fts_msg_bulk -lboost_unit_test_framework)
 endif()
-target_link_libraries(fts_msg_bulk ${ACTIVEMQCPP_LIBRARIES} fts_common fts_config -lrt ${Boost_LIBRARIES})
+
+target_link_libraries(fts_msg_bulk
+    ${ACTIVEMQCPP_LIBRARIES} fts_common fts_config -lrt ${Boost_LIBRARIES} ${JSONC_LIBRARIES})
 
 
 install(TARGETS         fts_msg_bulk 

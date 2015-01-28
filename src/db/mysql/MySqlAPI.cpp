@@ -10105,7 +10105,10 @@ void MySqlAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, unsi
                 {
                     // Delete old entries
                     sql.begin();
-                    soci::statement stmt3 = (sql.prepare << "DELETE FROM t_hosts WHERE beat <= DATE_SUB(UTC_TIMESTAMP(), interval 120 MINUTE)");
+                    soci::statement stmt3 = (sql.prepare <<
+                            "DELETE FROM t_hosts "
+                            "WHERE beat <= DATE_SUB(UTC_TIMESTAMP(), interval 120 MINUTE) "
+                            "   AND drain = 0");
                     stmt3.execute(true);
                     sql.commit();
                 }
@@ -11078,14 +11081,13 @@ int MySqlAPI::getStreamsOptimizationInternal(soci::session& sql, const std::stri
 
     try
         {
-
-	     sql << "SELECT global_tcp_stream from t_server_config where (vo_name IS NULL OR vo_name = '*') and  global_tcp_stream > 0", 
+	     sql << "SELECT global_tcp_stream from t_server_config where (vo_name IS NULL OR vo_name = '*') and  global_tcp_stream > 0",
 	     	soci::into(global_tcp_stream);
 	     if(sql.got_data() && global_tcp_stream > 0)
 	     {
-		return global_tcp_stream;			     	
-	     }	
-	
+		return global_tcp_stream;
+	     }
+
             sql << " SELECT count(*) from t_optimize_streams where source_se=:source_se "
                 " and dest_se=:dest_se and tested = 1 and throughput is not NULL  and throughput > 0",
                 soci::use(source_hostname), soci::use(destination_hostname), soci::into(allTested);

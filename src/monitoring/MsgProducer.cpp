@@ -19,7 +19,7 @@
  *
  */
 
-
+#include <json.h>
 #include <memory>
 #include "MsgProducer.h"
 #include "half_duplex.h" /* For name of the named-pipe */
@@ -31,10 +31,9 @@
 #include "logger.h"
 #include "serverconfig.h"
 #include <sstream>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
-using boost::property_tree::ptree;
-using boost::property_tree::read_json;
+
+// End-Of-Transmission character
+static const char EOT = 0x04;
 
 
 bool stopThreads = false;
@@ -101,6 +100,28 @@ MsgProducer::~MsgProducer()
 {
 }
 
+
+static std::string _getVoFromMessage(const std::string& msg, const char* key)
+{
+    enum json_tokener_error error;
+    json_object * jobj = json_tokener_parse_verbose(msg.c_str(), &error);
+    if (!jobj) {
+        throw Err_System(json_tokener_error_desc(error));
+    }
+
+    struct json_object *vo_name_obj = NULL;
+    if (!json_object_object_get_ex(jobj, key, &vo_name_obj)) {
+        json_object_put(jobj);
+        throw Err_System("Could not find vo_name in the message");
+    }
+
+    std::string vo_name = json_object_get_string(vo_name_obj);
+    json_object_put(jobj);
+
+    return vo_name;
+}
+
+
 bool MsgProducer::sendMessage(std::string &temp)
 {
 
@@ -114,7 +135,7 @@ bool MsgProducer::sendMessage(std::string &temp)
             temp = temp.substr(2, temp.length()); //remove message prefix
             tempFTS = "\"endpnt\":\"" + FTSEndpoint + "\"";
             find_and_replace(temp, "\"endpnt\":\"\"", tempFTS); //add FTS endpoint
-            temp += 4;
+            temp += EOT;
             TextMessage* message = session->createTextMessage(temp);
             producer_transfer_started->send(message);
             logger::writeLog(temp);
@@ -132,21 +153,17 @@ bool MsgProducer::sendMessage(std::string &temp)
 
             temp = replaceMetadataString(temp);
 
-            // Read vo from json
-            ptree pt2;
-            std::istringstream is (temp);
+            std::string vo;
+            try {
+                 vo = _getVoFromMessage(temp, "vo");
+            }
+            catch (const std::exception& e) {
+                std::ostringstream error_message;
+                error_message << "MESSAGE_ERROR (" << e.what() << ") " << temp;
+                logger::writeLog(error_message.str());
+            }
 
-            try
-                {
-                    read_json (is, pt2);
-                }
-            catch(...)
-                {
-                    std::string error_message = "MESSAGE_ERROR " + temp;
-                    logger::writeLog(error_message);                    
-                }
-            std::string vo = pt2.get<std::string> ("vo");
-            temp += 4;
+            temp += EOT;
             TextMessage* message = session->createTextMessage(temp);
             message->setStringProperty("vo",vo);
             producer_transfer_completed->send(message);
@@ -159,21 +176,17 @@ bool MsgProducer::sendMessage(std::string &temp)
 
             temp = replaceMetadataString(temp);
 
-            // Read vo from json
-            ptree pt2;
-            std::istringstream is (temp);
+            std::string vo;
+            try {
+                vo = _getVoFromMessage(temp, "vo_name");
+            }
+            catch (const std::exception& e) {
+                std::ostringstream error_message;
+                error_message << "MESSAGE_ERROR (" << e.what() << ") " << temp;
+                logger::writeLog(error_message.str());
+            }
 
-            try
-                {
-                    read_json (is, pt2);
-                }
-            catch(...)
-                {
-                    std::string error_message = "MESSAGE_ERROR " + temp;
-                    logger::writeLog(error_message);                    
-                }
-            std::string vo = pt2.get<std::string> ("vo_name");
-            temp += 4;
+            temp += EOT;
             TextMessage* message = session->createTextMessage(temp);
             message->setStringProperty("vo",vo);
             producer_transfer_state->send(message);
