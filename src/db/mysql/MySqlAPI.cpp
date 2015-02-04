@@ -1697,8 +1697,34 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
 
     try
         {
-            sql.begin();
+            sql.begin();	    	    
+	    
             // Insert job
+	    if(mreplica)
+	    {
+            soci::statement insertJob = ( sql.prepare << "INSERT INTO t_job (job_id, job_state, job_params, user_dn, user_cred, priority,       "
+                                          "                   vo_name, submit_time, internal_job_params, submit_host, cred_id,   "
+                                          "                   myproxy_server, space_token, overwrite_flag, source_space_token,   "
+                                          "                   copy_pin_lifetime, fail_nearline, checksum_method, "
+                                          "                   reuse_job, bring_online, retry, retry_delay, job_metadata,		  "
+                                          "			        dest_se)         										  "
+                                          "VALUES (:jobId, :jobState, :jobParams, :userDn, :userCred, :priority,                 "
+                                          "        :voName, UTC_TIMESTAMP(), :internalParams, :submitHost, :credId,              "
+                                          "        :myproxyServer, :spaceToken, :overwriteFlag, :sourceSpaceToken,               "
+                                          "        :copyPinLifetime, :failNearline, :checksumMethod,             "
+                                          "        :reuseJob, :bring_online, :retry, :retryDelay, :job_metadata,				  "
+                                          "	   :destSe)															  ",
+                                          soci::use(jobId), soci::use(initialState), soci::use(paramFTP), soci::use(DN), soci::use(cred), soci::use(priority),
+                                          soci::use(voName), soci::use(jobParams), soci::use(hostname), soci::use(delegationID),
+                                          soci::use(myProxyServer), soci::use(spaceToken), soci::use(overwrite), soci::use(sourceSpaceToken),
+                                          soci::use(copyPinLifeTime), soci::use(failNearLine), soci::use(checksumMethod),
+                                          soci::use(reuseFlag), soci::use(bringOnline),
+                                          soci::use(retry), soci::use(retryDelay), soci::use(metadata), soci::use(destinationSe));
+
+            insertJob.execute(true);
+	    }
+	    else
+	    {
             soci::statement insertJob = ( sql.prepare << "INSERT INTO t_job (job_id, job_state, job_params, user_dn, user_cred, priority,       "
                                           "                   vo_name, submit_time, internal_job_params, submit_host, cred_id,   "
                                           "                   myproxy_server, space_token, overwrite_flag, source_space_token,   "
@@ -1719,7 +1745,8 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::list<job_element_t
                                           soci::use(retry), soci::use(retryDelay), soci::use(metadata),
                                           soci::use(sourceSe), soci::use(destinationSe));
 
-            insertJob.execute(true);
+            insertJob.execute(true);	    
+	    }
 
             unsigned jobHashedId = 0;
             typedef std::pair<std::string, std::string> Key;
@@ -2994,6 +3021,7 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
             std::string currentState("");
             std::string reuseFlag;
             soci::indicator isNull = soci::i_ok;
+	    std::string source_se;
             soci::indicator isNullFileId = soci::i_ok;
 
             if(job_id.empty())
@@ -3038,6 +3066,10 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
                     sql <<  " SELECT file_id from t_file where job_id=:job_id and file_state='SUBMITTED' LIMIT 1 ", soci::use(job_id), soci::into(file_id, isNullFileId);
                     if(isNullFileId != soci::i_null && file_id > 0)
                         return true;
+                }
+            else if ( status == "FINISHED" && reuseFlag == "R")
+                {                    
+                    sql <<  " SELECT source_se from t_file where job_id=:job_id and file_state='FINISHED' LIMIT 1 ", soci::use(job_id), soci::into(source_se);                    
                 }
 
 
@@ -3123,6 +3155,23 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
                         return true;
 
 
+		    if(source_se.length() > 0)
+		    {
+                    sql.begin();
+                    // Update job
+                    soci::statement stmt6 = (
+                                                sql.prepare << "UPDATE t_job SET "
+                                                "    job_state = :state, job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+                                                "    reason = :reason, source_se = :source_se "
+                                                "WHERE job_id = :jobId and job_state NOT IN ('FAILED','FINISHEDDIRTY','CANCELED','FINISHED')  ",
+                                                soci::use(state, "state"), soci::use(reason, "reason"), soci::use(source_se, "source_se"),
+                                                soci::use(job_id, "jobId"));
+                    stmt6.execute(true);
+
+                    sql.commit();
+		    }
+		    else
+		    {
                     sql.begin();
                     // Update job
                     soci::statement stmt6 = (
@@ -3134,7 +3183,9 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
                                                 soci::use(job_id, "jobId"));
                     stmt6.execute(true);
 
-                    sql.commit();
+                    sql.commit();		    
+		    
+		    }
 
                     sql.begin();
 
