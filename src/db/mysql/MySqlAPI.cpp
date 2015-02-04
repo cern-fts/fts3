@@ -4146,18 +4146,7 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
     try
         {
             int highDefault = MIN_ACTIVE;
-
-            sql << "SELECT max_per_se, max_per_link "
-                   "FROM t_server_config "
-                   "WHERE vo_name IS NULL OR vo_name = '*'",
-                   soci::into(max_per_se), soci::into(max_per_link);
-
-            if(max_per_link > 0)
-                MAX_ACTIVE_PER_LINK = max_per_link;
-            if(max_per_se > 0)
-                MAX_ACTIVE_ENDPOINT_LINK = max_per_se;
-
-
+           
             soci::statement stmt1 = (
                                         sql.prepare << "SELECT active, fixed FROM t_optimize_active "
                                         "WHERE source_se = :source AND dest_se = :dest_se LIMIT 1 ",
@@ -4183,29 +4172,8 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
 
             //stop here to respect fixed for a given link
             if (isNullFixed != soci::i_null && active_fixed == "on")
-                return allowed;
-
-            //make sure it doesn't grow beyond the limits
-            getMaxActive(sql, maxSource, maxDestination, source_hostname, destin_hostname);
-
-            //admin requested to stop processing for this source or destination endpoint
-            if(maxSource == 0 || maxDestination == 0)
-                {
-                    return false;
-                }
-
-            sql << "SELECT SUM(source_se=:source) AS f1, SUM(dest_se=:dest) AS f2 FROM t_file WHERE file_state='ACTIVE' and (source_se=:source OR dest_se=:dest) ",
-                soci::use(source_hostname),
-                soci::use(destin_hostname),
-                soci::use(source_hostname),
-                soci::use(destin_hostname),
-                soci::into(activeSource, isNull1),
-                soci::into(activeDestination, isNull2);
-
-            if( (isNull1 != soci::i_null && activeSource >= maxSource) || (isNull2 != soci::i_null && activeDestination >= maxDestination) || maxActive >= MAX_ACTIVE_PER_LINK)
-                {
-                    allowed = false;
-                }
+                return allowed;            
+           
 
             //keep track of active for this link in url_copy
             currentActive = active;
@@ -4506,7 +4474,7 @@ bool MySqlAPI::updateOptimizer()
 
             sql << "SELECT max_per_se, max_per_link "
                    "FROM t_server_config "
-                   "WHERE vo_name IS NULL or vo_name = '*'",
+                   "WHERE (vo_name IS NULL or vo_name = '*')",
                    soci::into(max_per_se), soci::into(max_per_link);
 
             if(max_per_link > 0)
