@@ -786,6 +786,12 @@ void appendMessageToLogFile(std::string & text)
     if (fout.is_open()  && fexists(filename.c_str())==0)
         {
             fout << text << endl; //send to file
+	    
+	    if(fout.bad())
+	    {
+	    	fout.close();
+		init = false;
+	    }
         }
     else
         {
