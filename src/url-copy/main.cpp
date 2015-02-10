@@ -659,8 +659,8 @@ int main(int argc, char **argv)
         }
 
     //catch any other unexpected exception, at least the transfer state will be propagated to the db
-    set_terminate(myterminate);
-    set_unexpected(myunexpected);
+    //set_terminate(myterminate);
+    //set_unexpected(myunexpected);
 
     Logger &logger = Logger::getInstance();
 
