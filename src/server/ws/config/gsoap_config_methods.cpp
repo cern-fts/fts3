@@ -909,12 +909,60 @@ int fts3::implcfg__setGlobalLimits(soap* ctx, fts3::config__GlobalLimits* limits
         }
     catch (...)
         {
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the setGlobalTimeout failed"  << commit;
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the setGlobalLimits failed"  << commit;
             return SOAP_FAULT;
         }
 
     return SOAP_OK;
 }
+
+
+int fts3::implcfg__authorizeAction(soap* ctx, fts3::config__SetAuthz* authz, fts3::implcfg__authorizeActionResponse& resp)
+{
+    try
+        {
+            AuthorizationManager::getInstance().authorize(
+                ctx,
+                AuthorizationManager::CONFIG,
+                AuthorizationManager::dummy
+            );
+            CGsiAdapter cgsi(ctx);
+            string vo = cgsi.getClientVo();
+            string dn = cgsi.getClientDn();
+
+            stringstream audit;
+
+            DBSingleton::instance().getDBObjectInstance()->authorize(authz->add, authz->operation, authz->dn);
+
+            if (authz->add)
+                {
+                    audit << "Authorize " << authz->operation << " to \"" << authz->dn << "\"";
+                    DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, audit.str(), "authorize");
+                    FTS3_COMMON_LOGGER_NEWLOG (INFO) << audit.str() << commit;
+                }
+            else
+                {
+                    audit << "Revoke " << authz->operation << " to \"" << authz->dn << "\"";
+                    DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, audit.str(), "revoke");
+                    FTS3_COMMON_LOGGER_NEWLOG (INFO) << audit.str() << commit;
+                }
+        }
+    catch (Err& ex)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+            soap_receiver_fault(ctx, ex.what(), "InvalidConfigurationException");
+
+            return SOAP_FAULT;
+        }
+    catch (...)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the authorizeAction failed"  << commit;
+            return SOAP_FAULT;
+        }
+
+    return SOAP_OK;
+}
+
 
 int fts3::implcfg__setS3Credential(soap* ctx, std::string accessKey, std::string secretKey, std::string vo, std::string storage, implcfg__setS3CredentialResponse& resp)
 {
@@ -940,7 +988,7 @@ int fts3::implcfg__setS3Credential(soap* ctx, std::string accessKey, std::string
         }
     catch (...)
         {
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the setGlobalTimeout failed"  << commit;
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the setS3Credential failed"  << commit;
             return SOAP_FAULT;
         }
 
@@ -968,7 +1016,7 @@ int fts3::implcfg__setDropboxCredential(soap* ctx, std::string appKey, std::stri
         }
     catch (...)
         {
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the setGlobalTimeout failed"  << commit;
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the setDropboxCredential failed"  << commit;
             return SOAP_FAULT;
         }
 

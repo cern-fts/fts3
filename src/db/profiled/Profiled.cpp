@@ -618,6 +618,13 @@ void ProfiledDB::setGlobalLimits(const int* maxActivePerLink, const int* maxActi
     PROFILE_PREFIXED("DB::", db->setGlobalLimits(maxActivePerLink, maxActivePerSe));
 }
 
+
+void ProfiledDB::authorize(bool add, const std::string& op, const std::string& dn)
+{
+    PROFILE_PREFIXED("DB::", db->authorize(add, op, dn));
+}
+
+
 void ProfiledDB::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
 {
     PROFILE_PREFIXED("DB::", db->setToFailOldQueuedJobs(jobs));

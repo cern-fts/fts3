@@ -146,6 +146,16 @@ SetCfgCli::SetCfgCli(bool spec)
                 "Set the dropbox credentials, requires: app-key, app-secret and service API URL"
                 "\n(Example: --s3 $APP_KEY $APP_SECRET $API_URL)"
             )
+            (
+                "authorize",  po::value< std::vector<std::string> >()->multitoken(),
+                "Authorize a user to perform an action without needing VO extensions"
+                "\n(Example: --authorize config \"/DC=ch/DC=cern/...\""
+            )
+            (
+                "revoke",  po::value< std::vector<std::string> >()->multitoken(),
+                "Revoke the permissions given to an user to perform an action without needing VO extensions"
+                "\n(Example: --revoke config \"/DC=ch/DC=cern/...\""
+            )
             ;
         }
 
@@ -218,6 +228,12 @@ void SetCfgCli::validate()
     if (vm.count("dropbox"))
         {
             if (vm.size() != 1) throw bad_option("dropbox", "should be used only as a single option");
+            return;
+        }
+
+    if (vm.count("authorize") || vm.count("revoke"))
+        {
+            if (vm.size() != 1) throw bad_option("authorize/revoke", "should be used only as a single option");
             return;
         }
 
@@ -582,4 +598,26 @@ optional< std::tuple<std::string, std::string, std::string> > SetCfgCli::dropbox
     if (v.size() != 3) throw bad_option("dropbox", "3 parameters were expected: app-key, app-secret and service API URL");
 
     return std::make_tuple(v[0], v[1], v[2]);
+}
+
+optional< std::tuple<std::string, std::string> > SetCfgCli::getAddAuthorization()
+{
+    if (!vm.count("authorize")) return boost::none;
+
+    std::vector<std::string> const & v = vm["authorize"].as< std::vector<std::string> >();
+
+    if (v.size() != 2) throw bad_option("authorize", "2 parameters were expected: operation and dn");
+
+    return std::make_tuple(v[0], v[1]);
+}
+
+optional< std::tuple<std::string, std::string> > SetCfgCli::getRevokeAuthorization()
+{
+    if (!vm.count("revoke")) return boost::none;
+
+    std::vector<std::string> const & v = vm["revoke"].as< std::vector<std::string> >();
+
+    if (v.size() != 2) throw bad_option("revoke", "2 parameters were expected: operation and dn");
+
+    return std::make_tuple(v[0], v[1]);
 }

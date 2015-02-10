@@ -6797,6 +6797,42 @@ void OracleAPI::setGlobalLimits(const int* maxActivePerLink, const int* maxActiv
 }
 
 
+void OracleAPI::authorize(bool add, const std::string& op, const std::string& dn)
+{
+    soci::session sql(*connectionPool);
+    try
+        {
+            if (add)
+                {
+                    sql << "MERGE INTO t_authz_dn USING "
+                           "    (SELECT :op AS operation, :dn as dn FROM dual) Authz"
+                           " ON (t_authz_dn.operation = Authz.operation AND t_authz_dn.dn = Authz.dn) "
+                           " WHEN NOT MATCHED THEN "
+                           " INSERT (operation, dn) VALUES "
+                           "     (Authz.operation, Authz.dn)",
+                           soci::use(op), soci::use(dn);
+
+                }
+            else
+                {
+                    sql << "DELETE FROM t_authz_dn WHERE operation = :op AND dn = :dn",
+                            soci::use(op), soci::use(dn);
+                }
+            sql.commit();
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
+}
+
+
 void OracleAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
 {
     const static std::string message = "Job has been canceled because it stayed in the queue for too long";

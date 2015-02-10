@@ -187,6 +187,22 @@ int main(int ac, char* av[])
                     return 0;
                 }
 
+            optional<std::tuple<std::string, std::string> > addAuthz = cli.getAddAuthorization();
+            if (addAuthz)
+                {
+                    ctx.authorize(std::get<0>(*addAuthz), std::get<1>(*addAuthz));
+                    std::cout << "Done" << std::endl;
+                    return 0;
+                }
+
+            optional<std::tuple<std::string, std::string> > revokeAuthz = cli.getRevokeAuthorization();
+            if (revokeAuthz)
+            {
+                ctx.revoke(std::get<0>(*revokeAuthz), std::get<1>(*revokeAuthz));
+                std::cout << "Done" << std::endl;
+                return 0;
+            }
+
             config__Configuration *config = soap_new_config__Configuration(ctx, -1);
             config->cfg = cli.getConfigurations();
             if (config->cfg.empty()) return 0;

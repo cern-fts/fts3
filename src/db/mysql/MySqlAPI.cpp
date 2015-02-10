@@ -3072,7 +3072,6 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
             sql <<  " SELECT source_se from t_file where job_id=:job_id and file_state='FINISHED' LIMIT 1 ", soci::use(job_id), soci::into(source_se);
         }
 
-
         sql << " SELECT COUNT(DISTINCT file_index) "
             " FROM t_file "
             " WHERE job_id = :job_id ",
@@ -3167,7 +3166,6 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
                                             soci::use(state, "state"), soci::use(reason, "reason"), soci::use(source_se, "source_se"),
                                             soci::use(job_id, "jobId"));
                 stmt6.execute(true);
-
                 sql.commit();
             }
             else
@@ -3182,7 +3180,6 @@ bool MySqlAPI::updateJobTransferStatusInternal(soci::session& sql, std::string j
                                             soci::use(state, "state"), soci::use(reason, "reason"),
                                             soci::use(job_id, "jobId"));
                 stmt6.execute(true);
-
                 sql.commit();
 
             }
@@ -7416,6 +7413,36 @@ void MySqlAPI::setGlobalLimits(const int* maxActivePerLink, const int* maxActive
         sql.rollback();
         throw Err_Custom(std::string(__func__) + ": Caught exception " );
     }
+}
+
+
+void MySqlAPI::authorize(bool add, const std::string& op, const std::string& dn)
+{
+    soci::session sql(*connectionPool);
+    try
+        {
+            if (add)
+                {
+                    sql << "INSERT IGNORE INTO t_authz_dn (operation, dn) VALUES (:op, :dn)",
+                            soci::use(op), soci::use(dn);
+                }
+            else
+                {
+                    sql << "DELETE FROM t_authz_dn WHERE operation = :op AND dn = :dn",
+                            soci::use(op), soci::use(dn);
+                }
+            sql.commit();
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " );
+        }
 }
 
 

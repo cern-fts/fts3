@@ -266,6 +266,7 @@ public:
 
     virtual void setGlobalLimits(const int* maxActivePerLink, const int* maxActivePerSe);
 
+    virtual void authorize(bool add, const std::string& op, const std::string& dn);
 
     virtual void setToFailOldQueuedJobs(std::vector<std::string>& jobs);
 
