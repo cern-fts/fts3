@@ -48,9 +48,6 @@ using namespace db;
 
 #define TIME_TO_SLEEP_BETWEEN_TRANSACTION_RETRIES 1
 
-// the mutex guarding 'activitiesInQueue' (common for all calls)
-static boost::mutex mtx;
-
 
 static unsigned getHashedId(void)
 {
@@ -540,7 +537,7 @@ std::vector<std::string> MySqlAPI::getAllActivityShareConf()
         soci::rowset<soci::row>::const_iterator it;
         for (it = rs.begin(); it != rs.end(); it++)
         {
-            ret.push_back(it->get<std::string>("vo"));	    
+            ret.push_back(it->get<std::string>("vo"));
         }
     }
     catch (std::exception& e)
@@ -557,17 +554,17 @@ std::vector<std::string> MySqlAPI::getAllActivityShareConf()
 
 std::map<std::string, long long> MySqlAPI::getActivitiesInQueue(soci::session& sql, std::string src, std::string dst, std::string vo)
 {
-    static std::map<std::string, long long> ret;   
+    std::map<std::string, long long> ret;
 
     try
     {
         std::string vo_exists;
-	soci::indicator isNull = soci::i_ok;
-	
+        soci::indicator isNull = soci::i_ok;
+
         sql << "SELECT vo FROM t_activity_share_config where vo=:vo", soci::use(vo), soci::into(vo_exists, isNull);
-	if(isNull == soci::i_null)
-		return ret;
-       
+        if(isNull == soci::i_null)
+            return ret;
+
 
         soci::rowset<soci::row> rs = (
                                          sql.prepare <<
@@ -576,18 +573,18 @@ std::map<std::string, long long> MySqlAPI::getActivitiesInQueue(soci::session& s
                                          "  j.vo_name = f.vo_name AND f.file_state = 'SUBMITTED' AND "
                                          "	f.source_se = :source AND f.dest_se = :dest AND "
                                          "	f.vo_name = :vo_name AND j.vo_name = f.vo_name AND "
-                                         "	f.wait_timestamp IS NULL AND "                                        
-                                         "	(f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "                                        
+                                         "	f.wait_timestamp IS NULL AND "
+                                         "	(f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
                                          "  (j.reuse_job = 'N' OR j.reuse_job = 'R' OR j.reuse_job IS NULL) "
                                          " GROUP BY activity ORDER BY NULL ",
                                          soci::use(src),
                                          soci::use(dst),
-                                         soci::use(vo),                                                                                 
+                                         soci::use(vo),
                                          soci::use(hashSegment.start),
                                          soci::use(hashSegment.end)
                                      );
 
-	ret.clear();
+        ret.clear();
 
         soci::rowset<soci::row>::const_iterator it;
         for (it = rs.begin(); it != rs.end(); it++)
@@ -600,7 +597,7 @@ std::map<std::string, long long> MySqlAPI::getActivitiesInQueue(soci::session& s
             {
                 std::string activityShare = it->get<std::string>("activity");
                 long long nFiles = it->get<long long>("count");
-                ret[activityShare.empty() ? "default" : activityShare] = nFiles;		
+                ret[activityShare.empty() ? "default" : activityShare] = nFiles;
             }
         }
     }
@@ -616,6 +613,9 @@ std::map<std::string, long long> MySqlAPI::getActivitiesInQueue(soci::session& s
     return ret;
 }
 
+
+//check if called by multiple threads
+
 std::map<std::string, int> MySqlAPI::getFilesNumPerActivity(soci::session& sql, std::string src, std::string dst, std::string vo, int filesNum, std::set<std::string> & default_activities)
 {
     std::map<std::string, int> activityFilesNum;
@@ -627,22 +627,9 @@ std::map<std::string, int> MySqlAPI::getFilesNumPerActivity(soci::session& sql, 
 
         // if there is no configuration no assigment can be made
         if (activityShares.empty()) return activityFilesNum;
-        
-        // locking the mutex
-        boost::mutex::scoped_lock lock(mtx);
 
         // get the activities in the queue
         std::map<std::string, long long> activitiesInQueue = getActivitiesInQueue(sql, src, dst, vo);
-	//e.g.
-	/*
-+------------------+-------+
-| activity         | count |
-+------------------+-------+
-| T0 Export        |   889 |
-| Data Export Test |   407 |
-+------------------+-------+
-	
-	*/
 
         // sum of all activity shares in the queue (needed for normalization)
         double sum = 0.0;
@@ -661,47 +648,47 @@ std::map<std::string, int> MySqlAPI::getFilesNumPerActivity(soci::session& sql, 
                 default_activities.insert(it->first);
             }
         }
-		
-	
-	
+
+
+
         // if default was used add it as well
         if (!default_activities.empty())
-            sum += activityShares["default"];	    	
+            sum += activityShares["default"];
 
         // assign slots to activities
         for (int i = 0; i < filesNum; i++)
-        {	
+        {
             // if sum <= 0 there is nothing to assign
             if (sum <= 0) break;
             // a random number from (0, 1)
-            double r = ((double) rand() / (RAND_MAX));
+            double r = ((double) rand() / (double)RAND_MAX);
             // interval corresponding to given activity
             double interval = 0;
 
             for (it = activitiesInQueue.begin(); it != activitiesInQueue.end(); it++)
-            {	    
+            {
                 // if there are no more files for this activity continue
                 if (it->second <= 0) continue;
                 // get the activity name (if it was not defined use default)
                 std::string activity_name = default_activities.count(it->first) ? "default" : it->first;
-				
+
                 // calculate the interval (normalize)
                 interval += activityShares[activity_name] / sum;
-				
+
                 // if the slot has been assigned to the given activity ...
-		
+
                 if (r < interval)
-                {		
+                {
                     ++activityFilesNum[activity_name];
 
                     --it->second;
                     // if there are no more files for the given ativity remove it from the sum
-                    if (it->second == 0) 
-		    {
-		    	sum -= activityShares[activity_name];			
-		    }
+                    if (it->second == 0)
+                    {
+                        sum -= activityShares[activity_name];
+                    }
                     break;
-		    
+
                 }
             }
         }
@@ -1002,7 +989,7 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
 
                 for (it_act = activityFilesNum.begin(); it_act != activityFilesNum.end(); ++it_act)
                 {
-                    if (it_act->second == 0) continue;		    		   
+                    if (it_act->second == 0) continue;
 
                     std::string select = " select f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
                                          "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, "
@@ -7393,29 +7380,29 @@ void MySqlAPI::authorize(bool add, const std::string& op, const std::string& dn)
 {
     soci::session sql(*connectionPool);
     try
+    {
+        if (add)
         {
-            if (add)
-                {
-                    sql << "INSERT IGNORE INTO t_authz_dn (operation, dn) VALUES (:op, :dn)",
-                            soci::use(op), soci::use(dn);
-                }
-            else
-                {
-                    sql << "DELETE FROM t_authz_dn WHERE operation = :op AND dn = :dn",
-                            soci::use(op), soci::use(dn);
-                }
-            sql.commit();
+            sql << "INSERT IGNORE INTO t_authz_dn (operation, dn) VALUES (:op, :dn)",
+                soci::use(op), soci::use(dn);
         }
+        else
+        {
+            sql << "DELETE FROM t_authz_dn WHERE operation = :op AND dn = :dn",
+                soci::use(op), soci::use(dn);
+        }
+        sql.commit();
+    }
     catch (std::exception& e)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
+    {
+        sql.rollback();
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
     catch (...)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }
+    {
+        sql.rollback();
+        throw Err_Custom(std::string(__func__) + ": Caught exception " );
+    }
 }
 
 
