@@ -354,6 +354,12 @@ public:
     void setGlobalLimits(boost::optional<int> maxActivePerLink, boost::optional<int> maxActivePerSe);
 
     /**
+     * Handle static authorization/revocation
+     */
+    void authorize(const std::string& op, const std::string& dn);
+    void revoke(const std::string& op, const std::string& dn);
+
+    /**
      * Remote call to setSecPerMb
      */
     void setSecPerMb(int secPerMb);

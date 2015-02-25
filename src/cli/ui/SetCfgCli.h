@@ -222,6 +222,12 @@ public:
      */
     boost::optional< std::tuple<std::string, std::string, std::string> > dropbox();
 
+    /**
+     * @return : tuple with operation and dn
+     */
+    boost::optional< std::tuple<std::string, std::string> > getAddAuthorization();
+    boost::optional< std::tuple<std::string, std::string> > getRevokeAuthorization();
+
 private:
     /// helper function for handling max source and destination active
     boost::optional< std::pair<std::string, int> > getMaxSeActive(std::string option);

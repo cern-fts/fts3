@@ -665,6 +665,28 @@ void GSoapContextAdapter::setGlobalLimits(boost::optional<int> maxActivePerLink,
         throw gsoap_error(ctx);
 }
 
+void GSoapContextAdapter::authorize(const std::string& op, const std::string& dn)
+{
+    implcfg__authorizeActionResponse resp;
+    config__SetAuthz req;
+    req.add = true;
+    req.operation = op;
+    req.dn = dn;
+    if (soap_call_implcfg__authorizeAction(ctx, endpoint.c_str(), 0, &req, resp))
+        throw gsoap_error(ctx);
+}
+
+void GSoapContextAdapter::revoke(const std::string& op, const std::string& dn)
+{
+    implcfg__authorizeActionResponse resp;
+    config__SetAuthz req;
+    req.add = false;
+    req.operation = op;
+    req.dn = dn;
+    if (soap_call_implcfg__authorizeAction(ctx, endpoint.c_str(), 0, &req, resp))
+        throw gsoap_error(ctx);
+}
+
 void GSoapContextAdapter::setSecPerMb(int secPerMb)
 {
     implcfg__setSecPerMbResponse resp;

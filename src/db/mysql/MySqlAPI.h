@@ -262,6 +262,8 @@ public:
 
     virtual void setGlobalLimits(const int* maxActivePerLink, const int* maxActivePerSe);
 
+    virtual void authorize(bool add, const std::string& op, const std::string& dn);
+
     virtual void setMaxTimeInQueue(int afterXHours);
 
     virtual void setToFailOldQueuedJobs(std::vector<std::string>& jobs);
@@ -326,7 +328,7 @@ public:
 
     virtual std::vector<std::string> getAllActivityShareConf();
 
-    std::map<std::string, long long> & getActivitiesInQueue(soci::session& sql, std::string src, std::string dst, std::string vo);
+    std::map<std::string, long long> getActivitiesInQueue(soci::session& sql, std::string src, std::string dst, std::string vo);
 
     std::map<std::string, int> getFilesNumPerActivity(soci::session& sql, std::string src, std::string dst, std::string vo, int filesNum, std::set<std::string> & default_activities);
 

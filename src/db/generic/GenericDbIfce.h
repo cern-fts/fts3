@@ -308,6 +308,8 @@ public:
     // If NULL, it will not be modified
     virtual void setGlobalLimits(const int* maxActivePerLink, const int* maxActivePerSe) = 0;
 
+    // If add is false, the entry will be removed
+    virtual void authorize(bool add, const std::string& op, const std::string& dn) = 0;
 
     virtual void setToFailOldQueuedJobs(std::vector<std::string>& jobs) = 0;
 

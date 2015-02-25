@@ -238,6 +238,8 @@ public:
 
     void setGlobalLimits(const int* maxActivePerLink, const int* maxActivePerSe);
 
+    void authorize(bool add, const std::string& op, const std::string& dn);
+
     void setToFailOldQueuedJobs(std::vector<std::string>& jobs);
 
     std::vector< std::pair<std::string, std::string> > getPairsForSe(std::string se);

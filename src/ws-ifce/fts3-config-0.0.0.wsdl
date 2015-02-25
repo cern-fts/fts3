@@ -55,6 +55,14 @@
                     <element minOccurs="0" maxOccurs="1" name="maxActivePerSe" type="xsd:int"/>
                 </sequence>
             </complexType>
+            
+            <complexType name="SetAuthz">
+            	<sequence>
+            		<element minOccurs="1" maxOccurs="1" name="dn" type="xsd:string"/>
+            		<element minOccurs="1" maxOccurs="1" name="operation" type="xsd:string"/>
+            		<element minOccurs="1" maxOccurs="1" name="add" type="xsd:boolean"/>
+            	</sequence>
+            </complexType>
 
             <complexType name="ConfigurationException">
                 <sequence>
@@ -253,6 +261,13 @@
     </message>
     
     <message name="setSecPerMbResponse"/>
+    
+    <message name="setAuthorizationRequest">
+    	<part name="authz" type="config:SetAuthz"/>
+    </message>
+    
+    <message name="setAuthorizationResponse">
+    </message>
 
     <message name="AuthorizationException">
         <part name="fault" element="config:AuthorizationExceptionElement"/>
@@ -442,7 +457,16 @@
             <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
             <fault message="impl:InvalidArgumentException" name="InvalidArgumentException"/>
             <fault message="impl:InternalException" name="InternalException"/>
-        </operation>          
+        </operation>   
+        
+        <operation name="authorizeAction" parameterOrder="authorizeAction">
+    	    <input message="impl:setAuthorizationRequest" name="setAuthorizationRequest"/>
+            <output message="impl:setAuthorizationResponse" name="setAuthorizationResponse"/>
+            <fault message="impl:AuthorizationException" name="AuthorizationException"/>
+            <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
+            <fault message="impl:InvalidArgumentException" name="InvalidArgumentException"/>
+            <fault message="impl:InternalException" name="InternalException"/>
+        </operation>
     </portType>
 
     <binding name="SoapBinding" type="impl:Config">
@@ -957,8 +981,29 @@
             <fault name="InternalException">
                 <wsdlsoap:fault name="InternalException" use="literal"/>
             </fault>
-        </operation>  
+        </operation>
         
+        <operation name="authorizeAction">
+        	<wsdlsoap:operation soapAction=""/>
+            <input name="setAuthorizationRequest">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </input>
+            <output name="setAuthorizationResponse">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </output>
+            <fault name="AuthorizationException">
+                <wsdlsoap:fault name="AuthorizationException" use="literal"/>
+            </fault>
+            <fault name="ServiceBusyException">
+                <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
+            </fault>
+            <fault name="InvalidArgumentException">
+                <wsdlsoap:fault name="InvalidArgumentException" use="literal"/>
+            </fault>
+            <fault name="InternalException">
+                <wsdlsoap:fault name="InternalException" use="literal"/>
+            </fault>
+        </operation>
     </binding>
 
     <service name="Config">
@@ -967,4 +1012,3 @@
         </port>
     </service>
 </definitions>
-
