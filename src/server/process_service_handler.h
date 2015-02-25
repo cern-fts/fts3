@@ -122,23 +122,23 @@ public:
         infosys = theServerConfig().get<std::string > ("Infosys");
         const vector<std::string> voNameList(theServerConfig().get< vector<string> >("AuthorizedVO"));
         if (voNameList.size() > 0 && std::string(voNameList[0]).compare("*") != 0)
+        {
+            std::vector<std::string>::const_iterator iterVO;
+            allowedVOs += "(";
+            for (iterVO = voNameList.begin(); iterVO != voNameList.end(); ++iterVO)
             {
-                std::vector<std::string>::const_iterator iterVO;
-                allowedVOs += "(";
-                for (iterVO = voNameList.begin(); iterVO != voNameList.end(); ++iterVO)
-                    {
-                        allowedVOs += "'";
-                        allowedVOs += (*iterVO);
-                        allowedVOs += "',";
-                    }
-                allowedVOs = allowedVOs.substr(0, allowedVOs.size() - 1);
-                allowedVOs += ")";
-                boost::algorithm::to_lower(allowedVOs);
+                allowedVOs += "'";
+                allowedVOs += (*iterVO);
+                allowedVOs += "',";
             }
+            allowedVOs = allowedVOs.substr(0, allowedVOs.size() - 1);
+            allowedVOs += ")";
+            boost::algorithm::to_lower(allowedVOs);
+        }
         else
-            {
-                allowedVOs = voNameList[0];
-            }
+        {
+            allowedVOs = voNameList[0];
+        }
 
         std::string monitoringMessagesStr = theServerConfig().get<std::string > ("MonitoringMessaging");
         if(monitoringMessagesStr == "false")
@@ -184,121 +184,121 @@ protected:
     void getFiles( std::vector< boost::tuple<std::string, std::string, std::string> >& distinct)
     {
         try
+        {
+            if(distinct.empty())
+                return;
+
+            //now get files to be scheduled
+            std::map< std::string, std::list<TransferFiles> > voQueues;
+            DBSingleton::instance().getDBObjectInstance()->getByJobId(distinct, voQueues);
+
+            if(voQueues.empty())
+                return;
+
+            // create transfer-file handler
+            TransferFileHandler tfh(voQueues);
+
+            // the worker thread pool
+            common::ThreadPool<FileTransferExecutor> execPool(execPoolSize);
+
+            std::map< std::pair<std::string, std::string>, std::string > proxies;
+
+            // loop until all files have been served
+
+            int initial_size = tfh.size();
+
+
+            while (!tfh.empty())
             {
-                if(distinct.empty())
-                    return;
+                PROFILE_SCOPE("executeUrlcopy::while[!reuse]");
 
-                //now get files to be scheduled
-                std::map< std::string, std::list<TransferFiles> > voQueues;
-                DBSingleton::instance().getDBObjectInstance()->getByJobId(distinct, voQueues);
-
-                if(voQueues.empty())
-                    return;
-
-                // create transfer-file handler
-                TransferFileHandler tfh(voQueues);
-
-                // the worker thread pool
-                common::ThreadPool<FileTransferExecutor> execPool(execPoolSize);
-
-                std::map< std::pair<std::string, std::string>, std::string > proxies;
-
-                // loop until all files have been served
-
-                int initial_size = tfh.size();
-
-
-                while (!tfh.empty())
+                // iterate over all VOs
+                set<string>::iterator it_vo;
+                for (it_vo = tfh.begin(); it_vo != tfh.end(); it_vo++)
+                {
+                    if (stopThreads)
                     {
-                        PROFILE_SCOPE("executeUrlcopy::while[!reuse]");
-
-                        // iterate over all VOs
-                        set<string>::iterator it_vo;
-                        for (it_vo = tfh.begin(); it_vo != tfh.end(); it_vo++)
-                            {
-                                if (stopThreads)
-                                    {
-                                        execPool.interrupt();
-                                        return;
-                                    }
-
-                                boost::optional<TransferFiles> opt_tf = tfh.get(*it_vo);
-                                // if this VO has no more files to process just continue
-                                if (!opt_tf) continue;
-
-                                TransferFiles & tf = *opt_tf;
-
-                                // just to be sure
-                                if(tf.FILE_ID == 0 || tf.DN.empty() || tf.CRED_ID.empty()) continue;
-
-                                std::pair<std::string, std::string> proxy_key(tf.CRED_ID, tf.DN);
-
-                                if (proxies.find(proxy_key) == proxies.end())
-                                    {
-                                        boost::scoped_ptr<DelegCred> delegCredPtr(new DelegCred);
-                                        std::string filename = delegCredPtr->getFileName(tf.DN, tf.CRED_ID), message;
-
-                                        if (!delegCredPtr->isValidProxy(filename, message))
-                                            {
-                                                if(!message.empty())
-                                                    {
-                                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << message  << commit;
-                                                    }
-                                                // check the proxy lifetime in DB
-                                                time_t db_lifetime = -1;
-                                                boost::scoped_ptr<Cred> cred (DBSingleton::instance().getDBObjectInstance()->
-                                                                              findGrDPStorageElement(tf.CRED_ID, tf.DN)
-                                                                             );
-                                                if (cred.get()) db_lifetime = cred->termination_time - time(NULL);
-                                                // check the proxy lifetime in filesystem
-                                                time_t lifetime, voms_lifetime;
-                                                get_proxy_lifetime(filename, &lifetime, &voms_lifetime);
-
-                                                if (db_lifetime > lifetime)
-                                                    {
-                                                        filename = get_proxy_cert(
-                                                                       tf.DN, // user_dn
-                                                                       tf.CRED_ID, // user_cred
-                                                                       tf.VO_NAME, // vo_name
-                                                                       "",
-                                                                       "", // assoc_service
-                                                                       "", // assoc_service_type
-                                                                       false,
-                                                                       ""
-                                                                   );
-                                                    }
-                                            }
-
-                                        proxies[proxy_key] = filename;
-                                    }
-
-                                FileTransferExecutor* exec = new FileTransferExecutor(
-                                    tf,
-                                    tfh,
-                                    monitoringMessages,
-                                    infosys,
-                                    ftsHostName,
-                                    proxies[proxy_key]
-                                );
-
-                                execPool.start(exec);
-
-                            }
+                        execPool.interrupt();
+                        return;
                     }
 
-                // wait for all the workers to finish
-                execPool.join();
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Threadpool processed: " << initial_size << " files (" << execPool.reduce(std::plus<int>()) << " have been scheduled)" << commit;
+                    boost::optional<TransferFiles> opt_tf = tfh.get(*it_vo);
+                    // if this VO has no more files to process just continue
+                    if (!opt_tf) continue;
 
+                    TransferFiles & tf = *opt_tf;
+
+                    // just to be sure
+                    if(tf.FILE_ID == 0 || tf.DN.empty() || tf.CRED_ID.empty()) continue;
+
+                    std::pair<std::string, std::string> proxy_key(tf.CRED_ID, tf.DN);
+
+                    if (proxies.find(proxy_key) == proxies.end())
+                    {
+                        boost::scoped_ptr<DelegCred> delegCredPtr(new DelegCred);
+                        std::string filename = delegCredPtr->getFileName(tf.DN, tf.CRED_ID), message;
+
+                        if (!delegCredPtr->isValidProxy(filename, message))
+                        {
+                            if(!message.empty())
+                            {
+                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << message  << commit;
+                            }
+                            // check the proxy lifetime in DB
+                            time_t db_lifetime = -1;
+                            boost::scoped_ptr<Cred> cred (DBSingleton::instance().getDBObjectInstance()->
+                                                          findGrDPStorageElement(tf.CRED_ID, tf.DN)
+                                                         );
+                            if (cred.get()) db_lifetime = cred->termination_time - time(NULL);
+                            // check the proxy lifetime in filesystem
+                            time_t lifetime, voms_lifetime;
+                            get_proxy_lifetime(filename, &lifetime, &voms_lifetime);
+
+                            if (db_lifetime > lifetime)
+                            {
+                                filename = get_proxy_cert(
+                                               tf.DN, // user_dn
+                                               tf.CRED_ID, // user_cred
+                                               tf.VO_NAME, // vo_name
+                                               "",
+                                               "", // assoc_service
+                                               "", // assoc_service_type
+                                               false,
+                                               ""
+                                           );
+                            }
+                        }
+
+                        proxies[proxy_key] = filename;
+                    }
+
+                    FileTransferExecutor* exec = new FileTransferExecutor(
+                        tf,
+                        tfh,
+                        monitoringMessages,
+                        infosys,
+                        ftsHostName,
+                        proxies[proxy_key]
+                    );
+
+                    execPool.start(exec);
+
+                }
             }
+
+            // wait for all the workers to finish
+            execPool.join();
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Threadpool processed: " << initial_size << " files (" << execPool.reduce(std::plus<int>()) << " have been scheduled)" << commit;
+
+        }
         catch (std::exception& e)
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler:getFiles " << e.what() << commit;
-            }
+        {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler:getFiles " << e.what() << commit;
+        }
         catch (...)
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler!" << commit;
-            }
+        {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler!" << commit;
+        }
     }
 
     void executeUrlcopy()
@@ -307,57 +307,64 @@ protected:
         std::vector< boost::tuple<std::string, std::string, std::string> > distinct;
 
         try
+        {
+            boost::thread_group g;
+
+            try
             {
-                boost::thread_group g;
-
+                DBSingleton::instance().getDBObjectInstance()->getVOPairs(distinct);
+            }
+            catch (std::exception& e)
+            {
+                //try again if deadlocked
+                sleep(1);
                 try
-                    {
-                        DBSingleton::instance().getDBObjectInstance()->getVOPairs(distinct);
-                    }
+                {
+                    distinct.clear();
+                    DBSingleton::instance().getDBObjectInstance()->getVOPairs(distinct);
+                }
                 catch (std::exception& e)
-                    {
-                        //try again if deadlocked
-                        sleep(1);
-                        try
-                            {
-                                distinct.clear();
-                                DBSingleton::instance().getDBObjectInstance()->getVOPairs(distinct);
-                            }
-                        catch (std::exception& e)
-                            {
-                                distinct.clear();
-                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler " << e.what() << commit;
-                            }
-                        catch (...)
-                            {
-                                distinct.clear();
-                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler!" << commit;
-                            }
-                    }
+                {
+                    distinct.clear();
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler " << e.what() << commit;
+                }
                 catch (...)
-                    {
-                        //try again if deadlocked
-                        sleep(1);
-                        try
-                            {
-                                distinct.clear();
-                                DBSingleton::instance().getDBObjectInstance()->getVOPairs(distinct);
-                            }
-                        catch (std::exception& e)
-                            {
-                                distinct.clear();
-                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler " << e.what() << commit;
-                            }
-                        catch (...)
-                            {
-                                distinct.clear();
-                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler!" << commit;
-                            }
-                    }
+                {
+                    distinct.clear();
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler!" << commit;
+                }
+            }
+            catch (...)
+            {
+                //try again if deadlocked
+                sleep(1);
+                try
+                {
+                    distinct.clear();
+                    DBSingleton::instance().getDBObjectInstance()->getVOPairs(distinct);
+                }
+                catch (std::exception& e)
+                {
+                    distinct.clear();
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler " << e.what() << commit;
+                }
+                catch (...)
+                {
+                    distinct.clear();
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler!" << commit;
+                }
+            }
 
-                if(distinct.empty())
-                    return;
-
+            if(distinct.empty())
+            {
+                return;
+            }
+            else if(1 == distinct.size())
+            {	    	
+                getFiles(distinct);
+            }
+            else
+            {
                 std::size_t const half_size1 = distinct.size() / 2;
                 std::vector< boost::tuple<std::string, std::string, std::string> > split_1(distinct.begin(), distinct.begin() + half_size1);
                 std::vector< boost::tuple<std::string, std::string, std::string> > split_2(distinct.begin() + half_size1, distinct.end());
@@ -383,18 +390,20 @@ protected:
 
                 // wait for them
                 g.join_all();
-                distinct.clear();
             }
+
+            distinct.clear();
+        }
         catch (std::exception& e)
-            {
-                distinct.clear();
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler " << e.what() << commit;
-            }
+        {
+            distinct.clear();
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler " << e.what() << commit;
+        }
         catch (...)
-            {
-                distinct.clear();
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler!" << commit;
-            }
+        {
+            distinct.clear();
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler!" << commit;
+        }
     }
 
     /* ---------------------------------------------------------------------- */
@@ -404,47 +413,47 @@ protected:
         static bool drainMode = false;
 
         while (true)
+        {
+            retrieveRecords = time(0);
+
+            try
             {
-                retrieveRecords = time(0);
+                if (stopThreads)
+                {
+                    return;
+                }
 
-                try
-                    {
-                        if (stopThreads)
-                            {
-                                return;
-                            }
+                if (DrainMode::getInstance())
+                {
+                    if (!drainMode)
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more transfers for this instance!" << commit;
+                    drainMode = true;
+                    sleep(15);
+                    continue;
+                }
+                else
+                {
+                    drainMode = false;
+                }
 
-                        if (DrainMode::getInstance())
-                            {
-                                if (!drainMode)
-                                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more transfers for this instance!" << commit;
-                                drainMode = true;
-                                sleep(15);
-                                continue;
-                            }
-                        else
-                            {
-                                drainMode = false;
-                            }
+                /*check for non-reused jobs*/
+                executeUrlcopy();
 
-                        /*check for non-reused jobs*/
-                        executeUrlcopy();
-
-                        if (stopThreads)
-                            return;
-                    }
-                catch (std::exception& e)
-                    {
-                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler " << e.what() << commit;
-                        sleep(2);
-                    }
-                catch (...)
-                    {
-                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler!" << commit;
-                        sleep(2);
-                    }
+                if (stopThreads)
+                    return;
+            }
+            catch (std::exception& e)
+            {
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler " << e.what() << commit;
                 sleep(2);
-            } /*end while*/
+            }
+            catch (...)
+            {
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler!" << commit;
+                sleep(2);
+            }
+            sleep(2);
+        } /*end while*/
     }
 
     /* ---------------------------------------------------------------------- */
