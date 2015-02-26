@@ -280,23 +280,31 @@ struct type_conversion<FileTransferStatus>
             {
                 transfer.finish_time = 0;
             }
-        if (v.get_indicator("staging_start") == soci::i_ok)
+
+        try
             {
-                aux_tm = v.get<struct tm>("staging_start");
-                transfer.staging_start = timegm(&aux_tm);
+                if (v.get_indicator("staging_start") == soci::i_ok)
+                    {
+                        aux_tm = v.get<struct tm>("staging_start");
+                        transfer.staging_start = timegm(&aux_tm);
+                    }
+                else
+                    {
+                        transfer.staging_start = 0;
+                    }
+                if (v.get_indicator("staging_finished") == soci::i_ok)
+                    {
+                        aux_tm = v.get<struct tm>("staging_finished");
+                        transfer.staging_finished = timegm(&aux_tm);
+                    }
+                else
+                    {
+                        transfer.staging_finished = 0;
+                    }
             }
-        else
+        catch (...)
             {
-                transfer.staging_start = 0;
-            }
-        if (v.get_indicator("staging_finished") == soci::i_ok)
-            {
-                aux_tm = v.get<struct tm>("staging_finished");
-                transfer.staging_finished = timegm(&aux_tm);
-            }
-        else
-            {
-                transfer.staging_finished = 0;
+                transfer.staging_start = transfer.staging_finished = 0;
             }
     }
 };
