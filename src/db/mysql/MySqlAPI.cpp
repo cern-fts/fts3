@@ -49,7 +49,7 @@ using namespace db;
 #define TIME_TO_SLEEP_BETWEEN_TRANSACTION_RETRIES 1
 
 
-static unsigned getHashedId(void)
+static int thread_random(void)
 {
     static __thread struct random_data rand_data =
     {
@@ -61,13 +61,18 @@ static unsigned getHashedId(void)
 
     if (rand_data.state == NULL)
     {
-        initstate_r(static_cast<unsigned>(time(NULL)), statbuf, sizeof(statbuf), &rand_data);
+        initstate_r(static_cast<unsigned>(clock()), statbuf, sizeof(statbuf), &rand_data);
     }
 
     int value = 0;
     random_r(&rand_data, &value);
+    return value;
+}
 
-    return value % UINT16_MAX;
+
+static unsigned getHashedId(void)
+{
+    return thread_random() % UINT16_MAX;
 }
 
 
@@ -661,7 +666,10 @@ std::map<std::string, int> MySqlAPI::getFilesNumPerActivity(soci::session& sql, 
             // if sum <= 0 there is nothing to assign
             if (sum <= 0) break;
             // a random number from (0, 1)
-            double r = ((double) rand() / (double)RAND_MAX);
+            double r = ((double) thread_random() / (double)RAND_MAX);
+
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << __func__ << ": Dice result: " << r << commit;
+
             // interval corresponding to given activity
             double interval = 0;
 
@@ -691,6 +699,12 @@ std::map<std::string, int> MySqlAPI::getFilesNumPerActivity(soci::session& sql, 
 
                 }
             }
+        }
+
+        // Debug output
+        std::map<std::string, int>::const_iterator j;
+        for (j = activityFilesNum.begin(); j != activityFilesNum.end(); ++j) {
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << __func__ << ": " << j->first << " assigned " << j->second << commit;
         }
     }
     catch (std::exception& e)
