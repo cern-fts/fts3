@@ -197,11 +197,11 @@ int main(int ac, char* av[])
 
             optional<std::tuple<std::string, std::string> > revokeAuthz = cli.getRevokeAuthorization();
             if (revokeAuthz)
-            {
-                ctx.revoke(std::get<0>(*revokeAuthz), std::get<1>(*revokeAuthz));
-                std::cout << "Done" << std::endl;
-                return 0;
-            }
+                {
+                    ctx.revoke(std::get<0>(*revokeAuthz), std::get<1>(*revokeAuthz));
+                    std::cout << "Done" << std::endl;
+                    return 0;
+                }
 
             config__Configuration *config = soap_new_config__Configuration(ctx, -1);
             config->cfg = cli.getConfigurations();

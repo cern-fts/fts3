@@ -414,7 +414,7 @@ std::map<std::string, double> OracleAPI::getActivityShareConf(soci::session& sql
             boost::tokenizer< boost::char_separator<char> > tokens(activity_share_str, sep);
             boost::tokenizer< boost::char_separator<char> >::iterator it;
 
-            static const boost::regex re("^\\s*\\{\\s*\"([ a-zA-Z0-9\\.-]+)\"\\s*:\\s*((0\\.)?\\d+)\\s*\\}\\s*$");
+            static const boost::regex re("^\\s*\\{\\s*\"([ a-zA-Z0-9\\._-]+)\"\\s*:\\s*((0\\.)?\\d+)\\s*\\}\\s*$");
             static const int ACTIVITY_NAME = 1;
             static const int ACTIVITY_SHARE = 2;
 
@@ -3678,9 +3678,9 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
             int highDefault = MIN_ACTIVE;
 
             sql << "SELECT max_per_se, max_per_link "
-                   "FROM t_server_config "
-                   "WHERE vo_name IS NULL OR vo_name = '*'",
-                   soci::into(max_per_se), soci::into(max_per_link);
+                "FROM t_server_config "
+                "WHERE vo_name IS NULL OR vo_name = '*'",
+                soci::into(max_per_se), soci::into(max_per_link);
 
 
             if(max_per_link > 0)
@@ -3736,9 +3736,9 @@ void OracleAPI::getMaxActive(soci::session& sql, int& source, int& destination, 
     try
         {
             sql << "SELECT max_per_se, max_per_link "
-                   "FROM t_server_config "
-                   "WHERE vo_name IS NULL OR vo_name = '*'",
-                   soci::into(max_per_se), soci::into(max_per_link);
+                "FROM t_server_config "
+                "WHERE vo_name IS NULL OR vo_name = '*'",
+                soci::into(max_per_se), soci::into(max_per_link);
 
             if(max_per_link > 0)
                 MAX_ACTIVE_PER_LINK = max_per_link;
@@ -6805,18 +6805,18 @@ void OracleAPI::authorize(bool add, const std::string& op, const std::string& dn
             if (add)
                 {
                     sql << "MERGE INTO t_authz_dn USING "
-                           "    (SELECT :op AS operation, :dn as dn FROM dual) Authz"
-                           " ON (t_authz_dn.operation = Authz.operation AND t_authz_dn.dn = Authz.dn) "
-                           " WHEN NOT MATCHED THEN "
-                           " INSERT (operation, dn) VALUES "
-                           "     (Authz.operation, Authz.dn)",
-                           soci::use(op), soci::use(dn);
+                        "    (SELECT :op AS operation, :dn as dn FROM dual) Authz"
+                        " ON (t_authz_dn.operation = Authz.operation AND t_authz_dn.dn = Authz.dn) "
+                        " WHEN NOT MATCHED THEN "
+                        " INSERT (operation, dn) VALUES "
+                        "     (Authz.operation, Authz.dn)",
+                        soci::use(op), soci::use(dn);
 
                 }
             else
                 {
                     sql << "DELETE FROM t_authz_dn WHERE operation = :op AND dn = :dn",
-                            soci::use(op), soci::use(dn);
+                        soci::use(op), soci::use(dn);
                 }
             sql.commit();
         }
@@ -9002,7 +9002,7 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
                 soci::into(copy_pin_lifetime);
 
 
-	    bool exists = (reason.find("ETIMEDOUT") != std::string::npos);
+            bool exists = (reason.find("ETIMEDOUT") != std::string::npos);
 
             //staging exception, if file failed with timeout and was staged before, reset it
             if( (bring_online > 0 || copy_pin_lifetime > 0) && exists)
@@ -9357,9 +9357,9 @@ void OracleAPI::updateHeartBeatInternal(soci::session& sql, unsigned* index, uns
                 {
                     sql.begin();
                     soci::statement stmt3 = (sql.prepare <<
-                            "DELETE FROM t_hosts "
-                            "WHERE beat <= (sys_extract_utc(systimestamp) - interval '120' MINUTE) "
-                            "   AND drain = 0");
+                                             "DELETE FROM t_hosts "
+                                             "WHERE beat <= (sys_extract_utc(systimestamp) - interval '120' MINUTE) "
+                                             "   AND drain = 0");
                     stmt3.execute(true);
                     sql.commit();
                 }
@@ -10282,12 +10282,12 @@ int OracleAPI::getStreamsOptimization(const std::string & source_hostname, const
 
     try
         {
-	     sql << "SELECT global_tcp_stream from t_server_config where (vo_name IS NULL OR vo_name = '*') and  global_tcp_stream > 0",
-	     	soci::into(global_tcp_stream);
-	     if(sql.got_data() && global_tcp_stream > 0)
-	     {
-		return global_tcp_stream;
-	     }
+            sql << "SELECT global_tcp_stream from t_server_config where (vo_name IS NULL OR vo_name = '*') and  global_tcp_stream > 0",
+                soci::into(global_tcp_stream);
+            if(sql.got_data() && global_tcp_stream > 0)
+                {
+                    return global_tcp_stream;
+                }
 
 
             sql << " SELECT count(*) from t_optimize_streams where source_se=:source_se "
