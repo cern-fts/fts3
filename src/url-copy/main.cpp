@@ -1237,7 +1237,7 @@ int main(int argc, char **argv)
                         goto stop;
                     }
 
-                
+
                 logger.INFO() << "Transfer Starting" << std::endl;
                 reporter.sendLog(opts.jobId, currentTransfer.fileId, fileManagement.getLogFilePath(), opts.debugLevel);
 

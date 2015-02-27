@@ -105,15 +105,17 @@ static std::string _getVoFromMessage(const std::string& msg, const char* key)
 {
     enum json_tokener_error error;
     json_object * jobj = json_tokener_parse_verbose(msg.c_str(), &error);
-    if (!jobj) {
-        throw Err_System(json_tokener_error_desc(error));
-    }
+    if (!jobj)
+        {
+            throw Err_System(json_tokener_error_desc(error));
+        }
 
     struct json_object *vo_name_obj = NULL;
-    if (!json_object_object_get_ex(jobj, key, &vo_name_obj)) {
-        json_object_put(jobj);
-        throw Err_System("Could not find vo_name in the message");
-    }
+    if (!json_object_object_get_ex(jobj, key, &vo_name_obj))
+        {
+            json_object_put(jobj);
+            throw Err_System("Could not find vo_name in the message");
+        }
 
     std::string vo_name = json_object_get_string(vo_name_obj);
     json_object_put(jobj);
@@ -128,70 +130,86 @@ bool MsgProducer::sendMessage(std::string &temp)
     std::string tempFTS("");
     register int index = 0;
 
-    if (temp.compare(0, 2, "ST") == 0)
+    try
         {
-            for (index = 0; index < 19; index++)
-                find_and_replace(temp, startedToken[index], started[index]);
-            temp = temp.substr(2, temp.length()); //remove message prefix
-            tempFTS = "\"endpnt\":\"" + FTSEndpoint + "\"";
-            find_and_replace(temp, "\"endpnt\":\"\"", tempFTS); //add FTS endpoint
-            temp += EOT;
-            TextMessage* message = session->createTextMessage(temp);
-            producer_transfer_started->send(message);
-            logger::writeLog(temp);
-            delete message;
-        }
-    else if (temp.compare(0, 2, "CO") == 0)
-        {
-            for (index = 0; index < 48; index++)
+
+            if (temp.compare(0, 2, "ST") == 0)
                 {
-                    find_and_replace(temp, completedToken[index], completed[index]);
+                    for (index = 0; index < 19; index++)
+                        find_and_replace(temp, startedToken[index], started[index]);
+                    temp = temp.substr(2, temp.length()); //remove message prefix
+                    tempFTS = "\"endpnt\":\"" + FTSEndpoint + "\"";
+                    find_and_replace(temp, "\"endpnt\":\"\"", tempFTS); //add FTS endpoint
+                    temp += EOT;
+                    TextMessage* message = session->createTextMessage(temp);
+                    producer_transfer_started->send(message);
+                    logger::writeLog(temp);
+                    delete message;
                 }
-            temp = temp.substr(2, temp.length()); //remove message prefix
-            tempFTS = "\"endpnt\":\"" + FTSEndpoint + "\"";
-            find_and_replace(temp, "\"endpnt\":\"\"", tempFTS); //add FTS endpoint
+            else if (temp.compare(0, 2, "CO") == 0)
+                {
+                    for (index = 0; index < 48; index++)
+                        {
+                            find_and_replace(temp, completedToken[index], completed[index]);
+                        }
+                    temp = temp.substr(2, temp.length()); //remove message prefix
+                    tempFTS = "\"endpnt\":\"" + FTSEndpoint + "\"";
+                    find_and_replace(temp, "\"endpnt\":\"\"", tempFTS); //add FTS endpoint
 
-            temp = replaceMetadataString(temp);
+                    temp = replaceMetadataString(temp);
 
-            std::string vo;
-            try {
-                 vo = _getVoFromMessage(temp, "vo");
-            }
-            catch (const std::exception& e) {
-                std::ostringstream error_message;
-                error_message << "MESSAGE_ERROR (" << e.what() << ") " << temp;
-                logger::writeLog(error_message.str());
-            }
+                    std::string vo;
+                    try
+                        {
+                            vo = _getVoFromMessage(temp, "vo");
+                        }
+                    catch (const std::exception& e)
+                        {
+                            std::ostringstream error_message;
+                            error_message << "MESSAGE_ERROR (" << e.what() << ") " << temp;
+                            logger::writeLog(error_message.str());
+                        }
 
-            temp += EOT;
-            TextMessage* message = session->createTextMessage(temp);
-            message->setStringProperty("vo",vo);
-            producer_transfer_completed->send(message);
-            logger::writeLog(temp);
-            delete message;
+                    temp += EOT;
+                    TextMessage* message = session->createTextMessage(temp);
+                    message->setStringProperty("vo",vo);
+                    producer_transfer_completed->send(message);
+                    logger::writeLog(temp);
+                    delete message;
+                }
+            else if (temp.compare(0, 2, "SS") == 0)
+                {
+                    temp = temp.substr(2, temp.length()); //remove message prefix
+
+                    temp = replaceMetadataString(temp);
+
+                    std::string vo;
+                    try
+                        {
+                            vo = _getVoFromMessage(temp, "vo_name");
+                        }
+                    catch (const std::exception& e)
+                        {
+                            std::ostringstream error_message;
+                            error_message << "MESSAGE_ERROR (" << e.what() << ") " << temp;
+                            logger::writeLog(error_message.str());
+                        }
+
+                    temp += EOT;
+                    TextMessage* message = session->createTextMessage(temp);
+                    message->setStringProperty("vo",vo);
+                    producer_transfer_state->send(message);
+                    logger::writeLog(temp);
+                    delete message;
+                }
         }
-    else if (temp.compare(0, 2, "SS") == 0)
+    catch (CMSException& e)
         {
-            temp = temp.substr(2, temp.length()); //remove message prefix
-
-            temp = replaceMetadataString(temp);
-
-            std::string vo;
-            try {
-                vo = _getVoFromMessage(temp, "vo_name");
-            }
-            catch (const std::exception& e) {
-                std::ostringstream error_message;
-                error_message << "MESSAGE_ERROR (" << e.what() << ") " << temp;
-                logger::writeLog(error_message.str());
-            }
-
-            temp += EOT;
-            TextMessage* message = session->createTextMessage(temp);
-            message->setStringProperty("vo",vo);
-            producer_transfer_state->send(message);
-            logger::writeLog(temp);
-            delete message;
+            concurrent_queue::getInstance()->push(temp);
+        }
+    catch (...)
+        {
+            concurrent_queue::getInstance()->push(temp);
         }
 
     return true;
@@ -346,11 +364,8 @@ void MsgProducer::run()
                 }
             catch (CMSException& e)
                 {
-                    if(msgBk.length() > 5)  //random number,just to make it's not empty
-                        {
-                            concurrent_queue::getInstance()->push(msgBk);
-                            send_message(msgBk);
-                        }
+                    concurrent_queue::getInstance()->push(msgBk);
+                    send_message(msgBk);
                     errorMessage = "PROCESS_ERROR 3" + e.getStackTraceString();
                     logger::writeLog(errorMessage, true);
                     connected = false;
@@ -358,11 +373,8 @@ void MsgProducer::run()
                 }
             catch (...)
                 {
-                    if(msgBk.length() > 5)  //random number,just to make it's not empty
-                        {
-                            concurrent_queue::getInstance()->push(msgBk);
-                            send_message(msgBk);
-                        }
+                    concurrent_queue::getInstance()->push(msgBk);
+                    send_message(msgBk);
                     logger::writeLog("PROCESS_ERROR Unhandled exception occured", true);
                     connected = false;
                     sleep(5);
