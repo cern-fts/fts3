@@ -249,7 +249,7 @@ function loading($rootScope)
         $rootScope.loading = true;
 }
 
-function stopLoading($rootScope)
+function stopLoading($rootScope, headers)
 {
     if (nLoading > 0)
         nLoading -= 1;
@@ -257,6 +257,8 @@ function stopLoading($rootScope)
         $rootScope.loading = false;
         var now = new Date();
         $rootScope.lastRefresh = "Generated at " + now.toLocaleTimeString();
+        if ('x-host' in headers)
+            $rootScope.lastRefresh += " (" + headers['x-host'] + ")";
     }
 }
 
@@ -354,9 +356,9 @@ function withDefault(v, def)
 
 /** Generic callbacks */
 function genericSuccessMethod(deferred, $rootScope) {
-    return function(data) {
+    return function(data, headers) {
         deferred.resolve(data);
-        stopLoading($rootScope);
+        stopLoading($rootScope, headers());
     }
 }
 
