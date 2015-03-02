@@ -94,10 +94,15 @@ def _get_retried_stats(timewindow, hostname):
 @require_certificate
 @jsonify
 def get_overview(http_request):
+    try:
+        time_window = timedelta(hours=int(http_request.GET['time_window']))
+    except:
+        time_window = timedelta(hours=1)
+
     hostname = http_request.GET.get('hostname', None)
 
-    last_hour = _get_count_per_state(timedelta(hours=1), hostname)
-    retried = _get_retried_stats(timedelta(hours=1), hostname)
+    last_hour = _get_count_per_state(time_window, hostname)
+    retried = _get_retried_stats(time_window, hostname)
 
     return {
         'lasthour': last_hour,
@@ -162,10 +167,15 @@ def _get_host_service_and_segment():
 
 # This one does not require certificate, so the Service Level can be still queried
 def get_servers(http_request):
+    try:
+        time_window = timedelta(hours=int(http_request.GET['time_window']))
+    except:
+        time_window = timedelta(hours=1)
+
     format = http_request.GET.get('format', None)
     try:
         segments = _get_host_service_and_segment()
-        transfers = _get_transfer_and_submission_per_host(timedelta(hours=1))
+        transfers = _get_transfer_and_submission_per_host(time_window)
 
         hosts = segments.keys()
 
@@ -202,7 +212,12 @@ def get_servers(http_request):
 @require_certificate
 @jsonify
 def get_pervo(http_request):
-    not_before = datetime.utcnow() - timedelta(minutes=30)
+    try:
+        time_window = timedelta(hours=int(http_request.GET['time_window']))
+    except:
+        time_window = timedelta(hours=1)
+
+    not_before = datetime.utcnow() - time_window
 
     # Terminal first
     terminal = File.objects.values('file_state', 'vo_name') \

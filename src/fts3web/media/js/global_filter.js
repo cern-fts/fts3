@@ -15,6 +15,7 @@ angular.module('ftsmon.global_filter', [])
                 };
             }
             scope.globalFilter = $rootScope.globalFilter;
+            scope.attrs = attrs;
 
             if (attrs['onMore']) {
                 scope.moreFilters = function() {
@@ -22,8 +23,11 @@ angular.module('ftsmon.global_filter', [])
                 }
                 scope.isThereMoreFilters = true;
             }
-            if (attrs['disableVo']) {
-                scope.disable_vo = true;
+
+            for (key in scope.attrs) {
+                if (key.indexOf("hide") == 0) {
+                    scope.attrs[key] = scope.$eval(scope.attrs[key]);
+                }
             }
         },
         controller: function($scope, $location, Unique) {
