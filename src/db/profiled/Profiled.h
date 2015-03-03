@@ -373,12 +373,8 @@ public:
 
     void getAlreadyStartedStaging(std::vector< boost::tuple<std::string, std::string, std::string, int, int, int, std::string, std::string, std::string, std::string> >& files);
 
-
     //file_id / surl / token
     void getStagingFilesForCanceling(std::set< std::pair<std::string, std::string> >& files);
-
-    void setMaxStagingPerEndpoint(int maxStaging, const std::string & endpoint, const std::string & vo);
-    int getMaxStatingsPerEndpoint(const std::string & endpoint, const std::string & vo);
 
     void submitdelete(const std::string & jobId, const std::map<std::string,std::string>& rulsHost,
                       const std::string & DN, const std::string & voName, const std::string & credID);

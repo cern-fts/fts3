@@ -12871,64 +12871,6 @@ void MySqlAPI::getStagingFilesForCanceling(std::set< std::pair<std::string, std:
         }
 }
 
-void MySqlAPI::setMaxStagingPerEndpoint(int maxStaging, const std::string & endpoint, const std::string & vo)
-{
-    soci::session sql(*connectionPool);
-
-    try
-        {
-            sql.begin();
-
-            sql << " DELETE from t_stage_req where operation='staging' and vo_name=:vo_name and host = :endpoint",
-                soci::use(vo), soci::use(endpoint);
-
-            sql << 	" INSERT INTO concurrent_ops(vo_name, host, operation, concurrent_ops)  "
-                " VALUES(:vo, :endpoint, 'staging', :maxStaging) ",
-                soci::use(vo), soci::use(endpoint), soci::into(maxStaging);
-
-            sql.commit();
-        }
-    catch (std::exception& e)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-    catch (...)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception ");
-        }
-}
-
-
-int MySqlAPI::getMaxStatingsPerEndpoint(const std::string & endpoint, const std::string & vo)
-{
-    soci::session sql(*connectionPool);
-
-    try
-        {
-            int maxValue = 0;;
-
-            sql << 	"SELECT concurrent_ops from t_stage_req "
-                "WHERE vo_name=:vo_name and host = :endpoint and operation='staging' and concurrent_ops is NOT NULL ",
-                soci::use(vo), soci::use(endpoint), soci::into(maxValue);
-
-            if (sql.got_data())
-                {
-                    return maxValue;
-                }
-            return 0; //default
-        }
-    catch (std::exception& e)
-        {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
-        }
-    catch (...)
-        {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }
-}
-
 
 void MySqlAPI::checkJobOperation(std::vector<std::string >& jobs, std::vector< boost::tuple<std::string, std::string> >& ops)
 {

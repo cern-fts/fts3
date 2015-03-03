@@ -977,16 +977,6 @@ void ProfiledDB::getStagingFilesForCanceling(std::set< std::pair<std::string, st
     PROFILE_PREFIXED("DB::", db->getStagingFilesForCanceling(files));
 }
 
-void ProfiledDB::setMaxStagingPerEndpoint(int maxStaging, const std::string & endpoint, const std::string & vo)
-{
-    PROFILE_PREFIXED("DB::", db->setMaxStagingPerEndpoint(maxStaging, endpoint, vo));
-}
-
-int ProfiledDB::getMaxStatingsPerEndpoint(const std::string & endpoint, const std::string & vo)
-{
-    PROFILE_PREFIXED("DB::", return db->getMaxStatingsPerEndpoint(endpoint, vo));
-}
-
 
 void ProfiledDB::submitdelete(const std::string & jobId, const std::map<std::string,std::string>& rulsHost,
                               const std::string & DN, const std::string & voName, const std::string & credID)
