@@ -170,7 +170,7 @@ py::object PyFile::getSelectionStrategy()
 
 }
 
-File PyFile::getFileCpp()
+File PyFile::getFileCpp() const
 {
 
     File f;

@@ -114,7 +114,17 @@ void MsgPrinter::print(std::string const & ostr_subject, std::string const & jso
             if (!ostr_subject.empty()) (*ostr) << ostr_subject << " : ";
             (*ostr) << msg << std::endl;
         }
-    else jout.print(json_subject, msg);
+    else
+        {
+            try {
+                jout.print(json_subject, msg);
+            }
+            catch (...) {
+                json = false;
+                if (!ostr_subject.empty()) (*ostr) << ostr_subject << " : ";
+                (*ostr) << msg << std::endl;
+            }
+        }
 }
 
 void MsgPrinter::print(std::string const & subject, std::string const & msg)

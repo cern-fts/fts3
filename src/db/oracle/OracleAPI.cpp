@@ -9850,6 +9850,7 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
 
                     result << "]}";
                 }
+            result.unsetf(std::ios::floatfield);
         }
     catch (std::exception& e)
         {

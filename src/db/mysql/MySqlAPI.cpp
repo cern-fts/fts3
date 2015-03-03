@@ -10759,6 +10759,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
 
                     result << "]}";
                 }
+            result.unsetf(std::ios::floatfield);
         }
     catch (std::exception& e)
         {

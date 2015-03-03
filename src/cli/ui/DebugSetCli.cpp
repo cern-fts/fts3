@@ -75,7 +75,7 @@ void DebugSetCli::validate()
 
     if (!vm.count("debug_level")) throw bad_option("debug_level", "value missing");
 
-    if (level < 0 || level > 3) throw bad_option("debug_level", "takes following values: 0, 1, 2 or 3");
+    if (level > 3) throw bad_option("debug_level", "takes following values: 0, 1, 2 or 3");
 }
 
 std::string DebugSetCli::getUsageString(std::string tool)
