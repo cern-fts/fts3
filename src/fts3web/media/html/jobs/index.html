@@ -81,11 +81,22 @@
 		        <button type="button" class="btn btn-warning btn-small" data-ng-model="filter.state.finisheddirty" data-btn-checkbox>FINISHED DIRTY</button>
 		    </p>
 
-			<label for="timewindow">Time window:</label>
-			<input type="number" placeholder="time window in hours" id="timewindow" data-ng-model="filter.time_window"/>
+            <p>
+			    <label for="timewindow">Time window:</label>
+			    <input type="number" placeholder="time window in hours" id="timewindow" data-ng-model="filter.time_window"/>
+            </p>
 
-			<label for="diagnosis">Enable diagnosis mode</label>
-			<input type="checkbox" id="diagnosis" data-ng-model="filter.diagnosis"/>
+            <p>
+                <label for="diagnosis" class="checkbox inline">
+                    <input type="checkbox" id="diagnosis" data-ng-model="filter.diagnosis"/>
+                    Enable diagnosis mode
+                </label>
+
+                <label for="with-debug" class="checkbox inline">
+                    <input type="checkbox" id="with-debug" data-ng-model="filter.with_debug"/>
+                    With debug output
+                </label>
+            </p>
 	    </div>
 	    <div class="modal-footer">
 	        <a class="btn btn-success" data-ng-click="applyFilters()">Apply</a>

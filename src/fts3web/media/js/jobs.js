@@ -45,6 +45,7 @@ function JobListCtrl($rootScope, $location, $scope, jobs, Job)
         time_window: withDefault($location.$$search.time_window, 1),
         state:       statesFromString($location.$$search.state),
         diagnosis:   withDefault($location.$$search.diagnosis, 0),
+        with_debug:  withDefault($location.$$search.with_debug, 0),
     }
 
     $scope.showFilterDialog = function() {
@@ -61,7 +62,8 @@ function JobListCtrl($rootScope, $location, $scope, jobs, Job)
             page:        1,
             time_window: $scope.filter.time_window,
             state:       joinStates($scope.filter.state),
-            diagnosis:   $scope.filter.diagnosis
+            diagnosis:   $scope.filter.diagnosis,
+            with_debug:  $scope.filter.with_debug,
         });
     }
 
