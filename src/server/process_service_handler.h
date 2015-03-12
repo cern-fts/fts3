@@ -116,6 +116,7 @@ public:
     {
         cmd = "fts_url_copy";
 
+	logDir = theServerConfig().get<std::string > ("TransferLogDirectory");
         execPoolSize = theServerConfig().get<int> ("InternalThreadPool");
         ftsHostName = theServerConfig().get<std::string > ("Alias");
         allowedVOs = std::string("");
@@ -174,6 +175,7 @@ protected:
     bool monitoringMessages;
     int execPoolSize;
     std::string cmd;
+    std::string logDir;
 
     std::string extractHostname(const std::string &surl)
     {
@@ -278,7 +280,8 @@ protected:
                                     monitoringMessages,
                                     infosys,
                                     ftsHostName,
-                                    proxies[proxy_key]
+                                    proxies[proxy_key],
+				    logDir
                                 );
 
                                 execPool.start(exec);

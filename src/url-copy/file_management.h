@@ -32,6 +32,7 @@ public:
     ~FileManagement();
 
 public:
+    void init(std::string logDir);
     std::string archive();
     std::string generateLogFileName(std::string surl, std::string durl, unsigned file_id, std::string & job_id);
     static std::string dateDir();

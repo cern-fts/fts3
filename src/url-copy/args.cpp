@@ -54,10 +54,11 @@ const option UrlCopyOpts::long_options[] =
     {"retry_max",    	  required_argument, 0, '4'},
     {"job_m_replica",     required_argument, 0, '0'},
     {"last_replica",      required_argument, 0, '6'},
+    {"logDir",      	  required_argument, 0, 'y'},    
     {0, 0, 0, 0}
 };
 
-const char UrlCopyOpts::short_options[] = "PONM:L:K:J:I:H:GRFD:E:C:z:A:t:a:b:c:de:f:h:ij:k:B:5:UXZV:Y:7:@:S:8:9:2:3:4:0:6:";
+const char UrlCopyOpts::short_options[] = "PONM:L:K:J:I:H:GRFD:E:C:z:A:t:a:b:c:de:f:h:ij:k:B:5:UXZV:Y:7:@:S:8:9:2:3:4:0:6:y:";
 
 UrlCopyOpts::UrlCopyOpts(): monitoringMessages(false), autoTunned(false),
     manualConfig(false), overwrite(false), daemonize(false),
@@ -67,7 +68,8 @@ UrlCopyOpts::UrlCopyOpts(): monitoringMessages(false), autoTunned(false),
     compareChecksum(CHECKSUM_DONT_CHECK),
     fileId(0), userFileSize(0), bringOnline(-1), copyPinLifetime(-1),
     nStreams(DEFAULT_NOSTREAMS), tcpBuffersize(DEFAULT_BUFFSIZE),
-    blockSize(0), timeout(DEFAULT_TIMEOUT), secPerMb(0), retry(0), retry_max(0), job_m_replica("false"), last_replica("false")
+    blockSize(0), timeout(DEFAULT_TIMEOUT), secPerMb(0), retry(0), retry_max(0), job_m_replica("false"), last_replica("false"),
+    logDir("/var/log/fts3/")
 {
 }
 
@@ -264,6 +266,9 @@ int UrlCopyOpts::parse(int argc, char * const argv[])
                         case '6':
                             last_replica = boost::lexical_cast<std::string>(optarg);
                             break;
+                        case 'y':
+                            logDir = boost::lexical_cast<std::string>(optarg);
+                            break;			    
                         }
                 }
         }

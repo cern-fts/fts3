@@ -301,7 +301,7 @@ void checkDbSchema()
 
 
 
-void checkInitDirs()
+void checkInitDirs(std::string logsDir)
 {
     try
         {
@@ -309,7 +309,7 @@ void checkInitDirs()
             isPathSane(hostcert, false, R_OK);
             isPathSane(hostkey, false, R_OK);
             isPathSane(configfile, false, R_OK, true);
-            isPathSane("/var/log/fts3");
+            isPathSane(logsDir);
             isPathSane("/var/lib/fts3");
             isPathSane("/var/lib/fts3/monitoring");
             isPathSane("/var/lib/fts3/status");
@@ -536,7 +536,8 @@ int main(int argc, char** argv)
             FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv, true);
 
             //check file/dir persmissions
-            checkInitDirs();
+	    std::string logDir = theServerConfig().get<std::string > ("TransferLogDirectory");
+            checkInitDirs(logDir);
 
             //check if db schema is installed
             checkDbSchema();

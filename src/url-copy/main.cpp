@@ -657,11 +657,7 @@ int main(int argc, char **argv)
             else
                 file_id = argv[4];
         }
-
-    //catch any other unexpected exception, at least the transfer state will be propagated to the db
-    //set_terminate(myterminate);
-    //set_unexpected(myunexpected);
-
+  
     Logger &logger = Logger::getInstance();
 
     // register signals handler
@@ -675,7 +671,11 @@ int main(int argc, char **argv)
             abnormalTermination("FAILED", errorMessage, "Error");
             return 1;
         }
-
+	
+	
+    fileManagement.init(opts.logDir);	
+    
+   
     currentTransfer.jobId = opts.jobId;
 
     UserProxyEnv* cert = NULL;
