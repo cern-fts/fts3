@@ -40,7 +40,8 @@ def setup_filters(http_request):
         'hostname': None,
         'reason': None,
         'with_file': None,
-        'diagnosis': False
+        'diagnosis': False,
+        'with_debug': False
     }
 
     for key in filters.keys():
@@ -52,9 +53,9 @@ def setup_filters(http_request):
                     if http_request.GET[key]:
                         filters[key] = http_request.GET[key].split(',')
                 elif key == 'diagnosis':
-                    print http_request.GET[key]
-                    if http_request.GET[key] != '0':
-                        filters[key] = True
+                    filters[key] = http_request.GET[key] not in ('0', 'false')
+                elif key == 'with_debug':
+                    filters[key] = http_request.GET[key] not in ('0', 'false')
                 else:
                     filters[key] = http_request.GET[key]
         except:
@@ -92,16 +93,21 @@ class JobListDecorator(object):
         job['space_token'] = job_desc[6]
         job['job_finished'] = job_desc[7]
         self.cursor.execute(
-            "SELECT file_state, COUNT(file_state) FROM t_file WHERE job_id = %s GROUP BY file_state ORDER BY NULL",
+            """SELECT file_state, COUNT(file_state), SUM(t_log_file_debug)
+               FROM t_file WHERE job_id = %s GROUP BY file_state ORDER BY NULL
+            """,
             [job_id])
         result = self.cursor.fetchall()
         count = dict()
+        with_debug = 0
         total = 0
         for r in result:
             count[r[0]] = r[1]
             total += r[1]
+            with_debug += r[2] if r[2] else 0
         job['files'] = count
         job['count'] = total
+        job['with_debug'] = with_debug
         return job
 
     def _decorated(self, index):
@@ -161,8 +167,8 @@ def get_job_list(http_request):
         job_ids = job_ids.filter(dest_se=filters['dest_se'])
 
     job_list = JobListDecorator(map(lambda j: j['job_id'], job_ids))
-    if filters['diagnosis']:
-        job_list = JobDiagnosis(job_list)
+    if filters['diagnosis'] or filters['with_debug']:
+        job_list = JobDiagnosis(job_list, filters['diagnosis'], filters['with_debug'])
     return job_list
 
 

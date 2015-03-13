@@ -29,5 +29,11 @@ def diagnosed(job_list):
         yield j
 
 
-def JobDiagnosis(job_list):
-    return filter(lambda j: j['diagnosis'] is not None, diagnosed(job_list))
+def JobDiagnosis(job_list, require_diagnosis, require_debug):
+    def _diagnosis_filter(job):
+        if require_diagnosis and job['diagnosis'] is not None:
+            return False
+        if require_debug and job['with_debug'] < 1:
+            return False
+        return True
+    return filter(_diagnosis_filter, diagnosed(job_list))
