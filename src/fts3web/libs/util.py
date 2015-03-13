@@ -1,5 +1,6 @@
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 import sys
+import settings
 
 
 def get_order_by(request):
@@ -50,3 +51,21 @@ def paged(elements, http_request, page_size=50):
         'pageSize':   page_size,
         'items':      page.object_list
     }
+
+
+def db_to_date():
+    if settings.DATABASES['default']['ENGINE'] == 'django.db.backends.oracle':
+        return 'TO_TIMESTAMP(%s, \'YYYY-MM-DD HH24:MI:SS.FF\')'
+    elif settings.DATABASES['default']['ENGINE'] == 'django.db.backends.mysql':
+        return 'STR_TO_DATE(%s, \'%%Y-%%m-%%d %%H:%%i:%%S\')'
+    else:
+        return '%s'
+
+
+def db_limit(sql, limit):
+    if settings.DATABASES['default']['ENGINE'] == 'django.db.backends.oracle':
+        return "SELECT * FROM (%s) WHERE rownum <= %d" % (sql, limit)
+    elif settings.DATABASES['default']['ENGINE'] == 'django.db.backends.mysql':
+        return sql + " LIMIT %d" % limit
+    else:
+        return sql

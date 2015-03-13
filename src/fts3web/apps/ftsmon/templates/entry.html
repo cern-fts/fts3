@@ -40,7 +40,16 @@
                         <div class="nav-collapse collapse">
                             <ul class="nav">
                                 <li><a href="#" data-toggle="collapse" data-target=".nav-collapse" apply-global-filter>Overview</a></li>
-                                <li><a href="#jobs" data-toggle="collapse" data-target=".nav-collapse" apply-global-filter>Jobs</a></li>
+                                <li class="dropdown">
+                                    <a href="#jobs" data-toggle="collapse" data-target=".nav-collapse" apply-global-filter
+                                            class="nav-split">Jobs</a>
+                                    <a href="#" class="dropdown-toggle nav-split-caret">
+                                        <b class="caret"></b>
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        <li><a href="#transfers" data-toggle="collapse" data-target=".nav-collapse" apply-global-filter>Transfers</a></li>
+                                    </ul>
+                                </li>
                                 <li class="dropdown">
                                     <a href="#" class="dropdown-toggle">
                                         Optimizer<b class="caret"></b>

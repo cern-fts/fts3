@@ -2,8 +2,8 @@
 function TransfersCtrl($rootScope, $location, $scope, transfers, Transfers, Unique)
 {
     $scope.unique = {
-        activities: Unique('activities'),
-        hostnames: Unique('hostnames')
+        activities: Unique.query({field:'activities'}),
+        hostnames: Unique.query({field:'hostnames'}),
     }
     // Queue entries
     $scope.transfers = transfers;

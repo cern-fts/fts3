@@ -347,8 +347,11 @@ def get_transfer_list(http_request):
     if filters['reason']:
         transfers = transfers.filter(reason=filters['reason'])
 
-    transfers = transfers.values('file_id', 'file_state', 'job_id',
-                                 'source_se', 'dest_se', 'start_time', 'finish_time')
+    transfers = transfers.values(
+        'file_id', 'file_state', 'job_id',
+        'source_se', 'dest_se', 'start_time', 'finish_time',
+        'activity'
+    )
 
     # Ordering
     (order_by, order_desc) = get_order_by(http_request)
@@ -359,6 +362,6 @@ def get_transfer_list(http_request):
     elif order_by == 'finish_time':
         transfers = transfers.order_by(ordered_field('finish_time', order_desc))
     else:
-        transfers = transfers.order_by('-file_id')
+        transfers = transfers.order_by('-job_finished')
 
     return transfers
