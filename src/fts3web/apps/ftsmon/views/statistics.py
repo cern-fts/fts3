@@ -180,19 +180,11 @@ def get_servers(http_request):
             servers[host]['services'] = segments[host]
 
         if format == 'sls':
-            availability = list()
-            for host, v in servers.iteritems():
-                for service, status in v['services'].iteritems():
-                    if service != 'fts_backup':
-                        if status['status'] == 'down':
-                            value = 0
-                        else:
-                            value = 100
-                        availability.append(("%s_%s" % (host, service), value))
-            return  slsfy(availability, id_tail='Server Info')
+            return  slsfy(servers, id_tail='Server Info')
         else:
             return as_json(servers)
     except Exception, e:
+        raise
         if format == 'sls':
             return slsfy_error(str(e), id_tail='Server Info')
         else:
