@@ -65,6 +65,19 @@ def _calculate_availability(e_sls, servers):
         e_availability_desc = SubElement(e_sls, 'availabilitydesc')
         e_availability_desc.text = '%d services are down, %d draining' % (down_count, draining_count)
 
+
+def slsfy(servers, id_tail, color_mapper=_color_mapper):
+    """
+    Present the data with the given filters as a suitable XML
+    to be processed by SLS
+    """
+    e_sls = Element('serviceupdate')
+    e_id = SubElement(e_sls, 'id')
+    e_id.text = ("%s %s" % (getattr(settings, 'SITE_NAME', 'FTS3'), id_tail)).replace(' ', '_')
+
+    _calculate_availability(e_sls, servers)
+
+    # Add host count
     e_data = SubElement(e_sls, 'data')
     _add_numeric(e_data, 'host_count', len(servers.keys()))
     _add_numeric(e_data, 'fts_server_running',
@@ -84,18 +97,41 @@ def _calculate_availability(e_sls, servers):
         )
     )
 
+    # Add active and queued transfers
+    _add_numeric(e_data, 'queued',
+        sum(
+            map(
+                lambda (server, info): info.get('queued', 0),
+                servers.iteritems()
+            )
+        )
+    )
+    _add_numeric(e_data, 'active',
+        sum(
+            map(
+                lambda (server, info): info.get('active', 0),
+                servers.iteritems()
+            )
+        )
+    )
+    _add_numeric(e_data, 'staging',
+        sum(
+            map(
+                lambda (server, info): info.get('started', 0),
+                servers.iteritems()
+            )
+        )
+    )
+    _add_numeric(e_data, 'staging_queued',
+        sum(
+            map(
+                lambda (server, info): info.get('staging', 0),
+                servers.iteritems()
+            )
+        )
+    )
 
-def slsfy(servers, id_tail, color_mapper=_color_mapper):
-    """
-    Present the data with the given filters as a suitable XML
-    to be processed by SLS
-    """
-    e_sls = Element('serviceupdate')
-    e_id = SubElement(e_sls, 'id')
-    e_id.text = ("%s %s" % (getattr(settings, 'SITE_NAME', 'FTS3'), id_tail)).replace(' ', '_')
-
-    _calculate_availability(e_sls, servers)
-
+    # Timestamp
     e_timestamp = SubElement(e_sls, 'timestamp')
     e_timestamp.text = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
 

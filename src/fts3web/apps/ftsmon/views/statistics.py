@@ -51,7 +51,7 @@ def _get_count_per_state(age, hostname):
     return count
 
 
-def _get_transfer_and_submission_per_host(timewindow):
+def _get_transfer_and_submission_per_host(timewindow, segments):
     servers = {}
 
     not_before = datetime.utcnow() - timewindow
@@ -63,12 +63,21 @@ def _get_transfer_and_submission_per_host(timewindow):
         actives = File.objects.filter(file_state='ACTIVE', transferHost=host).count()
         staging =  File.objects.filter(file_state='STAGING', transferHost=host).count()
         started =  File.objects.filter(file_state='STARTED', transferHost=host).count()
+        if host in segments and 'fts_server' in segments[host] and 'start' in segments[host]['fts_server']:
+            queued = File.objects.filter(
+                file_state='SUBMITTED', job_finished__isnull=True,
+                hashed_id__gte=int(segments[host]['fts_server']['start'], 16),
+                hashed_id__lt=int(segments[host]['fts_server']['end'], 16)
+            ).count()
+        else:
+            queued = 0
         servers[host] = {
             'submissions': submissions,
             'transfers': transfers,
             'active': actives,
             'staging': staging,
-            'started': started
+            'started': started,
+            'queued': queued
         }
 
     return servers
@@ -175,7 +184,7 @@ def get_servers(http_request):
     format = http_request.GET.get('format', None)
     try:
         segments = _get_host_service_and_segment()
-        transfers = _get_transfer_and_submission_per_host(time_window)
+        transfers = _get_transfer_and_submission_per_host(time_window, segments)
 
         hosts = segments.keys()
 
@@ -183,7 +192,7 @@ def get_servers(http_request):
         for host in hosts:
             servers[host] = dict()
             if host in transfers:
-                servers[host].update(transfers.get(host))
+                servers[host].update(transfers[host])
             else:
                 servers[host].update({'transfers': 0, 'active': 0, 'submissions': 0})
 
@@ -194,7 +203,6 @@ def get_servers(http_request):
         else:
             return as_json(servers)
     except Exception, e:
-        raise
         if format == 'sls':
             return slsfy_error(str(e), id_tail='Server Info')
         else:
