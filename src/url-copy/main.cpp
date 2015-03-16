@@ -65,7 +65,6 @@ static volatile bool propagated = false;
 static volatile bool terminalState = false;
 static std::string globalErrorMessage("");
 static std::vector<std::string> turlVector;
-static bool completeMsgSent = false;
 static bool inShutdown = false;
 
 
@@ -291,9 +290,8 @@ void abnormalTermination(std::string classification, std::string, std::string fi
     if(classification == "CANCELED")
         classification = "FAILED";
 
-    if(UrlCopyOpts::getInstance().monitoringMessages && !completeMsgSent)
+    if(UrlCopyOpts::getInstance().monitoringMessages)
         {
-            completeMsgSent = true;
             msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
         }
 
@@ -850,7 +848,6 @@ int main(int argc, char **argv)
             retry = true;
             errorMessage = std::string("");
             currentTransfer.throughput = 0.0;
-            completeMsgSent = false;
 
             currentTransfer = transferList[ii];
 
@@ -1512,13 +1509,11 @@ stop:
                 }
 
 
-
-            logger.INFO() << "Send monitoring complete message" << std::endl;
             msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
-            if(opts.monitoringMessages && !completeMsgSent)
+            if(opts.monitoringMessages)
                 {
-                    completeMsgSent = true;
+	            logger.INFO() << "Send monitoring complete message" << std::endl;
                     msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
                 }
 
