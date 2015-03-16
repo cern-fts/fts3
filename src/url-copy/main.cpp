@@ -657,7 +657,7 @@ int main(int argc, char **argv)
             else
                 file_id = argv[4];
         }
-  
+
     Logger &logger = Logger::getInstance();
 
     // register signals handler
@@ -671,11 +671,11 @@ int main(int argc, char **argv)
             abnormalTermination("FAILED", errorMessage, "Error");
             return 1;
         }
-	
-	
-    fileManagement.init(opts.logDir);	
-    
-   
+
+
+    fileManagement.init(opts.logDir);
+
+
     currentTransfer.jobId = opts.jobId;
 
     UserProxyEnv* cert = NULL;
@@ -753,11 +753,11 @@ int main(int argc, char **argv)
         }
 
     /*gfal2 debug logging*/
+    gfal2_log_set_handler((GLogFunc) log_func, NULL);
     if (opts.debugLevel > 0)
         {
             logger.INFO() << "Set the transfer to debug level " << opts.debugLevel << std::endl;
-            gfal_set_verbose(GFAL_VERBOSE_TRACE | GFAL_VERBOSE_VERBOSE | GFAL_VERBOSE_TRACE_PLUGIN);
-            gfal_log_set_handler((GLogFunc) log_func, NULL);
+            gfal2_log_set_level(G_LOG_LEVEL_DEBUG);
 
             if (opts.debugLevel >= 2)
                 {
@@ -782,6 +782,10 @@ int main(int argc, char **argv)
                     setenv("GLOBUS_GIS_OPENSSL_ERROR_DEBUG_LEVEL", "1", 1);
                     setenv("XRD_LOGLEVEL", "Dump", 1);
                 }
+        }
+    else
+        {
+            gfal2_log_set_level(G_LOG_LEVEL_MESSAGE);
         }
 
 
