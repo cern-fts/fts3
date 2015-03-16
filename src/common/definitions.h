@@ -251,7 +251,7 @@ public:
     ~message_monitoring()
     {
     }
-    char msg[3000];
+    char msg[5000];
     boost::posix_time::time_duration::tick_type timestamp;
 };
 
