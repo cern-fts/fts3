@@ -894,13 +894,6 @@ int main(int argc, char **argv)
             msg_ifce::getInstance()->set_file_metadata(&tr_completed, replaceMetadataString(currentTransfer.fileMetadata) );
             msg_ifce::getInstance()->set_job_metadata(&tr_completed, replaceMetadataString(opts.jobMetadata) );
 
-            if(opts.monitoringMessages)
-	    {
-		logger.INFO() << "Send monitoring start message " << std::endl;			    
-                std::string msgReturnValue = msg_ifce::getInstance()->SendTransferStartMessage(&tr_completed);
-  	        logger.INFO() << "Start message content: " << msgReturnValue << std::endl;		
-	    }
-
             if (!opts.logToStderr)
                 {
                     int checkError = Logger::getInstance().redirectTo(fileManagement.getLogFilePath(), opts.debugLevel);
@@ -911,6 +904,13 @@ int main(int argc, char **argv)
                             goto stop;
                         }
                 }
+
+            if(opts.monitoringMessages)
+	    {
+		logger.INFO() << "Send monitoring start message " << std::endl;			    
+                std::string msgReturnValue = msg_ifce::getInstance()->SendTransferStartMessage(&tr_completed);
+  	        logger.INFO() << "Start message content: " << msgReturnValue << std::endl;		
+	    }
 
             //also reuse session when both url's are gsiftp
             if(true == bothGsiftp(currentTransfer.sourceUrl, currentTransfer.destUrl))
