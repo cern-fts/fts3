@@ -147,7 +147,7 @@ inline bool caseInsCharCompareN(char a, char b)
 
 bool caseInsCompare(const string& s1, const string& s2);
 
-bool send_message(std::string & text);
+std::string send_message(std::string & text);
 
 
 //get timestamp in calendar time

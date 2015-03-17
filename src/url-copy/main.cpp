@@ -895,7 +895,11 @@ int main(int argc, char **argv)
             msg_ifce::getInstance()->set_job_metadata(&tr_completed, replaceMetadataString(opts.jobMetadata) );
 
             if(opts.monitoringMessages)
-                msg_ifce::getInstance()->SendTransferStartMessage(&tr_completed);
+	    {
+		logger.INFO() << "Send monitoring start message " << std::endl;			    
+                std::string msgReturnValue = msg_ifce::getInstance()->SendTransferStartMessage(&tr_completed);
+  	        logger.INFO() << "Start message content: " << msgReturnValue << std::endl;		
+	    }
 
             if (!opts.logToStderr)
                 {
@@ -1514,7 +1518,8 @@ stop:
             if(opts.monitoringMessages)
                 {
 	            logger.INFO() << "Send monitoring complete message" << std::endl;
-                    msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
+                    std::string msgReturnValue = msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
+		    logger.INFO() << "Complete message content: " << msgReturnValue << std::endl;
                 }
 
             inShutdown = true;

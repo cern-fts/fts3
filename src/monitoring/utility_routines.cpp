@@ -50,6 +50,7 @@
 #include "producer_consumer_common.h"
 #include "name_to_uid.h"
 #include "common/error.h"
+#include <boost/lexical_cast.hpp>
 
 #define MILLI 36000000
 
@@ -881,15 +882,18 @@ bool caseInsCompare(const string& s1, const string& s2)
 }
 
 
-bool send_message(std::string & text)
+std::string send_message(std::string & text)
 {    
             struct message_monitoring message;
             strncpy(message.msg, text.c_str(), sizeof(message.msg));
             message.msg[sizeof(message.msg) - 1] = '\0';
             message.timestamp = milliseconds_since_epoch();
-            runProducerMonitoring(message);
-    
-    return true;
+            int returnValue = runProducerMonitoring(message);
+	    
+	    if(returnValue == 0)
+	    	return std::string();
+	    else
+	    	return boost::lexical_cast<std::string>(returnValue);	        
 }
 
 
