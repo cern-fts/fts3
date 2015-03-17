@@ -55,7 +55,7 @@ public:
      * @param infosys - information system host
      * @param ftsHostName - hostname of the machine hosting FTS3
      */
-    FileTransferExecutor(TransferFiles& tf, TransferFileHandler& tfh, bool monitoringMsg, string infosys, string ftsHostName, string proxy);
+    FileTransferExecutor(TransferFiles& tf, TransferFileHandler& tfh, bool monitoringMsg, string infosys, string ftsHostName, string proxy, std::string logDir);
 
     /**
      * Destructor.
@@ -87,6 +87,7 @@ private:
     string ftsHostName;
     SiteName siteResolver;
     string proxy;
+    std::string logsDir;
 
     // DB interface
     GenericDbIfce* db;

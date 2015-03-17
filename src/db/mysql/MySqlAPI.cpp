@@ -2065,7 +2065,7 @@ void MySqlAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::stri
             query <<
                   "SELECT DISTINCT job_id, job_state, reason, submit_time, user_dn, "
                   "                 vo_name, priority, cancel_job, "
-                  "                 (SELECT COUNT(DISTINCT t_file.file_index) FROM t_file WHERE t_file.job_id = t_job.job_id) as numFiles "
+                  "                 (SELECT COUNT(*) FROM t_file WHERE t_file.job_id = t_job.job_id) as numFiles "
                   "FROM t_job ";
 
             //joins
@@ -4081,17 +4081,23 @@ void MySqlAPI::getMaxActive(soci::session& sql, int& source, int& destination, c
 
     try
         {
-            sql << "SELECT max_per_se, max_per_link "
-                "FROM t_server_config "
-                "WHERE vo_name IS NULL OR vo_name = '*'",
-                soci::into(max_per_se), soci::into(max_per_link);
+            sql << "SELECT max_per_se "
+                   "FROM t_server_config "
+                   "WHERE max_per_se > 0",
+                soci::into(max_per_se);
 
-            if(max_per_link > 0)
-                MAX_ACTIVE_PER_LINK = max_per_link;
-            if(max_per_se > 0)
+            if(sql.got_data() && max_per_se > 0)
                 MAX_ACTIVE_ENDPOINT_LINK = max_per_se;
 
-            int maxDefault = MAX_ACTIVE_ENDPOINT_LINK;
+            sql << "SELECT max_per_link "
+                   "FROM t_server_config "
+                   "WHERE max_per_link > 0",
+                soci::into(max_per_link);
+
+            if(sql.got_data() && max_per_link > 0)
+                MAX_ACTIVE_PER_LINK = max_per_link;            
+		
+            int maxDefault = MAX_ACTIVE_ENDPOINT_LINK;	    	    	   
 
             //check for source
             sql << " select active from t_optimize where source_se = :source_se and active is not NULL ",
@@ -4110,10 +4116,14 @@ void MySqlAPI::getMaxActive(soci::session& sql, int& source, int& destination, c
                 {
                     source = 0; //stop processing for this source endpoint
                 }
-            else
+            else if(sql.got_data() && maxActiveSource > 0)
                 {
                     source = maxActiveSource;
                 }
+	    else		
+	        {
+		    source = maxDefault;
+	        }
 
             sql << " select active from t_optimize where dest_se = :dest_se and active is not NULL ",
                 soci::use(destin_hostname),
@@ -4131,10 +4141,14 @@ void MySqlAPI::getMaxActive(soci::session& sql, int& source, int& destination, c
                 {
                     destination = 0; //stop processing for this destination endpoint
                 }
-            else
+            else if(sql.got_data() && maxActiveDest > 0)
                 {
                     destination = maxActiveDest;
                 }
+            else		
+	        {
+		    destination = maxDefault;
+	        }		
         }
     catch (std::exception& e)
         {
@@ -4495,16 +4509,23 @@ bool MySqlAPI::updateOptimizer()
                                          soci::into(allTested));
 
 
-            sql << "SELECT max_per_se, max_per_link "
-                "FROM t_server_config "
-                "WHERE (vo_name IS NULL or vo_name = '*')",
-                soci::into(max_per_se), soci::into(max_per_link);
+	    sql << "SELECT max_per_se "
+                   "FROM t_server_config "
+                   "WHERE max_per_se > 0",
+                soci::into(max_per_se);
 
-            if(max_per_link > 0)
-                MAX_ACTIVE_PER_LINK = max_per_link;
-            if(max_per_se > 0)
+            if(sql.got_data() && max_per_se > 0)
                 MAX_ACTIVE_ENDPOINT_LINK = max_per_se;
 
+            sql << "SELECT max_per_link "
+                   "FROM t_server_config "
+                   "WHERE max_per_link > 0",
+                soci::into(max_per_link);
+
+            if(sql.got_data() && max_per_link > 0)
+                MAX_ACTIVE_PER_LINK = max_per_link;            
+		
+           
 
             //check first for distinct sources
             for (soci::rowset<soci::row>::const_iterator i = rs_again.begin(); i != rs_again.end(); ++i)
@@ -4847,46 +4868,7 @@ bool MySqlAPI::updateOptimizer()
                             //make sure it doesn't grow beyond the limits
                             int maxSource = 0;
                             int maxDestination = 0;
-                            getMaxActive(sql, maxSource, maxDestination, source_hostname, destin_hostname);
-
-                            //FTS3 admin requested to stop processing for this source or destination endpoints
-                            if(maxSource == 0 || maxDestination == 0)
-                                {
-                                    updateOptimizerEvolution(sql, source_hostname, destin_hostname, maxActive, throughput, ratioSuccessFailure, 1, bandwidthIn);
-                                    continue;
-                                }
-                            else if(maxSource ==  MAX_ACTIVE_ENDPOINT_LINK && maxDestination == MAX_ACTIVE_ENDPOINT_LINK)
-                                {
-                                    //do nothing, use default for both
-                                }
-                            else if (maxSource !=  MAX_ACTIVE_ENDPOINT_LINK && maxDestination != MAX_ACTIVE_ENDPOINT_LINK) //both have been set
-                                {
-                                    if(maxSource > maxDestination)
-                                        {
-                                            maxSource = 	maxDestination; //take the min
-                                        }
-                                    else if( maxDestination > maxSource)
-                                        {
-                                            maxDestination = maxSource;
-                                        }
-                                    else
-                                        {
-                                            //do nothing
-                                        }
-                                }
-                            else if(maxSource !=  MAX_ACTIVE_ENDPOINT_LINK && maxDestination == MAX_ACTIVE_ENDPOINT_LINK)
-                                {
-                                    maxDestination = maxSource;
-                                }
-                            else if(maxSource ==  MAX_ACTIVE_ENDPOINT_LINK && maxDestination != MAX_ACTIVE_ENDPOINT_LINK)
-                                {
-                                    maxSource = maxDestination;
-                                }
-                            else
-                                {
-                                    //do nothing, use default
-                                }
-
+                            getMaxActive(sql, maxSource, maxDestination, source_hostname, destin_hostname);                          
 
                             if( activeSource >= maxSource || activeDestination >= maxDestination || maxActive >= MAX_ACTIVE_PER_LINK)
                                 {
@@ -7344,30 +7326,33 @@ void MySqlAPI::setGlobalLimits(const int* maxActivePerLink, const int* maxActive
 
     try
         {
-            sql << "SELECT max_per_link FROM t_server_config WHERE vo_name IS NULL or vo_name = '*'", soci::into(existsLink);
-            sql << "SELECT max_per_se FROM t_server_config WHERE vo_name IS NULL or vo_name = '*'", soci::into(existsSe);
-
-            sql.begin();
-
+            sql << "SELECT max_per_link FROM t_server_config WHERE (vo_name IS NULL or vo_name = '*') and max_per_link is not NULL", soci::into(existsLink);
+	   
+	    sql.begin();
+	   
             if (maxActivePerLink)
                 {
-                    if(existsLink > 0)
-                        {
-                            sql << "UPDATE t_server_config SET max_per_link = :maxLink",
-                                soci::use(*maxActivePerLink);
-                        }
+		    if(sql.got_data())
+		        {
+		    	    sql << "UPDATE t_server_config SET max_per_link = :maxLink where max_per_link=:existsLink",
+                                soci::use(*maxActivePerLink), soci::use(existsLink);
+		        }                    
                     else
                         {
                             sql << "INSERT into t_server_config(max_per_link, vo_name) VALUES(:maxLink, '*')",
                                 soci::use(*maxActivePerLink);
                         }
-                }
+                }	   
+	    
+	    
+            sql << "SELECT max_per_se FROM t_server_config WHERE (vo_name IS NULL or vo_name = '*') and max_per_se is not NULL", soci::into(existsSe);
+           
             if (maxActivePerSe)
                 {
-                    if(existsSe > 0)
+                    if(sql.got_data())
                         {
-                            sql << "UPDATE t_server_config SET max_per_se = :maxSe",
-                                soci::use(*maxActivePerSe);
+                            sql << "UPDATE t_server_config SET max_per_se = :maxSe where max_per_se=:existsSe",
+                                soci::use(*maxActivePerSe), soci::use(existsSe);
                         }
                     else
                         {
@@ -10759,6 +10744,7 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
 
                     result << "]}";
                 }
+            result.unsetf(std::ios::floatfield);
         }
     catch (std::exception& e)
         {
@@ -12867,64 +12853,6 @@ void MySqlAPI::getStagingFilesForCanceling(std::set< std::pair<std::string, std:
     catch (...)
         {
             sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }
-}
-
-void MySqlAPI::setMaxStagingPerEndpoint(int maxStaging, const std::string & endpoint, const std::string & vo)
-{
-    soci::session sql(*connectionPool);
-
-    try
-        {
-            sql.begin();
-
-            sql << " DELETE from t_stage_req where operation='staging' and vo_name=:vo_name and host = :endpoint",
-                soci::use(vo), soci::use(endpoint);
-
-            sql << 	" INSERT INTO concurrent_ops(vo_name, host, operation, concurrent_ops)  "
-                " VALUES(:vo, :endpoint, 'staging', :maxStaging) ",
-                soci::use(vo), soci::use(endpoint), soci::into(maxStaging);
-
-            sql.commit();
-        }
-    catch (std::exception& e)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-    catch (...)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception ");
-        }
-}
-
-
-int MySqlAPI::getMaxStatingsPerEndpoint(const std::string & endpoint, const std::string & vo)
-{
-    soci::session sql(*connectionPool);
-
-    try
-        {
-            int maxValue = 0;;
-
-            sql << 	"SELECT concurrent_ops from t_stage_req "
-                "WHERE vo_name=:vo_name and host = :endpoint and operation='staging' and concurrent_ops is NOT NULL ",
-                soci::use(vo), soci::use(endpoint), soci::into(maxValue);
-
-            if (sql.got_data())
-                {
-                    return maxValue;
-                }
-            return 0; //default
-        }
-    catch (std::exception& e)
-        {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
-        }
-    catch (...)
-        {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 }

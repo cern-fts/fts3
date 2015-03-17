@@ -1,5 +1,11 @@
+<global-filter data-hide-vo="true" data-hide-pair="true"></global-filter>
+
 <h2>Statistics - Servers</h2>
-<h3>For the last hour</h3>
+<h3>
+    For the last {{globalFilter.time_window || '1' }}
+    <span data-ng-show="globalFilter.time_window == 1 || !globalFilter.time_window">hour</span>
+    <span data-ng-show="globalFilter.time_window > 1">hours</span>
+</h3>
 
 <table class="table">
     <thead>

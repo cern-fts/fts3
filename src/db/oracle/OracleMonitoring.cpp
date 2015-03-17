@@ -23,7 +23,7 @@
 #include "OracleMonitoring.h"
 #include "sociMonitoringConversions.h"
 
-OracleMonitoring::OracleMonitoring(): poolSize(2)
+OracleMonitoring::OracleMonitoring(): poolSize(2), connectionPool(NULL)
 {
     memset(&notBefore, 0, sizeof(notBefore));
 }

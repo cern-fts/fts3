@@ -46,9 +46,9 @@ class Job
 
 public:
 
-    Job(PyFile file);
+    Job(const PyFile& file);
 
-    Job(py::list files);
+    Job(const py::list& files);
 
     virtual ~Job();
 
@@ -92,7 +92,7 @@ private:
 
     bool wrongChecksumFormat(std::string checksum);
 
-    void add(PyFile file);
+    void add(const PyFile& file);
 
     ///
     std::vector<File> elements;

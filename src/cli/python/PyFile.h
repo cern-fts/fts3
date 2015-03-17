@@ -64,7 +64,7 @@ public:
     void setSelectionStrategy(py::str select);
     py::object getSelectionStrategy();
 
-    File getFileCpp();
+    File getFileCpp() const;
 };
 
 } /* namespace cli */

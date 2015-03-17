@@ -65,7 +65,6 @@ static volatile bool propagated = false;
 static volatile bool terminalState = false;
 static std::string globalErrorMessage("");
 static std::vector<std::string> turlVector;
-static bool completeMsgSent = false;
 static bool inShutdown = false;
 
 
@@ -291,9 +290,8 @@ void abnormalTermination(std::string classification, std::string, std::string fi
     if(classification == "CANCELED")
         classification = "FAILED";
 
-    if(UrlCopyOpts::getInstance().monitoringMessages && !completeMsgSent)
+    if(UrlCopyOpts::getInstance().monitoringMessages)
         {
-            completeMsgSent = true;
             msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
         }
 
@@ -658,10 +656,6 @@ int main(int argc, char **argv)
                 file_id = argv[4];
         }
 
-    //catch any other unexpected exception, at least the transfer state will be propagated to the db
-    //set_terminate(myterminate);
-    //set_unexpected(myunexpected);
-
     Logger &logger = Logger::getInstance();
 
     // register signals handler
@@ -675,6 +669,10 @@ int main(int argc, char **argv)
             abnormalTermination("FAILED", errorMessage, "Error");
             return 1;
         }
+
+
+    fileManagement.init(opts.logDir);
+
 
     currentTransfer.jobId = opts.jobId;
 
@@ -753,11 +751,11 @@ int main(int argc, char **argv)
         }
 
     /*gfal2 debug logging*/
+    gfal2_log_set_handler((GLogFunc) log_func, NULL);
     if (opts.debugLevel > 0)
         {
             logger.INFO() << "Set the transfer to debug level " << opts.debugLevel << std::endl;
-            gfal_set_verbose(GFAL_VERBOSE_TRACE | GFAL_VERBOSE_VERBOSE | GFAL_VERBOSE_TRACE_PLUGIN);
-            gfal_log_set_handler((GLogFunc) log_func, NULL);
+            gfal2_log_set_level(G_LOG_LEVEL_DEBUG);
 
             if (opts.debugLevel >= 2)
                 {
@@ -782,6 +780,10 @@ int main(int argc, char **argv)
                     setenv("GLOBUS_GIS_OPENSSL_ERROR_DEBUG_LEVEL", "1", 1);
                     setenv("XRD_LOGLEVEL", "Dump", 1);
                 }
+        }
+    else
+        {
+            gfal2_log_set_level(G_LOG_LEVEL_MESSAGE);
         }
 
 
@@ -846,7 +848,6 @@ int main(int argc, char **argv)
             retry = true;
             errorMessage = std::string("");
             currentTransfer.throughput = 0.0;
-            completeMsgSent = false;
 
             currentTransfer = transferList[ii];
 
@@ -894,7 +895,11 @@ int main(int argc, char **argv)
             msg_ifce::getInstance()->set_job_metadata(&tr_completed, replaceMetadataString(opts.jobMetadata) );
 
             if(opts.monitoringMessages)
-                msg_ifce::getInstance()->SendTransferStartMessage(&tr_completed);
+	    {
+		logger.INFO() << "Send monitoring start message " << std::endl;			    
+                std::string msgReturnValue = msg_ifce::getInstance()->SendTransferStartMessage(&tr_completed);
+  	        logger.INFO() << "Start message content: " << msgReturnValue << std::endl;		
+	    }
 
             if (!opts.logToStderr)
                 {
@@ -1508,14 +1513,13 @@ stop:
                 }
 
 
-
-            logger.INFO() << "Send monitoring complete message" << std::endl;
             msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
-            if(opts.monitoringMessages && !completeMsgSent)
+            if(opts.monitoringMessages)
                 {
-                    completeMsgSent = true;
-                    msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
+	            logger.INFO() << "Send monitoring complete message" << std::endl;
+                    std::string msgReturnValue = msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
+		    logger.INFO() << "Complete message content: " << msgReturnValue << std::endl;
                 }
 
             inShutdown = true;

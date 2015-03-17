@@ -166,8 +166,8 @@ string GSoapDelegationHandler::getProxyReq(string delegationId)
 
     if (err)
         {
-            if (reqtxt) free(reqtxt);
-            if (keytxt) free(keytxt);
+            free(reqtxt);
+            free(keytxt);
             throw Err_Custom("'GRSTx509CreateProxyRequest' failed!");
         }
 
@@ -192,8 +192,8 @@ string GSoapDelegationHandler::getProxyReq(string delegationId)
 
                     if (cache.get())
                         {
-                            if (reqtxt) free(reqtxt);
-                            if (keytxt) free(keytxt);
+                            free(reqtxt);
+                            free(keytxt);
                             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " public-private key pair has been found in DB and is returned to the user" << commit;
                             return cache->certificateRequest;
                         }
@@ -203,20 +203,20 @@ string GSoapDelegationHandler::getProxyReq(string delegationId)
         }
     catch(Err& ex)
         {
-            if (reqtxt) free(reqtxt);
-            if (keytxt) free(keytxt);
+            free(reqtxt);
+            free(keytxt);
             throw Err_Custom(ex.what());
 
         }
     catch(...)
         {
-            if (reqtxt) free(reqtxt);
-            if (keytxt) free(keytxt);
+            free(reqtxt);
+            free(keytxt);
             throw Err_Custom("Problem while renewing proxy");
         }
 
-    if (reqtxt) free(reqtxt);
-    if (keytxt) free(keytxt);
+    free(reqtxt);
+    free(keytxt);
 
     FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " new public-private key pair has been generated and returned to the user" << commit;
 

@@ -54,6 +54,7 @@ Uri Uri::Parse(const std::string &uri)
             u0.QueryString = matches[7];
 
             // Port is put into Host, so extract it
+            u0.Port = 0;
             extractPort(u0);
         }
 

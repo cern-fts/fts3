@@ -132,12 +132,14 @@ int main(int argc, char** argv)
             if (ret == EXIT_SUCCESS)
                 {
                     // if every thing went well rename the file
-                    rename (myosg_path_part.c_str(), myosg_path.c_str());
+                    if (rename (myosg_path_part.c_str(), myosg_path.c_str()) < 0)
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not rename the part file " << myosg_path_part << ": " << errno << commit;
                 }
             else if (ret == EXIT_FAILURE)
                 {
                     // if there was an error remove the part file
-                    remove (myosg_path_part.c_str());
+                    if (remove (myosg_path_part.c_str()) < 0)
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not remove the part file " << myosg_path_part << ": " << errno << commit;
                 }
 
         }

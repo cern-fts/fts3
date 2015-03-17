@@ -99,7 +99,7 @@ int runConsumerMonitoring(std::vector<struct message_monitoring>& messages)
     vector<string> files = vector<string>();
     files.reserve(300);
 
-    if (getDir(dir,files, "ready") != 0)
+    if (getDir(dir, files, "ready") != 0)
         return errno;
 
     for (unsigned int i = 0; i < files.size(); i++)

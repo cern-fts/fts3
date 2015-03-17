@@ -36,13 +36,13 @@ namespace cli
 
 using namespace fts3::common;
 
-Job::Job(PyFile file) : checksum(false), expiration(0)
+Job::Job(const PyFile& file) : checksum(false), expiration(0)
 {
     // add the file
     add(file);
 }
 
-Job::Job(py::list files) : checksum(false), expiration(0)
+Job::Job(const py::list& files) : checksum(false), expiration(0)
 {
     // check the size
     boost::python::ssize_t size = py::len(files);
@@ -247,7 +247,7 @@ py::object Job::sessionReuse()
     return py::object(parameters.find(JobParameterHandler::REUSE) != parameters.end());
 }
 
-void Job::add(PyFile file)
+void Job::add(const PyFile& file)
 {
     // add the element
     elements.push_back(file.getFileCpp());

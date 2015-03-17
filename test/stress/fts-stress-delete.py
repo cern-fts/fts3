@@ -75,7 +75,7 @@ class DeletionBully:
         Poll the job_id until it finishes
         """
         state = self.get_job_state(job_id)
-        remaining = 1000
+        remaining = 10000
         JobTerminalStates = ['FINISHED', 'FAILED', 'CANCELED', 'FINISHEDDIRTY']
         while state not in JobTerminalStates:
             log.debug("%s %s" % (job_id, state))

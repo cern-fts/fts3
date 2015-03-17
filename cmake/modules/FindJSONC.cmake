@@ -8,7 +8,7 @@ find_library(JSONC_LIBRARIES
 
 find_path(JSONC_INCLUDE_DIRS
      NAMES json.h
-    HINTS /usr/include/json
+    HINTS /usr/include/json /usr/include/json-c
     DOC "json-c headers"
 )
 

@@ -88,3 +88,18 @@ pre {
 .pagination a {
     cursor: pointer;
 }
+
+.nav-split {
+    display: inline-block !important;
+    padding-right: 0px !important;
+}
+
+.nav-split-caret {
+    display: inline-block !important;
+    padding-left: 0px !important;
+}
+
+.nav-split-caret>.caret {
+    border-top-color: #999999 !important;
+    border-bottom-color: #999999 !important;
+}

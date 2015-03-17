@@ -34,7 +34,7 @@ void logger::writeLog(std::string message, bool console)
         {
             std::string timestapStr = timestamp();
             timestapStr.erase(timestapStr.end() - 1);
-            std::cerr << "ERROR: " <<  timestapStr << " " <<  message << std::endl;
+            std::cerr << "MSG_ERROR " <<  timestapStr << " " <<  message << std::endl;
 
             ++nb_commits;
             if (nb_commits > 1000)

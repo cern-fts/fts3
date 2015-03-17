@@ -94,7 +94,10 @@ void GSoapRequestHandler::handle()
                         "</SOAP-ENV:Body>"
                         "</SOAP-ENV:Envelope>";
                     // -1 = skip \0
-                    send(ctx->socket, msg, sizeof(msg) - 1, MSG_NOSIGNAL);
+                    if (send(ctx->socket, msg, sizeof(msg) - 1, MSG_NOSIGNAL) < 0)
+                        {
+                            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Could not set the 400 error code: " << errno << commit;
+                        }
                 }
             else
                 {

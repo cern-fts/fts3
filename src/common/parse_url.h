@@ -27,6 +27,8 @@ public:
     std::string QueryString, Path, Protocol, Host;
     unsigned Port;
 
+    Uri(): Port(0) {}
+
     std::string getSeName(void)
     {
         return Protocol + "://" + Host;

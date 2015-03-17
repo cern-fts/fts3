@@ -37,6 +37,7 @@
 #include <vector>
 #include <boost/filesystem.hpp>
 #include "definitions.h"
+#include <boost/lexical_cast.hpp>
 
 extern bool stopThreads;
 static bool signalReceived = false;
@@ -98,7 +99,13 @@ void MsgPipe::run()
                             continue;
                         }
 
-                    runConsumerMonitoring(messages);
+                    int returnValue = runConsumerMonitoring(messages);
+		    if(returnValue != 0)
+		    {
+		    	 errorMessage = "MSG_ERROR thrown in msg pipe " + boost::lexical_cast<std::string>(returnValue);                    
+	                 logger::writeLog(errorMessage);
+		    }
+		    
                     if(!messages.empty())
                         {
                             for (iter = messages.begin(); iter != messages.end(); ++iter)
@@ -111,13 +118,14 @@ void MsgPipe::run()
                 }
             catch (const fs::filesystem_error& ex)
                 {
+ 		    errorMessage = "MSG_ERROR ex thrown in msg pipe " + std::string(ex.what());
                     cleanup();
-                    logger::writeLog(ex.what());
+                    logger::writeLog(errorMessage);
                     sleep(1);
                 }
             catch (...)
                 {
-                    errorMessage = "Exception thrown in msg pipe";
+                    errorMessage = "MSG_ERROR ex thrown in msg pipe";
                     cleanup();
                     logger::writeLog(errorMessage);
                     sleep(1);

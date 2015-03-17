@@ -23,26 +23,8 @@ from ftsweb.models import Job, File, OptimizeActive
 from authn import require_certificate
 from jobs import setup_filters
 from jsonify import jsonify
-from util import get_order_by, paged
-import settings
+from util import get_order_by, paged, db_to_date
 
-
-def _db_to_date():
-    if settings.DATABASES['default']['ENGINE'] == 'django.db.backends.oracle':
-        return 'TO_TIMESTAMP(%s, \'YYYY-MM-DD HH24:MI:SS.FF\')'
-    elif settings.DATABASES['default']['ENGINE'] == 'django.db.backends.mysql':
-        return 'STR_TO_DATE(%s, \'%%Y-%%m-%%d %%H:%%i:%%S\')'
-    else:
-        return '%s'
-
-
-def _db_limit(sql, limit):
-    if settings.DATABASES['default']['ENGINE'] == 'django.db.backends.oracle':
-        return "SELECT * FROM (%s) WHERE rownum <= %d" % (sql, limit)
-    elif settings.DATABASES['default']['ENGINE'] == 'django.db.backends.mysql':
-        return sql + " LIMIT %d" % limit
-    else:
-        return sql
 
 
 def _get_pair_limits(limits, source, destination):
@@ -114,7 +96,7 @@ class OverviewExtended(object):
             SELECT AVG(throughput), AVG(tx_duration) FROM t_file
             WHERE source_se = %s AND dest_se = %s AND vo_name = %s
                 AND file_state in ('ACTIVE','FINISHED') AND throughput > 0
-                AND (job_finished is NULL OR job_finished > """ + _db_to_date() + ")"
+                AND (job_finished is NULL OR job_finished > """ + db_to_date() + ")"
             self.cursor.execute(query, [source, destination, vo, self.not_before])
             result = self.cursor.fetchall()
             if len(result):
@@ -196,7 +178,7 @@ def get_overview(http_request):
     WHERE file_state in ('FINISHED', 'FAILED', 'CANCELED') %s
         AND job_finished > %s
     GROUP BY file_state, source_se, dest_se, vo_name  order by NULL
-    """ % (pairs_filter, _db_to_date())
+    """ % (pairs_filter, db_to_date())
     cursor.execute(query, se_params + [not_before])
     for row in cursor.fetchall():
         triplet_key = (row[2], row[3], row[4])

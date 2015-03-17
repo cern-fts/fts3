@@ -69,6 +69,7 @@ public:
     int retry_max;
     std::string job_m_replica;
     std::string last_replica;
+    std::string logDir;
 
     bool areTransfersOnFile() const
     {

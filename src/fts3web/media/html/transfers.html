@@ -10,16 +10,17 @@
     max-size="15" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>
 
-<table class="table">
+<table class="table" style="font-size: 90%">
     <thead>
         <tr>
             <th style="width: 5%">
                 <span order-by="id">File Id</span>
             </th>
             <th style="width: 10%">File state</th>
-            <th style="width: 21%">Job Id</th>
-            <th style="width: 22%">Source</th>
-            <th style="width: 22%">Destination</th>
+            <th style="width: 18%">Job Id</th>
+            <th style="width: 18%">Source</th>
+            <th style="width: 18%">Destination</th>
+            <th style="width: 11%">Activity</th>
             <th style="width: 10%">
                 <span order-by="start_time">Start time</span>
             </th>
@@ -39,6 +40,7 @@
             </td>
             <td class="hscroll">{{t.source_se}}</td>
             <td class="hscroll">{{t.dest_se}}</td>
+            <td class="hscroll">{{t.activity}}</td>
             <td>{{t.start_time}}</td>
             <td>{{t.finish_time}}</td>
         </tr>

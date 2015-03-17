@@ -47,7 +47,7 @@ def get_audit(http_request):
 def get_server_config(http_request):
     config = dict()
     cursor = connection.cursor()
-    cursor.execute("SELECT retry, max_time_queue, global_timeout, sec_per_mb, vo_name FROM t_server_config")
+    cursor.execute("SELECT retry, max_time_queue, global_timeout, sec_per_mb, vo_name, global_tcp_stream FROM t_server_config")
     server_config = cursor.fetchall()
     config['per_vo'] = list()
     for entry in server_config:
@@ -56,7 +56,8 @@ def get_server_config(http_request):
             max_time_queue=entry[1],
             global_timeout=entry[2],
             sec_per_mb=entry[3],
-            vo_name=entry[4]
+            vo_name=entry[4],
+            tcp_streams=entry[5]
         )
         config['per_vo'].append(c)
 

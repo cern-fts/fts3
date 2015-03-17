@@ -40,13 +40,14 @@ namespace server
 const string FileTransferExecutor::cmd = "fts_url_copy";
 
 
-FileTransferExecutor::FileTransferExecutor(TransferFiles& tf, TransferFileHandler& tfh, bool monitoringMsg, string infosys, string ftsHostName, string proxy) :
+FileTransferExecutor::FileTransferExecutor(TransferFiles& tf, TransferFileHandler& tfh, bool monitoringMsg, string infosys, string ftsHostName, string proxy, std::string logDir) :
     tf(tf),
     tfh(tfh),
     monitoringMsg(monitoringMsg),
     infosys(infosys),
     ftsHostName(ftsHostName),
     proxy(proxy),
+    logsDir(logDir),
     db(DBSingleton::instance().getDBObjectInstance())
 {
 }
@@ -442,10 +443,11 @@ void FileTransferExecutor::run(boost::any & ctx)
 
                     params.append(" -6 ");
                     params.append(tf.LAST_REPLICA == 1? "true": "false");
-
-
-
-
+		    
+		    params.append(" -y ");
+                    params.append(prepareMetadataString(logsDir));		    
+		    
+		    
                     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd << " " << params << commit;
                     ExecuteProcess pr(cmd, params);
 

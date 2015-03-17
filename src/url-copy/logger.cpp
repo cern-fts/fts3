@@ -77,7 +77,8 @@ int Logger::redirectTo(const std::string& path, bool debug)
     logHandle.open(path.c_str(), std::ios::app);
     if (logHandle.fail())
         return errno;
-    chmod(path.c_str(), 0644);
+    if (chmod(path.c_str(), 0644))
+        this->ERROR() << "Failed to change the mode of the log file" << std::endl;
     log = &logHandle;
 
     // Debug output

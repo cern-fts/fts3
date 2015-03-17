@@ -4,7 +4,7 @@
 %global selinux_variants mls targeted
 
 Name: fts
-Version: 3.2.32
+Version: 3.2.33
 Release: 1%{?dist}
 Summary: File Transfer Service V3
 Group: System Environment/Daemons
@@ -38,7 +38,7 @@ BuildRequires:  e2fsprogs-devel
 %else
 BuildRequires:  libuuid-devel
 %endif
-BuildRequires:  gfal2-devel >= 2.7.3
+BuildRequires:  gfal2-devel >= 2.9.0
 BuildRequires:  glib2-devel
 BuildRequires:  globus-gsi-credential-devel
 BuildRequires:  gridsite-devel
@@ -74,9 +74,10 @@ Summary: File Transfer Service version 3 server
 Group: System Environment/Daemons
 
 Requires: fts-libs%{?_isa} = %{version}-%{release}
-Requires: gfal2-plugin-gridftp%{?_isa} >= 2.7.3
-Requires: gfal2-plugin-http%{?_isa} >= 2.7.3
-Requires: gfal2-plugin-srm%{?_isa} >= 2.7.3
+Requires: gfal2%{?_isa} >= 2.9.0
+Requires: gfal2-plugin-gridftp%{?_isa} >= 2.9.0
+Requires: gfal2-plugin-http%{?_isa} >= 2.9.0
+Requires: gfal2-plugin-srm%{?_isa} >= 2.9.0
 #Requires: gfal2-plugin-xrootd%{?_isa} >= 0.2.2
 Requires: gridsite >= 1.7.25
 Requires(post): chkconfig

@@ -166,8 +166,8 @@ bool MsgProducer::sendMessage(std::string &temp)
                     catch (const std::exception& e)
                         {
                             std::ostringstream error_message;
-                            error_message << "MESSAGE_ERROR (" << e.what() << ") " << temp;
-                            logger::writeLog(error_message.str());
+                            error_message << "MSG_ERROR (" << e.what() << ") " << temp;
+                            logger::writeLog(error_message.str(), true);
                         }
 
                     temp += EOT;
@@ -191,8 +191,8 @@ bool MsgProducer::sendMessage(std::string &temp)
                     catch (const std::exception& e)
                         {
                             std::ostringstream error_message;
-                            error_message << "MESSAGE_ERROR (" << e.what() << ") " << temp;
-                            logger::writeLog(error_message.str());
+                            error_message << "MSG_ERROR (" << e.what() << ") " << temp;
+                            logger::writeLog(error_message.str(), true);
                         }
 
                     temp += EOT;
@@ -205,10 +205,14 @@ bool MsgProducer::sendMessage(std::string &temp)
         }
     catch (CMSException& e)
         {
+  	    errorMessage = "MSG_ERROR ex thrown in msg producer " + e.getMessage();
+            logger::writeLog(errorMessage, true);
             concurrent_queue::getInstance()->push(temp);
         }
     catch (...)
         {
+	    errorMessage = "MSG_ERROR ex thrown in msg producer " + temp;
+            logger::writeLog(errorMessage, true);	
             concurrent_queue::getInstance()->push(temp);
         }
 
@@ -268,14 +272,14 @@ bool MsgProducer::getConnection()
         }
     catch (CMSException& e)
         {
-            errorMessage = "PROCESS_ERROR " + e.getStackTraceString();
+            errorMessage = "MSG_ERROR ex thrown in msg producer " + e.getMessage();
             logger::writeLog(errorMessage, true);
             connected = false;
             sleep(10);
         }
     catch (...)
         {
-            errorMessage = "PROCESS_ERROR Unhandled exception occured";
+            errorMessage = "MSG_ERROR ex thrown in msg producer";
             logger::writeLog(errorMessage, true);
             connected = false;
             sleep(10);
@@ -290,7 +294,7 @@ void MsgProducer::readConfig()
 
     if ((fileExists == false) || (false == getACTIVE()))
         {
-            std::cerr << "Cannot read msg broker config file, or msg connection(ACTIVE=) is set to false" << std::endl;
+            std::cerr << "MSG_ERROR Cannot read msg broker config file, or msg connection(ACTIVE=) is set to false" << std::endl;
             exit(0);
         }
 
@@ -309,7 +313,7 @@ void MsgProducer::readConfig()
         }
     catch (...)
         {
-            errorMessage = "Cannot read msg broker config file, check path and file name";
+            errorMessage = "MSG_ERROR Cannot read msg broker config file, check path and file name";
             logger::writeLog(errorMessage, true);
             exit(0);
         }
@@ -319,7 +323,7 @@ void MsgProducer::readConfig()
 // registered as an ExceptionListener with the connection.
 void MsgProducer::onException( const CMSException& ex AMQCPP_UNUSED)
 {
-    errorMessage = "PROCESS_ERROR " + ex.getStackTraceString();
+    errorMessage = "MSG_ERROR " + ex.getMessage();
     logger::writeLog(errorMessage, true);
     stopThreads = true;
     std::queue<std::string> myQueue = concurrent_queue::getInstance()->the_queue;
@@ -366,7 +370,7 @@ void MsgProducer::run()
                 {
                     concurrent_queue::getInstance()->push(msgBk);
                     send_message(msgBk);
-                    errorMessage = "PROCESS_ERROR 3" + e.getStackTraceString();
+                    errorMessage = "MSG_ERROR ex thrown in msg producer " + e.getMessage();
                     logger::writeLog(errorMessage, true);
                     connected = false;
                     sleep(5);
@@ -375,7 +379,7 @@ void MsgProducer::run()
                 {
                     concurrent_queue::getInstance()->push(msgBk);
                     send_message(msgBk);
-                    logger::writeLog("PROCESS_ERROR Unhandled exception occured", true);
+                    logger::writeLog("MSG_ERROR ex thrown in msg producer", true);
                     connected = false;
                     sleep(5);
                 }

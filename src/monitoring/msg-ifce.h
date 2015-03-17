@@ -110,8 +110,8 @@ private:
 public:
     /*static vector<std::string>  getData( const char * id);*/
     std::string getTimestamp();
-    void SendTransferStartMessage(transfer_completed *tr_started);
-    void SendTransferFinishMessage(transfer_completed *tr_completed);
+    std::string SendTransferStartMessage(transfer_completed *tr_started);
+    std::string SendTransferFinishMessage(transfer_completed *tr_completed);
     //transfer_completed setters
     void set_agent_fqdn(transfer_completed* tr_completed, const std::string & value);
     void set_transfer_id(transfer_completed* tr_completed, const std::string & value);

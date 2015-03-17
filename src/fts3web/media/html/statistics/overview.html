@@ -1,3 +1,5 @@
+<global-filter data-hide-vo="true" data-hide-pair="true"></global-filter>
+
 <h2>
     Statistics -
     <div class="dropdown">
@@ -51,7 +53,11 @@
 		</div>
 
 		<div class="span6">
-			<h4>For the last hour</h4>
+			<h4>
+                For the last {{globalFilter.time_window || '1' }}
+                <span data-ng-show="globalFilter.time_window == 1 || !globalFilter.time_window">hour</span>
+                <span data-ng-show="globalFilter.time_window > 1">hours</span>
+            </h4>
 			<table class="table">
 			    <thead>
 			        <tr>

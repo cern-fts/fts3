@@ -24,7 +24,7 @@ def _urlize(path):
     if url.scheme:
         return path
     else:
-        return path % {'base': BASE_URL} 
+        return path % {'base': BASE_URL}
 
 SITE_NAME       = FTS3WEB_CONFIG.get('site', 'name')
 SITE_LOGO       = _urlize(FTS3WEB_CONFIG.get('site', 'logo'))
@@ -43,4 +43,3 @@ if FTS3WEB_CONFIG.get('logs', 'port'):
 else:
     LOG_BASE_URL =  "%s://%%(host):8449/%s" % (FTS3WEB_CONFIG.get('logs', 'scheme'),
                                                FTS3WEB_CONFIG.get('logs', 'base'))
-

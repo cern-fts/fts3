@@ -73,11 +73,13 @@ msg_ifce::~msg_ifce()
 }
 
 
-void msg_ifce::SendTransferStartMessage(transfer_completed *tr_started)
+std::string msg_ifce::SendTransferStartMessage(transfer_completed *tr_started)
 {
 
+    std::string message;
+
     if(false == getACTIVE())
-        return;
+        return message;
     string text("");
     try
         {
@@ -185,21 +187,29 @@ void msg_ifce::SendTransferStartMessage(transfer_completed *tr_started)
 
             text.append("}");
 
-            send_message(text);
+            message = send_message(text);
+	    if(message.empty())
+	    	return text;
+	    else
+	        return message;	    
         }
     catch (...)
         {
-            send_message(text);
-            errorMessage = "Cannot send transfer started message with ID: " + tr_started->transfer_id ;
-            logger::writeLog(errorMessage);
+	    //try again
+	    message = send_message(text);
+	    if(message.empty())
+	    	return text;
+	    else
+	        return message;            
         }
 }
 
-void msg_ifce::SendTransferFinishMessage(transfer_completed *tr_completed)
+std::string msg_ifce::SendTransferFinishMessage(transfer_completed *tr_completed)
 {
+    std::string message;
 
     if(false == getACTIVE())
-        return;
+        return message;
 
     string text("");
     try
@@ -441,13 +451,21 @@ void msg_ifce::SendTransferFinishMessage(transfer_completed *tr_completed)
 
             text.append("}");
 
-            send_message(text);
+            message = send_message(text);
+	    if(message.empty())
+	    	return text;
+	    else
+	        return message;	 
+		
         }
     catch (...)
         {
-            send_message(text);
-            errorMessage = "Cannot send transfer completed message with ID: " + tr_completed->transfer_id ;
-            logger::writeLog(errorMessage);
+	    //try again
+            message = send_message(text);
+	    if(message.empty())
+	    	return text;
+	    else
+	        return message;	 
         }
 }
 

@@ -39,7 +39,13 @@ using namespace std;
 
 
 FileManagement::FileManagement() :file_id(0), logFileName("/var/log/fts3/"), castor(false)
+{   
+}
+
+void FileManagement::init(std::string logDir)
 {
+    logFileName = logDir;
+
     try
         {
             if (logFileName.length() > 0)
@@ -60,6 +66,7 @@ FileManagement::FileManagement() :file_id(0), logFileName("/var/log/fts3/"), cas
             directoryExists(dateArch.c_str());
             logFileName = dateArch;
         }
+
 }
 
 FileManagement::~FileManagement()
