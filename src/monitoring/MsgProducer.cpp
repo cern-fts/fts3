@@ -222,7 +222,7 @@ bool MsgProducer::sendMessage(std::string &temp)
 bool MsgProducer::getConnection()
 {
     try
-        {
+        {   	    	
             // Create a ConnectionFactory
             std::unique_ptr<ConnectionFactory> connectionFactory(
                 ConnectionFactory::createCMSConnectionFactory(brokerURI));
@@ -350,6 +350,9 @@ void MsgProducer::run()
                     if(!connected)
                         {
                             cleanup();
+			    //https://issues.apache.org/jira/browse/AMQCPP-524
+			    activemq::library::ActiveMQCPP::shutdownLibrary();
+			    activemq::library::ActiveMQCPP::initializeLibrary();			    
                             getConnection();
 
                             if(!connected)
@@ -496,7 +499,7 @@ void MsgProducer::cleanup()
         }
     connection = NULL;
 
-
+    
 
 }
 
