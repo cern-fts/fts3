@@ -762,6 +762,7 @@ int main(int argc, char **argv)
                     setenv("CGSI_TRACE", "1", 1);
                     setenv("GLOBUS_FTP_CLIENT_DEBUG_LEVEL", "255", 1);
                     setenv("GLOBUS_FTP_CONTROL_DEBUG_LEVEL", "10", 1);
+                    setenv("GFAL2_GRIDFTP_DEBUG", "1", 1);
                 }
             if (opts.debugLevel >= 3)
                 {
@@ -779,6 +780,7 @@ int main(int argc, char **argv)
                     setenv("GLOBUS_NEXUS_DEBUG_LEVEL", "1", 1);
                     setenv("GLOBUS_GIS_OPENSSL_ERROR_DEBUG_LEVEL", "1", 1);
                     setenv("XRD_LOGLEVEL", "Dump", 1);
+                    setenv("GFAL2_GRIDFTP_DEBUG", "1", 1);
                 }
         }
     else
@@ -907,9 +909,9 @@ int main(int argc, char **argv)
 
             if(opts.monitoringMessages)
 	    {
-		logger.INFO() << "Send monitoring start message " << std::endl;			    
+		logger.INFO() << "Send monitoring start message " << std::endl;
                 std::string msgReturnValue = msg_ifce::getInstance()->SendTransferStartMessage(&tr_completed);
-  	        logger.INFO() << "Start message content: " << msgReturnValue << std::endl;		
+  	        logger.INFO() << "Start message content: " << msgReturnValue << std::endl;
 	    }
 
             //also reuse session when both url's are gsiftp
