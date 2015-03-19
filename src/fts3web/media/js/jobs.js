@@ -202,7 +202,8 @@ JobViewCtrl.resolve = {
 
         var deferred = $q.defer();
 
-        var filter = $location.$$search;
+                var filter = $location.$$search;
+        filter.jobId = $route.current.params.jobId
         filter.jobId = $route.current.params.jobId
         Files.query(filter,
               function (data) {

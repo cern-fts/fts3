@@ -160,8 +160,16 @@ def get_activities(http_request):
 @require_certificate
 @jsonify
 def get_actives_per_activity(http_request, vo):
-    active = File.objects.filter(vo_name = vo, job_finished__isnull=True).exclude(file_state='NOT_USED')\
+    active = File.objects.filter(vo_name = vo, job_finished__isnull=True)\
+
+    if http_request.GET.get('source_se', None):
+        active = active.filter(source_se = http_request.GET['source_se'])
+    if http_request.GET.get('dest_se', None):
+        active = active.filter(dest_se = http_request.GET['dest_se'])
+
+    active = active .exclude(file_state='NOT_USED')\
             .values('activity', 'file_state').annotate(count=Count('activity')).values('activity', 'file_state', 'count')
+
     grouped = dict()
     for row in active:
         activity = grouped.get(row['activity'], dict())
