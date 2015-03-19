@@ -166,6 +166,7 @@ Gfal2Ctrl.resolve = {
 /// Activities
 function ActivitiesCtrl($location, $scope, activities) {
     $scope.activities = activities;
+    $scope.filter = $location.search();
 }
 
 ActivitiesCtrl.resolve = {
@@ -238,9 +239,8 @@ VoActivePerActivitiesCtrl.resolve = {
 
         var deferred = $q.defer();
 
-        var filter = {
-            vo: $route.current.params.vo
-        };
+        var filter = $location.$$search;
+        filter.vo = $route.current.params.vo;
 
         ActivePerActivity.query(filter,
             genericSuccessMethod(deferred, $rootScope),
