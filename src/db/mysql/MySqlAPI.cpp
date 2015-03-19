@@ -4352,6 +4352,7 @@ bool MySqlAPI::updateOptimizer()
     int maxNoStreams = 16;
     int nostreams = 1;
     double throughput=0.0;
+    double throughputStreams=0.0;    
     double maxThroughput = 0.0;
     long long int testedThroughput = 0;
     int updateStream = 0;
@@ -4466,8 +4467,8 @@ bool MySqlAPI::updateOptimizer()
                                          soci::use(source_hostname),
                                          soci::use(destin_hostname),
                                          soci::use(nostreams),
-                                         soci::use(throughput),
-                                         soci::use(throughput)
+                                         soci::use(throughputStreams),
+                                         soci::use(throughputStreams)
                                      );
 
             soci::statement stmt23 = (
@@ -4495,7 +4496,7 @@ bool MySqlAPI::updateOptimizer()
             soci::statement stmt28 = (
                                          sql.prepare << " UPDATE t_optimize_streams set throughput = :throughput, datetime = UTC_TIMESTAMP() "
                                          " WHERE source_se=:source_se AND dest_se=:dest_se AND nostreams = :nostreams and tested = 1  ",
-                                         soci::use(throughput),
+                                         soci::use(throughputStreams),
                                          soci::use(source_hostname),
                                          soci::use(destin_hostname),
                                          soci::use(nostreams));
@@ -4549,6 +4550,7 @@ bool MySqlAPI::updateOptimizer()
 
                     double nFailedLastHour=0.0, nFinishedLastHour=0.0;
                     throughput=0.0;
+		    throughputStreams = 0.0;
                     double filesize = 0.0;
                     double totalSize = 0.0;
                     retry = 0.0;   //latest from db
@@ -4626,6 +4628,7 @@ bool MySqlAPI::updateOptimizer()
                     if(spawnActive == 2) //only execute streams optimization when level/plan is 2
                         {
                             /* apply streams optimization*/
+			    throughputStreams = throughput;
 
                             //get max streams
                             stmt20.execute(true);
@@ -4661,14 +4664,14 @@ bool MySqlAPI::updateOptimizer()
                                             if(timeIsOk && diff >= STREAMS_UPDATE_SAMPLE && testedThroughput == 1 && maxThroughput > 0.0) //every 15min experiment with diff number of streams
                                                 {
                                                     nostreams += 1;
-                                                    throughput = 0.0;
+                                                    throughputStreams = 0.0;
                                                     sql.begin();
                                                     stmt22.execute(true);
                                                     sql.commit();
                                                 }
                                             else
                                                 {
-                                                    if(throughput > 0.0)
+                                                    if(throughputStreams > 0.0)
                                                         {
                                                             sql.begin();
                                                             stmt22.execute(true);
@@ -4696,7 +4699,7 @@ bool MySqlAPI::updateOptimizer()
                                             time_t now = getUTC(0);
                                             double diff = difftime(now, lastTime);
 
-                                            if (timeIsOk && diff >= STREAMS_UPDATE_MAX && throughput > 0.0) //almost half a day has passed, compare throughput with max sample
+                                            if (timeIsOk && diff >= STREAMS_UPDATE_MAX && throughputStreams > 0.0) //almost half a day has passed, compare throughput with max sample
                                                 {
                                                     sql.begin();
                                                     stmt28.execute(true);	//update stream currently used with new throughput and timestamp this time
@@ -4706,7 +4709,7 @@ bool MySqlAPI::updateOptimizer()
                                 }
                             else //it's NULL, no sample yet, insert the first record for this pair
                                 {
-                                    throughput = 0.0;
+                                    throughputStreams = 0.0;
                                     sql.begin();
                                     stmt22.execute(true);
                                     sql.commit();
