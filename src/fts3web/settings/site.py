@@ -37,9 +37,20 @@ ADMINS = (
 MANAGERS = ADMINS
 
 if FTS3WEB_CONFIG.get('logs', 'port'):
-    LOG_BASE_URL =  "%s://%%(host):%d/%s" % (FTS3WEB_CONFIG.get('logs', 'scheme'),
+    LOG_BASE_URL =  "%s://%%(host)s:%d/%s" % (FTS3WEB_CONFIG.get('logs', 'scheme'),
                                              FTS3WEB_CONFIG.getint('logs', 'port'),
                                              FTS3WEB_CONFIG.get('logs', 'base'))
 else:
-    LOG_BASE_URL =  "%s://%%(host):8449/%s" % (FTS3WEB_CONFIG.get('logs', 'scheme'),
+    LOG_BASE_URL =  "%s://%%(host)s:8449/%s" % (FTS3WEB_CONFIG.get('logs', 'scheme'),
                                                FTS3WEB_CONFIG.get('logs', 'base'))
+
+
+# Configure host aliases
+HOST_ALIASES = dict()
+if os.path.exists('/etc/fts3/host_aliases'):
+    aliases = open('/etc/fts3/host_aliases')
+    for line in aliases:
+        line = line.strip()
+        if len(line) > 0 and not line.startswith('#'):
+            original, alias = line.split()
+            HOST_ALIASES[original] = alias

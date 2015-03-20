@@ -34,16 +34,16 @@
 			    <tbody>
 			        <tr>
 			            <td>
-			                <a href="#/jobs?hostname={{host}}&state=SUBMITTED">{{stats.lasthour.submitted}}</a>
+			                <a href="#/transfers?hostname={{host}}&state=SUBMITTED">{{stats.lasthour.submitted}}</a>
 			            </td>
 			            <td>
-			                <a href="#/jobs?hostname={{host}}&state=READY">{{stats.lasthour.ready}}</a>
+			                <a href="#/transfers?hostname={{host}}&state=READY">{{stats.lasthour.ready}}</a>
 			            </td>
 			            <td>
-			                <a href="#/jobs?hostname={{host}}&state=ACTIVE">{{stats.lasthour.active}}</a>
+			                <a href="#/transfers?hostname={{host}}&state=ACTIVE">{{stats.lasthour.active}}</a>
 		                </td>
 			            <td>
-			                <a href="#/jobs?hostname={{host}}&state=STAGING">{{stats.lasthour.staging}}</a>
+			                <a href="#/transfers?hostname={{host}}&state=STAGING">{{stats.lasthour.staging}}</a>
 			            </td>
 			        </tr>
 			    </tbody>
@@ -69,13 +69,13 @@
 			    <tbody>
 			        <tr>
 			            <td>
-			                <a href="#/jobs?time_window=1&hostname={{host}}&state=FINISHED">{{stats.lasthour.finished}}</a>
+			                <a href="#/transfers?time_window=1&hostname={{host}}&state=FINISHED">{{stats.lasthour.finished}}</a>
                         </td>
 			            <td>
-                            <a href="#/jobs?time_window=1&hostname={{host}}&state=FAILED">{{stats.lasthour.failed}}</a>
+                            <a href="#/transfers?time_window=1&hostname={{host}}&state=FAILED">{{stats.lasthour.failed}}</a>
                         </td>
 			            <td>
-			                <a href="#/jobs?time_window=1&hostname={{host}}&state=CANCELED">{{stats.lasthour.canceled}}</a>
+			                <a href="#/transfers?time_window=1&hostname={{host}}&state=CANCELED">{{stats.lasthour.canceled}}</a>
 			            </td>
 			        </tr>
 			    </tbody>
