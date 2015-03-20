@@ -89,4 +89,6 @@ def db_limit(sql, limit):
 
 
 def log_link(host, log):
+    if host in settings.HOST_ALIASES:
+        host = settings.HOST_ALIASES[host]
     return urlparse.urljoin(settings.LOG_BASE_URL % ({'host': host}), log)
