@@ -21,7 +21,7 @@ from datetime import datetime, timedelta
 
 from jsonify import jsonify, jsonify_paged
 from ftsweb.models import Job, File, RetryError, DmFile
-from util import get_order_by, ordered_field, paged
+from util import get_order_by, ordered_field, paged, log_link
 from diagnosis import JobDiagnosis
 
 
@@ -236,6 +236,23 @@ class RetriesFetcher(object):
             yield f
 
 
+class LogLinker(object):
+    """
+    Change the log so it is the actual link
+    """
+
+    def __init__(self, files):
+        self.files = files
+
+    def __len__(self):
+        return len(self.files)
+
+    def __getitem__(self, i):
+        for f in self.files[i]:
+            f.log_file = log_link(f.transferHost, f.log_file)
+            yield f
+
+
 @jsonify
 def get_job_transfers(http_request, job_id):
     files = File.objects.filter(job=job_id)
@@ -313,7 +330,7 @@ def get_job_transfers(http_request, job_id):
             pass
 
     return {
-        'files': paged(RetriesFetcher(files), http_request),
+        'files': paged(RetriesFetcher(LogLinker(files)), http_request),
         'stats': stats
     }
 

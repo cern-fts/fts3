@@ -114,20 +114,6 @@ config(function($routeProvider) {
         return i;
     }
 })
-.directive('log', function() {
-    return {
-        restrict: 'A',
-        scope: {
-            host: '=',
-            log: '='
-        },
-        replace: true,
-        template: '<a href="{{logUrl}}">{{log}}</a>',
-        link: function(scope, element, attr) {
-            scope.logUrl = LOG_BASE_URL.replace('%(host)', scope.host) + scope.log;
-        }
-    }
-})
 .directive('optionalNumber', function() {
     return {
         restrict: 'A',
@@ -257,7 +243,7 @@ function stopLoading($rootScope, headers)
         $rootScope.loading = false;
         var now = new Date();
         $rootScope.lastRefresh = "Generated at " + now.toLocaleTimeString();
-        if ('x-host' in headers)
+        if (typeof(headers) != 'undefined' && 'x-host' in headers)
             $rootScope.lastRefresh += " (" + headers['x-host'] + ")";
     }
 }
@@ -358,7 +344,10 @@ function withDefault(v, def)
 function genericSuccessMethod(deferred, $rootScope) {
     return function(data, headers) {
         deferred.resolve(data);
-        stopLoading($rootScope, headers());
+        if (typeof(headers) != 'undefined')
+            stopLoading($rootScope, headers());
+        else
+            stopLoading($rootScope);
     }
 }
 

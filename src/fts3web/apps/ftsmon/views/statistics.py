@@ -26,7 +26,7 @@ from ftsweb.models import ACTIVE_STATES, STATES
 from authn import require_certificate
 from jsonify import jsonify, jsonify_paged, as_json
 from slsfy import slsfy, slsfy_error
-from util import get_order_by, ordered_field
+from util import get_order_by, ordered_field, log_link
 import settings
 
 
@@ -77,7 +77,9 @@ def _get_transfer_and_submission_per_host(timewindow, segments):
             'active': actives,
             'staging': staging,
             'started': started,
-            'queued': queued
+            'queued': queued,
+            'fts3server_log': log_link(host, '/var/log/fts3/fts3server.log'),
+            'fts3bringonline_log': log_link(host, '/var/log/fts3/fts3bringonline.log'),
         }
 
     return servers
