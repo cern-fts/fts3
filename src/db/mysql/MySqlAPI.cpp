@@ -511,7 +511,9 @@ std::map<std::string, double> MySqlAPI::getActivityShareConf(soci::session& sql,
             boost::smatch what;
             boost::regex_match(str, what, re, boost::match_extra);
 
-            ret[what[ACTIVITY_NAME]] = boost::lexical_cast<double>(what[ACTIVITY_SHARE]);
+            std::string activity_name(what[ACTIVITY_NAME]);
+            boost::algorithm::to_lower(activity_name);
+            ret[activity_name] = boost::lexical_cast<double>(what[ACTIVITY_SHARE]);
         }
     }
     catch (std::exception& e)
@@ -594,16 +596,21 @@ std::map<std::string, long long> MySqlAPI::getActivitiesInQueue(soci::session& s
         soci::rowset<soci::row>::const_iterator it;
         for (it = rs.begin(); it != rs.end(); it++)
         {
-            if (it->get_indicator("activity") == soci::i_null)
-            {
-                ret["default"] = it->get<long long>("count");
+            std::string activity_name;
+
+            if (it->get_indicator("activity") == soci::i_null) {
+                activity_name = "default";
             }
-            else
-            {
-                std::string activityShare = it->get<std::string>("activity");
-                long long nFiles = it->get<long long>("count");
-                ret[activityShare.empty() ? "default" : activityShare] = nFiles;
+            else {
+                activity_name = it->get<std::string>("activity");
+                if (activity_name.empty()) {
+                    activity_name = "default";
+                }
             }
+
+            boost::algorithm::to_lower(activity_name);
+            long long nFiles = it->get<long long>("count");
+            ret[activity_name] = nFiles;
         }
     }
     catch (std::exception& e)
