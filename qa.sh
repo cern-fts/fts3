@@ -1,43 +1,36 @@
 #!/bin/bash
+SOURCE_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
-set -x
-set -e
+# CPPCheck
+cppcheck --version &> /dev/null
+if [ $? -ne 0 ]; then
+    echo "cppcheck not installed"
+else
+    echo "Running cppcheck"
+    cppcheck -v --enable=all --xml "${SOURCE_DIR}/src" 2> cppcheck.xml
+fi
 
-# Build RATS
-function build_rats() {
-    if [ ! -e "rats-2.4" ]; then
-	    wget "https://rough-auditing-tool-for-security.googlecode.com/files/rats-2.4.tgz" -O "rats-2.4.tgz"
-	    tar xzf "rats-2.4.tgz"
-	fi
-	
-	pushd "rats-2.4"
-	if [ ! -e "rats" ]; then
-	    ./configure
-	    make
-	fi
-	popd
-} 
+# Vera++
+vera++ --version &> /dev/null
+if [ $? -ne 0 ]; then
+    echo "vera++ not installed"
+else
+    if [ ! -e "/tmp/vera++Report2checkstyleReport.perl" ]; then
+        wget "https://raw.githubusercontent.com/wenns/sonar-cxx/master/sonar-cxx-plugin/src/tools/vera%2B%2BReport2checkstyleReport.perl" -O "/tmp/vera++Report2checkstyleReport.perl"
+        chmod a+x "/tmp/vera++Report2checkstyleReport.perl"
+    fi
+    echo "Runnign vera++"
+    find "${SOURCE_DIR}/src" -regex ".*\.c\|.*\.h\|.*\.cpp" | vera++ - -showrules -nodup |& /tmp/vera++Report2checkstyleReport.perl > vera.xml
+fi
 
-# Build vera++
-# Dependencies: tcl-devel lua-devel 
-function build_vera() {
-	if [ ! -e "vera++-1.3.0" ]; then
-	    wget "https://bitbucket.org/verateam/vera/downloads/vera%2B%2B-1.3.0.tar.gz" -O "vera++-1.3.0.tar.gz"
-	    tar xzf "vera++-1.3.0.tar.gz"
-	fi
-	pushd "vera++-1.3.0"
-	cmake .
-	make
-	popd	
-}
-   
-###############
-# Build tools #
-###############
+# Rats
+rats &> /dev/null
+if [ $? -ne 0 ]; then
+    echo "rats not installed"
+else
+    echo "Running rats"
+    rats -w 3 --xml "${SOURCE_DIR}/src" > rats.xml
+fi
 
-mkdir -p /tmp/fts3-qa
-
-pushd /tmp/fts3-qa
-    build_rats
-    build_vera
-popd
+# Done
+echo "Ready to run sonar-runner"
