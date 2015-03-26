@@ -426,7 +426,9 @@ std::map<std::string, double> OracleAPI::getActivityShareConf(soci::session& sql
                     boost::smatch what;
                     boost::regex_match(str, what, re, boost::match_extra);
 
-                    ret[what[ACTIVITY_NAME]] = boost::lexical_cast<double>(what[ACTIVITY_SHARE]);
+                    std::string activity_name(what[ACTIVITY_NAME]);
+                    boost::algorithm::to_lower(activity_name);
+                    ret[activity_name] = boost::lexical_cast<double>(what[ACTIVITY_SHARE]);
                 }
         }
     catch (std::exception& e)
@@ -622,16 +624,21 @@ std::map<std::string, long long> OracleAPI::getActivitiesInQueue(soci::session& 
             soci::rowset<soci::row>::const_iterator it;
             for (it = rs.begin(); it != rs.end(); it++)
                 {
-                    if (it->get_indicator("ACTIVITY") == soci::i_null)
-                        {
-                            ret["default"] = it->get<int>("COUNT");
+                    std::string activity_name;
+
+                    if (it->get_indicator("activity") == soci::i_null) {
+                        activity_name = "default";
+                    }
+                    else {
+                        activity_name = it->get<std::string>("activity");
+                        if (activity_name.empty()) {
+                            activity_name = "default";
                         }
-                    else
-                        {
-                            std::string activityShare = it->get<std::string>("ACTIVITY");
-                            long long nFiles = it->get<int>("COUNT");
-                            ret[activityShare.empty() ? "default" : activityShare] = nFiles;
-                        }
+                    }
+
+                    boost::algorithm::to_lower(activity_name);
+                    long long nFiles = it->get<long long>("count");
+                    ret[activity_name] = nFiles;
                 }
         }
     catch (std::exception& e)
