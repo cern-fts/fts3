@@ -26,9 +26,16 @@ void DeletionTask::run(boost::any const &)
 
 void DeletionTask::run_impl()
 {
-    std::vector<char const *> urls = ctx.getUrls();
-    // make sure there is work to do
-    if (urls.empty()) return;
+    std::set<std::string> urlSet = ctx.getUrls();
+    if (urlSet.empty())
+        return;
+
+    std::vector<const char*> urls;
+    urls.reserve(urlSet.size());
+    for (auto set_i = urlSet.begin(); set_i != urlSet.end(); ++set_i) {
+        urls.push_back(set_i->c_str());
+    }
+
     std::vector<GError*> error (urls.size(), NULL);
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DELETION Bulk of " << urls.size() << " files" << commit;

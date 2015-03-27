@@ -80,9 +80,10 @@ public:
     bool checkValidProxy(std::string& message) const;
 
     /**
-     * @return : list of URLs
+     * @return : set of URLs
+     * Using std::set we make sure we do not get duplicates
      */
-    std::vector<char const *> getUrls() const;
+    std::set<std::string> getUrls() const;
 
     /**
      * @return : set of SURLs

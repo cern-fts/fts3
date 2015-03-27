@@ -98,7 +98,7 @@ public:
 
     bool is_timeouted();
 
-    std::vector<char const *> for_abortion(std::set<std::pair<std::string, std::string>> const &);
+    std::set<std::string> for_abortion(std::set<std::pair<std::string, std::string>> const &);
 
 private:
 

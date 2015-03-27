@@ -36,7 +36,7 @@ bool StagingContext::is_timeouted()
     return difftime(time(0), start_time) > bringonlineTimeout;
 }
 
-std::vector<char const *> StagingContext::for_abortion(std::set<std::pair<std::string, std::string>> const & urls)
+std::set<std::string> StagingContext::for_abortion(std::set<std::pair<std::string, std::string>> const & urls)
 {
     // remove respective URLs from the task
     for (auto it = urls.begin(); it != urls.end(); ++it)
@@ -55,12 +55,12 @@ std::vector<char const *> StagingContext::for_abortion(std::set<std::pair<std::s
                 }
         }
 
-    std::vector<char const *> ret;
+    std::set<std::string> ret;
     for (auto it = urls.begin(); it != urls.end(); ++it)
         {
             std::string const & url = it->second;
             if (not_canceled.count(url) || unique.count(url)) continue;
-            ret.push_back(url.c_str());
+            ret.insert(url.c_str());
         }
     return ret;
 }

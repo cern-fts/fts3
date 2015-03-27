@@ -90,7 +90,7 @@ private:
     bool timeout_occurred();
 
     /// aborts the bring online operation for the given URLs
-    void abort(std::vector<char const *> const & urls, bool report = true);
+    void abort(std::set<std::string> const & urls, bool report = true);
 
     /**
      * Gets the interval after next polling should be done

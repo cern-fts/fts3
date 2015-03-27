@@ -47,16 +47,16 @@ bool JobContext::checkValidProxy(std::string& message) const
     return delegCredPtr->isValidProxy(proxy, message);
 }
 
-std::vector<char const *> JobContext::getUrls() const
+std::set<std::string> JobContext::getUrls() const
 {
-    std::vector<char const *> ret;
+    std::set<std::string> ret;
     // make sure only unique SURLs will be brought online / deleted
     for (auto it_j = jobs.begin(); it_j != jobs.end(); ++it_j)
         {
             auto const & urls = it_j->second;
             for (auto it_u = urls.begin(); it_u != urls.end(); ++it_u)
                 {
-                    ret.push_back(it_u->first.c_str());
+                    ret.insert(it_u->first);
                 }
         }
     return ret;

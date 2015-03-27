@@ -12420,7 +12420,7 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                 {
                     int counter = itQueue->second;
 
-                    if(counter < 30)
+                    if(counter < 30 && 0)
                     {
                         queuedStagingFiles[source_se] = counter + 1;
                         continue;

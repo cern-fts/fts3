@@ -21,7 +21,16 @@ std::set<std::pair<std::string, std::string>> BringOnlineTask::active_urls;
 void BringOnlineTask::run(boost::any const &)
 {
     char token[512] = {0};
-    std::vector<char const *> urls = ctx.getUrls();
+    std::set<std::string> urlSet = ctx.getUrls();
+    if (urlSet.empty())
+        return;
+
+    std::vector<const char*> urls;
+    urls.reserve(urlSet.size());
+    for (auto set_i = urlSet.begin(); set_i != urlSet.end(); ++set_i) {
+        urls.push_back(set_i->c_str());
+    }
+
     std::vector<GError*> errors(urls.size(), NULL);
 
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE issuing bring-online for: " << urls.size() << " files, "

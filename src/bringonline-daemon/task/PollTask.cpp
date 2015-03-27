@@ -21,9 +21,15 @@ void PollTask::run(boost::any const &)
     // handle cancelled jobs/files
     handle_canceled();
 
-    std::vector<char const *> urls = ctx.getUrls();
-    // make sure there is work to be done
-    if (urls.empty()) return;
+    std::set<std::string> urlSet = ctx.getUrls();
+    if (urlSet.empty())
+        return;
+
+    std::vector<const char*> urls;
+    urls.reserve(urlSet.size());
+    for (auto set_i = urlSet.begin(); set_i != urlSet.end(); ++set_i) {
+        urls.push_back(set_i->c_str());
+    }
 
     std::vector<GError*> errors(urls.size(), NULL);
 
@@ -161,9 +167,15 @@ bool PollTask::timeout_occurred()
     return true;
 }
 
-void PollTask::abort(std::vector<char const *> const & urls, bool report)
+void PollTask::abort(std::set<std::string> const & urlSet, bool report)
 {
-    if (urls.empty()) return;
+    if (urlSet.empty()) return;
+
+    std::vector<const char*> urls;
+    urls.reserve(urlSet.size());
+    for (auto set_i = urlSet.begin(); set_i != urlSet.end(); ++set_i) {
+        urls.push_back(set_i->c_str());
+    }
 
     std::vector<GError*> errors(urls.size(), NULL);
     int status = gfal2_abort_files(gfal2_ctx, static_cast<int>(urls.size()), urls.data(), token.c_str(), errors.data());
