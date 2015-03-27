@@ -46,6 +46,7 @@ function JobListCtrl($rootScope, $location, $scope, jobs, Job)
         state:       statesFromString($location.$$search.state),
         diagnosis:   withDefault($location.$$search.diagnosis, 0),
         with_debug:  withDefault($location.$$search.with_debug, 0),
+        multireplica:withDefault($location.$$search.multireplica, 0),
     }
 
     $scope.showFilterDialog = function() {
@@ -64,6 +65,7 @@ function JobListCtrl($rootScope, $location, $scope, jobs, Job)
             state:       joinStates($scope.filter.state),
             diagnosis:   $scope.filter.diagnosis,
             with_debug:  $scope.filter.with_debug,
+            multireplica:$scope.filter.multireplica
         });
     }
 

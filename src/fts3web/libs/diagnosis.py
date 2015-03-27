@@ -1,7 +1,7 @@
 from ftsweb.models import ACTIVE_STATES, FILE_TERMINAL_STATES
 
 
-def are_job_and_files_consistent(job):
+def _are_job_and_files_consistent(job):
     """
     Returns None if the job state and individual file states are consistent, otherwise a
     diagnosis message
@@ -23,17 +23,28 @@ def are_job_and_files_consistent(job):
     return None
 
 
-def diagnosed(job_list):
+def _diagnosed(job_list):
     for j in job_list:
-        j['diagnosis'] = are_job_and_files_consistent(j)
+        j['diagnosis'] = _are_job_and_files_consistent(j)
         yield j
 
 
-def JobDiagnosis(job_list, require_diagnosis, require_debug):
+def JobDiagnosis(job_list, require_diagnosis, require_debug, multireplica):
     def _diagnosis_filter(job):
         if require_diagnosis and job['diagnosis'] is not None:
             return False
         if require_debug and job['with_debug'] < 1:
             return False
+        if multireplica and job['n_replicas'] >= job['count']:
+            return False
         return True
-    return filter(_diagnosis_filter, diagnosed(job_list))
+    # We can not diagnose all jobs, that would be way too expensive!
+    limit = 50
+    result = list()
+    for job in _diagnosed(job_list):
+        if _diagnosis_filter(job):
+            result.append(job)
+            limit -= 1
+        if limit <= 0:
+            break
+    return result

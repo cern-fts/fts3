@@ -41,7 +41,8 @@ def setup_filters(http_request):
         'reason': None,
         'with_file': None,
         'diagnosis': False,
-        'with_debug': False
+        'with_debug': False,
+        'multireplica': False
     }
 
     for key in filters.keys():
@@ -55,6 +56,8 @@ def setup_filters(http_request):
                 elif key == 'diagnosis':
                     filters[key] = http_request.GET[key] not in ('0', 'false')
                 elif key == 'with_debug':
+                    filters[key] = http_request.GET[key] not in ('0', 'false')
+                elif key == 'multireplica':
                     filters[key] = http_request.GET[key] not in ('0', 'false')
                 else:
                     filters[key] = http_request.GET[key]
@@ -93,21 +96,24 @@ class JobListDecorator(object):
         job['space_token'] = job_desc[6]
         job['job_finished'] = job_desc[7]
         self.cursor.execute(
-            """SELECT file_state, COUNT(file_state), SUM(t_log_file_debug)
+            """SELECT file_state, COUNT(file_id), SUM(t_log_file_debug), MAX(file_index)
                FROM t_file WHERE job_id = %s GROUP BY file_state ORDER BY NULL
             """,
             [job_id])
         result = self.cursor.fetchall()
         count = dict()
         with_debug = 0
+        n_replicas = 0
         total = 0
         for r in result:
             count[r[0]] = r[1]
             total += r[1]
             with_debug += r[2] if r[2] else 0
+            n_replicas = max(n_replicas, r[3])
         job['files'] = count
         job['count'] = total
         job['with_debug'] = with_debug
+        job['n_replicas'] = n_replicas + 1
         return job
 
     def _decorated(self, index):
@@ -119,7 +125,7 @@ class JobListDecorator(object):
             index = slice(index, index, 1)
 
         step = index.step if index.step else 1
-        nelems = (index.stop - index.start) / step
+        nelems = (index.stop - index.start if index.start else 0) / step
         if nelems > 100:
             return self.job_ids[index]
         else:
@@ -167,8 +173,8 @@ def get_job_list(http_request):
         job_ids = job_ids.filter(dest_se=filters['dest_se'])
 
     job_list = JobListDecorator(map(lambda j: j['job_id'], job_ids))
-    if filters['diagnosis'] or filters['with_debug']:
-        job_list = JobDiagnosis(job_list, filters['diagnosis'], filters['with_debug'])
+    if filters['diagnosis'] or filters['with_debug'] or filters['multireplica']:
+        job_list = JobDiagnosis(job_list, filters['diagnosis'], filters['with_debug'], filters['multireplica'])
     return job_list
 
 
