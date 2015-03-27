@@ -11580,7 +11580,16 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
                                                               "	AND f.source_se = :source_se  "
                                                               " AND j.user_dn = :user_dn "
                                                               " AND j.vo_name = :vo_name "
-                                                              "	AND j.job_finished is null ORDER BY SYS_EXTRACT_UTC(j.submit_time) )  WHERE ROWNUM <= :limit ",
+                                                              "	AND j.job_finished is null "
+                                                              "   AND NOT EXISTS ( "
+                                                              "       SELECT "
+                                                              "           1 FROM t_file f1 "
+                                                              "       WHERE "
+                                                              "           f1.source_surl = f.source_surl AND f1.file_state='STARTED' "
+                                                              "           AND f1.vo_name = f.vo_name AND f1.job_finished IS NULL "
+                                                              "           AND f1.source_se = f.source_se"
+                                                              "   ) "
+                                                              " ORDER BY SYS_EXTRACT_UTC(j.submit_time) )  WHERE ROWNUM <= :limit ",
                                                               soci::use(hashSegment.start), soci::use(hashSegment.end),
                                                               soci::use(source_se),
                                                               soci::use(user_dn),

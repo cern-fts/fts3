@@ -12420,7 +12420,7 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                 {
                     int counter = itQueue->second;
 
-                    if(counter < 30 && 0)
+                    if(counter < 30)
                     {
                         queuedStagingFiles[source_se] = counter + 1;
                         continue;
@@ -12474,7 +12474,15 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
                                                   "   AND j.vo_name = :vo_name "
                                                   "   AND f.vo_name = j.vo_name "
                                                   "   AND f.job_finished IS NULL "
-                                                  " order by f.file_id LIMIT :limit",
+                                                  "   AND NOT EXISTS ( "
+                                                  "       SELECT "
+                                                  "           1 FROM t_file f1 "
+                                                  "       WHERE "
+                                                  "           f1.source_surl = f.source_surl AND f1.file_state='STARTED' "
+                                                  "           AND f1.vo_name = f.vo_name AND f1.job_finished IS NULL "
+                                                  "           AND f1.source_se = f.source_se"
+                                                  "   ) "
+                                                  " ORDER BY f.file_id LIMIT :limit",
                                                   soci::use(hashSegment.start), soci::use(hashSegment.end),
                                                   soci::use(source_se),
                                                   soci::use(user_dn),
