@@ -7,16 +7,16 @@
 </div>
 
 <p>
-	<i class="icon-user"></i> Submitted by <span class="dn">'{{job.job.user_dn}}'</span><br/>
-	<i class="icon-group"></i> VO: <span class="vo">{{job.job.vo_name}}</span><br/>
+    <i class="icon-user"></i> Submitted by <span class="dn">'{{job.job.user_dn}}'</span><br/>
+    <i class="icon-group"></i> VO: <span class="vo">{{job.job.vo_name}}</span><br/>
 </p>
 <div class="row-fluid">
     <div class="span6">
         <p>
-			<i class="icon-user"></i> Delegation ID: {{job.job.cred_id}}<br/>
-			<i class="icon-time"></i> Submitted time: {{job.job.submit_time}}<br/>
-			<i class="icon-time"></i> Job finished: {{job.job.job_finished}}<br/>
-			<i class="icon-star"></i> Priority: {{job.job.priority}}<br/>
+            <i class="icon-user"></i> Delegation ID: {{job.job.cred_id}}<br/>
+            <i class="icon-time"></i> Submitted time: {{job.job.submit_time}}<br/>
+            <i class="icon-time"></i> Job finished: {{job.job.job_finished}}<br/>
+            <i class="icon-star"></i> Priority: {{job.job.priority}}<br/>
             <i class="icon-download-alt"></i> Bring online: {{job.job.bring_online}}<br/>
         </p>
     </div>
@@ -107,24 +107,24 @@
 <table class="table table-small">
     <thead>
         <tr>
-	        <th style="width: 6%">
-	           <span data-order-by="id">File ID</span>
+            <th style="width: 6%">
+               <span data-order-by="id">File ID</span>
             </th>
-	        <th>Source URL</th>
-	        <th>Destination URL</th>
-	        <th style="width: 6%">File State</th>
-	        <th style="width: 8%">
-	           <span data-order-by="size">File Size</span>
+            <th>Source URL</th>
+            <th>Destination URL</th>
+            <th style="width: 6%">File State</th>
+            <th style="width: 8%">
+               <span data-order-by="size">File Size</span>
             </th>
-	        <th style="width: 8%">
-	           <span data-order-by="throughput">Throughput</span>
+            <th style="width: 8%">
+               <span data-order-by="throughput">Throughput</span>
             </th>
             <th style="width: 6%">Remaining</th>
-	        <th style="width: 8%">
-	           <span data-order-by="start_time">Start Time</span>
+            <th style="width: 8%">
+               <span data-order-by="start_time">Start Time</span>
             </th>
-	        <th style="width: 8%">
-	           <span data-order-by="finish_time">Finish Time</span>
+            <th style="width: 8%">
+               <span data-order-by="finish_time">Finish Time</span>
             </th>
             <th style="width: 8%">
                 <span data-order-by="staging_start">Staging Start</span>
@@ -168,37 +168,38 @@
                     <li>PID: {{file.pid}}</li>
                     <li>Hash: {{file.hashed_id|hex}}</li>
                     <li>Activity: {{file.activity}}</li>
-					<li>Attempts: {{file.retry}}</li>
-					<li>Duration: {{file.tx_duration}} seconds</li>
-					<li>Checksum: {{file.checksum}}</li>
-					<li>User specified size: {{file.user_filesize}}</li>
-					<li>Configuration: {{file.symbolicname}}</li>
-					<li>Parameters: {{file.internal_file_params}}</li>
-					<li>Job finished: {{file.job_finished}}</li>
-					<li>Finished time: {{file.finish_time}}</li>
-					<li>Error reason: {{file.reason}}</li>
-					<li>Log file:
-					   <p>
-					       <a href="{{file.log_file}}">
-					           {{file.log_file}}
-						   </a><br/>
-						   <span data-ng-switch="file.log_debug">
-	                       <a data-ng-switch-when="1" href="{{file.file.log_debug}}.debug">
-	                           {{file.file.log_debug}}.debug
-	                       </a>
-	                       </span>
+                    <li>Selection strategy: {{file.selection_strategy}}</li>
+                    <li>Attempts: {{file.retry}}</li>
+                    <li>Duration: {{file.tx_duration}} seconds</li>
+                    <li>Checksum: {{file.checksum}}</li>
+                    <li>User specified size: {{file.user_filesize}}</li>
+                    <li>Configuration: {{file.symbolicname}}</li>
+                    <li>Parameters: {{file.internal_file_params}}</li>
+                    <li>Job finished: {{file.job_finished}}</li>
+                    <li>Finished time: {{file.finish_time}}</li>
+                    <li>Error reason: {{file.reason}}</li>
+                    <li>Log file:
+                       <p>
+                           <a href="{{file.log_file}}">
+                               {{file.log_file}}
+                           </a><br/>
+                           <span data-ng-switch="file.log_debug">
+                           <a data-ng-switch-when="1" href="{{file.file.log_debug}}.debug">
+                               {{file.file.log_debug}}.debug
+                           </a>
+                           </span>
                        </p>
-				    </li>
-				    <li>Metadata:
-				        <pre>{{file.file_metadata}}</pre>
-				    </li>
-				    <li data-ng-show="file.retry">Retries:
-				        <dl data-ng-repeat="retry in file.retries">
-				            <dt>{{retry.datetime}}</dt>
-				            <dd>{{retry.reason}}</dd>
-				        </dl>
-				    </li>
-				</ul>
+                    </li>
+                    <li>Metadata:
+                        <pre>{{file.file_metadata}}</pre>
+                    </li>
+                    <li data-ng-show="file.retry">Retries:
+                        <dl data-ng-repeat="retry in file.retries">
+                            <dt>{{retry.datetime}}</dt>
+                            <dd>{{retry.reason}}</dd>
+                        </dl>
+                    </li>
+                </ul>
             </td>
         </tr>
     </tbody>

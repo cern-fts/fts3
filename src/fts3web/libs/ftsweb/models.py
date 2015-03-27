@@ -126,6 +126,7 @@ class FileBase(models.Model):
     log_file        = models.CharField(max_length = 2048, db_column = 't_log_file')
     log_debug       = models.IntegerField(db_column = 't_log_file_debug')
     activity        = models.CharField(max_length = 255)
+    selection_strategy = models.CharField(max_length = 255)
 
     def get_start_time(self):
         """
