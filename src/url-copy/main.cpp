@@ -1056,7 +1056,7 @@ int main(int argc, char **argv)
                         errorScope = SOURCE;
                         reasonClass = mapErrnoToString(gfal_posix_code_error());
                         errorPhase = TRANSFER_PREPARATION;
-                        retry = true;
+                        retry = false;
                         goto stop;
                     }
 
