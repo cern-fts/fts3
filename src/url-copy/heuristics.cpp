@@ -2,8 +2,10 @@
 #include <limits.h>
 #include "common/definitions.h"
 #include "heuristics.h"
+#include "logger.h"
 
-bool retryTransfer(int errorNo, const std::string& category, const std::string& message)
+
+static bool retryTransferInternal(int errorNo, const std::string& category, const std::string& message)
 {
     bool retry = true;
 
@@ -146,6 +148,16 @@ bool retryTransfer(int errorNo, const std::string& category, const std::string& 
     return retry;
 }
 
+
+bool retryTransfer(int errorNo, const std::string& category, const std::string& message)
+{
+    bool retry = retryTransferInternal(errorNo, category, message);
+    if (retry)
+        Logger::getInstance().WARNING() << "Recoverable error: [" << errorNo << "] " << message << std::endl;
+    else
+        Logger::getInstance().WARNING() << "Non-recoverable error: [" << errorNo << "] " << message << std::endl;
+    return retry;
+}
 
 
 unsigned adjustStreamsBasedOnSize(off_t sizeInBytes, unsigned int /*currentStreams*/)
