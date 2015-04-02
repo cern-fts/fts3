@@ -5,41 +5,63 @@
 #include "logger.h"
 
 
+static bool findSubstring(const std::string& stack, const char* needles[])
+{
+    for (size_t i = 0; needles[i] != NULL; ++i) {
+        if (stack.find(needles[i]) != std::string::npos)
+            return true;
+    }
+    return false;
+}
+
+
 static bool retryTransferInternal(int errorNo, const std::string& category, const std::string& message)
 {
-    bool retry = true;
-
     // ETIMEDOUT shortcuts the following
     if (errorNo == ETIMEDOUT)
         return true;
 
-    //search for error patterns not reported by SRM or GSIFTP
-    std::size_t found = message.find("performance marker");
-    if (found!=std::string::npos)
+    // If the following strings appear in the error message, assume retriable
+    const char* msg_imply_retry[] = {
+        "performance marker",
+        "Name or service not known",
+        "Connection timed out",
+        "end-of-file was reached",
+        "end of file occurred",
+        "SRM_INTERNAL_ERROR",
+        "was forcefully killed",
+        "operation timeout",
+        NULL
+    };
+
+    if (findSubstring(message, msg_imply_retry))
         return true;
-    found = message.find("Name or service not known");
-    if (found!=std::string::npos)
+
+    // If the following strings appear in the error message, assume non-retriable
+    const char* msg_imply_do_not_retry[] = {
+        "proxy expired",
+        "with an error 550 File not found",
+        "File exists and overwrite",
+        "No such file or directory",
+        "SRM_INVALID_PATH",
+        "The certificate has expired",
+        "The available CRL has expired",
+        "SRM Authentication failed",
+        "SRM_DUPLICATION_ERROR",
+        "SRM_AUTHENTICATION_FAILURE",
+        "SRM_NO_FREE_SPACE",
+        "digest too big for rsa key",
+        "Can not determine address of local host",
+        "Permission denied",
+        "System error in write into HDFS",
+        "File exists",
+        NULL
+    };
+
+    if (findSubstring(message, msg_imply_do_not_retry))
         return false;
-    found = message.find("Connection timed out");
-    if (found!=std::string::npos)
-        return true;
-    found = message.find("end-of-file was reached");
-    if (found!=std::string::npos)
-        return true;
-    found = message.find("end of file occurred");
-    if (found!=std::string::npos)
-        return true;
-    found = message.find("SRM_INTERNAL_ERROR");
-    if (found!=std::string::npos)
-        return true;
-    found = message.find("was forcefully killed");
-    if (found!=std::string::npos)
-        return true;
-    found = message.find("operation timeout");
-    if (found!=std::string::npos)
-        return true;
 
-
+    // Rely on the error codes otherwise
     if (category == "SOURCE")
         {
             switch (errorNo)
@@ -52,11 +74,7 @@ static bool retryTransferInternal(int errorNo, const std::string& category, cons
                 case E2BIG:           // Argument list too long
                 case ENOTDIR:         // Part of the path is not a directory
                 case EPROTONOSUPPORT: // Protocol not supported by gfal2 (plugin missing?)
-                    retry = false;
-                    break;
-                default:
-                    retry = true;
-                    break;
+                    return false;
                 }
         }
     else if (category == "DESTINATION")
@@ -69,11 +87,7 @@ static bool retryTransferInternal(int errorNo, const std::string& category, cons
                 case ENAMETOOLONG:    //  File name too long
                 case E2BIG:           //  Argument list too long
                 case EPROTONOSUPPORT: // Protocol not supported by gfal2 (plugin missing?)
-                    retry = false;
-                    break;
-                default:
-                    retry = true;
-                    break;
+                    return false;
                 }
         }
     else //TRANSFER
@@ -88,64 +102,11 @@ static bool retryTransferInternal(int errorNo, const std::string& category, cons
                 case EROFS:           // Read-only file system
                 case ENAMETOOLONG:    // File name too long
                 case EPROTONOSUPPORT: // Protocol not supported by gfal2 (plugin missing?)
-                    retry = false;
-                    break;
-                default:
-                    retry = true;
-                    break;
+                    return false;
                 }
         }
 
-    found = message.find("proxy expired");
-    if (found!=std::string::npos)
-        retry = false;
-    found = message.find("with an error 550 File not found");
-    if (found!=std::string::npos)
-        retry = false;
-    found = message.find("File exists and overwrite");
-    if (found!=std::string::npos)
-        retry = false;
-    found = message.find("No such file or directory");
-    if (found!=std::string::npos)
-        retry = false;
-    found = message.find("SRM_INVALID_PATH");
-    if (found!=std::string::npos)
-        retry = false;
-    found = message.find("The certificate has expired");
-    if (found!=std::string::npos)
-        retry = false;
-    found = message.find("The available CRL has expired");
-    if (found!=std::string::npos)
-        retry = false;
-    found = message.find("SRM Authentication failed");
-    if (found!=std::string::npos)
-        retry = false;
-    found = message.find("SRM_DUPLICATION_ERROR");
-    if (found!=std::string::npos)
-        retry = false;
-    found = message.find("SRM_AUTHENTICATION_FAILURE");
-    if (found!=std::string::npos)
-        retry = false;
-    found = message.find("SRM_NO_FREE_SPACE");
-    if (found!=std::string::npos)
-        retry = false;
-    found = message.find("digest too big for rsa key");
-    if (found!=std::string::npos)
-        retry = false;
-    found = message.find("Can not determine address of local host");
-    if (found!=std::string::npos)
-        retry = false;
-    found = message.find("Permission denied");
-    if (found!=std::string::npos)
-        retry = false;
-    found = message.find("System error in write into HDFS");
-    if (found!=std::string::npos)
-        retry = false;
-    found = message.find("File exists");
-    if (found!=std::string::npos)
-        retry = false;
-
-    return retry;
+    return true;
 }
 
 
