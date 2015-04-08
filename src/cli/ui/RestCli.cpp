@@ -39,7 +39,7 @@ std::string RestCli::capath()
             return vm["capath"].as<std::string>();
         }
 
-    throw bad_option("capath", "The CA certificates path has to be specified!");
+    return "/etc/grid-security/certificates";
 }
 
 std::string RestCli::proxy()
@@ -49,5 +49,13 @@ std::string RestCli::proxy()
             return vm["proxy"].as<std::string>();
         }
 
-    throw bad_option("proxy", "The path to the proxy certificate has to be specified!");
+    const char* x509_user_proxy = getenv("X509_USER_PROXY");
+    if (x509_user_proxy)
+        {
+            return x509_user_proxy;
+        }
+
+    std::ostringstream proxy_path;
+    proxy_path << "/tmp/x509up_u" << geteuid();
+    return proxy_path.str();
 }
