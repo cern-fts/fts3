@@ -26,13 +26,13 @@ RestCli::~RestCli()
 
 }
 
-bool RestCli::rest()
+bool RestCli::rest() const
 {
     // return true if rest is in the map
     return vm.count("rest");
 }
 
-std::string RestCli::capath()
+std::string RestCli::capath() const
 {
     if (vm.count("capath"))
         {
@@ -42,7 +42,7 @@ std::string RestCli::capath()
     return "/etc/grid-security/certificates";
 }
 
-std::string RestCli::proxy()
+std::string RestCli::proxy() const
 {
     if (vm.count("proxy"))
         {

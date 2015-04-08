@@ -41,17 +41,17 @@ public:
     /**
      * @return true if the rest interface has been selected, false otherwise
      */
-    bool rest();
+    bool rest() const;
 
     /**
      * @return the path to the CA certificates
      */
-    std::string capath();
+    std::string capath() const;
 
     /**
      * @return the path to the proxy certificate
      */
-    std::string proxy();
+    std::string proxy() const;
 };
 
 } /* namespace cli   */

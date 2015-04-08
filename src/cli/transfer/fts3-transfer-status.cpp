@@ -17,8 +17,7 @@
  *	limitations under the License.
  */
 
-#include "GSoapContextAdapter.h"
-#include "RestContextAdapter.h"
+#include "ui/ServiceAdapterFactory.h"
 
 #include "JobStatus.h"
 #include "ui/TransferStatusCli.h"
@@ -61,35 +60,9 @@ int main(int ac, char* av[])
             if (cli.printHelp()) return 0;
             cli.validate();
 
-            std::string const endpoint = cli.getService();
-
-            std::unique_ptr<ServiceAdapter> ctx;
-            if (cli.rest())
-                {
-                    std::string const capath = cli.capath();
-                    std::string const proxy = cli.proxy();
-                    ctx.reset(new RestContextAdapter(endpoint, capath, proxy));
-                }
-            else
-                {
-                    ctx.reset(new GSoapContextAdapter(endpoint));
-                }
+            std::unique_ptr<ServiceAdapter> ctx(ServiceAdapterFactory::getServiceAdapter(cli));
 
             cli.printApiDetails(*ctx.get());
-
-            if (cli.p())
-                {
-                    std::vector<std::string> ids = cli.getJobIds();
-                    std::vector<std::string>::const_iterator it;
-
-                    for (it = ids.begin(); it != ids.end(); ++it)
-                        {
-                            std::vector<DetailedFileStatus> vec = ctx->getDetailedJobStatus(*it);
-                            MsgPrinter::instance().print(*it, vec);
-                        }
-
-                    return 0;
-                }
 
             // archived content?
             bool archive = cli.queryArchived();
@@ -121,8 +94,8 @@ int main(int ac, char* av[])
                     // get the transfers
                     if (cli.list() || cli.dumpFailed())
                         {
-                            int offset = 0;
-                            int cnt = 0;
+                            size_t offset = 0;
+                            size_t cnt = 0;
 
                             do
                                 {

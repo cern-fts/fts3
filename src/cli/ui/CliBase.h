@@ -113,7 +113,7 @@ public:
      *
      * @return true if the help message has been printed
      */
-    virtual bool printHelp();
+    virtual bool printHelp() const;
 
     /**
      * Checks whether the -v option was used.
@@ -127,14 +127,14 @@ public:
      *
      * @return true if -q option has been used
      */
-    bool isQuiet();
+    bool isQuiet() const;
 
     /**
      * Gets the FTS3 service string
      *
      * @return FTS3 service string
      */
-    std::string getService();
+    std::string getService() const;
 
     /**
      * Pure virtual method, it aim is to give the instruction how to use the command line tool.
@@ -143,7 +143,7 @@ public:
      *
      * @return implementing class should return a string with instruction on how to use the tool
      */
-    virtual std::string getUsageString(std::string tool);
+    virtual std::string getUsageString(std::string tool) const;
 
 protected:
 
@@ -169,7 +169,7 @@ protected:
      *
      * @return FTS3 service string
      */
-    std::string discoverService();
+    std::string discoverService() const;
 
     /**
      * a map containing parsed options
@@ -226,7 +226,7 @@ private:
     /**
      *
      */
-    std::string getCliVersion();
+    std::string getCliVersion() const;
 
     std::string version;
     std::string interface;

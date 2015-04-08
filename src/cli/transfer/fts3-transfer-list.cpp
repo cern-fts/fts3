@@ -22,8 +22,7 @@
  *      Author: Michal Simon
  */
 
-#include "GSoapContextAdapter.h"
-#include "RestContextAdapter.h"
+#include "ui/ServiceAdapterFactory.h"
 
 #include "ui/ListTransferCli.h"
 #include "rest/HttpRequest.h"
@@ -55,19 +54,7 @@ int main(int ac, char* av[])
             if (cli.printHelp()) return 0;
             cli.validate();
 
-            std::string const endpoint = cli.getService();
-
-            std::unique_ptr<ServiceAdapter> ctx;
-            if (cli.rest())
-                {
-                    std::string const capath = cli.capath();
-                    std::string const proxy = cli.proxy();
-                    ctx.reset(new RestContextAdapter(endpoint, capath, proxy));
-                }
-            else
-                {
-                    ctx.reset(new GSoapContextAdapter(endpoint));
-                }
+            std::unique_ptr<ServiceAdapter> ctx(ServiceAdapterFactory::getServiceAdapter(cli));
 
             // print API details if verbose
             cli.printApiDetails(*ctx.get());

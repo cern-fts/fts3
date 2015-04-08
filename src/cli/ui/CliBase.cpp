@@ -170,12 +170,12 @@ void CliBase::printApiDetails(ServiceAdapter & ctx) const
     printCliDetails();
 }
 
-std::string CliBase::getUsageString(std::string tool)
+std::string CliBase::getUsageString(std::string tool) const
 {
     return "Usage: " + tool + " [options]";
 }
 
-bool CliBase::printHelp()
+bool CliBase::printHelp() const
 {
 
     // check whether the -h option was used
@@ -183,13 +183,14 @@ bool CliBase::printHelp()
         {
 
             // remove the path to the executive
-            size_t pos = toolname.find_last_of('/');
+            std::string basename(toolname);
+            size_t pos = basename.find_last_of('/');
             if( pos != std::string::npos)
                 {
-                    toolname = toolname.substr(pos + 1);
+                    basename = basename.substr(pos + 1);
                 }
             // print the usage guigelines
-            std::cout << std::endl << getUsageString(toolname) << std::endl << std::endl;
+            std::cout << std::endl << getUsageString(basename) << std::endl << std::endl;
             // print the available options
             std::cout << visible << std::endl;
             return true;
@@ -210,23 +211,23 @@ bool CliBase::isVerbose() const
     return vm.count("verbose");
 }
 
-bool CliBase::isQuiet()
+bool CliBase::isQuiet() const
 {
     return vm.count("quite");
 }
 
-std::string CliBase::getService()
+std::string CliBase::getService() const
 {
     return endpoint;
 }
 
-std::string CliBase::discoverService()
+std::string CliBase::discoverService() const
 {
     std::string tmp;
     return tmp;
 }
 
-std::string CliBase::getCliVersion()
+std::string CliBase::getCliVersion() const
 {
     return VERSION;
 }
