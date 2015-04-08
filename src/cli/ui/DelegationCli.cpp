@@ -27,7 +27,7 @@ DelegationCli::~DelegationCli()
 }
 
 
-std::string DelegationCli::getDelegationId()
+std::string DelegationCli::getDelegationId() const
 {
 
     // check if destination was passed via command line options
@@ -38,7 +38,7 @@ std::string DelegationCli::getDelegationId()
     return "";
 }
 
-long DelegationCli::getExpirationTime()
+long DelegationCli::getExpirationTime() const
 {
 
     if (vm.count("expire"))

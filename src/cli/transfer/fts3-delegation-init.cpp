@@ -17,12 +17,7 @@
  *	limitations under the License.
  */
 
-#include "GSoapContextAdapter.h"
-
-#include "delegation/ProxyCertificateDelegator.h"
-#include "delegation/SoapDelegator.h"
-#include "delegation/RestDelegator.h"
-
+#include "ui/ServiceAdapterFactory.h"
 #include "ui/DelegationCli.h"
 
 #include "JsonOutput.h"
@@ -44,20 +39,9 @@ int main(int ac, char* av[])
             cli.validate();
 
             // delegate Proxy Certificate
-            std::unique_ptr<ProxyCertificateDelegator> handler;
+            std::unique_ptr<ServiceAdapter> ctx(ServiceAdapterFactory::getServiceAdapter(cli));
 
-            if (cli.rest())
-                handler.reset(new RestDelegator(
-                                  cli.getService(), cli.getDelegationId(), cli.getExpirationTime(), cli.capath(), cli.proxy()
-                              ));
-            else
-                handler.reset(new SoapDelegator(
-                                  cli.getService(),
-                                  cli.getDelegationId(),
-                                  cli.getExpirationTime()
-                              ));
-
-            handler->delegate();
+            ctx->delegate(cli.getDelegationId(), cli.getExpirationTime());
 
         }
     catch(cli_exception const & ex)
