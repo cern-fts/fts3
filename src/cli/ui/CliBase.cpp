@@ -210,7 +210,7 @@ bool CliBase::isVerbose() const
     return vm.count("verbose");
 }
 
-bool CliBase::isQuite()
+bool CliBase::isQuiet()
 {
     return vm.count("quite");
 }

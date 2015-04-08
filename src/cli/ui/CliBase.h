@@ -127,7 +127,7 @@ public:
      *
      * @return true if -q option has been used
      */
-    bool isQuite();
+    bool isQuiet();
 
     /**
      * Gets the FTS3 service string
