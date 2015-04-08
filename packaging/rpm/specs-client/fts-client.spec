@@ -31,7 +31,7 @@ BuildRequires:  gcc44-c++
 BuildRequires:  python-devel
 %endif
 
-BuildRequires:  CGSI-gSOAP-devel
+BuildRequires:  CGSI-gSOAP-devel >= 1.3.6
 BuildRequires:  doxygen
 BuildRequires:  glib2-devel
 BuildRequires:  globus-gsi-credential-devel

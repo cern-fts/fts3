@@ -65,7 +65,7 @@ static std::string strFromStrPtr(const std::string* ptr)
         return std::string();
 }
 
-GSoapContextAdapter::GSoapContextAdapter(std::string endpoint):
+GSoapContextAdapter::GSoapContextAdapter(const std::string& endpoint, const std::string& proxy):
     ServiceAdapter(endpoint), ctx(soap_new2(SOAP_IO_KEEPALIVE, SOAP_IO_KEEPALIVE))
 {
     this->major = 0;
@@ -91,6 +91,9 @@ GSoapContextAdapter::GSoapContextAdapter(std::string endpoint):
         {
             if (soap_cgsi_init(ctx, CGSI_OPT_DISABLE_NAME_CHECK )) throw gsoap_error(ctx);
         }
+
+    if (!proxy.empty())
+        cgsi_plugin_set_credentials(ctx, 0, proxy.c_str(), proxy.c_str());
 
     // set the namespaces
     if (soap_set_namespaces(ctx, fts3_namespaces)) throw gsoap_error(ctx);

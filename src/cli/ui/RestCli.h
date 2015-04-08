@@ -47,11 +47,6 @@ public:
      * @return the path to the CA certificates
      */
     std::string capath() const;
-
-    /**
-     * @return the path to the proxy certificate
-     */
-    std::string proxy() const;
 };
 
 } /* namespace cli   */

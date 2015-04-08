@@ -70,7 +70,7 @@ public:
      *
      * Creates and initializes GSoap context
      */
-    GSoapContextAdapter(std::string endpoint);
+    GSoapContextAdapter(const std::string& endpoint, const std::string& proxy = std::string());
 
     /**
      * Destructor

@@ -130,6 +130,11 @@ public:
     bool isQuiet() const;
 
     /**
+     * @return the path to the proxy certificate
+     */
+    std::string proxy() const;
+
+    /**
      * Gets the FTS3 service string
      *
      * @return FTS3 service string

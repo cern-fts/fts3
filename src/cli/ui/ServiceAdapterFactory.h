@@ -36,7 +36,7 @@ public:
             }
         else
             {
-                return std::unique_ptr<ServiceAdapter>(new GSoapContextAdapter(cli.getService()));
+                return std::unique_ptr<ServiceAdapter>(new GSoapContextAdapter(cli.getService(), cli.proxy()));
             }
     }
 };

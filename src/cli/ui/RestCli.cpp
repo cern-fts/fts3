@@ -17,7 +17,6 @@ RestCli::RestCli()
     specific.add_options()
     ("rest", "Use the RESTful interface.")
     ("capath", po::value<std::string>(),  "Path to the GRID security certificates (e.g. /etc/grid-security/certificates).")
-    ("proxy", po::value<std::string>(),  "Path to the proxy certificate (e.g. /tmp/x509up_u500).")
     ;
 }
 
@@ -40,22 +39,4 @@ std::string RestCli::capath() const
         }
 
     return "/etc/grid-security/certificates";
-}
-
-std::string RestCli::proxy() const
-{
-    if (vm.count("proxy"))
-        {
-            return vm["proxy"].as<std::string>();
-        }
-
-    const char* x509_user_proxy = getenv("X509_USER_PROXY");
-    if (x509_user_proxy)
-        {
-            return x509_user_proxy;
-        }
-
-    std::ostringstream proxy_path;
-    proxy_path << "/tmp/x509up_u" << geteuid();
-    return proxy_path.str();
 }

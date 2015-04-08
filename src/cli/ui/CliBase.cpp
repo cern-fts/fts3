@@ -49,6 +49,7 @@ CliBase::CliBase(): visible("Allowed options")
     ("quite,q", "Quiet operation.")
     ("verbose,v", "Be more verbose.")
     ("service,s", po::value<std::string>(), "Use the transfer service at the specified URL.")
+    ("proxy", po::value<std::string>(),  "Path to the proxy certificate (e.g. /tmp/x509up_u500).")
     ("version,V", "Print the version number and exit.")
     ;
 
@@ -215,6 +216,25 @@ bool CliBase::isQuiet() const
 {
     return vm.count("quite");
 }
+
+std::string CliBase::proxy() const
+{
+    if (vm.count("proxy"))
+        {
+            return vm["proxy"].as<std::string>();
+        }
+
+    const char* x509_user_proxy = getenv("X509_USER_PROXY");
+    if (x509_user_proxy)
+        {
+            return x509_user_proxy;
+        }
+
+    std::ostringstream proxy_path;
+    proxy_path << "/tmp/x509up_u" << geteuid();
+    return proxy_path.str();
+}
+
 
 std::string CliBase::getService() const
 {
