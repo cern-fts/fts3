@@ -29,7 +29,7 @@ std::ostream& operator<<(std::ostream& os, RestDeletion const & me)
     std::vector<std::string>::const_iterator it;
     for (it = me.files.begin(); it != me.files.end(); ++it)
         {
-            files.push_back(std::make_pair("", *it));
+            files.push_back(std::make_pair(std::string(), pt::ptree(*it)));
         }
     // add files to the root
     root.push_back(std::make_pair("delete", files));
