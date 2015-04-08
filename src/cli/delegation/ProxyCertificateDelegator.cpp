@@ -40,14 +40,14 @@ namespace fts3
 namespace cli
 {
 
-long ProxyCertificateDelegator::isCertValid(std::string const & filename) const
+long ProxyCertificateDelegator::isCertValid() const
 {
 
     // find user proxy certificate
     FILE* fp;
-    if (!filename.empty())
+    if (!proxy.empty())
         {
-            fp = fopen(filename.c_str(), "r");
+            fp = fopen(proxy.c_str(), "r");
         }
     else
         {
@@ -79,7 +79,7 @@ void ProxyCertificateDelegator::delegate()
     bool renewDelegation = false, needDelegation = true;
 
     // get local proxy run time
-    time_t localProxyTimeLeft = isCertValid(std::string());
+    time_t localProxyTimeLeft = isCertValid();
     MsgPrinter::instance().print_info(
         "Remaining time for the local proxy is",
         "delegation.local_expiration_time",

@@ -231,7 +231,7 @@ public:
      */
     void setMaxOpt(std::tuple<std::string, int, std::string> const &, std::string const&);
 
-    std::string deleteFile (std::vector<std::string>& filesForDelete);
+    std::string deleteFile (const std::vector<std::string>& filesForDelete);
 
     /**
      * Remote call to setBandwidthLimit
@@ -420,7 +420,9 @@ public:
 
 private:
 
-    void getInterfaceDeatailes();
+    std::string proxy;
+
+    void getInterfaceDetails();
 
     void clean();
 

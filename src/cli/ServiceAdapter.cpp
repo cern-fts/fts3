@@ -17,7 +17,7 @@ namespace cli
 void ServiceAdapter::printServiceDetails()
 {
     // if verbose print general info
-    getInterfaceDeatailes();
+    getInterfaceDetails();
     MsgPrinter::instance().print_info("# Using endpoint", "endpoint", endpoint);
     MsgPrinter::instance().print_info("# Service version", "service_version", version);
     MsgPrinter::instance().print_info("# Interface version", "service_interface", interface);

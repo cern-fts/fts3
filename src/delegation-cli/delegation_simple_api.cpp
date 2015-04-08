@@ -40,6 +40,7 @@ struct _glite_delegation_ctx
     char                    *endpoint;
     char                    *error_message;
     int                     error;
+    char                    *proxy;
 };
 
 #define HTTP_PREFIX     "http:"
@@ -173,7 +174,7 @@ static void _fault_to_error(glite_delegation_ctx *ctx, const char *method)
     soap_end(soap);
 }
 
-glite_delegation_ctx *glite_delegation_new(const char *endpoint)
+glite_delegation_ctx *glite_delegation_new(const char *endpoint, const char *proxy)
 {
     int ret;
     glite_delegation_ctx *ctx;
@@ -222,6 +223,15 @@ glite_delegation_ctx *glite_delegation_new(const char *endpoint)
     else
         ret = 0;
 
+    /* Setup credentials */
+    if (ret == 0 && proxy)
+        {
+            if (cgsi_plugin_set_credentials(ctx->soap, 0, proxy, proxy) < 0) {
+                _fault_to_error(ctx, "Setting credentials");
+                return ctx;
+            }
+        }
+
     if (ret)
         {
             glite_delegation_set_error(ctx, (char *) "Failed to initialize the GSI plugin");
@@ -235,6 +245,8 @@ glite_delegation_ctx *glite_delegation_new(const char *endpoint)
             return ctx;
         }
 
+    ctx->proxy = strdup(proxy);
+
     return ctx;
 }
 
@@ -245,6 +257,7 @@ void glite_delegation_free(glite_delegation_ctx *ctx)
 
     free(ctx->endpoint);
     free(ctx->error_message);
+    free(ctx->proxy);
     if(ctx->soap)
         {
             soap_destroy(ctx->soap);
@@ -255,7 +268,8 @@ void glite_delegation_free(glite_delegation_ctx *ctx)
 }
 
 int glite_delegation_delegate(glite_delegation_ctx *ctx,
-                              const char *delegationID, int expiration, int force)
+                              const char *delegationID,
+                              int expiration, int force)
 {
     char *sdelegationID = (char *) "", *localproxy, *certtxt, *scerttxt;
     std::string certreq;
@@ -270,16 +284,22 @@ int glite_delegation_delegate(glite_delegation_ctx *ctx,
     if(!ctx)
         return -1;
 
-    if (NULL == (localproxy = getenv("X509_USER_PROXY")))
-        {
-            if (GLOBUS_GSI_SYSCONFIG_GET_PROXY_FILENAME(&localproxy,
-                    GLOBUS_PROXY_FILE_INPUT))
-                {
-                    glite_delegation_set_error(ctx, (char *) "glite_delegation_dowork: unable to get"
-                                               " user proxy filename!");
-                    return -1;
-                }
-        }
+    if (ctx->proxy) {
+        localproxy = ctx->proxy;
+    }
+    else {
+        localproxy = getenv("X509_USER_PROXY");
+        if (!localproxy)
+            {
+                if (GLOBUS_GSI_SYSCONFIG_GET_PROXY_FILENAME(&localproxy,
+                        GLOBUS_PROXY_FILE_INPUT))
+                    {
+                        glite_delegation_set_error(ctx, (char *) "glite_delegation_dowork: unable to get"
+                                                   " user proxy filename!");
+                        return -1;
+                    }
+            }
+    }
 
     /* error is already set */
     if (!ctx->soap)

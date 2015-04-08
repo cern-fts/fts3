@@ -24,10 +24,10 @@ class SoapDelegator : public fts3::cli::ProxyCertificateDelegator
 
 public:
 
-    SoapDelegator(std::string const & endpoint, std::string const & delegationId, long userRequestedDelegationExpTime) :
-        ProxyCertificateDelegator(endpoint, delegationId, userRequestedDelegationExpTime),
-        dctx (glite_delegation_new(endpoint.c_str()))
+    SoapDelegator(std::string const & endpoint, std::string const & delegationId, long userRequestedDelegationExpTime, std::string const& proxy) :
+        ProxyCertificateDelegator(endpoint, delegationId, userRequestedDelegationExpTime, proxy)
     {
+        dctx = glite_delegation_new(endpoint.c_str(), proxy.c_str());
         if (dctx == NULL)
             throw cli_exception("delegation: could not initialise a delegation context");
     }

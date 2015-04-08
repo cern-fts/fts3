@@ -66,7 +66,7 @@ static std::string strFromStrPtr(const std::string* ptr)
 }
 
 GSoapContextAdapter::GSoapContextAdapter(const std::string& endpoint, const std::string& proxy):
-    ServiceAdapter(endpoint), ctx(soap_new2(SOAP_IO_KEEPALIVE, SOAP_IO_KEEPALIVE))
+    ServiceAdapter(endpoint), ctx(soap_new2(SOAP_IO_KEEPALIVE, SOAP_IO_KEEPALIVE)), proxy(proxy)
 {
     this->major = 0;
     this->minor = 0;
@@ -127,7 +127,7 @@ GSoapContextAdapter::~GSoapContextAdapter()
     clean();
 }
 
-void GSoapContextAdapter::getInterfaceDeatailes()
+void GSoapContextAdapter::getInterfaceDetails()
 {
     // request the information about the FTS3 service
     impltns__getInterfaceVersionResponse ivresp;
@@ -268,17 +268,18 @@ std::string GSoapContextAdapter::transferSubmit(std::vector<File> const & files,
 void GSoapContextAdapter::delegate(std::string const & delegationId, long expirationTime)
 {
     // delegate Proxy Certificate
-    SoapDelegator delegator(endpoint, delegationId, expirationTime);
+    SoapDelegator delegator(endpoint, delegationId, expirationTime, proxy);
     delegator.delegate();
 }
 
-std::string GSoapContextAdapter::deleteFile (std::vector<std::string>& filesForDelete)
+
+std::string GSoapContextAdapter::deleteFile (const std::vector<std::string>& filesForDelete)
 {
     impltns__fileDeleteResponse resp;
     tns3__deleteFiles delFiles;
 
-    std::vector<std::string>::iterator it;
-    for(it=filesForDelete.begin(); it != filesForDelete.end(); ++it)
+    std::vector<std::string>::const_iterator it;
+    for (it = filesForDelete.begin(); it != filesForDelete.end(); ++it)
         delFiles.delf.push_back(*it);
 
     if (soap_call_impltns__fileDelete(ctx, endpoint.c_str(), 0, &delFiles,resp))
@@ -286,7 +287,6 @@ std::string GSoapContextAdapter::deleteFile (std::vector<std::string>& filesForD
 
     return resp._jobid;
 }
-
 
 
 JobStatus GSoapContextAdapter::getTransferJobStatus (std::string const & jobId, bool archive)

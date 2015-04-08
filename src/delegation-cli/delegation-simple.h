@@ -70,9 +70,10 @@ typedef struct _glite_delegation_ctx		glite_delegation_ctx;
  *
  * @param endpoint The name of the endpoint. Either an URL or a
  *  service name.
+ * @param proxy Path to the local proxy
  * @return the context or NULL if memory allocation has failed.
  */
-glite_delegation_ctx *glite_delegation_new(const char *endpoint);
+glite_delegation_ctx *glite_delegation_new(const char *endpoint, const char *proxy);
 
 /**
  * Destroys a fireman context.
@@ -107,7 +108,8 @@ char *glite_delegation_get_error(glite_delegation_ctx *ctx);
  * @return 0 if OK, -1 in case of error
  */
 int glite_delegation_delegate(glite_delegation_ctx *ctx,
-                              const char *delegationID, int expiration, int force);
+                              const char *delegationID,
+                              int expiration, int force);
 
 /**
  * Get the expiration time.
@@ -120,7 +122,8 @@ int glite_delegation_delegate(glite_delegation_ctx *ctx,
  * @return 0 if OK, -1 in case of error
  */
 int glite_delegation_info(glite_delegation_ctx *ctx,
-                          const char *delegationID, time_t *expiration);
+                          const char *delegationID,
+                          time_t *expiration);
 
 /**
  * @}

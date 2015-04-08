@@ -42,6 +42,8 @@ public:
 
     std::string transferSubmit (std::vector<File> const & files, std::map<std::string, std::string> const & parameters);
 
+    std::string deleteFile (const std::vector<std::string>& filesForDelete);
+
     JobStatus getTransferJobStatus (std::string const & jobId, bool archive);
 
     JobStatus getTransferJobSummary (std::string const & jobId, bool archive);
@@ -67,7 +69,7 @@ public:
 
 private:
 
-    void getInterfaceDeatailes();
+    void getInterfaceDetails();
 
     std::string const capath;
     std::string const proxy;

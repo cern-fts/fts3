@@ -76,6 +76,11 @@ public:
     virtual std::string transferSubmit (std::vector<File> const & files, std::map<std::string, std::string> const & parameters) = 0;
 
     /**
+     * Remote call for the removal of files
+     */
+    virtual std::string deleteFile (const std::vector<std::string>& filesForDelete) = 0;
+
+    /**
      * Remote call to getTransferJobStatus
      *
      * @param jobId   the job id
@@ -134,7 +139,7 @@ public:
 
 protected:
 
-    virtual void getInterfaceDeatailes() = 0;
+    virtual void getInterfaceDetails() = 0;
 
     std::string const endpoint;
 

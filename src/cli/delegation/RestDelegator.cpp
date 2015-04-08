@@ -53,8 +53,12 @@ void RestDelegator::doDelegation(time_t requestProxyDelegationTime, bool renew) 
     // do the request
     std::string const request = endpoint + "/delegation/" + delegationId + "/request";
 
-    char * localproxy;
-    if (NULL == (localproxy = getenv("X509_USER_PROXY")))
+    char * localproxy = NULL;
+    if (!proxy.empty())
+        {
+            localproxy = (char*)proxy.c_str();
+        }
+    else if (NULL == (localproxy = getenv("X509_USER_PROXY")))
         {
             if (GLOBUS_GSI_SYSCONFIG_GET_PROXY_FILENAME(&localproxy, GLOBUS_PROXY_FILE_INPUT))
                 {

@@ -8,6 +8,7 @@
 #include "RestContextAdapter.h"
 
 #include "rest/RestSubmission.h"
+#include "rest/RestDeletion.h"
 #include "rest/HttpRequest.h"
 #include "rest/ResponseParser.h"
 
@@ -23,7 +24,7 @@ namespace fts3
 namespace cli
 {
 
-void RestContextAdapter::getInterfaceDeatailes()
+void RestContextAdapter::getInterfaceDetails()
 {
     std::stringstream ss;
     HttpRequest http (endpoint, capath, proxy, ss);
@@ -128,6 +129,21 @@ std::string RestContextAdapter::transferSubmit (std::vector<File> const & files,
     return response.get("job_id");
 }
 
+
+std::string RestContextAdapter::deleteFile (const std::vector<std::string>& filesForDelete)
+{
+    std::stringstream ss;
+    ss << RestDeletion(filesForDelete);
+
+    std::string url = endpoint + "/jobs";
+    HttpRequest http (url, capath, proxy, ss);
+    http.put();
+
+    ResponseParser response(ss);
+    return response.get("job_id");
+}
+
+
 JobStatus RestContextAdapter::getTransferJobStatus (std::string const & jobId, bool archive)
 {
     std::string url = endpoint + "/jobs/" + jobId;
@@ -149,6 +165,7 @@ JobStatus RestContextAdapter::getTransferJobStatus (std::string const & jobId, b
                boost::lexical_cast<int>(response.get("priority"))
            );
 }
+
 
 JobStatus RestContextAdapter::getTransferJobSummary (std::string const & jobId, bool archive)
 {
@@ -191,7 +208,7 @@ JobStatus RestContextAdapter::getTransferJobSummary (std::string const & jobId, 
                response.get("reason"),
                response.get("vo_name"),
                response.get("submit_time"),
-               response_files.getFiles("files").size(),
+               (int)response_files.getFiles("files").size(),
                boost::lexical_cast<int>(response.get("priority")),
                summary
            );

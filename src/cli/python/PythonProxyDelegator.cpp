@@ -15,7 +15,7 @@ namespace cli
 {
 
 PythonProxyDelegator::PythonProxyDelegator(py::str endpoint, py::str delegationId, long expTime) :
-    delegator(new SoapDelegator(py::extract<std::string>(endpoint), py::extract<std::string>(delegationId), expTime))
+    delegator(new SoapDelegator(py::extract<std::string>(endpoint), py::extract<std::string>(delegationId), expTime, std::string()))
 {
 
 }
@@ -30,9 +30,9 @@ void PythonProxyDelegator::delegate()
     delegator->delegate();
 }
 
-long PythonProxyDelegator::isCertValid(py::str filename)
+long PythonProxyDelegator::isCertValid(void)
 {
-    return delegator->isCertValid(py::extract<std::string>(filename));
+    return delegator->isCertValid();
 }
 
 }

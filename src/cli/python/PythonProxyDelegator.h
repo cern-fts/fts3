@@ -30,7 +30,7 @@ public:
     virtual ~PythonProxyDelegator();
 
     void delegate();
-    long isCertValid(py::str filename);
+    long isCertValid();
 
 private:
     std::stringstream out;

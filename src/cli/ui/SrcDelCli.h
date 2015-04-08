@@ -25,6 +25,7 @@
 #ifndef SRCDESTCLI_H_
 #define SRCDESTCLI_H_
 
+#include "DelegationCli.h"
 #include "TransferCliBase.h"
 #include "SrcDestCli.h"
 #include "TransferCliBase.h"
@@ -43,7 +44,7 @@ namespace cli
  *  	- source (positional)
  *  	- destination (positional)
  */
-class SrcDelCli : public TransferCliBase
+class SrcDelCli : public DelegationCli
 {
 
 public:

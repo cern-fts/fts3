@@ -22,7 +22,8 @@
  *      Author: Christina Skarpathiotaki
  */
 
-#include "GSoapContextAdapter.h"
+#include "ui/ServiceAdapterFactory.h"
+
 #include "MsgPrinter.h"
 #include "ui/SrcDelCli.h"
 #include <boost/scoped_ptr.hpp>
@@ -60,13 +61,13 @@ int main(int ac, char* av[])
                     return 1;
                 }
 
-            GSoapContextAdapter ctx (cli.getService());
-            cli.printApiDetails(ctx);
+            std::unique_ptr<ServiceAdapter> ctx(ServiceAdapterFactory::getServiceAdapter(cli));
+            cli.printApiDetails(*ctx.get());
 
             // delegate Proxy Certificate
-            ctx.delegate("", 0);
+            ctx->delegate(cli.getDelegationId(), 0);
 
-            std::string resjobid = ctx.deleteFile(vect);
+            std::string resjobid = ctx->deleteFile(vect);
             std::cout << resjobid << std::endl;
 
 

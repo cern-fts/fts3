@@ -56,10 +56,14 @@ public:
      * @param delegationId - delegation ID (empty std::string means that the default ID should be used)
      * @param userRequestedDelegationExpTime - user specified delegation expire time
      * 											(0 means that the default value should be used)
+     * @param proxy - The proxy path
      */
-    ProxyCertificateDelegator(std::string const & endpoint, std::string const & delegationId, long userRequestedDelegationExpTime) :
+    ProxyCertificateDelegator(std::string const & endpoint,
+            std::string const & delegationId,
+            long userRequestedDelegationExpTime, std::string const & proxy) :
         delegationId(delegationId),
         endpoint(endpoint),
+        proxy(proxy),
         userRequestedDelegationExpTime(userRequestedDelegationExpTime)
     {
 
@@ -87,12 +91,9 @@ public:
 
     /**
      * Checks the expiration date of the local proxy certificate
-     *
-     * @param filename - the local proxy certificate (the default location is
-     * 						used if this std::string is empty
      * @return expiration date of the proxy certificate
      */
-    long isCertValid(std::string const & filename) const;
+    long isCertValid() const;
 
     static const int REDELEGATION_TIME_LIMIT = 3600*6;
     static const int MAXIMUM_TIME_FOR_DELEGATION_REQUEST = 3600 * 24;
@@ -102,6 +103,8 @@ protected:
     std::string delegationId;
     /// FTS3 service endpoint
     std::string const endpoint;
+    // proxy path
+    std::string proxy;
     /// user defined proxy certificate expiration time
     long const userRequestedDelegationExpTime;
 
