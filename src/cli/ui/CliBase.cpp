@@ -156,7 +156,7 @@ void CliBase::validate()
         }
 }
 
-void CliBase::printCliDeatailes() const
+void CliBase::printCliDetails() const
 {
     MsgPrinter::instance().print_info("# Client version", "client_version", version);
     MsgPrinter::instance().print_info("# Client interface version", "client_interface", interface);
@@ -167,7 +167,7 @@ void CliBase::printApiDetails(ServiceAdapter & ctx) const
     if (!isVerbose()) return;
 
     ctx.printServiceDetails();
-    printCliDeatailes();
+    printCliDetails();
 }
 
 std::string CliBase::getUsageString(std::string tool)

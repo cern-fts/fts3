@@ -150,7 +150,7 @@ protected:
     /**
      * If verbose additional info is printed
      */
-    void printCliDeatailes() const;
+    void printCliDetails() const;
 
     /**
      * check if it's possible to use fts3 server config file to discover the endpoint
