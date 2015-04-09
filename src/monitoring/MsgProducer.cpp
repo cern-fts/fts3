@@ -166,8 +166,8 @@ bool MsgProducer::sendMessage(std::string &temp)
                     catch (const std::exception& e)
                         {
                             std::ostringstream error_message;
-                            error_message << "MSG_ERROR (" << e.what() << ") " << temp;
-                            logger::writeLog(error_message.str(), true);
+                            error_message << "(" << e.what() << ") " << temp;
+                            LOGGER_ERROR(error_message.str());
                         }
 
                     temp += EOT;
@@ -191,8 +191,8 @@ bool MsgProducer::sendMessage(std::string &temp)
                     catch (const std::exception& e)
                         {
                             std::ostringstream error_message;
-                            error_message << "MSG_ERROR (" << e.what() << ") " << temp;
-                            logger::writeLog(error_message.str(), true);
+                            error_message << "(" << e.what() << ") " << temp;
+                            LOGGER_ERROR(error_message.str());
                         }
 
                     temp += EOT;
@@ -205,14 +205,12 @@ bool MsgProducer::sendMessage(std::string &temp)
         }
     catch (CMSException& e)
         {
-  	    errorMessage = "MSG_ERROR ex thrown in msg producer " + e.getMessage();
-            logger::writeLog(errorMessage, true);
+            LOGGER_ERROR(e.getMessage());
             concurrent_queue::getInstance()->push(temp);
         }
     catch (...)
         {
-	    errorMessage = "MSG_ERROR ex thrown in msg producer " + temp;
-            logger::writeLog(errorMessage, true);	
+            LOGGER_ERROR("Unexpected exception");
             concurrent_queue::getInstance()->push(temp);
         }
 
@@ -222,7 +220,7 @@ bool MsgProducer::sendMessage(std::string &temp)
 bool MsgProducer::getConnection()
 {
     try
-        {   	    	
+        {
             // Create a ConnectionFactory
             std::unique_ptr<ConnectionFactory> connectionFactory(
                 ConnectionFactory::createCMSConnectionFactory(brokerURI));
@@ -272,15 +270,13 @@ bool MsgProducer::getConnection()
         }
     catch (CMSException& e)
         {
-            errorMessage = "MSG_ERROR ex thrown in msg producer " + e.getMessage();
-            logger::writeLog(errorMessage, true);
+            LOGGER_ERROR(e.getMessage());
             connected = false;
             sleep(10);
         }
     catch (...)
         {
-            errorMessage = "MSG_ERROR ex thrown in msg producer";
-            logger::writeLog(errorMessage, true);
+            LOGGER_ERROR("Unknown exception");
             connected = false;
             sleep(10);
         }
@@ -294,37 +290,26 @@ void MsgProducer::readConfig()
 
     if ((fileExists == false) || (false == getACTIVE()))
         {
-            std::cerr << "MSG_ERROR Cannot read msg broker config file, or msg connection(ACTIVE=) is set to false" << std::endl;
+            LOGGER_ERROR("Cannot read msg broker config file, or msg connection(ACTIVE=) is set to false");
             exit(0);
         }
 
-    try
-        {
-            this->broker = getBROKER();
-            this->startqueueName = getSTART();
-            this->completequeueName = getCOMPLETE();
-            this->statequeueName = getSTATE();
+    this->broker = getBROKER();
+    this->startqueueName = getSTART();
+    this->completequeueName = getCOMPLETE();
+    this->statequeueName = getSTATE();
 
-            this->logfilename = getLOGFILENAME();
-            this->logfilepath = getLOGFILEDIR();
+    this->logfilename = getLOGFILENAME();
+    this->logfilepath = getLOGFILEDIR();
 
-            this->brokerURI = "tcp://" + broker + "?wireFormat=stomp&soKeepAlive=true&wireFormat.MaxInactivityDuration=-1";
-
-        }
-    catch (...)
-        {
-            errorMessage = "MSG_ERROR Cannot read msg broker config file, check path and file name";
-            logger::writeLog(errorMessage, true);
-            exit(0);
-        }
+    this->brokerURI = "tcp://" + broker + "?wireFormat=stomp&soKeepAlive=true&wireFormat.MaxInactivityDuration=-1";
 }
 
 // If something bad happens you see it here as this class is also been
 // registered as an ExceptionListener with the connection.
 void MsgProducer::onException( const CMSException& ex AMQCPP_UNUSED)
 {
-    errorMessage = "MSG_ERROR " + ex.getMessage();
-    logger::writeLog(errorMessage, true);
+    LOGGER_ERROR(ex.getMessage());
     stopThreads = true;
     std::queue<std::string> myQueue = concurrent_queue::getInstance()->the_queue;
     std::string ret;
@@ -352,7 +337,7 @@ void MsgProducer::run()
                             cleanup();
 			    //https://issues.apache.org/jira/browse/AMQCPP-524
 			    activemq::library::ActiveMQCPP::shutdownLibrary();
-			    activemq::library::ActiveMQCPP::initializeLibrary();			    
+			    activemq::library::ActiveMQCPP::initializeLibrary();
                             getConnection();
 
                             if(!connected)
@@ -373,8 +358,7 @@ void MsgProducer::run()
                 {
                     concurrent_queue::getInstance()->push(msgBk);
                     send_message(msgBk);
-                    errorMessage = "MSG_ERROR ex thrown in msg producer " + e.getMessage();
-                    logger::writeLog(errorMessage, true);
+                    LOGGER_ERROR(e.getMessage());
                     connected = false;
                     sleep(5);
                 }
@@ -382,7 +366,7 @@ void MsgProducer::run()
                 {
                     concurrent_queue::getInstance()->push(msgBk);
                     send_message(msgBk);
-                    logger::writeLog("MSG_ERROR ex thrown in msg producer", true);
+                    LOGGER_ERROR("Unexpected exception");
                     connected = false;
                     sleep(5);
                 }
@@ -499,7 +483,7 @@ void MsgProducer::cleanup()
         }
     connection = NULL;
 
-    
+
 
 }
 

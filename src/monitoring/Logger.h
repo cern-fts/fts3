@@ -33,9 +33,12 @@ using namespace std;
 class logger
 {
 public:
-    static void writeLog(std::string message, bool console = false);
-    static void writeMsg(std::string message);
-    static void writeMsgNoConfig(std::string message);
+    static void writeLog(const std::string& message, bool console = false);
+    static void writeMsg(const std::string& message);
+    static void writeMsgNoConfig(const std::string& message);
+    static void writeError(const char* file, const char* func, const std::string& message);
 };
+
+#define LOGGER_ERROR(message) logger::writeError(__FILE__, __func__, message)
 
 #endif

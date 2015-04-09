@@ -26,7 +26,7 @@
  * This is the actual workhorse of the logging system.
  */
 
-void logger::writeLog(std::string message, bool console)
+void logger::writeLog(const std::string& message, bool console)
 {
     static int nb_commits = 0;
 
@@ -52,7 +52,7 @@ void logger::writeLog(std::string message, bool console)
  * if logging messages to a file is enabled, append the message content(one line per message)
  */
 
-void logger::writeMsg(std::string message)
+void logger::writeMsg(const std::string& message)
 {
 
     std::string timestapStr = timestamp();
@@ -80,7 +80,7 @@ void logger::writeMsg(std::string message)
 }
 
 
-void logger::writeMsgNoConfig(std::string message)
+void logger::writeMsgNoConfig(const std::string& message)
 {
     std::string timestapStr = timestamp();
     timestapStr.erase(timestapStr.end() - 1);
@@ -88,3 +88,10 @@ void logger::writeMsgNoConfig(std::string message)
     appendMessageToLogFileNoConfig(msg);
 }
 
+
+void logger::writeError(const char* file, const char* func, const std::string& message)
+{
+    std::ostringstream full_msg;
+    full_msg << "MSG_ERROR In " << file << ":" << func << ": " << message;
+    logger::writeLog(full_msg.str(), true);
+}

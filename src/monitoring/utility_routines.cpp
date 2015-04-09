@@ -762,12 +762,12 @@ bool get_mon_cfg_file()
         }
     catch (const std::exception& e)
         {
-            logger::writeLog(std::string("msg config file error: ") + e.what(), true);
+            LOGGER_ERROR(std::string("msg config file error " )+ e.what());
             return false;
         }
     catch (...)
         {
-            logger::writeLog("msg config file error", true);
+            LOGGER_ERROR(std::string("msg config file error: unexpected exception"));
             return false;
         }
 }
@@ -883,17 +883,17 @@ bool caseInsCompare(const string& s1, const string& s2)
 
 
 std::string send_message(std::string & text)
-{    
+{
             struct message_monitoring message;
             strncpy(message.msg, text.c_str(), sizeof(message.msg));
             message.msg[sizeof(message.msg) - 1] = '\0';
             message.timestamp = milliseconds_since_epoch();
             int returnValue = runProducerMonitoring(message);
-	    
+
 	    if(returnValue == 0)
 	    	return std::string();
 	    else
-	    	return boost::lexical_cast<std::string>(returnValue);	        
+	    	return boost::lexical_cast<std::string>(returnValue);
 }
 
 
