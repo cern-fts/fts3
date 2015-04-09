@@ -17,6 +17,7 @@
  *
  */
 
+#include <chrono>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -34,7 +35,7 @@ using namespace std;
 convert a number to string, given the base
  */
 template <class T>
-std::string _to_string(T t, std::ios_base & (*)(std::ios_base&))
+static std::string _to_string(T t)
 {
     std::ostringstream oss;
     oss << fixed << t;
@@ -43,8 +44,13 @@ std::string _to_string(T t, std::ios_base & (*)(std::ios_base&))
 
 inline std::string _getTimestamp()
 {
-    time_t msec_started = time(NULL) * 1000; //the number of milliseconds since the epoch.
-    std::string transfer_started_to_string = _to_string<long double>(msec_started, std::dec);
+    std::chrono::milliseconds timestamp =
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::high_resolution_clock::now().time_since_epoch()
+            );
+
+    long double timestamp_double = static_cast<long double>(timestamp.count());
+    std::string transfer_started_to_string = _to_string<long double>(timestamp_double);
     return transfer_started_to_string;
 }
 
