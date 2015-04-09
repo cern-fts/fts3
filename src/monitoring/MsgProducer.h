@@ -75,7 +75,7 @@ private:
 public:
     MsgProducer();
     virtual ~MsgProducer();
-    bool sendMessage(std::string &text);
+    void sendMessage(std::string &text);
     virtual void run();
     void cleanup();
     virtual void onException( const CMSException& ex AMQCPP_UNUSED);
