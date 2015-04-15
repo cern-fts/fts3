@@ -18,7 +18,6 @@ public:
     bool autoTunned;
     bool manualConfig;
     bool overwrite;
-    bool daemonize;
     bool logToStderr;
     bool reuse;
     bool multihop;

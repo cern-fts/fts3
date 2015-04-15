@@ -33,7 +33,6 @@ const option UrlCopyOpts::long_options[] =
     {"nstreams",          required_argument, 0, 'e'},
     {"tcp-buffersize",    required_argument, 0, 'f'},
     {"timeout",           required_argument, 0, 'h'},
-    {"daemonize",         no_argument,       0, 'i'},
     {"dest-token-desc",   required_argument, 0, 'j'},
     {"source-token-desc", required_argument, 0, 'k'},
     {"file-id",           required_argument, 0, 'B'},
@@ -62,7 +61,7 @@ const option UrlCopyOpts::long_options[] =
 const char UrlCopyOpts::short_options[] = "?PONM:L:K:J:I:H:GRFD:E:C:z:A:t:a:b:c:de:f:h:ij:k:B:5:UXZV:Y:7:@:S:8:9:2:3:4:0:6:y:";
 
 UrlCopyOpts::UrlCopyOpts(): monitoringMessages(false), autoTunned(false),
-    manualConfig(false), overwrite(false), daemonize(false),
+    manualConfig(false), overwrite(false),
     logToStderr(false), reuse(false), multihop(false), enable_udt(false), enable_ipv6(false),
     global_timeout(false), strictCopy(false),hide_user_dn(false), level(1), active(0),
     debugLevel(0),
@@ -211,9 +210,6 @@ int UrlCopyOpts::parse(int argc, char * const argv[])
                             break;
                         case 'h':
                             timeout = boost::lexical_cast<unsigned>(optarg);
-                            break;
-                        case 'i':
-                            daemonize = true;
                             break;
                         case 'j':
                             destTokenDescription = optarg;
