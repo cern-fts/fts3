@@ -54,11 +54,12 @@ const option UrlCopyOpts::long_options[] =
     {"retry_max",    	  required_argument, 0, '4'},
     {"job_m_replica",     required_argument, 0, '0'},
     {"last_replica",      required_argument, 0, '6'},
-    {"logDir",      	  required_argument, 0, 'y'},    
+    {"logDir",      	  required_argument, 0, 'y'},
+    {"help",              no_argument,       0, '?'},
     {0, 0, 0, 0}
 };
 
-const char UrlCopyOpts::short_options[] = "PONM:L:K:J:I:H:GRFD:E:C:z:A:t:a:b:c:de:f:h:ij:k:B:5:UXZV:Y:7:@:S:8:9:2:3:4:0:6:y:";
+const char UrlCopyOpts::short_options[] = "?PONM:L:K:J:I:H:GRFD:E:C:z:A:t:a:b:c:de:f:h:ij:k:B:5:UXZV:Y:7:@:S:8:9:2:3:4:0:6:y:";
 
 UrlCopyOpts::UrlCopyOpts(): monitoringMessages(false), autoTunned(false),
     manualConfig(false), overwrite(false), daemonize(false),
@@ -82,18 +83,17 @@ UrlCopyOpts& UrlCopyOpts::getInstance()
 
 
 
-std::string UrlCopyOpts::usage(const std::string& bin)
+void UrlCopyOpts::usage(const std::string& bin)
 {
-    std::stringstream msg;
-    msg << "Usage: " << bin << " [options]" << std::endl
-        << "Options: " << std::endl;
+    std::cout << "Usage: " << bin << " [options]" << std::endl
+              << "Options: " << std::endl;
     for (int i = 0; long_options[i].name; ++i)
         {
-            msg << "\t--" << long_options[i].name
+            std::cout << "\t--" << long_options[i].name
                 << ",-" << static_cast<char>(long_options[i].val)
                 << std::endl;
         }
-    return msg.str();
+    exit(0);
 }
 
 
@@ -246,8 +246,8 @@ int UrlCopyOpts::parse(int argc, char * const argv[])
                             hide_user_dn = true;
                             break;
                         case '?':
-                            errorMessage = usage(argv[0]);
-                            return -1;
+                            usage(argv[0]);
+                            break;
                         case '9':
                             level = boost::lexical_cast<int>(optarg);
                             break;
@@ -268,7 +268,7 @@ int UrlCopyOpts::parse(int argc, char * const argv[])
                             break;
                         case 'y':
                             logDir = boost::lexical_cast<std::string>(optarg);
-                            break;			    
+                            break;
                         }
                 }
         }

@@ -10,7 +10,7 @@ public:
     static UrlCopyOpts& getInstance();
 
     int parse(int argc, char * const argv[]);
-    std::string usage(const std::string& bin);
+    void usage(const std::string& bin);
     std::string getErrorMessage();
 
     // Flags
