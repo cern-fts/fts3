@@ -80,13 +80,6 @@ using namespace FTS3_COMMON_NAMESPACE;
 using namespace db;
 using namespace FTS3_CONFIG_NAMESPACE;
 
-static std::string prepareMetadataString(std::string text)
-{
-    text = boost::replace_all_copy(text, " ", "?");
-    text = boost::replace_all_copy(text, "\"", "\\\"");
-    return text;
-}
-
 
 template
 <

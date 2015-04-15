@@ -71,11 +71,6 @@ public:
 
 private:
 
-    /**
-     * @return the metadata string
-     */
-    static string prepareMetadataString(std::string text);
-
     /// pairs that were already checked and were not scheduled
     set< pair<string, string> > notScheduled;
 
@@ -91,10 +86,6 @@ private:
 
     // DB interface
     GenericDbIfce* db;
-
-    /// url_copy command
-    static const std::string cmd;
-
 };
 
 } /* namespace server */

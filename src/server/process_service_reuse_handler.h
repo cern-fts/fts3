@@ -16,6 +16,7 @@ limitations under the License. */
 #pragma once
 
 #include "process_service_handler.h"
+#include "UrlCopyCmd.h"
 
 extern bool stopThreads;
 extern time_t retrieveRecords;
@@ -67,7 +68,7 @@ protected:
     using ProcessServiceHandler<TRAITS>::execPoolSize;
     using ProcessServiceHandler<TRAITS>::cmd;
 
-    void createJobFile(std::string job_id, std::vector<std::string>& files)
+    void writeJobFile(const std::string job_id, const std::vector<std::string>& files)
     {
         std::ofstream fout;
         try
@@ -85,6 +86,44 @@ protected:
             {
                 fout.close();
             }
+    }
+
+    std::map<int, std::string> generateJobFile(const std::string& job_id, const std::list<TransferFiles> files)
+    {
+        std::vector<std::string> urls;
+        std::map<int, std::string> fileIds;
+        std::ostringstream line;
+
+        for (auto it = files.begin(); it != files.end(); ++it)
+            {
+                PROFILE_SCOPE("executeUrlcopy::for[reuse]");
+
+                fileIds.insert(std::make_pair(it->FILE_ID, it->JOB_ID));
+
+                std::string fileMetadata = UrlCopyCmd::prepareMetadataString(it->FILE_METADATA);
+                if (fileMetadata.empty())
+                    fileMetadata = "x";
+
+                std::string bringOnlineToken = it->BRINGONLINE_TOKEN;
+                if (bringOnlineToken.empty())
+                    bringOnlineToken = "x";
+
+                std::string checksum = it->CHECKSUM;
+                if (checksum.empty())
+                    checksum = "x";
+
+                line << std::fixed << it->FILE_ID << " " << it->SOURCE_SURL << " " << it->DEST_SURL
+                                   << " " << checksum
+                                   << " " << boost::lexical_cast<long long>(it->USER_FILESIZE)
+                                   << " " << fileMetadata
+                                   << " " << bringOnlineToken;
+                urls.push_back(line.str());
+                line.str(std::string());
+            }
+
+        writeJobFile(job_id, urls);
+
+        return fileIds;
     }
 
     void getFiles( std::vector< boost::tuple<std::string, std::string, std::string> >& distinct)
@@ -116,349 +155,143 @@ protected:
 
     void startUrlCopy(std::string const & job_id, std::list<TransferFiles> const & files)
     {
-        std::string sourceSiteName;
-        std::string destSiteName;
+        GenericDbIfce *db = DBSingleton::instance().getDBObjectInstance();
+        UrlCopyCmd cmd_builder;
 
-        // since it is a single job those informations will be common for all files:
+        // Set parameters from the "representative", without using the source and destination url, and other data
+        // that is per transfer
         TransferFiles const & representative = files.front();
-        std::string vo = representative.VO_NAME;
-        std::string cred_id = representative.CRED_ID;
-        std::string dn = representative.DN;
-        std::string overwrite = representative.OVERWRITE;
-        std::string source_hostname = representative.SOURCE_SE;
-        std::string destin_hostname = representative.DEST_SE;
-        std::string source_space_token = representative.SOURCE_SPACE_TOKEN;
-        std::string dest_space_token = representative.DEST_SPACE_TOKEN;
-        int pinLifetime = representative.PIN_LIFETIME;
-        int bringOnline = representative.BRINGONLINE;
-        std::string jobMetadata = prepareMetadataString(representative.JOB_METADATA);
-        std::string checksumMethod = representative.CHECKSUM_METHOD;
-        std::string userCred = representative.USER_CREDENTIALS;
+        cmd_builder.setFromTransfer(representative, true);
 
-        bool multihop = representative.REUSE_JOB == "H";
+        // Generate the file containing the list of transfers
+        std::map<int, std::string> fileIds = generateJobFile(representative.JOB_ID, files);
 
-        int file_id = 0;
-        std::string checksum;
-        std::stringstream url;
-        std::string surl;
-        std::string durl;
-        double userFilesize = 0;
-        std::string fileMetadata;
-        std::string bringonlineToken;
-        std::map<int, std::string> fileIds;
-        std::vector<std::string> urls;
-        int level = 1;
-
-        std::list<TransferFiles>::const_iterator it;
-        for (it = files.begin(); it != files.end(); ++it)
-            {
-                PROFILE_SCOPE("executeUrlcopy::for[reuse]");
-                if (stopThreads) return;
-
-                TransferFiles const & temp = *it;
-
-                fileIds.insert(std::make_pair(temp.FILE_ID, temp.JOB_ID));
-
-                surl = temp.SOURCE_SURL;
-                durl = temp.DEST_SURL;
-                file_id = temp.FILE_ID;
-                userFilesize = temp.USER_FILESIZE;
-                fileMetadata = prepareMetadataString(temp.FILE_METADATA);
-                bringonlineToken = temp.BRINGONLINE_TOKEN;
-                checksum = temp.CHECKSUM;
-
-                if (fileMetadata.empty()) fileMetadata = "x";
-                if (bringonlineToken.empty()) bringonlineToken = "x";
-                if (checksum.empty()) checksum = "x";
-
-                url << std::fixed << file_id << " " << surl << " " << durl << " " << checksum << " " << boost::lexical_cast<long long>(userFilesize) << " " << fileMetadata << " " << bringonlineToken;
-                urls.push_back(url.str());
-                url.str("");
-            }
-
-        createJobFile(job_id, urls);
 
         /*check if manual config exist for this pair and vo*/
         vector< boost::shared_ptr<ShareConfig> > cfgs;
         ConfigurationAssigner cfgAssigner(representative);
         cfgAssigner.assign(cfgs);
 
-
-
         FileTransferScheduler scheduler(representative, cfgs);
         int currentActive = 0;
         if (!scheduler.schedule(currentActive)) return;   /*SET TO READY STATE WHEN TRUE*/
 
-        optional<ProtocolResolver::protocol> p = ProtocolResolver::getUserDefinedProtocol(representative);
+        optional<ProtocolResolver::protocol> user_protocol = ProtocolResolver::getUserDefinedProtocol(representative);
 
-        std::string params;
-        int BufSize = 0;
-        int StreamsperFile = 0;
-        int Timeout = 0;
-        bool StrictCopy = false;
-        bool manualProtocol = false;
-        bool userProtocol = false;
-
-        if (p)
+        if (user_protocol.is_initialized())
             {
-                BufSize = p->tcp_buffer_size;
-                StreamsperFile = p->nostreams;
-                Timeout = p->urlcopy_tx_to;
-                StrictCopy = p->strict_copy;
-                manualProtocol = true;
+                cmd_builder.setManualConfig(true);
+                cmd_builder.setFromProtocol(user_protocol.get());
             }
         else
             {
-                level  = DBSingleton::instance().getDBObjectInstance()->getBufferOptimization();
+                ProtocolResolver::protocol protocol;
+
+                int level = db->getBufferOptimization();
+                cmd_builder.setOptimizerLevel(level);
                 if(level == 2)
                     {
-                        StreamsperFile = DBSingleton::instance().getDBObjectInstance()->getStreamsOptimization(source_hostname, destin_hostname);
-                        if(StreamsperFile == 0)
-                            StreamsperFile = DEFAULT_NOSTREAMS;
+                        protocol.nostreams = db->getStreamsOptimization(representative.SOURCE_SE, representative.DEST_SE);
+                        if(protocol.nostreams == 0)
+                            protocol.nostreams = DEFAULT_NOSTREAMS;
                     }
                 else
                     {
-                        StreamsperFile = DEFAULT_NOSTREAMS;
+                        protocol.nostreams = DEFAULT_NOSTREAMS;
                     }
 
-                Timeout = DBSingleton::instance().getDBObjectInstance()->getGlobalTimeout();
-                if(Timeout == 0)
+                protocol.urlcopy_tx_to = db->getGlobalTimeout();
+                if(protocol.urlcopy_tx_to == 0)
                     {
-                        Timeout = DEFAULT_TIMEOUT;
+                        protocol.urlcopy_tx_to = DEFAULT_TIMEOUT;
                     }
                 else
                     {
-                        params.append(" -Z ");
-                        params.append(lexical_cast<string >(Timeout));
+                        cmd_builder.setGlobalTimeout(protocol.urlcopy_tx_to);
                     }
-                int secPerMB = DBSingleton::instance().getDBObjectInstance()->getSecPerMb();
+                int secPerMB = db->getSecPerMb();
                 if(secPerMB > 0)
                     {
-                        params.append(" -V ");
-                        params.append(lexical_cast<string >(secPerMB));
+                        cmd_builder.setSecondsPerMB(secPerMB);
                     }
-            }
 
-        bool isAutoTuned = false;
-        std::stringstream internalParams;
-        SeProtocolConfig protocol;
-        bool manualConfigExists = false;
+                cmd_builder.setFromProtocol(protocol);
+            }
 
         if (!cfgs.empty())
             {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Check link config for: " << source_hostname << " -> " << destin_hostname << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Check link config for: " << representative.SOURCE_SE << " -> " << representative.DEST_SE << commit;
                 ProtocolResolver resolver(representative, cfgs);
                 bool protocolExists = resolver.resolve();
                 if (protocolExists)
                     {
-                        manualConfigExists = true;
-                        protocol.NOSTREAMS = resolver.getNoStreams();
-                        protocol.NO_TX_ACTIVITY_TO = resolver.getNoTxActiveTo();
-                        protocol.TCP_BUFFER_SIZE = resolver.getTcpBufferSize();
-                        protocol.URLCOPY_TX_TO = resolver.getUrlCopyTxTo();
+                        cmd_builder.setManualConfig(true);
+                        ProtocolResolver::protocol protocol;
+
+                        protocol.nostreams = resolver.getNoStreams();
+                        protocol.no_tx_activity_to = resolver.getNoTxActiveTo();
+                        protocol.tcp_buffer_size = resolver.getTcpBufferSize();
+                        protocol.urlcopy_tx_to = resolver.getUrlCopyTxTo();
+
+                        cmd_builder.setFromProtocol(protocol);
                     }
 
                 if (resolver.isAuto())
                     {
-                        isAutoTuned = true;
+                        cmd_builder.setAutoTuned(true);
                     }
             }
 
         std::string proxy_file = get_proxy_cert(
-                                     dn, // user_dn
-                                     cred_id, // user_cred
-                                     vo, // vo_name
+                                     representative.DN, // user_dn
+                                     representative.CRED_ID, // user_cred
+                                     representative.VO_NAME, // vo_name
                                      "",
                                      "", // assoc_service
                                      "", // assoc_service_type
                                      false,
                                      "");
+        if (!proxy_file.empty())
+            cmd_builder.setProxy(proxy_file);
 
-        std::string oauth_file = fts3::generateOauthConfigFile(DBSingleton::instance().getDBObjectInstance(), representative);
+        std::string oauth_file = fts3::generateOauthConfigFile(db, representative);
+        if (!oauth_file.empty())
+            cmd_builder.setOAuthFile(oauth_file);
 
-        //send SUBMITTED message
+        // Send SUBMITTED message
         SingleTrStateInstance::instance().sendStateMessage(job_id, -1);
 
-        /*set all to ready, special case for session reuse*/
-        DBSingleton::instance().getDBObjectInstance()->updateFileStatusReuse(representative, "READY");
+        // Set all to ready, special case for session reuse
+        db->updateFileStatusReuse(representative, "READY");
 
-        /*these 3 must be the very first arguments, do not change, if more arguments needed just append in the end*/
-        /*START*/
-        params.append(" -a ");
-        params.append(job_id);
-
-        if (multihop)
-            params.append(" --multi-hop ");
-        else
-            params.append(" -G ");
-        /*END*/
-
-        unsigned debugLevel = DBSingleton::instance().getDBObjectInstance()->getDebugLevel(source_hostname, destin_hostname);
+        // Debug level
+        unsigned debugLevel = db->getDebugLevel(representative.SOURCE_SE, representative.DEST_SE);
         if (debugLevel > 0)
             {
-                params.append(" -debug=");
-                params.append(boost::lexical_cast<std::string>(debugLevel));
-                params.append(" ");
+                cmd_builder.setDebugLevel(debugLevel);
             }
 
-        if (StrictCopy)
-            {
-                params.append(" --strict-copy ");
-            }
+        // Enable monitoring?
+        cmd_builder.setMonitoring(monitoringMessages);
 
-        if (manualConfigExists || userProtocol)
-            {
-                params.append(" -N ");
-            }
+        // Infosystem
+        cmd_builder.setInfosystem(infosys);
 
-        if (isAutoTuned)
-            {
-                params.append(" -O ");
-            }
+        // FTS3 name
+        cmd_builder.setFTSName(ftsHostName);
 
-        if (monitoringMessages)
-            {
-                params.append(" -P ");
-            }
+        // Show user dn
+        cmd_builder.setShowUserDn(db->getUserDnVisible());
 
-        if (proxy_file.length() > 0)
-            {
-                params.append(" -proxy ");
-                params.append(proxy_file);
-            }
-
-        if (userCred.length() > 0)
-            {
-                params.append(" -oauth ");
-                params.append(oauth_file);
-            }
-
-        params.append(" -C ");
-        params.append(vo);
-        if (sourceSiteName.length() > 0)
-            {
-                params.append(" -D ");
-                params.append(sourceSiteName);
-            }
-        if (destSiteName.length() > 0)
-            {
-                params.append(" -E ");
-                params.append(destSiteName);
-            }
-        if (std::string(overwrite).length() > 0)
-            {
-                params.append(" -d ");
-            }
-
-        if (!manualConfigExists)
-            {
-                params.append(" -e ");
-                params.append(lexical_cast<string >(StreamsperFile));
-            }
-        else
-            {
-                if (protocol.NOSTREAMS >= 0)
-                    {
-                        params.append(" -e ");
-                        params.append(lexical_cast<string >(protocol.NOSTREAMS));
-                    }
-                else
-                    {
-                        params.append(" -e ");
-                        params.append(lexical_cast<string >(DEFAULT_NOSTREAMS));
-                    }
-            }
-
-        if (!manualConfigExists)
-            {
-                params.append(" --level ");
-                params.append(lexical_cast<string >(level));
-            }
-        else
-            {
-                if (protocol.TCP_BUFFER_SIZE >= 0)
-                    {
-                        params.append(" -f ");
-                        params.append(lexical_cast<string >(protocol.TCP_BUFFER_SIZE));
-                    }
-                else
-                    {
-                        params.append(" -f ");
-                        params.append(lexical_cast<string >(DEFAULT_BUFFSIZE));
-                    }
-            }
-
-        if (!manualConfigExists)
-            {
-                params.append(" -h ");
-                params.append(lexical_cast<string >(Timeout));
-            }
-        else
-            {
-                if (protocol.URLCOPY_TX_TO >= 0)
-                    {
-                        params.append(" -h ");
-                        params.append(lexical_cast<string >(protocol.URLCOPY_TX_TO));
-                    }
-                else
-                    {
-                        params.append(" -h ");
-                        params.append(lexical_cast<string >(DEFAULT_TIMEOUT));
-                    }
-            }
-
-        if (std::string(source_space_token).length() > 0)
-            {
-                params.append(" -k ");
-                params.append(source_space_token);
-            }
-        if (std::string(dest_space_token).length() > 0)
-            {
-                params.append(" -j ");
-                params.append(dest_space_token);
-            }
-
-        if (pinLifetime > 0)
-            {
-                params.append(" -t ");
-                params.append(boost::lexical_cast<std::string > (pinLifetime));
-            }
-
-        if (bringOnline > 0)
-            {
-                params.append(" -H ");
-                params.append(boost::lexical_cast<std::string > (bringOnline));
-            }
-
-        if (jobMetadata.length() > 0)
-            {
-                params.append(" -J ");
-                params.append(jobMetadata);
-            }
-
-        if (std::string(checksumMethod).length() > 0)
-            {
-                params.append(" -A ");
-                params.append(checksumMethod);
-            }
-
-        params.append(" -M ");
-        params.append(infosys);
-
-        params.append(" -7 ");
-        params.append(ftsHostName);
-
-        params.append(" -Y ");
-        params.append(prepareMetadataString(dn));
-
-        params.append(" -2 ");
-        params.append(lexical_cast<string >(currentActive));
+        // Current number of actives
+        cmd_builder.setNumberOfActive(currentActive);
 
 
-        bool ready = DBSingleton::instance().getDBObjectInstance()->isFileReadyStateV(fileIds);
+        bool ready = db->isFileReadyStateV(fileIds);
 
         if (ready)
             {
+                std::string params = cmd_builder.generateParameters();
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd << " " << params << commit;
                 ExecuteProcess pr(cmd, params);
                 /*check if fork failed , check if execvp failed, */
@@ -468,17 +301,17 @@ protected:
                         if(forkMessage.empty())
                             {
                                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to spawn " << commit;
-                                DBSingleton::instance().getDBObjectInstance()->forkFailedRevertStateV(fileIds);
+                                db->forkFailedRevertStateV(fileIds);
                             }
                         else
                             {
                                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to spawn " << forkMessage << commit;
-                                DBSingleton::instance().getDBObjectInstance()->forkFailedRevertStateV(fileIds);
+                                db->forkFailedRevertStateV(fileIds);
                             }
                     }
                 else
                     {
-                        DBSingleton::instance().getDBObjectInstance()->setPidV(pr.getPid(), fileIds);
+                        db->setPidV(pr.getPid(), fileIds);
                     }
                 std::map<int, std::string>::const_iterator iterFileIds;
                 for (iterFileIds = fileIds.begin(); iterFileIds != fileIds.end(); ++iterFileIds)
