@@ -202,9 +202,27 @@ void UrlCopyCmd::setFromTransfer(const TransferFiles& transfer, bool is_multiple
 
 void UrlCopyCmd::setFromProtocol(const ProtocolResolver::protocol& protocol)
 {
-    setOption("nstreams", protocol.nostreams);
-    setOption("timeout", protocol.urlcopy_tx_to);
-    setOption("tcp-buffersize", protocol.tcp_buffer_size);
+    if (protocol.nostreams >= 0) {
+        setOption("nstreams", protocol.nostreams);
+    }
+    else {
+        setOption("nstreams", DEFAULT_NOSTREAMS);
+    }
+
+    if (protocol.urlcopy_tx_to >= 0) {
+        setOption("timeout", protocol.urlcopy_tx_to);
+    }
+    else {
+        setOption("timeout", DEFAULT_TIMEOUT);
+    }
+
+    if (protocol.tcp_buffer_size > 0) {
+        setOption("tcp-buffersize", protocol.tcp_buffer_size);
+    }
+    else {
+        setOption("tcp-buffersize", DEFAULT_BUFFSIZE);
+    }
+
     setFlag("strict-copy", protocol.strict_copy);
 }
 
