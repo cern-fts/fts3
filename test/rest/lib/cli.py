@@ -79,8 +79,14 @@ class Cli:
         return state
 
 
-    def cancel(self, jobId):
-        cmdArray = ['fts-rest-transfer-cancel', '-s', config.Fts3Endpoint, jobId]
+    def cancel(self, jobId, fileIds=None):
+        if fileIds:
+            cmdArray = [
+                'fts-rest-transfer-cancel', '-s', config.Fts3Endpoint,
+                "%s:%s" % (jobId, ','.join(map(str, fileIds)))
+            ]
+        else:
+            cmdArray = ['fts-rest-transfer-cancel', '-s', config.Fts3Endpoint, jobId]
         self._spawn(cmdArray)
 
 
@@ -96,6 +102,13 @@ class Cli:
             pairDict[(src,dst)] = f
         return pairDict
 
+
+    def getFileIds(self, jobId):
+        cmdArray = ['fts-rest-transfer-status', '-s', config.Fts3Endpoint, '-j', jobId]
+        out =  self._spawn(cmdArray)
+        job = json.loads(out)
+        return map(lambda f: f['file_id'], job['files'])
+    
 
     def redelegate(self, force = False):
         cmdArray = ['fts-rest-delegate', '-v', '-s', config.Fts3Endpoint]

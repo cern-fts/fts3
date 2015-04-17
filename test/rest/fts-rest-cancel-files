@@ -1,0 +1,51 @@
+#!/usr/bin/env python
+# meta: proxy=true
+# meta: preconfig=../FTS3-config
+import itertools
+import logging
+from lib import base, storage
+
+
+class TestCancelFiles(base.TestRepeatEach):
+    
+    def setUp(self):
+        # Need to create three sources and three destinations
+        self.transfers = []
+        for (srcSa, dstSa) in storage.getStoragePairs():
+            pairs = []
+            for i in range(3):
+                s = self.surl.generate(srcSa)
+                d = self.surl.generate(dstSa)
+                pairs.append((s, d))
+            self.transfers.append(pairs)
+            
+    def iterations(self):
+        for t in self.transfers:
+            t_repr = "%s => %s" % (t[0][0].split(':')[0], t[0][1].split(':')[0])
+            yield (t_repr, t)
+
+    def test_cancelSingleFile(self, transfer):
+        """
+        Cancel one file within a job with multiple files
+        """
+        files = []
+        for (src, dst) in transfer:
+            logging.info("%s => %s" % (src, dst))
+            self.surl.create(src)
+            files.append({'sources': [src], 'destinations': [dst]})
+
+        jobId = self.client.submit(files)
+        logging.info("Got job id %s" % jobId)
+        
+        fileIds = self.client.getFileIds(jobId)
+        logging.info("Cancelling %s:%d" % (jobId, fileIds[-1]))
+        self.client.cancel(jobId, [fileIds[-1]])
+        
+        state = self.client.poll(jobId)
+        logging.info("Job %s finished with %s" % (jobId, state))
+        self.assertEqual('CANCELED', state, 'job.state')
+
+
+if __name__ == '__main__':
+      import sys
+      sys.exit(TestCancelFiles().run())
