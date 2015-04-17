@@ -4418,7 +4418,7 @@ bool OracleAPI::updateOptimizer()
                                 }
                             else
                                 {
-                                    updateOptimizerEvolution(sql, source_hostname, destin_hostname, maxActive, throughput, ratioSuccessFailure, 14, bandwidthIn);
+                                    updateOptimizerEvolution(sql, source_hostname, destin_hostname, maxActive, throughput, ratioSuccessFailure, 15, bandwidthIn);
                                     continue;
                                 }
 
