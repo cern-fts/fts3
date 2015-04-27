@@ -89,21 +89,19 @@ public:
 
     void cancelAllJobs(const std::string& voName, std::vector<std::string>& canceledJobs);
 
-    bool insertGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs);
+    bool insertCredentialCache(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs);
 
-    void updateGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs);
+    CredCache* findCredentialCache(std::string delegationID, std::string dn);
 
-    CredCache* findGrDPStorageCacheElement(std::string delegationID, std::string dn);
+    void deleteCredentialCache(std::string delegationID, std::string dn);
 
-    void deleteGrDPStorageCacheElement(std::string delegationID, std::string dn);
+    void insertCredential(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time);
 
-    void insertGrDPStorageElement(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time);
+    void updateCredential(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time);
 
-    void updateGrDPStorageElement(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time);
+    Cred* findCredential(std::string delegationID, std::string dn);
 
-    Cred* findGrDPStorageElement(std::string delegationID, std::string dn);
-
-    void deleteGrDPStorageElement(std::string delegationID, std::string dn);
+    void deleteCredential(std::string delegationID, std::string dn);
 
     unsigned getDebugLevel(std::string source_hostname, std::string destin_hostname);
 

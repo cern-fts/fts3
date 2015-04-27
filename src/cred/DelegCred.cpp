@@ -77,7 +77,7 @@ void DelegCred::getNewCertificate(const std::string& userDn, const std::string& 
     try
         {
             // Get the Cred Id
-            cred = DBSingleton::instance().getDBObjectInstance()->findGrDPStorageElement(cred_id,userDn);
+            cred = DBSingleton::instance().getDBObjectInstance()->findCredential(cred_id, userDn);
 
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Get the Cred Id " << cred_id << " " << userDn << commit;
 

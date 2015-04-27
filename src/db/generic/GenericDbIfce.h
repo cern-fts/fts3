@@ -158,21 +158,19 @@ public:
     virtual void cancelAllJobs(const std::string& voName, std::vector<std::string>& canceledJobs) = 0;
 
     /*t_credential API*/
-    virtual bool insertGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs) = 0;
+    virtual bool insertCredentialCache(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs) = 0;
 
-    virtual void updateGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs) = 0;
+    virtual CredCache* findCredentialCache(std::string delegationID, std::string dn) = 0;
 
-    virtual CredCache* findGrDPStorageCacheElement(std::string delegationID, std::string dn) = 0;
+    virtual void deleteCredentialCache(std::string delegationID, std::string dn) = 0;
 
-    virtual void deleteGrDPStorageCacheElement(std::string delegationID, std::string dn) = 0;
+    virtual void insertCredential(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time) = 0;
 
-    virtual void insertGrDPStorageElement(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time) = 0;
+    virtual void updateCredential(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time) = 0;
 
-    virtual void updateGrDPStorageElement(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time) = 0;
+    virtual  Cred* findCredential(std::string delegationID, std::string dn) = 0;
 
-    virtual  Cred* findGrDPStorageElement(std::string delegationID, std::string dn) = 0;
-
-    virtual void deleteGrDPStorageElement(std::string delegationID, std::string dn) = 0;
+    virtual void deleteCredential(std::string delegationID, std::string dn) = 0;
 
     virtual unsigned getDebugLevel(std::string source_hostname, std::string destin_hostname) = 0;
 

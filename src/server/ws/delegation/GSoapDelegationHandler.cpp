@@ -152,7 +152,7 @@ string GSoapDelegationHandler::getProxyReq(string delegationId)
 
     // check if the public - private key pair has been already generated and is in the DB cache
     scoped_ptr<CredCache> cache (
-        DBSingleton::instance().getDBObjectInstance()->findGrDPStorageCacheElement(delegationId, dn)
+        DBSingleton::instance().getDBObjectInstance()->findCredentialCache(delegationId, dn)
     );
 
     if (cache.get())
@@ -175,7 +175,7 @@ string GSoapDelegationHandler::getProxyReq(string delegationId)
 
     try
         {
-            bool inserted = DBSingleton::instance().getDBObjectInstance()->insertGrDPStorageCacheElement(
+            bool inserted = DBSingleton::instance().getDBObjectInstance()->insertCredentialCache(
                                 delegationId,
                                 dn,
                                 req,
@@ -187,7 +187,7 @@ string GSoapDelegationHandler::getProxyReq(string delegationId)
                 {
                     // double check if the public - private key pair has been already generated and is in the DB cache
                     cache.reset(
-                        DBSingleton::instance().getDBObjectInstance()->findGrDPStorageCacheElement(delegationId, dn)
+                        DBSingleton::instance().getDBObjectInstance()->findCredentialCache(delegationId, dn)
                     );
 
                     if (cache.get())
@@ -232,7 +232,7 @@ delegation__NewProxyReq* GSoapDelegationHandler::getNewProxyReq()
     if (delegationId.empty()) throw Err_Custom("'getDelegationId' failed!");
 
     scoped_ptr<CredCache> cache (
-        DBSingleton::instance().getDBObjectInstance()->findGrDPStorageCacheElement(delegationId, dn)
+        DBSingleton::instance().getDBObjectInstance()->findCredentialCache(delegationId, dn)
     );
 
     if (cache.get())
@@ -259,7 +259,7 @@ delegation__NewProxyReq* GSoapDelegationHandler::getNewProxyReq()
 
     try
         {
-            DBSingleton::instance().getDBObjectInstance()->insertGrDPStorageCacheElement(
+            DBSingleton::instance().getDBObjectInstance()->insertCredentialCache(
                 delegationId,
                 dn,
                 req,
@@ -417,7 +417,7 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy)
                 }
 
             scoped_ptr<CredCache> cache (
-                DBSingleton::instance().getDBObjectInstance()->findGrDPStorageCacheElement(delegationId, dn)
+                DBSingleton::instance().getDBObjectInstance()->findCredentialCache(delegationId, dn)
             );
 
             // if the DB cache is empty it means someone else
@@ -432,7 +432,7 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy)
             proxy = addKeyToProxyCertificate(proxy, cache->privateKey);
 
             scoped_ptr<Cred> cred (
-                DBSingleton::instance().getDBObjectInstance()->findGrDPStorageElement(delegationId, dn)
+                DBSingleton::instance().getDBObjectInstance()->findCredential(delegationId, dn)
             );
 
             try
@@ -453,7 +453,7 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy)
                                     return;
                                 }
 
-                            DBSingleton::instance().getDBObjectInstance()->updateGrDPStorageElement(
+                            DBSingleton::instance().getDBObjectInstance()->updateCredential(
                                 delegationId,
                                 dn,
                                 proxy,
@@ -463,7 +463,7 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy)
                         }
                     else
                         {
-                            DBSingleton::instance().getDBObjectInstance()->insertGrDPStorageElement(
+                            DBSingleton::instance().getDBObjectInstance()->insertCredential(
                                 delegationId,
                                 dn,
                                 proxy,
@@ -483,7 +483,7 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy)
                 }
 
             // clear the DB cache
-            DBSingleton::instance().getDBObjectInstance()->deleteGrDPStorageCacheElement(delegationId, dn);
+            DBSingleton::instance().getDBObjectInstance()->deleteCredentialCache(delegationId, dn);
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " t_credential_cache has been cleared" << commit;
         }
     catch(Err& ex)
@@ -510,7 +510,7 @@ string GSoapDelegationHandler::renewProxyReq(string delegationId)
             if (delegationId.empty()) throw Err_Custom("'handleDelegationId' failed!");
 
             scoped_ptr<CredCache> cache (
-                DBSingleton::instance().getDBObjectInstance()->findGrDPStorageCacheElement(delegationId, dn)
+                DBSingleton::instance().getDBObjectInstance()->findCredentialCache(delegationId, dn)
             );
 
             if(cache.get())
@@ -532,7 +532,7 @@ string GSoapDelegationHandler::renewProxyReq(string delegationId)
 
             try
                 {
-                    DBSingleton::instance().getDBObjectInstance()->insertGrDPStorageCacheElement(
+                    DBSingleton::instance().getDBObjectInstance()->insertCredentialCache(
                         delegationId,
                         dn,
                         req,
@@ -579,7 +579,7 @@ time_t GSoapDelegationHandler::getTerminationTime(string delegationId)
 
             time_t time;
             scoped_ptr<Cred> cred (
-                DBSingleton::instance().getDBObjectInstance()->findGrDPStorageElement(delegationId, dn)
+                DBSingleton::instance().getDBObjectInstance()->findCredential(delegationId, dn)
             );
 
             if (cred.get())
@@ -611,8 +611,8 @@ void GSoapDelegationHandler::destroy(string delegationId)
 
     try
         {
-            DBSingleton::instance().getDBObjectInstance()->deleteGrDPStorageCacheElement(delegationId, dn);
-            DBSingleton::instance().getDBObjectInstance()->deleteGrDPStorageElement(delegationId, dn);
+            DBSingleton::instance().getDBObjectInstance()->deleteCredentialCache(delegationId, dn);
+            DBSingleton::instance().getDBObjectInstance()->deleteCredential(delegationId, dn);
         }
     catch(Err& ex)
         {

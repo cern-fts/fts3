@@ -113,21 +113,19 @@ public:
     virtual void cancelAllJobs(const std::string& voName, std::vector<std::string>& canceledJobs);
 
     /*t_credential API*/
-    virtual bool insertGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs);
+    virtual bool insertCredentialCache(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs);
 
-    virtual void updateGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs);
+    virtual CredCache* findCredentialCache(std::string delegationID, std::string dn);
 
-    virtual CredCache* findGrDPStorageCacheElement(std::string delegationID, std::string dn);
+    virtual void deleteCredentialCache(std::string delegationID, std::string dn);
 
-    virtual void deleteGrDPStorageCacheElement(std::string delegationID, std::string dn);
+    virtual void insertCredential(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time);
 
-    virtual void insertGrDPStorageElement(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time);
+    virtual void updateCredential(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time);
 
-    virtual void updateGrDPStorageElement(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time);
+    virtual  Cred* findCredential(std::string delegationID, std::string dn);
 
-    virtual  Cred* findGrDPStorageElement(std::string delegationID, std::string dn);
-
-    virtual void deleteGrDPStorageElement(std::string delegationID, std::string dn);
+    virtual void deleteCredential(std::string delegationID, std::string dn);
 
     virtual unsigned getDebugLevel(std::string source_hostname, std::string destin_hostname);
 

@@ -158,51 +158,45 @@ void ProfiledDB::cancelAllJobs(const std::string& voName, std::vector<std::strin
 }
 
 
-bool ProfiledDB::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs)
+bool ProfiledDB::insertCredentialCache(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs)
 {
-    PROFILE_PREFIXED("DB::", return db->insertGrDPStorageCacheElement(dlg_id, dn, cert_request, priv_key, voms_attrs));
+    PROFILE_PREFIXED("DB::", return db->insertCredentialCache(dlg_id, dn, cert_request, priv_key, voms_attrs));
 }
 
 
-void ProfiledDB::updateGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs)
+CredCache* ProfiledDB::findCredentialCache(std::string delegationID, std::string dn)
 {
-    PROFILE_PREFIXED("DB::", db->updateGrDPStorageCacheElement(dlg_id, dn, cert_request, priv_key, voms_attrs));
+    PROFILE_PREFIXED("DB::", return db->findCredentialCache(delegationID, dn));
 }
 
 
-CredCache* ProfiledDB::findGrDPStorageCacheElement(std::string delegationID, std::string dn)
+void ProfiledDB::deleteCredentialCache(std::string delegationID, std::string dn)
 {
-    PROFILE_PREFIXED("DB::", return db->findGrDPStorageCacheElement(delegationID, dn));
+    PROFILE_PREFIXED("DB::", db->deleteCredentialCache(delegationID, dn));
 }
 
 
-void ProfiledDB::deleteGrDPStorageCacheElement(std::string delegationID, std::string dn)
+void ProfiledDB::insertCredential(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time)
 {
-    PROFILE_PREFIXED("DB::", db->deleteGrDPStorageCacheElement(delegationID, dn));
+    PROFILE_PREFIXED("DB::", db->insertCredential(dlg_id, dn, proxy, voms_attrs, termination_time));
 }
 
 
-void ProfiledDB::insertGrDPStorageElement(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time)
+void ProfiledDB::updateCredential(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time)
 {
-    PROFILE_PREFIXED("DB::", db->insertGrDPStorageElement(dlg_id, dn, proxy, voms_attrs, termination_time));
+    PROFILE_PREFIXED("DB::", db->updateCredential(dlg_id, dn, proxy, voms_attrs, termination_time));
 }
 
 
-void ProfiledDB::updateGrDPStorageElement(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time)
+Cred* ProfiledDB::findCredential(std::string delegationID, std::string dn)
 {
-    PROFILE_PREFIXED("DB::", db->updateGrDPStorageElement(dlg_id, dn, proxy, voms_attrs, termination_time));
+    PROFILE_PREFIXED("DB::", return db->findCredential(delegationID, dn));
 }
 
 
-Cred* ProfiledDB::findGrDPStorageElement(std::string delegationID, std::string dn)
+void ProfiledDB::deleteCredential(std::string delegationID, std::string dn)
 {
-    PROFILE_PREFIXED("DB::", return db->findGrDPStorageElement(delegationID, dn));
-}
-
-
-void ProfiledDB::deleteGrDPStorageElement(std::string delegationID, std::string dn)
-{
-    PROFILE_PREFIXED("DB::", db->deleteGrDPStorageElement(delegationID, dn));
+    PROFILE_PREFIXED("DB::", db->deleteCredential(delegationID, dn));
 }
 
 

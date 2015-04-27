@@ -3682,7 +3682,7 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
 
 
 /*t_credential API*/
-bool MySqlAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs)
+bool MySqlAPI::insertCredentialCache(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs)
 {
     soci::session sql(*connectionPool);
 
@@ -3722,56 +3722,7 @@ bool MySqlAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn,
 
 
 
-void MySqlAPI::updateGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs)
-{
-    soci::session sql(*connectionPool);
-
-    try
-    {
-        soci::statement stmt(sql);
-
-        stmt.exchange(soci::use(cert_request, "certRequest"));
-        stmt.exchange(soci::use(priv_key, "privKey"));
-        stmt.exchange(soci::use(voms_attrs, "vomsAttrs"));
-        stmt.exchange(soci::use(dlg_id, "dlgId"));
-        stmt.exchange(soci::use(dn, "dn"));
-
-        stmt.alloc();
-
-        stmt.prepare("UPDATE t_credential_cache SET "
-                     "    cert_request = :certRequest, "
-                     "    priv_key = :privKey, "
-                     "    voms_attrs = :vomsAttrs "
-                     "WHERE dlg_id = :dlgId AND dn=:dn");
-
-        stmt.define_and_bind();
-
-        sql.begin();
-        stmt.execute(true);
-        if (stmt.get_affected_rows() == 0)
-        {
-            std::ostringstream msg;
-            msg << "No entries updated in t_credential_cache! "
-                << dn << " (" << dlg_id << ")";
-            throw Err_Custom(msg.str());
-        }
-        sql.commit();
-    }
-    catch (std::exception& e)
-    {
-        sql.rollback();
-        throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
-    }
-    catch (...)
-    {
-        sql.rollback();
-        throw Err_Custom(std::string(__func__) + ": Caught exception ");
-    }
-}
-
-
-
-CredCache* MySqlAPI::findGrDPStorageCacheElement(std::string delegationID, std::string dn)
+CredCache* MySqlAPI::findCredentialCache(std::string delegationID, std::string dn)
 {
     CredCache* cred = NULL;
     soci::session sql(*connectionPool);
@@ -3807,7 +3758,7 @@ CredCache* MySqlAPI::findGrDPStorageCacheElement(std::string delegationID, std::
 
 
 
-void MySqlAPI::deleteGrDPStorageCacheElement(std::string delegationID, std::string dn)
+void MySqlAPI::deleteCredentialCache(std::string delegationID, std::string dn)
 {
     soci::session sql(*connectionPool);
 
@@ -3832,7 +3783,7 @@ void MySqlAPI::deleteGrDPStorageCacheElement(std::string delegationID, std::stri
 
 
 
-void MySqlAPI::insertGrDPStorageElement(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time)
+void MySqlAPI::insertCredential(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time)
 {
     soci::session sql(*connectionPool);
 
@@ -3862,7 +3813,7 @@ void MySqlAPI::insertGrDPStorageElement(std::string dlg_id, std::string dn, std:
 
 
 
-void MySqlAPI::updateGrDPStorageElement(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time)
+void MySqlAPI::updateCredential(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time)
 {
     soci::session sql(*connectionPool);
 
@@ -3897,7 +3848,7 @@ void MySqlAPI::updateGrDPStorageElement(std::string dlg_id, std::string dn, std:
 
 
 
-Cred* MySqlAPI::findGrDPStorageElement(std::string delegationID, std::string dn)
+Cred* MySqlAPI::findCredential(std::string delegationID, std::string dn)
 {
     Cred* cred = NULL;
     soci::session sql(*connectionPool);
@@ -3935,7 +3886,7 @@ Cred* MySqlAPI::findGrDPStorageElement(std::string delegationID, std::string dn)
 
 
 
-void MySqlAPI::deleteGrDPStorageElement(std::string delegationID, std::string dn)
+void MySqlAPI::deleteCredential(std::string delegationID, std::string dn)
 {
     soci::session sql(*connectionPool);
 

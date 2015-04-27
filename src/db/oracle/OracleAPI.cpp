@@ -3249,7 +3249,7 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs)
 
 
 /*t_credential API*/
-bool OracleAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs)
+bool OracleAPI::insertCredentialCache(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs)
 {
     soci::session sql(*connectionPool);
 
@@ -3290,57 +3290,7 @@ bool OracleAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn
 
 
 
-void OracleAPI::updateGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs)
-{
-    soci::session sql(*connectionPool);
-
-    try
-        {
-            soci::statement stmt(sql);
-
-            stmt.exchange(soci::use(dlg_id, "dlgId"));
-            stmt.exchange(soci::use(dn, "dn"));
-            stmt.exchange(soci::use(cert_request, "certRequest"));
-            stmt.exchange(soci::use(priv_key, "privKey"));
-            stmt.exchange(soci::use(voms_attrs, "vomsAttrs"));
-
-            stmt.alloc();
-
-            stmt.prepare("UPDATE t_credential_cache SET "
-                         "    dlg_id = :dlgId, dn = :dn, " // Workaround for ORA-24816
-                         "    cert_request = :certRequest, "
-                         "    priv_key = :privKey, "
-                         "    voms_attrs = :vomsAttrs "
-                         "WHERE dlg_id = :dlgId AND dn=:dn");
-
-            stmt.define_and_bind();
-
-            sql.begin();
-            stmt.execute(true);
-            if (stmt.get_affected_rows() == 0)
-                {
-                    std::ostringstream msg;
-                    msg << "No entries updated in t_credential_cache! "
-                        << dn << " (" << dlg_id << ")";
-                    throw Err_Custom(msg.str());
-                }
-            sql.commit();
-        }
-    catch (std::exception& e)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
-        }
-    catch (...)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }
-}
-
-
-
-CredCache* OracleAPI::findGrDPStorageCacheElement(std::string delegationID, std::string dn)
+CredCache* OracleAPI::findCredentialCache(std::string delegationID, std::string dn)
 {
     CredCache* cred = NULL;
     soci::session sql(*connectionPool);
@@ -3376,7 +3326,7 @@ CredCache* OracleAPI::findGrDPStorageCacheElement(std::string delegationID, std:
 
 
 
-void OracleAPI::deleteGrDPStorageCacheElement(std::string delegationID, std::string dn)
+void OracleAPI::deleteCredentialCache(std::string delegationID, std::string dn)
 {
     soci::session sql(*connectionPool);
 
@@ -3401,7 +3351,7 @@ void OracleAPI::deleteGrDPStorageCacheElement(std::string delegationID, std::str
 
 
 
-void OracleAPI::insertGrDPStorageElement(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time)
+void OracleAPI::insertCredential(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time)
 {
     soci::session sql(*connectionPool);
 
@@ -3431,7 +3381,7 @@ void OracleAPI::insertGrDPStorageElement(std::string dlg_id, std::string dn, std
 
 
 
-void OracleAPI::updateGrDPStorageElement(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time)
+void OracleAPI::updateCredential(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time)
 {
     soci::session sql(*connectionPool);
 
@@ -3468,7 +3418,7 @@ void OracleAPI::updateGrDPStorageElement(std::string dlg_id, std::string dn, std
 
 
 
-Cred* OracleAPI::findGrDPStorageElement(std::string delegationID, std::string dn)
+Cred* OracleAPI::findCredential(std::string delegationID, std::string dn)
 {
     Cred* cred = NULL;
     soci::session sql(*connectionPool);
@@ -3506,7 +3456,7 @@ Cred* OracleAPI::findGrDPStorageElement(std::string delegationID, std::string dn
 
 
 
-void OracleAPI::deleteGrDPStorageElement(std::string delegationID, std::string dn)
+void OracleAPI::deleteCredential(std::string delegationID, std::string dn)
 {
     soci::session sql(*connectionPool);
 

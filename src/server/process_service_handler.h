@@ -242,7 +242,7 @@ protected:
                                                 // check the proxy lifetime in DB
                                                 time_t db_lifetime = -1;
                                                 boost::scoped_ptr<Cred> cred (DBSingleton::instance().getDBObjectInstance()->
-                                                                              findGrDPStorageElement(tf.CRED_ID, tf.DN)
+                                                                              findCredential(tf.CRED_ID, tf.DN)
                                                                              );
                                                 if (cred.get()) db_lifetime = cred->termination_time - time(NULL);
                                                 // check the proxy lifetime in filesystem
