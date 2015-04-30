@@ -58,7 +58,7 @@ void handler(int sig)
                 {
                     ret = myQueue.front();
                     myQueue.pop();
-                    send_message(ret);
+                    restoreMessageToDisk(ret);
                 }
             sleep(5);
             exit(0);
@@ -140,6 +140,6 @@ void MsgPipe::cleanup()
         {
             ret = myQueue.front();
             myQueue.pop();
-            send_message(ret);
+            restoreMessageToDisk(ret);
         }
 }
