@@ -100,12 +100,13 @@ void MsgPipe::run()
                         }
 
                     int returnValue = runConsumerMonitoring(messages);
-		    if(returnValue != 0)
-		    {
-		    	 errorMessage = "MSG_ERROR thrown in msg pipe " + boost::lexical_cast<std::string>(returnValue);                    
-	                 logger::writeLog(errorMessage);
-		    }
-		    
+                    if(returnValue != 0)
+                    {
+                        std::ostringstream errorMessage;
+                        errorMessage << "runConsumerMonitoring returned " << returnValue;
+                        LOGGER_ERROR(errorMessage.str());
+                    }
+
                     if(!messages.empty())
                         {
                             for (iter = messages.begin(); iter != messages.end(); ++iter)
@@ -118,16 +119,14 @@ void MsgPipe::run()
                 }
             catch (const fs::filesystem_error& ex)
                 {
- 		    errorMessage = "MSG_ERROR ex thrown in msg pipe " + std::string(ex.what());
+                    LOGGER_ERROR(ex.what());
                     cleanup();
-                    logger::writeLog(errorMessage);
                     sleep(1);
                 }
             catch (...)
                 {
-                    errorMessage = "MSG_ERROR ex thrown in msg pipe";
+                    LOGGER_ERROR("Unexpected exception");
                     cleanup();
-                    logger::writeLog(errorMessage);
                     sleep(1);
                 }
         }

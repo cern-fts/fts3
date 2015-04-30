@@ -62,9 +62,6 @@ using namespace FTS3_COMMON_NAMESPACE;
 
 class MsgPipe : public Runnable
 {
-private:
-    std::string errorMessage;
-
 public:
     MsgPipe();
     virtual ~MsgPipe();

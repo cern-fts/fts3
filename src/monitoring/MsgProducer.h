@@ -69,7 +69,6 @@ private:
 
     std::string logfilename;
     std::string logfilepath;
-    std::string errorMessage;
     bool getConnection();
     void readConfig();
 
