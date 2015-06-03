@@ -23,9 +23,11 @@ set(VERSION_MINOR 2)
 set(VERSION_PATCH 34)
 set(VERSION_STRING ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 
-FILE(WRITE ${PROJECT_SOURCE_DIR}/src/common/version.h
-"\#define VERSION \"@VERSION_STRING@\"\n"
+file(
+    WRITE ${CMAKE_BINARY_DIR}/src/common/version.h
+    "\#define VERSION \"@VERSION_STRING@\"\n"
 )
+include_directories("${CMAKE_BINARY_DIR}/src/common/")
 
 option(ALLBUILD "Build fts all including db plug-ins" OFF)
 
