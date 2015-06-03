@@ -1,0 +1,38 @@
+<h2>Limit configuration</h2>
+
+<pagination rotate="false"
+    page="limits.page" total-items="limits.count" items-per-page="limits.pageSize"
+    max-size="15" class="pagination" boundary-links="true"
+    on-select-page="pageChanged(page)"></pagination>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                <span data-order-by="source_se">Source</span>
+            </th>
+            <th>
+                <span data-order-by="dest_se">Destination</span>
+            </th>
+            <th>
+                <span data-order-by="active">Max. Active</span>
+            </th>
+            <th>
+                <span data-order-by="bandwidth">Max. Bandwidth</span>
+            </th>
+        </tr>
+    </thead>
+    <tbody data-ng-repeat="limit in limits.items" data-ng-class-odd="'odd'">
+        <tr>
+            <td>{{ limit.source_se }}</td>
+            <td>{{ limit.dest_se }}</td>
+            <td>{{ limit.active }}</td>
+            <td><span data-optional-number="{{limit.bandwidth}}" data-digits="2" data-suffix="MB/s"></span></td>
+        </tr>
+    </tbody>
+</table>
+
+<pagination rotate="false"
+    page="limits.page" total-items="limits.count" items-per-page="limits.pageSize"
+    max-size="15" class="pagination" boundary-links="true"
+    on-select-page="pageChanged(page)"></pagination>

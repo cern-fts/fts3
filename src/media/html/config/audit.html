@@ -1,0 +1,67 @@
+<h2>
+    Configuration audit
+    <button class="btn btn-mini btn-info" type="button" data-ng-click="showFilterDialog()">Filter</button>
+</h2>
+
+<pagination rotate="false"
+    page="config.page" total-items="config.count" items-per-page="config.pageSize"
+    max-size="15" class="pagination" boundary-links="true"
+    on-select-page="pageChanged(page)"></pagination>
+
+<table class="table audit">
+    <thead>
+        <tr>
+            <th style="width: 7%">Action</th>
+            <th style="width: 45%">Configuration</th>
+            <th style="width: 15%">Time</th>
+            <th style="width: 33%">User</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr data-ng-repeat="c in config.items track by $index" data-ng-class-odd="'odd'" data-ng-class="c.action">
+            <td>{{c.action}}</td>
+            <td>{{c.config}}</td>
+            <td>{{c.datetime}}</td>
+            <td>{{c.dn}}</td>
+        </tr>
+    </tbody>
+</table>
+
+<pagination rotate="false"
+    page="config.page" total-items="config.count" items-per-page="config.pageSize"
+    max-size="15" class="pagination" boundary-links="true"
+    on-select-page="pageChanged(page)"></pagination>
+
+<!-- Modals -->
+<div id="filterDialog" class="modal" role="dialog" style="display: none">
+    <form data-ng-submit="applyFilters(filter)" autocomplete="off">
+        <div class="modal-header">
+            <h3>Filters</h3>
+        </div>
+        <div class="modal-body">
+            <label for="action">Action:</label>
+            <select id="action" data-ng-model="filter.action">
+                <option value="">-- All actions--</option>
+                <option>insert</option>
+                <option>update</option>
+                <option>delete</option>
+                <option>retry</option>
+                <option>debug</option>
+                <option>blacklist</option>
+                <option>drain</option>
+                <option>optimizer mode</option>
+                <option>queue-timeout</option>
+            </select>
+
+            <label for="user">User:</label>
+            <input type="text" id="user" data-ng-model="filter.user"/>
+
+            <label for="contains">Contains:</label>
+            <input type="text" id="contains" data-ng-model="filter.contains"/>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-success" data-ng-click="applyFilters(filter); filtersModal = false">Apply</button>
+            <button class="btn btn-danger" data-ng-click="filtersModal = false">Cancel</button>
+        </div>
+    </form>
+</div>

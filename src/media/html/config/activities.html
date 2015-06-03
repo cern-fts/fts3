@@ -1,0 +1,26 @@
+<h2>Activity shares</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>VO</th>
+            <th>Activity</th>
+            <th>Weight</th>
+        </tr>
+    </thead>
+    <tbody data-ng-repeat="(vo, shares) in activities" data-ng-class-odd="'odd'" >
+        <tr data-ng-repeat="(share_name, share_val) in shares | slice:0:0">
+            <td rowspan="{{ shares | objlength }}" style="vertical-align: middle">
+                <a href="#/config/activities/{{ vo }}?source_se={{ filter.source_se|escape }}&dest_se={{ filter.dest_se|escape }}">
+                    {{ vo }}
+                </a>
+            </td>
+            <td>{{ share_name }}</td>
+            <td>{{ share_val }}</td>
+        </tr>
+        <tr data-ng-repeat="(share_name, share_val) in shares | slice:1">
+            <td>{{ share_name }}</td>
+            <td>{{ share_val }}</td>
+        </tr>
+    </tbody>
+</table>

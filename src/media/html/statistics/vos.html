@@ -1,0 +1,51 @@
+<global-filter data-hide-vo="true" data-hide-pair="true"></global-filter>
+
+<h2>Statistics - VO</h2>
+<h3>
+    For the last {{globalFilter.time_window || '1' }}
+    <span data-ng-show="globalFilter.time_window == 1 || !globalFilter.time_window">hour</span>
+    <span data-ng-show="globalFilter.time_window > 1">hours</span>
+</h3>
+
+<div class="form-inline">
+    <form data-ng-submit="filterBy(filter)" autocomplete="off">
+	    <label for="source_se">Source: </label>
+	    <input type="text" placeholder="Source" id="source_se" data-ng-model="filter.source_se"
+	           data-typeahead="source for source in unique.sources | safeFilter:$viewValue"
+	           class="input-xxlarge"/>
+	    &nbsp;
+	    <label for="dest_se">Destination: </label>
+	    <input type="text" placeholder="Destination" id="dest_se" data-ng-model="filter.dest_se"
+	           data-typeahead="dest for dest in unique.destinations | safeFilter:$viewValue"
+	           class="input-xxlarge"/>
+	    <button class="btn" data-ng-click="applyFilters()"><i class="icon-filter"></i>Apply</button>
+    </form>
+</div>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th style="width: 15%">VO</th>
+            <th>Transfer states</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr data-ng-repeat="(vo, states) in vos" data-ng-class-odd="'odd'">
+            <td>{{vo}}</td>
+            <td>
+                <span data-ng-repeat="(state, count) in states">{{count}} {{state}} </span>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="row-fluid">
+    <div class="span6 text-center">
+        <div data-ac-chart="'pie'" data-ac-data="plots.active" data-ac-config="plots.active.config" id="active" class="chart">
+        </div>
+    </div>
+    <div class="span6 text-center">
+        <div data-ac-chart="'pie'" data-ac-data="plots.submitted" data-ac-config="plots.submitted.config" id="submitted" class="chart">
+        </div>
+    </div>
+</div>

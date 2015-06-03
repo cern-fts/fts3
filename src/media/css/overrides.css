@@ -1,0 +1,105 @@
+p {
+    margin-top: 10px;
+}
+
+.odd {
+	background: #E5E5E5;
+}
+
+.icon-plus {
+	cursor: pointer;
+}
+
+.icon-filter {
+	cursor: pointer;
+}
+
+.icon-th-list {
+	cursor: pointer;
+}
+
+pre {
+	background: transparent;
+	border: none;
+	font-size: 110%;
+}
+
+.navbar-fixed-top {
+    height: 44px;
+}
+
+.sub-navbar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 44px;
+}
+
+.sub-navbar>.navbar-inner {
+	position: relative;
+	height: 44px;
+}
+
+.sub-navbar>.navbar-inner>form {
+	position: absolute;
+	top: 50%;
+	height: 44px;
+    margin-top: -14px;
+}
+
+.sub-navbar>div>form>div {
+    vertical-align: middle;
+    margin: 0;
+    padding: 0;
+}
+
+.sub-navbar select {
+    display: inline;
+    width: 80%;
+    height: 2em;
+    margin: 0;
+}
+
+.sub-navbar input {
+	width: 45%;
+	margin: 0;
+}
+
+.sub-navbar label {
+    display: inline;
+}
+
+.navbar-spacer {
+    height: 50px;
+}
+
+.icon-group {
+	background: url("../img/group.png");
+	width: 20px;
+	height: 14px;
+}
+
+.icon-udt {
+    width: 14px;
+    height: 14px;
+    background: url("../img/udt.png");
+}
+
+.pagination a {
+    cursor: pointer;
+}
+
+.nav-split {
+    display: inline-block !important;
+    padding-right: 0px !important;
+}
+
+.nav-split-caret {
+    display: inline-block !important;
+    padding-left: 0px !important;
+}
+
+.nav-split-caret>.caret {
+    border-top-color: #999999 !important;
+    border-bottom-color: #999999 !important;
+}

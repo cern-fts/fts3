@@ -1,0 +1,59 @@
+<global-filter on-more="showFilterDialog()"></global-filter>
+
+<h2>
+    Errors for {{source_se}} → {{dest_se}}
+    <button class="btn btn-mini btn-info" type="button" data-ng-click="showFilterDialog()">Filter</button>
+</h2>
+
+<div style="text-align: center">
+    <div data-ac-chart="'pie'" data-ac-data="plots.phase" data-ac-config="plots.phase.config" id="queue" class="chart">
+    </div>
+</div>
+
+<pagination rotate="false"
+    page="errors.errors.page" total-items="errors.errors.count" items-per-page="errors.errors.pageSize"
+    max-size="15" class="pagination" boundary-links="true"
+    on-select-page="pageChanged(page)"></pagination>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th style="width: 10%">VO</th>
+            <th style="width: 10%">Count</th>
+            <th style="width: 80%">Reason</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr data-ng-repeat="e in errors.errors.items" data-ng-class-odd="'odd'">
+            <td>{{e.vo_name}}</td>
+            <td>{{e.count}}</td>
+            <td>
+                <a href="#/transfers?state=FAILED&vo={{e.vo_name}}&source_se={{source_se|escape}}&dest_se={{dest_se|escape}}&reason={{e.reason|escape}}&time_window={{globalFilter.time_window}}">
+                    {{e.reason}}
+                </a>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<pagination rotate="false"
+    page="errors.errors.page" total-items="errors.errors.count" items-per-page="errors.errors.pageSize"
+    max-size="15" class="pagination" boundary-links="true"
+    on-select-page="pageChanged(page)"></pagination>
+
+ <!-- Modals -->
+<div id="filterDialog" class="modal" role="dialog" style="display: none">
+    <form data-ng-submit="applyFilters()" autocomplete="off">
+        <div class="modal-header">
+            <h3>Reason contains</h3>
+        </div>
+        <div class="modal-body">
+            <label for="reason">Reason:</label>
+            <input type="text" placeholder="Error reason" id="reason" data-ng-model="filter.reason"/>
+        </div>
+        <div class="modal-footer">
+            <a class="btn btn-success" data-ng-click="applyFilters()">Apply</a>
+            <a class="btn btn-danger" data-ng-click="cancelFilters()">Cancel</a>
+        </div>
+    </form>
+</div>

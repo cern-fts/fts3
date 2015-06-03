@@ -1,0 +1,35 @@
+<h2>Statistics - Profiling</h2>
+
+{{profile.update}}
+
+<div data-ng-show="!profile.updated" class="hero-unit">
+    <h3>No profiling data available</h3>
+     <p>
+         There is no profile information available. It has probably been disabled
+     </p>
+</div>
+
+<div data-ng-show="profile.updated">
+    <h4>Last update: {{profile.updated}}</h4>
+    <p>Updated every {{profile.period}} seconds.</p>
+    <table class="table">
+        <thead>
+            <tr>
+                <th><span data-order-by="scope">Scope</span></th>
+                <th><span data-order-by="called">Called</span></th>
+                <th><span data-order-by="aggregate">Aggregate time</span></th>
+                <th><span data-order-by="average">Average time</span></th>
+                <th><span data-order-by="exceptions">Exceptions</span></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr data-ng-repeat="p in profile.profiles" data-ng-class-odd="'odd'">
+                <td>{{p.scope}}</td>
+                <td>{{p.cnt}}</td>
+                <td>{{p.total|number:2}}</td>
+                <td>{{p.average|number:2}}</td>
+                <td>{{p.exceptions}}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
