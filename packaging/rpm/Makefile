@@ -3,7 +3,7 @@ spec=./specs/fts.spec
 version=${shell grep '^Version:' $(spec) | awk '{print $$2}' }
 rpmbuild=${shell pwd}/rpmbuild
 MOCKENV=epel-6-cernonly-x86_64
-MOCKARGS=--trace --verbose
+MOCKARGS=--verbose --no-clean --no-cleanup-after
 
 rpmdefines=--define='_topdir ${rpmbuild}' \
 	--define='_sourcedir %{_topdir}/SOURCES' \
@@ -29,9 +29,11 @@ prepare: dist
 
 srpm: prepare $(spec)
 	rpmbuild --nodeps -bs $(rpmdefines) $(spec)
+	mv $(rpmbuild)/SRPMS/*.rpm .
+	rm -r $(rpmbuild)
 
 rpm: srpm
-	rpmbuild --nodeps -bb $(rpmdefines) $(spec) 
+	rpmbuild --rebuild $(name)-$(version)-*.src.rpm
 
 mock: srpm
-	/usr/bin/mock $(MOCKARGS) -r $(MOCKENV) --rebuild $(rpmbuild)/SRPMS/$(name)-$(version)-*.src.rpm
+	/usr/bin/mock $(MOCKARGS) -r $(MOCKENV) $(name)-$(version)-*.src.rpm

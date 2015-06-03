@@ -22,11 +22,13 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires:  boost-devel
 BuildRequires:  cmake
 BuildRequires:  libcurl-devel
+BuildRequires:  libuuid-devel
 BuildRequires:  python2-devel
 %else
 BuildRequires:  boost141-devel
 BuildRequires:  cmake28
 BuildRequires:  curl-devel
+BuildRequires:  e2fsprogs-devel
 BuildRequires:  gcc44-c++
 BuildRequires:  python-devel
 %endif
@@ -86,12 +88,10 @@ fi
 # Build
 mkdir build
 cd build
-%if %{?fedora}%{!?fedora:0} >= 10 || %{?rhel}%{!?rhel:0} >= 7
-    %cmake -DCLIENTBUILD=ON -D CMAKE_BUILD_TYPE=RelWithDebInfo -D CMAKE_INSTALL_PREFIX='' ..
-%elif %if %{?fedora}%{!?fedora:0} >= 10 || %{?rhel}%{!?rhel:0} == 6
-    %cmake28 -DCLIENTBUILD=ON -D CMAKE_BUILD_TYPE=RelWithDebInfo -D CMAKE_INSTALL_PREFIX='' ..
+%if %{?fedora}%{!?fedora:0} >= 10 || %{?rhel}%{!?rhel:0} >= 6
+    %cmake -DCLIENTBUILD=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX='' ..
 %else
-    %cmake28 -DCMAKE_C_COMPILER=/usr/bin/gcc44 -DCMAKE_CXX_COMPILER=/usr/bin/g++44 -DCLIENTBUILD=ON -D CMAKE_BUILD_TYPE=RelWithDebInfo -D CMAKE_INSTALL_PREFIX='' ..
+    %cmake28 -DCMAKE_C_COMPILER=/usr/bin/gcc44 -DCMAKE_CXX_COMPILER=/usr/bin/g++44 -DCLIENTBUILD=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX='' ..
 %endif
 
 make %{?_smp_mflags}

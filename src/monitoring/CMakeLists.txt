@@ -15,8 +15,9 @@
 
 cmake_minimum_required(VERSION 2.8)
 
+find_package(ActiveMQcpp 3.2.0 REQUIRED)
+
 set (CMAKE_INCLUDE_CURRENT_DIR ON)
-include_directories(BEFORE ${OCCI_INCLUDE_DIR})
 include_directories (${PROJECT_SOURCE_DIR}/src/common/)
 include_directories (${PROJECT_SOURCE_DIR}/src/config/)
 include_directories (.)

@@ -27,18 +27,33 @@ FILE(WRITE ${PROJECT_SOURCE_DIR}/src/common/version.h
 "\#define VERSION \"@VERSION_STRING@\"\n"
 )
 
-option(ORACLEBUILD "Build oracle plug-in" OFF)
-option(MYSQLBUILD "Build for EPEL" OFF)
-option(MAINBUILD "Build fts" OFF)
 option(ALLBUILD "Build fts all including db plug-ins" OFF)
-option(CLIENTBUILD "Build only the client libraries, tools and bindings" OFF)
-	 
-ADD_DEFINITIONS(-DWITH_IPV6)
-ADD_DEFINITIONS(-DOPENSSL_THREADS)
-ADD_DEFINITIONS(-DNDEBUG)
-ADD_DEFINITIONS(-DSOCKET_CLOSE_ON_EXIT)
-ADD_DEFINITIONS(-D_REENTRANT)
-ADD_DEFINITIONS(-DBOOST_DATE_TIME_HAS_REENTRANT_STD_FUNCTIONS)
+
+include (CMakeDependentOption REQUIRED)
+cmake_dependent_option(
+    ORACLEBUILD "Build oracle plug-in" OFF
+    "NOT ALLBUILD" ON
+)
+cmake_dependent_option(
+    MYSQLBUILD "Build for EPEL" OFF
+    "NOT ALLBUILD" ON
+)
+cmake_dependent_option(
+    SERVERBUILD "Build fts" OFF
+    "NOT ALLBUILD" ON
+)
+cmake_dependent_option(
+    CLIENTBUILD "Build the client libraries, tools and bindings" OFF
+    "NOT ALLBUILD" ON
+)
+
+ 
+add_definitions(-DWITH_IPV6)
+add_definitions(-DOPENSSL_THREADS)
+add_definitions(-DNDEBUG)
+add_definitions(-DSOCKET_CLOSE_ON_EXIT)
+add_definitions(-D_REENTRANT)
+add_definitions(-DBOOST_DATE_TIME_HAS_REENTRANT_STD_FUNCTIONS)
 
 # Enable C++11
 include(EnableCpp11 REQUIRED)
@@ -58,25 +73,6 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-long-long -Wconversion -Wuninitialized  -Wno-deprecated-declarations -Wextra -Wall -D_FORTIFY_SOURCE=2 -fstack-protector-all -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64")
 endif ()
-
-if (ORACLEBUILD STREQUAL "ON")
-find_package(OCCI)
-endif ()
-
-if (ALLBUILD STREQUAL "ON")
-find_package(OCCI)
-find_package(ActiveMQcpp 3.2.0 REQUIRED)
-find_package(PugiXML)
-endif ()
-
-if (MAINBUILD STREQUAL "ON")
-find_package(ActiveMQcpp 3.2.0 REQUIRED)
-find_package(PugiXML)
-endif ()
-
-if (NOT PUGIXML_FOUND)
-    add_definitions(-DWITHOUT_PUGI)
-endif (NOT PUGIXML_FOUND)
 
 find_package(Threads)
 find_package(OpenSSL)

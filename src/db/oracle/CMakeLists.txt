@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
+find_package(OCCI)
+
 include_directories(BEFORE ${OCCI_INCLUDE_DIR})
 include_directories (BEFORE ../generic)
 include_directories (BEFORE ../..)

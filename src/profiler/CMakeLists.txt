@@ -13,7 +13,7 @@ set_target_properties(fts_profiler       PROPERTIES
                                          VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
                                          SOVERSION ${VERSION_MAJOR})
 
-if (MAINBUILD STREQUAL "ON" OR ALLBUILD STREQUAL "ON")
+if (SERVERBUILD)
 install(TARGETS         fts_profiler
         RUNTIME         DESTINATION ${CMAKE_INSTALL_PREFIX} 
         LIBRARY         DESTINATION ${LIB_INSTALL_DIR}

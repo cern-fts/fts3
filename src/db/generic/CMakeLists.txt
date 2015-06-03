@@ -33,7 +33,7 @@ set_target_properties(fts_db_generic            PROPERTIES
                                                 SOVERSION ${VERSION_MAJOR}
                                                 CLEAN_DIRECT_OUTPUT 1)
 
-if (MAINBUILD STREQUAL "ON" OR ALLBUILD STREQUAL "ON")
+if (SERVERBUILD)
 install(TARGETS         fts_db_generic 
 	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 
 	LIBRARY             DESTINATION ${LIB_INSTALL_DIR} )

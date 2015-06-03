@@ -15,29 +15,32 @@
 
 cmake_minimum_required(VERSION 2.8)
 
-if (ORACLEBUILD STREQUAL "ON")
+# Required by bdii-cache-update and conditionally by infosys
+find_package(PugiXML)
+if (NOT PUGIXML_FOUND)
+    add_definitions(-DWITHOUT_PUGI)
+endif (NOT PUGIXML_FOUND)
+
+# Used by all submodules
 add_subdirectory(common)
+
+# Used by DB backends and server side
+if (ORACLEBUILD OR MYSQLBUILD OR MAINBUILD)
 add_subdirectory(config)
 add_subdirectory(db)
 add_subdirectory(profiler)
-ENDIF()
+endif ()
 
-IF (MYSQLBUILD STREQUAL "ON")
-add_subdirectory(common)
-add_subdirectory(config)
-add_subdirectory(db)
-add_subdirectory(profiler)
-ENDIF()
 
-IF (MAINBUILD STREQUAL "ON")
-add_subdirectory(common)
+#  Used by server and client
+if (SERVERBUILD OR CLIENTBUILD)
 add_subdirectory(ws-ifce)
-add_subdirectory(config)
+endif ()
+
+# Only by the server
+if (SERVERBUILD)
 add_subdirectory(infosys)
-add_subdirectory(db)
 add_subdirectory(cred)
-add_subdirectory(delegation-cli)
-add_subdirectory(cli)
 add_subdirectory(server)
 add_subdirectory(bringonline-daemon)
 add_subdirectory(monitoring)
@@ -46,45 +49,19 @@ add_subdirectory(scripts)
 add_subdirectory(dbClear)
 add_subdirectory(glue2-publisher)
 add_subdirectory(myosg-update)
-add_subdirectory(profiler)
 
 if (PUGIXML_FOUND)
     add_subdirectory(bdii-cache-update)
 endif (PUGIXML_FOUND)
-ENDIF()
+endif ()
 
-IF (ALLBUILD STREQUAL "ON")
-add_subdirectory(common)
-add_subdirectory(ws-ifce)
-add_subdirectory(config)
-add_subdirectory(infosys)
-add_subdirectory(db)
-add_subdirectory(cred)
-add_subdirectory(delegation-cli)
+# Only by the client
+if (CLIENTBUILD)
 add_subdirectory(cli)
-add_subdirectory(server)
-add_subdirectory(bringonline-daemon)
-add_subdirectory(monitoring)
-add_subdirectory(url-copy)
-add_subdirectory(scripts)
-add_subdirectory(dbClear)
-add_subdirectory(glue2-publisher)
-add_subdirectory(myosg-update)
-add_subdirectory(profiler)
-
-if (PUGIXML_FOUND)
-    add_subdirectory(bdii-cache-update)
-endif (PUGIXML_FOUND)
-
-ENDIF()
-
-IF (CLIENTBUILD STREQUAL "ON")
-add_subdirectory(cli)
-add_subdirectory(common)
 add_subdirectory(delegation-cli)
-add_subdirectory(ws-ifce)
-ENDIF()
+endif ()
 
-if(FTS3_COMPILE_WITH_UNITTEST_NEW)
+# Unit tests
+if (FTS3_COMPILE_WITH_UNITTEST_NEW)
 	add_subdirectory(unittest)
-endif()
+endif ()

@@ -1,19 +1,21 @@
+%bcond_with oracle
+
 %global _hardened_build 1
 %global __provides_exclude_from ^%{python_sitearch}/fts/.*\\.so$
 %global selinux_policyver %(sed -e 's,.*selinux-policy-\\([^/]*\\)/.*,\\1,' /usr/share/selinux/devel/policyhelp || echo 0.0.0)
 %global selinux_variants mls targeted
 
-Name: fts
-Version: 3.2.34
-Release: 1%{?dist}
-Summary: File Transfer Service V3
-Group: System Environment/Daemons
-License: ASL 2.0
-URL: https://svnweb.cern.ch/trac/fts3/wiki
+Name:       fts
+Version:    3.2.34
+Release:    1%{?dist}
+Summary:    File Transfer Service V3
+Group:      System Environment/Daemons
+License:    ASL 2.0
+URL:        http://fts3-service.web.cern.ch/
 # The source for this package was pulled from upstream's vcs.  Use the
 # following commands to generate the tarball:
 #  svn export https://svn.cern.ch/reps/fts3/trunk fts3
-#  tar -czvf fts-3.2.26-2.tar.gz fts3
+#  tar -czvf fts-3.2.34.tar.gz fts3
 Source0: https://grid-deployment.web.cern.ch/grid-deployment/dms/fts3/tar/%{name}-%{version}.tar.gz
 Source1: fts.te
 Source2: fts.fc
@@ -80,10 +82,10 @@ Requires: gfal2-plugin-http%{?_isa} >= 2.9.0
 Requires: gfal2-plugin-srm%{?_isa} >= 2.9.0
 #Requires: gfal2-plugin-xrootd%{?_isa} >= 0.2.2
 Requires: gridsite >= 1.7.25
-Requires(post): chkconfig
-Requires(preun): chkconfig
-Requires(postun): initscripts
-Requires(preun): initscripts
+Requires(post):     chkconfig
+Requires(preun):    chkconfig
+Requires(postun):   initscripts
+Requires(preun):    initscripts
 
 #Requires: emi-resource-information-service (from EMI3)
 #Requires: emi-version (from EMI3)
@@ -99,8 +101,8 @@ dynamically adjust transfer parameters for optimal bandwidth
 utilization and allows for configuring so called VO-shares.
 
 %package libs
-Summary: File Transfer Service version 3 libraries
-Group: System Environment/Libraries
+Summary:    File Transfer Service version 3 libraries
+Group:      System Environment/Libraries
 
 %description libs
 FTS common libraries used across the client and
@@ -109,40 +111,40 @@ parsing, logging and error-handling utilities, as
 well as, common definitions and interfaces
 
 %package infosys
-Summary: File Transfer Service version 3 infosys integration
-Group: System Environment/Daemons
-Requires: bdii
-Requires: fts-server%{?_isa} = %{version}-%{release}
-Requires: glue-schema
-Requires(post): chkconfig
-Requires(preun): chkconfig
-Requires(postun): initscripts
-Requires(preun): initscripts
+Summary:    File Transfer Service version 3 infosys integration
+Group:      System Environment/Daemons
+Requires:   bdii
+Requires:   fts-server%{?_isa} = %{version}-%{release}
+Requires:   glue-schema
+Requires(post):     chkconfig
+Requires(preun):    chkconfig
+Requires(postun):   initscripts
+Requires(preun):    initscripts
 
 %description infosys
 FTS infosys integration
 
 %package msg
-Summary: File Transfer Service version 3 messaging integration
-Group: System Environment/Daemons
-Requires: fts-server%{?_isa} = %{version}-%{release}
+Summary:    File Transfer Service version 3 messaging integration
+Group:      System Environment/Daemons
+Requires:   fts-server%{?_isa} = %{version}-%{release}
 
 %description msg
 FTS messaging integration
 
 %package python
-Summary: File Transfer Service version 3 python bindings
-Group: System Environment/Libraries
-Requires: fts-libs%{?_isa} = %{version}-%{release}
-Requires: python%{?_isa}
+Summary:    File Transfer Service version 3 python bindings
+Group:      System Environment/Libraries
+Requires:   fts-libs%{?_isa} = %{version}-%{release}
+Requires:   python%{?_isa}
 
 %description python
 FTS python bindings for client libraries and DB API
 
 %package client
-Summary: File Transfer Service version 3 client
-Group: Applications/Internet
-Requires: fts-libs%{?_isa} = %{version}-%{release}
+Summary:    File Transfer Service version 3 client
+Group:      Applications/Internet
+Requires:   fts-libs%{?_isa} = %{version}-%{release}
 
 %description client
 A set of command line tools for submitting, querying
@@ -153,7 +155,7 @@ administering purposes.
 %package server-selinux
 Summary:    SELinux support for fts-server
 Group:      Applications/Internet
-Requires: fts-server%{?_isa} = %{version}-%{release}
+Requires:   fts-server%{?_isa} = %{version}-%{release}
 %if "%{_selinux_policy_version}" != ""
 Requires:   selinux-policy >= %{_selinux_policy_version}
 %else
@@ -165,6 +167,31 @@ Requires(postun): /usr/sbin/semodule, /sbin/restorecon, fts-server
 %description server-selinux
 This package setup the SELinux policies for the FTS3 server.
 
+%package mysql
+Summary:    File Transfer Service V3 mysql plug-in
+Group:      Applications/Internet
+
+BuildRequires:  soci-mysql-devel
+Requires:   soci-mysql%{?_isa}
+Requires:   fts-server%{?_isa}
+
+%description mysql
+The File Transfer Service V3 mysql plug-in
+
+%{?with_oracle:%package oracle
+Summary:    File Transfer Service V3 oracle plug-in
+Group:      Applications/Internet
+
+BuildRequires:  soci-oracle-devel
+Requires:       soci-oracle%{?_isa}
+Requires:       fts-server%{?_isa}
+
+AutoReq: no
+AutoProv: yes
+
+%description oracle
+The File Transfer Service V3 oracle plug-in
+}
 
 
 %prep
@@ -187,9 +214,17 @@ fi
 mkdir build
 cd build
 %if %{?fedora}%{!?fedora:0} >= 18 || %{?rhel}%{!?rhel:0} >= 7
-    %cmake -DMAINBUILD=ON -D CMAKE_BUILD_TYPE=RelWithDebInfo -D CMAKE_INSTALL_PREFIX='' ..
+    %cmake -DSERVERBUILD=ON -DMYSQLBUILD=ON -DCLIENTBUILD=ON \
+        -DORACLEBUILD=%{?with_oracle:ON}%{?!with_oracle:OFF} \
+        -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+        -DCMAKE_INSTALL_PREFIX='' \
+        ..
 %else
-    %cmake28 -DMAINBUILD=ON -D CMAKE_BUILD_TYPE=RelWithDebInfo -D CMAKE_INSTALL_PREFIX='' ..
+    %cmake28 -DSERVERBUILD=ON -DMYSQLBUILD=ON -DCLIENTBUILD=ON \
+        -DORACLEBUILD=%{?with_oracle:ON}%{?!with_oracle:OFF} \
+        -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+        -DCMAKE_INSTALL_PREFIX='' \
+        ..
 %endif
 
 make %{?_smp_mflags}
@@ -437,14 +472,25 @@ fi
 %doc SELinux/*
 %{_datadir}/selinux/*/fts.pp
 
+%files mysql
+%{_libdir}/libfts_db_mysql.so.*
+%{_datadir}/fts-mysql
+
+%{?with_oracle:%files oracle
+%{_libdir}/libfts_db_oracle.so.*
+%{_datadir}/fts-oracle
+}
+
 %changelog
+* Wed Jun 03 2015 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.34-1
+  - Package everything in one single spec
 * Tue Feb 04 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.26-4
   - introduced dist back in the release
 * Tue Jan 14 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.26-3
   - using cmake28
 * Mon Jan 13 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.26-2
   - separated rpms for messaging and infosys subsystems
-* Mon Jan 12 2014 Michal Simon <michal.simon@cern.ch> - 3.2.25-1
+* Sun Jan 12 2014 Michal Simon <michal.simon@cern.ch> - 3.2.25-1
   - Update for new upstream release
 * Mon Nov 18 2013 Alejandro Alvarez Ayllon <aalvarez@cern.ch> - 3.1.33-2
   - Added missing changelog entry

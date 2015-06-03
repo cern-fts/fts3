@@ -14,7 +14,7 @@ set_target_properties(fts_db_profiled    PROPERTIES
                                          VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
                                          SOVERSION ${VERSION_MAJOR})
 
-if (MAINBUILD STREQUAL "ON" OR ALLBUILD STREQUAL "ON")
+if (SERVERBUILD)
 install(TARGETS         fts_db_profiled
         RUNTIME         DESTINATION ${CMAKE_INSTALL_PREFIX} 
         LIBRARY         DESTINATION ${LIB_INSTALL_DIR}
