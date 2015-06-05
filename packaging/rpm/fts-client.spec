@@ -72,7 +72,7 @@ FTS python bindings for client libraries and DB API
 rm -rf %{buildroot}
 
 %prep
-%setup -qc
+%setup -q
 
 %build
 # Make sure the version in the spec file and the version used

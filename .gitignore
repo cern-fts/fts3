@@ -2,3 +2,5 @@
 .project
 .settings
 *.rpm
+*.tar.gz
+

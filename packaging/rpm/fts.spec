@@ -17,8 +17,6 @@ URL:        http://fts3-service.web.cern.ch/
 #  svn export https://svn.cern.ch/reps/fts3/trunk fts3
 #  tar -czvf fts-3.2.34.tar.gz fts3
 Source0: https://grid-deployment.web.cern.ch/grid-deployment/dms/fts3/tar/%{name}-%{version}.tar.gz
-Source1: fts.te
-Source2: fts.fc
 
 %if 0%{?el5}
 BuildRequires:  activemq-cpp-library
@@ -196,9 +194,7 @@ The File Transfer Service V3 oracle plug-in
 
 
 %prep
-%setup -qc
-mkdir SELinux
-cp -p %{SOURCE1} %{SOURCE2} SELinux
+%setup -q
 
 %build
 # Make sure the version in the spec file and the version used
@@ -233,7 +229,7 @@ make %{?_smp_mflags}
 cd -
 
 # SELinux
-cd SELinux
+cd selinux
 for selinuxvariant in %{selinux_variants}; do
   make NAME=${selinuxvariant} -f /usr/share/selinux/devel/Makefile
   mv fts.pp fts.pp.${selinuxvariant}
@@ -258,7 +254,7 @@ cd -
 # SELinux
 for selinuxvariant in %{selinux_variants}; do
   install -d %{buildroot}%{_datadir}/selinux/${selinuxvariant}
-  install -p -m 644 SELinux/fts.pp.${selinuxvariant} %{buildroot}%{_datadir}/selinux/${selinuxvariant}/fts.pp
+  install -p -m 644 selinux/fts.pp.${selinuxvariant} %{buildroot}%{_datadir}/selinux/${selinuxvariant}/fts.pp
 done
 
 # Server scriptlets
@@ -470,7 +466,7 @@ fi
 
 %files server-selinux
 %defattr(-,root,root,0755)
-%doc SELinux/*
+%doc selinux/*
 %{_datadir}/selinux/*/fts.pp
 
 %files mysql
