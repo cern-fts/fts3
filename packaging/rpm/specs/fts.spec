@@ -183,6 +183,7 @@ Summary:    File Transfer Service V3 oracle plug-in
 Group:      Applications/Internet
 
 BuildRequires:  soci-oracle-devel
+BuildRequires:  oracle-instantclient-devel
 Requires:       soci-oracle%{?_isa}
 Requires:       fts-server%{?_isa}
 
