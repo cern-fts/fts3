@@ -1,4 +1,4 @@
-NAME=fts-rest
+NAME=fts-monitoring
 SPEC=rpm/$(NAME).spec
 VERSION=${shell grep '^Version:' $(SPEC) | awk '{print $$2}' }
 
