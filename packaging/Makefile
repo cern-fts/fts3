@@ -1,19 +1,19 @@
-NAME=fts-monitoring
+NAME=fts-rest
 SPEC=rpm/$(NAME).spec
 VERSION=${shell grep '^Version:' $(SPEC) | awk '{print $$2}' }
 
-PWD=${shell pwd}
+CWD=${shell pwd}
 
-RPMBUILD=/tmp//usr/bin/rpmbuild
-SRPMS=$(PWD)
-RPMS=$(PWD)/out
+RPMBUILD=/tmp/rpmbuild
+SRPMS=$(CWD)
+RPMS=$(CWD)/out
 
 MOCK_CHROOT=epel-6-cernonly-x86_64
 MOCK_FLAGS=--verbose
 
 
 RPMDEFINES_SRC=--define='_topdir $(RPMBUILD)' \
-	--define='_sourcedir $(PWD)' \
+	--define='_sourcedir $(CWD)' \
 	--define='_builddir %{_topdir}/BUILD' \
 	--define='_srcrpmdir $(SRPMS)' \
 	--define='_rpmdir $(RPMS)' 
