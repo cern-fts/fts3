@@ -47,6 +47,7 @@ limitations under the License. */
 #include <vector>
 #include <boost/algorithm/string.hpp>
 #include "common/panic.h"
+#include "version.h"
 
 using namespace std;
 using boost::thread;
@@ -825,8 +826,6 @@ int main(int argc, char **argv)
             gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "IPV6", TRUE, NULL);
         }
 
-
-
     // Load OAuth credentials, if any
     if (!opts.oauthFile.empty())
         {
@@ -838,6 +837,8 @@ int main(int argc, char **argv)
             unlink(opts.oauthFile.c_str());
         }
 
+    // Identify the client
+    gfal2_set_user_agent(handle, "fts_url_copy", VERSION, NULL);
 
     for (register unsigned int ii = 0; ii < numberOfFiles; ii++)
         {
@@ -852,6 +853,11 @@ int main(int argc, char **argv)
             currentTransfer.throughput = 0.0;
 
             currentTransfer = transferList[ii];
+
+            // Set custom information in gfal2
+            gfal2_add_client_info(handle, "job-id", currentTransfer.jobId.c_str(), NULL);
+            gfal2_add_client_info(handle, "file-id", boost::lexical_cast<std::string>(currentTransfer.fileId).c_str(), NULL);
+            gfal2_add_client_info(handle, "retry", boost::lexical_cast<std::string>(opts.retry).c_str(), NULL);
 
             fileManagement.setSourceUrl(currentTransfer.sourceUrl);
             fileManagement.setDestUrl(currentTransfer.destUrl);
