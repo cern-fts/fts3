@@ -71,7 +71,12 @@ def slsfy(servers, id_tail, color_mapper=_color_mapper):
     Present the data with the given filters as a suitable XML
     to be processed by SLS
     """
-    e_sls = Element('serviceupdate')
+    e_sls = Element('serviceupdate', attrib={
+         'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
+         'xmlns:xsd': 'http://www.w3.org/2001/XMLSchema',
+         'xmlns': 'http://sls.cern.ch/SLS/XML/update'
+    })
+
     e_id = SubElement(e_sls, 'id')
     e_id.text = ("%s %s" % (getattr(settings, 'SITE_NAME', 'FTS3'), id_tail)).replace(' ', '_')
 
