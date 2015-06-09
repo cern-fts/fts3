@@ -52,15 +52,10 @@ UserProxyEnv::UserProxyEnv(const std::string& file_name):
                 {
                     m_proxy = p;
                 }
-            if(false == m_key.empty())
-                {
-                    unsetenv(KEY_ENV_VAR);
-                }
-            if(false == m_cert.empty())
-                {
-                    unsetenv(CERT_ENV_VAR);
-                }
-            setenv(PROXY_ENV_VAR,file_name.c_str(),1);
+
+            setenv(PROXY_ENV_VAR,file_name.c_str(), 1);
+            setenv(CERT_ENV_VAR, file_name.c_str(), 1);
+            setenv(KEY_ENV_VAR, file_name.c_str(), 1);
             m_isSet = true;
 
         }
@@ -78,23 +73,23 @@ UserProxyEnv::UserProxyEnv(const std::string& file_name):
 UserProxyEnv::~UserProxyEnv()
 {
     // Reset the Environament Variable to the previous value
-    if(true == m_isSet)
+    if(m_isSet)
         {
-            if(false == m_proxy.empty())
+            if(!m_proxy.empty())
                 {
-                    setenv(PROXY_ENV_VAR,m_proxy.c_str(),1);
+                    setenv(PROXY_ENV_VAR, m_proxy.c_str(),1);
                 }
             else
                 {
                     unsetenv(PROXY_ENV_VAR);
                 }
-            if(false == m_key.empty())
+            if(!m_key.empty())
                 {
-                    setenv(KEY_ENV_VAR,m_key.c_str(),1);
+                    setenv(KEY_ENV_VAR, m_key.c_str(), 1);
                 }
-            if(false == m_cert.empty())
+            if(!m_cert.empty())
                 {
-                    setenv(CERT_ENV_VAR,m_cert.c_str(),1);
+                    setenv(CERT_ENV_VAR, m_cert.c_str(),1);
                 }
             //FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy Environment Restored" << commit;
         }
