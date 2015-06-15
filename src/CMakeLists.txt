@@ -31,7 +31,6 @@ add_subdirectory(db)
 add_subdirectory(profiler)
 endif ()
 
-
 #  Used by server and client
 if (SERVERBUILD OR CLIENTBUILD)
 add_subdirectory(ws-ifce)

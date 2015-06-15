@@ -21,6 +21,7 @@ limitations under the License. */
 #include <stdio.h>
 #include <string>
 #include <boost/thread.hpp>
+#include <google/coredumper.h>
 
 /*
  * This file contains the logic to handle signals, logging them and
@@ -41,48 +42,58 @@ void *Panic::stack_backtrace[STACK_BACKTRACE_SIZE] = {0};
 int Panic::stack_backtrace_size = 0;
 
 
-static void get_backtrace(int sig)
+static void get_backtrace(int signum)
 {
-    if (sig == SIGABRT ||
-            sig == SIGSEGV ||
-            sig ==  SIGILL ||
-            sig ==  SIGFPE ||
-            sig == SIGBUS ||
-            sig ==  SIGTRAP ||
-            sig ==  SIGSYS)
-        {
-            Panic::stack_backtrace_size = backtrace(Panic::stack_backtrace, STACK_BACKTRACE_SIZE);
+        Panic::stack_backtrace_size = backtrace(Panic::stack_backtrace, STACK_BACKTRACE_SIZE);
 
-            // print out all the frames to stderr
-            fprintf(stderr, "Caught signal: %d\n", sig);
-            fprintf(stderr, "Stack trace: \n");
-            backtrace_symbols_fd(Panic::stack_backtrace, Panic::stack_backtrace_size, STDERR_FILENO);
-            // and then print out all the frames to stdout
-            fprintf(stdout, "Caught signal: %d\n", sig);
-            fprintf(stdout, "Stack trace: \n");
-            backtrace_symbols_fd(Panic::stack_backtrace, Panic::stack_backtrace_size, STDOUT_FILENO);
-        }
+        // print out all the frames to stderr
+        fprintf(stderr, "Caught signal: %d\n", signum);
+        fprintf(stderr, "Stack trace: \n");
+        backtrace_symbols_fd(Panic::stack_backtrace, Panic::stack_backtrace_size, STDERR_FILENO);
+        // and then print out all the frames to stdout
+        fprintf(stdout, "Caught signal: %d\n", signum);
+        fprintf(stdout, "Stack trace: \n");
+        backtrace_symbols_fd(Panic::stack_backtrace, Panic::stack_backtrace_size, STDOUT_FILENO);
 }
 
 
-// Minimalistic logic inside a signal!
-static void signal_handler(int signal)
+static void generate_coredump(int signum)
 {
-    if (signal != raised_signal)
-        get_backtrace(signal);
-    raised_signal = signal;
+    extern char *program_invocation_short_name;
+
+    char fname[1024];
+    snprintf(fname, sizeof(fname), "/tmp/%s-%d.core", program_invocation_short_name, getpid());
+    WriteCoreDump(fname);
+}
+
+// Minimalistic logic inside a signal!
+static void signal_handler(int signum)
+{
+    if (signum != raised_signal) {
+        if (signum == SIGABRT ||
+            signum == SIGSEGV ||
+            signum ==  SIGILL ||
+            signum ==  SIGFPE ||
+            signum == SIGBUS ||
+            signum ==  SIGTRAP ||
+            signum ==  SIGSYS) {
+                get_backtrace(signum);
+                generate_coredump(signum);
+        }
+    }
+    raised_signal = signum;
     // From man sem_post
     // sem_post() is async-signal-safe: it may be safely called within a signal handler.
     sem_post(&semaphore);
 
     //special condition for ungraceful termination to avoid recurcive signals being received
-    if (signal == SIGABRT ||
-            signal == SIGSEGV ||
-            signal ==  SIGILL ||
-            signal ==  SIGFPE ||
-            signal == SIGBUS ||
-            signal ==  SIGTRAP ||
-            signal ==  SIGSYS)
+    if (signum == SIGABRT ||
+            signum == SIGSEGV ||
+            signum ==  SIGILL ||
+            signum ==  SIGFPE ||
+            signum == SIGBUS ||
+            signum ==  SIGTRAP ||
+            signum ==  SIGSYS)
         {
             sleep(120);
             exit(0);

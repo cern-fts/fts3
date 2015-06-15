@@ -15,49 +15,77 @@
 
 cmake_minimum_required(VERSION 2.8)
 
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(fts_include_dir 
+set (CMAKE_INCLUDE_CURRENT_DIR ON)
+set (fts_include_dir
 	"${PROJECT_SOURCE_DIR}/src/"
 	"${CMAKE_BINARY_DIR}/src/"
 )
 
 if (ORACLEBUILD STREQUAL "OFF")
-include_directories(${OPENSSL_INCLUDE_DIR})
+    include_directories (${OPENSSL_INCLUDE_DIR})
 endif ()
 include_directories (${fts_include_dir})
 include_directories (.)
 
-FILE(GLOB SSL_CPP "StaticSslLocking*")
+file (GLOB SSL_CPP "StaticSslLocking*")
 
 # Find libuuid
-find_package(LibUuid REQUIRED)
-include_directories(${LIBUUID_INCLUDE_DIRS})
+find_package (LibUuid REQUIRED)
+include_directories (${LIBUUID_INCLUDE_DIRS})
 
 # Find boost
-find_package(Boost COMPONENTS regex iostreams system thread)
+find_package (Boost COMPONENTS regex iostreams system thread)
+
+# Build Google coredumper
+# Depend on .touch to avoid re-running configure every time
+add_custom_command (OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper/.touch
+    COMMAND mkdir -p ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper
+    COMMAND touch ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper/.touch
+)
+add_custom_command (OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper/Makefile
+    WORKING_DIRECTORY google-coredumper
+    COMMAND CFLAGS=-fPIC ${CMAKE_CURRENT_SOURCE_DIR}/google-coredumper/configure
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper/.touch
+)
+add_custom_command (OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper/.libs/libcoredumper.a
+    WORKING_DIRECTORY google-coredumper
+    COMMAND make
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper/Makefile
+)
+add_custom_target (libcoredumper
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper/.libs/libcoredumper.a
+)
+
+add_library (coredumper STATIC IMPORTED)
+add_dependencies (coredumper libcoredumper)
+set_target_properties (coredumper PROPERTIES
+    IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper/.libs/libcoredumper.a
+)
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/google-coredumper/src)
 
 # Sources
 file(GLOB fts_common_sources "*.cpp")
 if (ORACLEBUILD STREQUAL "ON")
-list(REMOVE_ITEM fts_common_sources ${SSL_CPP})
+    list(REMOVE_ITEM fts_common_sources ${SSL_CPP})
 endif ()
 
 
-add_library(fts_common SHARED ${fts_common_sources})
-target_link_libraries(fts_common ${Boost_LIBRARIES} ${LIBUUID_LIBRARIES}  -lpthread )
+add_library (fts_common SHARED ${fts_common_sources})
+target_link_libraries (fts_common ${Boost_LIBRARIES} ${LIBUUID_LIBRARIES} -lpthread)
+target_link_libraries (fts_common coredumper)
+
 if (ORACLEBUILD STREQUAL "OFF")
-target_link_libraries(fts_common ${OPENSSL_LIBRARIES})
-target_link_libraries(fts_common ${LIBUUID_LIBRARIES})
+    target_link_libraries (fts_common ${OPENSSL_LIBRARIES})
+    target_link_libraries (fts_common ${LIBUUID_LIBRARIES})
 endif ()
 
 
-
-set_target_properties(fts_common             PROPERTIES
-                                                LIBRARY_OUTPUT_DIRECTORY
-${PROJECT_BINARY_DIR}/src/common
-                                                VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
-                                                SOVERSION ${VERSION_MAJOR}
-                                                CLEAN_DIRECT_OUTPUT 1)
+set_target_properties(fts_common PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/src/common
+    VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
+    SOVERSION ${VERSION_MAJOR}
+    CLEAN_DIRECT_OUTPUT 1)
 
 
 
@@ -68,7 +96,7 @@ endif()
 
 
 if (SERVERBUILD OR CLIENTBUILD)
-install(TARGETS         fts_common 
-	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 
-	LIBRARY             DESTINATION ${LIB_INSTALL_DIR} )
+    install(TARGETS fts_common
+        RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}
+        LIBRARY DESTINATION ${LIB_INSTALL_DIR})
 endif ()
