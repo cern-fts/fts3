@@ -1,4 +1,5 @@
 
 [submodule "src/common/google-coredumper"]
 	path = src/common/google-coredumper
-	url = https://github.com/Beirdo/google-coredumper.git
+	url = https://gitlab.cern.ch/fts/google-coredumper.git
+ 
