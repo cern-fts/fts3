@@ -44,7 +44,7 @@ add_custom_command (OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper/.touch
 )
 add_custom_command (OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper/Makefile
     WORKING_DIRECTORY google-coredumper
-    COMMAND CFLAGS=-fPIC ${CMAKE_CURRENT_SOURCE_DIR}/google-coredumper/configure
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/google-coredumper/configure CFLAGS='-fPIC -D_GNU_SOURCE'
     DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper/.touch
 )
 add_custom_command (OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/google-coredumper/.libs/libcoredumper.a
