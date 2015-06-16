@@ -1,6 +1,8 @@
 NAME=fts
 SPEC=rpm/$(NAME).spec
 VERSION=${shell grep '^Version:' $(SPEC) | awk '{print $$2}' }
+# Leave blank. To be overriden by CI tools.
+RELEASE=
 
 CWD=${shell pwd}
 
@@ -16,13 +18,15 @@ RPMDEFINES_SRC=--define='_topdir $(RPMBUILD)' \
 	--define='_sourcedir $(CWD)' \
 	--define='_builddir %{_topdir}/BUILD' \
 	--define='_srcrpmdir $(SRPMS)' \
-	--define='_rpmdir $(RPMS)' 
+	--define='_rpmdir $(RPMS)' \
+	$(if $(RELEASE),--define='release $(RELEASE)')
 
 RPMDEFINES_BIN=--define='_topdir $(RPMBUILD)' \
 	--define='_sourcedir %{_topdir}/SOURCES' \
 	--define='_builddir %{_topdir}/BUILD' \
 	--define='_srcrpmdir $(SRPMS).' \
-	--define='_rpmdir $(RPMS)'
+	--define='_rpmdir $(RPMS)' \
+	$(if $(RELEASE),--define='release $(RELEASE)')
 
 
 all: srpm
