@@ -94,6 +94,8 @@ void CliBase::parse(int ac, char* av[])
     MsgPrinter::instance().setJson(vm.count("json"));
 
     // check whether the -s option has been used
+    const char* fts3_env;
+
     if (vm.count("service"))
         {
             endpoint = vm["service"].as<std::string>();
@@ -103,6 +105,10 @@ void CliBase::parse(int ac, char* av[])
                     std::string msg =  "wrong endpoint format ('" + endpoint + "')";
                     throw bad_option("service", msg);
                 }
+        }
+    else if ((fts3_env = getenv("FTS3_ENDPOINT")) != NULL)
+        {
+            endpoint = fts3_env;
         }
     else
         {
@@ -243,8 +249,7 @@ std::string CliBase::getService() const
 
 std::string CliBase::discoverService() const
 {
-    std::string tmp;
-    return tmp;
+    return std::string();
 }
 
 std::string CliBase::getCliVersion() const
