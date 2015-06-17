@@ -55,6 +55,7 @@ static bool retryTransferInternal(int errorNo, const std::string& category, cons
         "Permission denied",
         "System error in write into HDFS",
         "File exists",
+        "checksum do not match",
         NULL
     };
 
