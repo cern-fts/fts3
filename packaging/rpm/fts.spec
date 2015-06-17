@@ -6,7 +6,7 @@
 %global selinux_variants mls targeted
 
 Name:       fts
-Version:    3.2.34
+Version:    3.3.0
 Release:    %{?release}%{!?release:1}%{?dist}
 Summary:    File Transfer Service V3
 Group:      System Environment/Daemons
@@ -14,8 +14,8 @@ License:    ASL 2.0
 URL:        http://fts3-service.web.cern.ch/
 # The source for this package was pulled from upstream's vcs.  Use the
 # following commands to generate the tarball:
-#  svn export https://svn.cern.ch/reps/fts3/trunk fts3
-#  tar -czvf fts-3.2.34.tar.gz fts3
+#  git clone https://gitlab.cern.ch/fts/fts3.git
+#  tar -czvf fts-3.3.0.tar.gz fts3
 Source0: https://grid-deployment.web.cern.ch/grid-deployment/dms/fts3/tar/%{name}-%{version}.tar.gz
 
 %if 0%{?el5}
