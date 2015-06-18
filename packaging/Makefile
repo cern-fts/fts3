@@ -1,6 +1,8 @@
 NAME=fts-monitoring
 SPEC=rpm/$(NAME).spec
 VERSION=${shell grep '^Version:' $(SPEC) | awk '{print $$2}' }
+# Leave blank. To be overriden by CI tools.
+RELEASE=
 
 CWD=${shell pwd}
 
@@ -16,7 +18,7 @@ RPMDEFINES_SRC=--define='_topdir $(RPMBUILD)' \
 	--define='_sourcedir $(CWD)' \
 	--define='_builddir %{_topdir}/BUILD' \
 	--define='_srcrpmdir $(SRPMS)' \
-	--define='_rpmdir $(RPMS)' 
+	--define='_rpmdir $(RPMS)'
 
 RPMDEFINES_BIN=--define='_topdir $(RPMBUILD)' \
 	--define='_sourcedir %{_topdir}/SOURCES' \
@@ -40,7 +42,10 @@ dist: clean
 $(RPMBUILD):
 	mkdir -p "$(RPMBUILD)"
 
-srpm: dist $(SPEC) $(RPMBUILD)
+override_release: $(SPEC)
+	$(if $(RELEASE), sed -i "s/Release:.*/Release: $(RELEASE)/g" "$(SPEC)")
+
+srpm: dist $(SPEC) $(RPMBUILD) override_release
 	/usr/bin/rpmbuild --nodeps -bs $(RPMDEFINES_SRC) $(SPEC)
 
 rpm: srpm
