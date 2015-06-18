@@ -3,4 +3,4 @@
 .settings
 *.rpm
 *.tar.gz
-
+*.pyc
