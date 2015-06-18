@@ -102,6 +102,9 @@ utilization and allows for configuring so called VO-shares.
 Summary:    File Transfer Service version 3 libraries
 Group:      System Environment/Libraries
 
+Obsoletes:  fts-mysql-debuginfo < %{version}
+Obsoletes:  fts-oracle-debuginfo < %{version}
+
 %description libs
 FTS common libraries used across the client and
 server. This includes among others: configuration
