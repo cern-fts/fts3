@@ -18,15 +18,13 @@ RPMDEFINES_SRC=--define='_topdir $(RPMBUILD)' \
 	--define='_sourcedir $(CWD)' \
 	--define='_builddir %{_topdir}/BUILD' \
 	--define='_srcrpmdir $(SRPMS)' \
-	--define='_rpmdir $(RPMS)' \
-	$(if $(RELEASE),--define='release $(RELEASE)')
+	--define='_rpmdir $(RPMS)'
 
 RPMDEFINES_BIN=--define='_topdir $(RPMBUILD)' \
 	--define='_sourcedir %{_topdir}/SOURCES' \
 	--define='_builddir %{_topdir}/BUILD' \
 	--define='_srcrpmdir $(SRPMS).' \
-	--define='_rpmdir $(RPMS)' \
-	$(if $(RELEASE),--define='release $(RELEASE)')
+	--define='_rpmdir $(RPMS)'
 
 
 all: srpm
@@ -44,7 +42,10 @@ dist: clean
 $(RPMBUILD):
 	mkdir -p "$(RPMBUILD)"
 
-srpm: dist $(SPEC) $(RPMBUILD)
+override_release: $(SPEC)
+	$(if $(RELEASE), sed -i "s/Release:.*/Release: $(RELEASE)/g" "$(SPEC)")
+
+srpm: dist $(SPEC) $(RPMBUILD) override_release
 	/usr/bin/rpmbuild --nodeps -bs $(RPMDEFINES_SRC) $(SPEC)
 
 rpm: srpm
