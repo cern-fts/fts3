@@ -72,6 +72,7 @@ mock_run svn co "${PUPPET_REPO}" "puppet"
 # /etc/yum/yum.conf is populated by mock, so we need to
 # get rid of it prior to running puppet, or our repos will
 # not be picked
+mock_run "rm -vf /etc/yum/yum.conf && yum clean all"
 mock_run "rm -vf /etc/yum/yum.conf && puppet apply --verbose --modulepath=puppet puppet/${TEST_MANIFEST}" 
 # Now keep going even if failed
 set +e
