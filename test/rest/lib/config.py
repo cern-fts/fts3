@@ -34,12 +34,12 @@ StorageParametrization = {
 # They will be replaced with the values of StorageParametrization
 StorageAreaPairs = [
     (
-        'gsiftp://storage01.lcg.cscs.ch/pnfs/lcg.cscs.ch/%(vo)s/',
-        'gsiftp://dcdoor01.pic.es:2811/pnfs/pic.es/data/%(vo)s/'
+        'gsiftp://se2.egi.cesga.es/dpm/egi.cesga.es/home/%(vo)s/',
+        'gsiftp://sbgse1.in2p3.fr/dpm/in2p3.fr/home/%(vo)s/'
     ),
     (
-        'srm://grid002.ft.uam.es:8443/srm/managerv2?SFN=/pnfs/ft.uam.es/data/%(vo)s/',
-        'srm://storage01.lcg.cscs.ch:8443/srm/managerv2?SFN=/pnfs/lcg.cscs.ch/%(vo)s/'
+        'srm://srm-dteam.gridpp.rl.ac.uk:8443/srm/mana?SFN=/castor/ads.rl.ac.uk/test/%(vo)s',
+        'srm://sbgse1.in2p3.fr:8446/srm/managerv2?SFN=/dpm/in2p3.fr/home/%(vo)s/'
     ),
 #    (
 #        'davs://lxfsra04a04.cern.ch/dpm/cern.ch/home/%(vo)s/',

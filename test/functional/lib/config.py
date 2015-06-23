@@ -3,7 +3,7 @@ import os
 import sys
 
 # FTS3 server
-Fts3Host = os.environ.get('FTS3_HOST', 'fts3-pilot.cern.ch')
+Fts3Host = os.environ.get('FTS3_HOST', 'fts3-devel.cern.ch')
 Fts3Port = int(os.environ.get('FTS3_PORT', 8443))
 Fts3Endpoint = 'https://%s:%d' % (Fts3Host, Fts3Port)
 
