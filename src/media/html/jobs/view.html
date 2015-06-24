@@ -179,7 +179,7 @@
                     <li>Finished time: {{file.finish_time}}</li>
                     <li>Error reason: {{file.reason}}</li>
                     <li>Log file:
-                       <p>
+                       <p data-ng-if="file.log_file">
                            <a href="{{file.log_file}}">
                                {{file.log_file}}
                            </a><br/>

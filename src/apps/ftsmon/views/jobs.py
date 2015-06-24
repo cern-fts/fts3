@@ -255,7 +255,7 @@ class LogLinker(object):
 
     def __getitem__(self, i):
         for f in self.files[i]:
-            if hasattr(f, 'log_file'):
+            if hasattr(f, 'log_file') and f.log_file:
                 f.log_file = log_link(f.transferHost, f.log_file)
             yield f
 
