@@ -20,7 +20,7 @@ from django.http import Http404
 from datetime import datetime, timedelta
 
 from jsonify import jsonify, jsonify_paged
-from ftsweb.models import Job, File, RetryError, DmFile
+from ftsweb.models import Job, File, RetryError, DmFile, ACTIVE_STATES
 from util import get_order_by, ordered_field, paged, log_link
 from diagnosis import JobDiagnosis
 
@@ -342,6 +342,12 @@ def get_job_transfers(http_request, job_id):
     }
 
 
+def _contains_active_state(state_filer):
+    # Consider empty a list with active states (because all are in)
+    if not state_filer:
+        return True
+    return reduce(bool.__or__, map(lambda s: s in state_filer, ACTIVE_STATES))
+
 @jsonify_paged
 def get_transfer_list(http_request):
     filters = setup_filters(http_request)
@@ -363,7 +369,11 @@ def get_transfer_list(http_request):
         transfers = transfers.filter(vo_name=filters['vo'])
     if filters['time_window']:
         not_before = datetime.utcnow() - timedelta(hours=filters['time_window'])
-        transfers = transfers.filter(Q(job_finished__isnull=True) | (Q(job_finished__gte=not_before)))
+        # Avoid querying for job_finished is NULL if there are no active states
+        if _contains_active_state(filters['state']):
+            transfers = transfers.filter(Q(job_finished__isnull=True) | (Q(job_finished__gte=not_before)))
+        else:
+            transfers = transfers.filter(Q(job_finished__gte=not_before))
     if filters['activity']:
         transfers = transfers.filter(activity=filters['activity'])
     if filters['hostname']:
