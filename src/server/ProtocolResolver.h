@@ -33,6 +33,7 @@
 #include <string>
 #include <utility>
 
+#include <boost/logic/tribool.hpp>
 #include <boost/optional.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/shared_ptr.hpp>
@@ -66,6 +67,7 @@ public:
         int tcp_buffer_size;
         int urlcopy_tx_to;
         bool strict_copy;
+        boost::tribool ipv6;
 
         static const int size = 4;
 

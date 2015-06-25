@@ -190,7 +190,8 @@ void FileTransferExecutor::run(boost::any & ctx)
 
                     // UDT and IPv6
                     cmd_builder.setUDT(db->isProtocolUDT(source_hostname, destin_hostname));
-                    cmd_builder.setIPv6(db->isProtocolIPv6(source_hostname, destin_hostname));
+                    if (!cmd_builder.isIPv6Explicit())
+                        cmd_builder.setIPv6(db->isProtocolIPv6(source_hostname, destin_hostname));
 
                     // FTS3 host name
                     cmd_builder.setFTSName(ftsHostName);

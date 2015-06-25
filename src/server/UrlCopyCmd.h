@@ -40,9 +40,13 @@ private:
         setOption(key, boost::lexical_cast<std::string>(value));
     }
 
+    bool IPv6Explicit;
+
 public:
     static const std::string Program;
     static std::string prepareMetadataString(const std::string& text);
+
+    UrlCopyCmd(): IPv6Explicit(false) {}
 
     std::string generateParameters(void);
 
@@ -56,6 +60,7 @@ public:
     void setProxy(const std::string&);
     void setUDT(bool);
     void setIPv6(bool);
+    bool isIPv6Explicit(void);
     void setShowUserDn(bool);
     void setFTSName(const std::string&);
     void setOAuthFile(const std::string&);

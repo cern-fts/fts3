@@ -130,7 +130,14 @@ void UrlCopyCmd::setUDT(bool set)
 
 void UrlCopyCmd::setIPv6(bool set)
 {
+    IPv6Explicit = true;
     setFlag("ipv6", set);
+}
+
+
+bool UrlCopyCmd::isIPv6Explicit(void)
+{
+    return IPv6Explicit;
 }
 
 
@@ -221,6 +228,11 @@ void UrlCopyCmd::setFromProtocol(const ProtocolResolver::protocol& protocol)
     }
     else {
         setOption("tcp-buffersize", DEFAULT_BUFFSIZE);
+    }
+
+
+    if (!indeterminate(protocol.ipv6)) {
+        this->setIPv6(protocol.ipv6);
     }
 
     setFlag("strict-copy", protocol.strict_copy);

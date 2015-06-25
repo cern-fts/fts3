@@ -179,6 +179,14 @@ optional<ProtocolResolver::protocol> ProtocolResolver::getUserDefinedProtocol(Tr
                 {
                     ret.strict_copy = true;
                 }
+            else if (*i == "ipv4")
+                {
+                    ret.ipv6 = false;
+                }
+            else if (*i == "ipv6")
+                {
+                    ret.ipv6 = true;
+                }
         }
 
     return ret;
