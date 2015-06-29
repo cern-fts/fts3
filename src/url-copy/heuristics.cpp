@@ -56,6 +56,7 @@ static bool retryTransferInternal(int errorNo, const std::string& category, cons
         "System error in write into HDFS",
         "File exists",
         "checksum do not match",
+        "CHECKSUM MISMATCH",
         NULL
     };
 
