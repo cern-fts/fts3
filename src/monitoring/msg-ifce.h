@@ -101,6 +101,11 @@ class msg_ifce
 {
 private:
 
+    enum {
+        MSG_IFCE_WAITING_START,
+        MSG_IFCE_WAITING_FINISH,
+    } state;
+
     static bool instanceFlag;
     static msg_ifce *single;
     std::string errorMessage;

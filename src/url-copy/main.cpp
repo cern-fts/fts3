@@ -293,7 +293,9 @@ void abnormalTermination(std::string classification, std::string, std::string fi
 
     if(UrlCopyOpts::getInstance().monitoringMessages)
         {
-            msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
+            Logger::getInstance().INFO() << "Send monitoring complete message" << std::endl;
+            std::string msgReturnValue = msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
+            Logger::getInstance().INFO() << "Complete message content: " << msgReturnValue << std::endl;
         }
 
     reporter.timeout = UrlCopyOpts::getInstance().timeout;
@@ -1525,9 +1527,9 @@ stop:
 
             if(opts.monitoringMessages)
                 {
-	            logger.INFO() << "Send monitoring complete message" << std::endl;
+                    logger.INFO() << "Send monitoring complete message" << std::endl;
                     std::string msgReturnValue = msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
-		    logger.INFO() << "Complete message content: " << msgReturnValue << std::endl;
+                    logger.INFO() << "Complete message content: " << msgReturnValue << std::endl;
                 }
 
             inShutdown = true;
