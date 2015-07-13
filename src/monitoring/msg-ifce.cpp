@@ -61,8 +61,8 @@ msg_ifce* msg_ifce::getInstance()
         }
 }
 
-
-msg_ifce::msg_ifce() /*private constructor*/
+/*private constructor*/
+msg_ifce::msg_ifce(): state(MSG_IFCE_WAITING_START)
 {
     read_initial_config();
 }
@@ -75,11 +75,18 @@ msg_ifce::~msg_ifce()
 
 std::string msg_ifce::SendTransferStartMessage(transfer_completed *tr_started)
 {
-
     std::string message;
+
+    if (state != MSG_IFCE_WAITING_START) {
+        logger::writeLog("WARNING Trying to send a start message, but the internal state is not MSG_IFCE_WAITING_START");
+        return message;
+    }
+
+    state = MSG_IFCE_WAITING_FINISH;
 
     if(false == getACTIVE())
         return message;
+
     string text("");
     try
         {
@@ -207,6 +214,13 @@ std::string msg_ifce::SendTransferStartMessage(transfer_completed *tr_started)
 std::string msg_ifce::SendTransferFinishMessage(transfer_completed *tr_completed)
 {
     std::string message;
+
+    if (state != MSG_IFCE_WAITING_FINISH) {
+        logger::writeLog("WARNING Trying to send a finish message, but the internal state is not MSG_IFCE_WAITING_FINISH");
+        return message;
+    }
+
+    state = MSG_IFCE_WAITING_START;
 
     if(false == getACTIVE())
         return message;
