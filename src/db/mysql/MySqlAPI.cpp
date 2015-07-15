@@ -11873,8 +11873,13 @@ void MySqlAPI::getFilesForDeletion(std::vector< boost::tuple<std::string, std::s
             sql << 	"SELECT concurrent_ops from t_stage_req "
                 "WHERE vo_name=:vo_name and host = :endpoint and operation='delete' and concurrent_ops is NOT NULL ",
                 soci::use(vo_name), soci::use(source_se), soci::into(maxValueConfig, isNull);
+            if (isNull == soci::i_null || maxValueConfig <= 0) {
+                sql <<  "SELECT concurrent_ops from t_stage_req "
+                    "WHERE vo_name=:vo_name and host = '*' and operation='delete' and concurrent_ops is NOT NULL ",
+                    soci::use(vo_name), soci::into(maxValueConfig, isNull);
+            }
 
-            //check current staging
+            //check current deletion
             sql << 	"SELECT count(*) from t_dm "
                 "WHERE vo_name=:vo_name and source_se = :endpoint and file_state='STARTED' and job_finished is NULL ",
                 soci::use(vo_name), soci::use(source_se), soci::into(currentDeleteActive);
@@ -12311,6 +12316,11 @@ void MySqlAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::st
             sql << 	"SELECT concurrent_ops from t_stage_req "
                 "WHERE vo_name=:vo_name and host = :endpoint and operation='staging' and concurrent_ops is NOT NULL ",
                 soci::use(vo_name), soci::use(source_se), soci::into(maxValueConfig);
+            if (maxValueConfig <= 0) {
+                sql <<  "SELECT concurrent_ops from t_stage_req "
+                    "WHERE vo_name=:vo_name and host = '*' and operation='staging' and concurrent_ops is NOT NULL ",
+                    soci::use(vo_name), soci::into(maxValueConfig);
+            }
 
             if(maxValueConfig > 0)
             {
