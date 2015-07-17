@@ -331,17 +331,6 @@ void ProfiledDB::unblacklistDn(std::string dn)
 }
 
 
-bool ProfiledDB::isSeBlacklisted(std::string se, std::string vo)
-{
-    PROFILE_PREFIXED("DB::", return db->isSeBlacklisted(se, vo));
-}
-
-
-bool ProfiledDB::allowSubmitForBlacklistedSe(std::string se)
-{
-    PROFILE_PREFIXED("DB::", return db->allowSubmitForBlacklistedSe(se));
-}
-
 void ProfiledDB::allowSubmit(std::string ses, std::string vo, std::list<std::string>& notAllowed)
 {
     PROFILE_PREFIXED("DB::", return db->allowSubmit(ses, vo, notAllowed));
@@ -649,39 +638,15 @@ std::vector<std::string> ProfiledDB::getAllShareOnlyCfgs()
 }
 
 
-int ProfiledDB::activeProcessesForThisHost()
-{
-    PROFILE_PREFIXED("DB::", return db->activeProcessesForThisHost());
-}
-
-
 std::vector< std::pair<std::string, std::string> > ProfiledDB::getAllPairCfgs()
 {
     PROFILE_PREFIXED("DB::", return db->getAllPairCfgs());
 }
 
 
-void ProfiledDB::getCredentials(std::string & vo_name, const std::string & job_id, int file_id, std::string & dn, std::string & dlg_id)
-{
-    PROFILE_PREFIXED("DB::", db->getCredentials(vo_name, job_id, file_id, dn, dlg_id));
-}
-
-
 void ProfiledDB::setMaxStageOp(const std::string& se, const std::string& vo, int val, const std::string & opt)
 {
     PROFILE_PREFIXED("DB::", db->setMaxStageOp(se, vo, val, opt));
-}
-
-
-double ProfiledDB::getSuccessRate(std::string source, std::string destination)
-{
-    PROFILE_PREFIXED("DB::", return db->getSuccessRate(source, destination));
-}
-
-
-double ProfiledDB::getAvgThroughput(std::string source, std::string destination)
-{
-    PROFILE_PREFIXED("DB::", return db->getAvgThroughput(source, destination));
 }
 
 
@@ -819,11 +784,6 @@ void ProfiledDB::setShowUserDn(bool show)
     PROFILE_PREFIXED("DB::", db->setShowUserDn(show));
 }
 
-bool ProfiledDB::getShowUserDn()
-{
-    PROFILE_PREFIXED("DB::", return db->getShowUserDn());
-}
-
 void ProfiledDB::setBandwidthLimit(const std::string & source_hostname, const std::string & destination_hostname, int bandwidthLimit)
 {
     PROFILE_PREFIXED("DB::", db->setBandwidthLimit(source_hostname, destination_hostname, bandwidthLimit));
@@ -916,28 +876,6 @@ void ProfiledDB::getFilesForDeletion(std::vector< boost::tuple<std::string, std:
     PROFILE_PREFIXED("DB::", db->getFilesForDeletion(files));
 }
 
-//job_id
-void ProfiledDB::cancelDeletion(std::vector<std::string>& files)
-{
-    PROFILE_PREFIXED("DB::", db->cancelDeletion(files));
-}
-
-//file_id / surl
-void ProfiledDB::getDeletionFilesForCanceling(std::vector< boost::tuple<int, std::string, std::string> >& files)
-{
-    PROFILE_PREFIXED("DB::", db->getDeletionFilesForCanceling(files));
-}
-
-void ProfiledDB::setMaxDeletionsPerEndpoint(int maxDeletions, const std::string & endpoint, const std::string & vo)
-{
-    PROFILE_PREFIXED("DB::", db->setMaxDeletionsPerEndpoint(maxDeletions, endpoint, vo));
-}
-
-int ProfiledDB::getMaxDeletionsPerEndpoint(const std::string & endpoint, const std::string & vo)
-{
-    PROFILE_PREFIXED("DB::", return db->getMaxDeletionsPerEndpoint(endpoint, vo));
-}
-
 void ProfiledDB::revertDeletionToStarted()
 {
     PROFILE_PREFIXED("DB::", return db->revertDeletionToStarted());
@@ -976,12 +914,6 @@ void ProfiledDB::submitdelete(const std::string & jobId, const std::map<std::str
                               const std::string & DN, const std::string & voName, const std::string & credID)
 {
     PROFILE_PREFIXED("DB::", db->submitdelete(jobId, rulsHost, DN, voName, credID));
-}
-
-
-void ProfiledDB::checkJobOperation(std::vector<std::string>& jobs, std::vector< boost::tuple<std::string, std::string> >& ops)
-{
-    PROFILE_PREFIXED("DB::", db->checkJobOperation(jobs, ops));
 }
 
 

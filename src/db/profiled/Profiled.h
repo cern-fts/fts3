@@ -147,10 +147,6 @@ public:
 
     void unblacklistDn(std::string dn);
 
-    bool isSeBlacklisted(std::string se, std::string vo);
-
-    bool allowSubmitForBlacklistedSe(std::string se);
-
     void allowSubmit(std::string ses, std::string vo, std::list<std::string>& notAllowed);
 
     boost::optional<int> getTimeoutForSe(std::string se);
@@ -248,17 +244,9 @@ public:
 
     std::vector<std::string> getAllShareOnlyCfgs();
 
-    int activeProcessesForThisHost();
-
     std::vector< std::pair<std::string, std::string> > getAllPairCfgs();
 
-    void getCredentials(std::string & vo_name, const std::string & job_id, int file_id, std::string & dn, std::string & dlg_id);
-
     void setMaxStageOp(const std::string& se, const std::string& vo, int val, const std::string & opt);
-
-    double getSuccessRate(std::string source, std::string destination);
-
-    double getAvgThroughput(std::string source, std::string destination);
 
     void updateProtocol(std::vector<struct message>& tempProtocol);
 
@@ -308,8 +296,6 @@ public:
 
     void setShowUserDn(bool show);
 
-    bool getShowUserDn();
-
     void setBandwidthLimit(const std::string & source_hostname, const std::string & destination_hostname, int bandwidthLimit);
 
     std::string getBandwidthLimit();
@@ -350,15 +336,6 @@ public:
     //vo_name, source_url, job_id, file_id, user_dn, cred_id
     void getFilesForDeletion(std::vector< boost::tuple<std::string, std::string, std::string, int, std::string, std::string> >& files);
 
-    //job_id
-    void cancelDeletion(std::vector<std::string>& files);
-
-    //file_id / surl
-    void getDeletionFilesForCanceling(std::vector< boost::tuple<int, std::string, std::string> >& files);
-
-    void setMaxDeletionsPerEndpoint(int maxDeletions, const std::string & endpoint, const std::string & vo);
-    int getMaxDeletionsPerEndpoint(const std::string & endpoint, const std::string & vo);
-
     void revertDeletionToStarted();
 
     //staging						//file_id / state / reason / token
@@ -376,8 +353,6 @@ public:
 
     void submitdelete(const std::string & jobId, const std::map<std::string,std::string>& rulsHost,
                       const std::string & DN, const std::string & voName, const std::string & credID);
-
-    void checkJobOperation(std::vector<std::string>& jobs, std::vector< boost::tuple<std::string, std::string> >& ops);
 
     bool getOauthCredentials(const std::string& user_dn, const std::string& vo,
                              const std::string& cloud_name, OAuth& oauth);

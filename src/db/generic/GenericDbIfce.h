@@ -216,10 +216,6 @@ public:
 
     virtual void unblacklistDn(std::string dn) = 0;
 
-    virtual bool isSeBlacklisted(std::string se, std::string vo) = 0;
-
-    virtual bool allowSubmitForBlacklistedSe(std::string se) = 0;
-
     virtual void allowSubmit(std::string ses, std::string vo, std::list<std::string>& notAllowed) = 0;
 
     virtual boost::optional<int> getTimeoutForSe(std::string se) = 0;
@@ -319,17 +315,9 @@ public:
 
     virtual std::vector<std::string> getAllShareOnlyCfgs() = 0;
 
-    virtual int activeProcessesForThisHost() = 0;
-
     virtual std::vector< std::pair<std::string, std::string> > getAllPairCfgs() = 0;
 
-    virtual void getCredentials(std::string & vo_name, const std::string & job_id, int file_id, std::string & dn, std::string & dlg_id) = 0;
-
     virtual void setMaxStageOp(const std::string& se, const std::string& vo, int val, const std::string & opt) = 0;
-
-    virtual double getSuccessRate(std::string source, std::string destination) = 0;
-
-    virtual double getAvgThroughput(std::string source, std::string destination) = 0;
 
     virtual void updateProtocol(std::vector<struct message>& tempProtocol) = 0;
 
@@ -396,8 +384,6 @@ public:
 
     virtual void setShowUserDn(bool show) = 0;
 
-    virtual bool getShowUserDn() = 0;
-
     virtual void setBandwidthLimit(const std::string & source_hostname, const std::string & destination_hostname, int bandwidthLimit) = 0;
 
     virtual std::string getBandwidthLimit() = 0;
@@ -438,15 +424,6 @@ public:
     //vo_name, source_url, job_id, file_id, user_dn, cred_id
     virtual void getFilesForDeletion(std::vector< boost::tuple<std::string, std::string, std::string, int, std::string, std::string> >& files) = 0;
 
-    //job_id
-    virtual void cancelDeletion(std::vector<std::string>& files) = 0;
-
-    //file_id / surl
-    virtual void getDeletionFilesForCanceling(std::vector< boost::tuple<int, std::string, std::string> >& files) = 0;
-
-    virtual void setMaxDeletionsPerEndpoint(int maxDeletions, const std::string & endpoint, const std::string & vo) = 0;
-    virtual int getMaxDeletionsPerEndpoint(const std::string & endpoint, const std::string & vo) = 0;
-
     virtual void revertDeletionToStarted() = 0;
 
     //staging						//file_id / state / reason / token
@@ -462,8 +439,6 @@ public:
 
     //file_id / surl / token
     virtual void getStagingFilesForCanceling(std::set< std::pair<std::string, std::string> >& files) = 0;
-
-    virtual void checkJobOperation(std::vector<std::string>& jobs, std::vector< boost::tuple<std::string, std::string> >& ops) = 0;
 
     virtual bool isDmJob(std::string const & job) = 0;
 

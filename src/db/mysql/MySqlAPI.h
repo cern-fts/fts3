@@ -171,10 +171,6 @@ public:
 
     virtual void unblacklistDn(std::string dn);
 
-    virtual bool isSeBlacklisted(std::string se, std::string vo);
-
-    virtual bool allowSubmitForBlacklistedSe(std::string se);
-
     virtual void allowSubmit(std::string ses, std::string vo, std::list<std::string>& notAllowed);
 
     virtual boost::optional<int> getTimeoutForSe(std::string se);
@@ -274,15 +270,7 @@ public:
 
     virtual std::vector< std::pair<std::string, std::string> > getAllPairCfgs();
 
-    virtual int activeProcessesForThisHost();
-
-    virtual void getCredentials(std::string & vo_name, const std::string & job_id, int file_id, std::string & dn, std::string & dlg_id);
-
     virtual void setMaxStageOp(const std::string& se, const std::string& vo, int val, const std::string & opt);
-
-    virtual double getSuccessRate(std::string source, std::string destination);
-
-    virtual double getAvgThroughput(std::string source, std::string destination);
 
     virtual void updateProtocol(std::vector<struct message>& tempProtocol);
 
@@ -346,8 +334,6 @@ public:
 
     virtual void setShowUserDn(bool show);
 
-    virtual bool getShowUserDn();
-
     virtual void setBandwidthLimit(const std::string & source_hostname, const std::string & destination_hostname, int bandwidthLimit);
 
     virtual std::string getBandwidthLimit();
@@ -389,15 +375,6 @@ public:
     //vo_name, source_url, job_id, file_id, user_dn, cred_id
     virtual void getFilesForDeletion(std::vector< boost::tuple<std::string, std::string, std::string, int, std::string, std::string> >& files);
 
-    //job_id
-    virtual void cancelDeletion(std::vector<std::string>& files);
-
-    //file_id / surl
-    virtual void getDeletionFilesForCanceling(std::vector< boost::tuple<int, std::string, std::string> >& files);
-
-    virtual void setMaxDeletionsPerEndpoint(int maxDeletions, const std::string & endpoint, const std::string & vo);
-    virtual int getMaxDeletionsPerEndpoint(const std::string & endpoint, const std::string & vo);
-
     virtual void revertDeletionToStarted();
 
     //staging						//file_id / state / reason / token
@@ -412,8 +389,6 @@ public:
 
     //file_id / surl / token
     virtual void getStagingFilesForCanceling(std::set< std::pair<std::string, std::string> >& files);
-
-    virtual void checkJobOperation(std::vector<std::string>& jobs, std::vector< boost::tuple<std::string, std::string> >& ops);
 
     virtual bool getUserDnVisible();
 
