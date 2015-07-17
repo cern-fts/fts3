@@ -258,11 +258,17 @@ protected:
         if (!oauth_file.empty())
             cmd_builder.setOAuthFile(oauth_file);
 
-        // Send SUBMITTED message
+        // Send initial message
         SingleTrStateInstance::instance().sendStateMessage(job_id, -1);
 
         // Set all to ready, special case for session reuse
-        db->updateFileStatusReuse(representative, "READY");
+        int updatedFiles = db->updateFileStatusReuse(representative, "READY");
+        if (updatedFiles <= 0) {
+            FTS3_COMMON_LOGGER_NEWLOG(WARNING)
+                    << "Transfer " << representative.JOB_ID << " with session reuse enabled"
+                    << " not updated. Probably picked by another node" << commit;
+            return;
+        }
 
         // Debug level
         unsigned debugLevel = db->getDebugLevel(representative.SOURCE_SE, representative.DEST_SE);

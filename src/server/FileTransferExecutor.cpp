@@ -221,32 +221,51 @@ void FileTransferExecutor::run(boost::any & ctx)
                     if(stopThreads)
                         return;
 
-                    //send SUBMITTED message
+                    //send current state message
                     SingleTrStateInstance::instance().sendStateMessage(tf.JOB_ID, tf.FILE_ID);
 
                     scheduled += 1;
+
+                    bool fileUpdated = false;
                     if (-1 == pr.executeProcessShell(forkMessage))
                         {
                             if(forkMessage.empty())
                                 {
                                     failed = true;
                                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to fork " <<  tf.JOB_ID << "  " << tf.FILE_ID << commit;
-                                    db->updateFileTransferStatus(0.0, tf.JOB_ID, tf.FILE_ID, "FAILED", "Transfer failed to fork, check fts3server.log for more details",(int) pr.getPid(), 0, 0, false);
+                                    fileUpdated = db->updateFileTransferStatus(
+                                            0.0, tf.JOB_ID, tf.FILE_ID, "FAILED",
+                                            "Transfer failed to fork, check fts3server.log for more details",
+                                            (int) pr.getPid(), 0, 0, false);
                                     db->updateJobTransferStatus(tf.JOB_ID, "FAILED",0);
                                 }
                             else
                                 {
                                     failed = true;
                                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to fork " <<  forkMessage << "   " <<  tf.JOB_ID << "  " << tf.FILE_ID << commit;
-                                    db->updateFileTransferStatus(0.0, tf.JOB_ID, tf.FILE_ID, "FAILED", "Transfer failed to fork, check fts3server.log for more details",(int) pr.getPid(), 0, 0, false);
+                                    fileUpdated = db->updateFileTransferStatus(
+                                            0.0, tf.JOB_ID, tf.FILE_ID, "FAILED",
+                                            "Transfer failed to fork, check fts3server.log for more details",
+                                            (int) pr.getPid(), 0, 0, false);
                                     db->updateJobTransferStatus(tf.JOB_ID, "FAILED",0);
                                 }
                         }
                     else
                         {
-                            db->updateFileTransferStatus(0.0, tf.JOB_ID, tf.FILE_ID, "ACTIVE", "",(int) pr.getPid(), 0, 0, false);
+                            fileUpdated = db->updateFileTransferStatus(
+                                    0.0, tf.JOB_ID, tf.FILE_ID, "ACTIVE", "",
+                                    (int) pr.getPid(), 0, 0, false);
                             db->updateJobTransferStatus(tf.JOB_ID, "ACTIVE",0);
                         }
+
+                    // If fileUpdated == false, the transfer was *not* updated, which means we got
+                    // probably a collision with some other node
+                    if (!fileUpdated) {
+                        FTS3_COMMON_LOGGER_NEWLOG(WARNING)
+                                << "Transfer " <<  tf.JOB_ID << " " << tf.FILE_ID
+                                << " not updated. Probably picked by another node" << commit;
+                        return;
+                    }
 
                     //send ACTIVE
                     SingleTrStateInstance::instance().sendStateMessage(tf.JOB_ID, tf.FILE_ID);
