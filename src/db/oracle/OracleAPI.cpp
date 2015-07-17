@@ -2584,7 +2584,7 @@ bool OracleAPI::updateFileTransferStatus(double throughputIn, std::string job_id
     soci::session sql(*connectionPool);
     try
         {
-            updateFileTransferStatusInternal(sql, throughputIn, job_id, file_id, transfer_status, transfer_message, process_id, filesize, duration, retry);
+            return updateFileTransferStatusInternal(sql, throughputIn, job_id, file_id, transfer_status, transfer_message, process_id, filesize, duration, retry);
         }
     catch (std::exception& e)
         {
@@ -2601,10 +2601,10 @@ bool OracleAPI::updateFileTransferStatus(double throughputIn, std::string job_id
 bool OracleAPI::updateFileTransferStatusInternal(soci::session& sql, double throughputIn, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
         int process_id, double filesize, double duration, bool retry)
 {
-    bool ok = true;
-
     try
         {
+            sql.begin();
+
             double throughput = 0.0;
 
             bool staging = false;
@@ -2617,9 +2617,6 @@ bool OracleAPI::updateFileTransferStatusInternal(soci::session& sql, double thro
 
             std::string st;
 
-
-            sql.begin();
-
             // query for the file state in DB
             sql << "SELECT file_state FROM t_file WHERE file_id=:fileId and job_id=:jobId",
                 soci::use(file_id),
@@ -2628,14 +2625,21 @@ bool OracleAPI::updateFileTransferStatusInternal(soci::session& sql, double thro
 
             staging = (st == "STAGING");
 
-
+            // If file is in terminal and trying to set a non-terminal, don't do anything, just return
             if(st == "FAILED" || st == "FINISHED" || st == "CANCELED" )
+            {
+                if(transfer_status == "SUBMITTED" || transfer_status == "READY" || transfer_status == "ACTIVE")
                 {
-                    if(transfer_status == "SUBMITTED" || transfer_status == "READY" || transfer_status == "ACTIVE")
-                        {
-                            return false; //don't do anything, just return
-                        }
+                    sql.rollback();
+                    return false;
                 }
+            }
+
+            // If the file already in the same state, don't do anything either
+            if (st == transfer_status) {
+                sql.rollback();
+                return false;
+            }
 
             soci::statement stmt(sql);
             std::ostringstream query;
@@ -2740,7 +2744,6 @@ bool OracleAPI::updateFileTransferStatusInternal(soci::session& sql, double thro
         }
     catch (std::exception& e)
         {
-            ok = false;
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
@@ -2749,7 +2752,7 @@ bool OracleAPI::updateFileTransferStatusInternal(soci::session& sql, double thro
             sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
-    return ok;
+    return true;
 }
 
 bool OracleAPI::updateJobTransferStatus(std::string job_id, const std::string status, int pid)

@@ -2645,7 +2645,7 @@ bool MySqlAPI::updateFileTransferStatus(double throughputIn, std::string job_id,
     soci::session sql(*connectionPool);
     try
     {
-        updateFileTransferStatusInternal(sql, throughputIn, job_id, file_id, transfer_status, transfer_message, process_id, filesize, duration, retry);
+        return updateFileTransferStatusInternal(sql, throughputIn, job_id, file_id, transfer_status, transfer_message, process_id, filesize, duration, retry);
     }
     catch (std::exception& e)
     {
@@ -2653,7 +2653,7 @@ bool MySqlAPI::updateFileTransferStatus(double throughputIn, std::string job_id,
         {
             //try again if deadlocked
             sleep(TIME_TO_SLEEP_BETWEEN_TRANSACTION_RETRIES);
-            updateFileTransferStatusInternal(sql, throughputIn, job_id, file_id, transfer_status, transfer_message, process_id, filesize, duration, retry);
+            return updateFileTransferStatusInternal(sql, throughputIn, job_id, file_id, transfer_status, transfer_message, process_id, filesize, duration, retry);
         }
         catch (std::exception& e)
         {
@@ -2670,7 +2670,7 @@ bool MySqlAPI::updateFileTransferStatus(double throughputIn, std::string job_id,
         {
             //try again if deadlocked
             sleep(TIME_TO_SLEEP_BETWEEN_TRANSACTION_RETRIES);
-            updateFileTransferStatusInternal(sql, throughputIn, job_id, file_id, transfer_status, transfer_message, process_id, filesize, duration, retry);
+            return updateFileTransferStatusInternal(sql, throughputIn, job_id, file_id, transfer_status, transfer_message, process_id, filesize, duration, retry);
         }
         catch (std::exception& e)
         {
@@ -2681,7 +2681,6 @@ bool MySqlAPI::updateFileTransferStatus(double throughputIn, std::string job_id,
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
     }
-    return true;
 }
 
 
@@ -2791,14 +2790,13 @@ void MySqlAPI::revertToSubmitted()
 
 
 
-bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throughputIn, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
+bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throughputIn, std::string job_id, int file_id,
+        std::string transfer_status, std::string transfer_message,
         int process_id, double filesize, double duration, bool retry)
 {
-    bool ok = true;
-
     try
     {
-
+        sql.begin();
 
         double throughput = 0.0;
 
@@ -2813,24 +2811,32 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
         gmtime_r(&now, &tTime);
 
         if((job_id.empty() || file_id == 0) && transfer_status == "FAILED")
-            sql <<  "select file_id from t_file where pid=:pid and job_finished is NULL and file_state  = 'ACTIVE' LIMIT 1 ",soci::use(process_id), soci::into(file_id);
+            sql <<  "SELECT file_id FROM t_file WHERE pid=:pid AND job_finished is NULL AND file_state  = 'ACTIVE' LIMIT 1 ",
+                soci::use(process_id), soci::into(file_id);
 
         // query for the file state in DB
-        sql << "SELECT file_state FROM t_file WHERE file_id=:fileId and job_id=:jobId",
+        sql << "SELECT file_state FROM t_file WHERE file_id=:fileId AND job_id=:jobId",
             soci::use(file_id),
             soci::use(job_id),
             soci::into(st);
 
         staging = (st == "STAGING");
 
+        // If file is in terminal and trying to set a non-terminal, don't do anything, just return
         if(st == "FAILED" || st == "FINISHED" || st == "CANCELED" )
         {
             if(transfer_status == "SUBMITTED" || transfer_status == "READY" || transfer_status == "ACTIVE")
             {
-                return false; //don't do anything, just return
+                sql.rollback();
+                return false;
             }
         }
 
+        // If the file already in the same state, don't do anything either
+        if (st == transfer_status) {
+            sql.rollback();
+            return false;
+        }
 
         soci::statement stmt(sql);
         std::ostringstream query;
@@ -2922,8 +2928,6 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
         stmt.prepare(query.str());
         stmt.define_and_bind();
 
-        sql.begin();
-
         stmt.execute(true);
 
         sql.commit();
@@ -2945,7 +2949,7 @@ bool MySqlAPI::updateFileTransferStatusInternal(soci::session& sql, double throu
         sql.rollback();
         throw Err_Custom(std::string(__func__) + ": Caught exception ");
     }
-    return ok;
+    return true;
 }
 
 
