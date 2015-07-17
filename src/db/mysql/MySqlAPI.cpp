@@ -80,7 +80,7 @@ static unsigned getHashedId(void)
 // will return 0 even if there were updated record, so this is an ugly workaround
 // See https://github.com/SOCI/soci/pull/221
 // Apparently this only affects when soci::use is used
-static unsigned long long get_affected_Rows(soci::session& sql)
+static unsigned long long get_affected_rows(soci::session& sql)
 {
     soci::mysql_session_backend* be = static_cast<soci::mysql_session_backend*>(sql.get_backend());
     return mysql_affected_rows(static_cast<MYSQL*>(be->conn_));
