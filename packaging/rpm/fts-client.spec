@@ -6,7 +6,7 @@
 
 Name: fts-client
 Version: 3.3.1
-Release: 1
+Release: 1%{?dist}
 Summary: File Transfer Service V3
 Group: Applications/Internet
 License: ASL 2.0

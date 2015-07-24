@@ -43,7 +43,7 @@ $(RPMBUILD):
 	mkdir -p "$(RPMBUILD)"
 
 override_release: $(SPEC)
-	$(if $(RELEASE), sed -i "s/Release:.*/Release: $(RELEASE)/g" "$(SPEC)")
+	$(if $(RELEASE), sed -i "s/Release:.*/Release: $(RELEASE)%{?dist}/g" "$(SPEC)")
 
 srpm: dist $(SPEC) $(RPMBUILD) override_release
 	/usr/bin/rpmbuild --nodeps -bs $(RPMDEFINES_SRC) $(SPEC)
