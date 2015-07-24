@@ -23,7 +23,6 @@
 #include "common/monitorobject.h"
 #include "GenericDbIfce.h"
 #include "DynamicLibraryManager.h"
-#include "MonitoringDbIfce.h"
 #include "definitions.h"
 #include "server_dev.h"
 

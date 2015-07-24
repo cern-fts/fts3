@@ -11,7 +11,7 @@ include_directories (/usr/include/openssl)
 include_directories (/usr/include/soci)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(fts_db_mysql_SOURCES MySqlAPI.cpp MySqlMonitoring.cpp)
+set(fts_db_mysql_SOURCES MySqlAPI.cpp)
 
 
 add_library(fts_db_mysql SHARED ${fts_db_mysql_SOURCES})

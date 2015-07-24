@@ -10,7 +10,7 @@ include_directories (/usr/include/soci)
 include_directories (.)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(fts_db_oracle_SOURCES OracleAPI.cpp OracleMonitoring.cpp)
+set(fts_db_oracle_SOURCES OracleAPI.cpp)
 
 add_library(fts_db_oracle SHARED ${fts_db_oracle_SOURCES})
 add_dependencies(fts_db_oracle fts_common)

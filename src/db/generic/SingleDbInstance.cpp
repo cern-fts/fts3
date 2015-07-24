@@ -41,7 +41,7 @@ ThreadTraits::MUTEX DBSingleton::_mutex;
 
 // Implementation
 
-DBSingleton::DBSingleton(): dbBackend(NULL), monitoringDbBackend(NULL)
+DBSingleton::DBSingleton(): dbBackend(NULL)
 {
 
     std::string dbType = theServerConfig().get<std::string>("DbType");
@@ -64,14 +64,6 @@ DBSingleton::DBSingleton(): dbBackend(NULL), monitoringDbBackend(NULL)
             *(void**)( &create_db ) =  symbolInstatiate;
 
             *(void**)( &destroy_db ) = symbolDestroy;
-
-            DynamicLibraryManager::Symbol symbolInstatiateMonitoring = dlm->findSymbol("create_monitoring");
-
-            DynamicLibraryManager::Symbol symbolDestroyMonitoring = dlm->findSymbol("destroy_monitoring");
-
-            *(void**)( &create_monitoring_db ) =  symbolInstatiateMonitoring;
-
-            *(void**)( &destroy_monitoring_db ) = symbolDestroyMonitoring;
 
             // create an instance of the DB class
             dbBackend = create_db();
@@ -106,8 +98,6 @@ DBSingleton::~DBSingleton()
 {
     if (dbBackend)
         destroy_db(dbBackend);
-    if (monitoringDbBackend)
-        destroy_monitoring_db(monitoringDbBackend);
     if (dlm)
         delete dlm;
 }

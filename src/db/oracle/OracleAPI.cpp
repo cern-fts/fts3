@@ -29,7 +29,6 @@
 #include <sys/param.h>
 #include <unistd.h>
 #include "OracleAPI.h"
-#include "OracleMonitoring.h"
 #include "sociConversions.h"
 #include "queue_updater.h"
 #include "DbUtils.h"
@@ -12126,17 +12125,6 @@ extern "C" GenericDbIfce* create()
 }
 
 extern "C" void destroy(GenericDbIfce* p)
-{
-    if (p)
-        delete p;
-}
-
-extern "C" MonitoringDbIfce* create_monitoring()
-{
-    return new OracleMonitoring;
-}
-
-extern "C" void destroy_monitoring(MonitoringDbIfce* p)
 {
     if (p)
         delete p;
