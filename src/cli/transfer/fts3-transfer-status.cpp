@@ -50,7 +50,7 @@ static bool isTransferFailed(const std::string& state)
  */
 int main(int ac, char* av[])
 {
-    static const int DEFAULT_LIMIT = 10000;
+    static const size_t DEFAULT_LIMIT = 10000;
 
     try
         {
@@ -101,7 +101,7 @@ int main(int ac, char* av[])
                                 {
                                     // do the request
                                     std::vector<FileInfo> const vect =
-                                        ctx->getFileStatus(jobId, archive, offset, DEFAULT_LIMIT, cli.detailed());
+                                        ctx->getFileStatus(jobId, archive, (int)offset, (int)DEFAULT_LIMIT, cli.detailed());
 
                                     cnt = vect.size();
 

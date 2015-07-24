@@ -212,7 +212,7 @@ bool CredService::isValidProxy(const std::string& filename, std::string& message
             message += " lifetime is ";
             message += time1;
             message +=  " secs, VO extensions expired ";
-            message += boost::lexical_cast<std::string>(abs(voms_lifetime));
+            message += boost::lexical_cast<std::string>(abs((int)voms_lifetime));
             message += " secs ago";
 
             return false;

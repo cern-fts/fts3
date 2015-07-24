@@ -79,10 +79,10 @@ static unsigned getHashedId(void)
 // will return 0 even if there were updated record, so this is an ugly workaround
 // See https://github.com/SOCI/soci/pull/221
 // Apparently this only affects when soci::use is used
-static unsigned long long get_affected_rows(soci::session& sql)
+static unsigned int get_affected_rows(soci::session& sql)
 {
     soci::mysql_session_backend* be = static_cast<soci::mysql_session_backend*>(sql.get_backend());
-    return mysql_affected_rows(static_cast<MYSQL*>(be->conn_));
+    return (unsigned int)mysql_affected_rows(static_cast<MYSQL*>(be->conn_));
 }
 
 
@@ -4151,15 +4151,7 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
     bool allowed = false;
     soci::indicator isNull = soci::i_ok;
     soci::indicator isNullFixed = soci::i_ok;
-    int maxSource = 0;
-    int maxDestination = 0;
-    int activeSource = 0;
-    int activeDestination = 0;
     std::string active_fixed;
-    soci::indicator isNull1 = soci::i_ok;
-    soci::indicator isNull2 = soci::i_ok;
-    int max_per_se = 0;
-    int max_per_link = 0;;
 
     try
     {

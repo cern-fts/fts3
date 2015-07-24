@@ -8729,7 +8729,7 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
             if (retry_delay > 0)
                 {
                     // update
-                    time_t now = getUTC(retry_delay);
+                    time_t now = getUTC((int)retry_delay);
                     gmtime_r(&now, &tTime);
                 }
             else
