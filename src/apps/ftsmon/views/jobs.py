@@ -384,7 +384,7 @@ def get_transfer_list(http_request):
     transfers = transfers.values(
         'file_id', 'file_state', 'job_id',
         'source_se', 'dest_se', 'start_time', 'finish_time',
-        'activity'
+        'activity', 'user_filesize', 'filesize'
     )
 
     # Ordering
