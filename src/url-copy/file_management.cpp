@@ -38,7 +38,7 @@ using namespace std;
 
 
 
-FileManagement::FileManagement() :file_id(0), logFileName("/var/log/fts3/"), castor(false)
+FileManagement::FileManagement() :file_id(0), logFileName("/var/log/fts3/")
 {   
 }
 
