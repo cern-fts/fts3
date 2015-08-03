@@ -257,6 +257,7 @@ void abnormalTermination(std::string classification, std::string, std::string fi
 
     msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());
     msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, getDefaultReasonClass());
+    msg_ifce::getInstance()->set_is_recoverable(&tr_completed, retry);
     msg_ifce::getInstance()->set_failure_phase(&tr_completed, getDefaultErrorPhase());
     msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
     msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, finalState);
@@ -612,6 +613,7 @@ void setRemainingTransfersToFailed(std::vector<Transfer>& transferList, unsigned
             msg_ifce::getInstance()->set_dest_url(&tr_completed, t.destUrl);
             msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, TRANSFER);
             msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, GENERAL_FAILURE);
+            msg_ifce::getInstance()->set_is_recoverable(&tr_completed, retry);
             msg_ifce::getInstance()->set_failure_phase(&tr_completed, TRANSFER);
             msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, "Not executed because a previous hop failed");
             msg_ifce::getInstance()->set_job_state(&tr_completed, "UNKNOWN");
@@ -1374,6 +1376,7 @@ int main(int argc, char **argv)
 stop:
             msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
             msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
+            msg_ifce::getInstance()->set_is_recoverable(&tr_completed, retry);
             msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
             msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
 

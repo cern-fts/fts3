@@ -462,6 +462,9 @@ std::string msg_ifce::SendTransferFinishMessage(transfer_completed *tr_completed
             text.append(tr_completed->job_state);
             text.append("\"");
 
+            text.append(",\"$22$\":\"");
+            text.append(tr_completed->is_recoverable);
+            text.append("\"");
 
             text.append("}");
 
@@ -819,5 +822,10 @@ void msg_ifce::set_job_m_replica(transfer_completed* tr_completed, const std::st
         tr_completed->job_m_replica = value;
 }
 
+void msg_ifce::set_is_recoverable(transfer_completed* tr_completed, bool recoverable)
+{
+    if (tr_completed)
+        tr_completed->is_recoverable = to_string<int>(recoverable, std::dec);
+}
 
 #endif

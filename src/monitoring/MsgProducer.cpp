@@ -61,10 +61,15 @@ string completed[] = {"tr_id", "endpnt", "src_srm_v", "dest_srm_v", "vo", "src_u
                       "timestamp_checksum_dest_ended", "t_timeout", "chk_timeout", "t_error_code", "tr_error_scope", "t_failure_phase", "tr_error_category", "t_final_transfer_state",
                       "tr_bt_transfered", "nstreams", "buf_size", "tcp_buf_size", "block_size", "f_size", "time_srm_prep_st", "time_srm_prep_end", "time_srm_fin_st", "time_srm_fin_end",
                       "srm_space_token_src", "srm_space_token_dst", "t__error_message", "tr_timestamp_start", "tr_timestamp_complete", "channel_type", "user_dn", "file_metadata", "job_metadata",
-                      "retry","retry_max","job_m_replica", "job_state"
+                      "retry","retry_max","job_m_replica", "job_state", "is_recoverable"
                      };
 
-std::string completedToken[] = {"$a$", "$b$", "$c$", "$d$", "$e$", "$f$", "$g$", "$h$", "$i$", "$j$", "$k$", "$l$", "$m$", "$n$", "$o$", "$p$", "$q$", "$r$", "$s$", "$t$", "$u$", "$v$", "$w$", "$x$", "$y$", "$z$", "$0$", "$1$", "$2$", "$3$", "$4$", "$5$", "$6$", "$7$", "$8$", "$9$", "$10$", "$11$", "$12$", "$13$", "$14$", "$15$", "$16$", "$17$", "$18$", "$19$", "$20$", "$21$"};
+std::string completedToken[] =
+{ "$a$", "$b$", "$c$", "$d$", "$e$", "$f$", "$g$", "$h$", "$i$", "$j$", "$k$",
+        "$l$", "$m$", "$n$", "$o$", "$p$", "$q$", "$r$", "$s$", "$t$", "$u$",
+        "$v$", "$w$", "$x$", "$y$", "$z$", "$0$", "$1$", "$2$", "$3$", "$4$",
+        "$5$", "$6$", "$7$", "$8$", "$9$", "$10$", "$11$", "$12$", "$13$",
+        "$14$", "$15$", "$16$", "$17$", "$18$", "$19$", "$20$", "$21$", "$22$" };
 
 
 
@@ -145,7 +150,7 @@ void MsgProducer::sendMessage(std::string &temp)
             }
         else if (temp.compare(0, 2, "CO") == 0)
             {
-                for (index = 0; index < 48; index++)
+                for (index = 0; index < 49; index++)
                     {
                         find_and_replace(temp, completedToken[index], completed[index]);
                     }

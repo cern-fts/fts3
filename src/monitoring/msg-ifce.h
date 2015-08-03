@@ -94,7 +94,7 @@ public:
     std::string retry_max;
     std::string job_m_replica;
     std::string job_state;
-
+    std::string is_recoverable;
 };
 
 class msg_ifce
@@ -169,6 +169,8 @@ public:
 
     void set_job_state(transfer_completed* tr_completed, const std::string & value);
     void set_job_m_replica(transfer_completed* tr_completed, const std::string & value);
+
+    void set_is_recoverable(transfer_completed* tr_completed, bool recoverable);
 
     static msg_ifce* getInstance();
     ~msg_ifce();
