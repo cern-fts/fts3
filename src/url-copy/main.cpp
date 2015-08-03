@@ -71,7 +71,7 @@ static bool inShutdown = false;
 
 //make them global so as to catch unexpected exception before proper reading the arguments
 static std::string job_id;
-static std::string file_id;
+static unsigned file_id;
 
 time_t globalTimeout;
 
@@ -303,8 +303,8 @@ void abnormalTermination(std::string classification, std::string, std::string fi
     reporter.nostreams = UrlCopyOpts::getInstance().nStreams;
     reporter.buffersize = UrlCopyOpts::getInstance().tcpBuffersize;
 
-    if(currentTransfer.fileId == 0 && boost::lexical_cast<int>(file_id) > 0)
-        currentTransfer.fileId = boost::lexical_cast<int>(file_id);
+    if(currentTransfer.fileId == 0 && file_id > 0)
+        currentTransfer.fileId = file_id;
 
     reporter.sendTerminal(currentTransfer.throughput, retry,
                           currentTransfer.jobId, currentTransfer.fileId,
@@ -542,7 +542,7 @@ void myunexpected()
     if(currentTransfer.jobId.empty())
         currentTransfer.jobId = job_id;
     if(currentTransfer.fileId == 0)
-        currentTransfer.fileId = boost::lexical_cast<unsigned>(file_id);
+        currentTransfer.fileId = file_id;
 
     errorMessage = "Transfer unexpected handler called: " + currentTransfer.jobId;
     Logger::getInstance().ERROR() << errorMessage << std::endl;
@@ -555,7 +555,7 @@ void myterminate()
     if(currentTransfer.jobId.empty())
         currentTransfer.jobId = job_id;
     if(currentTransfer.fileId == 0)
-        currentTransfer.fileId = boost::lexical_cast<unsigned>(file_id);
+        currentTransfer.fileId = file_id;
 
     errorMessage = "Transfer terminate handler called: " + currentTransfer.jobId;
     Logger::getInstance().ERROR() << errorMessage << std::endl;
@@ -648,24 +648,6 @@ __attribute__((constructor)) void begin(void)
 
 int main(int argc, char **argv)
 {
-    //read directly from the arguments list just in case it dies so fast that the sleep in the parent won't catch it
-    if (argc > 2)
-        job_id = argv[2];
-
-    //make sure to skip file_id for multi-hop and reuse jobs
-    if (argc > 4)
-        {
-            if(std::string(argv[3]) == "--multi-hop" || std::string(argv[3]) == "-G")
-                file_id = "0";
-            else
-                file_id = argv[4];
-        }
-
-    Logger &logger = Logger::getInstance();
-
-    // register signals handler
-    fts3::common::Panic::setup_signal_handlers(shutdown_callback, NULL);
-
     UrlCopyOpts &opts = UrlCopyOpts::getInstance();
     if (opts.parse(argc, argv) < 0)
         {
@@ -674,6 +656,20 @@ int main(int argc, char **argv)
             abnormalTermination("FAILED", errorMessage, "Error");
             return 1;
         }
+
+    //make sure to skip file_id for multi-hop and reuse jobs
+    if (opts.multihop || opts.reuse)
+        file_id = 0;
+    else
+        file_id = opts.fileId;
+
+    // Initialize logger
+    Logger &logger = Logger::getInstance();
+
+    // register signals handler
+    fts3::common::Panic::setup_signal_handlers(shutdown_callback, NULL);
+
+
 
 
     fileManagement.init(opts.logDir);
