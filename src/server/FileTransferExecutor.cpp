@@ -40,7 +40,9 @@ namespace server
 {
 
 
-FileTransferExecutor::FileTransferExecutor(TransferFiles& tf, TransferFileHandler& tfh, bool monitoringMsg, string infosys, string ftsHostName, string proxy, std::string logDir) :
+FileTransferExecutor::FileTransferExecutor(TransferFiles& tf,
+        TransferFileHandler& tfh, bool monitoringMsg, string infosys,
+        string ftsHostName, string proxy, std::string logDir) :
     tf(tf),
     tfh(tfh),
     monitoringMsg(monitoringMsg),

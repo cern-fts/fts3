@@ -42,6 +42,10 @@ MonitoringMessaging=true
 # Profiling interval in seconds. If set to 0, it will be disabled
 Profiling=0
 
+# Log directories
+TransferLogDirectory=/var/log/fts3/transfers
+ServerLogDirectory=/var/log/fts3
+
 [roles]
 Public = transfer
 lcgadmin = vo:transfer

@@ -195,7 +195,7 @@ int DoServer(int argc, char** argv)
                         }
                 }
 
-            std::string logDir = theServerConfig().get<std::string > ("TransferLogDirectory");
+            std::string logDir = theServerConfig().get<std::string > ("ServerLogDirectory");
             if (logDir.length() > 0)
                 {
                     logDir += "/fts3bringonline.log";

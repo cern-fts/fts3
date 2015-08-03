@@ -35,7 +35,8 @@ FTS3_CONFIG_NAMESPACE_START
 #define FTS3_CONFIG_SERVERCONFIG_PORT_DEFAULT 8443
 #define FTS3_CONFIG_SERVERCONFIG_IP_DEFAULT "localhost"
 #define FTS3_CONFIG_SERVERCONFIG_THREADNUM_DEFAULT 10
-#define FTS3_CONFIG_SERVERCONFIG_TRANSFERLOGFIRECTOTY_DEFAULT "/var/log/fts3"
+#define FTS3_CONFIG_SERVERCONFIG_SERVERLOGDIRECTOTY_DEFAULT ""
+#define FTS3_CONFIG_SERVERCONFIG_TRANSFERLOGDIRECTOTY_DEFAULT "/var/log/fts3"
 #define FTS3_CONFIG_SERVERCONFIG_CONFIGFILE_DEFAULT "/etc/fts3/fts3config"
 #define FTS3_CONFIG_SERVERCONFIG_DBTYPE_DEFAULT "oracle"
 #define FTS3_CONFIG_SERVERCONFIG_DBTHREADS_DEFAULT "4"
@@ -158,9 +159,14 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "Control HTTP Keep alive in gsoap"
     )
     (
+        "ServerLogDirectory",
+        po::value<std::string>( &(_vars["ServerLogDirectory"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_SERVERLOGDIRECTOTY_DEFAULT),
+        "Directory where the service logs are written"
+    )
+    (
         "TransferLogDirectory,l",
-        po::value<std::string>( &(_vars["TransferLogDirectory"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_TRANSFERLOGFIRECTOTY_DEFAULT),
-        "Directory where the individual transfer logs are written"
+        po::value<std::string>( &(_vars["TransferLogDirectory"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_TRANSFERLOGDIRECTOTY_DEFAULT),
+        "Directory where the transfer logs are written"
     )
     (
         "AuthorizedVO,v",
@@ -333,6 +339,14 @@ ServerConfigReader::type_return ServerConfigReader::operator() (int argc, char**
     po::options_description config_file_options;
     config_file_options.add(config).add(hidden);
     _readConfigFile<ReadConfigFile_SystemTraits> (config_file_options);
+
+    // For legacy configurations, point ServerLogDirectory to TransferLogDirectory if not configured
+    if (_vars["ServerLogDirectory"].empty()) {
+        _vars["ServerLogDirectory"] = _vars["TransferLogDirectory"];
+        std::cerr << "Setting ServerLogDirectory to the same value as TransferLogDirectory" << std::endl;
+        std::cerr << "\t" << _vars["ServerLogDirectory"] << std::endl;
+        std::cerr << "Add ServerLogDirectory to your configuration file to stop seeing this" << std::endl;
+    }
 
     return _vars;
 }

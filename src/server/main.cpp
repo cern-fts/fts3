@@ -421,7 +421,7 @@ int DoServer(int argc, char** argv)
             setenv("X509_USER_CERT", hostcert, 1);
             setenv("X509_USER_KEY", hostkey, 1);
 
-            std::string logDir = theServerConfig().get<std::string > ("TransferLogDirectory");
+            std::string logDir = theServerConfig().get<std::string > ("ServerLogDirectory");
             if (logDir.length() > 0)
                 {
                     logDir += "/fts3server.log";
@@ -536,7 +536,7 @@ int main(int argc, char** argv)
             FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv, true);
 
             //check file/dir persmissions
-	    std::string logDir = theServerConfig().get<std::string > ("TransferLogDirectory");
+	    std::string logDir = theServerConfig().get<std::string > ("ServerLogDirectory");
             checkInitDirs(logDir);
 
             //check if db schema is installed
