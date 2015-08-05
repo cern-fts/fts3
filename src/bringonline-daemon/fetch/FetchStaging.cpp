@@ -61,10 +61,8 @@ void FetchStaging::fetch()
                     std::vector<StagingContext::context_type>::iterator it_f;
                     for (it_f = files.begin(); it_f != files.end(); ++it_f)
                         {
-                            // make sure it is a srm SE
-                            std::string const & url = boost::get<StagingContext::surl>(*it_f);
-                            if (!isSrmUrl(url)) continue;
                             // get the SE name
+                            std::string const & url = boost::get<StagingContext::surl>(*it_f);
                             Uri uri = Uri::Parse(url);
                             std::string se = uri.Host;
                             // get the other values necessary for the key

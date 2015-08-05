@@ -61,11 +61,6 @@ private:
     // vo, dn ,se, source_space_token
     typedef std::tuple<std::string, std::string, std::string, std::string> key_type;
 
-    static bool isSrmUrl(const std::string & url)
-    {
-        return url.compare(0, 6, "srm://") == 0;
-    }
-
     ThreadPool<Gfal2Task> & threadpool;
 };
 
