@@ -75,7 +75,7 @@ private:
     /**
      * Default constructor
      */
-    WaitingRoom() : t(0), pool(0) {}
+    WaitingRoom(): pool(NULL) {}
 
     /**
      * Copy constructor (not implemented)

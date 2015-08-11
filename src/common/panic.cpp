@@ -59,7 +59,7 @@ static void get_backtrace(int signum)
 }
 
 
-static void generate_coredump(int signum)
+static void generate_coredump()
 {
 #ifndef WITHOUT_GOOGLE_COREDUMPER
     extern char *program_invocation_short_name;
@@ -82,7 +82,7 @@ static void signal_handler(int signum)
             signum ==  SIGTRAP ||
             signum ==  SIGSYS) {
                 get_backtrace(signum);
-                generate_coredump(signum);
+                generate_coredump();
         }
     }
     raised_signal = signum;

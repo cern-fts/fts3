@@ -44,13 +44,12 @@ static bool signalReceived = false;
 
 namespace fs = boost::filesystem;
 
-void handler(int sig)
+void handler(int)
 {
     if(!signalReceived)
         {
             signalReceived = true;
 
-            sig = 0;
             stopThreads = true;
             std::queue<std::string> myQueue = concurrent_queue::getInstance()->the_queue;
             std::string ret;

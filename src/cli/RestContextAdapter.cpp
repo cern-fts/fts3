@@ -44,7 +44,11 @@ void RestContextAdapter::getInterfaceDetails()
     schema += "." + parser.get("schema.patch");
 }
 
-std::vector<JobStatus> RestContextAdapter::listRequests (std::vector<std::string> const & statuses, std::string const & dn, std::string const & vo, std::string const & /*source*/, std::string const & /*destination*/)
+std::vector<JobStatus> RestContextAdapter::listRequests (
+	std::vector<std::string> const & statuses,
+        std::string const & dn,
+        std::string const & vo,
+        std::string const & /*source*/, std::string const & /*destination*/)
 {
     // prefix will be holding '?' at the first concatenation and then '&'
     char prefix = '?';
@@ -84,7 +88,12 @@ std::vector<JobStatus> RestContextAdapter::listRequests (std::vector<std::string
     return parser.getJobs("jobs");
 }
 
-std::vector<JobStatus> RestContextAdapter::listDeletionRequests (std::vector<std::string> const & statuses, std::string const & dn, std::string const & vo, std::string const & source, std::string const & destination)
+std::vector<JobStatus> RestContextAdapter::listDeletionRequests (
+	std::vector<std::string> const & /*statuses*/,
+        std::string const & /*dn*/,
+        std::string const & /*vo*/,
+        std::string const & /*source*/,
+        std::string const & /*destination*/)
 {
     return std::vector<JobStatus>(); // TODO
 }
@@ -110,7 +119,7 @@ std::vector< std::pair<std::string, std::string> > RestContextAdapter::cancel(st
 }
 
 
-boost::tuple<int, int>  RestContextAdapter::cancelAll(const std::string& vo)
+boost::tuple<int, int>  RestContextAdapter::cancelAll(const std::string& /*vo*/)
 {
     throw cli_exception("Not implemented");
 }
@@ -144,7 +153,7 @@ std::string RestContextAdapter::deleteFile (const std::vector<std::string>& file
 }
 
 
-JobStatus RestContextAdapter::getTransferJobStatus (std::string const & jobId, bool archive)
+JobStatus RestContextAdapter::getTransferJobStatus (std::string const & jobId, bool /*archive*/)
 {
     std::string url = endpoint + "/jobs/" + jobId;
 
@@ -167,7 +176,7 @@ JobStatus RestContextAdapter::getTransferJobStatus (std::string const & jobId, b
 }
 
 
-JobStatus RestContextAdapter::getTransferJobSummary (std::string const & jobId, bool archive)
+JobStatus RestContextAdapter::getTransferJobSummary (std::string const & jobId, bool /*archive*/)
 {
     // first get the files
     std::string url_files = endpoint + "/jobs/" + jobId + "/files";
@@ -214,7 +223,8 @@ JobStatus RestContextAdapter::getTransferJobSummary (std::string const & jobId, 
            );
 }
 
-std::vector<FileInfo> RestContextAdapter::getFileStatus (std::string const & jobId, bool archive, int offset, int limit, bool retries)
+std::vector<FileInfo> RestContextAdapter::getFileStatus (std::string const & jobId,
+        bool /*archive*/, int /*offset*/, int /*limit*/, bool /*retries*/)
 {
     std::string url = endpoint + "/jobs/" + jobId + "/files";
 

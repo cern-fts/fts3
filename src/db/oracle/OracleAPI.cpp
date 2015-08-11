@@ -3220,7 +3220,7 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs)
 
             soci::statement stmt1 = (sql.prepare << "UPDATE t_file SET  job_finished = sys_extract_utc(systimestamp) "
                                      "WHERE file_id = :file_id ",
-                                     soci::use(pid, "file_id"));
+                                     soci::use(file_id, "file_id"));
 
             // Cancel files
             sql.begin();
@@ -4102,7 +4102,7 @@ bool OracleAPI::updateOptimizer()
                     }
                     else //all samples taken, max is 16 streams
                     {
-                        stmt24.execute(true);	//get current stream used with max throughput
+                        stmt24.execute(true);   //get current stream used with max throughput
                         nostreams = updateStream;
 
                         sql << " SELECT max(datetime) FROM t_optimize_streams  WHERE source_se=:source_se and dest_se=:dest_se "
@@ -4123,7 +4123,7 @@ bool OracleAPI::updateOptimizer()
                         if (timeIsOk && diff >= STREAMS_UPDATE_MAX && throughput > 0.0) //almost half a day has passed, compare throughput with max sample
                         {
                             sql.begin();
-                            stmt28.execute(true);	//update stream currently used with new throughput and timestamp this time
+                            stmt28.execute(true);   //update stream currently used with new throughput and timestamp this time
                             sql.commit();
                         }
                     }
@@ -4311,7 +4311,7 @@ bool OracleAPI::updateOptimizer()
                 {
                     if(maxSource > maxDestination)
                     {
-                        maxSource = 	maxDestination; //take the min
+                        maxSource =     maxDestination; //take the min
                     }
                     else if( maxDestination > maxSource)
                     {
@@ -9224,7 +9224,6 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
         }
 
     bool sourceEmpty = true;
-    bool destinEmpty = true;
 
     if(!source_se_p.empty())
         {
@@ -9244,7 +9243,6 @@ void OracleAPI::snapshot(const std::string & vo_name, const std::string & source
 
     if(!dest_se_p.empty())
         {
-            destinEmpty = false;
             if(sourceEmpty)
                 {
                     dest_se = dest_se_p;

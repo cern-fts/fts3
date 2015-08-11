@@ -187,7 +187,7 @@ unsigned adjustTimeoutBasedOnSize(off_t sizeInBytes, unsigned timeout, unsigned 
         transferTimeout = adjustTimeout(sizeInBytes);
 
     // Final timeout adjusted considering transfer timeout
-    long double totalTimeout = transferTimeout + ceil(timeoutPerMBLocal * sizeInBytes / MB);
+    long double totalTimeout = transferTimeout + ceil(timeoutPerMBLocal * (static_cast<double>(sizeInBytes) / MB));
 
     // Truncate to an unsigned
     if (totalTimeout >= INT_MAX)

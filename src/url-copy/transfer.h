@@ -31,9 +31,9 @@ public:
     double throughput;
     off_t transferredBytes;
 
-    Transfer(): fileId(0), userFileSize(0), checksumMethod(UrlCopyOpts::CHECKSUM_STRICT),
-        startTime(0), finishTime(0),
-        fileSize(0), throughput(0.0), transferredBytes(0),job_m_replica("false"), last_replica("false")
+    Transfer(): fileId(0), userFileSize(0), job_m_replica("false"), last_replica("false"), 
+        checksumMethod(UrlCopyOpts::CHECKSUM_STRICT), startTime(0), finishTime(0),
+        fileSize(0), throughput(0.0), transferredBytes(0)
     {
     }
 

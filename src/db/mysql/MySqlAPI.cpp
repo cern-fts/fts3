@@ -4312,27 +4312,16 @@ bool MySqlAPI::updateOptimizer()
     int maxActive = 0;
     soci::indicator isNullRetry = soci::i_ok;
     soci::indicator isNullMaxActive = soci::i_ok;
-    soci::indicator isNullRate = soci::i_ok;
     soci::indicator isNullFixed = soci::i_ok;
     double retry = 0.0;   //latest from db
-    double lastSuccessRate = 0.0;
     int retrySet = 0;
     soci::indicator isRetry = soci::i_ok;
-    soci::indicator isNullStreamsFound = soci::i_ok;
-    long long streamsFound = 0;
-    long long recordFound = 0;
-    int insertStreams = -1;
-    soci::indicator isNullStartTime = soci::i_ok;
-    soci::indicator isNullRecordsFound = soci::i_ok;
-    long long int streamsCurrent = 0;
-    soci::indicator isNullStreamsCurrent = soci::i_ok;
     long long singleDest = 0;
     bool lanTransferBool = false;
     double ema = 0.0;
     double submitted = 0.0;
     std::string active_fixed;
     soci::indicator isNullStreamsOptimization = soci::i_ok;
-    soci::indicator isNullDatetime = soci::i_ok;
     int maxNoStreams = 16;
     int nostreams = 1;
     double throughput=0.0;
@@ -4563,23 +4552,12 @@ bool MySqlAPI::updateOptimizer()
             maxActive = 0;
             isNullRetry = soci::i_ok;
             isNullMaxActive = soci::i_ok;
-            lastSuccessRate = 0.0;
-            isNullRate = soci::i_ok;
-            isNullStreamsFound = soci::i_ok;
-            streamsFound = 0;
-            recordFound = 0;
-            insertStreams = -1;
-            isNullStartTime = soci::i_ok;
-            isNullRecordsFound = soci::i_ok;
-            streamsCurrent = 0;
-            isNullStreamsCurrent = soci::i_ok;
             singleDest = 0;
             lanTransferBool = false;
             ema = 0.0;
             submitted = 0.0;
             nostreams = 1;
             isNullStreamsOptimization = soci::i_ok;
-            isNullDatetime = soci::i_ok;
             maxThroughput = 0.0;
             testedThroughput = 0;
             updateStream = 0;
@@ -10072,7 +10050,6 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
     }
 
     bool sourceEmpty = true;
-    bool destinEmpty = true;
 
     if(!source_se_p.empty())
     {
@@ -10095,8 +10072,6 @@ void MySqlAPI::snapshot(const std::string & vo_name, const std::string & source_
 
     if(!dest_se_p.empty())
     {
-        destinEmpty = false;
-
         querySeAll += " and dest_se = '" + dest_se_p + "' ";
 
         if(sourceEmpty)

@@ -48,7 +48,7 @@ boost::optional<time_t> RestDelegator::getExpirationTime()
     return mktime(&time);
 }
 
-void RestDelegator::doDelegation(time_t requestProxyDelegationTime, bool renew) const
+void RestDelegator::doDelegation(time_t requestProxyDelegationTime, bool /*renew*/) const
 {
     // do the request
     std::string const request = endpoint + "/delegation/" + delegationId + "/request";
