@@ -13,8 +13,6 @@
 
 #include "cred/DelegCred.h"
 
-#include <boost/scoped_ptr.hpp>
-
 #include <tuple>
 #include <string>
 

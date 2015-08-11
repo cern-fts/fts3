@@ -19,7 +19,6 @@
 
 
 #include <iostream>
-#include <boost/scoped_ptr.hpp>
 #include "common/monitorobject.h"
 #include "GenericDbIfce.h"
 #include "DynamicLibraryManager.h"
@@ -72,7 +71,7 @@ private:
     static ThreadTraits::MUTEX _mutex;
     SingleTrStateInstance & operator=(SingleTrStateInstance const&);
     // assignment operator is private
-    static boost::scoped_ptr<SingleTrStateInstance> i;
+    static std::unique_ptr<SingleTrStateInstance> i;
 
     std::string ftsAlias;
 

@@ -18,8 +18,6 @@ limitations under the License. */
 #include "dev.h"
 #include "genericlogger.h"
 
-#include <boost/scoped_ptr.hpp>
-
 #ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 #include "unittest/testsuite.h"
 #endif // FTS3_COMPILE_WITH_UNITTESTS
@@ -175,7 +173,7 @@ struct GenericLogger_Constructor_Test
     }
 
     /// Internal test object
-    boost::scoped_ptr <GenericLogger_TestClass> testObject;
+    std::unique_ptr <GenericLogger_TestClass> testObject;
 };
 
 BOOST_AUTO_TEST_SUITE( common )

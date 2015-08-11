@@ -43,7 +43,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <boost/scoped_ptr.hpp>
 #include "logger.h"
 #include "error.h"
 #include "producer_consumer_common.h"

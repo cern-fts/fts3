@@ -30,7 +30,6 @@
 #include <boost/optional.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/scoped_ptr.hpp>
 
 #include "StandaloneSeCfg.h"
 #include "StandaloneGrCfg.h"

@@ -16,7 +16,6 @@ limitations under the License. */
 #pragma once
 
 #include "server_dev.h"
-#include "common/pointers.h"
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
 #include <string>
@@ -27,7 +26,6 @@ limitations under the License. */
 #include <string>
 #include <vector>
 #include <sstream>
-#include <boost/scoped_ptr.hpp>
 #include "producer_consumer_common.h"
 #include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
@@ -38,7 +36,6 @@ extern time_t updateRecords;
 namespace fs = boost::filesystem;
 
 FTS3_SERVER_NAMESPACE_START
-using FTS3_COMMON_NAMESPACE::Pointer;
 using namespace FTS3_COMMON_NAMESPACE;
 using namespace db;
 

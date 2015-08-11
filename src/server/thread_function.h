@@ -17,7 +17,6 @@ limitations under the License. */
 
 #include "server_dev.h"
 #include "common/threadtraits.h"
-#include "common/pointers.h"
 
 FTS3_SERVER_NAMESPACE_START
 
@@ -89,7 +88,7 @@ protected:
     virtual void operator () () = 0;
 
 private:
-    Pointer<ProgressCondition>::Shared _pcond;
+    std::shared_ptr<ProgressCondition> _pcond;
 };
 
 FTS3_SERVER_NAMESPACE_END

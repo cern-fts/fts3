@@ -60,8 +60,8 @@ struct SynchronizedQueueTest
     {
     public:
         typedef int queue_e_t;
-        typedef SynchronizedQueue<queue_e_t, boost::shared_ptr> queue_t;
-        typedef boost::shared_ptr<queue_t> queue_p_t;
+        typedef SynchronizedQueue<queue_e_t, std::shared_ptr> queue_t;
+        typedef std::shared_ptr<queue_t> queue_p_t;
 
         _TestContext() : _q(new queue_t(_QUEUE_SIZE)) {};
 
@@ -145,7 +145,7 @@ struct SynchronizedQueueTest
 		\
 		private: \
 			queue_p_t _q; \
-			boost::shared_ptr<queue_e_t> _v; \
+			std::shared_ptr<queue_e_t> _v; \
 		}
 
         /** Push a value to the queue. The value and the queue is set in the

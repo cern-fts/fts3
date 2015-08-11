@@ -36,7 +36,7 @@ using namespace FTS3_CONFIG_NAMESPACE;
 namespace db
 {
 
-boost::scoped_ptr<DBSingleton> DBSingleton::i;
+std::unique_ptr<DBSingleton> DBSingleton::i;
 ThreadTraits::MUTEX DBSingleton::_mutex;
 
 // Implementation

@@ -33,7 +33,6 @@
 #include "db/generic/SingleDbInstance.h"
 
 #include <boost/algorithm/string.hpp>
-#include <boost/scoped_ptr.hpp>
 
 
 using namespace fts3::config;

@@ -20,7 +20,6 @@ limitations under the License. */
 #include <queue>
 
 #include "server_dev.h"
-#include "common/pointers.h"
 #include "common/error.h"
 #include "common/logger.h"
 #include "ws-ifce/gsoap/gsoap_stubs.h"
@@ -44,7 +43,7 @@ public:
     soap* getSoapContext();
     void recycleSoapContext(soap* ctx);
 
-    boost::shared_ptr<GSoapRequestHandler> accept();
+    std::shared_ptr<GSoapRequestHandler> accept();
 
 protected:
 

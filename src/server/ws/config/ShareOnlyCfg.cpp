@@ -39,7 +39,7 @@ ShareOnlyCfg::ShareOnlyCfg(string dn, string name) : Configuration(dn), se(name)
     if (se == any) se = wildcard;
 
     // get SE active state
-    boost::scoped_ptr<LinkConfig> ptr (db->getLinkConfig(se, "*"));
+    std::unique_ptr<LinkConfig> ptr (db->getLinkConfig(se, "*"));
     if (ptr.get())
         active = ptr->state == on;
     else

@@ -16,7 +16,6 @@ limitations under the License. */
 #pragma once
 
 #include "server_dev.h"
-#include "common/pointers.h"
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
 #include <string>
@@ -54,7 +53,6 @@ limitations under the License. */
 #include "queue_updater.h"
 #include <boost/algorithm/string.hpp>
 #include <sys/param.h>
-#include <boost/shared_ptr.hpp>
 #include "name_to_uid.h"
 #include "producer_consumer_common.h"
 #include <sys/resource.h>
@@ -68,7 +66,6 @@ limitations under the License. */
 #include "profiler/Profiler.h"
 #include "profiler/Macros.h"
 #include <boost/thread.hpp>
-#include <boost/scoped_ptr.hpp>
 #include "oauth.h"
 
 extern bool stopThreads;
@@ -230,7 +227,7 @@ protected:
 
                                 if (proxies.find(proxy_key) == proxies.end())
                                     {
-                                        boost::scoped_ptr<DelegCred> delegCredPtr(new DelegCred);
+                                        std::unique_ptr<DelegCred> delegCredPtr(new DelegCred);
                                         std::string filename = delegCredPtr->getFileName(tf.DN, tf.CRED_ID), message;
 
                                         if (!delegCredPtr->isValidProxy(filename, message))
@@ -241,7 +238,7 @@ protected:
                                                     }
                                                 // check the proxy lifetime in DB
                                                 time_t db_lifetime = -1;
-                                                boost::scoped_ptr<Cred> cred (DBSingleton::instance().getDBObjectInstance()->
+                                                std::unique_ptr<Cred> cred (DBSingleton::instance().getDBObjectInstance()->
                                                                               findCredential(tf.CRED_ID, tf.DN)
                                                                              );
                                                 if (cred.get()) db_lifetime = cred->termination_time - time(NULL);

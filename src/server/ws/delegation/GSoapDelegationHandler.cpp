@@ -33,7 +33,6 @@
 #include <stdlib.h>
 
 #include <boost/regex.hpp>
-#include <boost/scoped_ptr.hpp>
 #include <sstream>
 
 using namespace fts3::ws;

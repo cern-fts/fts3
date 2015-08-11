@@ -40,14 +40,14 @@ using namespace fts3::ws;
 using namespace fts3::common;
 using namespace boost::assign;
 
-ProtocolResolver::ProtocolResolver(TransferFiles const & file, std::vector< boost::shared_ptr<ShareConfig> >& cfgs) :
+ProtocolResolver::ProtocolResolver(TransferFiles const & file, std::vector< std::shared_ptr<ShareConfig> >& cfgs) :
     db(DBSingleton::instance().getDBObjectInstance()),
     file(file),
     cfgs(cfgs),
     auto_tuned(false)
 {
 
-    std::vector< boost::shared_ptr<ShareConfig> >::iterator it;
+    std::vector< std::shared_ptr<ShareConfig> >::iterator it;
 
     // loop over the assigned configurations
     for (it = cfgs.begin(); it != cfgs.end(); ++it)
@@ -128,7 +128,7 @@ optional<ProtocolResolver::protocol> ProtocolResolver::getProtocolCfg(optional< 
     std::string source = (*link).first;
     std::string destination = (*link).second;
 
-    boost::shared_ptr<LinkConfig> cfg (
+    std::shared_ptr<LinkConfig> cfg (
         db->getLinkConfig(source, destination)
     );
 

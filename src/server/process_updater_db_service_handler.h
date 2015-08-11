@@ -16,7 +16,6 @@ limitations under the License. */
 #pragma once
 
 #include "server_dev.h"
-#include "common/pointers.h"
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
 #include <string>
@@ -47,7 +46,6 @@ extern time_t stallRecords;
 
 
 FTS3_SERVER_NAMESPACE_START
-using FTS3_COMMON_NAMESPACE::Pointer;
 using namespace FTS3_COMMON_NAMESPACE;
 using namespace db;
 using namespace FTS3_CONFIG_NAMESPACE;

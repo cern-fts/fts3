@@ -26,7 +26,6 @@
 
 #include "MsgPrinter.h"
 #include "ui/SrcDelCli.h"
-#include <boost/scoped_ptr.hpp>
 
 #include <iostream>
 #include <sys/types.h>

@@ -35,9 +35,6 @@
 #include <iostream>
 #include <string>
 
-
-#include <boost/scoped_ptr.hpp>
-
 #include <boost/property_tree/json_parser.hpp>
 
 using namespace fts3::cli;

@@ -36,7 +36,6 @@
 #include <boost/logic/tribool.hpp>
 #include <boost/optional.hpp>
 #include <boost/tuple/tuple.hpp>
-#include <boost/shared_ptr.hpp>
 
 FTS3_SERVER_NAMESPACE_START
 
@@ -111,7 +110,7 @@ public:
      *
      * @param job_id - transfer job ID
      */
-    ProtocolResolver(TransferFiles const & file, std::vector< boost::shared_ptr<ShareConfig> >& cfgs);
+    ProtocolResolver(TransferFiles const & file, std::vector< std::shared_ptr<ShareConfig> >& cfgs);
     ProtocolResolver(const fts3::server::ProtocolResolver&);
 
     /**
@@ -237,7 +236,7 @@ private:
     // the transfer file
     TransferFiles const & file;
 
-    std::vector< boost::shared_ptr<ShareConfig> >& cfgs;
+    std::vector< std::shared_ptr<ShareConfig> >& cfgs;
 
     /// -1 indicates that for the given protocol parameter the value obtained from auto-tuner should be used
     static const int automatic = -1;

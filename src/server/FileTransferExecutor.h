@@ -19,8 +19,6 @@
 #include <set>
 #include <string>
 
-#include <boost/scoped_ptr.hpp>
-
 namespace fts3
 {
 

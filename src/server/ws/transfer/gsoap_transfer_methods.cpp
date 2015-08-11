@@ -44,8 +44,6 @@
 #include <sstream>
 #include <list>
 
-#include <boost/scoped_ptr.hpp>
-
 #include <string.h>
 
 #include <cgsi_plugin.h>

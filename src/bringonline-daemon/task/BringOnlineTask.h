@@ -21,7 +21,6 @@
 #include <string>
 #include <utility>
 
-#include <boost/scoped_ptr.hpp>
 #include <boost/any.hpp>
 
 #include <gfal_api.h>

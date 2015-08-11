@@ -25,9 +25,6 @@
 #ifndef INSTANCEHOLDER_H_
 #define INSTANCEHOLDER_H_
 
-
-#include <boost/scoped_ptr.hpp>
-
 namespace fts3
 {
 namespace common
@@ -94,7 +91,7 @@ protected:
     /**
      * The single instance
      */
-    static boost::scoped_ptr<T> instance;
+    static std::unique_ptr<T> instance;
 
 private:
     /**
@@ -114,7 +111,7 @@ private:
 
 // initialize single instance pointer with 0
 template<typename T>
-boost::scoped_ptr<T> InstanceHolder<T>::instance;
+std::unique_ptr<T> InstanceHolder<T>::instance;
 
 }
 }

@@ -33,7 +33,6 @@
 #include "boost/tuple/tuple.hpp"
 #include <boost/optional.hpp>
 #include <boost/regex.hpp>
-#include <boost/shared_ptr.hpp>
 
 #include "db/generic/SingleDbInstance.h"
 
@@ -65,7 +64,7 @@ public:
      */
     FileTransferScheduler(
         TransferFiles const & file,
-        vector< boost::shared_ptr<ShareConfig> > cfgs,
+        vector< std::shared_ptr<ShareConfig> > cfgs,
         set<string> inses = set<string>(),
         set<string> outses = set<string>(),
         set<string> invos = set<string>(),
@@ -95,7 +94,7 @@ private:
     /// name of the destination SE
     string destSeName;
 
-    vector< boost::shared_ptr<ShareConfig> > cfgs;
+    vector< std::shared_ptr<ShareConfig> > cfgs;
 
     /// DB singleton instance
     GenericDbIfce* db;

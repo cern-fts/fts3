@@ -20,7 +20,6 @@ limitations under the License. */
 #include <queue>
 
 #include "server_dev.h"
-#include "common/pointers.h"
 #include "common/logger.h"
 #include "common/error.h"
 #include "ws-ifce/gsoap/gsoap_stubs.h"

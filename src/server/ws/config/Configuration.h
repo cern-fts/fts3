@@ -33,8 +33,6 @@
 #include <vector>
 #include <map>
 
-#include <boost/shared_ptr.hpp>
-
 namespace fts3
 {
 namespace ws
@@ -242,7 +240,7 @@ protected:
      * @param active - the state
      * @param symbolic_name - the symbolic name describing the link
      */
-    pair< boost::shared_ptr<LinkConfig>, bool > getLinkConfig(string source, string destination, bool active, string symbolic_name);
+    pair< std::shared_ptr<LinkConfig>, bool > getLinkConfig(string source, string destination, bool active, string symbolic_name);
 
     /**
      * Adds a link configuration to the DB.

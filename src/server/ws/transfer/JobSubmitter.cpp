@@ -48,7 +48,6 @@
 
 #include <boost/lambda/lambda.hpp>
 #include <boost/optional.hpp>
-#include <boost/scoped_ptr.hpp>
 #include <boost/assign.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/tuple/tuple.hpp>

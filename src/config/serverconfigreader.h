@@ -122,7 +122,7 @@ protected:
     {
         type_return::iterator config = _vars.find ("configfile");
         assert (config != _vars.end());
-        boost::shared_ptr<std::istream> in = DEPENDENCIES::getStream (config->second);
+        std::shared_ptr<std::istream> in = DEPENDENCIES::getStream (config->second);
         assert (in.get());
 
         try

@@ -27,7 +27,6 @@ limitations under the License. */
 
 #include <limits>
 #include <boost/ptr_container/ptr_vector.hpp>
-#include <boost/shared_ptr.hpp>
 
 /* ---------------------------------------------------------------------- */
 
@@ -41,7 +40,7 @@ namespace ThreadPool
 class ThreadPool : public Traced<ThreadPool>, public MonitorObject
 {
 private:
-    typedef SynchronizedQueue<ITask, boost::shared_ptr> _queue_t;
+    typedef SynchronizedQueue<ITask, std::shared_ptr> _queue_t;
 
 public:
     typedef _queue_t::element_type element_type;

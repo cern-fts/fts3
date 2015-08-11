@@ -44,7 +44,7 @@ using namespace fts3::ws;
 
 FileTransferScheduler::FileTransferScheduler(
     TransferFiles const & file,
-    vector< boost::shared_ptr<ShareConfig> > cfgs,
+    vector< std::shared_ptr<ShareConfig> > cfgs,
     set<string> inses,
     set<string> outses,
     set<string> invos,
@@ -57,13 +57,13 @@ FileTransferScheduler::FileTransferScheduler(
     srcSeName = file.SOURCE_SE;
     destSeName = file.DEST_SE;
 
-    vector< boost::shared_ptr<ShareConfig> > no_auto_share;
+    vector< std::shared_ptr<ShareConfig> > no_auto_share;
 
-    vector< boost::shared_ptr<ShareConfig> >::iterator it;
+    vector< std::shared_ptr<ShareConfig> >::iterator it;
     for (it = cfgs.begin(); it != cfgs.end(); it++)
         {
 
-            boost::shared_ptr<ShareConfig>& cfg = *it;
+            std::shared_ptr<ShareConfig>& cfg = *it;
 
             if (cfg->share_only)
                 {
@@ -127,7 +127,7 @@ bool FileTransferScheduler::schedule(int &currentActive)
                     return false;
                 }
 
-            vector< boost::shared_ptr<ShareConfig> >::iterator it;
+            vector< std::shared_ptr<ShareConfig> >::iterator it;
 
             for (it = cfgs.begin(); it != cfgs.end(); ++it)
                 {
@@ -136,7 +136,7 @@ bool FileTransferScheduler::schedule(int &currentActive)
                     string destination = (*it)->destination;
                     string vo = (*it)->vo;
 
-                    boost::shared_ptr<ShareConfig>& cfg = *it;
+                    std::shared_ptr<ShareConfig>& cfg = *it;
 
                     if (!cfg.get()) continue; // if the configuration has been deleted in the meanwhile continue
 
@@ -244,7 +244,7 @@ string FileTransferScheduler::getNoCreditsErrMsg(ShareConfig* cfg)
 
     for (it = cfgs.begin(); it != cfgs.end(); ++it)
         {
-            boost::shared_ptr<ShareConfig> ptr (*it);
+            std::shared_ptr<ShareConfig> ptr (*it);
             if (ptr->active_transfers)
                 {
                     if (it != cfgs.begin()) ss << ", ";

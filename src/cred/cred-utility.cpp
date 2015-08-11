@@ -43,11 +43,7 @@ extern "C" {
 }
 #endif //__cplusplus
 
-#include <boost/scoped_ptr.hpp>
 #include <unistd.h>
-
-
-using boost::scoped_ptr;
 
 /*
  * get_proxy_dn

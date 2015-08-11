@@ -55,7 +55,7 @@ ConfigurationAssigner::~ConfigurationAssigner()
 
 }
 
-void ConfigurationAssigner::assign(vector< boost::shared_ptr<ShareConfig> >& out)
+void ConfigurationAssigner::assign(vector< std::shared_ptr<ShareConfig> >& out)
 {
 
     string source = file.SOURCE_SE;
@@ -89,7 +89,7 @@ void ConfigurationAssigner::assign(vector< boost::shared_ptr<ShareConfig> >& out
     assignShareCfg(gr_cfgs, out);
 }
 
-void ConfigurationAssigner::assignShareCfg(list<cfg_type> arg, vector< boost::shared_ptr<ShareConfig> >& out)
+void ConfigurationAssigner::assignShareCfg(list<cfg_type> arg, vector< std::shared_ptr<ShareConfig> >& out)
 {
 
     content both (false, false);
@@ -116,7 +116,7 @@ void ConfigurationAssigner::assignShareCfg(list<cfg_type> arg, vector< boost::sh
             if (!link.get() || link->state == Configuration::off) continue;
 
             // check if there is a VO share
-            boost::shared_ptr<ShareConfig> ptr (
+            std::shared_ptr<ShareConfig> ptr (
                 db->getShareConfig(source, destination, vo)
             );
 

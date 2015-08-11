@@ -39,7 +39,7 @@ std::string _getTrTimestampUTC()
 
 
 
-boost::scoped_ptr<SingleTrStateInstance> SingleTrStateInstance::i;
+std::unique_ptr<SingleTrStateInstance> SingleTrStateInstance::i;
 ThreadTraits::MUTEX SingleTrStateInstance::_mutex;
 
 

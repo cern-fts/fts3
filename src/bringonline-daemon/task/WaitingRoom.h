@@ -12,10 +12,8 @@
 
 #include "common/ThreadPool.h"
 
-#include <boost/ptr_container/ptr_list.hpp> // thing about using a lockfree queue
-
+#include <boost/ptr_container/ptr_list.hpp> // think about using a lockfree queue
 #include <boost/thread.hpp>
-#include <boost/scoped_ptr.hpp>
 
 using namespace fts3::common;
 
@@ -94,7 +92,7 @@ private:
     /// the mutex preventing concurrent access
     boost::mutex m;
     /// the worker thread
-    boost::scoped_ptr<boost::thread> t;
+    std::unique_ptr<boost::thread> t;
     /// the threadpool items are waiting for
     ThreadPool<BASE> * pool;
 };

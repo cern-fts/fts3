@@ -632,7 +632,7 @@ void setRemainingTransfersToFailed(std::vector<Transfer>& transferList, unsigned
 
 bool checkValidProxy(const std::string& filename, std::string& message)
 {
-    boost::scoped_ptr<DelegCred> delegCredPtr(new DelegCred);
+    std::unique_ptr<DelegCred> delegCredPtr(new DelegCred);
     return delegCredPtr->isValidProxy(filename, message);
 }
 

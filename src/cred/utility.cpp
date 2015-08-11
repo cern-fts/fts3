@@ -17,7 +17,6 @@
 
 #include "utility.h"
 
-#include <boost/scoped_ptr.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 #include <algorithm>
@@ -28,9 +27,6 @@
 
 using namespace FTS3_COMMON_NAMESPACE;
 
-
-
-using boost::scoped_ptr;
 
 namespace
 {

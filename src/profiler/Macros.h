@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include <boost/shared_ptr.hpp>
 #include "Profiler.h"
 
 // Open a profiling scope, capturing exceptions
@@ -41,7 +40,7 @@ PROFILE_END;
 
 // Create a ScopeProfiler ONLY if profiling is set
 #define PROFILE_SCOPE(scope) \
-boost::scoped_ptr<fts3::ScopeProfiler> __profiler(NULL);\
+std::unique_ptr<fts3::ScopeProfiler> __profiler(NULL);\
 if (fts3::ProfilingSubsystem::getInstance().getInterval() > 0) {\
     __profiler.reset(new fts3::ScopeProfiler(scope));\
 }

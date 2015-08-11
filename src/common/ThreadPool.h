@@ -11,7 +11,6 @@
 #include <boost/thread.hpp>
 #include <boost/ptr_container/ptr_deque.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
-#include <boost/scoped_ptr.hpp>
 #include <boost/bind.hpp>
 #include <boost/any.hpp>
 #include <boost/optional.hpp>
@@ -50,7 +49,7 @@ class ThreadPool
         {
             while(!t_pool.interrupt_flag)
                 {
-                    boost::scoped_ptr<TASK> task(t_pool.next());
+                    std::unique_ptr<TASK> task(t_pool.next());
                     if (!task.get()) break;
                     task->run(thread_context);
                 }

@@ -14,9 +14,6 @@
 
 #include "cred/DelegCred.h"
 
-
-#include <boost/scoped_ptr.hpp>
-
 #include <boost/tuple/tuple.hpp>
 
 #include <tuple>

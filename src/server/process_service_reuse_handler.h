@@ -168,7 +168,7 @@ protected:
 
 
         /*check if manual config exist for this pair and vo*/
-        vector< boost::shared_ptr<ShareConfig> > cfgs;
+        vector< std::shared_ptr<ShareConfig> > cfgs;
         ConfigurationAssigner cfgAssigner(representative);
         cfgAssigner.assign(cfgs);
 

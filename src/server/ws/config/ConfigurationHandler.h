@@ -32,10 +32,8 @@
 
 #include <boost/assign.hpp>
 #include <boost/regex.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/tuple/tuple.hpp>
-#include <boost/scoped_ptr.hpp>
 
 #include "common/error.h"
 #include "common/logger.h"
@@ -154,7 +152,7 @@ public:
      *
      * @see parse
      */
-    boost::shared_ptr<SeProtocolConfig> getProtocolConfig(map<string, int> protocol);
+    std::shared_ptr<SeProtocolConfig> getProtocolConfig(map<string, int> protocol);
 
     /**
      * Gets the SE / SE group name

@@ -5,8 +5,6 @@
  *      Author: simonm
  */
 
-#include <boost/scoped_ptr.hpp>
-
 #include "FileTransferExecutor.h"
 
 #include "common/parse_url.h"
@@ -80,7 +78,7 @@ void FileTransferExecutor::run(boost::any & ctx)
 
             /*check if manual config exist for this pair and vo*/
 
-            vector< boost::shared_ptr<ShareConfig> > cfgs;
+            vector< std::shared_ptr<ShareConfig> > cfgs;
 
             ConfigurationAssigner cfgAssigner(tf);
             cfgAssigner.assign(cfgs);

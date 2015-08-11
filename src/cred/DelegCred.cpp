@@ -25,7 +25,6 @@
 #include <errno.h>
 #include <fstream>
 #include "utility.h"
-#include <boost/scoped_ptr.hpp>
 #include "SingleDbInstance.h"
 #include "common/logger.h"
 #include "common/error.h"
@@ -36,7 +35,6 @@
 #include "name_to_uid.h"
 
 using namespace FTS3_COMMON_NAMESPACE;
-using boost::scoped_ptr;
 using namespace db;
 
 namespace

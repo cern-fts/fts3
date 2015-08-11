@@ -26,9 +26,6 @@
 
 #include <sstream>
 
-#include <boost/shared_ptr.hpp>
-#include <boost/scoped_ptr.hpp>
-
 namespace fts3
 {
 namespace ws
@@ -45,7 +42,7 @@ StandaloneSeCfg::StandaloneSeCfg(string dn, string name) : StandaloneCfg(dn), se
     if (se == any) se = wildcard;
 
     // get SE active state
-    boost::scoped_ptr<LinkConfig> ptr (db->getLinkConfig(se, "*"));
+    std::unique_ptr<LinkConfig> ptr (db->getLinkConfig(se, "*"));
     if (ptr.get())
         active = ptr->state == on;
     else

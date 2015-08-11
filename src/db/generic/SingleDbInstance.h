@@ -36,15 +36,9 @@
  * -if an exception is raised, the operation is rollbacked and it's up the user/caller to redo it or not
  **/
 
-
-
 #pragma once
 
-
-
-
 #include <iostream>
-#include <boost/scoped_ptr.hpp>
 #include "common/monitorobject.h"
 #include "GenericDbIfce.h"
 #include "DynamicLibraryManager.h"
@@ -106,7 +100,7 @@ private:
     static ThreadTraits::MUTEX _mutex;
     DBSingleton & operator=(DBSingleton const&);
     // assignment operator is private
-    static boost::scoped_ptr<DBSingleton> i;
+    static std::unique_ptr<DBSingleton> i;
     DynamicLibraryManager *dlm;
     std::string libraryFileName;
 

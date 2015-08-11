@@ -31,7 +31,6 @@
 #include <list>
 
 #include <boost/tuple/tuple.hpp>
-#include <boost/shared_ptr.hpp>
 
 namespace fts3
 {
@@ -88,7 +87,7 @@ public:
      *
      * @return list of configurations
      */
-    void assign(vector< boost::shared_ptr<ShareConfig> >& out);
+    void assign(vector< std::shared_ptr<ShareConfig> >& out);
 
 private:
 
@@ -100,7 +99,7 @@ private:
     /// number of share configuration that have been assigned to the job
     int assign_count;
 
-    void assignShareCfg(list<cfg_type> arg, vector< boost::shared_ptr<ShareConfig> >& out);
+    void assignShareCfg(list<cfg_type> arg, vector< std::shared_ptr<ShareConfig> >& out);
 
     static const int auto_share = -1;
 };

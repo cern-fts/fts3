@@ -41,10 +41,8 @@ extern "C" {
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <boost/scoped_ptr.hpp>
 #include <boost/lexical_cast.hpp>
 
-using boost::scoped_ptr;
 using namespace db;
 
 static boost::mutex qm_cred_service;

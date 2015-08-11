@@ -31,7 +31,6 @@
 #include <string>
 
 #include <boost/thread.hpp>
-#include <boost/scoped_ptr.hpp>
 
 FTS3_CONFIG_NAMESPACE_START
 

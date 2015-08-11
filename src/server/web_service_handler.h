@@ -16,7 +16,6 @@ limitations under the License. */
 #pragma once
 
 #include "server_dev.h"
-#include "common/pointers.h"
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
 #include <string>
@@ -25,8 +24,6 @@ extern bool  stopThreads;
 
 
 FTS3_SERVER_NAMESPACE_START
-
-using FTS3_COMMON_NAMESPACE::Pointer;
 
 /** \bried Handle web service events.
  *
@@ -99,7 +96,7 @@ protected:
 
         while(stopThreads==false)
             {
-                typename Pointer<typename TRAITS::Handler>::Shared handler = acceptor.accept();
+                std::shared_ptr<typename TRAITS::Handler> handler = acceptor.accept();
 
                 if (handler.get())
                     {
@@ -125,7 +122,7 @@ protected:
     /** Active counterpart of _handle_a (doing the job) */
     void _handle_a
     (
-        typename Pointer<typename TRAITS::Handler>::Shared handler /**< Web service method handler object */
+        std::shared_ptr<typename TRAITS::Handler> handler /**< Web service method handler object */
     )
     {
         //assert (handler.get());

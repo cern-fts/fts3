@@ -258,9 +258,9 @@ struct ReadConfigFile_SystemTraits
         ::exit(aVal);
     }*/
 
-    static boost::shared_ptr<std::istream> getStream (const std::string& aName)
+    static std::shared_ptr<std::istream> getStream (const std::string& aName)
     {
-        boost::shared_ptr<std::istream> in
+        std::shared_ptr<std::istream> in
         (
             dynamic_cast<std::istream*> (new std::ifstream(aName.c_str()))
         );
@@ -311,7 +311,7 @@ BOOST_FIXTURE_TEST_CASE
     );
 
     // Test opening existing file
-    boost::shared_ptr<std::istream> in = getStream ("/etc/group");
+    std::shared_ptr<std::istream> in = getStream ("/etc/group");
     BOOST_CHECK (in.get());
     BOOST_CHECK (*in);
 }
@@ -831,13 +831,13 @@ struct ReadConfigFile_TestTraits
         // EMPTY
     }
 
-    static boost::shared_ptr<std::istream> getStream (const std::string&)
+    static std::shared_ptr<std::istream> getStream (const std::string&)
     {
         std::stringstream* ss = new std::stringstream;
         assert(ss);
         ss->str("");
         *ss << "intpar=10" << std::endl;
-        boost::shared_ptr<std::istream> ret (dynamic_cast<std::istream*>(ss));
+        std::shared_ptr<std::istream> ret (dynamic_cast<std::istream*>(ss));
         return ret;
     }
 
