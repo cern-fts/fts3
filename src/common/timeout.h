@@ -16,9 +16,10 @@ limitations under the License. */
 #pragma once
 
 #include "common_dev.h"
-#include "timetraits.h"
 #include <limits>
 #include <sys/time.h>
+
+#include <boost/thread/xtime.hpp>
 
 /* ---------------------------------------------------------------------- */
 
@@ -62,7 +63,7 @@ public:
      * It is the absolute time when the timeout should occur. The Boost library requires this
      * representation.
      */
-    TimeTraits::TIME getXtime() const
+    boost::xtime getXtime() const
     {
         return _xt;
     }
@@ -105,7 +106,7 @@ private:
     int _s; /**< second part of the timeout */
     int _us; /**< microsecond part of the timeout */
     int _ns; /**< nanosecond part of the timeout */
-    TimeTraits::TIME _xt; /**< absolut time of timeout (the @see actualize() method sets it) */
+    boost::xtime _xt; /**< absolut time of timeout (the @see actualize() method sets it) */
 };
 
 /** Class representing infinite timeout (timeout never occurs...) */
