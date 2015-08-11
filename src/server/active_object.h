@@ -17,7 +17,6 @@ limitations under the License. */
 
 #include "server_dev.h"
 #include "common/monitorobject.h"
-#include "common/ctl.h"
 #include <boost/bind.hpp>
 #include <boost/utility.hpp>
 #include <assert.h>
@@ -33,13 +32,12 @@ using namespace FTS3_COMMON_NAMESPACE;
  * See the concept here: http://en.wikipedia.org/wiki/Active_object
  *
  */
-template
-<
-class ExecutionPolicy, /**< Determines how the system executes the method.
+template<
+    class ExecutionPolicy, /**< Determines how the system executes the method.
         Queues it, executes it immediately, etc. */
-      class TracingModel = ctl::EmptyType /**< Tracing of method execution. Tracing:
+    class TracingModel /**< Tracing of method execution. Tracing:
         log object creation, etc. Default: no tracing. */
-      >
+>
 class ActiveObject :
     private boost::noncopyable,
     public MonitorObject
@@ -68,14 +66,6 @@ public:
         _runningMethods(0)
     {}
 
-    /* ------------------------------------------------------------------ */
-
-    ActiveObject
-    (
-        const ctl::EmptyType&
-    )
-        : _runningMethods(0)
-    {}
     /* ------------------------------------------------------------------ */
 
     ActiveObject()
@@ -192,18 +182,6 @@ protected:
     )
     {
         std::string ret = (t.id() + "(" + d + ")");
-        return ret;
-    }
-
-    /* ------------------------------------------------------------------ */
-
-    std::string _desc
-    (
-        const std::string& d,
-        const ctl::EmptyType&
-    )
-    {
-        std::string ret = "(" + d + ")";
         return ret;
     }
 
