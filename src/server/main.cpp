@@ -28,7 +28,6 @@ limitations under the License. */
 #include "ws/delegation/GSoapDelegationHandler.h"
 #include <fstream>
 #include "server.h"
-#include "signal_logger.h"
 #include "StaticSslLocking.h"
 #include <iomanip>
 #include <sys/types.h>
