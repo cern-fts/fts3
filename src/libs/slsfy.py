@@ -102,15 +102,6 @@ def slsfy(servers, id_tail, color_mapper=_color_mapper):
         )
     )
 
-    # Add active and queued transfers
-    _add_numeric(e_data, 'queued',
-        sum(
-            map(
-                lambda (server, info): info.get('queued', 0),
-                servers.iteritems()
-            )
-        )
-    )
     _add_numeric(e_data, 'active',
         sum(
             map(

@@ -61,23 +61,14 @@ def _get_transfer_and_submission_per_host(timewindow, segments):
         submissions = Job.objects.filter(submit_time__gte=not_before, submit_host=host).count()
         transfers = File.objects.filter(job_finished__gte=not_before, transferHost=host).count()
         actives = File.objects.filter(file_state='ACTIVE', transferHost=host).count()
-        staging =  File.objects.filter(file_state='STAGING', transferHost=host).count()
-        started =  File.objects.filter(file_state='STARTED', transferHost=host).count()
-        if host in segments and 'fts_server' in segments[host] and 'start' in segments[host]['fts_server']:
-            queued = File.objects.filter(
-                file_state='SUBMITTED', job_finished__isnull=True,
-                hashed_id__gte=int(segments[host]['fts_server']['start'], 16),
-                hashed_id__lt=int(segments[host]['fts_server']['end'], 16)
-            ).count()
-        else:
-            queued = 0
+        staging =  File.objects.filter(file_state='STAGING', stagingHost=host).count()
+        started =  File.objects.filter(file_state='STARTED', stagingHost=host).count()
         servers[host] = {
             'submissions': submissions,
             'transfers': transfers,
             'active': actives,
             'staging': staging,
             'started': started,
-            'queued': queued,
             'fts3server_log': log_link(host, '/var/log/fts3/fts3server.log'),
             'fts3bringonline_log': log_link(host, '/var/log/fts3/fts3bringonline.log'),
         }
