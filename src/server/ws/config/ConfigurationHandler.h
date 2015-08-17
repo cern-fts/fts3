@@ -144,26 +144,6 @@ public:
      */
     void del ();
 
-    /**
-     * Gets protocol configuration for the SE or SE group,
-     * 	First the 'parse' method has to be called
-     *
-     * @return a shared_ptr pointing on a SeProtocolConfig object
-     *
-     * @see parse
-     */
-    std::shared_ptr<SeProtocolConfig> getProtocolConfig(map<string, int> protocol);
-
-    /**
-     * Gets the SE / SE group name
-     *
-     * @return se name
-     */
-    string getName()
-    {
-        return "dummy"; // TODO it's used for authorization! should be the se name or symbolic name (?)
-    }
-
 private:
 
     /// Pointer to the 'GenericDbIfce' singleton
