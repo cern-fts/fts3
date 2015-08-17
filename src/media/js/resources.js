@@ -111,6 +111,11 @@ angular.module('ftsmon.resources', ['ngResource'])
 		query: {method: 'GET', isArray: false}
 	})
 })
+.factory('ConfigFixed', function($resource) {
+	return $resource('config/fixed', {}, {
+		query: {method: 'GET', isArray: false}
+	})
+})
 .factory('ConfigGfal2', function($resource) {
 	return $resource('config/gfal2', {}, {
 		query: {method: 'GET', isArray: false}

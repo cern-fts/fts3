@@ -1,0 +1,34 @@
+<h2>Fixed configuration</h2>
+
+<pagination rotate="false"
+    page="fixed.page" total-items="fixed.count" items-per-page="fixed.pageSize"
+    max-size="15" class="pagination" boundary-links="true"
+    on-select-page="pageChanged(page)"></pagination>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                <span>Source</span>
+            </th>
+            <th>
+                <span>Destination</span>
+            </th>
+            <th>
+                <span>Fixed active</span>
+            </th>
+        </tr>
+    </thead>
+    <tbody data-ng-repeat="fixed in fixed.items" data-ng-class-odd="'odd'">
+        <tr>
+            <td>{{ fixed.source_se }}</td>
+            <td>{{ fixed.dest_se }}</td>
+            <td>{{ fixed.active }}</td>
+        </tr>
+    </tbody>
+</table>
+
+<pagination rotate="false"
+    page="fixed.page" total-items="fixed.count" items-per-page="fixed.pageSize"
+    max-size="15" class="pagination" boundary-links="true"
+    on-select-page="pageChanged(page)"></pagination>

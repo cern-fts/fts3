@@ -144,6 +144,29 @@ ConfigLimitsCtrl.resolve = {
     }
 }
 
+function ConfigFixedCtrl($location, $scope, fixed) {
+    $scope.fixed = fixed;
+
+    // On page change, reload
+    $scope.pageChanged = function(newPage) {
+        $location.search('page', newPage);
+    };
+}
+
+ConfigFixedCtrl.resolve = {
+    fixed: function($rootScope, $location, $route, $q, ConfigFixed) {
+        loading($rootScope);
+
+        var deferred = $q.defer();
+
+        ConfigFixed.query($location.search(),
+              genericSuccessMethod(deferred, $rootScope),
+              genericFailureMethod(deferred, $rootScope, $location));
+
+        return deferred.promise;
+    }
+}
+
 /// Gfal2 configuration
 function Gfal2Ctrl($location, $scope, gfal2) {
     $scope.gfal2 = gfal2;

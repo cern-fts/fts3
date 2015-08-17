@@ -20,7 +20,7 @@ from django.db import connection
 from django.db.models import Q, Count
 from ftsweb.models import ConfigAudit
 from ftsweb.models import LinkConfig, ShareConfig
-from ftsweb.models import DebugConfig, Optimize
+from ftsweb.models import DebugConfig, Optimize, OptimizeActive
 from ftsweb.models import ActivityShare, File
 from authn import require_certificate
 from jsonify import jsonify, jsonify_paged
@@ -130,6 +130,12 @@ def get_limit_config(http_request):
         max_cfg = max_cfg.order_by('-active')
 
     return max_cfg
+
+
+@require_certificate
+@jsonify_paged
+def get_fixed_limits(http_request):
+    return OptimizeActive.objects.filter(fixed='on').all()
 
 
 @require_certificate
