@@ -39,7 +39,7 @@ StandaloneGrCfg::StandaloneGrCfg(string dn, string name) : StandaloneCfg(dn), gr
     if (!db->checkGroupExists(group))
         throw Err_Custom("The SE group: " + group + " does not exist!");
 
-    active = true; // TODO so far it is not possible to set the active state for a group to 'off' (false)
+    active = true;
 
     // init shares and protocols
     init(name);

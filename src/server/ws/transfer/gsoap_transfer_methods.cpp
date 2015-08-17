@@ -24,7 +24,6 @@
 
 #include "JobSubmitter.h"
 #include "RequestLister.h"
-#include "VersionResolver.h"
 #include "GSoapJobStatus.h"
 #include "JobCancelHandler.h"
 #include "JobStatusGetter.h"
@@ -625,7 +624,6 @@ int fts3::impltns__getTransferJobSummary3(soap *ctx, fts3::tns3__JobRequest *req
 int fts3::impltns__getVersion(soap *soap, struct impltns__getVersionResponse &_param_21)
 {
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getVersion' request" << commit;
-    _param_21.getVersionReturn = VersionResolver::getInstance().getVersion();
     _param_21.getVersionReturn = "3.7.6-1";
     return SOAP_OK;
 }
@@ -634,7 +632,6 @@ int fts3::impltns__getVersion(soap *soap, struct impltns__getVersionResponse &_p
 int fts3::impltns__getSchemaVersion(soap *soap, struct impltns__getSchemaVersionResponse &_param_22)
 {
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getSchemaVersion' request" << commit;
-    _param_22.getSchemaVersionReturn = VersionResolver::getInstance().getSchema();
     _param_22.getSchemaVersionReturn = "3.5.0";
     return SOAP_OK;
 }
@@ -643,7 +640,6 @@ int fts3::impltns__getSchemaVersion(soap *soap, struct impltns__getSchemaVersion
 int fts3::impltns__getInterfaceVersion(soap *soap, struct impltns__getInterfaceVersionResponse &_param_23)
 {
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getInterfaceVersion' request" << commit;
-    _param_23.getInterfaceVersionReturn = VersionResolver::getInstance().getInterface();
     _param_23.getInterfaceVersionReturn = "3.7.0";
     return SOAP_OK;
 }
@@ -652,7 +648,6 @@ int fts3::impltns__getInterfaceVersion(soap *soap, struct impltns__getInterfaceV
 int fts3::impltns__getServiceMetadata(soap *soap, string _key, struct impltns__getServiceMetadataResponse &_param_24)
 {
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getServiceMetadata' request" << commit;
-    _param_24._getServiceMetadataReturn = VersionResolver::getInstance().getMetadata();
     _param_24._getServiceMetadataReturn = "glite-data-fts-service-3.7.6-1";
     return SOAP_OK;
 }

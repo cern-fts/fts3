@@ -198,8 +198,6 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
                     throw Err_Custom("Reuse and multiple replica selection are incompatible!");
                 }
 
-            // TODO support flat file multi source/destination transfer job
-
             // add each pair
             std::list< boost::tuple<std::string, std::string, std::string, int> >::iterator it_p;
             for (it_p = tuples.begin(); it_p != tuples.end(); it_p++)
