@@ -90,30 +90,24 @@ char *glite_delegation_get_error(glite_delegation_ctx *ctx)
 static void decode_exception(glite_delegation_ctx *ctx,
                              struct SOAP_ENV__Detail *detail, const char *method)
 {
-    char *message;
+    const char *message;
 
     if (!detail)
         return;
 
-    // TODO remove this macro!!!
-
-#define SET_EXCEPTION(exc) \
-    message = const_cast<char*>(((struct _delegation__ ## exc *)detail->fault)->msg->c_str()); \
-    if (!message) \
-        message = (char *) #exc " received from the service"; \
-    glite_delegation_set_error(ctx, (char *) "%s: %s", method, message); \
-    ctx->error = 1;
-
     switch (detail->__type)
         {
         case SOAP_TYPE__delegation__DelegationException:
-            SET_EXCEPTION(DelegationException);
+            message = const_cast<char*>(((struct _delegation__DelegationException *)detail->fault)->msg->c_str());
+            if (!message)
+                message = "DelegationException received from the service";
+            glite_delegation_set_error(ctx, (char *) "%s: %s", method, message);
+            ctx->error = 1;
             break;
         default:
             /* Let the generic error decoding handle this */
             break;
         }
-#undef SET_EXCEPTION
 }
 
 static void _fault_to_error(glite_delegation_ctx *ctx, const char *method)
