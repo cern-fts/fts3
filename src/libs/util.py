@@ -51,7 +51,11 @@ def get_page(paginator, request):
     return page
 
 
-def paged(elements, http_request, page_size=50):
+def paged(elements, http_request):
+    try:
+        page_size = int(http_request.GET['page_size'])
+    except:
+        page_size = 50
     if http_request.GET.get('page', 0) == 'all':
         page_size = sys.maxint
 
