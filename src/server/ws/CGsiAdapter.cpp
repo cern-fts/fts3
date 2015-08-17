@@ -155,9 +155,6 @@ vector<string> CGsiAdapter::getClientRoles()
 
 string CGsiAdapter::initHostDn()
 {
-
-    // TODO check if other location is not used for hostcert.pem
-    // default path to host certificate
     const string hostCert = "/etc/grid-security/fts3hostcert.pem";
     string dn;
 

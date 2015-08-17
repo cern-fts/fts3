@@ -60,7 +60,7 @@ const string AuthorizationManager::ROLES_SECTION_PREFIX = "roles.";
 const OwnedResource *AuthorizationManager::dummy = NULL;
 
 template<>
-vector<string> AuthorizationManager::get< vector<string> >(string cfg)   // TODO same code is in serverconfig.h, Michail is using it!
+vector<string> AuthorizationManager::get< vector<string> >(string cfg)
 {
 
     char_separator<char> sep(";");

@@ -283,7 +283,6 @@ int fts3::implcfg__showUserDn(soap* ctx, bool show, implcfg__showUserDnResponse&
 
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Turning " << (show ? "on" : "off") << " the show-user-dn mode" << commit;
 
-            // TODO DB
             DBSingleton::instance().getDBObjectInstance()->setShowUserDn(show);
 
             // audit the operation

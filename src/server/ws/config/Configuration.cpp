@@ -173,8 +173,6 @@ string Configuration::json(vector<string>& members)
 
 void Configuration::addSe(string se, bool active)
 {
-
-    // make sure SE includes protocol! TODO
     static const regex re(".+://[a-zA-Z0-9\\.-]+");
 
     if (se != wildcard && !regex_match(se, re))

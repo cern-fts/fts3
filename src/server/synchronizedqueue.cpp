@@ -53,7 +53,7 @@ struct SynchronizedQueueTest
      * Remark: we must push only non-negative integers as the negative ones have
      * internal meanings.
      *
-     * TODO: If a test failed due to a thread got blocked infinitely, the destructor
+     * If a test failed due to a thread got blocked infinitely, the destructor
      * (and the whole test execution) will block. Should be optimized.
      */
     class _TestContext
