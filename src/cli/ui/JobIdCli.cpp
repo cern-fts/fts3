@@ -43,7 +43,7 @@ JobIdCli::~JobIdCli()
 }
 
 
-std::string JobIdCli::getUsageString(std::string tool)
+std::string JobIdCli::getUsageString(std::string tool) const
 {
     return "Usage: " + tool + " [options] JOBID [JOBID...]";
 }

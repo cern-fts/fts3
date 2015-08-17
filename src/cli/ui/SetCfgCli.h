@@ -101,7 +101,7 @@ public:
      *
      * @return a string with instruction on how to use the tool
      */
-    std::string getUsageString(std::string tool);
+    std::string getUsageString(std::string tool) const;
 
     /**
      * Gets a vector with SE configurations.

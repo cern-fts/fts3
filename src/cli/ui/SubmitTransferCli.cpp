@@ -463,7 +463,7 @@ bool SubmitTransferCli::isBlocking()
     return vm.count("blocking");
 }
 
-std::string SubmitTransferCli::getUsageString(std::string tool)
+std::string SubmitTransferCli::getUsageString(std::string tool) const
 {
     return "Usage: " + tool + " [options] SOURCE DEST [CHECKSUM]";
 }

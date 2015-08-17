@@ -57,7 +57,7 @@ void PriorityCli::validate()
         }
 }
 
-std::string PriorityCli::getUsageString(std::string tool)
+std::string PriorityCli::getUsageString(std::string tool) const
 {
     return "Usage: " + tool + " [options] JOB_ID PRIORITY";
 }

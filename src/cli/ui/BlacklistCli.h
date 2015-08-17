@@ -72,14 +72,14 @@ public:
      *
      * @return true if the help message has been printed
      */
-    virtual bool printHelp();
+    virtual bool printHelp() const;
 
     /**
      * Gives the instruction how to use the command line tool.
      *
      * @return a string with instruction on how to use the tool
      */
-    std::string getUsageString(std::string tool);
+    std::string getUsageString(std::string tool) const;
 
     /**
      * Gets the debug mode.

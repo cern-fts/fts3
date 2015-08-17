@@ -275,7 +275,7 @@ void SetCfgCli::validate()
         throw bad_option("source, destination", "missing source and destination pair");
 }
 
-std::string SetCfgCli::getUsageString(std::string tool)
+std::string SetCfgCli::getUsageString(std::string tool) const
 {
     return "Usage: " + tool + " [options] CONFIG [CONFIG...]";
 }

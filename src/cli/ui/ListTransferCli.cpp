@@ -51,7 +51,7 @@ ListTransferCli::~ListTransferCli()
 {
 }
 
-std::string ListTransferCli::getUsageString(std::string tool)
+std::string ListTransferCli::getUsageString(std::string tool) const
 {
 
     return "Usage: " + tool + " [options] [STATE...]";

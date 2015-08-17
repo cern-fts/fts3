@@ -78,7 +78,7 @@ void DebugSetCli::validate()
     if (level > 3) throw bad_option("debug_level", "takes following values: 0, 1, 2 or 3");
 }
 
-std::string DebugSetCli::getUsageString(std::string tool)
+std::string DebugSetCli::getUsageString(std::string tool) const
 {
     return "Usage: " + tool + " [options] LEVEL";
 }

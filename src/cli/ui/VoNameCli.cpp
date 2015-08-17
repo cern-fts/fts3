@@ -66,7 +66,7 @@ void VoNameCli::validate()
         }
 }
 
-std::string VoNameCli::getUsageString(std::string tool)
+std::string VoNameCli::getUsageString(std::string tool) const
 {
     return "Usage: " + tool + " [options] VONAME";
 }

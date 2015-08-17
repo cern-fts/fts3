@@ -245,7 +245,10 @@ glite_delegation_ctx *glite_delegation_new(const char *endpoint, const char *pro
             return ctx;
         }
 
-    ctx->proxy = strdup(proxy);
+    if (proxy)
+        ctx->proxy = strdup(proxy);
+    else
+        ctx->proxy = NULL;
 
     return ctx;
 }

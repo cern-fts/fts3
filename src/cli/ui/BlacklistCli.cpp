@@ -96,26 +96,26 @@ void BlacklistCli::validate()
         }
 }
 
-std::string BlacklistCli::getUsageString(std::string tool)
+std::string BlacklistCli::getUsageString(std::string tool) const
 {
     return "Usage: " + tool + " [options] COMMAND NAME ON|OFF";
 }
 
-bool BlacklistCli::printHelp()
+bool BlacklistCli::printHelp() const
 {
-
     // check whether the -h option was used
     if (vm.count("help"))
         {
 
             // remove the path to the executive
-            size_t pos = toolname.find_last_of('/');
+            std::string basename(toolname);
+            size_t pos = basename.find_last_of('/');
             if( pos != std::string::npos)
                 {
-                    toolname = toolname.substr(pos + 1);
+                    basename = basename.substr(pos + 1);
                 }
             // print the usage guigelines
-            std::cout << std::endl << getUsageString(toolname) << std::endl << std::endl;
+            std::cout << std::endl << getUsageString(basename) << std::endl << std::endl;
 
             std::cout << "List of Commands:" << std::endl << std::endl;
             std::cout << "dn		Blacklist DN (user)" << std::endl;

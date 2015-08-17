@@ -41,7 +41,7 @@ GetCfgCli::~GetCfgCli()
 {
 }
 
-std::string GetCfgCli::getUsageString(std::string tool)
+std::string GetCfgCli::getUsageString(std::string tool) const
 {
     return "Usage: " + tool + " [options] [STANDALONE_CFG | SOURCE DESTINATION]";
 }
