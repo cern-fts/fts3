@@ -33,10 +33,8 @@ using namespace FTS3_COMMON_NAMESPACE;
  *
  */
 template<
-    class ExecutionPolicy, /**< Determines how the system executes the method.
+    class ExecutionPolicy /**< Determines how the system executes the method.
         Queues it, executes it immediately, etc. */
-    class TracingModel /**< Tracing of method execution. Tracing:
-        log object creation, etc. Default: no tracing. */
 >
 class ActiveObject :
     private boost::noncopyable,
@@ -44,32 +42,9 @@ class ActiveObject :
 {
 public:
     /* ------------------------------------------------------------------ */
-    /** Constructor. */
-    template<class T>
-    ActiveObject
-    (
-        const T& t /**< A tracable object (can log the traced object state) */
-    ) :
-        _tracer(t),
-        _runningMethods(0)
-    {}
 
-    /* ------------------------------------------------------------------ */
-
-    template<class T, class U>
-    ActiveObject
-    (
-        const T& t,
-        const U& u
-    ) :
-        _tracer(t, u),
-        _runningMethods(0)
-    {}
-
-    /* ------------------------------------------------------------------ */
-
-    ActiveObject()
-        : _runningMethods(0)
+    ActiveObject (const std::string& id, const std::string& description) :
+        id(id), description(description), _runningMethods(0)
     {}
 
     /* ------------------------------------------------------------------ */
@@ -78,17 +53,15 @@ public:
     {}
 
     /* ------------------------------------------------------------------ */
+    std::string id;
+    std::string description;
 
 
 protected:
 
     /* ------------------------------------------------------------------ */
 
-    typedef ActiveObject<ExecutionPolicy, TracingModel> BaseType;
-
-    /* ------------------------------------------------------------------ */
-
-    typedef TracingModel TracingModelType;
+    typedef ActiveObject<ExecutionPolicy> BaseType;
 
     /* ------------------------------------------------------------------ */
 
@@ -158,10 +131,6 @@ protected:
         FTS3_COMMON_MONITOR_END_CRITICAL
     }
 
-    /* ------------------------------------------------------------------ */
-
-    TracingModel _tracer;
-
 protected:
 
     /* ------------------------------------------------------------------ */
@@ -171,31 +140,6 @@ protected:
         --_runningMethods;
         _notRunning.notify_all();
     }
-
-    /* ------------------------------------------------------------------ */
-
-    template<class T>
-    std::string _desc
-    (
-        const std::string& d,
-        const T& t
-    )
-    {
-        std::string ret = (t.id() + "(" + d + ")");
-        return ret;
-    }
-
-    /* ------------------------------------------------------------------ */
-
-    std::string _description
-    (
-        const std::string& d
-    )
-    {
-        return  _desc(d, _tracer);
-    }
-
-    /* ------------------------------------------------------------------ */
 
     unsigned long _runningMethods;
 

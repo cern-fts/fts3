@@ -27,7 +27,7 @@ namespace ThreadPool
 {
 
 ThreadPool::ThreadPool(const size_t queueSize, const size_t workerNum)
-    : Traced<ThreadPool>("ThreadPool"), _queue(queueSize)
+    : _queue(queueSize)
 {
     int c = 1;
     for (size_t i = 0; i < workerNum; ++i) _workers.push_back(new Worker(_thgrp, c++));

@@ -18,7 +18,6 @@ limitations under the License. */
 #include "server_dev.h"
 
 #include "common/timeout.h"
-#include "common/traced.h"
 #include "threadtraits.h"
 /* ---------------------------------------------------------------------- */
 
@@ -50,8 +49,6 @@ private:
         static InfiniteTimeout td;
         return td;
     }
-
-    Traced<Worker, int> _tracer;
 };
 
 } // namespace ThreadPool

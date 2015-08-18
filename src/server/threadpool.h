@@ -37,7 +37,7 @@ using namespace FTS3_COMMON_NAMESPACE;
 namespace ThreadPool
 {
 
-class ThreadPool : public Traced<ThreadPool>, public MonitorObject
+class ThreadPool : public MonitorObject
 {
 private:
     typedef SynchronizedQueue<ITask, std::shared_ptr> _queue_t;

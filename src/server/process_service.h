@@ -19,7 +19,6 @@ limitations under the License. */
 
 #include "active_object.h"
 #include "threadpool.h"
-#include "common/traced.h"
 
 
 FTS3_SERVER_NAMESPACE_START
@@ -34,7 +33,7 @@ class ProcessService;
 
 struct ProcessServiceTraits
 {
-    typedef ActiveObject <ThreadPool::ThreadPool, Traced<ProcessService> > ActiveObjectType;
+    typedef ActiveObject <ThreadPool::ThreadPool> ActiveObjectType;
 };
 
 /* -------------------------------------------------------------------------- */

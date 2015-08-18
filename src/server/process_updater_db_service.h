@@ -18,7 +18,6 @@ limitations under the License. */
 #include "process_updater_db_service_handler.h"
 #include "active_object.h"
 #include "threadpool.h"
-#include "common/traced.h"
 
 
 FTS3_SERVER_NAMESPACE_START
@@ -33,7 +32,7 @@ class ProcessUpdaterDBService;
 
 struct ProcessUpdaterDBServiceTraits
 {
-    typedef ActiveObject <ThreadPool::ThreadPool, Traced<ProcessUpdaterDBService> > ActiveObjectType;
+    typedef ActiveObject <ThreadPool::ThreadPool> ActiveObjectType;
 };
 
 /* -------------------------------------------------------------------------- */

@@ -3,7 +3,6 @@
 #include "process_service_multihop_handler.h"
 #include "active_object.h"
 #include "threadpool.h"
-#include "common/traced.h"
 
 FTS3_SERVER_NAMESPACE_START
 
@@ -17,7 +16,7 @@ class ProcessServiceMultihop;
 
 struct ProcessServiceMultihopTraits
 {
-    typedef ActiveObject <ThreadPool::ThreadPool, Traced<ProcessServiceMultihop> > ActiveObjectType;
+    typedef ActiveObject <ThreadPool::ThreadPool> ActiveObjectType;
 };
 
 /* -------------------------------------------------------------------------- */

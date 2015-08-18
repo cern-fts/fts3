@@ -30,7 +30,6 @@ using namespace FTS3_COMMON_NAMESPACE;
 /* ---------------------------------------------------------------------- */
 
 Worker::Worker(ThreadTraits::THREAD_GROUP& tg, const int id)
-    : _tracer("ThreadPoolWorker", id)
 {
     thr = tg.create_thread(boost::bind(&Worker::_doWork, this));
 }

@@ -10,7 +10,6 @@
 #include "process_service_reuse_handler.h"
 #include "active_object.h"
 #include "threadpool.h"
-#include "common/traced.h"
 
 FTS3_SERVER_NAMESPACE_START
 
@@ -24,7 +23,7 @@ class ProcessServiceReuse;
 
 struct ProcessServiceReuseTraits
 {
-    typedef ActiveObject <ThreadPool::ThreadPool, Traced<ProcessServiceReuse> > ActiveObjectType;
+    typedef ActiveObject <ThreadPool::ThreadPool> ActiveObjectType;
 };
 
 /* -------------------------------------------------------------------------- */

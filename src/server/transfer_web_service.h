@@ -20,7 +20,6 @@ limitations under the License. */
 #include "gsoap_request_handler.h"
 #include "active_object.h"
 #include "threadpool.h"
-#include "common/traced.h"
 #include "ws-ifce/gsoap/gsoap_stubs.h"
 
 FTS3_SERVER_NAMESPACE_START
@@ -37,7 +36,7 @@ struct TransferWebServiceTraits
 {
     typedef GSoapAcceptor Acceptor;
     typedef GSoapRequestHandler Handler;
-    typedef ActiveObject <ThreadPool::ThreadPool, Traced<TransferWebService> > ActiveObjectType;
+    typedef ActiveObject <ThreadPool::ThreadPool> ActiveObjectType;
 };
 
 /* -------------------------------------------------------------------------- */

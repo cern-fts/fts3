@@ -184,7 +184,7 @@ private:
 class HeartBeat;
 struct HeartBeatTraits
 {
-    typedef ActiveObject <ThreadPool::ThreadPool, Traced<HeartBeat> > ActiveObjectType;
+    typedef ActiveObject <ThreadPool::ThreadPool> ActiveObjectType;
 };
 
 /* -------------------------------------------------------------------------- */

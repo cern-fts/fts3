@@ -18,7 +18,6 @@ limitations under the License. */
 #include "process_queue_handler.h"
 #include "active_object.h"
 #include "threadpool.h"
-#include "common/traced.h"
 
 FTS3_SERVER_NAMESPACE_START
 
@@ -32,7 +31,7 @@ class ProcessQueue;
 
 struct ProcessQueueTraits
 {
-    typedef ActiveObject <ThreadPool::ThreadPool, Traced<ProcessQueue> > ActiveObjectType;
+    typedef ActiveObject <ThreadPool::ThreadPool> ActiveObjectType;
 };
 
 /* -------------------------------------------------------------------------- */

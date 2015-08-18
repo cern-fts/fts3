@@ -176,7 +176,7 @@ private:
 class CleanLogsActive;
 struct CleanLogsTraitsActive
 {
-    typedef ActiveObject <ThreadPool::ThreadPool, Traced<CleanLogsActive> > ActiveObjectType;
+    typedef ActiveObject <ThreadPool::ThreadPool> ActiveObjectType;
 };
 
 /* -------------------------------------------------------------------------- */

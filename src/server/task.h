@@ -18,7 +18,6 @@ limitations under the License. */
 /** \file task.h Interface of Task class. */
 
 #include "server_dev.h"
-#include "common/traced.h"
 #include "common/error.h"
 
 #include <iostream>
@@ -31,10 +30,10 @@ using namespace FTS3_COMMON_NAMESPACE;
 
 /** Common base of all Task<> classes providing Task-wise object identification for
  * tracing and forces the function operator property */
-class ITask : public Traced<ITask, void*>
+class ITask
 {
 public:
-    ITask() : Traced<ITask, void*>("Task", static_cast<void*>(this)) {};
+    ITask() {};
 
     virtual ~ITask() {};
 
@@ -55,6 +54,7 @@ public:
 template<class OP_TYPE> class Task : public ITask
 {
 public:
+    typedef Task<OP_TYPE> Type;
 
     Task(OP_TYPE& op) : ITask(), _op(op) {};
 
@@ -82,6 +82,10 @@ public:
                 std::cerr << "Unknown exception " << std::endl;
                 throw;
             }
+    }
+
+    std::string id() const {
+        return typeid(Type).name();
     }
 
 private:
