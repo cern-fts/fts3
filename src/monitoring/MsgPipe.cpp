@@ -21,7 +21,6 @@
 
 
 #include "MsgPipe.h"
-#include "half_duplex.h" /* For name of the named-pipe */
 #include "utility_routines.h"
 #include <iostream>
 #include <string>

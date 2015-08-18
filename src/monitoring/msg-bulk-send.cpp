@@ -50,7 +50,6 @@
 #include "MsgPipe.h"
 #include "MsgProducer.h"
 #include "concurrent_queue.h"
-#include "half_duplex.h"
 #include "utility_routines.h"
 #include "name_to_uid.h"
 #include <execinfo.h>

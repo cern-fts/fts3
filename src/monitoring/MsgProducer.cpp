@@ -22,7 +22,6 @@
 #include <json.h>
 #include <memory>
 #include "MsgProducer.h"
-#include "half_duplex.h" /* For name of the named-pipe */
 #include "utility_routines.h"
 #include "concurrent_queue.h"
 #include "Logger.h"

@@ -24,6 +24,9 @@
 #include <queue>
 #include <iostream>
 
+// Limit to the number of messages hold by the concurrent_queue
+#define MAX_NUM_MSGS_MON 20000
+
 
 class concurrent_queue
 {
