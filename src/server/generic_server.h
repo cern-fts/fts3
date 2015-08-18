@@ -20,7 +20,6 @@ limitations under the License. */
 #include "common/logger.h"
 #include "web_service_handler.h"
 #include <string>
-#include "StaticSslLocking.h"
 #include <iostream>
 
 FTS3_SERVER_NAMESPACE_START

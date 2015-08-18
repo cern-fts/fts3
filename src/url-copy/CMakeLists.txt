@@ -43,7 +43,6 @@ set(fts_url_copy_SOURCES args.cpp
                          heuristics.cpp
                          logger.cpp
                          reporter.cpp
-                         ${PROJECT_SOURCE_DIR}/src/common/StaticSslLocking.cpp
                          ${PROJECT_SOURCE_DIR}/src/common/UserProxyEnv.cpp
                          ${PROJECT_SOURCE_DIR}/src/common/name_to_uid.cpp
                          ${PROJECT_SOURCE_DIR}/src/common/producer.cpp

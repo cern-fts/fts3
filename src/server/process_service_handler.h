@@ -49,7 +49,6 @@ limitations under the License. */
 #include "config/serverconfig.h"
 #include "definitions.h"
 #include "DrainMode.h"
-#include "StaticSslLocking.h"
 #include "queue_updater.h"
 #include <boost/algorithm/string.hpp>
 #include <sys/param.h>

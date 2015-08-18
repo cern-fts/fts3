@@ -32,7 +32,6 @@ limitations under the License. */
 #include "msg-ifce.h"
 #include "name_to_uid.h"
 #include "reporter.h"
-#include "StaticSslLocking.h"
 #include "transfer.h"
 #include "UserProxyEnv.h"
 #include "DelegCred.h"

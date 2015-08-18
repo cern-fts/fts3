@@ -29,7 +29,6 @@ endif ()
 include_directories (${fts_include_dir})
 include_directories (.)
 
-file (GLOB SSL_CPP "StaticSslLocking*")
 
 # Find libuuid
 find_package (LibUuid REQUIRED)
@@ -72,10 +71,6 @@ endif()
 
 # Sources
 file(GLOB fts_common_sources "*.cpp")
-if (ORACLEBUILD STREQUAL "ON")
-    list(REMOVE_ITEM fts_common_sources ${SSL_CPP})
-endif ()
-
 
 add_library (fts_common SHARED ${fts_common_sources})
 target_link_libraries (fts_common ${Boost_LIBRARIES} ${LIBUUID_LIBRARIES} -lpthread)

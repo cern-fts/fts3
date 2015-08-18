@@ -24,7 +24,6 @@
 #include "server_dev.h"
 #include <cgsi_plugin.h>
 #include <signal.h>
-#include "StaticSslLocking.h"
 #include <sys/socket.h>
 #include <fstream>
 

@@ -16,7 +16,6 @@ limitations under the License. */
 #include "threadpool_worker.h"
 #include "threadpool.h"
 #include "common/logger.h"
-#include "StaticSslLocking.h"
 
 extern bool  stopThreads;
 
