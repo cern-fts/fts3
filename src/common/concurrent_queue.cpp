@@ -19,7 +19,6 @@
  */
 
 #include "concurrent_queue.h"
-#include "half_duplex.h"
 
 bool concurrent_queue::instanceFlag = false;
 concurrent_queue* concurrent_queue::single = NULL;

@@ -61,6 +61,8 @@
 
 #include "profiler/Profiler.h"
 
+using namespace fts3::common;
+
 /**
  * GenericDbIfce class declaration
  **/

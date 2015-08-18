@@ -24,8 +24,6 @@
 
 #include "common_dev.h"
 
-using namespace FTS3_COMMON_NAMESPACE;
-
 
 struct transfersStore
 {

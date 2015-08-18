@@ -19,10 +19,10 @@ limitations under the License. */
 #include <list>
 #include <vector>
 #include <string>
+#include <boost/thread.hpp>
 #include "definitions.h"
 #include "producer_consumer_common.h"
 
-using namespace FTS3_COMMON_NAMESPACE;
 
 class ThreadSafeList
 {
