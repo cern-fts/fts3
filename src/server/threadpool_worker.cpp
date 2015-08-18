@@ -29,7 +29,7 @@ using namespace FTS3_COMMON_NAMESPACE;
 
 /* ---------------------------------------------------------------------- */
 
-Worker::Worker(ThreadTraits::THREAD_GROUP& tg, const int id)
+Worker::Worker(boost::thread_group& tg, const int id)
 {
     thr = tg.create_thread(boost::bind(&Worker::_doWork, this));
 }

@@ -37,7 +37,7 @@ namespace db
 {
 
 std::unique_ptr<DBSingleton> DBSingleton::i;
-ThreadTraits::MUTEX DBSingleton::_mutex;
+boost::mutex DBSingleton::_mutex;
 
 // Implementation
 

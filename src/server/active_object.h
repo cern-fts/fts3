@@ -19,6 +19,7 @@ limitations under the License. */
 #include "common/monitorobject.h"
 #include <boost/bind.hpp>
 #include <boost/utility.hpp>
+#include <boost/thread/condition.hpp>
 #include <assert.h>
 
 FTS3_SERVER_NAMESPACE_START
@@ -145,7 +146,7 @@ protected:
 
     /* ------------------------------------------------------------------ */
 
-    typename synch_traits::CONDITION _notRunning;
+    typename boost::condition _notRunning;
 };
 
 FTS3_SERVER_NAMESPACE_END

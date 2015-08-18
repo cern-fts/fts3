@@ -61,7 +61,7 @@ public:
     {
         if (i.get() == 0)
             {
-                ThreadTraits::LOCK lock(_mutex);
+                boost::mutex::scoped_lock lock(_mutex);
                 if (i.get() == 0)
                     {
                         i.reset(new DBSingleton);
@@ -97,7 +97,7 @@ private:
     DBSingleton(DBSingleton const&)
     {
     }; // copy constructor is private
-    static ThreadTraits::MUTEX _mutex;
+    static boost::mutex _mutex;
     DBSingleton & operator=(DBSingleton const&);
     // assignment operator is private
     static std::unique_ptr<DBSingleton> i;

@@ -78,7 +78,7 @@ private:
 
     typedef boost::ptr_vector<Worker> _workers_t;
     _workers_t _workers;
-    ThreadTraits::THREAD_GROUP _thgrp;
+    boost::thread_group _thgrp;
 };
 
 struct NoThreads

@@ -40,7 +40,7 @@ std::string _getTrTimestampUTC()
 
 
 std::unique_ptr<SingleTrStateInstance> SingleTrStateInstance::i;
-ThreadTraits::MUTEX SingleTrStateInstance::_mutex;
+boost::mutex SingleTrStateInstance::_mutex;
 
 
 // Implementation

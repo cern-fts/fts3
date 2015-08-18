@@ -13,7 +13,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
-#include "common/threadtraits.h"
 #include "common/timeout.h"
 #include "thread_function.h"
 #include "synchronizedqueue.h"
@@ -157,7 +156,7 @@ struct SynchronizedQueueTest
 #undef _FUNCTOR_GENERATOR
 
         queue_p_t _q;
-        ThreadTraits::THREAD_GROUP _thgrp;
+        boost::thread_group _thgrp;
 
         static const size_t _QUEUE_SIZE = 2;
         // Timeout for the blocking call.

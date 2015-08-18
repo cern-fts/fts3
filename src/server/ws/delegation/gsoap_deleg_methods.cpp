@@ -25,7 +25,6 @@
 
 #include "common/logger.h"
 #include <common/error.h>
-#include "threadtraits.h"
 
 #include <boost/thread/locks.hpp>
 

@@ -23,6 +23,7 @@ limitations under the License. */
 
 #include <limits>
 #include <deque>
+#include <boost/thread/condition.hpp>
 
 FTS3_SERVER_NAMESPACE_START
 
@@ -171,11 +172,11 @@ private:
     std::deque<element_type> _queue;
     /* ---------------------------------------------------------------------- */
 
-    typename synch_traits::CONDITION _notEmpty;
+    boost::condition _notEmpty;
 
     /* ---------------------------------------------------------------------- */
 
-    typename synch_traits::CONDITION _notFull;
+    boost::condition _notFull;
 };
 
 FTS3_SERVER_NAMESPACE_END

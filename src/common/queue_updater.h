@@ -20,7 +20,6 @@ limitations under the License. */
 #include <vector>
 #include <string>
 #include "definitions.h"
-#include "threadtraits.h"
 #include "producer_consumer_common.h"
 
 using namespace FTS3_COMMON_NAMESPACE;
@@ -48,7 +47,7 @@ public:
 
 private:
     std::list<struct message_updater> m_list;
-    mutable ThreadTraits::MUTEX_R _mutex;
+    mutable boost::recursive_mutex _mutex;
 };
 
 #endif /*THREADSAFELIST_H_*/

@@ -15,8 +15,10 @@ limitations under the License. */
 
 #pragma once
 
+#include <boost/thread.hpp>
+#include <boost/thread/condition.hpp>
+
 #include "server_dev.h"
-#include "common/threadtraits.h"
 
 FTS3_SERVER_NAMESPACE_START
 
@@ -40,7 +42,7 @@ private:
 
         bool wait(const boost::xtime t)
         {
-            ThreadTraits::LOCK_R lock(_mutex);
+            boost::recursive_mutex::scoped_lock lock(_mutex);
             bool ret = _stopped ? true : _cond.timed_wait(lock, t);
             return ret;
         };
@@ -49,7 +51,7 @@ private:
 
         void finished()
         {
-            ThreadTraits::LOCK_R lock(_mutex);
+            boost::recursive_mutex::scoped_lock lock(_mutex);
             _stopped = true;
             _cond.notify_all();
         }
@@ -62,11 +64,11 @@ private:
 
         /* -------------------------------------------------------------- */
 
-        mutable ThreadTraits::MUTEX_R _mutex;
+        mutable boost::recursive_mutex _mutex;
 
         /* -------------------------------------------------------------- */
 
-        ThreadTraits::CONDITION _cond;
+        boost::condition _cond;
     };
 
 public:

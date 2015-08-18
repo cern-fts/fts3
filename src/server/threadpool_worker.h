@@ -16,9 +16,10 @@ limitations under the License. */
 #pragma once
 
 #include "server_dev.h"
-
 #include "common/timeout.h"
-#include "threadtraits.h"
+
+#include <boost/thread.hpp>
+
 /* ---------------------------------------------------------------------- */
 
 FTS3_SERVER_NAMESPACE_START
@@ -31,12 +32,12 @@ namespace ThreadPool
 class Worker
 {
 public:
-    Worker(ThreadTraits::THREAD_GROUP& tg, const int id);
+    Worker(boost::thread_group& tg, const int id);
     Worker(const Worker&);
 
     virtual ~Worker() {}
 
-    ThreadTraits::THREAD *thr;
+    boost::thread *thr;
 
     void cancel();
 

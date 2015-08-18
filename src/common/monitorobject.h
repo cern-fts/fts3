@@ -17,8 +17,8 @@ limitations under the License. */
 
 /** \file monitorobject.h Interface of MonitorObject class. */
 
+#include <boost/thread.hpp>
 #include "common_dev.h"
-#include "threadtraits.h"
 
 FTS3_COMMON_NAMESPACE_START
 
@@ -57,19 +57,16 @@ public:
     // Destructor (empty).
     virtual ~MonitorObject() {};
 
-    // Traits used for synchronization.
-    typedef ThreadTraits synch_traits;
-
 protected:
     // Lock used to protect a critical section. Do not use it directly, only with
     // FTS3_COMMON_MONITOR_* macros.
-    mutable synch_traits::MUTEX _monitor_lock;
+    mutable boost::mutex _monitor_lock;
 
     // Lock used to protect a static critical section (protects from all the objects
     // of a gven class). Do not use it directly, only with FTS3_COMMON_MONITOR_* macros.
-    static synch_traits::MUTEX& _static_monitor_lock()
+    static boost::mutex& _static_monitor_lock()
     {
-        static synch_traits::MUTEX m;
+        static boost::mutex m;
         return m;
     }
 };
@@ -82,10 +79,10 @@ protected:
 /// Opens a critical (protected) section. It must be closed by a corresponding FTS3_COMMON_MONITOR_END_CRITICAL.
 /// If you fail to indicate the end of the critical section, you will get compilation error.
 /// In runtime, the lock is always released at the end of the scope of the critical section.
-#define FTS3_COMMON_MONITOR_START_CRITICAL { ThreadTraits::LOCK FTS3_COMMON_MONITOR_LOCK(this->_monitor_lock);
+#define FTS3_COMMON_MONITOR_START_CRITICAL { boost::mutex::scoped_lock FTS3_COMMON_MONITOR_LOCK(this->_monitor_lock);
 
 /// Opens a "static" critical section (locks all the objects of a given class).
-#define FTS3_COMMON_MONITOR_START_STATIC_CRITICAL { ThreadTraits::LOCK FTS3_COMMON_MONITOR_LOCK(_static_monitor_lock());
+#define FTS3_COMMON_MONITOR_START_STATIC_CRITICAL { boost::mutex::scoped_lock FTS3_COMMON_MONITOR_LOCK(_static_monitor_lock());
 
 /// Closes a critical (protected) section. Used for static sections as well.
 #define FTS3_COMMON_MONITOR_END_CRITICAL }

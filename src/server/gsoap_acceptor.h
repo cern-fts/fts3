@@ -51,7 +51,7 @@ protected:
     std::queue<soap*> recycle;
 
 public:
-    mutable ThreadTraits::MUTEX_R _mutex;
+    mutable boost::recursive_mutex _mutex;
 };
 
 FTS3_SERVER_NAMESPACE_END

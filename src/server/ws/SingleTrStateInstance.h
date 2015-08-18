@@ -44,7 +44,7 @@ public:
     {
         if (i.get() == 0)
             {
-                ThreadTraits::LOCK lock(_mutex);
+                boost::mutex::scoped_lock lock(_mutex);
                 if (i.get() == 0)
                     {
                         i.reset(new SingleTrStateInstance);
@@ -68,7 +68,7 @@ private:
     SingleTrStateInstance(SingleTrStateInstance const&)
     {
     }; // copy constructor is private
-    static ThreadTraits::MUTEX _mutex;
+    static boost::mutex _mutex;
     SingleTrStateInstance & operator=(SingleTrStateInstance const&);
     // assignment operator is private
     static std::unique_ptr<SingleTrStateInstance> i;

@@ -20,7 +20,9 @@
 #include <vector>
 #include <iostream>
 #include <ctime>
-#include "threadtraits.h"
+#include <boost/thread.hpp>
+
+#include "common_dev.h"
 
 using namespace FTS3_COMMON_NAMESPACE;
 
@@ -70,7 +72,7 @@ public:
 
 private:
     std::vector<struct transfersStore> transfersStoreVector;
-    mutable ThreadTraits::MUTEX _mutex;
+    mutable boost::mutex _mutex;
 
 };
 
