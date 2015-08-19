@@ -116,7 +116,7 @@ public:
     /*static vector<std::string>  getData( const char * id);*/
     std::string getTimestamp();
     std::string SendTransferStartMessage(transfer_completed *tr_started);
-    std::string SendTransferFinishMessage(transfer_completed *tr_completed);
+    std::string SendTransferFinishMessage(transfer_completed *tr_completed, bool force=false);
     //transfer_completed setters
     void set_agent_fqdn(transfer_completed* tr_completed, const std::string & value);
     void set_transfer_id(transfer_completed* tr_completed, const std::string & value);

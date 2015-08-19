@@ -602,7 +602,7 @@ int statWithRetries(gfal_context_t handle, const std::string& category, const st
 
 void setRemainingTransfersToFailed(std::vector<Transfer>& transferList, unsigned currentIndex)
 {
-    for (unsigned i = currentIndex + 1; i < transferList.size(); ++i)
+    for (unsigned i = currentIndex; i < transferList.size(); ++i)
         {
             Transfer& t = transferList[i];
             Logger::getInstance().INFO() << "Report FAILED back to the server for " << t.fileId << std::endl;
@@ -619,7 +619,7 @@ void setRemainingTransfersToFailed(std::vector<Transfer>& transferList, unsigned
             msg_ifce::getInstance()->set_job_state(&tr_completed, "UNKNOWN");
 
             if(UrlCopyOpts::getInstance().monitoringMessages)
-                msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
+                msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed, true);
 
             reporter.sendTerminal(0, false,
                                   t.jobId, t.fileId,
@@ -1451,8 +1451,6 @@ stop:
                         {
                             logger.ERROR() << "Setting to fail the remaining transfers" << std::endl;
                             setRemainingTransfersToFailed(transferList, ii);
-                            logger.INFO() << "Send monitoring complete message" << std::endl;
-                            msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
                             std::string archiveErr = fileManagement.archive();
                             if (!archiveErr.empty())

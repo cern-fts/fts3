@@ -211,11 +211,11 @@ std::string msg_ifce::SendTransferStartMessage(transfer_completed *tr_started)
         }
 }
 
-std::string msg_ifce::SendTransferFinishMessage(transfer_completed *tr_completed)
+std::string msg_ifce::SendTransferFinishMessage(transfer_completed *tr_completed, bool force)
 {
     std::string message;
 
-    if (state != MSG_IFCE_WAITING_FINISH) {
+    if (!force && state != MSG_IFCE_WAITING_FINISH) {
         logger::writeLog("WARNING Trying to send a finish message, but the internal state is not MSG_IFCE_WAITING_FINISH");
         return message;
     }
