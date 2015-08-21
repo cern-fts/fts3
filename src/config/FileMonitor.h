@@ -18,22 +18,21 @@
  * limitations under the License.
  */
 
+#pragma once
 #ifndef FILEMONITOR_H_
 #define FILEMONITOR_H_
 
-#include "config_dev.h"
-
 #include <string>
-
 #include <boost/thread.hpp>
 
-FTS3_CONFIG_NAMESPACE_START
-
-using namespace std;
-using namespace boost;
+namespace fts3 {
 
 class ServerConfig;
 
+/**
+ * This class monitors in a background thread if the FTS3 configuration file
+ * has been modified. If it has, it triggers a reload of the configuration
+ */
 class FileMonitor
 {
 
@@ -41,22 +40,22 @@ public:
     FileMonitor(ServerConfig* sc);
     virtual ~FileMonitor();
 
-    void start(string path);
+    void start(std::string path);
     void stop();
 
     static void run (FileMonitor* const me);
 
 private:
-
     ServerConfig* sc;
 
-    string path;
+    std::string path;
     bool running;
 
-    scoped_ptr<thread> monitor_thread;
+    std::unique_ptr<boost::thread> monitor_thread;
 
     time_t timestamp;
 };
 
-FTS3_CONFIG_NAMESPACE_END
-#endif /* CONFIGFILEMONITOR_H_ */
+}
+
+#endif // FILEMONITOR_H_

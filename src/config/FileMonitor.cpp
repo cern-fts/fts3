@@ -20,23 +20,20 @@
 
 #include "FileMonitor.h"
 #include "serverconfig.h"
-
 #include "common/logger.h"
 
 #include <sys/stat.h>
 
-FTS3_CONFIG_NAMESPACE_START
+using namespace fts3;
 
-using namespace fts3::common;
 
 FileMonitor::FileMonitor(ServerConfig* sc) : sc(sc), running(false), timestamp(0)
 {
-
 }
+
 
 FileMonitor::~FileMonitor()
 {
-
     // stop the monitoring thread
     if (monitor_thread.get())
         {
@@ -45,9 +42,10 @@ FileMonitor::~FileMonitor()
         }
 }
 
-void FileMonitor::start(string path)
+
+void FileMonitor::start(std::string path)
 {
-    // checkl if it's already running
+    // check if it's already running
     if (running) return;
     // set the running state
     running = true;
@@ -63,15 +61,17 @@ void FileMonitor::start(string path)
 
     // start monitoring thread
     monitor_thread.reset (
-        new thread(run, this)
+        new boost::thread(run, this)
     );
 }
+
 
 void FileMonitor::stop()
 {
     // stop the monitoring thread
     running = false;
 }
+
 
 void FileMonitor::run (FileMonitor* const me)
 {
@@ -97,4 +97,3 @@ void FileMonitor::run (FileMonitor* const me)
         }
 }
 
-FTS3_CONFIG_NAMESPACE_END

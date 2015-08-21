@@ -22,17 +22,13 @@
 
 #pragma once
 
-#include "config_dev.h"
 #include "common/logger.h"
 #include <boost/program_options.hpp>
 #include <map>
 
-FTS3_CONFIG_NAMESPACE_START
+namespace fts3 {
 
 namespace po = boost::program_options;
-using namespace FTS3_COMMON_NAMESPACE;
-
-/* ========================================================================== */
 
 /** \brief Class reading the server server configuration, from the command line
  * and from the config file. */
@@ -87,7 +83,7 @@ protected:
     (
         int argc,  /**< The command line arguments (from main) */
         char *argv[],  /**< The command line arguments (from main) */
-        po::options_description &desc /**< Description of command line options */
+        boost::program_options::options_description &desc /**< Description of command line options */
     )
     {
         po::store(po::parse_command_line(argc, argv, desc), _vm);
@@ -136,13 +132,13 @@ protected:
             }
         catch (std::exception& e)
             {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Error in parsing config file: " << e.what() << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Error in parsing config file: " << e.what() << fts3::common::commit;
                 throw;
                 //DEPENDENCIES::exit(1);
             }
         catch (...)
             {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown error when parsing config file." << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown error when parsing config file." << fts3::common::commit;
                 throw;
                 //DEPENDENCIES::exit(1);
             }
@@ -178,5 +174,5 @@ protected:
     po::variables_map _vm;
 };
 
-FTS3_CONFIG_NAMESPACE_END
+}
 

@@ -30,11 +30,9 @@
 #include "unittest/testsuite.h"
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
-/* ---------------------------------------------------------------------- */
 
-FTS3_CONFIG_NAMESPACE_START
-
-using namespace FTS3_COMMON_NAMESPACE;
+using namespace fts3;
+using namespace fts3::common;
 
 /* ---------------------------------------------------------------------- */
 
@@ -173,31 +171,28 @@ void ServerConfig::read
 
 void ServerConfig::waitIfReading()
 {
-    mutex::scoped_lock lock(qm);
+    boost::mutex::scoped_lock lock(qm);
     while (reading) qv.wait(lock);
     getting++;
 }
 
 void ServerConfig::notifyReaders()
 {
-    mutex::scoped_lock lock(qm);
+    boost::mutex::scoped_lock lock(qm);
     getting--;
     qv.notify_all(); // there is anyway only one thread to be notified
 }
 
 void ServerConfig::waitIfGetting()
 {
-    mutex::scoped_lock lock(qm);
+    boost::mutex::scoped_lock lock(qm);
     while (getting > 0) qv.wait(lock);
     reading = true;
 }
 
 void ServerConfig::notifyGetters()
 {
-    mutex::scoped_lock lock(qm);
+    boost::mutex::scoped_lock lock(qm);
     reading = false;
     qv.notify_all();
 }
-
-FTS3_CONFIG_NAMESPACE_END
-

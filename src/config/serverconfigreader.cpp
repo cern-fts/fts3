@@ -32,9 +32,10 @@
 #include <cstdio>
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
-/* ---------------------------------------------------------------------- */
 
-FTS3_CONFIG_NAMESPACE_START
+using namespace fts3;
+using namespace fts3::common;
+
 
 // Default config values
 #define FTS3_CONFIG_SERVERCONFIG_PORT_DEFAULT 8443
@@ -873,6 +874,3 @@ BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 
 #endif // FTS3_COMPILE_WITH_UNITTESTS
-
-FTS3_CONFIG_NAMESPACE_END
-

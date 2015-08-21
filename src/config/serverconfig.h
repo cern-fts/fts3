@@ -21,8 +21,9 @@
 /** \file serverconfig.h Define FTS3 server configuration. */
 
 #pragma once
+#ifndef SERVERCONFIG_H_
+#define SERVERCONFIG_H_
 
-#include "config_dev.h"
 #include "FileMonitor.h"
 
 #include <map>
@@ -34,9 +35,7 @@
 #include <boost/algorithm/string.hpp>
 
 
-FTS3_CONFIG_NAMESPACE_START
-
-/* ========================================================================== */
+namespace fts3 {
 
 /** \brief Class representing server configuration. Server configuration read once,
  * when the server starts. It provides read-only singleton access. */
@@ -65,20 +64,14 @@ public:
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
     /** Read the configurations from config file only */
-    void read
-    (
-        const std::string& aFileName /**< Config file name */
-    );
-#endif // FTS3_COMPILE_WITH_UNITTEST
+    void read(const std::string& aFileName);
+#endif // FTS3_COMPILE_WITH_UNITTEST_NEW
 
     /* ---------------------------------------------------------------------- */
 
     /** General getter of an option. It returns the option, converted to the
      * desired type. Throws exception if the option is not found. */
-    template <typename RET> RET get
-    (
-        const std::string& aVariable /**< A config variable name. */
-    );
+    template <typename RET> RET get(const std::string& aVariable);
 
 protected:
 
@@ -88,10 +81,7 @@ protected:
     /* ---------------------------------------------------------------------- */
 
     /** Return the variable value as a string. */
-    const std::string& _get_str
-    (
-        const std::string& aVariable  /**< A config variable name. */
-    );
+    const std::string& _get_str(const std::string& aVariable);
 
     /* ---------------------------------------------------------------------- */
 
@@ -131,15 +121,11 @@ protected:
     /// configuration file monitor
     FileMonitor cfgmonitor;
 
-    ///
     bool reading;
-    ///
     int getting;
 
-    ///
-    mutex qm;
-    ///
-    condition_variable qv;
+    boost::mutex qm;
+    boost::condition_variable qv;
 
     time_t readTime;
 
@@ -250,5 +236,6 @@ inline std::map<std::string, std::string> ServerConfig::get< std::map<std::strin
     return ret;
 }
 
-FTS3_CONFIG_NAMESPACE_END
+}
 
+#endif // SERVERCONFIG_H_
