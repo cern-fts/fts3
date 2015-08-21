@@ -699,6 +699,7 @@ CREATE TABLE t_optimize_active (
   active INTEGER UNSIGNED DEFAULT 2,
   message      VARCHAR(512),
   datetime     TIMESTAMP  NULL DEFAULT NULL,
+-- Exponential Moving Average
   ema           DOUBLE DEFAULT 0,
   fixed         VARCHAR(3) CHECK (fixed in ('on', 'off')),
   CONSTRAINT t_optimize_active_pk PRIMARY KEY (source_se, dest_se)
