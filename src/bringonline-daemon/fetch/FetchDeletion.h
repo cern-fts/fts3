@@ -39,7 +39,7 @@ class FetchDeletion
 
 public:
 
-    FetchDeletion(ThreadPool<Gfal2Task> & threadpool) : threadpool(threadpool) {}
+    FetchDeletion(fts3::common::ThreadPool<Gfal2Task> & threadpool) : threadpool(threadpool) {}
 
     virtual ~FetchDeletion() {}
 
@@ -51,7 +51,7 @@ private:
     // vo, dn ,se
     typedef std::tuple<std::string, std::string, std::string> key_type;
 
-    ThreadPool<Gfal2Task> & threadpool;
+    fts3::common::ThreadPool<Gfal2Task> & threadpool;
 
 };
 

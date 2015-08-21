@@ -42,7 +42,6 @@
 
 #include "common/JobStatusHandler.h"
 
-using namespace FTS3_COMMON_NAMESPACE;
 using namespace db;
 
 #define TIME_TO_SLEEP_BETWEEN_TRANSACTION_RETRIES 1
@@ -1322,7 +1321,7 @@ void MySqlAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId)
 }
 
 
-bool pairCompare( std::pair<std::pair<std::string, std::string>, int> i, pair<std::pair<std::string, std::string>, int> j)
+bool pairCompare( std::pair<std::pair<std::string, std::string>, int> i, std::pair<std::pair<std::string, std::string>, int> j)
 {
     return i.second < j.second;
 }

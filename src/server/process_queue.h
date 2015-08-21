@@ -24,13 +24,8 @@
 #include "active_object.h"
 #include "threadpool.h"
 
-FTS3_SERVER_NAMESPACE_START
-
-/* -------------------------------------------------------------------------- */
-
-using namespace FTS3_COMMON_NAMESPACE;
-
-/* -------------------------------------------------------------------------- */
+namespace fts3 {
+namespace server {
 
 class ProcessQueue;
 
@@ -47,5 +42,6 @@ public:
     ProcessQueue() {}
 };
 
-FTS3_SERVER_NAMESPACE_END
+} // end namespace server
+} // end namespace fts3
 

@@ -27,6 +27,7 @@
 #include <map>
 
 namespace fts3 {
+namespace config {
 
 namespace po = boost::program_options;
 
@@ -174,5 +175,6 @@ protected:
     po::variables_map _vm;
 };
 
-}
+} // end namespace config
+} // end namespace fts3
 

@@ -22,7 +22,6 @@
 
 #pragma once
 
-#include "common_dev.h"
 #include "monitorobject.h"
 #include <iostream>
 #include <stdio.h>
@@ -30,7 +29,8 @@
 #include <fcntl.h>
 
 
-FTS3_COMMON_NAMESPACE_START
+namespace fts3 {
+namespace common {
 
 /* ========================================================================== */
 
@@ -299,5 +299,6 @@ GenericLogger<Traits> & addErr
     return aLogger;
 }
 
-FTS3_COMMON_NAMESPACE_END
+} // end namespace common
+} // end namespace fts3
 

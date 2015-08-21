@@ -24,7 +24,6 @@
 #include <boost/static_assert.hpp>
 #include <queue>
 
-#include "server_dev.h"
 #include "common/logger.h"
 #include "common/error.h"
 #include "ws-ifce/gsoap/gsoap_stubs.h"
@@ -34,9 +33,8 @@
 #include "unittest/testsuite.h"
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
-FTS3_SERVER_NAMESPACE_START
-
-using namespace FTS3_COMMON_NAMESPACE;
+namespace fts3 {
+namespace server {
 
 class GSoapAcceptor;
 
@@ -60,5 +58,6 @@ private:
 
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
-FTS3_SERVER_NAMESPACE_END
+} // end namespace server
+} // end namespace fts3
 

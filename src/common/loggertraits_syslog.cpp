@@ -21,7 +21,6 @@
 /** \file loggertraits_syslog.cpp Implementation of LoggerTraits_Syslog class. */
 
 #include "loggertraits_syslog.h"
-#include "common_dev.h"
 #include <string.h>
 #include <boost/preprocessor/stringize.hpp>
 
@@ -35,7 +34,7 @@
 #define FTS3_COMMON_LOGGER_FACILITY LOG_USER
 #define FTS3_COMMON_LOGGER_OPTION LOG_PID | LOG_PERROR | LOG_CONS
 
-FTS3_COMMON_NAMESPACE_START
+using namespace fts3::common;
 
 /* ========================================================================== */
 
@@ -103,5 +102,3 @@ BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 
 #endif // FTS3_COMPILE_WITH_UNITTESTS
-
-FTS3_COMMON_NAMESPACE_END

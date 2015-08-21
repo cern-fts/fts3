@@ -20,7 +20,6 @@
 
 #pragma once
 
-#include "server_dev.h"
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
 #include <string>
@@ -28,7 +27,8 @@
 extern bool  stopThreads;
 
 
-FTS3_SERVER_NAMESPACE_START
+namespace fts3 {
+namespace server {
 
 /** \bried Handle web service events.
  *
@@ -147,5 +147,6 @@ protected:
     _testHelper;
 };
 
-FTS3_SERVER_NAMESPACE_END
+} // end namespace server
+} // end namespace fts3
 

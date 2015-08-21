@@ -20,7 +20,6 @@
 
 #pragma once
 
-#include "server_dev.h"
 #include "common/timeout.h"
 #include "common/logger.h"
 #include "common/error.h"
@@ -30,7 +29,9 @@
 #include <deque>
 #include <boost/thread/condition.hpp>
 
-FTS3_SERVER_NAMESPACE_START
+
+namespace fts3 {
+namespace server {
 
 /**
  * Ref: An Object Behavioral Pattern for Concurrent Programming, Douglas C. Schmidt
@@ -40,7 +41,7 @@ template
 class ELEMENT,
       template <class> class ELEMENT_ACCESS
       >
-class SynchronizedQueue : public MonitorObject
+class SynchronizedQueue : public fts3::common::MonitorObject
 {
 public:
     /* ---------------------------------------------------------------------- */
@@ -82,7 +83,7 @@ public:
 
     /* ---------------------------------------------------------------------- */
 
-    element_type pop(const Timeout& tdiff)
+    element_type pop(const fts3::common::Timeout& tdiff)
     {
         bool isNotTimeout = true;
         FTS3_COMMON_MONITOR_START_CRITICAL
@@ -184,5 +185,6 @@ private:
     boost::condition _notFull;
 };
 
-FTS3_SERVER_NAMESPACE_END
+} // namespace server
+} // namespace fts3
 

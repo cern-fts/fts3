@@ -22,7 +22,6 @@
 
 #pragma once
 
-#include "common_dev.h"
 #include "genericlogger.h"
 
 // This macro should define the supported log levels as list of labels!
@@ -33,7 +32,8 @@
 #error FTS3_COMMON_LOGGER_SUPPORTED_LOG_LEVELS is not defined!
 #endif
 
-FTS3_COMMON_NAMESPACE_START
+namespace fts3 {
+namespace common {
 
 /* -------------------------------------------------------------------------- */
 
@@ -50,7 +50,8 @@ inline Logger& theLogger()
     return logger;
 }
 
-FTS3_COMMON_NAMESPACE_END
+} // end namespace common
+} // end namespace fts3
 
 /** This is how you should use FTS3 logging. For example:
  *
@@ -63,7 +64,7 @@ FTS3_COMMON_NAMESPACE_END
  * The log level labels are system specific,
  */
 #define FTS3_COMMON_LOGGER_NEWLOG(aLevel)	\
-	FTS3_COMMON_NAMESPACE::theLogger().newLog<FTS3_COMMON_NAMESPACE::Logger::type_traits::aLevel>(__FILE__, __FUNCTION__, __LINE__)
+	fts3::common::theLogger().newLog<fts3::common::Logger::type_traits::aLevel>(__FILE__, __FUNCTION__, __LINE__)
 
 /* -------------------------------------------------------------------------- */
 

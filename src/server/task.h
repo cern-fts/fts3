@@ -22,14 +22,12 @@
 
 /** \file task.h Interface of Task class. */
 
-#include "server_dev.h"
 #include "common/error.h"
 
 #include <iostream>
 
-FTS3_SERVER_NAMESPACE_START
-
-using namespace FTS3_COMMON_NAMESPACE;
+namespace fts3 {
+namespace server {
 
 /* -------------------------------------------------------------------------- */
 
@@ -72,14 +70,14 @@ public:
             {
                 _op();
             }
-        catch (const Err& e)
+        catch (const fts3::common::Err& e)
             {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "FTS3 Server Exception in " << id() << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "FTS3 Server Exception in " << id() << fts3::common::commit;
                 throw;
             }
         catch (const std::exception& e)
             {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "C++ Exception in " << id() << e.what() << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "C++ Exception in " << id() << e.what() << fts3::common::commit;
                 throw;
             }
         catch (...)
@@ -97,5 +95,6 @@ private:
     OP_TYPE _op;
 };
 
-FTS3_SERVER_NAMESPACE_END
+} // end namespace server
+} // end namespace fts3
 

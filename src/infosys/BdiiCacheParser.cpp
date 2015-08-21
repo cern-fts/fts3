@@ -27,11 +27,9 @@ namespace fts3
 namespace infosys
 {
 
-using namespace config;
-
 const std::string BdiiCacheParser::bdii_cache_path = "/var/lib/fts3/bdii_cache.xml";
 
-BdiiCacheParser::BdiiCacheParser(string path)
+BdiiCacheParser::BdiiCacheParser(std::string path)
 {
 
     doc.load_file(path.c_str());

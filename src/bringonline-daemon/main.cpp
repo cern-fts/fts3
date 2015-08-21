@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 
-#include "server_dev.h"
 #include "common/error.h"
 #include "common/logger.h"
 #include "common/ThreadPool.h"
@@ -35,8 +34,9 @@
 
 #include <string>
 
-using namespace FTS3_SERVER_NAMESPACE;
-using namespace FTS3_COMMON_NAMESPACE;
+using namespace fts3::server; 
+using namespace fts3::common;
+using namespace fts3::config;
 
 extern std::string stackTrace;
 bool stopThreads = false;
@@ -88,7 +88,7 @@ void shutdown_callback(int signal, void*)
         case SIGBUS:
         case SIGTRAP:
         case SIGSYS:
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Stack trace: \n" << Panic::stack_dump(Panic::stack_backtrace, Panic::stack_backtrace_size) << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Stack trace: \n" << panic::stack_dump(panic::stack_backtrace, panic::stack_backtrace_size) << commit;
             break;
         default:
             break;
@@ -178,11 +178,11 @@ int DoServer(int argc, char** argv)
         {
             setenv("GLOBUS_THREAD_MODEL", "pthread", 1);
 
-            Panic::setup_signal_handlers(shutdown_callback, NULL);
+            panic::setup_signal_handlers(shutdown_callback, NULL);
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE signal handlers installed" << commit;
 
             //re-read here
-            FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv, true);
+            theServerConfig().read(argc, argv, true);
 
             std::string arguments("");
             if (argc > 1)
@@ -204,14 +204,14 @@ int DoServer(int argc, char** argv)
             if (logDir.length() > 0)
                 {
                     logDir += "/fts3bringonline.log";
-                    if (FTS3_COMMON_NAMESPACE::theLogger().open(logDir) != 0)
+                    if (theLogger().open(logDir) != 0)
                         {
                             std::cerr << "BRINGONLINE  daemon failed to open log file, errno is:" << strerror(errno) << std::endl;
                             return -1;
                         }
                 }
 
-            bool isDaemon = !FTS3_CONFIG_NAMESPACE::theServerConfig().get<bool> ("no-daemon");
+            bool isDaemon = !theServerConfig().get<bool> ("no-daemon");
 
             if (isDaemon)
                 {
@@ -302,7 +302,7 @@ int main(int argc, char** argv)
     //very first check before it goes to deamon mode
     try
         {
-            FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv, true);
+            theServerConfig().read(argc, argv, true);
 
             std::string arguments("");
             int d = 0;

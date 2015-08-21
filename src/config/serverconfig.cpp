@@ -31,7 +31,7 @@
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
 
-using namespace fts3;
+using namespace fts3::config;
 using namespace fts3::common;
 
 /* ---------------------------------------------------------------------- */

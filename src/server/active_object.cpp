@@ -24,7 +24,7 @@
 #include "unittest/testsuite.h"
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
-FTS3_SERVER_NAMESPACE_START
+using namespace fts3::server;
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST
 
@@ -93,6 +93,4 @@ BOOST_FIXTURE_TEST_CASE
 }
 
 #endif // FTS3_COMPILE_WITH_UNITTESTS
-
-FTS3_SERVER_NAMESPACE_END
 

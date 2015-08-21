@@ -34,7 +34,6 @@
 #include "DbUtils.h"
 
 
-using namespace FTS3_COMMON_NAMESPACE;
 using namespace db;
 
 static unsigned getHashedId(void)
@@ -1307,7 +1306,7 @@ void OracleAPI::useFileReplica(soci::session& sql, std::string jobId, int fileId
 }
 
 
-bool pairCompare( std::pair<std::pair<std::string, std::string>, int> i, pair<std::pair<std::string, std::string>, int> j)
+bool pairCompare( std::pair<std::pair<std::string, std::string>, int> i, std::pair<std::pair<std::string, std::string>, int> j)
 {
     return i.second < j.second;
 }

@@ -27,7 +27,8 @@
 #include <boost/algorithm/string/find.hpp>
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
-FTS3_COMMON_NAMESPACE_START
+namespace fts3 {
+namespace common {
 
 /* -------------------------------------------------------------------------- */
 
@@ -96,5 +97,6 @@ BOOST_AUTO_TEST_SUITE_END()
 
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
-FTS3_COMMON_NAMESPACE_END
+} // end namespace common
+} // end namespace fts3
 

@@ -24,12 +24,12 @@
 
 extern bool  stopThreads;
 
-FTS3_SERVER_NAMESPACE_START
-
+namespace fts3 {
+namespace server {
 namespace ThreadPool
 {
 
-using namespace FTS3_COMMON_NAMESPACE;
+using namespace fts3::common;
 
 /* ---------------------------------------------------------------------- */
 
@@ -79,6 +79,6 @@ void Worker::_doWork()
 }
 
 } // namespace ThreadPool
-
-FTS3_SERVER_NAMESPACE_END
+} // end namespace server
+} // end namespace fts3
 

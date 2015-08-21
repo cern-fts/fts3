@@ -40,28 +40,27 @@
  * happen in a separate thread, outside the signal handling logic.
  */
 
-using namespace FTS3_NAMESPACE;
-using namespace FTS3_COMMON_NAMESPACE;
+using namespace fts3::common; 
 
 static sem_t semaphore;
 static sig_atomic_t raised_signal = 0;
 
-void *Panic::stack_backtrace[STACK_BACKTRACE_SIZE] = {0};
-int Panic::stack_backtrace_size = 0;
+void *panic::stack_backtrace[STACK_BACKTRACE_SIZE] = {0};
+int panic::stack_backtrace_size = 0;
 
 
 static void get_backtrace(int signum)
 {
-        Panic::stack_backtrace_size = backtrace(Panic::stack_backtrace, STACK_BACKTRACE_SIZE);
+        panic::stack_backtrace_size = backtrace(panic::stack_backtrace, STACK_BACKTRACE_SIZE);
 
         // print out all the frames to stderr
         fprintf(stderr, "Caught signal: %d\n", signum);
         fprintf(stderr, "Stack trace: \n");
-        backtrace_symbols_fd(Panic::stack_backtrace, Panic::stack_backtrace_size, STDERR_FILENO);
+        backtrace_symbols_fd(panic::stack_backtrace, panic::stack_backtrace_size, STDERR_FILENO);
         // and then print out all the frames to stdout
         fprintf(stdout, "Caught signal: %d\n", signum);
         fprintf(stdout, "Stack trace: \n");
-        backtrace_symbols_fd(Panic::stack_backtrace, Panic::stack_backtrace_size, STDOUT_FILENO);
+        backtrace_symbols_fd(panic::stack_backtrace, panic::stack_backtrace_size, STDOUT_FILENO);
 }
 
 
@@ -158,7 +157,7 @@ static void set_handlers(void)
 }
 
 // Wrap set_handlers, so it is called only once
-void Panic::setup_signal_handlers(void (*shutdown_callback)(int, void*), void* udata)
+void panic::setup_signal_handlers(void (*shutdown_callback)(int, void*), void* udata)
 {
     // First thing, wait for a signal to be caught
     static boost::once_flag set_handlers_flag = BOOST_ONCE_INIT;
@@ -168,7 +167,7 @@ void Panic::setup_signal_handlers(void (*shutdown_callback)(int, void*), void* u
 }
 
 
-std::string Panic::stack_dump(void* array[], int stack_size)
+std::string panic::stack_dump(void* array[], int stack_size)
 {
     std::string stackTrace;
 

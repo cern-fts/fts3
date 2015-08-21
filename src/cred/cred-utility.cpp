@@ -32,7 +32,7 @@
 
 static boost::mutex qm;
 
-using namespace FTS3_COMMON_NAMESPACE;
+using namespace fts3::common; 
 
 #ifdef __cplusplus
 extern "C" {
@@ -174,7 +174,7 @@ std::string get_proxy_cert(const std::string& user_dn,
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Get the Proxy Certificate for that user" << commit;
 
             // Get CertProxy Service
-            scoped_ptr<CredService> cred_service;
+            boost::scoped_ptr<CredService> cred_service;
             cred_service.reset(new DelegCred);
             try
                 {

@@ -26,7 +26,7 @@
 
 /* ---------------------------------------------------------------------- */
 
-FTS3_SERVER_NAMESPACE_START
+using namespace fts3::server;
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST
 
@@ -122,5 +122,4 @@ BOOST_AUTO_TEST_CASE(Task_testCatchingUnhandledException)
 
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
-FTS3_SERVER_NAMESPACE_END
 

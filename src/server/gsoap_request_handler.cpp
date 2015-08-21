@@ -21,7 +21,9 @@
 #include "gsoap_request_handler.h"
 #include "gsoap_acceptor.h"
 
-FTS3_SERVER_NAMESPACE_START
+using namespace fts3::common;
+using namespace fts3::server;
+
 
 GSoapRequestHandler::GSoapRequestHandler(GSoapAcceptor& acceptor): ctx(acceptor.getSoapContext()),acceptor(acceptor)
 {
@@ -78,7 +80,7 @@ void GSoapRequestHandler::handle()
                     FTS3_COMMON_LOGGER_NEWLOG (WARNING) << "Someone sent a plain HTTP request ("
                                                         << method
                                                         << ")"
-                                                        << commit;
+                                                        << commit; 
 
                     // Ugly, but soap doesn't seem to be able to respond
                     // (Probably because cgsi expects a ssl negotiation)
@@ -115,4 +117,3 @@ void GSoapRequestHandler::handle()
         }
 }
 
-FTS3_SERVER_NAMESPACE_END

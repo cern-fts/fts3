@@ -27,7 +27,7 @@
 #include <sstream>
 
 using namespace db;
-using namespace FTS3_CONFIG_NAMESPACE;
+using namespace fts3::config; 
 
 std::string _getTrTimestampUTC()
 {
@@ -36,7 +36,7 @@ std::string _getTrTimestampUTC()
     gmtime_r(&now, &tTime);
     time_t msec = mktime(&tTime) * 1000; //the number of milliseconds since the epoch
     std::ostringstream oss;
-    oss << fixed << msec;
+    oss << std::fixed << msec;
     return oss.str();
 }
 

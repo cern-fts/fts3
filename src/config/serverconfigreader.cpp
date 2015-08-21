@@ -33,8 +33,8 @@
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
 
-using namespace fts3;
 using namespace fts3::common;
+using namespace fts3::config;
 
 
 // Default config values
@@ -275,7 +275,7 @@ struct ReadConfigFile_SystemTraits
             {
                 std::stringstream msg;
                 msg << "Error opening file " << aName;
-                FTS3_COMMON_EXCEPTION_THROW ( FTS3_COMMON_NAMESPACE::Err_System (msg.str()) );
+                FTS3_COMMON_EXCEPTION_THROW ( Err_System (msg.str()) );
                 throw Err_System(msg.str());
             }
 
@@ -312,7 +312,7 @@ BOOST_FIXTURE_TEST_CASE
     BOOST_CHECK_EXCEPTION
     (
         getStream("/atyala/patyala/thisfile-doesnot_exis"),
-        FTS3_COMMON_NAMESPACE::Err_System,
+        fts3::common::Err_System,
         fts3_unittest_always_true
     );
 

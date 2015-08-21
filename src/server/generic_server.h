@@ -20,17 +20,14 @@
 
 #pragma once
 
-#include "server_dev.h"
 #include "config/serverconfig.h"
 #include "common/logger.h"
 #include "web_service_handler.h"
 #include <string>
 #include <iostream>
 
-FTS3_SERVER_NAMESPACE_START
-
-using namespace FTS3_COMMON_NAMESPACE;
-using namespace FTS3_CONFIG_NAMESPACE;
+namespace fts3 {
+namespace server {
 
 /* -------------------------------------------------------------------------- */
 
@@ -49,7 +46,7 @@ public:
         typename TRAITS::HeartBeatType heartBeatHandler;
         heartBeatHandler.beat();
 
-        if (!theServerConfig().get<bool> ("rush"))
+        if (!config::theServerConfig().get<bool> ("rush"))
             sleep(8);
 
         typename TRAITS::CleanLogsTypeActive cLeanLogsHandlerActive;
@@ -59,7 +56,7 @@ public:
         processUpdaterDBHandler.executeTransfer_p();
 
         /*wait for status updates to be processed and then start sanity threads*/
-        if (!theServerConfig().get<bool> ("rush"))
+        if (!config::theServerConfig().get<bool> ("rush"))
             sleep(12);
 
         typename TRAITS::HeartBeatTypeActive heartBeatHandlerActive;
@@ -74,8 +71,8 @@ public:
         typename TRAITS::ProcessServiceMultihopType processMultihopHandler;
         processMultihopHandler.executeTransfer_p();
 
-        unsigned int port = theServerConfig().get<unsigned int>("Port");
-        const std::string& ip = theServerConfig().get<std::string>("IP");
+        unsigned int port = config::theServerConfig().get<unsigned int>("Port");
+        const std::string& ip = config::theServerConfig().get<std::string>("IP");
 
         typename TRAITS::TransferWebServiceType handler_t;
         handler_t.listen_p(port, ip);
@@ -89,9 +86,10 @@ public:
     void stop()
     {
         TRAITS::ThreadPoolType::instance().stop();
-        theLogger() << commit;
+        common::theLogger() << common::commit;
     }
 };
 
-FTS3_SERVER_NAMESPACE_END
+} // end namespace server
+} // end namespace fts3
 

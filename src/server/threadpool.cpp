@@ -26,10 +26,11 @@
 
 /* ---------------------------------------------------------------------- */
 
-FTS3_SERVER_NAMESPACE_START
+namespace fts3 {
+namespace server {
+namespace ThreadPool {
 
-namespace ThreadPool
-{
+using namespace fts3::common;
 
 ThreadPool::ThreadPool(const size_t queueSize, const size_t workerNum)
     : _queue(queueSize)
@@ -133,5 +134,6 @@ bOOST_AUTO_TEST_CASE(ThreadPoolTest)
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
 } // namespace ThreadPool
+} // end namespace server
+} // end namespace fts3
 
-FTS3_SERVER_NAMESPACE_END

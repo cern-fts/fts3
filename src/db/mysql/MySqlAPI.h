@@ -20,11 +20,9 @@
 
 #pragma once
 
-#include <common_dev.h>
 #include <soci/soci.h>
 #include "GenericDbIfce.h"
 
-using namespace FTS3_COMMON_NAMESPACE;
 
 class MySqlAPI : public GenericDbIfce
 {

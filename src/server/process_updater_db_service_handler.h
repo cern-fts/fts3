@@ -20,7 +20,6 @@
 
 #pragma once
 
-#include "server_dev.h"
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
 #include <string>
@@ -49,11 +48,8 @@
 extern bool stopThreads;
 extern time_t stallRecords;
 
-
-FTS3_SERVER_NAMESPACE_START
-using namespace FTS3_COMMON_NAMESPACE;
-using namespace db;
-using namespace FTS3_CONFIG_NAMESPACE;
+namespace fts3 {
+namespace server {
 
 template
 <
@@ -384,5 +380,6 @@ protected:
     _testHelper;
 };
 
-FTS3_SERVER_NAMESPACE_END
+} // end namespace server
+} // end namespace fts3
 

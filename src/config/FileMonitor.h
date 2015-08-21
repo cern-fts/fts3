@@ -26,6 +26,7 @@
 #include <boost/thread.hpp>
 
 namespace fts3 {
+namespace config {
 
 class ServerConfig;
 
@@ -56,6 +57,7 @@ private:
     time_t timestamp;
 };
 
-}
+} // end namespace config
+} // end namespace fts3
 
 #endif // FILEMONITOR_H_

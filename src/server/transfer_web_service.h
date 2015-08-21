@@ -27,13 +27,8 @@
 #include "threadpool.h"
 #include "ws-ifce/gsoap/gsoap_stubs.h"
 
-FTS3_SERVER_NAMESPACE_START
-
-/* -------------------------------------------------------------------------- */
-
-using namespace FTS3_COMMON_NAMESPACE;
-
-/* -------------------------------------------------------------------------- */
+namespace fts3 {
+namespace server {
 
 class TransferWebService;
 
@@ -52,5 +47,6 @@ public:
     TransferWebService();
 };
 
-FTS3_SERVER_NAMESPACE_END
+} // end namespace server
+} // end namespace fts3
 

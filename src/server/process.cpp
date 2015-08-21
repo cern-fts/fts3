@@ -53,8 +53,7 @@
 #include <dirent.h>
 #include <sys/socket.h>
 
-using namespace FTS3_COMMON_NAMESPACE;
-using namespace std;
+using namespace fts3::common; 
 using namespace StringHelper;
 using namespace db;
 

@@ -23,13 +23,14 @@
 #pragma once
 
 #include "dev.h"
-#include "common_dev.h"
 #include <syslog.h>
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/seq/for_each.hpp>
 #include <string>
 
-FTS3_COMMON_NAMESPACE_START
+namespace fts3 {
+namespace common {
+
 #undef DEBUG
 #define FTS3_COMMON_LOGGER_SUPPORTED_LOG_LEVELS (EMERG)(DEBUG)(WARNING)(INFO)(ALERT)(CRIT)(ERR)(NOTICE)
 
@@ -71,5 +72,6 @@ struct LoggerTraits_Syslog
     static const std::string initialLogLine();
 };
 
-FTS3_COMMON_NAMESPACE_END
+} // end namespace common
+} // end namespace fts3
 

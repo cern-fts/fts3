@@ -34,7 +34,8 @@
 #include "process_multihop.h"
 #include "cleanStateLogs.h"
 
-FTS3_SERVER_NAMESPACE_START
+namespace fts3 {
+namespace server {
 
 /* -------------------------------------------------------------------------- */
 
@@ -65,5 +66,6 @@ inline Server& theServer()
     return s;
 }
 
-FTS3_SERVER_NAMESPACE_END
+} // end namespace server
+} // end namespace fts3
 

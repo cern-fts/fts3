@@ -36,7 +36,7 @@ static const char EOT = 0x04;
 
 bool stopThreads = false;
 
-using namespace FTS3_COMMON_NAMESPACE;
+using namespace fts3::common; 
 
 
 static std::string replaceMetadataString(std::string text)
@@ -93,8 +93,8 @@ MsgProducer::MsgProducer()
     producer_transfer_started = NULL;
     producer_transfer_state = NULL;
     destination_transfer_state = NULL;
-    FTS3_CONFIG_NAMESPACE::theServerConfig().read(0, NULL);
-    FTSEndpoint = FTS3_CONFIG_NAMESPACE::theServerConfig().get<std::string>("Alias");
+    fts3::config::theServerConfig().read(0, NULL);
+    FTSEndpoint = fts3::config::theServerConfig().get<std::string>("Alias");
     readConfig();
     connected = false;
 }

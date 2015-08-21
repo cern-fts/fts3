@@ -26,11 +26,9 @@
 #include "GenericDbIfce.h"
 #include "DynamicLibraryManager.h"
 #include "definitions.h"
-#include "server_dev.h"
 
 
-
-using namespace FTS3_COMMON_NAMESPACE;
+using namespace fts3::common; 
 
 /**
  * SingleTrStateInstance class declaration

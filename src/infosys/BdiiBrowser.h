@@ -45,7 +45,6 @@ namespace infosys
 {
 
 using namespace common;
-using namespace config;
 
 /**
  * BdiiBrowser class is responsible for browsing BDII.
@@ -65,9 +64,9 @@ public:
     static const char* ATTR_OC;
 
     /// glue1 base
-    static const string GLUE1;
+    static const std::string GLUE1;
     /// glue2 base
-    static const string GLUE2;
+    static const std::string GLUE2;
 
     /// the object class for glue2
     static const char* CLASS_SERVICE_GLUE2;
@@ -85,7 +84,7 @@ public:
      *
      * @return true if the VO is allowed, flase otherwise
      */
-    bool isVoAllowed(string se, string vo);
+    bool isVoAllowed(std::string se, std::string vo);
 
     /**
      * Checks if the SE status allows for submitting a transfer
@@ -94,7 +93,7 @@ public:
      *
      * @return true if yes, otherwise false
      */
-    bool getSeStatus(string se);
+    bool getSeStatus(std::string se);
 
     // if we want all available attributes we leave attr = 0
     /**
@@ -109,7 +108,7 @@ public:
      * @return the result set containing all the outcomes
      */
     template<typename R>
-    list< map<string, R> > browse(string base, string query, const char **attr = 0);
+    std::list< std::map<std::string, R> > browse(std::string base, std::string query, const char **attr = 0);
 
     /**
      * Looks for attribute names in a foreign key
@@ -117,7 +116,7 @@ public:
      * @param values the values returned for the given foreign key
      * @param attr - the attributes you are querying for
      */
-    static string parseForeingKey(list<string> values, const char *attr);
+    static std::string parseForeingKey(std::list<std::string> values, const char *attr);
 
     /**
      * Checks in the fts3config if the given base (glue1 or glue2) is currently in use
@@ -126,7 +125,7 @@ public:
      *
      * @return true if the base is in use, false otherwise
      */
-    bool checkIfInUse(const string& base);
+    bool checkIfInUse(const std::string& base);
 
 private:
 
@@ -138,7 +137,7 @@ private:
      *
      * @return true is connection was successful, otherwise false
      */
-    bool connect(string infosys, time_t sec = 15);
+    bool connect(std::string infosys, time_t sec = 15);
 
     /**
      * Reconnect in case that the current connection is not valid any more
@@ -166,7 +165,7 @@ private:
      *
      * @return respective string value
      */
-    string baseToStr(const string& base);
+    std::string baseToStr(const std::string& base);
 
     /**
      * Parses BDII reply
@@ -176,7 +175,7 @@ private:
      * @return result set containing the data retrived from BDII
      */
     template<typename R>
-    list< map<string, R> > parseBdiiResponse(LDAPMessage *reply);
+    std::list< std::map<std::string, R> > parseBdiiResponse(LDAPMessage *reply);
 
     /**
      * Parses single entry retrieved from BDII query
@@ -186,7 +185,7 @@ private:
      * @return map that holds entry names and respective values
      */
     template<typename R>
-    map<string, R> parseBdiiSingleEntry(LDAPMessage *entry);
+    std::map<std::string, R> parseBdiiSingleEntry(LDAPMessage *entry);
 
     /**
      * Parses BDII attribute
@@ -209,10 +208,10 @@ private:
     timeval search_timeout;
 
     /// full LDAP URL (including protocol)
-    string url;
+    std::string url;
 
     /// the BDII endpoint
-    string infosys;
+    std::string infosys;
 
     /**
      *  semaphore
@@ -253,12 +252,12 @@ private:
     static const char* ATTR_SE;
 
     /// not used for now
-    static const string FIND_SE_STATUS(string se);
+    static const std::string FIND_SE_STATUS(std::string se);
     /// not used for now
     static const char* FIND_SE_STATUS_ATTR[];
 
     /// a string 'false'
-    static const string false_str;
+    static const std::string false_str;
     /// flag - true if connected, false if not
     bool connected;
 
@@ -285,14 +284,16 @@ private:
 };
 
 template<typename R>
-list< map<string, R> > BdiiBrowser::browse(string base, string query, const char **attr)
+std::list< std::map<std::string, R> > BdiiBrowser::browse(std::string base, std::string query, const char **attr)
 {
     signal(SIGPIPE, SIG_IGN);
     // check in the fts3config file if the 'base' (glue1 or glue2) is in use, if no return an empty result set
-    if (!checkIfInUse(base)) return list< map<string, R> >();
+    if (!checkIfInUse(base))
+        return std::list< std::map<std::string, R> >();
 
     // check in the fts3config if the host name for BDII was specified, if no return an empty result set
-    if (!theServerConfig().get<bool>("Infosys")) return list< map<string, R> >();
+    if (!config::theServerConfig().get<bool>("Infosys"))
+        return std::list< std::map<std::string, R> >();
 
     // check if the connection is valid
     if (!isValid())
@@ -312,7 +313,7 @@ list< map<string, R> > BdiiBrowser::browse(string base, string query, const char
             if (!reconnected)
                 {
                     FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP error: it has not been possible to reconnect to the BDII" << commit;
-                    return list< map<string, R> >();
+                    return std::list< std::map<std::string, R> >();
                 }
         }
 
@@ -329,20 +330,20 @@ list< map<string, R> > BdiiBrowser::browse(string base, string query, const char
         {
             if (reply && rc > 0) ldap_msgfree(reply);
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP error: " << ldap_err2string(rc) << commit;
-            return list< map<string, R> > ();
+            return std::list< std::map<std::string, R> > ();
         }
 
-    list< map<string, R> > ret = parseBdiiResponse<R>(reply);
-    if (reply) ldap_msgfree(reply);
+    std::list< std::map<std::string, R> > ret = parseBdiiResponse<R>(reply);
+    if (reply)
+        ldap_msgfree(reply);
 
     return ret;
 }
 
 template<typename R>
-list< map<string, R> > BdiiBrowser::parseBdiiResponse(LDAPMessage *reply)
+std::list< std::map<std::string, R> > BdiiBrowser::parseBdiiResponse(LDAPMessage *reply)
 {
-
-    list< map<string, R> > ret;
+    std::list< std::map<std::string, R> > ret;
     for (LDAPMessage *entry = ldap_first_entry(ld, reply); entry != 0; entry = ldap_next_entry(ld, entry))
         {
 
@@ -355,12 +356,12 @@ list< map<string, R> > BdiiBrowser::parseBdiiResponse(LDAPMessage *reply)
 }
 
 template<typename R>
-map<string, R> BdiiBrowser::parseBdiiSingleEntry(LDAPMessage *entry)
+std::map<std::string, R> BdiiBrowser::parseBdiiSingleEntry(LDAPMessage *entry)
 {
 
     BerElement *berptr = 0;
     char* attr = 0;
-    map<string, R> m_entry;
+    std::map<std::string, R> m_entry;
 
     for (attr = ldap_first_attribute(ld, entry, &berptr); attr != 0; attr = ldap_next_attribute(ld, entry, berptr))
         {
@@ -382,18 +383,19 @@ map<string, R> BdiiBrowser::parseBdiiSingleEntry(LDAPMessage *entry)
 }
 
 template<>
-inline string BdiiBrowser::parseBdiiEntryAttribute<string>(berval **value)
+inline std::string BdiiBrowser::parseBdiiEntryAttribute<std::string>(berval **value)
 {
 
-    if (value && value[0] && value[0]->bv_val) return value[0]->bv_val;
-    return string();
+    if (value && value[0] && value[0]->bv_val)
+	return value[0]->bv_val;
+    return std::string();
 }
 
 template<>
-inline list<string> BdiiBrowser::parseBdiiEntryAttribute< list<string> >(berval **value)
+inline std::list<std::string> BdiiBrowser::parseBdiiEntryAttribute< std::list<std::string> >(berval **value)
 {
 
-    list<string> ret;
+    std::list<std::string> ret;
     for (int i = 0; value && value[i] && value[i]->bv_val; i++)
         {
             ret.push_back(value[i]->bv_val);

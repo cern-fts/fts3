@@ -26,7 +26,7 @@
 #include <memory>
 
 
-using namespace FTS3_COMMON_NAMESPACE;
+using namespace fts3::common; 
 
 DynamicLibraryManager::DynamicLibraryManager(const std::string &libraryFileName)
     : m_libraryHandle(NULL)

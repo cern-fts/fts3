@@ -26,7 +26,7 @@
 #define TIME_UTC_ TIME_UTC
 #endif
 
-FTS3_COMMON_NAMESPACE_START
+using namespace fts3::common;
 
 /* ---------------------------------------------------------------------- */
 
@@ -92,5 +92,4 @@ Timeout* InfiniteTimeout::clone() const
     return new InfiniteTimeout(*this);
 }
 
-FTS3_COMMON_NAMESPACE_END
 

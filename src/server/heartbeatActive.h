@@ -26,7 +26,8 @@
 
 extern bool stopThreads;
 
-FTS3_SERVER_NAMESPACE_START
+namespace fts3 {
+namespace server {
 
 template <typename TRAITS>
 class HeartBeatHandlerActive: public TRAITS::ActiveObjectType
@@ -88,4 +89,6 @@ public:
     virtual ~HearBeatActive() {};
 };
 
-FTS3_SERVER_NAMESPACE_END
+} // end namespace server
+} // end namespace fts3
+

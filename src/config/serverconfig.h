@@ -36,6 +36,7 @@
 
 
 namespace fts3 {
+namespace config {
 
 /** \brief Class representing server configuration. Server configuration read once,
  * when the server starts. It provides read-only singleton access. */
@@ -236,6 +237,7 @@ inline std::map<std::string, std::string> ServerConfig::get< std::map<std::strin
     return ret;
 }
 
-}
+} // end namespace config
+} // end namespace fts3
 
 #endif // SERVERCONFIG_H_

@@ -25,8 +25,6 @@
 #include <ctime>
 #include <boost/thread.hpp>
 
-#include "common_dev.h"
-
 
 struct transfersStore
 {

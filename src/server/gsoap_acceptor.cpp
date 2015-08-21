@@ -22,7 +22,6 @@
 #include "gsoap_request_handler.h"
 #include "ws-ifce/gsoap/fts3.nsmap"
 #include "serverconfig.h"
-#include "server_dev.h"
 #include <cgsi_plugin.h>
 #include <signal.h>
 #include <sys/socket.h>
@@ -35,11 +34,9 @@ time_t updateRecords = time(0);
 time_t stallRecords = time(0);
 
 
-using namespace FTS3_COMMON_NAMESPACE;
-using namespace FTS3_CONFIG_NAMESPACE;
+using namespace fts3::config;
 using namespace fts3::common;
-FTS3_SERVER_NAMESPACE_START
-
+using namespace fts3::server;
 
 
 GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip)
@@ -199,4 +196,3 @@ void GSoapAcceptor::recycleSoapContext(soap* ctx)
         }
 }
 
-FTS3_SERVER_NAMESPACE_END

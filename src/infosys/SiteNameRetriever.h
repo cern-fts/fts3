@@ -79,7 +79,7 @@ private:
 
     std::string getFromBdii(std::string se);
 
-    mutex m;
+    boost::mutex m;
     std::map<std::string, std::string> seToSite;
 };
 

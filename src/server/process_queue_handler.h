@@ -20,7 +20,6 @@
 
 #pragma once
 
-#include "server_dev.h"
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
 #include <string>
@@ -38,11 +37,8 @@
 extern bool stopThreads;
 extern time_t updateRecords;
 
-namespace fs = boost::filesystem;
-
-FTS3_SERVER_NAMESPACE_START
-using namespace FTS3_COMMON_NAMESPACE;
-using namespace db;
+namespace fts3 {
+namespace server {
 
 template
 <
@@ -70,7 +66,7 @@ public:
     ) :
         TRAITS::ActiveObjectType("ProcessQueueHandler", desc)
     {
-        enableOptimization = theServerConfig().get<std::string > ("Optimizer");
+        enableOptimization = config::theServerConfig().get<std::string > ("Optimizer");
         messages.reserve(600);
     }
 
@@ -241,7 +237,7 @@ protected:
                                 updateDatabase((*iter));
                             }
                     }
-                catch (const fs::filesystem_error& e)
+                catch (const boost::filesystem::filesystem_error& e)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Caught exception " << e.what() << commit;
                     }
@@ -285,7 +281,7 @@ protected:
                                 continue;
                             }
 
-                        if(!fs::is_empty(fs::path(STATUS_DIR)))
+                        if(!boost::filesystem::is_empty(boost::filesystem::path(STATUS_DIR)))
                             {
                                 if (runConsumerStatus(messages) != 0)
                                     {
@@ -307,7 +303,7 @@ protected:
                             }
 
                         //update log file path
-                        if (!fs::is_empty(fs::path(LOG_DIR)))
+                        if (!boost::filesystem::is_empty(boost::filesystem::path(LOG_DIR)))
                             {
                                 if(runConsumerLog(messagesLog) != 0)
                                     {
@@ -369,7 +365,7 @@ protected:
                         //update heartbeat and progress vector
                         try
                             {
-                                if (!fs::is_empty(fs::path(STALLED_DIR)))
+                                if (!boost::filesystem::is_empty(boost::filesystem::path(STALLED_DIR)))
                                     {
                                         if (runConsumerStall(messagesUpdater) != 0)
                                             {
@@ -438,7 +434,7 @@ protected:
                                     }
                                 messagesUpdater.clear();
                             }
-                        catch (const fs::filesystem_error& ex)
+                        catch (const boost::filesystem::filesystem_error& ex)
                             {
                                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
                             }
@@ -453,7 +449,7 @@ protected:
 
                         sleep(1);
                     }
-                catch (const fs::filesystem_error& ex)
+                catch (const boost::filesystem::filesystem_error& ex)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
 
@@ -533,5 +529,6 @@ protected:
     _testHelper;
 };
 
-FTS3_SERVER_NAMESPACE_END
+} // end namespace server
+} // end namespace fts3
 

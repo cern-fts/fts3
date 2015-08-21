@@ -26,13 +26,8 @@
 #include "threadpool.h"
 
 
-FTS3_SERVER_NAMESPACE_START
-
-/* -------------------------------------------------------------------------- */
-
-using namespace FTS3_COMMON_NAMESPACE;
-
-/* -------------------------------------------------------------------------- */
+namespace fts3 {
+namespace server {
 
 class ProcessService;
 
@@ -50,5 +45,6 @@ public:
 
 };
 
-FTS3_SERVER_NAMESPACE_END
+} // end namespace server
+} // end namespace fts3
 

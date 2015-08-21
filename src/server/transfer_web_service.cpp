@@ -24,13 +24,9 @@
 #include "unittest/testsuite.h"
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
-FTS3_SERVER_NAMESPACE_START
-
-/* -------------------------------------------------------------------------- */
+using namespace fts3::server;
 
 TransferWebService::TransferWebService()
     : WebServiceHandler <TransferWebServiceTraits> ("Transfer web service")
 {}
-
-FTS3_SERVER_NAMESPACE_END
 

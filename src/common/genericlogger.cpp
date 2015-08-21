@@ -28,7 +28,7 @@
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
 
-FTS3_COMMON_NAMESPACE_START
+using namespace fts3::common;
 
 /* ========================================================================== */
 
@@ -251,5 +251,4 @@ BOOST_AUTO_TEST_SUITE_END()
 
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
-FTS3_COMMON_NAMESPACE_END
 

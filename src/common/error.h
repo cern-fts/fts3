@@ -22,8 +22,6 @@
 
 #pragma once
 
-#include "common_dev.h"
-
 #include <string>
 #include <exception>
 
@@ -49,7 +47,8 @@
 
 /* ========================================================================== */
 
-FTS3_COMMON_NAMESPACE_START
+namespace fts3 {
+namespace common {
 
 /** General FTS3 error class. */
 class Err: public std::exception
@@ -183,5 +182,6 @@ public:
     Err_Transient(const std::string& aDesc) : Err_Custom(aDesc) {}
 };
 
-FTS3_COMMON_NAMESPACE_END
+} // end namespace common
+} // end namespace fts3
 

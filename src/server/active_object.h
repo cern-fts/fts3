@@ -20,16 +20,14 @@
 
 #pragma once
 
-#include "server_dev.h"
 #include "common/monitorobject.h"
 #include <boost/bind.hpp>
 #include <boost/utility.hpp>
 #include <boost/thread/condition.hpp>
 #include <assert.h>
 
-FTS3_SERVER_NAMESPACE_START
-
-using namespace FTS3_COMMON_NAMESPACE;
+namespace fts3 {
+namespace server {
 
 /* ---------------------------------------------------------------------- */
 
@@ -44,7 +42,7 @@ template<
 >
 class ActiveObject :
     private boost::noncopyable,
-    public MonitorObject
+    public fts3::common::MonitorObject
 {
 public:
     /* ------------------------------------------------------------------ */
@@ -154,5 +152,6 @@ protected:
     typename boost::condition _notRunning;
 };
 
-FTS3_SERVER_NAMESPACE_END
+} // end namespace server
+} // end namespace fts3
 

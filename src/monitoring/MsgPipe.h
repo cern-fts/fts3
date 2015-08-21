@@ -52,9 +52,7 @@ using namespace decaf::lang;
 using namespace decaf::util;
 using namespace decaf::util::concurrent;
 using namespace cms;
-using namespace std;
-using namespace FTS3_COMMON_NAMESPACE;
-
+using namespace fts3::common;
 
 
 class MsgPipe : public Runnable

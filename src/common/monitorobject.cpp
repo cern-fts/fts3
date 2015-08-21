@@ -27,8 +27,6 @@
 
 #include "unittest/testsuite.h"
 
-using namespace FTS3_COMMON_NAMESPACE;
-
 // Reflects how to use MonitorObject: Derive from it.
 struct MonitorObject_Test : public MonitorObject {};
 

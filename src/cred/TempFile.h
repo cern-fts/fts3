@@ -30,8 +30,6 @@
 #include "common/logger.h"
 #include "common/error.h"
 
-using namespace FTS3_COMMON_NAMESPACE;
-
 
 /**
  * TempFile class. The purpose of this class is to unlink a temporary file
@@ -72,11 +70,11 @@ public:
         // Check Preconditions
         if(m_filename.empty())
             {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "empty TempFile name" << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "empty TempFile name" << fts3::common::commit;
             }
         if(name.empty())
             {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "empty destination name" << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "empty destination name" << fts3::common::commit;
             }
         // Rename File
         int r = ::rename(m_filename.c_str(),name.c_str());
@@ -84,7 +82,7 @@ public:
             {
                 std::string reason = (std::string)"Cannot rename temporary file. Error is: " +
                                      strerror(errno);
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << reason << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << reason << fts3::common::commit;
                 ::unlink(m_filename.c_str());
             }
         // Release Ownership
@@ -123,12 +121,12 @@ public:
         // Check Procondition
         if(0 == fd)
             {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "null File Descriptor pointer" << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "null File Descriptor pointer" << fts3::common::commit;
                 return std::string("");
             }
         if(true == prefix.empty())
             {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "empty Prefix" << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "empty Prefix" << fts3::common::commit;
                 return std::string("");
             }
         char tmp_proxy[FILENAME_MAX];
@@ -147,7 +145,7 @@ public:
             {
                 std::string reason = (std::string)"Cannot create temporary file <" +
                                      tmp_proxy + ">.	Error is: " + strerror(errno);
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << reason << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << reason << fts3::common::commit;
                 return std::string("");
             }
         return tmp_proxy;

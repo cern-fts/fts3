@@ -120,7 +120,7 @@ ProfilingSubsystem& ProfilingSubsystem::getInstance()
 
 void ProfilingSubsystem::start()
 {
-    dumpInterval = fts3::config::theServerConfig().get<unsigned>("Profiling");
+    dumpInterval = config::theServerConfig().get<unsigned>("Profiling");
     if (dumpInterval)
         {
             boost::thread btUpdater(profilerThread, this);

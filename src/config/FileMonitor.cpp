@@ -24,7 +24,7 @@
 
 #include <sys/stat.h>
 
-using namespace fts3;
+using namespace fts3::config;
 
 
 FileMonitor::FileMonitor(ServerConfig* sc) : sc(sc), running(false), timestamp(0)

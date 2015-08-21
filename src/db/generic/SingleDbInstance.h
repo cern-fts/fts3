@@ -38,7 +38,6 @@
 #include "GenericDbIfce.h"
 #include "DynamicLibraryManager.h"
 
-using namespace FTS3_COMMON_NAMESPACE;
 namespace db
 {
 /**

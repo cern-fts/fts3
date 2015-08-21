@@ -21,8 +21,6 @@
 #ifndef PROTOCOLRESOLVER_H_
 #define PROTOCOLRESOLVER_H_
 
-#include "server_dev.h"
-
 #include "db/generic/SingleDbInstance.h"
 
 #include <list>
@@ -33,10 +31,10 @@
 #include <boost/optional.hpp>
 #include <boost/tuple/tuple.hpp>
 
-FTS3_SERVER_NAMESPACE_START
+namespace fts3 {
+namespace server {
 
 using namespace db;
-using namespace boost;
 
 /**
  * The class aims to resolve the protocol parameters for a given transfer job.
@@ -161,7 +159,7 @@ public:
      *
      * @return an object containing protocol parameters
      */
-    static optional<protocol> getUserDefinedProtocol(TransferFiles const & file);
+    static boost::optional<protocol> getUserDefinedProtocol(TransferFiles const & file);
 
 private:
 
@@ -182,7 +180,7 @@ private:
      *
      * @return first initialized object in the sublist, or an uninitialized object if non was found
      */
-    optional< std::pair<std::string, std::string> > getFirst(std::list<LinkType> l);
+    boost::optional< std::pair<std::string, std::string> > getFirst(std::list<LinkType> l);
 
     /**
      * Gets the protocol parameters for the given link
@@ -191,7 +189,7 @@ private:
      *
      * @return an object containing protocol parameters
      */
-    optional<protocol> getProtocolCfg(optional< std::pair<std::string, std::string> > link);
+    boost::optional<protocol> getProtocolCfg(boost::optional< std::pair<std::string, std::string> > link);
 
     /**
      * Merges two sets of protocol parameters.
@@ -201,7 +199,7 @@ private:
      *
      * @return an object containing protocol parameters (the memory has to be released by the user)
      */
-    optional<protocol> merge(optional<protocol> source, optional<protocol> destination);
+    boost::optional<protocol> merge(boost::optional<protocol> source, boost::optional<protocol> destination);
 
     /**
      * Fill the fields market as auto (-1) with respective value
@@ -209,7 +207,7 @@ private:
      * @param p - the protocol that if being transformed
      * @return input protocol after transformation
      */
-    void fillAuto(optional<protocol>& source, optional<protocol>& destination);
+    void fillAuto(boost::optional<protocol>& source, boost::optional<protocol>& destination);
 
 
     /**
@@ -224,10 +222,10 @@ private:
     GenericDbIfce* db;
 
     /// array containing respective source-destination pairs (corresponds to the LinkType enumeration)
-    optional< std::pair<std::string, std::string> > link[8];
+    boost::optional< std::pair<std::string, std::string> > link[8];
 
     /// stores the protocol parameters that have been resolved
-    optional<protocol> prot;
+    boost::optional<protocol> prot;
 
     // the transfer file
     TransferFiles const & file;
@@ -241,6 +239,7 @@ private:
     bool auto_tuned;
 };
 
-FTS3_SERVER_NAMESPACE_END
+} // end namespace server
+} // end namespace fts3
 
 #endif /* PROTOCOLRESOLVER_H_ */

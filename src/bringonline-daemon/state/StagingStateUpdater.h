@@ -33,7 +33,7 @@
 #include "producer_consumer_common.h"
 #include "common/logger.h"
 
-using namespace FTS3_COMMON_NAMESPACE;
+using namespace fts3::common; 
 
 extern bool stopThreads;
 

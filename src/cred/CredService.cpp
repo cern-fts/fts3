@@ -26,7 +26,7 @@
 #include "common/error.h"
 #include "SingleDbInstance.h"
 
-using namespace FTS3_COMMON_NAMESPACE;
+using namespace fts3::common; 
 
 #ifdef __cplusplus
 extern "C" {

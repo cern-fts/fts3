@@ -20,7 +20,6 @@
 
 #pragma once
 
-#include "common_dev.h"
 #include <limits>
 #include <sys/time.h>
 
@@ -28,7 +27,8 @@
 
 /* ---------------------------------------------------------------------- */
 
-FTS3_COMMON_NAMESPACE_START
+namespace fts3 {
+namespace common {
 
 /** A type representing timeout.
  *
@@ -129,5 +129,6 @@ private:
     InfiniteTimeout(const InfiniteTimeout& x) : Timeout(x) {}
 };
 
-FTS3_COMMON_NAMESPACE_END
+} // end namespace common
+} // end namespace fts3
 

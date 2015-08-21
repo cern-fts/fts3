@@ -20,7 +20,6 @@
 
 #pragma once
 
-#include "server_dev.h"
 #include "task.h"
 #include "threadpool_worker.h"
 #include "synchronizedqueue.h"
@@ -33,16 +32,13 @@
 #include <limits>
 #include <boost/ptr_container/ptr_vector.hpp>
 
-/* ---------------------------------------------------------------------- */
-
-FTS3_SERVER_NAMESPACE_START
-
-using namespace FTS3_COMMON_NAMESPACE;
+namespace fts3 {
+namespace server {
 
 namespace ThreadPool
 {
 
-class ThreadPool : public MonitorObject
+class ThreadPool : public fts3::common::MonitorObject
 {
 private:
     typedef SynchronizedQueue<ITask, std::shared_ptr> _queue_t;
@@ -62,14 +58,14 @@ public:
         //FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << tptr->id() << " is enqueued" << commit;
     }
 
-    element_type pop(const Timeout& td);
+    element_type pop(const fts3::common::Timeout& td);
 
     static ThreadPool& instance()
     {
         static ThreadPool tp
         (
             std::numeric_limits<size_t>::max(),
-            FTS3_CONFIG_NAMESPACE::theServerConfig().get<size_t> ("ThreadNum")
+            fts3::config::theServerConfig().get<size_t> ("ThreadNum")
         );
 
         return tp;
@@ -96,7 +92,7 @@ struct NoThreads
 
     template<class OP_TYPE>	void enqueue(OP_TYPE& op, const std::string& desc = "")
     {
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Task (" << desc << ") is executed immediately" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Task (" << desc << ") is executed immediately" << fts3::common::commit;
         op();
         //FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << " Task is finished" << commit;
     }
@@ -104,4 +100,6 @@ struct NoThreads
 
 } // namespace ThreadPool
 
-FTS3_SERVER_NAMESPACE_END
+} // namespace server
+} // namespace fts3
+

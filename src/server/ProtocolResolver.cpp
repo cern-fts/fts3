@@ -30,8 +30,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 
-FTS3_SERVER_NAMESPACE_START
-
+using namespace fts3::server;
 using namespace fts3::ws;
 using namespace fts3::common;
 using namespace boost::assign;
@@ -331,4 +330,3 @@ int ProtocolResolver::getUrlCopyTxTo()
     return (*prot).urlcopy_tx_to;
 }
 
-FTS3_SERVER_NAMESPACE_END

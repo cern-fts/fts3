@@ -27,8 +27,8 @@ namespace fts3
 namespace infosys
 {
 
-const string BdiiBrowser::GLUE1 = "o=grid";
-const string BdiiBrowser::GLUE2 = "o=glue";
+const std::string BdiiBrowser::GLUE1 = "o=grid";
+const std::string BdiiBrowser::GLUE2 = "o=glue";
 
 const char* BdiiBrowser::ATTR_STATUS = "GlueSEStatus";
 const char* BdiiBrowser::ATTR_SE = "GlueSEUniqueID";
@@ -39,14 +39,14 @@ const char* BdiiBrowser::ATTR_OC = "objectClass";
 const char* BdiiBrowser::CLASS_SERVICE_GLUE2 = "GLUE2Service";
 const char* BdiiBrowser::CLASS_SERVICE_GLUE1 = "GlueService";
 
-const string BdiiBrowser::false_str = "false";
+const std::string BdiiBrowser::false_str = "false";
 
 // "(| (%sAccessControlBaseRule=VO:%s) (%sAccessControlBaseRule=%s) (%sAccessControlRule=%s)"
 
-const string BdiiBrowser::FIND_SE_STATUS(string se)
+const std::string BdiiBrowser::FIND_SE_STATUS(std::string se)
 {
 
-    stringstream ss;
+    std::stringstream ss;
     ss << "(&(" << BdiiBrowser::ATTR_SE << "=*" << se << "*))";
     return ss.str();
 }
@@ -59,7 +59,7 @@ BdiiBrowser::~BdiiBrowser()
     disconnect();
 }
 
-bool BdiiBrowser::connect(string infosys, time_t sec)
+bool BdiiBrowser::connect(std::string infosys, time_t sec)
 {
 
     // make sure that the infosys string is not 'false'
@@ -95,7 +95,7 @@ bool BdiiBrowser::connect(string infosys, time_t sec)
         }
 
     // set the keep alive if it has been set to 'true' in the fts3config file
-    if (theServerConfig().get<bool>("BDIIKeepAlive"))
+    if (config::theServerConfig().get<bool>("BDIIKeepAlive"))
         {
 
             int val = keepalive_idle;
@@ -151,10 +151,10 @@ bool BdiiBrowser::reconnect()
     signal(SIGPIPE, SIG_IGN);
 
     // use unique locking - while reconnecting noone else can acquire the mutex
-    unique_lock<shared_mutex> lock(qm);
+    boost::unique_lock<boost::shared_mutex> lock(qm);
 
     if (connected) disconnect();
-    bool ret = connect(theServerConfig().get<string>("Infosys"));
+    bool ret = connect(config::theServerConfig().get<std::string>("Infosys"));
 
     return ret;
 }
@@ -165,14 +165,15 @@ bool BdiiBrowser::isValid()
     // if we are not connected the connection is not valid
     if (!connected) return false;
     // if the bdii host have changed it is also not valid
-    if (theServerConfig().get<string>("Infosys") != this->infosys) return false;
+    if (config::theServerConfig().get<std::string>("Infosys") != this->infosys)
+        return false;
 
     LDAPMessage *result = 0;
     signal(SIGPIPE, SIG_IGN);
     int rc = 0;
     // used shared lock - many concurrent reads are allowed
     {
-        shared_lock<shared_mutex> lock(qm);
+        boost::shared_lock<boost::shared_mutex> lock(qm);
         rc = ldap_search_ext_s(ld, "dc=example,dc=com", LDAP_SCOPE_BASE, "(sn=Curly)", 0, 0, 0, 0, &timeout, 0, &result);
     }
 
@@ -203,59 +204,59 @@ bool BdiiBrowser::isValid()
     return false;
 }
 
-string BdiiBrowser::parseForeingKey(list<string> values, const char *attr)
+std::string BdiiBrowser::parseForeingKey(std::list<std::string> values, const char *attr)
 {
 
-    list<string>::iterator it;
+    std::list<std::string>::iterator it;
     for (it = values.begin(); it != values.end(); ++it)
         {
 
-            string entry = *it, attr_str = attr;
-            to_lower(entry);
-            to_lower(attr_str);
+            std::string entry = *it, attr_str = attr;
+            boost::to_lower(entry);
+            boost::to_lower(attr_str);
 
             size_t pos = entry.find('=');
             if (entry.substr(0, pos) == attr_str) return it->substr(pos + 1);
         }
 
-    return string();
+    return std::string();
 }
 
-bool BdiiBrowser::getSeStatus(string se)
+bool BdiiBrowser::getSeStatus(std::string se)
 {
 
-    list< map<string, string> > rs = browse<string>(GLUE1, FIND_SE_STATUS(se), FIND_SE_STATUS_ATTR);
+    std::list< std::map<std::string, std::string> > rs = browse<std::string>(GLUE1, FIND_SE_STATUS(se), FIND_SE_STATUS_ATTR);
 
     if (rs.empty()) return true;
 
-    string status = rs.front()[ATTR_STATUS];
+    std::string status = rs.front()[ATTR_STATUS];
 
     return status == "Production" || status == "Online";
 }
 
-bool BdiiBrowser::isVoAllowed(string se, string vo)
+bool BdiiBrowser::isVoAllowed(std::string se, std::string vo)
 {
     se = std::string();
     vo = std::string();
     return true;
 }
 
-string BdiiBrowser::baseToStr(const string& base)
+std::string BdiiBrowser::baseToStr(const std::string& base)
 {
 
     if (base == GLUE1) return "glue1";
     if (base == GLUE2) return "glue2";
 
-    return string();
+    return std::string();
 }
 
-bool BdiiBrowser::checkIfInUse(const string& base)
+bool BdiiBrowser::checkIfInUse(const std::string& base)
 {
 
-    string base_str = baseToStr(base);
+    std::string base_str = baseToStr(base);
 
-    vector<string> providers = theServerConfig().get< vector<string> >("InfoProviders");
-    vector<string>::iterator it;
+    std::vector<std::string> providers = config::theServerConfig().get< std::vector<std::string> >("InfoProviders");
+    std::vector<std::string>::iterator it;
 
     for (it = providers.begin(); it != providers.end(); ++it)
         {

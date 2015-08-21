@@ -20,16 +20,13 @@
 
 #pragma once
 
-#include "server_dev.h"
 #include "common/timeout.h"
 
 #include <boost/thread.hpp>
 
-/* ---------------------------------------------------------------------- */
 
-FTS3_SERVER_NAMESPACE_START
-
-using namespace FTS3_COMMON_NAMESPACE;
+namespace fts3 {
+namespace server {
 
 namespace ThreadPool
 {
@@ -50,13 +47,15 @@ private:
     void _doWork();
 
 
-    static Timeout& _TIMEOUT()
+    static fts3::common::Timeout& _TIMEOUT()
     {
-        static InfiniteTimeout td;
+        static fts3::common::InfiniteTimeout td;
         return td;
     }
 };
 
 } // namespace ThreadPool
 
-FTS3_SERVER_NAMESPACE_END
+} // end namespace server
+} // end namespace fts3
+

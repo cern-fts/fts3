@@ -22,7 +22,7 @@
 #include "logger.h"
 
 
-using namespace FTS3_COMMON_NAMESPACE;
+using namespace fts3::common; 
 
 DynamicLibraryManagerException::DynamicLibraryManagerException(
     const std::string &libraryName,

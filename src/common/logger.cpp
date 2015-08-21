@@ -28,8 +28,6 @@
 
 /* ---------------------------------------------------------------------- */
 
-FTS3_COMMON_NAMESPACE_START
-
 #ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 
 BOOST_AUTO_TEST_SUITE( common )
@@ -50,6 +48,4 @@ BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 
 #endif // FTS3_COMPILE_WITH_UNITTESTS
-
-FTS3_COMMON_NAMESPACE_END
 

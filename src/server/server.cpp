@@ -26,10 +26,3 @@
 #include "unittest/testsuite.h"
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
-FTS3_SERVER_NAMESPACE_START
-
-/* -------------------------------------------------------------------------- */
-
-
-FTS3_SERVER_NAMESPACE_END
-

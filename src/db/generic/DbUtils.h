@@ -30,7 +30,7 @@
 #include "config/serverconfig.h"
 #include "GenericDbIfce.h"
 
-using namespace FTS3_CONFIG_NAMESPACE;
+using namespace fts3::config;
 
 namespace db
 {

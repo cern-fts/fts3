@@ -30,8 +30,6 @@ namespace fts3
 namespace infosys
 {
 
-using namespace config;
-
 const char* SiteNameRetriever::ATTR_GLUE1_SERVICE = "GlueServiceUniqueID";
 const char* SiteNameRetriever::ATTR_GLUE1_SERVICE_URI = "GlueServiceURI";
 
@@ -123,11 +121,11 @@ std::string SiteNameRetriever::getFromBdii(std::string se)
 std::string SiteNameRetriever::getSiteName(std::string se)
 {
     // check if the infosys has been activated in the fts3config file
-    bool active = theServerConfig().get<bool>("Infosys");
+    bool active = config::theServerConfig().get<bool>("Infosys");
     if (!active) return std::string();
 
     // lock the cache
-    mutex::scoped_lock lock(m);
+    boost::mutex::scoped_lock lock(m);
 
     // check if the se is in cache
     std::map<std::string, std::string>::iterator it = seToSite.find(se);

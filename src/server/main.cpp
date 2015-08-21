@@ -20,8 +20,6 @@
 
 /** \file main.cpp FTS3 server entry point. */
 
-#include "server_dev.h"
-
 #include <cstdio>
 #include <signal.h>
 #include <unistd.h>
@@ -49,8 +47,9 @@
 
 namespace fs = boost::filesystem;
 using boost::thread;
-using namespace FTS3_SERVER_NAMESPACE;
-using namespace FTS3_COMMON_NAMESPACE;
+using namespace fts3::common;
+using namespace fts3::config;
+using namespace fts3::server; 
 
 extern std::string stackTrace;
 extern bool stopThreads;
@@ -362,7 +361,7 @@ static void shutdown_callback(int signal, void*)
         case SIGTRAP:
         case SIGSYS:
             exit_status = -signal;
-            FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Stack trace: \n" << Panic::stack_dump(Panic::stack_backtrace, Panic::stack_backtrace_size) << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Stack trace: \n" << panic::stack_dump(panic::stack_backtrace, panic::stack_backtrace_size) << commit;
             break;
         default:
             break;
@@ -396,7 +395,7 @@ int DoServer(int argc, char** argv)
 {
     setenv("GLOBUS_THREAD_MODEL","pthread",1); //reset it
     // Register signal handlers
-    Panic::setup_signal_handlers(shutdown_callback, NULL);
+    panic::setup_signal_handlers(shutdown_callback, NULL);
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Signal handlers installed" << commit;
 
     try
@@ -418,7 +417,7 @@ int DoServer(int argc, char** argv)
                 }
 
             //re-read here
-            FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv, true);
+            theServerConfig().read(argc, argv, true);
 
             // Set X509_ environment variables properly - reset here is case the child crashes
             setenv("X509_USER_CERT", hostcert, 1);
@@ -428,14 +427,14 @@ int DoServer(int argc, char** argv)
             if (logDir.length() > 0)
                 {
                     logDir += "/fts3server.log";
-                    if (FTS3_COMMON_NAMESPACE::theLogger().open(logDir) != 0)
+                    if (theLogger().open(logDir) != 0)
                         {
                             std::cerr << "fts3 server failed to open log file " << logDir << " error is:" << strerror(errno) << std::endl;
                             return -1;
                         }
                 }
 
-            bool isDaemon = !FTS3_CONFIG_NAMESPACE::theServerConfig().get<bool> ("no-daemon");
+            bool isDaemon = !theServerConfig().get<bool> ("no-daemon");
 
             if (isDaemon)
                 {
@@ -536,7 +535,7 @@ int main(int argc, char** argv)
                     return EXIT_FAILURE;
                 }
 
-            FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv, true);
+            theServerConfig().read(argc, argv, true);
 
             //check file/dir persmissions
 	    std::string logDir = theServerConfig().get<std::string > ("ServerLogDirectory");

@@ -22,6 +22,8 @@
 
 #include "context/JobContext.h"
 
+using namespace fts3::common;
+
 std::string Gfal2Task::infosys;
 
 

@@ -20,7 +20,6 @@
 
 #pragma once
 
-#include "server_dev.h"
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
 #include <string>
@@ -75,12 +74,8 @@
 extern bool stopThreads;
 extern time_t retrieveRecords;
 
-
-FTS3_SERVER_NAMESPACE_START
-using namespace FTS3_COMMON_NAMESPACE;
-using namespace db;
-using namespace FTS3_CONFIG_NAMESPACE;
-
+namespace fts3 {
+namespace server {
 
 template
 <
@@ -110,12 +105,12 @@ public:
     {
         cmd = "fts_url_copy";
 
-	logDir = theServerConfig().get<std::string > ("TransferLogDirectory");
-        execPoolSize = theServerConfig().get<int> ("InternalThreadPool");
-        ftsHostName = theServerConfig().get<std::string > ("Alias");
+	logDir = config::theServerConfig().get<std::string > ("TransferLogDirectory");
+        execPoolSize = config::theServerConfig().get<int> ("InternalThreadPool");
+        ftsHostName = config::theServerConfig().get<std::string > ("Alias");
         allowedVOs = std::string("");
-        infosys = theServerConfig().get<std::string > ("Infosys");
-        const vector<std::string> voNameList(theServerConfig().get< vector<string> >("AuthorizedVO"));
+        infosys = config::theServerConfig().get<std::string > ("Infosys");
+        const std::vector<std::string> voNameList(config::theServerConfig().get< std::vector<std::string> >("AuthorizedVO"));
         if (voNameList.size() > 0 && std::string(voNameList[0]).compare("*") != 0)
             {
                 std::vector<std::string>::const_iterator iterVO;
@@ -135,7 +130,7 @@ public:
                 allowedVOs = voNameList[0];
             }
 
-        std::string monitoringMessagesStr = theServerConfig().get<std::string > ("MonitoringMessaging");
+        std::string monitoringMessagesStr = config::theServerConfig().get<std::string > ("MonitoringMessaging");
         if(monitoringMessagesStr == "false")
             monitoringMessages = false;
         else
@@ -467,5 +462,6 @@ protected:
     _testHelper;
 };
 
-FTS3_SERVER_NAMESPACE_END
+} // end namespace server
+} // end namespace fts3
 

@@ -23,9 +23,9 @@
 /** \file monitorobject.h Interface of MonitorObject class. */
 
 #include <boost/thread.hpp>
-#include "common_dev.h"
 
-FTS3_COMMON_NAMESPACE_START
+namespace fts3 {
+namespace common {
 
 /* -------------------------------------------------------------------------- */
 
@@ -92,5 +92,6 @@ protected:
 /// Closes a critical (protected) section. Used for static sections as well.
 #define FTS3_COMMON_MONITOR_END_CRITICAL }
 
-FTS3_COMMON_NAMESPACE_END
+} // end namespace common
+} // end namespace fts3
 

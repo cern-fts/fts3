@@ -24,20 +24,18 @@
 #include <boost/static_assert.hpp>
 #include <queue>
 
-#include "server_dev.h"
 #include "common/error.h"
 #include "common/logger.h"
 #include "ws-ifce/gsoap/gsoap_stubs.h"
 
 
-FTS3_SERVER_NAMESPACE_START
-
-using namespace FTS3_COMMON_NAMESPACE;
+namespace fts3 {
+namespace server {
 
 class GSoapRequestHandler;
 
 
-class GSoapAcceptor: public MonitorObject
+class GSoapAcceptor: public fts3::common::MonitorObject
 {
 
 public:
@@ -59,5 +57,6 @@ public:
     mutable boost::recursive_mutex _mutex;
 };
 
-FTS3_SERVER_NAMESPACE_END
+} // end namespace server
+} // end namespace fts3
 

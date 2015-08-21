@@ -32,7 +32,8 @@ extern time_t updateRecords;
 extern time_t stallRecords;
 
 
-FTS3_SERVER_NAMESPACE_START
+namespace fts3 {
+namespace server {
 
 template <typename TRAITS>
 class HeartBeatHandler: public TRAITS::ActiveObjectType
@@ -201,4 +202,6 @@ public:
     virtual ~HearBeat() {};
 };
 
-FTS3_SERVER_NAMESPACE_END
+} // end namespace server
+} // end namespace fts3
+

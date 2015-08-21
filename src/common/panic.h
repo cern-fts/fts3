@@ -23,13 +23,11 @@
 
 #pragma once
 
-#include "common_dev.h"
-
 #include <string>
 
-FTS3_COMMON_NAMESPACE_START
-
-namespace Panic
+namespace fts3 {
+namespace common {
+namespace panic
 {
 
 #define STACK_BACKTRACE_SIZE 25
@@ -41,6 +39,7 @@ void setup_signal_handlers(void (*shutdown_callback)(int, void*), void* udata);
 
 std::string stack_dump(void *stack[], int size);
 
-}
+} // end namespace panic
+} // end namespace common
+} // end namespace fts3
 
-FTS3_COMMON_NAMESPACE_END

@@ -55,8 +55,8 @@ bool OsgParser::isInUse()
 
     static const std::string myosg_str = "myosg";
 
-    vector<std::string> providers = theServerConfig().get< vector<std::string> >("InfoProviders");
-    vector<std::string>::iterator it;
+    std::vector<std::string> providers = theServerConfig().get< std::vector<std::string> >("InfoProviders");
+    std::vector<std::string>::iterator it;
 
     for (it = providers.begin(); it != providers.end(); ++it)
         {

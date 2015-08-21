@@ -20,7 +20,6 @@
 
 #pragma once
 
-#include <common_dev.h>
 #include <iomanip>
 #include <map>
 #include "GenericDbIfce.h"

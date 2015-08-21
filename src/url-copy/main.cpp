@@ -434,7 +434,7 @@ void shutdown_callback(int signum, void*)
         {
             if (propagated == false)
                 {
-                    std::string stackTrace = fts3::common::Panic::stack_dump(fts3::common::Panic::stack_backtrace, fts3::common::Panic::stack_backtrace_size);
+                    std::string stackTrace = fts3::common::panic::stack_dump(fts3::common::panic::stack_backtrace, fts3::common::panic::stack_backtrace_size);
                     propagated = true;
                     logger.ERROR() << "TRANSFER process died: " << currentTransfer.jobId << std::endl;
                     logger.ERROR() << "Received signal: " << signum << std::endl;
@@ -671,7 +671,7 @@ int main(int argc, char **argv)
     Logger &logger = Logger::getInstance();
 
     // register signals handler
-    fts3::common::Panic::setup_signal_handlers(shutdown_callback, NULL);
+    fts3::common::panic::setup_signal_handlers(shutdown_callback, NULL);
 
 
 

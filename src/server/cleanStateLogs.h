@@ -29,11 +29,11 @@
 #include <ctime>
 
 #define foreach BOOST_FOREACH
-namespace fs = boost::filesystem;
 
 extern bool stopThreads;
 
-FTS3_SERVER_NAMESPACE_START
+namespace fts3 {
+namespace server {
 
 template <typename TRAITS>
 class CleanLogsHandlerActive: public TRAITS::ActiveObjectType
@@ -193,4 +193,6 @@ public:
     virtual ~CleanLogsActive() {};
 };
 
-FTS3_SERVER_NAMESPACE_END
+} // end namespace server
+} // end namespace fts3
+

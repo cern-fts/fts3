@@ -30,8 +30,8 @@
 #include "unittest/testsuite.h"
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
-using namespace FTS3_COMMON_NAMESPACE;
-using namespace FTS3_CONFIG_NAMESPACE;
+using namespace fts3::config;
+using namespace fts3::common;
 
 namespace db
 {

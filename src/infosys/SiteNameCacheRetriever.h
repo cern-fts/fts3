@@ -62,7 +62,7 @@ private:
     SiteNameCacheRetriever& operator=(SiteNameCacheRetriever const&);
 
     void fromGlue1(std::map<std::string, EndpointInfo>& cache);
-    void fromGlue2(map<string, EndpointInfo>& cache);
+    void fromGlue2(std::map<std::string, EndpointInfo>& cache);
 
     // glue1
     static const char* ATTR_GLUE1_SERVICE;

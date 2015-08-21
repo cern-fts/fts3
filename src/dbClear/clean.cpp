@@ -32,8 +32,8 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-using namespace FTS3_SERVER_NAMESPACE;
-using namespace FTS3_COMMON_NAMESPACE;
+using namespace fts3::config; 
+using namespace fts3::common;
 using namespace db;
 
 /* -------------------------------------------------------------------------- */
@@ -81,7 +81,7 @@ int main(int argc, char** argv)
                     exit(1);
                 }
 
-            FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv);
+            theServerConfig().read(argc, argv);
 
             std::string logDir = theServerConfig().get<std::string > ("ServerLogDirectory");
             if (logDir.length() > 0)
