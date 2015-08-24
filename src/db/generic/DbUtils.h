@@ -56,27 +56,6 @@ const int MAX_STAGING_BULK_SIZE = 1000;
 const int MAX_STAGING_CONCURRENT_REQUESTS = 200;
 
 
-/*check if it's single source  / multiple destination replication job*/
-inline bool is_n_replication(std::list<job_element_tupple>& src_dest_pair)
-{
-    // if it has less than 2 pairs it wont be a n-replication job
-    if (src_dest_pair.size() < 2) return false;
-
-    std::string sourceSurl = src_dest_pair.begin()->source;
-
-    std::list<job_element_tupple>::const_iterator iter;
-    for (iter = src_dest_pair.begin(); iter != src_dest_pair.end(); ++iter)
-        {
-            if(sourceSurl != iter->source)
-                {
-                    return false;
-                }
-        }
-
-    return true;
-}
-
-
 /*check if it's a multiple replicas job*/
 inline bool is_mreplica(std::list<job_element_tupple>& src_dest_pair)
 {
@@ -115,23 +94,6 @@ inline bool is_mhop(std::list<job_element_tupple>& src_dest_pair)
     return true;
 }
 
-//http://stackoverflow.com/questions/17333/most-effective-way-for-float-and-double-comparison
-bool almost_equal(double x, double y, double epsilon)
-{
-    double diff = x - y;
-    if (x != 0 && y != 0)
-        {
-            diff = diff/y;
-        }
-
-    if (diff < epsilon && -1.0*diff < epsilon)
-        {
-            return true;
-        }
-    return false;
-}
-
-
 
 /*borrowed from http://oroboro.com/irregular-ema/*/
 inline double exponentialMovingAverage( double sample, double alpha, double cur )
@@ -140,7 +102,6 @@ inline double exponentialMovingAverage( double sample, double alpha, double cur 
         cur = ( sample * alpha ) + (( 1-alpha) * cur );
     return cur;
 }
-
 
 
 /**
@@ -193,26 +154,6 @@ inline int extractTimeout(std::string & str)
                     return atoi(str.c_str());
                 }
 
-        }
-    return 0;
-}
-
-
-
-inline int extractStreams(std::string & str)
-{
-    size_t found;
-    found = str.find("nostreams:");
-    if (found != std::string::npos)
-        {
-            size_t found2;
-            found2 = str.find(",timeout:");
-            if (found2 != std::string::npos)
-                {
-                    str = str.substr(0, found2);
-                    str = str.substr(10, str.length());
-                    return atoi(str.c_str());
-                }
         }
     return 0;
 }

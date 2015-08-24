@@ -29,18 +29,6 @@
 using namespace db;
 using namespace fts3::config; 
 
-std::string _getTrTimestampUTC()
-{
-    time_t now = time(NULL);
-    struct tm tTime;
-    gmtime_r(&now, &tTime);
-    time_t msec = mktime(&tTime) * 1000; //the number of milliseconds since the epoch
-    std::ostringstream oss;
-    oss << std::fixed << msec;
-    return oss.str();
-}
-
-
 
 std::unique_ptr<SingleTrStateInstance> SingleTrStateInstance::i;
 boost::mutex SingleTrStateInstance::_mutex;
