@@ -20,20 +20,18 @@
 
 #pragma once
 
-
-#include <iostream>
-#include "common/monitorobject.h"
-#include "GenericDbIfce.h"
-#include "DynamicLibraryManager.h"
 #include "definitions.h"
 
+#include <string>
+#include <boost/thread/mutex.hpp>
 
-using namespace fts3::common; 
+namespace fts3 {
+namespace server {
 
 /**
  * SingleTrStateInstance class declaration
  **/
-class SingleTrStateInstance: public MonitorObject
+class SingleTrStateInstance
 {
 public:
     ~SingleTrStateInstance();
@@ -79,4 +77,6 @@ private:
     bool monitoringMessages;
 };
 
+} // end namespace server
+} // end namespace fts3
 

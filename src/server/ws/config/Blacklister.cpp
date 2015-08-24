@@ -164,7 +164,7 @@ void Blacklister::handleJobsInTheQueue()
                         {
                             for (iter = canceled.begin(); iter != canceled.end(); ++iter)
                                 {
-                                    SingleTrStateInstance::instance().sendStateMessage((*iter), -1);
+                                    fts3::server::SingleTrStateInstance::instance().sendStateMessage((*iter), -1);
                                 }
                             canceled.clear();
                         }
@@ -180,7 +180,7 @@ void Blacklister::handleJobsInTheQueue()
                         {
                             for (iter = canceled.begin(); iter != canceled.end(); ++iter)
                                 {
-                                    SingleTrStateInstance::instance().sendStateMessage((*iter), -1);
+                                    fts3::server::SingleTrStateInstance::instance().sendStateMessage((*iter), -1);
                                 }
                             canceled.clear();
                         }

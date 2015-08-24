@@ -755,7 +755,7 @@ int fts3::impltns__cancelAll(soap* ctx, std::string voName, impltns__cancelAllRe
                     std::vector<struct message_state>::const_iterator j;
                     for (j = states.begin(); j != states.end(); ++j)
                         {
-                            SingleTrStateInstance::instance().constructJSONMsg(&(*j));
+                            fts3::server::SingleTrStateInstance::instance().constructJSONMsg(&(*j));
 
                             FTS3_COMMON_LOGGER_NEWLOG (INFO) << *i << " " << j->file_id << " canceled" << commit;
                         }

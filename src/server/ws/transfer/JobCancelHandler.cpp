@@ -162,7 +162,7 @@ void JobCancelHandler::send_msg(std::string const & job)
     std::vector<int>::const_iterator it;
     for (it = files.begin(); it != files.end(); ++it)
         {
-            SingleTrStateInstance::instance().sendStateMessage(job, *it);
+            fts3::server::SingleTrStateInstance::instance().sendStateMessage(job, *it);
         }
 }
 

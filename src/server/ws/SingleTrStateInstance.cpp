@@ -28,6 +28,7 @@
 
 using namespace db;
 using namespace fts3::config; 
+using namespace fts3::server;
 
 
 std::unique_ptr<SingleTrStateInstance> SingleTrStateInstance::i;
