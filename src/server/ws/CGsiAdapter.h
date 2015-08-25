@@ -31,7 +31,6 @@ namespace fts3
 namespace ws
 {
 
-using namespace std;
 
 class CGsiAdapter
 {
@@ -45,28 +44,28 @@ public:
      *
      * @return VO name
      */
-    string getClientVo();
+    std::string getClientVo();
 
     /**
      * Gets the DN of the client
      *
      * @return client DN
      */
-    string getClientDn();
+    std::string getClientDn();
 
     /**
      * Gets the voms attributes of the client
      *
      * @return vector with client's voms attributes
      */
-    vector<string> getClientAttributes();
+    std::vector<std::string> getClientAttributes();
 
     /**
      * Gets the roles of the client
      *
      * @return vector with client's roles
      */
-    vector<string> getClientRoles();
+    std::vector<std::string> getClientRoles();
 
     /**
      * Checks if the client was a root user of the server hosting fts3
@@ -88,19 +87,19 @@ private:
 
 
     /// client VO
-    string vo;
+    std::string vo;
 
     /// client DN
-    string dn;
+    std::string dn;
 
     /// client roles
-    vector<string> attrs;
+    std::vector<std::string> attrs;
 
     /// checks the host DN
-    static string initHostDn();
+    static std::string initHostDn();
 
     /// host dn
-    static const string hostDn;
+    static const std::string hostDn;
 };
 
 } /* namespace ws */

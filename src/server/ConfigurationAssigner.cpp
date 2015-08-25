@@ -51,15 +51,14 @@ ConfigurationAssigner::~ConfigurationAssigner()
 
 }
 
-void ConfigurationAssigner::assign(vector< std::shared_ptr<ShareConfig> >& out)
+void ConfigurationAssigner::assign(std::vector< std::shared_ptr<ShareConfig> >& out)
 {
-
-    string source = file.SOURCE_SE;
-    string destination = file.DEST_SE;
-    string vo = file.VO_NAME;
+    std::string source = file.SOURCE_SE;
+    std::string destination = file.DEST_SE;
+    std::string vo = file.VO_NAME;
 
     // possible configurations for SE
-    list<cfg_type> se_cfgs = list_of
+    std::list<cfg_type> se_cfgs = list_of
                              ( cfg_type( share(source, destination, vo), content(true, true) ) )
                              ( cfg_type( share(source, Configuration::any, vo), content(true, false) ) )
                              ( cfg_type( share(Configuration::wildcard, Configuration::any, vo), content(true, false) ) )
@@ -70,11 +69,11 @@ void ConfigurationAssigner::assign(vector< std::shared_ptr<ShareConfig> >& out)
     assignShareCfg(se_cfgs, out);
 
     // get group names for source and destination SEs
-    string sourceGr = db->getGroupForSe(source);
-    string destinationGr = db->getGroupForSe(destination);
+    std::string sourceGr = db->getGroupForSe(source);
+    std::string destinationGr = db->getGroupForSe(destination);
 
     // possible configuration for SE group
-    list<cfg_type> gr_cfgs;
+    std::list<cfg_type> gr_cfgs;
     if (!sourceGr.empty() && !destinationGr.empty())
         gr_cfgs.push_back( cfg_type( share(sourceGr, destinationGr, vo), content(true, true) ) );
     if (!sourceGr.empty())
@@ -85,24 +84,21 @@ void ConfigurationAssigner::assign(vector< std::shared_ptr<ShareConfig> >& out)
     assignShareCfg(gr_cfgs, out);
 }
 
-void ConfigurationAssigner::assignShareCfg(list<cfg_type> arg, vector< std::shared_ptr<ShareConfig> >& out)
+void ConfigurationAssigner::assignShareCfg(std::list<cfg_type> arg, std::vector< std::shared_ptr<ShareConfig> >& out)
 {
-
     content both (false, false);
 
-    list<cfg_type>::iterator it;
-    for (it = arg.begin(); it != arg.end(); ++it)
+    for (auto it = arg.begin(); it != arg.end(); ++it)
         {
-
-            share s = get<SHARE>(*it);
-            content c = get<CONTENT>(*it);
+            share s = boost::get<SHARE>(*it);
+            content c = boost::get<CONTENT>(*it);
 
             // check if configuration for the given side has not been assigned already
             if ( (c.first && both.first) || (c.second && both.second) ) continue;
 
-            string source = get<SOURCE>(s);
-            string destination = get<DESTINATION>(s);
-            string vo = get<VO>(s);
+            std::string source = boost::get<SOURCE>(s);
+            std::string destination = boost::get<DESTINATION>(s);
+            std::string vo = boost::get<VO>(s);
 
             // get the link configuration
             std::unique_ptr<LinkConfig> link (db->getLinkConfig(source, destination));

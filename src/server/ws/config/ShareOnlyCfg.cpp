@@ -25,7 +25,7 @@ namespace fts3
 namespace ws
 {
 
-ShareOnlyCfg::ShareOnlyCfg(string dn, string name) : Configuration(dn), se(name)
+ShareOnlyCfg::ShareOnlyCfg(std::string dn, std::string name) : Configuration(dn), se(name)
 {
 
     if (notAllowed.count(se))
@@ -44,10 +44,10 @@ ShareOnlyCfg::ShareOnlyCfg(string dn, string name) : Configuration(dn), se(name)
     init(se);
 }
 
-ShareOnlyCfg::ShareOnlyCfg(string dn, CfgParser& parser) : Configuration(dn)
+ShareOnlyCfg::ShareOnlyCfg(std::string dn, CfgParser& parser) : Configuration(dn)
 {
 
-    se = parser.get<string>("se");
+    se = parser.get<std::string>("se");
 
     if (notAllowed.count(se))
         throw Err_Custom("The SE name is not a valid!");
@@ -57,9 +57,9 @@ ShareOnlyCfg::ShareOnlyCfg(string dn, CfgParser& parser) : Configuration(dn)
 
     active = parser.get<bool>("active");
 
-    in_share = parser.get< map<string, int> >("in");
+    in_share = parser.get< std::map<std::string, int> >("in");
     checkShare(in_share);
-    out_share = parser.get< map<string, int> >("out");
+    out_share = parser.get< std::map<std::string, int> >("out");
     checkShare(out_share);
 
     all = json();
@@ -70,10 +70,10 @@ ShareOnlyCfg::~ShareOnlyCfg()
 
 }
 
-string ShareOnlyCfg::json()
+std::string ShareOnlyCfg::json()
 {
 
-    stringstream ss;
+    std::stringstream ss;
 
     ss << "{";
     ss << "\"" << "se" << "\":\"" << (se == wildcard ? any : se) << "\",";
@@ -102,7 +102,6 @@ void ShareOnlyCfg::save()
 
 void ShareOnlyCfg::del()
 {
-
     // erase changes in SE state
     eraseSe(se);
 
@@ -117,21 +116,18 @@ void ShareOnlyCfg::del()
     delLinkCfg(se, any);
 }
 
-void ShareOnlyCfg::init(string se)
+void ShareOnlyCfg::init(std::string se)
 {
-
     // get SE's in and out shares
     in_share = getShareMap(any, se);
     out_share = getShareMap(se, any);
 }
 
-void ShareOnlyCfg::checkShare(map<string, int>& share)
+void ShareOnlyCfg::checkShare(std::map<std::string, int>& share)
 {
-
     int sum = 0;
-    map<string, int>::iterator it;
 
-    for (it = share.begin(); it != share.end(); it++)
+    for (auto it = share.begin(); it != share.end(); it++)
         {
             sum += it->second;
         }

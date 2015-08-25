@@ -33,8 +33,6 @@ namespace fts3
 namespace ws
 {
 
-using namespace std;
-using namespace boost;
 using namespace fts3::common;
 
 /**
@@ -62,7 +60,7 @@ public:
      * @param delegationId - delegation ID (unique for a given VO and DN)
      * @param rqst - public key request
      */
-    void put(string delegationId, string rqst)
+    void put(std::string delegationId, std::string rqst)
     {
         pkeys[delegationId] = rqst;
     }
@@ -72,7 +70,7 @@ public:
      *
      * @param delegationId - delegation ID (unique for a given VO and DN)
      */
-    void remove(string delegationId)
+    void remove(std::string delegationId)
     {
         pkeys.erase(delegationId);
     }
@@ -82,7 +80,7 @@ public:
      *
      * @param delegationId - delegation ID (unique for a given VO and DN)
      */
-    string get(string delegationId)
+    std::string get(std::string delegationId)
     {
         return pkeys[delegationId];
     }
@@ -92,7 +90,7 @@ public:
      *
      * @param delegationId - delegation ID (unique for a given VO and DN)
      */
-    bool check(string delegationId)
+    bool check(std::string delegationId)
     {
         return pkeys.find(delegationId) != pkeys.end();
     }
@@ -101,7 +99,7 @@ public:
      * Mutex cast operator, should be used with 'scoped_lock'
      * to lock the cache before any operation is executed
      */
-    operator mutex&()
+    operator boost::mutex&()
     {
         return m;
     }
@@ -131,9 +129,9 @@ private:
     /**
      * the map holding a public key to each proxy certificate that is being delegated at the moment
      */
-    map<string, string> pkeys;
+    std::map<std::string, std::string> pkeys;
 
-    mutex m;
+    boost::mutex m;
 };
 
 } /* namespace ws */

@@ -36,7 +36,6 @@ namespace fts3
 namespace server
 {
 
-using namespace boost;
 using namespace db;
 
 typedef std::pair<std::string, int> FileIndex;
@@ -57,7 +56,7 @@ public:
     TransferFileHandler(std::map< std::string, std::list<TransferFiles> >& files);
     virtual ~TransferFileHandler();
 
-    optional<TransferFiles> get(std::string vo);
+    boost::optional<TransferFiles> get(std::string vo);
 
     std::set<std::string>::iterator begin();
     std::set<std::string>::iterator end();
@@ -74,11 +73,11 @@ public:
 
 private:
 
-    optional<TransferFiles> getFile(FileIndex index);
+    boost::optional<TransferFiles> getFile(FileIndex index);
 
-    optional<FileIndex> getIndex(std::string vo);
+    boost::optional<FileIndex> getIndex(std::string vo);
 
-    optional< std::pair<std::string, std::string> > getNextPair(std::string vo);
+    boost::optional< std::pair<std::string, std::string> > getNextPair(std::string vo);
 
     std::map< std::string, std::set<std::string> >& getMapFromCache(std::map< std::string, std::list<TransferFiles> >& files, GET_MAP_OPTS opt);
 
@@ -94,7 +93,7 @@ private:
     void freeList(std::list<TransferFiles>& l);
 
     /// mutex that ensures thread safety
-    mutex m;
+    boost::mutex m;
 
     /// next pair in given VO queue
     std::map< std::string, std::map< std::pair<std::string, std::string>, std::list<FileIndex> >::iterator > nextPairForVo;

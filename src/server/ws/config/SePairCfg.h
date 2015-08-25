@@ -47,7 +47,7 @@ public:
      * @param source - the source SE
      * @param destination - the destination SE
      */
-    SePairCfg(string dn, string source, string destination) : PairCfg(dn, source, destination) {};
+    SePairCfg(std::string dn, std::string source, std::string destination) : PairCfg(dn, source, destination) {};
 
     /**
      * Constructor.
@@ -57,7 +57,7 @@ public:
      * @param dn - client's DN
      * @param parser - the parser used for parsing JSON configuration
      */
-    SePairCfg(string dn, CfgParser& parser);
+    SePairCfg(std::string dn, CfgParser& parser);
 
     /**
      * Destructor.
@@ -65,11 +65,11 @@ public:
     virtual ~SePairCfg();
 
     /**
-     * Creates a string containing current configuration in JSON format.
+     * Creates a std::string containing current configuration in JSON format.
      *
-     * @return string containing the configuration.
+     * @return std::string containing the configuration.
      */
-    virtual string json();
+    virtual std::string json();
 
     /**
      * Saves the configuration into the DB.

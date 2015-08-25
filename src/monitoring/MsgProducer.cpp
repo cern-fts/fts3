@@ -47,14 +47,14 @@ static std::string replaceMetadataString(std::string text)
 
 
 
-string started[] = {"agent_fqdn", "transfer_id", "endpnt", "timestamp", "src_srm_v", "dest_srm_v",
+std::string started[] = {"agent_fqdn", "transfer_id", "endpnt", "timestamp", "src_srm_v", "dest_srm_v",
                     "vo", "src_url", "dst_url", "src_hostname", "dst_hostname", "src_site_name", "dst_site_name", "t_channel",
                     "srm_space_token_src", "srm_space_token_dst", "user_dn", "file_metadata", "job_metadata"
                    };
 
-string startedToken[] = {"$a$", "$b$", "$c$", "$d$", "$e$", "$f$", "$g$", "$h$", "$i$", "$j$", "$k$", "$l$", "$m$", "$n$", "$o$", "$p$", "$q$", "$r$", "$s$"};
+std::string startedToken[] = {"$a$", "$b$", "$c$", "$d$", "$e$", "$f$", "$g$", "$h$", "$i$", "$j$", "$k$", "$l$", "$m$", "$n$", "$o$", "$p$", "$q$", "$r$", "$s$"};
 
-string completed[] = {"tr_id", "endpnt", "src_srm_v", "dest_srm_v", "vo", "src_url", "dst_url", "src_hostname", "dst_hostname", "src_site_name",
+std::string completed[] = {"tr_id", "endpnt", "src_srm_v", "dest_srm_v", "vo", "src_url", "dst_url", "src_hostname", "dst_hostname", "src_site_name",
                       "dst_site_name", "t_channel", "timestamp_tr_st", "timestamp_tr_comp", "timestamp_chk_src_st", "timestamp_chk_src_ended", "timestamp_checksum_dest_st",
                       "timestamp_checksum_dest_ended", "t_timeout", "chk_timeout", "t_error_code", "tr_error_scope", "t_failure_phase", "tr_error_category", "t_final_transfer_state",
                       "tr_bt_transfered", "nstreams", "buf_size", "tcp_buf_size", "block_size", "f_size", "time_srm_prep_st", "time_srm_prep_end", "time_srm_fin_st", "time_srm_fin_end",
@@ -73,10 +73,10 @@ std::string completedToken[] =
 
 
 //utility routine private to this file
-void find_and_replace(string &source, const string & find, string & replace)
+void find_and_replace(std::string &source, const std::string & find, std::string & replace)
 {
     size_t j;
-    for (; (j = source.find(find)) != string::npos;)
+    for (; (j = source.find(find)) != std::string::npos;)
         {
             source.replace(j, find.length(), replace);
         }

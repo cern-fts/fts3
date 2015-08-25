@@ -87,7 +87,7 @@ std::string msg_ifce::SendTransferStartMessage(transfer_completed *tr_started)
     if(false == getACTIVE())
         return message;
 
-    string text("");
+    std::string text("");
     try
         {
 
@@ -225,12 +225,12 @@ std::string msg_ifce::SendTransferFinishMessage(transfer_completed *tr_completed
     if(false == getACTIVE())
         return message;
 
-    string text("");
+    std::string text("");
     try
         {
 
             // Create a messages
-            text = string("CO {");
+            text = std::string("CO {");
             text.append("\"$a$\":\"");
             text.append(tr_completed->transfer_id);
             text.append("\"");
@@ -380,7 +380,7 @@ std::string msg_ifce::SendTransferFinishMessage(transfer_completed *tr_completed
             text.append("\"");
 
             text.append(",\"$11$\":\"");
-            string temp = ReplaceNonPrintableCharacters(tr_completed->transfer_error_message);
+            std::string temp = ReplaceNonPrintableCharacters(tr_completed->transfer_error_message);
             temp.erase(std::remove(temp.begin(), temp.end(), '\n'), temp.end());
             temp.erase(std::remove(temp.begin(), temp.end(), '\''), temp.end());
             temp.erase(std::remove(temp.begin(), temp.end(), '\"'), temp.end());

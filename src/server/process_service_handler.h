@@ -205,8 +205,7 @@ protected:
                         PROFILE_SCOPE("executeUrlcopy::while[!reuse]");
 
                         // iterate over all VOs
-                        set<string>::iterator it_vo;
-                        for (it_vo = tfh.begin(); it_vo != tfh.end(); it_vo++)
+                        for (auto it_vo = tfh.begin(); it_vo != tfh.end(); it_vo++)
                             {
                                 if (stopThreads)
                                     {

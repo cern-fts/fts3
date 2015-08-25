@@ -134,12 +134,12 @@ public:
                     }
 
                 /*session reuse process died or terminated unexpected, must terminate all files of a given job*/
-                if ( (std::string(msg.transfer_message).find("Transfer terminate handler called") != string::npos ||
-                        std::string(msg.transfer_message).find("Transfer process died") != string::npos ||
-                        std::string(msg.transfer_message).find("because it was stalled") != string::npos ||
-                        std::string(msg.transfer_message).find("canceled by the user") != string::npos ||
-                        std::string(msg.transfer_message).find("undefined symbol") != string::npos ||
-                        std::string(msg.transfer_message).find("canceled because it was not responding") != string::npos ))
+                if ( (std::string(msg.transfer_message).find("Transfer terminate handler called") != std::string::npos ||
+                        std::string(msg.transfer_message).find("Transfer process died") != std::string::npos ||
+                        std::string(msg.transfer_message).find("because it was stalled") != std::string::npos ||
+                        std::string(msg.transfer_message).find("canceled by the user") != std::string::npos ||
+                        std::string(msg.transfer_message).find("undefined symbol") != std::string::npos ||
+                        std::string(msg.transfer_message).find("canceled because it was not responding") != std::string::npos ))
                     {
                         if(std::string(msg.job_id).length() == 0)
                             {

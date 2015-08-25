@@ -25,11 +25,11 @@ namespace fts3
 namespace ws
 {
 
-GrPairCfg::GrPairCfg(string dn, CfgParser& parser) : PairCfg(dn, parser)
+GrPairCfg::GrPairCfg(std::string dn, CfgParser& parser) : PairCfg(dn, parser)
 {
 
-    source = parser.get<string>("source_group");
-    destination = parser.get<string>("destination_group");
+    source = parser.get<std::string>("source_group");
+    destination = parser.get<std::string>("destination_group");
 
     if (notAllowed.count(source) || notAllowed.count(destination))
         throw Err_Custom("The source or destination name is not a valid!");
@@ -47,10 +47,10 @@ GrPairCfg::~GrPairCfg()
 {
 }
 
-string GrPairCfg::json()
+std::string GrPairCfg::json()
 {
 
-    stringstream ss;
+    std::stringstream ss;
 
     ss << "{";
     ss << "\"" << "source_group" << "\":\"" << source << "\",";

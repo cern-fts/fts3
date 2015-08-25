@@ -41,9 +41,7 @@ namespace fts3
 namespace ws
 {
 
-using namespace std;
 using namespace fts3::common;
-using namespace boost;
 
 /**
  * The JobSubmitter class takes care of submitting transfers
@@ -92,12 +90,12 @@ public:
     /**
      * submits the job
      */
-    string submit();
+    std::string submit();
 
     /**
      * extracts SE name from URL
      */
-    static string fileUrlToSeName(string url, bool source = false); // it is not the best place for it!
+    static std::string fileUrlToSeName(std::string url, bool source = false); // it is not the best place for it!
 
 private:
 
@@ -105,13 +103,13 @@ private:
     GenericDbIfce* db;
 
     /// job ID
-    string id;
+    std::string id;
     /// user DN
-    string dn;
+    std::string dn;
     /// user VO
-    string vo;
+    std::string vo;
     /// delegation ID
-    string delegationId;
+    std::string delegationId;
     /// copy lifetime pin
     int copyPinLifeTime;
 
@@ -122,7 +120,7 @@ private:
      * the job elements that have to be submitted (each job is a tuple of source,
      * destination, and optionally checksum)
      */
-    list<JobElementTuple> jobs;
+    std::list<JobElementTuple> jobs;
 
     /**
      * The common initialisation for both parameterised constructors
@@ -136,7 +134,7 @@ private:
      * Extracts the activity name from file metadata
      * in case if there is no activity it returns 'default'
      */
-    string getActivity(std::string const * const activity);
+    std::string getActivity(const std::string * activity);
 
     /**
      * Checks whether the right protocol has been used
@@ -144,22 +142,22 @@ private:
      * @file - source or destination file
      * @return true if right protol has been used
      */
-    static void checkProtocol(string file, bool source);
+    static void checkProtocol(std::string file, bool source);
 
     /// the regular expression for parsing URLs
-    static const regex fileUrlRegex;
+    static const boost::regex fileUrlRegex;
     /// srm protocol prefix
-    static const string srm_protocol;
+    static const std::string srm_protocol;
     /// true if at least one file was using srm
     bool srm_source;
 
     /// source SE
-    string sourceSe;
+    std::string sourceSe;
     /// destination SE
-    string destinationSe;
+    std::string destinationSe;
 
     /// initial state
-    string initialState;
+    std::string initialState;
 };
 
 }

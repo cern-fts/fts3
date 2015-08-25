@@ -33,8 +33,6 @@ namespace fts3
 namespace ws
 {
 
-using namespace std;
-using namespace boost;
 using namespace fts3::common;
 
 
@@ -56,7 +54,7 @@ public:
      * @param source - the source (SE or SE group)
      * @param destination - the destination (SE or SE group)
      */
-    PairCfg(string dn, string source, string destination);
+    PairCfg(std::string dn, std::string source, std::string destination);
 
     /**
      * Constructor. It retrieves configuration data from the given CfgParser
@@ -64,7 +62,7 @@ public:
      * @param dn - client's DN
      * @param parser - the parser that has been used to parser the JSON configuration
      */
-    PairCfg(string dn, CfgParser& parser);
+    PairCfg(std::string dn, CfgParser& parser);
 
     /**
      * Destructor.
@@ -72,9 +70,9 @@ public:
     virtual ~PairCfg();
 
     /**
-     * Creates a string containing the JSON configuration common for all 'pair' configurations
+     * Creates a std::string containing the JSON configuration common for all 'pair' configurations
      */
-    virtual string json();
+    virtual std::string json();
 
     /**
      * Saves the configuration into the DB.
@@ -88,21 +86,21 @@ public:
 
 protected:
     /// source
-    string source;
+    std::string source;
     /// destination
-    string destination;
+    std::string destination;
     /// optional symbolic name
-    optional<string> symbolic_name_opt;
+    boost::optional<std::string> symbolic_name_opt;
     /// symbolic name (given by user or generated)
-    string symbolic_name;
+    std::string symbolic_name;
 
 private:
     /// active state
     bool active;
     /// the share
-    map<string, int> share;
+    std::map<std::string, int> share;
     /// the protocol parameters
-    optional< map<string, int> > protocol;
+    boost::optional< std::map<std::string, int> > protocol;
 };
 
 } /* namespace ws */

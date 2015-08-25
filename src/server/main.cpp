@@ -410,7 +410,7 @@ int DoServer(int argc, char** argv)
                             arguments += argv[i];
                         }
                     foundHelp = arguments.find("-h");
-                    if (foundHelp != string::npos)
+                    if (foundHelp != std::string::npos)
                         {
                             exit(0);
                         }
@@ -572,7 +572,7 @@ int main(int argc, char** argv)
                 }
             found = arguments.find("-n");
             foundHelp = arguments.find("-h");
-            if (found != string::npos)
+            if (found != std::string::npos)
                 {
                     {
                         DoServer(argc, argv);
@@ -580,7 +580,7 @@ int main(int argc, char** argv)
                     pthread_exit(0);
                     return EXIT_SUCCESS;
                 }
-            else if (foundHelp != string::npos)
+            else if (foundHelp != std::string::npos)
                 {
                     {
                         DoServer(argc, argv);

@@ -194,7 +194,7 @@ int DoServer(int argc, char** argv)
                         }
                     // Should never happen, actually
                     size_t foundHelp = arguments.find("-h");
-                    if (foundHelp != string::npos)
+                    if (foundHelp != std::string::npos)
                         {
                             return -1;
                         }
@@ -315,14 +315,14 @@ int main(int argc, char** argv)
                         }
                     size_t found = arguments.find("-n");
                     size_t foundHelp = arguments.find("-h");
-                    if (found != string::npos)
+                    if (found != std::string::npos)
                         {
                             {
                                 DoServer(argc, argv);
                             }
                             return EXIT_SUCCESS;
                         }
-                    else if (foundHelp != string::npos)
+                    else if (foundHelp != std::string::npos)
                         {
                             {
                                 DoServer(argc, argv);

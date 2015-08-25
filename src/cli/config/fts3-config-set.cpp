@@ -49,21 +49,21 @@ int main(int ac, char* av[])
             GSoapContextAdapter ctx (cli.getService());
             cli.printApiDetails(ctx);
 
-            optional<std::tuple<std::string, std::string, std::string, std::string> > s3 = cli.s3();
+            boost::optional<std::tuple<std::string, std::string, std::string, std::string> > s3 = cli.s3();
             if (s3)
                 {
                     ctx.setS3Credential(std::get<0>(*s3), std::get<1>(*s3), std::get<2>(*s3), std::get<3>(*s3));
                     std::cout << "Done" << std::endl;
                 }
 
-            optional<std::tuple<std::string, std::string, std::string> > dropbox = cli.dropbox();
+            boost::optional<std::tuple<std::string, std::string, std::string> > dropbox = cli.dropbox();
             if (dropbox)
                 {
                     ctx.setDropboxCredential(std::get<0>(*dropbox), std::get<1>(*dropbox), std::get<2>(*dropbox));
                     std::cout << "Done" << std::endl;
                 }
 
-            optional<std::tuple<std::string, std::string, std::string>> protocol = cli.getProtocol();
+            boost::optional<std::tuple<std::string, std::string, std::string>> protocol = cli.getProtocol();
             if (protocol.is_initialized())
                 {
                     std::string prot = std::get<0>(*protocol);
@@ -75,7 +75,7 @@ int main(int ac, char* av[])
                     return 0;
                 }
 
-            optional< std::pair<std::string, int> > maxActivePerSe = cli.getMaxSrcSeActive();
+            boost::optional< std::pair<std::string, int> > maxActivePerSe = cli.getMaxSrcSeActive();
             if (maxActivePerSe.is_initialized())
                 {
                     ctx.setMaxSrcSeActive(maxActivePerSe.get().first, maxActivePerSe.get().second);
@@ -89,56 +89,56 @@ int main(int ac, char* av[])
                     std::cout << "Done, just applied: " << maxActivePerSe.get().first << " " << maxActivePerSe.get().second  << std::endl;
                 }
 
-            optional<bool> drain = cli.drain();
+            boost::optional<bool> drain = cli.drain();
             if (drain.is_initialized())
                 {
                     ctx.doDrain(drain.get());
                     std::cout << "Done" << std::endl;
                 }
 
-            optional<bool> showUserDn = cli.showUserDn();
+            boost::optional<bool> showUserDn = cli.showUserDn();
             if (showUserDn)
                 {
                     ctx.showUserDn(*showUserDn);
                     std::cout << "Done" << std::endl;
                 }
 
-            optional< std::pair<std::string, int> > retry = cli.retry();
+            boost::optional< std::pair<std::string, int> > retry = cli.retry();
             if (retry.is_initialized())
                 {
                     ctx.retrySet(retry->first, retry->second);
                     std::cout << "Done" << std::endl;
                 }
 
-            optional<int> mode = cli.optimizer_mode();
+            boost::optional<int> mode = cli.optimizer_mode();
             if (mode.is_initialized())
                 {
                     ctx.optimizerModeSet(*mode);
                     std::cout << "Done" << std::endl;
                 }
 
-            optional<int> secPerMb = cli.getSecPerMb();
+            boost::optional<int> secPerMb = cli.getSecPerMb();
             if (secPerMb.is_initialized())
                 {
                     ctx.setSecPerMb(*secPerMb);
                     std::cout << "Done" << std::endl;
                 }
 
-            optional<int> globalTimeout = cli.getGlobalTimeout();
+            boost::optional<int> globalTimeout = cli.getGlobalTimeout();
             if (globalTimeout.is_initialized())
                 {
                     ctx.setGlobalTimeout(*globalTimeout);
                     std::cout << "Done" << std::endl;
                 }
 
-            tuple<optional<int>, optional<int> > globalLimits = cli.getGlobalLimits();
+            boost::tuple<boost::optional<int>, boost::optional<int> > globalLimits = cli.getGlobalLimits();
             if (globalLimits.get<0>().is_initialized() || globalLimits.get<1>().is_initialized())
                 {
                     ctx.setGlobalLimits(globalLimits.get<0>(), globalLimits.get<1>());
                     std::cout << "Done" << std::endl;
                 }
 
-            optional<unsigned> queueTimeout = cli.queueTimeout();
+            boost::optional<unsigned> queueTimeout = cli.queueTimeout();
             if (queueTimeout.is_initialized())
                 {
                     ctx.queueTimeoutSet(*queueTimeout);
@@ -163,7 +163,7 @@ int main(int ac, char* av[])
                     return 0;
                 }
 
-            optional<std::tuple<std::string, std::string, int> > bandwidth_limitation = cli.getBandwidthLimitation();
+            boost::optional<std::tuple<std::string, std::string, int> > bandwidth_limitation = cli.getBandwidthLimitation();
             if (bandwidth_limitation)
                 {
                     ctx.setBandwidthLimit(std::get<0>(*bandwidth_limitation),
@@ -173,7 +173,7 @@ int main(int ac, char* av[])
                     return 0;
                 }
 
-            optional<std::tuple<std::string, std::string, int> > active_fixed = cli.getActiveFixed();
+            boost::optional<std::tuple<std::string, std::string, int> > active_fixed = cli.getActiveFixed();
             if (active_fixed)
                 {
                     ctx.setFixActivePerPair(std::get<0>(*active_fixed),
@@ -183,7 +183,7 @@ int main(int ac, char* av[])
                     return 0;
                 }
 
-            optional<std::tuple<std::string, std::string> > addAuthz = cli.getAddAuthorization();
+            boost::optional<std::tuple<std::string, std::string> > addAuthz = cli.getAddAuthorization();
             if (addAuthz)
                 {
                     ctx.authorize(std::get<0>(*addAuthz), std::get<1>(*addAuthz));
@@ -191,7 +191,7 @@ int main(int ac, char* av[])
                     return 0;
                 }
 
-            optional<std::tuple<std::string, std::string> > revokeAuthz = cli.getRevokeAuthorization();
+            boost::optional<std::tuple<std::string, std::string> > revokeAuthz = cli.getRevokeAuthorization();
             if (revokeAuthz)
                 {
                     ctx.revoke(std::get<0>(*revokeAuthz), std::get<1>(*revokeAuthz));

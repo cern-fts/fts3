@@ -52,7 +52,7 @@ GSoapDelegationHandler::~GSoapDelegationHandler()
 
 }
 
-string GSoapDelegationHandler::makeDelegationId()
+std::string GSoapDelegationHandler::makeDelegationId()
 {
 
     unsigned char hash_delegation_id[EVP_MAX_MD_SIZE] = {0};
@@ -111,19 +111,19 @@ string GSoapDelegationHandler::makeDelegationId()
     return delegation_id;
 }
 
-bool GSoapDelegationHandler::checkDelegationId(string delegationId)
+bool GSoapDelegationHandler::checkDelegationId(std::string delegationId)
 {
 
-    static string exp = "^[a-zA-Z0-9\\.,_]*$"; // only alphanumeric characters + '.', ',' and '_'
-    static regex re (exp);
+    static std::string exp = "^[a-zA-Z0-9\\.,_]*$"; // only alphanumeric characters + '.', ',' and '_'
+    static boost::regex re (exp);
 
-    smatch what;
-    regex_match(delegationId, what, re, match_extra);
+    boost::smatch what;
+    boost::regex_match(delegationId, what, re, boost::match_extra);
 
-    return !string(what[0]).empty();
+    return !std::string(what[0]).empty();
 }
 
-string GSoapDelegationHandler::handleDelegationId(string delegationId)
+std::string GSoapDelegationHandler::handleDelegationId(std::string delegationId)
 {
 
     if (delegationId.empty())
@@ -131,12 +131,12 @@ string GSoapDelegationHandler::handleDelegationId(string delegationId)
             return makeDelegationId();
         }
 
-    if (!checkDelegationId(delegationId)) return string();
+    if (!checkDelegationId(delegationId)) return std::string();
 
     return delegationId;
 }
 
-string GSoapDelegationHandler::getProxyReq(string delegationId)
+std::string GSoapDelegationHandler::getProxyReq(std::string delegationId)
 {
 
     FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " gets proxy certificate request" << commit;
@@ -165,7 +165,7 @@ string GSoapDelegationHandler::getProxyReq(string delegationId)
             throw Err_Custom("'GRSTx509CreateProxyRequest' failed!");
         }
 
-    string req (reqtxt);
+    std::string req (reqtxt);
 
     try
         {
@@ -220,7 +220,7 @@ delegation__NewProxyReq* GSoapDelegationHandler::getNewProxyReq()
 
     FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " gets new proxy certificate request" << commit;
 
-    string delegationId = makeDelegationId();
+    std::string delegationId = makeDelegationId();
     if (delegationId.empty()) throw Err_Custom("'getDelegationId' failed!");
 
     std::unique_ptr<CredCache> cache (
@@ -247,7 +247,7 @@ delegation__NewProxyReq* GSoapDelegationHandler::getNewProxyReq()
             throw Err_Custom("'GRSTx509CreateProxyRequest' failed!");
         }
 
-    string req (reqtxt);
+    std::string req (reqtxt);
 
     try
         {
@@ -283,10 +283,10 @@ delegation__NewProxyReq* GSoapDelegationHandler::getNewProxyReq()
     return ret;
 }
 
-string GSoapDelegationHandler::x509ToString(X509* cert)
+std::string GSoapDelegationHandler::x509ToString(X509* cert)
 {
 
-    string str;
+    std::string str;
     BIO  *certmem = NULL;
     char *ptr = NULL;
 
@@ -294,14 +294,14 @@ string GSoapDelegationHandler::x509ToString(X509* cert)
     if (PEM_write_bio_X509(certmem, cert) == 1)
         {
             size_t len = BIO_get_mem_data(certmem, &ptr);
-            str = string(ptr, len);
+            str = std::string(ptr, len);
         }
     BIO_free(certmem);
 
     return str;
 }
 
-string GSoapDelegationHandler::addKeyToProxyCertificate(string proxy, string key)
+std::string GSoapDelegationHandler::addKeyToProxyCertificate(std::string proxy, std::string key)
 {
 
     // first check if the key matches the certificate
@@ -328,7 +328,7 @@ string GSoapDelegationHandler::addKeyToProxyCertificate(string proxy, string key
             throw Err_Transient("Failed to add private key to the proxy certificate: key values mismatch!");
         }
 
-    stringstream ss;
+    std::stringstream ss;
     STACK_OF(X509) *certstack;
 
     if (GRSTx509StringToChain(&certstack, const_cast<char*>(proxy.c_str())) != GRST_RET_OK)
@@ -357,7 +357,7 @@ string GSoapDelegationHandler::addKeyToProxyCertificate(string proxy, string key
     return ss.str();
 }
 
-time_t GSoapDelegationHandler::readTerminationTime(string proxy)
+time_t GSoapDelegationHandler::readTerminationTime(std::string proxy)
 {
 
     BIO *bio = BIO_new(BIO_s_mem());
@@ -373,13 +373,13 @@ time_t GSoapDelegationHandler::readTerminationTime(string proxy)
     return time;
 }
 
-string GSoapDelegationHandler::fqansToString(vector<string> attrs)
+std::string GSoapDelegationHandler::fqansToString(std::vector<std::string> attrs)
 {
 
-    stringstream ss;
-    const string delimiter = " ";
+    std::stringstream ss;
+    const std::string delimiter = " ";
 
-    vector<string>::iterator it;
+    std::vector<std::string>::iterator it;
     for (it = attrs.begin(); it < attrs.end(); ++it)
         {
             ss << *it << delimiter;
@@ -388,7 +388,7 @@ string GSoapDelegationHandler::fqansToString(vector<string> attrs)
     return ss.str();
 }
 
-void GSoapDelegationHandler::putProxy(string delegationId, string proxy)
+void GSoapDelegationHandler::putProxy(std::string delegationId, std::string proxy)
 {
     try
         {
@@ -488,10 +488,10 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy)
         }
 }
 
-string GSoapDelegationHandler::renewProxyReq(string delegationId)
+std::string GSoapDelegationHandler::renewProxyReq(std::string delegationId)
 {
 
-    string req;
+    std::string req;
     try
         {
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " renews proxy certificate" << commit;
@@ -559,14 +559,14 @@ string GSoapDelegationHandler::renewProxyReq(string delegationId)
     return req;
 }
 
-time_t GSoapDelegationHandler::getTerminationTime(string delegationId)
+time_t GSoapDelegationHandler::getTerminationTime(std::string delegationId)
 {
 
     try
         {
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " gets proxy certificate termination time" << commit;
 
-            string delegationId = makeDelegationId();
+            std::string delegationId = makeDelegationId();
             if (delegationId.empty()) throw Err_Custom("'getDelegationId' failed!");
 
             time_t time;
@@ -593,7 +593,7 @@ time_t GSoapDelegationHandler::getTerminationTime(string delegationId)
         }
 }
 
-void GSoapDelegationHandler::destroy(string delegationId)
+void GSoapDelegationHandler::destroy(std::string delegationId)
 {
 
     FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " destroys proxy certificate" << commit;

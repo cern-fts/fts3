@@ -32,7 +32,6 @@
 #include <string>
 #include <vector>
 
-using namespace std;
 
 namespace fts3
 {
@@ -67,7 +66,7 @@ public:
      * @param dn - user DN
      * @param vo - user VO
      */
-    RequestLister(::soap* soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates, string dn, string vo, string src, string dst);
+    RequestLister(::soap* soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates, std::string dn, std::string vo, std::string src, std::string dst);
 
     /**
      * Retrieves job statuses from DB.
@@ -129,7 +128,7 @@ private:
     void checkGivenStates(impltns__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates);
 
     /// the job statuses retrived from the DB
-    vector<JobStatus*> jobs;
+    std::vector<JobStatus*> jobs;
 
     /// the soap object that is serving the given request
     ::soap* soap;
@@ -138,19 +137,19 @@ private:
     CGsiAdapter cgsi;
 
     /// DN used for listing jobs
-    string dn;
+    std::string dn;
 
     /// VO used for listing jobs
-    string vo;
+    std::string vo;
 
     /// source SE
-    string src;
+    std::string src;
 
     /// destination SE
-    string dst;
+    std::string dst;
 
     /// the states of interest
-    vector<string> inGivenStates;
+    std::vector<std::string> inGivenStates;
 
     ///
     GenericDbIfce & db;

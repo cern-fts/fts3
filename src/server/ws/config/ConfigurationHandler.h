@@ -44,9 +44,6 @@ namespace fts3
 namespace ws
 {
 
-using namespace boost;
-using namespace boost::assign;
-using namespace std;
 using namespace fts3::common;
 using namespace db;
 
@@ -65,7 +62,7 @@ public:
      *
      * initializes the regular expression objects and the 'parameterNameToId' map
      */
-    ConfigurationHandler(string dn);
+    ConfigurationHandler(std::string dn);
 
     /**
      * Destructor
@@ -73,14 +70,14 @@ public:
     virtual ~ConfigurationHandler();
 
     /**
-     * Parses the configuration string (JSON format)
+     * Parses the configuration std::string (JSON format)
      * 	Throws an Err_Custom if the given configuration is in wrong format.
      *
      * It has to be called before 'add'!
      *
-     * 	@param configuration - string containing the configuration in JSON format
+     * 	@param configuration - std::string containing the configuration in JSON format
      */
-    void parse(string configuration);
+    void parse(std::string configuration);
 
     /**
      * Adds a configuration to the DB.
@@ -95,7 +92,7 @@ public:
      *
      * @return vector containing single configuration entries in JSON format
      */
-    vector<string> get();
+    std::vector<std::string> get();
 
     /**
      * Gets the whole configuration regarding all SEs and all SE groups from the DB.
@@ -105,7 +102,7 @@ public:
      *
      * @return vector containing single configuration entries in JSON format
      */
-    string get(string name);
+    std::string get(std::string name);
 
     /**
      * Gets the whole configuration regarding all SEs and all SE groups from the DB.
@@ -115,22 +112,22 @@ public:
      *
      * @return vector containing single configuration entries in JSON format
      */
-    vector<string> getAll(string name);
+    std::vector<std::string> getAll(std::string name);
 
     /**
      *
      */
-    string getPair(string src, string dest);
+    std::string getPair(std::string src, std::string dest);
 
     /**
      *
      */
-    string getPair(string symbolic);
+    std::string getPair(std::string symbolic);
 
     /**
      *
      */
-    string getVo(string vo);
+    std::string getVo(std::string vo);
 
     /**
      * Deletes the configuration specified by the argument
@@ -146,9 +143,9 @@ private:
     GenericDbIfce* db;
 
     /// user DN
-    string dn;
+    std::string dn;
 
-    scoped_ptr<Configuration> cfg;
+    std::unique_ptr<Configuration> cfg;
 };
 
 }

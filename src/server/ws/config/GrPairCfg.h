@@ -47,7 +47,7 @@ public:
      * @param source - the source SE group
      * @param destination - the destination SE group
      */
-    GrPairCfg(string dn, string source, string destination) : PairCfg(dn, source, destination) {}; // check if SE groups exist
+    GrPairCfg(std::string dn, std::string source, std::string destination) : PairCfg(dn, source, destination) {}; // check if SE groups exist
 
     /**
      * Constructor.
@@ -57,7 +57,7 @@ public:
      * @param dn - client's DN
      * @param parser - parser that has been used for for parsing JSON configuration
      */
-    GrPairCfg(string dn, CfgParser& parser);
+    GrPairCfg(std::string dn, CfgParser& parser);
 
     /**
      * Destructor.
@@ -65,11 +65,11 @@ public:
     virtual ~GrPairCfg();
 
     /**
-     * Creates a string containing current configuration in JSON format.
+     * Creates a std::string containing current configuration in JSON format.
      *
-     * @return string containing the configuration
+     * @return std::string containing the configuration
      */
-    virtual string json();
+    virtual std::string json();
 
     /**
      * Saves the configuration into the DB.

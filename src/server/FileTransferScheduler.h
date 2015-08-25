@@ -32,8 +32,6 @@
 
 #include "db/generic/SingleDbInstance.h"
 
-using namespace std;
-using namespace boost;
 
 /**
  * The FileTransferScheduler class is responsible for scheduling transfer files
@@ -60,11 +58,11 @@ public:
      */
     FileTransferScheduler(
         TransferFiles const & file,
-        vector< std::shared_ptr<ShareConfig> > cfgs,
-        set<string> inses = set<string>(),
-        set<string> outses = set<string>(),
-        set<string> invos = set<string>(),
-        set<string> outvos = set<string>()
+        std::vector< std::shared_ptr<ShareConfig> > cfgs,
+        std::set<std::string> inses = std::set<std::string>(),
+        std::set<std::string> outses = std::set<std::string>(),
+        std::set<std::string> invos = std::set<std::string>(),
+        std::set<std::string> outvos = std::set<std::string>()
     );
     FileTransferScheduler(const FileTransferScheduler&);
 
@@ -86,11 +84,11 @@ private:
     /// pointer to the file that has to be scheduled
     TransferFiles const & file;
     /// name of the source SE
-    string srcSeName;
+    std::string srcSeName;
     /// name of the destination SE
-    string destSeName;
+    std::string destSeName;
 
-    vector< std::shared_ptr<ShareConfig> > cfgs;
+    std::vector< std::shared_ptr<ShareConfig> > cfgs;
 
     /// DB singleton instance
     GenericDbIfce* db;
@@ -102,7 +100,7 @@ private:
      *
      * @return error message
      */
-    string getNoCreditsErrMsg(ShareConfig* cfg);
+    std::string getNoCreditsErrMsg(ShareConfig* cfg);
 };
 
 #endif /* FILETRANSFERSCHEDULER_H_ */

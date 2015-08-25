@@ -34,8 +34,6 @@ namespace server
 {
 
 using namespace db;
-using namespace std;
-using namespace boost;
 
 /**
  * Assigns share configurations to transfer-job
@@ -57,9 +55,9 @@ class ConfigurationAssigner
     };
 
     /// share tuple (source, destination, VO) -> PK in DB
-    typedef boost::tuple<string, string, string> share;
+    typedef boost::tuple<std::string, std::string, std::string> share;
     /// content tuple - defines if a configuration regards the source, the destination or both
-    typedef pair<bool, bool> content;
+    typedef std::pair<bool, bool> content;
     /// configuration type
     typedef boost::tuple< share, content > cfg_type;
 
@@ -83,7 +81,7 @@ public:
      *
      * @return list of configurations
      */
-    void assign(vector< std::shared_ptr<ShareConfig> >& out);
+    void assign(std::vector< std::shared_ptr<ShareConfig> >& out);
 
 private:
 
@@ -95,7 +93,7 @@ private:
     /// number of share configuration that have been assigned to the job
     int assign_count;
 
-    void assignShareCfg(list<cfg_type> arg, vector< std::shared_ptr<ShareConfig> >& out);
+    void assignShareCfg(std::list<cfg_type> arg, std::vector< std::shared_ptr<ShareConfig> >& out);
 
     static const int auto_share = -1;
 };

@@ -23,7 +23,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include<cctype> //for isdigit
-#include<sstream> //to phrase string
+#include<sstream> //to phrase std::string
 #include<string>
 #include "Logger.h"
 #include <sys/stat.h>
@@ -85,20 +85,20 @@ static bool init = false;
 static std::vector<std::string> fileDB;
 
 //msg config file
-static map<string, string> cfg;
+static std::map<std::string, std::string> cfg;
 
 //recovery vector in case no data is retrieved
-static vector<std::string> recoveryVector(3, "");
+static std::vector<std::string> recoveryVector(3, "");
 
 //store fts endpoint for usage in the message field
-static map<string, string> ftsendpoint;
+static std::map<std::string, std::string> ftsendpoint;
 
 
 
 std::string get_channel_(std::string tr_id)
 {
     size_t found = tr_id.find("__");
-    if (found != string::npos)
+    if (found != std::string::npos)
         return tr_id.substr(0, (found));
 
     return tr_id;
@@ -114,13 +114,13 @@ std::string get_hostname(std::string hostname)
         {
             std::string temp = hostname.substr(9, found - 9);
             found = temp.find_first_of('/');
-            if (found != string::npos)
+            if (found != std::string::npos)
                 {
                     found_extra_slash = temp.find_first_of('/');
-                    if (found_extra_slash != string::npos)
+                    if (found_extra_slash != std::string::npos)
                         return temp.substr(0, found_extra_slash);
                     found_colon = temp.find_first_of(':');
-                    if (found_colon != string::npos)
+                    if (found_colon != std::string::npos)
                         return temp.substr(0, found_colon);
                     else
                         return temp.substr(0, found);
@@ -128,7 +128,7 @@ std::string get_hostname(std::string hostname)
             else
                 {
                     found = temp.find_first_of(':');
-                    if (found != string::npos)
+                    if (found != std::string::npos)
                         return temp.substr(0, found);
                 }
         }
@@ -138,10 +138,10 @@ std::string get_hostname(std::string hostname)
         {
             std::string temp = hostname.substr(6, found - 6);
             found = temp.find_first_of('/');
-            if (found != string::npos)
+            if (found != std::string::npos)
                 {
                     found_colon = temp.find_first_of(':');
-                    if (found_colon != string::npos)
+                    if (found_colon != std::string::npos)
                         return temp.substr(0, found_colon);
                     else
                         return temp.substr(0, found);
@@ -149,7 +149,7 @@ std::string get_hostname(std::string hostname)
             else
                 {
                     found = temp.find_first_of(':');
-                    if (found != string::npos)
+                    if (found != std::string::npos)
                         return temp.substr(0, found);
                 }
         }
@@ -186,7 +186,7 @@ std::string getConnectString(std::string & value, std::vector<std::string>::iter
     std::string connectstring("");
     std::string connectStringConcat("");
     size_t val;
-    string::iterator itr;
+    std::string::iterator itr;
     if (found != std::string::npos)
         {
             connectstring = *(++it);
@@ -219,7 +219,7 @@ int fexists(const char *filename)
     return -1;
 }
 
-int getdir(string rootDir, vector<string> &files)
+int getdir(std::string rootDir, std::vector<std::string> &files)
 {
     DIR *dir; //the directory
     struct dirent *dp;
@@ -232,7 +232,7 @@ int getdir(string rootDir, vector<string> &files)
 
     while ((dp = readdir(dir)) != NULL)
         {
-            files.push_back(string(dp->d_name));
+            files.push_back(std::string(dp->d_name));
         }
 
     closedir(dir);
@@ -243,8 +243,8 @@ std::string filesStore(const char* filename, const char *path, char *env)
 {
     std::string dirname;
     std::string rootDir;
-    vector<std::string> files = vector<std::string > ();
-    string inventory[3] = {"", "/usr", "/opt/glite"};
+    std::vector<std::string> files = std::vector<std::string > ();
+    std::string inventory[3] = {"", "/usr", "/opt/glite"};
     std::string xmlfile;
     size_t found;
 
@@ -314,7 +314,7 @@ std::string filesStore(const char* filename, const char *path, char *env)
                                 {
                                     xmlfile = files[i];
                                     found = xmlfile.find(filename);
-                                    if (found!=string::npos)
+                                    if (found != std::string::npos)
                                         {
                                             return dirname + xmlfile;
                                         }
@@ -445,9 +445,9 @@ std::vector<std::string> const& oracleCredentials()
         }
 }
 
-//checks if a string is full of digits
+//checks if a std::string is full of digits
 
-bool isDigits(string word)
+bool isDigits(std::string word)
 {
     for (unsigned int i = 0; i < word.size(); ++i)
         {
@@ -458,12 +458,12 @@ bool isDigits(string word)
 
 std::string extractNumber(const std::string & value)
 {
-    string sentence = value;
-    stringstream extract; // extract words by words;
+    std::string sentence = value;
+    std::stringstream extract; // extract words by words;
 
     extract << sentence; //enter the sentence that we want to extract word by word
 
-    string word = "";
+    std::string word = "";
 
     //while there are words to extract
     while (!extract.fail())
@@ -479,9 +479,9 @@ std::string extractNumber(const std::string & value)
     return "";
 }
 
-string strip_space(const string & s)
+std::string strip_space(const std::string & s)
 {
-    string ret(s);
+    std::string ret(s);
     while (ret.length() && (ret[0] == ' ' || ret[0] == '\t'))
         ret = ret.substr(1);
     while (ret.length() && (ret[ret.length() - 1] == ' ' || ret[ret.length() - 1] == '\t'))
@@ -610,8 +610,8 @@ bool get_mon_cfg_file()
             if (filename.length() == 0)
                 return false;
 
-            string ifname(filename);
-            ifstream in(ifname.c_str());
+            std::string ifname(filename);
+            std::ifstream in(ifname.c_str());
             if(!in)
                 {
                     logger::writeLog("msg config file cannot be read, check location and permissions", true);
@@ -619,7 +619,7 @@ bool get_mon_cfg_file()
                 }
 
             cfg.clear();
-            string line;
+            std::string line;
             while (!in.eof())
                 {
                     getline(in, line);
@@ -627,31 +627,31 @@ bool get_mon_cfg_file()
                     if (line.length() && line[0] != '#')
                         {
                             size_t pos = line.find("=");
-                            if (pos != string::npos)
+                            if (pos != std::string::npos)
                                 {
-                                    string key = strip_space(line.substr(0, pos));
-                                    string value = strip_space(line.substr(pos + 1));
+                                    std::string key = strip_space(line.substr(0, pos));
+                                    std::string value = strip_space(line.substr(pos + 1));
                                     cfg.insert(make_pair(key, value));
                                 }
                         }
                 }
 
-            map <string, string> ::const_iterator iter1 = cfg.find("BROKER");
-            map <string, string> ::const_iterator iter2 = cfg.find("START");
-            map <string, string> ::const_iterator iter3 = cfg.find("COMPLETE");
-            map <string, string> ::const_iterator iter4 = cfg.find("CRON");
-            map <string, string> ::const_iterator iter6 = cfg.find("TTL");
-            map <string, string> ::const_iterator iter5 = cfg.find("TOPIC");
-            map <string, string> ::const_iterator iter7 = cfg.find("ACTIVE");
-            map <string, string> ::const_iterator iter8 = cfg.find("ENABLELOG");
-            map <string, string> ::const_iterator iter9 = cfg.find("LOGFILEDIR");
-            map <string, string> ::const_iterator iter10 = cfg.find("LOGFILENAME");
-            map <string, string> ::const_iterator iter11 = cfg.find("FQDN");
-            map <string, string> ::const_iterator iter12 = cfg.find("ENABLEMSGLOG");
-            map <string, string> ::const_iterator iter13 = cfg.find("USERNAME");
-            map <string, string> ::const_iterator iter14 = cfg.find("PASSWORD");
-            map <string, string> ::const_iterator iter15 = cfg.find("USE_BROKER_CREDENTIALS");
-            map <string, string> ::const_iterator iter16 = cfg.find("STATE");
+            auto iter1 = cfg.find("BROKER");
+            auto iter2 = cfg.find("START");
+            auto iter3 = cfg.find("COMPLETE");
+            auto iter4 = cfg.find("CRON");
+            auto iter6 = cfg.find("TTL");
+            auto iter5 = cfg.find("TOPIC");
+            auto iter7 = cfg.find("ACTIVE");
+            auto iter8 = cfg.find("ENABLELOG");
+            auto iter9 = cfg.find("LOGFILEDIR");
+            auto iter10 = cfg.find("LOGFILENAME");
+            auto iter11 = cfg.find("FQDN");
+            auto iter12 = cfg.find("ENABLEMSGLOG");
+            auto iter13 = cfg.find("USERNAME");
+            auto iter14 = cfg.find("PASSWORD");
+            auto iter15 = cfg.find("USE_BROKER_CREDENTIALS");
+            auto iter16 = cfg.find("STATE");
 
 
             if (iter16 != cfg.end())
@@ -776,17 +776,17 @@ void appendMessageToLogFile(std::string & text)
 {
     static std::string filename = LOGFILEDIR + "" + LOGFILENAME;
     const char* logFileName = filename.c_str();
-    static ofstream fout;
+    static std::ofstream fout;
     uid_t pw_uid = name_to_uid();
 
     if(!init)
         {
-            fout.open(filename.c_str(), ios::app); // open file for appending
+            fout.open(filename.c_str(), std::ios::app); // open file for appending
             init = true;
         }
     if (fout.is_open()  && fexists(filename.c_str())==0)
         {
-            fout << text << endl; //send to file
+            fout << text << std::endl; //send to file
 
             if(fout.bad())
                 {
@@ -796,8 +796,8 @@ void appendMessageToLogFile(std::string & text)
         }
     else
         {
-            fout.open(filename.c_str(), ios::app); // open file for appending
-            fout << text << endl; //send to file
+            fout.open(filename.c_str(), std::ios::app); // open file for appending
+            fout << text << std::endl; //send to file
             fout.close();
             init = false;
         }
@@ -814,13 +814,13 @@ void appendMessageToLogFileNoConfig(std::string & text)
 {
     static std::string filename = TEMPLOG;
     const char* logFileName = filename.c_str();
-    static ofstream fout;
+    static std::ofstream fout;
     uid_t pw_uid = name_to_uid();
 
-    fout.open(filename.c_str(), ios::app); // open file for appending
+    fout.open(filename.c_str(), std::ios::app); // open file for appending
     if (fout.is_open())
         {
-            fout << text << endl; //send to file
+            fout << text << std::endl; //send to file
         }
     fout.close(); //close file
     int chownExec = chown(logFileName, pw_uid, getgid());
@@ -848,7 +848,7 @@ int GetIntVal(std::string strConvert)
 
 }
 
-std::string ReplaceNonPrintableCharacters(string s)
+std::string ReplaceNonPrintableCharacters(std::string s)
 {
     try
         {
@@ -875,7 +875,7 @@ std::string ReplaceNonPrintableCharacters(string s)
 }
 
 
-bool caseInsCompare(const string& s1, const string& s2)
+bool caseInsCompare(const std::string& s1, const std::string& s2)
 {
     return((s1.size( ) == s2.size( )) &&
            equal(s1.begin( ), s1.end( ), s2.begin( ), caseInsCharCompareN));
@@ -905,21 +905,20 @@ bool getResolveAlias()
 std::string getFTSEndpoint()
 {
     const char* path[2] = {"/etc/glite-sd2cache-cron.conf","/opt/glite/etc/glite-sd2cache-cron.conf"};
-    string line;
-    vector<std::string>::iterator myVectorIterator;
+    std::string line;
     std::string fts = "";
     std::string result = "";
 
     for(int index=0; index<2; index++)
         {
-            string ifname(path[index]);
-            ifstream in(ifname.c_str());
+            std::string ifname(path[index]);
+            std::ifstream in(ifname.c_str());
             if(!in)
                 {
                     continue;
                 }
 
-            string line;
+            std::string line;
             while (!in.eof())
                 {
                     getline(in, line);
@@ -927,16 +926,16 @@ std::string getFTSEndpoint()
                     if (line.length() && line[0] != '#')
                         {
                             size_t pos = line.find("=");
-                            if (pos != string::npos)
+                            if (pos != std::string::npos)
                                 {
-                                    string key = strip_space(line.substr(0, pos));
-                                    string value = strip_space(line.substr(pos + 1));
+                                    std::string key = strip_space(line.substr(0, pos));
+                                    std::string value = strip_space(line.substr(pos + 1));
                                     ftsendpoint.insert(make_pair(key, value));
                                 }
                         }
                 }
 
-            map <string, string> ::const_iterator iter = ftsendpoint.find("FTS_HOST");
+            auto iter = ftsendpoint.find("FTS_HOST");
             if (iter != ftsendpoint.end())
                 {
                     fts = ftsendpoint.find("FTS_HOST")->second;

@@ -39,8 +39,6 @@ namespace server
 {
 
 using namespace db;
-using namespace std;
-using namespace boost;
 using namespace fts3::common;
 
 /**
@@ -66,7 +64,7 @@ public:
      * @param infosys - information system host
      * @param ftsHostName - hostname of the machine hosting FTS3
      */
-    FileTransferExecutor(TransferFiles& tf, TransferFileHandler& tfh, bool monitoringMsg, string infosys, string ftsHostName, string proxy, std::string logDir);
+    FileTransferExecutor(TransferFiles& tf, TransferFileHandler& tfh, bool monitoringMsg, std::string infosys, std::string ftsHostName, std::string proxy, std::string logDir);
 
     /**
      * Destructor.
@@ -83,16 +81,16 @@ public:
 private:
 
     /// pairs that were already checked and were not scheduled
-    set< pair<string, string> > notScheduled;
+    std::set< std::pair<std::string, std::string> > notScheduled;
 
     /// variables from process_service_handler
     TransferFiles tf;
     TransferFileHandler const & tfh;
     bool monitoringMsg;
-    string infosys;
-    string ftsHostName;
+    std::string infosys;
+    std::string ftsHostName;
     SiteName siteResolver;
-    string proxy;
+    std::string proxy;
     std::string logsDir;
 
     // DB interface

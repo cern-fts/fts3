@@ -29,7 +29,7 @@ namespace ws
 
 using namespace boost;
 
-StandaloneSeCfg::StandaloneSeCfg(string dn, string name) : StandaloneCfg(dn), se(name)
+StandaloneSeCfg::StandaloneSeCfg(std::string dn, std::string name) : StandaloneCfg(dn), se(name)
 {
     if (notAllowed.count(se))
         throw Err_Custom("The SE name is not a valid!");
@@ -47,10 +47,9 @@ StandaloneSeCfg::StandaloneSeCfg(string dn, string name) : StandaloneCfg(dn), se
     init(se);
 }
 
-StandaloneSeCfg::StandaloneSeCfg(string dn, CfgParser& parser) : StandaloneCfg(dn, parser)
+StandaloneSeCfg::StandaloneSeCfg(std::string dn, CfgParser& parser) : StandaloneCfg(dn, parser)
 {
-
-    se = parser.get<string>("se");
+    se = parser.get<std::string>("se");
     all = json();
 
     if (notAllowed.count(se))
@@ -62,13 +61,11 @@ StandaloneSeCfg::StandaloneSeCfg(string dn, CfgParser& parser) : StandaloneCfg(d
 
 StandaloneSeCfg::~StandaloneSeCfg()
 {
-
 }
 
-string StandaloneSeCfg::json()
+std::string StandaloneSeCfg::json()
 {
-
-    stringstream ss;
+    std::stringstream ss;
 
     ss << "{";
     ss << "\"" << "se" << "\":\"" << (se == wildcard ? any : se) << "\",";

@@ -42,12 +42,12 @@ SetCfgCli::SetCfgCli(bool spec)
             specific.add_options()
             (
                 "bring-online", po::value< std::vector<std::string> >()->multitoken(),
-                "If this switch is used the user should provide SE_NAME VALUE and optionally VO_NAME in order to set the maximum number of files that are staged concurrently for a given SE."
+                "If this switch is used the user should provide SE_NAME VALUE and boost::optionally VO_NAME in order to set the maximum number of files that are staged concurrently for a given SE."
                 "\n(Example: --bring-online $SE_NAME $VALUE [$VO_NAME])"
             )
             (
                 "delete", po::value< std::vector<std::string> >()->multitoken(),
-                "If this switch is used the user should provide SE_NAME VALUE and optionally VO_NAME in order to set the maximum number of files that are deleted concurrently for a given SE."
+                "If this switch is used the user should provide SE_NAME VALUE and boost::optionally VO_NAME in order to set the maximum number of files that are deleted concurrently for a given SE."
                 "\n(Example: --delete $SE_NAME $VALUE [$VO_NAME])"
             )
             (
@@ -196,7 +196,7 @@ void SetCfgCli::parse(int ac, char* av[])
     std::vector<std::string>::iterator it;
     for (it = cfgs.begin(); it < cfgs.end(); it++)
         {
-            trim(*it);
+            boost::trim(*it);
             // check if the configuration is started with an opening brace and ended with a closing brace
             if (*it->begin() != '{' || *(it->end() - 1) != '}')
                 {
@@ -281,7 +281,7 @@ std::vector<std::string> SetCfgCli::getConfigurations()
     return cfgs;
 }
 
-optional<bool> SetCfgCli::drain()
+boost::optional<bool> SetCfgCli::drain()
 {
     if (vm.count("drain"))
         {
@@ -295,10 +295,10 @@ optional<bool> SetCfgCli::drain()
             return value == "on";
         }
 
-    return optional<bool>();
+    return boost::optional<bool>();
 }
 
-optional<bool> SetCfgCli::showUserDn()
+boost::optional<bool> SetCfgCli::showUserDn()
 {
     if (vm.count("show-user-dn"))
         {
@@ -315,7 +315,7 @@ optional<bool> SetCfgCli::showUserDn()
     return boost::none;
 }
 
-optional< std::pair<std::string, int> > SetCfgCli::retry()
+boost::optional< std::pair<std::string, int> > SetCfgCli::retry()
 {
     if (vm.count("retry"))
         {
@@ -326,20 +326,21 @@ optional< std::pair<std::string, int> > SetCfgCli::retry()
 
             try
                 {
-                    int retries = lexical_cast<int>(v[1]);
-                    if (retries < -1) throw bad_option("retry", "incorrect value: the number of retries has to greater or equal to -1.");
+                    int retries = boost::lexical_cast<int>(v[1]);
+                    if (retries < -1)
+                        throw bad_option("retry", "incorrect value: the number of retries has to greater or equal to -1.");
                     return make_pair(v[0], retries);
                 }
-            catch(bad_lexical_cast& ex)
+            catch(boost::bad_lexical_cast& ex)
                 {
                     throw bad_option("retry", "incorrect value: " + v[1] + " (the number of retries has be an integer).");
                 }
         }
 
-    return optional< std::pair<std::string, int> >();
+    return boost::optional< std::pair<std::string, int> >();
 }
 
-optional<int> SetCfgCli::optimizer_mode()
+boost::optional<int> SetCfgCli::optimizer_mode()
 {
     if (vm.count("optimizer-mode"))
         {
@@ -353,25 +354,26 @@ optional<int> SetCfgCli::optimizer_mode()
             return mode;
         }
 
-    return optional<int>();
+    return boost::optional<int>();
 }
 
-optional<unsigned> SetCfgCli::queueTimeout()
+boost::optional<unsigned> SetCfgCli::queueTimeout()
 {
     if (vm.count("queue-timeout"))
         {
             int timeout = vm["queue-timeout"].as<int>();
-            if (timeout < 0) throw bad_option("queue-timeout", "the queue-timeout value has to be greater or equal to 0.");
+            if (timeout < 0)
+                throw bad_option("queue-timeout", "the queue-timeout value has to be greater or equal to 0.");
             return timeout;
         }
 
-    return optional<unsigned>();
+    return boost::optional<unsigned>();
 }
 
-optional< std::tuple<std::string, std::string, std::string> > SetCfgCli::getProtocol()
+boost::optional< std::tuple<std::string, std::string, std::string> > SetCfgCli::getProtocol()
 {
     // check if the option was used
-    if (!vm.count("protocol")) return optional< std::tuple<std::string, std::string, std::string> >();
+    if (!vm.count("protocol")) return boost::optional< std::tuple<std::string, std::string, std::string> >();
     // make sure it was used corretly
     const std::vector<std::string>& v = vm["protocol"].as< std::vector<std::string> >();
     if (v.size() != 3) throw bad_option("protocol", "'--protocol' takes following parameters: udt/ipv6 SE on/off");
@@ -459,7 +461,7 @@ void SetCfgCli::parseMaxBandwidth()
 
     int limit = vm["max-bandwidth"].as<int>();
 
-    bandwidth_limitation = make_optional(std::tuple<std::string, std::string, int>(source_se, dest_se, limit));
+    bandwidth_limitation = boost::make_optional(std::tuple<std::string, std::string, int>(source_se, dest_se, limit));
 }
 
 void SetCfgCli::parseActiveFixed()
@@ -473,7 +475,7 @@ void SetCfgCli::parseActiveFixed()
 
     int active = vm["active-fixed"].as<int>();
 
-    active_fixed = make_optional(std::tuple<std::string, std::string, int>(source_se, dest_se, active));
+    active_fixed = boost::make_optional(std::tuple<std::string, std::string, int>(source_se, dest_se, active));
 }
 
 boost::optional< std::tuple<std::string, int, std::string> > SetCfgCli::getBringOnline()
@@ -488,21 +490,21 @@ boost::optional< std::tuple<std::string, int, std::string> > SetCfgCli::getDelet
     return max_opt["delete"];
 }
 
-optional<std::tuple<std::string, std::string, int> > SetCfgCli::getBandwidthLimitation()
+boost::optional<std::tuple<std::string, std::string, int> > SetCfgCli::getBandwidthLimitation()
 {
     return bandwidth_limitation;
 }
 
-optional<std::tuple<std::string, std::string, int> > SetCfgCli::getActiveFixed()
+boost::optional<std::tuple<std::string, std::string, int> > SetCfgCli::getActiveFixed()
 {
     return active_fixed;
 }
 
-optional< std::pair<std::string, int> > SetCfgCli::getMaxSeActive(std::string option)
+boost::optional< std::pair<std::string, int> > SetCfgCli::getMaxSeActive(std::string option)
 {
     if (!vm.count(option))
         {
-            return optional< std::pair<std::string, int> >();
+            return boost::optional< std::pair<std::string, int> >();
         }
 
     // make sure it was used corretly
@@ -514,31 +516,31 @@ optional< std::pair<std::string, int> > SetCfgCli::getMaxSeActive(std::string op
 
     try
         {
-            int active = lexical_cast<int>(v[0]);
+            int active = boost::lexical_cast<int>(v[0]);
 
             if (active < -1) throw bad_option("option", "values lower than -1 are not valid");
 
             return std::make_pair(se, active);
         }
-    catch(bad_lexical_cast& ex)
+    catch(boost::bad_lexical_cast& ex)
         {
             throw bad_option(option, "the number of active has to be an integer");
         }
 }
 
-optional< std::pair<std::string, int> > SetCfgCli::getMaxSrcSeActive()
+boost::optional< std::pair<std::string, int> > SetCfgCli::getMaxSrcSeActive()
 {
     return getMaxSeActive("max-se-source-active");
 }
 
-optional< std::pair<std::string, int> > SetCfgCli::getMaxDstSeActive()
+boost::optional< std::pair<std::string, int> > SetCfgCli::getMaxDstSeActive()
 {
     return getMaxSeActive("max-se-dest-active");
 }
 
-optional<int> SetCfgCli::getGlobalTimeout()
+boost:: optional<int> SetCfgCli::getGlobalTimeout()
 {
-    if (!vm.count("global-timeout")) return optional<int>();
+    if (!vm.count("global-timeout")) return boost::optional<int>();
 
     int timeout = vm["global-timeout"].as<int>();
 
@@ -549,21 +551,21 @@ optional<int> SetCfgCli::getGlobalTimeout()
     return timeout;
 }
 
-tuple<optional<int>, optional<int>> SetCfgCli::getGlobalLimits()
+boost::tuple<boost::optional<int>, boost::optional<int>> SetCfgCli::getGlobalLimits()
 {
-    optional<int> maxPerLink, maxPerSe;
+    boost::optional<int> maxPerLink, maxPerSe;
 
     if (vm.count("max-per-link"))
         maxPerLink = vm["max-per-link"].as<int>();
     if (vm.count("max-per-se"))
         maxPerSe = vm["max-per-se"].as<int>();
 
-    return tuple<optional<int>, optional<int> > (maxPerLink, maxPerSe);
+    return boost::tuple<boost::optional<int>, boost::optional<int> > (maxPerLink, maxPerSe);
 }
 
-optional<int> SetCfgCli::getSecPerMb()
+boost::optional<int> SetCfgCli::getSecPerMb()
 {
-    if (!vm.count("sec-per-mb")) return optional<int>();
+    if (!vm.count("sec-per-mb")) return boost::optional<int>();
 
     int sec = vm["sec-per-mb"].as<int>();
 
@@ -574,7 +576,7 @@ optional<int> SetCfgCli::getSecPerMb()
     return sec;
 }
 
-optional< std::tuple<std::string, std::string, std::string, std::string> > SetCfgCli::s3()
+boost::optional< std::tuple<std::string, std::string, std::string, std::string> > SetCfgCli::s3()
 {
     if (!vm.count("s3")) return boost::none;
 
@@ -585,7 +587,7 @@ optional< std::tuple<std::string, std::string, std::string, std::string> > SetCf
     return std::make_tuple(v[0], v[1], v[2], v[3]);
 }
 
-optional< std::tuple<std::string, std::string, std::string> > SetCfgCli::dropbox()
+boost::optional< std::tuple<std::string, std::string, std::string> > SetCfgCli::dropbox()
 {
     if (!vm.count("dropbox")) return boost::none;
 
@@ -596,7 +598,7 @@ optional< std::tuple<std::string, std::string, std::string> > SetCfgCli::dropbox
     return std::make_tuple(v[0], v[1], v[2]);
 }
 
-optional< std::tuple<std::string, std::string> > SetCfgCli::getAddAuthorization()
+boost::optional< std::tuple<std::string, std::string> > SetCfgCli::getAddAuthorization()
 {
     if (!vm.count("authorize")) return boost::none;
 
@@ -607,7 +609,7 @@ optional< std::tuple<std::string, std::string> > SetCfgCli::getAddAuthorization(
     return std::make_tuple(v[0], v[1]);
 }
 
-optional< std::tuple<std::string, std::string> > SetCfgCli::getRevokeAuthorization()
+boost::optional< std::tuple<std::string, std::string> > SetCfgCli::getRevokeAuthorization()
 {
     if (!vm.count("revoke")) return boost::none;
 

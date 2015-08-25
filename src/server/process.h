@@ -22,13 +22,12 @@
 
 #include <string>
 #include <map>
-using namespace std;
 
 
 class ExecuteProcess
 {
 public:
-    ExecuteProcess( const string& app, const string& arguments);
+    ExecuteProcess(const std::string& app, const std::string& arguments);
     int executeProcessShell(std::string& forkMessage);
 
     inline int getPid()
@@ -38,10 +37,10 @@ public:
 
 protected:
     int execProcessShell(std::string& forkMessage);
-    void getArgv(list<string>& argsHolder, size_t* argc, char*** argv);
+    void getArgv(std::list<std::string>& argsHolder, size_t* argc, char*** argv);
 
 private:
     int pid;
-    string m_app;
-    string m_arguments;
+    std::string m_app;
+    std::string m_arguments;
 };

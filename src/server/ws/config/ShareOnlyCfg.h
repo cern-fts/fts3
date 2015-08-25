@@ -44,7 +44,7 @@ public:
      *
      * @param dn - client's DN
      */
-    ShareOnlyCfg(string dn, string name);
+    ShareOnlyCfg(std::string dn, std::string name);
 
     /**
      * Constructor. Retrieves the configuration data from the given CfgParser.
@@ -52,7 +52,7 @@ public:
      * @param dn - client's DN
      * @param parser - the JSON configuration parser
      */
-    ShareOnlyCfg(string dn, CfgParser& parser);
+    ShareOnlyCfg(std::string dn, CfgParser& parser);
 
     /**
      * Destructor.
@@ -60,9 +60,9 @@ public:
     virtual ~ShareOnlyCfg();
 
     /**
-     * Creates a string containing the JSON configuration common for all 'standalone' configurations
+     * Creates a std::string containing the JSON configuration common for all 'standalone' configurations
      */
-    virtual string json();
+    virtual std::string json();
 
     /**
      * Saves the current configuration into the DB
@@ -87,23 +87,23 @@ private:
     /**
      * Initializes the object from DB
      */
-    void init(string se);
+    void init(std::string se);
 
     /**
      * Make sure that shares sum up to 100%
      */
-    void checkShare(map<string, int>& share);
+    void checkShare(std::map<std::string, int>& share);
 
     /// active state
     bool active;
 
     /// SE name
-    string se;
+    std::string se;
 
     /// inbound share
-    map<string, int> in_share;
+    std::map<std::string, int> in_share;
 
-    map<string, int> out_share;
+    std::map<std::string, int> out_share;
     /// outbound protocol
 };
 

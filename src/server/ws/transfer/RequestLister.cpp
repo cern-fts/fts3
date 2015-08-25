@@ -41,7 +41,7 @@ RequestLister::RequestLister(::soap* soap, impltns__ArrayOf_USCOREsoapenc_USCORE
     checkGivenStates (inGivenStates);
 }
 
-RequestLister::RequestLister(::soap* soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates, string dn, string vo, string src, string dst):
+RequestLister::RequestLister(::soap* soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates, std::string dn, std::string vo, std::string src, std::string dst):
     soap(soap),
     cgsi(soap),
     dn(dn),
@@ -104,7 +104,7 @@ impltns__ArrayOf_USCOREtns3_USCOREJobStatus* RequestLister::list_impl(Authorizat
     result = soap_new_impltns__ArrayOf_USCOREtns3_USCOREJobStatus(soap, -1);
 
     // fill it with job statuses
-    vector<JobStatus*>::iterator it;
+    std::vector<JobStatus*>::iterator it;
     for (it = jobs.begin(); it < jobs.end(); ++it)
         {
             GSoapJobStatus job_ptr (soap, **it);
@@ -125,8 +125,7 @@ void RequestLister::checkGivenStates(impltns__ArrayOf_USCOREsoapenc_USCOREstring
         }
 
     JobStatusHandler& handler = JobStatusHandler::getInstance();
-    vector<string>::iterator it;
-    for (it = inGivenStates->item.begin(); it < inGivenStates->item.end(); ++it)
+    for (auto it = inGivenStates->item.begin(); it < inGivenStates->item.end(); ++it)
         {
             if (*it == "Pending") continue; // We are ignoring the legacy state 'Pending'
             if(!handler.isStatusValid(*it))

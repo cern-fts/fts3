@@ -25,9 +25,8 @@ namespace fts3
 namespace ws
 {
 
-StandaloneGrCfg::StandaloneGrCfg(string dn, string name) : StandaloneCfg(dn), group(name)
+StandaloneGrCfg::StandaloneGrCfg(std::string dn, std::string name) : StandaloneCfg(dn), group(name)
 {
-
     notAllowed.insert(any);
     if (notAllowed.count(group))
         throw Err_Custom("The SE name is not a valid!");
@@ -44,13 +43,12 @@ StandaloneGrCfg::StandaloneGrCfg(string dn, string name) : StandaloneCfg(dn), gr
     db->getGroupMembers(name, members);
 }
 
-StandaloneGrCfg::StandaloneGrCfg(string dn, CfgParser& parser) : StandaloneCfg(dn, parser)
+StandaloneGrCfg::StandaloneGrCfg(std::string dn, CfgParser& parser) : StandaloneCfg(dn, parser)
 {
-
     notAllowed.insert(any);
 
-    group = parser.get<string>("group");
-    members = parser.get< vector<string> >("members");
+    group = parser.get<std::string>("group");
+    members = parser.get< std::vector<std::string> >("members");
 
     all = json();
 
@@ -62,10 +60,9 @@ StandaloneGrCfg::~StandaloneGrCfg()
 {
 }
 
-string StandaloneGrCfg::json()
+std::string StandaloneGrCfg::json()
 {
-
-    stringstream ss;
+    std::stringstream ss;
 
     ss << "{";
     ss << "\"" << "group" << "\":\"" << group << "\",";
@@ -78,14 +75,12 @@ string StandaloneGrCfg::json()
 
 void StandaloneGrCfg::save()
 {
-
     addGroup(group, members);
     StandaloneCfg::save(group);
 }
 
 void StandaloneGrCfg::del()
 {
-
     // check if pair configuration uses the group
     if (db->isGrInPair(group))
         throw Err_Custom("The group is used in a group-pair configuration, you need first to remove the pair!");

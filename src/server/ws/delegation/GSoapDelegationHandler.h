@@ -34,7 +34,6 @@ namespace fts3
 namespace ws
 {
 
-using namespace std;
 
 /**
  * The GSoapDelegationHandler class is responsible for proxy certificate delegation on the server side
@@ -73,7 +72,7 @@ public:
      * @return unique delegation ID, it will be always the same
      * 			for the same user and VOMS attributes
      */
-    string makeDelegationId();
+    std::string makeDelegationId();
 
     /**
      * If the delegation ID is empty creates a new one using
@@ -81,11 +80,11 @@ public:
      *
      * @param delegationId - the delegation ID provide by client
      *
-     * @return delegation ID, or empty string if the format was not correct
+     * @return delegation ID, or empty std::string if the format was not correct
      *
      * @see makeDelegationId
      */
-    string handleDelegationId(string delegationId);
+    std::string handleDelegationId(std::string delegationId);
 
     /**
      * Checks if the delegation ID format is right
@@ -94,16 +93,16 @@ public:
      *
      * @return true if the format is right, false otherwise
      */
-    bool checkDelegationId(string delegationId);
+    bool checkDelegationId(std::string delegationId);
 
     /**
-     * Converts a X509 struct to string
+     * Converts a X509 struct to std::string
      *
      * @param cert - the X509 struct that has to be converted
      *
-     * @return a string containing the certificate
+     * @return a std::string containing the certificate
      */
-    string x509ToString(X509* cert);
+    std::string x509ToString(X509* cert);
 
     /**
      * Adds the private (the one created in the getProxy step) to the proxy certificate.
@@ -112,9 +111,9 @@ public:
      * @param proxy - the proxy certificate delegated by the client
      * @param key - the private key that has to be added to the certificate
      *
-     * @return a string containing the certificate with the key (one the 2nd possition)
+     * @return a std::string containing the certificate with the key (one the 2nd possition)
      */
-    string addKeyToProxyCertificate(string proxy, string key);
+    std::string addKeyToProxyCertificate(std::string proxy, std::string key);
 
     /**
      * Reads the expiration time from a proxy certificate
@@ -123,17 +122,17 @@ public:
      *
      * @return expiration time
      */
-    time_t readTerminationTime(string proxy);
+    time_t readTerminationTime(std::string proxy);
 
     /**
-     * Converts a vector containing VOMS attributes (FQANs) to string
+     * Converts a vector containing VOMS attributes (FQANs) to std::string
      * Uses space as a delimiter.
      *
      * @param attrs - vector containing VOMS attributes
      *
-     * @return string containing all VOMS attributes (space is used a a delimiter)
+     * @return std::string containing all VOMS attributes (space is used a a delimiter)
      */
-    string fqansToString(vector<string> attrs);
+    std::string fqansToString(std::vector<std::string> attrs);
 
     /**
      * The WebServer getProxy request method.
@@ -143,21 +142,21 @@ public:
      * key is sent to the client
      *
      * @param delegationId - the delegation ID specified by the client,
-     * 							an empty string is also accepted
+     * 							an empty std::string is also accepted
      *
-     * 	@return string containing the public key
+     * 	@return std::string containing the public key
      */
-    string getProxyReq(string delegationId);
+    std::string getProxyReq(std::string delegationId);
 
     /**
      * The WebServer renewProxy request method.
      *
      * @param delegationId - the delegation ID specified by the client,
-     * 							an empty string is also accepted
+     * 							an empty std::string is also accepted
      *
-     * @return string containing a new public key
+     * @return std::string containing a new public key
      */
-    string renewProxyReq(string delegationId);
+    std::string renewProxyReq(std::string delegationId);
 
     /**
      * The WebServer getTerminationTime request method.
@@ -171,7 +170,7 @@ public:
      *
      * @return expiration time of the respective proxy certificate
      */
-    time_t getTerminationTime(string delegationId);
+    time_t getTerminationTime(std::string delegationId);
 
     /**
      * The WebServer getNewProxy request method.
@@ -194,10 +193,10 @@ public:
      * proxy certificate is stored in the DB for later use.
      *
      * @param delegationId - the delegation ID specified by the client,
-     * 							an empty string is also accepted
+     * 							an empty std::string is also accepted
      * @param proxy - the delegated proxy certificate
      */
-    void putProxy(string delegationId, string proxy);
+    void putProxy(std::string delegationId, std::string proxy);
 
     /**
      *	The WebServer destroy request method.
@@ -205,19 +204,19 @@ public:
      *	Removes the respective proxy certificate from the DB.
      *
      * @param delegationId - the delegation ID specified by the client,
-     * 							an empty string is also accepted
+     * 							an empty std::string is also accepted
      */
-    void destroy(string delegationId);
+    void destroy(std::string delegationId);
 
 private:
     /// gSOAP context
     soap* ctx;
 
     /// client DN
-    string dn;
+    std::string dn;
 
     /// client VOMS attributes (FQAN)
-    vector<string> attrs;
+    std::vector<std::string> attrs;
 };
 
 }

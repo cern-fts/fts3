@@ -237,13 +237,13 @@ CfgParser::CfgParser(std::string configuration)
         }
 
     // break into lines to give later better feedback to users
-    replace_all(configuration, ",", ",\n");
+    boost::replace_all(configuration, ",", ",\n");
 
     // store the lines in a vector
     std::vector<std::string> lines;
-    char_separator<char> sep("\n");
-    tokenizer< char_separator<char> > tokens(configuration, sep);
-    tokenizer< char_separator<char> >::iterator it;
+    boost::char_separator<char> sep("\n");
+    boost::tokenizer< boost::char_separator<char> > tokens(configuration, sep);
+    boost::tokenizer< boost::char_separator<char> >::iterator it;
 
     // put the configuration into a stream
     std::stringstream ss;
@@ -251,7 +251,7 @@ CfgParser::CfgParser(std::string configuration)
     for(it = tokens.begin(); it != tokens.end(); it++)
         {
             std::string s = *it;
-            trim(s);
+            boost::trim(s);
             if (!s.empty())
                 {
                     lines.push_back(s);
@@ -265,7 +265,7 @@ CfgParser::CfgParser(std::string configuration)
             read_json(ss, pt);
 
         }
-    catch(json_parser_error& ex)
+    catch(boost::property_tree::json_parser_error& ex)
         {
             // handle errors in JSON format
             std::string msg =
@@ -350,7 +350,7 @@ CfgParser::~CfgParser()
 
 }
 
-bool CfgParser::validate(ptree pt, std::map< std::string, std::set <std::string> > allowed, std::string path)
+bool CfgParser::validate(boost::property_tree::ptree pt, std::map< std::string, std::set <std::string> > allowed, std::string path)
 {
 
     // get the allowed names
@@ -361,10 +361,9 @@ bool CfgParser::validate(ptree pt, std::map< std::string, std::set <std::string>
             names = m_it->second;
         }
 
-    ptree::iterator it;
-    for (it = pt.begin(); it != pt.end(); it++)
+    for (auto it = pt.begin(); it != pt.end(); it++)
         {
-            std::pair<std::string, ptree> p = *it;
+            std::pair<std::string, boost::property_tree::ptree> p = *it;
 
             // if it's an array entry just continue
             if (p.first.empty()) continue;
@@ -402,17 +401,17 @@ bool CfgParser::validate(ptree pt, std::map< std::string, std::set <std::string>
     return true;
 }
 
-optional<std::string> CfgParser::get_opt(std::string path)
+boost::optional<std::string> CfgParser::get_opt(std::string path)
 {
 
-    optional<std::string> v;
+    boost::optional<std::string> v;
     try
         {
 
             v = pt.get_optional<std::string>(path);
 
         }
-    catch (ptree_bad_data& ex)
+    catch (boost::property_tree::ptree_bad_data& ex)
         {
             // if the type of the value is wrong throw an exception
             throw Err_Custom("Wrong value type of " + path);
@@ -449,12 +448,12 @@ bool CfgParser::isAuto(std::string path)
             v = pt.get<std::string>(path);
 
         }
-    catch (ptree_bad_path& ex)
+    catch (boost::property_tree::ptree_bad_path& ex)
         {
             // if the path is not correct throw en exception
             throw Err_Custom("The " + path + " has to be specified!");
         }
-    catch (ptree_bad_data& ex)
+    catch (boost::property_tree::ptree_bad_data& ex)
         {
             // if the type of the value is wrong throw an exception
             throw Err_Custom("Wrong value type of " + path);

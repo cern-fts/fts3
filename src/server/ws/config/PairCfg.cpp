@@ -29,7 +29,7 @@ namespace fts3
 namespace ws
 {
 
-PairCfg::PairCfg(string dn, string source, string destination) :
+PairCfg::PairCfg(std::string dn, std::string source, std::string destination) :
     Configuration(dn),
     source(source),
     destination(destination)
@@ -53,15 +53,15 @@ PairCfg::PairCfg(string dn, string source, string destination) :
     protocol = getProtocolMap(cfg.get());
 }
 
-PairCfg::PairCfg(string dn, CfgParser& parser) : Configuration(dn)
+PairCfg::PairCfg(std::string dn, CfgParser& parser) : Configuration(dn)
 {
 
     notAllowed.insert(any);
 
     symbolic_name_opt = parser.get_opt("symbolic_name");
-    share = parser.get< map<string, int> >("share");
+    share = parser.get< std::map<std::string, int> >("share");
     if (!parser.isAuto("protocol"))
-        protocol = parser.get< map<string, int> >("protocol");
+        protocol = parser.get< std::map<std::string, int> >("protocol");
     active = parser.get<bool>("active");
 }
 
@@ -69,10 +69,9 @@ PairCfg::~PairCfg()
 {
 }
 
-string PairCfg::json()
+std::string PairCfg::json()
 {
-
-    stringstream ss;
+    std::stringstream ss;
 
     ss << "\"" << "symbolic_name" << "\":\"" << symbolic_name << "\",";
     ss << "\"" << "active" << "\":" << (active ? "true" : "false") << ",";

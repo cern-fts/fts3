@@ -59,7 +59,7 @@ using namespace boost;
 using namespace boost::assign;
 
 
-const string JobSubmitter::srm_protocol = "srm";
+const std::string JobSubmitter::srm_protocol = "srm";
 
 static Uri checkValidUrl(const std::string &uri)
 {
@@ -148,8 +148,7 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
     srm_source = true;
 
     // extract the job elements from tns3__TransferJob2 object and put them into a vector
-    vector<tns3__TransferJobElement3 * >::iterator it;
-    for (it = job->transferJobElements.begin(); it < job->transferJobElements.end(); it++)
+    for (auto it = job->transferJobElements.begin(); it < job->transferJobElements.end(); it++)
         {
             tns3__TransferJobElement3* elem = (*it);
 
@@ -158,10 +157,10 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
 
             // common properties
             tupple.filesize = elem->filesize ? *elem->filesize : 0;
-            tupple.metadata = elem->metadata ? *elem->metadata : string();
+            tupple.metadata = elem->metadata ? *elem->metadata : std::string();
             tupple.activity = getActivity(elem->activity);
 
-            tupple.selectionStrategy = elem->selectionStrategy ? *elem->selectionStrategy : string();
+            tupple.selectionStrategy = elem->selectionStrategy ? *elem->selectionStrategy : std::string();
             if (!tupple.selectionStrategy.empty() && tupple.selectionStrategy != "orderly" && tupple.selectionStrategy != "auto")
                 throw Err_Custom("'" + tupple.selectionStrategy + "'");
 
@@ -266,10 +265,10 @@ void JobSubmitter::init(soap* ctx, JOB* job)
     initialState = (use_bring_online ? "STAGING" : "SUBMITTED");
 }
 
-inline string JobSubmitter::getActivity(std::string const * const activity)
+inline std::string JobSubmitter::getActivity(const std::string * activity)
 {
     // default value returned if the metadata are empty or an activity was not specified
-    static const string defstr = "default";
+    static const std::string defstr = "default";
     // if the activity was not specified return default
     if (!activity) return defstr;
     // if the activity was not found return default
@@ -281,7 +280,7 @@ JobSubmitter::~JobSubmitter()
 
 }
 
-string JobSubmitter::submit()
+std::string JobSubmitter::submit()
 {
 
     // for backwards compatibility check if copy-pin-lifetime and bring-online were set properly
@@ -382,7 +381,7 @@ string JobSubmitter::submit()
                         dn,
                         params.get(JobParameterHandler::CREDENTIALS),
                         vo,
-                        string(),
+                        std::string(),
                         delegationId,
                         sourceSe,
                         destinationSe,
@@ -413,7 +412,7 @@ string JobSubmitter::submit()
                         dn,
                         params.get(JobParameterHandler::CREDENTIALS),
                         vo,
-                        string(),
+                        std::string(),
                         delegationId,
                         sourceSe,
                         destinationSe,
@@ -441,9 +440,9 @@ string JobSubmitter::submit()
     return id;
 }
 
-void JobSubmitter::checkProtocol(string file, bool source)
+void JobSubmitter::checkProtocol(std::string file, bool source)
 {
-    string tmp (file);
+    std::string tmp (file);
     transform(tmp.begin(), tmp.end(), tmp.begin(), ::tolower);
     trim(tmp);
 
@@ -453,18 +452,18 @@ void JobSubmitter::checkProtocol(string file, bool source)
           tmp.find("https://") == 0 || tmp.find("lfc://") == 0 || tmp.find("davs://") == 0)
         &&
         // check if lfn if it is the source
-        (!source || !(file.find("/") == 0 && file.find(";") == string::npos && file.find(":") == string::npos))
+        (!source || !(file.find("/") == 0 && file.find(";") == std::string::npos && file.find(":") == std::string::npos))
         ;
 
     if(not_ok)
         {
-            string msg = (source ? "Source" : "Destination");
+            std::string msg = (source ? "Source" : "Destination");
             msg += " protocol is not supported for file: "  + file;
             throw Err_Custom(msg);
         }
 }
 
-string JobSubmitter::fileUrlToSeName(string url, bool source)
+std::string JobSubmitter::fileUrlToSeName(std::string url, bool source)
 {
     Uri u0 = checkValidUrl(url);
     return u0.getSeName();

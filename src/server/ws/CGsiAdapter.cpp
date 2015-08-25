@@ -42,7 +42,7 @@ using namespace fts3::common;
 using namespace boost;
 
 
-const string CGsiAdapter::hostDn = CGsiAdapter::initHostDn();
+const std::string CGsiAdapter::hostDn = CGsiAdapter::initHostDn();
 
 // Build a 'virtual vo' from the user DN, as follows:
 // Last CN without spaces @ concatenations of DC with dots
@@ -113,31 +113,30 @@ CGsiAdapter::~CGsiAdapter()
 {
 }
 
-string CGsiAdapter::getClientVo()
+std::string CGsiAdapter::getClientVo()
 {
     return vo;
 }
 
-string CGsiAdapter::getClientDn()
+std::string CGsiAdapter::getClientDn()
 {
     return dn;
 }
 
-vector<string> CGsiAdapter::getClientAttributes()
+std::vector<std::string> CGsiAdapter::getClientAttributes()
 {
     return attrs;
 }
 
-vector<string> CGsiAdapter::getClientRoles()
+std::vector<std::string> CGsiAdapter::getClientRoles()
 {
 
     static const regex re ("/.*/Role=(\\w+)/.*");
     static const int ROLE_VALUE = 1;
 
-    vector<string> ret;
-    vector<string>::iterator it;
+    std::vector<std::string> ret;
 
-    for (it = attrs.begin(); it != attrs.end(); ++it)
+    for (auto it = attrs.begin(); it != attrs.end(); ++it)
         {
 
             smatch what;
@@ -148,10 +147,10 @@ vector<string> CGsiAdapter::getClientRoles()
     return ret;
 }
 
-string CGsiAdapter::initHostDn()
+std::string CGsiAdapter::initHostDn()
 {
-    const string hostCert = "/etc/grid-security/fts3hostcert.pem";
-    string dn;
+    const std::string hostCert = "/etc/grid-security/fts3hostcert.pem";
+    std::string dn;
 
     struct stat buffer;
     if (stat(hostCert.c_str(), &buffer) != 0)
@@ -167,7 +166,7 @@ string CGsiAdapter::initHostDn()
         }
 
     if (!cert)
-        return string();
+        return std::string();
 
     dn = cert->name;
     X509_free(cert);

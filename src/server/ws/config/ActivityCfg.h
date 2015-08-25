@@ -37,16 +37,16 @@ class ActivityCfg  : public Configuration
 {
 public:
 
-    ActivityCfg(string dn, string name);
+    ActivityCfg(std::string dn, std::string name);
 
-    ActivityCfg(string dn, CfgParser& parser);
+    ActivityCfg(std::string dn, CfgParser& parser);
 
     virtual ~ActivityCfg();
 
     /**
-     * Creates a string containing the JSON configuration common for all 'standalone' configurations
+     * Creates a std::string containing the JSON configuration common for all 'standalone' configurations
      */
-    virtual string json();
+    virtual std::string json();
 
     /**
      * Saves the current configuration into the DB
@@ -71,10 +71,10 @@ private:
     /**
      * Initializes the object from DB
      */
-    void init(string vo);
+    void init(std::string vo);
 
-    string vo;
-    map<string, double> shares;
+    std::string vo;
+    std::map<std::string, double> shares;
     bool active;
 
 };

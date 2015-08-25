@@ -903,7 +903,7 @@ int fts3::impltns__prioritySet(soap* ctx, string job_id, int priority, impltns__
 
             DBSingleton::instance().getDBObjectInstance()->getTransferJobStatus(job_id, false, fileStatuses);
 
-            string status;
+            std::string status;
             if(!fileStatuses.empty())
                 {
                     // get the job status
@@ -928,7 +928,7 @@ int fts3::impltns__prioritySet(soap* ctx, string job_id, int priority, impltns__
                 }
 
 
-            string cmd = "fts-set-priority " + job_id + " " + lexical_cast<string>(priority);
+            std::string cmd = "fts-set-priority " + job_id + " " + boost::lexical_cast<std::string>(priority);
 
             DBSingleton::instance().getDBObjectInstance()->setPriority(job_id, priority);
 

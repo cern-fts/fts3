@@ -30,7 +30,6 @@ namespace fts3
 namespace ws
 {
 
-using namespace std;
 using namespace fts3::common;
 
 /**
@@ -52,7 +51,7 @@ public:
      * @param dn - client's DN
      * @param name - SE name
      */
-    StandaloneSeCfg(string dn, string name);
+    StandaloneSeCfg(std::string dn, std::string name);
 
     /**
      * Constructor.
@@ -62,7 +61,7 @@ public:
      * @param dn - client's DN
      * @param parser - the parser object
      */
-    StandaloneSeCfg(string dn, CfgParser& parser);
+    StandaloneSeCfg(std::string dn, CfgParser& parser);
 
     /**
      * Destructor.
@@ -70,9 +69,9 @@ public:
     virtual ~StandaloneSeCfg();
 
     /**
-     * Creates a string containing the JSON configuration common for a SE group 'standalone' configurations
+     * Creates a std::string containing the JSON configuration common for a SE group 'standalone' configurations
      */
-    virtual string json();
+    virtual std::string json();
 
     /**
      * Saves the current configuration into the DB
@@ -97,7 +96,7 @@ private:
     /**
      * SE name
      */
-    string se;
+    std::string se;
 };
 
 } /* namespace common */

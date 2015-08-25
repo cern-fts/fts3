@@ -52,8 +52,8 @@ namespace server
 
 
 FileTransferExecutor::FileTransferExecutor(TransferFiles& tf,
-        TransferFileHandler& tfh, bool monitoringMsg, string infosys,
-        string ftsHostName, string proxy, std::string logDir) :
+        TransferFileHandler& tfh, bool monitoringMsg, std::string infosys,
+        std::string ftsHostName, std::string proxy, std::string logDir) :
     tf(tf),
     tfh(tfh),
     monitoringMsg(monitoringMsg),
@@ -82,16 +82,16 @@ void FileTransferExecutor::run(boost::any & ctx)
 
     try
         {
-            string source_hostname = tf.SOURCE_SE;
-            string destin_hostname = tf.DEST_SE;
-            string params;
+            std::string source_hostname = tf.SOURCE_SE;
+            std::string destin_hostname = tf.DEST_SE;
+            std::string params;
 
             // if the pair was already checked and not scheduled skip it
             if (notScheduled.count(make_pair(source_hostname, destin_hostname))) return;
 
             /*check if manual config exist for this pair and vo*/
 
-            vector< std::shared_ptr<ShareConfig> > cfgs;
+            std::vector< std::shared_ptr<ShareConfig> > cfgs;
 
             ConfigurationAssigner cfgAssigner(tf);
             cfgAssigner.assign(cfgs);
@@ -111,7 +111,7 @@ void FileTransferExecutor::run(boost::any & ctx)
                     SeProtocolConfig protocol;
                     UrlCopyCmd cmd_builder;
 
-                    optional<ProtocolResolver::protocol> user_protocol = ProtocolResolver::getUserDefinedProtocol(tf);
+                    boost::optional<ProtocolResolver::protocol> user_protocol = ProtocolResolver::getUserDefinedProtocol(tf);
 
                     if (user_protocol.is_initialized())
                         {

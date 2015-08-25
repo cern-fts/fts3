@@ -37,7 +37,7 @@ namespace ws
 
 using namespace fts3::common;
 
-Blacklister::Blacklister(soap* ctx, string name, string status, int timeout, bool blk) :
+Blacklister::Blacklister(soap* ctx, std::string name, std::string status, int timeout, bool blk) :
     name(name),
     status(status),
     timeout(timeout),
@@ -49,7 +49,7 @@ Blacklister::Blacklister(soap* ctx, string name, string status, int timeout, boo
     adminDn = cgsi.getClientDn();
 }
 
-Blacklister::Blacklister(soap* ctx, string name, string vo, string status, int timeout, bool blk) :
+Blacklister::Blacklister(soap* ctx, std::string name, std::string vo, std::string status, int timeout, bool blk) :
     name(name),
     vo(vo),
     status(status),
@@ -88,13 +88,13 @@ void Blacklister::handleSeBlacklisting()
 {
 
     // audit the operation
-    string cmd = "fts-set-blacklist se " + name + (blk ? " on" : " off");
+    std::string cmd = "fts-set-blacklist se " + name + (blk ? " on" : " off");
     db->auditConfiguration(adminDn, cmd, "blacklist");
 
     if (blk)
         {
             db->blacklistSe(
-                name, *vo, status, timeout, string(), adminDn
+                name, *vo, status, timeout, std::string(), adminDn
             );
             // log it
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << adminDn << " had blacklisted the SE: " << name << commit;
@@ -114,7 +114,7 @@ void Blacklister::handleDnBlacklisting()
 {
 
     // audit the operation
-    string cmd = "fts-set-blacklist dn " + name + (blk ? " on" : " off");
+    std::string cmd = "fts-set-blacklist dn " + name + (blk ? " on" : " off");
     db->auditConfiguration(adminDn, cmd, "blacklist");
 
     if (blk)
@@ -124,7 +124,7 @@ void Blacklister::handleDnBlacklisting()
                     throw Err_Custom ("A user cannot blacklist himself!");
                 }
 
-            db->blacklistDn(name, string(), adminDn);
+            db->blacklistDn(name, std::string(), adminDn);
             // log it
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << name << " had blacklisted the DN: " << adminDn << commit;
 
@@ -156,13 +156,12 @@ void Blacklister::handleJobsInTheQueue()
             if (vo.is_initialized())
                 {
 
-                    set<string> canceled;
+                    std::set<std::string> canceled;
 
                     db->cancelFilesInTheQueue(name, *vo, canceled);
-                    set<string>::const_iterator iter;
                     if(!canceled.empty())
                         {
-                            for (iter = canceled.begin(); iter != canceled.end(); ++iter)
+                            for (auto iter = canceled.begin(); iter != canceled.end(); ++iter)
                                 {
                                     fts3::server::SingleTrStateInstance::instance().sendStateMessage((*iter), -1);
                                 }
@@ -172,13 +171,12 @@ void Blacklister::handleJobsInTheQueue()
             else
                 {
 
-                    vector<string> canceled;
+                    std::vector<std::string> canceled;
 
                     db->cancelJobsInTheQueue(name, canceled);
-                    vector<string>::const_iterator iter;
                     if(!canceled.empty())
                         {
-                            for (iter = canceled.begin(); iter != canceled.end(); ++iter)
+                            for (auto iter = canceled.begin(); iter != canceled.end(); ++iter)
                                 {
                                     fts3::server::SingleTrStateInstance::instance().sendStateMessage((*iter), -1);
                                 }

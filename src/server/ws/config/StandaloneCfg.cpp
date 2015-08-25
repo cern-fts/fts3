@@ -27,18 +27,18 @@ namespace fts3
 namespace ws
 {
 
-StandaloneCfg::StandaloneCfg(string dn, CfgParser& parser) : Configuration(dn)
+StandaloneCfg::StandaloneCfg(std::string dn, CfgParser& parser) : Configuration(dn)
 {
 
     active = parser.get<bool>("active");
 
-    in_share = parser.get< map<string, int> >("in.share");
+    in_share = parser.get< std::map<std::string, int> >("in.share");
     if (!parser.isAuto("in.protocol"))
-        in_protocol = parser.get< map<string, int> >("in.protocol");
+        in_protocol = parser.get< std::map<std::string, int> >("in.protocol");
 
-    out_share = parser.get< map<string, int> >("out.share");
+    out_share = parser.get< std::map<std::string, int> >("out.share");
     if (!parser.isAuto("out.protocol"))
-        out_protocol = parser.get< map<string, int> >("out.protocol");
+        out_protocol = parser.get< std::map<std::string, int> >("out.protocol");
 }
 
 StandaloneCfg::~StandaloneCfg()
@@ -46,7 +46,7 @@ StandaloneCfg::~StandaloneCfg()
 
 }
 
-void StandaloneCfg::init(string name)
+void StandaloneCfg::init(std::string name)
 {
     // get SE in and out share
     in_share = getShareMap(any, name);
@@ -56,9 +56,9 @@ void StandaloneCfg::init(string name)
     out_protocol = getProtocolMap(name, any);
 }
 
-string StandaloneCfg::json()
+std::string StandaloneCfg::json()
 {
-    stringstream ss;
+    std::stringstream ss;
 
     ss << "\"" << "active" << "\":" << (active ? "true" : "false") << ",";
     ss << "\"" << "in" << "\":{";
@@ -73,7 +73,7 @@ string StandaloneCfg::json()
     return ss.str();
 }
 
-void StandaloneCfg::save(string name)
+void StandaloneCfg::save(std::string name)
 {
     // add the in-link
     addLinkCfg(any, name, active, any + "-" + name, in_protocol);
@@ -86,7 +86,7 @@ void StandaloneCfg::save(string name)
     addShareCfg(name, any, out_share);
 }
 
-void StandaloneCfg::del(string name)
+void StandaloneCfg::del(std::string name)
 {
 
     // delete the shares for the in-link

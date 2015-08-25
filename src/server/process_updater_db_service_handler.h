@@ -278,10 +278,9 @@ protected:
                             {
                                 std::set<std::string> canceled;
                                 DBSingleton::instance().getDBObjectInstance()->cancelWaitingFiles(canceled);
-                                set<string>::const_iterator iterCan;
                                 if(!canceled.empty())
                                     {
-                                        for (iterCan = canceled.begin(); iterCan != canceled.end(); ++iterCan)
+                                        for (auto iterCan = canceled.begin(); iterCan != canceled.end(); ++iterCan)
                                             {
                                                 SingleTrStateInstance::instance().sendStateMessage((*iterCan), -1);
                                             }

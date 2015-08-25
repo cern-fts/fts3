@@ -37,8 +37,6 @@ namespace ws
 {
 
 using namespace fts3::common;
-using namespace std;
-using namespace boost;
 
 /**
  * AuthorizationManager facilitates the authorization of a fts operation
@@ -102,26 +100,26 @@ public:
 private:
 
     /// authorization level 'all' corresponding to global access
-    static const string ALL_LVL;
+    static const std::string ALL_LVL;
     /// authorization level 'vo' corresponding to access at VO level
-    static const string VO_LVL;
+    static const std::string VO_LVL;
     /// authorization level '' corresponding to private access (only resources the user is directly responsible of)
-    static const string PRV_LVL;
+    static const std::string PRV_LVL;
 
     /// public access string in fts3config file
-    static const string PUBLIC_ACCESS;
+    static const std::string PUBLIC_ACCESS;
 
     /// 'deleg' string corresponding to delegation operations
-    static const string DELEG_OP;
+    static const std::string DELEG_OP;
     /// 'transfer' string corresponding to transfer operations
-    static const string TRANSFER_OP;
+    static const std::string TRANSFER_OP;
     /// 'config' string corresponding to configuration operations
-    static const string CONFIG_OP;
+    static const std::string CONFIG_OP;
     /// operation wild-card ('*') - covers all above operations
-    static const string WILD_CARD;
+    static const std::string WILD_CARD;
 
     /// the prefix corresponding to the 'roles' section
-    static const string ROLES_SECTION_PREFIX;
+    static const std::string ROLES_SECTION_PREFIX;
 
     /**
      * Returns the access level that has been granted for the given operation
@@ -156,7 +154,7 @@ private:
      *
      * @return the level corresponding to the string
      */
-    Level stringToLvl(string s);
+    Level stringToLvl(std::string s);
 
     /**
      * Converts access level to string
@@ -165,7 +163,7 @@ private:
      *
      * @return string corresponding to the given access level
      */
-    string lvlToString(Level lvl);
+    std::string lvlToString(Level lvl);
 
     /**
      * Converts operation type to string
@@ -174,7 +172,7 @@ private:
      *
      * @return string corresponding to the given operation type
      */
-    string operationToStr(Operation op);
+    std::string operationToStr(Operation op);
 
     /**
      * Method for extracting values from roles/authorization entries in the fts3config file
@@ -185,7 +183,7 @@ private:
      *
      * @return parsed config entry
      */
-    template<typename R> R get(string cfg);
+    template<typename R> R get(std::string cfg);
 
     /**
      * Checks the access level for a given role and operation
@@ -195,7 +193,7 @@ private:
      *
      * @return access level configured in the fts3config file
      */
-    Level check(string role, string operation);
+    Level check(std::string role, std::string operation);
 
     /**
      * Private constructor
@@ -215,23 +213,23 @@ private:
     AuthorizationManager& operator=(const AuthorizationManager&);
 
     /// a set containing authorized VOs
-    set<string> vos;
+    std::set<std::string> vos;
     /// a map mapping roles to operations, for each operation access level is defined
-    map<string, map<string, Level> > access;
+    std::map<std::string, std::map<std::string, Level> > access;
 
     /**
      * Method used to initialize authorized VOs set
      *
      * @return authorized VOs set
      */
-    set<string> vostInit();
+    std::set<std::string> vostInit();
 
     /**
      * Method used to initialized access map
      *
      * @return access map
      */
-    map<string, map<string, Level> > accessInit();
+    std::map<std::string, std::map<std::string, Level> > accessInit();
 
     time_t cfgReadTime;
 

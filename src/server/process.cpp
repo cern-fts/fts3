@@ -58,7 +58,7 @@ using namespace StringHelper;
 using namespace db;
 
 
-ExecuteProcess::ExecuteProcess(const string& app, const string& arguments)
+ExecuteProcess::ExecuteProcess(const std::string& app, const std::string& arguments)
     : pid(0), m_app(app), m_arguments(arguments)
 {
 }
@@ -70,14 +70,14 @@ int ExecuteProcess::executeProcessShell(std::string& forkMessage)
 
 // argsHolder is used to keep the argument pointers alive
 // for as long as needed
-void ExecuteProcess::getArgv(list<string>& argsHolder, size_t* argc, char*** argv)
+void ExecuteProcess::getArgv(std::list<std::string>& argsHolder, size_t* argc, char*** argv)
 {
     split(m_arguments, ' ', argsHolder, 0, false);
 
     *argc = argsHolder.size() + 2; // Need place for the binary and the NULL
     *argv = new char*[*argc];
 
-    list<string>::iterator it;
+    std::list<std::string>::iterator it;
     int i = 0;
     (*argv)[i] = const_cast<char*> (m_app.c_str());
     for (it = argsHolder.begin(); it != argsHolder.end(); ++it)
@@ -156,7 +156,7 @@ int ExecuteProcess::execProcessShell(std::string& forkMessage)
             freopen("/dev/null", "a", stderr);
 
             // Get parameter array
-            list<string> argsHolder;
+            std::list<std::string> argsHolder;
             size_t       argc;
             char       **argv;
             getArgv(argsHolder, &argc, &argv);

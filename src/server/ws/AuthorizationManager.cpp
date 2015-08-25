@@ -39,32 +39,32 @@ namespace fts3
 namespace ws
 {
 
-const string AuthorizationManager::ALL_LVL = "all";
-const string AuthorizationManager::VO_LVL = "vo";
-const string AuthorizationManager::PRV_LVL;
+const std::string AuthorizationManager::ALL_LVL = "all";
+const std::string AuthorizationManager::VO_LVL = "vo";
+const std::string AuthorizationManager::PRV_LVL;
 
-const string AuthorizationManager::PUBLIC_ACCESS = "roles.Public";
+const std::string AuthorizationManager::PUBLIC_ACCESS = "roles.Public";
 
-const string AuthorizationManager::DELEG_OP = "deleg";
-const string AuthorizationManager::TRANSFER_OP = "transfer";
-const string AuthorizationManager::CONFIG_OP = "config";
+const std::string AuthorizationManager::DELEG_OP = "deleg";
+const std::string AuthorizationManager::TRANSFER_OP = "transfer";
+const std::string AuthorizationManager::CONFIG_OP = "config";
 
-const string AuthorizationManager::WILD_CARD = "*";
+const std::string AuthorizationManager::WILD_CARD = "*";
 
-const string AuthorizationManager::ROLES_SECTION_PREFIX = "roles.";
+const std::string AuthorizationManager::ROLES_SECTION_PREFIX = "roles.";
 
 const OwnedResource *AuthorizationManager::dummy = NULL;
 
 template<>
-vector<string> AuthorizationManager::get< vector<string> >(string cfg)
+std::vector<std::string> AuthorizationManager::get< std::vector<std::string> >(std::string cfg)
 {
 
-    char_separator<char> sep(";");
-    tokenizer< char_separator<char> > tokens(cfg, sep);
-    tokenizer< char_separator<char> >::iterator it;
+    boost::char_separator<char> sep(";");
+    boost::tokenizer< boost::char_separator<char> > tokens(cfg, sep);
+    boost::tokenizer< boost::char_separator<char> >::iterator it;
 
-    std::vector<string> ret;
-    for (it = tokens.begin(); it != tokens.end(); ++it)
+    std::vector<std::string> ret;
+    for (auto it = tokens.begin(); it != tokens.end(); ++it)
         {
             ret.push_back(*it);
         }
@@ -73,10 +73,10 @@ vector<string> AuthorizationManager::get< vector<string> >(string cfg)
 }
 
 template<>
-string AuthorizationManager::get<string>(string cfg)
+std::string AuthorizationManager::get<std::string>(std::string cfg)
 {
     size_t pos = cfg.find(':');
-    if (pos != string::npos)
+    if (pos != std::string::npos)
         {
             return cfg.substr(pos + 1);
         }
@@ -87,10 +87,10 @@ string AuthorizationManager::get<string>(string cfg)
 }
 
 template<>
-AuthorizationManager::Level AuthorizationManager::get<AuthorizationManager::Level>(string cfg)
+AuthorizationManager::Level AuthorizationManager::get<AuthorizationManager::Level>(std::string cfg)
 {
     size_t pos = cfg.find(':');
-    if (pos != string::npos)
+    if (pos != std::string::npos)
         {
             return stringToLvl(cfg.substr(0, pos));
         }
@@ -100,34 +100,32 @@ AuthorizationManager::Level AuthorizationManager::get<AuthorizationManager::Leve
         }
 }
 
-set<string> AuthorizationManager::vostInit()
+std::set<std::string> AuthorizationManager::vostInit()
 {
 
     // parse the authorized vo list
-    vector<string> voNameList = theServerConfig().get< vector<string> >("AuthorizedVO");
-    return set <string> (voNameList.begin(), voNameList.end());
+    std::vector<std::string> voNameList = theServerConfig().get< std::vector<std::string> >("AuthorizedVO");
+    return std::set<std::string> (voNameList.begin(), voNameList.end());
 }
 
-map<string, map<string, AuthorizationManager::Level> > AuthorizationManager::accessInit()
+std::map<std::string, std::map<std::string, AuthorizationManager::Level> > AuthorizationManager::accessInit()
 {
 
-    map<string, map<string, Level> > ret;
+    std::map<std::string, std::map<std::string, Level> > ret;
 
     // roles.* is a regular expression for all role entries
-    map<string, string> rolerights = theServerConfig().get< map<string, string> > (ROLES_SECTION_PREFIX + WILD_CARD);
+    std::map<std::string, std::string> rolerights = theServerConfig().get< std::map<std::string, std::string> > (ROLES_SECTION_PREFIX + WILD_CARD);
     if (!rolerights.empty())
         {
-            map<string, string>::iterator it;
-            for (it = rolerights.begin(); it != rolerights.end(); it++)
+            for (auto it = rolerights.begin(); it != rolerights.end(); it++)
                 {
 
-                    map<string, Level> rights;
+                    std::map<std::string, Level> rights;
 
-                    vector<string> r = get< vector<string> >(it->second);
-                    vector<string>::iterator r_it;
-                    for (r_it = r.begin(); r_it != r.end(); r_it++)
+                    std::vector<std::string> r = get< std::vector<std::string> >(it->second);
+                    for (auto r_it = r.begin(); r_it != r.end(); r_it++)
                         {
-                            string op = get<string>(*r_it);
+                            std::string op = get<std::string>(*r_it);
                             Level lvl = get<Level>(*r_it);
                             rights[op] = lvl;
                             if (op == TRANSFER_OP)
@@ -158,7 +156,7 @@ AuthorizationManager::~AuthorizationManager()
 
 }
 
-AuthorizationManager::Level AuthorizationManager::stringToLvl(string s)
+AuthorizationManager::Level AuthorizationManager::stringToLvl(std::string s)
 {
 
     if (s == ALL_LVL) return ALL;
@@ -166,7 +164,7 @@ AuthorizationManager::Level AuthorizationManager::stringToLvl(string s)
     return PRV;
 }
 
-string AuthorizationManager::lvlToString(Level lvl)
+std::string AuthorizationManager::lvlToString(Level lvl)
 {
 
     switch (lvl)
@@ -180,11 +178,11 @@ string AuthorizationManager::lvlToString(Level lvl)
         case ALL:
             return "all";
         default:
-            return string();
+            return std::string();
         }
 }
 
-string AuthorizationManager::operationToStr(Operation op)
+std::string AuthorizationManager::operationToStr(Operation op)
 {
 
     switch(op)
@@ -196,26 +194,22 @@ string AuthorizationManager::operationToStr(Operation op)
         case CONFIG:
             return CONFIG_OP;
         default:
-            return string();
+            return std::string();
         }
 }
 
 
-AuthorizationManager::Level AuthorizationManager::check(string role, string operation)
+AuthorizationManager::Level AuthorizationManager::check(std::string role, std::string operation)
 {
-
-    map< string, map<string, Level> >::const_iterator a_it;
-
     // check if the role is specified in fts3config file
-    a_it = access.find(role);
-    if (a_it == access.end()) return NONE;
-
-    map<string, Level>::const_iterator l_it;
+    auto a_it = access.find(role);
+    if (a_it == access.end())
+        return NONE;
 
     Level ret = NONE;
 
     // check is there is a wild card
-    l_it = a_it->second.find(WILD_CARD);
+    auto l_it = a_it->second.find(WILD_CARD);
     if (l_it != a_it->second.end())
         {
             ret = l_it->second;
@@ -241,7 +235,7 @@ AuthorizationManager::Level AuthorizationManager::getGrantedLvl(soap* ctx, Opera
     if(cgsi.isRoot())
         {
             if (op != DELEG) return ALL;
-            string msg = "Authorization failed, a host certificate has been used to submit a transfer!";
+            std::string msg = "Authorization failed, a host certificate has been used to submit a transfer!";
             throw Err_Custom(msg);
         }
 
@@ -262,17 +256,17 @@ AuthorizationManager::Level AuthorizationManager::getGrantedLvl(soap* ctx, Opera
 //		}
 //	}
 
-    // get operation string
-    string op_str = operationToStr(op);
+    // get operation std::string
+    std::string op_str = operationToStr(op);
 
     // check if the access is public
     Level lvl = check(PUBLIC_ACCESS, op_str);
 
     // check if the user has a role that is granting him the access
-    vector<string> roles = cgsi.getClientRoles();
+    std::vector<std::string> roles = cgsi.getClientRoles();
     if (!roles.empty())
         {
-            vector<string>::iterator it;
+            std::vector<std::string>::iterator it;
             for (it = roles.begin(); it != roles.end(); ++it)
                 {
                     Level tmp = check(ROLES_SECTION_PREFIX + *it, op_str);
@@ -284,7 +278,7 @@ AuthorizationManager::Level AuthorizationManager::getGrantedLvl(soap* ctx, Opera
     if (lvl != NONE) return lvl;
     else
         {
-            string msg = "Authorisation failed, access was not granted. ";
+            std::string msg = "Authorisation failed, access was not granted. ";
             msg += "(The user: ";
             msg += cgsi.getClientDn();
             msg += ") has not the right Role to perform '";
@@ -338,7 +332,7 @@ AuthorizationManager::Level AuthorizationManager::authorize(soap* ctx, Operation
 
     if (grantedLvl < requiredLvl)
         {
-            string msg = "Authorisation failed, access was not granted. ";
+            std::string msg = "Authorisation failed, access was not granted. ";
 
             switch(grantedLvl)
                 {

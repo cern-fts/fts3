@@ -36,7 +36,7 @@
 
 using namespace fts3::ws;
 
-ConfigurationHandler::ConfigurationHandler(string dn):
+ConfigurationHandler::ConfigurationHandler(std::string dn):
     dn(dn),
     db (DBSingleton::instance().getDBObjectInstance()),
     cfg(0)
@@ -48,10 +48,9 @@ ConfigurationHandler::~ConfigurationHandler()
 
 }
 
-void ConfigurationHandler::parse(string configuration)
+void ConfigurationHandler::parse(std::string configuration)
 {
-
-    to_lower(configuration);
+    boost::to_lower(configuration);
 
     CfgParser parser (configuration);
 
@@ -100,21 +99,20 @@ void ConfigurationHandler::add()
     cfg->save();
 }
 
-vector<string> ConfigurationHandler::get()
+std::vector<std::string> ConfigurationHandler::get()
 {
 
     FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is querying configuration" << commit;
 
-    vector<string> ret;
+    std::vector<std::string> ret;
 
     // get all standalone configurations (SE names only)
-    vector<string> secfgs = db->getAllStandAlloneCfgs();
-    vector<string>::iterator it;
+    std::vector<std::string> secfgs = db->getAllStandAlloneCfgs();
     // add the configurations for the SEs to the response
-    for (it = secfgs.begin(); it != secfgs.end(); it++)
+    for (auto it = secfgs.begin(); it != secfgs.end(); it++)
         {
             // get the SE name
-            string se = *it;
+            std::string se = *it;
             // if it's a wildcard change it to 'any', due to the convention
             if (se == Configuration::wildcard) se = Configuration::any;
             // check if it's a group or a SE
@@ -130,22 +128,21 @@ vector<string> ConfigurationHandler::get()
                 }
         }
     // get all share only configurations
-    vector<string> socfgs = db->getAllShareOnlyCfgs();
+    std::vector<std::string> socfgs = db->getAllShareOnlyCfgs();
     // add the configurations for the SEs to the response
-    for (it = socfgs.begin(); it != socfgs.end(); it++)
+    for (auto it = socfgs.begin(); it != socfgs.end(); it++)
         {
             // get the SE name
-            string se = *it;
+            std::string se = *it;
             // if it's a wildcard change it to 'any', due to the convention
             if (se == Configuration::wildcard) se = Configuration::any;
             ShareOnlyCfg cfg(dn, se);
             ret.push_back(cfg.json());
         }
     // get all pair configuration (source-destination pairs only)
-    vector< std::pair<string, string> > paircfgs = db->getAllPairCfgs();
-    vector< std::pair<string, string> >::iterator it2;
+    std::vector< std::pair<std::string, std::string> > paircfgs = db->getAllPairCfgs();
     // add the configurations for the pairs to the response
-    for (it2 = paircfgs.begin(); it2 != paircfgs.end(); it2++)
+    for (auto it2 = paircfgs.begin(); it2 != paircfgs.end(); it2++)
         {
 
             bool grPair = db->checkGroupExists(it2->first) && db->checkGroupExists(it2->second);
@@ -163,10 +160,9 @@ vector<string> ConfigurationHandler::get()
         }
 
     // get all activity configs ...
-    vector<string> activityshares = db->getAllActivityShareConf();
-    vector<string>::iterator it3;
+    std::vector<std::string> activityshares = db->getAllActivityShareConf();
 
-    for (it3 = activityshares.begin(); it3 != activityshares.end(); it3++)
+    for (auto it3 = activityshares.begin(); it3 != activityshares.end(); it3++)
         {
             ActivityCfg cfg(dn, *it3);
             ret.push_back(cfg.json());
@@ -175,7 +171,7 @@ vector<string> ConfigurationHandler::get()
     return ret;
 }
 
-string ConfigurationHandler::get(string name)
+std::string ConfigurationHandler::get(std::string name)
 {
     FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is querying configuration" << commit;
 
@@ -206,11 +202,11 @@ string ConfigurationHandler::get(string name)
     return cfg->json();
 }
 
-vector<string> ConfigurationHandler::getAll(string name)
+std::vector<std::string> ConfigurationHandler::getAll(std::string name)
 {
     FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is querying configuration" << commit;
 
-    vector<string> ret;
+    std::vector<std::string> ret;
 
     try
         {
@@ -223,17 +219,16 @@ vector<string> ConfigurationHandler::getAll(string name)
         }
 
     // check if there are pair configurations
-    vector< pair<string, string> > pairs = db->getPairsForSe(name);
-    vector< pair<string, string> >::iterator it;
+    std::vector< std::pair<std::string, std::string> > pairs = db->getPairsForSe(name);
 
-    for (it = pairs.begin(); it != pairs.end(); it++)
+    for (auto it = pairs.begin(); it != pairs.end(); it++)
         {
             // get the pair configurations
             ret.push_back(getPair(it->first, it->second));
         }
 
     // check if it is a member of a group
-    string group = db->getGroupForSe(name);
+    std::string group = db->getGroupForSe(name);
 
     if (!group.empty())
         {
@@ -244,7 +239,7 @@ vector<string> ConfigurationHandler::getAll(string name)
             // check if there are pair configurations
             pairs = db->getPairsForSe(group);
 
-            for (it = pairs.begin(); it != pairs.end(); it++)
+            for (auto it = pairs.begin(); it != pairs.end(); it++)
                 {
                     // get the pair configurations
                     ret.push_back(getPair(it->first, it->second));
@@ -254,7 +249,7 @@ vector<string> ConfigurationHandler::getAll(string name)
     return ret;
 }
 
-string ConfigurationHandler::getPair(string src, string dest)
+std::string ConfigurationHandler::getPair(std::string src, std::string dest)
 {
 
     FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is querying configuration" << commit;
@@ -280,9 +275,9 @@ string ConfigurationHandler::getPair(string src, string dest)
     return cfg->json();
 }
 
-string ConfigurationHandler::getPair(string symbolic)
+std::string ConfigurationHandler::getPair(std::string symbolic)
 {
-    std::unique_ptr< pair<string, string> > p (
+    std::unique_ptr< std::pair<std::string, std::string> > p (
         db->getSourceAndDestination(symbolic)
     );
 
@@ -292,7 +287,7 @@ string ConfigurationHandler::getPair(string symbolic)
         throw Err_Custom("The symbolic name does not exist!");
 }
 
-string ConfigurationHandler::getVo(string vo)
+std::string ConfigurationHandler::getVo(std::string vo)
 {
     cfg.reset(new ActivityCfg(dn, vo));
     return cfg->json();

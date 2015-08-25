@@ -44,7 +44,6 @@ using namespace decaf::lang;
 using namespace decaf::util;
 using namespace decaf::util::concurrent;
 using namespace cms;
-using namespace std;
 
 class MsgProducer : public Runnable, public ExceptionListener
 {

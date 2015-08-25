@@ -30,7 +30,6 @@
 #include <string>
 #include <map>
 
-using namespace std;
 
 /*
 convert a number to string, given the base
@@ -39,7 +38,7 @@ template <class T>
 static std::string _to_string(T t)
 {
     std::ostringstream oss;
-    oss << fixed << t;
+    oss << std::fixed << t;
     return oss.str();
 }
 
@@ -152,7 +151,7 @@ inline bool caseInsCharCompareN(char a, char b)
     return(toupper(a) == toupper(b));
 }
 
-bool caseInsCompare(const string& s1, const string& s2);
+bool caseInsCompare(const std::string& s1, const std::string& s2);
 
 std::string restoreMessageToDisk(std::string & text);
 

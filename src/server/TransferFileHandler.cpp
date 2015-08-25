@@ -95,20 +95,20 @@ TransferFileHandler::~TransferFileHandler()
         }
 }
 
-optional<TransferFiles> TransferFileHandler::get(std::string vo)
+boost::optional<TransferFiles> TransferFileHandler::get(std::string vo)
 {
     // get the index of the next File in turn for the VO
-    optional<FileIndex> index = getIndex(vo);
+    boost::optional<FileIndex> index = getIndex(vo);
     // if the index exists return the file
     if (index) return getFile(*index);
 
-    return optional<TransferFiles>();
+    return boost::optional<TransferFiles>();
 }
 
-optional< std::pair<std::string, std::string> > TransferFileHandler::getNextPair(std::string vo)
+boost::optional< std::pair<std::string, std::string> > TransferFileHandler::getNextPair(std::string vo)
 {
     // if there are no pairs for the given VO ...
-    if (voToFileIndexes[vo].empty()) return optional< std::pair<std::string, std::string> >();
+    if (voToFileIndexes[vo].empty()) return boost::optional< std::pair<std::string, std::string> >();
 
     // if it is the end wrap around
     if (nextPairForVo[vo] == voToFileIndexes[vo].end()) nextPairForVo[vo] = voToFileIndexes[vo].begin();
@@ -122,18 +122,18 @@ optional< std::pair<std::string, std::string> > TransferFileHandler::getNextPair
     return ret->first;
 }
 
-optional<FileIndex> TransferFileHandler::getIndex(std::string vo)
+boost::optional<FileIndex> TransferFileHandler::getIndex(std::string vo)
 {
     // find the item
     std::map<std::string, std::map< std::pair<std::string, std::string>, std::list<FileIndex> > >::iterator it =
         voToFileIndexes.find(vo);
 
     // if the VO has no mapping or no files are assigned to the VO ...
-    if (it == voToFileIndexes.end() || it->second.empty()) return optional<FileIndex>();
+    if (it == voToFileIndexes.end() || it->second.empty()) return boost::optional<FileIndex>();
 
-    optional< std::pair<std::string, std::string> > src_dst = getNextPair(vo);
+    boost::optional< std::pair<std::string, std::string> > src_dst = getNextPair(vo);
 
-    if (!src_dst.is_initialized()) return optional<FileIndex>();
+    if (!src_dst.is_initialized()) return boost::optional<FileIndex>();
 
     // get the index value
     FileIndex index = it->second[*src_dst].front();
@@ -153,9 +153,10 @@ optional<FileIndex> TransferFileHandler::getIndex(std::string vo)
     return index;
 }
 
-optional<TransferFiles> TransferFileHandler::getFile(FileIndex index)
+boost::optional<TransferFiles> TransferFileHandler::getFile(FileIndex index)
 {
-    optional<TransferFiles> ret;
+    boost::optional<TransferFiles> ret;
+
     // if there's no mapping for this index ..
     if (fileIndexToFiles.find(index) == fileIndexToFiles.end()) return ret;
 

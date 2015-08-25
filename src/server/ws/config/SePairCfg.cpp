@@ -27,11 +27,10 @@ namespace fts3
 namespace ws
 {
 
-SePairCfg::SePairCfg(string dn, CfgParser& parser) : PairCfg(dn, parser)
+SePairCfg::SePairCfg(std::string dn, CfgParser& parser) : PairCfg(dn, parser)
 {
-
-    source = parser.get<string>("source_se");
-    destination = parser.get<string>("destination_se");
+    source = parser.get<std::string>("source_se");
+    destination = parser.get<std::string>("destination_se");
 
     if (notAllowed.count(source) || notAllowed.count(destination))
         throw Err_Custom("The source or destination name is not a valid!");
@@ -48,10 +47,10 @@ SePairCfg::~SePairCfg()
 {
 }
 
-string SePairCfg::json()
+std::string SePairCfg::json()
 {
 
-    stringstream ss;
+    std::stringstream ss;
 
     ss << "{";
     ss << "\"" << "source_se" << "\":\"" << source << "\",";

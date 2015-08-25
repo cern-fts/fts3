@@ -95,10 +95,10 @@ int main(int argc, char** argv)
 
 
     //get emi-version
-    string versionEMI("");
+    std::string versionEMI("");
     if (fexists(emiVersion) == 0)
         {
-            ifstream myfile(emiVersion);
+            std::ifstream myfile(emiVersion);
             getline(myfile, versionEMI);
         }
     else

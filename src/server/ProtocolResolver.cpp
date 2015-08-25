@@ -116,9 +116,9 @@ bool ProtocolResolver::isGr(std::string name)
     return db->checkGroupExists(name);
 }
 
-optional<ProtocolResolver::protocol> ProtocolResolver::getProtocolCfg(optional< std::pair<std::string, std::string> > link)
+boost::optional<ProtocolResolver::protocol> ProtocolResolver::getProtocolCfg(boost::optional< std::pair<std::string, std::string> > link)
 {
-    if (!link) return optional<protocol>();
+    if (!link) return boost::optional<protocol>();
 
     std::string source = (*link).first;
     std::string destination = (*link).second;
@@ -147,28 +147,28 @@ optional<ProtocolResolver::protocol> ProtocolResolver::getProtocolCfg(optional< 
     return ret;
 }
 
-optional<ProtocolResolver::protocol> ProtocolResolver::getUserDefinedProtocol(TransferFiles const & file)
+boost::optional<ProtocolResolver::protocol> ProtocolResolver::getUserDefinedProtocol(TransferFiles const & file)
 {
-    if (file.INTERNAL_FILE_PARAMS.empty()) return optional<protocol>();
+    if (file.INTERNAL_FILE_PARAMS.empty()) return boost::optional<protocol>();
 
     std::vector<std::string> params;
-    split(params, file.INTERNAL_FILE_PARAMS, is_any_of(","));
+    boost::split(params, file.INTERNAL_FILE_PARAMS, boost::is_any_of(","));
 
     protocol ret;
 
-    for (std::vector<std::string>::const_iterator i = params.begin(); i != params.end(); ++i)
+    for (auto i = params.begin(); i != params.end(); ++i)
         {
-            if (starts_with(*i, "nostreams:"))
+            if (boost::starts_with(*i, "nostreams:"))
                 {
-                    ret.nostreams = lexical_cast<int>(i->substr(10));
+                    ret.nostreams = boost::lexical_cast<int>(i->substr(10));
                 }
-            else if (starts_with(*i, "timeout:"))
+            else if (boost::starts_with(*i, "timeout:"))
                 {
-                    ret.urlcopy_tx_to = lexical_cast<int>(i->substr(8));
+                    ret.urlcopy_tx_to = boost::lexical_cast<int>(i->substr(8));
                 }
-            else if (starts_with(*i, "buffersize:"))
+            else if (boost::starts_with(*i, "buffersize:"))
                 {
-                    ret.tcp_buffer_size = lexical_cast<int>(i->substr(11));
+                    ret.tcp_buffer_size = boost::lexical_cast<int>(i->substr(11));
                 }
             else if (*i == "strict")
                 {
@@ -187,7 +187,7 @@ optional<ProtocolResolver::protocol> ProtocolResolver::getUserDefinedProtocol(Tr
     return ret;
 }
 
-void ProtocolResolver::fillAuto(optional<protocol>& source, optional<protocol>& destination)
+void ProtocolResolver::fillAuto(boost::optional<protocol>& source, boost::optional<protocol>& destination)
 {
 
     if (!source && !destination) return;
@@ -221,7 +221,7 @@ void ProtocolResolver::fillAuto(optional<protocol>& source, optional<protocol>& 
         }
 }
 
-optional<ProtocolResolver::protocol> ProtocolResolver::merge(optional<protocol> source, optional<protocol> destination)
+boost::optional<ProtocolResolver::protocol> ProtocolResolver::merge(boost::optional<protocol> source, boost::optional<protocol> destination)
 {
     // replace the 'automatic' marker (-1) with autotuner values
     fillAuto(source, destination);
@@ -244,17 +244,16 @@ optional<ProtocolResolver::protocol> ProtocolResolver::merge(optional<protocol> 
     return ret;
 }
 
-optional< std::pair<std::string, std::string> > ProtocolResolver::getFirst(list<LinkType> l)
+boost::optional< std::pair<std::string, std::string> > ProtocolResolver::getFirst(std::list<LinkType> l)
 {
     // look for the first link
-    list<LinkType>::iterator it;
-    for (it = l.begin(); it != l.end(); ++it)
+    for (auto it = l.begin(); it != l.end(); ++it)
         {
             // return the first existing link
             if (link[*it]) return link[*it];
         }
     // if nothing was found return empty link
-    return optional< std::pair<std::string, std::string> >();
+    return boost::optional< std::pair<std::string, std::string> >();
 }
 
 bool ProtocolResolver::resolve()
@@ -272,12 +271,12 @@ bool ProtocolResolver::resolve()
     if (prot.is_initialized()) return true;
 
     // get the first existing standalone source link from the list
-    optional< std::pair<std::string, std::string> > source_link = getFirst(
-                list_of (SOURCE_SE) (SOURCE_GROUP) (SOURCE_WILDCARD)
+    boost::optional< std::pair<std::string, std::string> > source_link = getFirst(
+                boost::assign::list_of (SOURCE_SE) (SOURCE_GROUP) (SOURCE_WILDCARD)
             );
     // get the first existing standalone destination link from the list
-    optional< std::pair<std::string, std::string> > destination_link = getFirst(
-                list_of (DESTINATION_SE) (DESTINATION_GROUP) (DESTINATION_WILDCARD)
+    boost::optional< std::pair<std::string, std::string> > destination_link = getFirst(
+                boost::assign::list_of (DESTINATION_SE) (DESTINATION_GROUP) (DESTINATION_WILDCARD)
             );
 
     // merge the configuration of the most specific standlone source and destination links

@@ -37,9 +37,6 @@ namespace fts3
 namespace common
 {
 
-using namespace boost;
-using namespace boost::property_tree;
-
 
 /**
  * CfgParser is a wrapper class for boost ptree.
@@ -103,7 +100,7 @@ public:
      *
      * @return an instance of optional which holds the value
      */
-    optional<std::string> get_opt(std::string path);
+    boost::optional<std::string> get_opt(std::string path);
 
     /**
      * Checks if the given property was std::set to 'auto'
@@ -137,10 +134,10 @@ private:
      *
      * @return true if it's a configuration of a given type, false otherwise
      */
-    bool validate(ptree pt, std::map< std::string, std::set <std::string> > allowed, std::string path = std::string());
+    bool validate(boost::property_tree::ptree pt, std::map< std::string, std::set <std::string> > allowed, std::string path = std::string());
 
     /// The object that contains the parsed configuration
-    ptree pt;
+    boost::property_tree::ptree pt;
 
     /// the tokens used in standalone SE configuration
     static const std::map<std::string, std::set <std::string> > standaloneSeCfgTokens;
@@ -182,12 +179,12 @@ T CfgParser::get(std::string path)
             v = pt.get<T>(path);
 
         }
-    catch (ptree_bad_path& ex)
+    catch (boost::property_tree::ptree_bad_path& ex)
         {
             throw Err_Custom("The " + path + " has to be specified!");
 
         }
-    catch (ptree_bad_data& ex)
+    catch (boost::property_tree::ptree_bad_data& ex)
         {
             // if the type of the value is wrong throw an exception
             throw Err_Custom("Wrong value type of " + path);
@@ -202,13 +199,13 @@ inline std::vector<std::string> CfgParser::get< std::vector<std::string> >(std::
 
     std::vector<std::string> ret;
 
-    optional<ptree&> value = pt.get_child_optional(path);
+    boost::optional<boost::property_tree::ptree&> value = pt.get_child_optional(path);
     if (!value.is_initialized())
         {
             // the vector member was not specified in the configuration
             throw Err_Custom("The " + path + " has to be specified!");
         }
-    ptree& array = value.get();
+    boost::property_tree::ptree& array = value.get();
 
     // check if the node has a value,
     // accordingly to boost it should be empty if array syntax was used in JSON
@@ -218,10 +215,9 @@ inline std::vector<std::string> CfgParser::get< std::vector<std::string> >(std::
             throw Err_Custom("Wrong value: '" + wrong + "'");
         }
 
-    ptree::iterator it;
-    for (it = array.begin(); it != array.end(); ++it)
+    for (auto it = array.begin(); it != array.end(); ++it)
         {
-            std::pair<std::string, ptree> v = *it;
+            std::pair<std::string, boost::property_tree::ptree> v = *it;
 
             // check if the node has a name,
             // accordingly to boost it should be empty if object weren't
@@ -249,9 +245,10 @@ inline std::map <std::string, int> CfgParser::get< std::map<std::string, int> >(
 
     std::map<std::string, int> ret;
 
-    optional<ptree&> value = pt.get_child_optional(path);
-    if (!value.is_initialized()) throw Err_Custom("The " + path + " has to be specified!");
-    ptree& array = value.get();
+    boost::optional<boost::property_tree::ptree&> value = pt.get_child_optional(path);
+    if (!value.is_initialized())
+        throw Err_Custom("The " + path + " has to be specified!");
+    boost::property_tree::ptree& array = value.get();
 
     // check if the node has a value,
     // accordingly to boost it should be empty if array syntax was used in JSON
@@ -261,10 +258,9 @@ inline std::map <std::string, int> CfgParser::get< std::map<std::string, int> >(
             throw Err_Custom("Wrong value: '" + wrong + "'");
         }
 
-    ptree::iterator it;
-    for (it = array.begin(); it != array.end(); ++it)
+    for (auto it = array.begin(); it != array.end(); ++it)
         {
-            std::pair<std::string, ptree> v = *it;
+            std::pair<std::string, boost::property_tree::ptree> v = *it;
 
             // check if the node has a name,
             // accordingly to boost it should be empty if object weren't
@@ -287,7 +283,7 @@ inline std::map <std::string, int> CfgParser::get< std::map<std::string, int> >(
                     throw Err_Custom("In array '" + path + "' only ('{key:value}' objects were expected)");
                 }
 
-            std::pair<std::string, ptree> kv = v.second.front();
+            std::pair<std::string, boost::property_tree::ptree> kv = v.second.front();
             try
                 {
                     // get the std::string value
@@ -308,7 +304,7 @@ inline std::map <std::string, int> CfgParser::get< std::map<std::string, int> >(
                         }
 
                 }
-            catch(ptree_bad_data& ex)
+            catch(boost::property_tree::ptree_bad_data& ex)
                 {
                     throw Err_Custom("Wrong value type of " + kv.first);
                 }
@@ -323,9 +319,10 @@ inline std::map <std::string, double> CfgParser::get< std::map<std::string, doub
 
     std::map<std::string, double> ret;
 
-    optional<ptree&> value = pt.get_child_optional(path);
-    if (!value.is_initialized()) throw Err_Custom("The " + path + " has to be specified!");
-    ptree& array = value.get();
+    boost::optional<boost::property_tree::ptree&> value = pt.get_child_optional(path);
+    if (!value.is_initialized())
+        throw Err_Custom("The " + path + " has to be specified!");
+    boost::property_tree::ptree& array = value.get();
 
     // check if the node has a value,
     // accordingly to boost it should be empty if array syntax was used in JSON
@@ -335,10 +332,9 @@ inline std::map <std::string, double> CfgParser::get< std::map<std::string, doub
             throw Err_Custom("Wrong value: '" + wrong + "'");
         }
 
-    ptree::iterator it;
-    for (it = array.begin(); it != array.end(); ++it)
+    for (auto it = array.begin(); it != array.end(); ++it)
         {
-            std::pair<std::string, ptree> v = *it;
+            std::pair<std::string, boost::property_tree::ptree> v = *it;
 
             // check if the node has a name,
             // accordingly to boost it should be empty if object weren't
@@ -361,7 +357,7 @@ inline std::map <std::string, double> CfgParser::get< std::map<std::string, doub
                     throw Err_Custom("In array '" + path + "' only ('{key:value}' objects were expected)");
                 }
 
-            std::pair<std::string, ptree> kv = v.second.front();
+            std::pair<std::string, boost::property_tree::ptree> kv = v.second.front();
             try
                 {
                     // get the std::string value
@@ -382,7 +378,7 @@ inline std::map <std::string, double> CfgParser::get< std::map<std::string, doub
                         }
 
                 }
-            catch(ptree_bad_data& ex)
+            catch(boost::property_tree::ptree_bad_data& ex)
                 {
                     throw Err_Custom("Wrong value type of " + kv.first);
                 }

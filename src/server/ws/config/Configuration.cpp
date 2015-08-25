@@ -33,32 +33,32 @@ namespace ws
 {
 
 
-const string Configuration::Protocol::BANDWIDTH = "bandwidth";
-const string Configuration::Protocol::NOSTREAMS = "nostreams";
-const string Configuration::Protocol::TCP_BUFFER_SIZE = "tcp_buffer_size";
-const string Configuration::Protocol::NOMINAL_THROUGHPUT = "nominal_throughput";
-const string Configuration::Protocol::BLOCKSIZE = "blocksize";
-const string Configuration::Protocol::HTTP_TO = "http_to";
-const string Configuration::Protocol::URLCOPY_PUT_TO = "urlcopy_put_to";
-const string Configuration::Protocol::URLCOPY_PUTDONE_TO = "urlcopy_putdone_to";
-const string Configuration::Protocol::URLCOPY_GET_TO = "urlcopy_get_to";
-const string Configuration::Protocol::URLCOPY_GET_DONETO = "urlcopy_get_doneto";
-const string Configuration::Protocol::URLCOPY_TX_TO = "urlcopy_tx_to";
-const string Configuration::Protocol::URLCOPY_TXMARKS_TO = "urlcopy_txmarks_to";
-const string Configuration::Protocol::URLCOPY_FIRST_TXMARK_TO = "urlcopy_first_txmark_to";
-const string Configuration::Protocol::TX_TO_PER_MB = "tx_to_per_mb";
-const string Configuration::Protocol::NO_TX_ACTIVITY_TO = "no_tx_activity_to";
-const string Configuration::Protocol::PREPARING_FILES_RATIO = "preparing_files_ratio";
+const std::string Configuration::Protocol::BANDWIDTH = "bandwidth";
+const std::string Configuration::Protocol::NOSTREAMS = "nostreams";
+const std::string Configuration::Protocol::TCP_BUFFER_SIZE = "tcp_buffer_size";
+const std::string Configuration::Protocol::NOMINAL_THROUGHPUT = "nominal_throughput";
+const std::string Configuration::Protocol::BLOCKSIZE = "blocksize";
+const std::string Configuration::Protocol::HTTP_TO = "http_to";
+const std::string Configuration::Protocol::URLCOPY_PUT_TO = "urlcopy_put_to";
+const std::string Configuration::Protocol::URLCOPY_PUTDONE_TO = "urlcopy_putdone_to";
+const std::string Configuration::Protocol::URLCOPY_GET_TO = "urlcopy_get_to";
+const std::string Configuration::Protocol::URLCOPY_GET_DONETO = "urlcopy_get_doneto";
+const std::string Configuration::Protocol::URLCOPY_TX_TO = "urlcopy_tx_to";
+const std::string Configuration::Protocol::URLCOPY_TXMARKS_TO = "urlcopy_txmarks_to";
+const std::string Configuration::Protocol::URLCOPY_FIRST_TXMARK_TO = "urlcopy_first_txmark_to";
+const std::string Configuration::Protocol::TX_TO_PER_MB = "tx_to_per_mb";
+const std::string Configuration::Protocol::NO_TX_ACTIVITY_TO = "no_tx_activity_to";
+const std::string Configuration::Protocol::PREPARING_FILES_RATIO = "preparing_files_ratio";
 
-const string Configuration::any = "*";
-const string Configuration::wildcard = "(*)";
-const string Configuration::on = "on";
-const string Configuration::off = "off";
-const string Configuration::pub = "public";
-const string Configuration::share_only = "all";
+const std::string Configuration::any = "*";
+const std::string Configuration::wildcard = "(*)";
+const std::string Configuration::on = "on";
+const std::string Configuration::off = "off";
+const std::string Configuration::pub = "public";
+const std::string Configuration::share_only = "all";
 const int    Configuration::automatic = -1;
 
-Configuration::Configuration(string dn) :
+Configuration::Configuration(std::string dn) :
     dn(dn),
     db (DBSingleton::instance().getDBObjectInstance()),
     insertCount(0),
@@ -83,15 +83,14 @@ Configuration::~Configuration()
         db->auditConfiguration(dn, all, "update");
 }
 
-string Configuration::json(map<string, int>& params)
+std::string Configuration::json(std::map<std::string, int>& params)
 {
 
-    stringstream ss;
+    std::stringstream ss;
 
     ss << "[";
 
-    map<string, int>::iterator it;
-    for (it = params.begin(); it != params.end();)
+    for (auto it = params.begin(); it != params.end();)
         {
             if (it->second == automatic)
                 {
@@ -112,15 +111,14 @@ string Configuration::json(map<string, int>& params)
     return ss.str();
 }
 
-string Configuration::json(map<string, double>& params)
+std::string Configuration::json(std::map<std::string, double>& params)
 {
 
-    stringstream ss;
+    std::stringstream ss;
 
     ss << "[";
 
-    map<string, double>::iterator it;
-    for (it = params.begin(); it != params.end();)
+    for (auto it = params.begin(); it != params.end();)
         {
             ss << "{\"" << it->first << "\":" << it->second << "}";
             it++;
@@ -132,10 +130,10 @@ string Configuration::json(map<string, double>& params)
     return ss.str();
 }
 
-string Configuration::json(optional< map<string, int> >& params)
+std::string Configuration::json(boost::optional< std::map<std::string, int> >& params)
 {
 
-    stringstream ss;
+    std::stringstream ss;
 
     if (!params.is_initialized())
         {
@@ -146,15 +144,14 @@ string Configuration::json(optional< map<string, int> >& params)
     return json(params.get());
 }
 
-string Configuration::json(vector<string>& members)
+std::string Configuration::json(std::vector<std::string>& members)
 {
 
-    stringstream ss;
+    std::stringstream ss;
 
     ss << "[";
 
-    vector<string>::iterator it;
-    for (it = members.begin(); it != members.end();)
+    for (auto it = members.begin(); it != members.end();)
         {
             ss << "\"" << *it << "\"";
             it++;
@@ -166,11 +163,11 @@ string Configuration::json(vector<string>& members)
     return ss.str();
 }
 
-void Configuration::addSe(string se, bool active)
+void Configuration::addSe(std::string se, bool active)
 {
-    static const regex re(".+://[a-zA-Z0-9\\.-]+");
+    static const boost::regex re(".+://[a-zA-Z0-9\\.-]+");
 
-    if (se != wildcard && !regex_match(se, re))
+    if (se != wildcard && !boost::regex_match(se, re))
         throw Err_Custom("The SE name should be complaint with the following convention: 'protocol://hostname' !");
 
     //check if SE exists
@@ -179,25 +176,24 @@ void Configuration::addSe(string se, bool active)
     if (!ptr)
         {
             // if not add it to the DB
-            db->addSe(string(), string(), string(), se, active ? on : off, string(), string(), string(), string(), string(), string());
+            db->addSe(std::string(), std::string(), std::string(), se, active ? on : off, std::string(), std::string(), std::string(), std::string(), std::string(), std::string());
             insertCount++;
         }
     else
-        db->updateSe(string(), string(), string(), se, active ? on : off, string(), string(), string(), string(), string(), string());
+        db->updateSe(std::string(), std::string(), std::string(), se, active ? on : off, std::string(), std::string(), std::string(), std::string(), std::string(), std::string());
     delete ptr;
 }
 
-void Configuration::eraseSe(string se)
+void Configuration::eraseSe(std::string se)
 {
-    db->updateSe(string(), string(), string(), se, on, string(), string(), string(), string(), string(), string());
+    db->updateSe(std::string(), std::string(), std::string(), se, on, std::string(), std::string(), std::string(), std::string(), std::string(), std::string());
     updateCount++;
 }
 
-void Configuration::addGroup(string group, vector<string>& members)
+void Configuration::addGroup(std::string group, std::vector<std::string>& members)
 {
     // first check if the new group members are correct
-    vector<string>::iterator it;
-    for (it = members.begin(); it != members.end(); it++)
+    for (auto it = members.begin(); it != members.end(); it++)
         {
             if (db->checkIfSeIsMemberOfAnotherGroup(*it))
                 throw Err_Custom("The SE: " + *it + " is already a member of another SE group!");
@@ -206,18 +202,17 @@ void Configuration::addGroup(string group, vector<string>& members)
     if (db->checkGroupExists(group))
         {
             // if the group exists remove it!
-            vector<string> tmp;
+            std::vector<std::string> tmp;
             db->getGroupMembers(group, tmp);
             db->deleteMembersFromGroup(group, tmp);
             deleteCount++;
 
             // remove also assigned cfgs
-            vector<string>::iterator it;
-            for (it = tmp.begin(); it != tmp.end(); it++)
+            for (auto it = tmp.begin(); it != tmp.end(); it++)
                 db->delFileShareConfig(group, *it);
         }
     // add new members to the group
-    for (it = members.begin(); it != members.end(); it++)
+    for (auto it = members.begin(); it != members.end(); it++)
         {
             addSe(*it);
         }
@@ -226,7 +221,7 @@ void Configuration::addGroup(string group, vector<string>& members)
     insertCount++;
 }
 
-void Configuration::checkGroup(string group)
+void Configuration::checkGroup(std::string group)
 {
     // check if the group exists
     if (!db->checkGroupExists(group))
@@ -237,7 +232,7 @@ void Configuration::checkGroup(string group)
         }
 }
 
-std::pair< LinkConfig, bool > Configuration::getLinkConfig(string source, string destination, bool active, string symbolic_name)
+std::pair< LinkConfig, bool > Configuration::getLinkConfig(std::string source, std::string destination, bool active, std::string symbolic_name)
 {
 
     std::unique_ptr< std::pair<std::string, std::string> > p (
@@ -269,7 +264,7 @@ std::pair< LinkConfig, bool > Configuration::getLinkConfig(string source, string
     return std::make_pair(*cfg, update);
 }
 
-void Configuration::addLinkCfg(string source, string destination, bool active, string symbolic_name, optional< map<string, int> >& protocol)
+void Configuration::addLinkCfg(std::string source, std::string destination, bool active, std::string symbolic_name, boost::optional< std::map<std::string, int> >& protocol)
 {
 
     std::pair< LinkConfig, bool > cfg = getLinkConfig(source, destination, active, symbolic_name);
@@ -310,7 +305,7 @@ void Configuration::addLinkCfg(string source, string destination, bool active, s
         }
 }
 
-void Configuration::addLinkCfg(string source, string destination, bool active, string symbolic_name)
+void Configuration::addLinkCfg(std::string source, std::string destination, bool active, std::string symbolic_name)
 {
 
     std::pair< LinkConfig, bool > cfg = getLinkConfig(source, destination, active, symbolic_name);
@@ -337,7 +332,7 @@ void Configuration::addLinkCfg(string source, string destination, bool active, s
         }
 }
 
-void Configuration::addShareCfg(string source, string destination, map<string, int>& share)
+void Configuration::addShareCfg(std::string source, std::string destination, std::map<std::string, int>& share)
 {
     if (share.empty())
         {
@@ -371,7 +366,7 @@ void Configuration::addShareCfg(string source, string destination, map<string, i
         {
             std::string vo = it->first;
             // create new share configuration
-            scoped_ptr<ShareConfig> cfg(new ShareConfig);
+            std::unique_ptr<ShareConfig> cfg(new ShareConfig);
             cfg->source = source;
             cfg->destination = destination;
             cfg->vo = vo;
@@ -391,15 +386,14 @@ void Configuration::addShareCfg(string source, string destination, map<string, i
             // now lets update t_file_share_config !!!
 
             // get all scheduled files that are affected by this configuration
-            vector<int> files;
-            vector<int>::iterator it_f;
+            std::vector<int> files;
 
             if (isgroup())
                 {
                     db->getFilesForNewGrCfg(source, destination, vo, files);
 
                     // update t_file_share_config
-                    for (it_f = files.begin(); it_f != files.end(); it_f++)
+                    for (auto it_f = files.begin(); it_f != files.end(); it_f++)
                         {
 
                             // check if it is a pair
@@ -431,7 +425,7 @@ void Configuration::addShareCfg(string source, string destination, map<string, i
                     db->getFilesForNewSeCfg(source, destination, vo, files);
 
                     // update t_file_share_config
-                    for (it_f = files.begin(); it_f != files.end(); it_f++)
+                    for (auto it_f = files.begin(); it_f != files.end(); it_f++)
                         {
                             // first check the configuration type
                             bool pair =
@@ -489,15 +483,16 @@ boost::optional< std::map<std::string, int> > Configuration::getProtocolMap(std:
         db->getLinkConfig(source, destination)
     );
 
-    if (cfg->auto_tuning == on) return optional< map<string, int> >();
+    if (cfg->auto_tuning == on)
+        return boost::optional< std::map<std::string, int> >();
 
     return getProtocolMap(cfg.get());
 }
 
-optional< map<string, int> > Configuration::getProtocolMap(LinkConfig* cfg)
+boost::optional< std::map<std::string, int> > Configuration::getProtocolMap(LinkConfig* cfg)
 {
 
-    map<string, int> ret;
+    std::map<std::string, int> ret;
     ret[Protocol::NOSTREAMS] = cfg->NOSTREAMS;
     ret[Protocol::TCP_BUFFER_SIZE] = cfg->TCP_BUFFER_SIZE;
     ret[Protocol::URLCOPY_TX_TO] = cfg->URLCOPY_TX_TO;
@@ -506,7 +501,7 @@ optional< map<string, int> > Configuration::getProtocolMap(LinkConfig* cfg)
     return ret;
 }
 
-map<string, int> Configuration::getShareMap(string source, string destination)
+std::map<std::string, int> Configuration::getShareMap(std::string source, std::string destination)
 {
 
     std::vector<ShareConfig> vec = db->getShareConfig(source, destination);
@@ -518,7 +513,7 @@ map<string, int> Configuration::getShareMap(string source, string destination)
             );
         }
 
-    map<string, int> ret;
+    std::map<std::string, int> ret;
 
     for (auto it = vec.begin(); it != vec.end(); it++)
         {
@@ -528,7 +523,7 @@ map<string, int> Configuration::getShareMap(string source, string destination)
     return ret;
 }
 
-void Configuration::delLinkCfg(string source, string destination)
+void Configuration::delLinkCfg(std::string source, std::string destination)
 {
 
     std::unique_ptr<LinkConfig> cfg (
@@ -543,7 +538,7 @@ void Configuration::delLinkCfg(string source, string destination)
                     throw Err_Custom("The default configuration does not exist!");
                 }
 
-            string msg;
+            std::string msg;
             if (destination == any)
                 {
                     msg += "A standalone configuration for " + source;
@@ -567,7 +562,7 @@ void Configuration::delLinkCfg(string source, string destination)
     deleteCount++;
 }
 
-void Configuration::delShareCfg(string source, string destination)
+void Configuration::delShareCfg(std::string source, std::string destination)
 {
 
     db->deleteShareConfig(source, destination);

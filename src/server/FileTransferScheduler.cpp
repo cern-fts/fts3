@@ -39,11 +39,11 @@ using namespace fts3::ws;
 
 FileTransferScheduler::FileTransferScheduler(
     TransferFiles const & file,
-    vector< std::shared_ptr<ShareConfig> > cfgs,
-    set<string> inses,
-    set<string> outses,
-    set<string> invos,
-    set<string> outvos
+    std::vector< std::shared_ptr<ShareConfig> > cfgs,
+    std::set<std::string> inses,
+    std::set<std::string> outses,
+    std::set<std::string> invos,
+    std::set<std::string> outvos
 ) :
     file (file),
     db (DBSingleton::instance().getDBObjectInstance())
@@ -52,10 +52,9 @@ FileTransferScheduler::FileTransferScheduler(
     srcSeName = file.SOURCE_SE;
     destSeName = file.DEST_SE;
 
-    vector< std::shared_ptr<ShareConfig> > no_auto_share;
+    std::vector< std::shared_ptr<ShareConfig> > no_auto_share;
 
-    vector< std::shared_ptr<ShareConfig> >::iterator it;
-    for (it = cfgs.begin(); it != cfgs.end(); it++)
+    for (auto it = cfgs.begin(); it != cfgs.end(); it++)
         {
 
             std::shared_ptr<ShareConfig>& cfg = *it;
@@ -122,14 +121,12 @@ bool FileTransferScheduler::schedule(int &currentActive)
                     return false;
                 }
 
-            vector< std::shared_ptr<ShareConfig> >::iterator it;
-
-            for (it = cfgs.begin(); it != cfgs.end(); ++it)
+            for (auto it = cfgs.begin(); it != cfgs.end(); ++it)
                 {
 
-                    string source = (*it)->source;
-                    string destination = (*it)->destination;
-                    string vo = (*it)->vo;
+                    std::string source = (*it)->source;
+                    std::string destination = (*it)->destination;
+                    std::string vo = (*it)->vo;
 
                     std::shared_ptr<ShareConfig>& cfg = *it;
 
@@ -139,7 +136,7 @@ bool FileTransferScheduler::schedule(int &currentActive)
                     if (!cfg->active_transfers)
                         {
                             // failed to allocate active transfers credits to transfer-job
-                            string msg = getNoCreditsErrMsg(cfg.get());
+                            std::string msg = getNoCreditsErrMsg(cfg.get());
                             // set file status to failed
                             db->updateFileTransferStatus(
                                 0.0,
@@ -196,9 +193,9 @@ bool FileTransferScheduler::schedule(int &currentActive)
     return true;
 }
 
-string FileTransferScheduler::getNoCreditsErrMsg(ShareConfig* cfg)
+std::string FileTransferScheduler::getNoCreditsErrMsg(ShareConfig* cfg)
 {
-    stringstream ss;
+    std::stringstream ss;
 
     ss << "Failed to allocate active transfer credits to transfer job due to ";
 

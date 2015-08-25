@@ -31,7 +31,6 @@ namespace fts3
 namespace ws
 {
 
-using namespace std;
 using namespace fts3::common;
 
 /**
@@ -50,7 +49,7 @@ public:
      *
      * @param dn - client's DN
      */
-    StandaloneCfg(string dn) : Configuration(dn), active(true) {}
+    StandaloneCfg(std::string dn) : Configuration(dn), active(true) {}
 
     /**
      * Constructor. Retrieves the configuration data from the given CfgParser.
@@ -58,7 +57,7 @@ public:
      * @param dn - client's DN
      * @param parser - the JSON configuration parser
      */
-    StandaloneCfg(string dn, CfgParser& parser);
+    StandaloneCfg(std::string dn, CfgParser& parser);
 
     /**
      * Destructor.
@@ -66,9 +65,9 @@ public:
     virtual ~StandaloneCfg();
 
     /**
-     * Creates a string containing the JSON configuration common for all 'standalone' configurations
+     * Creates a std::string containing the JSON configuration common for all 'standalone' configurations
      */
-    virtual string json();
+    virtual std::string json();
 
     /**
      * Saves the current configuration into the DB
@@ -87,19 +86,19 @@ protected:
      *
      * @param name - SE or SE group name
      */
-    virtual void save(string name);
+    virtual void save(std::string name);
 
     /**
      * Removes the standalone configuration from DB
      */
-    virtual void del(string name);
+    virtual void del(std::string name);
 
     /**
      * Initializes the in/out shares and protocol parameters
      *
      * @param name - SE or SE group name
      */
-    void init(string name);
+    void init(std::string name);
 
     /// active state
     bool active;
@@ -107,14 +106,14 @@ protected:
 private:
 
     /// inbound share
-    map<string, int> in_share;
+    std::map<std::string, int> in_share;
     /// inbound protocol
-    optional< map<string, int> > in_protocol;
+    boost::optional< std::map<std::string, int> > in_protocol;
 
     /// outbound share
-    map<string, int> out_share;
+    std::map<std::string, int> out_share;
     /// outbound protocol
-    optional< map<string, int> > out_protocol;
+    boost::optional< std::map<std::string, int> > out_protocol;
 };
 
 } /* namespace common */

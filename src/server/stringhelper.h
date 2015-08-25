@@ -23,46 +23,45 @@
 
 #include <list>
 #include <string>
-using namespace std;
 
 
 namespace StringHelper
 {
 
 template <class T>
-void split( const string& s, char del,
+void split( const std::string& s, char del,
             T& target,
-            string::size_type startPos=0, bool useEmpty=true  );
+            std::string::size_type startPos=0, bool useEmpty=true  );
 
-string stripWhiteSpace( const string& s );
-bool startwith_nocase( const string& s1, const string& s2 );
+std::string stripWhiteSpace( const std::string& s );
+bool startwith_nocase( const std::string& s1, const std::string& s2 );
 
-string getValue( const string& s, char del );
-string getValueBefore( const string& s, char del );
+std::string getValue( const std::string& s, char del );
+std::string getValueBefore( const std::string& s, char del );
 
-string toLowerCase( const string& s );
-string toUpperCase( const string& s );
+std::string toLowerCase( const std::string& s );
+std::string toUpperCase( const std::string& s );
 
-string replaceAll( string& in,
-                   const string& oldString,
-                   const string& newString );
+std::string replaceAll( std::string& in,
+                   const std::string& oldString,
+                   const std::string& newString );
 
 
 
 template <class T>
-void split( const string& s, char del,
+void split( const std::string& s, char del,
             T& target,
-            string::size_type startPos, bool useEmpty )
+            std::string::size_type startPos, bool useEmpty )
 {
-    string line = s;
+    std::string line = s;
 
-    string::size_type pos;
-    string::size_type offset = startPos;
-    while ( ( pos = line.find( del, offset ) ) != string::npos )
+    std::string::size_type pos;
+    std::string::size_type offset = startPos;
+    while ( ( pos = line.find( del, offset ) ) != std::string::npos )
         {
             offset = 0;
 
-            string val = line.substr( 0, pos );
+            std::string val = line.substr( 0, pos );
             if ( useEmpty || !stripWhiteSpace( val ).empty() )
                 {
                     target.push_back( val );

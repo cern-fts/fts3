@@ -29,7 +29,6 @@
  * It is used by transfer-url-copy to set the monitoring information of a transfer
  * and to sent the transfer to the message broker
  */
-using namespace std;
 
 template <class T>
 std::string to_string(T t, std::ios_base & (*f)(std::ios_base&))

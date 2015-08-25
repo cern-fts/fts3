@@ -26,16 +26,16 @@ namespace ws
 {
 
 
-ActivityCfg::ActivityCfg(string dn, string name) : Configuration(dn), vo(name)
+ActivityCfg::ActivityCfg(std::string dn, std::string name) : Configuration(dn), vo(name)
 {
     init(vo);
 }
 
-ActivityCfg::ActivityCfg(string dn, CfgParser& parser) : Configuration(dn)
+ActivityCfg::ActivityCfg(std::string dn, CfgParser& parser) : Configuration(dn)
 {
-    vo = parser.get<string>("vo");
+    vo = parser.get<std::string>("vo");
     active = parser.get<bool>("active");
-    shares = parser.get< map<string, double> >("share");
+    shares = parser.get< std::map<std::string, double> >("share");
 
     all = json();
 }
@@ -45,10 +45,10 @@ ActivityCfg::~ActivityCfg()
 
 }
 
-string ActivityCfg::json()
+std::string ActivityCfg::json()
 {
 
-    stringstream ss;
+    std::stringstream ss;
 
     ss << "{";
     ss << "\"" << "vo" << "\":\"" << vo << "\",";
@@ -79,7 +79,7 @@ void ActivityCfg::del()
     db->deleteActivityConfig(vo);
 }
 
-void ActivityCfg::init(string vo)
+void ActivityCfg::init(std::string vo)
 {
     active = db->isActivityConfigActive(vo);
     shares = db->getActivityConfig(vo);

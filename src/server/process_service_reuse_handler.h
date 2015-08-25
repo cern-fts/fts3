@@ -78,7 +78,7 @@ protected:
             {
                 std::vector<std::string>::const_iterator iter;
                 std::string filename = "/var/lib/fts3/" + job_id;
-                fout.open(filename.c_str(), ios::out);
+                fout.open(filename.c_str(), std::ios::out);
                 for (iter = files.begin(); iter != files.end(); ++iter)
                     {
                         fout << *iter << std::endl;
@@ -171,7 +171,7 @@ protected:
 
 
         /*check if manual config exist for this pair and vo*/
-        vector< std::shared_ptr<ShareConfig> > cfgs;
+        std::vector< std::shared_ptr<ShareConfig> > cfgs;
         ConfigurationAssigner cfgAssigner(representative);
         cfgAssigner.assign(cfgs);
 
@@ -179,7 +179,7 @@ protected:
         int currentActive = 0;
         if (!scheduler.schedule(currentActive)) return;   /*SET TO READY STATE WHEN TRUE*/
 
-        optional<ProtocolResolver::protocol> user_protocol = ProtocolResolver::getUserDefinedProtocol(representative);
+        boost::optional<ProtocolResolver::protocol> user_protocol = ProtocolResolver::getUserDefinedProtocol(representative);
 
         if (user_protocol.is_initialized())
             {

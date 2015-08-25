@@ -31,7 +31,6 @@ namespace fts3
 namespace ws
 {
 
-using namespace std;
 using namespace fts3::common;
 
 /**
@@ -53,7 +52,7 @@ public:
      * @param dn - client's DN
      * @param name - SE group name
      */
-    StandaloneGrCfg(string dn, string name);
+    StandaloneGrCfg(std::string dn, std::string name);
 
     /**
      * Constructor.
@@ -63,7 +62,7 @@ public:
      * @param dn - client's DN
      * @param parser - an object that has been used for parsing the JSON configuration
      */
-    StandaloneGrCfg(string dn, CfgParser& parser);
+    StandaloneGrCfg(std::string dn, CfgParser& parser);
 
     /**
      * Destructor.
@@ -71,9 +70,9 @@ public:
     virtual ~StandaloneGrCfg();
 
     /**
-     * Creates a string containing the JSON configuration common for a SE group 'standalone' configurations
+     * Creates a std::string containing the JSON configuration common for a SE group 'standalone' configurations
      */
-    virtual string json();
+    virtual std::string json();
 
 
     /**
@@ -97,9 +96,9 @@ public:
 private:
 
     /// SE group name
-    string group;
+    std::string group;
     /// SE group members
-    vector<string> members;
+    std::vector<std::string> members;
 };
 
 } /* namespace common */

@@ -34,8 +34,6 @@ namespace fts3
 namespace ws
 {
 
-using namespace std;
-using namespace boost;
 using namespace db;
 using namespace fts3::common;
 
@@ -58,7 +56,7 @@ public:
      *
      * For logging reasons the object needs the user's DN
      */
-    Configuration(string dn);
+    Configuration(std::string dn);
 
     /**
      * Destructor, it updates the configuration audit traits
@@ -70,30 +68,30 @@ public:
      */
     struct Protocol
     {
-        static const string BANDWIDTH;
-        static const string NOSTREAMS;
-        static const string TCP_BUFFER_SIZE;
-        static const string NOMINAL_THROUGHPUT;
-        static const string BLOCKSIZE;
-        static const string HTTP_TO;
-        static const string URLCOPY_PUT_TO;
-        static const string URLCOPY_PUTDONE_TO;
-        static const string URLCOPY_GET_TO;
-        static const string URLCOPY_GET_DONETO;
-        static const string URLCOPY_TX_TO;
-        static const string URLCOPY_TXMARKS_TO;
-        static const string URLCOPY_FIRST_TXMARK_TO;
-        static const string TX_TO_PER_MB;
-        static const string NO_TX_ACTIVITY_TO;
-        static const string PREPARING_FILES_RATIO;
+        static const std::string BANDWIDTH;
+        static const std::string NOSTREAMS;
+        static const std::string TCP_BUFFER_SIZE;
+        static const std::string NOMINAL_THROUGHPUT;
+        static const std::string BLOCKSIZE;
+        static const std::string HTTP_TO;
+        static const std::string URLCOPY_PUT_TO;
+        static const std::string URLCOPY_PUTDONE_TO;
+        static const std::string URLCOPY_GET_TO;
+        static const std::string URLCOPY_GET_DONETO;
+        static const std::string URLCOPY_TX_TO;
+        static const std::string URLCOPY_TXMARKS_TO;
+        static const std::string URLCOPY_FIRST_TXMARK_TO;
+        static const std::string TX_TO_PER_MB;
+        static const std::string NO_TX_ACTIVITY_TO;
+        static const std::string PREPARING_FILES_RATIO;
     };
 
     /**
      * Returns a configuration in JSON format
      *
-     * @return a string with JSON configuration
+     * @return a std::string with JSON configuration
      */
-    virtual string json() = 0;
+    virtual std::string json() = 0;
 
     /**
      * Saves the current configuration into the DB
@@ -111,60 +109,60 @@ public:
     virtual bool isgroup() = 0;
 
     /// the 'any' character used to describe the SE (or SE group) to 'any' relation
-    static const string any;
-    /// the 'wildcard' string, so called catch-all
-    static const string wildcard;
-    /// 'on' string
-    static const string on;
-    /// 'off' string
-    static const string off;
+    static const std::string any;
+    /// the 'wildcard' std::string, so called catch-all
+    static const std::string wildcard;
+    /// 'on' std::string
+    static const std::string on;
+    /// 'off' std::string
+    static const std::string off;
     /// the public share
-    static const string pub;
-    /// 'share_only' string
-    static const string share_only;
+    static const std::string pub;
+    /// 'share_only' std::string
+    static const std::string share_only;
     /// value of a share pointing that auto should be used
     static const int automatic;
 
 protected:
 
-    /// set of strings that are not allowed as SE or SE group name
-    set<string> notAllowed;
+    /// set of std::strings that are not allowed as SE or SE group name
+    std::set<std::string> notAllowed;
 
     /// Pointer to the 'GenericDbIfce' singleton
     GenericDbIfce* db;
 
     /**
-     * Converts a STL map to JSON configuration string
+     * Converts a STL map to JSON configuration std::string
      *
      * @param params - the parameters to be converted to JSON
-     * @return string containing the JSON configuration
+     * @return std::string containing the JSON configuration
      */
-    static string json(map<string, int>& params);
+    static std::string json(std::map<std::string, int>& params);
 
     /**
-     * Converts a STL map to JSON configuration string
+     * Converts a STL map to JSON configuration std::string
      *
      * @param params - the parameters to be converted to JSON
-     * @return string containing the JSON configuration
+     * @return std::string containing the JSON configuration
      */
-    static string json(map<string, double>& params);
+    static std::string json(std::map<std::string, double>& params);
 
     /**
-     * Converts a STL map to JSON configuration string,
+     * Converts a STL map to JSON configuration std::string,
      * 	if the optional is not initialized "auto" value is used
      *
      * @param params - the parameters to be converted to JSON
-     * @return string containing the JSON configuration
+     * @return std::string containing the JSON configuration
      */
-    static string json(optional< map<string, int> >& params);
+    static std::string json(boost::optional< std::map<std::string, int> >& params);
 
     /**
-     * Converts a STL vector to JSON configuration string
+     * Converts a STL vector to JSON configuration std::string
      *
      * @param members - the vector members to be converted to JSON
-     * @return string containing the JSON configuration
+     * @return std::string containing the JSON configuration
      */
-    static string json(vector<string>& members);
+    static std::string json(std::vector<std::string>& members);
 
     /**
      * Gets a map containing the protocol parameter names and the respective values.
@@ -175,7 +173,7 @@ protected:
      *
      * @return map with protocol parameter names and their values
      */
-    optional< map<string, int> > getProtocolMap(string source, string destination);
+    boost::optional< std::map<std::string, int> > getProtocolMap(std::string source, std::string destination);
 
     /**
      * Gets a map containing the protocol parameter names and the respective values
@@ -184,7 +182,7 @@ protected:
      *
      * @return map with protocol parameter names and their values
      */
-    optional< map<string, int> > getProtocolMap(LinkConfig* cfg);
+    boost::optional< std::map<std::string, int> > getProtocolMap(LinkConfig* cfg);
 
     /**
      * Gets a map containing the VO names and the respective share value (for the given source-destination pair).
@@ -195,7 +193,7 @@ protected:
      *
      * @return map with VOs and their share values
      */
-    map<string, int> getShareMap(string source, string destination);
+    std::map<std::string, int> getShareMap(std::string source, std::string destination);
 
     /**
      * Adds a SE to the DB (if not already added)
@@ -203,7 +201,7 @@ protected:
      * @param se - SE name
      * @param active - the state of the SE (active ('on') by default)
      */
-    void addSe(string se, bool active = true);
+    void addSe(std::string se, bool active = true);
 
     /**
      * Changes the SE state to the default one ('on'),
@@ -211,7 +209,7 @@ protected:
      *
      * @param se - SE name
      */
-    void eraseSe(string se);
+    void eraseSe(std::string se);
 
     /**
      * Adds SE group and its members to the DB.
@@ -219,14 +217,14 @@ protected:
      * @param group - SE group name
      * @param members - SE members of the group
      */
-    void addGroup(string group, vector<string>& members);
+    void addGroup(std::string group, std::vector<std::string>& members);
 
     /**
      * Checks if the group exists in the DB. Throws an exception if not.
      *
      * @param group - SE group name
      */
-    void checkGroup(string group);
+    void checkGroup(std::string group);
 
     /**
      * Gets link configuration object, and a flag stating whether the object exists in DB or not.
@@ -236,7 +234,7 @@ protected:
      * @param active - the state
      * @param symbolic_name - the symbolic name describing the link
      */
-    std::pair< LinkConfig, bool > getLinkConfig(string source, string destination, bool active, string symbolic_name);
+    std::pair< LinkConfig, bool > getLinkConfig(std::string source, std::string destination, bool active, std::string symbolic_name);
 
     /**
      * Adds a link configuration to the DB.
@@ -247,7 +245,7 @@ protected:
      * @param symbolic_name - the symbolic name describing the link
      * @param protocol - the protocol parameters and the rrespective values
      */
-    void addLinkCfg(string source, string destination, bool active, string symbolic_name, optional< map<string, int> >& protocol);
+    void addLinkCfg(std::string source, std::string destination, bool active, std::string symbolic_name, boost::optional< std::map<std::string, int> >& protocol);
 
     /**
      * Adds a share-only link configuration to the DB.
@@ -258,7 +256,7 @@ protected:
      * @param symbolic_name - the symbolic name describing the link
      * @param protocol - the protocol parameters and the rrespective values
      */
-    void addLinkCfg(string source, string destination, bool active, string symbolic_name);
+    void addLinkCfg(std::string source, std::string destination, bool active, std::string symbolic_name);
 
     /**
      * Adds a share configuration to the DB.
@@ -267,7 +265,7 @@ protected:
      * @param destination - the destination (SE, SE group or 'any')
      * @param share - VO names and their shares
      */
-    void addShareCfg(string source, string destination, map<string, int>& share);
+    void addShareCfg(std::string source, std::string destination, std::map<std::string, int>& share);
 
     /**
      * Deletes the link configuration
@@ -275,7 +273,7 @@ protected:
      * @param source - the source (SE, SE group or 'any')
      * @param destination - the destination (SE, SE group or 'any')
      */
-    void delLinkCfg(string source, string destination);
+    void delLinkCfg(std::string source, std::string destination);
 
     /**
      * Deletes the share configuration
@@ -283,10 +281,10 @@ protected:
      * @param source - the source (SE, SE group or 'any')
      * @param destination - the destination (SE, SE group or 'any')
      */
-    void delShareCfg(string source, string destination);
+    void delShareCfg(std::string source, std::string destination);
 
     /// the whole configuration in JSON format
-    string all;
+    std::string all;
 
     /// number of SQL updates triggered by configuration command
     int updateCount;
@@ -298,7 +296,7 @@ protected:
 private:
 
     /// client's DN
-    string dn;
+    std::string dn;
 };
 
 } /* namespace cli */

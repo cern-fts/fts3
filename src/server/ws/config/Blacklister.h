@@ -34,8 +34,6 @@ namespace fts3
 namespace ws
 {
 
-using namespace std;
-using namespace boost;
 using namespace db;
 
 class Blacklister
@@ -43,9 +41,9 @@ class Blacklister
 
 public:
 
-    Blacklister(soap* ctx, string name, string status, int timeout, bool blk);
+    Blacklister(soap* ctx, std::string name, std::string status, int timeout, bool blk);
 
-    Blacklister(soap* ctx, string name, string vo, string status, int timeout, bool blk);
+    Blacklister(soap* ctx, std::string name, std::string vo, std::string status, int timeout, bool blk);
 
     virtual ~Blacklister();
 
@@ -58,11 +56,11 @@ private:
 
     void handleJobsInTheQueue();
 
-    string adminDn;
+    std::string adminDn;
 
-    optional<string> vo;
-    string name;
-    string status;
+    boost::optional<std::string> vo;
+    std::string name;
+    std::string status;
     int timeout;
     bool blk;
 

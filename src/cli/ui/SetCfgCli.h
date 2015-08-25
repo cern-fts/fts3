@@ -211,7 +211,7 @@ public:
     /**
      * @return : tuple with S3 access key, secret key, and VO name if specified by the user
      */
-    optional< std::tuple<std::string, std::string, std::string, std::string> > s3();
+    boost::optional< std::tuple<std::string, std::string, std::string, std::string> > s3();
 
     /**
      * @return : tuple with dropbox app key, app secret, and service API URL if specified by the user

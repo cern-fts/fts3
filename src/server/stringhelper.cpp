@@ -26,14 +26,10 @@ using namespace std;
 namespace StringHelper
 {
 
-
-
-
-
-string getValue( const string& s, char del )
+std::string getValue( const std::string& s, char del )
 {
-    string::size_type pos = s.find( del );
-    if ( pos != string::npos && pos+1 < s.length() )
+    std::string::size_type pos = s.find( del );
+    if ( pos != std::string::npos && pos+1 < s.length() )
         {
             return s.substr( pos + 1 );
         }
@@ -41,10 +37,10 @@ string getValue( const string& s, char del )
 }
 
 
-string getValueBefore( const string& s, char del )
+std::string getValueBefore( const std::string& s, char del )
 {
-    string::size_type pos = s.find( del );
-    if ( pos != string::npos )
+    std::string::size_type pos = s.find( del );
+    if ( pos != std::string::npos )
         {
             return s.substr( 0, pos );
         }
@@ -52,7 +48,7 @@ string getValueBefore( const string& s, char del )
 }
 
 
-string stripWhiteSpace( const string& s )
+std::string stripWhiteSpace( const std::string& s )
 {
     if ( s.empty() )
         {
@@ -60,7 +56,7 @@ string stripWhiteSpace( const string& s )
         }
 
     int pos = 0;
-    string line = s;
+    std::string line = s;
     int len = (int) line.length();
     while ( pos < len && isspace( line[static_cast<size_t>(pos)] ) )
         {
@@ -80,10 +76,10 @@ string stripWhiteSpace( const string& s )
 }
 
 
-bool startwith_nocase( const string& s1, const string& s2 )
+bool startwith_nocase( const std::string& s1, const std::string& s2 )
 {
-    string::const_iterator p1 = s1.begin();
-    string::const_iterator p2 = s2.begin();
+    std::string::const_iterator p1 = s1.begin();
+    std::string::const_iterator p2 = s2.begin();
 
     while ( p1 != s1.end() && p2 != s2.end() )
         {
@@ -104,10 +100,10 @@ bool startwith_nocase( const string& s1, const string& s2 )
 }
 
 
-string toLowerCase( const string& s )
+string toLowerCase( const std::string& s )
 {
-    string result = "";
-    for ( string::size_type i = 0; i < s.length(); ++i )
+    std::string result = "";
+    for ( std::string::size_type i = 0; i < s.length(); ++i )
         {
             result += static_cast<char>(tolower( s[i] ));
         }
@@ -116,10 +112,10 @@ string toLowerCase( const string& s )
 }
 
 
-string toUpperCase( const string& s )
+string toUpperCase( const std::string& s )
 {
-    string result = "";
-    for ( string::size_type i = 0; i < s.length(); ++i )
+    std::string result = "";
+    for ( std::string::size_type i = 0; i < s.length(); ++i )
         {
             result += static_cast<char>(toupper( s[i] ));
         }
@@ -128,12 +124,12 @@ string toUpperCase( const string& s )
 }
 
 
-string replaceAll( string& in,
-                   const string& oldString,
-                   const string& newString )
+string replaceAll( std::string& in,
+                   const std::string& oldString,
+                   const std::string& newString )
 {
     size_t pos;
-    while ( (pos = in.find( oldString )) != string::npos )
+    while ( (pos = in.find( oldString )) != std::string::npos )
         {
             in =
                 in.replace( pos, oldString.length(), newString );
