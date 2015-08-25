@@ -20,10 +20,9 @@
 
 #include "StagingContext.h"
 
-#include "cred/cred-utility.h"
-
 #include <sstream>
 #include <unordered_set>
+#include "../../cred/CredUtility.h"
 
 
 void StagingContext::add(context_type const & ctx)

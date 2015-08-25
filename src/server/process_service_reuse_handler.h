@@ -245,15 +245,7 @@ protected:
                     }
             }
 
-        std::string proxy_file = get_proxy_cert(
-                                     representative.DN, // user_dn
-                                     representative.CRED_ID, // user_cred
-                                     representative.VO_NAME, // vo_name
-                                     "",
-                                     "", // assoc_service
-                                     "", // assoc_service_type
-                                     false,
-                                     "");
+        std::string proxy_file = DelegCred::getProxyFile(representative.DN, representative.CRED_ID);
         if (!proxy_file.empty())
             cmd_builder.setProxy(proxy_file);
 

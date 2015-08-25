@@ -144,16 +144,6 @@ public:
         return ret;
     }
 
-private:
-
-    /**
-     * Generates the proxy-certificate file name based on DN and delegation ID
-     *
-     * @param dn : user DN
-     * @param delegationId : delegation ID
-     */
-    static std::string generateProxy(std::string const & dn, std::string const & delegationId);
-
 protected:
 
     /// Job ID -> URL -> list of file IDs

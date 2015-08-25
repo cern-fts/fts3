@@ -40,7 +40,6 @@
 #include "transfer.h"
 #include "UserProxyEnv.h"
 #include "DelegCred.h"
-#include "CredService.h"
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/lexical_cast.hpp>
 #include <iostream>
@@ -50,6 +49,8 @@
 #include <iterator>
 #include <vector>
 #include <boost/algorithm/string.hpp>
+
+#include "../cred/DelegCred.h"
 #include "common/panic.h"
 #include "version.h"
 
@@ -633,14 +634,6 @@ void setRemainingTransfersToFailed(std::vector<Transfer>& transferList, unsigned
 }
 
 
-
-bool checkValidProxy(const std::string& filename, std::string& message)
-{
-    std::unique_ptr<DelegCred> delegCredPtr(new DelegCred);
-    return delegCredPtr->isValidProxy(filename, message);
-}
-
-
 __attribute__((constructor)) void begin(void)
 {
     //switch to non-priviledged user to avoid reading the hostcert
@@ -649,6 +642,7 @@ __attribute__((constructor)) void begin(void)
     seteuid(pw_uid);
     setenv("GLOBUS_THREAD_MODEL", "pthread", 1);
 }
+
 
 int main(int argc, char **argv)
 {
@@ -1058,7 +1052,7 @@ int main(int argc, char **argv)
 
                 //before any operation, check if the proxy is valid
                 std::string message;
-                bool isValid = checkValidProxy(opts.proxy, message);
+                bool isValid = DelegCred::isValidProxy(opts.proxy, message);
                 if(!isValid)
                     {
                         errorMessage = "INIT" + message;

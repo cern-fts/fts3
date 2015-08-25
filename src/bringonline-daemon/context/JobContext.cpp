@@ -21,22 +21,17 @@
 #include "JobContext.h"
 
 #include "cred/DelegCred.h"
-#include "cred/cred-utility.h"
 #include "common/logger.h"
 
 #include <algorithm>
 #include <memory>
 #include <sstream>
 #include <unordered_set>
+#include "../../cred/CredUtility.h"
 
 JobContext::JobContext(std::string const & dn, std::string const & vo, std::string const & delegationId, std::string const & spaceToken) : spaceToken(spaceToken)
 {
-    proxy = generateProxy(dn, delegationId);
-
-    //get the proxy
-    std::string message;
-    if(!checkValidProxy(message))
-        proxy = get_proxy_cert(dn, delegationId, vo, "", "", "", false, "");
+    proxy = DelegCred::getProxyFile(dn, delegationId);
 }
 
 void JobContext::add(std::string const & surl, std::string const & jobId, int fileId)
@@ -48,16 +43,9 @@ void JobContext::add(std::string const & surl, std::string const & jobId, int fi
         }
 }
 
-std::string JobContext::generateProxy(std::string const & dn, std::string const & delegationId)
-{
-    std::unique_ptr<DelegCred> delegCredPtr(new DelegCred);
-    return delegCredPtr->getFileName(dn, delegationId);
-}
-
 bool JobContext::checkValidProxy(std::string& message) const
 {
-    std::unique_ptr<DelegCred> delegCredPtr(new DelegCred);
-    return delegCredPtr->isValidProxy(proxy, message);
+    return DelegCred::isValidProxy(proxy, message);
 }
 
 std::set<std::string> JobContext::getUrls() const

@@ -18,54 +18,67 @@
  * limitations under the License.
  */
 
-#ifndef CRED_DELEG_DELEGCRED_H_
-#define CRED_DELEG_DELEGCRED_H_
-
-#include "CredService.h"
-#include <boost/utility.hpp>
-
+#ifndef DELEGCRED_H_
+#define DELEGCRED_H_
 
 /**
- * DelegCred CredService
+ * DelegCred API.
+ * Define the interface for retrieving a the User Credentials for a given user
+ * DN
  */
-class DelegCred : public CredService, boost::noncopyable
+class DelegCred
 {
 public:
-    /**
-     * Constructor
-     */
-    DelegCred();
 
     /**
-     * Destructor
+     * Get name of a file containing the credentials for the requested user
+     * @param userDn [IN] The distinguished name of the user
+     * @param id [IN] The credential id needed to retrieve the user's
+     *        credentials (may be a passoword or an identifier, depending on the
+     *        implementation)
      */
-    virtual ~DelegCred();
+    static std::string getProxyFile(const std::string& userDn, const std::string& id);
 
     /**
-     * Generate a Name for the Certificate Proxy File
+     * Returns true if the certificate in the given file name is still valid
+     * @param filename [IN] trhe name of the file containing the proxy certificate
+     * @return true if the certificate in the given file name is still valid
      */
-    virtual std::string getFileName(const std::string& userDn, const std::string& passphrase) /* throw(LogicError) */;
+    static bool isValidProxy(const std::string& filename, std::string& message);
+
+private:
+    /**
+     * Generate a name for the file that should contain the proxy certificate.
+     * The length of this name shoud be (MAX_FILENAME - 7) maximum.
+     * @param userDn [IN] the user DN passed to the get method
+     * @param id [IN] the credential id passed to the get method
+     * @return the generated file name
+     */
+    static std::string generateProxyName(const std::string& userDn, const std::string& id);
 
     /**
-     * Get the Cerificate From the MyProxy Server
+     * Get a new Certificate and store in into a file
+     * @param userDn [IN] the user DN passed to the get method
+     * @param id [IN] the credential id passed to the get method
+     * @param fname [IN] the name of a temporary file where the new proxy
+     * certificate should be stored
      */
-    virtual void getNewCertificate(const std::string& userDn, const std::string& passphrase, const std::string& filename);
+    static void getNewCertificate(const std::string& userDn, const std::string& id, const std::string& fname);
 
     /**
      * Returns the validity time that the cached copy of the certificate should
      * have.
+     * @return the validity time that the cached copy of the certificate should
+     * have
      */
-    virtual unsigned long minValidityTime() /* throw() */;
-
-private:
+    static unsigned long minValidityTime();
 
     /**
-     * Encode a name
+     * Forbid instantiation
      */
-    std::string encodeName(const std::string& str)/*throw()*/;
-
+    DelegCred();
 };
 
 
+#endif // DELEGCRED_H_
 
-#endif //CRED_DELEG_DELEGCRED_H_

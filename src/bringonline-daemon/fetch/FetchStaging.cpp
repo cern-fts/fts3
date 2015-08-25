@@ -26,13 +26,12 @@
 
 #include "server/DrainMode.h"
 
-#include "cred/cred-utility.h"
-
 #include "db/generic/SingleDbInstance.h"
 
 #include "common/parse_url.h"
 
 #include <map>
+#include "../../cred/CredUtility.h"
 
 extern bool stopThreads;
 

@@ -43,7 +43,6 @@
 #include "DelegCred.h"
 #include <signal.h>
 #include "parse_url.h"
-#include "cred-utility.h"
 #include <sys/types.h>
 #include <unistd.h>
 #include <grp.h>
@@ -69,6 +68,8 @@
 #include "profiler/Profiler.h"
 #include "profiler/Macros.h"
 #include <boost/thread.hpp>
+
+#include "../cred/CredUtility.h"
 #include "oauth.h"
 
 extern bool stopThreads;
@@ -226,41 +227,7 @@ protected:
 
                                 if (proxies.find(proxy_key) == proxies.end())
                                     {
-                                        std::unique_ptr<DelegCred> delegCredPtr(new DelegCred);
-                                        std::string filename = delegCredPtr->getFileName(tf.DN, tf.CRED_ID), message;
-
-                                        if (!delegCredPtr->isValidProxy(filename, message))
-                                            {
-                                                if(!message.empty())
-                                                    {
-                                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << message  << commit;
-                                                    }
-                                                // check the proxy lifetime in DB
-                                                time_t db_lifetime = -1;
-                                                std::unique_ptr<Cred> cred (DBSingleton::instance().getDBObjectInstance()->
-                                                                              findCredential(tf.CRED_ID, tf.DN)
-                                                                             );
-                                                if (cred.get()) db_lifetime = cred->termination_time - time(NULL);
-                                                // check the proxy lifetime in filesystem
-                                                time_t lifetime, voms_lifetime;
-                                                get_proxy_lifetime(filename, &lifetime, &voms_lifetime);
-
-                                                if (db_lifetime > lifetime)
-                                                    {
-                                                        filename = get_proxy_cert(
-                                                                       tf.DN, // user_dn
-                                                                       tf.CRED_ID, // user_cred
-                                                                       tf.VO_NAME, // vo_name
-                                                                       "",
-                                                                       "", // assoc_service
-                                                                       "", // assoc_service_type
-                                                                       false,
-                                                                       ""
-                                                                   );
-                                                    }
-                                            }
-
-                                        proxies[proxy_key] = filename;
+                                        proxies[proxy_key] = DelegCred::getProxyFile(tf.DN, tf.CRED_ID);
                                     }
 
                                 FileTransferExecutor* exec = new FileTransferExecutor(

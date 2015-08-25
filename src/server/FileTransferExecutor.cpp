@@ -20,6 +20,8 @@
 
 #include "FileTransferExecutor.h"
 
+#include "../cred/CredUtility.h"
+#include "../cred/DelegCred.h"
 #include "common/parse_url.h"
 #include "common/OptimizerSample.h"
 #include "common/logger.h"
@@ -33,10 +35,8 @@
 #include "process.h"
 #include "UserProxyEnv.h"
 #include "DelegCred.h"
-#include "CredService.h"
 #include "ws/SingleTrStateInstance.h"
 
-#include "cred/cred-utility.h"
 #include "oauth.h"
 
 #include "UrlCopyCmd.h"

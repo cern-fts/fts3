@@ -24,28 +24,8 @@
 #include <string>
 
 /**
- * Get Proxy DN
- */
-std::string get_proxy_dn(const std::string& proxy_file = "") /*throw (CredServiceException)*/;
-
-/**
- * Get Proxy Certificate File Name for the given user
- */
-std::string get_proxy_cert(
-    const std::string&  user_dn,
-    const std::string&  user_cred,
-    const std::string&  vo_name,
-    const std::string&  cred_service_endpoint,
-    const std::string&  assoc_service,
-    const std::string&  assoc_service_type,
-    bool                disable_delegation,
-    const std::string&  cred_service_type = "") /*throw (LogicError, CredServiceException)*/;
-
-/**
  * Return the proxy lifetime. In case of other errors, returns -1
  */
 void get_proxy_lifetime(const std::string& filename, time_t *lifetime, time_t *vo_lifetime);
-
-
 
 #endif //CRED_CRED_UTILITY_H_

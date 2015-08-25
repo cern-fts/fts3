@@ -20,9 +20,8 @@
 
 #include "DeletionContext.h"
 
-#include "cred/cred-utility.h"
-
 #include <sstream>
+#include "../../cred/CredUtility.h"
 
 
 void DeletionContext::add(context_type const & ctx)

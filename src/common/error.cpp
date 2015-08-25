@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-/** \file error.cpp Implmentation of FTS3 error handling component. */
+/** \file error.cpp Implementation of FTS3 error handling component. */
 
 #include "error.h"
 

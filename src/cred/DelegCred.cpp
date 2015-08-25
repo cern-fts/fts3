@@ -18,118 +18,226 @@
  * limitations under the License.
  */
 
+#include "TempFile.h"
+#include "common/logger.h"
+#include "common/error.h"
 #include "DelegCred.h"
-#include "Cred.h"
+
+#include "CredUtility.h"
+#include "SingleDbInstance.h"
+
+#include <globus_gsi_credential.h>
 
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <boost/lexical_cast.hpp>
 #include <fstream>
-#include "utility.h"
-#include "SingleDbInstance.h"
-#include "common/logger.h"
-#include "common/error.h"
-#include <sys/types.h>
-#include <grp.h>
-#include <sys/stat.h>
-#include <pwd.h>
-#include "name_to_uid.h"
 
-using namespace fts3::common;
 using namespace db;
+using namespace fts3::common;
+
 
 namespace
 {
-const char * const PROXY_NAME_PREFIX         = "x509up_h";
+const char * const TMP_DIRECTORY = "/tmp/";
+const char * const PROXY_NAME_PREFIX = "x509up_h";
 }
 
-const std::string repository = "/tmp/";
-
-
 /*
- * DelegCred
+ * encodeName
  *
- * Constructor
+ * Encode a string, is not url encoded since the hash is alweays prefixed
  */
-DelegCred::DelegCred()
+static std::string encodeName(const std::string& str)
 {
+
+    std::string encoded;
+    encoded.reserve(str.length());
+
+    // for each character
+    std::string::const_iterator s_it;
+    for (s_it = str.begin(); s_it != str.end(); ++s_it) {
+        if (isalnum((*s_it))) {
+            encoded.push_back(static_cast<char>(tolower((*s_it))));
+        }
+        else {
+            encoded.push_back('X');
+        }
+    }
+    return encoded;
 }
 
-/*
- * ~DelegCred
- *
- * Destructor
- */
-DelegCred::~DelegCred()
+
+std::string DelegCred::getProxyFile(const std::string& userDn,
+        const std::string& id)
 {
+    std::string filename;
+
+    try {
+        // Check Preconditions
+        if (userDn.empty()) {
+            throw Err_System("Invalid User DN specified");
+        }
+
+        if(id.empty()) {
+            throw Err_System("Invalid credential id specified");
+        }
+
+        // Get the filename to be for the given DN
+        filename = generateProxyName(userDn, id);
+
+        // Post-Condition Check: filename length should be max (FILENAME_MAX - 7)
+        if(filename.length() > (FILENAME_MAX - 7))
+        {
+            throw Err_System("Invalid credential file name generated");
+        }
+
+        // Check if the Proxy Certificate is already there and it's valid
+        std::string message;
+        if(isValidProxy(filename, message))
+        {
+            return filename;
+        }
+
+        // Check if the database contains a valid proxy for this dlg id and DN
+        if(!DBSingleton::instance().getDBObjectInstance()->isCredentialExpired(id, userDn) )
+        {
+            // This looks crazy, but right now I don't know what can happen if I throw here
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Proxy for dlg id "<< id << " and DN " << userDn << " has expired in the DB, needs renewal!" << commit;
+            return filename;
+        }
+
+        // Create a Temporary File
+        TempFile tmp_proxy("cred", TMP_DIRECTORY);
+
+        // Get certificate
+        getNewCertificate(userDn, id, tmp_proxy.name());
+
+        // Rename the Temporary File
+        tmp_proxy.rename(filename);
+    }
+    catch(const std::exception& exc)
+    {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Can't get The proxy Certificate for the requested user: " << exc.what() << commit;
+    }
+    catch(...)
+    {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Can't get The proxy Certificate for the requested user" << commit;
+    }
+
+    return filename;
 }
 
 /*
- * getNewCertificate
+ * isValidProxy
  *
- * Get The proxy Certificate for the requested user
+ * Check if the Proxy Already Exists and is Valid.
  */
-void DelegCred::getNewCertificate(const std::string& userDn, const std::string& cred_id, const std::string& filename) /*throw (LogicError, DelegCredException)*/
+bool DelegCred::isValidProxy(const std::string& filename, std::string& message)
+{
+    //prevent ssl_library_init from getting called by multiple threads
+    static boost::mutex qm_cred_service;
+    boost::mutex::scoped_lock lock(qm_cred_service);
+
+    // Check if it's valid
+    time_t lifetime, voms_lifetime;
+    get_proxy_lifetime(filename, &lifetime, &voms_lifetime);
+
+    std::string time1 = boost::lexical_cast<std::string>(lifetime);
+    std::string time2 = boost::lexical_cast<std::string>(minValidityTime());
+
+    if(lifetime < 0)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Proxy Certificate expired" << commit;
+            message = " Proxy Certificate ";
+            message += filename;
+            message += " expired, lifetime is ";
+            message += time1;
+            message +=  " secs, while min validity time is ";
+            message += time2;
+            message += " secs";
+
+            return false;
+        }
+    else if (voms_lifetime < 0)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Proxy Certificate VO extensions expired" << commit;
+            message = " Proxy Certificate ";
+            message += filename;
+            message += " lifetime is ";
+            message += time1;
+            message +=  " secs, VO extensions expired ";
+            message += boost::lexical_cast<std::string>(abs((int)voms_lifetime));
+            message += " secs ago";
+
+            return false;
+        }
+
+    // casting to unsigned long is safe, condition lifetime < 0 already checked
+    if(minValidityTime() >= (unsigned long)lifetime)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Proxy Certificate should be renewed" << commit;
+            message = " Proxy Certificate ";
+            message += filename;
+            message += " should be renewed, lifetime is ";
+            message += time1;
+            message +=  " secs, while min validity time is ";
+            message += time2;
+            message += " secs";
+            return false;
+        }
+
+    return true;
+}
+
+
+void DelegCred::getNewCertificate(const std::string& userDn,
+        const std::string& cred_id, const std::string& filename) /*throw (LogicError, DelegCredException)*/
 {
 
     Cred* cred = NULL;
-    try
-        {
-            // Get the Cred Id
-            cred = DBSingleton::instance().getDBObjectInstance()->findCredential(cred_id, userDn);
+    try {
+        // Get the Cred Id
+        cred = DBSingleton::instance().getDBObjectInstance()->findCredential(
+                cred_id, userDn);
 
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Get the Cred Id " << cred_id << " " << userDn << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Get the Cred Id " << cred_id << " " << userDn << commit;
 
+        // write the content of the certificate property into the file
+        std::ofstream ofs(filename.c_str(), std::ios_base::binary);
 
-            // write the content of the certificate property into the file
-            std::ofstream ofs(filename.c_str(), std::ios_base::binary);
-
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "write the content of the certificate property into the file " << filename << commit;
-            if(ofs.bad())
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed open file " << filename << " for writing" << commit;
-                    if(cred)
-                        delete cred;
-                    return;
-                }
-            // write the Content of the certificate
-            if(cred)
-                ofs << cred->proxy.c_str();
-            // Close the file
-            ofs.close();
-            uid_t pw_uid;
-            pw_uid = name_to_uid();
-            int checkChown = chown(filename.c_str(), pw_uid, getgid());
-            if(checkChown!=0)
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to chmod for proxy" << filename << commit;
-                }
-
+        FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "write the content of the certificate property into the file " << filename << commit;
+        if (ofs.bad()) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Failed open file " << filename << " for writing" << commit;
             if(cred)
                 delete cred;
+            return;
         }
-    catch(const std::exception& exc)
-        {
-            if(cred)
-                delete cred;
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to get certificate for user <" << userDn << ">. Reason is: " << exc.what() << commit;
-        }
+        // write the Content of the certificate
+        if (cred)
+            ofs << cred->proxy.c_str();
+        // Close the file
+        ofs.close();
+        if (cred)
+            delete cred;
+    } catch (const std::exception& exc) {
+        if (cred)
+            delete cred;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Failed to get certificate for user <" << userDn << ">. Reason is: " << exc.what() << commit;
+    }
 }
 
-/*
- * getFileName
- *
- * Generate a Name for the Certificate Proxy File
- */
-std::string DelegCred::getFileName(const std::string& userDn, const std::string& id) /*throw(LogicError)*/
+
+std::string DelegCred::generateProxyName(const std::string& userDn, const std::string& id)
 {
 
     std::string filename;
 
     // Hash the DN:id
-    unsigned long h = hash_string(userDn + id);
+    size_t h = std::hash<std::string>()(userDn + id);
     std::stringstream ss;
     ss << h;
     std::string h_str = ss.str();
@@ -138,61 +246,27 @@ std::string DelegCred::getFileName(const std::string& userDn, const std::string&
     std::string encoded_dn = encodeName(userDn);
 
     // Compute Max length
-    unsigned long filename_max = static_cast<unsigned long>(pathconf(repository.c_str(), _PC_NAME_MAX));
+    unsigned long filename_max = static_cast<unsigned long>(pathconf(TMP_DIRECTORY, _PC_NAME_MAX));
     size_t max_length = (filename_max - 7 - strlen(PROXY_NAME_PREFIX));
-    if(max_length == 0)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot generate proxy file name: prefix too long" << commit;
-            return std::string("");
-        }
-    if(h_str.length() > (std::string::size_type)max_length)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot generate proxy file name: has too long" << commit;
-            return std::string("");
-        }
+    if (max_length == 0) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Cannot generate proxy file name: prefix too long" << commit;
+        return std::string("");
+    }
+    if (h_str.length() > (std::string::size_type) max_length) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Cannot generate proxy file name: has too long" << commit;
+        return std::string("");
+    }
     // Generate the filename using the has
-    filename = repository + PROXY_NAME_PREFIX + h_str;
-    if(h_str.length() < max_length)
-        {
-            filename.append(encoded_dn.substr(0,(max_length - h_str.length())));
-        }
+    filename = std::string(TMP_DIRECTORY) + PROXY_NAME_PREFIX + h_str;
+    if (h_str.length() < max_length) {
+        filename.append(encoded_dn.substr(0, (max_length - h_str.length())));
+    }
     return filename;
 }
 
-/*
- * minValidityTime
- *
- * Returns the validity time that the cached copy of the certificate should
- * have.
- */
-unsigned long DelegCred::minValidityTime() /* throw() */
+
+unsigned long DelegCred::minValidityTime()
 {
     return 3600;
 }
 
-/*
- * encodeName
- *
- * Encode a string, is not url encoded since the hash is alweays prefixed
- */
-std::string DelegCred::encodeName(const std::string& str) /*throw()*/
-{
-
-    std::string encoded;
-    encoded.reserve(str.length());
-
-    // for each character
-    std::string::const_iterator s_it;
-    for(s_it = str.begin(); s_it != str.end(); ++s_it)
-        {
-            if (isalnum((*s_it)))
-                {
-                    encoded.push_back(static_cast<char>(tolower((*s_it))));
-                }
-            else
-                {
-                    encoded.push_back('X');
-                }
-        }
-    return encoded;
-}

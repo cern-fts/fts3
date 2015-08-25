@@ -16,7 +16,7 @@ set(fts_include_dir "${PROJECT_SOURCE_DIR}/src/")
 include_directories (${fts_include_dir})
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(fts_proxy_SOURCES cred-utility.cpp CredService.cpp DelegCred.cpp utility.cpp)
+set(fts_proxy_SOURCES CredUtility.cpp DelegCred.cpp TempFile.cpp)
 
 add_library(fts_proxy SHARED ${fts_proxy_SOURCES})
 add_dependencies(fts_proxy fts_common fts_db_generic)
