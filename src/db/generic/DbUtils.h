@@ -57,14 +57,14 @@ const int MAX_STAGING_CONCURRENT_REQUESTS = 200;
 
 
 /*check if it's a multiple replicas job*/
-inline bool is_mreplica(std::list<job_element_tupple>& src_dest_pair)
+inline bool is_mreplica(std::list<JobElementTuple>& src_dest_pair)
 {
     // if it has less than 2 pairs it wont be a m-replica
     if (src_dest_pair.size() < 2) return false;
 
     std::string destSurl = src_dest_pair.begin()->destination;
 
-    std::list<job_element_tupple>::const_iterator iter;
+    std::list<JobElementTuple>::const_iterator iter;
     for (iter = src_dest_pair.begin(); iter != src_dest_pair.end(); ++iter)
         {
             if(destSurl != iter->destination)
@@ -77,13 +77,13 @@ inline bool is_mreplica(std::list<job_element_tupple>& src_dest_pair)
 }
 
 /*check if it's a m-hop job*/
-inline bool is_mhop(std::list<job_element_tupple>& src_dest_pair)
+inline bool is_mhop(std::list<JobElementTuple>& src_dest_pair)
 {
     // if it has less than 2 pairs it wont be a multi-hop
     if (src_dest_pair.size() < 2) return false;
 
-    std::list<job_element_tupple>::const_iterator iter = src_dest_pair.begin();
-    std::list<job_element_tupple>::const_iterator iter2 = src_dest_pair.begin();
+    std::list<JobElementTuple>::const_iterator iter = src_dest_pair.begin();
+    std::list<JobElementTuple>::const_iterator iter2 = src_dest_pair.begin();
     std::advance(iter2, 1);
 
     for (; iter2 != src_dest_pair.end(); ++iter, ++iter2)

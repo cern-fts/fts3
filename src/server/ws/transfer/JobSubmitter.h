@@ -122,7 +122,7 @@ private:
      * the job elements that have to be submitted (each job is a tuple of source,
      * destination, and optionally checksum)
      */
-    list<job_element_tupple> jobs;
+    list<JobElementTuple> jobs;
 
     /**
      * The common initialisation for both parameterised constructors

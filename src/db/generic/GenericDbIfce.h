@@ -66,9 +66,9 @@ using namespace fts3::common;
 /**
  * Map source/destination with the checksum provided
  **/
-struct job_element_tupple
+struct JobElementTuple
 {
-    job_element_tupple(): filesize(0), fileIndex(0), hashedId(0) {}
+    JobElementTuple(): filesize(0), fileIndex(0), hashedId(0) {}
     std::string source;
     std::string destination;
     std::string source_se;
@@ -102,7 +102,7 @@ public:
     /**
      * Submit a transfer request to be stored in the database
      **/
-    virtual void submitPhysical(const std::string & jobId, std::list<job_element_tupple>& src_dest_pair,
+    virtual void submitPhysical(const std::string & jobId, std::list<JobElementTuple>& src_dest_pair,
                                 const std::string & DN, const std::string & cred,
                                 const std::string & voName, const std::string & myProxyServer, const std::string & delegationID,
                                 const std::string & sourceSe, const std::string & destinationSe,

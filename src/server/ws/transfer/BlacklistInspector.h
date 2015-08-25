@@ -79,7 +79,7 @@ public:
     void add(std::string const & se);
 
     void inspect() const;
-    void setWaitTimeout(std::list<job_element_tupple> & jobs) const;
+    void setWaitTimeout(std::list<JobElementTuple> & jobs) const;
 
 private:
 

@@ -1578,7 +1578,7 @@ void OracleAPI::getByJobIdReuse(std::vector< boost::tuple<std::string, std::stri
         }
 }
 
-void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_tupple>& src_dest_pair,
+void OracleAPI::submitPhysical(const std::string & jobId, std::list<JobElementTuple>& src_dest_pair,
                                const std::string & DN, const std::string & cred,
                                const std::string & voName, const std::string & myProxyServer, const std::string & delegationID,
                                const std::string & sourceSe, const std::string & destinationSe,
@@ -1711,7 +1711,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::list<job_element_
             // the load balance between hosts
             jobHashedId = getHashedId();
 
-            std::list<job_element_tupple>::iterator iter;
+            std::list<JobElementTuple>::iterator iter;
             int index = 0;
             int insert_index = 0;
 

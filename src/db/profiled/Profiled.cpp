@@ -46,7 +46,7 @@ void ProfiledDB::init(std::string username, std::string password, std::string co
     PROFILE_PREFIXED("DB::", db->init(username, password, connectString, pooledConn));
 }
 
-void ProfiledDB::submitPhysical(const std::string & jobId, std::list<job_element_tupple>& src_dest_pair,
+void ProfiledDB::submitPhysical(const std::string & jobId, std::list<JobElementTuple>& src_dest_pair,
                                 const std::string & DN, const std::string & cred,
                                 const std::string & voName, const std::string & myProxyServer, const std::string & delegationID,
                                 const std::string & sourceSe, const std::string & destinationSe,

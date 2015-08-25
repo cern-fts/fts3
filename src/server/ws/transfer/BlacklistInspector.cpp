@@ -73,7 +73,7 @@ void BlacklistInspector::inspect() const
     throw Err_Custom("Following SEs: " + notAllowedStr + " are blacklisted!");
 }
 
-void BlacklistInspector::setWaitTimeout(std::list<job_element_tupple> & jobs) const
+void BlacklistInspector::setWaitTimeout(std::list<JobElementTuple> & jobs) const
 {
     // get the timeouts from DB
     std::map<std::string, int> timeouts;

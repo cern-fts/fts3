@@ -99,14 +99,14 @@ public:
      * @param jobs : list cpntainer for the extracted job elements
      * @param inspector : BlacklistInspector instance
      */
-    void get(std::list<job_element_tupple> & jobs, std::string vo)
+    void get(std::list<JobElementTuple> & jobs, std::string vo)
     {
         BlacklistInspector inspector(vo);
 
         typename std::vector<ELEMENT*>::const_iterator it;
         for (it = elements.begin(); it != elements.end(); ++it)
             {
-                job_element_tupple tupple = create_job_element(it, inspector);
+                JobElementTuple tupple = create_job_element(it, inspector);
                 jobs.push_back(tupple);
             }
         // do blacklist inspection
@@ -138,7 +138,7 @@ protected:
      * @param inspector : BlacklistInspector instance
      */
     template <typename ITER>
-    job_element_tupple create_job_element(ITER const & it, BlacklistInspector& inspector);
+    JobElementTuple create_job_element(ITER const & it, BlacklistInspector& inspector);
 
     /**
      * the input vector
@@ -198,14 +198,14 @@ public:
     PlainOldJob(std::vector<tns3__TransferJobElement2*> const & elements, std::string const & initialState) :
         PlainOldJobBase<tns3__TransferJobElement2>(elements, initialState) {}
 
-    void get(std::list<job_element_tupple> & jobs, std::string vo, JobParameterHandler & params)
+    void get(std::list<JobElementTuple> & jobs, std::string vo, JobParameterHandler & params)
     {
         BlacklistInspector inspector(vo);
 
         std::vector<tns3__TransferJobElement2*>::const_iterator it;
         for (it = elements.begin(); it != elements.end(); ++it)
             {
-                job_element_tupple tupple = create_job_element(it, inspector);
+                JobElementTuple tupple = create_job_element(it, inspector);
 
                 if((*it)->checksum)
                     {
@@ -251,7 +251,7 @@ typename PlainOldJobBase<ELEMENT>::job_type PlainOldJobBase<ELEMENT>::get_type(s
 
 template <typename ELEMENT>
 template <typename ITER>
-job_element_tupple PlainOldJobBase<ELEMENT>::create_job_element(ITER const & it, BlacklistInspector& inspector)
+JobElementTuple PlainOldJobBase<ELEMENT>::create_job_element(ITER const & it, BlacklistInspector& inspector)
 {
     // source and destination
     std::string src = *element(it).source, dest = *element(it).dest;
@@ -281,7 +281,7 @@ job_element_tupple PlainOldJobBase<ELEMENT>::create_job_element(ITER const & it,
             this->destinationSe = destinationSe;
         }
 
-    job_element_tupple job_element;
+    JobElementTuple job_element;
     job_element.source = src;
     job_element.destination = dest;
     job_element.source_se = sourceSe;

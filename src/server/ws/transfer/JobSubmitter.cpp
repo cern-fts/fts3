@@ -154,7 +154,7 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
             tns3__TransferJobElement3* elem = (*it);
 
             // prepare the job element and add it to the job
-            job_element_tupple tupple;
+            JobElementTuple tupple;
 
             // common properties
             tupple.filesize = elem->filesize ? *elem->filesize : 0;
