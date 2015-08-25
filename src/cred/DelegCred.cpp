@@ -198,11 +198,9 @@ void DelegCred::getNewCertificate(const std::string& userDn,
         const std::string& cred_id, const std::string& filename) /*throw (LogicError, DelegCredException)*/
 {
 
-    Cred* cred = NULL;
     try {
         // Get the Cred Id
-        cred = DBSingleton::instance().getDBObjectInstance()->findCredential(
-                cred_id, userDn);
+        std::unique_ptr<Cred> cred = DBSingleton::instance().getDBObjectInstance()->findCredential(cred_id, userDn);
 
         FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "Get the Cred Id " << cred_id << " " << userDn << commit;
 
@@ -212,8 +210,6 @@ void DelegCred::getNewCertificate(const std::string& userDn,
         FTS3_COMMON_LOGGER_NEWLOG(INFO)<< "write the content of the certificate property into the file " << filename << commit;
         if (ofs.bad()) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Failed open file " << filename << " for writing" << commit;
-            if(cred)
-                delete cred;
             return;
         }
         // write the Content of the certificate
@@ -221,11 +217,8 @@ void DelegCred::getNewCertificate(const std::string& userDn,
             ofs << cred->proxy.c_str();
         // Close the file
         ofs.close();
-        if (cred)
-            delete cred;
-    } catch (const std::exception& exc) {
-        if (cred)
-            delete cred;
+    }
+    catch (const std::exception& exc) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR)<< "Failed to get certificate for user <" << userDn << ">. Reason is: " << exc.what() << commit;
     }
 }

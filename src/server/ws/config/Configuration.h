@@ -236,7 +236,7 @@ protected:
      * @param active - the state
      * @param symbolic_name - the symbolic name describing the link
      */
-    pair< std::shared_ptr<LinkConfig>, bool > getLinkConfig(string source, string destination, bool active, string symbolic_name);
+    std::pair< LinkConfig, bool > getLinkConfig(string source, string destination, bool active, string symbolic_name);
 
     /**
      * Adds a link configuration to the DB.

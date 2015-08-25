@@ -62,7 +62,7 @@ public:
     void listRequestsDm(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
                         std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst);
 
-    TransferJobs* getTransferJob(std::string jobId, bool archive);
+    std::unique_ptr<TransferJob> getTransferJob(const std::string & jobId, bool archive);
 
     void getByJobIdReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFiles> > > >& files);
 
@@ -93,7 +93,7 @@ public:
 
     bool insertCredentialCache(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs);
 
-    CredCache* findCredentialCache(std::string delegationID, std::string dn);
+    std::unique_ptr<CredCache> findCredentialCache(std::string delegationID, std::string dn);
 
     void deleteCredentialCache(std::string delegationID, std::string dn);
 
@@ -101,7 +101,7 @@ public:
 
     void updateCredential(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time);
 
-    Cred* findCredential(std::string delegationID, std::string dn);
+    std::unique_ptr<Cred> findCredential(std::string delegationID, std::string dn);
 
     void deleteCredential(std::string delegationID, std::string dn);
 
@@ -174,8 +174,8 @@ public:
     void addLinkConfig(LinkConfig* cfg);
     void updateLinkConfig(LinkConfig* cfg);
     void deleteLinkConfig(std::string source, std::string destination);
-    LinkConfig* getLinkConfig(std::string source, std::string destination);
-    std::pair<std::string, std::string>* getSourceAndDestination(std::string symbolic_name);
+    std::unique_ptr<LinkConfig> getLinkConfig(std::string source, std::string destination);
+    std::unique_ptr<std::pair<std::string, std::string>> getSourceAndDestination(std::string symbolic_name);
     bool isGrInPair(std::string group);
     bool isShareOnly(std::string se);
 
@@ -183,8 +183,8 @@ public:
     void updateShareConfig(ShareConfig* cfg);
     void deleteShareConfig(std::string source, std::string destination, std::string vo);
     void deleteShareConfig(std::string source, std::string destination);
-    ShareConfig* getShareConfig(std::string source, std::string destination, std::string vo);
-    std::vector<ShareConfig*> getShareConfig(std::string source, std::string destination);
+    std::unique_ptr<ShareConfig> getShareConfig(std::string source, std::string destination, std::string vo);
+    std::vector<ShareConfig> getShareConfig(std::string source, std::string destination);
 
     virtual void addActivityConfig(std::string vo, std::string shares, bool active);
     virtual void updateActivityConfig(std::string vo, std::string shares, bool active);

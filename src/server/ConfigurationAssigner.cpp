@@ -105,7 +105,7 @@ void ConfigurationAssigner::assignShareCfg(list<cfg_type> arg, vector< std::shar
             string vo = get<VO>(s);
 
             // get the link configuration
-            scoped_ptr<LinkConfig> link (db->getLinkConfig(source, destination));
+            std::unique_ptr<LinkConfig> link (db->getLinkConfig(source, destination));
 
             // if there is no link there will be no share
             // (also if the link configuration state is 'off' we don't care about the share)
@@ -136,9 +136,7 @@ void ConfigurationAssigner::assignShareCfg(list<cfg_type> arg, vector< std::shar
                 }
 
             // check if there is a public share
-            ptr.reset(
-                db->getShareConfig(source, destination, Configuration::pub)
-            );
+            ptr = db->getShareConfig(source, destination, Configuration::pub);
 
             // if not create a public share with 0 active transfer (equivalent)
             if (!ptr.get())

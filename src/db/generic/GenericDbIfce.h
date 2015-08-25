@@ -36,7 +36,7 @@
 #include "SeConfig.h"
 #include "SeGroup.h"
 #include "SeAndConfig.h"
-#include "TransferJobs.h"
+#include "TransferJob.h"
 #include "TransferFiles.h"
 #include "SeProtocolConfig.h"
 #include "CredCache.h"
@@ -126,7 +126,7 @@ public:
     virtual void listRequestsDm(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
                                 std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst) = 0;
 
-    virtual TransferJobs* getTransferJob(std::string jobId, bool archive) = 0;
+    virtual std::unique_ptr<TransferJob> getTransferJob(const std::string & jobId, bool archive) = 0;
 
     virtual void getByJobIdReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFiles> > > >& files) = 0;
 
@@ -157,7 +157,7 @@ public:
     /*t_credential API*/
     virtual bool insertCredentialCache(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs) = 0;
 
-    virtual CredCache* findCredentialCache(std::string delegationID, std::string dn) = 0;
+    virtual std::unique_ptr<CredCache> findCredentialCache(std::string delegationID, std::string dn) = 0;
 
     virtual void deleteCredentialCache(std::string delegationID, std::string dn) = 0;
 
@@ -165,7 +165,7 @@ public:
 
     virtual void updateCredential(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time) = 0;
 
-    virtual  Cred* findCredential(std::string delegationID, std::string dn) = 0;
+    virtual std::unique_ptr<Cred> findCredential(std::string delegationID, std::string dn) = 0;
 
     virtual void deleteCredential(std::string delegationID, std::string dn) = 0;
 
@@ -226,7 +226,7 @@ public:
     virtual bool isFileReadyStateV(std::map<int,std::string>& fileIds) = 0;
 
     //t_group_members
-    virtual  bool checkGroupExists(const std::string & groupName) = 0;
+    virtual bool checkGroupExists(const std::string & groupName) = 0;
 
     virtual void getGroupMembers(const std::string & groupName, std::vector<std::string>& groupMembers) = 0;
 
@@ -240,8 +240,8 @@ public:
     virtual void addLinkConfig(LinkConfig* cfg) = 0;
     virtual void updateLinkConfig(LinkConfig* cfg) = 0;
     virtual void deleteLinkConfig(std::string source, std::string destination) = 0;
-    virtual LinkConfig* getLinkConfig(std::string source, std::string destination) = 0;
-    virtual std::pair<std::string, std::string>* getSourceAndDestination(std::string symbolic_name) = 0;
+    virtual std::unique_ptr<LinkConfig> getLinkConfig(std::string source, std::string destination) = 0;
+    virtual std::unique_ptr<std::pair<std::string, std::string>> getSourceAndDestination(std::string symbolic_name) = 0;
     virtual bool isGrInPair(std::string group) = 0;
     virtual bool isShareOnly(std::string se) = 0;
 
@@ -249,8 +249,8 @@ public:
     virtual void updateShareConfig(ShareConfig* cfg) = 0;
     virtual void deleteShareConfig(std::string source, std::string destination, std::string vo) = 0;
     virtual void deleteShareConfig(std::string source, std::string destination) = 0;
-    virtual ShareConfig* getShareConfig(std::string source, std::string destination, std::string vo) = 0;
-    virtual std::vector<ShareConfig*> getShareConfig(std::string source, std::string destination) = 0;
+    virtual std::unique_ptr<ShareConfig> getShareConfig(std::string source, std::string destination, std::string vo) = 0;
+    virtual std::vector<ShareConfig> getShareConfig(std::string source, std::string destination) = 0;
 
     virtual void addActivityConfig(std::string vo, std::string shares, bool active) = 0;
     virtual void updateActivityConfig(std::string vo, std::string shares, bool active) = 0;

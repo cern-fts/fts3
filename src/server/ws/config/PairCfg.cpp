@@ -39,7 +39,7 @@ PairCfg::PairCfg(string dn, string source, string destination) :
     if (notAllowed.count(source) || notAllowed.count(destination))
         throw Err_Custom("The source or destination name is not a valid!");
 
-    scoped_ptr<LinkConfig> cfg (
+    std::unique_ptr<LinkConfig> cfg (
         db->getLinkConfig(source, destination)
     );
 

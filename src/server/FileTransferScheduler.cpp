@@ -234,16 +234,15 @@ string FileTransferScheduler::getNoCreditsErrMsg(ShareConfig* cfg)
 
     ss << "Only the following VOs are allowed: ";
 
-    vector<ShareConfig*> cfgs = db->getShareConfig(cfg->source, cfg->destination);
-    vector<ShareConfig*>::iterator it;
+    std::vector<ShareConfig> cfgs = db->getShareConfig(cfg->source, cfg->destination);
 
-    for (it = cfgs.begin(); it != cfgs.end(); ++it)
+    for (auto it = cfgs.begin(); it != cfgs.end(); ++it)
         {
-            std::shared_ptr<ShareConfig> ptr (*it);
-            if (ptr->active_transfers)
+            if (it->active_transfers)
                 {
-                    if (it != cfgs.begin()) ss << ", ";
-                    ss << ptr->vo;
+                    if (it != cfgs.begin())
+                        ss << ", ";
+                    ss << it->vo;
                 }
         }
 

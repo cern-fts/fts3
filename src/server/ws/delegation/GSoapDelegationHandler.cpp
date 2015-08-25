@@ -33,7 +33,6 @@
 
 using namespace fts3::ws;
 using namespace db;
-using namespace boost;
 
 
 void GSoapDelegationHandler::init()
@@ -146,7 +145,7 @@ string GSoapDelegationHandler::getProxyReq(string delegationId)
     if (delegationId.empty()) throw Err_Custom("'handleDelegationId' failed!");
 
     // check if the public - private key pair has been already generated and is in the DB cache
-    scoped_ptr<CredCache> cache (
+    std::unique_ptr<CredCache> cache (
         DBSingleton::instance().getDBObjectInstance()->findCredentialCache(delegationId, dn)
     );
 
@@ -181,9 +180,7 @@ string GSoapDelegationHandler::getProxyReq(string delegationId)
             if (!inserted)
                 {
                     // double check if the public - private key pair has been already generated and is in the DB cache
-                    cache.reset(
-                        DBSingleton::instance().getDBObjectInstance()->findCredentialCache(delegationId, dn)
-                    );
+                    cache = DBSingleton::instance().getDBObjectInstance()->findCredentialCache(delegationId, dn);
 
                     if (cache.get())
                         {
@@ -226,7 +223,7 @@ delegation__NewProxyReq* GSoapDelegationHandler::getNewProxyReq()
     string delegationId = makeDelegationId();
     if (delegationId.empty()) throw Err_Custom("'getDelegationId' failed!");
 
-    scoped_ptr<CredCache> cache (
+    std::unique_ptr<CredCache> cache (
         DBSingleton::instance().getDBObjectInstance()->findCredentialCache(delegationId, dn)
     );
 
@@ -411,7 +408,7 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy)
                     throw Err_Custom("The proxy has to be valid for at least an hour!");
                 }
 
-            scoped_ptr<CredCache> cache (
+            std::unique_ptr<CredCache> cache (
                 DBSingleton::instance().getDBObjectInstance()->findCredentialCache(delegationId, dn)
             );
 
@@ -426,7 +423,7 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy)
 
             proxy = addKeyToProxyCertificate(proxy, cache->privateKey);
 
-            scoped_ptr<Cred> cred (
+            std::unique_ptr<Cred> cred (
                 DBSingleton::instance().getDBObjectInstance()->findCredential(delegationId, dn)
             );
 
@@ -504,7 +501,7 @@ string GSoapDelegationHandler::renewProxyReq(string delegationId)
             delegationId = handleDelegationId(delegationId);
             if (delegationId.empty()) throw Err_Custom("'handleDelegationId' failed!");
 
-            scoped_ptr<CredCache> cache (
+            std::unique_ptr<CredCache> cache (
                 DBSingleton::instance().getDBObjectInstance()->findCredentialCache(delegationId, dn)
             );
 
@@ -573,7 +570,7 @@ time_t GSoapDelegationHandler::getTerminationTime(string delegationId)
             if (delegationId.empty()) throw Err_Custom("'getDelegationId' failed!");
 
             time_t time;
-            scoped_ptr<Cred> cred (
+            std::unique_ptr<Cred> cred (
                 DBSingleton::instance().getDBObjectInstance()->findCredential(delegationId, dn)
             );
 

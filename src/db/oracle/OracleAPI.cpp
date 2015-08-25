@@ -334,7 +334,7 @@ void OracleAPI::submitdelete(const std::string & jobId, const std::map<std::stri
 
 
 
-TransferJobs* OracleAPI::getTransferJob(std::string jobId, bool archive)
+std::unique_ptr<TransferJob> OracleAPI::getTransferJob(const std::string & jobId, bool archive)
 {
     soci::session sql(*connectionPool);
 
@@ -350,10 +350,10 @@ TransferJobs* OracleAPI::getTransferJob(std::string jobId, bool archive)
                     "FROM t_job WHERE t_job.job_id = :jobId";
         }
 
-    TransferJobs* job = NULL;
+
     try
         {
-            job = new TransferJobs();
+            std::unique_ptr<TransferJob> job(new TransferJob);
 
             sql << query,
                 soci::use(jobId),
@@ -361,25 +361,21 @@ TransferJobs* OracleAPI::getTransferJob(std::string jobId, bool archive)
                 soci::into(job->USER_DN),
                 soci::into(job->JOB_STATE);
 
-            if (!sql.got_data())
+            if (sql.got_data())
                 {
-                    delete job;
-                    job = NULL;
+                    return job;
                 }
         }
     catch (std::exception& e)
         {
-            if(job)
-                delete job;
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            if(job)
-                delete job;
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
-    return job;
+
+    return std::unique_ptr<TransferJob>(NULL);
 }
 
 
@@ -3291,38 +3287,34 @@ bool OracleAPI::insertCredentialCache(std::string dlg_id, std::string dn, std::s
 
 
 
-CredCache* OracleAPI::findCredentialCache(std::string delegationID, std::string dn)
+std::unique_ptr<CredCache> OracleAPI::findCredentialCache(std::string delegationID, std::string dn)
 {
-    CredCache* cred = NULL;
     soci::session sql(*connectionPool);
 
     try
         {
-            cred = new CredCache();
+            std::unique_ptr<CredCache> cred(new CredCache);
+
             sql << "SELECT dlg_id, dn, voms_attrs, cert_request, priv_key "
                 "FROM t_credential_cache "
                 "WHERE dlg_id = :dlgId and dn = :dn",
                 soci::use(delegationID), soci::use(dn), soci::into(*cred);
-            if (!sql.got_data())
+
+            if (sql.got_data())
                 {
-                    delete cred;
-                    cred = NULL;
+                    return cred;
                 }
         }
     catch (std::exception& e)
         {
-            if(cred)
-                delete cred;
             throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
         }
     catch (...)
         {
-            if(cred)
-                delete cred;
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 
-    return cred;
+    return std::unique_ptr<CredCache>(NULL);
 }
 
 
@@ -3419,40 +3411,34 @@ void OracleAPI::updateCredential(std::string dlg_id, std::string dn, std::string
 
 
 
-Cred* OracleAPI::findCredential(std::string delegationID, std::string dn)
+std::unique_ptr<Cred> OracleAPI::findCredential(std::string delegationID, std::string dn)
 {
-    Cred* cred = NULL;
     soci::session sql(*connectionPool);
 
     try
         {
-            cred = new Cred();
+            std::unique_ptr<Cred> cred(new Cred);
             sql << "SELECT dlg_id, dn, voms_attrs, proxy, termination_time AS TERMINATION_TIME "
                 "FROM t_credential "
                 "WHERE dlg_id = :dlgId AND dn =:dn",
                 soci::use(delegationID), soci::use(dn),
                 soci::into(*cred);
 
-            if (!sql.got_data())
+            if (sql.got_data())
                 {
-                    delete cred;
-                    cred = NULL;
+                    return cred;
                 }
         }
     catch (std::exception& e)
         {
-            if(cred)
-                delete cred;
             throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
         }
     catch (...)
         {
-            if(cred)
-                delete cred;
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 
-    return cred;
+    return std::unique_ptr<Cred>(NULL);
 }
 
 
@@ -5677,21 +5663,21 @@ void OracleAPI::deleteLinkConfig(std::string source, std::string destination)
 
 
 
-LinkConfig* OracleAPI::getLinkConfig(std::string source, std::string destination)
+std::unique_ptr<LinkConfig> OracleAPI::getLinkConfig(std::string source, std::string destination)
 {
     soci::session sql(*connectionPool);
 
-    LinkConfig* lnk = NULL;
     try
         {
-            LinkConfig config;
+            std::unique_ptr<LinkConfig> config(new LinkConfig);
 
             sql << "SELECT * FROM t_link_config WHERE source = :source AND destination = :dest",
                 soci::use(source), soci::use(destination),
-                soci::into(config);
+                soci::into(*config);
 
-            if (sql.got_data())
-                lnk = new LinkConfig(config);
+            if (sql.got_data()) {
+                return config;
+            }
         }
     catch (std::exception& e)
         {
@@ -5701,37 +5687,33 @@ LinkConfig* OracleAPI::getLinkConfig(std::string source, std::string destination
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
-    return lnk;
+    return std::unique_ptr<LinkConfig>(NULL);
 }
 
 
 
-std::pair<std::string, std::string>* OracleAPI::getSourceAndDestination(std::string symbolic_name)
+std::unique_ptr<std::pair<std::string, std::string>> OracleAPI::getSourceAndDestination(std::string symbolic_name)
 {
     soci::session sql(*connectionPool);
 
-    std::pair<std::string, std::string>* pair = NULL;
     try
         {
             std::string source, destination;
             sql << "SELECT source, destination FROM t_link_config WHERE symbolicName = :sname",
                 soci::use(symbolic_name), soci::into(source), soci::into(destination);
-            if (sql.got_data())
-                pair = new std::pair<std::string, std::string>(source, destination);
+            if (sql.got_data()) {
+                return std::unique_ptr<std::pair<std::string, std::string>>(new std::pair<std::string, std::string>(source, destination));
+            }
         }
     catch (std::exception& e)
         {
-            if(pair)
-                delete pair;
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            if(pair)
-                delete pair;
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
-    return pair;
+    return std::unique_ptr<std::pair<std::string, std::string>>(NULL);
 }
 
 
@@ -5876,43 +5858,39 @@ void OracleAPI::deleteShareConfig(std::string source, std::string destination)
 
 
 
-ShareConfig* OracleAPI::getShareConfig(std::string source, std::string destination, std::string vo)
+std::unique_ptr<ShareConfig> OracleAPI::getShareConfig(std::string source, std::string destination, std::string vo)
 {
     soci::session sql(*connectionPool);
 
-    ShareConfig* cfg = NULL;
     try
         {
-            ShareConfig config;
+            std::unique_ptr<ShareConfig> config(new ShareConfig);
             sql << "SELECT * FROM t_share_config WHERE "
                 "  source = :source AND destination = :dest AND vo = :vo",
                 soci::use(source), soci::use(destination), soci::use(vo),
-                soci::into(config);
-            if (sql.got_data())
-                cfg = new ShareConfig(config);
+                soci::into(*config);
+            if (sql.got_data()) {
+                return config;
+            }
         }
     catch (std::exception& e)
         {
-            if(cfg)
-                delete cfg;
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     catch (...)
         {
-            if(cfg)
-                delete cfg;
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
-    return cfg;
+    return std::unique_ptr<ShareConfig>(NULL);
 }
 
 
 
-std::vector<ShareConfig*> OracleAPI::getShareConfig(std::string source, std::string destination)
+std::vector<ShareConfig> OracleAPI::getShareConfig(std::string source, std::string destination)
 {
     soci::session sql(*connectionPool);
 
-    std::vector<ShareConfig*> cfg;
+    std::vector<ShareConfig> cfg;
     try
         {
             soci::rowset<ShareConfig> rs = (sql.prepare << "SELECT * FROM t_share_config WHERE "
@@ -5921,8 +5899,7 @@ std::vector<ShareConfig*> OracleAPI::getShareConfig(std::string source, std::str
             for (soci::rowset<ShareConfig>::const_iterator i = rs.begin();
                     i != rs.end(); ++i)
                 {
-                    ShareConfig* newCfg = new ShareConfig(*i);
-                    cfg.push_back(newCfg);
+                    cfg.push_back(*i);
                 }
         }
     catch (std::exception& e)

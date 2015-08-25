@@ -30,7 +30,7 @@
 #include <SeGroup.h>
 #include <SeProtocolConfig.h>
 #include <ShareConfig.h>
-#include <TransferJobs.h>
+#include <TransferJob.h>
 #include <OAuth.h>
 #include <soci.h>
 #include <time.h>
@@ -129,11 +129,11 @@ struct type_conversion<CredCache>
 };
 
 template <>
-struct type_conversion<TransferJobs>
+struct type_conversion<TransferJob>
 {
     typedef values base_type;
 
-    static void from_base(values const& v, indicator, TransferJobs& job)
+    static void from_base(values const& v, indicator, TransferJob& job)
     {
         job.JOB_ID         = v.get<std::string>("JOB_ID");
         job.JOB_STATE      = v.get<std::string>("JOB_STATE");

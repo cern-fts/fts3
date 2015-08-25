@@ -96,7 +96,7 @@ void ProfiledDB::listRequestsDm(std::vector<JobStatus*>& jobs, std::vector<std::
     PROFILE_PREFIXED("DB::", db->listRequestsDm(jobs, inGivenStates, restrictToClientDN, forDN, VOname, src, dst));
 }
 
-TransferJobs* ProfiledDB::getTransferJob(std::string jobId, bool archive)
+std::unique_ptr<TransferJob> ProfiledDB::getTransferJob(const std::string & jobId, bool archive)
 {
     PROFILE_PREFIXED("DB::", return db->getTransferJob(jobId, archive));
 }
@@ -184,7 +184,7 @@ bool ProfiledDB::insertCredentialCache(std::string dlg_id, std::string dn, std::
 }
 
 
-CredCache* ProfiledDB::findCredentialCache(std::string delegationID, std::string dn)
+std::unique_ptr<CredCache> ProfiledDB::findCredentialCache(std::string delegationID, std::string dn)
 {
     PROFILE_PREFIXED("DB::", return db->findCredentialCache(delegationID, dn));
 }
@@ -208,7 +208,7 @@ void ProfiledDB::updateCredential(std::string dlg_id, std::string dn, std::strin
 }
 
 
-Cred* ProfiledDB::findCredential(std::string delegationID, std::string dn)
+std::unique_ptr<Cred> ProfiledDB::findCredential(std::string delegationID, std::string dn)
 {
     PROFILE_PREFIXED("DB::", return db->findCredential(delegationID, dn));
 }
@@ -429,12 +429,12 @@ void ProfiledDB::deleteLinkConfig(std::string source, std::string destination)
     PROFILE_PREFIXED("DB::", db->deleteLinkConfig(source, destination));
 }
 
-LinkConfig* ProfiledDB::getLinkConfig(std::string source, std::string destination)
+std::unique_ptr<LinkConfig> ProfiledDB::getLinkConfig(std::string source, std::string destination)
 {
     PROFILE_PREFIXED("DB::", return db->getLinkConfig(source, destination));
 }
 
-std::pair<std::string, std::string>* ProfiledDB::getSourceAndDestination(std::string symbolic_name)
+std::unique_ptr<std::pair<std::string, std::string>> ProfiledDB::getSourceAndDestination(std::string symbolic_name)
 {
     PROFILE_PREFIXED("DB::", return db->getSourceAndDestination(symbolic_name));
 }
@@ -470,12 +470,12 @@ void ProfiledDB::deleteShareConfig(std::string source, std::string destination)
     PROFILE_PREFIXED("DB::", db->deleteShareConfig(source, destination));
 }
 
-ShareConfig* ProfiledDB::getShareConfig(std::string source, std::string destination, std::string vo)
+std::unique_ptr<ShareConfig> ProfiledDB::getShareConfig(std::string source, std::string destination, std::string vo)
 {
     PROFILE_PREFIXED("DB::", return db->getShareConfig(source, destination, vo));
 }
 
-std::vector<ShareConfig*> ProfiledDB::getShareConfig(std::string source, std::string destination)
+std::vector<ShareConfig> ProfiledDB::getShareConfig(std::string source, std::string destination)
 {
     PROFILE_PREFIXED("DB::", return db->getShareConfig(source, destination));
 }

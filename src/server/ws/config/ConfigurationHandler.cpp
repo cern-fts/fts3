@@ -282,7 +282,7 @@ string ConfigurationHandler::getPair(string src, string dest)
 
 string ConfigurationHandler::getPair(string symbolic)
 {
-    scoped_ptr< pair<string, string> > p (
+    std::unique_ptr< pair<string, string> > p (
         db->getSourceAndDestination(symbolic)
     );
 

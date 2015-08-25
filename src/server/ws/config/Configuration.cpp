@@ -32,7 +32,6 @@ namespace fts3
 namespace ws
 {
 
-using namespace boost;
 
 const string Configuration::Protocol::BANDWIDTH = "bandwidth";
 const string Configuration::Protocol::NOSTREAMS = "nostreams";
@@ -238,10 +237,10 @@ void Configuration::checkGroup(string group)
         }
 }
 
-pair< std::shared_ptr<LinkConfig>, bool > Configuration::getLinkConfig(string source, string destination, bool active, string symbolic_name)
+std::pair< LinkConfig, bool > Configuration::getLinkConfig(string source, string destination, bool active, string symbolic_name)
 {
 
-    scoped_ptr< pair<string, string> > p (
+    std::unique_ptr< std::pair<std::string, std::string> > p (
         db->getSourceAndDestination(symbolic_name)
     );
 
@@ -251,7 +250,7 @@ pair< std::shared_ptr<LinkConfig>, bool > Configuration::getLinkConfig(string so
                 throw Err_Custom("A 'pair' with the same symbolic name exists already!");
         }
 
-    std::shared_ptr<LinkConfig> cfg (
+    std::unique_ptr<LinkConfig> cfg (
         db->getLinkConfig(source, destination)
     );
 
@@ -267,46 +266,46 @@ pair< std::shared_ptr<LinkConfig>, bool > Configuration::getLinkConfig(string so
     cfg->state = active ? on : off;
     cfg->symbolic_name = symbolic_name;
 
-    return make_pair(cfg, update);
+    return std::make_pair(*cfg, update);
 }
 
 void Configuration::addLinkCfg(string source, string destination, bool active, string symbolic_name, optional< map<string, int> >& protocol)
 {
 
-    pair< std::shared_ptr<LinkConfig>, bool > cfg = getLinkConfig(source, destination, active, symbolic_name);
+    std::pair< LinkConfig, bool > cfg = getLinkConfig(source, destination, active, symbolic_name);
 
     // not used for now therefore set to 0
-    cfg.first->NO_TX_ACTIVITY_TO = 0;
+    cfg.first.NO_TX_ACTIVITY_TO = 0;
 
     if (protocol.is_initialized())
         {
             int value = protocol.get()[Protocol::NOSTREAMS];
-            cfg.first->NOSTREAMS = value ? value : DEFAULT_NOSTREAMS;
+            cfg.first.NOSTREAMS = value ? value : DEFAULT_NOSTREAMS;
 
             value = protocol.get()[Protocol::TCP_BUFFER_SIZE];
-            cfg.first->TCP_BUFFER_SIZE = value ? value : DEFAULT_BUFFSIZE;
+            cfg.first.TCP_BUFFER_SIZE = value ? value : DEFAULT_BUFFSIZE;
 
             value = protocol.get()[Protocol::URLCOPY_TX_TO];
-            cfg.first->URLCOPY_TX_TO = value ? value : DEFAULT_TIMEOUT;
+            cfg.first.URLCOPY_TX_TO = value ? value : DEFAULT_TIMEOUT;
 
-            cfg.first->auto_tuning = off;
+            cfg.first.auto_tuning = off;
         }
     else
         {
-            cfg.first->NOSTREAMS = -1;
-            cfg.first->TCP_BUFFER_SIZE = -1;
-            cfg.first->URLCOPY_TX_TO = -1;
-            cfg.first->auto_tuning = on;
+            cfg.first.NOSTREAMS = -1;
+            cfg.first.TCP_BUFFER_SIZE = -1;
+            cfg.first.URLCOPY_TX_TO = -1;
+            cfg.first.auto_tuning = on;
         }
 
     if (cfg.second)
         {
-            db->updateLinkConfig(cfg.first.get());
+            db->updateLinkConfig(&cfg.first);
             updateCount++;
         }
     else
         {
-            db->addLinkConfig(cfg.first.get());
+            db->addLinkConfig(&cfg.first);
             insertCount++;
         }
 }
@@ -314,26 +313,26 @@ void Configuration::addLinkCfg(string source, string destination, bool active, s
 void Configuration::addLinkCfg(string source, string destination, bool active, string symbolic_name)
 {
 
-    pair< std::shared_ptr<LinkConfig>, bool > cfg = getLinkConfig(source, destination, active, symbolic_name);
+    std::pair< LinkConfig, bool > cfg = getLinkConfig(source, destination, active, symbolic_name);
 
     // not used therefore set to 0
-    cfg.first->NO_TX_ACTIVITY_TO = 0;
+    cfg.first.NO_TX_ACTIVITY_TO = 0;
     // not used in case of share-only configuration therefore set to -1
-    cfg.first->NOSTREAMS = -1;
-    cfg.first->TCP_BUFFER_SIZE = -1;
-    cfg.first->URLCOPY_TX_TO = -1;
+    cfg.first.NOSTREAMS = -1;
+    cfg.first.TCP_BUFFER_SIZE = -1;
+    cfg.first.URLCOPY_TX_TO = -1;
 
     // mark it as share only
-    cfg.first->auto_tuning = share_only;
+    cfg.first.auto_tuning = share_only;
 
     if (cfg.second)
         {
-            db->updateLinkConfig(cfg.first.get());
+            db->updateLinkConfig(&cfg.first);
             updateCount++;
         }
     else
         {
-            db->addLinkConfig(cfg.first.get());
+            db->addLinkConfig(&cfg.first);
             insertCount++;
         }
 }
@@ -348,30 +347,27 @@ void Configuration::addShareCfg(string source, string destination, map<string, i
         }
 
     // set with VOs that need an update
-    set<string> update;
+    std::set<std::string> update;
     // find all share configuration for source and destination
-    vector<ShareConfig*> vec = db->getShareConfig(source, destination);
-    vector<ShareConfig*>::iterator iv;
+    std::vector<ShareConfig> vec = db->getShareConfig(source, destination);
     // loop over share configuration
-    for (iv = vec.begin(); iv != vec.end(); iv++)
+    for (auto iv = vec.begin(); iv != vec.end(); iv++)
         {
-            scoped_ptr<ShareConfig> cfg (*iv);
-            if (share.find(cfg->vo) == share.end())
+            if (share.find(iv->vo) == share.end())
                 {
                     // if the VO was not in the new configuration remove the record
-                    db->deleteShareConfig(source, destination, cfg->vo);
+                    db->deleteShareConfig(source, destination, iv->vo);
                     // Although it is a deletion it is done due to an update
                     updateCount++;
                 }
             else
                 {
                     // otherwise schedule it for update
-                    update.insert(cfg->vo);
+                    update.insert(iv->vo);
                 }
         }
     // save the configuration in DB
-    map<string, int>::iterator it;
-    for (it = share.begin(); it != share.end(); it++)
+    for (auto it = share.begin(); it != share.end(); it++)
         {
             std::string vo = it->first;
             // create new share configuration
@@ -486,10 +482,10 @@ void Configuration::addShareCfg(string source, string destination, map<string, i
         }
 }
 
-optional< map<string, int> > Configuration::getProtocolMap(string source, string destination)
+boost::optional< std::map<std::string, int> > Configuration::getProtocolMap(std::string source, std::string destination)
 {
 
-    scoped_ptr<LinkConfig> cfg (
+    std::unique_ptr<LinkConfig> cfg (
         db->getLinkConfig(source, destination)
     );
 
@@ -513,7 +509,7 @@ optional< map<string, int> > Configuration::getProtocolMap(LinkConfig* cfg)
 map<string, int> Configuration::getShareMap(string source, string destination)
 {
 
-    vector<ShareConfig*> vec = db->getShareConfig(source, destination);
+    std::vector<ShareConfig> vec = db->getShareConfig(source, destination);
 
     if (vec.empty())
         {
@@ -524,11 +520,9 @@ map<string, int> Configuration::getShareMap(string source, string destination)
 
     map<string, int> ret;
 
-    vector<ShareConfig*>::iterator it;
-    for (it = vec.begin(); it != vec.end(); it++)
+    for (auto it = vec.begin(); it != vec.end(); it++)
         {
-            scoped_ptr<ShareConfig> cfg(*it);
-            ret[cfg->vo] = cfg->active_transfers;
+            ret[it->vo] = it->active_transfers;
         }
 
     return ret;
@@ -537,7 +531,7 @@ map<string, int> Configuration::getShareMap(string source, string destination)
 void Configuration::delLinkCfg(string source, string destination)
 {
 
-    scoped_ptr<LinkConfig> cfg (
+    std::unique_ptr<LinkConfig> cfg (
         db->getLinkConfig(source, destination)
     );
 

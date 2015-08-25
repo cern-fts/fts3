@@ -86,7 +86,7 @@ public:
 
     virtual void listRequestsDm(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates, std::string restrictToClientDN, std::string forDN, std::string VOname, std::string src, std::string dst);
 
-    virtual TransferJobs* getTransferJob(std::string jobId, bool archive);
+    virtual std::unique_ptr<TransferJob> getTransferJob(const std::string & jobId, bool archive);
 
     virtual void getByJobIdReuse(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::queue< std::pair<std::string, std::list<TransferFiles> > > >& files);
 
@@ -116,7 +116,7 @@ public:
     /*t_credential API*/
     virtual bool insertCredentialCache(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs);
 
-    virtual CredCache* findCredentialCache(std::string delegationID, std::string dn);
+    virtual std::unique_ptr<CredCache> findCredentialCache(std::string delegationID, std::string dn);
 
     virtual void deleteCredentialCache(std::string delegationID, std::string dn);
 
@@ -124,7 +124,7 @@ public:
 
     virtual void updateCredential(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time);
 
-    virtual  Cred* findCredential(std::string delegationID, std::string dn);
+    virtual std::unique_ptr<Cred> findCredential(std::string delegationID, std::string dn);
 
     virtual void deleteCredential(std::string delegationID, std::string dn);
 
@@ -199,8 +199,8 @@ public:
     virtual void addLinkConfig(LinkConfig* cfg);
     virtual void updateLinkConfig(LinkConfig* cfg);
     virtual void deleteLinkConfig(std::string source, std::string destination);
-    virtual LinkConfig* getLinkConfig(std::string source, std::string destination);
-    virtual std::pair<std::string, std::string>* getSourceAndDestination(std::string symbolic_name);
+    virtual std::unique_ptr<LinkConfig> getLinkConfig(std::string source, std::string destination);
+    virtual std::unique_ptr<std::pair<std::string, std::string>> getSourceAndDestination(std::string symbolic_name);
     virtual bool isGrInPair(std::string group);
     virtual bool isShareOnly(std::string se);
 
@@ -208,8 +208,8 @@ public:
     virtual void updateShareConfig(ShareConfig* cfg);
     virtual void deleteShareConfig(std::string source, std::string destination, std::string vo);
     virtual void deleteShareConfig(std::string source, std::string destination);
-    virtual ShareConfig* getShareConfig(std::string source, std::string destination, std::string vo);
-    virtual std::vector<ShareConfig*> getShareConfig(std::string source, std::string destination);
+    virtual std::unique_ptr<ShareConfig> getShareConfig(std::string source, std::string destination, std::string vo);
+    virtual std::vector<ShareConfig> getShareConfig(std::string source, std::string destination);
 
     virtual void addActivityConfig(std::string vo, std::string shares, bool active);
     virtual void updateActivityConfig(std::string vo, std::string shares, bool active);

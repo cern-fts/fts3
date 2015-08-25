@@ -26,15 +26,13 @@
 /**
  * Describes the status of one file in a transfer job.
  */
-class TransferJobs: public OwnedResource
+class TransferJob: public OwnedResource
 {
 public:
 
-    TransferJobs() :JOB_ID(""),JOB_STATE(""),CANCEL_JOB(""),JOB_PARAMS(""),SOURCE(""),DEST(""),USER_DN(""),AGENT_DN(""),USER_CRED(""),CRED_ID(""),VOMS_CRED(""),VO_NAME(""),SE_PAIR_NAME(""),REASON(""),SUBMIT_TIME(0),FINISH_TIME(0),PRIORITY(3),SUBMIT_HOST(""),MAX_TIME_IN_QUEUE(0),SPACE_TOKEN(""),STORAGE_CLASS(""),MYPROXY_SERVER(""),SRC_CATALOG(""),SRC_CATALOG_TYPE(""),DEST_CATALOG(""),DEST_CATALOG_TYPE(""),INTERNAL_JOB_PARAMS(""),OVERWRITE_FLAG(""),JOB_FINISHED(0),SOURCE_SPACE_TOKEN(""),SOURCE_TOKEN_DESCRIPTION(""),COPY_PIN_LIFETIME(0),LAN_CONNECTION(""),FAIL_NEARLINE(""),CHECKSUM_METHOD(""),BRINGONLINE(0)
-    {
-    }
-
-    ~TransferJobs()
+    TransferJob() :
+            SUBMIT_TIME(0), FINISH_TIME(0), PRIORITY(3), MAX_TIME_IN_QUEUE(0),
+            JOB_FINISHED(0), COPY_PIN_LIFETIME(0), BRINGONLINE(0)
     {
     }
 

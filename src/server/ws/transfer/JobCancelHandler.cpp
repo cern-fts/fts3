@@ -138,7 +138,7 @@ void JobCancelHandler::cancel(impltns__cancel2Response & resp)
 std::string JobCancelHandler::get_state(std::string const & job, std::string const & dn)
 {
     // get the transfer job object from DB
-    std::unique_ptr<TransferJobs> job_ptr (db.getTransferJob(job, false));
+    std::unique_ptr<TransferJob> job_ptr (db.getTransferJob(job, false));
     // if not throw an exception
     if (!job_ptr.get()) return DOES_NOT_EXIST;
     // Authorise the operation
