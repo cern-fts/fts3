@@ -468,7 +468,7 @@ std::unique_ptr<TransferJob> MySqlAPI::getTransferJob(const std::string & jobId,
     {
         throw Err_Custom(std::string(__func__) + ": Caught exception " );
     }
-    return std::unique_ptr<TransferJob>(NULL);
+    return std::unique_ptr<TransferJob>();
 }
 
 
@@ -3752,7 +3752,7 @@ std::unique_ptr<CredCache> MySqlAPI::findCredentialCache(std::string delegationI
         throw Err_Custom(std::string(__func__) + ": Caught exception ");
     }
 
-    return std::unique_ptr<CredCache>(NULL);
+    return std::unique_ptr<CredCache>();
 }
 
 
@@ -3874,7 +3874,7 @@ std::unique_ptr<Cred> MySqlAPI::findCredential(std::string delegationID, std::st
         throw Err_Custom(std::string(__func__) + ": Caught exception " );
     }
 
-    return std::unique_ptr<Cred>(NULL);
+    return std::unique_ptr<Cred>();
 }
 
 
@@ -6240,7 +6240,7 @@ std::unique_ptr<LinkConfig> MySqlAPI::getLinkConfig(std::string source, std::str
     {
         throw Err_Custom(std::string(__func__) + ": Caught exception " );
     }
-    return std::unique_ptr<LinkConfig>(NULL);
+    return std::unique_ptr<LinkConfig>();
 }
 
 
@@ -6266,7 +6266,7 @@ std::unique_ptr<std::pair<std::string, std::string>> MySqlAPI::getSourceAndDesti
     {
         throw Err_Custom(std::string(__func__) + ": Caught exception " );
     }
-    return std::unique_ptr<std::pair<std::string, std::string>>(NULL);
+    return std::unique_ptr<std::pair<std::string, std::string>>();
 }
 
 
@@ -6433,7 +6433,7 @@ std::unique_ptr<ShareConfig> MySqlAPI::getShareConfig(std::string source, std::s
     {
         throw Err_Custom(std::string(__func__) + ": Caught exception " );
     }
-    return std::unique_ptr<ShareConfig>(NULL);
+    return std::unique_ptr<ShareConfig>();
 }
 
 

@@ -375,7 +375,7 @@ std::unique_ptr<TransferJob> OracleAPI::getTransferJob(const std::string & jobId
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 
-    return std::unique_ptr<TransferJob>(NULL);
+    return std::unique_ptr<TransferJob>();
 }
 
 
@@ -3314,7 +3314,7 @@ std::unique_ptr<CredCache> OracleAPI::findCredentialCache(std::string delegation
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 
-    return std::unique_ptr<CredCache>(NULL);
+    return std::unique_ptr<CredCache>();
 }
 
 
@@ -3438,7 +3438,7 @@ std::unique_ptr<Cred> OracleAPI::findCredential(std::string delegationID, std::s
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
 
-    return std::unique_ptr<Cred>(NULL);
+    return std::unique_ptr<Cred>();
 }
 
 
@@ -5687,7 +5687,7 @@ std::unique_ptr<LinkConfig> OracleAPI::getLinkConfig(std::string source, std::st
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
-    return std::unique_ptr<LinkConfig>(NULL);
+    return std::unique_ptr<LinkConfig>();
 }
 
 
@@ -5713,7 +5713,7 @@ std::unique_ptr<std::pair<std::string, std::string>> OracleAPI::getSourceAndDest
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
-    return std::unique_ptr<std::pair<std::string, std::string>>(NULL);
+    return std::unique_ptr<std::pair<std::string, std::string>>();
 }
 
 
@@ -5881,7 +5881,7 @@ std::unique_ptr<ShareConfig> OracleAPI::getShareConfig(std::string source, std::
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " );
         }
-    return std::unique_ptr<ShareConfig>(NULL);
+    return std::unique_ptr<ShareConfig>();
 }
 
 
