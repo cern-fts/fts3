@@ -47,7 +47,11 @@ const int BASE_SUCCESS_RATE = 96;
 const int HIGH_THROUGHPUT = 50;
 const int AVG_TRANSFER_DURATION = 15;
 const int MAX_TRANSFER_DURATION = 3600;
-const int MAX_STAGING_BULK_SIZE = 40000000;
+// For bring online, this determines the maximum number of files per request
+const int MAX_STAGING_BULK_SIZE = 1000;
+// Do not send more than this number of concurrent requests
+const int MAX_STAGING_CONCURRENT_REQUESTS = 200;
+
 
 /*check if it's single source  / multiple destination replication job*/
 inline bool is_n_replication(std::list<job_element_tupple>& src_dest_pair)

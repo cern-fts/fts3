@@ -11076,13 +11076,17 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
                             limit = MAX_STAGING_BULK_SIZE; // Use a sensible default
                         }
 
+                    // Make sure we do not grab more than the limit for a bulk
+                    if (limit > MAX_STAGING_BULK_SIZE)
+                        limit = MAX_STAGING_BULK_SIZE;
+
                     //now check for max concurrent active requests, must no exceed 200
                     long long countActiveRequests = 0;
                     sql << " select count(distinct bringonline_token) from t_file where "
                         " vo_name=:vo_name and file_state='STARTED' and source_se=:source_se and bringonline_token is not NULL ",
                         soci::use(vo_name), soci::use(source_se), soci::into(countActiveRequests);
 
-                    if(countActiveRequests > 200)
+                    if(countActiveRequests > MAX_STAGING_CONCURRENT_REQUESTS)
                         continue;
 
                     //now make sure there are enough files to put in a single request
@@ -11090,8 +11094,9 @@ void OracleAPI::getFilesForStaging(std::vector< boost::tuple<std::string, std::s
                     sql << " SELECT count(*) from t_file where vo_name=:vo_name and source_se=:source_se and file_state='STAGING' ",
                         soci::use(vo_name), soci::use(source_se), soci::into(countQueuedFiles);
 
-
-                    if(countQueuedFiles < 2000)
+                    // If we haven't got enough for a bulk request, give some time for more
+                    // requests to arrive
+                    if(countQueuedFiles < MAX_STAGING_BULK_SIZE)
                         {
                             std::map<std::string, int>::iterator itQueue = queuedStagingFiles.find(source_se);
                             if(itQueue != queuedStagingFiles.end())
