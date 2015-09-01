@@ -6723,68 +6723,87 @@ void OracleAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
 {
     const static std::string message = "Job has been canceled because it stayed in the queue for too long";
 
-    int maxTime = 0;
+    // Only first host takes care of this task
+    if (hashSegment.start != 0)
+        return;
 
-    try
-        {
-            maxTime = getMaxTimeInQueue();
-            if (maxTime == 0)
-                return;
-        }
-    catch (std::exception& ex)
-        {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + ex.what());
-        }
-    catch (...)
-        {
-            throw Err_Custom(std::string(__func__) + ": Caught exception ");
-        }
+    int maxTime = getMaxTimeInQueue();
 
-
-    // Acquire the session afet calling getMaxTimeInQueue to avoid
+    // Acquire the session after calling getMaxTimeInQueue to avoid
     // deadlocks (sql acquired and getMaxTimeInQueue locked
     // waiting for a session we have)
     soci::session sql(*connectionPool);
 
     try
+    {
+        // Prepare common statements
+        std::string job_id;
+
+        soci::statement stmtCancelFile = (sql.prepare <<
+                "UPDATE t_file SET "
+                "   job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), "
+                "   file_state = 'CANCELED', reason = :reason "
+                "   WHERE job_id = :jobId AND file_state  = 'SUBMITTED'",
+                soci::use(message), soci::use(job_id));
+
+
+        soci::statement stmtCancelJob = ( sql.prepare <<
+                "UPDATE t_job SET "
+                "   job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), "
+                "   job_state = 'CANCELED', reason = :reason"
+                "   WHERE job_id = :jobId AND job_state  = 'SUBMITTED'",
+                soci::use(message), soci::use(job_id));
+
+        // Cancel jobs using global timeout
+        if(maxTime > 0)
         {
-            if(hashSegment.start == 0)
-                {
-                    soci::rowset<std::string> rs = (sql.prepare << "SELECT job_id FROM t_job WHERE "
-                                                    "    submit_time < (sys_extract_utc(systimestamp) - numtodsinterval(:interval, 'hour')) AND "
-                                                    "    job_state  = 'SUBMITTED' and job_finished is NULL ",
-                                                    soci::use(maxTime));
+            soci::rowset<std::string> rs = (sql.prepare << "SELECT job_id FROM t_job WHERE "
+                                            "    submit_time < (sys_extract_utc(systimestamp) - numtodsinterval(:interval, 'hour')) AND "
+                                            "    job_state  = 'SUBMITTED' and job_finished is NULL ",
+                                            soci::use(maxTime));
 
-                    sql.begin();
-                    for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
-                        {
+            sql.begin();
+            for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+            {
+                job_id = (*i);
 
-                            sql << "UPDATE t_file SET job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), "
-                                "    file_state = 'CANCELED', reason = :reason "
-                                "WHERE job_id = :jobId AND "
-                                "      file_state  = 'SUBMITTED'",
-                                soci::use(message), soci::use(*i);
+                stmtCancelFile.execute(true);
+                stmtCancelJob.execute(true);
 
-                            sql << "UPDATE t_job SET job_finished = sys_extract_utc(systimestamp), finish_time = sys_extract_utc(systimestamp), "
-                                "    job_state = 'CANCELED', reason = :reason "
-                                "WHERE job_id = :jobId AND job_state  = 'SUBMITTED'",
-                                soci::use(message), soci::use(*i);
-
-                            jobs.push_back(*i);
-                        }
-                    sql.commit();
-                }
+                jobs.push_back(*i);
+            }
+            sql.commit();
         }
+
+        // Cancel jobs using their own timeout
+        time_t expTime = time(NULL);
+        soci::rowset<std::string> rs = (sql.prepare
+                << "SELECT job_id FROM t_job WHERE "
+                   "    max_time_in_queue IS NOT NULL AND max_time_in_queue < :expirationTime "
+                   "    AND job_state  = 'SUBMITTED' and job_finished is NULL ",
+                   soci::use(expTime));
+        sql.begin();
+        for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+        {
+            job_id = (*i);
+
+            stmtCancelFile.execute(true);
+            stmtCancelJob.execute(true);
+
+            jobs.push_back(*i);
+        }
+        sql.commit();
+    }
     catch (std::exception& e)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
+    {
+        sql.rollback();
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
     catch (...)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " );
-        }
+    {
+        sql.rollback();
+        throw Err_Custom(std::string(__func__) + ": Caught exception ");
+    }
 }
 
 

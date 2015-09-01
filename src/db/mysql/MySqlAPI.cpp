@@ -7325,22 +7325,11 @@ void MySqlAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
 {
     const static std::string message = "Job has been canceled because it stayed in the queue for too long";
 
-    int maxTime = 0;
+    // Only first host takes care of this task
+    if (hashSegment.start != 0)
+        return;
 
-    try
-    {
-        maxTime = getMaxTimeInQueue();
-        if (maxTime == 0)
-            return;
-    }
-    catch (std::exception& ex)
-    {
-        throw Err_Custom(std::string(__func__) + ": Caught exception " + ex.what());
-    }
-    catch (...)
-    {
-        throw Err_Custom(std::string(__func__) + ": Caught exception ");
-    }
+    int maxTime = getMaxTimeInQueue();
 
     // Acquire the session after calling getMaxTimeInQueue to avoid
     // deadlocks (sql acquired and getMaxTimeInQueue locked
@@ -7349,35 +7338,61 @@ void MySqlAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
 
     try
     {
-        if(hashSegment.start == 0)
+        // Prepare common statements
+        std::string job_id;
+
+        soci::statement stmtCancelFile = (sql.prepare <<
+                "UPDATE t_file SET "
+                "   job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+                "   file_state = 'CANCELED', reason = :reason "
+                "   WHERE job_id = :jobId AND file_state  = 'SUBMITTED'",
+                soci::use(message), soci::use(job_id));
+
+
+        soci::statement stmtCancelJob = ( sql.prepare <<
+                "UPDATE t_job SET "
+                "   job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+                "   job_state = 'CANCELED', reason = :reason"
+                "   WHERE job_id = :jobId AND job_state  = 'SUBMITTED'",
+                soci::use(message), soci::use(job_id));
+
+        // Cancel jobs using global timeout
+        if(maxTime > 0)
         {
-            std::string job_id;
             soci::rowset<std::string> rs = (sql.prepare << "SELECT job_id FROM t_job WHERE "
                                             "    submit_time < (UTC_TIMESTAMP() - interval :interval hour) AND "
                                             "    job_state  = 'SUBMITTED' and job_finished is NULL ",
                                             soci::use(maxTime));
-
-            soci::statement stmt1 = (sql.prepare << "UPDATE t_file SET job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(),  file_state = 'CANCELED', reason = :reason WHERE job_id = :jobId AND file_state  = 'SUBMITTED'",
-                                     soci::use(message), soci::use(job_id));
-
-
-            soci::statement stmt2 = ( sql.prepare << "UPDATE t_job SET job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), job_state = 'CANCELED', reason = :reason WHERE job_id = :jobId AND job_state  = 'SUBMITTED'",
-                                      soci::use(message), soci::use(job_id));
-
-
 
             sql.begin();
             for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
             {
                 job_id = (*i);
 
-                stmt1.execute(true);
-                stmt2.execute(true);
+                stmtCancelFile.execute(true);
+                stmtCancelJob.execute(true);
 
                 jobs.push_back(*i);
             }
             sql.commit();
         }
+
+        // Cancel jobs using their own timeout
+        soci::rowset<std::string> rs = (sql.prepare
+                << "SELECT job_id FROM t_job WHERE "
+                   "    max_time_in_queue IS NOT NULL AND max_time_in_queue < unix_timestamp() "
+                   "    AND job_state  = 'SUBMITTED' and job_finished is NULL ");
+        sql.begin();
+        for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+        {
+            job_id = (*i);
+
+            stmtCancelFile.execute(true);
+            stmtCancelJob.execute(true);
+
+            jobs.push_back(*i);
+        }
+        sql.commit();
     }
     catch (std::exception& e)
     {
