@@ -22,13 +22,14 @@
 #include <memory>
 #include "MsgProducer.h"
 #include "utility_routines.h"
-#include "concurrent_queue.h"
 #include "Logger.h"
 #include <signal.h>
 #include "error.h"
 #include "logger.h"
 #include "serverconfig.h"
 #include <sstream>
+
+#include "../common/ConcurrentQueue.h"
 
 // End-Of-Transmission character
 static const char EOT = 0x04;
@@ -298,7 +299,7 @@ void MsgProducer::onException( const CMSException& ex AMQCPP_UNUSED)
 {
     LOGGER_ERROR(ex.getMessage());
     stopThreads = true;
-    std::queue<std::string> myQueue = concurrent_queue::getInstance()->the_queue;
+    std::queue<std::string> myQueue = ConcurrentQueue::getInstance()->the_queue;
     std::string ret;
     while(!myQueue.empty())
         {
@@ -335,7 +336,7 @@ void MsgProducer::run()
                         }
 
                     //send messages
-                    msg = concurrent_queue::getInstance()->pop();
+                    msg = ConcurrentQueue::getInstance()->pop();
                     msgBk = msg;
                     sendMessage(msg);
                     msg.clear();

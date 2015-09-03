@@ -48,11 +48,12 @@
 #include <iostream>
 #include "MsgPipe.h"
 #include "MsgProducer.h"
-#include "concurrent_queue.h"
 #include "utility_routines.h"
 #include "name_to_uid.h"
 #include <execinfo.h>
 #include "error.h"
+
+#include "../common/ConcurrentQueue.h"
 #include "logger.h"
 #include "Logger.h"
 
@@ -130,7 +131,7 @@ void DoServer() throw()
             activemq::library::ActiveMQCPP::initializeLibrary();
 
             //initialize here to avoid race conditions
-            concurrent_queue::getInstance();
+            ConcurrentQueue::getInstance();
 
             MsgPipe pipeMsg1;
             MsgProducer producer;

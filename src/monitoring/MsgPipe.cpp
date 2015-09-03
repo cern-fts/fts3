@@ -29,12 +29,13 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <signal.h>
-#include "concurrent_queue.h"
 #include "Logger.h"
 #include <vector>
 #include <boost/filesystem.hpp>
 #include "definitions.h"
 #include <boost/lexical_cast.hpp>
+
+#include "../common/ConcurrentQueue.h"
 
 extern bool stopThreads;
 static bool signalReceived = false;
@@ -48,7 +49,7 @@ void handler(int)
             signalReceived = true;
 
             stopThreads = true;
-            std::queue<std::string> myQueue = concurrent_queue::getInstance()->the_queue;
+            std::queue<std::string> myQueue = ConcurrentQueue::getInstance()->the_queue;
             std::string ret;
             while(!myQueue.empty())
                 {
@@ -107,7 +108,7 @@ void MsgPipe::run()
                         {
                             for (iter = messages.begin(); iter != messages.end(); ++iter)
                                 {
-                                    concurrent_queue::getInstance()->push( (*iter).msg );
+                                    ConcurrentQueue::getInstance()->push( (*iter).msg );
                                 }
                             messages.clear();
                         }
@@ -130,7 +131,7 @@ void MsgPipe::run()
 
 void MsgPipe::cleanup()
 {
-    std::queue<std::string> myQueue = concurrent_queue::getInstance()->the_queue;
+    std::queue<std::string> myQueue = ConcurrentQueue::getInstance()->the_queue;
     std::string ret;
     while(!myQueue.empty())
         {

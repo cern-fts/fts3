@@ -18,16 +18,16 @@
  * limitations under the License.
  */
 
-#include "concurrent_queue.h"
+#include "ConcurrentQueue.h"
 
-bool concurrent_queue::instanceFlag = false;
-concurrent_queue* concurrent_queue::single = NULL;
+bool ConcurrentQueue::instanceFlag = false;
+ConcurrentQueue* ConcurrentQueue::single = NULL;
 
-concurrent_queue* concurrent_queue::getInstance()
+ConcurrentQueue* ConcurrentQueue::getInstance()
 {
     if (!instanceFlag)
         {
-            single = new concurrent_queue();
+            single = new ConcurrentQueue();
             instanceFlag = true;
             return single;
         }
@@ -46,7 +46,7 @@ concurrent_queue* concurrent_queue::getInstance()
  *  wait = 0  => don't block, return null if the queue is empty
  *  wait > 0  => block for <block> seconds
  */
-std::string concurrent_queue::pop(int wait)
+std::string ConcurrentQueue::pop(int wait)
 {
     std::string ret;
     pthread_mutex_lock(&lock);
@@ -80,7 +80,7 @@ std::string concurrent_queue::pop(int wait)
 }
 
 //push on the queue
-void concurrent_queue::push( std::string  val )
+void ConcurrentQueue::push( std::string  val )
 {
     pthread_mutex_lock(&lock);
     if( the_queue.size() < MAX_NUM_MSGS_MON)
@@ -89,7 +89,7 @@ void concurrent_queue::push( std::string  val )
     pthread_cond_signal(&cv);
 }
 
-unsigned int concurrent_queue::size()
+unsigned int ConcurrentQueue::size()
 {
     //pthread_mutex_lock(&lock);
     unsigned int ret = (unsigned int)the_queue.size();
@@ -97,7 +97,7 @@ unsigned int concurrent_queue::size()
     return ret;
 }
 
-bool concurrent_queue::empty()
+bool ConcurrentQueue::empty()
 {
     pthread_mutex_lock(&lock);
     bool ret = the_queue.empty();
@@ -106,7 +106,7 @@ bool concurrent_queue::empty()
 }
 
 //set in blocking mode, so a call to pop without args waits until something is added to the queue
-void concurrent_queue::block()
+void ConcurrentQueue::block()
 {
     pthread_mutex_lock(&lock);
     blck = 1;
@@ -116,7 +116,7 @@ void concurrent_queue::block()
 
 //set in non-blocking mode, so a call to pop returns immediately, returning NULL if the queue is empty
 //also tells all currently blocking pop calls to return immediately
-void concurrent_queue::nonblock()
+void ConcurrentQueue::nonblock()
 {
     pthread_mutex_lock(&lock);
     blck = 0;

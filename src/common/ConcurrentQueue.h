@@ -29,17 +29,17 @@
 #define MAX_NUM_MSGS_MON 20000
 
 
-class concurrent_queue
+class ConcurrentQueue
 {
 private:
     static bool instanceFlag;
-    static concurrent_queue *single;
+    static ConcurrentQueue *single;
     pthread_mutex_t lock; // The queue lock
     pthread_cond_t  cv;   // Lock conditional variable
     int             blck; // should pop() block by default
 
 public:
-    static concurrent_queue* getInstance();
+    static ConcurrentQueue* getInstance();
     std::queue<std::string> the_queue;  // The queue
     void nonblock();
     void block();
@@ -47,7 +47,7 @@ public:
     unsigned int size();
     void push( std::string value );
     std::string pop(const int wait = -1);
-    concurrent_queue()
+    ConcurrentQueue()
     {
         blck = 1;
         pthread_mutex_init(&lock, NULL);
