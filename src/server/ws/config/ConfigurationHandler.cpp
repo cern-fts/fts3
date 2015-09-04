@@ -37,8 +37,8 @@
 using namespace fts3::ws;
 
 ConfigurationHandler::ConfigurationHandler(std::string dn):
-    dn(dn),
     db (DBSingleton::instance().getDBObjectInstance()),
+    dn(dn),
     cfg()
 {
 }

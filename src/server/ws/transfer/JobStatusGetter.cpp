@@ -254,7 +254,7 @@ tns3__JobStatus* JobStatusGetter::handleStatusExceptionForGLite()
     std::string msg = "getTransferJobStatus: RequestID <" + job + "> was not found";
 
     // add backspaces at the begining of the error message
-    for (int i = 0; i < replace.size(); i++)
+    for (size_t i = 0; i < replace.size(); i++)
         msg = bs + msg;
 
     // create the status object

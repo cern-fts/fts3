@@ -72,16 +72,13 @@ impltns__ArrayOf_USCOREtns3_USCOREJobStatus* RequestLister::listDm(Authorization
 
 impltns__ArrayOf_USCOREtns3_USCOREJobStatus* RequestLister::list_impl(AuthorizationManager::Level lvl, query_t list)
 {
-    switch(lvl)
-        {
-        case AuthorizationManager::PRV:
-            dn = cgsi.getClientDn();
-            vo = cgsi.getClientVo();
-            break;
-        case AuthorizationManager::VO:
-            vo = cgsi.getClientVo();
-            break;
-        }
+    if (lvl == AuthorizationManager::PRV) {
+        dn = cgsi.getClientDn();
+        vo = cgsi.getClientVo();
+    }
+    else if (lvl == AuthorizationManager::VO) {
+        vo = cgsi.getClientVo();
+    }
 
     try
         {

@@ -343,6 +343,10 @@ AuthorizationManager::Level AuthorizationManager::authorize(soap* ctx, Operation
                 case VO:
                     msg += "(the user is authorised to manage resources only within his VO)";
                     break;
+
+                default:
+                    msg += "(The user is not allowed to perform the action)";
+                    break;
                 }
 
             throw Err_Custom(msg);

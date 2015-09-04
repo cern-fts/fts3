@@ -125,11 +125,11 @@ public:
 
 protected:
 
-    /// set of std::strings that are not allowed as SE or SE group name
-    std::set<std::string> notAllowed;
-
     /// Pointer to the 'GenericDbIfce' singleton
     GenericDbIfce* db;
+
+    /// set of std::strings that are not allowed as SE or SE group name
+    std::set<std::string> notAllowed;
 
     /**
      * Converts a STL map to JSON configuration std::string

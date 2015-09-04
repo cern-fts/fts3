@@ -58,12 +58,13 @@ const std::string Configuration::pub = "public";
 const std::string Configuration::share_only = "all";
 const int    Configuration::automatic = -1;
 
+
 Configuration::Configuration(std::string dn) :
-    dn(dn),
     db (DBSingleton::instance().getDBObjectInstance()),
-    insertCount(0),
     updateCount(0),
-    deleteCount(0)
+    insertCount(0),
+    deleteCount(0),
+    dn(dn)
 {
 
     notAllowed.insert(wildcard);

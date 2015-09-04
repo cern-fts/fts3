@@ -37,7 +37,7 @@ namespace ws
 
 using namespace fts3::common;
 
-Blacklister::Blacklister(soap* ctx, std::string name, std::string status, int timeout, bool blk) :
+Blacklister::Blacklister(soap* ctx, std::string name, std::string status, int timeout, bool blk):
     name(name),
     status(status),
     timeout(timeout),
@@ -50,8 +50,8 @@ Blacklister::Blacklister(soap* ctx, std::string name, std::string status, int ti
 }
 
 Blacklister::Blacklister(soap* ctx, std::string name, std::string vo, std::string status, int timeout, bool blk) :
-    name(name),
     vo(vo),
+    name(name),
     status(status),
     timeout(timeout),
     blk(blk),

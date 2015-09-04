@@ -569,7 +569,6 @@ time_t GSoapDelegationHandler::getTerminationTime(std::string delegationId)
             std::string delegationId = makeDelegationId();
             if (delegationId.empty()) throw Err_Custom("'getDelegationId' failed!");
 
-            time_t time;
             std::unique_ptr<Cred> cred (
                 DBSingleton::instance().getDBObjectInstance()->findCredential(delegationId, dn)
             );

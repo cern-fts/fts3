@@ -81,7 +81,7 @@ time_t globalTimeout;
 
 Transfer currentTransfer;
 
-gfal_context_t handle = NULL;
+gfal2_context_t handle = NULL;
 
 
 static std::string replace_dn(std::string& user_dn)
@@ -568,7 +568,7 @@ void myterminate()
 }
 
 
-int statWithRetries(gfal_context_t handle, const std::string& category, const std::string& url, off_t* size, std::string* errMsg)
+int statWithRetries(gfal2_context_t handle, const std::string& category, const std::string& url, off_t* size, std::string* errMsg)
 {
     struct stat statBuffer;
     GError* statError = NULL;
@@ -790,9 +790,9 @@ int main(int argc, char **argv)
     GError* handleError = NULL;
     GError *tmp_err = NULL;
     gfalt_params_t params;
-    handle = gfal_context_new(&handleError);
+    handle = gfal2_context_new(&handleError);
     params = gfalt_params_handle_new(NULL);
-    gfalt_set_event_callback(params, event_logger, NULL);
+    gfalt_add_event_callback(params, event_logger, NULL, NULL, NULL);
 
     if (!handle)
         {
@@ -926,8 +926,6 @@ int main(int argc, char **argv)
 
             // Scope
             {
-                gfalt_set_user_data(params, NULL, NULL);
-
                 logger.INFO() << "Transfer accepted" << std::endl;
                 if(opts.hide_user_dn)
                     {
@@ -1233,7 +1231,7 @@ int main(int argc, char **argv)
                                      "UPDATE", "",
                                      0, currentTransfer.fileSize);
 
-                gfalt_set_monitor_callback(params, &call_perf, NULL);
+                gfalt_add_monitor_callback(params, &call_perf, NULL, NULL, NULL);
 
                 //check all params before passed to gfal2
                 if ((currentTransfer.sourceUrl).c_str() == NULL || (currentTransfer.destUrl).c_str() == NULL)
@@ -1363,8 +1361,6 @@ int main(int argc, char **argv)
                     {
                         logger.INFO() << "Skipping destination file size check" << std::endl;
                     }
-
-                gfalt_set_user_data(params, NULL, NULL);
             }//logStream
 stop:
             msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
@@ -1542,7 +1538,7 @@ stop:
         }
     if (handle)
         {
-            gfal_context_free(handle);
+            gfal2_context_free(handle);
             handle = NULL;
         }
 

@@ -656,7 +656,7 @@ int fts3::impltns__cancel(soap *ctx, impltns__ArrayOf_USCOREsoapenc_USCOREstring
             // glite error message that is used in case that transfer could not be canceled because it is in terminal state
             string glite_err_msg = "Cancel failed (nothing was done).";
             // add the backspaces at the front of the message in order to erased unwanted text
-            for (int i = 0; i < erase.size(); i++)
+            for (size_t i = 0; i < erase.size(); i++)
                 {
                     glite_err_msg = bs + glite_err_msg;
                 }
