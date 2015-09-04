@@ -1,3 +1,6 @@
+ExcludeArch: armv7hl
+
+
 %bcond_with oracle
 
 %global _hardened_build 1
@@ -14,9 +17,12 @@ License:    ASL 2.0
 URL:        http://fts3-service.web.cern.ch/
 # The source for this package was pulled from upstream's vcs.  Use the
 # following commands to generate the tarball:
-#  git clone https://gitlab.cern.ch/fts/fts3.git
-#  tar -czvf fts-3.3.0.tar.gz fts3
-Source0: https://grid-deployment.web.cern.ch/grid-deployment/dms/fts3/tar/%{name}-%{version}.tar.gz
+#  git clone https://gitlab.cern.ch/fts/fts3.git -b master --depth=1 fts-3.3.1
+#  cd fts-3.3.1
+#  git submodule init && git submodule update
+#  cd ..
+#  tar --exclude-vcs -vczf fts-3.3.1.tar.gz fts-3.3.1
+Source0: %{name}-%{version}.tar.gz
 
 %if 0%{?el5}
 BuildRequires:  activemq-cpp-library
@@ -78,16 +84,13 @@ Requires: gfal2%{?_isa} >= 2.9.0
 Requires: gfal2-plugin-gridftp%{?_isa} >= 2.9.0
 Requires: gfal2-plugin-http%{?_isa} >= 2.9.0
 Requires: gfal2-plugin-srm%{?_isa} >= 2.9.0
-#Requires: gfal2-plugin-xrootd%{?_isa} >= 0.2.2
+#Requires: gfal2-plugin-xrootd%{?_isa}
 Requires: gridsite >= 1.7.25
 Requires(post):     chkconfig
 Requires(preun):    chkconfig
 Requires(postun):   initscripts
 Requires(preun):    initscripts
 
-#Requires: emi-resource-information-service (from EMI3)
-#Requires: emi-version (from EMI3)
-#Requires: fetch-crl3 (metapackage)
 
 %description server
 The FTS server is a service which accepts transfer jobs,
@@ -482,16 +485,49 @@ fi
 }
 
 %changelog
-* Wed Jun 03 2015 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.34-1
-  - Package everything in one single spec
-* Tue Feb 04 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.26-4
+* Fri Sep 04 2015 Alejandro Alvarez <aalvarez@cern.ch> - 3.3.1-1
+- New upstream release
+- fts-mysql integrated
+
+* Thu Aug 27 2015 Jonathan Wakely <jwakely@redhat.com> - 3.2.32-6
+- Rebuilt for Boost 1.59
+
+* Wed Jul 29 2015 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 3.2.32-5
+- Rebuilt for https://fedoraproject.org/wiki/Changes/F23Boost159
+
+* Wed Jul 22 2015 David Tardon <dtardon@redhat.com> - 3.2.32-4
+- rebuild for Boost 1.58
+
+* Wed Jun 17 2015 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 3.2.32-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_23_Mass_Rebuild
+
+* Sat May 02 2015 Kalev Lember <kalevlember@gmail.com> - 3.2.32-2
+- Rebuilt for GCC 5 C++11 ABI change
+
+* Thu Mar 05 2015  Alejandro Alvarez Ayllon <aalvarez@cern.ch> - 3.2.31-1
+- Update for new upstream release
+
+* Thu Jan 29 2015 Petr Machata <pmachata@redhat.com> - 3.2.30-3
+- Rebuild for boost 1.57.0
+- Include <boost/scoped_ptr.hpp> in src/url-copy/main.cpp
+  (fts-3.2.30-boost157.patch)
+
+* Mon Jan 26 2015 Alejandro Alvarez Ayllon <aalvarez@cern.ch> - 3.2.30-2
+- Rebuilt for gsoap 2.8.21
+
+* Wed Nov 26 2014 Alejandro Alvarez Ayllon <aalvarez@cern.ch> - 3.2.30-1
+- Update for new upstream release
+
+* Thu Sep 04 2014 Orion Poplawski <orion@cora.nwra.com> - 3.2.26.2-4
+  - Rebuild for pugixml 1.4
+* Sat Aug 16 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 3.2.26.2-3
+  - Rebuilt for https://fedoraproject.org/wiki/Fedora_21_22_Mass_Rebuild
+* Wed Aug 13 2014 Michal Simon <michal.simon@cern.ch> - 3.2.26.2-2
+  - Update for new upstream releas
+* Tue Feb 04 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.26-1
   - introduced dist back in the release
-* Tue Jan 14 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.26-3
-  - using cmake28
-* Mon Jan 13 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.26-2
+* Mon Jan 13 2014 Alejandro Alvarez <aalvarez@cern.ch> - 3.2.25-2
   - separated rpms for messaging and infosys subsystems
-* Sun Jan 12 2014 Michal Simon <michal.simon@cern.ch> - 3.2.25-1
-  - Update for new upstream release
 * Mon Nov 18 2013 Alejandro Alvarez Ayllon <aalvarez@cern.ch> - 3.1.33-2
   - Added missing changelog entry
   - Fixed bogus date
@@ -528,3 +564,4 @@ fi
   - trailing white-spaces have been removed
 * Wed Apr 24 2013 Michal Simon <michal.simon@cern.ch> - 3.0.0-1
   - First EPEL release
+
