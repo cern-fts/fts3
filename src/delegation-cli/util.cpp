@@ -27,7 +27,7 @@
 #include <config.h>
 #endif
 
-#include <util.h>
+#include "util.h"
 #include "ServiceDiscoveryIfce.h"
 
 #include <gridsite.h>

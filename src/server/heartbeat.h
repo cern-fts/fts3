@@ -21,7 +21,7 @@
 #pragma once
 
 #include "active_object.h"
-#include "SingleDbInstance.h"
+#include "db/generic/SingleDbInstance.h"
 #include "threadpool.h"
 #include "DrainMode.h"
 #include <ctime>

@@ -28,7 +28,7 @@
 #include <queue>
 
 #include "JobStatus.h"
-#include "JobParameterHandler.h"
+#include "common/JobParameterHandler.h"
 #include "FileTransferStatus.h"
 #include "SePair.h"
 #include "TransferJobSummary.h"
@@ -41,8 +41,8 @@
 #include "SeProtocolConfig.h"
 #include "CredCache.h"
 #include "Cred.h"
-#include "definitions.h"
-#include "OptimizerSample.h"
+#include "common/definitions.h"
+#include "common/OptimizerSample.h"
 
 #include "LinkConfig.h"
 #include "ShareConfig.h"

@@ -20,18 +20,18 @@
 
 #pragma once
 
-#include <Cred.h>
-#include <CredCache.h>
-#include <FileTransferStatus.h>
-#include <JobStatus.h>
-#include <LinkConfig.h>
-#include <Se.h>
-#include <SeAndConfig.h>
-#include <SeGroup.h>
-#include <SeProtocolConfig.h>
-#include <ShareConfig.h>
-#include <TransferJob.h>
-#include <OAuth.h>
+#include "db/generic/Cred.h"
+#include "db/generic/CredCache.h"
+#include "db/generic/FileTransferStatus.h"
+#include "db/generic/JobStatus.h"
+#include "db/generic/LinkConfig.h"
+#include "db/generic/Se.h"
+#include "db/generic/SeAndConfig.h"
+#include "db/generic/SeGroup.h"
+#include "db/generic/SeProtocolConfig.h"
+#include "db/generic/ShareConfig.h"
+#include "db/generic/TransferJob.h"
+#include "db/generic/OAuth.h"
 #include <soci.h>
 #include <time.h>
 

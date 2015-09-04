@@ -21,7 +21,7 @@
 #pragma once
 
 #include <soci/soci.h>
-#include "GenericDbIfce.h"
+#include "db/generic/GenericDbIfce.h"
 
 
 class OracleAPI : public GenericDbIfce

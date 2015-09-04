@@ -19,9 +19,9 @@
  */
 
 #include "SingleTrStateInstance.h"
-#include "logger.h"
-#include "error.h"
-#include "producer_consumer_common.h"
+#include "common/logger.h"
+#include "common/error.h"
+#include "common/producer_consumer_common.h"
 #include "db/generic/SingleDbInstance.h"
 #include "config/serverconfig.h"
 #include <sstream>

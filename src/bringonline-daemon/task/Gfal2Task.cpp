@@ -20,7 +20,7 @@
 
 #include "Gfal2Task.h"
 
-#include "context/JobContext.h"
+#include "../context/JobContext.h"
 
 using namespace fts3::common;
 

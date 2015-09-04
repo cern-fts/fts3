@@ -26,7 +26,7 @@
 
 #include "common/logger.h"
 #include "common/error.h"
-#include "JobStatusHandler.h"
+#include "common/JobStatusHandler.h"
 
 #include <algorithm>
 

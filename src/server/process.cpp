@@ -49,7 +49,7 @@
 #include "common/error.h"
 #include <iostream>
 #include <fstream>
-#include "SingleDbInstance.h"
+#include "db/generic/SingleDbInstance.h"
 #include <dirent.h>
 #include <sys/socket.h>
 

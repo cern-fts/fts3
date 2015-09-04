@@ -37,7 +37,7 @@
 #include "common/logger.h"
 #include "common/error.h"
 #include "common/uuid_generator.h"
-#include "parse_url.h"
+#include "common/parse_url.h"
 #include "ws/delegation/GSoapDelegationHandler.h"
 
 #include <fstream>
@@ -47,7 +47,7 @@
 #include <string.h>
 
 #include <cgsi_plugin.h>
-#include "ws-ifce/gsoap/fts3.nsmap"
+//#include "fts3.nsmap"
 
 #include "ws/SingleTrStateInstance.h"
 

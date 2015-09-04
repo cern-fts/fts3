@@ -19,9 +19,9 @@
  */
 
 #include "site_name.h"
-#include "parse_url.h"
-#include "logger.h"
-#include "error.h"
+#include "common/parse_url.h"
+#include "common/logger.h"
+#include "common/error.h"
 
 #include "infosys/SiteNameRetriever.h"
 

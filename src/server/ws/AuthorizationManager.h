@@ -23,11 +23,12 @@
 
 #include "common/ThreadSafeInstanceHolder.h"
 #include "db/generic/OwnedResource.h"
-#include "ws-ifce/gsoap/gsoap_stubs.h"
+//#include "ws-ifce/gsoap/gsoap_stubs.h"
 
 #include <set>
 #include <vector>
 #include <utility>
+#include <stdsoap2.h>
 
 #include <boost/tokenizer.hpp>
 

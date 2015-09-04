@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "definitions.h"
+#include "common/definitions.h"
 
 #include <string>
 #include <boost/thread/mutex.hpp>

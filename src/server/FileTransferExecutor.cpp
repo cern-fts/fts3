@@ -20,8 +20,8 @@
 
 #include "FileTransferExecutor.h"
 
-#include "../cred/CredUtility.h"
-#include "../cred/DelegCred.h"
+#include "cred/CredUtility.h"
+#include "cred/DelegCred.h"
 #include "common/parse_url.h"
 #include "common/OptimizerSample.h"
 #include "common/logger.h"
@@ -33,8 +33,6 @@
 #include "FileTransferScheduler.h"
 #include "ProtocolResolver.h"
 #include "process.h"
-#include "UserProxyEnv.h"
-#include "DelegCred.h"
 #include "ws/SingleTrStateInstance.h"
 
 #include "oauth.h"

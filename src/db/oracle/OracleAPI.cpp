@@ -22,16 +22,16 @@
 #include <boost/tokenizer.hpp>
 #include <boost/regex.hpp>
 
-#include <error.h>
-#include <logger.h>
+#include "common/error.h"
+#include "common/logger.h"
 #include <soci/oracle/soci-oracle.h>
 #include <signal.h>
 #include <sys/param.h>
 #include <unistd.h>
 #include "OracleAPI.h"
 #include "sociConversions.h"
-#include "queue_updater.h"
-#include "DbUtils.h"
+#include "common/queue_updater.h"
+#include "db/generic/DbUtils.h"
 
 
 using namespace db;

@@ -1,58 +1,65 @@
+#
+# Copyright (c) CERN 2013-2015
+#
+# Copyright (c) Members of the EMI Collaboration. 2010-2013
+#  See  http://www.eu-emi.eu/partners for details on the copyright
+#  holders.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 cmake_minimum_required(VERSION 2.8)
 
-set(fts_include_dir 
-    "${PROJECT_SOURCE_DIR}/src/"
-    "${CMAKE_BINARY_DIR}/src/"
+# Dependencies
+find_package(GFAL2)
+find_package(GLIB2)
+find_package(Boost COMPONENTS thread system)
+
+include_directories (
+    ${GFAL2_INCLUDE_DIRS}
+    ${GLIB2_INCLUDE_DIRS}
 )
 
-include_directories (${fts_include_dir})
-include_directories (.)
-include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/)
-include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/common/)
-include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/cred/)
-include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/db/generic/)
-include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/server/)
-include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/config/)
-include_directories (BEFORE ${PROJECT_BINARY_DIR}/src/common/)
-include_directories (BEFORE ${PROJECT_BINARY_DIR}/src/config/)
-include_directories (BEFORE ${PROJECT_BINARY_DIR}/src/server/)
-include_directories (BEFORE ${PROJECT_BINARY_DIR}/src/db/generic/)
-include_directories (/usr/include/gfal2)
-link_directories (/usr/lib64/gfal2-plugins)
-
-
-find_package (GLIB2)
-include_directories (${GLIB2_INCLUDE_DIRS})
-
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
+# Sources
 file(GLOB fts_bringonline_SOURCES "*.cpp" "task/*.cpp" "context/*.cpp" "fetch/*.cpp")
 
 add_executable(fts_bringonline ${fts_bringonline_SOURCES})
-add_dependencies(fts_bringonline fts_config)
-add_dependencies(fts_bringonline fts_common)
-add_dependencies(fts_bringonline fts_db_generic)
-add_dependencies(fts_bringonline fts_proxy)
 
-find_package (Boost COMPONENTS thread system)
+target_link_libraries(fts_bringonline
+    ${CMAKE_DL_LIBS}
+    ${CMAKE_THREAD_LIBS_INIT}
+    ${GFAL2_LIBRARIES}
+    ${GLIB2_LIBRARIES}
+    ${Boost_LIBRARIES}
+    fts_db_generic
+    fts_config
+    fts_common
+    fts_proxy
+)
 
-target_link_libraries(fts_bringonline ${CMAKE_DL_LIBS})
-target_link_libraries(fts_bringonline ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries(fts_bringonline fts_db_generic)
-target_link_libraries(fts_bringonline fts_config)
-target_link_libraries(fts_bringonline fts_common)
-target_link_libraries(fts_bringonline fts_proxy)
 if(FTS3_COMPILE_WITH_UNITTEST_NEW)
-	target_link_libraries(fts_bringonline -lboost_unit_test_framework)
+	target_link_libraries(fts_bringonline boost_unit_test_framework)
 endif()
-target_link_libraries(fts_bringonline  -luuid -lssl -lgfal_transfer -lgfal2
-                                       -lglib-2.0 ${fts_libs}
-                                       ${Boost_LIBRARIES})
 
-install(TARGETS         fts_bringonline 
-	RUNTIME             DESTINATION ${SBIN_INSTALL_DIR} )		
+# Install artifacts
+install(
+    TARGETS    fts_bringonline 
+	RUNTIME    DESTINATION ${SBIN_INSTALL_DIR}
+)		
 	
-install(FILES         fts-bringonline.initd
-        DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d 
+install(
+    FILES       fts-bringonline.initd
+    DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d 
 	PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
-	RENAME fts-bringonline )
+	RENAME fts-bringonline
+)

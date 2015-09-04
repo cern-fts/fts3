@@ -1,8 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
 
-include_directories (BEFORE ../)
-include_directories (BEFORE ../common)
-include_directories (BEFORE ../db/generic)
 include_directories (/usr/include/soci)
 
 add_library (fts_profiler SHARED Profiler.cpp)

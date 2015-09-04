@@ -19,7 +19,7 @@
  */
 
 #include "DynamicLibraryManager.h"
-#include "error.h"
+#include "common/error.h"
 #include <dlfcn.h>
 #include <unistd.h>
 #include <iostream>

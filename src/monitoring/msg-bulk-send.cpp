@@ -49,12 +49,11 @@
 #include "MsgPipe.h"
 #include "MsgProducer.h"
 #include "utility_routines.h"
-#include "name_to_uid.h"
+#include "common/name_to_uid.h"
 #include <execinfo.h>
-#include "error.h"
+#include "common/error.h"
 
-#include "../common/ConcurrentQueue.h"
-#include "logger.h"
+#include "../common/Concurrent_Queue.h"
 #include "Logger.h"
 
 using namespace std;

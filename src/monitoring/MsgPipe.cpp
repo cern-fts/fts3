@@ -32,10 +32,9 @@
 #include "Logger.h"
 #include <vector>
 #include <boost/filesystem.hpp>
-#include "definitions.h"
+#include "common/definitions.h"
 #include <boost/lexical_cast.hpp>
-
-#include "../common/ConcurrentQueue.h"
+#include "common/Concurrent_Queue.h"
 
 extern bool stopThreads;
 static bool signalReceived = false;

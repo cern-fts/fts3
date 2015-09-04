@@ -26,4 +26,4 @@ struct SOAP_ENV__Fault;
 
 using namespace fts3;
 
-#include "ws-ifce/gsoap/fts3H.h"
+#include "fts3H.h"

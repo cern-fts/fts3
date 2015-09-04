@@ -15,16 +15,8 @@
 
 cmake_minimum_required(VERSION 2.8)
 
-set (CMAKE_INCLUDE_CURRENT_DIR ON)
-
-include_directories ("${PROJECT_SOURCE_DIR}/src/cli")
-include_directories ("${PROJECT_BINARY_DIR}/src")
-
 FILE(GLOB sources "*.cpp")
 FILE(GLOB cli_sources "${PROJECT_SOURCE_DIR}/src/cli/tests/*.cpp")
-
-SET(fts_include_dir "${PROJECT_SOURCE_DIR}/src/")
-include_directories (${fts_include_dir})
 
 add_executable (fts_unittest 
 	${sources} 

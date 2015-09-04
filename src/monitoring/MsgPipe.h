@@ -41,9 +41,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include "logger.h"
-#include "error.h"
-#include "producer_consumer_common.h"
+#include "common/logger.h"
+#include "common/error.h"
+#include "common/producer_consumer_common.h"
 
 using namespace activemq;
 using namespace activemq::core;
@@ -52,7 +52,6 @@ using namespace decaf::lang;
 using namespace decaf::util;
 using namespace decaf::util::concurrent;
 using namespace cms;
-using namespace fts3::common;
 
 
 class MsgPipe : public Runnable

@@ -3,13 +3,8 @@ cmake_minimum_required(VERSION 2.8)
 find_package(OCCI)
 
 include_directories(BEFORE ${OCCI_INCLUDE_DIR})
-include_directories (BEFORE ../generic)
-include_directories (BEFORE ../..)
-include_directories (BEFORE ../../common)
 include_directories (/usr/include/soci)
-include_directories (.)
 
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(fts_db_oracle_SOURCES OracleAPI.cpp)
 
 add_library(fts_db_oracle SHARED ${fts_db_oracle_SOURCES})

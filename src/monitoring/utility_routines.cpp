@@ -47,8 +47,8 @@
 #include <stdio.h>
 #include <netdb.h>
 #include <netinet/in.h>
-#include "producer_consumer_common.h"
-#include "name_to_uid.h"
+#include "common/producer_consumer_common.h"
+#include "common/name_to_uid.h"
 #include "common/error.h"
 #include <boost/lexical_cast.hpp>
 

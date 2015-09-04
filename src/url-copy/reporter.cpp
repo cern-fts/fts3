@@ -25,7 +25,7 @@
 #include <sys/types.h>
 #include "boost/date_time/gregorian/gregorian.hpp"
 #include <boost/tokenizer.hpp>
-#include "producer_consumer_common.h"
+#include "common/producer_consumer_common.h"
 #include <algorithm>
 #include <ctime>
 #include <sys/param.h>

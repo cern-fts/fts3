@@ -20,8 +20,8 @@
 
 #include "gsoap_acceptor.h"
 #include "gsoap_request_handler.h"
-#include "ws-ifce/gsoap/fts3.nsmap"
-#include "serverconfig.h"
+#include "fts3.nsmap"
+#include "config/serverconfig.h"
 #include <cgsi_plugin.h>
 #include <signal.h>
 #include <sys/socket.h>

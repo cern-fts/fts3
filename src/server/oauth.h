@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <GenericDbIfce.h>
+#include <db/generic/GenericDbIfce.h>
 
 namespace fts3
 {

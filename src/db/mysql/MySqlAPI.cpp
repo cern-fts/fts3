@@ -24,8 +24,8 @@
 #include <boost/regex.hpp>
 #include <cstdlib>
 #include <map>
-#include <error.h>
-#include <logger.h>
+#include "common/error.h"
+#include "common/logger.h"
 #include <soci/mysql/soci-mysql.h>
 #include <mysql/mysql.h>
 #include <signal.h>
@@ -34,8 +34,8 @@
 #include <unistd.h>
 #include "MySqlAPI.h"
 #include "sociConversions.h"
-#include "queue_updater.h"
-#include "DbUtils.h"
+#include "common/queue_updater.h"
+#include "db/generic/DbUtils.h"
 #include <random>
 #include <stdint.h>
 #include <unistd.h>

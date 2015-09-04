@@ -17,11 +17,6 @@ cmake_minimum_required(VERSION 2.8)
 
 find_package(ActiveMQcpp 3.2.0 REQUIRED)
 
-set (CMAKE_INCLUDE_CURRENT_DIR ON)
-include_directories (${PROJECT_SOURCE_DIR}/src/common/)
-include_directories (${PROJECT_SOURCE_DIR}/src/config/)
-include_directories (.)
-
 # We include directly the sources from common to avoid pulling
 # lots of dependencies to the messaging, increasing its size
 set(fts_msg_ifce_SOURCES
@@ -49,8 +44,6 @@ find_package (Boost COMPONENTS filesystem thread system)
 find_package (JSONC REQUIRED)
 
 include_directories (${ACTIVEMQCPP_INCLUDE_DIR})
-include_directories (${PROJECT_SOURCE_DIR}/src/common/)
-include_directories (${fts_include_dir})
 include_directories (${JSONC_INCLUDE_DIRS})
 
 

@@ -16,12 +16,6 @@
 cmake_minimum_required(VERSION 2.8)
 
 
-
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(fts_include_dir "${PROJECT_SOURCE_DIR}/src/")
-include_directories (${fts_include_dir})
-
-
 file(GLOB fts_config "*.cpp")
 add_library(fts_config SHARED ${fts_config})
 add_dependencies(fts_config fts_common)

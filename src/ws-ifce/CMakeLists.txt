@@ -15,12 +15,6 @@
 
 cmake_minimum_required(VERSION 2.8)
 
-set(fts_include_dir 
-    "${PROJECT_SOURCE_DIR}/src/"
-    "${CMAKE_BINARY_DIR}/src/"
-)
-
-include_directories (${fts_include_dir})
 
 # GSOAP file generation - general part
 find_package(gSOAP)
@@ -97,6 +91,9 @@ add_custom_command(
     DEPENDS ${delegation_header_file}
     COMMAND ${GSOAP_SOAPCPP2} -C -n -w -x -p ${delegation_prefix} -d ${generated_files_dir} -I ${GSOAP_IMPORT_DIR} ${delegation_header_file} 
 )
+
+# Generated header files
+include_directories("${generated_files_dir}")
 
 add_library(fts_ws_ifce_server SHARED 
     ${gsoap_env_source_files}

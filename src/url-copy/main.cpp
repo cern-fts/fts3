@@ -29,17 +29,17 @@
 #include <cstring>
 
 #include "args.h"
-#include "definitions.h"
+#include "common/definitions.h"
 #include "errors.h"
 #include "file_management.h"
 #include "heuristics.h"
 #include "logger.h"
-#include "msg-ifce.h"
-#include "name_to_uid.h"
+#include "monitoring/msg-ifce.h"
+#include "common/name_to_uid.h"
 #include "reporter.h"
 #include "transfer.h"
-#include "UserProxyEnv.h"
-#include "DelegCred.h"
+#include "common/UserProxyEnv.h"
+#include "cred/DelegCred.h"
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/lexical_cast.hpp>
 #include <iostream>
@@ -50,7 +50,6 @@
 #include <vector>
 #include <boost/algorithm/string.hpp>
 
-#include "../cred/DelegCred.h"
 #include "common/panic.h"
 #include "version.h"
 

@@ -28,7 +28,7 @@
 #include "exception/gsoap_error.h"
 
 
-#include "ws-ifce/gsoap/fts3.nsmap"
+#include "fts3.nsmap"
 
 #include "rest/ResponseParser.h"
 

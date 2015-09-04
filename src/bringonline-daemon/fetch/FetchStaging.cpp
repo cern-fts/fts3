@@ -20,9 +20,9 @@
 
 #include "FetchStaging.h"
 
-#include "task/BringOnlineTask.h"
-#include "task/PollTask.h"
-#include "task/WaitingRoom.h"
+#include "../task/BringOnlineTask.h"
+#include "../task/PollTask.h"
+#include "../task/WaitingRoom.h"
 
 #include "server/DrainMode.h"
 

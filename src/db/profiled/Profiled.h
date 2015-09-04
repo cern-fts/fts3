@@ -22,7 +22,7 @@
 
 #include <iomanip>
 #include <map>
-#include "GenericDbIfce.h"
+#include "db/generic/GenericDbIfce.h"
 
 /**
  * This class is intended to wrap implementations of the DB,

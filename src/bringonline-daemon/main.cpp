@@ -22,8 +22,8 @@
 #include "common/logger.h"
 #include "common/ThreadPool.h"
 #include "common/panic.h"
+#include "common/name_to_uid.h"
 #include "config/serverconfig.h"
-#include "server.h"
 
 #include "task/Gfal2Task.h"
 #include "fetch/FetchStaging.h"
@@ -31,10 +31,10 @@
 #include "fetch/FetchDeletion.h"
 #include "state/StagingStateUpdater.h"
 #include "state/DeletionStateUpdater.h"
+#include "server/DrainMode.h"
 
 #include <string>
 
-using namespace fts3::server; 
 using namespace fts3::common;
 using namespace fts3::config;
 
@@ -241,7 +241,7 @@ int DoServer(int argc, char** argv)
                 }
 
             // Start profiling
-            ProfilingSubsystem::getInstance().start();
+            fts3::ProfilingSubsystem::getInstance().start();
 
             boost::thread hbThread(heartbeat);
 

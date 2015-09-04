@@ -24,12 +24,10 @@
 #include "utility_routines.h"
 #include "Logger.h"
 #include <signal.h>
-#include "error.h"
-#include "logger.h"
-#include "serverconfig.h"
+#include "common/error.h"
+#include "config/serverconfig.h"
 #include <sstream>
-
-#include "../common/ConcurrentQueue.h"
+#include "../common/Concurrent_Queue.h"
 
 // End-Of-Transmission character
 static const char EOT = 0x04;

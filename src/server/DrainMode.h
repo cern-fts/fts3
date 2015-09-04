@@ -22,7 +22,7 @@
 #define FTSDRAIN_H_
 
 #include "common/ThreadSafeInstanceHolder.h"
-#include "SingleDbInstance.h"
+#include "db/generic/SingleDbInstance.h"
 
 using namespace db;
 

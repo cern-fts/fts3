@@ -23,7 +23,7 @@
 
 
 #include "Gfal2Task.h"
-#include "context/StagingContext.h"
+#include "../context/StagingContext.h"
 
 #include "common/definitions.h"
 

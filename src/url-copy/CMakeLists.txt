@@ -15,21 +15,9 @@
 
 cmake_minimum_required(VERSION 2.8)
 
-set (CMAKE_INCLUDE_CURRENT_DIR ON)
 
-
-SET(fts_include_dir "${PROJECT_SOURCE_DIR}/src/")
 link_directories (/usr/lib64/gfal2-plugins)
 
-include_directories (${PROJECT_SOURCE_DIR}/src/common/)
-include_directories (${PROJECT_SOURCE_DIR}/src/monitoring/)
-include_directories (${PROJECT_SOURCE_DIR}/src/cred/)
-
-include_directories (${PROJECT_BINARY_DIR}/src/common/)
-include_directories (${PROJECT_BINARY_DIR}/src/monitoring/)
-include_directories (${PROJECT_BINARY_DIR}/src/cred/)
-
-include_directories (${fts_include_dir})
 include_directories (/usr/include/gfal2)
 
 find_package (GLIB2)

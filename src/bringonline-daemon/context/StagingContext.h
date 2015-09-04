@@ -22,7 +22,7 @@
 #define STAGINGCONTEXT_H_
 
 #include "JobContext.h"
-#include "state/StagingStateUpdater.h"
+#include "../state/StagingStateUpdater.h"
 
 #include "cred/DelegCred.h"
 

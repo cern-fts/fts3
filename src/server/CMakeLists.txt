@@ -22,18 +22,11 @@ set(fts_include_dir
     "${CMAKE_BINARY_DIR}/src/"
 )
 
-include_directories (${fts_include_dir})
-include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/url-copy/)
-include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/db/generic/)
-include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/common/)
-include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/config/)
-include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/infosys/)
-include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/cred/)
-include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/ws-ifce/)
-include_directories (BEFORE ${PROJECT_BINARY_DIR}/src/ws-ifce/)
-
 find_package (GLIB2)
 include_directories (${GLIB2_INCLUDE_DIRS})
+
+# Require soap headers
+include_directories ("${CMAKE_BINARY_DIR}/src/ws-ifce/gsoap")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(fts_libs "-lboost_unit_test_framework")

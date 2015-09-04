@@ -20,8 +20,8 @@
 
 #include "SingleDbInstance.h"
 #include <fstream>
-#include "logger.h"
-#include "error.h"
+#include "common/logger.h"
+#include "common/error.h"
 #include "config/serverconfig.h"
 #include "version.h"
 #include "../profiled/Profiled.h"
@@ -85,11 +85,11 @@ DBSingleton::DBSingleton(): dbBackend(NULL)
         {
             if(dlm)
                 {
-                    throw Err_Custom(dlm->getLastError());
+                    throw Err_System(dlm->getLastError());
                 }
             else
                 {
-                    throw Err_Custom("Can't load " + libraryFileName + " plugin" );
+                    throw Err_System("Can't load " + libraryFileName + " plugin" );
                 }
         }
 }

@@ -24,7 +24,7 @@
 #include "DelegCred.h"
 
 #include "CredUtility.h"
-#include "SingleDbInstance.h"
+#include "db/generic/SingleDbInstance.h"
 
 #include <globus_gsi_credential.h>
 

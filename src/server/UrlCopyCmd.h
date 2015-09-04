@@ -25,7 +25,7 @@
 #include <map>
 #include <string>
 
-#include "TransferFiles.h"
+#include "db/generic/TransferFiles.h"
 #include "ProtocolResolver.h"
 
 namespace fts3 {

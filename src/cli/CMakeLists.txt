@@ -19,22 +19,20 @@ cmake_minimum_required (VERSION 2.6)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-set(fts_include_dir
-    "${PROJECT_SOURCE_DIR}/src/"
-    "${CMAKE_BINARY_DIR}/src/"
-)
+# Dependencies
+find_package(GLOBUS)
+include_directories(${GLOBUS_INCLUDE_DIRS})
 
-find_package (GLOBUS)
-include_directories (${GLOBUS_INCLUDE_DIRS})
-
-FIND_PACKAGE(PythonLibs REQUIRED)
-include_directories (${fts_include_dir} ${PYTHON_INCLUDE_PATH})
-include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/common/)
+find_package(PythonLibs REQUIRED)
+include_directories(${PYTHON_INCLUDE_PATH})
 
 find_package (Boost COMPONENTS python program_options unit_test_framework REQUIRED)
 execute_process (COMMAND python -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)" 
                  OUTPUT_VARIABLE PYTHON_SITE_PACKAGES
                  OUTPUT_STRIP_TRAILING_WHITESPACE)
+                 
+# Require soap headers
+include_directories ("${CMAKE_BINARY_DIR}/src/ws-ifce/gsoap")
 
 # add a target to generate API documentation with Doxygen
 find_package(Doxygen)

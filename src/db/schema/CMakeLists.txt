@@ -15,10 +15,6 @@
 
 cmake_minimum_required(VERSION 2.8)
 
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(fts_include_dir "${PROJECT_SOURCE_DIR}/src/")
-include_directories (${fts_include_dir})
-
 if (ORACLEBUILD STREQUAL "ON")
 install(FILES         oracle-drop.sql
         DESTINATION ${SHARE_INSTALL_PREFIX}/fts-oracle )

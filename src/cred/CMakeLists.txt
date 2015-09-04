@@ -1,19 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
-include_directories (.)
-include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/common/)
-include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/db/generic/)
-include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/config/)
-include_directories (BEFORE ${PROJECT_BINARY_DIR}/src/config/)
-include_directories (BEFORE ${PROJECT_BINARY_DIR}/src/common/)
-include_directories (BEFORE ${PROJECT_BINARY_DIR}/src/db/generic/)
-
 find_package (GLOBUS)
 include_directories (${GLOBUS_INCLUDE_DIRS})
-
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(fts_include_dir "${PROJECT_SOURCE_DIR}/src/")
-include_directories (${fts_include_dir})
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(fts_proxy_SOURCES CredUtility.cpp DelegCred.cpp TempFile.cpp)

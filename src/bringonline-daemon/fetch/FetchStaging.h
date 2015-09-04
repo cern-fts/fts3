@@ -22,8 +22,8 @@
 #define FETCHSTAGING_H_
 
 #include "common/ThreadPool.h"
-#include "task/Gfal2Task.h"
-#include "context/StagingContext.h"
+#include "../task/Gfal2Task.h"
+#include "../context/StagingContext.h"
 
 #include "cred/DelegCred.h"
 

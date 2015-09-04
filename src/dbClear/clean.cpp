@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-#include<iostream>
+#include <iostream>
 #include <cstdio>
 #include <signal.h>
 #include <unistd.h>
@@ -26,9 +26,10 @@
 #include "common/error.h"
 #include "common/logger.h"
 #include "config/serverconfig.h"
-#include "server.h"
 #include "db/generic/SingleDbInstance.h"
+#include "profiler/Profiler.h"
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -62,7 +63,8 @@ void fts3_initialize_db_backend()
 static int fexists(const char *filename)
 {
     struct stat buffer;
-    if (stat(filename, &buffer) == 0) return 0;
+    if (::stat(filename, &buffer) == 0)
+        return 0;
     return -1;
 }
 
@@ -122,7 +124,7 @@ int main(int argc, char** argv)
                                            << commit;
 
             // If profiling is configured, dump the timing
-            db::DBSingleton::instance().getDBObjectInstance()->storeProfiling(&ProfilingSubsystem::getInstance());
+            db::DBSingleton::instance().getDBObjectInstance()->storeProfiling(&fts3::ProfilingSubsystem::getInstance());
 
         }
     catch (Err& e)

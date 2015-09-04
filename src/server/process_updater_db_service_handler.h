@@ -23,7 +23,7 @@
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
 #include <string>
-#include "SingleDbInstance.h"
+#include "db/generic/SingleDbInstance.h"
 #include "common/logger.h"
 #include "common/error.h"
 #include <iostream>
@@ -38,8 +38,8 @@
 #include <pwd.h>
 #include <fstream>
 #include "config/serverconfig.h"
-#include "definitions.h"
-#include "queue_updater.h"
+#include "common/definitions.h"
+#include "common/queue_updater.h"
 #include <boost/algorithm/string.hpp>
 #include "ws/SingleTrStateInstance.h"
 #include <boost/filesystem.hpp>

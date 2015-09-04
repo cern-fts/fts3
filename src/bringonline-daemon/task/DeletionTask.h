@@ -24,7 +24,7 @@
 
 #include "Gfal2Task.h"
 
-#include "context/DeletionContext.h"
+#include "../context/DeletionContext.h"
 
 #include "common/definitions.h"
 

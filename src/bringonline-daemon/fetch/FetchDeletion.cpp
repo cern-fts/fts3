@@ -20,15 +20,15 @@
 
 #include "FetchDeletion.h"
 
-#include "task/DeletionTask.h"
-#include "context/DeletionContext.h"
+#include "../task/DeletionTask.h"
+#include "../context/DeletionContext.h"
 
 #include "server/DrainMode.h"
 #include "db/generic/SingleDbInstance.h"
 #include "common/parse_url.h"
 
 #include <map>
-#include "../../cred/CredUtility.h"
+#include "cred/CredUtility.h"
 
 extern bool stopThreads;
 

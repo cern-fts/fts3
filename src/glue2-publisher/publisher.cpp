@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-#include<iostream>
+#include <fstream>
 #include <cstdio>
 #include <signal.h>
 #include <unistd.h>
@@ -27,8 +27,8 @@
 #include "common/error.h"
 #include "common/logger.h"
 #include "config/serverconfig.h"
-#include "server.h"
 #include "db/generic/SingleDbInstance.h"
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
