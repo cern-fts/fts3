@@ -31,7 +31,6 @@
 #include "common/JobParameterHandler.h"
 #include "FileTransferStatus.h"
 #include "SePair.h"
-#include "TransferJobSummary.h"
 #include "Se.h"
 #include "SeConfig.h"
 #include "SeGroup.h"
