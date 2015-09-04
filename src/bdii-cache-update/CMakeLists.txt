@@ -39,27 +39,22 @@ if(FTS3_COMPILE_WITH_UNITTEST_NEW)
 endif()
 
 # Artifacts
-install(
-    TARGETS     fts_bdii_cache_updater 
-	RUNTIME     DESTINATION ${SBIN_INSTALL_DIR}
+install(TARGETS fts_bdii_cache_updater 
+	RUNTIME DESTINATION ${SBIN_INSTALL_DIR}
 )
 
-install(
-    FILES       fts-bdii-cache-updater
+install(FILES fts-bdii-cache-updater
     DESTINATION ${SYSCONF_INSTALL_DIR}/cron.daily
 	PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
 )			
 	
-install(
-    FILES       fts-bdii-cache-updater.initd
+install(FILES fts-bdii-cache-updater.initd
     DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d 
 	PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
 	RENAME fts-bdii-cache-updater
 )
 	
-install(
-    FILES        bdii_cache.xml
+install(FILES bdii_cache.xml
     DESTINATION /var/lib/fts3 
 	PERMISSIONS OWNER_WRITE OWNER_READ GROUP_READ WORLD_READ
 )
-	

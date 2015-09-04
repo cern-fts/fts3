@@ -1,46 +1,55 @@
-# Copyright @ Members of the EMI Collaboration, 2010.
-# See www.eu-emi.eu for details on the copyright holders.
-# 
-# Licensed under the Apache License, Version 2.0 (the "License"); 
-# you may not use this file except in compliance with the License. 
-# You may obtain a copy of the License at 
 #
-#    http://www.apache.org/licenses/LICENSE-2.0 
+# Copyright (c) CERN 2013-2015
 #
-# Unless required by applicable law or agreed to in writing, software 
-# distributed under the License is distributed on an "AS IS" BASIS, 
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-# See the License for the specific language governing permissions and 
-# limitations under the License. 
+# Copyright (c) Members of the EMI Collaboration. 2010-2013
+#  See  http://www.eu-emi.eu/partners for details on the copyright
+#  holders.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 
 cmake_minimum_required(VERSION 2.8)
 
 
 file(GLOB fts_config "*.cpp")
 add_library(fts_config SHARED ${fts_config})
-add_dependencies(fts_config fts_common)
-
 find_package(Boost COMPONENTS program_options regex thread)
 
-target_link_libraries(fts_config fts_common ${Boost_LIBRARIES})
-set_target_properties(fts_config                PROPERTIES
-                                                LIBRARY_OUTPUT_DIRECTORY
-                                                ${PROJECT_BINARY_DIR}/src/config
-                                                VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
-                                                SOVERSION ${VERSION_MAJOR}
-                                                CLEAN_DIRECT_OUTPUT 1)
-						
-if (SERVERBUILD)
+target_link_libraries(fts_config
+    fts_common
+    ${Boost_LIBRARIES}
+)
+set_target_properties(fts_config PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/src/config
+    VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
+    SOVERSION ${VERSION_MAJOR}
+    CLEAN_DIRECT_OUTPUT 1
+)
 
-install(TARGETS         fts_config 
-	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 
-	LIBRARY             DESTINATION ${LIB_INSTALL_DIR} )
-
-install(FILES         fts3config
+# Artifacts						
+if(SERVERBUILD)
+    install(TARGETS fts_config 
+    	RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX} 
+    	LIBRARY DESTINATION ${LIB_INSTALL_DIR}
+    )
+    
+    install(FILES fts3config
         DESTINATION ${SYSCONF_INSTALL_DIR}/fts3
-	PERMISSIONS OWNER_READ OWNER_WRITE)
-
-install(FILES         fts-msg-monitoring.conf
+    	PERMISSIONS OWNER_READ OWNER_WRITE
+	)
+    
+    install(FILES fts-msg-monitoring.conf
         DESTINATION ${SYSCONF_INSTALL_DIR}/fts3
-	PERMISSIONS OWNER_READ OWNER_WRITE )	
-endif ()
+    	PERMISSIONS OWNER_READ OWNER_WRITE )	
+	
+endif()
