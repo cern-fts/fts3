@@ -21,7 +21,8 @@
 #include <iostream>
 #include <time.h>
 #include <ctime>
-#include "queue_updater.h"
+
+#include "ThreadSafeList.h"
 
 
 ThreadSafeList::ThreadSafeList()

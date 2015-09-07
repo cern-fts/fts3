@@ -20,6 +20,7 @@
 
 #include "FileTransferExecutor.h"
 
+#include "../common/ThreadSafeList.h"
 #include "cred/CredUtility.h"
 #include "cred/DelegCred.h"
 #include "common/parse_url.h"
@@ -27,8 +28,6 @@
 #include "common/logger.h"
 #include "common/name_to_uid.h"
 #include "common/producer_consumer_common.h"
-#include "common/queue_updater.h"
-
 #include "ConfigurationAssigner.h"
 #include "FileTransferScheduler.h"
 #include "ProtocolResolver.h"

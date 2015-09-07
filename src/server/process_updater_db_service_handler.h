@@ -39,10 +39,11 @@
 #include <fstream>
 #include "config/serverconfig.h"
 #include "common/definitions.h"
-#include "common/queue_updater.h"
 #include <boost/algorithm/string.hpp>
 #include "ws/SingleTrStateInstance.h"
 #include <boost/filesystem.hpp>
+
+#include "../common/ThreadSafeList.h"
 #include "DrainMode.h"
 
 extern bool stopThreads;

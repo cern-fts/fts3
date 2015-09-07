@@ -52,7 +52,6 @@
 #include "config/serverconfig.h"
 #include "common/definitions.h"
 #include "DrainMode.h"
-#include "common/queue_updater.h"
 #include <boost/algorithm/string.hpp>
 #include <sys/param.h>
 #include "common/name_to_uid.h"
@@ -69,6 +68,7 @@
 #include "profiler/Macros.h"
 #include <boost/thread.hpp>
 
+#include "../common/ThreadSafeList.h"
 #include "../cred/CredUtility.h"
 #include "oauth.h"
 

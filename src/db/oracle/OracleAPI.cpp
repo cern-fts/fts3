@@ -29,8 +29,9 @@
 #include <sys/param.h>
 #include <unistd.h>
 #include "OracleAPI.h"
+
+#include "../../common/ThreadSafeList.h"
 #include "sociConversions.h"
-#include "common/queue_updater.h"
 #include "db/generic/DbUtils.h"
 
 

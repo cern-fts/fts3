@@ -34,7 +34,6 @@
 #include <iomanip>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include "common/queue_updater.h"
 #include <boost/filesystem.hpp>
 #include "common/name_to_uid.h"
 #include <sys/resource.h>
@@ -44,6 +43,7 @@
 #include <fstream>
 #include "common/panic.h"
 #include <execinfo.h>
+#include "../common/ThreadSafeList.h"
 
 namespace fs = boost::filesystem;
 using boost::thread;

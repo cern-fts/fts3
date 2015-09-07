@@ -34,12 +34,12 @@
 #include <unistd.h>
 #include "MySqlAPI.h"
 #include "sociConversions.h"
-#include "common/queue_updater.h"
 #include "db/generic/DbUtils.h"
 #include <random>
 #include <stdint.h>
 #include <unistd.h>
 
+#include "../../common/ThreadSafeList.h"
 #include "common/JobStatusHandler.h"
 
 using namespace db;
