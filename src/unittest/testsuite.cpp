@@ -20,8 +20,6 @@
 
 /** \file testsuite.cpp FTS3 test suite runner. */
 
-#include "common/dev.h"
-
 #define BOOST_TEST_MODULE FTS3_APPLICATION_LABEL
 #include "testsuite.h"
 

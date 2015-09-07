@@ -26,6 +26,8 @@
 #include <boost/program_options.hpp>
 #include <map>
 
+#include "version.h"
+
 namespace fts3 {
 namespace config {
 
@@ -99,7 +101,7 @@ protected:
 
         if (_vm.count("version"))
             {
-                DEPENDENCIES::stream() << FTS3_SERVER_VERSION << "\n";
+                DEPENDENCIES::stream() << VERSION << "\n";
                 return;
                 //DEPENDENCIES::exit(1);
             }

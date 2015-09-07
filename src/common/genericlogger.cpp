@@ -20,7 +20,6 @@
 
 /** \file genericlogger.cpp Implementation/tests of GenericLogger class. */
 
-#include "dev.h"
 #include "genericlogger.h"
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST_NEW

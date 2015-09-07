@@ -22,7 +22,6 @@
 
 #pragma once
 
-#include "dev.h"
 #include <syslog.h>
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/seq/for_each.hpp>
