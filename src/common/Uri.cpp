@@ -18,8 +18,12 @@
  * limitations under the License.
  */
 
-#include "parse_url.h"
 #include <boost/regex.hpp>
+#include "Uri.h"
+
+namespace fts3 {
+namespace common {
+
 
 // From http://www.ietf.org/rfc/rfc2396.txt
 // Appendix B
@@ -29,8 +33,8 @@ static boost::regex uri_regex(URI_REGEX);
 
 static void extractPort(Uri& u0)
 {
-    size_t bracket_close_i = u0.Host.rfind(']'); // Account for IPv6 in the host name
-    size_t colon_i = u0.Host.rfind(':');
+    size_t bracket_close_i = u0.host.rfind(']'); // Account for IPv6 in the host name
+    size_t colon_i = u0.host.rfind(':');
 
     // No port
     if (colon_i == std::string::npos)
@@ -40,28 +44,31 @@ static void extractPort(Uri& u0)
     if (bracket_close_i != std::string::npos && bracket_close_i > colon_i)
         return;
 
-    std::string port_str = u0.Host.substr(colon_i + 1);
-    u0.Host = u0.Host.substr(0, colon_i);
-    u0.Port = atoi(port_str.c_str());
+    std::string port_str = u0.host.substr(colon_i + 1);
+    u0.host = u0.host.substr(0, colon_i);
+    u0.port = atoi(port_str.c_str());
 }
 
 
-Uri Uri::Parse(const std::string &uri)
+Uri Uri::parse(const std::string &uri)
 {
     Uri u0;
 
     boost::smatch matches;
     if (boost::regex_match(uri, matches, uri_regex, boost::match_posix))
         {
-            u0.Protocol = matches[2];
-            u0.Host = matches[4];
-            u0.Path = matches[5];
-            u0.QueryString = matches[7];
+            u0.protocol = matches[2];
+            u0.host = matches[4];
+            u0.path = matches[5];
+            u0.queryString = matches[7];
 
-            // Port is put into Host, so extract it
-            u0.Port = 0;
+            // port is put into host, so extract it
+            u0.port = 0;
             extractPort(u0);
         }
 
     return u0;
 }
+
+} // namespace common
+} // namespace fts3

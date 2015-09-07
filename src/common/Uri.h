@@ -18,21 +18,32 @@
  * limitations under the License.
  */
 
+#pragma once
+#ifndef URI_H_
+#define URI_H_
+
 #include <string>
 
+namespace fts3 {
+namespace common {
 
-struct Uri
+class Uri
 {
 public:
-    std::string QueryString, Path, Protocol, Host;
-    unsigned Port;
+    std::string queryString, path, protocol, host;
+    unsigned port;
 
-    Uri(): Port(0) {}
+    Uri(): port(0) {}
 
     std::string getSeName(void)
     {
-        return Protocol + "://" + Host;
+        return protocol + "://" + host;
     }
 
-    static Uri Parse(const std::string &uri);
+    static Uri parse(const std::string &uri);
 };
+
+} // namespace common
+} // namespace fts3
+
+#endif // URI_H_

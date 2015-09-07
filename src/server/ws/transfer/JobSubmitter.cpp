@@ -23,7 +23,6 @@
 #include "TransferCreator.h"
 #include "PlainOldJob.h"
 
-#include "common/uuid_generator.h"
 #include "db/generic/SingleDbInstance.h"
 
 #include "common/logger.h"
@@ -48,8 +47,8 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/tuple/tuple.hpp>
 
-#include "common/parse_url.h"
-
+#include "../../../common/Uri.h"
+#include "../../../common/UuidGenerator.h"
 #include "ws/SingleTrStateInstance.h"
 
 using namespace db;
@@ -63,8 +62,8 @@ const std::string JobSubmitter::srm_protocol = "srm";
 
 static Uri checkValidUrl(const std::string &uri)
 {
-    Uri u0 = Uri::Parse(uri);
-    bool ok = u0.Host.length() != 0 && u0.Protocol.length() != 0 && u0.Path.length() != 0 && u0.Protocol.compare("file") != 0;
+    Uri u0 = Uri::parse(uri);
+    bool ok = u0.host.length() != 0 && u0.protocol.length() != 0 && u0.path.length() != 0 && u0.protocol.compare("file") != 0;
     if (!ok)
         {
             std::string errMsg = "Not valid uri format, check submitted uri's";

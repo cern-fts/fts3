@@ -18,8 +18,8 @@
  * limitations under the License.
  */
 
-#include "uuid_generator.h"
 #include <uuid/uuid.h>
+#include "UuidGenerator.h"
 
 
 std::string UuidGenerator::generateUUID()

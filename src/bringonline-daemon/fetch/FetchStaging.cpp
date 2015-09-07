@@ -28,9 +28,9 @@
 
 #include "db/generic/SingleDbInstance.h"
 
-#include "common/parse_url.h"
-
 #include <map>
+
+#include "../../common/Uri.h"
 #include "../../cred/CredUtility.h"
 
 extern bool stopThreads;
@@ -75,8 +75,8 @@ void FetchStaging::fetch()
                         {
                             // get the SE name
                             std::string const & url = boost::get<StagingContext::surl>(*it_f);
-                            Uri uri = Uri::Parse(url);
-                            std::string se = uri.Host;
+                            Uri uri = Uri::parse(url);
+                            std::string se = uri.host;
                             // get the other values necessary for the key
                             std::string const & dn = boost::get<StagingContext::dn>(*it_f);
                             std::string const & vo = boost::get<StagingContext::vo>(*it_f);

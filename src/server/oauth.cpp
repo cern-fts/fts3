@@ -23,16 +23,16 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 
-#include <common/parse_url.h>
 #include <common/error.h>
+#include "../common/Uri.h"
 
 
 static
 bool isCloudStorage(const Uri& storage)
 {
-    return storage.Protocol == "dropbox" ||
-           storage.Protocol == "s3" ||
-           storage.Protocol == "s3s";
+    return storage.protocol == "dropbox" ||
+           storage.protocol == "s3" ||
+           storage.protocol == "s3s";
 }
 
 static
@@ -48,19 +48,19 @@ std::string stripBucket(const std::string& host)
 static
 std::string getCloudStorageDefaultName(const Uri& storage)
 {
-    std::string prefix = storage.Protocol;
+    std::string prefix = storage.protocol;
     boost::to_upper(prefix);
     if (prefix == "S3")
         {
             // S3 is a bit special, so generate two: S3:HOST and S3:HOST removing first component (might be bucket)
-            std::string cs_name = prefix + ":" + storage.Host + ";";
-            cs_name += prefix + ":" + stripBucket(storage.Host);
+            std::string cs_name = prefix + ":" + storage.host + ";";
+            cs_name += prefix + ":" + stripBucket(storage.host);
 
             return cs_name;
         }
     else
         {
-            return prefix + ":" + storage.Host;
+            return prefix + ":" + storage.host;
         }
 }
 
@@ -69,8 +69,8 @@ std::string generateCloudStorageNames(const TransferFile& tf)
 {
     std::string cs_name;
 
-    Uri source_se = Uri::Parse(tf.sourceSe);
-    Uri dest_se   = Uri::Parse(tf.destSe);
+    Uri source_se = Uri::parse(tf.sourceSe);
+    Uri dest_se   = Uri::parse(tf.destSe);
 
     if (isCloudStorage(source_se))
         cs_name = getCloudStorageDefaultName(source_se);

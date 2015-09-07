@@ -39,7 +39,7 @@
 #include <string.h>
 
 
-using namespace std;
+using namespace fts3::common;
 
 
 
@@ -91,12 +91,12 @@ std::string FileManagement::getLogFilePath()
 void FileManagement::setSourceUrl(std::string& source_url)
 {
     this->source_url = source_url;
-    Uri uri = Uri::Parse(source_url);
+    Uri uri = Uri::parse(source_url);
 
-    if(uri.Protocol.length() && uri.Host.length())
+    if(uri.protocol.length() && uri.host.length())
         {
             shost = uri.getSeName();
-            shostFile = uri.Host;
+            shostFile = uri.host;
         }
     else
         {
@@ -108,11 +108,11 @@ void FileManagement::setSourceUrl(std::string& source_url)
 void FileManagement::setDestUrl(std::string& dest_url)
 {
     this->dest_url = dest_url;
-    Uri uri = Uri::Parse(dest_url);
-    if(uri.Protocol.length() && uri.Host.length())
+    Uri uri = Uri::parse(dest_url);
+    if(uri.protocol.length() && uri.host.length())
         {
             dhost = uri.getSeName();
-            dhostFile = uri.Host;
+            dhostFile = uri.host;
         }
     else
         {

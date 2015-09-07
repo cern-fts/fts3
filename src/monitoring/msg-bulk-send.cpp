@@ -51,9 +51,10 @@
 #include "utility_routines.h"
 #include "common/name_to_uid.h"
 #include <execinfo.h>
+
+#include "../common/ConcurrentQueue.h"
 #include "common/error.h"
 
-#include "../common/Concurrent_Queue.h"
 #include "Logger.h"
 
 using namespace std;

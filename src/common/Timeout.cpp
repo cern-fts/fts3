@@ -19,9 +19,9 @@
  */
 
 #include "error.h"
-#include "timeout.h"
-
 #include <boost/version.hpp>
+
+#include "Timeout.h"
 #if BOOST_VERSION < 105000
 #define TIME_UTC_ TIME_UTC
 #endif

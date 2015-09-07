@@ -53,9 +53,9 @@
 #include "common/panic.h"
 #include "version.h"
 
-using namespace std;
 using boost::thread;
 using namespace boost::algorithm;
+using namespace fts3::common;
 
 static FileManagement fileManagement;
 static Reporter reporter;
@@ -129,9 +129,9 @@ static std::vector<std::string> turlList(std::string str)
     //source
     if(!source_turl.empty() && source_turl.length() > 4)
         {
-            Uri src_uri = Uri::Parse(source_turl);
+            Uri src_uri = Uri::parse(source_turl);
 
-            if(src_uri.Protocol.length() && src_uri.Host.length())
+            if(src_uri.protocol.length() && src_uri.host.length())
                 {
                     shost = src_uri.getSeName();
                     trim(shost);
@@ -142,9 +142,9 @@ static std::vector<std::string> turlList(std::string str)
     //destination
     if(!destination_turl.empty() && destination_turl.length() > 4)
         {
-            Uri dst_uri = Uri::Parse(destination_turl);
+            Uri dst_uri = Uri::parse(destination_turl);
 
-            if(dst_uri.Protocol.length() && dst_uri.Host.length())
+            if(dst_uri.protocol.length() && dst_uri.host.length())
                 {
                     shost = dst_uri.getSeName();
                     trim(shost);

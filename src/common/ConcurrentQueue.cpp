@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-#include "Concurrent_Queue.h"
+#include "ConcurrentQueue.h"
 
 bool ConcurrentQueue::instanceFlag = false;
 ConcurrentQueue* ConcurrentQueue::single = NULL;

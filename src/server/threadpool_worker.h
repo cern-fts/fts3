@@ -20,9 +20,8 @@
 
 #pragma once
 
-#include "common/timeout.h"
-
 #include <boost/thread.hpp>
+#include "../common/Timeout.h"
 
 
 namespace fts3 {

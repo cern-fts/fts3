@@ -22,10 +22,10 @@
 
 #include <iostream>
 #include <ctime>
-#include "common/parse_url.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include "../common/Uri.h"
 
 class FileManagement
 {

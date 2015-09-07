@@ -36,7 +36,7 @@
 #include <iostream>
 #include <boost/lexical_cast.hpp>
 #include "producer_consumer_common.h"
-#include "uuid_generator.h"
+#include "UuidGenerator.h"
 using namespace std;
 
 

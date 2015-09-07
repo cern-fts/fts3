@@ -18,9 +18,9 @@
  * limitations under the License.
  */
 
-#include "common/timeout.h"
 #include "thread_function.h"
 #include "synchronizedqueue.h"
+#include "../common/Timeout.h"
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST
 #include "unittest/testsuite.h"

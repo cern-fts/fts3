@@ -21,6 +21,8 @@
 #ifndef INSTANCEHOLDER_H_
 #define INSTANCEHOLDER_H_
 
+#include <memory>
+
 namespace fts3
 {
 namespace common

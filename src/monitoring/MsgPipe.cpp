@@ -34,7 +34,8 @@
 #include <boost/filesystem.hpp>
 #include "common/definitions.h"
 #include <boost/lexical_cast.hpp>
-#include "common/Concurrent_Queue.h"
+
+#include "../common/ConcurrentQueue.h"
 
 extern bool stopThreads;
 static bool signalReceived = false;

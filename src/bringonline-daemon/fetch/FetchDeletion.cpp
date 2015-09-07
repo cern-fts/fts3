@@ -25,9 +25,9 @@
 
 #include "server/DrainMode.h"
 #include "db/generic/SingleDbInstance.h"
-#include "common/parse_url.h"
-
 #include <map>
+
+#include "../../common/Uri.h"
 #include "cred/CredUtility.h"
 
 extern bool stopThreads;
@@ -72,8 +72,8 @@ void FetchDeletion::fetch()
                             // make sure it is a srm SE
                             std::string const & url = boost::get<DeletionContext::source_url>(*it_f);
                             // get the SE name
-                            Uri uri = Uri::Parse(url);
-                            std::string se = uri.Host;
+                            Uri uri = Uri::parse(url);
+                            std::string se = uri.host;
                             // get the other values necessary for the key
                             std::string const & dn = boost::get<DeletionContext::user_dn>(*it_f);
                             std::string const & vo = boost::get<DeletionContext::vo_name>(*it_f);

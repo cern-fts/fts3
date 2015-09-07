@@ -20,11 +20,11 @@
 
 #pragma once
 
-#include "common/monitorobject.h"
 #include <boost/bind.hpp>
 #include <boost/utility.hpp>
 #include <boost/thread/condition.hpp>
 #include <assert.h>
+#include "../common/MonitorObject.h"
 
 namespace fts3 {
 namespace server {

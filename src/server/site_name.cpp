@@ -19,7 +19,8 @@
  */
 
 #include "site_name.h"
-#include "common/parse_url.h"
+
+#include "../common/Uri.h"
 #include "common/logger.h"
 #include "common/error.h"
 
@@ -40,11 +41,11 @@ SiteName::~SiteName()
 
 std::string SiteName::getSiteName(std::string& hostname)
 {
-    Uri uri = Uri::Parse(hostname);
+    Uri uri = Uri::parse(hostname);
 
-    if(uri.Host.length())
+    if(uri.host.length())
         {
-            std::string site =  SiteNameRetriever::getInstance().getSiteName(uri.Host);
+            std::string site =  SiteNameRetriever::getInstance().getSiteName(uri.host);
             if(site.length() > 0 && site != "null")
                 return site;
             else

@@ -34,7 +34,8 @@
 #pragma once
 
 #include <iostream>
-#include "common/monitorobject.h"
+
+#include "../../common/MonitorObject.h"
 #include "GenericDbIfce.h"
 #include "DynamicLibraryManager.h"
 

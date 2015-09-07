@@ -20,14 +20,14 @@
 
 #pragma once
 
-#include "common/timeout.h"
 #include "common/logger.h"
 #include "common/error.h"
-#include "common/monitorobject.h"
-
 #include <limits>
 #include <deque>
 #include <boost/thread/condition.hpp>
+
+#include "../common/MonitorObject.h"
+#include "../common/Timeout.h"
 
 
 namespace fts3 {

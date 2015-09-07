@@ -42,7 +42,6 @@
 #include "ProtocolResolver.h"
 #include "cred/DelegCred.h"
 #include <signal.h>
-#include "common/parse_url.h"
 #include <sys/types.h>
 #include <unistd.h>
 #include <grp.h>
@@ -69,6 +68,7 @@
 #include <boost/thread.hpp>
 
 #include "../common/ThreadSafeList.h"
+#include "../common/Uri.h"
 #include "../cred/CredUtility.h"
 #include "oauth.h"
 
@@ -169,8 +169,8 @@ protected:
 
     std::string extractHostname(const std::string &surl)
     {
-        Uri u0 = Uri::Parse(surl);
-        return u0.Protocol + "://" + u0.Host;
+        Uri u0 = Uri::parse(surl);
+        return u0.protocol + "://" + u0.host;
     }
 
     void getFiles( std::vector< boost::tuple<std::string, std::string, std::string> >& distinct)

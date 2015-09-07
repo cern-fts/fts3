@@ -24,8 +24,6 @@
 #include "exception/bad_option.h"
 
 #include "common/JobParameterHandler.h"
-#include "common/parse_url.h"
-
 #include <iostream>
 #include <fstream>
 #include <termios.h>
@@ -37,6 +35,7 @@
 
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include "../../common/Uri.h"
 
 using namespace fts3::cli;
 using namespace fts3::common;
@@ -128,8 +127,8 @@ boost::optional<std::string> SubmitTransferCli::getMetadata()
 
 bool SubmitTransferCli::checkValidUrl(const std::string &uri)
 {
-    Uri u0 = Uri::Parse(uri);
-    bool ok = u0.Host.length() != 0 && u0.Protocol.length() != 0 && u0.Path.length() != 0;
+    Uri u0 = Uri::parse(uri);
+    bool ok = u0.host.length() != 0 && u0.protocol.length() != 0 && u0.path.length() != 0;
     if (!ok)
         {
             throw cli_exception("Not valid uri format, check submitted uri's");

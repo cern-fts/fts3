@@ -21,7 +21,7 @@
 /** \file monitorobject.cpp Implementation of MonitorObject class. */
 
 
-#include "monitorobject.h"
+#include "MonitorObject.h"
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST_NEW
 

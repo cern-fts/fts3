@@ -27,7 +27,8 @@
 #include "common/error.h"
 #include "config/serverconfig.h"
 #include <sstream>
-#include "../common/Concurrent_Queue.h"
+
+#include "../common/ConcurrentQueue.h"
 
 // End-Of-Transmission character
 static const char EOT = 0x04;

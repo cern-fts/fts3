@@ -21,8 +21,8 @@
 #ifndef THREADSAFESINGLETON_H_
 #define THREADSAFESINGLETON_H_
 
-#include "common/monitorobject.h"
 #include "common/InstanceHolder.h"
+#include "MonitorObject.h"
 
 namespace fts3
 {
